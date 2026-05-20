@@ -1065,6 +1065,8 @@ estimate_calibration_note: |
 > `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
 > pipeline_mode / reconciler threshold / mode-routing logic.
 
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active workspace-wide at PM@fac14af3. STEP 5.77 (L2) now enforced — note 3 MDPS `to_parquet` L7 violations remain open (Tab 2 fix-list, tracked as Tab 5 action item). Verify `bash scripts/quality-gates.sh` before merging MTDS/MDPS mode-routing or record_captured() changes.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)

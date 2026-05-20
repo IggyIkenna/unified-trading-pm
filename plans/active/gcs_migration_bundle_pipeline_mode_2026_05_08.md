@@ -650,6 +650,8 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
 > pipeline_mode / reconciler threshold / mode-routing logic.
 
+> **🟢 RESOLVED — batch_live_symmetry Tab 4 (features ModeHandler lift, 2026-05-20)**: All 4 feature families (commodity / cross_instrument / multi_timeframe / calendar) lifted to UTL `ModeHandler` ABC at features-service@519625f7. Bare-class compat-paths scheduled for hard-delete post-prod-deploy. No impact on GCS pipeline_mode migration phases.
+
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator

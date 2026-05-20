@@ -110,6 +110,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active workspace-wide. STEP 5.75 (L1 DataType mode-agnosticism) · STEP 5.76 (L5 no service DataType redeclarations) · STEP 5.77 (L2 no mode-conditional outside seam) · STEP 5.78 (L3 RuntimeMode canonical in UAC only; UI deliberate-copy exempted) — all enabled at PM@fac14af3 (2026-05-14). Verify `bash scripts/quality-gates.sh` passes before merging changes to `available_at` stamping paths or record_captured() callsites.
+
 # `available_at` + Lookahead-Bias Completion — Plan
 
 > **Single SSOT for the end-to-end `available_at` chain.** Each chain link below is either OWNED by an existing plan (in

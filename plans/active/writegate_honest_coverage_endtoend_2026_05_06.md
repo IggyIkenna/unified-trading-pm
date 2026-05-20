@@ -32,6 +32,8 @@ estimate_calibration_note: |
 > top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
 > work + plan-flip backfills continue.
 
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active workspace-wide. STEP 5.77 (L2) blocks mode-conditional branching outside seam in writegate consumer code. Verify `bash scripts/quality-gates.sh` before merging record_captured() wiring changes or mode-routing callsites in Phase 4+ writegate work.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.

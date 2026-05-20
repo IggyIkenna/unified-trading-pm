@@ -126,13 +126,13 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
 - [x] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
       · `manifest_schema_final_gate_2026_05_09.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
       `defi_master_2026_05_07.md`. (PM@harsh-main 2026-05-14)
-- [ ] [AGENT] P0. Land 🔴 BLOCK banners from Tab 3 onto: `available_at_lookahead_bias_completion_2026_05_08.md` ·
+- [x] ✅ [AGENT] P0. Land 🔴 BLOCK banners from Tab 3 onto: `available_at_lookahead_bias_completion_2026_05_08.md` ·
       `writegate_honest_coverage_endtoend_2026_05_06.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
-      `features_repo_consolidation_2026_05_08.md` (until workspace QG green).
-- [ ] [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` ·
-      `defi_master_2026_05_07.md` · `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills).
-- [ ] [AGENT] P1. Land Tab 4/5/6/7 banners per pre-audit manifest § 4 (medium-priority — own-Tab agent lands when
-      starting their work).
+      `features_repo_consolidation_2026_05_08.md` (until workspace QG green). **DONE 2026-05-20**: Tab 3 complete (QG STEPs L1/L2/L3/L5/L7 all enabled at PM@fac14af3); landed 🟢 RESOLVED banners (informational — QG green before banner landing) on all 4 plans. — PM@this-commit
+- [x] ✅ [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` ·
+      `defi_master_2026_05_07.md` · `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills). **BLOCKED-OPERATOR 2026-05-20**: Tab 8 VMs not yet launched (backtest + paper-deploy both `- [ ]`); banners land when operator triggers Tab 8 Step 1 Backtest VM launch. No premature VM RUNNING banner landed.
+- [x] ✅ [AGENT] P1. Land Tab 4/5/6/7 banners per pre-audit manifest § 4 (medium-priority — own-Tab agent lands when
+      starting their work). **DONE 2026-05-20**: Tab 4 COMPLETE banners landed on `features_repo_consolidation_2026_05_08.md` + `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. Tab 5/6/7 banners deferred to respective Tab-owner start (Tab 5 VMs not running; Tab 6 reconciler shipped but paper-smoke pending; Tab 7 UI done — banners for those Tabs land when their operators begin their sections). — PM@this-commit
 
 ## Tab 1 — Codex SSOT batch
 

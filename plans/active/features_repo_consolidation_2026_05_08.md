@@ -960,6 +960,8 @@ estimate_calibration_note: |
 > status post-Tab-4". Tab 4 is in-flight on `batch_live_symmetry_2026_05_10`; changes to those families should be
 > coordinated with Tab 4 owner to avoid clobbering the lift.
 
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 + Tab 4 (2026-05-20)**: Tab 4 ModeHandler lift COMPLETE at features-service@519625f7 (2026-05-19). 4 families (commodity / cross_instrument / multi_timeframe / calendar) on UTL ModeHandler ABC. Bare-class compat-paths scheduled for hard-delete post-prod. Tab 3 QG STEPs L1/L5/L2/L3/L7 enabled at PM@fac14af3 — verify `bash scripts/quality-gates.sh` passes before merging further consolidation work.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
