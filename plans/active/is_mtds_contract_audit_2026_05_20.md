@@ -199,9 +199,13 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - Derive URLs from `record.source_archive_url_template` + `record.source_record_types` — NEVER hardcode
 - Wrap every (date × instrument) iteration with `record_captured` / `record_empty(reason=...)` / `record_failed(...)`
 
-- [ ] **P0. `solana_defi_handler.py`**: full rewrite of Drift S3 backfill path (lines 1101-1199).
-      Remove `_DRIFT_S3_BASE` (line 165), remove `_collect_drift` hardcoded URL re-fetch (line 419),
-      remove hardcoded Phoenix routes (lines 180-203). Call IS DriftReferenceDataAdapter.
+- [x] ✅ **P0. `solana_defi_handler.py` (partial — QG + manifest)**: Remove `_DRIFT_S3_BASE` module-level constant
+      → local `drift_s3_base` var in `_backfill_drift_s3_date`; add `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`;
+      add manifest emission (`record_captured`/`record_empty`(EXPECTED_PAST_SOURCE_COVERAGE_END)/`record_failed`)
+      to `_backfill_drift_s3_date`. — MTDS@3c8ce40
+- [ ] **P0. `solana_defi_handler.py` (remaining)**: remove `_collect_drift` IS-bypass (line ~419 uses Drift
+      data API directly instead of IS catalogue); remove `_PHOENIX_PAIRS` hardcoded universe (load from IS).
+      Call IS DriftReferenceDataAdapter for full universe derivation.
 - [ ] **P0. `perp_funding_handler.py`**: remove Drift market hardcode at line 145; call IS.
 - [ ] **P0. `lst_rates_handler.py`**: remove Solana LST hardcoded URLs (lines 135-160).
 - [ ] **P0. `native_staking_handler.py`**: remove hardcoded endpoint at line 85.
