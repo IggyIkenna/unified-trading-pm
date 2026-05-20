@@ -159,6 +159,29 @@ P1 (design confirm) ─┐
    P4 (GCS sync)  P5 (routing)  P6 (docs)
 ```
 
+## Phase 0 — Worker-host spawn prerequisites (root-caused 2026-05-20)
+
+> **Why this is here**: during the orchastrator→agent-orchestrator cutover, all worker API spawns failed with the
+> opaque `tmux session did not become ready within 30.0s`. Four silent first-run gates were the cause (theme picker,
+> OAuth login, folder-trust, and — the nastiest — `/tmp` read-only under `ProtectSystem=strict`). On a headless VM these
+> are far harder to detect. Full root-cause + fix table: `agent-orchestrator/docs/WORKER_SPAWN_PREREQUISITES.md`.
+> Interim fixes already landed on Harsh-primary (PC): unit `ReadWritePaths=/tmp`, claude onboarding flags + per-worktree
+> trust, and `scripts/worker-host-preflight.sh`.
+
+- [x] [INFRA] P0. Add `ReadWritePaths=/tmp` to `scripts/orchestrator.service` template + live unit (else `tmux` can't
+      create its socket in the service namespace). — agent-orchestrator (template fixed; live unit patched 2026-05-20)
+- [x] [SCRIPT] P0. `scripts/worker-host-preflight.sh` — idempotent: claude theme/onboarding flags, per-worktree
+      `hasTrustDialogAccepted`, credentials-present check, `/tmp` writability, + live self-test spawn. — agent-orchestrator
+- [x] [DOC] P0. `docs/WORKER_SPAWN_PREREQUISITES.md` — the four gates + the `nsenter` diagnostic + provisioning steps. — agent-orchestrator
+- [ ] [SCRIPT] P1. Spawn endpoint auto-ensures folder-trust + onboarding flags in `~/.claude.json` for the target
+      worktree before launching claude (reuse the `worktree_setup` bootstrap hook that already runs on spawn). — agent-orchestrator
+- [ ] [SCRIPT] P1. Spawn endpoint preflights `/tmp` writability **in its own namespace** and returns a specific 5xx
+      ("/tmp read-only — add ReadWritePaths=/tmp") instead of the opaque 30s timeout. — agent-orchestrator
+- [ ] [SCRIPT] P2. VM launcher runs `worker-host-preflight.sh` as a post-boot step + refuses to register the box as a
+      worker host until green. Surface result in `backends.json` health. — deployment-service + agent-orchestrator
+- [ ] [TEST] P2. CI/QG smoke: assert the unit template contains `ReadWritePaths=/tmp` so the regression can't silently
+      come back. — agent-orchestrator
+
 ## Pre-audit manifest
 
 Already exists:
