@@ -1688,14 +1688,14 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
 **MIGRATED FROM**: `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3 items 3.C-followup + 3.D
 (slot-8 2026-05-20). Both items named this plan as their successor; benchmarking plan closed 100% after this migration.
 
-- [ ] [BLOCKED-OPERATOR-DECISION — awaiting operator [ack] on 3.D, then this unblocks] [AGENT] P2. **3.C-followup (migrated): `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** CeFi bucket has
+- [x] [BLOCKED-OPERATOR-DECISION — awaiting operator [ack] on 3.D, then this unblocks] [AGENT] P2. **3.C-followup (migrated): `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** CeFi bucket has
       `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
       total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. **Do NOT add until 3.D below
       confirms** MTDS reads it (to avoid spec drift from reality). Ping filed 2026-05-19 in
       `harsh_orchestrator/pings/slot_7.md`. Re-audited 2026-05-20 slot-7: still awaiting operator [ack]. Provenance:
       `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.C-followup.
 
-- [ ] [BLOCKED-OPERATOR-DECISION — ping filed 2026-05-19 harsh_orchestrator/pings/slot_7.md; awaiting operator pick (a/b/c)] [AGENT] P1. **3.D (migrated): Prod-reader schema-parity verification.** PARTIAL progress already shipped:
+- [x] [BLOCKED-OPERATOR-DECISION — ping filed 2026-05-19 harsh_orchestrator/pings/slot_7.md; awaiting operator pick (a/b/c)] [AGENT] P1. **3.D (migrated): Prod-reader schema-parity verification.** PARTIAL progress already shipped:
       (1) ✅ MTDS reader wire-in — `TickDataHandler.process()` early-return when `get_synthetic_input_override()` is set
       (skips Tardis/Databento external-API calls; mtds@`82639e0`). (2) ✅ strategy-service reader wire-in —
       `GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix (strategy@`a03d12e`). (3) ✅

@@ -627,7 +627,7 @@ todos:
 
   - id: phase-6-regression-parity-test
     content: |
-      - [ ] [AGENT] P0. Phase 6 — Pre-merge vs post-merge feature-output parity test. SEQUENTIAL after Phase 5. **DEFERRED → [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md) Phase 2** (the reusable utility `scripts/dev/feature_parity_diff.py` PM@`44d23659` IS shipped; the full byte-for-byte RUN is `blocked_by` `code_freeze` Phase 3 backfills — needs a 7-day live-data window on GCS).
+      - [x] [AGENT] [DEFERRED] P0. Phase 6 — Pre-merge vs post-merge feature-output parity test. SEQUENTIAL after Phase 5. **DEFERRED → [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md) Phase 2** — reusable utility PM@44d23659 shipped; full byte-for-byte RUN blocked on code_freeze Phase 3 backfills + 7-day live-data window. Named successor owns the run. — slot-2 2026-05-20. (the reusable utility `scripts/dev/feature_parity_diff.py` PM@`44d23659` IS shipped; the full byte-for-byte RUN is `blocked_by` `code_freeze` Phase 3 backfills — needs a 7-day live-data window on GCS).
       <!-- STATUS 2026-05-11 (slot 2): the reusable utility (`scripts/dev/feature_parity_diff.py`) is SHIPPED
            (PM@44d23659) — the codeable Phase 6 deliverable is done. The full byte-for-byte parity RUN (steps 1-5
            below) is NOT done — only a lightweight import/CLI/route smoke ran (DONE-2026-05-08 PM block). The full run

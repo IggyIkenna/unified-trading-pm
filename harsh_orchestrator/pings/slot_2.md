@@ -1,3 +1,5 @@
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `live_pipeline_mtds_mdps_features` 3.C+3.D (migrated from mock_data_pipeline_benchmarking): (3.C) `CEFI_BOOK_SNAPSHOT_5_SPEC` blocked on 3.D ack; (3.D) subprocess-mode harness run + schema-parity assertion needs VM + operator sign-off. Original pings in `slot_7.md`. → **Unblock**: confirm schema audit path (a/b/c choice in slot_7.md ping) and approve VM run.
+
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `mdps_streaming_and_backpressure` Phase 4: Phases 1+2 shipped 2026-05-18 (MDPS@15c1889 + MDPS@6c560f4). Phase 4 (E2E VM validation + revert band-aid deployment-service@02ee6d6) is now unblocked code-wise. → **Unblock**: launch MDPS CeFi BTCUSDT 30-day backfill VM on standard memory tier, confirm STOPPED + manifest captured rows, then operator approves band-aid revert. Phase 3 (row-group iterator) is DEFERRED-POST-CUTOVER; no action needed for May-23.
 
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR × 6 items in `defi_catalogue_chain_primitives_2026_05_10.md` (all flipped [BLOCKED-OPERATOR] 2026-05-20):
