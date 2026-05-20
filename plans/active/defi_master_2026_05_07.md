@@ -1222,6 +1222,10 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       table had "staking + lending + perp" with Aave as component; slot labels used lido-aave-hyperliquid format.
       Corrected to 2-leg description, updated table to actual DERIBIT/BYBIT/DRIFT venues, replaced slot labels with 4
       actual catalog slots. — PM@8d3e5e55
+- [x] ✅ [DOC] P2. **category-instrument-coverage.md APD slot labels — remove PARTIAL stale labels + fix CeFi spot.**
+      "CeFi perp (funding-rate dispersion — PARTIAL, currently mis-labeled in UAC)" comment + `multi-cex-btc-funding`
+      labels were stale (superseded by bridge slots below). CeFi spot labels used wrong format. Fixed CeFi spot to
+      actual catalog labels; removed stale multi-cex labels; clarified bridge slots are not in TARGET_UNIVERSE. — PM@0d9b2849
 
 ## `available_at` adapter stamping (coordinated)
 
