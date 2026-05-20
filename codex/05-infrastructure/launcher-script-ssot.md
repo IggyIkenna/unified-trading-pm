@@ -528,22 +528,21 @@ heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + tem
 
 ## Cloud Run launchers
 
-Cloud Run deploy scripts are NOT VM launchers (they run `gcloud run deploy`, not
-`gcloud compute instances create`) and do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog
-registration. They live under `deployment-service/scripts/cloud-run/` and follow the shape of
-`deploy-ui.sh`:
+Cloud Run deploy scripts are NOT VM launchers (they run `gcloud run deploy`, not `gcloud compute instances create`) and
+do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog registration. They live under
+`deployment-service/scripts/cloud-run/` and follow the shape of `deploy-ui.sh`:
 
 - `--env` flag required (rejects missing; supports `--env=prod|uat`)
 - Triggers `docker buildx build` (local) or `gcloud builds submit` (Cloud Build) + `gcloud run deploy`
 - Optional `firebase deploy --only hosting` at P2 (agent-orchestrator) or always (odum-portal)
-- Note: `agent-orchestrator` has NO frontend in its Docker image (Vite dashboard served by Firebase
-  Hosting at P2). `config/docker-build.env.{production,uat}` in the agent-orchestrator repo document
-  runtime env vars only; `--set-env-vars` is used directly at deploy time rather than a build-arg file.
+- Note: `agent-orchestrator` has NO frontend in its Docker image (Vite dashboard served by Firebase Hosting at P2).
+  `config/docker-build.env.{production,uat}` in the agent-orchestrator repo document runtime env vars only;
+  `--set-env-vars` is used directly at deploy time rather than a build-arg file.
 
-| Script                          | Target service             | Region       | Status  |
-| ------------------------------- | -------------------------- | ------------ | ------- |
-| `deploy-ui.sh`                  | unified-trading-system-ui  | europe-west4 | shipped |
-| `deploy-agent-orchestrator.sh`  | agent-orchestrator         | europe-west4 | shipped |
+| Script                         | Target service            | Region       | Status  |
+| ------------------------------ | ------------------------- | ------------ | ------- |
+| `deploy-ui.sh`                 | unified-trading-system-ui | europe-west4 | shipped |
+| `deploy-agent-orchestrator.sh` | agent-orchestrator        | europe-west4 | shipped |
 
 `deploy-agent-orchestrator.sh` shipped at Phase 1 of
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`. Architecture SSOT:

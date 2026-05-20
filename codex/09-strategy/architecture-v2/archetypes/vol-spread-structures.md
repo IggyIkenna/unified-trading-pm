@@ -14,18 +14,18 @@ topology_requirements:
 
 # Archetype: `VOL_SPREAD_STRUCTURES`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven per leg — each leg
-> settles at its own expiry; calendar and butterfly spreads managed to expiry with roll logic. **Code module
-> (target):** `strategy-service/engine/strategies/v2/vol_trading/vol_spread_structures_engine.py`
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven per leg — each leg settles
+> at its own expiry; calendar and butterfly spreads managed to expiry with roll logic. **Code module (target):**
+> `strategy-service/engine/strategies/v2/vol_trading/vol_spread_structures_engine.py`
 
 ## What it does
 
-Trades the shape of the implied vol term structure and smile through calendar spreads and butterfly spreads.
-Calendar spread: buy back-month vol and sell front-month vol when the term structure is inverted (backwardation),
-expecting reversion to the normal contango shape; reverse when contango is extreme. Butterfly spread: sell two
-mid-strike options and buy the wing strikes to capture flattening of the vol smile — profits when realized skew
-is lower than implied by the smile. Both structures are vega-neutral at entry and isolate shape risk rather than
-level risk. Delta-hedge the aggregate book to remove directional exposure.
+Trades the shape of the implied vol term structure and smile through calendar spreads and butterfly spreads. Calendar
+spread: buy back-month vol and sell front-month vol when the term structure is inverted (backwardation), expecting
+reversion to the normal contango shape; reverse when contango is extreme. Butterfly spread: sell two mid-strike options
+and buy the wing strikes to capture flattening of the vol smile — profits when realized skew is lower than implied by
+the smile. Both structures are vega-neutral at entry and isolate shape risk rather than level risk. Delta-hedge the
+aggregate book to remove directional exposure.
 
 ## Token / position flow
 
@@ -97,10 +97,10 @@ level risk. Delta-hedge the aggregate book to remove directional exposure.
 
 ## When to use / market regime
 
-- **Calendar (backwardation)**: after vol spikes when spot market recovers — front IV stays elevated while back
-  IV normalises; expect curve to revert to contango within days to weeks
-- **Butterfly**: quiet, range-bound markets where the smile is rich but unlikely to be realised; captures
-  over-priced skew structure without large directional or vol-level risk
+- **Calendar (backwardation)**: after vol spikes when spot market recovers — front IV stays elevated while back IV
+  normalises; expect curve to revert to contango within days to weeks
+- **Butterfly**: quiet, range-bound markets where the smile is rich but unlikely to be realised; captures over-priced
+  skew structure without large directional or vol-level risk
 - **Avoid**: fast-trending markets or during liquidity crises where spreads widen materially per leg
 - **Asset fit**: BTC, ETH (Deribit has the deepest multi-expiry options book); SPX for TradFi calendars
 
@@ -114,10 +114,12 @@ VOL_SPREAD_STRUCTURES@cboe-spx-calendar-weekly-usd-prod
 
 ## Not in this archetype
 
-- IV vs RV level divergence trade (not shape) — enter long or short vol on absolute spread threshold → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- IV vs RV level divergence trade (not shape) — enter long or short vol on absolute spread threshold →
+  [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
 - Structural short-vol carry (sell straddle to harvest theta/carry premium) → [`VOL_CARRY`](vol-carry.md)
 - ATM straddle held for a binary event catalyst → [`VOL_STRADDLE`](vol-straddle.md)
-- Hard calendar no-arb violation (calendar spread below zero cost-of-carry) — mechanical arbitrage, not statistical → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- Hard calendar no-arb violation (calendar spread below zero cost-of-carry) — mechanical arbitrage, not statistical →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

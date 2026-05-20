@@ -20,12 +20,11 @@ topology_requirements:
 
 ## What it does
 
-Trades the spread between implied volatilities of correlated assets at matched tenors. The primary crypto example is
-the BTC/ETH vol spread: historically, 30-day BTC IV exceeds ETH IV by 5-15 vol points, with occasional inversions
-(ETH IV > BTC IV) during ETH-specific events (upgrades, ETF decisions). When the spread exceeds its 2-sigma band
-relative to its rolling mean, the strategy simultaneously buys vol on the relatively cheap asset and sells vol on the
-relatively expensive asset at the same expiry. Profit is earned when the cross-asset vol spread reverts to its
-historical norm.
+Trades the spread between implied volatilities of correlated assets at matched tenors. The primary crypto example is the
+BTC/ETH vol spread: historically, 30-day BTC IV exceeds ETH IV by 5-15 vol points, with occasional inversions (ETH IV >
+BTC IV) during ETH-specific events (upgrades, ETF decisions). When the spread exceeds its 2-sigma band relative to its
+rolling mean, the strategy simultaneously buys vol on the relatively cheap asset and sells vol on the relatively
+expensive asset at the same expiry. Profit is earned when the cross-asset vol spread reverts to its historical norm.
 
 ## Token / position flow
 
@@ -99,11 +98,11 @@ historical norm.
 
 - **Use when**: vol spread between correlated assets at multi-week extreme; both asset option chains liquid at same
   tenor; no known idiosyncratic event for the expensive-vol asset in the near term
-- **Best regime**: BTC/ETH spread inversion during ETH upgrade hype (ETH IV spikes relative to BTC → sell ETH vol,
-  buy BTC vol, profit when inversion corrects); or BTC IV spike during regulatory event while ETH relatively calm
-- **Avoid**: correlation breakdown between assets (spread becomes a pure directional vol bet, not a spread trade);
-  near an ETH hard fork or BTC halving where the fundamental vol dynamics shift; when matched expiry liquidity thin
-  on one side
+- **Best regime**: BTC/ETH spread inversion during ETH upgrade hype (ETH IV spikes relative to BTC → sell ETH vol, buy
+  BTC vol, profit when inversion corrects); or BTC IV spike during regulatory event while ETH relatively calm
+- **Avoid**: correlation breakdown between assets (spread becomes a pure directional vol bet, not a spread trade); near
+  an ETH hard fork or BTC halving where the fundamental vol dynamics shift; when matched expiry liquidity thin on one
+  side
 - **Crypto pairs**: BTC/ETH (primary); BTC/SOL (secondary — lower correlation, wider expected spread); ETH/SOL
 
 ## Example instances

@@ -3,14 +3,26 @@ title: "cross_asset not in instruments-service scope — needs design call"
 created: 2026-05-14
 author: harsh-slot-7
 resolved: 2026-05-20
-resolution: ACKED-OUT-OF-SCOPE — features-service owns per-pair viability + pricing implicitly via existing derived-feature output (basis_spread_bps, dispersion features, etc.). No separate synthetic-universe registry. Mega-audit C6 (features→strategy) scope augmented to enforce features-service emits per-pair viability + pricing for every active archetype.
+resolution:
+  ACKED-OUT-OF-SCOPE — features-service owns per-pair viability + pricing implicitly via existing derived-feature output
+  (basis_spread_bps, dispersion features, etc.). No separate synthetic-universe registry. Mega-audit C6
+  (features→strategy) scope augmented to enforce features-service emits per-pair viability + pricing for every active
+  archetype.
 source:
   - plans/active/data_status_ui_phase_2f.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
-> **🟢 RESOLVED 2026-05-20 — ACKED-OUT-OF-SCOPE** — features-service owns per-pair viability + pricing implicitly via existing derived-feature output (e.g. `basis_spread_bps`, dispersion features). No separate "synthetic universe" registry needed; instruments-service stays per-asset_group; strategy-service consumes features and selects viable pairs at decision time. Rotation by liquidity / expiry / data freshness is feature-level filter logic in features-service. Enforcement: mega-audit C6 (features→strategy) scope explicitly augmented to verify features-service emits per-pair viability + pricing for every active archetype (see mega_audit_and_plan_beefup_progression_2026_05_20.md § C6 scope addendum). Revisit only if a specific use case emerges needing stable synthetic-instrument identity (client-facing structured product, backtest comparability for rebalanced basket — neither active).
+> **🟢 RESOLVED 2026-05-20 — ACKED-OUT-OF-SCOPE** — features-service owns per-pair viability + pricing implicitly via
+> existing derived-feature output (e.g. `basis_spread_bps`, dispersion features). No separate "synthetic universe"
+> registry needed; instruments-service stays per-asset_group; strategy-service consumes features and selects viable
+> pairs at decision time. Rotation by liquidity / expiry / data freshness is feature-level filter logic in
+> features-service. Enforcement: mega-audit C6 (features→strategy) scope explicitly augmented to verify features-service
+> emits per-pair viability + pricing for every active archetype (see
+> mega_audit_and_plan_beefup_progression_2026_05_20.md § C6 scope addendum). Revisit only if a specific use case emerges
+> needing stable synthetic-instrument identity (client-facing structured product, backtest comparability for rebalanced
+> basket — neither active).
 
 ## What I found
 
@@ -61,13 +73,18 @@ more shard would introduce the same QG overhead (STEP 5.61/5.62/5.34) with zero 
 
 Concrete implementation gate:
 
-- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-api/pm-configs/sharding.instruments-service.yaml` — awaiting operator ack on Option 1 vs 2 vs 3
-- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-ui/src/components/ServiceList.tsx` IS filter buttons — awaiting operator ack on Option 1 vs 2 vs 3
-- [x] **[BLOCKED-OPERATOR-DECISION]** Implement `InstrumentBuilder` for cross-asset pairs (basis of CEX:DEX synthetic legs) — awaiting operator ack on Option 1 vs 2 vs 3
-- [x] **[BLOCKED-OPERATOR-DECISION]** Wire into existing IS CLI `--asset-group cross_asset` — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-api/pm-configs/sharding.instruments-service.yaml`
+      — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-ui/src/components/ServiceList.tsx` IS filter
+      buttons — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Implement `InstrumentBuilder` for cross-asset pairs (basis of CEX:DEX synthetic
+      legs) — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Wire into existing IS CLI `--asset-group cross_asset` — awaiting operator ack on
+      Option 1 vs 2 vs 3
 
 **Status: BLOCKED-OPERATOR-DECISION** — waiting for operator [ack] on Option 1 vs alternatives. Not blocking May-23 (P2;
-features-service already handles cross_asset data production). Items closed as BLOCKED-OPERATOR-DECISION per task done_definition.
+features-service already handles cross_asset data production). Items closed as BLOCKED-OPERATOR-DECISION per task
+done_definition.
 
 execution: owner: operator cadence: one-shot (design decision) verifier: cross_asset appears in
 sharding.instruments-service.yaml + produces manifest rows last_executed: NEVER (pending operator decision)

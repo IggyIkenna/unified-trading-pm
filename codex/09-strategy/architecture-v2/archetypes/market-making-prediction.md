@@ -72,9 +72,12 @@ MARKET_MAKING_EVENT_SETTLED for sports markets but applied to political, economi
 
 ## Risk management
 
-- Single-market concentration: max_exposure_usd per contract (prediction markets have binary payoff — full loss on wrong outcome)
-- Event blackout: cancel all quotes min_hours_before_resolution before event resolves (avoid forced inventory into settlement)
-- Sharp-book deviation kill: pause quoting if `|our_fair_value - sharp_mid| > max_deviation_from_sharp` (model drift vs market signal)
+- Single-market concentration: max_exposure_usd per contract (prediction markets have binary payoff — full loss on wrong
+  outcome)
+- Event blackout: cancel all quotes min_hours_before_resolution before event resolves (avoid forced inventory into
+  settlement)
+- Sharp-book deviation kill: pause quoting if `|our_fair_value - sharp_mid| > max_deviation_from_sharp` (model drift vs
+  market signal)
 - Daily P&L stop: daily_stop_loss_usd across all prediction markets
 - Inventory hard cap: market-order exit at inventory_hard_cap (USDC taker cost accepted)
 
@@ -102,9 +105,10 @@ MARKET_MAKING_EVENT_SETTLED for sports markets but applied to political, economi
 - **Use when**: prediction market has sufficient liquidity and a reliable sharp-book reference; bid-ask spread is wide
   enough to absorb fees after maker/taker commissions; event is well-defined with clear resolution criteria
 - **Best regime**: active political or economic event markets (elections, Fed decisions, major sports championships)
-  where multiple sharp participants establish reliable fair-value references; markets with stable liquidity several
-  days before resolution
-- **Avoid**: markets with no sharp-book reference and no model signal (pure noise quoting); markets resolving in < event_blackout_hours; binary outcomes with non-standard resolution criteria (ambiguity risk)
+  where multiple sharp participants establish reliable fair-value references; markets with stable liquidity several days
+  before resolution
+- **Avoid**: markets with no sharp-book reference and no model signal (pure noise quoting); markets resolving in <
+  event_blackout_hours; binary outcomes with non-standard resolution criteria (ambiguity risk)
 - **Contrast with ARBITRAGE_CROSS_DOMAIN_EVENT**: this archetype earns spread on a single venue; cross-domain arb
   exploits pricing gaps across domains
 
@@ -121,7 +125,8 @@ MARKET_MAKING_PREDICTION@polymarket-sports-championship-yesno-mm-usdc-prod
 - Sports exchange back-lay quoting (Betfair/Smarkets) → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
 - Crypto CLOB continuous quoting → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md)
 - Cross-venue prediction market price dispersion arb → [`ARBITRAGE_CROSS_DOMAIN_EVENT`](arbitrage-cross-domain-event.md)
-- Directional one-sided position on a prediction contract → [`ML_DIRECTIONAL_EVENT_SETTLED`](ml-directional-event-settled.md)
+- Directional one-sided position on a prediction contract →
+  [`ML_DIRECTIONAL_EVENT_SETTLED`](ml-directional-event-settled.md)
 
 ## See also
 

@@ -14,19 +14,18 @@ topology_requirements:
 
 # Archetype: `VOL_OVERLAY_PROTECTIVE_PUT`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — puts purchased
-> per expiry cycle; rolled before expiry to maintain continuous tail protection. **Code module (target):**
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — puts purchased per expiry
+> cycle; rolled before expiry to maintain continuous tail protection. **Code module (target):**
 > `strategy-service/engine/strategies/v2/vol_trading/vol_overlay_protective_put_engine.py`
 
 ## What it does
 
-Buys OTM puts as tail-risk insurance against existing delta-1 long positions (spot or perp). Targets 15-30
-delta puts (roughly 1-2 standard deviations below spot), providing meaningful downside protection without
-excessive premium cost. The put floor limits maximum drawdown on the underlying long to the distance between
-spot and strike, plus the premium paid. When the put premium budget is constrained, the overlay is structured
-as a collar: simultaneously writing a covered call (see `VOL_OVERLAY_COVERED_CALLS`) to finance the put
-purchase, capping both upside and downside. This archetype is a cost centre by design — P&L is the insurance
-cost paid against the protected underlying position's P&L.
+Buys OTM puts as tail-risk insurance against existing delta-1 long positions (spot or perp). Targets 15-30 delta puts
+(roughly 1-2 standard deviations below spot), providing meaningful downside protection without excessive premium cost.
+The put floor limits maximum drawdown on the underlying long to the distance between spot and strike, plus the premium
+paid. When the put premium budget is constrained, the overlay is structured as a collar: simultaneously writing a
+covered call (see `VOL_OVERLAY_COVERED_CALLS`) to finance the put purchase, capping both upside and downside. This
+archetype is a cost centre by design — P&L is the insurance cost paid against the protected underlying position's P&L.
 
 ## Token / position flow
 
@@ -100,12 +99,11 @@ cost paid against the protected underlying position's P&L.
 
 ## When to use / market regime
 
-- **Best regime**: after a strong rally when tail risk is elevated but IV is still moderate — puts are
-  relatively cheap relative to the downside risk of an extended position
-- **Collar regime**: low-IV, sideways markets where upside is limited anyway — the collar funds itself
-  and reduces drag
-- **Avoid**: very high IV environments (put premium is prohibitively expensive); or when portfolio
-  already has natural hedges (DeFi protocol shorts, basis trades on the other side)
+- **Best regime**: after a strong rally when tail risk is elevated but IV is still moderate — puts are relatively cheap
+  relative to the downside risk of an extended position
+- **Collar regime**: low-IV, sideways markets where upside is limited anyway — the collar funds itself and reduces drag
+- **Avoid**: very high IV environments (put premium is prohibitively expensive); or when portfolio already has natural
+  hedges (DeFi protocol shorts, basis trades on the other side)
 - **Asset fit**: BTC, ETH with large spot or perp longs; any position where drawdown management is critical
 
 ## Example instances
@@ -118,10 +116,14 @@ VOL_OVERLAY_PROTECTIVE_PUT@deribit-btc-collar-30dte-usdt-prod
 
 ## Not in this archetype
 
-- Writing calls against the long to generate premium income (covered call overlay) → [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
-- Buying puts without an existing delta-1 long as a standalone vol view → [`VOL_STRADDLE`](vol-straddle.md) or [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
-- Structural short-vol carry — this archetype is a cost centre (long vol insurance), not a carry harvester → [`VOL_CARRY`](vol-carry.md)
-- Tail hedging via perp short rather than options (delta-1 hedge, no premium) → [`CARRY_BASIS_PERP`](carry-basis-perp.md)
+- Writing calls against the long to generate premium income (covered call overlay) →
+  [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
+- Buying puts without an existing delta-1 long as a standalone vol view → [`VOL_STRADDLE`](vol-straddle.md) or
+  [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- Structural short-vol carry — this archetype is a cost centre (long vol insurance), not a carry harvester →
+  [`VOL_CARRY`](vol-carry.md)
+- Tail hedging via perp short rather than options (delta-1 hedge, no premium) →
+  [`CARRY_BASIS_PERP`](carry-basis-perp.md)
 
 ## See also
 

@@ -2,85 +2,84 @@
 
 _Generated: 2026-05-20T11:28:40.848987+00:00_
 
-Adapter files scanned: 573 across 3 repos.
-In-scope (asset_group, venue_token, data_type) tuples checked: 160.
+Adapter files scanned: 573 across 3 repos. In-scope (asset_group, venue_token, data_type) tuples checked: 160.
 
 ## Parity status per asset_group
 
 | asset_group | GREEN | BATCH_ONLY | LIVE_ONLY | MISSING_BOTH |
-|---|---:|---:|---:|---:|
-| cefi | 1 | 7 | 0 | 31 |
-| defi | 0 | 4 | 0 | 89 |
-| prediction | 0 | 2 | 0 | 0 |
-| sports | 0 | 0 | 0 | 12 |
-| tradfi | 0 | 0 | 0 | 14 |
+| ----------- | ----: | ---------: | --------: | -----------: |
+| cefi        |     1 |          7 |         0 |           31 |
+| defi        |     0 |          4 |         0 |           89 |
+| prediction  |     0 |          2 |         0 |            0 |
+| sports      |     0 |          0 |         0 |           12 |
+| tradfi      |     0 |          0 |         0 |           14 |
 
 ## BATCH_ONLY cells (live equivalent MUST be built per CLAUDE.md Batch = Live)
 
 Total BATCH_ONLY cells: **13** (review-blocking — every batch adapter MUST have a live equivalent)
 
-| asset_group | venue | data_type | batch file count | sample |
-|---|---|---|---:|---|
-| cefi | aster | liquidations | 1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py` |
-| cefi | aster | trades | 2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py` |
-| cefi | deribit | trades | 1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_ws_mixin.py` |
-| cefi | hyperliquid | book_snapshot_5 | 1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py` |
-| cefi | hyperliquid | derivative_ticker | 1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
-| cefi | hyperliquid | liquidations | 1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py` |
-| cefi | hyperliquid | trades | 2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
-| defi | curve | dex_pools | 1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py` |
-| defi | curve | dex_swaps | 1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py` |
-| defi | jito | lst_rates | 2 | `market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py` |
-| defi | morpho | lending_indices | 1 | `market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py` |
-| prediction | kalshi | trades | 2 | `market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py` |
-| prediction | polymarket | trades | 2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py` |
+| asset_group | venue       | data_type         | batch file count | sample                                                                                                             |
+| ----------- | ----------- | ----------------- | ---------------: | ------------------------------------------------------------------------------------------------------------------ |
+| cefi        | aster       | liquidations      |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
+| cefi        | aster       | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
+| cefi        | deribit     | trades            |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_ws_mixin.py`                  |
+| cefi        | hyperliquid | book_snapshot_5   |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
+| cefi        | hyperliquid | derivative_ticker |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
+| cefi        | hyperliquid | liquidations      |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
+| cefi        | hyperliquid | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
+| defi        | curve       | dex_pools         |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py`                              |
+| defi        | curve       | dex_swaps         |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py`                              |
+| defi        | jito        | lst_rates         |                2 | `market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py`                            |
+| defi        | morpho      | lending_indices   |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py`                               |
+| prediction  | kalshi      | trades            |                2 | `market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py`          |
+| prediction  | polymarket  | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py`         |
 
 ## MISSING_BOTH cells (no adapter detected — silent gap)
 
 Total MISSING_BOTH cells: **146**
 
-| asset_group | venue | data_type |
-|---|---|---|
-| cefi | aster | book_snapshot_5 |
-| cefi | aster | derivative_ticker |
-| cefi | binance | book_snapshot_5 |
-| cefi | binance | derivative_ticker |
-| cefi | binance | futures_chain |
-| cefi | binance | liquidations |
-| cefi | bybit | book_snapshot_5 |
-| cefi | bybit | derivative_ticker |
-| cefi | bybit | futures_chain |
-| cefi | bybit | liquidations |
-| cefi | bybit | trades |
-| cefi | coinbase | book_snapshot_5 |
-| cefi | coinbase | trades |
-| cefi | deribit | book_snapshot_5 |
-| cefi | deribit | derivative_ticker |
-| cefi | deribit | futures_chain |
-| cefi | deribit | liquidations |
-| cefi | deribit | options_chain |
-| cefi | futures | book_snapshot_5 |
-| cefi | futures | derivative_ticker |
-| cefi | futures | futures_chain |
-| cefi | futures | liquidations |
-| cefi | futures | trades |
-| cefi | okx | book_snapshot_5 |
-| cefi | okx | derivative_ticker |
-| cefi | okx | liquidations |
-| cefi | okx | trades |
-| cefi | spot | book_snapshot_5 |
-| cefi | spot | trades |
-| cefi | upbit | book_snapshot_5 |
-| cefi | upbit | trades |
-| defi | aavev3 | flash_loan_events |
-| defi | aavev3 | lending_indices |
-| defi | aavev3 | liquidation_events |
-| defi | aavev3 | position_data |
-| defi | aavev3 | risk_params |
-| defi | arbitrum | dex_pools |
-| defi | arbitrum | dex_swaps |
-| defi | arbitrum | flash_loan_events |
-| defi | arbitrum | lending_indices |
+| asset_group | venue    | data_type          |
+| ----------- | -------- | ------------------ |
+| cefi        | aster    | book_snapshot_5    |
+| cefi        | aster    | derivative_ticker  |
+| cefi        | binance  | book_snapshot_5    |
+| cefi        | binance  | derivative_ticker  |
+| cefi        | binance  | futures_chain      |
+| cefi        | binance  | liquidations       |
+| cefi        | bybit    | book_snapshot_5    |
+| cefi        | bybit    | derivative_ticker  |
+| cefi        | bybit    | futures_chain      |
+| cefi        | bybit    | liquidations       |
+| cefi        | bybit    | trades             |
+| cefi        | coinbase | book_snapshot_5    |
+| cefi        | coinbase | trades             |
+| cefi        | deribit  | book_snapshot_5    |
+| cefi        | deribit  | derivative_ticker  |
+| cefi        | deribit  | futures_chain      |
+| cefi        | deribit  | liquidations       |
+| cefi        | deribit  | options_chain      |
+| cefi        | futures  | book_snapshot_5    |
+| cefi        | futures  | derivative_ticker  |
+| cefi        | futures  | futures_chain      |
+| cefi        | futures  | liquidations       |
+| cefi        | futures  | trades             |
+| cefi        | okx      | book_snapshot_5    |
+| cefi        | okx      | derivative_ticker  |
+| cefi        | okx      | liquidations       |
+| cefi        | okx      | trades             |
+| cefi        | spot     | book_snapshot_5    |
+| cefi        | spot     | trades             |
+| cefi        | upbit    | book_snapshot_5    |
+| cefi        | upbit    | trades             |
+| defi        | aavev3   | flash_loan_events  |
+| defi        | aavev3   | lending_indices    |
+| defi        | aavev3   | liquidation_events |
+| defi        | aavev3   | position_data      |
+| defi        | aavev3   | risk_params        |
+| defi        | arbitrum | dex_pools          |
+| defi        | arbitrum | dex_swaps          |
+| defi        | arbitrum | flash_loan_events  |
+| defi        | arbitrum | lending_indices    |
 
 _(showing first 40 of 146 MISSING_BOTH cells)_
 
@@ -88,11 +87,15 @@ _(showing first 40 of 146 MISSING_BOTH cells)_
 
 Total LIVE_ONLY cells: **0**
 
-
 ## Caveats (sampling transparency)
 
-- Venue + data_type extraction is **regex-based on file paths + first 4000 chars**. Adapters that don't put venue/data_type in their path or module header are missed.
-- Path classification `is_batch` / `is_live` based on path tokens (`/handlers/`, `/live/`, `/stream/`, etc.). Ambiguous files default to batch.
-- An adapter may exist in code but not be wired into the orchestrator scope — A6 only checks *adapter file existence*, not whether it's enumerated.
-- A6 does not check schema parity between batch + live adapters (would require running them). Operator may want to follow up with a runtime parity test (cross-checking manifest rows from each mode).
-- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures` → split into `binance` + `futures`). Per-token false positives possible — see CSV `venue_token` column for exact match.
+- Venue + data_type extraction is **regex-based on file paths + first 4000 chars**. Adapters that don't put
+  venue/data_type in their path or module header are missed.
+- Path classification `is_batch` / `is_live` based on path tokens (`/handlers/`, `/live/`, `/stream/`, etc.). Ambiguous
+  files default to batch.
+- An adapter may exist in code but not be wired into the orchestrator scope — A6 only checks _adapter file existence_,
+  not whether it's enumerated.
+- A6 does not check schema parity between batch + live adapters (would require running them). Operator may want to
+  follow up with a runtime parity test (cross-checking manifest rows from each mode).
+- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures` → split into `binance` + `futures`). Per-token false
+  positives possible — see CSV `venue_token` column for exact match.

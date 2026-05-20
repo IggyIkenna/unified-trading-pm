@@ -14,19 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_OVERLAY_COVERED_CALLS`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — calls written per
-> expiry cycle; position rewritten at expiry or rolled up on rally. **Code module (target):**
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — calls written per expiry
+> cycle; position rewritten at expiry or rolled up on rally. **Code module (target):**
 > `strategy-service/engine/strategies/v2/vol_trading/vol_overlay_covered_calls_engine.py`
 
 ## What it does
 
-Systematically writes OTM calls against existing delta-1 long positions (spot or perp) to generate premium
-income and reduce effective carry costs. The overlay sells calls at 15-25 delta (roughly 1-2 standard deviations
-OTM) each expiry cycle, collecting time decay as the primary P&L source. Premium income partially offsets
-funding costs on perp longs or adds yield to spot holdings. The trade-off is capped upside: if the underlying
-rallies past the call strike, the overlay triggers and limits gains at that level. On rally, the position is
-rolled up to a higher strike to maintain the long exposure. This archetype operates as an overlay on an existing
-delta-1 book — it does not initiate the underlying position itself.
+Systematically writes OTM calls against existing delta-1 long positions (spot or perp) to generate premium income and
+reduce effective carry costs. The overlay sells calls at 15-25 delta (roughly 1-2 standard deviations OTM) each expiry
+cycle, collecting time decay as the primary P&L source. Premium income partially offsets funding costs on perp longs or
+adds yield to spot holdings. The trade-off is capped upside: if the underlying rallies past the call strike, the overlay
+triggers and limits gains at that level. On rally, the position is rolled up to a higher strike to maintain the long
+exposure. This archetype operates as an overlay on an existing delta-1 book — it does not initiate the underlying
+position itself.
 
 ## Token / position flow
 
@@ -74,13 +74,13 @@ delta-1 book — it does not initiate the underlying position itself.
 ## Risk management
 
 - Covered: max loss on the short call is absorbed by underlying appreciation (position is covered)
-- Uncapped downside on underlying: this archetype does not hedge the long; pair with
-  `VOL_OVERLAY_PROTECTIVE_PUT` for tail protection (collar structure)
-- Roll-up discipline: never let the call expire deep ITM without rolling — exercise assignment disrupts
-  underlying position size
+- Uncapped downside on underlying: this archetype does not hedge the long; pair with `VOL_OVERLAY_PROTECTIVE_PUT` for
+  tail protection (collar structure)
+- Roll-up discipline: never let the call expire deep ITM without rolling — exercise assignment disrupts underlying
+  position size
 - Max calls written = call_coverage_ratio × underlying_qty: never over-write (uncovered calls forbidden)
-- IV spike guard: if ATM IV rises > iv_spike_buyback_threshold post-entry, buy back calls to avoid
-  being short-gamma into a rally
+- IV spike guard: if ATM IV rises > iv_spike_buyback_threshold post-entry, buy back calls to avoid being short-gamma
+  into a rally
 
 ## Config parameters
 
@@ -99,12 +99,12 @@ delta-1 book — it does not initiate the underlying position itself.
 
 ## When to use / market regime
 
-- **Best regime**: sideways to mildly bullish market with elevated IV — maximises premium while limiting
-  probability of call being exercised
-- **Avoid**: strongly trending bull markets where the covered call caps significant gains; also avoid very low
-  IV environments where premium barely covers execution costs
-- **Asset fit**: BTC, ETH (liquid options chain on Deribit); any asset with a clean perp or spot long already
-  running in the portfolio
+- **Best regime**: sideways to mildly bullish market with elevated IV — maximises premium while limiting probability of
+  call being exercised
+- **Avoid**: strongly trending bull markets where the covered call caps significant gains; also avoid very low IV
+  environments where premium barely covers execution costs
+- **Asset fit**: BTC, ETH (liquid options chain on Deribit); any asset with a clean perp or spot long already running in
+  the portfolio
 - **Complements**: `VOL_OVERLAY_PROTECTIVE_PUT` (add puts to form a collar with defined risk on both sides)
 
 ## Example instances
@@ -118,10 +118,13 @@ VOL_OVERLAY_COVERED_CALLS@okx-options-btc-call-7dte-usdt-prod
 ## Not in this archetype
 
 - Writing calls without an existing underlying long (naked call writing) — not supported; this archetype is covered-only
-- Buying puts for tail protection on the same underlying long → [`VOL_OVERLAY_PROTECTIVE_PUT`](vol-overlay-protective-put.md)
-- Structural short-vol carry without an existing delta-1 book (standalone theta harvesting) → [`VOL_CARRY`](vol-carry.md)
+- Buying puts for tail protection on the same underlying long →
+  [`VOL_OVERLAY_PROTECTIVE_PUT`](vol-overlay-protective-put.md)
+- Structural short-vol carry without an existing delta-1 book (standalone theta harvesting) →
+  [`VOL_CARRY`](vol-carry.md)
 - ATM straddle expression (symmetric vol view, no underlying long required) → [`VOL_STRADDLE`](vol-straddle.md)
-- Directional options expression where alpha is the underlying move, not premium income → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- Directional options expression where alpha is the underlying move, not premium income →
+  [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
 
 ## See also
 

@@ -106,8 +106,8 @@ todos:
     status: done
     note:
       "ALL SHIPPED. uac@3157f45 RecordFailedReason taxonomy; uac@37d1ddb CeFi/DeFi/EVENT_CONTRACT validators;
-      uac@80aef10 FUTURE+OPTION validators; instruments-service@3c2da42 per-row record_failed routing;
-      uac@436bed0 Sports fixture_id closure + model_validator comment update. Phase 1 complete 2026-05-19 slot 4."
+      uac@80aef10 FUTURE+OPTION validators; instruments-service@3c2da42 per-row record_failed routing; uac@436bed0
+      Sports fixture_id closure + model_validator comment update. Phase 1 complete 2026-05-19 slot 4."
 
   - id: phase-2-per-row-record-failed-orchestrator-refactor
     content: |
@@ -206,10 +206,10 @@ estimate_calibration_note: |
 
 ## Closure note (2026-05-19 slot 4)
 
-All 7 plan todos completed: uac@3157f45 (RecordFailedReason taxonomy) + uac@37d1ddb (CeFi/DeFi validators) +
-uac@80aef10 (FUTURE+OPTION validators) + instruments-service@3c2da42 (per-row record_failed) + uac@436bed0 (Sports
-fixture_id) + UTL@0caa08e3 (MalformedRowKeyError) + PM@429b64b2 (STEP 5.83 QG). Codex updated. One deferred item
-(full type-level expiry flip) migrated to tradfi_master P3. Plan status: active → done.
+All 7 plan todos completed: uac@3157f45 (RecordFailedReason taxonomy) + uac@37d1ddb (CeFi/DeFi validators) + uac@80aef10
+(FUTURE+OPTION validators) + instruments-service@3c2da42 (per-row record_failed) + uac@436bed0 (Sports fixture_id) +
+UTL@0caa08e3 (MalformedRowKeyError) + PM@429b64b2 (STEP 5.83 QG). Codex updated. One deferred item (full type-level
+expiry flip) migrated to tradfi_master P3. Plan status: active → done.
 
 # Hard Schema Enforcement at Write Boundary — Workspace-Wide
 
@@ -269,16 +269,16 @@ intent, plan owns activation); pre-audit complete via the source RFC archived to
 
 Per-field enforcement status as of 2026-05-20 (audit by slot 7 re-dispatch 2026-05-19; validator work slot 4):
 
-| Field | Declaration | Model validator | Status |
-|---|---|---|---|
-| `base_asset` | `str = ""` | ✅ Rule 1: CeFi SPOT_PAIR/PERPETUAL → non-empty | **Already non-nullable.** Validator enforces at runtime. Phase C audit script verifies legacy rows. |
-| `quote_asset` | `str = ""` | ✅ Rule 1: same | **Already non-nullable.** Same as base_asset. |
-| `pool_address` | `str \| None` | ✅ Rule 2: DeFi ONCHAIN → pool_address OR contract_address (disjunctive) | **Disjunctive — cannot flip individually.** Validator is SSOT. |
-| `base_asset_contract_address` | `str \| None` | ✅ Rule 2: disjunctive | **Same as pool_address.** |
-| `base_asset_decimals` | `int \| None` | ✅ **Rule 6: SHIPPED uac@956bec1 2026-05-19** | Non-null enforced for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`. Phase B audit script verifies legacy rows. |
-| `quote_asset_decimals` | `int \| None` | ✅ **Rule 7: SHIPPED uac@956bec1 2026-05-19** | Non-null enforced for POOL type (two-asset). |
-| `expiry` | `datetime \| None` | ✅ Rules 3/4/5: FUTURE/OPTION/EVENT_CONTRACT → non-null (uac@80aef10) | **Legitimately None for non-futures.** Declaration stays Optional. Phase E (subclass) is post-cutover. |
-| Sports `fixture_id` | `str` (non-optional on all per-fixture entities) | N/A — already non-optional | **No flip needed.** `CanonicalInjury.fixture_id: str \| None` is legitimately nullable (pre-season injuries have no fixture). |
+| Field                         | Declaration                                      | Model validator                                                          | Status                                                                                                                        |
+| ----------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `base_asset`                  | `str = ""`                                       | ✅ Rule 1: CeFi SPOT_PAIR/PERPETUAL → non-empty                          | **Already non-nullable.** Validator enforces at runtime. Phase C audit script verifies legacy rows.                           |
+| `quote_asset`                 | `str = ""`                                       | ✅ Rule 1: same                                                          | **Already non-nullable.** Same as base_asset.                                                                                 |
+| `pool_address`                | `str \| None`                                    | ✅ Rule 2: DeFi ONCHAIN → pool_address OR contract_address (disjunctive) | **Disjunctive — cannot flip individually.** Validator is SSOT.                                                                |
+| `base_asset_contract_address` | `str \| None`                                    | ✅ Rule 2: disjunctive                                                   | **Same as pool_address.**                                                                                                     |
+| `base_asset_decimals`         | `int \| None`                                    | ✅ **Rule 6: SHIPPED uac@956bec1 2026-05-19**                            | Non-null enforced for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`. Phase B audit script verifies legacy rows.                         |
+| `quote_asset_decimals`        | `int \| None`                                    | ✅ **Rule 7: SHIPPED uac@956bec1 2026-05-19**                            | Non-null enforced for POOL type (two-asset).                                                                                  |
+| `expiry`                      | `datetime \| None`                               | ✅ Rules 3/4/5: FUTURE/OPTION/EVENT_CONTRACT → non-null (uac@80aef10)    | **Legitimately None for non-futures.** Declaration stays Optional. Phase E (subclass) is post-cutover.                        |
+| Sports `fixture_id`           | `str` (non-optional on all per-fixture entities) | N/A — already non-optional                                               | **No flip needed.** `CanonicalInjury.fixture_id: str \| None` is legitimately nullable (pre-season injuries have no fixture). |
 
 **Three architectural choices for the actual flips** (next agent picks one):
 
@@ -289,9 +289,9 @@ Per-field enforcement status as of 2026-05-20 (audit by slot 7 re-dispatch 2026-
    requirements at runtime (e.g. `if instrument_type in {SPOT, PERPETUAL}: assert base_asset and quote_asset`).
    Lightest-touch but defers errors to runtime instead of type-check.
 3. **Conditional-required per work-split (b)** — flip all the fields to non-nullable at the schema level + allow
-   instrument-records to pass through the instruments-service adapter with sentinel values during the tradfi-master Q1+Q2 transition
-   window, then flip the sentinels to hard-required post-tradfi-Q1+Q2 land. Operator preference per 2026-05-11
-   aggressive May-15 push.
+   instrument-records to pass through the instruments-service adapter with sentinel values during the tradfi-master
+   Q1+Q2 transition window, then flip the sentinels to hard-required post-tradfi-Q1+Q2 land. Operator preference per
+   2026-05-11 aggressive May-15 push.
 
 **Recommended**: option (2) `model_validator` — smallest blast radius, codifies the workspace rules without disrupting
 the existing `InstrumentRecord` consumers, lands incrementally per asset_group. Subclasses (option 1) can come later as

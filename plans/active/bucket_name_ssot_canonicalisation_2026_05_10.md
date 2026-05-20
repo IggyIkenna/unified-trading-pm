@@ -557,7 +557,9 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion. **2026-05-20 slot-6 audit**: all
       4 open items confirmed BLOCKED-\* (Phase 0d → BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy
       get_bucket_name → BLOCKED-PHASE-2.6; this audit table → BLOCKED-PHASE-2.6). Zero agent-doable items remain. Agent
-      items exhausted — calling /done. **2026-05-20 slot 1 (R-006)**: formal grep audit table added to § "2026-05-20 grep audit" below; issue doc filed at `plans/active/issues/bucket_name_ssot_residual_drift_2026_05_20.md`. 13 service-code rows remain (all BLOCKED). Checkbox stays `- [ ]`.
+      items exhausted — calling /done. **2026-05-20 slot 1 (R-006)**: formal grep audit table added to § "2026-05-20
+      grep audit" below; issue doc filed at `plans/active/issues/bucket_name_ssot_residual_drift_2026_05_20.md`. 13
+      service-code rows remain (all BLOCKED). Checkbox stays `- [ ]`.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 
@@ -612,29 +614,38 @@ owner's done-def (GAP-2.4.D extends Done-def #6).
 > write-pause alongside the flat→env-tiered data migration (step 2.6.4). L3 row status remains 🟡 DRIFTING (partial),
 > deferred-after unchanged.
 
-> **2026-05-20 grep audit (slot 1, task R-006)**. Workspace-wide `rg 'gs://\{'`, `rg '"bucket_template"'`, and `rg 'get_bucket_name\('` run across all repos in `.tabs/1/`. Results below. Issue doc filed at `plans/active/issues/bucket_name_ssot_residual_drift_2026_05_20.md`.
+> **2026-05-20 grep audit (slot 1, task R-006)**. Workspace-wide `rg 'gs://\{'`, `rg '"bucket_template"'`, and
+> `rg 'get_bucket_name\('` run across all repos in `.tabs/1/`. Results below. Issue doc filed at
+> `plans/active/issues/bucket_name_ssot_residual_drift_2026_05_20.md`.
 >
-> **Inline `gs://\{` f-strings** — 0 actual SSOT violations. All grep hits are: (a) `# noqa: gs-uri`-annotated error messages where bucket is already resolved (batch-live-recon, UTL dependency_checker), (b) docstrings/comments, (c) infra scripts operating on already-resolved bucket names (setup-buckets.py, verify_infra.py, analyze_vm_costs.py). QG STEP 5.69 v2 AST-walk continues to enforce zero new inline URI patterns.
+> **Inline `gs://\{` f-strings** — 0 actual SSOT violations. All grep hits are: (a) `# noqa: gs-uri`-annotated error
+> messages where bucket is already resolved (batch-live-recon, UTL dependency_checker), (b) docstrings/comments, (c)
+> infra scripts operating on already-resolved bucket names (setup-buckets.py, verify_infra.py, analyze_vm_costs.py). QG
+> STEP 5.69 v2 AST-walk continues to enforce zero new inline URI patterns.
 >
 > **Formal file:line audit table** (remaining drift only — intentional patterns excluded):
 
-| Repo | File:Line | Pattern | Status |
-| ---- | --------- | ------- | ------ |
-| `ml-inference-service` | `ml_inference_service/app/core/dependency_checker.py:32,37` | `"bucket_template": "ml-training-store-..."` / `"features-delta-one-store-..."` | Deferred — BLOCKED-UTL-MIGRATION |
-| `execution-service` | `execution_service/utils/dependency_checker.py:209,216,221,226,235` | `"bucket_template"` probe templates (5 entries) | Deferred — BLOCKED-UTL-MIGRATION |
-| `features-service` | `features_service/{delta_one,volatility,onchain}/core/dependency_checker.py` (16 entries) | `"bucket_template"` probe templates | Deferred — BLOCKED-UTL-MIGRATION |
-| `deployment-service` | `deployment_service/catalog.py:135,142,153,159,186,192,199,206,219,226,232` | `"bucket_template"` entries (L5 category) | Deferred — BLOCKED-PHASE-2.6 |
-| `instruments-service` | `instruments_service/reference_data/utils/evm_creation_resolver.py:174` | `get_bucket_name("instruments", "defi")` | Deferred — BLOCKED-PHASE-2.6 |
-| `instruments-service` | `instruments_service/reference_data/adapters/tradfi/tradfi_live.py:142` | `get_bucket_name("instruments", "tradfi")` | Deferred — BLOCKED-PHASE-2.6 |
-| `instruments-service` | `instruments_service/reference_data/adapters/defi/_solana_utils.py:79` | `get_bucket_name("instruments", "defi")` | Deferred — BLOCKED-PHASE-2.6 |
-| `pnl-attribution-service` | `pnl_attribution_service/engine/pnl_input_builder.py:48` | `get_bucket_name("gas-fees")` | Deferred — BLOCKED-PHASE-2.6 |
-| `pnl-attribution-service` | `pnl_attribution_service/engine/orchestrator.py:233` | `get_bucket_name("execution", "cefi")` | Deferred — BLOCKED-PHASE-2.6 |
-| `execution-service` | `execution_service/instruments/definitions_loader.py:54` | `gcs.get_bucket_name("instruments")` | Deferred — BLOCKED-PHASE-2.6 |
-| `unified-trading-library` | `unified_trading_library/core/seed_writer.py:291` | `get_bucket_name(domain)` | Deferred — BLOCKED-PHASE-2.6 |
-| `deployment-service` | `deployment_service/shard_builder.py:253` | `loader.get_bucket_name(domain, ag)` | Deferred — BLOCKED-PHASE-2.6 |
-| `deployment-service` | `deployment_service/cli/utils/manifest_reader.py:160` | `get_bucket_name("instruments", "CEFI", ...)` | Deferred — BLOCKED-PHASE-2.6 |
+| Repo                      | File:Line                                                                                 | Pattern                                                                         | Status                           |
+| ------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| `ml-inference-service`    | `ml_inference_service/app/core/dependency_checker.py:32,37`                               | `"bucket_template": "ml-training-store-..."` / `"features-delta-one-store-..."` | Deferred — BLOCKED-UTL-MIGRATION |
+| `execution-service`       | `execution_service/utils/dependency_checker.py:209,216,221,226,235`                       | `"bucket_template"` probe templates (5 entries)                                 | Deferred — BLOCKED-UTL-MIGRATION |
+| `features-service`        | `features_service/{delta_one,volatility,onchain}/core/dependency_checker.py` (16 entries) | `"bucket_template"` probe templates                                             | Deferred — BLOCKED-UTL-MIGRATION |
+| `deployment-service`      | `deployment_service/catalog.py:135,142,153,159,186,192,199,206,219,226,232`               | `"bucket_template"` entries (L5 category)                                       | Deferred — BLOCKED-PHASE-2.6     |
+| `instruments-service`     | `instruments_service/reference_data/utils/evm_creation_resolver.py:174`                   | `get_bucket_name("instruments", "defi")`                                        | Deferred — BLOCKED-PHASE-2.6     |
+| `instruments-service`     | `instruments_service/reference_data/adapters/tradfi/tradfi_live.py:142`                   | `get_bucket_name("instruments", "tradfi")`                                      | Deferred — BLOCKED-PHASE-2.6     |
+| `instruments-service`     | `instruments_service/reference_data/adapters/defi/_solana_utils.py:79`                    | `get_bucket_name("instruments", "defi")`                                        | Deferred — BLOCKED-PHASE-2.6     |
+| `pnl-attribution-service` | `pnl_attribution_service/engine/pnl_input_builder.py:48`                                  | `get_bucket_name("gas-fees")`                                                   | Deferred — BLOCKED-PHASE-2.6     |
+| `pnl-attribution-service` | `pnl_attribution_service/engine/orchestrator.py:233`                                      | `get_bucket_name("execution", "cefi")`                                          | Deferred — BLOCKED-PHASE-2.6     |
+| `execution-service`       | `execution_service/instruments/definitions_loader.py:54`                                  | `gcs.get_bucket_name("instruments")`                                            | Deferred — BLOCKED-PHASE-2.6     |
+| `unified-trading-library` | `unified_trading_library/core/seed_writer.py:291`                                         | `get_bucket_name(domain)`                                                       | Deferred — BLOCKED-PHASE-2.6     |
+| `deployment-service`      | `deployment_service/shard_builder.py:253`                                                 | `loader.get_bucket_name(domain, ag)`                                            | Deferred — BLOCKED-PHASE-2.6     |
+| `deployment-service`      | `deployment_service/cli/utils/manifest_reader.py:160`                                     | `get_bucket_name("instruments", "CEFI", ...)`                                   | Deferred — BLOCKED-PHASE-2.6     |
 
-> **Summary**: 0 fixable-now drift sites. 13 service-code rows remain (all BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION). Additionally ~10 script-only `get_bucket_name` hits in `instruments-service/scripts/` and `unified-trading-pm/scripts/` are lower-priority (scripts, not service code) and also deferred. Checkbox stays `- [ ]` per existing notes; zero-drift verification criterion remains Phase 2.6 gate. See issue doc for full inventory + follow-up recommendation.
+> **Summary**: 0 fixable-now drift sites. 13 service-code rows remain (all BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION).
+> Additionally ~10 script-only `get_bucket_name` hits in `instruments-service/scripts/` and
+> `unified-trading-pm/scripts/` are lower-priority (scripts, not service code) and also deferred. Checkbox stays `- [ ]`
+> per existing notes; zero-drift verification criterion remains Phase 2.6 gate. See issue doc for full inventory +
+> follow-up recommendation.
 
 ## Dependencies / sequencing
 

@@ -227,8 +227,8 @@ instead of writing nothing.
 
 **Audit scope** (every per-shard adapter):
 
-- [x] ✅ [MTDS] P0. Audit MTDS adapters + (when source returns zero AND catalog-aware guard reports the instrument alive)
-      replace the `record_empty()` call with a per-data*type zero-activity-bar emission per the CLAUDE.md table:
+- [x] ✅ [MTDS] P0. Audit MTDS adapters + (when source returns zero AND catalog-aware guard reports the instrument
+      alive) replace the `record_empty()` call with a per-data\*type zero-activity-bar emission per the CLAUDE.md table:
       `ohlcv**`→ O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close;`trades`→ empty parquet (0 rows
       ok; manifest`record_captured`row_count=0 + zero-activity flag column);`book_snapshot_5`→ carry-forward last
       bid/ask 5 levels;`derivative_ticker`→ carry-forward last open_interest/mark_price/index_price. **AUDIT DONE
@@ -256,10 +256,10 @@ instead of writing nothing.
       `codex/02-data/honest-absence-downstream-handling.md` — per-data_type carry-forward table
       (ohlcv/trades/book_snapshot/derivative_ticker/options_chain/DeFi-continuous/prediction CLOB), vol-smile
       constraint, Wave 3.M implementation requirements, and successor-plan pointer.
-- [x] ✅ [PLAN] P2. **DEFERRED-AFTER-CUTOVER** File `plans/active/wave3x_track_d_implementation_<date>.md` — the Wave 3.M
-      case-D implementation plan. (evidence: `plans/active/wave3x_track_d_implementation_2026_05_19.md` created PM@5c54ed57
-      — scope: UTL `zero_activity_bars` primitive + catalog threading + MTDS/MDPS/features wire-in + per-adapter smoke
-      tests. Post-2026-05-23 cutover. Owner: slot 1 or writegate Phase 3.D.5 Wave 2/3 owner.)
+- [x] ✅ [PLAN] P2. **DEFERRED-AFTER-CUTOVER** File `plans/active/wave3x_track_d_implementation_<date>.md` — the Wave
+      3.M case-D implementation plan. (evidence: `plans/active/wave3x_track_d_implementation_2026_05_19.md` created
+      PM@5c54ed57 — scope: UTL `zero_activity_bars` primitive + catalog threading + MTDS/MDPS/features wire-in +
+      per-adapter smoke tests. Post-2026-05-23 cutover. Owner: slot 1 or writegate Phase 3.D.5 Wave 2/3 owner.)
 
 ### Track E — Wave 3.S sports per-source rules (sports services, ~3 days)
 
@@ -280,13 +280,12 @@ stamping logic.
       `INJURIES_REPORT_TIME_COL` / `ODDS_SNAPSHOT_TIME_COL` constants + 3 facade re-exports. **DEVIATION**: kept the
       module's DataFrame-shaped helper API (the plan body sketched scalar signatures `(kickoff: datetime) -> datetime`);
       `stamp_available_at_lineups` (kickoff−60min) already existed.
-- [x] ✅ [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries.
-      **DEFERRED → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B** (slot-8 2026-05-20). MTDS sports
-      odds stamping (Harsh slot 4 scope) was absorbed by Ikenna slot 3 and shipped at MTDS@a512edf +
-      UTL@f7b704fd (2026-05-11). Features-sports calculator/writer-boundary enforcement (Tab 12) is officially
-      deferred per PM@cf9b9ba1 until `features_repo_consolidation_2026_05_08` Phase 5.c + chain links 0+1 ship;
-      named successor is `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B. UTL stamp helpers ready to
-      consume.
+- [x] ✅ [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries. **DEFERRED →
+      `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B** (slot-8 2026-05-20). MTDS sports odds stamping
+      (Harsh slot 4 scope) was absorbed by Ikenna slot 3 and shipped at MTDS@a512edf + UTL@f7b704fd (2026-05-11).
+      Features-sports calculator/writer-boundary enforcement (Tab 12) is officially deferred per PM@cf9b9ba1 until
+      `features_repo_consolidation_2026_05_08` Phase 5.c + chain links 0+1 ship; named successor is
+      `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B. UTL stamp helpers ready to consume.
 - [x] [TEST] P0. **SHIPPED 2026-05-11 UTL@`2ab3685`** (slot 3): `tests/unit/test_availability_stamping.py` extended (NOT
       a parallel file — same file). +18 tests (injuries default/custom/missing-col; odds_snapshot default/custom;
       cascade priority-per-row / first-wins / single-candidate-matches-post_match / fallback-only / empty-list-raises /

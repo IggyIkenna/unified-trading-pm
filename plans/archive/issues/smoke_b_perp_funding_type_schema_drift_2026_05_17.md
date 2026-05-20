@@ -10,7 +10,11 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C4 (MTDS → features contract audit, perp_funding schema row)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). Bug 2 (utilization stall) + Bug 3 (Callable NameError) pre-fixed at features-service@818d8ecc / @64682456 — verify via git log. Do NOT work standalone.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C4 (MTDS → features contract audit, perp_funding schema
+> row)** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). Bug 2 (utilization stall) + Bug 3 (Callable NameError) pre-fixed at features-service@818d8ecc /
+> @64682456 — verify via git log. Do NOT work standalone.
 
 # Smoke B FAILED — perp_funding schema drift + utilization stall
 

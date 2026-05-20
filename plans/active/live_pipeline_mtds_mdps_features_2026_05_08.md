@@ -1050,7 +1050,6 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
-
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
 > [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) is establishing QG STEPs L1-L7 (mode-axis
@@ -1063,7 +1062,10 @@ estimate_calibration_note: |
 > `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
 > pipeline_mode / reconciler threshold / mode-routing logic.
 
-> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active workspace-wide at PM@fac14af3. STEP 5.77 (L2) now enforced — note 3 MDPS `to_parquet` L7 violations remain open (Tab 2 fix-list, tracked as Tab 5 action item). Verify `bash scripts/quality-gates.sh` before merging MTDS/MDPS mode-routing or record_captured() changes.
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active
+> workspace-wide at PM@fac14af3. STEP 5.77 (L2) now enforced — note 3 MDPS `to_parquet` L7 violations remain open (Tab 2
+> fix-list, tracked as Tab 5 action item). Verify `bash scripts/quality-gates.sh` before merging MTDS/MDPS mode-routing
+> or record_captured() changes.
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
@@ -1410,7 +1412,7 @@ open are tracked here so Harsh slot 5 + the next agent pick up cleanly.
 | Phase 13 — VM launchers + watchdog dict                         | `helper-shipped` (deployment-service@<this commit>)           | 4 launchers shipped code-ready in (b+) env-aware shape: `launch-mtds-live.sh` + `launch-mdps-features-live.sh` (both parameterised by `--asset-group <ag> --env <env>`) + `launch-features-cross-cutting.sh` (singleton) + `launch-replay-cascade.sh` (singleton + window-parameterised). Watchdog dict registered 14 new prefixes (5 mtds-live-{ag} + 5 mdps-features-live-{ag} + features-xc- + replay-). Operational launch deferred to Phase 15 cluster bootstrap (named successor per Plans-Run-To-Actual-Completion rule). Watchdog VM relaunch (`launch-vm-zombie-watchdog.sh`) deferred to Phase 15 same logical unit.                                                                                                                                                                                                         |
 | Phase 11.2 — `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` registry          | `done` (deployment-api@<this commit>)                         | NEW registry separate from `_SERVICE_LAUNCHER_SCRIPTS` (which serves per-shard Deploy-Missing). Keyed by live-cluster role (`mtds-live` / `mdps-features-live` / `features-cross-cutting` / `replay-cascade`) per `codex/05-infrastructure/runtime-tiers-and-deployment.md` § "Live-pipeline VM topology". Phase 11.4 UI button consumes this registry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Phase 14 item 3 — instrument-lifecycle codex callback tables    | `done` (PM@<this commit>)                                     | `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` extended with per-service Phase-10-detail tables for MTDS / MDPS / features-service `CatalogDelta` callback wiring + reloader invocation pattern. Unblocked by Phase 10 `[x] done` status — `InstrumentLifecycleCacheDeltaReloader` (UTL@`54d658e8`) shipped, callback semantics now documented against the real Protocol surface.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Phase 14 item 2 — replay-subsystem.md MTDS layer               | ✅ `done` (PM@`a22aee69`, 2026-05-20 slot-7)                  | `codex/05-infrastructure/replay-subsystem.md` enhanced with full MTDS-side implementation detail: split status table into UTL + MTDS layers; added ReplayRunner / HistoricalWindowFetcher Protocol / InstrumentWindowData / ReplayHandler CLI / HISTORICAL_WINDOW_FETCHER_FACTORIES registry scaffold (empty at Phase 7) entries; corrected REPLAY_BACKSTOP_REACHED emitter attribution (ReplayRunner.run() not ReplayPublisher.finalize()); added "MTDS implementation layer" section with constructor parameter table, lifecycle events, CLI arg table, benchmark placeholder table. Per-venue fetcher implementations remain ⏳ PENDING Phase 3.5. Throughput benchmarks ⏳ PENDING Phase 7 production run.                                                                                                                                |
+| Phase 14 item 2 — replay-subsystem.md MTDS layer                | ✅ `done` (PM@`a22aee69`, 2026-05-20 slot-7)                  | `codex/05-infrastructure/replay-subsystem.md` enhanced with full MTDS-side implementation detail: split status table into UTL + MTDS layers; added ReplayRunner / HistoricalWindowFetcher Protocol / InstrumentWindowData / ReplayHandler CLI / HISTORICAL_WINDOW_FETCHER_FACTORIES registry scaffold (empty at Phase 7) entries; corrected REPLAY_BACKSTOP_REACHED emitter attribution (ReplayRunner.run() not ReplayPublisher.finalize()); added "MTDS implementation layer" section with constructor parameter table, lifecycle events, CLI arg table, benchmark placeholder table. Per-venue fetcher implementations remain ⏳ PENDING Phase 3.5. Throughput benchmarks ⏳ PENDING Phase 7 production run.                                                                                                                         |
 | Phase 11.4 — Deploy live-cluster UI button + endpoint           | `done` (deployment-api@`dd2adb6` + deployment-ui@`657ed68`)   | `POST /deploy-live-cluster-preview` + `GET /deploy-live-cluster-roles` consume `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` registry; closed-set validation across 4 roles × 5 asset_groups × 3 envs + replay-window guard; 12 unit tests. `DeployLiveClusterButton` (deployment-ui) renders role/asset-group/env/replay-window form + bash command preview + copy-to-clipboard; 8 vitest tests; integrated into `LiveDataStatusTab` header.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Phase 13.4 — Watchdog VM relaunch (operational)                 | `done` (operational 2026-05-11 14:18 UTC; verified 14:21 UTC) | Tarball refresh via `create-code-tarballs.sh` (CORE — UAC/UTL/MTDS/deployment-service all timestamped 2026-05-11T13:16Z). Old watchdog `vm-zombie-watchdog-20260510-194210` deleted; new `vm-zombie-watchdog-20260511-141810` RUNNING in `asia-northeast1-c`. **Verified per `No fire-and-forget VM launches` rule**: serial console shows `vm_zombie_watchdog.py` (39.9 KiB, fresh upload) pulled from GCS at 13:19; first poll completed at 13:19:58 — "found 2 watchable VMs in 2.7s (2 known-prefix + shard signal, 0 unknown-prefix → heartbeat-only) / 2 alive / 0 zombie / 0 too_young / killed 0/0". The 14 new `VM_PREFIX_TO_BUCKET` entries from Phase 13 (5 mtds-live-{ag} + 5 mdps-features-live-{ag} + features-xc- + replay-) are loaded in-process; when live-pipeline VMs launch with those names, watchdog sees them. |
 
@@ -1685,29 +1687,32 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
 
 ## Deferred work after 2026-05-20 slot-8 session (mock-data-benchmarking migration)
 
-**MIGRATED FROM**: `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3 items 3.C-followup + 3.D
-(slot-8 2026-05-20). Both items named this plan as their successor; benchmarking plan closed 100% after this migration.
+**MIGRATED FROM**: `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3 items 3.C-followup + 3.D (slot-8
+2026-05-20). Both items named this plan as their successor; benchmarking plan closed 100% after this migration.
 
-- [x] [BLOCKED-OPERATOR-DECISION — awaiting operator [ack] on 3.D, then this unblocks] [AGENT] P2. **3.C-followup (migrated): `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** CeFi bucket has
-      `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
-      total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. **Do NOT add until 3.D below
-      confirms** MTDS reads it (to avoid spec drift from reality). Ping filed 2026-05-19 in
-      `harsh_orchestrator/pings/slot_7.md`. Re-audited 2026-05-20 slot-7: still awaiting operator [ack]. Provenance:
-      `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.C-followup.
+- [x] [BLOCKED-OPERATOR-DECISION — awaiting operator [ack] on 3.D, then this unblocks] [AGENT] P2. **3.C-followup
+      (migrated): `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** CeFi bucket has `book_snapshot_5` data for
+      BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M total/day). No
+      `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. **Do NOT add until 3.D below confirms** MTDS reads
+      it (to avoid spec drift from reality). Ping filed 2026-05-19 in `harsh_orchestrator/pings/slot_7.md`. Re-audited
+      2026-05-20 slot-7: still awaiting operator [ack]. Provenance: `mock_data_pipeline_benchmarking_2026_05_10.md`
+      Phase 3.C-followup.
 
-- [x] [BLOCKED-OPERATOR-DECISION — ping filed 2026-05-19 harsh_orchestrator/pings/slot_7.md; awaiting operator pick (a/b/c)] [AGENT] P1. **3.D (migrated): Prod-reader schema-parity verification.** PARTIAL progress already shipped:
+- [x] [BLOCKED-OPERATOR-DECISION — ping filed 2026-05-19 harsh_orchestrator/pings/slot_7.md; awaiting operator pick
+      (a/b/c)] [AGENT] P1. **3.D (migrated): Prod-reader schema-parity verification.** PARTIAL progress already shipped:
       (1) ✅ MTDS reader wire-in — `TickDataHandler.process()` early-return when `get_synthetic_input_override()` is set
       (skips Tardis/Databento external-API calls; mtds@`82639e0`). (2) ✅ strategy-service reader wire-in —
       `GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix (strategy@`a03d12e`). (3) ✅
       ml-inference-service wire-in — `FeatureSubscriber.read()` override check (ml-inference@`0206358`). (4) ✅ Harness
       `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`). **DEFERRED remains**:
       subprocess-mode harness run + schema-drift assertion (requires VM, needs operator sign-off). Run each generator's
-      output through prod MTDS / MDPS / features-* reader via harness `subprocess` mode (once `--synthetic-input-uri`
+      output through prod MTDS / MDPS / features-\* reader via harness `subprocess` mode (once `--synthetic-input-uri`
       flag is wired) and assert NO schema-drift error. Any column the prod reader expects that the Phase 2.A skeleton
       omits → add to skeleton + `# SCHEMA-PARITY: <reader>` provenance line. **Also include slot-8 handshake items**:
-      (a) cefi fixtures cover 21-venue zero-activity-bar matrix incl. Cat-D shape (`catalogue_audit_cefi_2026_05_12.md`);
-      (b) tradfi re-point at new `tradfi_etfs.py`/`tradfi_roots.py` SSOT once Ikenna's catalogue Phase 5 lands — do not
-      bake fragmented 4-place ETF list into specs; (c) sports/prediction gaps (`EXPECTED_PAUSED_LEAGUE` +
-      `prediction_canonical_question_group` + `MARKET_LIFECYCLE`) already covered by DEFERRED-PER-USER post-cutover
-      sports/prediction sub-plan. Provenance: `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.D + slot-8
-      handshake `harsh_orchestrator/pings/slot_8.md:15`.
+      (a) cefi fixtures cover 21-venue zero-activity-bar matrix incl. Cat-D shape
+      (`catalogue_audit_cefi_2026_05_12.md`); (b) tradfi re-point at new `tradfi_etfs.py`/`tradfi_roots.py` SSOT once
+      Ikenna's catalogue Phase 5 lands — do not bake fragmented 4-place ETF list into specs; (c) sports/prediction gaps
+      (`EXPECTED_PAUSED_LEAGUE` + `prediction_canonical_question_group` + `MARKET_LIFECYCLE`) already covered by
+      DEFERRED-PER-USER post-cutover sports/prediction sub-plan. Provenance:
+      `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.D + slot-8 handshake
+      `harsh_orchestrator/pings/slot_8.md:15`.

@@ -88,16 +88,16 @@ a manifest row with `timeframe` shard populated.
 
 Bucket: `features-{feature_group}-{category}-central-element-323112`
 
-| Service                   | feature_groups (examples)                      | Upstream dependency             | Applicable categories |
-| ------------------------- | ---------------------------------------------- | ------------------------------- | --------------------- |
-| features-delta-one        | `price_return`, `momentum`, `microstructure`   | MTDS ticks + MDPS candles       | CeFi, TradFi          |
-| features-volatility       | `realized_vol`, `garch`, `iv_surface`          | MDPS candles + CeFi options     | CeFi, TradFi          |
-| features-onchain          | `pool_state`, `lending_state`, `oracle_price`  | MTDS DeFi ticks                 | DeFi only             |
-| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv` | MTDS sports + instruments-service ref          | Sports only           |
-| features-calendar         | `session_flags`, `macro_events`, `holiday`     | calendar tables                 | CeFi, TradFi          |
-| features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)          | CeFi, TradFi, DeFi    |
-| features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments | CeFi, TradFi          |
-| features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures        | TradFi only           |
+| Service                   | feature_groups (examples)                      | Upstream dependency                   | Applicable categories |
+| ------------------------- | ---------------------------------------------- | ------------------------------------- | --------------------- |
+| features-delta-one        | `price_return`, `momentum`, `microstructure`   | MTDS ticks + MDPS candles             | CeFi, TradFi          |
+| features-volatility       | `realized_vol`, `garch`, `iv_surface`          | MDPS candles + CeFi options           | CeFi, TradFi          |
+| features-onchain          | `pool_state`, `lending_state`, `oracle_price`  | MTDS DeFi ticks                       | DeFi only             |
+| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv` | MTDS sports + instruments-service ref | Sports only           |
+| features-calendar         | `session_flags`, `macro_events`, `holiday`     | calendar tables                       | CeFi, TradFi          |
+| features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)                | CeFi, TradFi, DeFi    |
+| features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments       | CeFi, TradFi          |
+| features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures              | TradFi only           |
 
 Writer: identical pattern — `StreamingParquetWriter(strict=True)` + `ManifestWriter.write_with_zero_fill`, with
 `feature_group` populated as a shard column.

@@ -13,8 +13,8 @@ locked_since: 2026-05-15
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
-annotations next to each open item in body for the specific successor / blocker per-item. No single migration target
-— this plan tracks multiple per-item dispositions. 2026-05-19 slot 2 audit: completed 2026-05-15 cycle doc.
+annotations next to each open item in body for the specific successor / blocker per-item. No single migration target —
+this plan tracks multiple per-item dispositions. 2026-05-19 slot 2 audit: completed 2026-05-15 cycle doc.
 
 # Ikenna's daily work-split — 2026-05-15
 
@@ -36,10 +36,10 @@ annotations next to each open item in body for the specific successor / blocker 
 3. **Singleton-locked + watchdog-registered launchers only** — no fire-and-forget VMs. STARTED within 60s + ≥1 progress
    event/hour + STOPPED at exit.
 4. **Half-1 + Half-2 plan-flip discipline (HARD RULE strengthened 2026-05-15)**: every shippable unit = (a) commit +
-   push code, then (b) flip the checkbox to checked in the SAME AGENT TURN with `docs(plans):` prefix.
-   Two consecutive code commits without a sibling docs(plans) flip = rule violation. Reference incident: slots 5+7 each
-   shipped 15+ items unflipped on 14 May → dashboard reported 14.5% when real was ~70%. See CLAUDE.md § "Commit + Push +
-   Flip Plan Checkboxes".
+   push code, then (b) flip the checkbox to checked in the SAME AGENT TURN with `docs(plans):` prefix. Two consecutive
+   code commits without a sibling docs(plans) flip = rule violation. Reference incident: slots 5+7 each shipped 15+
+   items unflipped on 14 May → dashboard reported 14.5% when real was ~70%. See CLAUDE.md § "Commit + Push + Flip Plan
+   Checkboxes".
 5. **DeFi recursive borrow Phases 4-11 IN-SCOPE** (operator direction 2026-05-14, DESCOPE REVERSED).
 6. **Wallet/Treasury Phase 2** (Copper / CEFFU): CLIENT-SIDE — not our blocker.
 
@@ -730,9 +730,9 @@ redesign accepted today.
   lines); ManualInstruction + audit-log UAC contracts ✅ shipped Ikenna T8 (Day-1/2/3 — uac@1d8a059 + fe8e50e + 003b5ff,
   22 unit tests). Plan body line 104-105 confirms `ManualInstruction.side` already covers sports `HOME/AWAY/DRAW` +
   prediction `YES/NO` and `operation_type` covers `PLACE_BET` — sports/prediction-specific UAC types already on LDR. 11
-  remaining open items are explicitly Harsh-T6 [BUILD]/[SCRIPT] (UI builds + consumer wiring). Slot 4 has no
-  implementer surface in the Ikenna-half closure beyond the bookkeeping flip recorded here. Plan stays `status: active`
-  pending Harsh-T6 DONE block.
+  remaining open items are explicitly Harsh-T6 [BUILD]/[SCRIPT] (UI builds + consumer wiring). Slot 4 has no implementer
+  surface in the Ikenna-half closure beyond the bookkeeping flip recorded here. Plan stays `status: active` pending
+  Harsh-T6 DONE block.
 
 #### Slot 5 — **[SWEEP-16]** items (+8 cal — TradFi/cross-cutting closure)
 

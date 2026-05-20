@@ -45,7 +45,8 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
 ---
 
-> **ARCHIVED 2026-05-20** — 100% complete (all 41 items shipped); DEFERRED items have named successor plans. Preserved for archaeology.
+> **ARCHIVED 2026-05-20** — 100% complete (all 41 items shipped); DEFERRED items have named successor plans. Preserved
+> for archaeology.
 
 # Data-status drill-down + MTDS CLI shard-atom alignment
 
@@ -172,10 +173,10 @@ The fix is two pieces:
 - **Replace the chain-row math** with `Σ leaf shards` (numerator = manifest rows with `capture_status=captured`;
   denominator = expected `(chain, venue, data_type, instrument_id_or_protocol_id, day)` tuples per the codex shard atom)
   so the chain row and the asset-group header use the same regime.
-  > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: `numerator = captured` above was correct at time of writing but is
-  > now incomplete — it excludes `empty_confirmed` and `expected_unattempted_known_empty` from numerator.
-  > Canonical formula: `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts`
-  > (`unified-api-contracts@a9891f9`). SSOT: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
+  > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: `numerator = captured` above was correct at time of writing but is now
+  > incomplete — it excludes `empty_confirmed` and `expected_unattempted_known_empty` from numerator. Canonical formula:
+  > `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts` (`unified-api-contracts@a9891f9`).
+  > SSOT: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
 - **Land `PROTOCOL_LAUNCH_DATES` in UAC** so the leaf denominator clips pre-protocol-launch days the way
   `CHAIN_GENESIS_DATES` already clips pre-chain-genesis days.
 
@@ -330,8 +331,8 @@ on whatever flags exist today as a degenerate case).
       `timeframe` / `canonical_question_group`) + `expand_to_depth`. Lazy-load via filter query params: returns the
       subtree rooted at the deepest matched filter level. Plus `GET /api/data-status/drilldown-pairs` enumerating every
       supported `(service, asset_group)` from the SSOT.
-- [x] ✅ DEFERRED [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
-      hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
+- [x] ✅ DEFERRED [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key
+      (currently hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
       (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
       accept partial keys (`instrument_type`, `data_type`, `chain`, `league_id`, `job_id`); Phase 3 wire-in is the
       SmartDownloadButton consumer change. 2026-05-14 audit: `download_csv` at routes/data_status.py:1328 already
@@ -365,17 +366,19 @@ on whatever flags exist today as a degenerate case).
       builds the `/data-status/download-shard-csv` URL via the existing `buildShardDownloadUrl` helper using the leaf's
       `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner already in place
       from the multi-axis plan Phase 3; no change to that surface.
-- [x] ✅ DEFERRED [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
-      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED-PER-USER**: the
-      local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is operator-doable today
-      (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`). Successor: Phase 6 Playwright walk.
+- [x] ✅ DEFERRED [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm
+      the drill-down depth matches the shard atom. Empty-state placeholders where writers haven't shipped.
+      **DEFERRED-PER-USER**: the local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is
+      operator-doable today (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`). Successor: Phase 6
+      Playwright walk.
 
 ### Phase 3 — Per-shard download + missing surfacing
 
-- [x] ✅ DEFERRED [deployment-api] P1. `/coverage-summary` extended with leaf-shard counts (rolled up per axis level) so the UI can
-      show "23 missing instrument-shards" inside the BTCUSDT branch instead of just at the venue level. **DEFERRED** —
-      partially covered by the Phase 1 `/drilldown` endpoint which already returns per-axis-level captured /
-      empty_confirmed / attempted_failed / total counts; coverage-summary extension is a UI-rollup-driven follow-up.
+- [x] ✅ DEFERRED [deployment-api] P1. `/coverage-summary` extended with leaf-shard counts (rolled up per axis level) so
+      the UI can show "23 missing instrument-shards" inside the BTCUSDT branch instead of just at the venue level.
+      **DEFERRED** — partially covered by the Phase 1 `/drilldown` endpoint which already returns per-axis-level
+      captured / empty_confirmed / attempted_failed / total counts; coverage-summary extension is a UI-rollup-driven
+      follow-up.
 - [x] [deployment-api] P1 (shipped deployment-api@f8bc3d8). Deploy-Missing preview endpoint:
       `POST /api/data-status/deploy-missing-preview` takes a leaf `row_key` + composes the canonical 6-field
       `--shard-key=...` plus the bash invocation the operator copies + runs from their authenticated terminal. Plus
@@ -546,9 +549,9 @@ cannot reach the truncated tail. **Two related shape problems**:
 - [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). 6 new unit tests in
       `TestPaginationAndBundledRootVirtualisation` covering total count, paged offset, last partial page, no-limit
       default, bundled-options surfacing as roots, and per-instrument rows unchanged by virtualisation. 19/19 pass.
-- [x] ✅ DEFERRED [deployment-ui] P1. Visual smoke (Playwright) — BINANCE-FUTURES PERPETUAL drilldown shows >500 instruments via
-      load-more; CME `futures_chain` drilldown shows ESH4/NQH4/etc as roots; DERIBIT `options_chain` drilldown shows
-      BTC/ETH as roots. **DEFERRED** to follow-up turn (operator-doable today via
+- [x] ✅ DEFERRED [deployment-ui] P1. Visual smoke (Playwright) — BINANCE-FUTURES PERPETUAL drilldown shows >500
+      instruments via load-more; CME `futures_chain` drilldown shows ESH4/NQH4/etc as roots; DERIBIT `options_chain`
+      drilldown shows BTC/ETH as roots. **DEFERRED** to follow-up turn (operator-doable today via
       `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`).
 
 ### Open drifts (named successors)
@@ -563,13 +566,14 @@ cannot reach the truncated tail. **Two related shape problems**:
       needed — the SHARD_AXIS_MATRIX is now the codex tree. UAC tests 32/32 pass; deployment-api hierarchical tests
       23/23 pass.
 
-- [x] ✅ DEFERRED [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis but not a real manifest
-      column.** Same bug class as the protocol_id drift — appears in `SHARD_AXIS_MATRIX` for prediction asset_group
-      across instruments-service / MTDS / MDPS / features-cross-instrument, but is NOT in UTL `_ROW_KEY_COLUMNS`.
-      **Named successor**: `predictions_master_2026_05_07.md` (predictions Plan A — adds the column + Polymarket
-      lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level for every prediction
-      service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
-      successor plan" rule. **DEFERRED** to `predictions_master_2026_05_07.md` predictions Plan A.
+- [x] ✅ DEFERRED [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis but not a real
+      manifest column.** Same bug class as the protocol_id drift — appears in `SHARD_AXIS_MATRIX` for prediction
+      asset_group across instruments-service / MTDS / MDPS / features-cross-instrument, but is NOT in UTL
+      `_ROW_KEY_COLUMNS`. **Named successor**: `predictions_master_2026_05_07.md` (predictions Plan A — adds the
+      column + Polymarket lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level
+      for every prediction service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary
+      state must have a named successor plan" rule. **DEFERRED** to `predictions_master_2026_05_07.md` predictions Plan
+      A.
 
 - [x] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
       UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist of v8-pending-columns like `canonical_question_group`).

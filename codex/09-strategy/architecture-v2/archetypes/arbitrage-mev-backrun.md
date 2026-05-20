@@ -13,7 +13,8 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_BACKRUN`
 
-> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** Single tx with per-block ordering. **Code module:**
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement
+> model:** Single tx with per-block ordering. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/mev/backrun.py`.
 
 ## What it does
@@ -63,8 +64,10 @@ ARBITRAGE_MEV_BACKRUN@uniswapv3-binance-eth-usdt-ethereum-prod
 
 - Front-running a pending victim tx (requires mempool feed) → [`ARBITRAGE_MEV_SANDWICH`](arbitrage-mev-sandwich.md)
 - JIT LP minted around an imminent swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
-- Flash-loan liquidation bundle (different profit mechanism) → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
-- Persistent cross-venue price arb (no per-block ordering dependency) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- Flash-loan liquidation bundle (different profit mechanism) →
+  [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
+- Persistent cross-venue price arb (no per-block ordering dependency) →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

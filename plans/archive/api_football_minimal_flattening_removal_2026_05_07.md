@@ -41,7 +41,8 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
 ---
 
-> **ARCHIVED 2026-05-20** — 100% complete (all 16 items shipped + DEFERRED resolved 2026-05-20 slot-8); preserved for archaeology. No deferred work outstanding.
+> **ARCHIVED 2026-05-20** — 100% complete (all 16 items shipped + DEFERRED resolved 2026-05-20 slot-8); preserved for
+> archaeology. No deferred work outstanding.
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
@@ -243,36 +244,36 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       normalizers (stats, events, lineups). INJURIES stays single-dict per row. (instruments-service@539130f — also
       tightens return-type annotations from `list[CanonicalX]` to `list[dict[str, object]]` to match the actual runtime
       shape + base-class signature, drops unused Canonical\* imports.)
-- [x] ✅ [instruments-service] P0. **SHIPPED 2026-05-16 (slot 4)** — live-API smoke against fixture_id=1208051 (Liverpool
-      vs Man Utd 2024-12-22) verified the chain.from_iterable + normalizer composition produces expected multi-row
-      expansion end-to-end: - fixture_stats: **2 rows × 22 cols** per-team (expected ≥2 / ~18-22 cols ✅) -
+- [x] ✅ [instruments-service] P0. **SHIPPED 2026-05-16 (slot 4)** — live-API smoke against fixture_id=1208051
+      (Liverpool vs Man Utd 2024-12-22) verified the chain.from_iterable + normalizer composition produces expected
+      multi-row expansion end-to-end: - fixture_stats: **2 rows × 22 cols** per-team (expected ≥2 / ~18-22 cols ✅) -
       fixture_events: **25 rows × 12 cols** per-event (expected ≥1 ✅) - fixture_lineups: **40 rows × 12 cols**
       (expected ≥22 — 11 starters × 2 teams ✅) - injuries (date=2026-05-16): **540 rows × 10 cols** date-level fetch ✅
       Smoke script `instruments-service/scripts/smoke_api_football_flattening_2026_05_16.py` uses
       `get_secret('api-football-api-key')` from vaulted credential (operator provisioned pre-2026-05-16). Re-runnable.
 - [x] ✅ [instruments-service] P0. EPL forward-poll verified end-to-end (2026-05-19): GCS parquet
-      `sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/fixture_stats.parquet`
-      has shape (2, 23) — 2 rows per fixture (one per team) × 23 columns including `team_id`, `team_name`,
-      `is_home`, `shots_on_target`, `shots_off_target`, `shots_total`, `ball_possession_pct`, `expected_goals`,
-      `goals_prevented`, `passes_pct`, `corners`, `offsides`, `yellow_cards`, `red_cards`, `goalkeeper_saves`,
-      `passes_total/accurate`, `data_available_at`. Confirms flattening code (IS@539130f) is live in production.
-      Old 2-column schema is gone. PM@2f710f9a (plan closeout flip).
+      `sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/fixture_stats.parquet` has shape (2, 23)
+      — 2 rows per fixture (one per team) × 23 columns including `team_id`, `team_name`, `is_home`, `shots_on_target`,
+      `shots_off_target`, `shots_total`, `ball_possession_pct`, `expected_goals`, `goals_prevented`, `passes_pct`,
+      `corners`, `offsides`, `yellow_cards`, `red_cards`, `goalkeeper_saves`, `passes_total/accurate`,
+      `data_available_at`. Confirms flattening code (IS@539130f) is live in production. Old 2-column schema is gone.
+      PM@2f710f9a (plan closeout flip).
 
 ### Phase 4 — Optional historical reprocessor
 
-- [x] ✅ [CANCELLED — optional, default skip per plan] [instruments-service] P1. One-shot historical reprocessor
-      — plan body explicitly recommends skipping: "quota cost > marginal value on stale fixtures." Forward-poll
-      naturally fills new fixtures with new shape. Historical thin rows (pre-2026-05-08) handled by per-calculator
-      NaN gate + UTL `assert_available_at_present`. Re-evaluate only if features-sports calculators become
-      critically blocked on historical rows. pm@<flip-sha>.
+- [x] ✅ [CANCELLED — optional, default skip per plan] [instruments-service] P1. One-shot historical reprocessor — plan
+      body explicitly recommends skipping: "quota cost > marginal value on stale fixtures." Forward-poll naturally fills
+      new fixtures with new shape. Historical thin rows (pre-2026-05-08) handled by per-calculator NaN gate + UTL
+      `assert_available_at_present`. Re-evaluate only if features-sports calculators become critically blocked on
+      historical rows. pm@<flip-sha>.
 
 ### Phase 5 — Codex doc + plan close
 
-- [x] ✅ [unified-trading-pm] P2. `codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected column
-      count per data_type" so a future audit catches a regression to the minimal-flattening shape. (PM@36c40a10 —
+- [x] ✅ [unified-trading-pm] P2. `codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected
+      column count per data_type" so a future audit catches a regression to the minimal-flattening shape. (PM@36c40a10 —
       shipped in the original DONE-2026-05-08 cycle; checkbox was inadvertently not flipped at that time. Flipped now.)
-- [x] ✅ [unified-trading-pm] P2. Plan closes out: all phases shipped. 3.B live-API smoke ✅ (2026-05-16, slot 4);
-      3.C EPL forward-poll ✅ (2026-05-19); Phase 4 CANCELLED (optional skip); Phase 5.A/5.B closed. Full plan 100%.
+- [x] ✅ [unified-trading-pm] P2. Plan closes out: all phases shipped. 3.B live-API smoke ✅ (2026-05-16, slot 4); 3.C
+      EPL forward-poll ✅ (2026-05-19); Phase 4 CANCELLED (optional skip); Phase 5.A/5.B closed. Full plan 100%.
       PM@2f710f9a (2026-05-13 closeout) + Phase 3.B/3.C completed post-2026-05-13.
 
 ## Success criteria
@@ -324,8 +325,8 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 ## DONE-2026-05-13 — Slot 6 Wave 3 cycle (plan closeout)
 
 Slot 6 Wave 3 closed out residual checkboxes: flipped Phase 5.A (codex doc shipped PM@36c40a10 but checkbox missed) and
-Phase 5.B (plan closeout). Phase 3.B/3.C were deferred at this point but completed subsequently:
-Phase 3.B live-API smoke ✅ 2026-05-16 (slot 4); Phase 3.C EPL forward-poll ✅ 2026-05-19. Plan is 100% complete.
+Phase 5.B (plan closeout). Phase 3.B/3.C were deferred at this point but completed subsequently: Phase 3.B live-API
+smoke ✅ 2026-05-16 (slot 4); Phase 3.C EPL forward-poll ✅ 2026-05-19. Plan is 100% complete.
 
 - `unified-trading-pm@2f710f9a` — docs(plans): api_football — flip Phase 5.A/5.B + plan closeout + DONE-2026-05-13
 
@@ -352,8 +353,10 @@ Code commits:
   shipped checkboxes in this plan body with commit-sha + brief evidence; marks the 2 Phase 3 smoke-test items as
   `**DEFERRED**` with a hand-back note for operator-driven live-API + EPL forward-poll verification.
 
-~~Open items (executable — credentials available via act-secrets):~~ **[RESOLVED 2026-05-20 slot-8]** — all items now done:
+~~Open items (executable — credentials available via act-secrets):~~ **[RESOLVED 2026-05-20 slot-8]** — all items now
+done:
 
-- ~~Phase 3.B + 3.C~~ ✅ DONE: Phase 3.B live-API smoke shipped 2026-05-16 (slot 4); Phase 3.C EPL forward-poll verified end-to-end 2026-05-19. Plan body checkboxes updated.
+- ~~Phase 3.B + 3.C~~ ✅ DONE: Phase 3.B live-API smoke shipped 2026-05-16 (slot 4); Phase 3.C EPL forward-poll verified
+  end-to-end 2026-05-19. Plan body checkboxes updated.
 - ~~Phase 4~~ ✅ CANCELLED: optional skip confirmed per plan recommendation. Checkbox flipped.
 - ~~Phase 5.B~~ ✅ DONE: plan close flipped PM@2f710f9a (2026-05-13). Plan 100% complete.

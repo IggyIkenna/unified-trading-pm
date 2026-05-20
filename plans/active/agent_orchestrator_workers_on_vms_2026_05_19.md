@@ -161,21 +161,28 @@ P1 (design confirm) ─┐
 
 ## Phase 0 — Worker-host spawn prerequisites (root-caused 2026-05-20)
 
-> **Why this is here**: during the orchastrator→agent-orchestrator cutover, all worker API spawns failed with the
-> opaque `tmux session did not become ready within 30.0s`. Four silent first-run gates were the cause (theme picker,
-> OAuth login, folder-trust, and — the nastiest — `/tmp` read-only under `ProtectSystem=strict`). On a headless VM these
-> are far harder to detect. Full root-cause + fix table: `agent-orchestrator/docs/WORKER_SPAWN_PREREQUISITES.md`.
-> Interim fixes already landed on Harsh-primary (PC): unit `ReadWritePaths=/tmp`, claude onboarding flags + per-worktree
-> trust, and `scripts/worker-host-preflight.sh`.
+> **Why this is here**: during the orchastrator→agent-orchestrator cutover, all worker API spawns failed with the opaque
+> `tmux session did not become ready within 30.0s`. Four silent first-run gates were the cause (theme picker, OAuth
+> login, folder-trust, and — the nastiest — `/tmp` read-only under `ProtectSystem=strict`). On a headless VM these are
+> far harder to detect. Full root-cause + fix table: `agent-orchestrator/docs/WORKER_SPAWN_PREREQUISITES.md`. Interim
+> fixes already landed on Harsh-primary (PC): unit `ReadWritePaths=/tmp`, claude onboarding flags + per-worktree trust,
+> and `scripts/worker-host-preflight.sh`.
 
 - [x] [INFRA] P0. Add `ReadWritePaths=/tmp` to `scripts/orchestrator.service` template + live unit (else `tmux` can't
       create its socket in the service namespace). — agent-orchestrator (template fixed; live unit patched 2026-05-20)
 - [x] [SCRIPT] P0. `scripts/worker-host-preflight.sh` — idempotent: claude theme/onboarding flags, per-worktree
-      `hasTrustDialogAccepted`, credentials-present check, `/tmp` writability, + live self-test spawn. — agent-orchestrator
-- [x] [DOC] P0. `docs/WORKER_SPAWN_PREREQUISITES.md` — the four gates + the `nsenter` diagnostic + provisioning steps. — agent-orchestrator
-- [x] ✅ [AGENT] P0. `server/worker_liveness.py` — `WorkerLivenessKicker` daemon thread (mirrors `TmuxPruner`): classify pane (working/frozen/idle), kick frozen+idle via send-keys+sleep1+C-m, per-slot debounce (2×interval), `worker_kicked` activity event. Wired into `server.lifespan` next to `TmuxPruner`. Tests in `tests/test_worker_liveness.py` (21 tests, classifier fixtures, blocked-skip, debounce). ruff+basedpyright+pytest green; CI green. — agent-orchestrator@9e18f97
+      `hasTrustDialogAccepted`, credentials-present check, `/tmp` writability, + live self-test spawn. —
+      agent-orchestrator
+- [x] [DOC] P0. `docs/WORKER_SPAWN_PREREQUISITES.md` — the four gates + the `nsenter` diagnostic + provisioning steps. —
+      agent-orchestrator
+- [x] ✅ [AGENT] P0. `server/worker_liveness.py` — `WorkerLivenessKicker` daemon thread (mirrors `TmuxPruner`): classify
+      pane (working/frozen/idle), kick frozen+idle via send-keys+sleep1+C-m, per-slot debounce (2×interval),
+      `worker_kicked` activity event. Wired into `server.lifespan` next to `TmuxPruner`. Tests in
+      `tests/test_worker_liveness.py` (21 tests, classifier fixtures, blocked-skip, debounce). ruff+basedpyright+pytest
+      green; CI green. — agent-orchestrator@9e18f97
 - [ ] [SCRIPT] P1. Spawn endpoint auto-ensures folder-trust + onboarding flags in `~/.claude.json` for the target
-      worktree before launching claude (reuse the `worktree_setup` bootstrap hook that already runs on spawn). — agent-orchestrator
+      worktree before launching claude (reuse the `worktree_setup` bootstrap hook that already runs on spawn). —
+      agent-orchestrator
 - [ ] [SCRIPT] P1. Spawn endpoint preflights `/tmp` writability **in its own namespace** and returns a specific 5xx
       ("/tmp read-only — add ReadWritePaths=/tmp") instead of the opaque 30s timeout. — agent-orchestrator
 - [ ] [SCRIPT] P2. VM launcher runs `worker-host-preflight.sh` as a post-boot step + refuses to register the box as a

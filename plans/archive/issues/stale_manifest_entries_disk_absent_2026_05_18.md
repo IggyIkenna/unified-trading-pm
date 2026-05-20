@@ -11,19 +11,19 @@ locked_by: live-defi-rollout
 
 ## RESOLVED 2026-05-20 — unified-trading-pm@3ac7be47b
 
-**Outcome**: 9 of 10 listed repos confirmed archived on GitHub (`gh api .archived = true`) and annotated
-with `archived: true` in `workspace-manifest.json`. `fund-administration-service` was a false positive — it
-IS present on disk and NOT archived on GitHub. 0 repos moved to `removedEntries` (all 9 still exist on
-GitHub; manifest retains them for historical-commit resolution).
+**Outcome**: 9 of 10 listed repos confirmed archived on GitHub (`gh api .archived = true`) and annotated with
+`archived: true` in `workspace-manifest.json`. `fund-administration-service` was a false positive — it IS present on
+disk and NOT archived on GitHub. 0 repos moved to `removedEntries` (all 9 still exist on GitHub; manifest retains them
+for historical-commit resolution).
 
-**Structural fix**: added disk-presence assertion to
-`scripts/manifest/check-dependency-alignment.py` (lines 33-50 + 117-143 + 158-191). Exempt statuses:
-`{archived, deprecated, deleted, future}` + prefixes `{consolidated-into-, merged-into-,
-pending-archive-into-}` + entries with `archived: true` boolean. Future drift fails CI.
+**Structural fix**: added disk-presence assertion to `scripts/manifest/check-dependency-alignment.py` (lines 33-50 +
+117-143 + 158-191). Exempt statuses: `{archived, deprecated, deleted, future}` + prefixes
+`{consolidated-into-, merged-into-, pending-archive-into-}` + entries with `archived: true` boolean. Future drift fails
+CI.
 
 **Verification**: `python3 scripts/manifest/check-dependency-alignment.py --json` →
-`aligned: true, disk_absent_count: 0`. Negative-path test (flipped one entry to status=active) correctly
-surfaced disk_absent.
+`aligned: true, disk_absent_count: 0`. Negative-path test (flipped one entry to status=active) correctly surfaced
+disk_absent.
 
 | Repo                                | GitHub `archived` | On disk | Cleanup applied        |
 | ----------------------------------- | ----------------- | ------- | ---------------------- |

@@ -188,7 +188,8 @@ The T0 tier contains two sub-tiers due to a single permitted intra-UAC import di
   library.
 
 > Note: `unified-config-interface` is T1, not T0. The audit spec listing it as T0 was outdated and has been corrected
-> here. The canonical tier assignment is: UAC=T0-base, UIC=T0-consumer, UCI=T1a, UTL=T1b. unified-reference-data-interface/T1c eliminated.
+> here. The canonical tier assignment is: UAC=T0-base, UIC=T0-consumer, UCI=T1a, UTL=T1b.
+> unified-reference-data-interface/T1c eliminated.
 
 **T2, T3:** unchanged — see the 5-Tier Dependency Model section above.
 

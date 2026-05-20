@@ -25,8 +25,8 @@ Queue-aware market making extends the ML-lean and inventory-skew approaches by m
 explicitly: order flow toxicity (trade imbalance and arrival rate patterns), queue position priority (time-priority in
 FIFO price-time order books), and expected fill probability given current queue depth. The strategy only posts a quote
 when the queue-position-adjusted expected value is positive — accounting for the fact that a limit order deep in the
-queue has low fill probability and may get adversely selected more often than one at the front. Tracks own queue rank
-at each price level and reprices aggressively when queue position deteriorates.
+queue has low fill probability and may get adversely selected more often than one at the front. Tracks own queue rank at
+each price level and reprices aggressively when queue position deteriorates.
 
 ## Token / position flow
 
@@ -100,15 +100,15 @@ at each price level and reprices aggressively when queue position deteriorates.
 
 ## When to use / market regime
 
-- **Use when**: FIFO time-priority venue where queue position is a key P&L determinant; co-located or low-latency
-  setup allowing real-time L2 queue tracking; instrument where adverse selection is modellable via VPIN
+- **Use when**: FIFO time-priority venue where queue position is a key P&L determinant; co-located or low-latency setup
+  allowing real-time L2 queue tracking; instrument where adverse selection is modellable via VPIN
 - **Best regime**: liquid, active markets where queue position is achievable (not a winner-takes-first race against
   HFT); moderate-flow environments where VPIN signals are stable
 - **Avoid**: venues without time-priority (pro-rata matching does not reward queue position); very high-frequency HFT
-  environments where achieving and maintaining queue rank requires sub-millisecond infrastructure; instruments
-  where L2 data quality is insufficient for queue estimation
-- **Upgrade path from**: MARKET_MAKING_INVENTORY_SKEW or MARKET_MAKING_ML_LEAN when adverse selection is the
-  binding P&L constraint
+  environments where achieving and maintaining queue rank requires sub-millisecond infrastructure; instruments where L2
+  data quality is insufficient for queue estimation
+- **Upgrade path from**: MARKET_MAKING_INVENTORY_SKEW or MARKET_MAKING_ML_LEAN when adverse selection is the binding P&L
+  constraint
 
 ## Example instances
 

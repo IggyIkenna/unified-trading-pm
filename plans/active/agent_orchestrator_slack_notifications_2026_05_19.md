@@ -256,13 +256,13 @@ P2 code work can start immediately. P3 + P4 require the staging Cloud Run servic
 
 ## Full-execution closeout summary (filled at P4 + P5 completion)
 
-| Phase | What ran                                           | Verification                                     | SHA        |
-| ----- | -------------------------------------------------- | ------------------------------------------------ | ---------- |
-| P1    | Audit + scope check (2026-05-20 slot 4)            | eea2f69 on LDR confirmed; pre-audit manifest ✅  | —          |
-| P2    | Block Kit + retry + blocked_id + 9 unit tests      | 9 tests PASS; ruff+basedpyright 0 errors         | cd04fc2    |
-| P3    | BLOCKED-OPERATOR: IAM bind for webhook secret      | Ping filed in slot_4.md (2026-05-20)             | —          |
-| P4    | _pending P3_                                       | _pending_                                        | —          |
-| P5    | Codex doc created + overview updated (2026-05-20)  | codex/05-infrastructure/agent-orchestrator-slack-notifications.md ✅ | PM@d460bc67 |
+| Phase | What ran                                          | Verification                                                         | SHA         |
+| ----- | ------------------------------------------------- | -------------------------------------------------------------------- | ----------- |
+| P1    | Audit + scope check (2026-05-20 slot 4)           | eea2f69 on LDR confirmed; pre-audit manifest ✅                      | —           |
+| P2    | Block Kit + retry + blocked_id + 9 unit tests     | 9 tests PASS; ruff+basedpyright 0 errors                             | cd04fc2     |
+| P3    | BLOCKED-OPERATOR: IAM bind for webhook secret     | Ping filed in slot_4.md (2026-05-20)                                 | —           |
+| P4    | _pending P3_                                      | _pending_                                                            | —           |
+| P5    | Codex doc created + overview updated (2026-05-20) | codex/05-infrastructure/agent-orchestrator-slack-notifications.md ✅ | PM@d460bc67 |
 
 ---
 

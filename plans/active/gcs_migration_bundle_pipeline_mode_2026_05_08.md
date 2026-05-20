@@ -670,7 +670,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
 > pipeline_mode / reconciler threshold / mode-routing logic.
 
-> **🟢 RESOLVED — batch_live_symmetry Tab 4 (features ModeHandler lift, 2026-05-20)**: All 4 feature families (commodity / cross_instrument / multi_timeframe / calendar) lifted to UTL `ModeHandler` ABC at features-service@519625f7. Bare-class compat-paths scheduled for hard-delete post-prod-deploy. No impact on GCS pipeline_mode migration phases.
+> **🟢 RESOLVED — batch_live_symmetry Tab 4 (features ModeHandler lift, 2026-05-20)**: All 4 feature families (commodity
+> / cross_instrument / multi_timeframe / calendar) lifted to UTL `ModeHandler` ABC at features-service@519625f7.
+> Bare-class compat-paths scheduled for hard-delete post-prod-deploy. No impact on GCS pipeline_mode migration phases.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -882,7 +884,8 @@ session. Phases shipped on `live-defi-rollout`:
 - ✅ Phase 5.3 — Sports + cross-asset `candidate_parquet_paths` extension — unified-api-contracts@fefd720 (2026-05-19).
 - Phase 6 — Residual phantom cleanup (sequential after Phase 3.6).
 - Phase 8 — Reader fallback removal (T+30d, ~2026-06-15).
-- ✅ Phase 9 — Final workspace-wide QG sweep (slot 5, 2026-05-20). 5/9 migration-critical repos green; 4 non-migration repos have pre-existing/infra gaps. OPERATOR CONFIRM to close gate.
+- ✅ Phase 9 — Final workspace-wide QG sweep (slot 5, 2026-05-20). 5/9 migration-critical repos green; 4 non-migration
+  repos have pre-existing/infra gaps. OPERATOR CONFIRM to close gate.
 - Cross-asset rescan launcher script + watchdog dict update (sub-agent rate-limited; design doc shipped at `cc67e904`).
 
 **Foot-gun #3 incidents this session (4 total — see

@@ -113,10 +113,10 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
 
 Quality gates enforce schema placement:
 
-- **UAC external/canonical** (`scripts/check_schema_organization.py`): Schemas in `unified_api_contracts/canonical/domain/` or
-  `unified_api_contracts/canonical/crosscutting/` must be used in at least one of: `unified_api_contracts/normalize_utils/`,
-  `unified_api_contracts/external/`, or `tests/`. If not used, the schema is internal-only and should live in
-  `unified_api_contracts.internal`.
+- **UAC external/canonical** (`scripts/check_schema_organization.py`): Schemas in
+  `unified_api_contracts/canonical/domain/` or `unified_api_contracts/canonical/crosscutting/` must be used in at least
+  one of: `unified_api_contracts/normalize_utils/`, `unified_api_contracts/external/`, or `tests/`. If not used, the
+  schema is internal-only and should live in `unified_api_contracts.internal`.
 - **UAC internal** (`scripts/check_schema_organization.py`): Domain schemas under `internal/domain/<service-name>/`;
   imports from `unified_api_contracts.canonical` only.
 - **Other repos** (`unified-trading-pm/scripts/validation/check_schema_provenance.py`): Local
@@ -214,12 +214,12 @@ Each source declares its capabilities in `registry/capability/` via `SourceCapab
 
 **Phase 1 metadata fields (2026-05-20)** — 4 structured fields added to `SourceCapability`:
 
-| Field | Type | Canonical values | Purpose |
-|---|---|---|---|
-| `chain` | `str \| None` | `"ethereum"`, `"starknet"`, `"solana"`, `"hyperevm"`, `"polygon"`, `"dydx-chain"`, `None` for pure CEX/data | Underlying settlement layer |
-| `kind` | `Literal[...] \| None` | `"perp_dex"`, `"spot_dex"`, `"perp_cex"`, `"spot_cex"`, `"options_cex"`, `"options_dex"`, `"prediction_dex"`, `"sports_book"`, `"lending_protocol"`, `"staking_protocol"`, `"amm_dex"`, `"vault_protocol"`, `None` for data providers | Venue class taxonomy |
-| `mandatory_user_agent` | `str \| None` | `"odum-group-unified-trading/extended-mtds"` for Extended Starknet; `None` otherwise | REST/WS clients MUST send this header if set |
-| `coverage_start` | `dict[str, date] \| None` | keys = workspace-canonical data_type names (e.g. `"candles"`, `"funding_rates"`, `"rates"`); values = ISO dates | Earliest available data per data_type |
+| Field                  | Type                      | Canonical values                                                                                                                                                                                                                      | Purpose                                      |
+| ---------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `chain`                | `str \| None`             | `"ethereum"`, `"starknet"`, `"solana"`, `"hyperevm"`, `"polygon"`, `"dydx-chain"`, `None` for pure CEX/data                                                                                                                           | Underlying settlement layer                  |
+| `kind`                 | `Literal[...] \| None`    | `"perp_dex"`, `"spot_dex"`, `"perp_cex"`, `"spot_cex"`, `"options_cex"`, `"options_dex"`, `"prediction_dex"`, `"sports_book"`, `"lending_protocol"`, `"staking_protocol"`, `"amm_dex"`, `"vault_protocol"`, `None` for data providers | Venue class taxonomy                         |
+| `mandatory_user_agent` | `str \| None`             | `"odum-group-unified-trading/extended-mtds"` for Extended Starknet; `None` otherwise                                                                                                                                                  | REST/WS clients MUST send this header if set |
+| `coverage_start`       | `dict[str, date] \| None` | keys = workspace-canonical data_type names (e.g. `"candles"`, `"funding_rates"`, `"rates"`); values = ISO dates                                                                                                                       | Earliest available data per data_type        |
 
 All 4 default to `None` (backwards-compatible). QG STEP 5.85 enforces explicit `chain=` and `kind=` kwargs on every
 `SourceCapability(...)` instantiation in `capability_declarations/_*.py` (even `None` is acceptable — the rule enforces

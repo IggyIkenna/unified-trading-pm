@@ -316,16 +316,16 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Verification**:
     `aws iam list-roles --query 'Roles[?starts_with(RoleName, \`uts-\`)].RoleName'`lists every service's role;`aws iam
     list-attached-role-policies --role-name <role>` matches the yaml.
-  - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-iam-roles.sh` shipped upstream (deployment-service
-    LDR ~2026-05-19). Script covers role creation but `aws_iam_roles.yaml` SSOT config file not yet created.
+  - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-iam-roles.sh` shipped upstream (deployment-service LDR
+    ~2026-05-19). Script covers role creation but `aws_iam_roles.yaml` SSOT config file not yet created.
   - **[PARTIAL]** 2026-05-20 slot 7: `configs/aws_iam_roles.yaml` SSOT config created at deployment-service@`c6bd7c1`.
-    Covers all 19 services × prod-tier (staging/dev follow same shape). Per-service S3/SM/SNS/KMS/EC2/ECS shapes
-    derived from aws-iam-matrix.md §2 + setup-iam-roles.sh. Execution-service ONLY has kms:Decrypt on 5 trading CMKs.
-    Remaining: (b) run `setup-iam-roles.sh --apply` via `aws` CLI.
-  - **[BLOCKED-AWS-PERMISSIONS]** 2026-05-20 slot 7: `harsh-worker` IAM user (`arn:aws:iam::427895769566:user/harsh-worker`)
-    does NOT have `iam:CreateRole` permission. Dry-run showed 30 roles would be created (10 services × 3 tiers).
-    Blocked on operator granting `iam:CreateRole` to harsh-worker OR running `setup-iam-roles.sh --apply` as admin user.
-    Ping filed in `harsh_orchestrator/pings/slot_7.md`.
+    Covers all 19 services × prod-tier (staging/dev follow same shape). Per-service S3/SM/SNS/KMS/EC2/ECS shapes derived
+    from aws-iam-matrix.md §2 + setup-iam-roles.sh. Execution-service ONLY has kms:Decrypt on 5 trading CMKs. Remaining:
+    (b) run `setup-iam-roles.sh --apply` via `aws` CLI.
+  - **[BLOCKED-AWS-PERMISSIONS]** 2026-05-20 slot 7: `harsh-worker` IAM user
+    (`arn:aws:iam::427895769566:user/harsh-worker`) does NOT have `iam:CreateRole` permission. Dry-run showed 30 roles
+    would be created (10 services × 3 tiers). Blocked on operator granting `iam:CreateRole` to harsh-worker OR running
+    `setup-iam-roles.sh --apply` as admin user. Ping filed in `harsh_orchestrator/pings/slot_7.md`.
 
 - [x] [SCRIPT] P0. **1.C — ECR setup + dual-cloud image push.** Create ECR repository per service in `ap-northeast-1`.
       Update `cloudbuild.yaml` + `buildspec.aws.yaml` to push the same image to both
@@ -352,11 +352,10 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
     expected bucket count; sample-read returns expected rows.
   - **DONE** — deployment-service@`e2e2fef` 2026-05-19 slot 2: added 10 non-DeFi entries (cefi×2, tradfi×2, sports×2,
     prediction×2 + upstream Databento tradfi×2); 33 total AWS infrastructure_buckets. Config parity achieved.
-  - **VERIFIED** 2026-05-20 slot 7: `aws s3 ls` confirmed 93 unified-trading-* buckets exist including CeFi
-    (execution-cefi-{dev,prod,staging}, features-delta-one-cefi-*, features-onchain-cefi-*), TradFi
-    (execution-tradfi-*, features-delta-one-tradfi-*), Sports (features-sports-{dev,prd,stg}), and Prediction
-    equivalents. Bucket provisioning complete — `provision-aws-buckets.sh` not needed (buckets pre-provisioned
-    2026-04-29/05-16).
+  - **VERIFIED** 2026-05-20 slot 7: `aws s3 ls` confirmed 93 unified-trading-_ buckets exist including CeFi
+    (execution-cefi-{dev,prod,staging}, features-delta-one-cefi-_, features-onchain-cefi-_), TradFi (execution-tradfi-_,
+    features-delta-one-tradfi-\*), Sports (features-sports-{dev,prd,stg}), and Prediction equivalents. Bucket
+    provisioning complete — `provision-aws-buckets.sh` not needed (buckets pre-provisioned 2026-04-29/05-16).
 
 - [x] [SCRIPT] P0. **1.E — AWS Secrets Manager replication.** For every secret in GCP Secret Manager, create an AWS
       Secrets Manager equivalent in `ap-northeast-1`. Naming convention codified in
@@ -368,11 +367,11 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **[PARTIAL]** 2026-05-20 slot 7: `scripts/aws/replicate-secrets-to-aws.sh` scaffold created at
     deployment-service@`c6bd7c1`. Fixed filter bug (state=ENABLED returned 0 results) at deployment-service@`a250916`.
   - **DONE** 2026-05-20 slot 7: `replicate-secrets-to-aws.sh --apply` executed. Results: **146 created** / 15 skipped
-    (no version in GCP SM) / 2 AWS failures (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `tenderly-fork-rpc-url` — likely
-    value format). 163 GCP secrets total. Exclusions: `firebase-sa-json` / `gcp-sa-key-*` / `github-pat` /
-    `WORKLOAD_IDENTITY`. All trading credentials replicated: binance-{read,trade}-api-key, bybit_api_{key,secret},
-    aster-{api-key,secret-key}, exec-anu-okx-*, okx-*, databento-api-key*, alchemy-api-key, helius-api-key, etc.
-    The 2 failures are non-critical (Slack webhook + Tenderly fork URL). `--verify` run pending (see note below).
+    (no version in GCP SM) / 2 AWS failures (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `tenderly-fork-rpc-url` — likely value
+    format). 163 GCP secrets total. Exclusions: `firebase-sa-json` / `gcp-sa-key-*` / `github-pat` /
+    `WORKLOAD_IDENTITY`. All trading credentials replicated: binance-{read,trade}-api-key, bybit*api*{key,secret},
+    aster-{api-key,secret-key}, exec-anu-okx-_, okx-_, databento-api-key\*, alchemy-api-key, helius-api-key, etc. The 2
+    failures are non-critical (Slack webhook + Tenderly fork URL). `--verify` run pending (see note below).
   - **Remaining**: (1) investigate 2 AWS failures + retry with escaped values if needed; (2) `UnifiedCloudConfig` AWS
     round-trip test (Block H7 verification).
 
@@ -389,18 +388,17 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
       `gcloud compute instances create` script under `deployment-service/scripts/vm/launch-*-vm.sh` needs an AWS twin
       `launch-*-vm-aws.sh` using `aws ec2 run-instances`. Add AWS-side `VM_PREFIX_TO_BUCKET` registry equivalent in
       `deployment-service/scripts/vm/vm_zombie_watchdog_aws.py`.
-  - **DONE** 2026-05-20 slot 7 (operator ack: "proceed now"). Design: single master launcher
-    `launch-ec2-vm.sh` (--task dispatch, 80 task entries) + shared library
-    `lib/aws_ec2_launch_lib.sh` (lc_aws_* functions mirroring launcher_common.sh) +
-    `vm_zombie_watchdog_aws.py` (boto3 twin of vm_zombie_watchdog.py, full VM_PREFIX_TO_BUCKET
+  - **DONE** 2026-05-20 slot 7 (operator ack: "proceed now"). Design: single master launcher `launch-ec2-vm.sh` (--task
+    dispatch, 80 task entries) + shared library `lib/aws_ec2_launch_lib.sh` (lc*aws*\* functions mirroring
+    launcher_common.sh) + `vm_zombie_watchdog_aws.py` (boto3 twin of vm_zombie_watchdog.py, full VM_PREFIX_TO_BUCKET
     registry). deployment-service@`5c4bed4`.
-  - **Remaining**: AWS_SECURITY_GROUP_IDS + AWS_SUBNET_ID must be set at runtime; IAM instance
-    profiles gated on 1.B resolution (scripts work today for code review/dry-run).
+  - **Remaining**: AWS_SECURITY_GROUP_IDS + AWS_SUBNET_ID must be set at runtime; IAM instance profiles gated on 1.B
+    resolution (scripts work today for code review/dry-run).
 
 - [ ] [AGENT] P1. **1.H — Cross-cloud Workload Identity Federation.** GCP SA assumes AWS IAM role for services spanning
       both clouds (per `aws-iam-matrix.md`). Configure trust policy on AWS roles + WIF pool on GCP project.
   - **[BLOCKED-AWS-PERMISSIONS]** 2026-05-20 slot 7: aws CLI IS available. Blocked on 1.B (IAM roles must exist first
-    + harsh-worker needs `iam:CreateOpenIDConnectProvider`/`iam:UpdateAssumeRolePolicy`). Gated on 1.B resolution.
+    - harsh-worker needs `iam:CreateOpenIDConnectProvider`/`iam:UpdateAssumeRolePolicy`). Gated on 1.B resolution.
 
 **Phase 1 done definition** (full-execution criterion):
 

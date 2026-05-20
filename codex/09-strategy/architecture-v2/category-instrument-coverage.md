@@ -628,15 +628,15 @@ STAKE+LEND+BORROW path was deleted — see archetype doc § "Not in this archety
 
 #### Coverage (2026-05-20 — reflects post-Stream A venues with confirmed LST cross-margin)
 
-| Category            | Instrument      | Status    | Representative venues                               | Signal variant             | Notes / Gap                                                                                          |
-| ------------------- | --------------- | --------- | --------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| CeFi                | any             | N/A       | —                                                   | —                          | No CeFi native staking                                                                               |
-| DeFi (Ethereum)     | staking + perp  | SUPPORTED | Lido stETH → DERIBIT ETH-perp (7.5% haircut, X:PM) | staking APY + funding APY  | USDC margin; stETH deposited to Deribit X:Portfolio margin as cross-collateral                       |
-| DeFi (Ethereum)     | staking + perp  | SUPPORTED | Lido stETH → BYBIT UTA ETH-perp (10% haircut)      | staking APY + funding APY  | USDT margin; stETH deposited to Bybit Unified Trading Account as cross-collateral                    |
-| DeFi (Solana)       | staking + perp  | SUPPORTED | Jito JitoSOL → DRIFT SOL-perp (10% haircut)         | staking APY + funding APY  | USDC margin; JitoSOL posted directly as Drift cross-margin                                           |
-| DeFi (Solana)       | staking + perp  | SUPPORTED | Marinade mSOL → DRIFT SOL-perp (10% haircut)        | staking APY + funding APY  | USDC margin; mSOL posted directly as Drift cross-margin                                              |
-| TradFi              | any             | N/A       | —                                                   | —                          | No applicable concept                                                                                |
-| Sports & Prediction | any             | N/A       | —                                                   | —                          | No applicable concept                                                                                |
+| Category            | Instrument     | Status    | Representative venues                              | Signal variant            | Notes / Gap                                                                       |
+| ------------------- | -------------- | --------- | -------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| CeFi                | any            | N/A       | —                                                  | —                         | No CeFi native staking                                                            |
+| DeFi (Ethereum)     | staking + perp | SUPPORTED | Lido stETH → DERIBIT ETH-perp (7.5% haircut, X:PM) | staking APY + funding APY | USDC margin; stETH deposited to Deribit X:Portfolio margin as cross-collateral    |
+| DeFi (Ethereum)     | staking + perp | SUPPORTED | Lido stETH → BYBIT UTA ETH-perp (10% haircut)      | staking APY + funding APY | USDT margin; stETH deposited to Bybit Unified Trading Account as cross-collateral |
+| DeFi (Solana)       | staking + perp | SUPPORTED | Jito JitoSOL → DRIFT SOL-perp (10% haircut)        | staking APY + funding APY | USDC margin; JitoSOL posted directly as Drift cross-margin                        |
+| DeFi (Solana)       | staking + perp | SUPPORTED | Marinade mSOL → DRIFT SOL-perp (10% haircut)       | staking APY + funding APY | USDC margin; mSOL posted directly as Drift cross-margin                           |
+| TradFi              | any            | N/A       | —                                                  | —                         | No applicable concept                                                             |
+| Sports & Prediction | any            | N/A       | —                                                  | —                         | No applicable concept                                                             |
 
 #### Active slot_labels (2026-05-20, from `catalog.py _build_carry_staked_basis`)
 

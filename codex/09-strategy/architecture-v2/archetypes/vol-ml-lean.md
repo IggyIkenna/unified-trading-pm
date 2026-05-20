@@ -14,20 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_ML_LEAN`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous — vol positions
-> sized and directioned by rolling ML forecast; positions rolled at expiry. **Code module (target):**
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous — vol positions sized and
+> directioned by rolling ML forecast; positions rolled at expiry. **Code module (target):**
 > `strategy-service/engine/strategies/v2/vol_trading/vol_ml_lean_engine.py`
 
 ## What it does
 
-Uses a trained machine learning model to forecast near-term realized volatility, then tilts option position
-sizing and direction based on the model's prediction versus current implied vol. The core signal is the
-gap between model-predicted RV and market-implied IV: when the model forecasts RV below current IV, the
-archetype sells vol (short straddle or strangle); when it forecasts RV above IV, it buys vol (long straddle).
-The model is a rolling random forest trained on vol features — lagged realized vol across windows, VIX or
-crypto IV term structure, perp funding rates, and options order flow imbalance. Position sizing scales with
-model confidence (prediction margin over IV) and model accuracy on recent out-of-sample windows. The archetype
-re-trains the model on a rolling basis to avoid regime staleness.
+Uses a trained machine learning model to forecast near-term realized volatility, then tilts option position sizing and
+direction based on the model's prediction versus current implied vol. The core signal is the gap between model-predicted
+RV and market-implied IV: when the model forecasts RV below current IV, the archetype sells vol (short straddle or
+strangle); when it forecasts RV above IV, it buys vol (long straddle). The model is a rolling random forest trained on
+vol features — lagged realized vol across windows, VIX or crypto IV term structure, perp funding rates, and options
+order flow imbalance. Position sizing scales with model confidence (prediction margin over IV) and model accuracy on
+recent out-of-sample windows. The archetype re-trains the model on a rolling basis to avoid regime staleness.
 
 ## Token / position flow
 
@@ -81,8 +80,8 @@ re-trains the model on a rolling basis to avoid regime staleness.
 
 ## Entry conditions + signal
 
-- `|prediction_margin| > threshold_vp` AND `model_confidence > min_confidence` (random forest
-  probability of correct direction class)
+- `|prediction_margin| > threshold_vp` AND `model_confidence > min_confidence` (random forest probability of correct
+  direction class)
 - Model OOS accuracy on last eval_window_days >= min_oos_accuracy (e.g. 0.58 directional accuracy)
 - IV within normal range: suppress if IV > iv_regime_upper_cap (model not trained on extremes)
 - No binary event within tenor unless event_mode_enabled = true (model has event features)
@@ -122,12 +121,12 @@ re-trains the model on a rolling basis to avoid regime staleness.
 
 ## When to use / market regime
 
-- **Best regime**: markets with persistent IV-RV autocorrelation patterns; periods where order flow
-  and funding imbalances reliably predict near-term realized vol
-- **Avoid**: extreme novelty regimes (black-swan events, exchange hacks) where the model is out of
-  distribution; also avoid during data gaps that corrupt feature windows
-- **Model maintenance**: requires regular monitoring — retrain validation, OOS accuracy tracking,
-  and feature drift alerting are operational requirements, not optional
+- **Best regime**: markets with persistent IV-RV autocorrelation patterns; periods where order flow and funding
+  imbalances reliably predict near-term realized vol
+- **Avoid**: extreme novelty regimes (black-swan events, exchange hacks) where the model is out of distribution; also
+  avoid during data gaps that corrupt feature windows
+- **Model maintenance**: requires regular monitoring — retrain validation, OOS accuracy tracking, and feature drift
+  alerting are operational requirements, not optional
 - **Asset fit**: BTC, ETH (rich feature set); cross-asset features (VIX) require TradFi data pipeline
 
 ## Example instances
@@ -142,8 +141,10 @@ VOL_ML_LEAN@cboe-spx-straddle-weekly-usd-prod
 
 - Rule-based IV-RV spread trade (threshold-entry, no ML model, no rolling retrain) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
 - Structural short-vol carry (always short vol for theta, no model signal required) → [`VOL_CARRY`](vol-carry.md)
-- ML model predicting underlying direction (alpha is price, not realized vol) → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
-- ATM straddle sized for a specific binary event catalyst (event calendar, not model forecast) → [`VOL_STRADDLE`](vol-straddle.md)
+- ML model predicting underlying direction (alpha is price, not realized vol) →
+  [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- ATM straddle sized for a specific binary event catalyst (event calendar, not model forecast) →
+  [`VOL_STRADDLE`](vol-straddle.md)
 
 ## See also
 

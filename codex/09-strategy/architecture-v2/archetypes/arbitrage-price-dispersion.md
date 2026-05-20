@@ -3,7 +3,23 @@ scope: [engineer, admin]
 archetype: ARBITRAGE_PRICE_DISPERSION
 family: ARBITRAGE_STRUCTURAL
 status: code-shipped
-venue_universe: [BINANCE, BYBIT, OKX, DERIBIT, HYPERLIQUID, ASTER, KRAKEN, UNISWAPV3, BALANCER, CURVE, UNITY, BETFAIR_DIRECT, SMARKETS_DIRECT, POLYMARKET]
+venue_universe:
+  [
+    BINANCE,
+    BYBIT,
+    OKX,
+    DERIBIT,
+    HYPERLIQUID,
+    ASTER,
+    KRAKEN,
+    UNISWAPV3,
+    BALANCER,
+    CURVE,
+    UNITY,
+    BETFAIR_DIRECT,
+    SMARKETS_DIRECT,
+    POLYMARKET,
+  ]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -81,9 +97,9 @@ duplicate.
 
 ## Config schema
 
-> **⚠️ SUPERSEDED (generic schema below)** — the generic `opportunity_type`/`eligible_venues`/`eligible_markets`
-> schema below was the original design. The two deployed variants are documented in the concrete sections
-> that follow. Use those for new strategy-instance configs.
+> **⚠️ SUPERSEDED (generic schema below)** — the generic `opportunity_type`/`eligible_venues`/`eligible_markets` schema
+> below was the original design. The two deployed variants are documented in the concrete sections that follow. Use
+> those for new strategy-instance configs.
 
 ```yaml
 # LEGACY GENERIC SCHEMA — for reference only; use variant sections below for actual configs
@@ -128,13 +144,13 @@ REQUIRED_PARAMS = `{"candidate_venues"}` — engine raises `ValueError` at boot 
 
 ```yaml
 # Required:
-candidate_venues: [BINANCE, BYBIT]  # ≥2 venues required; raises ValueError at boot if absent or <2
+candidate_venues: [BINANCE, BYBIT] # ≥2 venues required; raises ValueError at boot if absent or <2
 
 # Optional (engine defaults shown):
-dispersion_bps: "30"       # minimum cross-venue price gap to trigger entry
-cost_bps: "10"             # round-trip transaction cost estimate
-stake_fraction: "0.1"      # fraction of capital per opportunity
-hedge_deadline_ms: "5000"  # max ms between leader fill and hedge submission
+dispersion_bps: "30" # minimum cross-venue price gap to trigger entry
+cost_bps: "10" # round-trip transaction cost estimate
+stake_fraction: "0.1" # fraction of capital per opportunity
+hedge_deadline_ms: "5000" # max ms between leader fill and hedge submission
 
 # Universal StrategyInstanceDefinition fields:
 target_leverage: "1.0"
@@ -147,15 +163,16 @@ share_class: USD
 
 ### Variant B — Funding-rate dispersion
 
-Uses paired long/short positions across perp venues to capture funding-rate spread.
-Engine: `price_dispersion._on_tick_funding_rate_dispersion()` + `funding_rate_dispersion.py`
-(VenuePair, PairSelectionMode, VolCapClampConfig). Fully implemented as of 2026-05-20.
+Uses paired long/short positions across perp venues to capture funding-rate spread. Engine:
+`price_dispersion._on_tick_funding_rate_dispersion()` + `funding_rate_dispersion.py` (VenuePair, PairSelectionMode,
+VolCapClampConfig). Fully implemented as of 2026-05-20.
 
-Venue universe (May-23): bybit, deribit, binance, okx, hyperliquid, aster (6 CeFi perps).
-Pair selection: `dynamic-best-long-short` (PairSelectionMode) — ranks all venue pairs by
-funding spread net of cost, takes the best long venue vs best short venue each tick.
+Venue universe (May-23): bybit, deribit, binance, okx, hyperliquid, aster (6 CeFi perps). Pair selection:
+`dynamic-best-long-short` (PairSelectionMode) — ranks all venue pairs by funding spread net of cost, takes the best long
+venue vs best short venue each tick.
 
 Key params:
+
 ```
 dispersion_type: "funding-rate-dispersion"
 venue_universe: "bybit,deribit,binance,okx,hyperliquid,aster"
@@ -170,6 +187,7 @@ cost_bps: "10"
 ```
 
 Catalog slots (catalog.py `_build_arbitrage_price_dispersion`):
+
 - `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`
 - `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod`
 
@@ -249,10 +267,11 @@ Cross-venue dated futures arb (CME micro vs Deribit, same expiry):
   ARBITRAGE_PRICE_DISPERSION@cme-deribit-met-eth-1h-usdc-v2-prod
 ```
 
-Funding-rate dispersion slots live in the legacy-factory bridge (`archetype_slot_resolver.py`) not in the
-catalog — see Variant B above for labels and config.
+Funding-rate dispersion slots live in the legacy-factory bridge (`archetype_slot_resolver.py`) not in the catalog — see
+Variant B above for labels and config.
 
 Bridge slots (2026-05-20, from `archetype_slot_resolver.py STRATEGY_TYPE_TO_SLOT`):
+
 ```
   ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
   ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod

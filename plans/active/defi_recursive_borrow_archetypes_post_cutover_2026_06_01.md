@@ -96,8 +96,8 @@ started).
       prereq preserved). — 2026-05-18 slot 3.
 - [x] [PM] P0. Add sub-bullet to `master_to_live_defi_2026_05_23.md` Group F item 18 (2-year batch backtest run)
       pointing at this successor plan's Phase 12. **SLOT-1-ONLY** — queued for slot 1 on next master-plan refresh.
-      **[DEFERRED-SLOT-1-ONLY]** 2026-05-19 slot 2: SLOT-1-ONLY designation; slot 2 cannot execute. Will land on
-      next slot-1 master-plan refresh per daily work-split SSOT.
+      **[DEFERRED-SLOT-1-ONLY]** 2026-05-19 slot 2: SLOT-1-ONLY designation; slot 2 cannot execute. Will land on next
+      slot-1 master-plan refresh per daily work-split SSOT.
 - [x] ✅ [PM] P0. Update top-of-file banner in `defi_master_2026_05_07.md` to reference post-cutover plan as canonical
       Phase 10+ implementation track; pre-cutover Phases 1-9 carrier clarified as `2026_05_10.md`. — 2026-05-18 slot 3.
 - [x] ✅ [PM] P0. Update top-of-file banner in `alerting_service_live_rules_2026_05_07.md` to reference Phase 8 of
@@ -115,38 +115,38 @@ Note: `ARCHETYPE_CONFIG_SEED` rows are DONE. Remaining Phase 2 todos:
 - [x] [UAC] P0. Extend `CARRY_RECURSIVE_STAKED` config in `internal/architecture_v2/archetype_config.py` with:
       `perp_leg_enabled: bool`, `perp_venue: PerpVenue | None`, `target_net_delta: Decimal`, `recursion_depth_max: int`,
       `safety_buffer_ltv: Decimal`, `opening_mode: Literal["persistent", "flash"]`, `usdc_margin_buffer_min: Decimal`,
-      `lending_protocol: LendingProtocol`.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: design fully specced in companion plan Phase 2; no live trading
-      required; implementation starts post-2026-05-23. Successor: this plan (Phase 2).
+      `lending_protocol: LendingProtocol`. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: design fully specced in
+      companion plan Phase 2; no live trading required; implementation starts post-2026-05-23. Successor: this plan
+      (Phase 2).
 - [x] [UAC] P0. New helper enum `LendingProtocol` (AAVE_V3 / COMPOUND_V3 / SPARK / MORPHO_BLUE / MAKER_DSR) in
-      `canonical/crosscutting/defi.py`.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: pure schema addition; design confirmed in companion plan.
+      `canonical/crosscutting/defi.py`. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: pure schema addition; design
+      confirmed in companion plan.
 - [x] [UAC] P0. `PerpVenue` — reuse existing `Venue` filtered by `VenueCapability.PERP_TRADE` via
-      `get_perp_venues() -> frozenset[str]` helper (System-First; no new enum).
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: helper function; design confirmed (System-First, no new enum).
+      `get_perp_venues() -> frozenset[str]` helper (System-First; no new enum). **[DEFERRED-POST-CUTOVER]** 2026-05-19
+      slot 2: helper function; design confirmed (System-First, no new enum).
 - [x] [UAC] P0. Backfill default values for existing `CARRY_RECURSIVE_STAKED` instances (set `perp_leg_enabled=True`,
       `perp_venue=Hyperliquid`, `target_net_delta=0`, `lending_protocol=AAVE_V3`, `opening_mode="persistent"`).
       **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on LendingProtocol enum + config extension above.
 - [x] [UAC] P0. Update `defi_reserve_params.py` module docstring (line 1-22) — claims "verified 2026-03-29" but 12+
-      Ethereum reserves are missing; refresh audit date or scope the claim.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: doc-string only; will land with Phase 2 UAC batch.
+      Ethereum reserves are missing; refresh audit date or scope the claim. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot
+      2: doc-string only; will land with Phase 2 UAC batch.
 - [x] [UAC] P0. Schema test: round-trip `archetype_config.from_dict(json)` for both Family 1 and Family 2 configs under
-      `tests/internal/unit/test_carry_recursive_staked_config_variants.py`.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on config extension items above.
+      `tests/internal/unit/test_carry_recursive_staked_config_variants.py`. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot
+      2: gated on config extension items above.
 - [x] [UAC] P1. Extend `AAVE_V3_ETHEREUM_RESERVES` with `RETH`; admit `RETH` to ETH_CORRELATED E-Mode.
       **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: UAC reserve registry update; no live trading required.
 - [x] [UAC] P1. Investigate 12+ missing Aave V3 Ethereum reserves (OSETH, RSETH, WEETHS, LUSD, FRAX, SDAI, USDS, PYUSD,
-      USDE, SUSDE, CRVUSD, GHO).
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: research + reserve additions; no live trading required.
+      USDE, SUSDE, CRVUSD, GHO). **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: research + reserve additions; no live
+      trading required.
 - [x] [UAC] P1. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` +
-      `COMPOUND_V3_BASE_RESERVES`.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: reserve dicts; no live trading required.
+      `COMPOUND_V3_BASE_RESERVES`. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: reserve dicts; no live trading
+      required.
 - [x] [UAC] P2. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; confirm Spark in post-cutover scope).
       **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: P2 reserve addition; confirm Spark scope at plan start.
 - [x] [UAC] P2. Document Morpho per-market LLTV overrides via `get_morpho_market_lltv(market_id)` accessor.
       **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: accessor helper + doc; no live trading required.
-- [x] [UAC] P2. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: symbol disambiguation; no live trading required.
+- [x] [UAC] P2. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys. **[DEFERRED-POST-CUTOVER]**
+      2026-05-19 slot 2: symbol disambiguation; no live trading required.
 
 **Done definition:** UAC schema accepts both Family-1 and Family-2 configs; existing `CARRY_RECURSIVE_STAKED` instances
 continue to round-trip; QG green on UAC.
@@ -159,9 +159,9 @@ continue to round-trip; QG green on UAC.
 
 - [x] [strategy-service] **P0**. Peripheral script wiring: extend `strategy-service/scripts/quality-gates.sh` to run
       basedpyright + ruff on `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (Phase 12 scope — wire in same
-      logical unit as Phase 12 smoke script creation).
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: explicitly gated on Phase 12 smoke script (which is itself
-      post-cutover). Must be done in same logical unit as Phase 12 smoke script per plan body.
+      logical unit as Phase 12 smoke script creation). **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: explicitly gated
+      on Phase 12 smoke script (which is itself post-cutover). Must be done in same logical unit as Phase 12 smoke
+      script per plan body.
 
 ---
 
@@ -373,9 +373,9 @@ patches, and `strategy-summary.md` patches are ALREADY SHIPPED (see original pla
 - [x] [codex] **P0**. NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md` (gates on Phase 9 P&L
       curves — per-month attribution table per variant). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0 gate #6. **BLOCKED-DATA** — gates on Phase 9
-      matching-engine DeFi cost model (execution-service).
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: BLOCKED-DATA acknowledged; gated on Phase 9 cost-model which
-      is itself post-cutover. Will be authored after Phase 9 P&L curves are available.
+      matching-engine DeFi cost model (execution-service). **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: BLOCKED-DATA
+      acknowledged; gated on Phase 9 cost-model which is itself post-cutover. Will be authored after Phase 9 P&L curves
+      are available.
 - [x] ✅ [codex] **P0**. NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md`
       (14-scenario taxonomy; per-cell verdict matrix; harness shape; SSOT alignment caveats). Gates on Phase 12 design
       (DESIGN SHIPPED in original plan). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0

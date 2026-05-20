@@ -470,30 +470,32 @@ error-handling pattern is identical.
 `InstrumentRecord._enforce_per_asset_group_required_fields` (Pydantic `model_validator(mode="after")`) enforces
 per-asset-group field requirements at write-time. Rules shipped as of 2026-05-20:
 
-| Rule | Condition | Requirement | Shipped |
-|---|---|---|---|
-| 1 | `instrument_type in {SPOT_PAIR, PERPETUAL}` | `base_asset` non-empty AND `quote_asset` non-empty | `uac@hard-schema-phase1` |
-| 2 | DeFi ONCHAIN | `pool_address` OR `base_asset_contract_address` non-null (disjunctive — one or the other) | `uac@hard-schema-phase1` |
-| 3 | `instrument_type == FUTURE` | `expiry` non-null | `uac@80aef10` |
-| 4 | `instrument_type == OPTION` | `expiry` non-null | `uac@80aef10` |
-| 5 | `instrument_type == EVENT_CONTRACT` | `expiry` non-null | `uac@80aef10` |
-| 6 | `instrument_type in DEFI_ONCHAIN_INSTRUMENT_TYPES` | `base_asset_decimals` non-null | `uac@956bec1` |
-| 7 | `instrument_type == POOL` | `quote_asset_decimals` non-null (two-asset pool) | `uac@956bec1` |
+| Rule | Condition                                          | Requirement                                                                               | Shipped                  |
+| ---- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
+| 1    | `instrument_type in {SPOT_PAIR, PERPETUAL}`        | `base_asset` non-empty AND `quote_asset` non-empty                                        | `uac@hard-schema-phase1` |
+| 2    | DeFi ONCHAIN                                       | `pool_address` OR `base_asset_contract_address` non-null (disjunctive — one or the other) | `uac@hard-schema-phase1` |
+| 3    | `instrument_type == FUTURE`                        | `expiry` non-null                                                                         | `uac@80aef10`            |
+| 4    | `instrument_type == OPTION`                        | `expiry` non-null                                                                         | `uac@80aef10`            |
+| 5    | `instrument_type == EVENT_CONTRACT`                | `expiry` non-null                                                                         | `uac@80aef10`            |
+| 6    | `instrument_type in DEFI_ONCHAIN_INSTRUMENT_TYPES` | `base_asset_decimals` non-null                                                            | `uac@956bec1`            |
+| 7    | `instrument_type == POOL`                          | `quote_asset_decimals` non-null (two-asset pool)                                          | `uac@956bec1`            |
 
 **`DEFI_ONCHAIN_INSTRUMENT_TYPES`** (UAC `internal/reference/instrument.py`):
 `{POOL, LENDING, LST, YIELD_BEARING, A_TOKEN, DEBT_TOKEN, STAKING, SPOT_ASSET}`
 
 **Declaration status**: all fields above stay `Optional` at declaration level (cannot express disjunctive or
-per-instrument-type constraints in the type system alone). The `model_validator` is the runtime SSOT.
-Subclass approach (declaration-level enforcement for `expiry` on FUTURE/OPTION) is Phase E —
-deferred post-cutover per `hard_schema_phase1_field_flip_migration_2026_05_19.md`.
+per-instrument-type constraints in the type system alone). The `model_validator` is the runtime SSOT. Subclass approach
+(declaration-level enforcement for `expiry` on FUTURE/OPTION) is Phase E — deferred post-cutover per
+`hard_schema_phase1_field_flip_migration_2026_05_19.md`.
 
 **Audit scripts** (instruments-service/scripts/):
+
 - `audit_defi_null_decimals_2026_05_19.py` — audits Rules 6+7 against GCS historical rows
 - `audit_cefi_empty_base_quote_2026_05_19.py` — audits Rule 1 against GCS historical rows
 
 **SSOT**: `plans/active/hard_schema_phase1_field_flip_migration_2026_05_19.md`
-+ `plans/active/hard_schema_enforcement_2026_05_08.md`
+
+- `plans/active/hard_schema_enforcement_2026_05_08.md`
 
 ---
 

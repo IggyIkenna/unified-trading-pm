@@ -7,7 +7,11 @@ source:
 locked_by: ""
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C4 (MTDS → features audit) + Phase C6 (features → strategy audit)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). 9 TODOs split: Group 1 (futures roll) → C2+C4; Group 2 (aave on-chain) → C4; Group 3 (sports) → C6 or D5. Do NOT work standalone.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C4 (MTDS → features audit) + Phase C6 (features →
+> strategy audit)** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). 9 TODOs split: Group 1 (futures roll) → C2+C4; Group 2 (aave on-chain) → C4; Group 3 (sports) → C6
+> or D5. Do NOT work standalone.
 
 ## What I found
 

@@ -9,7 +9,12 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟡 COVERED BY** [../phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md](../phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md) + [../promote_workflow_may23_cli_path_2026_05_10.md](../promote_workflow_may23_cli_path_2026_05_10.md) — `PaperRunDataReadinessCheck` is a feature of `e2e-testing/scripts/defi/run-paper.sh` owned by the May-23 CLI promote plan (slot-1 triage 2026-05-20). Will also leverage mega-audit Phase A2 `expected_coverage()` once it lands. Archive when parent plans close.
+> **🟡 COVERED BY**
+> [../phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md](../phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md) +
+> [../promote_workflow_may23_cli_path_2026_05_10.md](../promote_workflow_may23_cli_path_2026_05_10.md) —
+> `PaperRunDataReadinessCheck` is a feature of `e2e-testing/scripts/defi/run-paper.sh` owned by the May-23 CLI promote
+> plan (slot-1 triage 2026-05-20). Will also leverage mega-audit Phase A2 `expected_coverage()` once it lands. Archive
+> when parent plans close.
 
 # Paper-DeFi pre-run data-readiness gap
 

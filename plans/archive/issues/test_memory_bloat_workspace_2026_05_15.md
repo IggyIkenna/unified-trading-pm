@@ -16,7 +16,11 @@ severity: P2 — not blocking May-23; impacts dev-box concurrent-QG capacity + G
 suggested_owner: ikenna-side OR opus-max-tier slot (memory-profiling + import-graph surgery is design work)
 ---
 
-> **🟢 RESOLUTION VERIFIED 2026-05-20** — structural fix shipped at `unified-trading-pm@c3cb11f6` (`QG_MEM_CAP=10G` per-subprocess cap via systemd-run) + `unified-trading-pm@ca3fad47` (`PYTEST_WORKERS=1` default + macOS warning path). SSOT `codex/06-coding-standards/quality-gates-memory-governance.md`. No more runaway >10 GB processes possible; current peak ~3 GB well within cap. Per-repo memray audit + UTL <1 GB optimisation is explicit NICE-TO-HAVE not blocking May-23 (operator-acked at issue-doc filing). Archiving.
+> **🟢 RESOLUTION VERIFIED 2026-05-20** — structural fix shipped at `unified-trading-pm@c3cb11f6` (`QG_MEM_CAP=10G`
+> per-subprocess cap via systemd-run) + `unified-trading-pm@ca3fad47` (`PYTEST_WORKERS=1` default + macOS warning path).
+> SSOT `codex/06-coding-standards/quality-gates-memory-governance.md`. No more runaway >10 GB processes possible;
+> current peak ~3 GB well within cap. Per-repo memray audit + UTL <1 GB optimisation is explicit NICE-TO-HAVE not
+> blocking May-23 (operator-acked at issue-doc filing). Archiving.
 
 ## TL;DR
 

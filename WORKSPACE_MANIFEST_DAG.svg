@@ -56,9 +56,9 @@
   <text x="95" y="224" text-anchor="middle" class="level-label">L0</text>
   <text x="150" y="224" class="desc">Project management — manifest, templates, scripts, cursor rules. (1 repos)</text>
   <rect x="70" y="247" width="146" height="38" class="devops" />
-  <rect x="70" y="247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="143" y="265" text-anchor="middle" class="label">unified-trading-pm</text>
-  <circle cx="206" cy="255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="206" cy="255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="143" y="277" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Foundation contracts (Tier 0) — present clone set. (1 repos) -->
   <rect x="40" y="319" width="2320" height="107" class="level-bg" />
@@ -66,9 +66,9 @@
   <text x="95" y="343" text-anchor="middle" class="level-label">L1</text>
   <text x="150" y="343" class="desc">Foundation contracts (Tier 0) — present clone set. (1 repos)</text>
   <rect x="70" y="366" width="167" height="38" class="lib" />
-  <rect x="70" y="366" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="366" width="4" height="38" fill="#facc15" rx="2" />
   <text x="153" y="384" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="153" y="396" text-anchor="middle" class="ver">0.1.20</text>
   <!-- L2: Trading library (Tier 1) — depends on UAC. (1 repos) -->
   <rect x="40" y="438" width="2320" height="107" class="level-bg" />
@@ -90,11 +90,11 @@
   <text x="146" y="622" text-anchor="middle" class="label">instruments-service</text>
   <circle cx="213" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="146" y="634" text-anchor="middle" class="ver">0.1.22</text>
-  <!-- L4: Core services (batch + live) — parallel within tier. (19 repos) -->
+  <!-- L4: Core services (batch + live) — parallel within tier. (18 repos) -->
   <rect x="40" y="676" width="2320" height="155" class="level-bg" />
   <rect x="55" y="684" width="80" height="22" fill="#8b5cf6" class="level-badge" />
   <text x="95" y="700" text-anchor="middle" class="level-label">L4</text>
-  <text x="150" y="700" class="desc">Core services (batch + live) — parallel within tier. (19 repos)</text>
+  <text x="150" y="700" class="desc">Core services (batch + live) — parallel within tier. (18 repos)</text>
   <rect x="70" y="723" width="132" height="38" class="svc" />
   <rect x="70" y="723" width="4" height="38" fill="#facc15" rx="2" />
   <text x="136" y="741" text-anchor="middle" class="label">alerting-service</text>
@@ -166,55 +166,38 @@
   <circle cx="707" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="623" y="801" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="727" y="771" width="160" height="38" class="svc" />
-  <rect x="727" y="771" width="4" height="38" fill="#facc15" rx="2" />
   <text x="807" y="789" text-anchor="middle" class="label">ml-inference-service</text>
-  <circle cx="877" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="877" cy="779" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="807" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="897" y="771" width="153" height="38" class="svc" />
-  <rect x="897" y="771" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="973" y="789" text-anchor="middle" class="label">ml-training-service</text>
-  <circle cx="1040" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1040" cy="779" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="973" y="801" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1060" y="771" width="181" height="38" class="svc" />
+  <rect x="1060" y="771" width="132" height="38" class="svc" />
   <rect x="1060" y="771" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1150" y="789" text-anchor="middle" class="label">pnl-attribution-service</text>
-  <circle cx="1231" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1150" y="801" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1251" y="771" width="132" height="38" class="svc" />
-  <rect x="1251" y="771" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1317" y="789" text-anchor="middle" class="label">strategy-service</text>
-  <circle cx="1373" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1317" y="801" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1393" y="771" width="167" height="38" class="svc" />
-  <rect x="1393" y="771" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1476" y="789" text-anchor="middle" class="label">trading-agent-service</text>
-  <circle cx="1550" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1476" y="801" text-anchor="middle" class="ver">0.1.0</text>
-  <!-- L5: Client-facing APIs and operational services. (4 repos) -->
+  <text x="1126" y="789" text-anchor="middle" class="label">strategy-service</text>
+  <circle cx="1182" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1126" y="801" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1202" y="771" width="167" height="38" class="svc" />
+  <rect x="1202" y="771" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="1285" y="789" text-anchor="middle" class="label">trading-agent-service</text>
+  <circle cx="1359" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1285" y="801" text-anchor="middle" class="ver">0.1.0</text>
+  <!-- L5: Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.) (2 repos) -->
   <rect x="40" y="843" width="2320" height="107" class="level-bg" />
   <rect x="55" y="851" width="80" height="22" fill="#ec4899" class="level-badge" />
   <text x="95" y="867" text-anchor="middle" class="level-label">L5</text>
-  <text x="150" y="867" class="desc">Client-facing APIs and operational services. (4 repos)</text>
+  <text x="150" y="867" class="desc">Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.) (2 repos)</text>
   <rect x="70" y="890" width="160" height="38" class="api" />
   <rect x="70" y="890" width="4" height="38" fill="#facc15" rx="2" />
   <text x="150" y="908" text-anchor="middle" class="label">client-reporting-api</text>
   <circle cx="220" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="150" y="920" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="240" y="890" width="244" height="38" class="svc" />
-  <rect x="240" y="890" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="362" y="908" text-anchor="middle" class="label">position-balance-monitor-service</text>
-  <circle cx="474" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="362" y="920" text-anchor="middle" class="ver">0.1.1</text>
-  <rect x="494" y="890" width="195" height="38" class="svc" />
-  <rect x="494" y="890" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="591" y="908" text-anchor="middle" class="label">risk-and-exposure-service</text>
-  <circle cx="679" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="591" y="920" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="699" y="890" width="153" height="38" class="infra" />
-  <rect x="699" y="890" width="4" height="38" fill="#ef4444" rx="2" />
-  <text x="775" y="908" text-anchor="middle" class="label">unified-trading-api</text>
-  <circle cx="842" cy="898" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
-  <text x="775" y="920" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="240" y="890" width="153" height="38" class="infra" />
+  <rect x="240" y="890" width="4" height="38" fill="#ef4444" rx="2" />
+  <text x="316" y="908" text-anchor="middle" class="label">unified-trading-api</text>
+  <circle cx="383" cy="898" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <text x="316" y="920" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L6: Deployment + batch reconciliation (orchestration). (3 repos) -->
   <rect x="40" y="962" width="2320" height="107" class="level-bg" />
   <rect x="55" y="970" width="80" height="22" fill="#dc2626" class="level-badge" />

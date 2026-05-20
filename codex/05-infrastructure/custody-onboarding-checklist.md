@@ -153,9 +153,9 @@ Operator-action items:
 
 Same shape for AWS, region-pinned to ap-northeast-1 per Tokyo same-metro egress rule.
 
-> **Origin note**: `--origin AWS_CLOUDHSM` (FIPS 140-2 Level 3) requires a provisioned CloudHSM cluster
-> (~$1.60/hour per HSM). For May-23 without a cluster, use `--origin AWS_KMS` (FIPS 140-2 Level 2, multi-tenant
-> HSM-backed). The `CloudKmsCustodyProvider` code works identically with both origins — the ARN format is the same.
+> **Origin note**: `--origin AWS_CLOUDHSM` (FIPS 140-2 Level 3) requires a provisioned CloudHSM cluster (~$1.60/hour per
+> HSM). For May-23 without a cluster, use `--origin AWS_KMS` (FIPS 140-2 Level 2, multi-tenant HSM-backed). The
+> `CloudKmsCustodyProvider` code works identically with both origins — the ARN format is the same.
 
 ```yaml
 execution:
@@ -166,49 +166,27 @@ execution:
 ```
 
 - [ ] **B.2.1** Create CMK per asset_group (use `AWS_KMS` for May-23; swap `AWS_CLOUDHSM` post-cluster-provisioning):
-      ```bash
-      for ag in defi cefi tradfi sports prediction; do
-        aws kms create-key \
-          --description "trading-${ag}-master-v1" \
-          --key-usage ENCRYPT_DECRYPT \
-          --customer-master-key-spec SYMMETRIC_DEFAULT \
-          --origin AWS_KMS \
-          --region ap-northeast-1
-      done
-      ```
+      `bash     for ag in defi cefi tradfi sports prediction; do       aws kms create-key \         --description "trading-${ag}-master-v1" \         --key-usage ENCRYPT_DECRYPT \         --customer-master-key-spec SYMMETRIC_DEFAULT \         --origin AWS_KMS \         --region ap-northeast-1     done     `
       Note the `KeyId` (UUID) returned per key — needed for alias + ARN construction.
 - [ ] **B.2.2** Create human-readable aliases (required for `kms_key_uri` ARN in `WalletProvisioningConfig`):
-      ```bash
-      for ag in defi cefi tradfi sports prediction; do
-        aws kms create-alias \
-          --alias-name "alias/trading-${ag}-master-v1" \
-          --target-key-id <key-id-from-B.2.1-for-${ag}> \
-          --region ap-northeast-1
-      done
-      ```
+      `bash     for ag in defi cefi tradfi sports prediction; do       aws kms create-alias \         --alias-name "alias/trading-${ag}-master-v1" \         --target-key-id <key-id-from-B.2.1-for-${ag}> \         --region ap-northeast-1     done     `
       The full ARN form used in code: `arn:aws:kms:ap-northeast-1:427895769566:key/<key-id>`.
 - [ ] **B.2.3** Bind `kms:Decrypt` to trading-VM EC2 instance role **only**. NO human IAM principals:
-      ```bash
-      aws kms put-key-policy \
-        --key-id <key-id> \
-        --policy-name default \
-        --policy '{"Version":"2012-10-17","Statement":[{"Sid":"AllowDecryptByTradingVMRoleOnly","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::427895769566:role/trading-vm-role"},"Action":["kms:Decrypt"],"Resource":"*"}]}' \
-        --region ap-northeast-1
-      ```
-      Verify: `aws kms get-key-policy --key-id <key-id> --policy-name default --region ap-northeast-1 | grep -v "trading-vm-role"` should return only the KMS service principle, no human principals.
+      `bash     aws kms put-key-policy \       --key-id <key-id> \       --policy-name default \       --policy '{"Version":"2012-10-17","Statement":[{"Sid":"AllowDecryptByTradingVMRoleOnly","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::427895769566:role/trading-vm-role"},"Action":["kms:Decrypt"],"Resource":"*"}]}' \       --region ap-northeast-1     `
+      Verify:
+      `aws kms get-key-policy --key-id <key-id> --policy-name default --region ap-northeast-1 | grep -v "trading-vm-role"`
+      should return only the KMS service principle, no human principals.
 - [ ] **B.2.4** CloudTrail logging enabled for all CMK actions. Verify via AWS Console → CloudTrail → Event history
       filter: `eventSource=kms.amazonaws.com, eventName=Decrypt`.
-- [ ] **B.2.5** Envelope-encrypt the wallet PK + store wrapped ciphertext in AWS Secrets Manager (AWS equivalent of
-      GCP B.3.2):
-      ```bash
-      # Step 1: encrypt PK with AWS KMS (offline cold laptop with AWS CLI configured)
-      echo -n "$RAW_PK" | \
-        aws kms encrypt \
-          --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
-          --plaintext fileb:///dev/stdin \
-          --query CiphertextBlob \
-          --output text \
-          --region ap-northeast-1 > /tmp/wrapped.b64
+- [ ] **B.2.5** Envelope-encrypt the wallet PK + store wrapped ciphertext in AWS Secrets Manager (AWS equivalent of GCP
+      B.3.2): ```bash # Step 1: encrypt PK with AWS KMS (offline cold laptop with AWS CLI configured) echo -n "$RAW_PK"
+      | \
+       aws kms encrypt \
+       --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
+       --plaintext fileb:///dev/stdin \
+       --query CiphertextBlob \
+       --output text \
+       --region ap-northeast-1 > /tmp/wrapped.b64
 
       # Step 2: store wrapped ciphertext as-is in Secrets Manager (SecretString = base64-encoded ciphertext blob)
       aws secretsmanager create-secret \
@@ -220,18 +198,9 @@ execution:
       shred -u /tmp/wrapped.b64
       ```
       Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
+
 - [ ] **B.2.6** Populate `WalletProvisioningConfig` row with AWS ARN form for `kms_key_uri`:
-      ```python
-      WalletProvisioningConfig(
-          wallet_id="defi-eth-hot-aave-v1",
-          chain="ETHEREUM",
-          kind=WalletKind.HOT_TRADING,
-          signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,
-          kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",
-          private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",
-          archetype_id="carry_staked_basis",
-      )
-      ```
+      `python     WalletProvisioningConfig(         wallet_id="defi-eth-hot-aave-v1",         chain="ETHEREUM",         kind=WalletKind.HOT_TRADING,         signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,         kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",         private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",         archetype_id="carry_staked_basis",     )     `
       The `CloudKmsCustodyProvider` detects `cloud_provider="aws"` and routes to `boto3.client("kms")` +
       `client.decrypt(CiphertextBlob=wrapped, KeyId=kms_key_uri)` automatically (no code change needed).
 

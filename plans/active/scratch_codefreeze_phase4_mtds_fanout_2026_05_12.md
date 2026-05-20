@@ -23,12 +23,16 @@ estimate_calibration_note: |
 ## ✅ CLOSED 2026-05-19 slot-5
 
 Both gating deps landed before this fan-out was needed:
-1. UAC `PipelineMode` enum + 6 new `BATCH_*` values (BATCH_YAHOO/BARCHART/FOOTYSTATS/HYPERLIQUID_REST/PYTH_HERMES/CHAINLINK) — UAC@`52d289c`+`7d7ea4c`
+
+1. UAC `PipelineMode` enum + 6 new `BATCH_*` values
+   (BATCH_YAHOO/BARCHART/FOOTYSTATS/HYPERLIQUID_REST/PYTH_HERMES/CHAINLINK) — UAC@`52d289c`+`7d7ea4c`
 2. Ikenna slot 3 Phase 4.MTDS sweep — MTDS@`3da3f43` (97 callsites in 26 files, `pipeline_mode=` added to all handlers)
 
-PM baseline shrunk from 114 → 17 (FEATURES-only) → 6 remaining after UTL sweep. Fan-out sub-agents never spawned — single sweep was more efficient.
+PM baseline shrunk from 114 → 17 (FEATURES-only) → 6 remaining after UTL sweep. Fan-out sub-agents never spawned —
+single sweep was more efficient.
 
-**Remaining scope deferred**: `DefiManifestRecorder` `record_captured` full-v8 migration (df-flow propagation through every DeFi handler) → tracked at `manifest_schema_final_gate_2026_05_09.md` Phase 4.DEFAULT-REMOVAL.
+**Remaining scope deferred**: `DefiManifestRecorder` `record_captured` full-v8 migration (df-flow propagation through
+every DeFi handler) → tracked at `manifest_schema_final_gate_2026_05_09.md` Phase 4.DEFAULT-REMOVAL.
 
 0 open `- [ ]` checkboxes in this scratch plan — done_definition satisfied.
 

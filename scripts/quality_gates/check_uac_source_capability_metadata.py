@@ -8,6 +8,7 @@ has not been run (new venues added without the structured metadata fields).
 Exit 0 — all SourceCapability instances have chain= and kind=.
 Exit 1 — one or more instances missing chain= or kind=.
 """
+
 from __future__ import annotations
 
 import re

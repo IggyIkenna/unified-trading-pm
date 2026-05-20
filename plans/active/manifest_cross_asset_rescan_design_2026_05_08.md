@@ -226,16 +226,17 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       flips (trades+tbbo+ohlcv_1m) + 0 stamps ~08:27–08:34 UTC. Sports/prediction apply-flips deferred — needs separate
       authorized slot (99,620 sports phantoms). **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on
       classifier fix (P1 issue filed).
-- [x] ✅ **DEFERRED** [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
-      bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
-      `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
+- [x] ✅ **DEFERRED** [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`**
+      (blocked on physical bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket
+      names (e.g. `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
       `cloud-providers.yaml` lines 124-132 already define the canonical env-tiered templates
       (`market-data-tick-cefi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`). Scripts must NOT adopt `resolve_bucket_name`
       until the physical GCS buckets are renamed/created — adopting early would point to non-existent buckets and fail
-      all manifest reads. **MIGRATED TO**: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (create env-tiered
-      buckets + copy data + cutover). After Phase 2.6 gate, update the 3 scripts: replace `ASSET_GROUP_CONFIG` hardcoded
-      bucket strings with `resolve_bucket_name(cloud=Cloud.GCP, kind="market-data-tick", asset_group=ag)` (and
-      `kind="instruments-store"` for sports). Remove hardcoded `PROJECT_ID` constant. Deferred 2026-05-19 slot-8.
+      all manifest reads. **MIGRATED TO**: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (create
+      env-tiered buckets + copy data + cutover). After Phase 2.6 gate, update the 3 scripts: replace
+      `ASSET_GROUP_CONFIG` hardcoded bucket strings with
+      `resolve_bucket_name(cloud=Cloud.GCP, kind="market-data-tick", asset_group=ag)` (and `kind="instruments-store"`
+      for sports). Remove hardcoded `PROJECT_ID` constant. Deferred 2026-05-19 slot-8.
 
 ## Reconciliation execution order
 
@@ -489,17 +490,17 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
 
 ## Deferred work — migrated to successor plans
 
-| Item | Successor plan |
-| ---- | -------------- |
+| Item                                                            | Successor plan                                                                                  |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.A (deployment-service@c8a1cd4) |
-| `cross_asset_rescan.py` script + 5-axis drift fix | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.D |
-| Sports/prediction apply-flips (99,620 sports phantoms) | `sports_master_2026_05_07.md` § "Phantom recon + failure triage" |
-| `resolve_bucket_name` migration for 3 reconciler scripts | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 |
-| Operator sign-off (class-C triage + sign-off section) | `manifest_schema_final_gate_2026_05_09.md` Phase 8.A + 8.B |
-| Codex SSOT updates (phantom audit doc + rescan stub) | `manifest_schema_final_gate_2026_05_09.md` Phase codex items |
+| `cross_asset_rescan.py` script + 5-axis drift fix               | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.D                              |
+| Sports/prediction apply-flips (99,620 sports phantoms)          | `sports_master_2026_05_07.md` § "Phantom recon + failure triage"                                |
+| `resolve_bucket_name` migration for 3 reconciler scripts        | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6                                     |
+| Operator sign-off (class-C triage + sign-off section)           | `manifest_schema_final_gate_2026_05_09.md` Phase 8.A + 8.B                                      |
+| Codex SSOT updates (phantom audit doc + rescan stub)            | `manifest_schema_final_gate_2026_05_09.md` Phase codex items                                    |
 
 ## Closure note (2026-05-19 slot 4)
 
 Design plan complete. All AI-executable checkboxes are `[x]`. Cross-asset rescan launcher + script shipped in
-`manifest_schema_final_gate_2026_05_09.md`. Remaining deferred items tracked in successor plans above. Operator
-sign-off (Phase 8.A+8.B) is a HUMAN-only gate in manifest_schema_final_gate. Status: active → done.
+`manifest_schema_final_gate_2026_05_09.md`. Remaining deferred items tracked in successor plans above. Operator sign-off
+(Phase 8.A+8.B) is a HUMAN-only gate in manifest_schema_final_gate. Status: active → done.

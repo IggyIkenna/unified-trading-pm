@@ -198,13 +198,13 @@ impl."
 - [x] **P1. FIXED** — Slot 6 applied fixes 1–4 to carry-staked-basis.md (confirmed in merge 2026-05-15).
 - [x] **P2. FIXED** — Slot 6 applied fix 5 to arbitrage-price-dispersion.md (confirmed in merge 2026-05-15).
 - [x] ✅ **P3. FIXED** — Add `lst_native_rate` + `lst_native_rate_ts` to features-onchain publisher so staleness guard
-      activates in production. features-service@c29dd8cc: added both columns to `_annualise_and_stamp` + happy-path
-      unit test verifying output schema. Provenance: slot-3 audit 2026-05-15. Fixed: slot-7 2026-05-19.
+      activates in production. features-service@c29dd8cc: added both columns to `_annualise_and_stamp` + happy-path unit
+      test verifying output schema. Provenance: slot-3 audit 2026-05-15. Fixed: slot-7 2026-05-19.
 - [x] ✅ **P4. FIXED** — Updated `carry-staked-basis.md` config schema with Drift 6 boot-validation note: 6 required
       params validated at `__init__`; ValueError raised at boot if absent. PM codex update slot-7 2026-05-19.
 - [x] ✅ **P5. FIXED** — Replaced APD generic config schema with actual impl params (Drift 7): added SUPERSEDED banner
-      on legacy schema + Variant A (price-dispersion, CURRENT IMPLEMENTATION with `candidate_venues` required) +
-      Variant B placeholder (funding-rate-dispersion). PM codex update slot-7 2026-05-19.
+      on legacy schema + Variant A (price-dispersion, CURRENT IMPLEMENTATION with `candidate_venues` required) + Variant
+      B placeholder (funding-rate-dispersion). PM codex update slot-7 2026-05-19.
 
 ## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
 

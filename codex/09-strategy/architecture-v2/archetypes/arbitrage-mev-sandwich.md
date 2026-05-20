@@ -13,8 +13,9 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)
 
-> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Status:** **TRACER ONLY.** No live engine exists or is factory-registered.
-> **Code module:** `strategy-service/strategy_service/engine/strategies/v2/mev/sandwich_theoretical.py`.
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Status:**
+> **TRACER ONLY.** No live engine exists or is factory-registered. **Code module:**
+> `strategy-service/strategy_service/engine/strategies/v2/mev/sandwich_theoretical.py`.
 
 ## Why no live engine
 
@@ -90,9 +91,11 @@ ARBITRAGE_MEV_SANDWICH@balancer-curve-eth-usdt-ethereum-theoretical
 ## Not in this archetype
 
 - Post-confirmation backrun (no mempool required, live today) → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
-- JIT LP around an imminent swap (fee capture, not sandwich) → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- JIT LP around an imminent swap (fee capture, not sandwich) →
+  [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
 - Flash-loan liquidation bundle → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
-- Persistent cross-venue price arb (no tx-ordering dependency) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- Persistent cross-venue price arb (no tx-ordering dependency) →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

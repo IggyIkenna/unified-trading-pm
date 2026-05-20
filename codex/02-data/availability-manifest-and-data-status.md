@@ -887,9 +887,9 @@ venues), the catalogue is **complete** for the asset_group. Cross-references:
 
 **Seven drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
 
-1. **Hive-vocab drift** — `category=` (legacy, pre-2026-05-19) vs `asset_group=` (canonical post-migration). Phase 3
-   GCS migration (2026-05-19) completed the `category=` → `asset_group=` rekey on disk. Reader fallback still probes
-   both during the 30-day window (until ~2026-06-15). After Phase 8 fallback removal, `category=` paths no longer exist.
+1. **Hive-vocab drift** — `category=` (legacy, pre-2026-05-19) vs `asset_group=` (canonical post-migration). Phase 3 GCS
+   migration (2026-05-19) completed the `category=` → `asset_group=` rekey on disk. Reader fallback still probes both
+   during the 30-day window (until ~2026-06-15). After Phase 8 fallback removal, `category=` paths no longer exist.
 2. **`instrument_type` casing** — manifest holds `PERPETUAL` / `perpetual` interchangeably; disk only has lowercase.
    Membership check is case-insensitive.
 3. **Empty `instrument_type`** — schema-4 manifest rows omit the segment; audit accepts any disk `instrument_type`.
@@ -1137,11 +1137,11 @@ denominator-divergence closure depends on the row EXISTING, not on the specific 
   `unified_api_contracts.registry.venue_launch_dates` SSOT (20 CeFi venues + 2 Prediction venues). Consumer-class
   behaviour documented in [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md).
 
-  **`EXPECTED_PRE_SOURCE_COVERAGE_START` — structured SSOT (2026-05-20)**: The per-data_type earliest available date
-  for a venue is now first-class on `SourceCapability.coverage_start: dict[str, date] | None` in
+  **`EXPECTED_PRE_SOURCE_COVERAGE_START` — structured SSOT (2026-05-20)**: The per-data_type earliest available date for
+  a venue is now first-class on `SourceCapability.coverage_start: dict[str, date] | None` in
   `unified_api_contracts/registry/capability.py`. Consumers call
-  `is_before_source_coverage_start(venue, data_type, check_date)` in `registry/expected_coverage.py` — returns `True`
-  if `check_date < capability.coverage_start[data_type]`, meaning callers should emit
+  `is_before_source_coverage_start(venue, data_type, check_date)` in `registry/expected_coverage.py` — returns `True` if
+  `check_date < capability.coverage_start[data_type]`, meaning callers should emit
   `EmptyConfirmedReason.EXPECTED_PRE_SOURCE_COVERAGE_START` in `record_empty()`. Returns `False` when no coverage start
   is known (no clip — the date is not excluded from the expected denominator). `venue_launch_dates.py` remains as a
   secondary index for the single-date (not per-data_type) venue launch semantics; `coverage_start` field is SSOT for
@@ -1439,9 +1439,8 @@ manifest and computes coverage at three aggregation levels:
 - **Level 2 — per (asset_group, venue)**: same shape per venue
 - **Level 3 — per (asset_group, venue, data_type)**: same shape per data_type per venue
 
-**Coverage formula** — SSOT: `compute_honest_coverage()` in UAC
-(`unified_api_contracts.compute_honest_coverage`, `unified-api-contracts@a9891f9`).
-Do **NOT** recompute inline — import and call the canonical function.
+**Coverage formula** — SSOT: `compute_honest_coverage()` in UAC (`unified_api_contracts.compute_honest_coverage`,
+`unified-api-contracts@a9891f9`). Do **NOT** recompute inline — import and call the canonical function.
 
 ```python
 from unified_api_contracts import CaptureStatusCounts, compute_honest_coverage
@@ -1459,8 +1458,7 @@ ratio = compute_honest_coverage(counts)
 # returns 1.0 if denominator == 0 (empty manifest = fully covered)
 ```
 
-For reading live manifest data use
-`unified_trading_library.manifest_writer.read_capture_status_counts(bucket, ...)` or
+For reading live manifest data use `unified_trading_library.manifest_writer.read_capture_status_counts(bucket, ...)` or
 `compute_coverage_for_bucket(bucket, ...)` — `unified-trading-library@8d66204`.
 
 **Output**: `gs://central-element-323112-honest-coverage/{YYYY-MM-DD}/coverage.json`

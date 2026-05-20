@@ -3,13 +3,17 @@ title: "unified-trading-pm: CHANGELOG.md missing"
 created: 2026-05-19
 author: slot-5
 resolved: 2026-05-20
-resolution: SHIPPED — operator picked Option A (add now) 2026-05-20. CHANGELOG.md created at unified-trading-pm/CHANGELOG.md (PM@e8bcff952). Post-1.0.0 release-notes runbook upgrade tracked at plans/active/release_notes_runbook_post_1_0_0.md (stub-awaiting-1.0.0).
+resolution:
+  SHIPPED — operator picked Option A (add now) 2026-05-20. CHANGELOG.md created at unified-trading-pm/CHANGELOG.md
+  (PM@e8bcff952). Post-1.0.0 release-notes runbook upgrade tracked at plans/active/release_notes_runbook_post_1_0_0.md
+  (stub-awaiting-1.0.0).
 source:
   - "MECH14-PM-CHANGELOG-AUDIT (orchestrator task)"
 locked_by: live-defi-rollout
 ---
 
-> **🟢 RESOLVED 2026-05-20** — operator picked Option A (add now). CHANGELOG.md shipped at PM@e8bcff952. Post-1.0.0 runbook upgrade has named successor `release_notes_runbook_post_1_0_0.md`. Archiving.
+> **🟢 RESOLVED 2026-05-20** — operator picked Option A (add now). CHANGELOG.md shipped at PM@e8bcff952. Post-1.0.0
+> runbook upgrade has named successor `release_notes_runbook_post_1_0_0.md`. Archiving.
 
 ## What I found
 
@@ -38,13 +42,13 @@ slot-1 main as owner for weekly updates. Adds ~15 min/week of maintenance.
 
 **Action items (if Option B chosen):**
 
-- [ ] Create `CHANGELOG.md` at repo root following Keep a Changelog format
-      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
-- [ ] Add weekly update responsibility to `ikenna_orchestrator/LEDGER.md` slot-1 duties
-      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
+- [ ] Create `CHANGELOG.md` at repo root following Keep a Changelog format **[DEFERRED-OPERATOR-DECISION]** 2026-05-19
+      slot 2: conditional on Option B selection; no ack found.
+- [ ] Add weekly update responsibility to `ikenna_orchestrator/LEDGER.md` slot-1 duties **[DEFERRED-OPERATOR-DECISION]**
+      2026-05-19 slot 2: conditional on Option B selection; no ack found.
 - [ ] Add `CHANGELOG.md` presence check to `quality-gates.sh` STEP 5.7x (codex template update required)
       **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
 
-**Current status:** Pending operator decision (A vs B). No blocking impact on May-23 gate.
-Recommended = Option A (do nothing until 1.0.0 graduation). 2026-05-19 slot 2 audit: no operator ack for
-Option B found in _agent_pings.md. Items gated on operator pick.
+**Current status:** Pending operator decision (A vs B). No blocking impact on May-23 gate. Recommended = Option A (do
+nothing until 1.0.0 graduation). 2026-05-19 slot 2 audit: no operator ack for Option B found in \_agent_pings.md. Items
+gated on operator pick.

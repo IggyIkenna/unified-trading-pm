@@ -80,10 +80,18 @@ estimate_calibration_note: |
 
 ### Slot 2 — pvl-p18a monitor + alerting close + wave3x + manifest_schema + sustain S3–S6 — ~14 cal AI-days
 
-1. - [x] ✅ **pvl-p18a health check** — `strategy-paper-carry-staked-basis-20260519-183013` RUNNING (asia-northeast1-c). 2h checks logged: slot_2.md#health-check-1 (2026-05-20) + #health-check-2 (2026-05-20). (2026-05-20 slot-2)
-2. - [x] ✅ **alerting_live_rules remaining 15 items** — read plan: 0 agent-actionable items. All remaining `- [ ]` are: Phase 7 threshold tuning BLOCKED-UPSTREAM (alerting-quietness VM, auto-stop ~2026-05-22 11:12 UTC); Phase 8 rehearsal HUMAN; Phase 9 go-live HUMAN; PagerDuty DEFERRED-PER-DECISION. Plan at max agent-closeable state. (2026-05-20 slot-2)
-3. - [x] ✅ **wave3x_residual_ssots close** — grepped `^- \[ \]`: 0 results. Plan is 100% complete. Work-split dashboard percentage was stale. (2026-05-20 slot-2)
-4. - [x] ✅ **manifest_schema_final_gate residuals** — Phase 7.C/7.D/7.E/7.F/7.G + 5 sub-checkboxes flipped (GCS migration Phase 3 complete 2026-05-19). Remaining open: Phase 8.A/8.B [HUMAN] + Phase 9.B [OPERATOR-APPROVE] + Phase 4.DEFAULT-REMOVAL [DEFERRED-writegate-6.x] + Phases 10-13 [sequential after 9.B]. PM@9cc93053. (2026-05-20 slot-2)
+1. - [x] ✅ **pvl-p18a health check** — `strategy-paper-carry-staked-basis-20260519-183013` RUNNING (asia-northeast1-c).
+         2h checks logged: slot_2.md#health-check-1 (2026-05-20) + #health-check-2 (2026-05-20). (2026-05-20 slot-2)
+2. - [x] ✅ **alerting_live_rules remaining 15 items** — read plan: 0 agent-actionable items. All remaining `- [ ]` are:
+         Phase 7 threshold tuning BLOCKED-UPSTREAM (alerting-quietness VM, auto-stop ~2026-05-22 11:12 UTC); Phase 8
+         rehearsal HUMAN; Phase 9 go-live HUMAN; PagerDuty DEFERRED-PER-DECISION. Plan at max agent-closeable state.
+         (2026-05-20 slot-2)
+3. - [x] ✅ **wave3x_residual_ssots close** — grepped `^- \[ \]`: 0 results. Plan is 100% complete. Work-split dashboard
+         percentage was stale. (2026-05-20 slot-2)
+4. - [x] ✅ **manifest_schema_final_gate residuals** — Phase 7.C/7.D/7.E/7.F/7.G + 5 sub-checkboxes flipped (GCS
+         migration Phase 3 complete 2026-05-19). Remaining open: Phase 8.A/8.B [HUMAN] + Phase 9.B [OPERATOR-APPROVE] +
+         Phase 4.DEFAULT-REMOVAL [DEFERRED-writegate-6.x] + Phases 10-13 [sequential after 9.B]. PM@9cc93053.
+         (2026-05-20 slot-2)
 5. - [x] ✅ **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
          enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal) —
          execution-service@8d60c4a1; 0 remaining violations across workspace
@@ -97,7 +105,8 @@ estimate_calibration_note: |
          `cd unified-api-contracts &&    pytest tests/test_cassette_schema_parity.py`. Fix any mismatches. (research
          1.2×, ~2 = 2.4 cal) — 316 passed, 49 skipped. Also fixed 5 QG failures (BATCH_FEATURES_ONCHAIN_SERVICE missing
          from PipelineMode + EMISSION_LATENCY): UAC@127012b
-9. - [x] ✅ **Plan flips** for all items shipped — items 1-4 flipped above; S3-S6 already ✅; this commit. (2026-05-20 slot-2)
+9. - [x] ✅ **Plan flips** for all items shipped — items 1-4 flipped above; S3-S6 already ✅; this commit. (2026-05-20
+         slot-2)
 
 ---
 
@@ -144,18 +153,16 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          dst=68703 OK solana-defi src=5037 = dst=5037 OK evm-defi src=30114 = dst=30114 OK (5 empty source buckets
          skipped; no objects to copy.) Source `prod`-named buckets: operator authorized immediate deletion (same
          session) after a delta-sync no-op confirmed no concurrent writes; all 10 source buckets deleted via boto3
-         versioned cleanup (512,055 objects + versions + delete-markers cleared, then `delete_bucket`). The
-         30-day archival window noted in the script comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d
-         is therefore moot in practice (operator chose immediate cutover; data was *copied* not *moved*, byte-parity
+         versioned cleanup (512,055 objects + versions + delete-markers cleared, then `delete_bucket`). The 30-day
+         archival window noted in the script comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d is
+         therefore moot in practice (operator chose immediate cutover; data was _copied_ not _moved_, byte-parity
          already verified, `resolve_bucket_name()` SSOT means no live writer targets the old names). Discovery + fix
-         (same turn): `--verify`
-         mode had two parser bugs — (a) `wc -l` + `set -o pipefail` interaction made transient S3 retries produce a
-         two-line "N\n0" count that broke arithmetic compare; (b) `aws s3api head-bucket` exits non-zero for both
-         NoSuchBucket and transient errors, mis-flagging real buckets as missing. Fixed in
-         `deployment-service@9cc26a3`: account-scoped `list-buckets` for existence,
-         `aws s3 ls --recursive --summarize` for counting. Re-ran `--verify` post-fix: all 10 buckets `[VERIFIED]`
-         (256,024 objects total — config-store had 9 objects we'd missed pre-fix).
-         (infra 0.8×, ~5 = 4.0 cal)
+         (same turn): `--verify` mode had two parser bugs — (a) `wc -l` + `set -o pipefail` interaction made transient
+         S3 retries produce a two-line "N\n0" count that broke arithmetic compare; (b) `aws s3api head-bucket` exits
+         non-zero for both NoSuchBucket and transient errors, mis-flagging real buckets as missing. Fixed in
+         `deployment-service@9cc26a3`: account-scoped `list-buckets` for existence, `aws s3 ls --recursive --summarize`
+         for counting. Re-ran `--verify` post-fix: all 10 buckets `[VERIFIED]` (256,024 objects total — config-store had
+         9 objects we'd missed pre-fix). (infra 0.8×, ~5 = 4.0 cal)
 9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
 
 ---
@@ -164,8 +171,8 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 > **Note**: if Ikenna slot 9 ships cme_polymarket_arb Phase 1 early, slot 4 can pick up Phase 2 as reserve.
 
-1. - [x] ✅ **hard_schema_enforcement** — plan `status: done`, 0 open items. Phase 1 (field-flip migration phases B/C/D/F)
-         shipped this cycle: instruments-service@1f807c9 + instruments-service@46bea40 + uac@956bec1 +
+1. - [x] ✅ **hard_schema_enforcement** — plan `status: done`, 0 open items. Phase 1 (field-flip migration phases
+         B/C/D/F) shipped this cycle: instruments-service@1f807c9 + instruments-service@46bea40 + uac@956bec1 +
          pm@65039c1e. Phase E DEFERRED post-cutover. (backfilled 2026-05-20 slot-4)
 2. - [x] ✅ **strategy_archetype_taxonomy** — plan `status: done`, 0 open items. All taxonomy items shipped prior
          cycles. No new agent work needed. (backfilled 2026-05-20 slot-4)
@@ -177,10 +184,17 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ### Slot 5 — features_repo_consolidation + gcs_migration_bundle + AUDIT + propagation — ~12 cal AI-days
 
-1. - [x] ✅ **features_repo_consolidation Phase residuals** — Plan at max closeable state. Only open item (Phase 6 parity RUN) is explicitly DEFERRED to `features_service_qg_cleanup_2026_05_11.md` Phase 2 (blocked by 7-day live-data window). Code utility shipped at PM@44d23659. 0 agent-doable work remaining. (2026-05-20 slot-5)
-2. - [x] ✅ **gcs_migration_bundle_pipeline_mode close** — Phase 3 sign-off checkboxes flipped (all 5 asset_groups ✅ CONFIRMED inline) + Phase 6 SKIP (NOT NEEDED per Axis-10 fix) — PM@4042e905. Phase 8 P2 DEFERRED to 2026-06-15 by design. Plan at max closeable state. (2026-05-20 slot-5)
-3. - [x] ✅ **AUDIT_pre_may_8_cleanup** — Coordination doc, 0 open items. All tracked plans either closed, deferred with named successors, or assigned to active slots. Plan exhausted. (2026-05-20 slot-5)
-4. - [x] ✅ **expected_unattempted_propagation_chain close** — All items `[x]`. Phases 1-6 complete; Passes 3/4 formally deferred to writegate Phase 6.x (named successor). Validation items deferred to Phase 3 window (production run required). Plan at max closeable state. (2026-05-20 slot-5)
+1. - [x] ✅ **features_repo_consolidation Phase residuals** — Plan at max closeable state. Only open item (Phase 6
+         parity RUN) is explicitly DEFERRED to `features_service_qg_cleanup_2026_05_11.md` Phase 2 (blocked by 7-day
+         live-data window). Code utility shipped at PM@44d23659. 0 agent-doable work remaining. (2026-05-20 slot-5)
+2. - [x] ✅ **gcs_migration_bundle_pipeline_mode close** — Phase 3 sign-off checkboxes flipped (all 5 asset_groups ✅
+         CONFIRMED inline) + Phase 6 SKIP (NOT NEEDED per Axis-10 fix) — PM@4042e905. Phase 8 P2 DEFERRED to 2026-06-15
+         by design. Plan at max closeable state. (2026-05-20 slot-5)
+3. - [x] ✅ **AUDIT_pre_may_8_cleanup** — Coordination doc, 0 open items. All tracked plans either closed, deferred with
+         named successors, or assigned to active slots. Plan exhausted. (2026-05-20 slot-5)
+4. - [x] ✅ **expected_unattempted_propagation_chain close** — All items `[x]`. Phases 1-6 complete; Passes 3/4 formally
+         deferred to writegate Phase 6.x (named successor). Validation items deferred to Phase 3 window (production run
+         required). Plan at max closeable state. (2026-05-20 slot-5)
 5. - [x] ✅ **Plan flips** for all shipped items — PM@4042e905 + this work_split flip commit. (2026-05-20 slot-5)
 
 ---
@@ -336,17 +350,29 @@ Ikenna ack):
 happening — Harsh needs to run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in his local
 clone.
 
-1. - [x] ✅ **P0 — Compliance scaffold + rename** — plan status: done. Rename complete, typo fix 46 files, health_router wired, Dockerfile updated, port 8026 allocated. QG green. agent-orchestrator@0e84ebd+8e5a7e2+a44d903. (backfilled 2026-05-20)
+1. - [x] ✅ **P0 — Compliance scaffold + rename** — plan status: done. Rename complete, typo fix 46 files, health_router
+         wired, Dockerfile updated, port 8026 allocated. QG green. agent-orchestrator@0e84ebd+8e5a7e2+a44d903.
+         (backfilled 2026-05-20)
 
-2. - [x] ✅ **P1 — Cloud Run staging deploy** — plan status: done. Cloud Run staging at agent-orchestrator-staging-1060025368044.europe-west4.run.app, /health+/readiness 200. deployment-service@163788f+04e5596. (backfilled 2026-05-20)
+2. - [x] ✅ **P1 — Cloud Run staging deploy** — plan status: done. Cloud Run staging at
+         agent-orchestrator-staging-1060025368044.europe-west4.run.app, /health+/readiness 200.
+         deployment-service@163788f+04e5596. (backfilled 2026-05-20)
 
-3. - [x] ✅ **P2 agent steps — firebase.json + .firebaserc + vite.config** — firebase.json + .firebaserc on LDR agent-orchestrator@d9ddc73; vite.config.ts confirmed outDir="dist" matches firebase.json public="dashboard/dist". ✅ Remaining human step: `firebase deploy --only hosting:uat` (Firebase CLI not installed on agent slot). (slot 4 2026-05-20)
+3. - [x] ✅ **P2 agent steps — firebase.json + .firebaserc + vite.config** — firebase.json + .firebaserc on LDR
+         agent-orchestrator@d9ddc73; vite.config.ts confirmed outDir="dist" matches firebase.json
+         public="dashboard/dist". ✅ Remaining human step: `firebase deploy --only hosting:uat` (Firebase CLI not
+         installed on agent slot). (slot 4 2026-05-20)
 
-4. - [x] ✅ **P3 agent steps — strict auth flip** — plan status: done. ORCHESTRATOR_JWT_SECRET + ORCHESTRATOR_USERS_JSON in Secret Manager, argon2id auth wired, ALLOW_ANONYMOUS=false. 5-curl smoke PASS. agent-orchestrator@aa54607. (backfilled 2026-05-20)
+4. - [x] ✅ **P3 agent steps — strict auth flip** — plan status: done. ORCHESTRATOR_JWT_SECRET + ORCHESTRATOR_USERS_JSON
+         in Secret Manager, argon2id auth wired, ALLOW_ANONYMOUS=false. 5-curl smoke PASS. agent-orchestrator@aa54607.
+         (backfilled 2026-05-20)
 
-5. - [x] ✅ **P4 — CI/CD wire-up** — plan status: done (scoped down per workspace pattern: no GHA-driven deploys). quality-gates.yml added, deploy-staging/prod scoped out. agent-orchestrator@5294de1. (backfilled 2026-05-20)
+5. - [x] ✅ **P4 — CI/CD wire-up** — plan status: done (scoped down per workspace pattern: no GHA-driven deploys).
+         quality-gates.yml added, deploy-staging/prod scoped out. agent-orchestrator@5294de1. (backfilled 2026-05-20)
 
-6. - [x] ✅ **P6 — Codex SSOT + CLAUDE.md updates** — plan status: done. New codex doc at codex/04-architecture/agent-orchestrator-overview.md, local-dev.md updated, CLAUDE.md key repo map updated, README+OPERATIONS.md updated. PM@1277a0cb. (backfilled 2026-05-20)
+6. - [x] ✅ **P6 — Codex SSOT + CLAUDE.md updates** — plan status: done. New codex doc at
+         codex/04-architecture/agent-orchestrator-overview.md, local-dev.md updated, CLAUDE.md key repo map updated,
+         README+OPERATIONS.md updated. PM@1277a0cb. (backfilled 2026-05-20)
 
 7. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)
 
@@ -366,9 +392,13 @@ must exist). P1 code work can start immediately.
 - `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` — real value ✅
 - All 4 other Slack app secrets ✅
 
-1. - [x] ✅ **P1 — Implement `server/notifications/slack.py`** — upgraded to Block Kit + retry in plan P2; 9 unit tests in tests/test_slack_notifications.py all pass; ruff+basedpyright clean. agent-orchestrator@cd04fc2. (slot 4 2026-05-20)
+1. - [x] ✅ **P1 — Implement `server/notifications/slack.py`** — upgraded to Block Kit + retry in plan P2; 9 unit tests
+         in tests/test_slack_notifications.py all pass; ruff+basedpyright clean. agent-orchestrator@cd04fc2. (slot 4
+         2026-05-20)
 
-2. - [x] ✅ **P2 — Wire hooks into server event handlers** — confirmed done at eea2f69: notify_slot_blocked in server.py L686, notify_slot_stale in health.py L110, notify_slot_failed in health.py L140. blocked_id now passed to notify_slot_blocked at cd04fc2. (slot 4 2026-05-20)
+2. - [x] ✅ **P2 — Wire hooks into server event handlers** — confirmed done at eea2f69: notify_slot_blocked in server.py
+         L686, notify_slot_stale in health.py L110, notify_slot_failed in health.py L140. blocked_id now passed to
+         notify_slot_blocked at cd04fc2. (slot 4 2026-05-20)
 
 3. - [ ] **P0 — Wire `--update-secrets` on Cloud Run staging** (~0.3 cal) _(after Slot 10 P1 done)_
    - Look up staging SA:
@@ -382,7 +412,8 @@ must exist). P1 code work can start immediately.
    - Post ack ping to `_agent_pings.md`:
      `[DATE] harsh-slot-11 — Slack notifications live on staging; #agent-orchestrator-alerts received test message. P3 done.`
 
-5. - [x] ✅ **P4 — Codex update** — new `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created; overview Slack section replaced with 2-line pointer. (slot 4 2026-05-20)
+5. - [x] ✅ **P4 — Codex update** — new `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created;
+         overview Slack section replaced with 2-line pointer. (slot 4 2026-05-20)
 
 6. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)
 

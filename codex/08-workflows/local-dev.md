@@ -149,8 +149,8 @@ configuration.
 
 ### agent-orchestrator local dev (port 8026)
 
-The agent-orchestrator is **operator tooling** — not a trading service. It doesn't use `dev-start.sh` or the standard
-QG pipeline. Start it directly:
+The agent-orchestrator is **operator tooling** — not a trading service. It doesn't use `dev-start.sh` or the standard QG
+pipeline. Start it directly:
 
 ```bash
 cd agent-orchestrator
@@ -165,8 +165,8 @@ scripts/dev.sh            # live mode (real state.db)
 scripts/dev.sh --mock     # demo mode (state.mock.db + admin endpoints)
 ```
 
-Quality gates: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). Cloud Run deploy uses
-`PORT=8080` internally (set in Dockerfile); local dev uses 8026 per workspace port registry.
+Quality gates: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). Cloud Run deploy uses `PORT=8080`
+internally (set in Dockerfile); local dev uses 8026 per workspace port registry.
 
 Dashboard public URLs: `https://agent-orchestrator.odum-research.com` (prod, pending P5 cutover) and
 `https://agent-orchestrator.staging.odum-research.com` (staging). Architecture SSOT:

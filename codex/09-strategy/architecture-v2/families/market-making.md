@@ -12,10 +12,10 @@ scope: [engineer, admin]
 > **Typical hold policies:** CONTINUOUS (quote lifecycle is long-running; positions are transient, inventory-aware).
 >
 > **Archetype count:** 10 — `MARKET_MAKING_CONTINUOUS` (legacy CeFi catch-all) + `MARKET_MAKING_EVENT_SETTLED` (sports
-> exchange back/lay — **not** legacy) + 5 granular CeFi/prediction variants + 3 DeFi LP variants, all added in the
-> Phase 9 expansion (2026-04-25). SSOT: UAC `StrategyArchetype` (`enum-wins` governance rule per
-> `strategy-summary.md:27`). DeFi LP variants sit in `MARKET_MAKING` because the alpha is fee earnings for _providing_
-> liquidity, not directional or dispersion edge.
+> exchange back/lay — **not** legacy) + 5 granular CeFi/prediction variants + 3 DeFi LP variants, all added in the Phase
+> 9 expansion (2026-04-25). SSOT: UAC `StrategyArchetype` (`enum-wins` governance rule per `strategy-summary.md:27`).
+> DeFi LP variants sit in `MARKET_MAKING` because the alpha is fee earnings for _providing_ liquidity, not directional
+> or dispersion edge.
 
 ## Alpha thesis
 
@@ -37,7 +37,8 @@ This family covers:
 **Not in this family:**
 
 - One-shot quoting / RFQ — covered under a dedicated action type; not a strategy family
-- DEX price-dispersion / arbitrage across pools — alpha is the spread, not LP fee earnings → `ARBITRAGE_PRICE_DISPERSION`
+- DEX price-dispersion / arbitrage across pools — alpha is the spread, not LP fee earnings →
+  `ARBITRAGE_PRICE_DISPERSION`
 
 > **LP of every kind belongs here.** Concentrated V3 LP (`DEFI_LP_CONCENTRATED`), full-range / passive pool LP such as
 > Curve stableswap and Balancer weighted (`DEFI_LP_POOL`), and ERC-4626 yield vaults (`DEFI_LP_VAULT`) are all
@@ -46,25 +47,25 @@ This family covers:
 
 ## 10 Archetypes
 
-The 2026-04-17 baseline shipped two MM archetypes (`MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED`). The
-Phase 9 expansion (2026-04-25) split CeFi continuous-quoting into explicit strategy variants (the quote-generation
-logic, latency profile, and risk gates differ enough to be separate code paths) and added the prediction-CLOB and
-DeFi-LP archetypes. `MARKET_MAKING_CONTINUOUS` is retained as the legacy back-compat value for old records; new CeFi MM
+The 2026-04-17 baseline shipped two MM archetypes (`MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED`). The Phase
+9 expansion (2026-04-25) split CeFi continuous-quoting into explicit strategy variants (the quote-generation logic,
+latency profile, and risk gates differ enough to be separate code paths) and added the prediction-CLOB and DeFi-LP
+archetypes. `MARKET_MAKING_CONTINUOUS` is retained as the legacy back-compat value for old records; new CeFi MM
 strategies use the granular variants. `MARKET_MAKING_EVENT_SETTLED` is **not** legacy — it is the canonical archetype
 for the sports exchange (back/lay) family.
 
-| Archetype                                                                                 | Edge mechanism / venue                                                       | Settlement                |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------- |
-| [`MARKET_MAKING_CONTINUOUS`](../archetypes/market-making-continuous.md) _(legacy)_        | Back-compat CeFi continuous-quoting catch-all (spot/perp/options/cross-CEX)  | Continuous                |
-| [`MARKET_MAKING_EVENT_SETTLED`](../archetypes/market-making-event-settled.md)             | Sports exchange back/lay quoting (Betfair, Smarkets, Matchbook, Betdaq)      | Event-settled             |
-| [`MARKET_MAKING_PASSIVE_SPREAD`](../archetypes/market-making-passive-spread.md)           | Symmetric two-sided quoting; near-zero inventory target; repost on each fill | Continuous                |
-| [`MARKET_MAKING_INVENTORY_SKEW`](../archetypes/market-making-inventory-skew.md)           | Avellaneda-Stoikov inventory-skewed quotes (self-correcting inventory)       | Continuous                |
-| [`MARKET_MAKING_ML_LEAN`](../archetypes/market-making-ml-lean.md)                         | Short-horizon ML directional tilt layered on inventory skew                  | Continuous                |
-| [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](../archetypes/market-making-queue-microstructure.md) | Queue-position + VPIN toxicity-aware quoting (FIFO time-priority venues)   | Continuous                |
-| [`MARKET_MAKING_PREDICTION`](../archetypes/market-making-prediction.md)                   | Binary YES/NO CLOB MM on prediction venues (Polymarket, Kalshi)              | Event-settled             |
-| [`DEFI_LP_CONCENTRATED`](../archetypes/defi-lp-concentrated.md)                           | Uniswap V3 (clones) concentrated-liquidity range; fee capture + rebalance    | Atomic mint/burn          |
-| [`DEFI_LP_POOL`](../archetypes/defi-lp-pool.md)                                           | Full-range pool LP (Curve stableswap, Balancer weighted); hold-or-exit       | Atomic deposit/withdraw   |
-| [`DEFI_LP_VAULT`](../archetypes/defi-lp-vault.md)                                         | ERC-4626 vault deposit (Yearn V3, MetaMorpho, Aave Vaults); APY-gated        | ERC-4626 deposit/redeem   |
+| Archetype                                                                                   | Edge mechanism / venue                                                       | Settlement              |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------- |
+| [`MARKET_MAKING_CONTINUOUS`](../archetypes/market-making-continuous.md) _(legacy)_          | Back-compat CeFi continuous-quoting catch-all (spot/perp/options/cross-CEX)  | Continuous              |
+| [`MARKET_MAKING_EVENT_SETTLED`](../archetypes/market-making-event-settled.md)               | Sports exchange back/lay quoting (Betfair, Smarkets, Matchbook, Betdaq)      | Event-settled           |
+| [`MARKET_MAKING_PASSIVE_SPREAD`](../archetypes/market-making-passive-spread.md)             | Symmetric two-sided quoting; near-zero inventory target; repost on each fill | Continuous              |
+| [`MARKET_MAKING_INVENTORY_SKEW`](../archetypes/market-making-inventory-skew.md)             | Avellaneda-Stoikov inventory-skewed quotes (self-correcting inventory)       | Continuous              |
+| [`MARKET_MAKING_ML_LEAN`](../archetypes/market-making-ml-lean.md)                           | Short-horizon ML directional tilt layered on inventory skew                  | Continuous              |
+| [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](../archetypes/market-making-queue-microstructure.md) | Queue-position + VPIN toxicity-aware quoting (FIFO time-priority venues)     | Continuous              |
+| [`MARKET_MAKING_PREDICTION`](../archetypes/market-making-prediction.md)                     | Binary YES/NO CLOB MM on prediction venues (Polymarket, Kalshi)              | Event-settled           |
+| [`DEFI_LP_CONCENTRATED`](../archetypes/defi-lp-concentrated.md)                             | Uniswap V3 (clones) concentrated-liquidity range; fee capture + rebalance    | Atomic mint/burn        |
+| [`DEFI_LP_POOL`](../archetypes/defi-lp-pool.md)                                             | Full-range pool LP (Curve stableswap, Balancer weighted); hold-or-exit       | Atomic deposit/withdraw |
+| [`DEFI_LP_VAULT`](../archetypes/defi-lp-vault.md)                                           | ERC-4626 vault deposit (Yearn V3, MetaMorpho, Aave Vaults); APY-gated        | ERC-4626 deposit/redeem |
 
 ## Shared primitives (all archetypes)
 

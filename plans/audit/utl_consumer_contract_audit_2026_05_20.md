@@ -10,37 +10,36 @@ status: complete
 # C10 Contract Audit — All Services → UTL (unified-trading-library)
 
 > **Upstream**: `unified-trading-library/` — manifest writer/reader, event setup, cloud interface, config interface,
-> service bootstrap, emission publisher.
-> **Downstream**: every service repo in the workspace.
+> service bootstrap, emission publisher. **Downstream**: every service repo in the workspace.
 
 ## Repo SHAs at audit time
 
-| Repo | SHA |
-| ---- | --- |
-| `unified-trading-pm` | `2565bbfd5` |
-| `market-tick-data-service` | `fae9416` |
-| `instruments-service` | `95ae0b5` |
-| `execution-service` | `f6795bfe0` |
-| `strategy-service` | `e4e5a1e6` |
-| `features-service` | `33e85297` |
-| `ml-inference-service` | `8a611ea` |
-| `ml-training-service` | `446642f` |
-| `ml-service` | `d4dbbe4` |
-| `alerting-service` | `f4b25e2` |
-| `batch-live-reconciliation-service` | `4294a67` |
-| `fund-administration-service` | `d96f05a` |
-| `trading-agent-service` | `ed3cb92` |
-| `deployment-api` | `413f4a7` |
+| Repo                                | SHA         |
+| ----------------------------------- | ----------- |
+| `unified-trading-pm`                | `2565bbfd5` |
+| `market-tick-data-service`          | `fae9416`   |
+| `instruments-service`               | `95ae0b5`   |
+| `execution-service`                 | `f6795bfe0` |
+| `strategy-service`                  | `e4e5a1e6`  |
+| `features-service`                  | `33e85297`  |
+| `ml-inference-service`              | `8a611ea`   |
+| `ml-training-service`               | `446642f`   |
+| `ml-service`                        | `d4dbbe4`   |
+| `alerting-service`                  | `f4b25e2`   |
+| `batch-live-reconciliation-service` | `4294a67`   |
+| `fund-administration-service`       | `d96f05a`   |
+| `trading-agent-service`             | `ed3cb92`   |
+| `deployment-api`                    | `413f4a7`   |
 
 ---
 
 ## 4-Dimensional Audit Matrix
 
-| Dim | What it measures | Status |
-| --- | ---------------- | ------ |
-| Dim 1 | ServiceBootstrap presence per service | RED — 1 service missing |
-| Dim 2 | `make_health_router` (UTL) vs custom health route | YELLOW — 1 service uses custom route |
-| Dim 3 | Manifest emission: `record_captured/empty/failed` vs legacy `ManifestWriter.add()/.write()` | RED — 4 service source files use legacy `.add()` |
+| Dim   | What it measures                                                                               | Status                                                                                 |
+| ----- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Dim 1 | ServiceBootstrap presence per service                                                          | RED — 1 service missing                                                                |
+| Dim 2 | `make_health_router` (UTL) vs custom health route                                              | YELLOW — 1 service uses custom route                                                   |
+| Dim 3 | Manifest emission: `record_captured/empty/failed` vs legacy `ManifestWriter.add()/.write()`    | RED — 4 service source files use legacy `.add()`                                       |
 | Dim 4 | `ApiKeyReloader` (hot-reload) vs `validate_api_keys_for_venues()` (one-shot) in service source | YELLOW — instruments-service preflight uses one-shot; scripts are acceptable exception |
 
 ---
@@ -65,8 +64,8 @@ deployment-api's operational state.
 **Evidence**: `deployment-api/deployment_api/` (all `.py` source files) — SHA `413f4a7`
 
 **Remediation**: Add `ServiceBootstrap(service_name="deployment-api", ...)` in the FastAPI `lifespan` handler in
-`deployment_api/routes/` or a dedicated `bootstrap.py`. Follow fund-administration-service pattern
-(`bootstrap.py` + `cli_entry.py`).
+`deployment_api/routes/` or a dedicated `bootstrap.py`. Follow fund-administration-service pattern (`bootstrap.py` +
+`cli_entry.py`).
 
 ---
 
@@ -93,12 +92,14 @@ writer.write()
 assertion means per-row write-time is not enforced.
 
 **Evidence**:
+
 - `execution-service/execution_service/engine/modes/live/data_sink.py` lines 16, 114-126 — SHA `f6795bfe0`
 - `execution-service/execution_service/results/save_operations.py` lines 26, 731-742 — SHA `f6795bfe0`
 
-**Remediation**: Replace both `.add()/.write()` calls with `writer.record_captured(data_type=..., row_count=...,
-available_at=datetime.now(UTC), ...)`. Add `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` on zero-row
-path. Add `record_failed(...)` on exception path with `classify_venue_error()`.
+**Remediation**: Replace both `.add()/.write()` calls with
+`writer.record_captured(data_type=..., row_count=..., available_at=datetime.now(UTC), ...)`. Add
+`record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` on zero-row path. Add `record_failed(...)` on exception
+path with `classify_venue_error()`.
 
 ---
 
@@ -107,6 +108,7 @@ path. Add `record_failed(...)` on exception path with `classify_venue_error()`.
 **Contract**: Same as P0-2.
 
 **Finding**:
+
 - `strategy-service/strategy_service/pnl/cli/handlers/compute_handler.py:233-244` — `ManifestWriter.add()/.write()`
 - `strategy-service/strategy_service/risk/core/risk_snapshot_sink.py:179-190` — `ManifestWriter.add()/.write()`
 
@@ -117,6 +119,7 @@ manifests will see silent DIVERGENT_EMPTY or NULL `schema_version` rows. Compoun
 2026-05-20.
 
 **Evidence**:
+
 - `strategy-service/strategy_service/pnl/cli/handlers/compute_handler.py` lines 18, 233-244 — SHA `e4e5a1e6`
 - `strategy-service/strategy_service/risk/core/risk_snapshot_sink.py` lines 16, 179-190 — SHA `e4e5a1e6`
 
@@ -129,8 +132,8 @@ manifests will see silent DIVERGENT_EMPTY or NULL `schema_version` rows. Compoun
 **Contract**: Migration scripts that write manifest rows must use the v8 API. `ManifestWriter.add()` for non-bundled
 data_types still works but misses `available_at` enforcement.
 
-**Finding**: `market-tick-data-service/scripts/build_continuous_es.py:593` — instantiates `ManifestWriter` directly
-but line 521 uses `writer.record_captured()` for the main path. The secondary path at line 593 may be a bare
+**Finding**: `market-tick-data-service/scripts/build_continuous_es.py:593` — instantiates `ManifestWriter` directly but
+line 521 uses `writer.record_captured()` for the main path. The secondary path at line 593 may be a bare
 `ManifestWriter()` construction. Additional legacy references appear in `scripts/migrate_cefi_instrument_types.py` where
 `BUCKET = "gs://market-data-tick-cefi-central-element-323112"` is a hardcoded inline bucket string (P7 violation, see
 below).
@@ -152,11 +155,11 @@ injected from `preflight()` into orchestrator. This is acceptable for batch pref
 `instruments-service/scripts/` use `validate_api_keys_for_venues()` directly — this is acceptable for standalone
 scripts.
 
-The service engine uses `ApiKeyReloader` (9 hits in production code) confirming the hot-reload pattern is wired for
-live operations. The one-shot path in orchestrator is preflight-only and acceptable.
+The service engine uses `ApiKeyReloader` (9 hits in production code) confirming the hot-reload pattern is wired for live
+operations. The one-shot path in orchestrator is preflight-only and acceptable.
 
-**Status**: This is YELLOW not P0. The service correctly uses `ApiKeyReloader` for its hot-reload runtime path.
-Scripts and preflight using `validate_api_keys_for_venues()` is correct usage.
+**Status**: This is YELLOW not P0. The service correctly uses `ApiKeyReloader` for its hot-reload runtime path. Scripts
+and preflight using `validate_api_keys_for_venues()` is correct usage.
 
 **Recommendation**: Annotate the `validate_api_keys_for_venues()` calls in `instruments_service/engine/orchestrator.py`
 and `reference_data/factory.py` with a comment confirming preflight-only scope to prevent future ambiguity.
@@ -196,14 +199,17 @@ data_freshness applies, pass a `lambda: None` stub.
 **Contract**: P7 — every bucket reference via `resolve_bucket_name(...)`. QG STEP 5.69 enforces.
 
 **Finding**: `market-tick-data-service/scripts/migrate_cefi_instrument_types.py:37`:
+
 ```python
 BUCKET = "gs://market-data-tick-cefi-central-element-323112"
 ```
+
 This is a hardcoded inline `gs://` f-string (actually a literal string). The QG STEP 5.69 ratchet baseline may already
 permit this file; however, it is a contract violation regardless of QG baseline exemption.
 
-Additional inline `gs://` references found in scripts: `instruments-service/scripts/cefi_per_venue_capture_summary.py:33`
-(hardcoded manifest path), `instruments-service/scripts/measure_honest_coverage.py:67` (f-string bucket).
+Additional inline `gs://` references found in scripts:
+`instruments-service/scripts/cefi_per_venue_capture_summary.py:33` (hardcoded manifest path),
+`instruments-service/scripts/measure_honest_coverage.py:67` (f-string bucket).
 
 **Evidence**: SHA `fae9416`
 
@@ -214,64 +220,64 @@ Additional inline `gs://` references found in scripts: `instruments-service/scri
 
 ## Per-Service UTL Compliance Table
 
-| Service | ServiceBootstrap | setup_events | make_health_router | Manifest API | ApiKeyReloader | Overall |
-| ------- | ---------------- | ------------ | ------------------ | ------------ | -------------- | ------- |
-| `market-tick-data-service` | ✅ | ✅ (18 hits) | ✅ | ✅ `record_captured` (main); ⚠ legacy in scripts | ✅ | YELLOW |
-| `instruments-service` | ✅ | ✅ (10 hits) | ✅ | ✅ `record_captured`/`record_empty` dominant | ⚠ preflight one-shot (acceptable) | GREEN |
-| `execution-service` | ✅ | ✅ (12 hits) | ✅ | ❌ P0-2: `ManifestWriter.add()` in live data_sink + save_operations | n/a | RED |
-| `strategy-service` | ✅ | ✅ (3 hits) | ✅ | ❌ P0-3: `ManifestWriter.add()` in PnL + risk sink | ✅ (12 hits) | RED |
-| `features-service` | ✅ | ✅ (2 hits) | ✅ (9 hits) | ✅ `record_captured`/`record_empty` | ✅ (24 hits) | GREEN |
-| `market-data-processing-service` | ✅ | ✅ (4 hits) | ✅ | ✅ `record_captured`/`record_empty` in canonical_writer | n/a | GREEN |
-| `ml-inference-service` | ✅ | ✅ (1 hit) | ✅ | ✅ `publish_with_policy` path | ✅ (0 direct; closes over ServiceBootstrap) | GREEN |
-| `ml-training-service` | ✅ | ✅ (3 hits) | ✅ | ✅ | ✅ | GREEN |
-| `ml-service` | ✅ | ✅ (4 hits) | ✅ (3 hits) | ✅ `publish_with_policy` path | n/a | GREEN |
-| `alerting-service` | ✅ | ✅ (2 hits) | ❌ P1-1: custom health route | ✅ event routing, no manifest writes | n/a | YELLOW |
-| `batch-live-reconciliation-service` | ✅ | ✅ (2 hits) | ✅ | ✅ `record_captured` in stages | n/a | GREEN |
-| `fund-administration-service` | ✅ (`bootstrap.py` + `cli_entry.py`) | ✅ via `log_event` | ✅ | ✅ | n/a | GREEN |
-| `trading-agent-service` | ✅ | ✅ via `log_event` (ServiceBootstrap calls setup_events) | ✅ | n/a (no manifest writes) | n/a | GREEN |
-| `deployment-api` | ❌ P0-1: MISSING | n/a | ✅ (tested in integration test) | n/a (no manifest writes) | n/a | RED |
+| Service                             | ServiceBootstrap                     | setup_events                                             | make_health_router              | Manifest API                                                        | ApiKeyReloader                              | Overall |
+| ----------------------------------- | ------------------------------------ | -------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------- | ------- |
+| `market-tick-data-service`          | ✅                                   | ✅ (18 hits)                                             | ✅                              | ✅ `record_captured` (main); ⚠ legacy in scripts                   | ✅                                          | YELLOW  |
+| `instruments-service`               | ✅                                   | ✅ (10 hits)                                             | ✅                              | ✅ `record_captured`/`record_empty` dominant                        | ⚠ preflight one-shot (acceptable)          | GREEN   |
+| `execution-service`                 | ✅                                   | ✅ (12 hits)                                             | ✅                              | ❌ P0-2: `ManifestWriter.add()` in live data_sink + save_operations | n/a                                         | RED     |
+| `strategy-service`                  | ✅                                   | ✅ (3 hits)                                              | ✅                              | ❌ P0-3: `ManifestWriter.add()` in PnL + risk sink                  | ✅ (12 hits)                                | RED     |
+| `features-service`                  | ✅                                   | ✅ (2 hits)                                              | ✅ (9 hits)                     | ✅ `record_captured`/`record_empty`                                 | ✅ (24 hits)                                | GREEN   |
+| `market-data-processing-service`    | ✅                                   | ✅ (4 hits)                                              | ✅                              | ✅ `record_captured`/`record_empty` in canonical_writer             | n/a                                         | GREEN   |
+| `ml-inference-service`              | ✅                                   | ✅ (1 hit)                                               | ✅                              | ✅ `publish_with_policy` path                                       | ✅ (0 direct; closes over ServiceBootstrap) | GREEN   |
+| `ml-training-service`               | ✅                                   | ✅ (3 hits)                                              | ✅                              | ✅                                                                  | ✅                                          | GREEN   |
+| `ml-service`                        | ✅                                   | ✅ (4 hits)                                              | ✅ (3 hits)                     | ✅ `publish_with_policy` path                                       | n/a                                         | GREEN   |
+| `alerting-service`                  | ✅                                   | ✅ (2 hits)                                              | ❌ P1-1: custom health route    | ✅ event routing, no manifest writes                                | n/a                                         | YELLOW  |
+| `batch-live-reconciliation-service` | ✅                                   | ✅ (2 hits)                                              | ✅                              | ✅ `record_captured` in stages                                      | n/a                                         | GREEN   |
+| `fund-administration-service`       | ✅ (`bootstrap.py` + `cli_entry.py`) | ✅ via `log_event`                                       | ✅                              | ✅                                                                  | n/a                                         | GREEN   |
+| `trading-agent-service`             | ✅                                   | ✅ via `log_event` (ServiceBootstrap calls setup_events) | ✅                              | n/a (no manifest writes)                                            | n/a                                         | GREEN   |
+| `deployment-api`                    | ❌ P0-1: MISSING                     | n/a                                                      | ✅ (tested in integration test) | n/a (no manifest writes)                                            | n/a                                         | RED     |
 
 ---
 
 ## Dim 1 — ServiceBootstrap presence
 
-| Service | Status | Evidence |
-| ------- | ------ | -------- |
-| market-tick-data-service | ✅ | `cli/main.py` imports `ServiceBootstrap` |
-| instruments-service | ✅ | `cli/main.py` imports `ServiceBootstrap` |
-| execution-service | ✅ | `cli/main.py` imports `ServiceBootstrap` |
-| strategy-service | ✅ | pnl + position + risk `cli/main.py` |
-| features-service | ✅ | multi_timeframe + cross_instrument + delta_one + sports + volatility + calendar `cli/main.py` |
-| market-data-processing-service | ✅ | `cli/main.py` |
-| ml-inference-service | ✅ | `cli/main.py` |
-| ml-training-service | ✅ | `cli/main.py` |
-| ml-service | ✅ | `cli/main.py` |
-| alerting-service | ✅ | `alerting_service/cli/main.py` |
-| batch-live-reconciliation-service | ✅ | `cli/main.py` |
-| fund-administration-service | ✅ | `fund_administration_service/bootstrap.py` + `cli_entry.py` |
-| trading-agent-service | ✅ | `cli/main.py` |
-| **deployment-api** | **❌ MISSING** | No `ServiceBootstrap` in `deployment_api/` source |
+| Service                           | Status         | Evidence                                                                                      |
+| --------------------------------- | -------------- | --------------------------------------------------------------------------------------------- |
+| market-tick-data-service          | ✅             | `cli/main.py` imports `ServiceBootstrap`                                                      |
+| instruments-service               | ✅             | `cli/main.py` imports `ServiceBootstrap`                                                      |
+| execution-service                 | ✅             | `cli/main.py` imports `ServiceBootstrap`                                                      |
+| strategy-service                  | ✅             | pnl + position + risk `cli/main.py`                                                           |
+| features-service                  | ✅             | multi_timeframe + cross_instrument + delta_one + sports + volatility + calendar `cli/main.py` |
+| market-data-processing-service    | ✅             | `cli/main.py`                                                                                 |
+| ml-inference-service              | ✅             | `cli/main.py`                                                                                 |
+| ml-training-service               | ✅             | `cli/main.py`                                                                                 |
+| ml-service                        | ✅             | `cli/main.py`                                                                                 |
+| alerting-service                  | ✅             | `alerting_service/cli/main.py`                                                                |
+| batch-live-reconciliation-service | ✅             | `cli/main.py`                                                                                 |
+| fund-administration-service       | ✅             | `fund_administration_service/bootstrap.py` + `cli_entry.py`                                   |
+| trading-agent-service             | ✅             | `cli/main.py`                                                                                 |
+| **deployment-api**                | **❌ MISSING** | No `ServiceBootstrap` in `deployment_api/` source                                             |
 
 ---
 
 ## Dim 2 — `make_health_router` compliance
 
-| Service | Status | Evidence |
-| ------- | ------ | -------- |
-| market-tick-data-service | ✅ | 1 hit in `api/main.py` |
-| instruments-service | ✅ | 1 hit in `api/main.py` |
-| execution-service | ✅ | 1 hit in `api/main.py` |
-| strategy-service | ✅ | 4 hits across PnL + position + risk + signal APIs |
-| features-service | ✅ | 9 hits across family APIs |
-| market-data-processing-service | ✅ | 1 hit |
-| ml-inference-service | ✅ | 1 hit |
-| ml-training-service | ✅ | 1 hit |
-| ml-service | ✅ | 3 hits |
-| **alerting-service** | **❌ CUSTOM** | Custom `health.py` route, no `make_health_router` |
-| batch-live-reconciliation-service | ✅ | 1 hit |
-| fund-administration-service | ✅ | 1 hit |
-| trading-agent-service | ✅ | 1 hit |
-| deployment-api | ✅ (integration test only) | Tested but not in production route code |
+| Service                           | Status                     | Evidence                                          |
+| --------------------------------- | -------------------------- | ------------------------------------------------- |
+| market-tick-data-service          | ✅                         | 1 hit in `api/main.py`                            |
+| instruments-service               | ✅                         | 1 hit in `api/main.py`                            |
+| execution-service                 | ✅                         | 1 hit in `api/main.py`                            |
+| strategy-service                  | ✅                         | 4 hits across PnL + position + risk + signal APIs |
+| features-service                  | ✅                         | 9 hits across family APIs                         |
+| market-data-processing-service    | ✅                         | 1 hit                                             |
+| ml-inference-service              | ✅                         | 1 hit                                             |
+| ml-training-service               | ✅                         | 1 hit                                             |
+| ml-service                        | ✅                         | 3 hits                                            |
+| **alerting-service**              | **❌ CUSTOM**              | Custom `health.py` route, no `make_health_router` |
+| batch-live-reconciliation-service | ✅                         | 1 hit                                             |
+| fund-administration-service       | ✅                         | 1 hit                                             |
+| trading-agent-service             | ✅                         | 1 hit                                             |
+| deployment-api                    | ✅ (integration test only) | Tested but not in production route code           |
 
 ---
 
@@ -279,22 +285,22 @@ Additional inline `gs://` references found in scripts: `instruments-service/scri
 
 Service-level summary (non-test, non-script source):
 
-| Service | API Status | Files using legacy `.add()` | Files using `record_captured/empty` |
-| ------- | ---------- | --------------------------- | ------------------------------------ |
-| market-tick-data-service | ✅ v8 dominant | `scripts/build_continuous_es.py` (partial legacy) | `cli/handlers/` — all use `record_captured` |
-| instruments-service | ✅ v8 | None in service source | Multiple `record_captured/empty` callers |
-| **execution-service** | **❌ P0-2** | `engine/modes/live/data_sink.py`, `results/save_operations.py` | None |
-| **strategy-service** | **❌ P0-3** | `pnl/cli/handlers/compute_handler.py`, `risk/core/risk_snapshot_sink.py` | `engine/strategies/v2/` writers |
-| features-service | ✅ v8 | None | `delta_one/`, `volatility/`, `calendar/` handlers |
-| market-data-processing-service | ✅ v8 | None | `canonical_writer.py` dominates |
-| ml-inference-service | ✅ | None | `publish_with_policy` path |
-| ml-training-service | ✅ | None | `publish_with_policy` path |
-| ml-service | ✅ | None | `publish_with_policy` path |
-| alerting-service | n/a (event router) | n/a | n/a |
-| batch-live-reconciliation-service | ✅ | None | `stages/` writers |
-| fund-administration-service | ✅ | None | `events/emit.py` |
-| trading-agent-service | n/a (no manifest writes) | n/a | n/a |
-| deployment-api | n/a (no manifest writes) | n/a | n/a |
+| Service                           | API Status               | Files using legacy `.add()`                                              | Files using `record_captured/empty`               |
+| --------------------------------- | ------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------- |
+| market-tick-data-service          | ✅ v8 dominant           | `scripts/build_continuous_es.py` (partial legacy)                        | `cli/handlers/` — all use `record_captured`       |
+| instruments-service               | ✅ v8                    | None in service source                                                   | Multiple `record_captured/empty` callers          |
+| **execution-service**             | **❌ P0-2**              | `engine/modes/live/data_sink.py`, `results/save_operations.py`           | None                                              |
+| **strategy-service**              | **❌ P0-3**              | `pnl/cli/handlers/compute_handler.py`, `risk/core/risk_snapshot_sink.py` | `engine/strategies/v2/` writers                   |
+| features-service                  | ✅ v8                    | None                                                                     | `delta_one/`, `volatility/`, `calendar/` handlers |
+| market-data-processing-service    | ✅ v8                    | None                                                                     | `canonical_writer.py` dominates                   |
+| ml-inference-service              | ✅                       | None                                                                     | `publish_with_policy` path                        |
+| ml-training-service               | ✅                       | None                                                                     | `publish_with_policy` path                        |
+| ml-service                        | ✅                       | None                                                                     | `publish_with_policy` path                        |
+| alerting-service                  | n/a (event router)       | n/a                                                                      | n/a                                               |
+| batch-live-reconciliation-service | ✅                       | None                                                                     | `stages/` writers                                 |
+| fund-administration-service       | ✅                       | None                                                                     | `events/emit.py`                                  |
+| trading-agent-service             | n/a (no manifest writes) | n/a                                                                      | n/a                                               |
+| deployment-api                    | n/a (no manifest writes) | n/a                                                                      | n/a                                               |
 
 ---
 
@@ -316,8 +322,8 @@ Not audited in this pass (runtime-only; no grep signal). Recommend dedicated swe
 
 ## Pattern 6 — Error classification at the boundary
 
-`classify_venue_error()` usage audit is partially covered by QG STEP 5.83 (`no_adapter_contract_regression.sh`).
-This audit did not perform a full per-adapter sweep; that is in scope for C9 (IS→MTDS) and C4 (execution-service).
+`classify_venue_error()` usage audit is partially covered by QG STEP 5.83 (`no_adapter_contract_regression.sh`). This
+audit did not perform a full per-adapter sweep; that is in scope for C9 (IS→MTDS) and C4 (execution-service).
 
 ---
 
@@ -325,29 +331,29 @@ This audit did not perform a full per-adapter sweep; that is in scope for C9 (IS
 
 Key violations found:
 
-| File | Violation | Severity |
-| ---- | --------- | -------- |
-| `market-tick-data-service/scripts/migrate_cefi_instrument_types.py:37` | `BUCKET = "gs://market-data-tick-cefi-..."` hardcoded literal | P1 |
-| `instruments-service/scripts/cefi_per_venue_capture_summary.py:33` | `MANIFEST = "gs://market-data-tick-cefi-..."` hardcoded | P1 |
-| `instruments-service/scripts/measure_honest_coverage.py:67` | `f"gs://{bucket_name}/_index/availability_index.parquet"` | P1 |
+| File                                                                   | Violation                                                     | Severity |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------- | -------- |
+| `market-tick-data-service/scripts/migrate_cefi_instrument_types.py:37` | `BUCKET = "gs://market-data-tick-cefi-..."` hardcoded literal | P1       |
+| `instruments-service/scripts/cefi_per_venue_capture_summary.py:33`     | `MANIFEST = "gs://market-data-tick-cefi-..."` hardcoded       | P1       |
+| `instruments-service/scripts/measure_honest_coverage.py:67`            | `f"gs://{bucket_name}/_index/availability_index.parquet"`     | P1       |
 
-Note: many `f"gs://{bucket}/..."` patterns in `deployment-api/services/shard_detail.py` and
-`data_status_drilldown.py` carry `# noqa: gs-uri` suppression comments indicating bucket is already resolved — these
-are not violations. The QG STEP 5.69 ratchet baseline tracks the per-file exemption count.
+Note: many `f"gs://{bucket}/..."` patterns in `deployment-api/services/shard_detail.py` and `data_status_drilldown.py`
+carry `# noqa: gs-uri` suppression comments indicating bucket is already resolved — these are not violations. The QG
+STEP 5.69 ratchet baseline tracks the per-file exemption count.
 
 ---
 
 ## QG Ratchet Phase
 
-| Pattern | QG Script | Status |
-| ------- | --------- | ------ |
-| P1 — SSOT-owned reference | `no_hardcoded_venue_urls.sh` + `no_hardcoded_venue_universe.sh` (STEP 5.70) | SHIPPED |
-| P2 — Manifest emission | `no_silent_absence_handlers.sh` (STEP 5.70) | SHIPPED — but does NOT catch `.add()` in non-handler files like `data_sink.py` |
-| P3 — Schema-version (code) | `rg 'schema_version\s*=\s*[1-7]'` | GAP — add as inline STEP |
-| P4 — Honest-absence reasons | `rg 'record_empty.*reason\s*=\s*""'` | GAP — add as inline STEP |
-| P5 — expected_coverage preflight | (runtime-only) | GAP |
-| P6 — Error classification | `no_adapter_contract_regression.sh` (STEP 5.83) | SHIPPED |
-| P7 — Bucket SSOT | `check_inline_bucket_uri.py` (STEP 5.69) | SHIPPED — ratchet exempts known scripts |
+| Pattern                          | QG Script                                                                   | Status                                                                         |
+| -------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| P1 — SSOT-owned reference        | `no_hardcoded_venue_urls.sh` + `no_hardcoded_venue_universe.sh` (STEP 5.70) | SHIPPED                                                                        |
+| P2 — Manifest emission           | `no_silent_absence_handlers.sh` (STEP 5.70)                                 | SHIPPED — but does NOT catch `.add()` in non-handler files like `data_sink.py` |
+| P3 — Schema-version (code)       | `rg 'schema_version\s*=\s*[1-7]'`                                           | GAP — add as inline STEP                                                       |
+| P4 — Honest-absence reasons      | `rg 'record_empty.*reason\s*=\s*""'`                                        | GAP — add as inline STEP                                                       |
+| P5 — expected_coverage preflight | (runtime-only)                                                              | GAP                                                                            |
+| P6 — Error classification        | `no_adapter_contract_regression.sh` (STEP 5.83)                             | SHIPPED                                                                        |
+| P7 — Bucket SSOT                 | `check_inline_bucket_uri.py` (STEP 5.69)                                    | SHIPPED — ratchet exempts known scripts                                        |
 
 **Additional gap**: QG STEP 5.61 (`ServiceBootstrap` presence check) does not currently fire for `deployment-api`
 because that repo's `quality-gates.sh` may not run the same check. Verify the check covers all repos including
@@ -361,17 +367,17 @@ scans `*_handler.py` file names.
 
 ## Continuous-Verification Column
 
-| Pattern | Continuous-verification path | Cadence | Last verified |
-| ------- | ---------------------------- | ------- | ------------- |
-| P1 — SSOT-owned reference | `no_hardcoded_venue_urls.sh` + `no_hardcoded_venue_universe.sh` in QG | every push to LDR | 2026-05-20 |
-| P2 — Manifest emission | `no_silent_absence_handlers.sh` in QG | every push | 2026-05-20 |
-| P2b — Legacy `.add()` in sinks | **GAP** — no QG step covers non-handler files | — | not wired |
-| P3 — Schema-version (code) | Inline QG `rg` step (once added) | every push | not wired |
-| P4 — Honest-absence reasons | `LegacyBlankErrorReasonError` raised at runtime | every batch run | runtime-only |
-| P5 — expected_coverage preflight | Post-hoc `DIVERGENT_EMPTY` scanner (A3-style) | daily scheduled audit | not wired |
-| P6 — Error classification | `no_adapter_contract_regression.sh` (STEP 5.83) | every push | 2026-05-20 |
-| P7 — Bucket SSOT | `check_inline_bucket_uri.py` (STEP 5.69) | every push | 2026-05-20 |
-| ServiceBootstrap presence | QG STEP 5.61 | every push | 2026-05-20 — **deployment-api exempt gap** |
+| Pattern                          | Continuous-verification path                                          | Cadence               | Last verified                              |
+| -------------------------------- | --------------------------------------------------------------------- | --------------------- | ------------------------------------------ |
+| P1 — SSOT-owned reference        | `no_hardcoded_venue_urls.sh` + `no_hardcoded_venue_universe.sh` in QG | every push to LDR     | 2026-05-20                                 |
+| P2 — Manifest emission           | `no_silent_absence_handlers.sh` in QG                                 | every push            | 2026-05-20                                 |
+| P2b — Legacy `.add()` in sinks   | **GAP** — no QG step covers non-handler files                         | —                     | not wired                                  |
+| P3 — Schema-version (code)       | Inline QG `rg` step (once added)                                      | every push            | not wired                                  |
+| P4 — Honest-absence reasons      | `LegacyBlankErrorReasonError` raised at runtime                       | every batch run       | runtime-only                               |
+| P5 — expected_coverage preflight | Post-hoc `DIVERGENT_EMPTY` scanner (A3-style)                         | daily scheduled audit | not wired                                  |
+| P6 — Error classification        | `no_adapter_contract_regression.sh` (STEP 5.83)                       | every push            | 2026-05-20                                 |
+| P7 — Bucket SSOT                 | `check_inline_bucket_uri.py` (STEP 5.69)                              | every push            | 2026-05-20                                 |
+| ServiceBootstrap presence        | QG STEP 5.61                                                          | every push            | 2026-05-20 — **deployment-api exempt gap** |
 
 ---
 
@@ -408,10 +414,10 @@ rows from these services will have sub-v8 schema and no `capture_status` until f
 - **P5 (`expected_coverage()` preflight)**: not scannable by grep; runtime-only. Out of scope for this grep-based pass.
 - **P6 (per-adapter error classification)**: full coverage requires per-adapter file read. Covered by C9 (IS→MTDS) and
   the individual service-pair audits. Not re-audited here.
-- **Pattern 1 (SSOT-owned reference)**: This is the IS→MTDS contract specifically. Not applicable to the UTL→all-services
-  pair. Verified clean for this audit dimension.
-- **instruments-service `validate_api_keys_for_venues()`**: Confirmed as preflight-only usage in service source.
-  Script usage in `instruments-service/scripts/` is acceptable (standalone scripts, not persistent handlers).
+- **Pattern 1 (SSOT-owned reference)**: This is the IS→MTDS contract specifically. Not applicable to the
+  UTL→all-services pair. Verified clean for this audit dimension.
+- **instruments-service `validate_api_keys_for_venues()`**: Confirmed as preflight-only usage in service source. Script
+  usage in `instruments-service/scripts/` is acceptable (standalone scripts, not persistent handlers).
 
 ---
 
@@ -419,15 +425,17 @@ rows from these services will have sub-v8 schema and no `capture_status` until f
 
 **5 findings total: 4 P0, 1 P1** (instruments-service one-shot downgraded to YELLOW — not a violation).
 
-| ID | Service | Contract | Severity |
-| -- | ------- | -------- | -------- |
-| P0-1 | deployment-api | Missing ServiceBootstrap | P0 |
-| P0-2 | execution-service | ManifestWriter.add() in live data_sink + save_operations | P0 |
-| P0-3 | strategy-service | ManifestWriter.add() in PnL compute_handler + risk_snapshot_sink | P0 |
-| P0-4 | market-tick-data-service/scripts | Legacy ManifestWriter path + hardcoded bucket | P0 |
-| P1-1 | alerting-service | Custom health route instead of make_health_router | P1 |
+| ID   | Service                          | Contract                                                         | Severity |
+| ---- | -------------------------------- | ---------------------------------------------------------------- | -------- |
+| P0-1 | deployment-api                   | Missing ServiceBootstrap                                         | P0       |
+| P0-2 | execution-service                | ManifestWriter.add() in live data_sink + save_operations         | P0       |
+| P0-3 | strategy-service                 | ManifestWriter.add() in PnL compute_handler + risk_snapshot_sink | P0       |
+| P0-4 | market-tick-data-service/scripts | Legacy ManifestWriter path + hardcoded bucket                    | P0       |
+| P1-1 | alerting-service                 | Custom health route instead of make_health_router                | P1       |
 
-The most critical findings are P0-2 and P0-3: execution and strategy manifest rows are being written without `capture_status`, `available_at` enforcement, or v8 schema. This compounds the 2026-05-20 mega-audit finding that 0% of 7.4M prod rows were at v8 — these services are actively writing pre-v8 rows to their buckets.
+The most critical findings are P0-2 and P0-3: execution and strategy manifest rows are being written without
+`capture_status`, `available_at` enforcement, or v8 schema. This compounds the 2026-05-20 mega-audit finding that 0% of
+7.4M prod rows were at v8 — these services are actively writing pre-v8 rows to their buckets.
 
 ---
 

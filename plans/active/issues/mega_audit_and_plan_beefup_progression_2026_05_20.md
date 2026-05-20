@@ -29,8 +29,8 @@ between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 > [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md) re-prioritised P0 +
 > ACKED to run TONIGHT in parallel with Phase -2 consolidation tail. Requires **Opus 4.7 (1M context)** per
 > `codex/06-coding-standards/model-tier-selection.md` opus-required tier — cross-archetype + cross-codebase scope.
-> Operator authorisation: "mostly done anyway, do it tonight or in parallel." Not part of this mega-audit's
-> data-sanity scope; sequenced after consolidation Phase 11 lands clean.
+> Operator authorisation: "mostly done anyway, do it tonight or in parallel." Not part of this mega-audit's data-sanity
+> scope; sequenced after consolidation Phase 11 lands clean.
 
 > **🚨 OPERATOR DIRECTIVE 2026-05-20 — supersedes any "deadline-driven cutbacks" in this tracker**: "The data pipeline
 > is critical to everything we do. I don't care about the 23rd deadline... I want every single issue that we found fully

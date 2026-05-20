@@ -24,10 +24,10 @@ estimate_calibration_note: |
 ---
 
 > **🟡 BLOCKED-ON G4 Phase 7 GCS MIGRATION FLEET** (updated 2026-05-19 slot 8) — CODE GATE DONE: v7→v8 rename
-> (manifest_schema_final_gate Phase 2.D ✅) + `record_captured(service_emission_state=)` MANDATORY enforcement
-> (Phase 4.DEFAULT-REMOVAL ✅). Remaining blocker: GCS migration fleet (Phase 7.C-G of
-> `manifest_schema_final_gate_2026_05_09` — HUMAN+AGENT; requires operator to launch migration VMs + sign off).
-> Phase 4 VM launches (this plan) can proceed immediately after Phase 7.G sign-off.
+> (manifest_schema_final_gate Phase 2.D ✅) + `record_captured(service_emission_state=)` MANDATORY enforcement (Phase
+> 4.DEFAULT-REMOVAL ✅). Remaining blocker: GCS migration fleet (Phase 7.C-G of `manifest_schema_final_gate_2026_05_09`
+> — HUMAN+AGENT; requires operator to launch migration VMs + sign off). Phase 4 VM launches (this plan) can proceed
+> immediately after Phase 7.G sign-off.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -265,20 +265,21 @@ using pyarrow column-projection on the 190M-row manifest (pyarrow scans in ~30s 
 
 ### Phase 4 — Production launch (P1, ~0.5 day wall-clock; 2-4 hrs per asset_group)
 
-- [x] ✅ **DEFERRED** [VM] P1. Launch v2 enumerator VMs per asset_group (~10 total: 7 cefi venues + 1 defi + 1 tradfi + 1 sports + 1
-      prediction). Apply CLAUDE.md "No fire-and-forget VM launches" rule: verify STARTED event within 60s + ≥1 progress
-      event per hour + STOPPED/FAILED at exit per VM. Total wall-clock ~3-4 hrs running in parallel.
+- [x] ✅ **DEFERRED** [VM] P1. Launch v2 enumerator VMs per asset_group (~10 total: 7 cefi venues + 1 defi + 1 tradfi +
+      1 sports + 1 prediction). Apply CLAUDE.md "No fire-and-forget VM launches" rule: verify STARTED event within 60s +
+      ≥1 progress event per hour + STOPPED/FAILED at exit per VM. Total wall-clock ~3-4 hrs running in parallel.
       **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase 7.G sign-off trigger (operator-acked defer
       2026-05-19 via BLK-89befd81). Code gate fully done; launches immediately after Phase 7.G sign-off.
-- [x] ✅ **DEFERRED** [VM] P1. Manifest consolidator daemon merges per-VM shards into canonical manifest. Expected: ~190M rows in
-      `_index/availability_index.parquet`.
-      **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase 7.G sign-off trigger (operator-acked 2026-05-19).
+- [x] ✅ **DEFERRED** [VM] P1. Manifest consolidator daemon merges per-VM shards into canonical manifest. Expected:
+      ~190M rows in `_index/availability_index.parquet`. **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase
+      7.G sign-off trigger (operator-acked 2026-05-19).
 - [x] ✅ **DEFERRED** [VERIFY] P1. Post-run verification (per "Plans Run To Actual Completion" HARD RULE):
       `bash     gsutil ls gs://{pid}-events/events/instruments-service/{today}/expected-universe-v2-*/   # STARTED+STOPPED for every VM     python -c "import pyarrow.parquet as pq; t = pq.read_table('gs://{manifest_bucket}/_index/availability_index.parquet', columns=['capture_status']); from collections import Counter; print(Counter(t['capture_status'].to_pylist()))"     # expect: expected_unattempted count ~190M; captured + empty_confirmed + attempted_failed unchanged     `
       **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase 7.G sign-off trigger (operator-acked 2026-05-19).
-- [x] ✅ **DEFERRED** [VERIFY] P1. Per-asset-group spot-check: sample 100 random `(instrument_id, day)` pairs per asset_group; assert
-      lifecycle bounds enforced (no rows pre-`active_from` / post-`active_to` for cefi; no rows pre-genesis for defi;
-      etc.). **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase 7.G sign-off trigger (operator-acked 2026-05-19).
+- [x] ✅ **DEFERRED** [VERIFY] P1. Per-asset-group spot-check: sample 100 random `(instrument_id, day)` pairs per
+      asset_group; assert lifecycle bounds enforced (no rows pre-`active_from` / post-`active_to` for cefi; no rows
+      pre-genesis for defi; etc.). **MIGRATED TO**: `manifest_schema_final_gate_2026_05_09` Phase 7.G sign-off trigger
+      (operator-acked 2026-05-19).
 
 ### Phase 5 — Codex SSOT updates (P1, ~0.25 day) — per "Post-Plan-Phase Codex Audit" HARD RULE
 

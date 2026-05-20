@@ -121,9 +121,8 @@ credential issue is a routine operator-rotation task that doesn't block May-23 c
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN
-**Triaged by**: slot-8 triage sweep
-**Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but credentials gap remains
+**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but
+credentials gap remains
 
 ---
 

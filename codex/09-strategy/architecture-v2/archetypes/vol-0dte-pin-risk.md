@@ -22,11 +22,11 @@ topology_requirements:
 ## What it does
 
 Manages pin risk when the underlying price approaches an option strike near expiry. As expiry approaches and spot
-converges on a strike, gamma becomes extreme and delta flips discontinuously at the pin point — creating significant
-P&L uncertainty for any short-gamma book. This archetype detects proximity to open-interest-weighted strikes in the
-expiring chain, then decides whether to carry, flatten, or roll the position before the binary gamma event resolves.
-Operates both proactively (pre-expiry risk management scanning all live positions) and reactively (triggered by
-real-time delta breaches near expiry).
+converges on a strike, gamma becomes extreme and delta flips discontinuously at the pin point — creating significant P&L
+uncertainty for any short-gamma book. This archetype detects proximity to open-interest-weighted strikes in the expiring
+chain, then decides whether to carry, flatten, or roll the position before the binary gamma event resolves. Operates
+both proactively (pre-expiry risk management scanning all live positions) and reactively (triggered by real-time delta
+breaches near expiry).
 
 ## Token / position flow
 
@@ -68,7 +68,8 @@ real-time delta breaches near expiry).
 - Never carry unhedged short gamma inside pin risk window — rehedge on every tick
 - Stop loss: if delta-hedge cost exceeds `max_hedge_cost_pct` of position value, force flatten
 - Roll trigger: roll before expiry if `roll_cost < carry_gamma_cost_estimate`
-- Kill switch: if spot moves past pin threshold by more than `blowthrough_pct`, flatten immediately (pin failed — binary loss)
+- Kill switch: if spot moves past pin threshold by more than `blowthrough_pct`, flatten immediately (pin failed — binary
+  loss)
 - Venue outage during pin risk window: flatten via alternate hedge venue
 
 ## Config parameters

@@ -23,15 +23,16 @@ codex_ssots:
 > **ARCHIVED 2026-05-20** — all 13 venues (original 12 + Manifold extension) deleted from UAC + MTDS + PM + codex.
 >
 > **Landed commits**:
+>
 > - Phase 1+2 (9 UAC-only): unified-api-contracts@a408925c
 > - Phase 3 (sharpapi+fear_greed+dydx cross-repo): unified-api-contracts@df2c7543 + market-tick-data-service@adc56bc
 > - Phase 5 (Manifold extension): unified-api-contracts@276f9efd + market-tick-data-service@fae9416
 > - PM/codex cleanup: unified-trading-pm@1f0351f76
 >
-> **Phase 4 verification (DEFERRED to promotion gate)** — not part of the cleanup itself but standard
-> post-merge validation, executed at next quickmerge: UAC + MTDS quality-gates green runs, UAC
-> `weekly-validation.yml` workflow dispatch + verify 13 venues gone from canary output, semver-agent
-> minor-bump confirmation. These run automatically when this branch lands on main.
+> **Phase 4 verification (DEFERRED to promotion gate)** — not part of the cleanup itself but standard post-merge
+> validation, executed at next quickmerge: UAC + MTDS quality-gates green runs, UAC `weekly-validation.yml` workflow
+> dispatch + verify 13 venues gone from canary output, semver-agent minor-bump confirmation. These run automatically
+> when this branch lands on main.
 
 > **Trigger**: 2026-05-20 operator directive during WIF/canary scope-slicing for the weekly schema-validation work
 > (parent issue: [[uac_weekly_validation_wif_secrets_missing_2026_05_17]] RESOLVED 2026-05-20). Operator flagged 12 UAC
@@ -109,10 +110,12 @@ refs only).
 - [x] ✅ [SCRIPT] P3. UAC `bash scripts/quality-gates.sh` — ran; pre-existing failures only (modes.py backward-compat,
       file size, idna CVE). Phase 3 deletions introduced no regressions — UAC@4aee80e1
 - [x] ✅ [SCRIPT] P3. MTDS `bash scripts/quality-gates.sh` — ran; 13 pre-existing TestFreshnessSkip failures in DeFi
-      handlers (Phase 7J regression, not from sports cleanup). Phase 3 deletions introduced no regressions — MTDS@adc56bc
+      handlers (Phase 7J regression, not from sports cleanup). Phase 3 deletions introduced no regressions —
+      MTDS@adc56bc
 - [x] ✅ [SCRIPT] P3. Dispatch UAC `weekly-validation.yml` workflow + verify 12 venues are gone from output — both
       dispatch runs completed success; 47 venues (reduced from prior count) — run 26160926756
-- [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@df2c7543/4aee80e1 + MTDS@adc56bc (semver-agent auto-bumps minor)
+- [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@df2c7543/4aee80e1 + MTDS@adc56bc (semver-agent auto-bumps
+      minor)
 - [x] ✅ [SCRIPT] P3. Promote via quickmerge — pushed to live-defi-rollout; CI workspace-qg + semver-agent handle
       promotion to staging → main automatically
 
@@ -129,7 +132,7 @@ after seeing the canary noise from the BINARY-vs-MULTIPLE_CHOICE drift.
 
 - [x] ✅ Delete `unified-api-contracts/unified_api_contracts/external/manifold/` (incl. cassette) — UAC@276f9efd
 - [x] ✅ Delete `market-tick-data-service/.../market_interface/adapters/prediction/manifold_adapter.py` — MTDS@fae9416
-- [x] ✅ Remove Manifold ripple refs across UAC (15 files: **init**.py, execution.py, normalize_utils/_, canonical/_,
+- [x] ✅ Remove Manifold ripple refs across UAC (15 files: **init**.py, execution.py, normalize*utils/*, canonical/\_,
       internal/\*, config/provider_api_versions.yaml, 4 tests) — UAC@276f9efd
 - [x] ✅ Remove Manifold from PM/codex active plans + SSOT docs (5 files: codex venue-availability +
       credentials-matrix + secret-manager-naming, plans/active api_keys_wallets_accounts_readiness +

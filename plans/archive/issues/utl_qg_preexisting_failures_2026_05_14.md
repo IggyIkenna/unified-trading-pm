@@ -3,7 +3,13 @@ title: "UTL `quality-gates.sh` has 6 pre-existing failure categories (post-117-s
 created: 2026-05-14
 author: slot-3-harsh
 re_opened: 2026-05-20
-prior_substantive_progress: 4 of 5 categories shipped 2026-05-16 — Cloud SDK import (`unified-trading-library@dfbe83c2`), function/method-size 25/51 cleared (cumulative SHAs in body — `ae622fe8` / `403f4b34` / `92e99a84` / `cc8323e5` / `c8957897` / `ad4f2897` / `351a54bf` / `6709fca6` / `09b971f9` / `22b97cd0` / `86e6062a` / `d902f405` / `652abdc3` / `54265159` / `6fff25f0` / `e6fff423` / `6bfd6e64` / `0b79a4b3` / `f34af1be` / `175eaf1d` / `5a3a341b` / `d75ae5d7` / `0e0feced` / `d5780025` / `17640cba` / `fe2710bf`); urllib3 CVE bump across 8 repos to `>=2.7.0`; deep UAC imports 11/11 lifted (`unified-trading-library@bd6a27ef` + `ca1ccafc` after UAC root facade re-exports at `unified-api-contracts@48315a0`).
+prior_substantive_progress:
+  4 of 5 categories shipped 2026-05-16 — Cloud SDK import (`unified-trading-library@dfbe83c2`), function/method-size
+  25/51 cleared (cumulative SHAs in body — `ae622fe8` / `403f4b34` / `92e99a84` / `cc8323e5` / `c8957897` / `ad4f2897` /
+  `351a54bf` / `6709fca6` / `09b971f9` / `22b97cd0` / `86e6062a` / `d902f405` / `652abdc3` / `54265159` / `6fff25f0` /
+  `e6fff423` / `6bfd6e64` / `0b79a4b3` / `f34af1be` / `175eaf1d` / `5a3a341b` / `d75ae5d7` / `0e0feced` / `d5780025` /
+  `17640cba` / `fe2710bf`); urllib3 CVE bump across 8 repos to `>=2.7.0`; deep UAC imports 11/11 lifted
+  (`unified-trading-library@bd6a27ef` + `ca1ccafc` after UAC root facade re-exports at `unified-api-contracts@48315a0`).
 source:
   - unified-trading-library/scripts/quality-gates.sh
   - utl@26ded7d (post-117-test-fixture sweep)
@@ -16,7 +22,13 @@ routing:
   composes_with: utl_117_test_fixture_pipeline_mode_sweep_closed_2026_05_14.md
 ---
 
-> **🔴 RE-OPENED 2026-05-20** — 4 of 5 categories were genuinely shipped (SHAs in frontmatter `prior_substantive_progress`). Per operator directive 2026-05-20 ("don't defer"), the residual Item 2 (3 backward-compat shims — `kill_switch/bus.py` audit-log + legacy bridge, `treasury/approval_bus.py` idempotency_key alias) is dispersed-cleanup work that fits Phase D ratchet scope, not standalone closure. Successor: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md` § Phase D cross-cutting QG ratchet plan. The remaining 26/51 docstring-heavy method-size methods + the 3 backward-compat shims land as a D-phase deliverable; ratchet floor locks in the 25-cleared progress so it cannot regress.
+> **🔴 RE-OPENED 2026-05-20** — 4 of 5 categories were genuinely shipped (SHAs in frontmatter
+> `prior_substantive_progress`). Per operator directive 2026-05-20 ("don't defer"), the residual Item 2 (3
+> backward-compat shims — `kill_switch/bus.py` audit-log + legacy bridge, `treasury/approval_bus.py` idempotency_key
+> alias) is dispersed-cleanup work that fits Phase D ratchet scope, not standalone closure. Successor:
+> `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md` § Phase D cross-cutting QG ratchet plan.
+> The remaining 26/51 docstring-heavy method-size methods + the 3 backward-compat shims land as a D-phase deliverable;
+> ratchet floor locks in the 25-cleared progress so it cannot regress.
 
 ## What I found
 

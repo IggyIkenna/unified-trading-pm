@@ -30,7 +30,6 @@ related_plans:
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
 > plan's May-23 scope.
 
-
 > **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for prediction asset_group**: 3,442 `MISSING_EXPECTED` cells.
 > KALSHI trades: 1,756 cells missing. POLYMARKET trades: 1,686 cells missing. Both are POST-launch cells (Polymarket
 > 2020-09-01, Kalshi 2021-07-30) that should have data — adapter never ran or never emitted. Reassigned slot 9 portion

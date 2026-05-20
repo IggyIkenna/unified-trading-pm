@@ -175,11 +175,18 @@ Last-mile work, scoped tightly.
 
 Before writing any code, run these probes on a same-region GCE VM (asia-northeast1-c):
 
-- [x] ✅ **Read Extended Exchange API docs** — docs.extended.exchange is product-overview only (no API ref). Working API discovered via direct probing. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ **Probe likely Extended REST endpoints** — `GET /api/v1/info/candles/{symbol}/trades?interval=PT1M&limit=1440&endTime=<ms>` returns HTTP 200 with 1440 bars for historical UTC days. Response shape: `{status: "OK", data: [{T: ms, o, h, l, c, v}]}`. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ **Identify Extended's Settlement contract** — NOT NEEDED. REST path sufficient for OHLCV; Starknet event-replay path skipped per plan C.3 guidance ("if REST candles found, skip C.3"). mtds@4f0cdbd (2026-05-19).
+- [x] ✅ **Read Extended Exchange API docs** — docs.extended.exchange is product-overview only (no API ref). Working API
+      discovered via direct probing. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ **Probe likely Extended REST endpoints** —
+      `GET /api/v1/info/candles/{symbol}/trades?interval=PT1M&limit=1440&endTime=<ms>` returns HTTP 200 with 1440 bars
+      for historical UTC days. Response shape: `{status: "OK", data: [{T: ms, o, h, l, c, v}]}`. mtds@4f0cdbd
+      (2026-05-19).
+- [x] ✅ **Identify Extended's Settlement contract** — NOT NEEDED. REST path sufficient for OHLCV; Starknet event-replay
+      path skipped per plan C.3 guidance ("if REST candles found, skip C.3"). mtds@4f0cdbd (2026-05-19).
 - [x] ✅ **Probe contract event-emit pattern** — NOT NEEDED (REST path chosen). mtds@4f0cdbd (2026-05-19).
-- [x] ✅ **Decide path**: **REST `/info/candles/{symbol}/trades`**. Empirical proof: limit=1440 returns exactly 1440 bars for 2025-06-01 (all timestamps within [00:00, 24:00) UTC). No pagination needed. C.3 (UAC Starknet RPC) skipped. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ **Decide path**: **REST `/info/candles/{symbol}/trades`**. Empirical proof: limit=1440 returns exactly 1440
+      bars for 2025-06-01 (all timestamps within [00:00, 24:00) UTC). No pagination needed. C.3 (UAC Starknet RPC)
+      skipped. mtds@4f0cdbd (2026-05-19).
 
 #### C.3 — Phase 1: UAC Starknet RPC template (only if Phase 0 → event-replay path)
 
@@ -279,13 +286,25 @@ This unblocks routing the same way UAC `e890022` unblocked Lighter + Pacifica.
 
 Lighter + Pacifica proved this path on 2026-05-07 — system layers should already work. Verify explicitly for Extended:
 
-- [x] ✅ Single-day smoke (local pipeline run, not Tokyo VM — Japan-region latency not available in slot). MTDS CLI with `--venues EXTENDED-STARKNET --data-types ohlcv_1m --start-date 2025-06-01 --asset-group CEFI`: 1440 rows written in 11s. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ Parquet exists at `gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-06-01/asset_group=cefi/venue=EXTENDED-STARKNET/instrument_type=perpetual/data_type=ohlcv_1m/BTC.parquet` (1440 rows, 0.1 MB). mtds@4f0cdbd (2026-05-19).
-- [x] ✅ Read parquet: 1440 rows, timestamps `[2025-06-01 00:00:00+00:00, 2025-06-01 23:59:00+00:00]`, all within [day_start, day_end). mtds@4f0cdbd (2026-05-19).
-- [x] ✅ Manifest `record_captured` row: `(date=2025-06-01, venue=EXTENDED-STARKNET, data_type=ohlcv_1m, instrument_id=BTC, capture_status=captured, instrument_count=1440)` in per-VM shard `_index/per_vm/slot7-smoke-extended.parquet`. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ deployment-api turbo: `GET /api/data-status/turbo?service=market-tick-data-service&start_date=2025-06-01&end_date=2025-06-01&asset_group=CEFI` → EXTENDED-STARKNET `dates_found=1, dates_missing=0, dates_found_list=["2025-06-01"]`. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ coverage-summary: `GET /api/data-status/coverage-summary?service=market-tick-data-service&asset_group=CEFI` → `total_shards=2632932` (incremented by 1 vs pre-run), `unique_venues=45`. EXTENDED-STARKNET counted in aggregate. mtds@4f0cdbd (2026-05-19).
-- [x] ✅ deployment-ui drill-down: deployment-api turbo confirms EXTENDED-STARKNET ohlcv_1m dates_found=1 — UI renders from same turbo endpoint; data-status panel would show populated ohlcv_1m row. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ Single-day smoke (local pipeline run, not Tokyo VM — Japan-region latency not available in slot). MTDS CLI with
+      `--venues EXTENDED-STARKNET --data-types ohlcv_1m --start-date 2025-06-01 --asset-group CEFI`: 1440 rows written
+      in 11s. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ Parquet exists at
+      `gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-06-01/asset_group=cefi/venue=EXTENDED-STARKNET/instrument_type=perpetual/data_type=ohlcv_1m/BTC.parquet`
+      (1440 rows, 0.1 MB). mtds@4f0cdbd (2026-05-19).
+- [x] ✅ Read parquet: 1440 rows, timestamps `[2025-06-01 00:00:00+00:00, 2025-06-01 23:59:00+00:00]`, all within
+      [day_start, day_end). mtds@4f0cdbd (2026-05-19).
+- [x] ✅ Manifest `record_captured` row:
+      `(date=2025-06-01, venue=EXTENDED-STARKNET, data_type=ohlcv_1m, instrument_id=BTC, capture_status=captured, instrument_count=1440)`
+      in per-VM shard `_index/per_vm/slot7-smoke-extended.parquet`. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ deployment-api turbo:
+      `GET /api/data-status/turbo?service=market-tick-data-service&start_date=2025-06-01&end_date=2025-06-01&asset_group=CEFI`
+      → EXTENDED-STARKNET `dates_found=1, dates_missing=0, dates_found_list=["2025-06-01"]`. mtds@4f0cdbd (2026-05-19).
+- [x] ✅ coverage-summary: `GET /api/data-status/coverage-summary?service=market-tick-data-service&asset_group=CEFI` →
+      `total_shards=2632932` (incremented by 1 vs pre-run), `unique_venues=45`. EXTENDED-STARKNET counted in aggregate.
+      mtds@4f0cdbd (2026-05-19).
+- [x] ✅ deployment-ui drill-down: deployment-api turbo confirms EXTENDED-STARKNET ohlcv_1m dates_found=1 — UI renders
+      from same turbo endpoint; data-status panel would show populated ohlcv_1m row. mtds@4f0cdbd (2026-05-19).
 
 #### C.7 — Phase 5: backfill VM launch
 

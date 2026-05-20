@@ -44,45 +44,48 @@ Each transition requires a verification step (see § "Verification at cutover").
 
 ## DeFi-first credential request list (Phase 4 AWS provisioning target)
 
-**Secret naming convention**: keep GCP name byte-for-byte in AWS to avoid `unified-config-interface` lookup drift.
-AWS Secrets Manager path: `arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:<gcp_name>`.
+**Secret naming convention**: keep GCP name byte-for-byte in AWS to avoid `unified-config-interface` lookup drift. AWS
+Secrets Manager path: `arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:<gcp_name>`.
 
 ### Group A — Per-venue execution API sub-keys (HUMAN-REQUIRED — operator must generate per-venue)
 
-| Secret name | Type | Consumer services | GCP status | AWS status | Notes |
-|---|---|---|---|---|---|
-| `exec-odum-binance-cefi` | `api_key_secret_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Binance → API Management → enable Spot+Futures, restrict to VPC CIDR |
-| `exec-odum-deribit-cefi` | `oauth2_client_credentials_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Deribit → Account → API Keys, trade+read; tokens auto-refreshed by execution-service |
-| `exec-odum-okx-cefi` | `api_key_secret_passphrase_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | OKX requires api_key + secret_key + passphrase (JSON blob) |
-| `exec-odum-bybit-cefi` | `api_key_secret_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Bybit → API → Unified Trading Account permissions |
-| `exec-odum-hyperliquid-defi` | `eip712_wallet_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | EIP-712 agent wallet; NEVER use primary wallet; `{"private_key":"0x...","agent_address":"0x..."}` |
-| `exec-odum-aster-cefi` | `api_key_secret_json` | execution-service | `NOT_IN_REGISTRY` | `AWAITING_OPERATOR` | Aster perp venue; NOT YET in `credentials-registry.yaml`; add entry when account created |
+| Secret name                  | Type                             | Consumer services | GCP status           | AWS status          | Notes                                                                                             |
+| ---------------------------- | -------------------------------- | ----------------- | -------------------- | ------------------- | ------------------------------------------------------------------------------------------------- |
+| `exec-odum-binance-cefi`     | `api_key_secret_json`            | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Binance → API Management → enable Spot+Futures, restrict to VPC CIDR                              |
+| `exec-odum-deribit-cefi`     | `oauth2_client_credentials_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Deribit → Account → API Keys, trade+read; tokens auto-refreshed by execution-service              |
+| `exec-odum-okx-cefi`         | `api_key_secret_passphrase_json` | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | OKX requires api_key + secret_key + passphrase (JSON blob)                                        |
+| `exec-odum-bybit-cefi`       | `api_key_secret_json`            | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | Bybit → API → Unified Trading Account permissions                                                 |
+| `exec-odum-hyperliquid-defi` | `eip712_wallet_json`             | execution-service | `needs_provisioning` | `AWAITING_OPERATOR` | EIP-712 agent wallet; NEVER use primary wallet; `{"private_key":"0x...","agent_address":"0x..."}` |
+| `exec-odum-aster-cefi`       | `api_key_secret_json`            | execution-service | `NOT_IN_REGISTRY`    | `AWAITING_OPERATOR` | Aster perp venue; NOT YET in `credentials-registry.yaml`; add entry when account created          |
 
 > **Operator action required**: generate sub-key per venue (NOT primary keys — use dedicated trading sub-accounts).
 > Store each as `aws secretsmanager create-secret --name <name> --secret-string '<json_blob>' --region ap-northeast-1`.
 
 ### Group B — On-chain RPC + DeFi infrastructure (may be scriptable from GCP)
 
-| Secret name | Type | Consumer services | GCP status | AWS status | Notes |
-|---|---|---|---|---|---|
-| `alchemy-api-key` | `api_key` | features-onchain-service | `needs_provisioning` | `AWAITING_SCRIPT` | EVM RPC (Arbitrum/Base/Polygon for Chainlink + Aave calls) |
-| `thegraph-api-key` | `api_key` | features-onchain-service | `needs_provisioning` | `AWAITING_SCRIPT` | DeFi subgraph queries (Uniswap, Aave, Compound pool data) |
+| Secret name        | Type      | Consumer services        | GCP status           | AWS status        | Notes                                                      |
+| ------------------ | --------- | ------------------------ | -------------------- | ----------------- | ---------------------------------------------------------- |
+| `alchemy-api-key`  | `api_key` | features-onchain-service | `needs_provisioning` | `AWAITING_SCRIPT` | EVM RPC (Arbitrum/Base/Polygon for Chainlink + Aave calls) |
+| `thegraph-api-key` | `api_key` | features-onchain-service | `needs_provisioning` | `AWAITING_SCRIPT` | DeFi subgraph queries (Uniswap, Aave, Compound pool data)  |
 
-> **Script path**: `aws secretsmanager create-secret --name alchemy-api-key --secret-string "$(gcloud secrets versions access latest --secret=alchemy-api-key --project=central-element-323112)"`. Requires both GCP ADC + AWS admin_od auth in same shell.
+> **Script path**:
+> `aws secretsmanager create-secret --name alchemy-api-key --secret-string "$(gcloud secrets versions access latest --secret=alchemy-api-key --project=central-element-323112)"`.
+> Requires both GCP ADC + AWS admin_od auth in same shell.
 
 ### Group C — Alerting paging credentials (NOT yet in credentials-registry.yaml)
 
-| Secret name | Type | Consumer services | GCP status | AWS status | Notes |
-|---|---|---|---|---|---|
-| `telegram-bot-token` | `api_key` | alerting-service | `unknown` | `AWAITING_OPERATOR` | Telegram BotFather token; see alerting_service_live_rules_2026_05_07.md Phase 4 |
-| `pagerduty-api-key` | `api_key` | alerting-service | `unknown` | `AWAITING_OPERATOR` | PagerDuty integration key for high-severity pages |
+| Secret name          | Type      | Consumer services | GCP status | AWS status          | Notes                                                                           |
+| -------------------- | --------- | ----------------- | ---------- | ------------------- | ------------------------------------------------------------------------------- |
+| `telegram-bot-token` | `api_key` | alerting-service  | `unknown`  | `AWAITING_OPERATOR` | Telegram BotFather token; see alerting_service_live_rules_2026_05_07.md Phase 4 |
+| `pagerduty-api-key`  | `api_key` | alerting-service  | `unknown`  | `AWAITING_OPERATOR` | PagerDuty integration key for high-severity pages                               |
 
-> **Note**: these secrets are referenced in the alerting plan but NOT yet in `credentials-registry.yaml`. Add entries when provisioned.
+> **Note**: these secrets are referenced in the alerting plan but NOT yet in `credentials-registry.yaml`. Add entries
+> when provisioned.
 
 ### Group D — Wallet / custody keys (HUMAN-ONLY — never script)
 
-| Secret name | Type | Notes |
-|---|---|---|
+| Secret name                  | Type                  | Notes                                                                                                                                                                                      |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | KMS-encrypted trading wallet | `cloud_kms_encrypted` | May-23 ships on `CLOUD_KMS_ENCRYPTED` per CLAUDE.md § "DeFi Execution Architecture — Custody". AWS KMS key must be created in ap-northeast-1 by operator. Copper + CEFFU are June-1 scope. |
 
 > **Hard rule**: wallet private keys MUST NOT be scripted from GCP → AWS. Operator generates fresh on AWS KMS. No copy.
@@ -103,8 +106,8 @@ Phase 4 will fill this in via `gcloud secrets list --project central-element-323
 
 ## Cross-references
 
-- **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md) Phase 4.
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
+  Phase 4.
 - **Credential metadata SSOT:** [`credentials-registry.yaml`](../../../credentials-registry.yaml).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](../05-infrastructure/cloud-agnostic-script-pattern.md),
   [`interface-credential-convention`](../04-architecture/interface-credential-convention.md).

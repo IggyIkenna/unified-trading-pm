@@ -663,8 +663,9 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       (2026-05-18 slot 6)
 - [x] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
       time_window). Launches a backtest VM via the deployment-service launcher (per VM launcher script SSOT). Returns
-      `run_id`. Async; result polled via 7.C. **DEFERRED-POST-CUTOVER** → simulation_scenarios_post_cutover_2026_06_01.md;
-      gates on SCENARIO_REGISTRY ≥34 (currently 10, per 9.A BLOCKED-UPSTREAM-OUTAGE).
+      `run_id`. Async; result polled via 7.C. **DEFERRED-POST-CUTOVER** →
+      simulation_scenarios_post_cutover_2026_06_01.md; gates on SCENARIO_REGISTRY ≥34 (currently 10, per 9.A
+      BLOCKED-UPSTREAM-OUTAGE).
 - [x] [AGENT] P1. ✅ **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read
       parquet from GCS; cache results. — deployment-api@cb1918d (2026-05-18 slot 6). Matrix: in-memory from
       SCENARIO_ARCHETYPE_MATRIX. Report: 501 scaffold — ScenarioReportEmitter (Phase 2.C) deferred per compressed scope;
@@ -760,15 +761,14 @@ engine state) and emits a real `ScenarioReport` parquet.
 - [x] [SCRIPT] P0. **9.B Event-stream verification.** Per "No fire-and-forget VM launches" HARD RULE — every VM emits
       STARTED + per-scenario INSTRUMENT_PROCESSED-equivalent (`SCENARIO_RUN_STARTED` / `SCENARIO_RUN_FINISHED` per
       overlay)
-  - STOPPED. Watcher (sub-agent or `ScheduleWakeup`) confirms within 90s of launch.
-  **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run completing (SCENARIO_REGISTRY ≥34 required).
-  **DEFERRED-POST-CUTOVER** → simulation_scenarios_post_cutover_2026_06_01.md.
+  - STOPPED. Watcher (sub-agent or `ScheduleWakeup`) confirms within 90s of launch. **BLOCKED-UPSTREAM-OUTAGE** — gates
+    on 9.A matrix run completing (SCENARIO_REGISTRY ≥34 required). **DEFERRED-POST-CUTOVER** →
+    simulation_scenarios_post_cutover_2026_06_01.md.
 - [x] [AGENT] P0. **9.C Failure triage.** Any matrix cell that FAILS its assertion is a finding per Findings Triage
       Discipline. Three dispositions: (a) scenario assertion was wrong (fix the assertion in UAC + re-run); (b) prod
       code has a real defect under that condition (file an issue doc + fix in the appropriate plan); (c) outcome is
-      acceptable + the assertion was over-strict (fix + document why). No green-washing.
-      **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run + 9.B verification.
-      **DEFERRED-POST-CUTOVER** → successor plan.
+      acceptable + the assertion was over-strict (fix + document why). No green-washing. **BLOCKED-UPSTREAM-OUTAGE** —
+      gates on 9.A matrix run + 9.B verification. **DEFERRED-POST-CUTOVER** → successor plan.
 - [x] [SCRIPT] P0. **9.D Evidence capture.** For every matrix cell, capture: VM name + run_id + report parquet GCS URI +
       outcome assertion pass/fail. Compiled into a `Phase 9 evidence` table appended to this plan body.
       **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run + 9.B/C. **DEFERRED-POST-CUTOVER** → successor plan.
@@ -797,8 +797,8 @@ engine state) and emits a real `ScenarioReport` parquet.
       scenario-regression-matrix gate (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6
       2026-05-12)
 - [x] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
-      Phase 9 is green. Per the banner-remove-owner-by-launcher rule.
-      **DEFERRED-POST-CUTOVER** — gates on Phase 9 green (BLOCKED-UPSTREAM-OUTAGE). → successor plan.
+      Phase 9 is green. Per the banner-remove-owner-by-launcher rule. **DEFERRED-POST-CUTOVER** — gates on Phase 9 green
+      (BLOCKED-UPSTREAM-OUTAGE). → successor plan.
 - [x] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
       alerting-service rule fires if matrix red >24h. Per `Master Plan Continuous-Verification Column` HARD RULE.
       **DEFERRED-POST-CUTOVER** — gates on Phase 9 green + cron-VM-launch. → successor plan.

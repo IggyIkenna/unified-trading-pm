@@ -140,6 +140,7 @@ class WalletCustodyReloader(ApiKeyReloader):
 pushed via `inject_directive()` rather than polled from a store.
 
 Key properties:
+
 - In-memory `dict[archetype_id, ArchetypeAllocationDirective]` with `threading.Lock`
 - TTL eviction via `valid_until` field (directives auto-expire on `get_directive()` + each poll cycle)
 - `inject_directive(directive)` / `get_directive(archetype_id)` / `poll_once()` public API
@@ -162,8 +163,8 @@ directive = reloader.get_directive("carry_staked_basis")  # None if absent/expir
 weight = engine.weight_with_directive(directive)           # fallback to static if None
 ```
 
-**Thread-safety**: `_lock` guards `_directives` dict. All reads/writes use `with self._lock`.
-`enabled=False` directives are stored and returned — callers must check `.enabled`.
+**Thread-safety**: `_lock` guards `_directives` dict. All reads/writes use `with self._lock`. `enabled=False` directives
+are stored and returned — callers must check `.enabled`.
 
 **Post-cutover**: lifted into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per
 `strategy_repo_consolidation_2026_05_19.md`.

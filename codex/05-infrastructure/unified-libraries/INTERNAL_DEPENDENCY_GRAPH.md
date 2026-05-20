@@ -6,8 +6,9 @@ last_reviewed: 2026-05-20
 # Internal Dependency Graph — Unified Libraries
 
 > **⚠️ Migration note (2026-05-20)**: `risk-and-exposure-service`, `position-balance-monitor-service`, and
-> `pnl-attribution-service` are now sub-packages of `strategy-service`. Graph edges from those 3 repos now route
-> through `strategy-service` as the single node. See [`strategy-service-architecture.md`](../../04-architecture/strategy-service-architecture.md).
+> `pnl-attribution-service` are now sub-packages of `strategy-service`. Graph edges from those 3 repos now route through
+> `strategy-service` as the single node. See
+> [`strategy-service-architecture.md`](../../04-architecture/strategy-service-architecture.md).
 
 **Last Updated:** 2026-02-28 (full rewrite — previous version dated 2026-02-19 used obsolete pre-refactor library names)
 **Purpose:** Show every internal unified-\* library dependency, library→library and service→library, for the current
@@ -246,23 +247,23 @@ graph TB
 `●` = direct dependency · `○` = not required · `⟪f⟫` = future/scaffolded
 
 | Service                              | UTS | UCI | UEI | UCLI | AC  | UIC | ref-if | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
-| ------------------------------------ | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
-| instruments-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| market-tick-data-service             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| market-data-processing-service       |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| features-service (calendar family)   |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ○  |
-| features-service (delta-one family)  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| features-service (volatility family) |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| features-service (onchain family)    |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ●   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| features-service (sports family) ⟪f⟫ |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ●   |  ○  |  ●  |  ○  |  ●  |
-| ml-training-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| ml-inference-service                 |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| strategy-service                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| execution-service                    |  ●  |  ●  |  ●  |  ○   |  ●  |  ○  |  ○   |  ●  |  ●  |  ●  |  ●   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| pnl-attribution-service              |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| position-balance-monitor-service     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ●  |  ●  |
-| risk-and-exposure-service            |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| alerting-service                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ○  |
+| ------------------------------------ | :-: | :-: | :-: | :--: | :-: | :-: | :----: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
+| instruments-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ●    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| market-tick-data-service             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| market-data-processing-service       |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| features-service (calendar family)   |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ○  |
+| features-service (delta-one family)  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| features-service (volatility family) |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| features-service (onchain family)    |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ●   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| features-service (sports family) ⟪f⟫ |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ●   |  ○  |  ●  |  ○  |  ●  |
+| ml-training-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| ml-inference-service                 |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| strategy-service                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| execution-service                    |  ●  |  ●  |  ●  |  ○   |  ●  |  ○  |   ○    |  ●  |  ●  |  ●  |  ●   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| pnl-attribution-service              |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| position-balance-monitor-service     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ●  |  ●  |
+| risk-and-exposure-service            |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| alerting-service                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ○  |
 
 ---
 

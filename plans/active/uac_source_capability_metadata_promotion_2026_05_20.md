@@ -202,7 +202,8 @@ Phases 0 + 1 can run in parallel (Phase 0 is read-only harvest; Phase 1 is schem
       `UAC_CANONICAL_EXEMPT=true`. — PM@(this commit) (2026-05-20)
 - [x] ✅ **P0. Synthetic regression test** — inline regex test confirms checker catches `source='binance'` missing
       `chain=`. Checker returns exit 0 on current 70-venue corpus. — PM@(this commit) (2026-05-20)
-- [x] ✅ **P0. Codex `quality-gates.md` row update** — STEP 5.85 entry added (UAC SourceCapability structured venue metadata guard). — PM@6c84cb472 (2026-05-20)
+- [x] ✅ **P0. Codex `quality-gates.md` row update** — STEP 5.85 entry added (UAC SourceCapability structured venue
+      metadata guard). — PM@6c84cb472 (2026-05-20)
 
 ### Phase 4 — A2 expected_coverage() integration
 
@@ -216,16 +217,26 @@ Phase A2 oracle.
 - [x] ✅ **P0. Test** — 16 tests in `test_expected_coverage_source_start.py`: isolated test capabilities +
       real-declaration smoke tests (hyperliquid/polymarket/binance). Confirms EXPECTED_PRE_SOURCE_COVERAGE_START signal
       correct for dates before/after venue's `coverage_start[data_type]`. — uac@11227f95 (2026-05-20)
-- [x] ✅ **P1. Document the integration** in `codex/02-data/availability-manifest-and-data-status.md` — linked `SourceCapability.coverage_start` to `EXPECTED_PRE_SOURCE_COVERAGE_START`, documents `is_before_source_coverage_start()` as SSOT consumer and co-existence with `venue_launch_dates.py`. — PM@6c84cb472 (2026-05-20)
+- [x] ✅ **P1. Document the integration** in `codex/02-data/availability-manifest-and-data-status.md` — linked
+      `SourceCapability.coverage_start` to `EXPECTED_PRE_SOURCE_COVERAGE_START`, documents
+      `is_before_source_coverage_start()` as SSOT consumer and co-existence with `venue_launch_dates.py`. — PM@6c84cb472
+      (2026-05-20)
 
 ### Phase 5 — Codex SSOT + post-migration cleanup
 
-- [x] ✅ **P0. Update** `codex/02-data/contracts-scope-and-layout.md` — added capability registry table for chain/kind/mandatory_user_agent/coverage_start fields with canonical values, kind taxonomy, QG STEP 5.85, and consumer function. — PM@6c84cb472 (2026-05-20)
-- [x] ✅ **P0. Update** `codex/06-coding-standards/quality-gates.md` — STEP 5.85 row added to QG table after STEP 5.83. — PM@6c84cb472 (2026-05-20)
+- [x] ✅ **P0. Update** `codex/02-data/contracts-scope-and-layout.md` — added capability registry table for
+      chain/kind/mandatory_user_agent/coverage_start fields with canonical values, kind taxonomy, QG STEP 5.85, and
+      consumer function. — PM@6c84cb472 (2026-05-20)
+- [x] ✅ **P0. Update** `codex/06-coding-standards/quality-gates.md` — STEP 5.85 row added to QG table after STEP 5.83.
+      — PM@6c84cb472 (2026-05-20)
 - [ ] **P1. Prune duplicated info** in capability_declarations docstrings — once Phase 4 confirms structured fields are
       consumed correctly, remove now-redundant `chain: ...` / `kind: ...` lines from per-venue docstrings. Keep
-      human-readable context paragraphs. **DEFERRED** — post-cutover cleanup (successor: `uac_venue_metadata_gap_fill_2026_06_xx.md`)
-- [ ] **P1. SUPERSEDED banner** on `venue_launch_dates.py` — co-existence is fine per plan. `coverage_start` field is SSOT for per-data_type; `venue_launch_dates.py` remains SSOT for single-date venue launch semantics. Both documented in `availability-manifest-and-data-status.md`. **DEFERRED** — only needed if venue_launch_dates read sites are replaced (named successor: post-cutover cleanup plan).
+      human-readable context paragraphs. **DEFERRED** — post-cutover cleanup (successor:
+      `uac_venue_metadata_gap_fill_2026_06_xx.md`)
+- [ ] **P1. SUPERSEDED banner** on `venue_launch_dates.py` — co-existence is fine per plan. `coverage_start` field is
+      SSOT for per-data_type; `venue_launch_dates.py` remains SSOT for single-date venue launch semantics. Both
+      documented in `availability-manifest-and-data-status.md`. **DEFERRED** — only needed if venue_launch_dates read
+      sites are replaced (named successor: post-cutover cleanup plan).
 
 ## Success criteria
 

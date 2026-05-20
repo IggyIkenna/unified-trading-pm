@@ -17,38 +17,35 @@ related_plans:
 
 # Ikenna work-split 2026-05-20
 
-> **Supersedes** `work_split_2026_05_19_ikenna.md` — slot 6/7/9 freeze gates remain;
-> slots 9/10/11 re-themed to QG green background sweep on the Ikenna AWS VM while
-> Harsh is offline (India timezone). Master plan
+> **Supersedes** `work_split_2026_05_19_ikenna.md` — slot 6/7/9 freeze gates remain; slots 9/10/11 re-themed to QG green
+> background sweep on the Ikenna AWS VM while Harsh is offline (India timezone). Master plan
 > `data_pipeline_master_coordination_2026_05_20.md` is the canonical ordering layer.
 
 ## Slot stack — local laptop (slots 1-8) + AWS VM background (slots 9-11)
 
-| Slot | Host | Theme | Phase ownership (per master coordinator) | Status |
-| --- | --- | --- | --- | --- |
-| 1 | Local | Main orchestrator + ping audit + cron monitor | Phase 0, 2, 8 | Continuous |
-| 2 | Local | code_freeze §2.6 + R19 UAC import surface | Phase 1, 3, 4, 10 | KEEP |
-| 3 | Local | code_freeze §2.0-2.5 + batch_live_symmetry T1-3 | Phase 1, 3, 4, 13 | KEEP |
-| 4 | Local | api_keys + defi_recursive_borrow + AWS migration owner | Phase 5, 12 (live adapter) | KEEP |
-| 5 | Local | writegate + v8 backfill + writer SSOT + label-flip + dep-prop QG | Phase 6, 7, 10, 14 | KEEP (the v8-backfill anchor) |
-| **6** | Local | 🔴 FROZEN (was deployment_ui_lifecycle_tabs) — reassigned to A3 DeFi MISSING_EXPECTED remediation | Phase 9 (denominator UI post-unfreeze) | FROZEN |
-| **7** | Local | 🔴 FROZEN (was simulation_scenarios + defi_master P2-3) — reassigned to A3 Sports + A2 off-season gap | Resumes post-unfreeze | FROZEN |
-| 8 | Local | defi_catalogue close + R-NEW-6 detector candidate | Phase 14 | KEEP |
-| **9** | **✅ DONE** | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL** | Phase -1 (workspace QG prereq) | ✅ UAC (already green); ✅ UTL@f63eb8e2 (9 violations fixed + pm@424b4319 checker bug); ✅ IS (already green, no changes needed) |
-| **10** | **🟢 DONE** | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS** | Phase -1 | ✅ MTDS@5c1631d green (no fixes by slot-10); ✅ features-service@31c38543 green (codex+imports+upload-API fixes); ✅ MDPS@e3441a9 green (within-tolerance, no fixes needed) |
-| **11** | **🟡 PARALLEL** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service** | Phase -1 | NEW theme tonight |
+| Slot   | Host            | Theme                                                                                                 | Phase ownership (per master coordinator) | Status                                                                                                                                                                      |
+| ------ | --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | Local           | Main orchestrator + ping audit + cron monitor                                                         | Phase 0, 2, 8                            | Continuous                                                                                                                                                                  |
+| 2      | Local           | code_freeze §2.6 + R19 UAC import surface                                                             | Phase 1, 3, 4, 10                        | KEEP                                                                                                                                                                        |
+| 3      | Local           | code_freeze §2.0-2.5 + batch_live_symmetry T1-3                                                       | Phase 1, 3, 4, 13                        | KEEP                                                                                                                                                                        |
+| 4      | Local           | api_keys + defi_recursive_borrow + AWS migration owner                                                | Phase 5, 12 (live adapter)               | KEEP                                                                                                                                                                        |
+| 5      | Local           | writegate + v8 backfill + writer SSOT + label-flip + dep-prop QG                                      | Phase 6, 7, 10, 14                       | KEEP (the v8-backfill anchor)                                                                                                                                               |
+| **6**  | Local           | 🔴 FROZEN (was deployment_ui_lifecycle_tabs) — reassigned to A3 DeFi MISSING_EXPECTED remediation     | Phase 9 (denominator UI post-unfreeze)   | FROZEN                                                                                                                                                                      |
+| **7**  | Local           | 🔴 FROZEN (was simulation_scenarios + defi_master P2-3) — reassigned to A3 Sports + A2 off-season gap | Resumes post-unfreeze                    | FROZEN                                                                                                                                                                      |
+| 8      | Local           | defi_catalogue close + R-NEW-6 detector candidate                                                     | Phase 14                                 | KEEP                                                                                                                                                                        |
+| **9**  | **✅ DONE**     | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL**                                       | Phase -1 (workspace QG prereq)           | ✅ UAC (already green); ✅ UTL@f63eb8e2 (9 violations fixed + pm@424b4319 checker bug); ✅ IS (already green, no changes needed)                                            |
+| **10** | **🟢 DONE**     | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS**                                        | Phase -1                                 | ✅ MTDS@5c1631d green (no fixes by slot-10); ✅ features-service@31c38543 green (codex+imports+upload-API fixes); ✅ MDPS@e3441a9 green (within-tolerance, no fixes needed) |
+| **11** | **🟡 PARALLEL** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service**                     | Phase -1                                 | NEW theme tonight                                                                                                                                                           |
 
 ## Slot 9-11 dispatch — QG green sweep (Phase -1 owner)
 
-> **Why background**: Harsh-side normally owns workspace-wide QG green per
-> CLAUDE.md HARD RULE "Quality Gates Are A Merge Prerequisite" + the master
-> coordinator Phase -1. Harsh is offline (India timezone) — slots 9-11 on
-> Ikenna VM (or local if VM provisioning slips tonight) take ownership of
-> QG sweep so Phase -1 can land GREEN without waiting for Harsh's day.
+> **Why background**: Harsh-side normally owns workspace-wide QG green per CLAUDE.md HARD RULE "Quality Gates Are A
+> Merge Prerequisite" + the master coordinator Phase -1. Harsh is offline (India timezone) — slots 9-11 on Ikenna VM (or
+> local if VM provisioning slips tonight) take ownership of QG sweep so Phase -1 can land GREEN without waiting for
+> Harsh's day.
 >
-> When Harsh's primary backend wakes up (his laptop online again), Harsh-side
-> slots resume QG ownership; slots 9-11 hand off via git rebase (Harsh
-> absorbs the QG fixes from `live-defi-rollout`).
+> When Harsh's primary backend wakes up (his laptop online again), Harsh-side slots resume QG ownership; slots 9-11 hand
+> off via git rebase (Harsh absorbs the QG fixes from `live-defi-rollout`).
 
 ### Common boot steps (apply to slots 9, 10, 11)
 
@@ -146,35 +143,39 @@ Plan-of-record: plans/active/work_split_2026_05_20_ikenna.md § Slot 11.
 
 ### Comms model
 
-- **Status pings**: HTTP `/heartbeat` + `/progress` + `/done` + `/blocked` to dashboard
-  (no git for status). Backend: Ikenna AWS VM if running there; otherwise local.
-- **Code changes**: standard git → `live-defi-rollout`. Per-shippable-unit commit
-  cadence (CLAUDE.md HARD RULE).
-- **Cross-slot coord**: `ikenna_orchestrator/pings/slot_<N>.md` for intra-side
-  signalling (each agent posts blocker / question / DONE).
+- **Status pings**: HTTP `/heartbeat` + `/progress` + `/done` + `/blocked` to dashboard (no git for status). Backend:
+  Ikenna AWS VM if running there; otherwise local.
+- **Code changes**: standard git → `live-defi-rollout`. Per-shippable-unit commit cadence (CLAUDE.md HARD RULE).
+- **Cross-slot coord**: `ikenna_orchestrator/pings/slot_<N>.md` for intra-side signalling (each agent posts blocker /
+  question / DONE).
 - **Cross-side**: `plans/active/_agent_pings.md` for Ikenna ↔ Harsh signalling.
 
 ### Local vs VM split decision (operator picks tonight)
 
 **Option A — Slots 9-11 on local laptop** (alongside 1-8):
+
 - Pro: zero provisioning; ping files + worktrees already exist locally.
 - Con: laptop must stay on; resource contention with 1-8.
 
 **Option B — Slots 9-11 on Ikenna AWS VM** (true background):
+
 - Pro: laptop can close; VM keeps working overnight.
 - Con: ~10min provisioning step (SSH to VM, run `setup-tab-worktrees.sh --add-slot 9/10/11` on the VM's worktree set).
 
-**Recommendation**: Option B for tonight (Harsh's offline window = perfect chance to verify VM workers). Codex covers the setup at `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`.
+**Recommendation**: Option B for tonight (Harsh's offline window = perfect chance to verify VM workers). Codex covers
+the setup at `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`.
 
 ### Hand-off when Harsh wakes up
 
 - Slot 9-11 post DONE ping → dashboard.
-- Harsh's primary backend (laptop) wakes → operator picks up slots from his side OR keeps Ikenna-side ownership for one more day.
+- Harsh's primary backend (laptop) wakes → operator picks up slots from his side OR keeps Ikenna-side ownership for one
+  more day.
 - Git LDR is the merge point — Harsh's slots see the QG-green commits from slots 9-11 automatically on next rebase.
 
 ## Phase -1 GREEN criterion (slots 9-11 done)
 
 For each repo in clusters A+B+C:
+
 - `bash scripts/quality-gates.sh` exit 0
 - No `# type: ignore`, no fallback imports, no banned patterns
 - Commit pushed to `live-defi-rollout`

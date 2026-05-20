@@ -9,12 +9,12 @@ recipients: ALL slots (Ikenna 2-11 + Harsh 2-11)
 
 # 🔴 OPERATOR DIRECTIVE — commit + push dirty work to slot branch + FF to LDR
 
-**Why**: many slots have dirty state across multiple repos; operator wants visibility into the latest state.
-Before starting any new work (especially before Ikenna slots 3-9 boot into the repo consolidation push), each
-slot must commit + push its in-flight work to its slot branch + ensure it's reachable from LDR.
+**Why**: many slots have dirty state across multiple repos; operator wants visibility into the latest state. Before
+starting any new work (especially before Ikenna slots 3-9 boot into the repo consolidation push), each slot must
+commit + push its in-flight work to its slot branch + ensure it's reachable from LDR.
 
-**This is a one-shot sweep, not a recurring task.** After your tab is clean, normal Half-1+Half-2 commit cadence
-resumes per CLAUDE.md "Commit + Push + Flip Plan Checkboxes As You Ship Each Item" HARD RULE.
+**This is a one-shot sweep, not a recurring task.** After your tab is clean, normal Half-1+Half-2 commit cadence resumes
+per CLAUDE.md "Commit + Push + Flip Plan Checkboxes As You Ship Each Item" HARD RULE.
 
 ---
 
@@ -38,9 +38,9 @@ done
 
 ### Step 2 — Per dirty repo: stage YOUR files explicitly
 
-🔴 **NEVER `git add -A` / `git add .`** — stage explicitly by name per CLAUDE.md "Stage explicitly by name; never
-git add -A". Today's slot-1 commit (`518a0010d`) caught a pre-loaded foreign-staged 156-file index — explicit
-reset + per-file stage prevented bundling foreign work. Same risk applies to your tab.
+🔴 **NEVER `git add -A` / `git add .`** — stage explicitly by name per CLAUDE.md "Stage explicitly by name; never git
+add -A". Today's slot-1 commit (`518a0010d`) caught a pre-loaded foreign-staged 156-file index — explicit reset +
+per-file stage prevented bundling foreign work. Same risk applies to your tab.
 
 ```bash
 cd ${WORKSPACE_ROOT}/.tabs/<N>/<repo>
@@ -58,19 +58,19 @@ git commit -m "<type>(<scope>): <summary>"
 
 Conventional-commit prefixes (prek rejects others):
 
-| Prefix     | When to use                                                                |
-| ---------- | -------------------------------------------------------------------------- |
-| `feat`     | new feature or scope                                                       |
-| `fix`      | bug fix                                                                    |
-| `refactor` | code change without functional behaviour change                            |
-| `docs`     | documentation (incl. `docs(plans):`, `docs(codex):`)                       |
-| `test`     | test-only changes                                                          |
-| `chore`    | tooling, deps, build                                                       |
-| `perf`     | performance improvement                                                    |
+| Prefix     | When to use                                          |
+| ---------- | ---------------------------------------------------- |
+| `feat`     | new feature or scope                                 |
+| `fix`      | bug fix                                              |
+| `refactor` | code change without functional behaviour change      |
+| `docs`     | documentation (incl. `docs(plans):`, `docs(codex):`) |
+| `test`     | test-only changes                                    |
+| `chore`    | tooling, deps, build                                 |
+| `perf`     | performance improvement                              |
 
 If prek auto-restore symptoms observed in commit output (look for "Restored working tree changes from
-.../prek/patches/"): use `--no-verify` per CLAUDE.md foot-gun #4 authorization. Bundle Edit→stage→commit→push
-into ONE Bash call when this is observed.
+.../prek/patches/"): use `--no-verify` per CLAUDE.md foot-gun #4 authorization. Bundle Edit→stage→commit→push into ONE
+Bash call when this is observed.
 
 ### Step 4 — Push to slot branch
 
@@ -78,8 +78,7 @@ into ONE Bash call when this is observed.
 git push origin HEAD:tab/<operator>/<N>
 ```
 
-Replace `<operator>` with `ikennaigboaka` or `harshharish` (or your actual handle) and `<N>` with your slot
-number.
+Replace `<operator>` with `ikennaigboaka` or `harshharish` (or your actual handle) and `<N>` with your slot number.
 
 ### Step 5 — FF to LDR
 
@@ -110,25 +109,26 @@ git log --oneline origin/live-defi-rollout..HEAD     # Should be empty (your wor
 - 🔴 **NEVER force-push** (`--force` / `--force-with-lease`) without operator approval. Branch protection on
   `live-defi-rollout` will reject force-push; on slot branches it would rewrite parallel sessions' work.
 - 🔴 **If you see merge conflicts on rebase**: STOP. Ping operator via your per-slot ping file or
-  `ikenna_orchestrator/_agent_pings.md`. Do NOT auto-resolve foreign conflicts (CLAUDE.md "Two teammates ×
-  multiple parallel agents" HARD RULE).
-- 🔴 **Untracked files in dep repos = NOT YOURS**. Leave them. Stage only what you wrote in your tab worktree
-  this session.
-- 🔴 **Foreign-file handling**: if `git status` shows foreign edits you don't recognise, leave them in the
-  working tree. They belong to someone else's parallel slot. The auto-restore stash (`stash@{0}` per CLAUDE.md
-  foot-gun #4) may preserve them; do NOT pop without understanding what's there.
+  `ikenna_orchestrator/_agent_pings.md`. Do NOT auto-resolve foreign conflicts (CLAUDE.md "Two teammates × multiple
+  parallel agents" HARD RULE).
+- 🔴 **Untracked files in dep repos = NOT YOURS**. Leave them. Stage only what you wrote in your tab worktree this
+  session.
+- 🔴 **Foreign-file handling**: if `git status` shows foreign edits you don't recognise, leave them in the working tree.
+  They belong to someone else's parallel slot. The auto-restore stash (`stash@{0}` per CLAUDE.md foot-gun #4) may
+  preserve them; do NOT pop without understanding what's there.
 
 ---
 
 ## What "your" files means
 
 A file is "yours" if:
+
 1. You created it this session (untracked → now staged).
 2. You modified it this session via Edit/Write tool (verify by reading your transcript).
-3. The plan or task you were dispatched to owns it (e.g. slot 3 owns
-   `strategy-service/pyproject.toml` for Phase 0.5).
+3. The plan or task you were dispatched to owns it (e.g. slot 3 owns `strategy-service/pyproject.toml` for Phase 0.5).
 
 A file is NOT yours if:
+
 1. It was already dirty when you booted (foreign-edit from another slot).
 2. Untracked in a dep repo you didn't explicitly modify.
 3. You don't remember touching it and `git log` shows a different agent's last commit.
@@ -137,8 +137,7 @@ A file is NOT yours if:
 
 ## Report back
 
-Ack in your per-slot ping file (`ikenna_orchestrator/pings/slot_<N>.md` or
-`harsh_orchestrator/pings/slot_<N>.md`) with:
+Ack in your per-slot ping file (`ikenna_orchestrator/pings/slot_<N>.md` or `harsh_orchestrator/pings/slot_<N>.md`) with:
 
 ```
 [<timestamp>] [ack] slot <N> commit-sweep complete:
@@ -153,6 +152,7 @@ If you cannot ship something (operator-gated, blocked, conflict), ack with:
 ```
 
 Examples:
+
 - `[blocked] slot 4: instruments-service — rebase conflict with origin/live-defi-rollout, need operator review`
 - `[blocked] slot 8: deployment-service — Terraform plan pending operator approval, code committed locally not pushed`
 - `[ack] slot 6 commit-sweep complete: features-service@a1b2c3d (feat(metrics): add cardinality guard), pm@d4e5f6a (docs(plans): flip Phase 4D item)`

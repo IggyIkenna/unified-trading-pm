@@ -21,12 +21,12 @@ topology_requirements:
 
 ## What it does
 
-Inventory-skewed market making extends the passive spread archetype by adjusting bid and ask quotes asymmetrically
-based on current net inventory. When the strategy is long (over-filled on the buy side), it widens the bid and tightens
-the ask — making it harder to accumulate more inventory and easier for sellers to offload against us. When short,
-the opposite applies. This approach implements the core insight of the Avellaneda-Stoikov framework: the optimal
-quote is not centred on mid but offset by an inventory-risk penalty term. The result is a self-correcting mechanism
-that reduces inventory blowout risk without resorting to aggressive market-order exits.
+Inventory-skewed market making extends the passive spread archetype by adjusting bid and ask quotes asymmetrically based
+on current net inventory. When the strategy is long (over-filled on the buy side), it widens the bid and tightens the
+ask — making it harder to accumulate more inventory and easier for sellers to offload against us. When short, the
+opposite applies. This approach implements the core insight of the Avellaneda-Stoikov framework: the optimal quote is
+not centred on mid but offset by an inventory-risk penalty term. The result is a self-correcting mechanism that reduces
+inventory blowout risk without resorting to aggressive market-order exits.
 
 ## Token / position flow
 
@@ -114,7 +114,8 @@ MARKET_MAKING_INVENTORY_SKEW@hyperliquid-sol-usdt-perp-mm-prod
 
 - Symmetric spread with no skew logic → [`MARKET_MAKING_PASSIVE_SPREAD`](market-making-passive-spread.md)
 - ML-directed short-horizon lean on top of inventory skew → [`MARKET_MAKING_ML_LEAN`](market-making-ml-lean.md)
-- Queue-position and VPIN-aware posting decision → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
+- Queue-position and VPIN-aware posting decision →
+  [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
 - Sports/event-settled back-lay quoting → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
 - DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 

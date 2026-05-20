@@ -11,7 +11,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-18
 ---
 
-> **🟡 COVERED BY** [../bucket_name_ssot_canonicalisation_2026_05_10.md](../bucket_name_ssot_canonicalisation_2026_05_10.md) — findings live in the parent plan's Done-def #6 (zero-drift verification) (slot-1 triage 2026-05-20). Mega-audit A1 inventory will independently catch via "no hardcoded `gs://`" compliance row. Archive when parent closes.
+> **🟡 COVERED BY**
+> [../bucket_name_ssot_canonicalisation_2026_05_10.md](../bucket_name_ssot_canonicalisation_2026_05_10.md) — findings
+> live in the parent plan's Done-def #6 (zero-drift verification) (slot-1 triage 2026-05-20). Mega-audit A1 inventory
+> will independently catch via "no hardcoded `gs://`" compliance row. Archive when parent closes.
 
 ## What I found
 

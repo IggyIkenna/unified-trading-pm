@@ -769,9 +769,9 @@ smoke begins.
       cross-ref repaired). 3/3 items closed.
 - [x] ✅ **15. MEGA RESERVE — codex/04-architecture/ drift audit** — sweep `batch-live-architecture.md` +
       `cloud-agnostic-migration.md` + `runtime-deployment-topology.md` for stale references post-recent shipped commits.
-      Done-def: 3+ docs audited + drift fixes. **~3 cal-days**. — PM@9874c794 (runtime-deployment-topology.md: unified-reference-data-interface
-      phantom removed; batch-live-architecture.md: broken archive plan path fixed; cloud-agnostic-migration.md: no drift
-      found). 3/3 docs audited, 2 fixes applied.
+      Done-def: 3+ docs audited + drift fixes. **~3 cal-days**. — PM@9874c794 (runtime-deployment-topology.md:
+      unified-reference-data-interface phantom removed; batch-live-architecture.md: broken archive plan path fixed;
+      cloud-agnostic-migration.md: no drift found). 3/3 docs audited, 2 fixes applied.
 - [x] ✅ **16. MEGA RESERVE — codex/02-data/honest-absence-downstream-handling.md hardening** — build on slot-5 item 1
       (writegate Phase 2.E.4 DOCS already shipped). Add cross-link examples per data_type + per asset_group
       consumer-class behaviour. Done-def: 2+ codex sections extended + grep-clean. **~2 cal-days**. — PM@2ce13809 (2
@@ -979,7 +979,8 @@ smoke begins.
       workspace-constraints.toml violations — tracked by version-alignment-gate separately.
 - [x] ✅ **4. codex/06 cross-link sweep (slot 8 item 20)** — sweep codex/06-coding-standards/ for stale cross-links
       (post-recent renames). Done-def: 0 broken anchors. — 19 stale refs fixed across 6 files
-      (unified_trading_services→unified_trading_library x10, unified-reference-data-interface→instruments-service x9). PM worktree@8fa773c4.
+      (unified_trading_services→unified_trading_library x10, unified-reference-data-interface→instruments-service x9).
+      PM worktree@8fa773c4.
 
 #### Reserve queue
 

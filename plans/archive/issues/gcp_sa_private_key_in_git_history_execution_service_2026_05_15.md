@@ -6,7 +6,9 @@ created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
 resolved: 2026-05-15
 history_scrubbed: 2026-05-20
-resolution: FULLY-RESOLVED — credential is dead (key NOT_FOUND on cloudstorage@ SA — already deleted) AND git history scrubbed via BFG across all 5 repos (2026-05-20). SA-permission audit + retire-oldest-keys filed as separate hardening task.
+resolution:
+  FULLY-RESOLVED — credential is dead (key NOT_FOUND on cloudstorage@ SA — already deleted) AND git history scrubbed via
+  BFG across all 5 repos (2026-05-20). SA-permission audit + retire-oldest-keys filed as separate hardening task.
 source:
   - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
   - execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service git
@@ -18,11 +20,16 @@ severity: P0 — ROTATE KEY IMMEDIATELY
 
 > **🟢 FULLY RESOLVED 2026-05-20** — BFG history scrub complete across all 5 affected repos.
 >
-> **Phase-1 scrub (3 PR-clear repos)**: instruments-service + unified-trading-library + strategy-service — companion agent.
+> **Phase-1 scrub (3 PR-clear repos)**: instruments-service + unified-trading-library + strategy-service — companion
+> agent.
 >
-> **Phase-2 scrub (2 PR-heavy repos)**: execution-service + market-tick-data-service — this commit. 56 open PRs orphaned by design (operator-acked "do it" directive 2026-05-20).
+> **Phase-2 scrub (2 PR-heavy repos)**: execution-service + market-tick-data-service — this commit. 56 open PRs orphaned
+> by design (operator-acked "do it" directive 2026-05-20).
 >
-> **Verification (Phase 4)**: standard `git clone` of both repos returns 0 hits for `central-element-323112-e35fb0ddafe2.json` across all `refs/heads/*`. Residual `refs/pull/*` refs (GitHub-managed, not fetched by default clone) will be GC'd by GitHub upon PR closure or via GitHub-support request. Cross-link: `bfg_history_scrub_sequence_2026_05_20.md`.
+> **Verification (Phase 4)**: standard `git clone` of both repos returns 0 hits for
+> `central-element-323112-e35fb0ddafe2.json` across all `refs/heads/*`. Residual `refs/pull/*` refs (GitHub-managed, not
+> fetched by default clone) will be GC'd by GitHub upon PR closure or via GitHub-support request. Cross-link:
+> `bfg_history_scrub_sequence_2026_05_20.md`.
 
 ## What I found
 

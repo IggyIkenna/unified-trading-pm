@@ -575,22 +575,22 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       available if Phase 7.C-7.F bundled walk causes manifest drift.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.C — Launch migration VM fleet per gcs_migration plan Phase 3 spec — per-bucket
       parallelism (4-8 VMs per bucket); same-region `asia-northeast1-c`; HTTP pool `2*workers`;
-      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
-      **DONE 2026-05-19** — gcs_migration Phase 3 VM fleet launched + completed ~16:01 UTC. 31 VMs TERMINATED.
-      Evidence: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 DONE banner + sign-off checkboxes.
-- [x] ✅ [HUMAN+AGENT] P0. Phase 7.D — Watch event stream — `MIGRATION_VM_STARTED` + per-parquet progress + `STOPPED`. Per
-      CLAUDE.md "no fire-and-forget VM launches" — verify each VM emits STARTED within 60s
+      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`. **DONE 2026-05-19** —
+      gcs_migration Phase 3 VM fleet launched + completed ~16:01 UTC. 31 VMs TERMINATED. Evidence:
+      `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 DONE banner + sign-off checkboxes.
+- [x] ✅ [HUMAN+AGENT] P0. Phase 7.D — Watch event stream — `MIGRATION_VM_STARTED` + per-parquet progress + `STOPPED`.
+      Per CLAUDE.md "no fire-and-forget VM launches" — verify each VM emits STARTED within 60s
   - per-hour progress. **DONE 2026-05-19** — all 31 VMs tracked + TERMINATED with event confirmation.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.E — Manifest consolidator runs continuously during walk; per-VM shards merge via
       last-writer-wins. **DONE 2026-05-19** — per-VM shards merged; manifest consolidated post-walk.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.F — Per-asset-group QA gate: re-run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom
       count MUST be 0 (was 354 residual pre-bundle). **DONE 2026-05-19** — Phase 3.6 re-audit (Axis-10 fix applied
-      instruments-service@8accb30): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) /
-      cefi ✅ 0 (1,290,707 real). False-positive phantoms from Axis-10 `prefix_tpls` bug eliminated.
-- [x] ✅ [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes, one
-      per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green.
-      **DONE 2026-05-19** — all 5 asset_group sign-offs confirmed per gcs_migration plan Phase 3 operator acks.
+      instruments-service@8accb30): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) / cefi ✅ 0
+      (1,290,707 real). False-positive phantoms from Axis-10 `prefix_tpls` bug eliminated.
+- [x] ✅ [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes,
+      one per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green. **DONE 2026-05-19** —
+      all 5 asset_group sign-offs confirmed per gcs_migration plan Phase 3 operator acks.
   - [x] ✅ cefi signed off — date: 2026-05-19 — gcs_migration Phase 3 (1,290,707 real rows, 0 phantoms)
   - [x] ✅ defi signed off — date: 2026-05-19 — gcs_migration Phase 3 (311,602 real rows, 0 phantoms)
   - [x] ✅ tradfi signed off — date: 2026-05-19 — gcs_migration Phase 3 (0 phantoms, all paths confirmed)
@@ -599,9 +599,10 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
 - **Post-sign-off trigger (2026-05-19 slot-8, operator-acked)**: after all 5 asset_groups signed off, launch
-  `expected_universe_v2` Phase 4 VM fleet (`bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh
-  --asset-group {cefi|defi|tradfi|sports|prediction}`). See `expected_universe_v2_design_2026_05_08.md` Phase 4
-  (deferred to this gate per BLK-89befd81 operator answer 2026-05-19).
+  `expected_universe_v2` Phase 4 VM fleet
+  (`bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh --asset-group {cefi|defi|tradfi|sports|prediction}`).
+  See `expected_universe_v2_design_2026_05_08.md` Phase 4 (deferred to this gate per BLK-89befd81 operator answer
+  2026-05-19).
 
 ### Phase 8 — Cross-asset rescan triage review (May 15)
 

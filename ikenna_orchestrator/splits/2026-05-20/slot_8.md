@@ -13,7 +13,7 @@ coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordinatio
 | **-2** Strategy/ML consolidation finish (Bucket 3 stale-ref cleanup) | 🟡 IN PROGRESS — dispatched per-slot             | **Read `ikenna_orchestrator/pings/slot_8.md` for your slice** |
 | **-1** Workspace-wide QG green                                       | 🟡 IN PROGRESS (slots 9-11 owning Cluster A/B/C) | — (unless your QG passes uncover new violations)              |
 | 0 Pre-flight audits                                                  | ✅ DONE (mega-audit Phase A by slot-1 main)      | —                                                             |
-| 1 AWS↔GCP bucket-name symmetry                                       | ⚪ READY when Phase 0 GREEN                      | —                                                             |
+| 1 AWS↔GCP bucket-name symmetry                                      | ⚪ READY when Phase 0 GREEN                      | —                                                             |
 | 2 CODE FREEZE WINDOW                                                 | ⚪ TRIGGERED by operator after Phase 1           | —                                                             |
 | 3 VM fleet drain                                                     | ⚪ Needs Phase 2 active                          | —                                                             |
 | 4 GCS bucket migration                                               | ⚪ Needs Phase 3 GREEN                           | —                                                             |

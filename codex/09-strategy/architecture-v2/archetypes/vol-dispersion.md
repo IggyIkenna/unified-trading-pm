@@ -23,10 +23,10 @@ topology_requirements:
 Dispersion trading exploits the persistent premium that index implied volatility carries over the average implied
 volatility of its constituents. This premium arises because index options buyers pay extra for the correlation
 protection they provide — the index moves less than its components if they diverge, but index options still need to
-price for the worst-case correlated drawdown. The strategy sells index volatility (short straddle on the index) and
-buys volatility on a weighted basket of individual components, harvesting the correlation premium. Profit is earned
-when realised correlation is lower than the implied correlation baked into index IV. In crypto, this is applied as BTC
-index vol vs a weighted basket of ETH, SOL, and BNB component vol.
+price for the worst-case correlated drawdown. The strategy sells index volatility (short straddle on the index) and buys
+volatility on a weighted basket of individual components, harvesting the correlation premium. Profit is earned when
+realised correlation is lower than the implied correlation baked into index IV. In crypto, this is applied as BTC index
+vol vs a weighted basket of ETH, SOL, and BNB component vol.
 
 ## Token / position flow
 
@@ -93,11 +93,12 @@ index vol vs a weighted basket of ETH, SOL, and BNB component vol.
 
 ## When to use / market regime
 
-- **Use when**: index IV significantly elevated vs component IV average; market-wide fear buying pushing index options up
+- **Use when**: index IV significantly elevated vs component IV average; market-wide fear buying pushing index options
+  up
 - **Best regime**: risk-off environments where index hedgers pile in; macro events that push index vol up without
   proportionally lifting component vols
-- **Avoid**: highly correlated crash environments (all correlations go to 1); illiquid component option markets;
-  very short tenor where simultaneous fills across many legs become impractical
+- **Avoid**: highly correlated crash environments (all correlations go to 1); illiquid component option markets; very
+  short tenor where simultaneous fills across many legs become impractical
 - **Crypto note**: BTC serves as both index and dominant component — weight ETH/SOL/BNB carefully; BTC OI dominates
   Deribit; use OKX for ETH component; other components may have limited Deribit liquidity
 
@@ -113,8 +114,10 @@ VOL_DISPERSION@cboe-spx-dispersion-monthly-usd-prod
 
 - Single-underlying variance swap replication via 1/K² option strip → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
 - Outright index short-vol without component legs → [`VOL_CARRY`](vol-carry.md)
-- Cross-asset vol spread between two correlated single underlyings → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
-- Hard cross-venue single-option mispricing vs theoretical model price → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- Cross-asset vol spread between two correlated single underlyings →
+  [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- Hard cross-venue single-option mispricing vs theoretical model price →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

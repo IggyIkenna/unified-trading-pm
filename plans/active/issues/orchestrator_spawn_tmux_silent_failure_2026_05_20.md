@@ -17,29 +17,32 @@ chat UI, both startup prompts dismissed, `.agent-claim` file written, boot promp
 
 **Root cause was THREE compounding defects, not two**:
 
-1. **`ProtectSystem=strict` + missing `/tmp` in `ReadWritePaths`** on the *installed* `/etc/systemd/system/orchestrator.service` (the **dominant** defect — without `/tmp` writable, tmux can't create its socket at `/tmp/tmux-<uid>/default`, daemon dies silently regardless of Python-side fixes). The repo-tracked SSOT at
-   `agent-orchestrator/scripts/orchestrator.service` already had `ReadWritePaths=/tmp` with a detailed comment explaining
-   exactly this footgun — but the installed unit on EC2 VM `13.113.200.22` was an earlier version pre-dating that fix.
+1. **`ProtectSystem=strict` + missing `/tmp` in `ReadWritePaths`** on the _installed_
+   `/etc/systemd/system/orchestrator.service` (the **dominant** defect — without `/tmp` writable, tmux can't create its
+   socket at `/tmp/tmux-<uid>/default`, daemon dies silently regardless of Python-side fixes). The repo-tracked SSOT at
+   `agent-orchestrator/scripts/orchestrator.service` already had `ReadWritePaths=/tmp` with a detailed comment
+   explaining exactly this footgun — but the installed unit on EC2 VM `13.113.200.22` was an earlier version pre-dating
+   that fix.
 2. **Defect A as filed** (Python-side parent-FD coupling) — fixed defensively even though defect 1 was dominant; the
    change makes future systemd-unit changes safer.
 3. **Defect B as filed** (workspace-trust prompt unhandled) — fixed.
 
 **Bonus discovery during fix**: installed unit had `KillMode=mixed` which SIGKILLs the whole cgroup on
-`systemctl restart`, nuking all spawned workers (the SSOT correctly uses `KillMode=process` per Harsh's
-2026-05-20 comment in the template). Updated installed unit to match SSOT — future orchestrator restarts now preserve
-running worker tmux sessions.
+`systemctl restart`, nuking all spawned workers (the SSOT correctly uses `KillMode=process` per Harsh's 2026-05-20
+comment in the template). Updated installed unit to match SSOT — future orchestrator restarts now preserve running
+worker tmux sessions.
 
-**Slot casualties from the fix sequence**: slots 1, 2, 3 (spawned manually pre-fix during e2e test) were killed when
-the orchestrator restarted before the `KillMode=process` fix landed. Slot 4 was spawned after both fixes and survived.
+**Slot casualties from the fix sequence**: slots 1, 2, 3 (spawned manually pre-fix during e2e test) were killed when the
+orchestrator restarted before the `KillMode=process` fix landed. Slot 4 was spawned after both fixes and survived.
 
 ## Fixes shipped
 
-| Defect | Repo / commit | Change |
-| --- | --- | --- |
-| 1. `/tmp` not in ReadWritePaths | VM unit only (SSOT already correct) | `sudo sed` added `/tmp` + `.aws` + `.config` + `.claude` + `.cache` to `ReadWritePaths` |
-| 1b. `KillMode=mixed` killing workers | VM unit only (SSOT already correct) | `sudo sed` flipped to `KillMode=process` per SSOT |
-| A. Python subprocess FD coupling | `agent-orchestrator@e975f19` | `Popen(stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE, start_new_session=True, close_fds=True)` + `.communicate(timeout=5)` |
-| B. Workspace-trust prompt missed | `agent-orchestrator@e975f19` | New `_dismiss_startup_prompts` polls for trust + bypass prompts in sequence; old `_dismiss_bypass_warning` retained as back-compat shim |
+| Defect                               | Repo / commit                       | Change                                                                                                                                  |
+| ------------------------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. `/tmp` not in ReadWritePaths      | VM unit only (SSOT already correct) | `sudo sed` added `/tmp` + `.aws` + `.config` + `.claude` + `.cache` to `ReadWritePaths`                                                 |
+| 1b. `KillMode=mixed` killing workers | VM unit only (SSOT already correct) | `sudo sed` flipped to `KillMode=process` per SSOT                                                                                       |
+| A. Python subprocess FD coupling     | `agent-orchestrator@e975f19`        | `Popen(stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE, start_new_session=True, close_fds=True)` + `.communicate(timeout=5)`                 |
+| B. Workspace-trust prompt missed     | `agent-orchestrator@e975f19`        | New `_dismiss_startup_prompts` polls for trust + bypass prompts in sequence; old `_dismiss_bypass_warning` retained as back-compat shim |
 
 ## Verification
 
@@ -83,23 +86,23 @@ The subprocess returns `rc=0` with empty stderr. Then `has_session(NAME)` polls 
 tmux daemon either never started OR died immediately after the subprocess returned.
 
 **Crucial control**: running the byte-identical command from a manual Python subprocess in an interactive SSH session
-**works** — `tmux ls` immediately shows the new session, claude inside the pane reaches the workspace-trust prompt.
-The difference is the parent process: systemd-spawned vs interactive-shell-spawned.
+**works** — `tmux ls` immediately shows the new session, claude inside the pane reaches the workspace-trust prompt. The
+difference is the parent process: systemd-spawned vs interactive-shell-spawned.
 
-**Likely root cause**: when `tmux new-session -d` daemonizes, it inherits stdin/stdout/stderr from the parent
-subprocess (despite `capture_output=True` redirecting them to pipes). When the orchestrator's `subprocess.run` returns,
-those pipe FDs close. The forked-off tmux daemon then SIGPIPEs on its first write attempt and exits, killing the
-freshly-created session. Interactive-shell case doesn't reproduce because the parent shell's TTY persists past the
-subprocess.run lifetime.
+**Likely root cause**: when `tmux new-session -d` daemonizes, it inherits stdin/stdout/stderr from the parent subprocess
+(despite `capture_output=True` redirecting them to pipes). When the orchestrator's `subprocess.run` returns, those pipe
+FDs close. The forked-off tmux daemon then SIGPIPEs on its first write attempt and exits, killing the freshly-created
+session. Interactive-shell case doesn't reproduce because the parent shell's TTY persists past the subprocess.run
+lifetime.
 
 **Confirming evidence**: systemd unit has `PrivateTmp=no` (correct), `User=ubuntu` (correct). HOME / PATH / USER all
 present in the orchestrator's `/proc/$PID/environ`. The only differential is the parent-process lifetime.
 
 ### Defect B — `_dismiss_bypass_warning` misses the workspace-trust prompt
 
-`agent-orchestrator/server/tmux_spawn.py::_dismiss_bypass_warning` polls the pane for the string `"Bypass Permissions
-mode"` + `"Yes, I accept"` and sends `2`. But Claude on first-run into a directory it has never seen displays the
-**workspace-trust prompt first**:
+`agent-orchestrator/server/tmux_spawn.py::_dismiss_bypass_warning` polls the pane for the string
+`"Bypass Permissions mode"` + `"Yes, I accept"` and sends `2`. But Claude on first-run into a directory it has never
+seen displays the **workspace-trust prompt first**:
 
 ```
 Quick safety check: Is this a project you created or one you trust? (...)
@@ -109,8 +112,8 @@ Quick safety check: Is this a project you created or one you trust? (...)
 Enter to confirm · Esc to cancel
 ```
 
-The bypass-permissions warning appears only AFTER the trust prompt is dismissed (verified by manual reproduction on
-slot 1 / 2 / 3, 2026-05-20). The current dismissal function loops for 4s looking for the wrong text, gives up, then
+The bypass-permissions warning appears only AFTER the trust prompt is dismissed (verified by manual reproduction on slot
+1 / 2 / 3, 2026-05-20). The current dismissal function loops for 4s looking for the wrong text, gives up, then
 `_paste_prompt` fires — at which point claude is still on the trust prompt and the boot text gets pasted into the
 trust-prompt input (which only accepts `1` / `2` / Enter).
 
@@ -121,8 +124,8 @@ The spawn endpoint is the dashboard's path for launching new slot workers. Witho
 - Operator must manually `ssh` + `tmux new-session` + send-keys to dismiss prompts + load-buffer + paste-buffer for
   every spawn.
 - Dashboard "Spawn here" button is broken end-to-end.
-- Phase 1 + Phase 4 mitigations work but Phase 3 (`.agent-claim` write on spawn) is bypassed since the spawn
-  endpoint never reaches the write_claim call.
+- Phase 1 + Phase 4 mitigations work but Phase 3 (`.agent-claim` write on spawn) is bypassed since the spawn endpoint
+  never reaches the write_claim call.
 
 ## Reproduction recipe
 
@@ -138,9 +141,9 @@ Fix both in `agent-orchestrator` repo in a single commit:
 
 **Defect A fix**: replace `subprocess.run` in `_start_session` with `subprocess.Popen` using
 `stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True`. Wait for
-return via `.wait(timeout=5)`. The `start_new_session=True` invokes `setsid()` which detaches the tmux daemon from
-the orchestrator's process group, breaking the cgroup / SIGPIPE coupling. The `DEVNULL` FDs ensure no pipes close
-behind the daemon.
+return via `.wait(timeout=5)`. The `start_new_session=True` invokes `setsid()` which detaches the tmux daemon from the
+orchestrator's process group, breaking the cgroup / SIGPIPE coupling. The `DEVNULL` FDs ensure no pipes close behind the
+daemon.
 
 **Defect B fix**: in `_dismiss_bypass_warning` (rename to `_dismiss_startup_prompts`), poll for either prompt:
 
@@ -149,9 +152,9 @@ behind the daemon.
 
 Loop until BOTH have been dismissed (or `claude` chat UI is visible) — `claude-code v2.1.144` shows them sequentially.
 
-Smoke test: spawn into a clean slot via the API. Verify (1) tmux session registers within 5s, (2) workspace trust
-prompt is dismissed, (3) bypass-permissions prompt is dismissed, (4) boot prompt lands in claude's input box, (5)
-claude reads RULES.md and calls /api/slots/<N>/boot.
+Smoke test: spawn into a clean slot via the API. Verify (1) tmux session registers within 5s, (2) workspace trust prompt
+is dismissed, (3) bypass-permissions prompt is dismissed, (4) boot prompt lands in claude's input box, (5) claude reads
+RULES.md and calls /api/slots/<N>/boot.
 
 ## Manual workaround until fix lands
 

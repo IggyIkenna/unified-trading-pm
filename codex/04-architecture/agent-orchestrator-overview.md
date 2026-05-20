@@ -156,11 +156,11 @@ integration — operator tooling exemption per the deployment plan.
 
 ## Slack notifications
 
-Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook.
-Shipped at `agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
+Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook. Shipped at
+`agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
 
-**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
-table, payload shape, retry logic, secret inventory, V2 out-of-scope).
+**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event table, payload shape, retry logic,
+secret inventory, V2 out-of-scope).
 
 ---
 
@@ -201,29 +201,29 @@ operator coordination surface.
 
 Five mitigations added to close gaps in the multi-agent loop. All live on the Ikenna VM backend.
 
-| # | Mitigation | Mechanism | Failure mode it closes |
-| --- | --- | --- | --- |
-| 1 | Mirror-failure → orchestrator alert | `tab-mirror-to-ldr.yml` POSTs every outcome to `/api/mirror-events` | Push to tab branch silently fails to cascade to LDR; downstream agents read stale plan state |
-| 2 | Pre-spawn dirty-state gate | `spawn_slot()` runs `worktree_clean_check.py` first; HTTP 409 + per-repo manifest on dirty | New agent silently inherits another agent's WIP |
-| 3 | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON written on spawn, refreshed by heartbeat | Context-reset agent can't tell own predecessor's WIP from foreign WIP |
-| 4 | Heartbeat in-flight files | `HeartbeatRequest.in_flight_files` persisted to `SlotRow.in_flight_files_json` | Successor agent into a dead slot has no record of WIP file list |
-| 5 | On-demand artifact pattern | Worktrees code-only; venvs / node_modules built on first need | ~160G of duplicated venvs across 12 slots; SSD bloat |
+| #   | Mitigation                          | Mechanism                                                                                  | Failure mode it closes                                                                       |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| 1   | Mirror-failure → orchestrator alert | `tab-mirror-to-ldr.yml` POSTs every outcome to `/api/mirror-events`                        | Push to tab branch silently fails to cascade to LDR; downstream agents read stale plan state |
+| 2   | Pre-spawn dirty-state gate          | `spawn_slot()` runs `worktree_clean_check.py` first; HTTP 409 + per-repo manifest on dirty | New agent silently inherits another agent's WIP                                              |
+| 3   | Per-agent `.agent-claim` file       | `.tabs/<N>/.agent-claim` JSON written on spawn, refreshed by heartbeat                     | Context-reset agent can't tell own predecessor's WIP from foreign WIP                        |
+| 4   | Heartbeat in-flight files           | `HeartbeatRequest.in_flight_files` persisted to `SlotRow.in_flight_files_json`             | Successor agent into a dead slot has no record of WIP file list                              |
+| 5   | On-demand artifact pattern          | Worktrees code-only; venvs / node_modules built on first need                              | ~160G of duplicated venvs across 12 slots; SSD bloat                                         |
 
-Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer"
-in the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
+Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
+the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
 ## Two-operator topology
 
 The system is **multi-master**. Each operator runs a fully autonomous backend:
 
-| Operator | Backend host | Public URL | State |
-| --- | --- | --- | --- |
-| Ikenna | EC2 `m8i.4xlarge`, EIP `13.113.200.22`, `ap-northeast-1` | `https://api.agent-orchestrator.odum-research.com` | Independent `state.db`, users, slots, claim files |
-| Harsh | Personal laptop | `https://orch.epiphanytechnologies.com` | Independent `state.db`, users, slots, claim files |
+| Operator | Backend host                                             | Public URL                                         | State                                             |
+| -------- | -------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------- |
+| Ikenna   | EC2 `m8i.4xlarge`, EIP `13.113.200.22`, `ap-northeast-1` | `https://api.agent-orchestrator.odum-research.com` | Independent `state.db`, users, slots, claim files |
+| Harsh    | Personal laptop                                          | `https://orch.epiphanytechnologies.com`            | Independent `state.db`, users, slots, claim files |
 
-The Firebase-hosted SPA at `https://agent-orchestrator.odum-research.com` is the SHARED entrypoint; the
-backend dropdown lets either operator pick which API the SPA hits. Login is per-backend (each `users.json` is
-distinct). There is no shared runtime state between backends — cross-side coordination happens through:
+The Firebase-hosted SPA at `https://agent-orchestrator.odum-research.com` is the SHARED entrypoint; the backend dropdown
+lets either operator pick which API the SPA hits. Login is per-backend (each `users.json` is distinct). There is no
+shared runtime state between backends — cross-side coordination happens through:
 
 - `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
 - Daily work-split files `plans/active/work_split_<date>_<operator>.md`
@@ -236,14 +236,14 @@ re-targeted from Cloud Run to dedicated EC2 VM 2026-05-19; see `docs/ikenna-vm-s
 
 Active successor plans:
 
-- `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5
-  shipped; auto `uv sync` hook deferred)
+- `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5 shipped;
+  auto `uv sync` hook deferred)
 - `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` — Slack push notifications (P1 + P2 shipped)
 - `plans/active/agent_orchestrator_workers_on_vms_2026_05_XX.md` — worker execution on VMs (planning)
 - `plans/active/agent_orchestrator_multi_account_failover_2026_05_XX.md` — multi-account failover (planning)
 
 Resolved/closed issues:
 
-- `plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md` (RESOLVED 2026-05-20 — spawn endpoint
-  tmux daemon silent-fail + workspace-trust prompt unhandled; fix shipped at `agent-orchestrator@e975f19` +
+- `plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md` (RESOLVED 2026-05-20 — spawn endpoint tmux
+  daemon silent-fail + workspace-trust prompt unhandled; fix shipped at `agent-orchestrator@e975f19` +
   `scripts/install-orchestrator-service.sh` at `agent-orchestrator@dc535b2` to prevent recurrence)

@@ -22,10 +22,10 @@ topology_requirements:
 
 Trades the slope (shape) of the volatility term structure rather than its level. A long-slope position (buy front-tenor
 vol, sell back-tenor vol) bets that the term structure is in backwardation and will transition toward contango. A
-short-slope position (sell front-tenor, buy back-tenor) bets on steepening. The entry signal is derived from fitting
-the full term structure to a parametric model (Heston or SVI) and extracting the slope parameter; entry triggers when
-the slope deviates from its rolling 30-day mean by more than the configured threshold. The archetype continuously
-manages rolling expiries to maintain constant exposure to the target DTE spread.
+short-slope position (sell front-tenor, buy back-tenor) bets on steepening. The entry signal is derived from fitting the
+full term structure to a parametric model (Heston or SVI) and extracting the slope parameter; entry triggers when the
+slope deviates from its rolling 30-day mean by more than the configured threshold. The archetype continuously manages
+rolling expiries to maintain constant exposure to the target DTE spread.
 
 ## Token / position flow
 
@@ -107,7 +107,8 @@ VOL_TERM_STRUCTURE_SLOPE@cboe-spx-slope-weekly-v-monthly-usd-prod
 
 ## Not in this archetype
 
-- Discrete two-tenor calendar spread without daily parametric refit → [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
+- Discrete two-tenor calendar spread without daily parametric refit →
+  [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
 - Outright single-tenor short-vol carry without slope signal → [`VOL_CARRY`](vol-carry.md)
 - Long-dated LEAPS convexity (single far tenor, no front leg) → [`VOL_LEAPS_CONVEXITY`](vol-leaps-convexity.md)
 - Cross-asset vol spread (two correlated underlyings) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)

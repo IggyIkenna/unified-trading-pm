@@ -296,8 +296,8 @@ would upgrade if `--apply-flips` were passed:
 
 ## Deferred work — migrated to
 
-| Item | Migrated To | Status |
-| ---- | ----------- | ------ |
+| Item                                      | Migrated To                                                                             | Status                                                                                                                                                                  |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TradFi 5,212 legacy-blank apply-flips run | `plans/epics/tradfi_master_2026_05_07.md` § "TradFi 5,212 legacy-blank apply-flips run" | `- [ ] [SCRIPT] P2` — **BLOCKED-OPERATOR 2026-05-20 slot-6**: requires VM run with `--apply-flips`; operator must schedule + approve VM launch; ping filed `slot_6.md`. |
 
 ---

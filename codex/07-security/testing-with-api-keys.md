@@ -58,9 +58,9 @@ Never commit credentials. See `07-security/secrets-management.md`.
 ## VCR Cassette Matrix
 
 > **DERIVED-MATRIX BANNER (codified 2026-05-12 per TS-8 audit)** — this table was a 2026-Q1 pre-collapse layout that
-> referenced interfaces (UMI/UTEI/UPI/instruments-service/USEI/UDEI/UCI) and cassette paths (`unified-api-contracts/mocks/<iface>/`)
-> that no longer exist. The interface repos collapsed into `execution-service` / `instruments-service` /
-> `position-balance-monitor-service` / `market-tick-data-service`; cassettes live at
+> referenced interfaces (UMI/UTEI/UPI/instruments-service/USEI/UDEI/UCI) and cassette paths
+> (`unified-api-contracts/mocks/<iface>/`) that no longer exist. The interface repos collapsed into `execution-service`
+> / `instruments-service` / `position-balance-monitor-service` / `market-tick-data-service`; cassettes live at
 > `unified_api_contracts/external/<venue>/mocks/*.yaml` (per
 > [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) "Current Cassettes" — ~22 VALIDATED
 > cassettes across crypto/sports/databento/onchain venues). **Treat this table as historical**; the live cassette matrix
@@ -69,15 +69,15 @@ Never commit credentials. See `07-security/secrets-management.md`.
 
 Historical layout (pre-collapse, 2026-Q1; retained for archival reference only — all rows are stale):
 
-| Interface                                                                | Venues Covered                                    | Cassette Location                          | Status  |
-| ------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------ | ------- |
-| UMI (market-tick-data-service/market_tick_data_service/market_interface) | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
-| UTEI (unified-trade-execution-interface)                                 | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`        | pending |
+| Interface                                                                | Venues Covered                                    | Cassette Location                                  | Status  |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------- | ------- |
+| UMI (market-tick-data-service/market_tick_data_service/market_interface) | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`                 | pending |
+| UTEI (unified-trade-execution-interface)                                 | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`                | pending |
 | instruments-service (formerly unified-reference-data-interface)          | databento, polygon                                | `unified-api-contracts/mocks/instruments-service/` | pending |
-| UPI (unified-position-interface)                                         | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`         | pending |
-| USEI (unified-sports-execution-interface)                                | betfair, pinnacle, polymarket                     | `unified-api-contracts/mocks/usei/`        | pending |
-| UDEI (unified-defi-execution-interface)                                  | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`        | pending |
-| UCI (unified-cloud-interface)                                            | gcp (sm, gcs, bq, pubsub), aws (sm, s3, dynamodb) | `unified-cloud-interface/tests/cassettes/` | pending |
+| UPI (unified-position-interface)                                         | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`                 | pending |
+| USEI (unified-sports-execution-interface)                                | betfair, pinnacle, polymarket                     | `unified-api-contracts/mocks/usei/`                | pending |
+| UDEI (unified-defi-execution-interface)                                  | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`                | pending |
+| UCI (unified-cloud-interface)                                            | gcp (sm, gcs, bq, pubsub), aws (sm, s3, dynamodb) | `unified-cloud-interface/tests/cassettes/`         | pending |
 
 **Cassette requirements per venue (still apply):** at minimum one cassette per endpoint called in normal operation
 (instrument list, order submit, position query, market data snapshot). Current cassette inventory + status:

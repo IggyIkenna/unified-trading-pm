@@ -1,8 +1,8 @@
 # Trading-Agent Service — Directive Pipeline Architecture
 
 > **Created**: 2026-05-20 — Phase 8 of `trading_agent_service_architecture_unlock_2026_05_22.md` **Status**:
-> Architecture shipped (Phases 1-6.5 done); production logic post-cutover. **Tier**: Tier-1 architecture-only (data
-> flow wired by May-23; production allocator logic post-cutover).
+> Architecture shipped (Phases 1-6.5 done); production logic post-cutover. **Tier**: Tier-1 architecture-only (data flow
+> wired by May-23; production allocator logic post-cutover).
 
 ---
 
@@ -205,7 +205,7 @@ The following items are explicitly out of May-23 scope and tracked in
 | 5     | strategy-service      | `StrategyDirectiveReloader` ships; PnL emission wired                  | ✅ strategy@afd17fe9     |
 | 6     | trading-agent-service | `AllocationDirectiveLoop` scaffold + ServiceBootstrap + Health API     | ✅ trading-agent@119fa74 |
 | 6.5   | trading-agent-service | Backtest-replay infrastructure (inference cache + directive log)       | ✅ trading-agent@33a7ae9 |
-| 7     | trading-agent-service | CI green on `live-defi-rollout` (GH_PAT rotation needed)              | ⏳ BLOCKED-CREDENTIALS   |
+| 7     | trading-agent-service | CI green on `live-defi-rollout` (GH_PAT rotation needed)               | ⏳ BLOCKED-CREDENTIALS   |
 | 8     | PM                    | Codex + plan updates (this file)                                       | ✅ this commit           |
 
 ---

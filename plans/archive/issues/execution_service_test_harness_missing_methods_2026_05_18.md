@@ -9,7 +9,9 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C7 (strategy → execution contract audit)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). Do NOT work standalone; banner removed when C7 closes this scope.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C7 (strategy → execution contract audit)** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). Do NOT work standalone; banner removed when C7 closes this scope.
 
 ## What I found
 

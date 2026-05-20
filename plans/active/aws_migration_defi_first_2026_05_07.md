@@ -360,17 +360,18 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 - [x] [SCRIPT] P0. Apply IAM bucket policies from `iam-bucket-policies.yaml` to AWS via `aws s3api put-bucket-policy`.
       The YAML SSOT references GCP `serviceAccount:*` principals; mirror as AWS IAM principals
       (`arn:aws:iam::*:role/*-prod`, etc.). Land an `iam-bucket-policies.aws.yaml` if the IAM model differs enough.
-      **SHIPPED 2026-05-18** (slot 4): `deployment-service/configs/iam-bucket-policies.aws.yaml` created —
-      documents IAM roles taxonomy (prod/staging/dev service roles, migration user, Glue crawler role, admin),
-      3 policy rules (prod_write_protection / glue_read_access / athena_results_write), and 12 DeFi prod bucket
-      targets. Actual `aws s3api put-bucket-policy` apply script still open — see TODO in yaml file and next item below.
+      **SHIPPED 2026-05-18** (slot 4): `deployment-service/configs/iam-bucket-policies.aws.yaml` created — documents IAM
+      roles taxonomy (prod/staging/dev service roles, migration user, Glue crawler role, admin), 3 policy rules
+      (prod_write_protection / glue_read_access / athena_results_write), and 12 DeFi prod bucket targets. Actual
+      `aws s3api put-bucket-policy` apply script still open — see TODO in yaml file and next item below.
       deployment-service@4550bc3.
 - [x] [QG] P0. Verify `aws s3 ls` shows 10 new buckets + `aws s3api get-bucket-policy` returns expected JSON for each.
-      **SHIPPED 2026-05-19** (slot 6): Phase 1.B — IAM matrix + bucket policy scripts landed (deployment-service@f9fd4c0).
-      `scripts/aws/setup-iam-roles.sh` creates 30 uts-{service}-{env} IAM roles (10 DeFi services × prod/staging/dev),
-      mirroring GCP SA matrix. `scripts/aws/apply-bucket-policies.sh` applies prod_write_protection + glue_read_access
-      + athena_results_write policies to 12 DeFi prod S3 buckets. Both scripts idempotent, default dry-run. Operator
-      next step: `aws auth admin_od` then `bash scripts/aws/setup-iam-roles.sh --apply && bash scripts/aws/apply-bucket-policies.sh --apply`.
+      **SHIPPED 2026-05-19** (slot 6): Phase 1.B — IAM matrix + bucket policy scripts landed
+      (deployment-service@f9fd4c0). `scripts/aws/setup-iam-roles.sh` creates 30 uts-{service}-{env} IAM roles (10 DeFi
+      services × prod/staging/dev), mirroring GCP SA matrix. `scripts/aws/apply-bucket-policies.sh` applies
+      prod_write_protection + glue_read_access + athena_results_write policies to 12 DeFi prod S3 buckets. Both scripts
+      idempotent, default dry-run. Operator next step: `aws auth admin_od` then
+      `bash scripts/aws/setup-iam-roles.sh --apply && bash scripts/aws/apply-bucket-policies.sh --apply`.
 - [ ] [SCRIPT] P1. **DEFERRED** Add `defi-validation` key to `aws.storage` in `cloud-providers.yaml` — GCP has
       `${GCP_PROJECT_ID}-defi-validation` (line 195) but AWS section has no equivalent. DeFi validation VMs use
       `resolve_bucket_name(kind="defi-validation")` and will 404 on `CLOUD_PROVIDER=aws`. Fix: add
@@ -381,12 +382,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 - [x] [SCRIPT] P0. `aws ecr create-repository` for the 8 missing service ECR repos: `features-service (onchain family)`,
       `strategy-service`, `execution-service`, `risk-and-exposure-service`, `position-balance-monitor-service`,
-      `alerting-service`, `deployment-api`, `deployment-service`. Region `ap-northeast-1`.
-      **SHIPPED 2026-05-18** (slot 4): `deployment-service/scripts/aws/setup-ecr-repos.sh` created and run with
-      `--apply`. All 8 repos created in ap-northeast-1 (427895769566). ECR now has 12 repos total (4 pre-existing +
-      8 new). Verified via `aws ecr describe-repositories`. deployment-service@4550bc3.
-- [x] ✅ [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise per-service
-      (`REPO_NAME` env var). **SHIPPED 2026-05-19** (slot 3): canonical template (REPO_NAME=$(basename $(pwd)), flat ECR
+      `alerting-service`, `deployment-api`, `deployment-service`. Region `ap-northeast-1`. **SHIPPED 2026-05-18** (slot
+      4): `deployment-service/scripts/aws/setup-ecr-repos.sh` created and run with `--apply`. All 8 repos created in
+      ap-northeast-1 (427895769566). ECR now has 12 repos total (4 pre-existing + 8 new). Verified via
+      `aws ecr describe-repositories`. deployment-service@4550bc3.
+- [x] ✅ [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise
+      per-service (`REPO_NAME` env var). **SHIPPED 2026-05-19** (slot 3): canonical template
+      (REPO_NAME=$(basename $(pwd)), flat ECR
       push, PM QG clone, dynamic GH dispatch URL) propagated to all 7 service repos + deployment-service URL fix.
       deployment-service@10dcea9, features-service@2fbcb16d, strategy-service@ff8efb8, execution-service@ec6644cc,
       risk-and-exposure-service@07f36af, position-balance-monitor-service@6f65750, alerting-service@8008758,
@@ -765,12 +767,11 @@ it." Set up:
   `aws s3 ls --recursive --summarize`.
 - **Glue Crawler triggers**: post-transfer, run
   `for c in <5 crawler names>; do aws glue start-crawler --name "$c"; done` then
-  `aws glue get-crawler --name "$c" --query 'Crawler.State'` until READY.
-  **DONE 2026-05-18** (slot 4): all 5 Glue crawlers triggered and confirmed RUNNING state:
-  `unified-trading-defi-events-crawler`, `unified-trading-defi-instruments-store-defi-crawler`,
-  `unified-trading-defi-dex-pools-crawler`, `unified-trading-defi-evm-defi-crawler`,
-  `unified-trading-defi-market-data-defi-crawler`. Data from GCS→S3 transfer (346,920 objects / 36.83 GB,
-  completed 2026-05-09) is now catalogued in Glue DB `unified_trading_defi`.
+  `aws glue get-crawler --name "$c" --query 'Crawler.State'` until READY. **DONE 2026-05-18** (slot 4): all 5 Glue
+  crawlers triggered and confirmed RUNNING state: `unified-trading-defi-events-crawler`,
+  `unified-trading-defi-instruments-store-defi-crawler`, `unified-trading-defi-dex-pools-crawler`,
+  `unified-trading-defi-evm-defi-crawler`, `unified-trading-defi-market-data-defi-crawler`. Data from GCS→S3 transfer
+  (346,920 objects / 36.83 GB, completed 2026-05-09) is now catalogued in Glue DB `unified_trading_defi`.
 - **Athena verification**:
   `aws athena start-query-execution --work-group unified-trading-defi --query-string "SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_<table>"`
   - `aws athena get-query-results --query-execution-id <id>`.
