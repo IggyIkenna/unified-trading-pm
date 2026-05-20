@@ -281,13 +281,18 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 
 ### Phase 8 — Codex SSOT updates
 
-- [ ] **P0. New** `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` —
-      codifies the contract diagram at top of this plan.
-- [ ] **P0. Update** `codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy"
-      to include `EXPECTED_PAST_SOURCE_COVERAGE_END`.
-- [ ] **P0. SUPERSEDED banner** on `cross_asset_instruments_service_scope_2026_05_14.md`'s
-      "BLOCKED-OPERATOR-DECISION" if Phase 1-3 of this plan resolve it.
-- [ ] **P0. CLAUDE.md update** to mention the QG steps in `### Service architecture`.
+- [x] ✅ **P0. New** `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` —
+      codifies the contract diagram at top of this plan. — PM@404dba52
+- [x] ✅ **P0. Update** `codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy"
+      to include `EXPECTED_PAST_SOURCE_COVERAGE_END`. Added row to honest-absence-downstream-handling.md
+      table + updated availability-manifest-and-data-status.md line 1133 example list. — PM@404dba52
+- [x] ✅ **P0. SUPERSEDED banner** on `cross_asset_instruments_service_scope_2026_05_14.md`'s
+      "BLOCKED-OPERATOR-DECISION" — assessed: condition is FALSE. Phase 1-3 of this plan address
+      archive metadata + MTDS contract (Solana DeFi); the cross_asset plan's BLOCKED items are
+      about cross_asset shard architecture (orthogonal). No banner added; cross_asset remains
+      BLOCKED-OPERATOR-DECISION pending operator ack. — PM@404dba52
+- [x] ✅ **P0. CLAUDE.md update** to mention the QG steps in `### Service architecture`. Added
+      IS→MTDS contract bullet with 3 QG scripts + codex pointer. — PM@404dba52
 
 ## Continuous verification
 
