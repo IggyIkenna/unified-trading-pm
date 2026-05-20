@@ -151,6 +151,48 @@ All 4 in `PROMOTE_WORKFLOW_EVENT_TYPES` set + `STANDARD_LIFECYCLE_EVENTS`.
 
 ---
 
+## Per-Client and Per-Shard Semantics
+
+**Promote promotes a strategy, not a client.** The promote workflow operates at the `(strategy_id, manifest_id)` grain.
+It does not know about clients directly.
+
+**Per-client isolation happens at the VM layer**, not the promote layer:
+
+1. Promote → deployment-api launches a `StrategySupervisor` VM (one per archetype × shard).
+2. The supervisor's `clients.yaml` lists which clients run on that shard.
+3. Each `ClientWorker` subprocess handles one client's orders, positions, PnL, and credentials independently.
+4. The execution-service side uses `CLIENT_ID` env var + `isolation_policy.py:assert_client_allowed()` to enforce
+   per-process-per-client isolation.
+
+**Shard is invisible to the promote workflow.** The promote endpoint targets `(strategy_id, manifest_id, mode)`. The
+deployment-api determines the shard automatically (always shard 0 for new promotions; E.2 auto-shard handles overflow
+post-cutover).
+
+```
+Promote(strategy_id=X, mode=paper_1d)
+    → deployment-api: "launch strategy-paper-carry-staked-basis-shard0-{ts}"
+    → VM boots → StrategySupervisor starts
+    → loads clients.yaml → spawns ClientWorker for each registered client
+    → each ClientWorker independently runs the strategy for its client
+```
+
+**Promote target taxonomy** (May-23):
+
+| Target       | What launches                               | Shard    | Clients                     |
+| ------------ | ------------------------------------------- | -------- | --------------------------- |
+| `paper_1d`   | `strategy-paper-{archetype}-shard0-{ts}` VM | Always 0 | All clients in clients.yaml |
+| `live_early` | `strategy-live-{archetype}-shard0-{ts}` VM  | Always 0 | All clients in clients.yaml |
+
+Shard auto-spawn (`strategy-live-{archetype}-shard1-...`) is **outside the promote flow** — it is triggered by
+`ShardCapacityEvent` from the supervisor and handled by deployment-api's shard-spawn endpoint.
+
+Cross-reference:
+
+- `codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker model
+- `codex/05-infrastructure/strategy-shard-vm-topology.md` — shard naming + capacity thresholds
+
+---
+
 ## Post-Cutover Deferred Items
 
 > These are explicitly out of May-23 scope. Named successor plan:
@@ -163,3 +205,4 @@ All 4 in `PROMOTE_WORKFLOW_EVENT_TYPES` set + `STANDARD_LIFECYCLE_EVENTS`.
 - CEFFU custody integration (June-1+ per custody-providers.md § CEFFU)
 - `LIVE_FULL` maturity phase
 - UI as primary track without CLI fallback
+- Shard auto-spawn end-to-end (E.2 — `per_client_isolation_and_venue_fanout_topology_2026_05_20.md`)
