@@ -258,7 +258,7 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
       — PM@4b8d2f76; passes clean
 - [x] ✅ **P0. Wire all three** into per-service `quality-gates.sh` (instruments-service + MTDS).
       Pre-existing handlers failing the check produce REVIEW-BLOCKING warnings at PR time.
-      — IS@6ef6e96 (STEP 5.70 wired: no_silent_absence); MTDS@8ca45ee (all 3 scripts wired)
+      — IS@ceea3e5 (all 3 scripts wired — slot-5 completed partial IS@6ef6e96 slot-8 wiring); MTDS@8ca45ee (all 3 scripts wired)
 - [ ] **P1. Cross-link** with `honest_coverage_formula_consolidation_2026_05_19.md` Phase 6
       (the "no inline coverage formula" linter). All three QG steps live in the same script
       bundle.
