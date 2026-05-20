@@ -1198,7 +1198,7 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
 - [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc config schema — remove "today" and "when" stale qualifiers.**
       Config schema YAML example had comments like "JITO / MARINADE today; LIDO when an ETH-perp venue lands LST margin"
       — stale since DERIBIT/BYBIT slots landed in Stream A (2026-05-14). Updated to reflect live slot inventory:
-      JITO/MARINADE/LIDO all live, SOL+ETH instruments both present. — PM@PENDING
+      JITO/MARINADE/LIDO all live, SOL+ETH instruments both present. — PM@65c76031
 
 ## `available_at` adapter stamping (coordinated)
 
