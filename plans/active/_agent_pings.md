@@ -4186,3 +4186,103 @@ git fetch && git reset --hard origin/main   # NOT git pull --rebase
 `pull --rebase` produces duplicate commits with mangled history; `reset --hard` is the recovery. Stash YOUR files first (by name, not `-u` to avoid foreign-dirty), reset, then pop.
 
 — slot-1 main / ikenna
+
+
+## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+
+**Operator authorized 2026-05-20** ("do it" — operator-acked 56-PR breakage).
+
+**Force-pushed feature branches on** (`main` HEAD unchanged on both — see "Key finding" below):
+
+- IggyIkenna/execution-service (20 feature branches rewritten)
+- IggyIkenna/market-tick-data-service (20 feature branches rewritten)
+
+History rewrote SA-key file `central-element-323112-e35fb0ddafe2.json` out of all reachable refs. Every open PR's branch tip has been rewritten — PRs continue to "exist" in the GitHub UI but their head ref no longer matches what the original author pushed.
+
+**Key finding**: `main` HEAD SHA was UNCHANGED on both repos because the SA-key file only lived on feature/auto branches (it was never committed to `main` directly). The BFG scrub rewrote 20 + 20 feature branches per repo; `main`'s commit chain was already clean. So a fresh-clone advisory is only relevant for slots actively working on the rewritten feature branches — NOT for slots tracking `main` or `live-defi-rollout`.
+
+**Pre-scrub main HEAD SHAs (recovery anchor)**:
+- execution-service: `807489468d6e77cd68724635937248cb3c1333f0` (unchanged post-scrub)
+- market-tick-data-service: `ae638b58e586f0fd17d013c4add39fa7f2f850e7` (unchanged post-scrub)
+
+**Open PRs requiring rebase if author wants to resurrect them** (snapshot at scrub time — 35 PRs in execution-service + 21 PRs in MTDS = 56 total; operator-acked orphan):
+
+### execution-service (35 PRs)
+
+- #177 [feat/ci-cd-foundation] — fix: P0 - except Exception pass, GOOGLE_CLOUD_PROJECT, ImportError fallbacks — @IggyIkenna
+- #176 [auto/20260220-154522-490985] — feat: Pass mode to get_order_adapter for sim/real routing (Task 350) — @CosmicTrader
+- #175 [auto/config-schema-unified-config] — Import config_schema from unified-config-interface (v1.7.0 corrected) — @IggyIkenna
+- #174 [auto/pattern-b-migration-execution] — feat: migrate to Pattern B (Artifact Registry with all 5 libs) — @IggyIkenna
+- #172 [auto/20260219-114842-41277] — fix: add unified-config-interface for CI and local quality gates — @IggyIkenna
+- #171 [auto/20260219-094044-1941] — Split libraries: direct unified_events_interface imports, setup_events in benchmark_compare — @IggyIkenna
+- #170 [auto/20260218-150553-35099] — Upgrade to Python 3.13 and migrate to split libraries (Tier 1) — @IggyIkenna
+- #164 [refactor/live-orchestration-layer] — Add live orchestration layer using split library structure — @IggyIkenna
+- #158 [auto/20260215-141643-nogates] — chore: add UNIFIED_CLOUD_SERVICES_GCS_BUCKET to cloudbuild — @IggyIkenna
+- #151 [auto/20260214-120514-26552] — Fixes #147: quality gates accept Python 3.13 and smoke test exit 5 — @IggyIkenna
+- #144 [auto/20260213-032738-77774] — replace print() with logger in test_predefined_orders.py — @IggyIkenna
+- #137 [fix/997-import-top] — move import to top in test_signal_trace_debug.py — @IggyIkenna
+- #126 [fix/976-print-to-logger-ucs-integration] — replace print() with logger.info() in test_ucs_integration.py — @IggyIkenna
+- #115 [auto/20260213-015638-50337] — move imports to top in test_instrument_resolver — @IggyIkenna
+- #110, #108 [auto/20260213-014550-78669, 20260213-014219-47183] — move imports to top in test_instruction_type_algorithm_selection — @IggyIkenna
+- #106, #104 [auto/20260213-013809-18040, 20260213-013447-7380] — move imports to top in test_cloud_agnostic_paths — @IggyIkenna
+- #105 [auto/20260213-013522-10395] — Replace print() with logger.info() in test_shard_combinatorics — @IggyIkenna
+- #94 [auto/20260213-010920-49741] — move rich imports to top in preflight.py — @IggyIkenna
+- #72 [fix/654-print-to-logger] — replace print() with logger in cleanup_gcs_bucket.py — @IggyIkenna
+- #67 [auto/20260213-000611-12639] — replace print() with logger.info() in run_phasee_fullpath_matrix.py — @IggyIkenna
+- #66 [fix/643-list-gcs-config] — replace os.getenv with ExecutionServicesConfig in list_gcs_dates_and_files.py — @IggyIkenna
+- #65 [fix/codex-649-imports-at-top] — move imports to top in upload_backtest_results_to_gcs.py — @IggyIkenna
+- #64 [auto/20260212-235917-75403] — replace print() with logger in list_gcs_dates_and_files.py — @IggyIkenna
+- #63 [auto/20260212-235741-70337] — replace os.getenv with ExecutionServicesConfig in upload_backtest_results_to_gcs — @IggyIkenna
+- #55 [auto/20260212-190248-49529] — add --entrypoint bash override for quality gates in Cloud Build — @IggyIkenna
+- #53 [auto/20260212-172430-91351] — feat: migrate to UCS base image, Python 3.12, uv; add .cursorrules — @IggyIkenna
+- #52 [auto/20260211-162930-15245] — add dependency install + git fetch/reset to quickmerge — @IggyIkenna
+- #50 [auto/20260210-172245-67579] — Fix duplicate fallback defs in backtest ImportError block — @IggyIkenna
+- #44 [auto/20260210-060524-12124] — quality gates and quickmerge updates — @IggyIkenna
+- #43 [auto/20260209-234409-54041] — error handling standardization and add unit tests — @IggyIkenna
+- #37 [auto/20260209-210907-85059] — Align test execution: use python -m pytest — @IggyIkenna
+- #17, #16 [auto/20260208-115540-84558, 20260208-115236-80075] — remove --no-verify from quickmerge.sh — @IggyIkenna
+
+### market-tick-data-service (21 PRs)
+
+- #95 [auto/20260227-211553-29705] — P0 - pip->uv, print->logger, GOOGLE_CLOUD_PROJECT, ImportError fallbacks — @IggyIkenna
+- #94 [data-io-production-readiness-project-9] — Data I/O Production Readiness: config, UEI migration, codex alignment — @CosmicTrader
+- #93 [auto/20260220-092607-84647] — Move nautilus_schema (Phase 1 Step 1 of v1.7.0 domain extraction) — @IggyIkenna
+- #87 [refactor/import-from-market-interface] — import market feed clients from unified-market-interface — @IggyIkenna
+- #86 [auto/pattern-b-migration-market-tick] — migrate to Pattern B (Artifact Registry) — @IggyIkenna
+- #74 [auto/20260219-093103-80107] — log_event signature for unified_events_interface; fix E2E test imports — @IggyIkenna
+- #70 [merge-auto-20260216-212353] — Merge: DataOrchestrationService, LiveModeHandler, split libraries — @IggyIkenna
+- #68 [auto/20260216-212353-56938] — Add split libraries, live mode, e2e tests for CEFI/TRADFI/DEFI — @IggyIkenna
+- #65 [auto/20260216-185111-354256] — feat(epic-2): complete market data infrastructure implementation — @CosmicTrader
+- #56 [auto/20260215-100052-16753] — quickmerge use uv for deps — @IggyIkenna
+- #55 [auto/20260214-123016-68236] — Rollout Check 5 (imports inside functions) to quality gates — @IggyIkenna
+- #44 [auto/20260211-125049-20793] — extract parallel_download_orchestrator, Phase 2 completion — @IggyIkenna
+- #43 [phase3-transforms-uploaders-python-20260211-115425] — Phase 3: Extract uploaders + Python 3.12+ consistency — @IggyIkenna
+- #37 [auto/20260210-063242-52879] — sync latest changes — @IggyIkenna
+- #35 [auto/20260210-060458-12124] — quality gates and quickmerge updates — @IggyIkenna
+- #34 [auto/20260209-222339-62362] — add test_no_direct_gcs_client_imports (cloud-agnostic enforcement) — @IggyIkenna
+- #32 [auto/20260209-213239-19606] — market-tick audit fixes - P0/P1/P2 — @IggyIkenna
+- #31 [auto/20260209-210805-82937] — Align test execution: use python -m pytest — @IggyIkenna
+- #24 [auto/20260208-214251-19870] — normalize DEFI adapter schemas + historical validation (Curve, Euler, Fluid) — @IggyIkenna
+- #21 [auto/20260208-200734-68714] — add DATABENTO_USE_ALTERNATE_KEYS + DATABENTO_BATCH_REGISTRY_BUCKET — @IggyIkenna
+- #16 [auto/20260208-115523-84079] — remove --no-verify from quickmerge.sh — @IggyIkenna
+
+**Per-PR recovery recipe** (if author wants to resurrect a specific PR):
+```bash
+cd <repo>
+git fetch origin                       # pull the new rewritten branch tip
+git checkout <pr-branch>
+git fetch origin <pr-branch>
+git reset --hard origin/<pr-branch>    # branch tip already rewritten — adopt it
+# Re-apply your local changes on top, OR cherry-pick from the dropped PR-author commits via reflog.
+git push --force-with-lease origin <pr-branch>
+```
+
+**Slot fresh-clone advisory** (applies only to slots actively working on the 40 rewritten feature branches across these 2 repos — slots on `main` / `live-defi-rollout` / `staging` are NOT affected):
+```bash
+cd <repo> && git fetch && git reset --hard origin/<your-branch>   # NOT git pull --rebase
+```
+Stash YOUR named dirty files first (`git stash push -- path/to/your_file`), then reset, then `git stash pop`. NEVER `git stash -u` (autostashes foreign-dirty files belonging to other slots).
+
+**Residual `refs/pull/*` GitHub-managed refs**: still carry the SA-key blob (cannot be deleted via `git push`). GitHub will auto-GC these upon PR closure. Operator may optionally request GitHub support to force-purge if needed for compliance.
+
+— slot-1 main / ikenna

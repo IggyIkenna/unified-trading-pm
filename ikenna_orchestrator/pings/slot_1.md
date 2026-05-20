@@ -4893,3 +4893,31 @@ instruments-service first risks 100% `EXPECTED_DEPENDENCY_NOT_AVAILABLE` shards 
 
 **Action requested**: operator picks A/B/C/D. Slot 1 resumes within same dispatch on ack.
 
+
+
+## 2026-05-20 — BFG scrub Phase 2 complete; slot fresh-clone advisory
+
+Completed BFG history scrub on execution-service + MTDS (the 2 PR-heavy repos in the 5-repo BFG sequence). Operator authorized 2026-05-20 ("do it" — operator-acked 56-PR breakage).
+
+**Pre/post-scrub main HEAD SHAs** (recovery anchor; main UNCHANGED — file lived only on feature branches):
+- execution-service: `807489468d6e77cd68724635937248cb3c1333f0` (pre = post)
+- market-tick-data-service: `ae638b58e586f0fd17d013c4add39fa7f2f850e7` (pre = post)
+
+**Branches rewritten**: 20 feature/auto branches per repo (40 total).
+
+**Slot impact**: ONLY slots actively working on those 40 rewritten feature branches need to resync. Slots on `main`/`live-defi-rollout`/`staging` are NOT affected (those branches are unchanged).
+
+**Resync recipe** (per affected feature branch):
+```bash
+cd <repo>
+git status                                            # identify your dirty files (by name)
+git stash push -m "pre-scrub-resync" -- path/to/your_file_1 path/to/your_file_2
+git fetch origin
+git reset --hard origin/<your-branch>
+git stash pop
+```
+NEVER `git pull --rebase` (history doesn't share ancestry post-rewrite) or `git stash -u` (steals foreign-dirty).
+
+Plan + parent issue archived in same commit. See `_agent_pings.md` for the broader PR-author notification.
+
+— slot-1 main / ikenna
