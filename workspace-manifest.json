@@ -1518,11 +1518,6 @@
           "required": true
         },
         {
-          "name": "alerting-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "execution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1538,9 +1533,9 @@
           "required": true
         },
         {
-          "name": "client-reporting-api",
+          "name": "unified-sports-execution-interface",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
+          "required": false
         }
       ],
       "completion_path": "cefi",

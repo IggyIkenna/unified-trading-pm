@@ -559,6 +559,21 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       PYSEC-2024-277/PYSEC-2025-183, flattened pyproject.toml deps. QG: exit 0 (all steps pass). —
       alerting-service@a43e83c (2026-05-20)
 
+- [x] ✅ **P0 NEW** [AGENT slot 3] Phase 11f — Bucket 3 stale-ref sweep: trading-agent-service. Rewired
+      `adapters/__init__.py` docstring (`risk-and-exposure-service` → `strategy-service`), `adapters/risk_adapter.py`
+      module + class docstrings (lines 1, 20), `config.py` field description, `engine/mock_data_provider.py`
+      (`UPSTREAM_SERVICES` list + `risk_path` seed base). QG: exit 0. —
+      trading-agent-service@9b2f3ee (2026-05-20)
+
+- [x] ✅ **P0 NEW** [AGENT slot 3] Phase 11f — Bucket 3 stale-ref sweep: system-integration-tests. Removed
+      `ml-inference-service` + `ml-training-service` from `SIT_SCOPE_REPOS` and `_SERVICE_MATRIX` (both archived → ml-service);
+      removed stale `risk-and-exposure-service` tuple from `_SERVICE_MATRIX` (already merged into strategy-service);
+      rewired `position-balance-monitor-service` → `strategy-service` in `defi_scenarios.py`; updated
+      `test_deployment_smoke.py` known_services; updated `test_contract_normalization.py` service refs. Also fixed 3
+      pre-existing QG violations: pip-audit PYSEC-2026-87/2024-277/2025-183 ignores added to `quality-gates.sh`,
+      `RepoContext` marked `# CORRECT-LOCAL`, workspace-manifest.json deps aligned. QG: exit 0. —
+      system-integration-tests@d3cdfda (2026-05-20)
+
 **Total gap-close additions**: ~2.35 cal-AI-days bundled into existing slots (no new slot needed). Slot 3 +0.05, slot 4
 +1, slot 6 +0.25, slot 7 +1.1.
 
