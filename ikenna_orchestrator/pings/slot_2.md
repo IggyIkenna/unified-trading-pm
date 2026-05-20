@@ -870,4 +870,23 @@ awaiting operator write-pause signal to push.
 - `deployment-api` (3 files): `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` → check if already in facade
 - `unified-trading-system-ui` (10 files): facade re-exports in `context/api-contracts/` — likely exempt (UI layer)
 
+---
+
+## [slot 2 → main] 2026-05-20 R19 deployment-api COMPLETE — source clean verified
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for deployment-api**:
+- **deployment-api@deb23fe** — rewrote all 7 deep `canonical.*` imports across 3 files to UAC facade:
+  - `routes/monitor_live.py`: `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, LIVE_CLUSTER_REGISTRY, LiveClusterDeploymentKind, LiveClusterSpec)`)
+  - `routes/monitor_scheduled.py`: `canonical.crosscutting.{cloud_target,environment_tier,scheduler_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, SchedulerSpec, SchedulerTargetKind, get_schedulers_for_env)`)
+  - `routes/kill_switch_routes.py`: `canonical.crosscutting.circuit_breaker.BreakerRecoveryMode` with `# noqa: qg-deep-import` → `from unified_api_contracts import BreakerRecoveryMode`
+
+**Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` → CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent STEP 5.23 from running; source verified clean manually.
+
+**R19 remaining**:
+- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason` added to UAC facade first
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 dispatch table
+
 **Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § slot dispatch table row 2 (R19)
