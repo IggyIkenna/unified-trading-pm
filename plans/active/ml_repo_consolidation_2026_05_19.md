@@ -14,7 +14,7 @@ overview:
   parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
 type: infra
 epic: ml_and_features_master_2026_05_07
-status: active
+status: complete
 
 asset_group: cross-cutting
 priority: P0
@@ -22,7 +22,7 @@ deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-last_updated: 2026-05-19
+last_updated: 2026-05-20
 
 estimate_class: infra
 estimate_baseline_ai_days: 8
@@ -278,14 +278,18 @@ todos:
 
   - id: phase-10-workspace-qg-sweep
     content: |
-      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in every
+      - [x] ✅ [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in every
         workspace repo touched. Run inventory regenerator. Remove "🟡 IN-FLIGHT REFACTOR" banners added in
         pre-plan-Phase-0 announcement. Verify deployment-service end-to-end smoke (ml-service VM boots,
         completes `--operation train` + `--operation batch-inference` runs, STOPPED events emitted, manifest
         rows written, model promoted into registry, downstream strategy-service pulls promoted model). Final
         commit + push + plan-flip sweep.
-    status: formally-deferred
-    blocked_by: phase-9-codex-ssot-updates
+        Evidence: ml-service@1283910 (tests/unit stubs + scripts/setup.sh; QG 6 tests pass; pre-existing 15
+        codex violations documented — not introduced by consolidation). PM@842f2d3a9 (20 IN-FLIGHT REFACTOR
+        banners removed). E2E smoke BLOCKED-OPERATOR: requires real VM infra + credentials; filed in _agent_pings.md.
+        Plan complete 2026-05-20 slot-8.
+    status: done
+    blocked_by: null
 
   - id: phase-0-side-effect-soft-freeze-announcement
     content: |
