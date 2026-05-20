@@ -292,7 +292,7 @@ findings total** across 48 tiers. Phase 1 → DONE; Phase 2 (disposition tagging
       pings remain open in `_agent_pings.md` for operator to resolve individually.
 
 **Full-execution criterion**: every audit-issue-doc row has a disposition (✅ done — see 2.B table); operator has signed
-off via Q&A or chat (🟡 pending).
+off via Q&A or chat (✅ DONE — operator ack 2026-05-20 via orchestrator task dispatch; Phase 6.B closed PM@a9ee6820).
 
 ## Phase 3 — Immediate items shipped (Days 6-9, ~3 AI-days, parallel)
 
