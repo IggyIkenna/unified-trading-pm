@@ -10,7 +10,11 @@ overview:
   deployment-service when a VM saturates. Composes with the un-deferred Phase 5 UTL lifts (ConfigReloaderBase +
   KillSwitchBusSubscriberBase → extended with ClientLifecycleBusSubscriberBase). May-23 ships E.0+E.1 hard isolation
   (subprocess per client, supervisor process, hybrid push/pull hot-reload); auto-shard supervisor signal (E.2) +
-  cross-client transfer rebalancer (E.3) deferred post-cutover with named successor anchors in this plan.
+  intra-client multi-portfolio / multi-wallet rebalancer (E.3) deferred post-cutover with named successor anchors in
+  this plan. **HARD RULE codified by this plan: funds NEVER move between different clients.** Rebalancing scope is
+  always within a single client's portfolios (groups of strategy archetypes) or across that one client's wallets /
+  accounts — never client-A-to-client-B. Custody + legal boundary (each client is a separately-managed account under
+  its own custody / legal entity).
 type: infra
 epic: master_to_live_defi_2026_05_23
 status: active
@@ -112,24 +116,29 @@ to 2 clients on May-23 (it does; deployment-api fans out per-process per `CLIENT
   moves. Sub-account transfers (margin↔spot within one exchange) NOT FOUND in workspace.
 
 Decision (per this plan): **transfers stay owned by execution-service** but get a unified `TransferCoordinator` facade
-that strategy-service invokes via UAC `TransferIntent` events. Cross-client rebalancing is post-cutover (E.3 — named
-successor below). Sub-account transfers added on demand when an archetype needs them.
+that strategy-service invokes via UAC `TransferIntent` events. **HARD RULE — all transfer endpoints scoped to a single
+client_id; `TransferIntent.source_account` and `.dest_account` MUST belong to the same `client_id` — TransferCoordinator
+REJECTS any intent where source/dest clients differ (raises `CrossClientTransferForbiddenError`). Funds never move
+between different clients; only between portfolios/wallets/accounts of one client.** Intra-client multi-portfolio +
+multi-wallet rebalancing is post-cutover (E.3 — named successor below). Sub-account transfers added on demand when an
+archetype needs them (still intra-client).
 
 ## Architecture decision tree (operator-locked 2026-05-20)
 
-| Axis                                        | Decision                                                                                                                                                                                                                                 | Rationale                                                                                                                       |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Per-VM topology (strategy-service)          | One VM per (archetype × shard). Shard 0 holds clients 0..N-1; shard 1 holds N..2N-1; auto-spawned on capacity threshold (E.2).                                                                                                           | Singleton-per-archetype already exists; adding shard suffix is mechanical. Crash isolation between archetypes preserved.        |
-| Per-client isolation (strategy-service)     | Subprocess per client (multiprocessing.Process) under a parent StrategySupervisor. Hard crash isolation (segfault/OOM/uncaught all survived).                                                                                            | Soft isolation (asyncio task + try/except) doesn't survive segfault/OOM. Subprocess gives true parallel CPU for MTM/risk paths. |
-| Pricing centralisation                      | MarkPriceAggregator owned by StrategySupervisor; broadcasts per-tick computed marks to all ClientWorker subprocesses via `multiprocessing.shared_memory` (zero-copy).                                                                    | Audit 2026-05-20 confirmed MTM compute is local. One compute per symbol per tick, broadcast to N clients, not N computes.       |
-| Hot client register/deregister              | Push via UAC `ClientLifecycleEvent` bus (extends `KillSwitchBusEvent` pattern). Supervisor subscribes.                                                                                                                                   | Low-frequency operator action; bus is the right surface; composes with Phase 5 KillSwitchBusSubscriberBase lift.                |
-| Hot credential rotation                     | Pull via ClientWorker poll of Cloud KMS / Secret Manager (interval per-venue configurable, default 60s).                                                                                                                                 | High-frequency automated rotation; push would couple supervisor to rotation cadence.                                            |
-| Per-client preflight                        | ClientWorker boot: (a) load creds from KMS, (b) per-venue auth ping, (c) per-venue balance fetch, (d) emit `CLIENT_READY` event. If any step fails → emit `CLIENT_QUARANTINED` + supervisor marks worker dead; other clients unaffected. | Operator wants clients to fail in isolation without bringing down others.                                                       |
-| Execution-service per-client                | KEEP existing: one execution-service process per client (already enforced by isolation_policy.py). Deployment-api fans out per `CLIENT_ID`.                                                                                              | Already correct; no rewrite.                                                                                                    |
-| Multi-venue concurrency (execution-service) | KEEP existing: asyncio.gather + SmartOrderRouter. Document the contract in codex. Add per-venue circuit breaker (E.1 — see Phase 4).                                                                                                     | Current pattern is fine for May-23. Per-venue rate-limit / circuit-breaker hardening can layer on.                              |
-| Transfer ownership                          | execution-service owns ALL transfers (CEX withdrawals, DeFi deposit/withdraw, bridges, sub-account moves). Strategy-service emits `TransferIntent` events; execution-service consumes.                                                   | Single ownership boundary; mirrors orders pattern.                                                                              |
-| Cross-client rebalancing                    | OUT OF SCOPE for May-23. Named successor: E.3 (this plan, post-cutover) — `RebalanceCoordinator` service or sub-package.                                                                                                                 | Not needed for 2-client May-23 launch; defer until concrete use case lands.                                                     |
-| GIL / true parallelism                      | Subprocess gives each ClientWorker its own GIL → true parallel CPU. Free-threading (PEP 703) explicitly NOT in scope until C-extension recompile audit.                                                                                  | Subprocess pattern is portable across Python 3.12/3.13/3.14; free-threading is a future optimisation.                           |
+| Axis                                        | Decision                                                                                                                                                                                                                                 | Rationale                                                                                                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Per-VM topology (strategy-service)          | One VM per (archetype × shard). Shard 0 holds clients 0..N-1; shard 1 holds N..2N-1; auto-spawned on capacity threshold (E.2).                                                                                                           | Singleton-per-archetype already exists; adding shard suffix is mechanical. Crash isolation between archetypes preserved.                                            |
+| Per-client isolation (strategy-service)     | Subprocess per client (multiprocessing.Process) under a parent StrategySupervisor. Hard crash isolation (segfault/OOM/uncaught all survived).                                                                                            | Soft isolation (asyncio task + try/except) doesn't survive segfault/OOM. Subprocess gives true parallel CPU for MTM/risk paths.                                     |
+| Pricing centralisation                      | MarkPriceAggregator owned by StrategySupervisor; broadcasts per-tick computed marks to all ClientWorker subprocesses via `multiprocessing.shared_memory` (zero-copy).                                                                    | Audit 2026-05-20 confirmed MTM compute is local. One compute per symbol per tick, broadcast to N clients, not N computes.                                           |
+| Hot client register/deregister              | Push via UAC `ClientLifecycleEvent` bus (extends `KillSwitchBusEvent` pattern). Supervisor subscribes.                                                                                                                                   | Low-frequency operator action; bus is the right surface; composes with Phase 5 KillSwitchBusSubscriberBase lift.                                                    |
+| Hot credential rotation                     | Pull via ClientWorker poll of Cloud KMS / Secret Manager (interval per-venue configurable, default 60s).                                                                                                                                 | High-frequency automated rotation; push would couple supervisor to rotation cadence.                                                                                |
+| Per-client preflight                        | ClientWorker boot: (a) load creds from KMS, (b) per-venue auth ping, (c) per-venue balance fetch, (d) emit `CLIENT_READY` event. If any step fails → emit `CLIENT_QUARANTINED` + supervisor marks worker dead; other clients unaffected. | Operator wants clients to fail in isolation without bringing down others.                                                                                           |
+| Execution-service per-client                | KEEP existing: one execution-service process per client (already enforced by isolation_policy.py). Deployment-api fans out per `CLIENT_ID`.                                                                                              | Already correct; no rewrite.                                                                                                                                        |
+| Multi-venue concurrency (execution-service) | KEEP existing: asyncio.gather + SmartOrderRouter. Document the contract in codex. Add per-venue circuit breaker (E.1 — see Phase 4).                                                                                                     | Current pattern is fine for May-23. Per-venue rate-limit / circuit-breaker hardening can layer on.                                                                  |
+| Transfer ownership                          | execution-service owns ALL transfers (CEX withdrawals, DeFi deposit/withdraw, bridges, sub-account moves). Strategy-service emits `TransferIntent` events; execution-service consumes.                                                   | Single ownership boundary; mirrors orders pattern.                                                                                                                  |
+| **Cross-client fund movement**              | **FORBIDDEN — never. HARD RULE.** TransferCoordinator rejects any intent where source_account.client_id ≠ dest_account.client_id. Custody + legal boundary.                                                                              | Each client = separately-managed account under own custody/legal entity. Cross-client moves = custody violation + regulatory breach. Not an engineering preference. |
+| Intra-client rebalancing                    | Post-cutover (E.3, this plan). Two legitimate scopes only: (a) multi-portfolio (shifting allocation between archetypes for ONE client); (b) multi-wallet/account (moving between ONE client's wallets/accounts).                         | Not needed for 2-client May-23 launch; defer until concrete intra-client use case lands.                                                                            |
+| GIL / true parallelism                      | Subprocess gives each ClientWorker its own GIL → true parallel CPU. Free-threading (PEP 703) explicitly NOT in scope until C-extension recompile audit.                                                                                  | Subprocess pattern is portable across Python 3.12/3.13/3.14; free-threading is a future optimisation.                                                               |
 
 ## Phased execution DAG
 
@@ -232,8 +241,9 @@ todos:
         transfer-intent-emitted); (5) Refactor existing strategy-service surfaces (signal_generation, pnl, position,
         risk) to ACCEPT a ClientContext argument instead of reading process-level globals. ClientContext carries
         client_id, credentials, position cache, books, risk limits; (6) colocated_engine.py rewrite: SharedState becomes
-        per-ClientWorker; the parent supervisor owns MarkPriceAggregator + EngineCtx (cross-client config); per-client
-        logic moves into ClientWorker.run(). Tests: unit tests for ClientWorker lifecycle (start → preflight → ready →
+        per-ClientWorker; the parent supervisor owns MarkPriceAggregator + EngineCtx (supervisor-level shared read-only
+        config visible to all ClientWorkers in the shard — NOT cross-client fund-movement state); per-client logic moves
+        into ClientWorker.run(). Tests: unit tests for ClientWorker lifecycle (start → preflight → ready →
         process-event-loop → graceful-shutdown); crash test (raise unhandled exception in worker → supervisor detects
         via pipe close → restart logic); IPC test (parent emits credential-rotation → worker reloads CredentialStore
         without restart). status: pending blocked_by: phase-3-supervisor
@@ -346,14 +356,23 @@ todos:
         cost-ceiling guard (operator-configured max VMs per archetype); operator-override (manual SPAWN_NEW_SHARD via
         API). Target: 2026-05-28. status: deferred blocked_by: phase-9-codex-ssot
 
-- id: phase-e3-cross-client-rebalancer content: |
-  - [ ] **POST-MAY-23** [AGENT] P2. Phase E.3 — Cross-client RebalanceCoordinator (named successor for cross-client
-        moves explicitly out-of-scope for May-23): Add `RebalanceCoordinator` (sub-package in strategy-service or new
-        top-level service — decide at filing time). Owns: detecting per-client over/under-allocation per archetype's
-        target weights; emitting TransferIntent events to move funds between client wallets / sub-accounts; settlement
-        reconciliation. Requires legal/custody review (Odum UK ↔ Cayman entity gateway considerations per
-        [trading-entities memory]). Target: 2026-06-01 to 2026-06-15. status: deferred blocked_by:
-        phase-e2-auto-shard-supervisor-signal
+- id: phase-e3-intra-client-rebalancer content: |
+  - [ ] **POST-MAY-23** [AGENT] P2. Phase E.3 — **Intra-client** RebalanceCoordinator (two legitimate scopes;
+        cross-client fund movement is FORBIDDEN by HARD RULE — see plan body): Add `IntraClientRebalanceCoordinator`
+        (sub-package in strategy-service or new top-level service — decide at filing time). Owns TWO and ONLY TWO
+        rebalance scopes, BOTH bounded by `client_id` invariant: (a) **Intra-client multi-portfolio**: shifting
+        allocation between strategy archetypes (portfolios) for ONE client — e.g. client X reduces `carry_staked_basis`
+        exposure to fund `arbitrage_price_dispersion`. All TransferIntent events emitted carry the same client_id on
+        source + dest. (b) **Intra-client multi-wallet / multi-account**: moving funds between ONE client's wallets or
+        accounts — e.g. client X's main wallet → client X's archetype-specific subaccount, or client X's Binance
+        subaccount → client X's Coinbase wallet. Same client_id invariant. **Invariant enforced at code AND test
+        level**: every TransferIntent emitted by this coordinator MUST satisfy
+        `source_account.client_id == dest_account.client_id`. Unit test asserts coordinator REFUSES to emit any
+        cross-client intent (raises `CrossClientTransferForbiddenError`). Defence-in-depth: TransferCoordinator
+        (Phase 6) ALSO rejects at the execution-service consumer side. Requires legal/custody review only for the
+        multi-wallet variant if client X's wallets sit under different custody providers (Copper vs CEFFU vs
+        self-custody). Multi-portfolio rebalancing within one custody provider needs no legal review. Target: 2026-06-01
+        to 2026-06-15. status: deferred blocked_by: phase-e2-auto-shard-supervisor-signal
 
 ## Slot assignment (slot 1 main proposes — operator may reallocate)
 
@@ -388,7 +407,8 @@ lifts land May-20 EOD (slot 5 active).
 ## Out-of-scope for May-23 (named successors)
 
 - Auto-shard end-to-end → Phase E.2 (this plan), 2026-05-28
-- Cross-client rebalancing → Phase E.3 (this plan), 2026-06-01
+- Intra-client multi-portfolio + multi-wallet rebalancing → Phase E.3 (this plan), 2026-06-01. **Cross-client fund
+  movement is NEVER in scope — HARD RULE codified in this plan + `codex/04-architecture/client-funds-isolation.md`.**
 - Sub-account transfers for non-Binance/OKX venues → `subaccount_transfers_phase_2_2026_06_01.md` (to be created)
 - Free-threading (PEP 703) evaluation → `python_free_threading_eval_2026_07_01.md` (to be created post-cutover)
 

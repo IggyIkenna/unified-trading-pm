@@ -46,8 +46,9 @@ Pick (a) only if it's clean; otherwise (b) is fine. Same scaffold pattern preser
 - Slot 7: Phase 8 (deployment-service wiring)
 - Slot 8: Phase 9 (codex SSOT) — mostly doc-only, parallel-start
 
-Target: full E.0+E.1 shipped by 2026-05-23 EOD. Auto-shard end-to-end (Phase E.2) + cross-client rebalancer (Phase E.3)
-are POST-MAY-23 with named anchors in the plan body.
+Target: full E.0+E.1 shipped by 2026-05-23 EOD. Auto-shard end-to-end (Phase E.2) + **intra-client** multi-portfolio /
+multi-wallet rebalancer (Phase E.3) are POST-MAY-23 with named anchors in the plan body. (HARD RULE codified 2026-05-20:
+cross-client fund movement is FORBIDDEN — see plan body + `codex/04-architecture/client-funds-isolation.md`.)
 
 — slot 1 main / ikenna
 

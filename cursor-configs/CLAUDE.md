@@ -189,9 +189,9 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
     `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0.
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
 - **GCS object ops in migration scripts**: use `unified_trading_library.cloud_interface.gcs_copy_object` /
-  `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops.
-  250× faster (REST API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32).
-  SSOT: `codex/05-infrastructure/gcs-object-operations.md`.
+  `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
+  API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
+  `codex/05-infrastructure/gcs-object-operations.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
@@ -271,6 +271,19 @@ Pointer chain. Full specs in codex:
   SSOT: `codex/09-strategy/architecture-v2/archetypes/`.
 - **Custody**: Copper + CEFFU are June-1. May-23 ships on `CLOUD_KMS_ENCRYPTED`. SSOT:
   `codex/04-architecture/custody-providers.md`.
+
+### Client funds isolation (HARD RULE codified 2026-05-20)
+
+**Funds NEVER move between different clients.** Every transfer / withdraw / deposit / bridge / sub-account move /
+rebalancing operation MUST satisfy `source_account.client_id == dest_account.client_id`. Enforced at 3 layers (UAC
+schema construction, strategy-service emit, execution-service consume); each raises `CrossClientTransferForbiddenError`.
+Custody + legal boundary — each client is a separately-managed account under its own custody / legal entity (Odum UK vs
+Cayman vs others). Plan proposals framing "cross-client rebalancing" as in-scope are **review-blocking** — rewrite as
+"intra-client multi-portfolio" or "intra-client multi-wallet" with explicit client_id invariant. **Valid usages of
+"cross-client"** are isolation-enforcement contexts ONLY (`isolation_policy.assert_client_allowed()`,
+`CrossClientEventError` event-bus rejection, supervisor-level read-only config visibility) — never fund movement. SSOT:
+`codex/04-architecture/client-funds-isolation.md`. Required tests in every transfer-related plan: happy intra-client
+path + UAC-validator-rejects-cross-client + defence-in-depth coordinator-rejects-cross-client + alert-on-attempt.
 
 ---
 
@@ -607,8 +620,8 @@ Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plan
 
 **Operational consequences**:
 
-1. **Layer-N+1 work freezes when a data audit is RED for affected asset_groups** (foundation-completion-gate expansion
-   — see `codex/11-project-management/foundation-completion-gate-discipline.md`).
+1. **Layer-N+1 work freezes when a data audit is RED for affected asset_groups** (foundation-completion-gate expansion —
+   see `codex/11-project-management/foundation-completion-gate-discipline.md`).
 2. **Slot reassignment is mandatory**: slot 1 main reassigns slots from layer-N+1 to data-fix work until the audit is
    GREEN. Slots that "double down on bad code" (build paper-trade / strategy / execution on top of unaudited data) are
    blocked, not deprioritised.
@@ -619,9 +632,8 @@ Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plan
 
 **Composes with**: `Foundation-Completion-Gate Discipline` (data-correctness expansion of that gate);
 `External Data Is Always Available` (per-data-source case — credentials unblock, not scope removal);
-`Plans Run To Actual Completion` (operationally-shipped = every cell, not "most cells");
-`Manifest + Honest Absence` (per-cell expression — every cell either `captured` or `empty_confirmed[reason=<typed>]`
-with operator-acked reason).
+`Plans Run To Actual Completion` (operationally-shipped = every cell, not "most cells"); `Manifest + Honest Absence`
+(per-cell expression — every cell either `captured` or `empty_confirmed[reason=<typed>]` with operator-acked reason).
 
 **Reference incident (2026-05-20)**: Mega-audit Phase A surfaced 765 `DIVERGENT_EMPTY` + 236,892 `MISSING_EXPECTED`
 cells across MTDS buckets + **0% of 7.4M prod manifest rows at v8** + 1.3M NULL-schema-version rows. Operator codifying
@@ -664,9 +676,9 @@ asset_groups; parallel-up across asset_groups within a layer is encouraged, para
 review-blocking. Full layer table + application rules + anti-patterns:
 `codex/11-project-management/foundation-completion-gate-discipline.md`. Master tracker:
 `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. (9) Issue-Doc Lifecycle Discipline — issue
-docs in `plans/active/issues/` exist to surface UNACKED work; once acked (into a plan / shipped code / out-of-scope
-with named successor), they archive immediately. Banner-marked-in-`active/issues/` is a transitional convenience, NOT
-a permanent state. "Stays until parent closes" lifecycles are dual-tracking and review-blocking. State machine + audit
+docs in `plans/active/issues/` exist to surface UNACKED work; once acked (into a plan / shipped code / out-of-scope with
+named successor), they archive immediately. Banner-marked-in-`active/issues/` is a transitional convenience, NOT a
+permanent state. "Stays until parent closes" lifecycles are dual-tracking and review-blocking. State machine + audit
 recipe + anti-patterns: `codex/11-project-management/issue-doc-lifecycle.md`.
 
 ---
