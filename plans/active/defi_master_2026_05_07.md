@@ -416,24 +416,27 @@ calculator, two consumers; the per-archetype filter logic is in the catalog spec
       feedback_lighter_pacifica_cloudfront_quirks per-trade replay infeasible because Lighter `block_height` is
       sequencer-internal NOT zkSync L1 — on-chain `Trade` event parsing was found infeasible during empirical research.
       Subgraph option still pending in dex_perp_onboarding_handover Item C]
-- [ ] [AGENT] P0. Lighter subgraph availability check (thegraph.com/explorer); validate row schema match against
-      `_fetch_lighter_rest`. [AUDIT 2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C — Extended
-      on-chain replay sub-plan, pending operator]
+- [x] **[SUPERSEDED]** [AGENT] P0. ~~Lighter subgraph availability check (thegraph.com/explorer); validate row schema
+      match against `_fetch_lighter_rest`.~~ — REST `/candles` path chosen at MTDS@10aa715 (`_fetch_lighter_candles`).
+      Subgraph historical fill-in not needed; OHLCV covers historical data. Closed SUPERSEDED 2026-05-20.
 - [x] **[SUPERSEDED]** [SCRIPT] P0. ~~Launch `mtds-lighter-history-backfill-{ts}` singleton-locked VM~~ — approach
       replaced by OHLCV via /candles endpoint (MTDS@10aa715). Per-trade history not recoverable (REST capped, no cursor;
       `block_height` is sequencer-internal per Lighter quirks finding). Closed as SUPERSEDED per audit cleanup 2026-05-20.
-- [ ] [AGENT] P0. Extended Starknet mainnet `Settlement` contract address + event signature; add Starknet RPC template
-      to UAC `CHAIN_RPC_TEMPLATES`. [AUDIT 2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C Phase 0
-      empirical research; Extended is the third venue, pending]
-- [ ] [AGENT] P0. `_fetch_extended_history` in `umi_tick_provider.py`; schema-parity vs `_fetch_extended_rest`. [AUDIT
-      2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C]
+- [x] **[SUPERSEDED]** [AGENT] P0. ~~Extended Starknet mainnet `Settlement` contract address + event signature; add
+      Starknet RPC template to UAC `CHAIN_RPC_TEMPLATES`.~~ — Item C (dex_perp_onboarding_handover) chose REST `/candles`
+      path at mtds@4f0cdbd; on-chain Settlement event-replay was not pursued. UAC RPC template not needed for REST path.
+      Closed SUPERSEDED 2026-05-20.
+- [x] **[SUPERSEDED]** [AGENT] P0. ~~`_fetch_extended_history` in `umi_tick_provider.py`; schema-parity vs
+      `_fetch_extended_rest`.~~ — REST path shipped as `_fetch_extended_candles` + `_fetch_extended_rest`
+      (umi_tick_provider.py lines 240/249); separate history method not needed. Closed SUPERSEDED 2026-05-20.
 - [x] [AGENT] P0. Pacifica Solana program ID + Anchor `emit!` log decoder; Helius `getSignaturesForAddress` +
       `getTransaction` parse. [AUDIT 2026-05-07: DONE for OHLCV path — MTDS@51fecd5 `_fetch_pacifica_candles` via /kline
       (ms timestamps); per-trade Anchor decoder still pending in handover Item C]
 - [x] [AGENT] P0. `_fetch_pacifica_history` in `umi_tick_provider.py`; schema-parity vs `_fetch_pacifica_rest`. [AUDIT
       2026-05-07: DONE — MTDS@51fecd5 (ohlcv_1m via /kline); per MEMORY project_dex_perp_onboarding_2026_05_07]
-- [ ] [SCRIPT] P0. Backfill VMs for each new venue + schema-parity validation against the REST adapter. [AUDIT
-      2026-05-07: PARTIAL — Lighter + Pacifica VMs ran successfully per MEMORY; Extended VM still pending]
+- [x] [SCRIPT] [BLOCKED-OPERATOR] P0. Backfill VMs for each new venue + schema-parity validation against the REST
+      adapter. — Lighter + Pacifica VMs ran successfully per MEMORY. Extended-STARKNET backfill VM pending operator
+      approval (date range + VM launch sign-off needed). Ping filed slot_2.md 2026-05-20. [PARTIAL-DONE]
 
 ### DEX perp forward-poll handlers + collateral matrix (folded-in 2026-05-07 from `dex_perp_onboarding_handover`)
 
@@ -713,17 +716,19 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 | 1    | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07`   | full history | ~9,668                     | ~3h           | **In flight** as `mtds-lending-indices-20260507-140418` since 14:04 IST |
 | 2    | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | high carry-archetype value | parallel-safe | not yet launched                                                        |
 
-- [ ] [AGENT] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done), Arbitrum / Base / Polygon
-      (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. **2026-05-07 NOTE: original
-      headline percentages are defensible if reading the deployment-ui's per-bucket panels — see CORRECTION block above.
-      Earlier "0%" claim was a single-bucket misread, not reality.** [AUDIT 2026-05-07: FRESH — actionable; the
-      in-flight `mtds-lending-indices-20260507-140418` VM is doing the right work. After it drains, run
-      vault-share-price as the parallel-safe runner-up.]
+- [x] [AGENT] [BLOCKED-OPERATOR] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done),
+      Arbitrum / Base / Polygon (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6.
+      — `mtds-lending-indices-20260507-140418` VM ran 2026-05-07; vault-share-price backfill VM still pending.
+      Remaining gap requires: (1) `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` VM launch,
+      (2) mid-tier DEX subgraph schema fixes (PancakeSwap V3 / SushiSwap V3 / Aerodrome V3 / Camelot V3 — see
+      item below). Ping filed slot_2.md 2026-05-20. [PARTIAL-DONE]
 
 ### DeFi DEX-perp adapters from `cefi_venue_universe_expansion` (re-classified to DeFi)
 
-- [ ] [AGENT] P0. **Extended** — UAC: add to `VENUES_BY_ASSET_GROUP['defi']`. Adapter: `_fetch_extended_rest` + history.
-      [AUDIT 2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C — empirical research pending]
+- [x] **[SUPERSEDED]** [AGENT] P0. ~~**Extended** — UAC: add to `VENUES_BY_ASSET_GROUP['defi']`. Adapter:
+      `_fetch_extended_rest` + history.~~ — EXTENDED-STARKNET correctly classified as CEFI (DEX perp), not DEFI
+      (market_data_categories.py line 196 in cefi list). REST adapters `_fetch_extended_rest` + `_fetch_extended_candles`
+      already shipped. No DEFI reclassification needed. Closed SUPERSEDED 2026-05-20.
 - [x] [AGENT] P0. **Pacifica** — UAC: same. Adapter: `_fetch_pacifica_rest`. Hyperliquid clone — schema parity. [AUDIT
       2026-05-07: DONE — MTDS@51fecd5 (ohlcv_1m); UAC@e890022 added ohlcv_1m to cefi DATA_TYPES_BY_ASSET_GROUP (note:
       routing gate per MEMORY entry feedback_uac_data_types_by_asset_group_is_routing_gate); UAC@7cb9068 / 405cbf5
