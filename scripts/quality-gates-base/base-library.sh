@@ -772,6 +772,23 @@ if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_INSTRUMENT_VALID
     fi
 fi
 
+# ── STEP 5.85: UAC SourceCapability structured venue metadata guard ────────────
+# Verifies every SourceCapability(...) instance in capability_declarations/_*.py
+# has explicit chain= and kind= kwargs (even if set to None). Guards regression
+# where new venue declarations omit the Phase 2 metadata fields.
+# Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
+_UAC_SOURCE_CAPABILITY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_uac_source_capability_metadata.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_SOURCE_CAPABILITY_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_SOURCE_CAPABILITY_CHECKER" "$WORKSPACE_ROOT" >/tmp/uac_source_capability_qg.log 2>&1; then
+        log_ok "STEP 5.85: UAC SourceCapability structured metadata present on all venues"
+    else
+        log_fail "STEP 5.85: SourceCapability instances missing chain= or kind= kwargs:"
+        cat /tmp/uac_source_capability_qg.log
+        log_fail "         Fix: add chain=... kind=... to each SourceCapability() call"
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"

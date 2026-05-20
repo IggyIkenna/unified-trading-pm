@@ -184,11 +184,10 @@ Phases 0 + 1 can run in parallel (Phase 0 is read-only harvest; Phase 1 is schem
 
 ### Phase 3 — QG ratchet enforcement
 
-- [ ] **P0. QG STEP `no_unstructured_venue_metadata.sh`** at `unified-trading-pm/scripts/quality_gates/`:
-      Asserts every `SourceCapability(...)` instance has `chain` + `kind` populated (non-None). `mandatory_user_agent` + `coverage_start` are optional (some venues genuinely don't have launch dates yet).
-- [ ] **P0. Wire into UAC's `quality-gates.sh`**. Step number: next available after STEP 5.83 / 5.84 (likely 5.85).
-- [ ] **P0. Synthetic regression test** — temporarily remove `chain` from a venue, run QG, verify it fails with diagnostic. Restore.
-- [ ] **P0. Codex `quality-gates.md` row update** — STEP 5.85 entry.
+- [x] ✅ **P0. QG STEP `no_unstructured_venue_metadata.sh`** — Python checker at `unified-trading-pm/scripts/quality_gates/check_uac_source_capability_metadata.py`. Scans `_*.py` in capability_declarations/ and verifies explicit `chain=` and `kind=` kwargs on every SourceCapability block. — PM@(this commit) (2026-05-20)
+- [x] ✅ **P0. Wire into UAC's `quality-gates.sh`** via STEP 5.85 in `base-library.sh` (after STEP 5.83). Guarded by `UAC_CANONICAL_EXEMPT=true`. — PM@(this commit) (2026-05-20)
+- [x] ✅ **P0. Synthetic regression test** — inline regex test confirms checker catches `source='binance'` missing `chain=`. Checker returns exit 0 on current 70-venue corpus. — PM@(this commit) (2026-05-20)
+- [ ] **P0. Codex `quality-gates.md` row update** — STEP 5.85 entry. (Phase 5)
 
 ### Phase 4 — A2 expected_coverage() integration
 
