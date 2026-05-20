@@ -169,10 +169,10 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
 - **Manifest consolidator runtime**: Cloud Run + Cloud Scheduler (10 jobs, `*/1 * * * *`). Terraform:
-  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`. Legacy GCE VM launcher DELETED 2026-05-20
-  (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. AWS-side consolidation NOT in scope. SSOT:
-  `codex/05-infrastructure/manifest-consolidator-ssot.md`. Operator-directed consolidation to per-asset-group jobs
-  (5 instead of 10) + extension to all 16 services without consolidator (R-NEW-1) tracked under slot 5.
+  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`. Legacy GCE VM launcher DELETED 2026-05-20 (was
+  `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. AWS-side consolidation NOT in scope. SSOT:
+  `codex/05-infrastructure/manifest-consolidator-ssot.md`. Operator-directed consolidation to per-asset-group jobs (5
+  instead of 10) + extension to all 16 services without consolidator (R-NEW-1) tracked under slot 5.
 - **VM tarball**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
@@ -647,24 +647,25 @@ keep being sloppy and keep missing out stuff."
 
 **Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
-**Operator-handoff entry point for migration coordination**: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
-— sequences (Phase -2) strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10)
-data-pipeline migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
-strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD
-(do not reorder). Per-phase plan-of-record + owner slot + verification criterion in the coordinator plan.
+**Operator-handoff entry point for migration coordination**:
+`plans/active/data_pipeline_master_coordination_2026_05_20.md` — sequences (Phase -2) strategy/ml/features repo
+consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline migration as previously
+sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry + strategy/execution deployment-topology
+cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do not reorder). Per-phase plan-of-record +
+owner slot + verification criterion in the coordinator plan.
 
-**Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**:
-no code change merges to `live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the
-touched repo + any cross-repo consumers. Plan reviewers reject PRs that lack a QG-green evidence line. Harsh-side slots
-own the workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration work. Operator-tunable exemption
-only via `BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
+**Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**: no code change merges to
+`live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the touched repo + any
+cross-repo consumers. Plan reviewers reject PRs that lack a QG-green evidence line. Harsh-side slots own the
+workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration work. Operator-tunable exemption only via
+`BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
 `Data Pipeline Correctness Is The Heartbeat`.
 
 **Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
 no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
 `harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record (`plans/active/<slug>.md`,
-`plans/epics/<slug>.md`, `plans/audit/<slug>.md`, or `plans/active/issues/<slug>.md`). Bare slug links to
-date-suffixed plan files (`<slug>_YYYY_MM_DD.md`) inside the same ping-ledger directory also count.
+`plans/epics/<slug>.md`, `plans/audit/<slug>.md`, or `plans/active/issues/<slug>.md`). Bare slug links to date-suffixed
+plan files (`<slug>_YYYY_MM_DD.md`) inside the same ping-ledger directory also count.
 
 **If an agent's ping references nothing**, the agent MUST EITHER (a) file a new plan / extend an existing one before
 posting (preferred), OR (b) remove the ping. **Forcing agents to make plans or issues around their pings is the point**
@@ -676,13 +677,17 @@ posting (preferred), OR (b) remove the ping. **Forcing agents to make plans or i
   ```
   0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
   ```
-- **AWS agent-orchestrator VM** (EventBridge cron offset by 2h so passes don't collide):
-  `15 2,6,10,14,18,22 * * *` → invokes script via the orchestrator's worker container. See
-  `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` for the deployment surface.
+- **GCP Cloud Run Job + Cloud Scheduler** (`central-element-323112` / `asia-northeast1`, offset by 2h so passes don't
+  collide): `15 2,6,10,14,18,22 * * *` UTC. Job name `uts-prod-orphan-ping-audit` clones unified-trading-pm @
+  live-defi-rollout, runs the audit script, commits + pushes orphan notifications back to LDR. Image:
+  `gcr.io/google.com/cloudsdktool/google-cloud-cli:slim`. GH PAT sourced from Secret Manager `GH_PAT`. Terraform SSOT:
+  `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`. Entrypoint:
+  `scripts/agents/cron_orphan_ping_audit_entrypoint.sh`. (AWS-VM path NOT used — agent-orchestrator's prod backend is
+  Cloud Run; reusing the existing GCP cron stack avoids a new infra surface.)
 
 When orphans are detected: the script appends a `## [orphan-ping-cron]` notification to BOTH orchestrator inboxes
-(`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`) listing every orphan + remediation
-steps. Slot-1 main + harsh main are responsible for clearing the notification within one cron cycle (4h).
+(`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`) listing every orphan + remediation steps.
+Slot-1 main + harsh main are responsible for clearing the notification within one cron cycle (4h).
 
 **Audit script SSOT**: `unified-trading-pm/scripts/agents/audit_ping_orphans.sh`. Composes with
 `Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo — pings just point at the todo).
