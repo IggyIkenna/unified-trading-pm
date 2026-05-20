@@ -264,12 +264,16 @@ todos:
 
   - id: phase-8b-deployment-api-ui
     content: |
-      - [ ] [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints
+      - [x] ✅ [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints
         (`/services/list`, `/services/<id>/health`) update to remove the 3 source service IDs and expose
         per-operation health on strategy-service. DART drilldown UI updates for risk-monitor + position-recon +
         pnl-attribution surfaces to point at strategy-service health endpoints. Update `MinimalCandidateManifest`
         Firestore consumers if any reference `risk_and_exposure_service` / etc. by name (Phase 0 (h) finding).
-    status: todo
+        — deployment-api@bd87d70 + deployment-ui@d22f2ba (2026-05-20). Removed 3 old IDs from VALID_SERVICES,
+        SERVICES_WITH_TRIGGERS, _KNOWN_TARBALL_SERVICES, _ASSET_GROUP_TARBALLS (5 asset groups), RICH_SERVICES,
+        TURBO_SUB_DIMENSION_SERVICES, OVERRIDABLE_SERVICES; added risk-monitor/position-recon/pnl-attribution
+        operations to strategy-service entry in ServiceList.tsx.
+    status: done
     blocked_by: phase-7-archive-source-repos
 
   - id: phase-9-codex-ssot-updates
@@ -304,7 +308,7 @@ todos:
         every active plan identified in fact-report (2026-05-19) as having scope over the 4 affected repos
         (~12 plans with `repo_gates`, ~34 with passing mentions). Banner text:
         ```
-        
+
         > strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service +
         > pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API
         > surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive
@@ -489,14 +493,15 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       recipe; <5 min work. — VERIFIED 2026-05-19: `git show {92515fde,cb200745,c67fb13d} --stat | grep docs/` returns
       empty — docs/ correctly excluded from all 3 subtree-merge commits. Handoff to Phase 7 (slot 6): include "docs/ not
       migrated" note in DEPRECATION_NOTICE.md per above.
-- [x] ✅ **P0** [AGENT slot 8] Phase 4 basedpyright/test fix pass — 71 basedpyright errors resolved across strategy_service/
-      (cast() patterns for pandas/model_dump, public rename _VenueData→VenueData + _apply_fill_to_position→apply_fill_to_position,
-      log_event field names fixed for RiskMetrics UAC fields, __init__.py added to tests/risk/ + tests/position/ unit dirs,
-      sys.path depth fix in test_capture_phase_9_evidence.py). Multi-repo cleanup: dirty working trees in deployment-api,
-      e2e-testing, execution-service, pnl-attribution-service, system-integration-tests, unified-trading-pm resolved and
-      rebased onto remote. All repos clean. — strategy-service@d9a76e9a + system-integration-tests@fd45c5a (2026-05-20)
-      Evidence: ruff → All checks passed; basedpyright → 0 errors; pytest tests/risk/unit/ tests/position/unit/
-      tests/pnl/unit/ → 1456 passed, 2 skipped.
+- [x] ✅ **P0** [AGENT slot 8] Phase 4 basedpyright/test fix pass — 71 basedpyright errors resolved across
+      strategy_service/ (cast() patterns for pandas/model_dump, public rename \_VenueData→VenueData +
+      \_apply_fill_to_position→apply_fill_to_position, log_event field names fixed for RiskMetrics UAC fields,
+      **init**.py added to tests/risk/ + tests/position/ unit dirs, sys.path depth fix in
+      test_capture_phase_9_evidence.py). Multi-repo cleanup: dirty working trees in deployment-api, e2e-testing,
+      execution-service, pnl-attribution-service, system-integration-tests, unified-trading-pm resolved and rebased onto
+      remote. All repos clean. — strategy-service@d9a76e9a + system-integration-tests@fd45c5a (2026-05-20) Evidence:
+      ruff → All checks passed; basedpyright → 0 errors; pytest tests/risk/unit/ tests/position/unit/ tests/pnl/unit/ →
+      1456 passed, 2 skipped.
 - [ ] **P2 NEW** [AGENT slot 7] Phase 8A addendum — GitHub Actions workflows in source repos going dark. Each archived
       repo carries ~9 workflow files (~27 total across risk + position + pnl). Most are templated copies
       (`workspace-qg.yml`, `semver-agent.yml`, `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) that strategy-service
