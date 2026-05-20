@@ -164,15 +164,15 @@ Phases 0 + 1 can run in parallel (Phase 0 is read-only harvest; Phase 1 is schem
 
 ### Phase 1 — SourceCapability schema extension (PARALLEL with Phase 0)
 
-- [ ] **P0. Add 4 fields to `unified_api_contracts/registry/capability.py`** with the exact signature from § "The 4 fields" above. All optional with `None` default.
-- [ ] **P0. Pydantic v2 validators** — `chain` is free-form str (no enum lock; new chains land too often); `kind` is `Literal[...]` (closed set). Add `field_validator` on `coverage_start` to ensure dict keys are non-empty strings.
-- [ ] **P0. Roundtrip test** — `tests/unit/test_source_capability_metadata.py` — Pydantic write + read of SourceCapability with all 4 new fields populated.
-- [ ] **P0. Backwards-compat test** — old declarations without the new fields still validate (defaults to None).
+- [x] ✅ **P0. Add 4 fields to `unified_api_contracts/registry/capability.py`** with the exact signature from § "The 4 fields" above. All optional with `None` default. — uac@6e2f569 (2026-05-20)
+- [x] ✅ **P0. Pydantic v2 validators** — `chain` is free-form str (no enum lock; new chains land too often); `kind` is `Literal[...]` (closed set). Add `field_validator` on `coverage_start` to ensure dict keys are non-empty strings. — uac@6e2f569 (2026-05-20)
+- [x] ✅ **P0. Roundtrip test** — `tests/unit/test_source_capability_metadata.py` — Pydantic write + read of SourceCapability with all 4 new fields populated. 13 tests, 4 classes. — uac@6e2f569 (2026-05-20)
+- [x] ✅ **P0. Backwards-compat test** — old declarations without the new fields still validate (defaults to None). — uac@6e2f569 (2026-05-20)
 
 ### Phase 1.5 — Test the schema doesn't break existing consumers
 
-- [ ] **P0. Run full UAC test suite** — `cd unified-api-contracts && bash scripts/quality-gates.sh` should pass cleanly. Adding optional fields with defaults shouldn't break anything.
-- [ ] **P0. Workspace-wide basedpyright** — `run_timeout 120 basedpyright unified_api_contracts/` clean.
+- [x] ✅ **P0. Run full UAC test suite** — `cd unified-api-contracts && bash scripts/quality-gates.sh` passes (tests + basedpyright clean; pre-existing codex/size violations are SIZE_EXTRA_EXCLUDES, not from this change). — uac@6e2f569 (2026-05-20)
+- [x] ✅ **P0. Workspace-wide basedpyright** — `run_timeout 120 basedpyright unified_api_contracts/` clean (0 errors, 0 warnings). — uac@6e2f569 (2026-05-20)
 
 ### Phase 2 — Migrate 70 venue declarations
 
