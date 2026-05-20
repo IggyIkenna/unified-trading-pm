@@ -440,11 +440,14 @@ Pre-audit artifact:
       `system-integration-tests/tests/smoke/test_sports_arb_pipeline.py` (banned per CLAUDE.md
       `.cursor/rules/no-empty-fallbacks.mdc`); imports become unconditional intra-package post-merge. — ✅
       system-integration-tests@0b20329 (2026-05-19)
-- [ ] **P1** [AGENT+DECISION] Architectural-collision resolution — existing `strategy_service/models/position.py` +
+- [x] ✅ **P1** [AGENT+DECISION] Architectural-collision resolution — existing `strategy_service/models/position.py` +
       `strategy_service/models/pnl.py` will coexist with new `strategy_service/{position,pnl}/` sub-packages. Symbols
       don't collide but layout confuses readers. Decide in Phase 4 (a): (i) absorb existing models into sub-packages
       (preferred), (ii) keep both with cross-link comments, (iii) rename existing to
-      `strategy_service/models/legacy_*.py`. Not cutover-blocking.
+      `strategy_service/models/legacy_*.py`. Not cutover-blocking. — ✅ strategy-service@f7c62f61 (2026-05-20): DECISION
+      option (ii): added NOTE cross-link comments to models/pnl.py + models/position.py (UAC type aliases) pointing to
+      strategy_service.pnl/position sub-packages (computation). Added reverse pointers in pnl/**init**.py +
+      position/**init**.py. Option (i) deferred post-May-23 to avoid callsite-breakage risk at T-3 days.
 - [ ] **P1** [AGENT] Phase 8A sharpening — deployment-service blast radius is **~90 hits across Terraform (6 per-service
       dirs on GCP + AWS), cloud-build, cluster configs, bucket configs, launchers, bootstrap scripts**. Phase 8A is the
       LARGEST single-repo edit in this plan. Plan `terraform destroy` of the 3 retiring service modules in conjunction
