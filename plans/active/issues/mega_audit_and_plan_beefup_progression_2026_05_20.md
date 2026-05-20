@@ -250,13 +250,15 @@ feed it + lists the full remediation backlog drawn from those audits.
 - [ ] **D7. Live adapters plan** — beef from C4, C8 (live mode rows)
 - [ ] **D8. Perf upgrade plan** — beef from A1 (hot-path identification)
 - [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps).
-      **Progress: 4/7 patterns SHIPPED as QG steps**: (a) `no_silent_absence_handlers.sh` STEP 5.70 (manifest emission),
+      **Progress: 6/7 patterns SHIPPED as QG steps**: (a) `no_silent_absence_handlers.sh` STEP 5.70 (manifest emission),
       (b) `no_hardcoded_venue_urls.sh` STEP 5.70 (IS→MTDS URL ownership), (c) `no_hardcoded_venue_universe.sh` STEP 5.70
       (IS→MTDS universe ownership), (d) `no_adapter_contract_regression.sh` STEP 5.83 (per-file ratchet on
       `classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed`; shipped 2026-05-20 per
-      `lint_sweep_774602ea8_regression_audit_2026_05_20.md`). **Remaining 3 patterns** awaiting codification: (e)
-      schema-version compliance, (f) honest-absence reason taxonomy enforcement, (g) expected_coverage preflight +
-      DIVERGENT_EMPTY post-hoc check.
+      `lint_sweep_774602ea8_regression_audit_2026_05_20.md`), (e) `no_legacy_schema_version.sh` STEP 5.84
+      (schema-version compliance; IS@f766e5d + MTDS@c4a82a5; 2026-05-20), (f) `no_blank_empty_reason.sh` STEP 5.85
+      (honest-absence reason taxonomy enforcement; IS@f766e5d + MTDS@c4a82a5; 2026-05-20). **Remaining 1 pattern**
+      awaiting codification: (g) expected_coverage preflight + DIVERGENT_EMPTY post-hoc check (runtime-only; requires
+      dedicated QG integration test harness — deferred to D2 plan).
 
 Estimate per plan-beef-up: ~1 calibrated AI-day (audit-driven fill-in). Total:
 ~10 calibrated AI-days, parallelisable.
