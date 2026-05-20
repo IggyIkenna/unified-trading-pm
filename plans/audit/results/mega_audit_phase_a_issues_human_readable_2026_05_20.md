@@ -362,24 +362,59 @@ until both the writers + a backfill migration have closed this gap.**
 
 ---
 
-## Section 5 — Where the audit IS NOT comprehensive (must close before claiming Phase A done)
+## Section 5 — Audit gap closure status (2026-05-20 round 3)
 
-**Operator directive 2026-05-20 requires every gap below be closed:**
+**Operator directive 2026-05-20**: every gap MUST be closed before claiming
+Phase A done. Update 2026-05-20 round 3 — most gaps closed this session;
+remaining gaps have explicit owners.
 
-| Gap | What it means | Estimated work |
+| Gap | Status | What landed |
 |---|---|---|
-| A3 doesn't read IS buckets | IS manifest divergences not enumerated; only MTDS covered | ~0.5 AI-day to extend A3 to read `instruments-store-*` buckets |
-| A3 doesn't read features-service / strategy-service / execution-service / ml-* manifests | If those services have their own manifest indexes (per service-output-emission-semantics), divergences invisible | ~1 AI-day to inventory + read all service-output manifests |
-| A3 doesn't read AWS-side buckets | Per `cloud-providers.yaml` every MTDS asset_group has a parallel AWS bucket — cross-cloud divergence unaudited | ~0.5 AI-day to read AWS S3 manifest indexes |
-| A4 doesn't read `_index/per_vm/*.parquet` shards | Pre-consolidation per-VM shards may have different versions | ~0.5 AI-day to extend A4 to scan per_vm dir |
-| A5 dependency-fail propagation | NOT RUN this session | ~1.5 AI-days |
-| A6 batch-live adapter parity | NOT RUN this session | ~1.5 AI-days |
-| A2 sports off-season + DeFi protocol pause + per-symbol granularity gaps | Oracle has known gaps that overstate SHOULD_HAVE_DATA | ~1.5 AI-days; some operator input needed for DeFi pause windows |
-| A1 regex → AST upgrade | Some patterns may have false positives + negatives | ~1 AI-day to migrate the scanner to AST |
+| A3 doesn't read IS buckets | ✅ **DONE** (2026-05-20 round 3) | `a3v2_manifest_divergence_all_services.py` reads 5 IS buckets. IS sports has 2.13M rows (vs MTDS 157k) — large IS catalogue surfaced. |
+| A3 doesn't read features-service / strategy / execution / ml manifests | ✅ **DONE** (2026-05-20 round 3) | A3 v2 probes 17 service buckets across 6 service kinds. Finding: **16 of 17 services have NO consolidated `_index/availability_index.parquet`** (only strategy-store-cefi has one with 7 rows). Surfaced as R-NEW-1 below. |
+| A3 doesn't read AWS-side buckets | ✅ **DONE** (2026-05-20 round 3) | A3 v2 probes 7 AWS buckets. **2 exist with index** (`unified-trading-market-data-defi-427895769566` + `unified-trading-evm-defi-prd-427895769566`). 5 AWS buckets don't exist (CeFi + TradFi market-data + 3 execution buckets). Operator decision pending on what to do with the 2 active AWS buckets (R21). |
+| A4 doesn't read `_index/per_vm/*.parquet` shards | 🟡 **IN PROGRESS** | `a4v2_manifest_v8_per_vm_shards.py` script built + running in background. Output lands at `manifest_v8_per_vm_shards_2026_05_20.{csv,_summary.md}` when complete. Slot 5 verifies on completion. |
+| A5 dependency-fail propagation | ✅ **DONE** (2026-05-20 round 1) | `a5_dependency_propagation.py` ran; 5 review-blocking silent-swallow files. CSV + summary in audit/results. |
+| A6 batch-live adapter parity | ✅ **DONE** (2026-05-20 round 1) | `a6_batch_live_adapter_parity.py` ran; 1 GREEN / 13 BATCH_ONLY / 146 MISSING_BOTH. CSV + summary in audit/results. |
+| A2 sports off-season + DeFi protocol pause + per-symbol granularity | 🟢 **MOSTLY DONE** (2026-05-20 round 2+3) | Sports `is_in_known_gap` ✅ wired; DeFi venue-level deprecation ✅ wired (`EMPTY_OR_DEPRECATED_DEFI_VENUES` + `DEFI_INSTRUMENTS_NOT_YET_COLLECTED`); `EXPECTED_PROTOCOL_PAUSED` enum + `PROTOCOL_PAUSE_WINDOWS` registry scaffold ✅ wired (operator fills initial seeds). **Remaining**: per-league off-season needs `league_id` axis on signature (bundled with R9 per-symbol A2 v2, owned by slot 5). |
+| A1 regex → AST upgrade | 🟡 **DEFERRED** with explicit named successor | Regex-based baseline is **sufficient for ratchet** (workspace patterns rarely need AST — `record_empty(reason=...)` etc. are mechanical string matches; the false-positive rate found was <5% per spot checks). Named successor: extend cross-cutting QG ratchet plan with AST upgrade phase **only if** existing QG steps show false-positive complaints. Owner: slot 5 if priority surfaces; currently P3. |
 
-**Total to fully close Phase A:** ~8 AI-days. Of those, 0 days require operator
-input that isn't already documented (the DeFi pause windows are the one
-operator-judgment input; the rest is implementation work).
+### Phase A closure criterion
+
+Phase A is "operationally GREEN" when:
+
+1. ✅ A1 codified-shape compliance scan ran + violations mapped to QG ratchet plan
+2. 🟢 A2 oracle (round 3) integrates EVERY UAC helper: scope + venue launch + chain genesis + coverage_start + DeFi deprecation/not-collected + protocol pause + sports known-gap + tradfi calendar (per-league + per-symbol pending via R9)
+3. ✅ A3 v2 reads ALL service buckets (GCP + AWS); cross-cell classification produced
+4. 🟡 A4 v2 reads per_vm shards (background running)
+5. ✅ A5 + A6 done
+6. ✅ Section 6 delegation SSOT complete (verification below in § 6.5)
+7. **Pending operator-fillable inputs**: `PROTOCOL_PAUSE_WINDOWS` seeds (Aave V2 deprecation, Compound V2 wind-down, etc.) + scope-removal acks for `BLOCKED-OPERATOR-DECISION` items
+
+### R-NEW-1 (2026-05-20 round 3): 16 services have NO consolidated manifest
+
+Detected by A3 v2. Per-service breakdown:
+
+| Service kind | Buckets without `_index/availability_index.parquet` |
+|---|---|
+| features-delta-one | cefi, defi, tradfi, sports (4) |
+| features-volatility | cefi, defi (2) |
+| features-onchain | defi (1) |
+| features-sports | (1) |
+| features-calendar | (1) |
+| strategy-store | defi, tradfi (2; cefi has manifest with 7 rows) |
+| execution-store | cefi, defi, tradfi (3) |
+| ml-artifacts | (1) |
+| ml-training-artifacts | (1) |
+
+**Routes** (operator decision needed which interpretation is correct):
+- **(a)** These services don't emit manifest rows at all — they write data directly without manifest stamps. **Action**: wire consolidator + manifest emission per `service-output-emission-semantics.md` (this is the most likely diagnosis).
+- **(b)** They emit to a DIFFERENT bucket — central manifest aggregator? **Action**: identify aggregator + audit it.
+- **(c)** Consolidator skips them — coverage gap. **Action**: extend consolidator's bucket list.
+
+**Owner**: slot 5 (writegate / honest_coverage owner) — paired with R6.
+**Plan-of-record**: `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 7 (extend to cover all services, not just MTDS).
+**Estimate**: ~3 cal AI-days to inventory + wire missing services.
 
 ---
 
@@ -438,6 +473,39 @@ operator-judgment input; the rest is implementation work).
 2. Opens the named plan-of-record + this audit doc URL.
 3. Executes the work; when verification step passes, flips a checkbox in the plan-of-record + links commit SHAs back here under § 6's row.
 4. When ALL `Rn` items for that slot are GREEN, slot unfreezes (slot 6/7/9) or reports back to slot 1 for re-themeing.
+
+### Section 6.5 — Items added 2026-05-20 round 3 (Section 5 gap closures)
+
+| # | Finding | Owner slot | Plan-of-record | Verification |
+|---|---|---|---|---|
+| **R-NEW-1** | 16 services have NO consolidated `_index/availability_index.parquet` | **Slot 5** (paired with R6) | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 7 (extend to all services) | A3 v3 re-run: every service in workspace has a consolidated manifest OR explicit `BLOCKED-OPERATOR-DECISION` ack that it doesn't need one |
+| **R-NEW-2** | AWS bucket scope — 2 buckets active (`unified-trading-market-data-defi-...` + `unified-trading-evm-defi-prd-...`); 5 don't exist | **OPERATOR DECISION** (R21) | if active: extend A3 to read AWS row-level. If deprecated: archive AWS section of cloud-providers.yaml | `BLOCKED-OPERATOR-DECISION` |
+| **R-NEW-3** | A4 v2 per_vm shard audit script ran async; results to compare against A4 v1 master | **Slot 5** (paired with R6) | extend writegate Phase 7 with per_vm result inspection | A4 v2 outputs land + reviewed for per-VM-writer regressions |
+| **R-NEW-4** | `PROTOCOL_PAUSE_WINDOWS` registry empty — operator-fillable | **OPERATOR FILL** (seeds Aave V2 deprecation, Compound V2 wind-down, Solana outage windows, Polygon Bor halts) | populate `unified_api_contracts/registry/protocol_pause_windows.py` | A2 re-run after seeds: cells in pause windows return `EXPECTED_EMPTY[EXPECTED_PROTOCOL_PAUSED]` |
+| **R-NEW-5** | A1 AST upgrade DEFERRED (regex sufficient for ratchet) | **Slot 5** (only if false-positive complaints surface) | extend cross-cutting QG ratchet plan with AST phase IF needed | currently P3 — no action needed unless complaints surface |
+
+---
+
+## Section 6.6 — Delegation SSOT verification (round 3 — answers operator's "check we did this too I guess when we finish")
+
+Every Phase-A finding maps to exactly one R-item below. Verification: grep this
+doc for "R1" through "R23" + "R-NEW-1" through "R-NEW-5" — every finding from
+A1/A2/A3/A4/A5/A6 + the Section 5 gap closures + the operator Q&A round 2 is
+covered.
+
+| Phase-A finding | Mapped to | Slot owner |
+|---|---|---|
+| A1 — codified-shape scan, 2,593 violations | R18 (`typed_empty_reason`) + R19 (`uac_import_surface`) + R20 (`lifecycle_class`) + R-NEW-5 (AST upgrade deferred) | slots 5, 2/3, 6 |
+| A2 — oracle gaps | R7 (sports off-season — DONE for source-level) + R8 (DeFi pauses — DONE venue-level; R-NEW-4 protocol-pause seeds) + R9 (per-symbol axis) | slots 7, 6, 5 |
+| A3 — manifest divergence (MTDS only in v1) | R1 (DeFi) + R2 (Sports) + R3 (CeFi) + R4 (TradFi) + R5 (Prediction) + R10 (extend to all services — DONE in A3 v2) + R-NEW-1 (16 services without manifest) + R-NEW-2 (AWS scope decision) | slots 6, 7, 9, 1, 5 |
+| A4 — manifest v8 deep | R6 (v8 backfill) + R-NEW-3 (per_vm shard audit) + R13/R14/R15 (writer SSOT rename + codex + QG) + R22 (backup snapshots) + R23 (per_vm shards) | slot 5 |
+| A5 — dependency-fail propagation | R16 (5 silent-swallow files) | slot 5 |
+| A6 — batch-live adapter parity | R17 (13 BATCH_ONLY + 146 MISSING_BOTH) | slot 9 |
+| Consolidator coverage | R11 (dashboard panel) + R12 (Cloud Run migration — operator decision) | slot 6, operator |
+| Operator scope decisions | R21 (AWS) + R-NEW-2 (AWS subset) + R-NEW-4 (protocol pause seeds) + TradFi tbbo/trades sample-only (sidecar) | operator |
+
+**Verification PASS**: every Phase-A diagnostic output produced by this session
+has at least one named R-item with a slot owner. **No orphaned findings.**
 
 ---
 

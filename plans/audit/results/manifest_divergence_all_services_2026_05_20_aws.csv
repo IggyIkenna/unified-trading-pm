@@ -1,0 +1,8 @@
+asset_group,service_kind,bucket,status
+cefi,mtds-aws,unified-trading-market-data-cefi-427895769566,MISSING:
+defi,mtds-aws,unified-trading-market-data-defi-427895769566,EXISTS_WITH_INDEX
+tradfi,mtds-aws,unified-trading-market-data-tradfi-427895769566,MISSING:
+defi,evm-defi-aws,unified-trading-evm-defi-prd-427895769566,EXISTS_WITH_INDEX
+cefi,execution-aws,unified-trading-execution-cefi-prod-427895769566,MISSING:
+defi,execution-aws,unified-trading-execution-defi-prod-427895769566,MISSING:
+tradfi,execution-aws,unified-trading-execution-tradfi-prod-427895769566,MISSING:
