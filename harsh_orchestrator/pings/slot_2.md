@@ -1,3 +1,9 @@
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` poolGetSnapshots (P1): Balancer V3 uses
+`poolGetSnapshots` (per-pool API) not `poolSnapshots` (per-day). Requires (a) Balancer V3 subgraph IDs for each chain
+added to UAC `registry/capability_declarations/_defi.py`, (b) new query loop pattern. Current Balancer subgraph IDs in
+UAC are V2 only. → **Unblock**: provide Balancer V3 subgraph IDs (from thegraph.com/explorer) for ETHEREUM + ARBITRUM
++ BASE at minimum. Post-cutover unless you have the IDs available.
+
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` per-chain MTDS coverage + Extended backfill:
 - **Vault-share-price VM**: `bash deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` → awaiting operator launch approval. Estimated ~3-4h run.
 - **Extended-STARKNET backfill VM**: no launcher exists yet; need operator to specify: (a) date range, (b) approve VM creation. REST adapter `_fetch_extended_candles` + `_fetch_extended_rest` are shipped (mtds@4f0cdbd). Without these VMs, per-chain MTDS stays at ~60-85% for non-ETH/SOL chains.

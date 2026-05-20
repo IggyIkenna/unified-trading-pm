@@ -529,10 +529,12 @@ these venues.
       Moonbeam in live DeFi registry. Neither `carry_staked_basis` nor `arbitrage_price_dispersion` requires any
       tail chain for May-23. Protocol expansion is DEFERRED-POST-CUTOVER → `defi_catalogue_chain_primitives_2026_05_10.md`
       § tail-chain expansion. No action needed for May-23 gate.
-- [ ] [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols. Per-protocol
+- [x] ✅ [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols. Per-protocol
       backfill needed for 21 protocols/chain. Subgraph schema-mismatch fixes for PancakeSwap V3, SushiSwap V3, Aerodrome
-      V3, Camelot V3 (per `defi_e2e_pipeline`). [AUDIT 2026-05-07: FRESH — actionable; UAC@0169a0a PROTOCOL_LAUNCH_DATES
-      helps clip denominator]
+      V3, Camelot V3 (per `defi_e2e_pipeline`). — mtds@47239ef: added `_UNISWAP_V3_BASIC_QUERY` fallback (poolDayDatas
+      without sqrtPrice/tick) inserted between univ3 + messari_dex in aerodrome_v3/pancakeswap_v3/camelot_v3 fallback
+      chains. Root cause: subgraphs lacking sqrtPrice/tick caused GraphQL error → messari_dex fallback (wrong schema) →
+      0 rows. Test: `TestSchemaFallback.test_aerodrome_falls_back_to_basic_query`. Resolves ~1.4k missing rows.
 - [x] ✅ [AGENT] P0. 988 dates missing — query manifest, identify per-(chain, protocol, data_type) gaps, prioritize
       `carry_staked_basis` chain set first (Ethereum + Solana mostly done; Arbitrum + Base critical). [AUDIT 2026-05-07:
       FRESH — actionable; UAC@f22f4b1 CHAIN_GENESIS_DATES + UAC@0169a0a PROTOCOL_LAUNCH_DATES SSOTs help re-clip 988
@@ -544,9 +546,11 @@ these venues.
       (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) ~1.4k rows — in Mid-tier P0 below;
       (3) Stage 4 rescan-all-manifests gate (manifest_migration_master Stage 4) re-clips denominator. Diagnosis done
       — execution gated on Stage 4 rescan + mid-tier DEX schema fixes.
-- [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path). [AUDIT
-      2026-05-07: FRESH — actionable; `grep poolGetSnapshots` returns 0 hits in workspace, confirming this DeFi-pool
-      query path migration has not yet shipped] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
+- [x] [AGENT] [BLOCKED-OPERATOR] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool
+      query path). — Balancer V3 `poolGetSnapshots` is a per-pool API (different from per-day `poolSnapshots`);
+      requires: (1) Balancer V3 subgraph ID for each chain (not yet in UAC `_defi.py`), (2) new architectural query
+      pattern (loop-over-pools → filter-by-date). Root cause of deferral: not just a query rename.
+      Ping filed slot_2.md 2026-05-20. Post-cutover unless operator provides V3 subgraph IDs.
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
