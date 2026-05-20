@@ -612,7 +612,11 @@ Discipline — no plan ships items in layer N+1 before layer N is GREEN-audited 
 asset_groups; parallel-up across asset_groups within a layer is encouraged, parallel-up across layers is
 review-blocking. Full layer table + application rules + anti-patterns:
 `codex/11-project-management/foundation-completion-gate-discipline.md`. Master tracker:
-`plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`.
+`plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. (9) Issue-Doc Lifecycle Discipline — issue
+docs in `plans/active/issues/` exist to surface UNACKED work; once acked (into a plan / shipped code / out-of-scope
+with named successor), they archive immediately. Banner-marked-in-`active/issues/` is a transitional convenience, NOT
+a permanent state. "Stays until parent closes" lifecycles are dual-tracking and review-blocking. State machine + audit
+recipe + anti-patterns: `codex/11-project-management/issue-doc-lifecycle.md`.
 
 ---
 
