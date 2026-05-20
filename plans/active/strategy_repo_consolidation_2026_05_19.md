@@ -549,6 +549,16 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       2026-05-20 slot 5: strategy-service required-checks = `quality-gates` only (no orphan refs). Source repos each
       have `quality-gates` only — go dark on archive with zero drift. No `gh api PATCH` needed.
 
+- [x] ✅ **P0 NEW** [AGENT slot 3] Phase 11f — Bucket 3 stale-ref sweep: alerting-service. Rewire all archived
+      strategy-service refs in alerting-service source: `core/system_health_aggregator.py` (`_DEFAULT_SERVICE_URLS`
+      dict: `risk-and-exposure-service` → `strategy-service`, removed `position-balance-monitor`),
+      `subscribers/batch_event_reader.py` (`_EVENT_SOURCE_SERVICES`: removed `risk-and-exposure-service`,
+      `position-balance-monitor-service`, `pnl-attribution-service`, `ml-training-service`, `ml-inference-service`).
+      Also: fixed legacy package imports in `notifiers/pagerduty.py` + `notifiers/slack.py`, wired
+      `make_health_router` (STEP 5.62), wired `dispatch-cloud-build` (STEP 5.82), added pip-audit ignores for
+      PYSEC-2024-277/PYSEC-2025-183, flattened pyproject.toml deps. QG: exit 0 (all steps pass). —
+      alerting-service@a43e83c (2026-05-20)
+
 **Total gap-close additions**: ~2.35 cal-AI-days bundled into existing slots (no new slot needed). Slot 3 +0.05, slot 4
 +1, slot 6 +0.25, slot 7 +1.1.
 

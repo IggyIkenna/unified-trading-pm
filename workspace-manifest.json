@@ -1176,10 +1176,10 @@
       "consolidation_plan": "ml_repo_consolidation_2026_05_19",
       "github_url": "https://github.com/IggyIkenna/ml-inference-service",
       "note": "Awaiting operator: gh repo archive IggyIkenna/ml-inference-service",
-      "ci_status": "ARCHIVED",
-      "coverage_pct": 0,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
+      "ci_status": "archived",
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "archived",
       "skipped_gates": []
     },
     "ml-service": {
@@ -1249,10 +1249,10 @@
       "consolidation_plan": "ml_repo_consolidation_2026_05_19",
       "github_url": "https://github.com/IggyIkenna/ml-training-service",
       "note": "Awaiting operator: gh repo archive IggyIkenna/ml-training-service",
-      "ci_status": "LOCAL_PASS",
-      "coverage_pct": 0,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
+      "ci_status": "archived",
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "archived",
       "skipped_gates": []
     },
     "pnl-attribution-service": {
