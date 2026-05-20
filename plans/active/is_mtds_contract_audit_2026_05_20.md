@@ -199,10 +199,12 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - Derive URLs from `record.source_archive_url_template` + `record.source_record_types` — NEVER hardcode
 - Wrap every (date × instrument) iteration with `record_captured` / `record_empty(reason=...)` / `record_failed(...)`
 
-- [x] ✅ **P0. `solana_defi_handler.py` (partial — QG + manifest)**: Remove `_DRIFT_S3_BASE` module-level constant
-      → local `drift_s3_base` var in `_backfill_drift_s3_date`; add `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`;
+- [x] ✅ **P0. `solana_defi_handler.py` (QG + manifest)**: Remove `_DRIFT_S3_BASE` module-level constant;
+      remove S3 URL literal fallback (URL now sourced exclusively from UAC registry via
+      `get_solana_protocol_url`); add `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`;
       add manifest emission (`record_captured`/`record_empty`(EXPECTED_PAST_SOURCE_COVERAGE_END)/`record_failed`)
-      to `_backfill_drift_s3_date`. — MTDS@3c8ce40
+      to `_backfill_drift_s3_date`. All 3 QG scripts pass clean.
+      — MTDS@3c8ce40 + MTDS@4bea31e
 - [ ] **P0. `solana_defi_handler.py` (remaining)**: remove `_collect_drift` IS-bypass (line ~419 uses Drift
       data API directly instead of IS catalogue); remove `_PHOENIX_PAIRS` hardcoded universe (load from IS).
       Call IS DriftReferenceDataAdapter for full universe derivation.
