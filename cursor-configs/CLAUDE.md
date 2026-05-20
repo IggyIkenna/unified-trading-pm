@@ -168,6 +168,11 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
+- **Manifest consolidator runtime**: Cloud Run + Cloud Scheduler (10 jobs, `*/1 * * * *`). Terraform:
+  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`. Legacy GCE VM launcher DELETED 2026-05-20
+  (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. AWS-side consolidation NOT in scope. SSOT:
+  `codex/05-infrastructure/manifest-consolidator-ssot.md`. Operator-directed consolidation to per-asset-group jobs
+  (5 instead of 10) + extension to all 16 services without consolidator (R-NEW-1) tracked under slot 5.
 - **VM tarball**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
