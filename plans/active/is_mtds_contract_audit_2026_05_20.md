@@ -208,11 +208,18 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - [ ] **P0. `solana_defi_handler.py` (remaining)**: remove `_collect_drift` IS-bypass (line ~419 uses Drift
       data API directly instead of IS catalogue); remove `_PHOENIX_PAIRS` hardcoded universe (load from IS).
       Call IS DriftReferenceDataAdapter for full universe derivation.
-- [ ] **P0. `perp_funding_handler.py`**: remove Drift market hardcode at line 145; call IS.
-- [ ] **P0. `lst_rates_handler.py`**: remove Solana LST hardcoded URLs (lines 135-160).
-- [ ] **P0. `native_staking_handler.py`**: remove hardcoded endpoint at line 85.
-- [ ] **P0. `staking_yields_handler.py`**: remove Lido/Marinade hardcodes (lines 110-135).
-- [ ] **P0. `solana_lst_archival.py`**: remove Marinade/Jito hardcodes (lines 75-95).
+- [x] ✅ **P0. `perp_funding_handler.py`**: VERIFIED CLEAN — no Drift reference in current codebase;
+      `DEFAULT_PROTOCOLS` = `["hyperliquid", "aster", "gmx", "pacifica", "lighter"]`. Plan line-145 citation stale. (2026-05-20 slot-5)
+- [ ] **P0. `lst_rates_handler.py`** `**[BLOCKED-OPERATOR-DECISION]**`: `_LST_TOKENS` dict is the hardcoded
+      universe; needs `load_lst_metadata_for_date()` equivalent in `_instruments_metadata.py`. IS has Jito/Marinade
+      adapters but no LST metadata loader in MTDS yet. Operator: should LST universe come from IS parquet or UAC constants?
+- [ ] **P0. `native_staking_handler.py`** `**[BLOCKED-OPERATOR-DECISION]**`: `_JITO_MEV_REWARDS_URL` is a
+      live API endpoint, not an archive URL. IS adapters don't write MEV rewards metadata. Operator: should this
+      URL move to UAC constants (like other API endpoints) or to IS `source_archive_url_template`?
+- [ ] **P0. `staking_yields_handler.py`** `**[BLOCKED-OPERATOR-DECISION]**`: `LIDO_APY_URL` is a live API.
+      Operator: same decision as native_staking — UAC constants or IS?
+- [ ] **P0. `solana_lst_archival.py`** `**[BLOCKED-OPERATOR-DECISION]**`: Marinade/Jito archive endpoints —
+      same decision chain as above.
 - [ ] **P1. `position_data_handler.py` + `tick_data_handler.py` + `websocket_streaming_handler.py`**:
       remove partial fallback hardcodes.
 - [ ] **P1. Legacy intent audit** for `data_manifest_handler.py` / `replay_handler.py`:
