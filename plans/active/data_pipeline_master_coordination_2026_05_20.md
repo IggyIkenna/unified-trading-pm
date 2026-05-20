@@ -297,25 +297,30 @@ branch on cloud.
 
 **Phase 1 deliverables**:
 
-1. - [ ] **AWS bucket inventory audit** — every kind in
+1. - [x] ✅ **AWS bucket inventory audit** — every kind in
        `deployment-service/configs/cloud-providers.yaml` `aws:` block: list
        current bucket name + target symmetric name + 63-char-cap check. Output:
        `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv`.
-2. - [ ] **Bucket-spawning script audit** — every script in
+       — deployment-service@43fb886, audit-script@plans/audit/results/generate_aws_gcp_bucket_symmetry_audit.py
+2. - [x] ✅ **Bucket-spawning script audit** — every script in
        `deployment-service/scripts/` that provisions buckets on either cloud:
        confirm it consults the YAML template + that the YAML is the SSOT.
        Surface drift cases (hardcoded bucket names, alternate naming, missing
        env-tier).
-3. - [ ] **YAML template alignment** — update `cloud-providers.yaml` `aws:`
+       — setup-defi-buckets.sh drift found + fixed: deployment-service@b9029ad
+3. - [x] ✅ **YAML template alignment** — update `cloud-providers.yaml` `aws:`
        block templates to mirror `gcp:` templates (one-line-per-kind diff).
        Pre-existing GCP shape `{kind}-{ag}-${DEPLOYMENT_ENV_SHORT}-${PROJECT_ID}`
        must apply with `${AWS_ACCOUNT_ID}` swap on AWS.
-4. - [ ] **63-char cap re-verification** — automated check that every
+       — deployment-service@43fb886; UTL tests: unified-trading-library@dc107d15
+4. - [x] ✅ **63-char cap re-verification** — automated check that every
        resolved bucket name on BOTH clouds is ≤63 chars across the full
        (env × kind × asset_group) matrix.
-5. - [ ] **`prd`/`stg`/`dev` consistency** — confirm DEPLOYMENT_ENV_SHORT
+       — All 65 kinds × all env × all asset_group: 0 violations (python3 check)
+5. - [x] ✅ **`prd`/`stg`/`dev` consistency** — confirm DEPLOYMENT_ENV_SHORT
        3-char form used on BOTH clouds (currently GCP uses `prd`, AWS may use
        a different form per its older templates).
+       — Both clouds: identical 24-kind env-tiered set; all use ${DEPLOYMENT_ENV_SHORT}
 
 ## Phase 2 — code freeze protocol
 
