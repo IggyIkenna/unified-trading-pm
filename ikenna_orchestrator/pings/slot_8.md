@@ -1207,3 +1207,24 @@ Without it: Phase 3 subtree-merge cannot proceed
 - Available for reallocation to any unblocked track
 
 — slot 8
+
+---
+
+## [slot 8 → main] 2026-05-19 — ALERT: strategy Phase 3 done, slot 4 not yet responded; Phase 4 idle
+
+**Observation**: strategy-service remote live-defi-rollout shows Phase 3 subtree-merge landed at 14:24 UTC
+(commits 92515fde/cb200745/c67fb13d/544edf80). Phase 4 (fix imports + CLI) is NOW unblocked.
+
+**Problem**: slot_4.md shows dispatch at top but no ack/STARTED response for strategy Phase 4 yet. Last slot 4
+activity was 2026-05-18 on execution-service method-size refactoring. If slot 4 is not running, Phase 4 is idle
+which blocks the entire Phase 4→5→6→7→8A→9→10 chain.
+
+**Action taken**: 
+- Completed Phase 0 SIDE EFFECT for strategy_repo_consolidation (20 plans soft-frozen, PM@ec98aef9c)
+- Phase 4 not touched — it's slot 4's assignment
+- Doing Phase 9 pre-audit while waiting (enumerating codex docs with 3 source-repo names for Phase 9h)
+
+**Request**: if slot 4 is idle, please re-dispatch Phase 4 to another slot (or to slot 8 — I have
+`strategy-service` in my worktree and Phase 3 is pulled).
+
+— slot 8
