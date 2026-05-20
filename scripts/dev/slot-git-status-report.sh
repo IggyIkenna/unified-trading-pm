@@ -29,6 +29,7 @@ INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-live-defi-rollout}"
 ORCH_URL="${ORCH_URL:-https://api.agent-orchestrator.odum-research.com}"
 WORKSPACE_PATH="${WORKSPACE_PATH:-}"
 TOKEN_FILE="${ORCH_TOKEN_FILE:-}"
+SLOTS_FILTER="${SLOTS_FILTER:-}"   # comma-separated slot ids; empty = all numeric slots under .tabs/
 QUIET=0
 
 while [[ $# -gt 0 ]]; do
@@ -37,6 +38,7 @@ while [[ $# -gt 0 ]]; do
         --orch-url)           ORCH_URL="$2"; shift 2;;
         --token-file)         TOKEN_FILE="$2"; shift 2;;
         --integration-branch) INTEGRATION_BRANCH="$2"; shift 2;;
+        --slots)              SLOTS_FILTER="$2"; shift 2;;
         --quiet)              QUIET=1; shift;;
         -h|--help)
             sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -44,6 +46,16 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown arg: $1" >&2; exit 2;;
     esac
 done
+
+slot_in_filter() {
+    # Returns 0 if --slots is empty OR if slot_id is in the comma-separated list.
+    local sid="$1"
+    [[ -z "${SLOTS_FILTER}" ]] && return 0
+    case ",${SLOTS_FILTER}," in
+        *",${sid},"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 log()       { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 log_quiet() { [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
@@ -268,6 +280,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
     [[ -d "${slot_dir}" ]] || continue
     slot_id_str=$(basename "${slot_dir}")
     [[ "${slot_id_str}" =~ ^[0-9]+$ ]] || continue
+    slot_in_filter "${slot_id_str}" || { log_quiet "[skip:not-in-filter] slot ${slot_id_str}"; continue; }
 
     rows_tsv=""
     for repo_dir in "${slot_dir}"*/; do
