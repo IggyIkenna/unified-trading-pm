@@ -330,20 +330,19 @@ todos:
         phase-7-e2e-and-unit-test-bundle
 
 - id: phase-9-codex-ssot content: |
-  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (docs 1, 6, 7, 8 SHIPPED; docs 2-5 pending slot-7 Phase 6)** —
-        PM@32d1929db (slot 8 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
+  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (ALL 8 DOCS SHIPPED)** —
+        PM@32d1929db (slot 8 2026-05-20) + PM@b1664fe8 (slot 7 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
         supervisor + ClientWorker subprocess, MarkPriceAggregator, hybrid hot-reload, preflight, crash isolation, GIL
-        rationale, clients.yaml - ⏳ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — PENDING
-        slot 7 Phase 6 write - ⏳ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` — PENDING slot 7 Phase
-        6 - ⏳ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — PENDING slot 7 Phase 6 - ⏳ (5)
-        `codex/04-architecture/transfer-coordinator.md` — PENDING slot 7 Phase 6 - ✅ (6)
+        rationale, clients.yaml - ✅ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — SHIPPED
+        slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` — SHIPPED
+        slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (5)
+        `codex/04-architecture/transfer-coordinator.md` — SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (6)
         `codex/04-architecture/client-lifecycle-event-bus.md` — REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED,
         push-vs-pull, ShardCapacityEvent, supervisor subscription code snippet - ✅ (7)
         `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, capacity thresholds, shard auto-spawn,
         vm_zombie_watchdog prefix mapping, drain-before-migration rule - ✅ (8)
         `codex/04-architecture/promote-workflow-architecture.md` UPDATED — per-client + per-shard taxonomy added,
-        shard-invisible-to-promote clarified, E.2 listed in deferred status: partial (docs 1/6/7/8 done; sanity-check of
-        2-5 pending slot-7 ship)
+        shard-invisible-to-promote clarified, E.2 listed in deferred status: done (all 8 docs shipped across slot 8 + slot 7)
 
 - id: phase-e2-auto-shard-supervisor-signal content: |
   - [ ] **POST-MAY-23** [AGENT] P1. Phase E.2 — Auto-shard supervisor signal end-to-end: Wire deployment-service to
