@@ -1195,6 +1195,10 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
 - [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc catalog axis — update examples from 2 pre-Stream-A to 4 current
       slots.** Examples section only showed 2 pre-2026-05-07 DRIFT slots. Updated to show all 4 live slots including
       DERIBIT/stETH (USDC margin) and BYBIT/stETH (USDT margin), noting that stable token differs by venue. — PM@02c5c4a9
+- [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc config schema — remove "today" and "when" stale qualifiers.**
+      Config schema YAML example had comments like "JITO / MARINADE today; LIDO when an ETH-perp venue lands LST margin"
+      — stale since DERIBIT/BYBIT slots landed in Stream A (2026-05-14). Updated to reflect live slot inventory:
+      JITO/MARINADE/LIDO all live, SOL+ETH instruments both present. — PM@PENDING
 
 ## `available_at` adapter stamping (coordinated)
 

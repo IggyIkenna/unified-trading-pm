@@ -201,12 +201,13 @@ capital_budget_amount: 1000000
 # All 6 required params are validated at engine construction (__init__): ValueError is raised
 # at boot if any are absent — earlier than tick-time preflight. Missing params cause immediate
 # startup failure (not a silent default).
-staking_protocol: JITO # JITO / MARINADE today; LIDO / ROCKETPOOL / ETHERFI when an ETH-perp venue lands LST margin
-native_asset: SOL # SOL today; ETH when an ETH-perp venue lands LST margin
-lst_asset: JitoSOL # JitoSOL / mSOL today
-perp_venue: DRIFT # must appear in VENUE_COLLATERAL_MATRIX with the LST accepted=True
-perp_instrument: SOL-PERP
-spot_venue: JUPITER # USDC->native swap venue (JUPITER / UNISWAP_V3 / ...)
+staking_protocol: JITO  # live 2026-05-20: JITO / MARINADE (Solana) + LIDO (ETH, DERIBIT + BYBIT slots)
+native_asset: SOL      # SOL for Solana slots; ETH for DERIBIT/BYBIT slots
+lst_asset: JitoSOL     # JitoSOL / mSOL (Solana) · stETH (DERIBIT/BYBIT)
+perp_venue: DRIFT      # must appear in VENUE_COLLATERAL_MATRIX with the LST accepted=True
+                       # live venues: DRIFT (JitoSOL/mSOL) · DERIBIT (stETH) · BYBIT (stETH)
+perp_instrument: SOL-PERP  # SOL-PERP for Solana slots · ETH-PERP for ETH slots
+spot_venue: JUPITER    # USDC->native swap venue (JUPITER for Solana · UNISWAP_V3 for ETH)
 start_token: USDC # entry token; must be in `accepted_perp_collateral(perp_venue)` (sanity check)
 stake_fraction: "1.0" # always 1.0 post-2026-05-05 — LST is the perp margin
 
