@@ -335,8 +335,8 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 | Phase 5a: Drift S3 backfill execution | AWAITING-OPERATOR-EXECUTION | Needs VM + GCS access | Operator runs: `python -m market_tick_data_service.scripts.backfill_drift_s3_phase5 --apply --confirm` (script at MTDS@167f0ee) |
 | Phase 5b: IS Solana DeFi backfill execution | AWAITING-OPERATOR-EXECUTION | Needs VM + GCS access | Operator runs: `python3 scripts/backfill_solana_defi_is_phase5.py --apply --confirm` (script at IS@116c930) |
 | Phase 6: coverage verification | BLOCKED (gated on Phases 4+5 execution) | - | After Phases 4+5 execute on VM |
-| Phase 7 P1: Cross-link with honest_coverage_formula_consolidation_2026_05_19.md Phase 6 | Open P1 | No | Future slot |
-| Phase 3 P1: legacy audit `data_manifest_handler.py` / `replay_handler.py` | Open P1 | No | Future slot |
+| Phase 7 P1: Cross-link with honest_coverage_formula_consolidation_2026_05_19.md Phase 6 | ✅ DONE | — | PM@5c604cec (honest_coverage Phase 6 flipped, confirms ⚓) |
+| Phase 3 P1: legacy audit `data_manifest_handler.py` / `replay_handler.py` | ✅ DONE | — | MTDS@5217c10 (exempt comments added) |
 
 ## Temporary states + their canonical follow-up plans
 
