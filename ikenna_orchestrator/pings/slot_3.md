@@ -1435,3 +1435,41 @@ reconciler bug). Root cause confirmed + fix shipped. See corrected operator ping
 proceed with Phase 9 workspace-wide QG sweep.
 
 Slot 3 CO-DUTY CLOSED. Phase 3.6 monitoring complete.
+
+---
+
+## 2026-05-20 — UAC SourceCapability metadata promotion plan ready for pickup
+
+**From**: slot-1 main ikenna
+**Plan**: [plans/active/uac_source_capability_metadata_promotion_2026_05_20.md](../../plans/active/uac_source_capability_metadata_promotion_2026_05_20.md)
+**Estimate**: 1.6 calibrated AI-days (refactor × 0.4)
+**Deadline**: 2026-05-25
+**Priority**: P3 — not on May-23 path, but unblocks mega-audit Phase A2 expected_coverage() oracle
+
+### Why now
+
+Extended Starknet UAC declaration (UAC@2365885) halted on extending `SourceCapability` with 4 fields (`chain`, `kind`, `mandatory_user_agent`, `coverage_start`). Adding them workspace-wide is ~70-venue cross-cutting refactor — not appropriate for a single-venue PR. This plan does the structured promotion properly across all 70 venues.
+
+### Scope
+
+Promote 4 fields to first-class `SourceCapability` Pydantic fields + migrate 70 venue declarations + QG STEP 5.85 ratchet + Phase A2 `expected_coverage()` consumer wiring + codex SSOT updates.
+
+**Explicit non-goal per operator 2026-05-20**: NO `entity` field. Cayman vs UK split stays implicit via per-secret labels in Secret Manager. Operator said "venue separation is overkill entity-wise".
+
+### Self-execution prompt
+
+Plan body § "Agent execution prompt (for slot 3 dispatch)" has the exact prompt to paste at task launch. Phases 0-5 are well-defined; Phase 0 + 1 can run in parallel.
+
+### Coordination notes
+
+- Builds on the 4-of-7-shipped foundation-gate QG patterns (no_silent_absence + no_hardcoded_venue_urls + no_hardcoded_venue_universe + no_adapter_contract_regression). Mirror those QG scripts as reference shape for STEP 5.85.
+- Touches: `unified-api-contracts/unified_api_contracts/registry/capability.py` + `capability_declarations/_*.py` (5 files) + `venue_launch_dates.py` + `data_source_continuity.py` consumer-side reads + new `expected_coverage()` integration.
+- Does NOT touch per-venue adapter code in MTDS/execution-service — pure UAC + consumer layer.
+- Composes with mega-audit C9 (UAC consumer audit) — surfaces some of the same surface but at the data-shape level.
+- Coordinate with whoever picks up Phase A2 of the mega audit — that's the canonical consumer of the new `coverage_start` field.
+
+### Success criterion
+
+70 venues populated with at minimum `chain` + `kind`. QG STEP 5.85 green workspace-wide. `expected_coverage()` reads `SourceCapability.coverage_start` for the source-level "earliest available" check.
+
+— slot-1 main / ikenna
