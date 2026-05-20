@@ -893,3 +893,843 @@ tasks:
     plan_ref: "master_coord § Phase 10 + A5"
     est_hours: 5
     model: sonnet
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # HUMAN-WORK BACKLOG (operator r2 split — 2026-05-20)
+  # Plan-of-record: plans/active/human_work_backlog_2026_05_20.md
+  # Slot 1 = Ikenna interactive (Opus 4.7). Slot 2 = Harsh interactive (Opus 4.7).
+  # Slots 3-20 = centralised Sonnet 4.6 workers.
+  # tier=50 = human-task (dispatcher does NOT auto-dispatch; operator-claimed).
+  # ─────────────────────────────────────────────────────────────────────────
+
+  # ───── Harsh wake-up ready (NO upstream blockers, can start immediately) ─────
+
+  - id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-A
+    title: "Harsh: workspace QG green sweep — cluster A (UAC + UTL + IS)"
+    tier: 1
+    priority: 100
+    target_slot: 2
+    affinity: high
+    repos:
+      - unified-api-contracts
+      - unified-trading-library
+      - instruments-service
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per CLAUDE.md HARD RULE "Quality Gates Are A Merge Prerequisite" and
+      data_pipeline_master_coordination_2026_05_20.md Phase -1.
+
+      For each of: unified-api-contracts, unified-trading-library,
+      instruments-service — run `bash scripts/quality-gates.sh`, fix any
+      failures (no new features, just QG-fix work), commit + push to
+      live-defi-rollout with conventional-commit prefix.
+
+      Composes with: plans/active/human_work_backlog_2026_05_20.md item 8
+      (HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP).
+
+      Estimated: 1 cal-AI-day for this cluster.
+    done_definition: |
+      - All 3 repos: bash scripts/quality-gates.sh exit 0
+      - Plan flip: HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP item flipped with
+        per-repo SHA evidence
+      - No new features added; only QG-fix work
+
+  - id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-B
+    title: "Harsh: workspace QG green sweep — cluster B (MTDS + features + MDPS)"
+    tier: 1
+    priority: 110
+    target_slot: 2
+    affinity: high
+    repos:
+      - market-tick-data-service
+      - features-service
+      - market-data-processing-service
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Same as HUMAN-HARSH-WORKSPACE-QG-CLUSTER-A but for cluster B:
+      market-tick-data-service, features-service,
+      market-data-processing-service.
+
+      PYTEST_UNIT_DIR override may be needed for features-service (per-family
+      test layout). See CLAUDE.md § "PYTEST_UNIT_DIR per-family override".
+    done_definition: |
+      - All 3 repos: bash scripts/quality-gates.sh exit 0
+      - Plan flip evidence per repo
+
+  - id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-C
+    title: "Harsh: workspace QG green sweep — cluster C (strategy + execution + ml — surface-only under freeze)"
+    tier: 1
+    priority: 120
+    target_slot: 2
+    affinity: high
+    repos:
+      - strategy-service
+      - execution-service
+      - ml-service
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Cluster C: strategy-service, execution-service, ml-service.
+
+      STRATEGY-LOGIC FREEZE GATE active (per coordinator plan): do NOT
+      modify strategy_service/engine/strategies/v2/, engine/allocator/,
+      collateral/, liquidation/, cross-venue-transfer/. Surface-only QG
+      fixes allowed (imports, type hints, dead code). If a fix requires
+      logic touch → file as BLOCKED + ping operator.
+
+      ml-service is archived — confirm QG moot or skip per repo state.
+    done_definition: |
+      - strategy-service + execution-service: QG green via surface-only fixes
+      - ml-service: confirmed archived OR QG green
+      - Per-repo SHA evidence
+
+  - id: HUMAN-HARSH-CI-CD-PROMOTION-TEST
+    title: "Harsh: drive full LDR → staging → SIT → main promotion cycle on a non-critical service"
+    tier: 1
+    priority: 150
+    target_slot: 2
+    affinity: high
+    repos:
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per codex/08-workflows/deployment-flow.md + plans/active/human_work_backlog_2026_05_20.md
+      item 14 (HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE).
+
+      Pick a non-critical service (e.g. alerting-service or a small util
+      package), drive a full promotion cycle:
+        1. LDR → staging via quickmerge with --agent (lint/format/typecheck/codex)
+        2. staging → SIT via the SDLC workflow
+        3. SIT → main via promotion workflow
+      Verify each step exits clean. Capture timing + any QG bumps.
+      Outcome: documented dry-run + any pre-cutover fixes needed before May-23.
+    done_definition: |
+      - Full LDR → staging → SIT → main cycle completed on one non-critical service
+      - Document timing + any workflow bumps in commit message + plan flip
+      - Pre-cutover gaps filed as issues if found
+
+  - id: HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-SCOPING
+    title: "Harsh: scope AWS-side manifest consolidator (currently only GCP has Cloud Run jobs)"
+    tier: 1
+    priority: 160
+    target_slot: 2
+    affinity: high
+    repos:
+      - deployment-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per codex/05-infrastructure/manifest-consolidator-ssot.md: AWS-side
+      consolidation is NOT in scope. Operator wants this scoped — either
+      a sub-plan filed + estimated, OR a BLOCKED-OPERATOR-DECISION ping
+      with explicit "leave AWS without consolidator" articulation.
+
+      Compose: investigate AWS Lambda + EventBridge equivalents for the
+      10 Cloud Run jobs running every 1 min. Cost estimate. Migration
+      complexity estimate.
+    done_definition: |
+      - Either: new sub-plan filed in plans/active/ + estimated, OR
+      - BLOCKED-OPERATOR-DECISION ping filed with the "leave AWS without
+        consolidator" articulation + tradeoff analysis
+
+  - id: HUMAN-HARSH-LAPTOP-MIGRATION
+    title: "Harsh: complete laptop migration — onboard to shared agent-orchestrator from orch.epiphanytechnologies.com"
+    tier: 1
+    priority: 180
+    target_slot: 2
+    affinity: high
+    repos:
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md
+      Steps 1-8. Self-onboarding to the shared agent-orchestrator.
+      One-shot setup; flip plan item 17 when done.
+    done_definition: |
+      - All 8 steps from harsh-laptop-migration-2026-05-20.md confirmed
+      - Harsh's interactive Claude can /boot through orchestrator
+      - Plan item HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE flipped
+
+  # ───── Adapter scaffolding (co-owned, bandwidth-claimed) ─────
+  # target_slot: none — any slot can claim. Each adapter integration
+  # tests stay skipped until Ikenna lands the matching credential.
+
+  - id: ADAPTER-HELIUS-SOLANA-PAID
+    title: "Adapter: Helius paid Solana RPC scaffolding (BLOCKED-CREDENTIALS — scaffold + unit tests ship now)"
+    tier: 1
+    priority: 200
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per CLAUDE.md HARD RULE "External Data Is Always Available — Never
+      Silently Defer Adapters" + plans/active/human_work_backlog_2026_05_20.md
+      adapter scaffolding track.
+
+      Build the adapter scaffold:
+        - UAC contract (schema + endpoints from Helius docs)
+        - Auth shape (API key in header)
+        - Retry/backoff/rate-limit semantics
+        - Error classifier via classify_venue_error() + ADAPTER_FETCH_FAILED
+        - Manifest emission per writegate Phase 6.x
+        - Unit tests against mocked Helius API responses
+        - Integration tests marked @pytest.mark.requires_credentials
+
+      Status: BLOCKED-CREDENTIALS (Ikenna ping operator for Helius paid tier
+      signup).
+    done_definition: |
+      - Scaffold + UAC contract + unit tests shipped
+      - Integration tests skipped with @pytest.mark.requires_credentials
+      - QG green
+      - CREDENTIAL APPROVAL REQUEST filed in pings/slot_1.md
+
+  - id: ADAPTER-GLASSNODE-ONCHAIN
+    title: "Adapter: Glassnode on-chain analytics scaffolding"
+    tier: 1
+    priority: 210
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Same shape as ADAPTER-HELIUS-SOLANA-PAID for Glassnode on-chain
+      analytics. Schema from Glassnode public docs. Auth header.
+      Per-endpoint rate limits per their docs.
+    done_definition: |
+      - Scaffold + unit tests shipped
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-KAIKO-CEX-HISTORICAL
+    title: "Adapter: Kaiko CEX historical depth scaffolding"
+    tier: 1
+    priority: 220
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Kaiko historical CEX depth + tick data. Schema from Kaiko docs.
+      Bearer token auth. Pagination per their docs.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-POLYGON-IO-TRADFI-TICKS
+    title: "Adapter: Polygon.io TradFi ticks scaffolding"
+    tier: 1
+    priority: 230
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Polygon.io US equities + options + futures tick data. API key auth.
+      WebSocket + REST endpoints. Schema from Polygon docs.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-DATABENTO-TRADFI
+    title: "Adapter: Databento TradFi alt scaffolding"
+    tier: 1
+    priority: 240
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Databento TradFi alt (cross-asset historical + live). API key auth.
+      Schema from Databento docs. Both batch download + live stream paths.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-SPORTRADAR-FEED
+    title: "Adapter: Sportradar sports feed scaffolding"
+    tier: 1
+    priority: 250
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Sportradar sports odds + live event feed. API key auth.
+      Per-sport endpoints. Schema from Sportradar docs.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-FOOTYSTATS-FEED
+    title: "Adapter: Footystats sports feed scaffolding (cheaper alt)"
+    tier: 1
+    priority: 260
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Footystats football odds + stats. API key auth.
+      Lower-cost alt to Sportradar for football-only coverage.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-THE-ODDS-API
+    title: "Adapter: The-Odds-API sports/prediction odds scaffolding"
+    tier: 1
+    priority: 270
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      The-Odds-API cross-book sports + prediction odds. API key auth.
+      Multiple sports + multiple books per sport. Schema from docs.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-POLYMARKET-FEED
+    title: "Adapter: Polymarket prediction-market feed scaffolding"
+    tier: 1
+    priority: 280
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Polymarket prediction-market contracts. On-chain (Polygon) +
+      off-chain order book. Schema from Polymarket docs.
+      Composes with: plans/active/cme_polymarket_arb_2026_05_08.md.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials (Polymarket API key)
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  - id: ADAPTER-KALSHI-FEED
+    title: "Adapter: Kalshi prediction-market feed scaffolding"
+    tier: 1
+    priority: 290
+    repos:
+      - market-tick-data-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Kalshi prediction-market contracts. REST + WebSocket.
+      Member API requires KYC-bound credentials.
+      Schema from Kalshi docs.
+    done_definition: |
+      - Scaffold + unit tests
+      - Integration tests requires_credentials (KYC-bound)
+      - CREDENTIAL APPROVAL REQUEST filed
+
+  # ───── Post-May-23 / parallel-prep tracks (gated soft on archetype-audit GREEN) ─────
+
+  - id: HUMAN-HARSH-BATCH-ML-CEFI
+    title: "Harsh: batch ML training for CeFi archetypes (perp funding + basis + cross-CEX arb)"
+    tier: 50
+    priority: 300
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - ml-service
+      - features-service
+    prereqs:
+      completed_tasks: []
+      conditions:
+        - phase-11-operational-backfill-green
+    brief: |
+      Per plans/active/human_work_backlog_2026_05_20.md item 24. Batch ML
+      training runs for CeFi archetypes: perp funding predictor, basis
+      signal model, cross-CEX stat-arb model. Run from spec once features
+      ready.
+    done_definition: |
+      - 3 CeFi ML models trained against batch features
+      - Model artifacts published to ml-training-artifacts bucket
+      - Sample backtest evidence
+
+  - id: HUMAN-HARSH-BATCH-ML-TRADFI
+    title: "Harsh: batch ML for TradFi (basis predictor + calendar spread)"
+    tier: 50
+    priority: 310
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - ml-service
+      - features-service
+    prereqs:
+      completed_tasks: []
+      conditions:
+        - phase-11-operational-backfill-green
+    brief: |
+      Per item 25. Same shape as CeFi but for TradFi: basis predictor
+      (futures vs spot), calendar spread model.
+    done_definition: |
+      - 2 TradFi ML models trained
+      - Artifacts + backtest evidence
+
+  - id: HUMAN-HARSH-BATCH-ML-SPORTS
+    title: "Harsh: batch ML for Sports (odds dispersion + in-game movement)"
+    tier: 50
+    priority: 320
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - ml-service
+      - features-service
+    prereqs:
+      completed_tasks: []
+      conditions:
+        - phase-11-operational-backfill-green
+    brief: |
+      Per item 26. Sports ML: odds dispersion model, in-game line movement.
+    done_definition: |
+      - 2 Sports ML models trained
+      - Artifacts + backtest evidence
+
+  - id: HUMAN-HARSH-BATCH-ML-PREDICTION
+    title: "Harsh: batch ML for Prediction (Polymarket-Kalshi spread + settlement-source discrepancy)"
+    tier: 50
+    priority: 330
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - ml-service
+      - features-service
+    prereqs:
+      completed_tasks: []
+      conditions:
+        - phase-11-operational-backfill-green
+    brief: |
+      Per item 27. Prediction ML: Polymarket-Kalshi spread model,
+      settlement-source discrepancy detector.
+    done_definition: |
+      - 2 Prediction ML models trained
+      - Artifacts + backtest evidence
+
+  - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-CEFI
+    title: "Harsh: wire batch strategy + execution for CeFi archetypes"
+    tier: 50
+    priority: 340
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - strategy-service
+      - execution-service
+    prereqs:
+      completed_tasks:
+        - HUMAN-HARSH-BATCH-ML-CEFI
+      conditions:
+        - phase-14-strategy-topology-green
+    brief: |
+      Per item 28. Wire batch strategy + execution for CeFi against
+      features + CeFi ML outputs. Same shape as DeFi.
+    done_definition: |
+      - CeFi strategies registered in strategy-service v2 module
+      - Batch backtest runs end-to-end
+      - Sample paper-trade harness output
+
+  - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-TRADFI
+    title: "Harsh: wire batch strategy + execution for TradFi"
+    tier: 50
+    priority: 350
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - strategy-service
+      - execution-service
+    prereqs:
+      completed_tasks:
+        - HUMAN-HARSH-BATCH-ML-TRADFI
+      conditions:
+        - phase-14-strategy-topology-green
+    brief: |
+      Per item 29. Wire batch strategy + execution for TradFi.
+    done_definition: |
+      - TradFi strategies registered
+      - Batch backtest end-to-end
+      - Sample paper-trade output
+
+  - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-SPORTS-PREDICTION
+    title: "Harsh: wire batch strategy + execution for Sports + Prediction (bundled)"
+    tier: 50
+    priority: 360
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - strategy-service
+      - execution-service
+    prereqs:
+      completed_tasks:
+        - HUMAN-HARSH-BATCH-ML-SPORTS
+        - HUMAN-HARSH-BATCH-ML-PREDICTION
+      conditions:
+        - phase-14-strategy-topology-green
+    brief: |
+      Per item 30. Bundle Sports + Prediction wiring (overlap on book
+      selection + settlement handling).
+    done_definition: |
+      - Sports + Prediction strategies registered
+      - Batch backtest end-to-end for both
+      - Sample paper-trade output
+
+  - id: HUMAN-HARSH-PAPER-TRADE-HARNESS-CROSS-ASSETGROUP
+    title: "Harsh: paper-trade harness runs for CeFi/TradFi/Sports/Prediction"
+    tier: 50
+    priority: 370
+    target_slot: 2
+    affinity: medium
+    target_slot_timeout_seconds: 3600
+    repos:
+      - strategy-service
+      - execution-service
+      - e2e-testing
+    prereqs:
+      completed_tasks:
+        - HUMAN-HARSH-BATCH-STRATEGY-EXEC-CEFI
+        - HUMAN-HARSH-BATCH-STRATEGY-EXEC-TRADFI
+        - HUMAN-HARSH-BATCH-STRATEGY-EXEC-SPORTS-PREDICTION
+      conditions: []
+    brief: |
+      Per item 31. Paper-trade harness runs for CeFi/TradFi/Sports/Prediction
+      archetypes. Same shape as DeFi paper_1d → live_early flow.
+      Each archetype's harness output feeds Ikenna's paper-trade audit.
+    done_definition: |
+      - 4 paper-trade harness runs (1 per asset_group) completed
+      - Output captured + sampled
+      - Ready for Ikenna paper-trade audit
+
+  # ───── Ikenna human-judgment items (slot 1, human-task tier, operator-claimed) ─────
+
+  - id: HUMAN-IKENNA-ARCHETYPE-AUDIT
+    title: "Ikenna: D1-D14 archetype audit (in-progress operator session)"
+    tier: 50
+    priority: 400
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md.
+      D1-D14 dimensions. Operator-acked tonight to run in parallel with
+      consolidation. Status: in-progress (operator session). Composes with
+      Phase -2 Bucket 4 of coordinator.
+      Estimated: 8 cal-AI-days.
+    done_definition: |
+      - Audit doc produced
+      - R-items dispatched to slots
+      - 🟢 STRATEGY-LOGIC UNFREEZE ping in _agent_pings.md
+
+  - id: HUMAN-IKENNA-DATA-PIPELINE-COORDINATION
+    title: "Ikenna: data_pipeline_master_coordination supervision + Phase 7b triage + Phase 14 design"
+    tier: 50
+    priority: 410
+    target_slot: 1
+    affinity: high
+    repos:
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per plans/active/data_pipeline_master_coordination_2026_05_20.md +
+      human_work_backlog item 3.
+
+      Three sub-tasks:
+        (a) Rolling phase supervision — operator-set per-phase checkpoint
+            review. Both Ikenna+Harsh maintain phase-of-record in their
+            _agent_pings.md.
+        (b) Phase 7b DIVERGENT_EMPTY triage: per-cell label-flip-vs-
+            rebackfill judgment on the 765 cells from A3. Triggers AFTER
+            Phase 7a (Harsh) lands GREEN.
+        (c) Phase 14 topology design: per archetype dimension 14
+            (deployment topology + dynamic-config + accounts/clients).
+            Hands off to Harsh validation harness when design lands.
+    done_definition: |
+      - Phase 7b triage CSV produced with per-cell classification
+      - Phase 14 topology design doc landed
+      - Each coordinator phase has a ping-ledger entry from slot 1
+
+  - id: HUMAN-IKENNA-CROSS-CLIENT-ISOLATION-AUDIT
+    title: "Ikenna: cross-client funds isolation HARD RULE — retroactive code audit"
+    tier: 50
+    priority: 420
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - execution-service
+      - unified-api-contracts
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md
+      + CLAUDE.md § "Client funds isolation". HARD RULE codified 2026-05-20:
+      funds NEVER move between clients. Validation pass across:
+        - UAC schema constructors (transfer/withdraw/deposit/bridge events)
+        - strategy-service emit paths
+        - execution-service consume paths
+      Required tests: happy intra-client + UAC-validator-rejects-cross-client
+      + defence-in-depth coordinator-rejects + alert-on-attempt.
+    done_definition: |
+      - 3-layer enforcement verified (UAC + strategy emit + execution consume)
+      - Test coverage added per HARD RULE requirements
+      - Any code paths violating the rule fixed with CrossClientTransferForbiddenError
+
+  - id: HUMAN-IKENNA-PROMOTE-WORKFLOW-REVIEW
+    title: "Ikenna: review promote workflow architecture before May-23 cutover"
+    tier: 50
+    priority: 430
+    target_slot: 1
+    affinity: high
+    repos:
+      - unified-trading-pm
+      - strategy-service
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per codex/04-architecture/promote-workflow-architecture.md +
+      codex/09-strategy/operational/cli-promote-paths.md. Critical-path call:
+      paper_1d → live_early tonight, live_full post-cutover.
+
+      Review:
+        - CLI primary path (run-paper.sh → colocated_engine.py → run-live.sh)
+        - UI secondary path (Promote button → MinimalCandidateManifest)
+        - Firebase execution-full enforcement
+        - DART ManualTradeGateDialog 3-trading-day window
+    done_definition: |
+      - Architecture review doc / ping with sign-off
+      - Any gaps filed as P0 issues with named owner
+      - Ready-state confirmed for May-23 cutover
+
+  - id: HUMAN-IKENNA-CREDENTIALS-UNBLOCK-TRACK
+    title: "Ikenna: operator-facing credential asks (rolling) — Helius, Glassnode, Kaiko, Polygon, Databento, Sportradar, Footystats, Odds-API, Polymarket, Kalshi"
+    tier: 50
+    priority: 440
+    target_slot: 1
+    affinity: high
+    repos:
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per CLAUDE.md § "External Data Is Always Available". For each adapter
+      in the ADAPTER-* track that ships scaffold + filed CREDENTIAL APPROVAL
+      REQUEST: drive operator-side signup / paid tier negotiation / API key
+      provisioning. Status taxonomy: BLOCKED-CREDENTIALS until acked.
+
+      Composes with: human_work_backlog item 6.
+    done_definition: |
+      - Each filed CREDENTIAL APPROVAL REQUEST resolved (creds in vault OR
+        explicit BLOCKED-OPERATOR-DECISION articulation)
+      - Adapter integration tests unblock as creds land
+
+  - id: HUMAN-IKENNA-CUSTODY-PROVIDER-DECISIONS
+    title: "Ikenna: Copper + CEFFU custody onboarding (June-1) + Cayman/UK jurisdiction calls"
+    tier: 50
+    priority: 450
+    target_slot: 1
+    affinity: high
+    repos:
+      - unified-trading-pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per codex/04-architecture/custody-providers.md + project_trading_entities
+      memory. May-23 ships on CLOUD_KMS_ENCRYPTED; Copper + CEFFU come June-1.
+      Cayman entity is gateway for venues that ban UK residents.
+    done_definition: |
+      - Custody provider onboarding status documented
+      - Cayman-vs-UK venue routing matrix populated
+      - venue-bans-UK gating flipped where applicable
+
+  - id: HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT
+    title: "Ikenna: paper-trade DeFi audit (3-trading-day operator-gate window)"
+    tier: 50
+    priority: 460
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - execution-service
+      - e2e-testing
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Per plans/active/promote_workflow_may23_cli_path_2026_05_10.md +
+      human_work_backlog item 18.
+
+      Read paper trades for carry_staked_basis + arbitrage_price_dispersion,
+      validate logic matches archetype intent (collateral, liquidation,
+      cross-venue transfer, venue restriction, deployment topology dims
+      9-14 from archetype audit). 3-trading-day operator-gate window.
+    done_definition: |
+      - 3 trading days of paper-trade output audited
+      - Per-trade audit notes captured
+      - Promotion ack to live_early OR named-gap issues filed
+
+  - id: HUMAN-IKENNA-CEFI-ARCHETYPE-DESIGN
+    title: "Ikenna: CeFi archetype mechanics design (perp-funding carry + spot-perp basis + cross-CEX arb)"
+    tier: 50
+    priority: 470
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks:
+        - HUMAN-IKENNA-ARCHETYPE-AUDIT
+      conditions: []
+    brief: |
+      Per plans/epics/cefi_master_2026_05_07.md + human_work_backlog item 19.
+      Allocator math, collateral on perp venues (cross vs isolated margin),
+      liquidation safety bands, venue restriction matrix (which CEXes
+      Cayman-only).
+    done_definition: |
+      - CeFi archetype design doc in strategy-service v2 module
+      - Allocator math validated against DeFi template
+      - Venue restriction matrix populated
+
+  - id: HUMAN-IKENNA-TRADFI-ARCHETYPE-DESIGN
+    title: "Ikenna: TradFi archetype mechanics design (ETF/futures basis + cash-and-carry + calendar spreads)"
+    tier: 50
+    priority: 480
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks:
+        - HUMAN-IKENNA-ARCHETYPE-AUDIT
+      conditions: []
+    brief: |
+      Per plans/epics/tradfi_master_2026_05_07.md + human_work_backlog item 20.
+      Custody implications (TradFi prime broker), settlement asymmetries
+      (T+2 equities vs T+1 futures), Cayman/UK regulatory split.
+    done_definition: |
+      - TradFi archetype design doc in strategy-service v2
+      - Settlement timing matrix
+      - Prime broker custody flow
+
+  - id: HUMAN-IKENNA-SPORTS-ARCHETYPE-DESIGN
+    title: "Ikenna: Sports archetype edge model design (odds dispersion + in-game line movement + season-state gating)"
+    tier: 50
+    priority: 490
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks:
+        - HUMAN-IKENNA-ARCHETYPE-AUDIT
+      conditions: []
+    brief: |
+      Per plans/epics/sports_master_2026_05_07.md + human_work_backlog item 21.
+      Sportsbook custody is intrinsic (funds at the book). Capital allocation:
+      smaller stake per bet, more concurrent positions. Off-season gating.
+    done_definition: |
+      - Sports archetype design doc
+      - Sportsbook custody flow documented
+      - Off-season gate logic specified
+
+  - id: HUMAN-IKENNA-PREDICTION-ARCHETYPE-DESIGN
+    title: "Ikenna: Prediction archetype design (Polymarket-vs-Kalshi spread + settlement-source disagreements)"
+    tier: 50
+    priority: 500
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - unified-trading-pm
+    prereqs:
+      completed_tasks:
+        - HUMAN-IKENNA-ARCHETYPE-AUDIT
+      conditions: []
+    brief: |
+      Per plans/epics/predictions_master_2026_05_07.md + human_work_backlog item 22.
+      Contract expiry mechanics, settlement-source disagreements (which oracle
+      / when), liquidity-weighted edge thresholds.
+    done_definition: |
+      - Prediction archetype design doc
+      - Settlement source matrix
+      - Edge threshold logic
+
+  - id: HUMAN-IKENNA-PAPER-TRADE-AUDIT-CROSS-ASSETGROUP
+    title: "Ikenna: paper-trade audit for CeFi + TradFi + Sports + Prediction"
+    tier: 50
+    priority: 510
+    target_slot: 1
+    affinity: high
+    repos:
+      - strategy-service
+      - e2e-testing
+    prereqs:
+      completed_tasks:
+        - HUMAN-HARSH-PAPER-TRADE-HARNESS-CROSS-ASSETGROUP
+      conditions: []
+    brief: |
+      Per human_work_backlog item 23. Once Harsh's paper-trade harness lands
+      for each asset_group, audit the paper trades the same way as DeFi
+      audit (item HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT). 1 cal-AI-day per
+      asset_group × 4 = 4 cal-AI-days total.
+    done_definition: |
+      - 4 asset_groups: paper-trade audit notes per trade
+      - Promotion ack OR named-gap issues per asset_group
