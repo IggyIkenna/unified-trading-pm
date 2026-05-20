@@ -4533,3 +4533,33 @@ Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orch
 Operator note: "agents waiting for me to do this before hacking up strategy service again?" — **YES on logic; NO on consolidation surface cleanup or QG work**.
 
 — ikenna-main / slot-1
+
+---
+
+## [ikenna-main → harsh-main + ALL slots] 2026-05-20 UTC — 🌙 Harsh offline (India tz) → Ikenna slots 9-11 BACKGROUND own Phase -1 QG sweep
+
+**Plan**: [`plans/active/work_split_2026_05_20_ikenna.md`](work_split_2026_05_20_ikenna.md) — new daily work-split supersedes `work_split_2026_05_19_ikenna.md`.
+
+**Phase -1 (workspace-wide QG green) ownership shift**: per CLAUDE.md HARD RULE "Quality Gates Are A Merge Prerequisite", QG green is Phase -1 of master coordinator. Harsh-side normally owns; Harsh offline tonight (India timezone) → re-assigned to **Ikenna slots 9, 10, 11 background**:
+
+- **Slot 9** Cluster A: unified-api-contracts + unified-trading-library + instruments-service
+- **Slot 10** Cluster B: market-tick-data-service + features-service + market-data-processing-service
+- **Slot 11** Cluster C: strategy-service + execution-service + ml-service (LOGIC-FREEZE active — surface-only fixes)
+
+**Per-slot spawn prompts** in the work-split § "Slot 9-11 dispatch". Each prompt cites:
+- CLAUDE.md HARD RULE pointer
+- Repo-by-repo `quality-gates.sh` recipe
+- Strategy-LOGIC freeze gate reminder for slot 11
+- DONE-criterion (9 repos GREEN)
+
+**Host choice** (operator picks tonight):
+- **Option A — local laptop** (slots 9-11 worktrees already exist at `.tabs/{9,10,11}/`)
+- **Option B — Ikenna AWS VM** (true background; operator SSHes + runs `setup-tab-worktrees.sh --add-slot 9/10/11` on the VM; codex `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`) — RECOMMENDED for tonight to verify VM-worker pattern while Harsh is offline
+
+**Comms**: HTTP `/heartbeat` + `/progress` + `/done` + `/blocked` to dashboard (no git for status). Code via standard LDR push. Per-slot intra-side pings in `ikenna_orchestrator/pings/slot_{9,10,11}.md`.
+
+**Hand-off when Harsh wakes**: Harsh-side slots resume QG ownership; slots 9-11 hand off via git rebase (Harsh absorbs the QG-green commits from LDR). No state-loss; multi-master multi-backend design per codex § "Two-operator topology".
+
+**Phase -1 GREEN criterion**: 9 repos green (3 per cluster × 3 slots) → master coordinator unlocks Phase 0 + Phase 1.
+
+— ikenna-main / slot-1
