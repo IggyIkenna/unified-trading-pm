@@ -156,34 +156,11 @@ integration — operator tooling exemption per the deployment plan.
 
 ## Slack notifications
 
-Module `server/notifications/slack.py` (P1: `agent-orchestrator@ceaaefe`). Three async functions post to
-`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (GCP Secret Manager, `central-element-323112`):
+Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook.
+Shipped at `agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
 
-| Function              | Wired in                                                         | Event                           | Slack emoji        |
-| --------------------- | ---------------------------------------------------------------- | ------------------------------- | ------------------ |
-| `notify_slot_blocked` | `server/server.py:blocked_slot`                                  | slot transitions → blocked      | `:octagonal_sign:` |
-| `notify_slot_stale`   | `server/health.py:HealthMonitor.check_once` (working-stale pass) | slot silent > 25 min            | `:warning:`        |
-| `notify_slot_failed`  | `server/health.py:HealthMonitor.check_once` (idle-stale pass)    | idle worker heartbeat loop dead | `:x:`              |
-
-Wiring shipped at `agent-orchestrator@eea2f69`.
-
-**Non-fatal failure pattern** — every call site wraps in `contextlib.suppress(Exception)`. A Slack outage or missing
-webhook URL never propagates to the server process or health monitor.
-
-**No-op in local dev** — if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is empty or unset, `_post()` returns immediately. No mock
-or stub needed; tests patch `_WEBHOOK_URL` directly.
-
-**Secret inventory** (all in Secret Manager):
-
-| Secret                                    | Used for                                      |
-| ----------------------------------------- | --------------------------------------------- |
-| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | Incoming webhook — POST notifications         |
-| `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` | Mounted for future slash-command verification |
-| `AGENT_ORCHESTRATOR_SLACK_APP_ID`         | Reference only (app ID `A0B4N3802N9`)         |
-| `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`      | OAuth future use                              |
-| `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET`  | OAuth future use                              |
-
-SSOT: `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md`.
+**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
+table, payload shape, retry logic, secret inventory, V2 out-of-scope).
 
 ---
 

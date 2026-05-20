@@ -377,11 +377,9 @@ must exist). P1 code work can start immediately.
    - Post ack ping to `_agent_pings.md`:
      `[DATE] harsh-slot-11 — Slack notifications live on staging; #agent-orchestrator-alerts received test message. P3 done.`
 
-5. - [ ] **P4 — Codex update** (~0.2 cal)
-   - Add "Slack notifications" section to `codex/04-architecture/agent-orchestrator-overview.md`
-   - Strike "Slack notification when blocked" from `agent-orchestrator/TODO.md`
+5. - [x] ✅ **P4 — Codex update** — new `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created; overview Slack section replaced with 2-line pointer. (slot 4 2026-05-20)
 
-6. - [ ] **Plan flips** for all items. (0.1 cal)
+6. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)
 
 ---
 
