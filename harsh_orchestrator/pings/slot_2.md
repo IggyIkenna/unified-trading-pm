@@ -1,3 +1,8 @@
+[2026-05-20 UTC] slot-2 → operator — 📋 manifest_schema_final_gate Phase 7.C-7.G BACKFILLED:
+GCS migration Phase 3 completed 2026-05-19 per gcs_migration plan. Flipped Phase 7.C/7.D/7.E/7.F/7.G (+ 5 sub-checkboxes) in manifest_schema_final_gate_2026_05_09.md.
+**Phase 8.A/8.B still open [HUMAN]**: operator needs to review class-C triage rows at `gs://central-element-323112-rescan-triage/{run_id}/triage.jsonl` + sign off in `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan triage decisions".
+**Phase 9.B still open**: MTDS VM fleet launch. Currently `mtds-backfill-odds-1` RUNNING (sports). Per-asset-group launch needed for cefi/defi/tradfi/prediction. → **Unblock Phase 9.B**: approve MTDS VM fleet launch per asset_group; Phase 9.A E3 checklist VERIFIED 2026-05-17.
+
 [2026-05-20 UTC] slot-2 → operator — 📊 pvl-p18a health check: original VM `strategy-paper-carry-staked-basis-20260518-115404` is TERMINATED (zone=asia-northeast1-c). Most recent paper VM `strategy-paper-carry-staked-basis-20260519-183013` is RUNNING in asia-northeast1-c. No action needed.
 
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` poolGetSnapshots (P1): Balancer V3 uses
