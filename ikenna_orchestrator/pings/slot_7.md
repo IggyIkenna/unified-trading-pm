@@ -1,9 +1,88 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 7 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
+> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 6 + 8. History below
+> 2026-05-20 is audit-trail only.
 
 ---
 
-## [slot 1 main → slot 7] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 8A
+## [slot 1 main → slot 7] 2026-05-20 — 🎯 NEW THEME — Group H Phases 6 (execution-service docs + TransferCoordinator) + 8 (deployment-service wiring)
+
+**Previous theme done**: strategy_repo_consolidation Phase 8A shipped
+(`docs(plans): flip Phase 8A — deployment-service@cb018c0` upstream). Phase 8B also flipped
+(`deployment-service@5fd84a2`).
+
+**New theme**: Group H plan
+[`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](../../plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md).
+
+**Your assignment**: Phases 6 + 8 — ~1.5 cal-AI-days total. Most of Phase 6 is doc-only so you can parallel-start ahead
+of slot 4 Phase 3.
+
+### Phase 6 — Execution-service wiring + TransferCoordinator facade (~1 cal-AI-day)
+
+Mostly documentation (existing patterns are correct) + ONE new component (TransferCoordinator):
+
+**Codex documentation** (existing patterns — confirm no rewrite needed, just document):
+
+- `codex/04-architecture/execution-service-per-client-isolation.md` — per-process per-client model
+  (`isolation_policy.py:1-80` `CLIENT_ID` env binding + `assert_client_allowed` cross-client reject at bus layer).
+  Already correct for May-23 — 2 clients = 2 execution-service processes via deployment-api fan-out.
+- `codex/04-architecture/oms-protocol-and-state-machine.md` — `PersistentOrderManager` + `UnifiedOrderManager`
+  protocol + state machine (PENDING→VALIDATED→SUBMITTED→FILLED|REJECTED|CANCELLED) + 300s idempotency cache.
+- `codex/04-architecture/multi-venue-concurrent-routing.md` — `asyncio.gather` two-leg (`engine/concurrent.py:12`) +
+  `SmartOrderRouter` cross-DEX splits (`algorithms/sor.py:47`). Per-venue circuit breaker pattern — extend ONLY if Phase
+  0 audit § (e) flags gaps.
+
+**NEW component — TransferCoordinator** (`execution_service/transfer_coordinator.py`):
+
+- SINGLE entry point for all `TransferIntent` events (UAC contract slot 5 ships in Phase 1).
+- Routes by `transfer_type` to existing implementations:
+  - `CEX_WITHDRAW` → `adapters/order_adapter.py` venue withdraw
+  - `DEFI_DEPOSIT` / `DEFI_WITHDRAW` → `defi_execution/protocols/<protocol>/{deposit,withdraw}`
+  - `BRIDGE` → `v2/handlers.py` `BridgeHandler`
+  - `SUBACCOUNT_MOVE` → NEW (Binance + OKX only; raise `NotSupportedError` for others with named successor
+    `subaccount_transfers_phase_2_2026_06_01.md`)
+- **HARD RULE enforcement** (per `codex/04-architecture/client-funds-isolation.md`): reject any TransferIntent where
+  `source_account.client_id != dest_account.client_id`. Raise `CrossClientTransferForbiddenError`. Emit alert. Log
+  structured event. This is the final-gate consumer-side check; UAC validator + strategy-service emitter also enforce
+  (defence in depth).
+- Idempotency via `idempotency_key`: same key submitted twice → second is no-op, returns cached `TransferResult`. Extend
+  or reuse existing `OrderPersistenceAdapter` pattern.
+- Wire UAC `TransferIntent` event subscription; emit `TransferResult` on completion.
+
+**Required tests** (per HARD RULE codex SSOT):
+
+- intra-client happy path (USDC → Aave deposit, same client_id on source + dest);
+- UAC-validator rejects cross-client at construction;
+- defence-in-depth: TransferCoordinator rejects cross-client at consume time even if UAC validator bypassed;
+- alert assertion on rejection.
+
+Blocked-on (Phase 6 NEW component): slot 5 Phase 1 (UAC TransferIntent contract). Doc work has no blocker.
+
+### Phase 8 — deployment-service + deployment-api wiring for shards + clients.yaml (~0.5 cal-AI-day)
+
+- Update `deployment-service/scripts/vm/launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` to accept
+  `--shard N` (default 0) and `--clients-yaml-path PATH`. VM name pattern: `strategy-{mode}-{archetype}-shard{N}-{ts}`.
+  Singleton lock changes to `{mode}-{archetype}-{shard}` triplet.
+- Update `VM_PREFIX_TO_BUCKET` in `deployment-service/scripts/vm/vm_zombie_watchdog.py` to recognise new pattern.
+  `lifecycle_class = LONG_LIVED_LIVE` for live, `SCHEDULED_RECURRING` for paper.
+- Add `deployment-api/api/routes/strategy_shard.py`: `POST /api/strategy/shard/spawn` (consumes ShardCapacityEvent →
+  launches new VM); `POST /api/strategy/shard/drain` (DEREGISTER all clients → SIGTERM → reap).
+- Per-client `clients.yaml` schema in `deployment-service/configs/strategy/{archetype}/clients.yaml`. UAC validates via
+  new type in `unified_api_contracts/canonical/domain/strategy/clients_yaml_schema.py`. For May-23: two entries (us +
+  defi-client-1) with `shard_id=0`.
+
+Blocked-on: slot 6 Phase 7 (e2e tests) — Phase 8 ships after tests prove the supervisor topology works.
+
+### Composes with
+
+- Slot 5: Phase 1 (UAC TransferIntent) — prerequisite for TransferCoordinator
+- Slot 4: Phase 3 (StrategySupervisor) — provides ShardCapacityEvent that your Phase 8 endpoint consumes
+- Slot 6: Phase 7 (tests) — gates Phase 8
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 7] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 8A (SUPERSEDED — Phase 8A+8B shipped)
 
 Your previous theme (cross_cutting_deliverables + simulation_scenarios_topology + defi_master) is **DEFERRED to Cycle
 3**. New theme: **strategy_repo_consolidation Phase 8A — deployment-service sweep**. ~3 cal-AI-days. **Blocked-on**:
@@ -2002,14 +2081,21 @@ tick-76b (setup.py 4 violations).
 
 **From**: slot-1 main ikenna
 
-**Issue**: You've been editing UAC `_defi.py` re-exports (and similar `capability_declarations/_*.py`) as part of `tick-76b` + `defi_master Phase 2`. Slot-3 ikenna just picked up `uac_source_capability_metadata_promotion_2026_05_20.md` which adds 4 new fields (`chain`, `kind`, `mandatory_user_agent`, `coverage_start`) to ALL 70 venue declarations across `_cefi.py`/`_defi.py`/`_tradfi.py`/`_sports.py`/`_prediction.py`.
+**Issue**: You've been editing UAC `_defi.py` re-exports (and similar `capability_declarations/_*.py`) as part of
+`tick-76b` + `defi_master Phase 2`. Slot-3 ikenna just picked up
+`uac_source_capability_metadata_promotion_2026_05_20.md` which adds 4 new fields (`chain`, `kind`,
+`mandatory_user_agent`, `coverage_start`) to ALL 70 venue declarations across
+`_cefi.py`/`_defi.py`/`_tradfi.py`/`_sports.py`/`_prediction.py`.
 
-**Recommended action**: pause further `capability_declarations/_*.py` edits until slot-3's Phase 2 migration commit lands. Slot-3's plan is 1.6 calibrated AI-days. Mid-window stash-conflict risk is high since slot-3 touches 70 declarations workspace-wide.
+**Recommended action**: pause further `capability_declarations/_*.py` edits until slot-3's Phase 2 migration commit
+lands. Slot-3's plan is 1.6 calibrated AI-days. Mid-window stash-conflict risk is high since slot-3 touches 70
+declarations workspace-wide.
 
 **Continue-clear**:
+
 - `tick-76b` method-size refactor work outside UAC
 - defi_master Phase 2 forward-poll cron-VM already shipped (deployment-service@81f0f49)
-- Any UAC *consumer* work (reading the new fields once they exist) — but wait until slot-3 publishes schema
+- Any UAC _consumer_ work (reading the new fields once they exist) — but wait until slot-3 publishes schema
 
 Slot-3's plan: `plans/active/uac_source_capability_metadata_promotion_2026_05_20.md`.
 

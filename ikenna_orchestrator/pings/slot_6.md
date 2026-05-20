@@ -1,48 +1,120 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 6 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
+> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 4 + 7. History below
+> 2026-05-20 is audit-trail only.
 
 ---
 
-## [slot 1 main → slot 6] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 6+7
+## [slot 1 main → slot 6] 2026-05-20 — 🎯 NEW THEME — Group H Phases 4 (ClientWorker + IPC) + 7 (e2e + unit tests)
+
+**Previous theme done**: strategy_repo_consolidation Phase 6 parity ✅ (boot 12/12 pairs, QG 4059 passed,
+strategy-service@91f701b0). Phase 7 archive awaits operator `gh repo archive` — operator-gated, not your blocker.
+
+**New theme**: Group H plan
+[`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](../../plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md).
+
+**Your assignment**: Phases 4 + 7 — ~2.5 cal-AI-days total.
+
+### Phase 4 — ClientWorker subprocess + IPC wiring (~1.5 cal-AI-day)
+
+Concrete subclass of `ClientWorkerBase` (slot 5 ships base in Phase 2):
+
+- **Subprocess entry**: spawned via `multiprocessing.get_context("spawn").Process` (spawn not fork — venue HTTP clients
+  don't always survive fork). Receives at startup: client_id, archetype_id, shard_id, shared_memory_name,
+  parent_event_pipe.
+- **Per-client state**: PositionStateStore, ExecutionRouter (publishes Order events keyed by client_id; consumes Fill
+  events filtered by client_id), PnLAttributor, RiskGuard, CredentialStore.
+- **Shared-memory mark consumption**: every tick, read MarkPriceAggregator's shared dict (slot 4 Phase 3 ships this);
+  compute per-position unrealized_pnl using shared `mtm_value_per_unit × position qty`. **CRITICAL**: the existing local
+  MTM compute in strategy-service (4 paths identified by 2026-05-20 audit) MOVES to the aggregator — do NOT keep it in
+  ClientWorker.
+- **IPC**: parent→child = `multiprocessing.Pipe` (events: lifecycle, credential-rotation, shutdown); child→parent = same
+  pipe (events: ready, quarantined, heartbeat, order-emitted, transfer-intent-emitted).
+- **Refactor existing strategy-service surfaces** (signal_generation, pnl, position, risk) to ACCEPT a ClientContext
+  argument instead of reading process-level globals. ClientContext carries client_id, credentials, position cache,
+  books, risk limits.
+- **colocated_engine.py rewrite**: SharedState becomes per-ClientWorker; supervisor owns MarkPriceAggregator + EngineCtx
+  (supervisor-level shared read-only config — NOT cross-client fund-movement state per HARD RULE codex
+  `04-architecture/client-funds-isolation.md`); per-client logic moves into ClientWorker.run().
+
+Blocked-on: slot 4 Phase 3 (StrategySupervisor) for shared-memory contract; slot 5 Phase 2 (ClientWorkerBase).
+
+### Phase 7 — End-to-end + unit test bundle for 2-client May-23 (~1 cal-AI-day)
+
+Full test bundle covering:
+
+- **E2E**: spawn StrategySupervisor with 2 clients (us + defi-client-1) → both reach CLIENT_READY → emit synthetic
+  signal → orders flow to execution-service (1 process per client) → fills → per-client PnL; force CRASH client A (raise
+  SystemExit) → supervisor restarts ≤16s + client B unaffected; force QUARANTINE (5 restart failures) →
+  CLIENT_QUARANTINED emitted + client B still trading.
+- **Unit bundle**: hot-add 3rd client (REGISTER → spawn ≤30s → READY); hot-remove (DEREGISTER → drain + reap ≤60s); push
+  credential rotation (CREDENTIAL_ROTATED bus → reload ≤100ms); pull rotation (KMS poll → reload ≤poll_interval+1s).
+- **Capacity simulation**: shard_capacity_max=3, register 4 → 3rd triggers SPAWN_NEW_SHARD; 4th queued/rejected.
+- **Crash matrix**: ctypes segfault → restart; OOM → kernel kills → restart.
+- **Performance baseline**: 2 clients × 100 ticks/sec × 10min → `mtm_compute_count_total` Prometheus metric verifies
+  one-compute-per-symbol-per-tick; shared-memory read latency p99 < 100us.
+- **HARD RULE compliance tests** (per `codex/04-architecture/client-funds-isolation.md`): construct TransferIntent with
+  mismatched client_ids → UAC validator rejects with `CrossClientTransferForbiddenError`; bypass UAC (test-only), submit
+  to TransferCoordinator → consumer rejects; assert alert emitted on rejection attempt.
+
+Tests live in: `strategy-service/tests/per_client_isolation/`, `execution-service/tests/transfer_coordinator/`,
+`e2e-testing/scripts/defi/per_client_isolation_e2e.py`. May need `PYTEST_UNIT_DIR="tests/"` per CLAUDE.md per-family
+override rule.
+
+Blocked-on: slot 7 Phase 6 (execution-service TransferCoordinator) for transfer-related tests.
+
+### Composes with
+
+- Slot 4: Phase 3 (StrategySupervisor) + Phase 5 (preflight)
+- Slot 5: Phases 1 + 2 (UAC + UTL bases) — prerequisite
+- Slot 7: Phase 6 (TransferCoordinator) — required for HARD RULE tests
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 6] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 6+7 (SUPERSEDED — Phase 6 done; Phase 7 awaits operator archive, not your block)
 
 Your previous theme (deployment_ui_lifecycle_tabs full 6-tab restructure) is **DEFERRED to Cycle 3**. New theme:
-**strategy_repo_consolidation Phase 6 (parity validation) + Phase 7 (archive)**. ~2 cal-AI-days. **Blocked-on**:
-slot 4 Phase 4.
+**strategy_repo_consolidation Phase 6 (parity validation) + Phase 7 (archive)**. ~2 cal-AI-days. **Blocked-on**: slot 4
+Phase 4.
 
 **Phase 6 — three parity gates, all must be green**:
 
-1. **Boot parity**: `python -m strategy_service --operation <op> --asset-group <ag> --mode batch` boots cleanly
-   for every {operation × asset_group} pair the 3 source repos previously supported. Capture STARTED per case.
-   Startup-time regression >2× is a stop.
-2. **QG parity**: `bash scripts/quality-gates.sh` green in strategy-service AND no regression vs each source
-   repo's last-pre-archive QG run (record pre-merge QG output as baseline; STEP-by-STEP comparison post-merge).
-3. **Functional parity**: 7-day live-window sample per surface (risk breaker-trip events, position recon,
-   pnl attribution within `1e-9`). Write `scripts/dev/strategy_parity_diff.py` mirroring
-   `feature_parity_diff.py` from features-service precedent.
+1. **Boot parity**: `python -m strategy_service --operation <op> --asset-group <ag> --mode batch` boots cleanly for
+   every {operation × asset_group} pair the 3 source repos previously supported. Capture STARTED per case. Startup-time
+   regression >2× is a stop.
+2. **QG parity**: `bash scripts/quality-gates.sh` green in strategy-service AND no regression vs each source repo's
+   last-pre-archive QG run (record pre-merge QG output as baseline; STEP-by-STEP comparison post-merge).
+3. **Functional parity**: 7-day live-window sample per surface (risk breaker-trip events, position recon, pnl
+   attribution within `1e-9`). Write `scripts/dev/strategy_parity_diff.py` mirroring `feature_parity_diff.py` from
+   features-service precedent.
 
 **Phase 7 — archive 3 source repos**. Operator-gated `gh repo archive` step — file ping in
-`plans/active/_agent_pings.md` when ready. Per-repo: DEPRECATION_NOTICE.md banner → final commit → `gh repo archive
-IggyIkenna/<repo> --confirm` → remove from `unified-trading-system-repos.code-workspace` + `workspace-manifest.json`
-+ `setup-tab-worktrees.sh`.
+`plans/active/_agent_pings.md` when ready. Per-repo: DEPRECATION_NOTICE.md banner → final commit →
+`gh repo archive IggyIkenna/<repo> --confirm` → remove from `unified-trading-system-repos.code-workspace` +
+`workspace-manifest.json`
+
+- `setup-tab-worktrees.sh`.
 
 **🔴 HARD STOP**: do NOT proceed to Phase 7 if any Phase 6 gate is RED. Flip plan to `BLOCKED-CUTOVER` instead;
 sub-packages remain merged (correctness preserved), source repos remain un-archived; resume Phase 7 post-cutover.
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-6-parity-test`, `phase-7-archive-source-repos`.
-- Pre-audit: [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todos `phase-6-parity-test`, `phase-7-archive-source-repos`.
+- Pre-audit:
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 
 **Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 7 scope, +0.25 cal-day):
 
 - **P3 Per-repo markdown files** — each source repo carries `CHANGELOG.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
-  `IMPLEMENTATION_VERIFICATION.md`, `UV_AND_DATABASE_UPDATES.md`, `QUALITY_GATES_REPORT.md`. Pre-archive
-  decision:
+  `IMPLEMENTATION_VERIFICATION.md`, `UV_AND_DATABASE_UPDATES.md`, `QUALITY_GATES_REPORT.md`. Pre-archive decision:
   - `CHANGELOG.md` from each source repo → PREPEND to `strategy-service/CHANGELOG.md` under a new heading
     `## Consolidation 2026-05-19 — risk + position + pnl absorbed`. Preserve provenance.
-  - `QUALITY_GATE_BYPASS_AUDIT.md` from each source repo → MERGE per-bypass row into strategy-service's
-    consolidated QGBA. Tag each bypass with `[merged from risk-and-exposure-service]` etc. for audit trail.
-  - `IMPLEMENTATION_VERIFICATION.md` + `QUALITY_GATES_REPORT.md` + `UV_AND_DATABASE_UPDATES.md` — one-shot
-    audit snapshots, NOT load-bearing. DROP (they're preserved in the archived repo's git history if
-    needed).
+  - `QUALITY_GATE_BYPASS_AUDIT.md` from each source repo → MERGE per-bypass row into strategy-service's consolidated
+    QGBA. Tag each bypass with `[merged from risk-and-exposure-service]` etc. for audit trail.
+  - `IMPLEMENTATION_VERIFICATION.md` + `QUALITY_GATES_REPORT.md` + `UV_AND_DATABASE_UPDATES.md` — one-shot audit
+    snapshots, NOT load-bearing. DROP (they're preserved in the archived repo's git history if needed).
   - `DEPRECATION_NOTICE.md` in each archived repo references the codex SSOT
     (`codex/04-architecture/strategy-service-architecture.md`) per slot 3's Phase 3 addendum.
 
@@ -56,12 +128,11 @@ Ack with `[ack] slot 6 booted` when slot 4 Phase 4 ships.
 
 **Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
 
-**Context — IMPORTANT FINDING**: Slot 6's 2026-05-19 work-split lists items 1-7 as `[ ]` (30 cal AI-days
-"unstarted"). **This is wrong.** The actual plan
-[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) is
-**89% done (33/37 items ✅)**. Slot 6 itself backfilled Phase B.1+B.2 + shipped F.1+F.2+G.1 today at
-deployment-ui@`ba009b2` + deployment-api@`ffd97c1` + utl@`424e03af`. The work-split was authored before today's plan
-body refresh and is stale.
+**Context — IMPORTANT FINDING**: Slot 6's 2026-05-19 work-split lists items 1-7 as `[ ]` (30 cal AI-days "unstarted").
+**This is wrong.** The actual plan
+[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) is **89%
+done (33/37 items ✅)**. Slot 6 itself backfilled Phase B.1+B.2 + shipped F.1+F.2+G.1 today at deployment-ui@`ba009b2` +
+deployment-api@`ffd97c1` + utl@`424e03af`. The work-split was authored before today's plan body refresh and is stale.
 
 **Only 4 items genuinely open**, all `[HUMAN]` or `[HUMAN+AGENT]` tagged:
 
@@ -85,9 +156,9 @@ body refresh and is stale.
    `docs(plans): flip slot-6 items 1-7 — deployment-ui plan 89% done, work-split was stale` commit.
 
 2. **F.3 AGENT-half — draft CLAUDE.md VM Naming Convention update** — write the new section text + propose where to
-   insert in existing CLAUDE.md. Save as a `.draft.md` next to CLAUDE.md (NOT a direct edit — operator decides where
-   it lands + when). Reference Phase A.2 SSOT (`VmPrefixSpec` + `lifecycle_class` field) +
-   experiment-VM `exp-<service>-<run_id>-<ts>` suffix rule. Include 2-3 example VM names per lifecycle class.
+   insert in existing CLAUDE.md. Save as a `.draft.md` next to CLAUDE.md (NOT a direct edit — operator decides where it
+   lands + when). Reference Phase A.2 SSOT (`VmPrefixSpec` + `lifecycle_class` field) + experiment-VM
+   `exp-<service>-<run_id>-<ts>` suffix rule. Include 2-3 example VM names per lifecycle class.
 
 3. **H.4 AGENT-half — staging+prod provisioning spec** — write
    `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` (or similar) capturing:
@@ -95,19 +166,18 @@ body refresh and is stale.
    - Firebase Hosting site configs for `deployment-ui` (staging + prod tier)
    - DNS records (`staging.<research-domain>/deployment` + `<research-domain>/deployment`)
    - TLS cert provisioning (Cloud Run managed certs)
-   - IAM bindings: deployment-api service account scoped to env tier (cross-env data leakage prevention per Phase
-     A.5)
-   - Reference existing trading-system-UI deployment pattern (look it up; cite paths)
-   Output is a runbook the operator can execute step-by-step. Do NOT actually provision.
+   - IAM bindings: deployment-api service account scoped to env tier (cross-env data leakage prevention per Phase A.5)
+   - Reference existing trading-system-UI deployment pattern (look it up; cite paths) Output is a runbook the operator
+     can execute step-by-step. Do NOT actually provision.
 
-4. **G.2 AGENT-half — staging deploy runbook** — write
-   `deployment-service/runbooks/deployment-ui-staging-deploy.md` with: (a) the exact `gcloud run deploy` /
-   `firebase deploy` command sequence; (b) per-axis verification checklist (cloud-toggle latency, sub-tab
-   instant-feel, deploy-missing-schedulers idempotence, live-cluster lifecycle actions on smoke-cluster, experiment
-   tracker round-trip, streaming logs across all 4 lifecycle classes, env badge correctness). One-pager.
+4. **G.2 AGENT-half — staging deploy runbook** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md`
+   with: (a) the exact `gcloud run deploy` / `firebase deploy` command sequence; (b) per-axis verification checklist
+   (cloud-toggle latency, sub-tab instant-feel, deploy-missing-schedulers idempotence, live-cluster lifecycle actions on
+   smoke-cluster, experiment tracker round-trip, streaming logs across all 4 lifecycle classes, env badge correctness).
+   One-pager.
 
-5. **G.3 surface to operator-pending** — add entry to master plan operator-pending section flagging G.3 as the final
-   B6 gate after G.2 lands.
+5. **G.3 surface to operator-pending** — add entry to master plan operator-pending section flagging G.3 as the final B6
+   gate after G.2 lands.
 
 **HARD RULES**:
 
@@ -120,8 +190,8 @@ body refresh and is stale.
 
 **ETA**: design 0.6× × ~10 baseline = ~6 cal AI-days. Sized to fit comfortably.
 
-**Why slot 6**: peak context — just shipped F.1+F.2+G.1 hours ago + backfilled B.1+B.2. The 4 remaining items are
-all within their existing context graph.
+**Why slot 6**: peak context — just shipped F.1+F.2+G.1 hours ago + backfilled B.1+B.2. The 4 remaining items are all
+within their existing context graph.
 
 ---
 
@@ -918,16 +988,22 @@ report results.
 
 **From**: slot-1 main ikenna
 
-**Issue**: Per slot-work audit 2026-05-20, slot-6 is IDLE — scenarios Phase 7.A + 7.C SHIPPED, queue exhausted. Last activity 2026-05-19 14:41.
+**Issue**: Per slot-work audit 2026-05-20, slot-6 is IDLE — scenarios Phase 7.A + 7.C SHIPPED, queue exhausted. Last
+activity 2026-05-19 14:41.
 
 **Recommended dispatch options** (pick one — operator-clear, no blockers):
 
-**A. Mega-audit Phase A diagnostics build-out** (HIGHEST VALUE — unblocks everything downstream):
-Master tracker: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. Three diagnostics:
+**A. Mega-audit Phase A diagnostics build-out** (HIGHEST VALUE — unblocks everything downstream): Master tracker:
+`plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. Three diagnostics:
 
-1. **A1 inventory script** — scan all repos for codified-shape compliance (log-upload trap, manifest v8, record_* emission, typed reasons, classify_venue_error, resolve_bucket_name, lifecycle_class, no hardcoded venue URLs/universe, UAC import surface). Output: `plans/audit/results/codified_shape_compliance_2026_05_20.csv`.
-2. **A2 `expected_coverage()` function** — depends on slot-3's UAC SourceCapability metadata promotion to land first (provides `coverage_start` field). Then build the deterministic availability function. Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`.
-3. **A3 manifest divergence report** — cross-reference current GCS manifest state against A2 dump. Output: `plans/audit/results/manifest_divergence_2026_05_20.parquet` + summary md.
+1. **A1 inventory script** — scan all repos for codified-shape compliance (log-upload trap, manifest v8, record\_\*
+   emission, typed reasons, classify_venue_error, resolve_bucket_name, lifecycle_class, no hardcoded venue
+   URLs/universe, UAC import surface). Output: `plans/audit/results/codified_shape_compliance_2026_05_20.csv`.
+2. **A2 `expected_coverage()` function** — depends on slot-3's UAC SourceCapability metadata promotion to land first
+   (provides `coverage_start` field). Then build the deterministic availability function. Output:
+   `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`.
+3. **A3 manifest divergence report** — cross-reference current GCS manifest state against A2 dump. Output:
+   `plans/audit/results/manifest_divergence_2026_05_20.parquet` + summary md.
 
 **B. deployment_ui_lifecycle_tabs** — per your work_split row. Lower-impact but well-scoped.
 
@@ -939,36 +1015,43 @@ Reach for A unless B context already loaded. Estimate: A1 ~1.5 cal-days, A3 ~1.5
 
 ## 2026-05-20 — DISPATCH: trading-agent unlock Path A (UAC + strategy-service path)
 
-**From**: slot-1 main ikenna
-**Plan**: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
-**Change manifest**: [plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
+**From**: slot-1 main ikenna **Plan**:
+[plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
+**Change manifest**:
+[plans/active/issues/\_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
 
-**Note** — operator took mega-audit Phase A diagnostics to a separate Opus 1M tab, so the earlier dispatch ping for Phase A is RETIRED. Pick this up instead.
+**Note** — operator took mega-audit Phase A diagnostics to a separate Opus 1M tab, so the earlier dispatch ping for
+Phase A is RETIRED. Pick this up instead.
 
 ### Your chain — Path A (~2.5 cal-AI-days)
 
-Critical path; ships the UAC schemas + strategy-service emission + the directive reloader. Slot-4 ikenna runs Path B (features + agent service + backtest replay) and gates on your Phase 1 landing.
+Critical path; ships the UAC schemas + strategy-service emission + the directive reloader. Slot-4 ikenna runs Path B
+(features + agent service + backtest replay) and gates on your Phase 1 landing.
 
-| Order | Phase | Estimate | Why |
-|---|---|---|---|
-| 1 | **Phase 1 — UAC schemas** (BLOCKING) | 0.5 day | Adds `strategy_pnl_stream`, `strategy_directives`, `agent_inference_cache` Pydantic to `unified_api_contracts/internal/`. Unblocks every downstream phase. Coordinate with slot-3 ikenna's `uac_source_capability_metadata_promotion` plan — different dirs (`internal/` vs `registry/`); no conflict. |
-| 2 | **Phase 4 — UAC __init__ exports + integration tests** | 0.2 day | Wires the new Pydantic models into `unified_api_contracts/__init__.py` per root-facade rule. Schema-level integration tests. Trivial after Phase 1. |
-| 3 | **Phase 2 — strategy-service emits PnL** | 1 day | Wires the emission path for May-23 archetypes (`carry_staked_basis`, `arbitrage_price_dispersion`). Other archetypes deferred to post-cutover per Phase 2 of the closed-loop allocator plan. |
-| 4 | **Phase 5 — strategy-service `StrategyDirectiveReloader`** | 0.5 day | Reads directives; defaults to no-override; existing capital/equity allocator reads from directive when present. `config_reloaders.py` pattern. |
-| 5 | **Phase 8 — Codex SSOT + master/epic/issue plan updates** | 0.5 day | After Path B finishes too. Updates master_to_live_defi_2026_05_23 to flip trading-agent-service to Phase-1-on-May-23 path + writes codex/04-architecture/trading-agent-service-directive-pipeline.md. |
+| Order | Phase                                                      | Estimate | Why                                                                                                                                                                                                                                                                                                    |
+| ----- | ---------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | **Phase 1 — UAC schemas** (BLOCKING)                       | 0.5 day  | Adds `strategy_pnl_stream`, `strategy_directives`, `agent_inference_cache` Pydantic to `unified_api_contracts/internal/`. Unblocks every downstream phase. Coordinate with slot-3 ikenna's `uac_source_capability_metadata_promotion` plan — different dirs (`internal/` vs `registry/`); no conflict. |
+| 2     | **Phase 4 — UAC **init** exports + integration tests**     | 0.2 day  | Wires the new Pydantic models into `unified_api_contracts/__init__.py` per root-facade rule. Schema-level integration tests. Trivial after Phase 1.                                                                                                                                                    |
+| 3     | **Phase 2 — strategy-service emits PnL**                   | 1 day    | Wires the emission path for May-23 archetypes (`carry_staked_basis`, `arbitrage_price_dispersion`). Other archetypes deferred to post-cutover per Phase 2 of the closed-loop allocator plan.                                                                                                           |
+| 4     | **Phase 5 — strategy-service `StrategyDirectiveReloader`** | 0.5 day  | Reads directives; defaults to no-override; existing capital/equity allocator reads from directive when present. `config_reloaders.py` pattern.                                                                                                                                                         |
+| 5     | **Phase 8 — Codex SSOT + master/epic/issue plan updates**  | 0.5 day  | After Path B finishes too. Updates master_to_live_defi_2026_05_23 to flip trading-agent-service to Phase-1-on-May-23 path + writes codex/04-architecture/trading-agent-service-directive-pipeline.md.                                                                                                  |
 
 ### Coordination
 
-- After your Phase 1 commit pushes, **post a ping to `ikenna_orchestrator/pings/slot_4.md`** with "Phase 1 landed @<sha> — Path B unblocked".
+- After your Phase 1 commit pushes, **post a ping to `ikenna_orchestrator/pings/slot_4.md`** with "Phase 1 landed @<sha>
+  — Path B unblocked".
 - For Phase 8, coordinate with slot-4 to confirm all Phase 6/6.5/7 landed before you write the master-plan flip.
-- Per memory `feedback_harvest_from_existing.md`: harvest from existing UAC dirs (`registry/`, `internal/`) before any "iterate with operator" loop. No operator input expected for Phase 1-5 — schemas are fully specified in the plan.
+- Per memory `feedback_harvest_from_existing.md`: harvest from existing UAC dirs (`registry/`, `internal/`) before any
+  "iterate with operator" loop. No operator input expected for Phase 1-5 — schemas are fully specified in the plan.
 
 ### Self-execution prompt
 
-The plan's agent-execution prompts under each Phase 1/2/4/5/8 section are paste-able. Run quality-gates per phase before moving to the next. Commit cadence per phase. Push to `live-defi-rollout`.
+The plan's agent-execution prompts under each Phase 1/2/4/5/8 section are paste-able. Run quality-gates per phase before
+moving to the next. Commit cadence per phase. Push to `live-defi-rollout`.
 
 ### Foundation-gate
 
-Your work is layer-4 (UAC) → layer-6 (strategy-service). All layer-N prerequisites are GREEN (UAC + strategy-service are already foundation-stable). No blockers.
+Your work is layer-4 (UAC) → layer-6 (strategy-service). All layer-N prerequisites are GREEN (UAC + strategy-service are
+already foundation-stable). No blockers.
 
 — slot-1 main / ikenna

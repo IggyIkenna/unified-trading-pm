@@ -1,10 +1,60 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split + 2026-05-20 UTL-lift compose-with note.** Booting agents:
-> read 2026-05-20 entry first, then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 8. History below is
-> audit-trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H Phase 9 dispatch.** Booting agents: read the 2026-05-20 LATER
+> entry FIRST (Phase 9 codex SSOT), then the earlier UTL-lift compose-with note. History below 2026-05-20 is audit-trail
+> only.
 
 ---
 
-## [slot 1 main → slot 8] 2026-05-20 — 📎 COMPOSES-WITH note — `ConfigReloaderBase` lift in strategy consolidation Phase 5
+## [slot 1 main → slot 8] 2026-05-20 (later) — 🎯 NEW THEME — Group H Phase 9 (codex SSOT updates)
+
+**Previous theme done**: ml_repo_consolidation full plan (Phases 0–10) shipped —
+`docs(plans): flip Phase 10 + mark ml_repo_consolidation_2026_05_19 complete` (PM@755a81c07 upstream).
+
+**New theme**: Group H plan
+[`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](../../plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md).
+
+**Your assignment**: Phase 9 — ~0.5 cal-AI-day. Mostly doc-only, can parallel-start ahead of other slots since most
+content is derivable from the plan body + the 2 audit reports referenced in it.
+
+### Phase 9 — Codex SSOT updates (~0.5 cal-AI-day)
+
+Create / extend 8 codex docs:
+
+1. **NEW** `codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker subprocess pattern,
+   MarkPriceAggregator centralisation rationale (audit 2026-05-20 confirmed LOCAL MTM compute in 4 paths), hybrid
+   hot-reload (push REGISTER/DEREGISTER + pull KMS rotation), preflight sequence, crash isolation guarantees,
+   GIL-and-subprocess rationale.
+2. **NEW** `codex/04-architecture/execution-service-per-client-isolation.md` — slot 7 Phase 6 owns the actual write; you
+   sanity-check it. Confirm `isolation_policy.py:1-80` pattern; one-process-per-client deployment model.
+3. **NEW** `codex/04-architecture/oms-protocol-and-state-machine.md` — slot 7 Phase 6 owns the write; you sanity-check.
+4. **NEW** `codex/04-architecture/multi-venue-concurrent-routing.md` — slot 7 Phase 6 owns; you sanity-check.
+5. **NEW** `codex/04-architecture/transfer-coordinator.md` — slot 7 Phase 6 owns; you sanity-check. **Must
+   cross-reference `codex/04-architecture/client-funds-isolation.md`** for the HARD RULE.
+6. **NEW** `codex/04-architecture/client-lifecycle-event-bus.md` — REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED
+   events, push-vs-pull contract for hot-reload, supervisor subscription. Composes with un-deferred Phase 5 UTL lifts
+   already shipped (utl@e2445522).
+7. **NEW** `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming
+   (`strategy-{mode}-{archetype}-shard{N}-{ts}`), shard auto-spawn (E.2 post-cutover), capacity threshold defaults,
+   `vm_zombie_watchdog` integration.
+8. **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — add per-client + per-shard semantics to promote
+   target taxonomy. Note: shard is INVISIBLE to promote workflow (lives entirely in strategy-service runtime).
+
+**Already shipped 2026-05-20**: `codex/04-architecture/client-funds-isolation.md` (HARD RULE — cross-client fund
+movement FORBIDDEN). Your docs 1, 5, 6 MUST cross-reference it.
+
+Phase 9 has no hard blockers — slot 7's NEW docs (2, 3, 4, 5) you sanity-check after slot 7 ships; your NEW docs (1, 6,
+7, 8) can ship in parallel from the plan body.
+
+### Composes with
+
+- Slot 1 main (this slot, already shipped): `codex/04-architecture/client-funds-isolation.md` HARD RULE
+- Slot 7 Phase 6: NEW docs 2/3/4/5 — you sanity-check
+- Slot 4 Phase 3 + slot 6 Phase 4: source-of-truth for the supervisor/ClientWorker code your docs describe
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 8] 2026-05-20 — 📎 COMPOSES-WITH note — `ConfigReloaderBase` lift in strategy consolidation Phase 5 (SUPERSEDED — slot 5 shipped UTL lifts at utl@e2445522)
 
 Slot 5 has been **un-deferred** for `strategy_repo_consolidation` Phase 5 — UTL lifts of `ConfigReloaderBase` (4×
 typed-config reloaders across risk/position/pnl/strategy) + `KillSwitchBusSubscriberBase` (4×). See

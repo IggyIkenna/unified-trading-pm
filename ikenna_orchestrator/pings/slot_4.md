@@ -1,23 +1,93 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 4 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
+> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 3 + 5. History below
+> 2026-05-20 is audit-trail only.
 
 ---
 
-## [slot 1 main → slot 4] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 3+4
+## [slot 1 main → slot 4] 2026-05-20 — 🎯 NEW THEME — Group H Phases 3 (StrategySupervisor) + 5 (preflight + hot reload)
 
-Your previous theme (api_keys Phase 3–4 + defi_recursive_borrow Phase 3–4) is **DEFERRED to Cycle 3**. New
-theme: **strategy_repo_consolidation Phase 3 + 4** — subtree-merge + import-rewrite + unified CLI. ~4 cal-AI-days.
+**Previous theme done**: strategy_repo_consolidation Phases 3+4 shipped (subtree-merge + import-rewrite landed
+strategy-service@7265289a + @29e4f149). Phase 5 UTL lifts ALSO shipped by slot 5 (utl@e2445522 +
+strategy-service@054fae03; 22 tests; basedpyright clean both repos).
 
-**Blocked-on**: slot 3 Phase 2 scaffold lands first (pyproject conflicts resolved + sub-package dirs created).
-Poll slot 3's docs(plans) commits or ack ping.
+**New theme**: Group H plan
+[`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](../../plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
+— per-client subprocess isolation + multi-venue concurrent routing + TransferCoordinator. 2 live clients (Odum UK +
+defi-client-1) on May-23. Operator-directed. Promoted into master plan as Group H (items 24–27).
 
-**🔴 CRITICAL Phase 4 (a) ordering**: rewrite `e2e-testing/scripts/defi/colocated_engine.py` **FIRST** — this is
-the **primary May-23 promote-CLI path** per CLAUDE.md. Boot the rewritten CLI green BEFORE rewriting the other 6
-external-consumer files. Fact-report 2026-05-19 claimed ZERO external imports; pre-audit found **25 imports
-across 7 files**. Exact file:line list in pre-audit § (b).
+**Your assignment**: Phases 3 + 5 — ~1.8 cal-AI-days total.
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-3-subtree-merge`, `phase-4-fix-imports-and-cli`.
-- Pre-audit (READ § (b) FIRST): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+### Phase 3 — StrategySupervisor concrete impl in strategy-service (~1 cal-AI-day)
+
+Concrete subclass of `StrategySupervisorBase` (slot 5 ships the base in Phase 2). You implement:
+
+- **MarkPriceAggregator**: subscribes to MTDS/MDPS mark price stream once per (archetype, shard); shared-memory dict
+  keyed by instrument_id → `MarkSnapshot(price, mtm_value_per_unit, timestamp, stale_after_ms)`. ClientWorkers consume
+  read-only via `multiprocessing.shared_memory.SharedMemory`. **Required because strategy-service has LOCAL MTM
+  compute** (audit 2026-05-20 found 4 paths in `pnl/engine/pnl_input_builder.py:197-198`,
+  `position/core/mark_price_subscriber.py:52`, `position/core/leg_snapshot_builder.py:106`,
+  `risk/core/risk_calculator.py:127-129`) — one compute per symbol per tick, NOT per client.
+- **ClientAdmissionController**: subscribes to `ClientLifecycleEvent` bus (slot 5 Phase 1 UAC contract); on REGISTER
+  spawns ClientWorker subprocess (multiprocessing.get_context("spawn")), waits for CLIENT_READY ≤30s; on DEREGISTER
+  sends SIGTERM, drains ≤60s, reaps; on crash restarts with exponential backoff (1/2/4/8/16s) then QUARANTINE.
+- **ShardCapacitySensor**: 10s poll of psutil memory_pct + cpu_pct + event-loop-lag; 3-sample threshold for emit.
+- **HealthAggregator**: rolls per-ClientWorker heartbeats into `strategy-service/api/main.py` aggregated endpoint.
+- **Lifecycle**: boot reads `clients/<archetype>/<shard>/clients.yaml`, registers pre-configured clients; hot-add via
+  REGISTER events.
+
+Blocked-on: slot 5 Phase 2 (UTL bases — StrategySupervisorBase + ClientWorkerBase). Coordinate via this ping file.
+
+### Phase 5 — Preflight auth + balance + hybrid hot-reload wiring (~0.8 cal-AI-day)
+
+Inside ClientWorker (slot 6 ships Phase 4 ClientWorker concrete; you bolt on the preflight + hot-reload):
+
+- **Preflight sequence** (boot, blocks CLIENT_READY): KMS cred load → per-venue auth ping → per-venue balance fetch
+  (assert ≥ min_balance from clients.yaml, else QUARANTINE with `INSUFFICIENT_BALANCE`) → emit CLIENT_READY with
+  `venue_auth_status` dict.
+- **Hybrid hot-reload**: pull via `ClientCredentialKmsPoller` (slot 5 Phase 2 UTL base — poll Cloud KMS every N seconds
+  per venue type: CEX 60s, DEX 300s, lending 600s); push via ClientLifecycleEvent.CREDENTIAL_ROTATED (bypass KMS poll,
+  immediate). Old creds discarded after 10s grace period for in-flight requests.
+- **Per-venue circuit breaker**: 3 consecutive auth-fail or balance-fail within 5min → trip 15min cooldown → emit
+  `VENUE_CIRCUIT_TRIPPED` for alerting-service.
+
+Blocked-on: slot 6 Phase 4 (ClientWorker concrete impl).
+
+### HARD RULE compliance — transfers in scope
+
+If your Phase 3/5 code emits or consumes `TransferIntent` events: **cross-client fund movement is FORBIDDEN** per
+`codex/04-architecture/client-funds-isolation.md`. Every TransferIntent must satisfy
+`source_account.client_id == dest_account.client_id`. Not relevant for Phase 3 itself (supervisor doesn't move funds),
+but Phase 5 preflight balance-fetch reads per-client venue balances — those reads are scoped to one client's credentials
+per ClientWorker subprocess (already isolated). No cross-client read paths permitted.
+
+### Composes with
+
+- Slot 5: Phases 1 + 2 (UAC + UTL bases) — prerequisite
+- Slot 6: Phase 4 (ClientWorker concrete) — your Phase 5 layers on this
+- Slot 6: Phase 7 (e2e + unit tests) — tests your Phase 3 supervisor behaviour
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 4] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 3+4 (SUPERSEDED — see 2026-05-20 entry above; consolidation phases done)
+
+Your previous theme (api_keys Phase 3–4 + defi_recursive_borrow Phase 3–4) is **DEFERRED to Cycle 3**. New theme:
+**strategy_repo_consolidation Phase 3 + 4** — subtree-merge + import-rewrite + unified CLI. ~4 cal-AI-days.
+
+**Blocked-on**: slot 3 Phase 2 scaffold lands first (pyproject conflicts resolved + sub-package dirs created). Poll slot
+3's docs(plans) commits or ack ping.
+
+**🔴 CRITICAL Phase 4 (a) ordering**: rewrite `e2e-testing/scripts/defi/colocated_engine.py` **FIRST** — this is the
+**primary May-23 promote-CLI path** per CLAUDE.md. Boot the rewritten CLI green BEFORE rewriting the other 6
+external-consumer files. Fact-report 2026-05-19 claimed ZERO external imports; pre-audit found **25 imports across 7
+files**. Exact file:line list in pre-audit § (b).
+
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todos `phase-3-subtree-merge`, `phase-4-fix-imports-and-cli`.
+- Pre-audit (READ § (b) FIRST):
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 - The 7 external-consumer files to rewrite (in order):
   1. `e2e-testing/scripts/defi/colocated_engine.py` ← FIRST (cutover-critical)
   2. `deployment-api/deployment_api/routes/treasury_routes.py`
@@ -26,18 +96,19 @@ across 7 files**. Exact file:line list in pre-audit § (b).
   5. `system-integration-tests/tests/integration/test_recon_rebalancing.py`
   6. `system-integration-tests/tests/integration/test_phase6_reward_realisation_e2e.py`
   7. `system-integration-tests/tests/integration/test_leveraged_leg_controller_e2e.py`
-  + `system-integration-tests/tests/smoke/test_sports_arb_pipeline.py` (remove `try/except ImportError` guards per CLAUDE.md no-empty-fallbacks rule)
+  - `system-integration-tests/tests/smoke/test_sports_arb_pipeline.py` (remove `try/except ImportError` guards per
+    CLAUDE.md no-empty-fallbacks rule)
 
-Also remember **Phase 4 (g)**: set `PYTEST_UNIT_DIR="tests/"` in merged strategy-service quality-gates.sh before
-running QG — PBM's per-family layout triggers the override rule.
+Also remember **Phase 4 (g)**: set `PYTEST_UNIT_DIR="tests/"` in merged strategy-service quality-gates.sh before running
+QG — PBM's per-family layout triggers the override rule.
 
 Architectural-collision P1 callout: existing `strategy_service/models/{position,pnl}.py` will coexist with new
 `strategy_service/{position,pnl}/` sub-packages. Layout-confusion only; defer absorption decision to follow-up.
 
 **Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 4 scope extension, +1 cal-day total):
 
-- **P0 Phase 4 (a-extension)** — e2e-testing scripts BEYOND Python imports (~0.5 cal-day). After you finish the
-  7-file Python `import` rewrite, grep these directories for shell + non-import invocations:
+- **P0 Phase 4 (a-extension)** — e2e-testing scripts BEYOND Python imports (~0.5 cal-day). After you finish the 7-file
+  Python `import` rewrite, grep these directories for shell + non-import invocations:
 
   ```bash
   rg -nF -e 'risk_and_exposure_service' -e 'position_balance_monitor_service' -e 'pnl_attribution_service' \
@@ -52,15 +123,13 @@ Architectural-collision P1 callout: existing `strategy_service/models/{position,
 
 - **P1 Phase 4 (i)** — Logging + observability config consolidation (~0.5 cal-day). After Phase 4 (b-h) ships:
   - Per-sub-package logger naming: `strategy_service.risk`, `strategy_service.position`, `strategy_service.pnl`,
-    `strategy_service.engine` (use `logging.getLogger(__name__)` — gets the right namespace automatically; just
-    verify no source repo has `logging.getLogger("risk_and_exposure_service")` hardcoded).
-  - OpenTelemetry: `service.name=strategy-service` + `subsurface={risk,position,pnl,strategy}` label dimension
-    on emitted spans + metrics. Each source repo's `setup_telemetry()` callsite (or equivalent) gets the new
-    label.
-  - Prometheus / Cloud Trace exporters: confirm post-merge metrics emit with the consolidated `service.name`;
-    spot-check a kill-switch trip event flowing end-to-end to the observability backend.
-  - **Coordinate with slot 5** — if `ConfigReloaderBase` lift surfaces a shared logger-config pattern, lift that
-    too.
+    `strategy_service.engine` (use `logging.getLogger(__name__)` — gets the right namespace automatically; just verify
+    no source repo has `logging.getLogger("risk_and_exposure_service")` hardcoded).
+  - OpenTelemetry: `service.name=strategy-service` + `subsurface={risk,position,pnl,strategy}` label dimension on
+    emitted spans + metrics. Each source repo's `setup_telemetry()` callsite (or equivalent) gets the new label.
+  - Prometheus / Cloud Trace exporters: confirm post-merge metrics emit with the consolidated `service.name`; spot-check
+    a kill-switch trip event flowing end-to-end to the observability backend.
+  - **Coordinate with slot 5** — if `ConfigReloaderBase` lift surfaces a shared logger-config pattern, lift that too.
 
 Ack with `[ack] slot 4 booted` when you start Phase 3.
 
@@ -78,16 +147,16 @@ shipped (with CCTP bridge adapter as a discovered open item). 3 batch-32 method-
 Slot-4 cumulative: 100 files cleared.
 
 Re-dispatch to **continue the same stream** — peak context, pure refactor, no operator dependencies, sized to single
-agent session. Remaining 9 files in the execution-service allowlist + any cross-service allowlists slot 4 hasn't
-touched yet.
+agent session. Remaining 9 files in the execution-service allowlist + any cross-service allowlists slot 4 hasn't touched
+yet.
 
 **Plan**: same pattern as items 11-13 — extract long methods to private helpers, all public methods ≤50L, remove from
 `FUNCTION_SIZE_EXTRA_EXCLUDES`.
 
 **Tasks**:
 
-1. **Inventory remaining 9 files** in execution-service `FUNCTION_SIZE_EXTRA_EXCLUDES`. Output the path list at start
-   of session for traceability.
+1. **Inventory remaining 9 files** in execution-service `FUNCTION_SIZE_EXTRA_EXCLUDES`. Output the path list at start of
+   session for traceability.
 
 2. **Refactor in batches of 3** — per the established cadence from items 11-13. For each file:
    - Read the file; identify all methods >50L
@@ -101,8 +170,8 @@ touched yet.
    `unified-trading-api`, `ml-inference-service`, `ml-training-service`, `strategy-service` for non-zero allowlists.
    Pick the smallest one (lowest hanging fruit) and continue the refactor stream.
 
-4. **Codex SSOT pin** — if you find a recurring pattern across services (e.g. "config-builder methods consistently
-   blow the 50L limit"), add a one-line note to `codex/06-coding-standards/method-size.md` capturing the pattern + the
+4. **Codex SSOT pin** — if you find a recurring pattern across services (e.g. "config-builder methods consistently blow
+   the 50L limit"), add a one-line note to `codex/06-coding-standards/method-size.md` capturing the pattern + the
    canonical extraction shape. Per CLAUDE.md "Post-Plan-Phase Codex Audit" — if you found a new pattern, codify it.
 
 **HARD RULES**:
@@ -111,15 +180,15 @@ touched yet.
 - ❌ Do NOT batch >3 files into one commit (per item 11-13 cadence — one commit per file).
 - ❌ Do NOT use `--no-verify` on QG (only on git commit hooks if prek auto-restore symptom observed).
 - ✅ DO append new work-split items 14, 15, 16, ... per file cleared (or one rollup item "items 14-22: 9 files cleared
-   execution-service@...").
+  execution-service@...").
 - ✅ DO follow Half-1+2 cadence — code commit + plan flip in same agent turn.
 
 **ETA**: refactor 0.4× × ~12 baseline (9 files × ~1.3 cal each) = ~5 cal AI-days. Comfortably one session.
 
 **Cumulative target**: 100 → 109+ files cleared by EOD.
 
-**Why slot 4**: peak context — just shipped 3 in a row using the exact same extraction pattern. The 4th file is
-muscle memory at this point.
+**Why slot 4**: peak context — just shipped 3 in a row using the exact same extraction pattern. The 4th file is muscle
+memory at this point.
 
 ---
 
@@ -1793,14 +1862,16 @@ Acknowledge "STARTED AWS Phase 2 verification" within 10 min.
 
 ## [slot 3 → slot 4] 2026-05-19 ~14:55 UTC — 🟢 UNBLOCKED: strategy consolidation Phase 3+4 scaffold LANDED
 
-Slot 3's Phase 2 scaffold is on LDR at **strategy-service@eee8bbb** (`feat(consolidation): Phase 2 skeleton`).
-The following are confirmed live in strategy-service on `live-defi-rollout`:
+Slot 3's Phase 2 scaffold is on LDR at **strategy-service@eee8bbb** (`feat(consolidation): Phase 2 skeleton`). The
+following are confirmed live in strategy-service on `live-defi-rollout`:
 
 - `strategy_service/risk/__init__.py` — Phase 2 skeleton shim (subtree-merge landing zone)
 - `strategy_service/position/__init__.py` — Phase 2 skeleton shim
 - `strategy_service/pnl/__init__.py` — Phase 2 skeleton shim
-- `strategy-service/pyproject.toml` — dep union (all 3 source repos unified; market-tick-data-service editable source added)
-- `strategy-service/strategy_service/cli/service_entry.py` — RiskMonitorHandler, PositionReconHandler, PnlAttributionHandler stubs
+- `strategy-service/pyproject.toml` — dep union (all 3 source repos unified; market-tick-data-service editable source
+  added)
+- `strategy-service/strategy_service/cli/service_entry.py` — RiskMonitorHandler, PositionReconHandler,
+  PnlAttributionHandler stubs
 - `strategy-service/strategy_service/api/main.py` — risk/position/pnl freshness keys in `_data_freshness()`
 
 **You are unblocked for Phase 3+4** per work_split_2026_05_19_ikenna.md § "🔴 TOP PRIORITY DISPATCH" → Slot 4 row.
@@ -1808,17 +1879,17 @@ The following are confirmed live in strategy-service on `live-defi-rollout`:
 **Phase 3** = subtree-merge 3 source repos into strategy-service with git history (see plan §phase-3-subtree-merge).
 **Phase 4** = fix internal imports + unify CLI + collapse health-API routers (see plan §phase-4-fix-imports-and-cli).
 
-**CRITICAL Phase 4 order**: rewrite `e2e-testing/scripts/defi/colocated_engine.py` FIRST — primary May-23 promote-CLI path.
-Pre-audit §(b) has exact 7-file list with line numbers.
+**CRITICAL Phase 4 order**: rewrite `e2e-testing/scripts/defi/colocated_engine.py` FIRST — primary May-23 promote-CLI
+path. Pre-audit §(b) has exact 7-file list with line numbers.
 
-**Gap-close addendum for Phase 3** (slot 3 forwarding, P2 NEW +0.05 cal-day):
-Drop source-repo `docs/` during subtree-merge. The `git read-tree --prefix=strategy_service/<sub>/` recipe pulls
-package + tests + scripts only — `docs/` intentionally NOT merged (codex is workspace SSOT). Add to DEPRECATION_NOTICE.md
-banner template (slot 6 owns Phase 7 write): "docs/ content not migrated — see
-`codex/04-architecture/strategy-service-architecture.md` and related codex pages."
+**Gap-close addendum for Phase 3** (slot 3 forwarding, P2 NEW +0.05 cal-day): Drop source-repo `docs/` during
+subtree-merge. The `git read-tree --prefix=strategy_service/<sub>/` recipe pulls package + tests + scripts only —
+`docs/` intentionally NOT merged (codex is workspace SSOT). Add to DEPRECATION_NOTICE.md banner template (slot 6 owns
+Phase 7 write): "docs/ content not migrated — see `codex/04-architecture/strategy-service-architecture.md` and related
+codex pages."
 
-**Plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md`
-**Pre-audit artifact**: `plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` (§(b) = 7 external consumer files)
+**Plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md` **Pre-audit artifact**:
+`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` (§(b) = 7 external consumer files)
 
 Ack with `[ack] slot 4 starting Phase 3` and confirm you're on `live-defi-rollout` branch in strategy-service worktree.
 
@@ -1830,13 +1901,17 @@ Ack with `[ack] slot 4 starting Phase 3` and confirm you're on `live-defi-rollou
 
 **From**: slot-1 main ikenna
 
-**Issue**: Per slot-work audit 2026-05-20, your last activity was 2026-05-19 15:49. Slot-8 self-dispatched the strategy Phase 4 import-rewrites (PM@4a0db8e94 + strategy-service@d9a76e9a) which you were originally working on, and completed it.
+**Issue**: Per slot-work audit 2026-05-20, your last activity was 2026-05-19 15:49. Slot-8 self-dispatched the strategy
+Phase 4 import-rewrites (PM@4a0db8e94 + strategy-service@d9a76e9a) which you were originally working on, and completed
+it.
 
 **Ack one of**:
+
 - **(A) Context-expired**: confirm you're idle / context-rolled, then await re-dispatch
 - **(B) Still working on something**: brief note on what + what blockers exist
 
 If (A): natural dispatch candidates:
+
 - Mega-audit Phase B template extraction (`codex/04-architecture/service-contract-audit-template.md`)
 - One of the C-audits (C1 IS→features, C2 IS→strategy, C3 IS→execution) — each ~2 cal-days
 - Any open STANDALONE-OPEN issue (archive_deferred_migration triage, unused_import_audit ride-along)
@@ -1847,36 +1922,44 @@ If (A): natural dispatch candidates:
 
 ## 2026-05-20 — DISPATCH: trading-agent unlock Path B (features + agent service + backtest)
 
-**From**: slot-1 main ikenna
-**Plan**: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
-**Change manifest**: [plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
+**From**: slot-1 main ikenna **Plan**:
+[plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
+**Change manifest**:
+[plans/active/issues/\_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
 
 **Prior ping** (2026-05-20 clarification) — confirmed re-dispatch path. This is your new chain.
 
 ### Your chain — Path B (~4 cal-AI-days)
 
-Heavier path; ships the features-side scaffold + the trading-agent-service core + the backtest-replay infrastructure. Gates on slot-6 ikenna's Phase 1 commit before starting Phase 3.
+Heavier path; ships the features-side scaffold + the trading-agent-service core + the backtest-replay infrastructure.
+Gates on slot-6 ikenna's Phase 1 commit before starting Phase 3.
 
-| Order | Phase | Estimate | Dep | Why |
-|---|---|---|---|---|
-| 1 | **Phase 3 — features-service `performance_features` scaffold** | 0.5 day | Phase 1 from slot-6 | New empty subdomain in features-service; producer surface for the agent service to consume. May-23 = scaffold only; real Sharpe/drawdown/regime-conditional features ship post-cutover. |
-| 2 | **Phase 7 — CI hygiene fix (trading-agent-service)** | 0.5 day | none — parallel-anytime | GH_PAT rotation per `trading_agent_service_workspace_qg_silent_clone_fail`. Operator may need to land a PAT secret — coordinate ping if needed. Run in parallel with Phase 3 if possible. |
-| 3 | **Phase 6 — trading-agent-service core scaffold** | 2 days | Phases 1+2+3 | Subscribes to features + ML + LLM + PnL streams (last 3 stubs for May-23; just-log subscribers). Emits no-op `AllocationDirective` that matches the existing static config — wires the path without changing behavior. |
-| 4 | **Phase 6.5 — Backtest-replay infrastructure** | 1 day | Phase 6 | NEW per operator directive 2026-05-20 (backtest-able + no forward-looking bias). Ships: `inference_cache.py` (LLM/ML output cache, write-through in live, read-only in backtest), `directive_log.py` (every directive logged with input snapshot), `--mode=backtest` CLI + `cutoff_clamp.py` decorator, the no-leak gate test. |
+| Order | Phase                                                          | Estimate | Dep                     | Why                                                                                                                                                                                                                                                                                                                            |
+| ----- | -------------------------------------------------------------- | -------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | **Phase 3 — features-service `performance_features` scaffold** | 0.5 day  | Phase 1 from slot-6     | New empty subdomain in features-service; producer surface for the agent service to consume. May-23 = scaffold only; real Sharpe/drawdown/regime-conditional features ship post-cutover.                                                                                                                                        |
+| 2     | **Phase 7 — CI hygiene fix (trading-agent-service)**           | 0.5 day  | none — parallel-anytime | GH_PAT rotation per `trading_agent_service_workspace_qg_silent_clone_fail`. Operator may need to land a PAT secret — coordinate ping if needed. Run in parallel with Phase 3 if possible.                                                                                                                                      |
+| 3     | **Phase 6 — trading-agent-service core scaffold**              | 2 days   | Phases 1+2+3            | Subscribes to features + ML + LLM + PnL streams (last 3 stubs for May-23; just-log subscribers). Emits no-op `AllocationDirective` that matches the existing static config — wires the path without changing behavior.                                                                                                         |
+| 4     | **Phase 6.5 — Backtest-replay infrastructure**                 | 1 day    | Phase 6                 | NEW per operator directive 2026-05-20 (backtest-able + no forward-looking bias). Ships: `inference_cache.py` (LLM/ML output cache, write-through in live, read-only in backtest), `directive_log.py` (every directive logged with input snapshot), `--mode=backtest` CLI + `cutoff_clamp.py` decorator, the no-leak gate test. |
 
 ### Coordination
 
 - **DO NOT start Phase 3** until slot-6 ikenna posts "Phase 1 landed @<sha>" to your ping file. Watch your ping queue.
 - **Phase 7 can run in parallel** — no dependency. Recommend starting it WHILE waiting for slot-6's Phase 1.
-- After your Phase 6.5 commit pushes, **post a ping to slot-6 ikenna** with "Path B complete @<sha> — Phase 8 unblocked" so slot-6 can write the master-plan flip.
-- Per memory `feedback_harvest_from_existing.md`: schemas + integration patterns are fully specified in the plan; harvest existing patterns (Hyperliquid adapter shape for Phase 6, `config_reloaders.py` for the StrategyDirectiveReloader pattern) — no operator iteration needed.
+- After your Phase 6.5 commit pushes, **post a ping to slot-6 ikenna** with "Path B complete @<sha> — Phase 8 unblocked"
+  so slot-6 can write the master-plan flip.
+- Per memory `feedback_harvest_from_existing.md`: schemas + integration patterns are fully specified in the plan;
+  harvest existing patterns (Hyperliquid adapter shape for Phase 6, `config_reloaders.py` for the
+  StrategyDirectiveReloader pattern) — no operator iteration needed.
 
 ### Self-execution prompt
 
-The plan's agent-execution prompts under each Phase 3/6/6.5/7 section are paste-able. The Phase 6.5 no-leak gate test is the most novel — see `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md` § Phase 6.5 for the exact test shape (`tests/integration/test_no_leak_gate.py`).
+The plan's agent-execution prompts under each Phase 3/6/6.5/7 section are paste-able. The Phase 6.5 no-leak gate test is
+the most novel — see `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md` § Phase 6.5 for the exact
+test shape (`tests/integration/test_no_leak_gate.py`).
 
 ### Foundation-gate
 
-Your work is layer-5 (features-service) → layer-7 (trading-agent-service). Layer-5 is GREEN. Layer-7 is greenfield (new service). All clear.
+Your work is layer-5 (features-service) → layer-7 (trading-agent-service). Layer-5 is GREEN. Layer-7 is greenfield (new
+service). All clear.
 
 — slot-1 main / ikenna
