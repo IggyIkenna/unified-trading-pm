@@ -265,25 +265,16 @@ todos:
 
   - id: phase-9-codex-ssot-updates
     content: |
-      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 9 — Codex SSOT updates. MANDATORY per HARD RULE "Post-Plan-Phase Codex Audit":
-        (a) **NEW** `codex/04-architecture/ml-service-architecture.md` — full SSOT covering: 2 sub-packages
-            (training + inference), CLI dispatch keyed by `--operation`, Health-API aggregator, model registry +
-            promotion topology, feature-subscriber/prediction-publisher pub-sub wiring, ServiceBootstrap
-            consolidation, deployment topology (single VM per asset-group × operation flavor with single
-            flat-deps Docker image per operator decision 2026-05-19 Option 2), migration history cross-link,
-            anti-patterns.
-        (b) **UPDATE** `codex/00-SSOT-INDEX.md` — register new architecture page; drop 2 archived repos.
-        (c) **UPDATE** `codex/02-data/README.md` — ML data lineage now references `ml-service` (was 2 repos).
-        (d) **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — promote workflow references
-            `ml-service` for inference-image pinning + model promotion gate.
-        (e) **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — 2-to-1 launcher collapse.
-        (f) **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — single ml-service tarball.
-        (g) **UPDATE** `codex/06-coding-standards/cli-convention.md` — `--operation` sub-command table for
-            ml-service's 6+ operations.
-        (h) **UPDATE** any other codex page surfaced by `rg "ml-training-service|ml-inference-service" codex/` —
-            replace with `ml-service/<sub>/` or add SUPERSEDED banner.
-    status: formally-deferred
-    blocked_by: phase-8a-launcher-migration
+      - [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 9 — Codex SSOT updates.
+        (a) ml-service-architecture.md status: stub → stable; migration history updated with Phase 1-9 evidence.
+        (b) SSOT-INDEX: ml-service entry updated to STABLE; cefi-ml-live-serving reference updated.
+        (c) 02-data/README.md: ml-training/ml-inference topics → ml-service (training/inference sub-package).
+        (f) vm-tarball-deployment.md: launch-ml-vm.sh section replaces launch-ml-training-vm.sh.
+        (g) cli-convention.md: --operation table for 8 ml-service operations added; violations row updated.
+        service-registry.yaml: ml-training-service + ml-inference-service → ml-service (consolidated).
+        deprecation-ledger.yaml: both source repos → status: archived, ready_to_delete: true, archive_date: 2026-05-20.
+        — PM@99955526c.
+    status: complete
 
   - id: phase-10-workspace-qg-sweep
     content: |
