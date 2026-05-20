@@ -457,6 +457,8 @@ Pre-audit artifact:
       **UN-DEFERRED 2026-05-20 per operator direction** (work_split_2026_05_19_ikenna.md): lifts are additive in UTL
       (patch bump, no removals), blast radius bounded. Ship as 2 UTL PRs. Slot 5 picks up immediately. — ✅
       utl@e2445522 + strategy-service@054fae03 (backfilled 2026-05-20)
+- [ ] [AGENT] P2. After May-23 architecture unlock, `StrategyDirectiveReloader` becomes the 5th typed-reloader callsite;
+      lift into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per epic §1.7. POST-CUTOVER.
 - [x] ✅ **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
       entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
       Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any launcher / cron / VM bootstrap

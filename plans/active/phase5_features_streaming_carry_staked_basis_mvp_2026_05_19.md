@@ -207,8 +207,8 @@ Group B kinds.
 
 - [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Deploy via `gcloud run deploy`** (operator). Smoke-check `/health`
       returns OK + `data_freshness` is non-stale. BLK-363c4fe1 filed 2026-05-20. Command:
-      `bash deployment-service/scripts/cloud-run/deploy_features_service_cloud_run.sh`
-      (prereqs: image build + Artifact Registry repo + SA + mdps-redis-url-prod secret — see script header).
+      `bash deployment-service/scripts/cloud-run/deploy_features_service_cloud_run.sh` (prereqs: image build + Artifact
+      Registry repo + SA + mdps-redis-url-prod secret — see script header).
 
 - [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **24-hour soak**: features-service emits a feature parquet every N seconds
       for every active feature_group, no FAILED events, no manifest gaps. Sequential after deploy above.
@@ -363,12 +363,27 @@ key absent.
 - Solana LIVE mode depth (Helius RPC real-time pool state) → `matching_engine_provider_multi_venue_2026_06.md` (G.1
   BATCH mode only; LIVE mode extension deferred; helius-api-key credential confirmed working)
 
+## Phase-H: performance-features subdomain passthrough scaffold (P1, ARCHITECTURE-ONLY)
+
+Per operator directive 2026-05-20 "trading-agent-service architecture unlocked": features-service needs the consumer
+surface for performance-derived features to exist even if it only computes passthrough today.
+
+- [x] ✅ [AGENT] P1. `features_service/performance_features/__init__.py` + `passthrough_compute.py` subscribes to
+      `StrategyPnlStreamEvent`; emits honest-absence `record_empty(reason=EXPECTED_NO_PNL_STREAM)` when no events. —
+      features@2a7af305
+- [x] ✅ [AGENT] P1. `performance_features` CLI handler wired in features-service dispatcher. — features@2a7af305
+- [x] ✅ [AGENT] P1. Manifest write: `record_empty(reason=EXPECTED_NO_PNL_STREAM)` when no upstream PnL events. —
+      features@2a7af305
+- [x] ✅ [TEST] P1. Unit tests: subscribe-and-emit passthrough + honest-absence path. — features@2a7af305
+
+**Done gate**: ✅ COMPLETE — features-service QG green; performance_features subdomain exists with honest-absence path.
+
 ## Deferred work after 2026-05-20 slot-4
 
-| Item | Status | Blocker | Evidence |
-|---|---|---|---|
-| Phase-E: `gcloud run deploy features-service` | `BLOCKED-OPERATOR-DEPLOY` | deploy_features_service_cloud_run.sh line 4: operator-only; BLK-363c4fe1 filed | — |
-| Phase-E: 24h soak (features-service healthy:true, no FAILED events) | `BLOCKED-OPERATOR-DEPLOY` | needs deploy first | — |
-| Phase-F: Relaunch paper VM `strategy-paper-carry-staked-basis-{date}-{ts}` | `BLOCKED-OPERATOR-DEPLOY` | sequential after 24h soak | tarballs ready in GCS at c9729dce |
-| Phase-F: fills>0 in first 10 ticks | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch | — |
-| Phase-F: OPERATOR_CAPITAL_OVERRIDE_APPLIED → DEPOSIT_DETECTED → resize check | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch | — |
+| Item                                                                         | Status                    | Blocker                                                                        | Evidence                          |
+| ---------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------ | --------------------------------- |
+| Phase-E: `gcloud run deploy features-service`                                | `BLOCKED-OPERATOR-DEPLOY` | deploy_features_service_cloud_run.sh line 4: operator-only; BLK-363c4fe1 filed | —                                 |
+| Phase-E: 24h soak (features-service healthy:true, no FAILED events)          | `BLOCKED-OPERATOR-DEPLOY` | needs deploy first                                                             | —                                 |
+| Phase-F: Relaunch paper VM `strategy-paper-carry-staked-basis-{date}-{ts}`   | `BLOCKED-OPERATOR-DEPLOY` | sequential after 24h soak                                                      | tarballs ready in GCS at c9729dce |
+| Phase-F: fills>0 in first 10 ticks                                           | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch                                                   | —                                 |
+| Phase-F: OPERATOR_CAPITAL_OVERRIDE_APPLIED → DEPOSIT_DETECTED → resize check | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch                                                   | —                                 |

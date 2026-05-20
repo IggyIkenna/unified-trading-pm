@@ -292,6 +292,12 @@ legacy archetypes after granular variants doc-complete). **+rename**: `CARRY_REC
 - (a) `CARRY_BORROW_PERP_HEDGED` / `CARRY_BORROW_PERP_HEDGED_DATED` (descriptive)
 - (b) `CARRY_BASIS_PERP_INV` / `CARRY_BASIS_DATED_INV` (inverse-of-basis intuition) **[my recommendation]**
 
+**PnL emission status (StrategyPnlStreamEvent)**:
+
+- `carry_staked_basis`: ✅ May-23 (architecture-unlock plan Phase 2 — strategy@a0f87c66)
+- `arbitrage_price_dispersion`: ✅ May-23 (architecture-unlock plan Phase 2 — strategy@a0f87c66)
+- All other archetypes: TODO post-cutover (when continuous-paper infrastructure lands per archetype)
+
 ## Routing (per-slot)
 
 **Slot 2** (defi_catalogue + cross_asset_audit owner):
@@ -539,15 +545,15 @@ Slot 6/8)" (PM@`f36f2cd4`).
 
 All 23 pending archetype docs written and pushed. README table updated to reflect actual counts.
 
-**Batch 1** (PM@`642014e1`) — 9 Vol Trading docs:
-`vol-arb-rv-iv.md`, `vol-spread-structures.md`, `vol-overlay-covered-calls.md`, `vol-overlay-protective-put.md`,
-`vol-straddle.md`, `vol-synthetic-delta.md`, `vol-market-making.md`, `vol-ml-lean.md`, `vol-0dte-gamma-scalping.md`
+**Batch 1** (PM@`642014e1`) — 9 Vol Trading docs: `vol-arb-rv-iv.md`, `vol-spread-structures.md`,
+`vol-overlay-covered-calls.md`, `vol-overlay-protective-put.md`, `vol-straddle.md`, `vol-synthetic-delta.md`,
+`vol-market-making.md`, `vol-ml-lean.md`, `vol-0dte-gamma-scalping.md`
 
-**Batch 2** (PM@`6d4011ae`) — 14 docs (8 Vol + 5 MM + 1 Arb):
-`vol-0dte-pin-risk.md`, `vol-term-structure-arb.md`, `vol-term-structure-slope.md`, `vol-dispersion.md`,
-`vol-variance-swap.md`, `vol-leaps-convexity.md`, `vol-cross-asset-spread.md`, `vol-ratio-spread.md`,
-`market-making-passive-spread.md`, `market-making-inventory-skew.md`, `market-making-ml-lean.md`,
-`market-making-queue-microstructure.md`, `market-making-prediction.md`, `arbitrage-cross-domain-event.md`
+**Batch 2** (PM@`6d4011ae`) — 14 docs (8 Vol + 5 MM + 1 Arb): `vol-0dte-pin-risk.md`, `vol-term-structure-arb.md`,
+`vol-term-structure-slope.md`, `vol-dispersion.md`, `vol-variance-swap.md`, `vol-leaps-convexity.md`,
+`vol-cross-asset-spread.md`, `vol-ratio-spread.md`, `market-making-passive-spread.md`,
+`market-making-inventory-skew.md`, `market-making-ml-lean.md`, `market-making-queue-microstructure.md`,
+`market-making-prediction.md`, `arbitrage-cross-domain-event.md`
 
 **README updated** (this commit): Arbitrage `7 docs`, Market Making `10 docs`, Vol Trading `19 docs`, Document Layout
 comment updated to `57 docs — all archetypes documented`. All 57 archetypes now have canonical docs.
@@ -584,7 +590,8 @@ in the **family docs**, which were never updated after the Phase-9 expansion, pl
   disambiguated the plan's "Family 0/1/2" numbering from `StrategyFamily` (PM@`217660c1`)
 - 4 MEV + 3 DeFi-LP archetype docs ✅ — added markdown family-doc links (were plain-text family names) (PM@`217660c1`)
 - `strategy-summary.md` ✅ — registry/coverage narrative still cited "55 archetypes" at lines 808/816 (the V-8-deferred
-  leftovers); bumped to 57 and clarified the manifest declares cells for a 22-archetype live subset today (PM@`09f68f3a`)
+  leftovers); bumped to 57 and clarified the manifest declares cells for a 22-archetype live subset today
+  (PM@`09f68f3a`)
 
 **Verified clean (no change needed):** all 18 Vol archetype docs, 5 granular MM docs, `arbitrage-cross-domain-event.md`,
 3 MEV docs (body), `category-instrument-coverage.md` (scope = 57), `archetype-paper-readiness.md` (= 57), README

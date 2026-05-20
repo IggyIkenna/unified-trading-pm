@@ -7,7 +7,9 @@ source:
   - github.com/IggyIkenna/trading-agent-service/actions/runs/25969164753 (pre-fix initial)
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
-severity: P2 — single-repo failure; workspace-qg Phase B succeeded for the other 20
+severity:
+  P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for
+  layer-7 service
 ---
 
 ## What I found
@@ -119,6 +121,16 @@ credential issue is a routine operator-rotation task that doesn't block May-23 c
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but credentials gap remains
+**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but
+credentials gap remains
+
+## Triage update — 2026-05-20 (operator directive: architecture unlocked)
+
+**Status**: OPEN-P0 (was BLOCKED-CREDENTIALS-deferred-post-cutover) **Reason**: trading-agent-service now on May-23
+architecture-unlock path. CI hygiene fix needed for layer-7 continuous verification. **Slot owner**: assigned to
+architecture-unlock plan Phase 7 (CI hygiene). **Operator ask** (CREDENTIAL APPROVAL REQUEST):
+
+- Rotate `GH_PAT` secret on `IggyIkenna/trading-agent-service` to match the working value on `IggyIkenna/mtds`
+- `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`
+- Without it: trading-agent-service workspace-qg stays red; architecture unlock is "shipped but unverified by CI"
+  **Workaround until unblock**: per-repo `bash scripts/quality-gates.sh` local invocation by the implementing slot.

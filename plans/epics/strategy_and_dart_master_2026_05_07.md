@@ -193,6 +193,13 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ### 1.7 Phase 10.7 — Allocator-as-shared-service split
 
+> **🟢 ARCHITECTURE-UNLOCK 2026-05-20** (operator directive): the **dataflow scaffold** of Phase 10.7 ships May-23 via
+> [`trading_agent_service_architecture_unlock_2026_05_22.md`](../active/trading_agent_service_architecture_unlock_2026_05_22.md).
+> Specifically: `ArchetypeAllocationDirective` UAC model lands; shared-allocator-core stub at
+> `strategy_service/portfolio_allocator/` emits no-op directives; strategy-service `StrategyDirectiveReloader` consumes
+> directives via existing config_reloaders.py pattern. **Production allocator logic + IM-side + Trading-platform-side
+> UIs stay P1 post-cutover.**
+
 - [ ] [CODE] P1. **IM-side allocator** inside the IM service. Careful-mode UI: human-approved weight changes, multi-sign
       workflows, full audit trail via UTL events.
 - [ ] [CODE] P1. **Trading-platform-side allocator** inside the Trading service. Auto-mode: client target weight vector
@@ -265,6 +272,10 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
       items (11 action handlers, policy registry, Layer 3 pre-flight) still pending; orchestrator itself done.
 
 #### Allocator service (8 archetype engines)
+
+> **🟢 ARCHITECTURE-UNLOCK 2026-05-20**: the service scaffolding item "ServiceBootstrap, Health API + data_freshness,
+> typed config reloader, SM keys" ships May-23 in trading-agent-service via architecture-unlock plan Phase 6. The 7
+> archetype-engine items + guard rails + shadow mode + NAV reads stay post-cutover.
 
 - [ ] [CODE] P1. 8 allocator archetypes: FIXED, PNL_WEIGHTED, SHARPE_WEIGHTED, RISK_PARITY, KELLY, MIN_CVAR, [+2].
 - [ ] [CODE] P1. Per-client instance registry; cadence scheduler (DAILY / HOURLY / WEEKLY / ON_EVENT).
