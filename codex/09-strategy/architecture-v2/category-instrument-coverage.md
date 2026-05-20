@@ -801,25 +801,20 @@ execution. Covers price, funding-rate, IV, and odds dispersion depending on cell
 Not applicable: lending (no arb concept for a supplied balance — `YIELD_ROTATION_LENDING` captures rate spread), staking
 (no arb — `CARRY_STAKED_BASIS`).
 
-#### Representative slot_labels
+#### Slot labels (active catalog + illustrative; 2026-05-20)
 
 ```
-# CeFi spot
-ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-usdt-prod
-ARBITRAGE_PRICE_DISPERSION@binance-okx-eth-usdt-prod
-ARBITRAGE_PRICE_DISPERSION@cross-cex-sol-usdt-prod
+# CeFi spot (active catalog slots from _build_arbitrage_price_dispersion)
+ARBITRAGE_PRICE_DISPERSION@binance-okx-btc-1m-usdt-v2-prod
+ARBITRAGE_PRICE_DISPERSION@binance-bybit-eth-1m-usdt-v2-prod
+ARBITRAGE_PRICE_DISPERSION@okx-hyperliquid-sol-1m-usdt-v2-prod
 
-# CeFi perp (price)
+# CeFi perp (price; illustrative — not yet in catalog)
 ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-perp-usdt-prod
 ARBITRAGE_PRICE_DISPERSION@hyperliquid-binance-eth-perp-usdt-prod
 
-# CeFi perp (funding-rate dispersion — PARTIAL, currently mis-labeled in UAC)
-ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
-ARBITRAGE_PRICE_DISPERSION@multi-cex-eth-funding-usdt-prod
-
-# CeFi perp (funding-rate dispersion — multi-venue universe + dynamic best-long/best-short, Stream B 2026-05-07)
-# Canonical strategy-service slot shape per arbitrage_price_dispersion_finalisation_2026_05_09 Phase A.
-# venue_universe = [bybit, deribit, binance, okx, hyperliquid, aster]; venue_selection_mode = dynamic-best-long-short.
+# CeFi perp (funding-rate dispersion — bridge slots in archetype_slot_resolver.py; NOT in TARGET_UNIVERSE catalog)
+# venue_universe = [bybit, deribit, binance, okx, hyperliquid, aster]; pair_selection_mode = dynamic-best-long-short.
 ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
 ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod
 
