@@ -58,12 +58,19 @@ from typing import Final
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-#: Per-line opt-out markers (case-insensitive). Both forms accepted —
-#: the new ``imports-inside-functions`` marker AND the legacy
-#: ``qg-inside-import`` marker that base-library.sh already supports.
+#: Per-line opt-out markers (case-insensitive). Handles both the canonical
+#: single-code form (``# noqa: imports-inside-functions``) and multi-code
+#: form where the marker appears after a comma (``# noqa: PLC0415, qg-inside-import``).
+#: Also recognises the ruff code PLC0415 which is the ruff equivalent.
 NOQA_MARKERS: Final[tuple[str, ...]] = (
     "noqa: imports-inside-functions",
     "noqa: qg-inside-import",
+    # Multi-code variants — appear after a comma in the noqa list:
+    ", imports-inside-functions",
+    ", qg-inside-import",
+    # ruff PLC0415 is the canonical ruff code for "import outside top-level"; treat
+    # it as equivalent to qg-inside-import when it's the sole or first code:
+    "noqa: plc0415",
 )
 
 #: AST node types that scope an import as "inside a function" (real violation).
