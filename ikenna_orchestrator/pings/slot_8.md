@@ -1,6 +1,44 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H Phase 9 dispatch.** Booting agents: read the 2026-05-20 LATER
-> entry FIRST (Phase 9 codex SSOT), then the earlier UTL-lift compose-with note. History below 2026-05-20 is audit-trail
-> only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H Phase 9 dispatch + 2026-05-20 strategy-consolidation Phase
+> 11 dispatch.** Booting agents: read the 2026-05-20 latest (Phase 11) entry below FIRST, then the earlier Group H
+> Phase 9 codex SSOT entry, then the UTL-lift compose-with note. History below 2026-05-20 is audit-trail only.
+
+---
+
+## [slot 1 main → slot 8] 2026-05-20 (latest) — 🔴 P0 ADDITIONAL — strategy + ML consolidation Phase 11e+f+g (execution + ml-service own-repo + tail)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to BOTH consolidation plans after a workspace audit found ~545 live-code refs to the 5 archived
+services still present in consumer repos.
+
+**Your slice (slot 8, P0 — execution-service + ml-service own-repo + ML-side tail)**:
+
+- **Plans**:
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11e** (execution-service, strategy side).
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11f** (ml-service own-repo) + **Phase 11g** (execution + sys-int tail, ML side).
+- **Scope (execution-service strategy side, ~18 live refs)**:
+  - `execution_service/preflight.py:28` — **hardcoded risk-service URL (HIGH: live runtime ref)** → replace with
+    strategy-service URL or remove if pre-flight gate is satisfied by strategy_service/risk/.
+  - `providers/funding_pnl_accrual.py:9`, `algo_library/dust_router_runner.py:16`,
+    `matching_engine/slashing_*.py:96,44`, `engine/pnl_monitor.py:149,158`, `preflight.py:11` — comment/docstring
+    refs (in-scope since live source, not migration history).
+- **Scope (ml-service own-repo, ~69 live refs)**:
+  - Logger format strings + CLI banner strings still saying `ml-training-service` / `ml-inference-service`.
+  - Rewire to `ml-service.{training,inference}` sub-package naming.
+  - `tests/experiments/phase_5d_runlist_2026_04_18.yaml:357` + test scaffolding.
+- **Scope (ML-side execution + sys-int tail, ~30 live refs)**:
+  - execution-service / system-integration-tests / e2e refs to ml-training-service or ml-inference-service —
+    rewire to ml-service.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history / docstring
+  module headers.
+- **Gate**: `cd execution-service && bash scripts/quality-gates.sh` GREEN; same for ml-service. Bundle per-repo
+  (single quickmerge per repo).
+- **Estimate**: ~0.75 cal-AI-days total.
+- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip in same agent turn.
+
+**Compose-with**: your existing Group H Phase 9 (codex SSOT) is the priority. This Phase 11 work composes naturally:
+your existing **Phase 4a/4b** outstanding work on `strategy_execution_contract_remediation_2026_05_20.md` already
+touches execution-service — bundle the Phase 11e cleanup into the SAME execution-service PR if you pick that up.
+Phase 4a/4b is still BLOCKED on operator bucket-strategy decision (no movement there); pick this up independently.
 
 ---
 

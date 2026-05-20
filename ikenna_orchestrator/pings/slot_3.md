@@ -1,5 +1,36 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 3 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 strategy-consolidation Phase 11 dispatch (TOP).** Booting agents:
+> read the 2026-05-20 entry below FIRST, then your existing Group H assignments. History older than 2026-05-20
+> is audit-trail only.
+
+---
+
+## [slot 1 main → slot 3] 2026-05-20 — 🔴 P0 ADDITIONAL — strategy + ML consolidation Phase 11f (tail consumers)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to BOTH consolidation plans after a workspace audit found ~535 live-code refs to the 5 archived
+services still present in consumer repos.
+
+**Your slice (slot 3, P1 tail)**:
+
+- **Plan**: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11f**.
+- **Scope**: alerting-service + system-integration-tests + e2e-testing + trading-agent-service refs to the 3 archived
+  strategy-consolidation services (risk-and-exposure / position-balance-monitor / pnl-attribution). ~30 live refs.
+- **Hot spots to fix first**:
+  - `alerting-service/risk_rule_event_handler.py:3`, `core/system_health_aggregator.py:26`,
+    `subscribers/batch_event_reader.py:40` — rewire to `strategy-service`.
+  - `trading-agent-service/config.py:126`, `adapters/risk_adapter.py:1,20` — HTTP client base URLs + adapter
+    imports → strategy-service.
+  - `system-integration-tests/tests/smoke/test_deployment_smoke.py:178` + integration test skip-guards/service lists.
+  - `e2e-testing/scripts/` — any archived-service references.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history / docstring
+  module headers — leave intact.
+- **Gate**: per-repo `bash scripts/quality-gates.sh` GREEN.
+- **Estimate**: ~0.5 cal-AI-days.
+- **Half-1+2 discipline**: ship code + flip the Phase 11f checkbox in the SAME agent turn (`docs(plans): flip
+  Phase 11f — <repo>@<sha>`). See CLAUDE.md § "Commit + Push + Flip" HARD RULE.
+
+**Compose-with**: your existing Group H assignment is the priority; this is a P1 add-on that should fit in spare
+cycles or be picked up when Group H phases naturally complete.
 
 ---
 

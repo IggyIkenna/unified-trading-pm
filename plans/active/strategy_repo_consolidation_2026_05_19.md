@@ -15,7 +15,7 @@ overview:
   if Phase 6 parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
 type: infra
 epic: strategy_and_dart_master_2026_05_07
-status: active
+status: active-cleanup-phase-11
 
 asset_group: cross-cutting
 priority: P0
@@ -615,3 +615,141 @@ references to archived-repo workflow names. No patch needed.
 ## Codex SSOT updates (mandatory enumeration — HARD RULE)
 
 See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 ships without all 8 verified.
+
+---
+
+## Phase 11 — Workspace-wide stale-ref cleanup (REOPENED 2026-05-20 per operator directive)
+
+> **Reopen note (2026-05-20)**: operator directed an audit-and-finalise sweep for "anything to do with the services
+> that were consolidated into strategy-service". Phase 7 archive (gh repo archive) of the 3 source repos completed
+> 2026-05-20 — but workspace-wide grep found **205 LIVE-CODE refs** to the 3 archived service names across consumer
+> repos (excluding DEPRECATION_NOTICE / ARCHIVED.md / CHANGELOG / migration-history, which stay as legitimate
+> historical record). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit only** — skip
+> docstrings, CHANGELOG, migration-history.
+>
+> Counts (live-code refs only, 3 strategy-consolidation services):
+>
+> | Repo                          | risk | position | pnl | Total live refs | Owner slot      | Est cal-AI-days |
+> | ----------------------------- | ---- | -------- | --- | --------------- | --------------- | --------------- |
+> | deployment-service            | 29   | 24       | 21  | ~80             | slot 7          | 0.75            |
+> | unified-trading-system-ui     | 16   | 17       | 15  | ~50             | slot 6          | 0.5             |
+> | unified-api-contracts         | 33   | 25       | 17  | ~75             | slot 5          | 0.75            |
+> | unified-trading-library       | 14   | 12       | 7   | ~33             | slot 5          | 0.25            |
+> | execution-service             | 13   | 3        | 2   | ~18             | slot 8          | 0.25            |
+> | alerting + sys-int + e2e + ta | tail | tail     | tail| ~30             | slot 3          | 0.5             |
+> | strategy-service (own)        | 37   | 34       | 31  | ~30 (logger str)| slot 4          | 0.25            |
+>
+> **Total: ~3.25 cal-AI-days, fan-out to slots 3/4/5/6/7/8.**
+
+```yaml
+phases:
+  - id: phase-11-workspace-stale-ref-cleanup
+    todos:
+      - [ ] [AGENT slot 7] **P0. Phase 11a — deployment-service stale-ref cleanup.** ~80 live refs across 3 archived
+            strategy-consolidation services. Scope:
+            1. `terraform destroy` + dir removal for `deployment-service/terraform/services/{risk-and-exposure-service,
+               position-balance-monitor-service,pnl-attribution-service}/` (3 dirs × {gcp,aws} = 6 stack destroys).
+               Each dir has ARCHIVED.md marker — destroy the cloud resources, then delete the dir.
+            2. `terraform/shared/gcp/main.tf` lines 44-50 — remove 3 services from shared service lists.
+            3. `cloud-build/{gcp,aws}/main.tf` + `cloud-build/refresh-tarballs.cloudbuild.yaml` — remove tarball
+               refresh entries for 3 archived services.
+            4. Grafana dashboards (`deployment-service/grafana/dashboards/system-health.json` + others) — remove
+               panels for 3 archived service names; re-route relevant metrics to `strategy-service` with
+               `sub_package={risk,position,pnl}` filter.
+            5. `tests/unit/test_dependencies.py` + `test_cluster_materialisation.py` + `test_client_isolation.py` —
+               update assertion lists to drop archived service names.
+            6. `deployment-api/` service registry endpoints — verify Phase 8B work is complete + add missing entries.
+            Gate: `cd deployment-service && bash scripts/quality-gates.sh` GREEN + `terraform plan` GREEN.
+
+      - [ ] [AGENT slot 5] **P0. Phase 11b — unified-api-contracts stale-ref cleanup.** ~75 live refs across 3
+            archived strategy-consolidation services. Scope:
+            1. `canonical/crosscutting/risk_rule.py` (lines 20, 563, 695) — service topology refs need
+               `strategy-service` substitution (risk_rule is consumed by strategy_service/risk/, not a separate
+               service anymore).
+            2. `canonical/crosscutting/kill_switch.py:175` — kill-switch topic routing.
+            3. `canonical/crosscutting/service_emission_policy.py` (lines 190, 195) — emission policy entries for
+               archived services need updating (mark `consolidated_into: strategy-service`).
+            4. `canonical/crosscutting/circuit_breaker.py:5` — circuit breaker topology.
+            5. `registry/` files — any service-name enums / topology maps.
+            6. Across-the-grep: every remaining live-code ref → either rewire to `strategy-service` or remove if
+               obsolete. DEPRECATION_NOTICE / migration-history left intact.
+            Gate: `cd unified-api-contracts && bash scripts/quality-gates.sh` GREEN + cassette parity test green.
+
+      - [ ] [AGENT slot 5] **P0. Phase 11c — unified-trading-library stale-ref cleanup.** ~33 live refs across 3
+            archived strategy-consolidation services. Scope:
+            1. `tests/unit/test_emission_publisher.py` (lines 106, 194, 500, 511) — test fixtures using archived
+               service names; rewire to `strategy-service` with sub-package filter.
+            2. `tests/unit/test_topology_reader.py` (lines 124, 132, 138) — topology fixtures.
+            3. `tests/unit/test_auth_entitlements.py` (lines 148-149) — entitlement fixtures.
+            4. Source modules: grep for any non-test refs and remove (UTL has zero runtime knowledge of
+               archived-service names — all refs should be in tests only).
+            Gate: `cd unified-trading-library && bash scripts/quality-gates.sh` GREEN.
+
+      - [ ] [AGENT slot 6] **P0. Phase 11d — unified-trading-system-ui stale-ref cleanup.** ~50 live refs across 3
+            archived strategy-consolidation services. Scope:
+            1. `context/pm/data-flow-manifest.json` (lines 10, 19, 74, 83, 92, 101, 166, 176) — service registry
+               entries. Replace with `strategy-service` + sub-package metadata.
+            2. `context/pm/workspace-manifest.json` (lines 73, 185) — should already be updated to
+               `status=archived` per Phase 7; verify + clean orphan service entries.
+            3. `dashboard/index.tsx` + service registry — remove 3 service cards; ensure strategy-service card
+               surfaces risk/position/pnl sub-package health endpoints.
+            4. Monitoring panels — service-filter dropdowns / hardcoded lists.
+            Gate: `cd unified-trading-system-ui && bash scripts/quality-gates.sh` GREEN + dev-tier 0 boot test.
+
+      - [ ] [AGENT slot 8] **P1. Phase 11e — execution-service stale-ref cleanup.** ~18 live refs across 3 archived
+            strategy-consolidation services. Scope:
+            1. `execution_service/preflight.py:28` — hardcoded risk-service URL (HIGH: live runtime ref) → replace
+               with strategy-service URL or remove if pre-flight gate is satisfied by strategy_service/risk/.
+            2. `execution_service/providers/funding_pnl_accrual.py:9`,
+               `algo_library/dust_router_runner.py:16`, `matching_engine/slashing_*.py:96,44`,
+               `engine/pnl_monitor.py:149,158`, `preflight.py:11` — comment / docstring refs (in-scope per operator
+               directive since this is live source code, not migration history).
+            Gate: `cd execution-service && bash scripts/quality-gates.sh` GREEN. Composes with slot-8's open
+            Phase 4a/4b work on `strategy_execution_contract_remediation_2026_05_20.md`.
+
+      - [ ] [AGENT slot 3] **P1. Phase 11f — tail consumer cleanup (alerting + sys-int-tests + e2e + trading-agent).**
+            ~30 live refs across 3 archived strategy-consolidation services. Scope:
+            1. `alerting-service/risk_rule_event_handler.py:3`, `core/system_health_aggregator.py:26`,
+               `subscribers/batch_event_reader.py:40` — rewire to strategy-service.
+            2. `trading-agent-service/config.py:126`, `adapters/risk_adapter.py:1,20` — HTTP client base URLs +
+               adapter imports → strategy-service.
+            3. `system-integration-tests/tests/smoke/test_deployment_smoke.py:178` + `integration/test_*_e2e.py` —
+               5 skip guards + service lists.
+            4. `e2e-testing/scripts/` — any archived-service references.
+            Gate: per-repo `quality-gates.sh` GREEN.
+
+      - [ ] [AGENT slot 4] **P1. Phase 11g — strategy-service own-repo logger/string cleanup.** ~30 live refs in
+            strategy-service itself. Scope: logger format strings + CLI banner strings still saying
+            `position-balance-monitor-service` / `risk-and-exposure-service` / `pnl-attribution-service`. Rewire to
+            `strategy-service.{position,risk,pnl}` sub-package naming. Examples:
+            - `strategy_service/position/cli/main.py:53` — `"Starting position-balance-monitor-service (...)"`
+              → `"Starting strategy-service position sub-package (...)"`.
+            - Equivalent in `strategy_service/risk/cli/` + `strategy_service/pnl/cli/`.
+            **Out of scope per operator directive**: docstring module headers ("CLI entry point of
+            position-balance-monitor-service") + CHANGELOG + migration-history — leave intact as legitimate
+            historical record.
+            Gate: `cd strategy-service && bash scripts/quality-gates.sh` GREEN + boot all 4 health endpoints.
+
+      - [ ] [AGENT slot 6] **P0. Phase 11h — DEPRECATION_NOTICE audit + verification.** Verify each of the 3 archived
+            source repos (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`)
+            has a correct `DEPRECATION_NOTICE.md` at repo root pointing to the new home (strategy_service/risk,
+            strategy_service/position, strategy_service/pnl). Recipe:
+            ```bash
+            for svc in risk-and-exposure-service position-balance-monitor-service pnl-attribution-service; do
+              gh api repos/IggyIkenna/$svc/contents/DEPRECATION_NOTICE.md --jq .content | base64 -d | head -20
+            done
+            ```
+            Confirm: archived=true + DEPRECATION_NOTICE present + content points to strategy-service sub-package +
+            workspace-manifest.json status=archived + archived_into=strategy-service.
+            Gate: ack in Phase 7 audit trail + flip checkbox.
+
+    status: pending
+    blocked_by: phase-7-archive-source-repos
+```
+
+**Compose-with**: `ml_repo_consolidation_2026_05_19.md` Phase 11 (parallel ML-side cleanup — slots 6 + 8 own UI +
+ml-service test cleanup respectively). Operator pings still open for ml-archive (`gh repo archive`) and
+strategy/execution Phase 4 (bucket-strategy decision) — both pre-existing and unchanged by this phase.
+
+**Done = all 8 sub-phases (11a-11h) flipped + per-repo QG green + DEPRECATION_NOTICE audit ack.**
+

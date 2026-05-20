@@ -1,6 +1,52 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
-> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 6 + 8. History below
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch + 2026-05-20 strategy-consolidation Phase 11
+> dispatch.** Booting agents: read BOTH 2026-05-20 entries below FIRST (Phase 11 is the most-recent), then
+> `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 6 + 8. History below
 > 2026-05-20 is audit-trail only.
+
+---
+
+## [slot 1 main → slot 7] 2026-05-20 (later) — 🔴 P0 ADDITIONAL — strategy + ML consolidation Phase 11a+b (deployment-service cleanup, terraform destroy)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to BOTH consolidation plans after a workspace audit found ~545 live-code refs to the 5 archived
+services still present in consumer repos. **deployment-service has the largest cleanup load (~142 live refs)** —
+this slot owns it because you already shipped Phase 8A launcher migration in the original plan.
+
+**Your slice (slot 7, P0 — deployment-service cleanup for both consolidations into a single QG pass)**:
+
+- **Plans**:
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11a** (deployment-service, strategy side).
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11b** (deployment-service, ML side).
+- **Scope (~142 live refs total)**:
+  1. **Terraform destroy** + dir removal for **5 archived service stacks** (`terraform/services/{risk-and-exposure-service,
+     position-balance-monitor-service, pnl-attribution-service, ml-training-service, ml-inference-service}/`):
+     - Each has an ARCHIVED.md marker.
+     - Per service: `cd terraform/services/<svc>/gcp && terraform destroy`; same for `aws`. 5 services × 2 clouds =
+       **10 stack destroys**. Verify zero remaining cloud resources before deleting dirs.
+  2. `terraform/shared/gcp/main.tf` lines 44-50 — remove all 5 archived service names from shared service lists.
+  3. `cloud-build/{gcp,aws}/main.tf` + `cloud-build/refresh-tarballs.cloudbuild.yaml` lines 116-117 — remove tarball
+     refresh entries for all 5 archived services; verify the consolidated entries (strategy-service, ml-service) are
+     present.
+  4. `grafana/dashboards/system-health.json` + other dashboards — remove panels for 5 archived service names; route
+     metrics to {strategy-service, ml-service} with `sub_package` filter.
+  5. `tests/unit/test_dependencies.py` + `test_cluster_materialisation.py` + `test_client_isolation.py` — update
+     assertion lists.
+  6. `deployment-api/` service registry endpoints — verify Phase 8B work covers the consolidated entries (~25 refs
+     specifically in deployment-api for ML side).
+- **ML-side note**: ml-service-side terraform destroy is technically not blocked by the operator `gh repo archive`
+  ping (line 41 of `_agent_pings.md`) — you can destroy the cloud resources independently of the GitHub repo state.
+  But coordinate with `_agent_pings.md` line 41 ack to align timing.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / ARCHIVED.md markers themselves — leave
+  intact; you DELETE the terraform dirs (containing ARCHIVED.md) only AFTER terraform destroy succeeds.
+- **Gate**: `cd deployment-service && bash scripts/quality-gates.sh` GREEN + `terraform plan` GREEN (no orphan
+  state).
+- **Estimate**: ~1.25 cal-AI-days bundled.
+- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip — flip BOTH plans' matching phase
+  checkboxes per single deployment-service PR
+  (`docs(plans): flip Phase 11a (strategy) + 11b (ml) — deployment-service@<sha>`).
+
+**Compose-with**: your existing Group H Phases 6 + 8 assignment is the priority; this Phase 11 work composes since
+both touch deployment-service infrastructure.
 
 ---
 

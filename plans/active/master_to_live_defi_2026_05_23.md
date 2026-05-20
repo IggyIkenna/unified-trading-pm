@@ -210,6 +210,16 @@ folded into the appropriate epic._
 
 <!-- AUTO-INVENTORY-END -->
 
+> **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
+> and `ml_repo_consolidation_2026_05_19` had **Phase 11 — workspace-wide stale-ref cleanup** appended 2026-05-20 per
+> operator directive ("finish all strategy consolidation related plans for your slots"). Workspace audit found ~545
+> live-code refs to the 5 archived services across consumer repos (deployment-service, UAC, UTL, UI, execution,
+> tail). Scope: live code + DEPRECATION_NOTICE audit only; docstrings/CHANGELOG/migration-history stay intact. New
+> phase fan-out: ~4.75 cal-AI-days across slots 3, 4, 5, 6, 7, 8. Two operator-pending items still unblocked:
+> (a) `gh repo archive` for ml-training-service + ml-inference-service (`_agent_pings.md` line 41+); (b) bucket-strategy
+> decision unblocking `strategy_execution_contract_remediation_2026_05_20` Phase 4a/4b. **Inventory counts above will
+> drop for both plans on next regenerate** (e.g. strategy plan: 17/18 → 17/26; ml plan: 17/17 → 17/25).
+
 ---
 
 ## What this plan is — three deliverables in one doc

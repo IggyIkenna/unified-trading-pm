@@ -1,6 +1,40 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 dispatches.** Booting agents: read the TWO 2026-05-20 entries at the top
-> FIRST (un-defer + downstream Group H plan), then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block
-> 2026-05-20). History below 2026-05-20 entries is audit-trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 dispatches (THREE entries now).** Booting agents: read the THREE
+> 2026-05-20 entries at the top FIRST (latest = Phase 11 UAC + UTL cleanup, then un-defer + downstream Group H
+> plan), then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block 2026-05-20). History below
+> 2026-05-20 entries is audit-trail only.
+
+---
+
+## [slot 1 main → slot 5] 2026-05-20 (latest) — 🔴 P0 ADDITIONAL — strategy + ML consolidation Phase 11b+c+d (UAC + UTL cleanup, both consolidations)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to BOTH consolidation plans after a workspace audit found ~545 live-code refs to the 5 archived
+services still present in consumer repos.
+
+**Your slice (slot 5, P0 — bundled across both consolidations into a single QG-per-repo pass)**:
+
+- **Plans**:
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11b** (UAC) + **Phase 11c** (UTL) — strategy side.
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11c** (UAC) + **Phase 11d** (UTL) — ML side.
+- **Scope (UAC, ~119 live refs total)**: rewire archived-service names to consolidated repos in:
+  - `canonical/crosscutting/risk_rule.py` (lines 20, 563, 695), `kill_switch.py:175`,
+    `service_emission_policy.py` (lines 190, 195), `circuit_breaker.py:5`.
+  - `registry/` files — service-name enums / topology maps for all 5 archived services.
+  - Replace `risk-and-exposure-service` / `position-balance-monitor-service` / `pnl-attribution-service` →
+    `strategy-service`; `ml-training-service` / `ml-inference-service` → `ml-service`.
+- **Scope (UTL, ~57 live refs total)**: rewire test fixtures:
+  - `tests/unit/test_emission_publisher.py` (lines 106, 194, 500, 511) — emission test fixtures.
+  - `tests/unit/test_topology_reader.py` (lines 124, 132, 138) — topology fixtures.
+  - `tests/unit/test_auth_entitlements.py` (lines 148-149) — entitlement fixtures.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history / docstrings.
+- **Gate**: `cd unified-api-contracts && bash scripts/quality-gates.sh` GREEN + cassette parity test green; same for
+  unified-trading-library. Bundle both consolidations into ONE quickmerge per repo (one UAC PR, one UTL PR).
+- **Estimate**: ~1.0 cal-AI-days bundled (0.75 UAC + 0.25 UTL, both sides combined).
+- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip in same agent turn — flip BOTH plans'
+  matching phase checkboxes per single repo PR (`docs(plans): flip Phase 11b+c (strategy + ml) — uac@<sha>`).
+
+**Compose-with**: your existing Group H downstream-plan Phase 1+2 dispatch is the priority; this Phase 11 work fits
+in the same quality-gate pass since both touch UAC. If you're mid-UAC anyway, bundle the cleanup into the same PR.
 
 ---
 

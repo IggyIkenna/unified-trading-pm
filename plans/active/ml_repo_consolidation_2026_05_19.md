@@ -14,7 +14,7 @@ overview:
   parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
 type: infra
 epic: ml_and_features_master_2026_05_07
-status: complete
+status: active-cleanup-phase-11
 
 asset_group: cross-cutting
 priority: P0
@@ -500,3 +500,133 @@ cal-AI-days for ML consolidation. Still single-slot ownership; no new slot neede
 ## Codex SSOT updates (mandatory enumeration — HARD RULE)
 
 See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 ships without all 8 verified.
+
+---
+
+## Phase 11 — Archive finalisation + workspace-wide stale-ref cleanup (REOPENED 2026-05-20 per operator directive)
+
+> **Reopen note (2026-05-20)**: operator directed an audit-and-finalise sweep covering both strategy + ML
+> consolidations. Phase 7 (gh repo archive of ml-training-service + ml-inference-service) is BLOCKED on operator
+> action (ping filed 2026-05-20 11:30 UTC in `_agent_pings.md`). Workspace-wide grep also found **~330 LIVE-CODE refs**
+> to `ml-training-service` / `ml-inference-service` across consumer repos (excluding DEPRECATION_NOTICE / ARCHIVED.md
+> / CHANGELOG / migration-history). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit
+> only** — skip docstrings, CHANGELOG, migration-history.
+>
+> Counts (live-code refs only, 2 ML-consolidation services):
+>
+> | Repo                          | ml-train | ml-infer | Total live refs | Owner slot      | Est cal-AI-days |
+> | ----------------------------- | -------- | -------- | --------------- | --------------- | --------------- |
+> | deployment-service            | 30       | 32       | ~62             | slot 7          | 0.5             |
+> | unified-trading-system-ui     | 15       | 23       | ~38             | slot 6          | 0.5             |
+> | unified-api-contracts         | 21       | 23       | ~44             | slot 5          | 0.5             |
+> | unified-trading-library       | 16       | 8        | ~24             | slot 5          | 0.25            |
+> | ml-service (own repo cleanup) | 34       | 35       | ~69             | slot 8          | 0.25            |
+> | deployment-api                | 16       | 9        | ~25             | slot 7          | 0.25            |
+> | execution + sys-int + tail    | tail     | tail     | ~30             | slot 8          | 0.25            |
+>
+> **Total: ~2.5 cal-AI-days, fan-out to slots 5/6/7/8.**
+
+```yaml
+phases:
+  - id: phase-11a-operator-archive-action
+    todos:
+      - [ ] **[OPERATOR REQUIRED] P0. Phase 11a — `gh repo archive` ml-training-service + ml-inference-service.**
+            Run:
+            ```bash
+            gh repo archive IggyIkenna/ml-training-service --yes
+            gh repo archive IggyIkenna/ml-inference-service --yes
+            gh api repos/IggyIkenna/ml-training-service --jq .archived  # expect: true
+            gh api repos/IggyIkenna/ml-inference-service --jq .archived  # expect: true
+            ```
+            Ping filed 2026-05-20 11:30 UTC by ikenna-slot-8 (see `_agent_pings.md` line 41). Pending operator
+            execution. **Blocks Phase 11b-h** — stale-ref cleanup is partially blocked until the source repos go
+            archived (CI on archived repos cannot run, so any quickmerge promotion to the source repo also blocks).
+    status: blocked-operator
+    blocked_by: operator-archive-action
+
+  - id: phase-11b-deployment-service-cleanup
+    todos:
+      - [ ] [AGENT slot 7] **P0. Phase 11b — deployment-service stale-ref cleanup (ML side).** ~62 live refs across
+            ml-training-service + ml-inference-service. Scope:
+            1. `terraform destroy` + dir removal for
+               `deployment-service/terraform/services/{ml-training-service,ml-inference-service}/` (2 dirs ×
+               {gcp,aws} = 4 stack destroys). Has ARCHIVED.md markers.
+            2. `terraform/shared/gcp/main.tf` — remove ml-training + ml-inference from shared service lists.
+            3. `cloud-build/{gcp,aws}/main.tf` + `refresh-tarballs.cloudbuild.yaml` — remove tarball refresh entries
+               for ml-training + ml-inference (replace with single `ml-service` entry — verify Phase 8B work).
+            4. Grafana dashboards — remove panels for archived ml service names; re-route to ml-service with
+               `sub_package={training,inference}` filter.
+            5. `tests/unit/test_dependencies.py` etc — update assertion lists.
+            6. `deployment-api/` — verify ml-service registry endpoint replaced ml-training + ml-inference (~25 refs
+               in deployment-api specifically).
+            Gate: `cd deployment-service && bash scripts/quality-gates.sh` GREEN + `terraform plan` GREEN.
+            **Composes with Phase 11a strategy-side deployment-service cleanup — same slot 7, single QG run.**
+
+  - id: phase-11c-uac-cleanup
+    todos:
+      - [ ] [AGENT slot 5] **P0. Phase 11c — unified-api-contracts ML stale-ref cleanup.** ~44 live refs. Scope:
+            1. `registry/` files referencing ml-training-service / ml-inference-service service names → replace with
+               `ml-service` + sub-package.
+            2. `canonical/` files (similar to strategy side) — service topology, emission policy, kill-switch routing.
+            3. Across-the-grep verify no remaining live-code refs.
+            Gate: `cd unified-api-contracts && bash scripts/quality-gates.sh` GREEN + cassette parity test green.
+            **Composes with strategy-side UAC cleanup (Phase 11b of strategy plan) — same slot 5, single QG run.**
+
+  - id: phase-11d-utl-cleanup
+    todos:
+      - [ ] [AGENT slot 5] **P0. Phase 11d — unified-trading-library ML stale-ref cleanup.** ~24 live refs (tests
+            mostly). Scope: same as strategy side — `tests/unit/test_emission_publisher.py`,
+            `test_topology_reader.py`, `test_auth_entitlements.py` ML-side fixtures. Rewire to `ml-service` with
+            sub-package filter.
+            Gate: `cd unified-trading-library && bash scripts/quality-gates.sh` GREEN.
+
+  - id: phase-11e-ui-cleanup
+    todos:
+      - [ ] [AGENT slot 6] **P0. Phase 11e — unified-trading-system-ui ML stale-ref cleanup.** ~38 live refs. Scope:
+            1. `context/pm/data-flow-manifest.json` + `workspace-manifest.json` — verify ml-service replaced
+               ml-training + ml-inference entries.
+            2. Service registry / dashboard cards — remove 2 archived-service cards; ensure ml-service card surfaces
+               training + inference sub-package health endpoints.
+            3. Monitoring panels — service-filter dropdowns.
+            Gate: `cd unified-trading-system-ui && bash scripts/quality-gates.sh` GREEN + dev-tier 0 boot test.
+            **Composes with strategy-side UI cleanup — same slot 6, single QG run.**
+
+  - id: phase-11f-ml-service-own-cleanup
+    todos:
+      - [ ] [AGENT slot 8] **P0. Phase 11f — ml-service own-repo logger/string cleanup.** ~69 live refs in ml-service
+            itself. Scope:
+            1. Logger format strings + CLI banner strings still saying `ml-training-service` / `ml-inference-service`.
+               Rewire to `ml-service.{training,inference}` sub-package naming.
+            2. `tests/experiments/phase_5d_runlist_2026_04_18.yaml:357` + test scaffolding service references.
+            **Out of scope per operator directive**: docstring module headers + CHANGELOG + migration-history.
+            Gate: `cd ml-service && bash scripts/quality-gates.sh` GREEN + boot both health endpoints.
+
+  - id: phase-11g-execution-tail-cleanup
+    todos:
+      - [ ] [AGENT slot 8] **P1. Phase 11g — execution + sys-int + tail ML stale-ref cleanup.** ~30 live refs.
+            Scope: any execution-service / system-integration-tests / e2e refs to ml-training-service or
+            ml-inference-service — rewire to ml-service.
+            Gate: per-repo `quality-gates.sh` GREEN.
+
+  - id: phase-11h-deprecation-notice-audit-ml
+    todos:
+      - [ ] [AGENT slot 6] **P0. Phase 11h — DEPRECATION_NOTICE audit (ML side).** After Phase 11a operator action
+            lands, verify ml-training-service + ml-inference-service have correct DEPRECATION_NOTICE.md at repo root
+            pointing to ml-service sub-packages. Recipe:
+            ```bash
+            for svc in ml-training-service ml-inference-service; do
+              gh api repos/IggyIkenna/$svc/contents/DEPRECATION_NOTICE.md --jq .content | base64 -d | head -20
+              gh api repos/IggyIkenna/$svc --jq .archived
+            done
+            ```
+            Gate: ack in Phase 7 audit trail + flip checkbox.
+    status: pending
+    blocked_by: phase-11a-operator-archive-action
+```
+
+**Compose-with**: `strategy_repo_consolidation_2026_05_19.md` Phase 11 (parallel strategy-side cleanup — same slots).
+Slots 5, 6, 7 each do BOTH strategy + ML cleanup in their consumer repo in a single QG run. Slot 8 does ML own-repo +
+execution/tail; slot 4 does strategy own-repo; slot 3 does strategy alerting/sys-int tail.
+
+**Done = all 8 sub-phases (11a-11h) flipped + per-repo QG green + DEPRECATION_NOTICE audit ack + both source repos
+archived=true on GitHub.**
