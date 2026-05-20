@@ -6,6 +6,8 @@ created: 2026-05-08
 last_updated: 2026-05-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 data_dependency: |
   Operator confirmation 2026-05-15: "cme_polymarket_arb dependency on tick data - i think ohlcv 1m
   is enough to get a feel for arb backtest". Plan does NOT require Databento trades/tbbo/mbp_10 (L1-L3
@@ -157,6 +159,10 @@ todos:
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
 annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
 — this plan tracks multiple per-item dispositions.
+
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 # CME × Polymarket Cross-Venue Event-Arb Plan
 

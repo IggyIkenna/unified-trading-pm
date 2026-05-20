@@ -24,17 +24,22 @@ related_plans:
   - data_status_multi_axis_shard_propagation_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
-> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for cefi asset_group**:
-> 16,171 `MISSING_EXPECTED` + 17,207 `ATTEMPTED_FAILED` cells.
-> MISSING: OKX (trades/book_snapshot_5/derivative_ticker/liquidations all 2,332 cells) +
-> COINBASE (trades/book_snapshot_5, 2,332 each) + UPBIT (trades/book_snapshot_5, 450 each).
-> FAILED: DERIBIT futures_chain (2,286) + options_chain (2,283) + liquidations (1,819) +
-> BINANCE-FUTURES futures_chain (2,309) + book_snapshot_5 (669) + BYBIT futures_chain (2,083) +
-> book_snapshot_5 (589) + ASTER ALL 4 types (563 each from launch) + HYPERLIQUID liquidations (916).
-> Reassigned slot 9 portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED"
-> + CLAUDE.md HARD RULE.
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
+
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for cefi asset_group**: 16,171 `MISSING_EXPECTED` + 17,207
+> `ATTEMPTED_FAILED` cells. MISSING: OKX (trades/book_snapshot_5/derivative_ticker/liquidations all 2,332 cells) +
+> COINBASE (trades/book_snapshot_5, 2,332 each) + UPBIT (trades/book_snapshot_5, 450 each). FAILED: DERIBIT
+> futures_chain (2,286) + options_chain (2,283) + liquidations (1,819) + BINANCE-FUTURES futures_chain (2,309) +
+> book_snapshot_5 (669) + BYBIT futures_chain (2,083) + book_snapshot_5 (589) + ASTER ALL 4 types (563 each from
+> launch) + HYPERLIQUID liquidations (916). Reassigned slot 9 portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 —
+> REASSIGNED"
+>
+> - CLAUDE.md HARD RULE.
 >
 > **Scope MUST cover every venue × data_type — no asset_group skipped, no deadline-driven cutbacks**.
 

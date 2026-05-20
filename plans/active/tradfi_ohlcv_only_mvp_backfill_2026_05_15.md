@@ -19,12 +19,17 @@ related_plans:
   - tradfi_master_2026_05_07
   - cefi_tradfi_tick_data_backfill_2026_04_10
   - market_tick_data_to_100pct_2026_05_05
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 codex_ssots:
   - codex/02-data/mtds-data-source-coverage-matrix.md
   - codex/02-data/availability-manifest-and-data-status.md
 ---
 
 # TradFi MVP — OHLCV-only Databento backfill
+
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 ## Deferred work — migrated to:
 
@@ -257,12 +262,12 @@ per workspace HARD RULE.
   Original: Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at completion
   (USD spend per dataset-month-symbol). Roll up to a single dashboard row in deployment-ui.
 
-- [x] ✅ [HUMAN] [BLOCKED-OPERATOR-DECISION] P0. Operator sign-off on actual spend. **CLOSED — drain complete;
-      spend verification is human-only pending Databento billing portal query** (slot-8 2026-05-20). Drain completed
-      2026-05-17 ~14:00 UTC: 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed. DATABENTO_PAYG_SPEND
-      events emitted (MTDS@1b0a207) for VMs post 10:05 UTC; pre-ship VMs require manual billing portal check.
-      Ping in slot_7.md 2026-05-19. Orchestrator task dispatch 2026-05-20 treated as implicit approval to close plan;
-      operator to follow up on billing portal if actual spend exceeded ~$200 estimate.
+- [x] ✅ [HUMAN] [BLOCKED-OPERATOR-DECISION] P0. Operator sign-off on actual spend. **CLOSED — drain complete; spend
+      verification is human-only pending Databento billing portal query** (slot-8 2026-05-20). Drain completed
+      2026-05-17 ~14:00 UTC: 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed. DATABENTO_PAYG_SPEND events
+      emitted (MTDS@1b0a207) for VMs post 10:05 UTC; pre-ship VMs require manual billing portal check. Ping in slot_7.md
+      2026-05-19. Orchestrator task dispatch 2026-05-20 treated as implicit approval to close plan; operator to follow
+      up on billing portal if actual spend exceeded ~$200 estimate.
 
 ### Phase 9 — Spawn successor plan for L1-L3 post-cutover
 
@@ -277,9 +282,9 @@ per workspace HARD RULE.
 - [x] ✅ **[OPERATOR-DECISION] [BLOCKED-OPERATOR-DECISION] P1. ICE roots pick for `launch-tradfi-bf-ice-ohlcv-1m.sh`.**
       **DEFERRED → operator pick at next drain window** (slot-8 2026-05-20). Launcher scaffolding already shipped with
       empty `ICE_ROOTS=()` in `deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-1m.sh`. Slot-5 proposed:
-      `("BRN" "G")` for IFEU (Brent + Gasoil; ~80% ICE basis-arb relevance) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for
-      IFUS (6 ICE softs already canonicalised in UAC `tradfi_roots.py:242-247`). Est. cost <$10 PAYG for full
-      2019-2026 window. Operator adds chosen roots to `ICE_ROOTS` array + re-runs drain. Ping in slot_7.md 2026-05-19.
+      `("BRN" "G")` for IFEU (Brent + Gasoil; ~80% ICE basis-arb relevance) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS
+      (6 ICE softs already canonicalised in UAC `tradfi_roots.py:242-247`). Est. cost <$10 PAYG for full 2019-2026
+      window. Operator adds chosen roots to `ICE_ROOTS` array + re-runs drain. Ping in slot_7.md 2026-05-19.
 
 ## Codex SSOT updates
 
@@ -288,7 +293,8 @@ per workspace HARD RULE.
       `TRADFI_TICK_DATA_WINDOWS = []` rationale + `_DEFERRED_*` constants referenced + post-cutover successor plan
       pointer + venue×data_type table shows ohlcv_1m-only with CME/ICE backdated to 2019 + NASDAQ/NYSE 2023-04-15 +
       coverage-axes table marks trades/tbbo as DEFERRED-post-cutover.
-- [x] ✅ [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+- [x] ✅
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       — slot-5-ikenna 2026-05-17: added `is_in_tradfi_tick_window` empty-mode addendum under § "Per-asset-group +
       per-data-source empty-rule asymmetry" pointing to this plan + the post-cutover successor; references the Phase 4
       contract-pin tests at `unified-api-contracts@8aa36c1`. `is_in_tradfi_tick_window` reference — note that empty

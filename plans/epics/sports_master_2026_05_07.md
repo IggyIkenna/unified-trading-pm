@@ -25,21 +25,22 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
-> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for sports asset_group**:
-> 25,652 `MISSING_EXPECTED` cells across ALL 11 bookmaker × data_type combos
-> (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE × odds_snapshot + odds_movement).
-> The full window is missing — sports backfill has NOT run for any of these venues.
-> Reassigned slot 7 (was simulation_scenarios + defi_master P2-3) per
-> `work_split_2026_05_19_ikenna.md` § "Slot 7 — REASSIGNED" + CLAUDE.md HARD RULE
-> "Data Pipeline Correctness Is The Heartbeat". Includes A2 oracle gap remediation
-> for sports off-season calendars per
-> `audit/results/expected_coverage_calendar_decisions_2026_05_20.md`.
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
+
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for sports asset_group**: 25,652 `MISSING_EXPECTED` cells across
+> ALL 11 bookmaker × data_type combos (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE × odds_snapshot +
+> odds_movement). The full window is missing — sports backfill has NOT run for any of these venues. Reassigned slot 7
+> (was simulation_scenarios + defi_master P2-3) per `work_split_2026_05_19_ikenna.md` § "Slot 7 — REASSIGNED" +
+> CLAUDE.md HARD RULE "Data Pipeline Correctness Is The Heartbeat". Includes A2 oracle gap remediation for sports
+> off-season calendars per `audit/results/expected_coverage_calendar_decisions_2026_05_20.md`.
 >
-> **Scope MUST cover every bookmaker × data_type — no asset_group skipped, no
-> deadline-driven cutbacks** (operator directive 2026-05-20). Closed-set deferral
-> only via `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` /
+> **Scope MUST cover every bookmaker × data_type — no asset_group skipped, no deadline-driven cutbacks** (operator
+> directive 2026-05-20). Closed-set deferral only via `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` /
 > `BLOCKED-UPSTREAM-OUTAGE` with operator ack.
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
@@ -1005,19 +1006,19 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 > **MIGRATED FROM**: `plans/active/trigger_based_reference_data_2026_04_13.md` Phase A2.4-5 + A3.2-4 + A4.1 + C1b.
 > Already-shipped items (A2.1-3, A3.1) were flipped in the source plan (pm@<flip-sha>).
 
-- [ ] [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/` (trigger-dated)**
-      — Change `_fetch_transfermarkt_data` write path from `by_date/` only to also write
+- [ ] [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/` (trigger-dated)** —
+      Change `_fetch_transfermarkt_data` write path from `by_date/` only to also write
       `sports_reference/master/entity=teams/`, `sports_reference/master/entity=team_mapping/`,
       `sports_reference/master/entity=player_values/` (accumulating) +
-      `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/` (point-in-time).
-      ML training needs point-in-time squad values to avoid lookahead bias.
-- [ ] [CODE] P2. **team_mapping append-only** — read existing master parquet, merge new rows, write back.
-      Depends on GCS write-path item above.
+      `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/` (point-in-time). ML training needs
+      point-in-time squad values to avoid lookahead bias.
+- [ ] [CODE] P2. **team_mapping append-only** — read existing master parquet, merge new rows, write back. Depends on GCS
+      write-path item above.
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5.
-- [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026
-      (from `get_reference_refresh_dates()`), run instruments-service with `--season=X --start-date=trigger_date
-      --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh` pattern but iterates trigger
-      dates not date ranges.
+- [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026 (from
+      `get_reference_refresh_dates()`), run instruments-service with
+      `--season=X --start-date=trigger_date     --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh`
+      pattern but iterates trigger dates not date ranges.
 - [ ] [SCRIPT] P2. **VM fleet run** for trigger-date backfill (parallelize by league). Operational.
 - [ ] [QG] P2. Validate GCS snapshots exist for all trigger dates × leagues × seasons.
 - [ ] [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities (teams/team_mapping/player_values).

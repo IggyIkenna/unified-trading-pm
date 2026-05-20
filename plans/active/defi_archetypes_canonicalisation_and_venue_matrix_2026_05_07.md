@@ -23,8 +23,13 @@ estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 12
 estimate_calibration_note: |
   Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
+related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 > **🟡 IN-FLIGHT REFACTOR — `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` (successor to
 > `defi_recursive_borrow_archetypes_2026_05_10.md`) consumes the lending-indices DEFERRED note in this plan as a P0
@@ -105,12 +110,12 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
 - [x] **BLOCKED-CREDENTIALS** [SCRIPT] P0. Live-API probe to confirm exact 2026-05-07 collateral value ratios for:
       Deribit stETH, Bybit stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document each in
       `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with API/URL evidence per
-      venue. **Status 2026-05-18**: Playbook doc already exists at that path with web-doc citations (Deribit 7.5%,
-      Bybit 10%, OKX 10% — conservative placeholders). Live-API endpoint probe (Deribit `/private/get-position-mode`,
-      Bybit `/v5/account/info`, OKX `/api/v5/account/account-position-risk`) requires operator venue account
-      credentials. Credential ask filed: `harsh_orchestrator/pings/slot_3.md` 2026-05-18 21:05 UTC. PM@`29dd6f7a` at
-      item 18. Under-utilises margin pool until confirmed (safe error, not correctness bug per playbook doc). **FORMALLY
-      CLOSED 2026-05-19 slot-5** as BLOCKED-CREDENTIALS with named ping.
+      venue. **Status 2026-05-18**: Playbook doc already exists at that path with web-doc citations (Deribit 7.5%, Bybit
+      10%, OKX 10% — conservative placeholders). Live-API endpoint probe (Deribit `/private/get-position-mode`, Bybit
+      `/v5/account/info`, OKX `/api/v5/account/account-position-risk`) requires operator venue account credentials.
+      Credential ask filed: `harsh_orchestrator/pings/slot_3.md` 2026-05-18 21:05 UTC. PM@`29dd6f7a` at item 18.
+      Under-utilises margin pool until confirmed (safe error, not correctness bug per playbook doc). **FORMALLY CLOSED
+      2026-05-19 slot-5** as BLOCKED-CREDENTIALS with named ping.
 - [x] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries.
       **VERIFIED 2026-05-09 audit** — Stream A flip comments confirmed at venue_collateral.py:138 (DERIBIT stETH + 7.5%
       haircut), :159+ (BYBIT entries), :173 (OKX wstETH); plus rows at lines 162/164/167/170 for BYBIT
@@ -148,8 +153,8 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
       remove the hardcode. **CONFIRMED 2026-05-18 slot-3 audit**: `_emit_staked_basis_slots` calls
       `_resolve_start_token(perp_venue, lst_asset)` → `accepted_perp_collateral(venue)` → reads
       `VENUE_COLLATERAL_MATRIX` at import time. Zero hardcoded acceptance logic. Design note: `"OKX-FUTURES"` in
-      `_STAKED_BASIS_ETH_PERP_VENUES` maps to UAC entries with no LST acceptance; bare `"OKX"` (wstETH accepted=True)
-      is NOT in the venue tuple — gated behind [SCRIPT] P0 ratio confirmation. No code change needed.
+      `_STAKED_BASIS_ETH_PERP_VENUES` maps to UAC entries with no LST acceptance; bare `"OKX"` (wstETH accepted=True) is
+      NOT in the venue tuple — gated behind [SCRIPT] P0 ratio confirmation. No code change needed.
 
 **Gate:** UAC quality-gates pass with the 5+ flipped rows + new tests; codex doc reflects the corrected matrix; PM
 quality-gates pass on the new playbook + carry-staked-basis.md edits.
@@ -261,8 +266,8 @@ L205 P&L attribution ✅ Phase C at pnl-attribution-service@f5dcf63 + operationa
 `gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
 sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 + SOL `bybit→hyperliquid` $45.19 EMIT pairs).
 Successor finalisation plan
-[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md) shipped
-100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
+[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)
+shipped 100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
 
 ---
 
@@ -378,22 +383,25 @@ variant (6% → 18% net at 3x).
 
 **Tasks**
 
-- [x] [codex] P0. ✅ PM@5fe86b19 — `arbitrage-price-dispersion.md` config schema: added
-      `target_leverage: 1.0` [1,10] + `target_net_delta: 0.0` + `max_underlying_move_pct: 3.0` +
-      `instrument_volatility_registry_lookup: true`. Defaults + bounds documented.
+- [x] [codex] P0. ✅ PM@5fe86b19 — `arbitrage-price-dispersion.md` config schema: added `target_leverage: 1.0` [1,10] +
+      `target_net_delta: 0.0` + `max_underlying_move_pct: 3.0` + `instrument_volatility_registry_lookup: true`.
+      Defaults + bounds documented.
 - [x] [codex] P0. ✅ PM@5fe86b19 — `carry-basis-perp.md` config schema: same additions (delta-neutral carry hedge; wider
       vol-cap clamp comment).
 - [x] [codex] P0. ✅ PM@5fe86b19 — `carry-staked-basis.md` config schema: same additions; documented that
       `target_leverage = 1.0` always for LST_AS_MARGIN (field universal per StrategyInstanceDefinition).
 - [x] ✅ [codex] P1. Remaining archetype docs — same `target_leverage` / `target_net_delta` schema entries. Defaults can
-      vary per archetype; the field is universal. PM@8855eaca — 14 docs with `## Config schema` updated (carry-basis-dated,
-      event-driven, liquidation-capture, market-making-continuous ×2, market-making-event-settled, ml-directional-continuous,
-      ml-directional-event-settled, rules-directional-continuous, rules-directional-event-settled, stat-arb-cross-sectional,
-      stat-arb-pairs-fixed, vol-trading-options, yield-rotation-lending, yield-staking-simple). Docs without yaml config
-      schemas (carry-recursive-borrow-*, defi-lp-*, arbitrage-mev-*) use different formats — not in scope.
-- [x] ✅ DEFERRED [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields where the
-      schema declares them. **DEFERRED to deployment-ui touch**; tracker here. Named successor: opened when deployment-ui touches paper-trade configs per Temporary states.
-- [x] ✅ DEFERRED [paper-trade configs] P1. Paper-trade YAML templates need `target_leverage` field examples. **DEFERRED**. Named successor: opened when strategy-service touches paper-trade configs per Temporary states.
+      vary per archetype; the field is universal. PM@8855eaca — 14 docs with `## Config schema` updated
+      (carry-basis-dated, event-driven, liquidation-capture, market-making-continuous ×2, market-making-event-settled,
+      ml-directional-continuous, ml-directional-event-settled, rules-directional-continuous,
+      rules-directional-event-settled, stat-arb-cross-sectional, stat-arb-pairs-fixed, vol-trading-options,
+      yield-rotation-lending, yield-staking-simple). Docs without yaml config schemas (carry-recursive-borrow-_,
+      defi-lp-_, arbitrage-mev-\*) use different formats — not in scope.
+- [x] ✅ DEFERRED [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields
+      where the schema declares them. **DEFERRED to deployment-ui touch**; tracker here. Named successor: opened when
+      deployment-ui touches paper-trade configs per Temporary states.
+- [x] ✅ DEFERRED [paper-trade configs] P1. Paper-trade YAML templates need `target_leverage` field examples.
+      **DEFERRED**. Named successor: opened when strategy-service touches paper-trade configs per Temporary states.
 
 **Gate:** All affected archetype docs have `target_leverage` + `target_net_delta` + volatility-cap clamp in their config
 schemas.
@@ -427,24 +435,25 @@ overgeneralisation.
 
 ## Success criteria (whole plan)
 
-- [x] ✅ Stream A: UAC matrix flipped + tests pass + codex venue table updated
-      (UAC matrix ✅ verified at venue_collateral.py:138+ per 2026-05-09 audit; strategy-service catalog confirm ✅ DONE 2026-05-18.
-      Live-API probe BLOCKED-CREDENTIALS tracked separately at line 104 above — does not gate Stream A core criterion.)
+- [x] ✅ Stream A: UAC matrix flipped + tests pass + codex venue table updated (UAC matrix ✅ verified at
+      venue_collateral.py:138+ per 2026-05-09 audit; strategy-service catalog confirm ✅ DONE 2026-05-18. Live-API probe
+      BLOCKED-CREDENTIALS tracked separately at line 104 above — does not gate Stream A core criterion.)
 - [x] Stream B: All references to `leveraged_funding_arb` as a standalone archetype gone (except historical references
-      in the issue file + this plan). ✅ Gate fully closed 2026-05-10 (plan body § "Gate status 2026-05-10 ✅ FULLY CLOSED").
-- [x] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport flag.
-      ✅ Done: 4 docs @PM@552a3e6e (carry-staked-basis, carry-basis-perp, APD, carry-recursive-staked) +
-      7 docs @PM@8bcf0f96 (carry-basis-dated, carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged,
+      in the issue file + this plan). ✅ Gate fully closed 2026-05-10 (plan body § "Gate status 2026-05-10 ✅ FULLY
+      CLOSED").
+- [x] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport
+      flag. ✅ Done: 4 docs @PM@552a3e6e (carry-staked-basis, carry-basis-perp, APD, carry-recursive-staked) + 7 docs
+      @PM@8bcf0f96 (carry-basis-dated, carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged,
       yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool).
-- [x] ✅ Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp.
-      P0 items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining 14 docs ✅ @PM@8855eaca.
+- [x] ✅ Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp. P0
+      items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining 14 docs ✅ @PM@8855eaca.
 - [x] Stream E: Master plan + `defi_master` use precise venue subsets per archetype (PM@pending — master + defi_master
       body updated 2026-05-14)
 - [x] ✅ Cross-cutting: PM `quality-gates.sh` passes; UAC `quality-gates.sh` passes (Stream A); codex links resolve;
-      doc/plan/code triad in sync per the workspace rule.
-      (PM QG: ruff not on PATH in slot-6 environment — pre-existing tooling gap, no code changes in this plan session.
-      UAC QG passed at Stream A ship time per venue_collateral.py audit 2026-05-09. Codex links verified prior sessions.
-      Doc/plan/code triad: all 5 Streams' code/doc pairs have evidence SHAs.)
+      doc/plan/code triad in sync per the workspace rule. (PM QG: ruff not on PATH in slot-6 environment — pre-existing
+      tooling gap, no code changes in this plan session. UAC QG passed at Stream A ship time per venue_collateral.py
+      audit 2026-05-09. Codex links verified prior sessions. Doc/plan/code triad: all 5 Streams' code/doc pairs have
+      evidence SHAs.)
 
 ## Temporary states + their canonical follow-up plans
 

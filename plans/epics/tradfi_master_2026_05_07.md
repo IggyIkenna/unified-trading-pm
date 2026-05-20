@@ -24,17 +24,21 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
-> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for tradfi asset_group**:
-> 7,115 `MISSING_EXPECTED` + 1,546 `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED` cells.
-> Concentrated in: ICE tbbo (1,254) + ICE trades (1,238) + CME tbbo (1,188) +
-> YAHOO_FINANCE ohlcv_15m (938) + NYSE ohlcv_1m (839) + NASDAQ ohlcv_1m (839) +
-> YAHOO_FINANCE ohlcv_24h ATTEMPTED_FAILED (830) — likely rolling-window issue.
-> UNEXPECTED_CAPTURED 1,928 cells = data on dates oracle said EXPECTED_EMPTY
-> (weekend/holiday) — operator review needed (US_MARKET_HOLIDAYS list outdated?).
-> Reassigned slot 9 portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED"
-> + CLAUDE.md HARD RULE.
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
+
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for tradfi asset_group**: 7,115 `MISSING_EXPECTED` + 1,546
+> `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED` cells. Concentrated in: ICE tbbo (1,254) + ICE trades (1,238) + CME
+> tbbo (1,188) + YAHOO_FINANCE ohlcv_15m (938) + NYSE ohlcv_1m (839) + NASDAQ ohlcv_1m (839) + YAHOO_FINANCE ohlcv_24h
+> ATTEMPTED_FAILED (830) — likely rolling-window issue. UNEXPECTED_CAPTURED 1,928 cells = data on dates oracle said
+> EXPECTED_EMPTY (weekend/holiday) — operator review needed (US_MARKET_HOLIDAYS list outdated?). Reassigned slot 9
+> portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED"
+>
+> - CLAUDE.md HARD RULE.
 >
 > **Scope MUST cover every venue × data_type — no asset_group skipped, no deadline-driven cutbacks**.
 
@@ -337,11 +341,12 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       covering older dates — they are honest absence, not noise. The earlier "2,211 abandoned" framing was
       pre-VIX-source-layering; that framing is stale per the CLAUDE.md "VIX 15m source layering" SSOT.
 
-- [ ] [SCRIPT] P2. **TradFi 5,212 legacy-blank apply-flips run** — `reconcile_legacy_blank_to_typed_reason
-      --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run 2026-05-17) confirmed upgrade logic correct (0
-      uncertain cases): 5,099 rows `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` +
-      113 rows `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Use `launch-manifest-recon-all-vm.sh`
-      with `--apply-flips` variant or a separate VM. **MIGRATED FROM:
+- [ ] [SCRIPT] P2. **TradFi 5,212 legacy-blank apply-flips run** —
+      `reconcile_legacy_blank_to_typed_reason     --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run
+      2026-05-17) confirmed upgrade logic correct (0 uncertain cases): 5,099 rows
+      `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` + 113 rows
+      `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Use `launch-manifest-recon-all-vm.sh` with
+      `--apply-flips` variant or a separate VM. **MIGRATED FROM:
       `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md`** (§ "TradFi Side-Finding").
 
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
@@ -399,16 +404,16 @@ mass-fail every existing futures row.
       `hard_schema_enforcement_2026_05_08` plan) ships AFTER to avoid mass-fail during transit. [REFRESH 2026-05-16 slot
       5: this item is the tradfi-side mirror of `hard_schema_enforcement_2026_05_08.md`. Coordination is the cross-plan
       banner discipline, not a code-action. Tradfi schema flip already landed (UAC@dd407ae + IS@db070da). Workspace-wide
-      enforcement tracked in the other plan; flip closes when that plan's Phase 1B propagation lands.]
-      **CLOSED 2026-05-19 slot 4**: hard_schema_enforcement shipped all phases (model_validator uac@80aef10, per-row
+      enforcement tracked in the other plan; flip closes when that plan's Phase 1B propagation lands.] **CLOSED
+      2026-05-19 slot 4**: hard_schema_enforcement shipped all phases (model_validator uac@80aef10, per-row
       record_failed IS@3c2da42, QG STEP 5.83 PM@f13a259f). Coordination gate satisfied.
 - [ ] **DEFERRED P3** [SCRIPT]. **InstrumentRecord.expiry full type-level nullable→required flip (FUTURE + OPTION)**
-      **MIGRATED FROM: `hard_schema_enforcement_2026_05_08.md` 2026-05-19.**
-      Model_validator approach (uac@80aef10) provides runtime enforcement. Full Pydantic type flip
-      (`datetime | None = None` → `datetime`) requires all downstream `InstrumentRecord` consumers to update call
-      sites + would be a breaking API change. Not May-23 critical path. **Run after**: (1) live GCS migration script
-      completes (IS@db070da `migrate_tradfi_expiry_schema.py`), (2) instruments-service adapter confirms zero-null
-      expiry rows in production. Then flip UAC `InstrumentRecord.expiry` field type + basedpyright catch of consumers.
+      **MIGRATED FROM: `hard_schema_enforcement_2026_05_08.md` 2026-05-19.** Model_validator approach (uac@80aef10)
+      provides runtime enforcement. Full Pydantic type flip (`datetime | None = None` → `datetime`) requires all
+      downstream `InstrumentRecord` consumers to update call sites + would be a breaking API change. Not May-23 critical
+      path. **Run after**: (1) live GCS migration script completes (IS@db070da `migrate_tradfi_expiry_schema.py`), (2)
+      instruments-service adapter confirms zero-null expiry rows in production. Then flip UAC `InstrumentRecord.expiry`
+      field type + basedpyright catch of consumers.
 - [x] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
       includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options-chain
       rows have non-null expiration. Manifest queries return ZERO rows where these fields are null for data_type ∈

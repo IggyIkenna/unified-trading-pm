@@ -32,6 +32,7 @@ related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 related_codex:
   - codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md
   - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
@@ -50,8 +51,11 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-
 # DeFi recursive-borrow archetypes — Family 1 + Family 2 implementation
+
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
@@ -225,8 +229,8 @@ touched by this plan, enumerated.
       2026-05-15 — 3 banners added; master_to_live_defi_2026_05_23.md Group F queued for slot 1 in
       ikenna_orchestrator/\_agent_pings.md)
 - [x] [operator-ratify] P0. Operator confirms AD-1 through AD-6. (Not gating Phase 1 — Phase 1 is the lending-indices
-      fix that's needed regardless of archetype shape — but gating Phase 2 onwards.) **BLOCKED-OPERATOR-DECISION** — awaiting
-      operator ack on AD-1 through AD-6. Phase 2+ gated on this; Phase 1 shipped regardless.
+      fix that's needed regardless of archetype shape — but gating Phase 2 onwards.) **BLOCKED-OPERATOR-DECISION** —
+      awaiting operator ack on AD-1 through AD-6. Phase 2+ gated on this; Phase 1 shipped regardless.
 
 **Done definition:** Q-doc closed; banners landed; AD-1 through AD-6 ratified.
 
@@ -1331,8 +1335,8 @@ replaced by 2 distinct family docs.
       addresses update when operator completes deploy. (PM@a411c240 + backfilled 2026-05-17 slot-5)
 - [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
       unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
-- [x] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED-DATA** — gates on Phase 9
-      matching-engine DeFi cost model (execution-service). DEFERRED-POST-CUTOVER → successor plan.
+- [x] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED-DATA** — gates on Phase
+      9 matching-engine DeFi cost model (execution-service). DEFERRED-POST-CUTOVER → successor plan.
 - [x] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
       2026-05-12 above). (c5a25181 unified-trading-pm 2026-05-15)
 - [x] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries. (already done in prior session —
@@ -1718,11 +1722,11 @@ round-trip place-and-monitor test executed via the UI's manual-trade gate.
       into strategy-service QG per peripheral-script-dirs HARD RULE. — e2e-testing@a7e9243 (backfilled 2026-05-17
       slot-5)
 - [x] [reconciliation] P0. Batch-vs-live reconciliation per `master_to_live_defi_2026_05_23.md` Group F item 21. Delta <
-      5bps over 7 days = green. **BLOCKED-DATA** — gates on Phase 12 backtest run completion.
-      **DEFERRED-POST-CUTOVER** → successor plan.
+      5bps over 7 days = green. **BLOCKED-DATA** — gates on Phase 12 backtest run completion. **DEFERRED-POST-CUTOVER**
+      → successor plan.
 - [x] [findings] P0. Capture any divergences as plan todos in this plan body or as
-      `plans/active/issues/<slug>_2026_05_xx.md` per Findings Triage Discipline.
-      **BLOCKED-DATA** — gates on Phase 12 backtest + reconciliation. **DEFERRED-POST-CUTOVER** → successor plan.
+      `plans/active/issues/<slug>_2026_05_xx.md` per Findings Triage Discipline. **BLOCKED-DATA** — gates on Phase 12
+      backtest + reconciliation. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Done definition:** 2-year backtest committed; 7-day paper-smoke green; batch-vs-live recon < 5bps.
 
@@ -1739,8 +1743,8 @@ daily progress events + STOPPED with non-empty per-day P&L metadata; reconciliat
       19; testnet uses pre-funded wallet. **BLOCKED-OPERATOR-DECISION** — requires operator capital allocation + custody
       setup. **DEFERRED-POST-CUTOVER** → successor plan.
 - [x] [VM] P0. Launch + monitor for 7 continuous days per master plan target. Verify event stream + alerting +
-      kill-switch + reconciliation. **BLOCKED-OPERATOR-DECISION** — gates on treasury allocation (above) + deployed mainnet
-      contract. **DEFERRED-POST-CUTOVER** → successor plan.
+      kill-switch + reconciliation. **BLOCKED-OPERATOR-DECISION** — gates on treasury allocation (above) + deployed
+      mainnet contract. **DEFERRED-POST-CUTOVER** → successor plan.
 - [x] [PM] P0. Plan archival: status → complete; Phase 1-13 todos all `- [x]`; deferred items per "Plan Archival HARD
       RULE" migrate to active home (P1 lending protocols → follow-up plan; Solana / Marginfi → separate plan; full
       external Solidity audit → separate plan). **DEFERRED** — plan archival blocked until BLOCKED-OPERATOR-DECISION

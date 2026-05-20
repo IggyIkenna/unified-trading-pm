@@ -21,6 +21,7 @@ related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - shard_granularity_ssot_propagation_2026_05_06
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 estimate_class: design
 estimate_baseline_ai_days: 23.5
 estimate_calibrated_ai_days: 14.1
@@ -29,6 +30,9 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 > **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` is the canonical implementation track
 > for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_BASIS_PERP_INV` (Family 2, formerly
@@ -306,31 +310,30 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       0 errors; features-service 825→0 errors — features-service@f141061d slot-4 2026-05-18, per
       defi_basedpyright_features_service_2026_05_15.md)
 - [x] ✅ [AGENT] P0. CARRY_RECURSIVE_STAKED batch e2e produces non-zero PnL row in
-      `pnl-store-{pid}/by_strategy/.../day=2025-06-21`. — strategy@f409b0c8:
-      `TestCarryRecursiveStakedNonZeroPnL` — on_tick with staking_apy=400 bps + borrow_apy=150 bps emits
-      AtomicInstruction; `current_position_units > 0` confirmed post-entry (56 tests pass).
+      `pnl-store-{pid}/by_strategy/.../day=2025-06-21`. — strategy@f409b0c8: `TestCarryRecursiveStakedNonZeroPnL` —
+      on_tick with staking_apy=400 bps + borrow_apy=150 bps emits AtomicInstruction; `current_position_units > 0`
+      confirmed post-entry (56 tests pass).
 - [x] ✅ [AGENT] P0. PnL row decomposes into base_apy + restaking_apy + borrow_cost + gas attribution. —
       strategy@f409b0c8: `TestCarryRecursivePnLAttestations` — attestations contain `staking_apy_bps` (base),
       `borrow_apy_bps` (borrow_cost), `net_apy_bps`; net = L×staking − (L−1)×borrow verified ±1 bps.
 - [x] ✅ [AGENT] P0. Position snapshot reflects leveraged LST holding + WETH debt. — strategy@f409b0c8:
-      `TestCarryRecursiveLegPortfolioState` — `declare_leg_portfolio_state()` returns 2-leg
-      `LegPortfolioState`: `lst_collateral` (leverage=target) + `native_borrow_recursed` (leverage=target-1).
-- [x] ✅ [AGENT] P0. Health factor recorded ≥ configured `min_health_factor` for every snapshot. —
-      strategy@f409b0c8: `TestHealthFactorGate` — HF=1.1 < min_health_factor=1.25 → no instruction;
-      HF=1.5 ≥ 1.25 → instruction emitted.
+      `TestCarryRecursiveLegPortfolioState` — `declare_leg_portfolio_state()` returns 2-leg `LegPortfolioState`:
+      `lst_collateral` (leverage=target) + `native_borrow_recursed` (leverage=target-1).
+- [x] ✅ [AGENT] P0. Health factor recorded ≥ configured `min_health_factor` for every snapshot. — strategy@f409b0c8:
+      `TestHealthFactorGate` — HF=1.1 < min_health_factor=1.25 → no instruction; HF=1.5 ≥ 1.25 → instruction emitted.
 - [x] ✅ [AGENT] P0. Synthetic feature tick injected into `defi-onchain-features-ready` produces a fill on
-      `fill-events-{venue}`. — strategy@f409b0c8: `TestFeatureTickToFillPipeline` — `on_tick(valid_features)`
-      emits ≥1 envelope for CARRY_STAKED_BASIS, CARRY_BASIS_PERP, CARRY_RECURSIVE_STAKED.
+      `fill-events-{venue}`. — strategy@f409b0c8: `TestFeatureTickToFillPipeline` — `on_tick(valid_features)` emits ≥1
+      envelope for CARRY_STAKED_BASIS, CARRY_BASIS_PERP, CARRY_RECURSIVE_STAKED.
 - [x] ✅ [AGENT] P0. PBM emits position snapshot; pnl-attribution emits per-strategy attribution row. —
-      strategy@f409b0c8: `TestPositionStateProgresses` — `current_position_units` moves 0→>0 after entry;
-      second tick with same features returns [] (no double-entry).
-- [x] ✅ [AGENT] P0. Risk-and-exposure-service log shows RISK_PASS published before execution. —
-      strategy@f409b0c8: `TestRiskPassSelfCheck` — `self_check()` returns APPROVED for un-killed engine;
-      returns REJECTED after `on_kill_switch(KILL_SWITCH_TRIGGERED)`.
-- [x] ✅ [AGENT] P0. All 8 archetypes pass Phase 1 batch e2e: CARRY_RECURSIVE_STAKED, CARRY_STAKED_BASIS, CARRY_BASIS_PERP,
-      [+5 more]. — strategy@f409b0c8: `TestAllEightArchetypesPhase1` (parametrized × 8 archetypes × 5
-      assertions = 40 tests): all in ARCHETYPE_ENGINE_REGISTRY; factory builds; empty-features no-crash;
-      full-features returns list; self_check APPROVED.
+      strategy@f409b0c8: `TestPositionStateProgresses` — `current_position_units` moves 0→>0 after entry; second tick
+      with same features returns [] (no double-entry).
+- [x] ✅ [AGENT] P0. Risk-and-exposure-service log shows RISK_PASS published before execution. — strategy@f409b0c8:
+      `TestRiskPassSelfCheck` — `self_check()` returns APPROVED for un-killed engine; returns REJECTED after
+      `on_kill_switch(KILL_SWITCH_TRIGGERED)`.
+- [x] ✅ [AGENT] P0. All 8 archetypes pass Phase 1 batch e2e: CARRY_RECURSIVE_STAKED, CARRY_STAKED_BASIS,
+      CARRY_BASIS_PERP, [+5 more]. — strategy@f409b0c8: `TestAllEightArchetypesPhase1` (parametrized × 8 archetypes × 5
+      assertions = 40 tests): all in ARCHETYPE_ENGINE_REGISTRY; factory builds; empty-features no-crash; full-features
+      returns list; self_check APPROVED.
 - [x] ✅ [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
       Phase changes. DONE (2026-05-15): features-service@`7929e80c` — add $SHORT_SHA tag to cloudbuild.yaml build step
       (root cause: `images:` section expected $SHORT_SHA but build only created $VERSION + :latest tags); Cloud Build
@@ -421,11 +424,12 @@ calculator, two consumers; the per-archetype filter logic is in the catalog spec
       Subgraph historical fill-in not needed; OHLCV covers historical data. Closed SUPERSEDED 2026-05-20.
 - [x] **[SUPERSEDED]** [SCRIPT] P0. ~~Launch `mtds-lighter-history-backfill-{ts}` singleton-locked VM~~ — approach
       replaced by OHLCV via /candles endpoint (MTDS@10aa715). Per-trade history not recoverable (REST capped, no cursor;
-      `block_height` is sequencer-internal per Lighter quirks finding). Closed as SUPERSEDED per audit cleanup 2026-05-20.
+      `block_height` is sequencer-internal per Lighter quirks finding). Closed as SUPERSEDED per audit cleanup
+      2026-05-20.
 - [x] **[SUPERSEDED]** [AGENT] P0. ~~Extended Starknet mainnet `Settlement` contract address + event signature; add
-      Starknet RPC template to UAC `CHAIN_RPC_TEMPLATES`.~~ — Item C (dex_perp_onboarding_handover) chose REST `/candles`
-      path at mtds@4f0cdbd; on-chain Settlement event-replay was not pursued. UAC RPC template not needed for REST path.
-      Closed SUPERSEDED 2026-05-20.
+      Starknet RPC template to UAC `CHAIN_RPC_TEMPLATES`.~~ — Item C (dex_perp_onboarding_handover) chose REST
+      `/candles` path at mtds@4f0cdbd; on-chain Settlement event-replay was not pursued. UAC RPC template not needed for
+      REST path. Closed SUPERSEDED 2026-05-20.
 - [x] **[SUPERSEDED]** [AGENT] P0. ~~`_fetch_extended_history` in `umi_tick_provider.py`; schema-parity vs
       `_fetch_extended_rest`.~~ — REST path shipped as `_fetch_extended_candles` + `_fetch_extended_rest`
       (umi_tick_provider.py lines 240/249); separate history method not needed. Closed SUPERSEDED 2026-05-20.
@@ -480,13 +484,13 @@ these venues.
       Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift] **DONE** (2026-05-15): UAC@dbdeb16 —
       PACIFICA-SOLANA: USDC accepted (primary margin); SOL/JitoSOL/mSOL explicit accepted=False (USDC-only linear perp,
       no LST cross-margin per 2026-05-15 live probe + docs review).
-- [x] **[BLOCKED-OPERATOR-DECISION]** [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
-      `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
-      Starknet event subgraph against the Extended Settlement contract. **NOTE 2026-05-18 slot-3**:
-      `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) — the "add Starknet RPC
-      template" prerequisite is unblocked. Remaining: (1) historical endpoint research on docs.extended.exchange + (2)
-      Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C). Falls back to forward-poll only
-      if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
+- [x] **[BLOCKED-OPERATOR-DECISION]** [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in
+      priority order: (1) re-read `docs.extended.exchange` for the documented historical endpoint (might be auth-gated);
+      (2) failing that, build a Starknet event subgraph against the Extended Settlement contract. **NOTE 2026-05-18
+      slot-3**: `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) — the "add Starknet
+      RPC template" prerequisite is unblocked. Remaining: (1) historical endpoint research on docs.extended.exchange +
+      (2) Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C). Falls back to forward-poll
+      only if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
       `cefi-extended-starknet-history-backfill-{ts}` VM]
 - [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
       `_LIGHTER_BACKFILL_TOP_SYMBOLS = (BTC, ETH, SOL,     HYPE, TON)`; expand to top-30 (Lighter has 170 perps
@@ -524,33 +528,32 @@ these venues.
 - [x] ✅ [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
       `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) requires those chains. [AUDIT 2026-05-07: FRESH —
-      actionable diagnostic only; expansion deferred]
-      **DIAGNOSIS COMPLETE 2026-05-19**: Confirmed zero protocol-chain entries for Aurora/Celo/Fantom/Mantle/Metis/
-      Moonbeam in live DeFi registry. Neither `carry_staked_basis` nor `arbitrage_price_dispersion` requires any
-      tail chain for May-23. Protocol expansion is DEFERRED-POST-CUTOVER → `defi_catalogue_chain_primitives_2026_05_10.md`
-      § tail-chain expansion. No action needed for May-23 gate.
-- [x] ✅ [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols. Per-protocol
-      backfill needed for 21 protocols/chain. Subgraph schema-mismatch fixes for PancakeSwap V3, SushiSwap V3, Aerodrome
-      V3, Camelot V3 (per `defi_e2e_pipeline`). — mtds@47239ef: added `_UNISWAP_V3_BASIC_QUERY` fallback (poolDayDatas
-      without sqrtPrice/tick) inserted between univ3 + messari_dex in aerodrome_v3/pancakeswap_v3/camelot_v3 fallback
-      chains. Root cause: subgraphs lacking sqrtPrice/tick caused GraphQL error → messari_dex fallback (wrong schema) →
-      0 rows. Test: `TestSchemaFallback.test_aerodrome_falls_back_to_basic_query`. Resolves ~1.4k missing rows.
+      actionable diagnostic only; expansion deferred] **DIAGNOSIS COMPLETE 2026-05-19**: Confirmed zero protocol-chain
+      entries for Aurora/Celo/Fantom/Mantle/Metis/ Moonbeam in live DeFi registry. Neither `carry_staked_basis` nor
+      `arbitrage_price_dispersion` requires any tail chain for May-23. Protocol expansion is DEFERRED-POST-CUTOVER →
+      `defi_catalogue_chain_primitives_2026_05_10.md` § tail-chain expansion. No action needed for May-23 gate.
+- [x] ✅ [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols.
+      Per-protocol backfill needed for 21 protocols/chain. Subgraph schema-mismatch fixes for PancakeSwap V3, SushiSwap
+      V3, Aerodrome V3, Camelot V3 (per `defi_e2e_pipeline`). — mtds@47239ef: added `_UNISWAP_V3_BASIC_QUERY` fallback
+      (poolDayDatas without sqrtPrice/tick) inserted between univ3 + messari_dex in
+      aerodrome_v3/pancakeswap_v3/camelot_v3 fallback chains. Root cause: subgraphs lacking sqrtPrice/tick caused
+      GraphQL error → messari_dex fallback (wrong schema) → 0 rows. Test:
+      `TestSchemaFallback.test_aerodrome_falls_back_to_basic_query`. Resolves ~1.4k missing rows.
 - [x] ✅ [AGENT] P0. 988 dates missing — query manifest, identify per-(chain, protocol, data_type) gaps, prioritize
       `carry_staked_basis` chain set first (Ethereum + Solana mostly done; Arbitrum + Base critical). [AUDIT 2026-05-07:
       FRESH — actionable; UAC@f22f4b1 CHAIN_GENESIS_DATES + UAC@0169a0a PROTOCOL_LAUNCH_DATES SSOTs help re-clip 988
-      number downward]
-      **DIAGNOSIS COMPLETE 2026-05-08 (Tab 6)**: Audit filed at
-      `plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`. Finding: 1.3M non-captured rows across 10
-      DeFi buckets; 99% are SSOT-correct pre-genesis/pre-launch clipping; only 13,632 rows / 2,234 distinct dates
-      actionable. Remaining actionable items: (1) ASTER perp-funding FIXED 2026-05-15 mtds@f9824d0 — dead URL fixed;
-      (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) ~1.4k rows — in Mid-tier P0 below;
-      (3) Stage 4 rescan-all-manifests gate (manifest_migration_master Stage 4) re-clips denominator. Diagnosis done
-      — execution gated on Stage 4 rescan + mid-tier DEX schema fixes.
-- [x] [AGENT] [BLOCKED-OPERATOR] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool
-      query path). — Balancer V3 `poolGetSnapshots` is a per-pool API (different from per-day `poolSnapshots`);
-      requires: (1) Balancer V3 subgraph ID for each chain (not yet in UAC `_defi.py`), (2) new architectural query
-      pattern (loop-over-pools → filter-by-date). Root cause of deferral: not just a query rename.
-      Ping filed slot_2.md 2026-05-20. Post-cutover unless operator provides V3 subgraph IDs.
+      number downward] **DIAGNOSIS COMPLETE 2026-05-08 (Tab 6)**: Audit filed at
+      `plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`. Finding: 1.3M non-captured rows across 10 DeFi
+      buckets; 99% are SSOT-correct pre-genesis/pre-launch clipping; only 13,632 rows / 2,234 distinct dates actionable.
+      Remaining actionable items: (1) ASTER perp-funding FIXED 2026-05-15 mtds@f9824d0 — dead URL fixed; (2) DEX
+      subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) ~1.4k rows — in Mid-tier P0 below; (3) Stage 4
+      rescan-all-manifests gate (manifest_migration_master Stage 4) re-clips denominator. Diagnosis done — execution
+      gated on Stage 4 rescan + mid-tier DEX schema fixes.
+- [x] [AGENT] [BLOCKED-OPERATOR] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query
+      path). — Balancer V3 `poolGetSnapshots` is a per-pool API (different from per-day `poolSnapshots`); requires: (1)
+      Balancer V3 subgraph ID for each chain (not yet in UAC `_defi.py`), (2) new architectural query pattern
+      (loop-over-pools → filter-by-date). Root cause of deferral: not just a query rename. Ping filed slot_2.md
+      2026-05-20. Post-cutover unless operator provides V3 subgraph IDs.
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
@@ -720,19 +723,19 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 | 1    | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07`   | full history | ~9,668                     | ~3h           | **In flight** as `mtds-lending-indices-20260507-140418` since 14:04 IST |
 | 2    | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | high carry-archetype value | parallel-safe | not yet launched                                                        |
 
-- [x] [AGENT] [BLOCKED-OPERATOR] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done),
-      Arbitrum / Base / Polygon (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6.
-      — `mtds-lending-indices-20260507-140418` VM ran 2026-05-07; vault-share-price backfill VM still pending.
-      Remaining gap requires: (1) `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` VM launch,
-      (2) mid-tier DEX subgraph schema fixes (PancakeSwap V3 / SushiSwap V3 / Aerodrome V3 / Camelot V3 — see
-      item below). Ping filed slot_2.md 2026-05-20. [PARTIAL-DONE]
+- [x] [AGENT] [BLOCKED-OPERATOR] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done), Arbitrum /
+      Base / Polygon (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. —
+      `mtds-lending-indices-20260507-140418` VM ran 2026-05-07; vault-share-price backfill VM still pending. Remaining
+      gap requires: (1) `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` VM launch, (2) mid-tier DEX
+      subgraph schema fixes (PancakeSwap V3 / SushiSwap V3 / Aerodrome V3 / Camelot V3 — see item below). Ping filed
+      slot_2.md 2026-05-20. [PARTIAL-DONE]
 
 ### DeFi DEX-perp adapters from `cefi_venue_universe_expansion` (re-classified to DeFi)
 
 - [x] **[SUPERSEDED]** [AGENT] P0. ~~**Extended** — UAC: add to `VENUES_BY_ASSET_GROUP['defi']`. Adapter:
       `_fetch_extended_rest` + history.~~ — EXTENDED-STARKNET correctly classified as CEFI (DEX perp), not DEFI
-      (market_data_categories.py line 196 in cefi list). REST adapters `_fetch_extended_rest` + `_fetch_extended_candles`
-      already shipped. No DEFI reclassification needed. Closed SUPERSEDED 2026-05-20.
+      (market_data_categories.py line 196 in cefi list). REST adapters `_fetch_extended_rest` +
+      `_fetch_extended_candles` already shipped. No DEFI reclassification needed. Closed SUPERSEDED 2026-05-20.
 - [x] [AGENT] P0. **Pacifica** — UAC: same. Adapter: `_fetch_pacifica_rest`. Hyperliquid clone — schema parity. [AUDIT
       2026-05-07: DONE — MTDS@51fecd5 (ohlcv_1m); UAC@e890022 added ohlcv_1m to cefi DATA_TYPES_BY_ASSET_GROUP (note:
       routing gate per MEMORY entry feedback_uac_data_types_by_asset_group_is_routing_gate); UAC@7cb9068 / 405cbf5
@@ -754,16 +757,16 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 - [x] ✅ [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
-      P0-relevant for May 23 Group F] DONE 2026-05-20 slot 7: 25 unit tests (mock-based, all pass) +
-      integration scaffold in `tests/integration/test_copper_custody_provider.py` (BLOCKED-CREDENTIALS —
-      copper-sandbox-api-key/secret/org-id not in SM; skips gracefully). execution-service@0cc58c56.
-      Sandbox creds ping in `harsh_orchestrator/pings/slot_7.md`.
+      P0-relevant for May 23 Group F] DONE 2026-05-20 slot 7: 25 unit tests (mock-based, all pass) + integration
+      scaffold in `tests/integration/test_copper_custody_provider.py` (BLOCKED-CREDENTIALS —
+      copper-sandbox-api-key/secret/org-id not in SM; skips gracefully). execution-service@0cc58c56. Sandbox creds ping
+      in `harsh_orchestrator/pings/slot_7.md`.
 - [x] ✅ [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
       `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
       Ikenna slot 4 successor + Harsh implementation. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
-- [x] **[DEFERRED-AFTER-CUTOVER]** [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation per
-      `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
-      `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
+- [x] **[DEFERRED-AFTER-CUTOVER]** [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider`
+      implementation per `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor
+      plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -925,16 +928,16 @@ shipping with the Fork-1 prep batches below).
       prediction canonical-question, sports fixture-bundles all write to their asset-group canonical buckets
       (`market-data-tick-{cefi,tradfi,prediction,sports}-{pid}`) which ARE already in the poll list — no dedicated
       per-data_type buckets there.
-- [x] **[DEFERRED]** [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction /
-      ml-\* buckets (slot-6 finding 2026-05-11).** **[MIGRATED TO: code_freeze Phase 2.6]** When the features-service / execution-service / ml-\* pipelines run
-      end-to-end and write manifest rows to their per-asset-group buckets — AND if they run multi-VM with
-      `MANIFEST_PER_VM_SHARDS=true` — those buckets MUST be added to the consolidator `BUCKETS` list or their canonical
-      `_index/availability_index.parquet` will drift stale. Currently NOT a gap: probed 2026-05-11 —
-      `features-delta-one-*` / `features-volatility-*` / `features-onchain-defi` / `features-calendar` /
-      `features-sports` / `execution-store-*` / `ml-predictions-store` buckets exist but have ZERO
-      `_index/availability_index.parquet` (pipeline hasn't run with manifest writes yet); `ml-models-store-{pid}` has a
-      canonical index (single-writer pattern → no consolidation needed); `strategy-store-prediction-{pid}` not
-      provisioned. **Also**: the bucket-name SSOT env-tier migration
+- [x] **[DEFERRED]** [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store /
+      strategy-store-prediction / ml-\* buckets (slot-6 finding 2026-05-11).** **[MIGRATED TO: code_freeze Phase 2.6]**
+      When the features-service / execution-service / ml-\* pipelines run end-to-end and write manifest rows to their
+      per-asset-group buckets — AND if they run multi-VM with `MANIFEST_PER_VM_SHARDS=true` — those buckets MUST be
+      added to the consolidator `BUCKETS` list or their canonical `_index/availability_index.parquet` will drift stale.
+      Currently NOT a gap: probed 2026-05-11 — `features-delta-one-*` / `features-volatility-*` /
+      `features-onchain-defi` / `features-calendar` / `features-sports` / `execution-store-*` / `ml-predictions-store`
+      buckets exist but have ZERO `_index/availability_index.parquet` (pipeline hasn't run with manifest writes yet);
+      `ml-models-store-{pid}` has a canonical index (single-writer pattern → no consolidation needed);
+      `strategy-store-prediction-{pid}` not provisioned. **Also**: the bucket-name SSOT env-tier migration
       (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6) RENAMES every bucket (e.g.
       `market-data-tick-prediction-{pid}` → `market-data-tick-pred-prd-{pid}`); the consolidator `BUCKETS` list MUST be
       updated in lockstep with that rename or it polls dead names. **Owner**: this item migrates to `code_freeze` Phase
@@ -952,8 +955,8 @@ shipping with the Fork-1 prep batches below).
       poll-list is now correct vs the authoritative source = `get_write_bucket_name()` callsites +
       `_BUCKET_CATEGORY_OVERRIDES`). Fix when touching the watchdog dict next: point those 5 prefixes at their dedicated
       buckets. Operator relaunch of the watchdog VM required to pick it up (per CLAUDE.md VM-Naming-Convention rule).
-- [x] ✅ **[FIXED]** [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path
-      `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon
+- [x] ✅ **[FIXED]** [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet
+      path `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon
       (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` on
       `defi-phantom-recon-defi-20260511-192115`, completed 2026-05-11 13:58 UTC) reported **1298 "phantom captures", ALL
       `venue=EIGENLAYER` / `data_type=rewards`** — but they're **FALSE positives** (the data exists on disk, the audit's
@@ -982,11 +985,11 @@ shipping with the Fork-1 prep batches below).
       coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit
       result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the
       shard-key drift is a latent inconsistency that needs the handler fix.
-- [x] ✅ **[FIXED — deployment-service@a2b3c92]** [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its
-      `DEFI_REPOS`/EXTRA*REPOS list references `features-service (onchain family)` (consolidated into `features-service`
-      by the 2026-05-08 features-* consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo
-      aborts the whole tarball build with `EXIT=1` (it logs the SKIP message but then dies). Blocks
-      `create-code-tarballs.sh --asset-group DEFI` from `.tabs/_`worktrees (which
+- [x] ✅ **[FIXED — deployment-service@a2b3c92]** [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list +
+      non-graceful skip** — its `DEFI_REPOS`/EXTRA*REPOS list references `features-service (onchain family)`
+      (consolidated into `features-service` by the 2026-05-08 features-* consolidation); the "SKIP <repo> — not found"
+      path trips `set -e` so a missing repo aborts the whole tarball build with `EXIT=1` (it logs the SKIP message but
+      then dies). Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs/_`worktrees (which
       have`features-service`not`features-service (onchain     family)`). Workaround for Priority #5: none needed — the
       deployed `mtds-code.tar.gz` (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest
       lending_indices code, so the VM ran current code without a refresh. Fix: (a) update the repo lists to
@@ -1183,10 +1186,9 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
 - [x] ✅ [AGENT] P1. **Verification recipe automation.** Post-VM-launch silent-zero detector — Cloud Scheduler job that
       checks the last 24h of lending-indices manifest rows for unexpected zero-rows-per-instrument; alerts via Telegram
       if a venue × chain pair flatlines. Generalisable to other DeFi handlers; not just lending. Coordinate with
-      `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor.
-      DONE 2026-05-20 slot 7: `scripts/detect_zero_row_defi_manifest.py` in MTDS — generalised via --data-type-filter;
-      runbook fields declared; last_executed=NEVER pending Cloud Scheduler wire-up (Phase A.11 upstream).
-      mtds@507774e.
+      `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor. DONE 2026-05-20 slot 7:
+      `scripts/detect_zero_row_defi_manifest.py` in MTDS — generalised via --data-type-filter; runbook fields declared;
+      last_executed=NEVER pending Cloud Scheduler wire-up (Phase A.11 upstream). mtds@507774e.
 
 ### 2026-05-07 venue-matrix re-verification (Stream E update)
 
@@ -1203,18 +1205,20 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
 
 ### Archetype codex doc accuracy audit (2026-05-20 slot 4)
 
-- [x] ✅ [DOC] P2. **APD archetype doc Variant B — remove "not yet implemented" stale text.** `arbitrage-price-dispersion.md`
-      Variant B section said "Funding-rate dispersion (not yet implemented; placeholder)" but the engine is fully
-      implemented (`price_dispersion._on_tick_funding_rate_dispersion` + `funding_rate_dispersion.py`). Updated to
-      accurate description with params, venue universe (bybit/deribit/binance/okx/hyperliquid/aster), and bridge slot
-      labels. — PM@02c5c4a9
-- [x] ✅ [DOC] P2. **APD archetype doc Example instances — replace stale slot labels with actual catalog/bridge labels.**
-      Example instances section showed conceptual labels (e.g. `ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod`,
+- [x] ✅ [DOC] P2. **APD archetype doc Variant B — remove "not yet implemented" stale text.**
+      `arbitrage-price-dispersion.md` Variant B section said "Funding-rate dispersion (not yet implemented;
+      placeholder)" but the engine is fully implemented (`price_dispersion._on_tick_funding_rate_dispersion` +
+      `funding_rate_dispersion.py`). Updated to accurate description with params, venue universe
+      (bybit/deribit/binance/okx/hyperliquid/aster), and bridge slot labels. — PM@02c5c4a9
+- [x] ✅ [DOC] P2. **APD archetype doc Example instances — replace stale slot labels with actual catalog/bridge
+      labels.** Example instances section showed conceptual labels (e.g.
+      `ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod`,
       `ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-ethereum-prod`) that didn't match the actual catalog. Replaced with
       the 17 live catalog slots + bridge funding-rate-dispersion slots with source annotations. — PM@02c5c4a9
 - [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc catalog axis — update examples from 2 pre-Stream-A to 4 current
       slots.** Examples section only showed 2 pre-2026-05-07 DRIFT slots. Updated to show all 4 live slots including
-      DERIBIT/stETH (USDC margin) and BYBIT/stETH (USDT margin), noting that stable token differs by venue. — PM@02c5c4a9
+      DERIBIT/stETH (USDC margin) and BYBIT/stETH (USDT margin), noting that stable token differs by venue. —
+      PM@02c5c4a9
 - [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc config schema — remove "today" and "when" stale qualifiers.**
       Config schema YAML example had comments like "JITO / MARINADE today; LIDO when an ETH-perp venue lands LST margin"
       — stale since DERIBIT/BYBIT slots landed in Stream A (2026-05-14). Updated to reflect live slot inventory:
@@ -1224,22 +1228,22 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Hyperliquid (hyperliquid_l1)" — incorrect: Hyperliquid is CeFi; all 6 funding-rate-dispersion venues are CeFi
       perps so `allowed_chains` is irrelevant for Variant B. Also removed stale guidance to set `allowed_chains` to
       on-chain perp legs — no such config path exists. — PM@fbddce38
-- [x] ✅ [DOC] P2. **CSB archetype doc venue-collateral matrix — fix OKX/BYBIT stale facts + slot count.**
-      OKX row said "pending live API verification" but UAC `venue_collateral.py` confirmed wstETH acceptance in
-      2026-05-08 Stream A flip; catalog slot still absent (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`). BYBIT row
-      said "stETH + METH + USDe up to 3 rows" but matrix has stETH + wstETH only; actual catalog output = 1 row
-      (LIDO/stETH). Slot count corrected from "~7" to 4 (verified by running collateral helper). — PM@b7f84482
-- [x] ✅ [DOC] P2. **CSB-dated archetype doc catalog slots — fix stale slot labels from initial seed.**
-      Doc had `steth-deribit-q1-...-v2-prod` etc. (prototype labels); actual catalog generates
-      `lido-deribit-eth-q1-usdc-v1-prod`, `lido-deribit-eth-q2-usdc-v1-prod`, `jito-drift-sol-q1-usdc-v1-prod`.
-      Updated section heading from "Initial seed" to "Active catalog slots". — PM@bef3b7b6
+- [x] ✅ [DOC] P2. **CSB archetype doc venue-collateral matrix — fix OKX/BYBIT stale facts + slot count.** OKX row said
+      "pending live API verification" but UAC `venue_collateral.py` confirmed wstETH acceptance in 2026-05-08 Stream A
+      flip; catalog slot still absent (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`). BYBIT row said "stETH + METH + USDe
+      up to 3 rows" but matrix has stETH + wstETH only; actual catalog output = 1 row (LIDO/stETH). Slot count corrected
+      from "~7" to 4 (verified by running collateral helper). — PM@b7f84482
+- [x] ✅ [DOC] P2. **CSB-dated archetype doc catalog slots — fix stale slot labels from initial seed.** Doc had
+      `steth-deribit-q1-...-v2-prod` etc. (prototype labels); actual catalog generates
+      `lido-deribit-eth-q1-usdc-v1-prod`, `lido-deribit-eth-q2-usdc-v1-prod`, `jito-drift-sol-q1-usdc-v1-prod`. Updated
+      section heading from "Initial seed" to "Active catalog slots". — PM@bef3b7b6
 - [x] ✅ [DOC] P2. **Carry-and-yield family doc CSB slot examples — replace conceptual with actual catalog labels.**
-      Family doc "Typical instance examples" showed `lido-aave-hyperliquid-eth-prod` etc. (proto labels with aave as
-      a venue which is wrong for CSB). Updated to 4 actual catalog slots with comments. — PM@2f499ef7
+      Family doc "Typical instance examples" showed `lido-aave-hyperliquid-eth-prod` etc. (proto labels with aave as a
+      venue which is wrong for CSB). Updated to 4 actual catalog slots with comments. — PM@2f499ef7
 - [x] ✅ [DOC] P2. **Arbitrage-structural family doc APD examples — replace conceptual with actual catalog labels.**
       "Typical instance examples" used `unity-epl-1x2-usd-prod`, `multi-dex-eth-usdc-ethereum-prod` etc. (prototype
-      labels). Updated to 17 catalog slots + 2 bridge funding-rate-dispersion slots. Renamed section to "Active
-      catalog slots (2026-05-20)". — PM@80e67a49
+      labels). Updated to 17 catalog slots + 2 bridge funding-rate-dispersion slots. Renamed section to "Active catalog
+      slots (2026-05-20)". — PM@80e67a49
 - [x] ✅ [DOC] P2. **category-instrument-coverage.md CSB section — fix 3-leg→2-leg description + stale Aave/slots.**
       Description still said "Three-leg DeFi-native: stake + borrow + perp" — borrow leg removed 2026-05-04. Coverage
       table had "staking + lending + perp" with Aave as component; slot labels used lido-aave-hyperliquid format.
@@ -1248,7 +1252,8 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
 - [x] ✅ [DOC] P2. **category-instrument-coverage.md APD slot labels — remove PARTIAL stale labels + fix CeFi spot.**
       "CeFi perp (funding-rate dispersion — PARTIAL, currently mis-labeled in UAC)" comment + `multi-cex-btc-funding`
       labels were stale (superseded by bridge slots below). CeFi spot labels used wrong format. Fixed CeFi spot to
-      actual catalog labels; removed stale multi-cex labels; clarified bridge slots are not in TARGET_UNIVERSE. — PM@0d9b2849
+      actual catalog labels; removed stale multi-cex labels; clarified bridge slots are not in TARGET_UNIVERSE. —
+      PM@0d9b2849
 
 ## `available_at` adapter stamping (coordinated)
 

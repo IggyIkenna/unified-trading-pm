@@ -28,6 +28,7 @@ related:
   - defi_master_2026_05_07.md
   - arbitrage_price_dispersion_finalisation_2026_05_09.md
   - writegate_honest_coverage_endtoend_2026_05_06.md
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 completion_gates:
   code: C5
   deployment: D3
@@ -35,6 +36,10 @@ completion_gates:
 ---
 
 # DEX perp + venue data expansion
+
+> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 > **Context from handover:** LIGHTER-ZKSYNC + PACIFICA-SOLANA + EXTENDED-STARKNET were onboarded in the 2026-05-07
 > session (`dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`). Extended (Starknet) adapter ships ohlcv_1m and
@@ -177,11 +182,12 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2F: Extended backfill planning
 
-- [x] ✅ [SCRIPT] P1. **Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** — deployment-service@099805a
-      `scripts/vm/launch-mtds-extended-ohlcv-backfill.sh` shipped: singleton-locked on `cefi-ext-bfill-` prefix
-      (EPHEMERAL_BATCH, `vm_zombie_watchdog.py` registered). Data types: trades + book_snapshot_5 (no funding —
-      pre-2025-08-01 funding → `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` by MTDS). Execution requires operator go-ahead
-      per plan note (window + VM cost). **[BLOCKED-OPERATOR-DECISION — launcher written; awaiting operator ack to run]**
+- [x] ✅ [SCRIPT] P1. **Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** —
+      deployment-service@099805a `scripts/vm/launch-mtds-extended-ohlcv-backfill.sh` shipped: singleton-locked on
+      `cefi-ext-bfill-` prefix (EPHEMERAL_BATCH, `vm_zombie_watchdog.py` registered). Data types: trades +
+      book_snapshot_5 (no funding — pre-2025-08-01 funding → `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` by MTDS).
+      Execution requires operator go-ahead per plan note (window + VM cost). **[BLOCKED-OPERATOR-DECISION — launcher
+      written; awaiting operator ack to run]**
 
 - [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** ✅ **DONE 2026-05-16 (slot-3)** —
       `market-tick-data-service/scripts/probe_drift_trades_window.py` at MTDS@`21ccab6`. One-shot probe of
@@ -257,10 +263,10 @@ feature available to downstream strategy-service consumers.
       before committing infra); (2) production path = Graph Studio custom subgraph emitting per-tick liquidity per block
       on Mint/Burn/Swap events; (3) Alchemy archive `eth_call` for spot-check at 26 CU/call. Write findings as a todo in
       `defi_master_2026_05_07.md` research section once validated, NOT as a code commitment here. **DEFERRED: no
-      implementation this plan — research only.**
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2 (R-S2-DEX-PERP-VENUE-DATA-EXPANSION): plan explicitly deferred this
-      to post-cutover research. Named successor: `plans/active/uniswap_v3_tick_subgraph_<date>.md` (create when Dune SQL
-      validation confirms CLMM math). Not blocking May-23.
+      implementation this plan — research only.** **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2
+      (R-S2-DEX-PERP-VENUE-DATA-EXPANSION): plan explicitly deferred this to post-cutover research. Named successor:
+      `plans/active/uniswap_v3_tick_subgraph_<date>.md` (create when Dune SQL validation confirms CLMM math). Not
+      blocking May-23.
 
 **Phase 4 success criteria:** Archetype doc updated + pushed. Verification script executable and outputs structured
 report. No QG gates for the doc-only changes (PM repo uses doc-fast-path to main).

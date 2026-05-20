@@ -132,3 +132,14 @@ class WalletCustodyReloader(ApiKeyReloader):
                           wallet_id=wallet_id,
                           old_surface=old_surface, new_surface=row.signing_surface)
 ```
+
+### StrategyDirectiveReloader (directive-specific variant)
+
+`strategy_service.config_reloaders.StrategyDirectiveReloader` extends the typed-reloader pattern with:
+
+- In-memory `dict[archetype_id, ArchetypeAllocationDirective]` with `threading.Lock`
+- TTL eviction via `valid_until` field (directives auto-expire)
+- `inject_directive(directive)` / `get_directive(archetype_id)` / `poll_once()` public API
+- Consumed by `AllocatorArchetypeEngine.weight_with_directive()` in `portfolio_allocator/archetypes.py`
+- No-op default: absent directive → `weight()` called unchanged (static config preserved)
+- See SSOT: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
