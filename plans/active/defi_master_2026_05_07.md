@@ -1217,6 +1217,11 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       "Typical instance examples" used `unity-epl-1x2-usd-prod`, `multi-dex-eth-usdc-ethereum-prod` etc. (prototype
       labels). Updated to 17 catalog slots + 2 bridge funding-rate-dispersion slots. Renamed section to "Active
       catalog slots (2026-05-20)". — PM@80e67a49
+- [x] ✅ [DOC] P2. **category-instrument-coverage.md CSB section — fix 3-leg→2-leg description + stale Aave/slots.**
+      Description still said "Three-leg DeFi-native: stake + borrow + perp" — borrow leg removed 2026-05-04. Coverage
+      table had "staking + lending + perp" with Aave as component; slot labels used lido-aave-hyperliquid format.
+      Corrected to 2-leg description, updated table to actual DERIBIT/BYBIT/DRIFT venues, replaced slot labels with 4
+      actual catalog slots. — PM@8d3e5e55
 
 ## `available_at` adapter stamping (coordinated)
 
