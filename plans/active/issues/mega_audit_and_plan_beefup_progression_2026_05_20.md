@@ -48,30 +48,126 @@ output. Mark `resolved: <date>` + `resolution:` block when closing.
 
 ### Phase A — Diagnostics (parallel, gates everything else)
 
-- [ ] **A1. Inventory script (codified-shape compliance matrix)**
-      Scan all repos for adherence to: log-upload trap, manifest v8 schema,
-      `record_*` emission, typed `EmptyConfirmedReason`, `classify_venue_error`,
-      `resolve_bucket_name`, `lifecycle_class` on VM prefixes, no hardcoded
-      venue URLs, no hardcoded venue universes, UAC import-surface rule.
-      Output: `plans/audit/results/codified_shape_compliance_2026_05_20.csv`.
+- [x] ✅ **A1. Inventory script (codified-shape compliance matrix)** — 2026-05-20 slot-1 opus.
+      Output: `plans/audit/results/codified_shape_compliance_2026_05_20.csv` +
+      `..._summary.md`. **8,142 files scanned across 25 repos; 1,274 violating; 2,593 total violations.**
+      Top checks by raw violation count: `uac_import_surface` (995), `resolve_bucket_name` (759),
+      `classify_venue_error` (302), `record_emission` (215), `no_hardcoded_venue_urls` (189),
+      `typed_empty_reason` (81), `has_log_upload_trap` (28), `no_hardcoded_venue_universe` (18),
+      `manifest_v8` (6), `lifecycle_class` (0).
+      Gap analysis (lacking QG enforcement): `typed_empty_reason`, `uac_import_surface`,
+      `lifecycle_class` CI check, `manifest_v8` workspace-wide constant ratchet. These slot
+      into the existing Cross-cutting QG ratchet plan (no new SSOT).
+
+- [x] ✅ **A2. `expected_coverage()` function build + dump** — 2026-05-20 slot-1 opus.
+      Function landed in `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py`
+      (per operator directive merge into existing scope-policy SSOT, single module).
+      Composes existing UAC SSOTs: `EXPECTED_COVERAGE_BY_ASSET_GROUP` (scope) +
+      `CEFI/DEFI/PREDICTION_VENUE_LAUNCH_DATES` + `CHAIN_GENESIS_DATES` +
+      `US_MARKET_HOLIDAYS` + `HALF_DAY_SESSIONS`. 14 unit tests pass; basedpyright clean.
+      Dump: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`
+      (429,088 rows, 0.56 MiB; 70% SHOULD_HAVE_DATA, 28% NOT_YET_LIVE, 2% EXPECTED_EMPTY).
+      Sidecar calendar decisions: `expected_coverage_calendar_decisions_2026_05_20.md`
+      (lists 5 known gaps — sports off-seasons, DeFi protocol pauses, per-symbol axis,
+      `SourceCapability.coverage_start` integration, pre-Tardis-archive windows).
+
+- [x] ✅ **A3. Manifest divergence report** — 2026-05-20 slot-1 opus.
+      Read 5 MTDS manifest indexes from prod GCS (CEFI / DEFI / TRADFI / SPORTS / PREDICTION
+      buckets, `_index/availability_index.parquet`, single-walk discipline — one parquet
+      per bucket). **3,968,880 manifest rows ingested.** Output:
+      `plans/audit/results/manifest_divergence_2026_05_20.parquet` (1.2M joined cells)
+      + `..._summary.md`. **Headline findings:**
+      - **765 `DIVERGENT_EMPTY` cells** (the Drift-bug class — review-blocking) — all in DeFi.
+      - **236,892 `MISSING_EXPECTED` cells** (silent gaps — review-blocking) — DeFi 184k,
+        sports 25k, cefi 16k, tradfi 7k, prediction 3k. Top venues:
+        - DeFi: FLUID-ETHEREUM (lending) + MORPHO-ETHEREUM/POLYGON (lending) + CURVE-ETHEREUM
+          + BALANCER + UNISWAPV2 (all dex_pools/dex_swaps missing).
+        - Sports: every bookmaker (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE)
+          missing all 2,332-day odds_snapshot/movement window.
+        - Prediction: KALSHI (1,756 cells) + POLYMARKET (1,686 cells) missing trades.
+        - CeFi: OKX + COINBASE + UPBIT missing trades/book_snapshot_5 backfill chunks.
+        - TradFi: ICE + CME tbbo gaps, YAHOO_FINANCE ohlcv windows, NYSE/NASDAQ ohlcv_1m gaps.
+      - **18,753 `ATTEMPTED_FAILED` cells** (per-row noise; check `error_reason` column for
+        taxonomy). Concentrated in DERIBIT/BINANCE-FUTURES/BYBIT futures_chain/options_chain,
+        ASTER (all 4 data types), HYPERLIQUID liquidations, BINANCE-FUTURES/BYBIT
+        book_snapshot_5, YAHOO_FINANCE ohlcv_24h/15m.
+      - **Only 44,955 `OK_CAPTURED` cells (3.66%)** — i.e. the workspace has confirmed-captured
+        data on only ~4% of in-scope cells. Bulk of the gap is `MISSING_EXPECTED` (silent gaps
+        the master plan hasn't yet enumerated/scheduled).
+
+### Phase A — Diagnostics: expanded-scope additions (operator directive 2026-05-20)
+
+The original A1/A2/A3 scope was insufficient — operator flagged 3 additional cross-cutting
+audit dimensions that must land for full data-pipeline coverage. These are A-phase
+(not B/C) because they're prerequisites for the Phase D plan beef-ups (the layer-N+1
+work shouldn't ship if these audits are RED).
+
+- [ ] **A4. Manifest v8 deep audit (data + code paths)**
+      Two dimensions, both per-asset-group:
+      - **Data side**: read each MTDS + IS manifest's `_index/availability_index.parquet`,
+        group by `schema_version` column → confirm 100% are v8. Any row at v<8 is
+        unmigrated data — emit a remediation cell. A1 only catches the *code* side
+        (constants in source) — this catches the *data* side (rows already written
+        at older schema versions that never got rewritten).
+      - **Code-path side**: scan every consumer of manifest rows (MTDS handlers, IS
+        orchestrator, deployment-api, features-service readers, strategy/execution
+        readers) for branches that handle pre-v8 rows or are missing v8 enhanced-field
+        consumers. Output: per-file v8-readiness flag (consumes_v8_enhanced_fields,
+        falls_back_to_v_lt_8). Surface mixed states as **review-blocking**.
+      Output: `plans/audit/results/manifest_v8_compliance_2026_05_20.csv` +
+      `..._summary.md`. Owner: background agent. Estimate: 1.0 calibrated AI-day.
+      Composes with: A1 (file-level v8 constant scan) + existing QG STEP for manifest
+      schema-version checks. SSOT: extend existing Cross-cutting QG ratchet plan
+      with the data-side ratchet step (no new SSOT).
+
+- [ ] **A5. Dependency-data-checking + fail-propagation audit (per service × mode)**
+      Every service must declare what upstream data it depends on, AND fail loudly
+      when that data is missing. Two sub-dimensions:
+      - **Batch mode**: pre-flight gate before each shard write. If upstream
+        manifest row is missing OR `attempted_failed`, raise `DependencyError(fail_fast=True)`
+        — NOT silently `record_empty()`. Audit every service's batch handler for the
+        pattern. Must match `EXPECTED_UPSTREAM_EMPTY` reason taxonomy only where upstream
+        is *legitimately* empty (oracle says `EXPECTED_EMPTY`) — otherwise raise.
+      - **Live mode**: stream-time freshness gate. If upstream stream is stale
+        (no new row in window-N), raise `StaleUpstreamError` — NOT fall through to
+        zero. Audit every service's live handler.
+      Per service × mode = matrix of (upstream_checked, fail_propagates_loudly,
+      uses_typed_reason). Concentration on: features-service (consumes MTDS),
+      strategy-service (consumes features), execution-service (consumes strategy),
+      ML services (consume features). Output: `plans/audit/results/dependency_propagation_2026_05_20.csv`
+      + `..._summary.md`. **MUST surface every service × mode cell that swallows a
+      missing-upstream condition** (the silent-empty class on the consumer side, sister
+      to A3's DIVERGENT_EMPTY on the producer side).
       Owner: background agent. Estimate: 1.5 calibrated AI-days.
+      Codify the patterns as QG steps: `check_dependency_fail_propagation.py` (per
+      service × mode) wired into each service's `quality-gates.sh` — operator directive
+      "any issues caught should be hardened in tests that quality gates uses".
 
-- [ ] **A2. `expected_coverage()` function build + workspace-wide CSV dump**
-      Build the function in UAC (`canonical/crosscutting/expected_coverage.py`)
-      reading instruments-service + UAC continuity + gap calendars. Dump
-      `expected_coverage(asset_group, source, symbol, date)` for every cell
-      since 2020-01-01. Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`.
-      Owner: background agent (function) + ikenna (gap calendars require
-      trading judgment — tradfi holidays per venue, no-fixture days per league,
-      chain-reorg windows, halving epochs). Estimate: 3 calibrated AI-days.
+- [ ] **A6. Batch-live adapter parity audit (per venue × data_type)**
+      Per CLAUDE.md "Batch = Live (CRITICAL)" — live + batch are operational modes of
+      the same pipeline. For every venue × data_type with a batch adapter, there
+      MUST be a live adapter (potentially from a different upstream source, but
+      same schema + same manifest emission contract). Audit:
+      - Enumerate batch adapters (MTDS handlers + IS handlers).
+      - Enumerate live adapters (MTDS live handlers + IS live handlers).
+      - Diff: every batch-only cell is a P0 gap on the live track; every live-only
+        cell may be intentional (live-only data_type) or a P1 gap on the batch track.
+      Output: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv` +
+      `..._summary.md` with the per-(venue, data_type) matrix. **MUST list every
+      batch-only adapter** so the live-rollout plan can size the gap explicitly.
+      Owner: background agent. Estimate: 1.5 calibrated AI-days.
+      Note: different upstream sources between batch + live is fine (e.g. Tardis for
+      batch CeFi vs venue WebSocket for live CeFi) — the audit checks contract parity,
+      not source identity.
 
-- [ ] **A3. Manifest divergence report**
-      Cross-reference current GCS manifest state against the A2 dump. Output
-      two lists: `DIVERGENT_EMPTY` cells (likely adapter bugs, à la Drift) and
-      `MISSING_EXPECTED` cells (silent gaps). Output:
-      `plans/audit/results/manifest_divergence_2026_05_20.parquet` +
-      `plans/audit/results/manifest_divergence_2026_05_20_summary.md`.
-      Owner: background agent. Blocked-on: A2. Estimate: 1.5 calibrated AI-days.
+**Why these aren't in the original A1/A2/A3**: A1 is *code-shape* compliance (regex
+scan of source); A2/A3 are *data-availability* expected vs actual. A4-A6 are *contract-
+correctness* audits — they verify that the workspace's internal contracts (manifest
+schema, dependency-fail propagation, batch-live parity) hold across services + modes.
+
+**Sequencing**: A4-A6 can run in parallel with B (template extraction) but must
+finish before C (per-pair contract audits) since C consumes these. Phase D plan
+beef-ups consume all of A1-A6.
 
 ### Phase B — Template extraction (small, unblocks all sibling audits)
 
@@ -99,7 +195,7 @@ are diagnostic outputs, not actionable until phase D digests them).
 | C3 | IS → execution-service | `is_execution_contract_audit_2026_05_20.md` | 1 |
 | C4 | MTDS → features-service | `mtds_features_contract_audit_2026_05_20.md` | 4, 5 |
 | C5 | MTDS → strategy-service | `mtds_strategy_contract_audit_2026_05_20.md` | 4, 6 |
-| C6 | features → strategy | `features_strategy_contract_audit_2026_05_20.md` | 5, 6 |
+| C6 | features → strategy | `features_strategy_contract_audit_2026_05_20.md` | 5, 6 |  [scope addendum 2026-05-20: see below](#c6-scope-addendum-2026-05-20-per-pair-viability--pricing-ownership) |
 | C7 | strategy → execution | `strategy_execution_contract_audit_2026_05_20.md` | 6 |
 | C8 | execution → venue adapter | `execution_venue_contract_audit_2026_05_20.md` | 6, 7 |
 | C9 | All → UAC | `uac_consumer_contract_audit_2026_05_20.md` | cross-cutting |
@@ -273,3 +369,33 @@ no further bookkeeping in this file.
 - **CLAUDE.md inflation**: do not add `expected_coverage` or
   `DIVERGENT_EMPTY` rules to CLAUDE.md until they're shipped in code +
   enforced by QG. Premature codification = drift between doc and code.
+
+## C6 scope addendum 2026-05-20: per-pair viability + pricing ownership
+
+Per operator directive 2026-05-20 (when archiving `cross_asset_instruments_service_scope_2026_05_14.md`): the C6 audit must verify features-service is the implicit owner of synthetic / cross-pair viability + pricing. There is **no** separate "synthetic universe" registry; the universe is encoded in features-service's per-pair feature output.
+
+### Scope items the C6 audit MUST cover
+
+For each active archetype (`carry_staked_basis`, `arbitrage_price_dispersion`, sports arb when active):
+
+1. **Universe enumeration**: features-service produces a feature stream per viable pair. Pairs absent from the stream = not in the universe at that time. Verify:
+   - Per-leg data-freshness filter is wired (no stale-leg pair makes it to strategy).
+   - Per-leg liquidity floor is enforced (illiquid leg → pair drops).
+   - Per-leg event filter is wired (LST unwind / depeg / funding cap → pair drops).
+
+2. **Per-pair pricing signal**: features-service emits the spread / carry / dispersion feature that strategy-service consumes for selection. Verify:
+   - Feature schema includes both legs' identifiers + spread/carry value.
+   - Feature is produced for ALL viable pairs, not a curated subset.
+   - Feature timestamp + staleness tag is per-pair, not per-leg.
+
+3. **Strategy-service consumes correctly**: verify strategy archetypes read the per-pair feature stream (not raw per-leg data) for selection. Banned: strategy code that re-enumerates legs from MTDS / instruments-service directly.
+
+4. **No instruments-service `cross_asset` shard reads** in strategy-service or features-service code. The `instruments-service` venue catalogue is per-asset_group only; any synthetic-pair concept lives in features-service derivation.
+
+### Why this matters
+
+If features-service does NOT fully own per-pair viability, strategy-service ends up re-deriving leg-combinations from raw data — duplicating logic, missing freshness filters, producing inconsistent universe between backtest and live. The C6 audit catches this drift before live trading exposes the gap.
+
+### Out of scope (still)
+
+`cross_asset` as an instruments-service shard remains REJECTED. Stable synthetic-instrument identity is a separate concern (deferred indefinitely; revisit only for client-facing structured products or rebalanced-basket backtests — neither active).

@@ -95,6 +95,8 @@ logs/
 # --- Common data / document file types (generated or local, not for git) ---
 # Uncomment or add !tests/fixtures/*.csv if the repo commits CSV fixtures
 *.csv
+# Mega-audit diagnostic outputs are checked-in artefacts consumed by downstream phases.
+!plans/audit/results/*.csv
 *.xlsx
 *.xls
 *.xlsm
@@ -106,6 +108,8 @@ logs/
 *.docm
 *.pdf
 *.parquet
+# Mega-audit diagnostic outputs are checked-in artefacts consumed by downstream phases.
+!plans/audit/results/*.parquet
 *.tsv
 *.ods
 *.odt
