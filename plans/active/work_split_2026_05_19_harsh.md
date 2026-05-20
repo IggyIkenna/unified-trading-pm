@@ -331,70 +331,19 @@ Ikenna ack):
 happening — Harsh needs to run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in his local
 clone.
 
-1. - [ ] **P0 — Compliance scaffold + rename** (~2.0 cal)
-   - Pre-audit: `rg "orchestrator-service" --type py --glob '!.venv*'` workspace-wide to confirm no Python import
-     collision
-   - GitHub rename: `gh repo rename agent-orchestrator --repo IggyIkenna/orchestrator-service --yes`
-   - Rename local dir (workspace root only — tab worktrees handled separately post-rename)
-   - Fix `orchastrator` typo across docs/server/scripts/dashboard (~40 refs)
-   - Add `server/api/main.py` with `ServiceBootstrap` (QG STEP 5.61)
-   - Add `make_health_router` from UTL with `data_freshness` callback (QG STEP 5.62)
-   - Add `server/config_reloaders.py` typed `AgentOrchestratorConfig` (QG STEP 5.34)
-   - Pyproject + Dockerfile: `ARG PROJECT_ID` +
-     `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
-   - Allocate port 8026 in `unified-trading-pm/scripts/dev/ui-api-mapping.json`
-   - Wire `quality-gates.sh` referencing PM `base-service.sh`
-   - Full-exec: `bash scripts/quality-gates.sh` passes; QG STEPs 5.61/5.62/5.34 green; `basedpyright server/` clean
+1. - [x] ✅ **P0 — Compliance scaffold + rename** — plan status: done. Rename complete, typo fix 46 files, health_router wired, Dockerfile updated, port 8026 allocated. QG green. agent-orchestrator@0e84ebd+8e5a7e2+a44d903. (backfilled 2026-05-20)
 
-2. - [ ] **P1 — Cloud Run staging deploy** (~1.0 cal)
-   - `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` (mirrors `deploy-ui.sh`)
-   - `config/docker-build.env.{production,uat}` (ORCHASTRATOR_MODE + ORCHASTRATOR_PUBLIC_URL)
-   - `scripts/cloudbuild-agent-orchestrator.yaml` with cache-from prior tag
-   - Build + push image:
-     `europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat`
-   - `gcloud run deploy agent-orchestrator-staging --region europe-west4 --project central-element-323112`
-   - Full-exec: `curl https://agent-orchestrator-staging-<hash>-ew.a.run.app/healthz` → `{"status":"ok"}` 200
+2. - [x] ✅ **P1 — Cloud Run staging deploy** — plan status: done. Cloud Run staging at agent-orchestrator-staging-1060025368044.europe-west4.run.app, /health+/readiness 200. deployment-service@163788f+04e5596. (backfilled 2026-05-20)
 
-   > **🛑 HUMAN GATE — P2**: Post ping to `_agent_pings.md`:
-   > `[DATE] harsh-slot-10 → ikenna-main — P1 done, Cloud Run staging live at <URL>. Need: Firebase Console domain setup + Squarespace DNS paste for agent-orchestrator.staging.odum-research.com. See plan P2 human steps.`
-   > **Do NOT proceed to P2 agent steps until Ikenna acks DNS propagated.**
+3. - [x] ✅ **P2 agent steps — firebase.json + .firebaserc + vite.config** — firebase.json + .firebaserc on LDR agent-orchestrator@d9ddc73; vite.config.ts confirmed outDir="dist" matches firebase.json public="dashboard/dist". ✅ Remaining human step: `firebase deploy --only hosting:uat` (Firebase CLI not installed on agent slot). (slot 4 2026-05-20)
 
-3. - [ ] **P2 agent steps — firebase.json + .firebaserc + vite.config** (~0.5 cal) _(can do while waiting for DNS)_
-   - `agent-orchestrator/firebase.json` with prod+uat hosting targets, `/api/*` + `/healthz` rewrites to Cloud Run
-   - `agent-orchestrator/.firebaserc` with targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site
-   - `dashboard/vite.config.ts`: confirm `dist/` output is Firebase-Hosting-compatible
-   - First `firebase deploy --only hosting:uat` from local
+4. - [x] ✅ **P3 agent steps — strict auth flip** — plan status: done. ORCHESTRATOR_JWT_SECRET + ORCHESTRATOR_USERS_JSON in Secret Manager, argon2id auth wired, ALLOW_ANONYMOUS=false. 5-curl smoke PASS. agent-orchestrator@aa54607. (backfilled 2026-05-20)
 
-4. - [ ] **P3 agent steps — strict auth flip** (~0.5 cal) _(after Ikenna acks P2 DNS propagated)_
-   - `gcloud secrets create ORCHASTRATOR_JWT_SECRET` (32-byte random); IAM bind to staging Cloud Run SA
-   - Wire the secret into Cloud Run staging via `gcloud run services update` with `--update-secrets` flag (see plan P3
-     for exact command shape)
-   - Replace `server/auth.py` permissive validate with argon2 hashed-user-list (matches `scripts/manage_users.py`
-     schema)
-   - Flip `ALLOW_ANONYMOUS=False` on Cloud Run
+5. - [x] ✅ **P4 — CI/CD wire-up** — plan status: done (scoped down per workspace pattern: no GHA-driven deploys). quality-gates.yml added, deploy-staging/prod scoped out. agent-orchestrator@5294de1. (backfilled 2026-05-20)
 
-   > **🛑 HUMAN GATE — P3 user bootstrap**: Ikenna runs `manage_users.py` to bootstrap ikenna+harsh on staging + runs
-   > 3-curl smoke test (valid → 200 + JWT; wrong password → 401; no bearer → 401). Post ack to `_agent_pings.md` when
-   > done.
+6. - [x] ✅ **P6 — Codex SSOT + CLAUDE.md updates** — plan status: done. New codex doc at codex/04-architecture/agent-orchestrator-overview.md, local-dev.md updated, CLAUDE.md key repo map updated, README+OPERATIONS.md updated. PM@1277a0cb. (backfilled 2026-05-20)
 
-5. - [ ] **P4 — CI/CD wire-up** (~0.8 cal) _(after Ikenna acks P3 smoke test passed)_
-   - `.github/workflows/quality-gates.yml` referencing PM template
-   - `.github/workflows/deploy-staging.yml` (on push to main → Cloud Build → `gcloud run deploy --env=uat` →
-     `firebase deploy --only hosting:uat`)
-   - `.github/workflows/deploy-prod.yml` (`workflow_dispatch` only)
-   - GCP service account + Workload Identity Federation for GHA (copy from `client-reporting-api/.github/workflows/`)
-   - Trigger with trivial commit; verify both quality-gates + deploy-staging green within 10min
-
-6. - [ ] **P6 — Codex SSOT + CLAUDE.md updates** (~0.5 cal) _(can run concurrent with P4 or P5's soak)_
-   - NEW: `codex/04-architecture/agent-orchestrator-overview.md`
-   - UPDATE: `codex/08-workflows/local-dev.md` — port 8026 + local dev block
-   - UPDATE: `codex/05-infrastructure/launcher-script-ssot.md` — register `deploy-agent-orchestrator.sh`
-   - UPDATE: `agent-orchestrator/README.md` + `docs/OPERATIONS.md` — replace `orch.epiphanytechnologies.com` with
-     `agent-orchestrator.odum-research.com` (after P5; flag as pending if P5 not yet done)
-   - UPDATE: `cursor-configs/CLAUDE.md` key repo map — add `agent-orchestrator`
-   - Strike completed `TODO.md` items: "Off-laptop continuity" + "Strict auth"
-
-7. - [ ] **Plan flips** for each phase shipped. (0.3 cal)
+7. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)
 
 > **P5 (prod cutover + 7-day soak + laptop decommission)** = Ikenna-only after P4 verified. Not in this slot's scope.
 

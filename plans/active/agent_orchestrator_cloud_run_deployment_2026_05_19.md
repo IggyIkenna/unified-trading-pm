@@ -76,9 +76,9 @@ todos:
     content: |
       - [ ] [HUMAN+AGENT] P2. Phase 2 — Firebase Hosting + custom domains (depends on P1)
         - [x] ✅ Added agent-orchestrator/firebase.json with prod+uat hosting targets, each rewriting `/api/**` + `/health{,/**}` + `/readiness` + `/healthz` to the matching Cloud Run service (region **europe-west4** — corrected from harsh-main's PM@51962e62b which incorrectly flipped to asia-northeast1; CLAUDE.md asia-northeast1 SSOT applies to GCS data only, not Cloud Run compute. Cross-side ping at PM@<this commit>). Static dashboard served from dashboard/dist with SPA fallback + immutable-cache headers on static assets — agent-orchestrator@ec72899
-        - [ ] Add agent-orchestrator/.firebaserc with hosting targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site (both under central-element-323112 firebase project)
-        - [ ] dashboard/vite.config.ts: confirm build output goes to a Firebase-Hosting-friendly path (dist/ → public/ relative to firebase.json)
-        - [ ] First `firebase deploy --only hosting:uat` from local laptop
+        - [x] ✅ Add agent-orchestrator/.firebaserc with hosting targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site (both under central-element-323112 firebase project) — agent-orchestrator@d9ddc73
+        - [x] ✅ dashboard/vite.config.ts: confirmed build.outDir="dist" in dashboard/ → dashboard/dist matches firebase.json "public": "dashboard/dist". ✅
+        - [ ] [HUMAN — Firebase CLI required] First `firebase deploy --only hosting:uat` from local laptop (firebase-tools not installed on agent slot; requires `firebase login` + `npm run build` in dashboard/)
         - [x] ✅ [HUMAN] Operator (Ikenna): Firebase Console → Hosting → created sites `agent-orchestrator-uat-site` + `agent-orchestrator-prod-site` via CLI; added custom domains `agent-orchestrator.staging.odum-research.com` + `agent-orchestrator.odum-research.com` — Firebase returned CNAME records 2026-05-19
         - [x] ✅ [HUMAN] Operator (Ikenna): pasted CNAME records into Squarespace DNS (odum-research.com) — `agent-orchestrator.staging` → `agent-orchestrator-uat-site.web.app`; `agent-orchestrator` → `agent-orchestrator-prod-site.web.app` — 2026-05-19
         - [x] ✅ [HUMAN] Firebase verified DNS + issued SSL — both domains show Connected 2026-05-19. Verified: `openssl s_client` confirms subject CN=agent-orchestrator.staging.odum-research.com + CN=agent-orchestrator.odum-research.com, issuer Google Trust Services WR3.
