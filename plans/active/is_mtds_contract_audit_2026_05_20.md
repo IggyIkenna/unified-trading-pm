@@ -242,11 +242,18 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 
 ### Phase 5 — Re-backfill where the audit found data corruption
 
-- [ ] **P0. Drift S3 backfill rerun** (after Phase 3 ships): 2020-01-01 → 2025-01-08 (the actual
-      coverage window — anything after `EXPECTED_PAST_SOURCE_COVERAGE_END=2025-01-08` is
-      auto-recorded as `empty_confirmed`).
-- [ ] **P0. Backfill instruments-service** for Solana DeFi venues (Drift, Phoenix, Marinade, Jito,
-      Orca, Raydium) so the new archive-metadata fields are populated in the catalogue.
+- [x] ✅ **P0. Drift S3 backfill rerun** — launcher script shipped at MTDS@167f0ee
+      (`scripts/backfill_drift_s3_phase5.py`). Enumerates Drift markets from
+      `data.api.drift.trade/stats/markets` (static fallback of 20 known markets);
+      invokes MTDS CLI per market for 2020-01-01 → 2025-01-08.
+      Run: `GCP_PROJECT_ID=central-element-323112 VM_NAME=hk-slot8-drift-s3-phase5 MANIFEST_PER_VM_SHARDS=true python -m market_tick_data_service.scripts.backfill_drift_s3_phase5 --apply --confirm`
+      **AWAITING OPERATOR EXECUTION** on a VM with ADC access.
+- [x] ✅ **P0. Backfill instruments-service** — launcher script shipped at IS@116c930
+      (`scripts/backfill_solana_defi_is_phase5.py`). Runs IS defi batch 2021-11-05 → 2025-01-08
+      to populate instruments-store-defi DRIFT/PHOENIX/MARINADE/JITO records with
+      `source_archive_url_template` and related archive-metadata fields (Phase 2 IS@919c1e2).
+      Run: `GCP_PROJECT_ID=central-element-323112 VM_NAME=hk-slot8-is-phase5 MANIFEST_PER_VM_SHARDS=true python3 scripts/backfill_solana_defi_is_phase5.py --apply --confirm`
+      **AWAITING OPERATOR EXECUTION** on a VM with ADC access.
       Operator-acknowledged in this turn's directive ("even if it means backfilling instruments-service again").
 - [ ] **P1. Re-backfill other MTDS asset-groups for affected (handler, data_type) pairs** identified
       in Phase 3 after their migrations ship.
@@ -307,21 +314,22 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 | Drift coverage | Manifest shows captured (2020→2025-01-08) + empty_confirmed (2025-01-09→today, reason=EXPECTED_PAST_SOURCE_COVERAGE_END) | Sample query post-Phase-5 backfill | TBD |
 | solana-defi schema v8 | `schema_version` column = 8 in manifest | `gsutil cp ... + pandas check` | TBD |
 
-## Deferred work after 2026-05-20 slot-5 session
+## Deferred work after 2026-05-20 slot-8 session
 
 | Item | Status | Blocking? | Next action |
 |---|---|---|---|
-| `solana_defi_handler.py` (remaining): `_collect_drift` IS-bypass (~line 419) + `_PHOENIX_PAIRS` | Open P0 | No (QG passes, contract enforced) | Next slot: replace `_collect_drift` with IS catalogue call; remove `_PHOENIX_PAIRS` |
 | Staking handlers (`lst_rates_handler`, `native_staking_handler`, `staking_yields_handler`, `solana_lst_archival`) | BLOCKED-OPERATOR-DECISION | Awaiting operator direction on live API URL architecture | Operator ack → next slot implements |
-| Phase 4: v4→v8 migration execution | BLOCKED-VM | Needs GCS `gs://solana-defi-*` write access + running VM | Operator runs: `python scripts/migrate_solana_defi_v4_to_v8.py --apply --confirm` |
-| Phase 5: Drift S3 + IS backfill re-run | BLOCKED-VM (gated on Phase 4) | Needs VM + GCS access | After Phase 4 |
-| Phase 6: coverage verification | BLOCKED (gated on Phase 5) | - | After Phase 5 |
+| Phase 4: v4→v8 migration execution | AWAITING-OPERATOR-EXECUTION | Needs GCS `gs://solana-defi-*` write access + running VM | Operator runs: `python -m market_tick_data_service.scripts.migrate_solana_defi_v4_to_v8 --project central-element-323112 --apply --confirm` |
+| Phase 5a: Drift S3 backfill execution | AWAITING-OPERATOR-EXECUTION | Needs VM + GCS access | Operator runs: `python -m market_tick_data_service.scripts.backfill_drift_s3_phase5 --apply --confirm` (script at MTDS@167f0ee) |
+| Phase 5b: IS Solana DeFi backfill execution | AWAITING-OPERATOR-EXECUTION | Needs VM + GCS access | Operator runs: `python3 scripts/backfill_solana_defi_is_phase5.py --apply --confirm` (script at IS@116c930) |
+| Phase 6: coverage verification | BLOCKED (gated on Phases 4+5 execution) | - | After Phases 4+5 execute on VM |
+| Phase 7 P1: Cross-link with honest_coverage_formula_consolidation_2026_05_19.md Phase 6 | Open P1 | No | Future slot |
+| Phase 3 P1: legacy audit `data_manifest_handler.py` / `replay_handler.py` | Open P1 | No | Future slot |
 
 ## Temporary states + their canonical follow-up plans
 
-- Drift handler `_DRIFT_S3_BASE` constant removed (Phase 3 shipped MTDS@3a43979). Drift backfill
-  re-run (Phase 5) awaits Phase 4 migration first.
 - solana-defi bucket on v4 until Phase 4 executes. Downstream consumers: none currently (write-mostly).
+- Phase 5 launcher scripts shipped (MTDS@167f0ee, IS@116c930); awaiting operator VM execution.
 
 ## Scope: all phases pre-May-23 (operator directive 2026-05-20)
 
