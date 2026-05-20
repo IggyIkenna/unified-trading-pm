@@ -23,6 +23,8 @@ severity:
   were moved, lost, or have path-format mismatch. Phase 6 --apply is BLOCKED until root cause confirmed.
 ---
 
+> **🟡 COVERED BY** [../gcs_migration_bundle_pipeline_mode_2026_05_08.md](../gcs_migration_bundle_pipeline_mode_2026_05_08.md) + [../gate_3_phantom_audit_runbook_2026_05_13.md](../gate_3_phantom_audit_runbook_2026_05_13.md) — P0 migration regression owned by Phase 3.6 of the migration plan + the phantom-audit runbook (slot-1 triage 2026-05-20). Phase 6 `--apply` BLOCKED until root cause confirmed. Mega-audit Phase A3 divergence report will also surface this class. Archive when parent plans close.
+
 ## What I found
 
 Post-migration Phase 3.6 audit (`reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run`) returned

@@ -7,6 +7,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase C0 (IS → MTDS contract audit) + Phase C9 (UAC consumer audit)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). Group A (Tardis network) + Group B + Group C (smarkets UAC venue registry) all fall under those contract pairs; 5 test failures source into D4 MTDS preflight beef-up. Do NOT work standalone.
+
 ## What I found
 
 5 test failures remain after fixing 2 Databento-related regressions (MTDS@139e2e6):

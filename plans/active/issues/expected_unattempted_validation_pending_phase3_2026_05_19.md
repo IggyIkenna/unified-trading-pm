@@ -7,6 +7,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase A3 (manifest divergence report)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). A3 produces the exact validation data this issue is waiting on. Do NOT work standalone.
+
 ## What I found
 
 Phase 1+2 code (MTDS instruments-service pre-flight + MDPS DependencyChecker

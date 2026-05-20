@@ -9,6 +9,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D cross-cutting QG ratchet plan + Phase D3 (manifest v8 finish)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). UAC `[tool.coverage.run].omit` is canonically a QG-ratchet item (patterns 4+5: validation_logic + error_classification surfaces). Do NOT work standalone.
+
 ## What I found
 
 `unified-api-contracts/pyproject.toml` has a `[tool.coverage.run].omit` block (citadel-phase-1 transitional) that

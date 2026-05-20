@@ -9,6 +9,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 COVERED BY** [../ml_repo_consolidation_2026_05_19.md](../ml_repo_consolidation_2026_05_19.md) — this is the Phase 0 pre-audit diagnostic artefact for the named consolidation plan (slot-1 triage 2026-05-20). Stays in issues/ until parent closes, then archives with it. Note: future Phase-0 artefacts should land in `plans/audit/`, mirroring the mega-audit's C-audit location convention.
+
 > **Scope**: read-only artifact driving every later phase of `ml_repo_consolidation_2026_05_19.md`. This file enumerates
 > per source repo (`ml-training-service`, `ml-inference-service`) the full module / consumer / dependency surface that
 > the subtree-merge into the NEW `ml-service` repo will touch.

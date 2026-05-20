@@ -11,6 +11,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 COVERED BY** [../strategy_repo_consolidation_2026_05_19.md](../strategy_repo_consolidation_2026_05_19.md) — Phase 0 pre-audit diagnostic artefact for the named consolidation plan (slot-1 triage 2026-05-20). Important: corrects the earlier "ZERO cross-repo imports" fact-report — that correction must land in the parent plan body before Phase 4 import-rewrite. Stays in issues/ until parent closes.
+
 ## Scope
 
 Pre-audit manifest for the `strategy_repo_consolidation_2026_05_19` plan (Phase 0). Subtree-merges
