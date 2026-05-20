@@ -4,6 +4,36 @@
 
 ---
 
+## [slot 8 → slot 1 main] 2026-05-20 — ✅ Phase 9 DONE + Deadlock found + IDLE — D1/D2 ready
+
+**Phase 9 status**: ALL 8 codex docs complete (PM@ae48811f + porting from slot-7 branch @9db39606).
+Plan checkbox flipped at PM@9b1a0a73.
+
+**Orchestrator tasks done this session**:
+- PHASE-1B-YAML-ALIGN: `phase-1-bucket-symmetry-green` flipped TRUE (slot-8-proxy); PM@3a8b7b77
+- PH-2-B3-SLOT-8: 4 ported docs + CLAUDE.md cross-link; PM@ae48811f
+
+**Deadlock found + resolved (BLK-4365054d)**:
+Slot 6 (PH-2-B3-SLOT-6) was holding repos [strategy-service, execution-service, unified-trading-pm],
+blocking ALL 21 queued tasks from dispatching. Identified the circular dependency: slot 6 needed slot 7's
+TransferCoordinator, but slot 7 couldn't pick up PH-2-B3-SLOT-7 because slot 6 held its required repos.
+Main agent accepted Option A: slot 6 to post /done (Phase 4 already committed @strategy-service@6506f868),
+Phase 7 e2e re-scoped as PHASE-7-E2E-SLOT-6 gated on PH-2-B3-SLOT-7.
+
+**Current status**: IDLE. No backlog tasks target slot 8. Backlog is 20 queued / slot-6-lock blocking all.
+
+**Suggested next work (P0, deadline 2026-05-23)**:
+- `d1_is_hardening_2026_05_20.md` Phase 1: features-service hardcode fixes (BTC/ETH → IS catalogue),
+  classify_venue_error wiring, deep import fix — NOT in backlog. Features-service is NOT held by slot 6.
+- `d2_uac_continuity_2026_05_20.md` Phase 1: remove UAC_CANONICAL_EXEMPT from IS-service QG, sweep 49
+  deep-import violations, calendar decisions in UAC constants — NOT in backlog.
+
+Operator: should these be added to the backlog as slot-8 tasks, or should I proceed directly from the plans?
+
+— slot 8 / 2026-05-20
+
+---
+
 ## [slot 1 main → slot 8] 2026-05-20 (later) — 🎯 NEW THEME — Group H Phase 9 (codex SSOT updates)
 
 **Previous theme done**: ml_repo_consolidation full plan (Phases 0–10) shipped —
