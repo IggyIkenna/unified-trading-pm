@@ -402,8 +402,11 @@ codex_audit F3 ambiguity):
 
 The plan items here promote the existing pieces to execution shape:
 
-- [ ] [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** — Cross-asset-group `--apply-flips`
-      reconciler. **Disposition**: promote draft → active execution plan. The plan today has:
+- [x] ✅ [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** — Cross-asset-group
+      `--apply-flips` reconciler. **Disposition**: promote draft → active execution plan. **DONE 2026-05-19 slot-4
+      closure note**: all AI-executable items `[x]`; launcher + script shipped in
+      `manifest_schema_final_gate_2026_05_09.md` Phase 3.A/3.D; operator sign-off (Phase 8.A+8.B) tracked in that
+      successor plan. The plan today has:
   1. **Class A mutable** flips (`capture_status` / `error_reason` / `attempted_at` / `path` reconciled to disk truth).
   2. **Class B immutable** columns the rescan respects but does NOT flip (`pipeline_mode` / `available_at` /
      `service_emission_state` set at write-time, not by walk).
@@ -426,12 +429,16 @@ The plan items here promote the existing pieces to execution shape:
       `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per
       `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`)
       lands in this same Phase 1 window.
-- [ ] [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Promote draft to active execution plan
-      if launched in Phase 2 (per audit Q3 sequencing-vs-v8 decision). If deferred behind v8, defer to Phase 3.
+- [x] ✅ **DEFERRED to Phase 3** [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Promote draft
+      to active execution plan if launched in Phase 2 (per audit Q3 sequencing-vs-v8 decision). **DEFERRED to Phase 3**
+      per plan's own disposition ("If deferred behind v8, defer to Phase 3") — VM execution items marked
+      `[x] ✅ **DEFERRED**` in plan; implementation code all shipped.
 
 ### Phase 2.2 — GCS bundled migration: pipeline_mode + category-rekey + drift sweep
 
-- [ ] [PLAN] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — BUNDLED overnight GCS migration.
+- [x] ✅ [PLAN] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — BUNDLED overnight GCS
+      migration. **DONE 2026-05-19**: all plan checkboxes `[x]`; Phase 7 migration VM fleet executed (Phases 7.A–7.G all
+      ✅); `pipeline_mode` column added, `category=` rekey done, 5 drift axes swept, OHLCV Phase 2.5 spec appended.
       **CRITICAL CONSTRAINT**: this plan walks every parquet ONCE; it MUST include all Phase 2 GCS-touching changes in
       the same walk. Bundled changes:
   1. NEW `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive partition column.
