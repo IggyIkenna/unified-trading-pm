@@ -20,6 +20,19 @@ codex_ssots:
 
 # Defunct UAC provider dirs cleanup — 2026-05-20
 
+> **ARCHIVED 2026-05-20** — all 13 venues (original 12 + Manifold extension) deleted from UAC + MTDS + PM + codex.
+>
+> **Landed commits**:
+> - Phase 1+2 (9 UAC-only): unified-api-contracts@a408925c
+> - Phase 3 (sharpapi+fear_greed+dydx cross-repo): unified-api-contracts@df2c7543 + market-tick-data-service@adc56bc
+> - Phase 5 (Manifold extension): unified-api-contracts@276f9efd + market-tick-data-service@fae9416
+> - PM/codex cleanup: unified-trading-pm@1f0351f76
+>
+> **Phase 4 verification (DEFERRED to promotion gate)** — not part of the cleanup itself but standard
+> post-merge validation, executed at next quickmerge: UAC + MTDS quality-gates green runs, UAC
+> `weekly-validation.yml` workflow dispatch + verify 13 venues gone from canary output, semver-agent
+> minor-bump confirmation. These run automatically when this branch lands on main.
+
 > **Trigger**: 2026-05-20 operator directive during WIF/canary scope-slicing for the weekly schema-validation work
 > (parent issue: [[uac_weekly_validation_wif_secrets_missing_2026_05_17]] RESOLVED 2026-05-20). Operator flagged 12 UAC
 > `external/<venue>/` dirs as defunct vendors / unused scaffolding to delete. Promoted from issue doc to active plan
