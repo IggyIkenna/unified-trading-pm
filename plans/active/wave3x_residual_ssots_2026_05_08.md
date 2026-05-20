@@ -280,11 +280,13 @@ stamping logic.
       `INJURIES_REPORT_TIME_COL` / `ODDS_SNAPSHOT_TIME_COL` constants + 3 facade re-exports. **DEVIATION**: kept the
       module's DataFrame-shaped helper API (the plan body sketched scalar signatures `(kickoff: datetime) -> datetime`);
       `stamp_available_at_lineups` (kickoff−60min) already existed.
-- [ ] [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries that currently emit
-      blank or read-time-derived `available_at` columns. **DEFERRED — per-service half; owner = Harsh slot 4 (MTDS
-      sports adapter stamping wiring) + Ikenna slot 3 (available_at Phase 1 per-asset_group cascade) per the 2026-05-11
-      work-split.** UTL helpers (above) are ready to consume; see `plans/active/issues/` for slot 4's MTDS-slice sports
-      `available_at` wiring issue doc.
+- [x] ✅ [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries.
+      **DEFERRED → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B** (slot-8 2026-05-20). MTDS sports
+      odds stamping (Harsh slot 4 scope) was absorbed by Ikenna slot 3 and shipped at MTDS@a512edf +
+      UTL@f7b704fd (2026-05-11). Features-sports calculator/writer-boundary enforcement (Tab 12) is officially
+      deferred per PM@cf9b9ba1 until `features_repo_consolidation_2026_05_08` Phase 5.c + chain links 0+1 ship;
+      named successor is `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B. UTL stamp helpers ready to
+      consume.
 - [x] [TEST] P0. **SHIPPED 2026-05-11 UTL@`2ab3685`** (slot 3): `tests/unit/test_availability_stamping.py` extended (NOT
       a parallel file — same file). +18 tests (injuries default/custom/missing-col; odds_snapshot default/custom;
       cascade priority-per-row / first-wins / single-candidate-matches-post_match / fallback-only / empty-list-raises /
