@@ -1,12 +1,20 @@
 ---
 title: kalshi + polymarket_clob adapters missing classify_venue_error()
 created: 2026-05-18
+resolved: 2026-05-20
 author: ikenna-main (surfaced by harsh slot 5 audit)
 source:
   - execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py
   - execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py
 locked_by: live-defi-rollout
 ---
+
+> **🟢 RE-RESOLVED 2026-05-20** — original fix at execution-service@a2b5eef46 (2026-05-18) was regressed by 774602ea8
+> (chore(lint): add # noqa justification comments across execution-service); restored at execution-service@195cf6829.
+> kalshi.py: classify_venue_error=7, ADAPTER_FETCH_FAILED=13 (matches a2b5eef46 baseline).
+> polymarket_clob.py: classify_venue_error=5, ADAPTER_FETCH_FAILED=9 (4 catch sites, all SP-12(a) pattern restored).
+> QG green (7514 passed; 2 pre-existing failures unrelated). Full blast-radius audit:
+> `plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
 
 ## What I found
 
@@ -42,15 +50,9 @@ Files to change:
 
 ## Resolution
 
-> **🔴 REGRESSION DETECTED 2026-05-20 (slot 1 verification sweep)** — `classify_venue_error` count in BOTH
-> `kalshi.py` and `polymarket_clob.py` is currently **0**, despite the 2026-05-18 fix at `execution-service@a2b5eef46`
-> adding 7 sites. Bisect shows commit `774602ea8` (chore(lint): add # noqa justification comments across execution-service)
-> wiped classify_venue_error from kalshi.py (and presumably polymarket_clob.py). At `a2b5eef46` count = 7; at
-> `5708cd6f5` count = 7; at `774602ea8` count = 0. **Issue REMAINS OPEN — does NOT archive.** Reassign to
-> execution-service slot owner to (a) restore classify_venue_error sites + (b) audit `774602ea8` for other adapter
-> regressions.
+**RE-RESOLVED 2026-05-20** — execution-service@195cf6829 (restored after regression at 774602ea8)
 
-**RESOLVED 2026-05-18** — execution-service@a2b5eef46 (REVERTED at `774602ea8` — see annotation above)
+**Original RESOLVED 2026-05-18** — execution-service@a2b5eef46 (REVERTED at `774602ea8`)
 
 - `kalshi.py`: added `classify_venue_error` + `ErrorAction` imports from UAC `canonical.crosscutting.errors`; added
   `ADAPTER_FETCH_FAILED` + `UNKNOWN_VENUE_ERROR_RECEIVED` imports from UTL events; all 5 `except aiohttp.ClientError`
