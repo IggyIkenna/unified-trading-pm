@@ -2,10 +2,14 @@
 title: "unified-trading-pm: CHANGELOG.md missing"
 created: 2026-05-19
 author: slot-5
+resolved: 2026-05-20
+resolution: SHIPPED — operator picked Option A (add now) 2026-05-20. CHANGELOG.md created at unified-trading-pm/CHANGELOG.md (PM@e8bcff952). Post-1.0.0 release-notes runbook upgrade tracked at plans/active/release_notes_runbook_post_1_0_0.md (stub-awaiting-1.0.0).
 source:
   - "MECH14-PM-CHANGELOG-AUDIT (orchestrator task)"
-locked_by: ""
+locked_by: live-defi-rollout
 ---
+
+> **🟢 RESOLVED 2026-05-20** — operator picked Option A (add now). CHANGELOG.md shipped at PM@e8bcff952. Post-1.0.0 runbook upgrade has named successor `release_notes_runbook_post_1_0_0.md`. Archiving.
 
 ## What I found
 

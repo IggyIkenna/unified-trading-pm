@@ -1,8 +1,9 @@
 ---
 title: "TradFi forward-poll cron missing — continuous-verification gap"
 type: issue
-status: open
+status: resolved
 created: 2026-05-17
+resolved: 2026-05-20
 author: slot-5
 priority: P1
 source:
@@ -11,6 +12,17 @@ source:
   - Cloud Scheduler asia-northeast1
 locked_by: live-defi-rollout
 ---
+
+> **🟢 RESOLVED 2026-05-20** — Option B shipped per operator directive. Cron-VM pattern:
+> `launch-tradfi-fwd-daily-cron-vm.sh` registered + launched. Mirrors `qg-snapshot-`/`honest-coverage-` pattern.
+> CeFi equivalent (`launch-cefi-fwd-daily-cron-vm.sh`) shipped in same unit of work (the previously-broken
+> Cloud-Scheduler→Cloud-Run anti-pattern on `trigger-market-tick-cefi-job` returning HTTP 403 with zero
+> executions for 4+ months was deprecated alongside). Both cron hosts are SCHEDULED_RECURRING e2-micro VMs
+> in asia-northeast1-c, registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`. TradFi fires 06:00 UTC,
+> CeFi fires 09:00 UTC. **Post-cutover cleanup (deferred, do NOT touch yet):** the broken Cloud Run
+> services + Cloud Scheduler entries are left dormant — no traffic, no cost beyond idle Cloud Run minimum
+> (~$0.50/month). Schedule cleanup post-May-23 cutover to avoid cross-asset surprise (operator policy:
+> dormant infra stays until live trading is stable). Archiving.
 
 # TradFi forward-poll cron missing — continuous-verification gap
 
