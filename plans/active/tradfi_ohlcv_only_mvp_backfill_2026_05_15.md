@@ -288,7 +288,7 @@ per workspace HARD RULE.
       `TRADFI_TICK_DATA_WINDOWS = []` rationale + `_DEFERRED_*` constants referenced + post-cutover successor plan
       pointer + venue×data_type table shows ohlcv_1m-only with CME/ICE backdated to 2019 + NASDAQ/NYSE 2023-04-15 +
       coverage-axes table marks trades/tbbo as DEFERRED-post-cutover.
-- [x] [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+- [x] ✅ [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       — slot-5-ikenna 2026-05-17: added `is_in_tradfi_tick_window` empty-mode addendum under § "Per-asset-group +
       per-data-source empty-rule asymmetry" pointing to this plan + the post-cutover successor; references the Phase 4
       contract-pin tests at `unified-api-contracts@8aa36c1`. `is_in_tradfi_tick_window` reference — note that empty

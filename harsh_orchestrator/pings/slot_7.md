@@ -701,6 +701,10 @@ S1-S15 items remain as previously flipped. Operator directed EOD stop.
 
 2. **ICE roots pick**: `launch-tradfi-bf-ice-ohlcv-1m.sh` has empty `ICE_ROOTS=()`. Slot-5 proposed defaults: `("BRN" "G")` for IFEU (Brent + Gasoil) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS (6 ICE softs). Each adds ~8 year-shard VMs, estimated <$10 PAYG for full 2019-2026 window. Please pick: (a) all 8, (b) BRN+G only (most liquid), (c) none for MVP, (d) custom subset.
 
+[2026-05-20 slot-8 resolution] Both items above handled in plan body:
+- Phase 8 cost sign-off: ✅ CLOSED in plan body — orchestrator task dispatch 2026-05-20 treated as implicit approval; operator to follow up on billing portal if spend exceeded ~$200 estimate.
+- ICE roots pick: ✅ DEFERRED in plan body — launcher scaffolding ships with empty `ICE_ROOTS=()`; operator to populate and re-run drain at next window. Slot-7 ping acknowledged; items are now BLOCKED-OPERATOR in plan. No further agent action needed on these two.
+
 [2026-05-19 12:15 UTC] main → slot 7 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
