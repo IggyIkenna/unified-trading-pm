@@ -1203,6 +1203,11 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Hyperliquid (hyperliquid_l1)" — incorrect: Hyperliquid is CeFi; all 6 funding-rate-dispersion venues are CeFi
       perps so `allowed_chains` is irrelevant for Variant B. Also removed stale guidance to set `allowed_chains` to
       on-chain perp legs — no such config path exists. — PM@fbddce38
+- [x] ✅ [DOC] P2. **CSB archetype doc venue-collateral matrix — fix OKX/BYBIT stale facts + slot count.**
+      OKX row said "pending live API verification" but UAC `venue_collateral.py` confirmed wstETH acceptance in
+      2026-05-08 Stream A flip; catalog slot still absent (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`). BYBIT row
+      said "stETH + METH + USDe up to 3 rows" but matrix has stETH + wstETH only; actual catalog output = 1 row
+      (LIDO/stETH). Slot count corrected from "~7" to 4 (verified by running collateral helper). — PM@b7f84482
 
 ## `available_at` adapter stamping (coordinated)
 
