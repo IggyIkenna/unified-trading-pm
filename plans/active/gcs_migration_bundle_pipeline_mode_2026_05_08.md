@@ -600,7 +600,9 @@ todos:
   - id: phase-8-fallback-removal-followup
     content: |
       - [ ] [AGENT] P2. Phase 8 — Reader fallback removal (T+30 days post-migration).
-        DEFERRED-PER-DESIGN to 2026-06-15.
+        DEFERRED-PER-DESIGN to 2026-06-15. **[BLOCKED-DATE-GATE 2026-05-20 slot-6]: not actionable
+        before 2026-06-15 — requires 30d of zero READER_FELL_BACK_TO_LEGACY_PATH events post-migration.
+        Migration completed ~2026-05-15; earliest unlock ~2026-06-15. Agent items exhausted.]**
 
         After 30 days of zero `READER_FELL_BACK_TO_LEGACY_PATH` events workspace-wide, delete the legacy
         fallback paths from:
