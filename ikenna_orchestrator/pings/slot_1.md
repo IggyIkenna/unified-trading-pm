@@ -180,6 +180,62 @@ follow-up for the operator to triage when they look at DeFi coverage gaps).
 **Net**: the demonstrated bug (TERMINATED, no log) is closed. Every VM in the patched 14 launchers will reliably
 emit run.log on every exit path. T+10min audits + post-mortems no longer fly blind.
 
+## [slot 1 main] 2026-05-20 ~00:30 UTC — IS↔MTDS CONTRACT AUDIT (workspace-wide, no code shipped — by operator request "slow down")
+
+**Trigger chain**: Drift S3 silent-absence finding (yesterday) → operator: "this might not be just a solana drift
+issue and warrants an audit across adapters and asset groups across IS and MTDS so see whats left service code wise,
+migration wise, manifest flip wise and backfill wise across everything" + "this should also be fixed in plans and
+actioned" (re: missing QG step for record_* enforcement).
+
+### Audit conclusions
+
+**4-dimensional matrix** captured in NEW plan `plans/active/is_mtds_contract_audit_2026_05_20.md`. Headline findings:
+
+| Dimension | Headline | Plan phase |
+| --- | --- | --- |
+| **IS adapter coverage** | All 5 asset_groups have IS adapters; Drift/Phoenix/Marinade/Jito ALL have IS adapters that MTDS ignores | Phase 2 (already-built IS adapters) + Phase 3 (rewire MTDS) |
+| **MTDS IS-consumption** | 6 handlers ❌ hardcode universe/URLs; 18 ✅ correct (dex_pools is gold pattern) | Phase 3 |
+| **Manifest emission** | 1 real silent-absence (Drift backfill); 3 legacy handlers need intent audit | Phase 3 P0 (Drift) + P1 (legacy) |
+| **Schema version** | `solana-defi-central` on v4 (hardcoded `data_manifest_handler.py:242`); others on v8 | Phase 4 |
+| **QG enforcement** | **ZERO** gates for no-silent-absence / no-hardcoded-URL / no-hardcoded-universe — this is THE root cause that let the audit gap persist | Phase 7 (3 new QG steps wired into per-service quality-gates.sh) |
+
+**Drift specifically — the canonical case**: handler uses `record_type=trades`, S3 actually uses `tradeRecords`
+(camelCase, all 404s); source stopped writing 2025-01-08 (verified via direct S3 listing); handler emits zero
+manifest rows on 0-record days. Two new UAC artifacts needed: archive-metadata fields on `InstrumentRecord`,
+and `EXPECTED_PAST_SOURCE_COVERAGE_END` enum member.
+
+### What landed this session
+
+| Commit | What |
+| --- | --- |
+| `unified-trading-pm@<new>` | NEW plan `is_mtds_contract_audit_2026_05_20.md` (5.6 calibrated AI-days, 8 phases) |
+| `unified-trading-pm@<new>` | Cross-link in honest_coverage plan Phase 6 → contract plan Phase 7 (composed QG bundle) |
+
+### NOT shipped this session (per operator "slow down")
+
+- Drift handler patch (would have been fast but operator wants root fix)
+- UAC InstrumentRecord schema extension
+- solana-defi v4→v8 migration
+- 6 MTDS handler refactors
+- The 3 new QG steps
+
+These are scoped in the new plan with P0/P1 prioritization. Operator sign-off on the plan precedes implementation.
+
+### Open question for operator
+
+Plan estimates 5.6 calibrated AI-days (refactor class × 0.4 = ~14 baseline). Roughly:
+- ~1 day: UAC schema + IS adapter migration (Drift first, others opportunistic)
+- ~2 days: MTDS handler refactors (6 ❌/⚠ handlers)
+- ~0.5 day: solana-defi v4→v8 migration
+- ~1 day: re-backfill (IS for Solana DeFi, then Drift S3 with correct shape)
+- ~0.5 day: 3 QG scripts + wire to quality-gates.sh
+- ~0.5 day: codex docs + SUPERSEDED banners + CLAUDE.md update + verification
+
+This pushes past May-23 cutover for full completion. Suggestion: ship Phase 1 + Phase 7 (QG enforcement) +
+the Drift-specific Phase 3 sub-item pre-cutover. Other handler refactors are post-cutover work.
+
+Awaiting operator decision on scope.
+
 **Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
 
 **Rationale (operator)**: live-inference runs on long-lived VMs, not scale-to-zero serverless. Cold-start

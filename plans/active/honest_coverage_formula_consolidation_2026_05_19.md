@@ -180,6 +180,10 @@ Phase 0 (✅ DONE)
       service's bucket scope.
 - [ ] **P1. Inline-formula linter**: `grep` for re-implementations of the formula in any
       file outside `honest_coverage.py` → QG FAIL.
+- [ ] **P0. ⚓ COMPOSES WITH `is_mtds_contract_audit_2026_05_20.md` Phase 7** — the
+      no-silent-absence + no-hardcoded-URL + no-hardcoded-universe QG steps live alongside
+      the inline-formula linter in the same `unified-trading-pm/scripts/qg/` bundle. The
+      ratchet is the "regression detector"; those three are the "structural guards".
 
 ### Phase 7 — Codex docs
 
