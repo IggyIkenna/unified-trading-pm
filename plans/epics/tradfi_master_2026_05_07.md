@@ -22,7 +22,21 @@ folds_in:
 related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
+  - audit/results/manifest_divergence_2026_05_20_summary.md
+  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
 ---
+
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for tradfi asset_group**:
+> 7,115 `MISSING_EXPECTED` + 1,546 `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED` cells.
+> Concentrated in: ICE tbbo (1,254) + ICE trades (1,238) + CME tbbo (1,188) +
+> YAHOO_FINANCE ohlcv_15m (938) + NYSE ohlcv_1m (839) + NASDAQ ohlcv_1m (839) +
+> YAHOO_FINANCE ohlcv_24h ATTEMPTED_FAILED (830) — likely rolling-window issue.
+> UNEXPECTED_CAPTURED 1,928 cells = data on dates oracle said EXPECTED_EMPTY
+> (weekend/holiday) — operator review needed (US_MARKET_HOLIDAYS list outdated?).
+> Reassigned slot 9 portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED"
+> + CLAUDE.md HARD RULE.
+>
+> **Scope MUST cover every venue × data_type — no asset_group skipped, no deadline-driven cutbacks**.
 
 # TradFi Master — asset_group umbrella
 

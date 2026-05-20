@@ -109,18 +109,79 @@ work.
 
 ## Slot stack — ~231 cal AI-days across 8 implementer slots
 
+> **🔴 SLOT FREEZE 2026-05-20 (operator directive)**: Per new data-pipeline
+> correctness HARD RULE ([CLAUDE.md](../../cursor-configs/CLAUDE.md) §
+> "Data Pipeline Correctness Is The Heartbeat" +
+> [codex SSOT](../../codex/02-data/data-pipeline-correctness-hard-rule.md)),
+> slots **6, 7, 9** FROZEN from prior themes (deployment UI / simulation
+> scenarios / promote workflow) until mega-audit Phase A1-A6 GREEN for their
+> asset_groups. All 3 were doubling down on layer-N+1 work on top of a workspace
+> with only 3.66% in-scope cells confirmed `captured` + 0% manifest rows at v8.
+> Reassigned to A3 remediation per epics + A6 BATCH_ONLY remediation. See
+> per-slot sections below for new scope.
+
 | Slot      | Theme                                                                                             | Cal AI-days | Plans owned                                                            |
 | --------- | ------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------- |
-| 1         | Main orchestrator (continuous, uncounted)                                                         | —           | This LEDGER                                                            |
-| 2         | code_freeze Phase 2.6 close (write-pause + L3/L5 + archive)                                       | ~35         | code_freeze §2.6                                                       |
-| 3         | code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry Tabs 1–3                                     | ~35         | code_freeze §2.0–2.5, batch_live_symmetry                              |
-| 4         | api_keys Phase 3–4 + defi_recursive_borrow Phase 3–4                                              | ~34         | api_keys, defi_recursive_borrow                                        |
-| 5         | writegate Phase 6.6/6.7 + live_pipeline Phase 3–5                                                 | ~30         | writegate, live_pipeline                                               |
-| 6         | deployment_ui_lifecycle_tabs (full 6-tab restructure)                                             | ~30         | deployment_ui_lifecycle_tabs                                           |
-| 7         | cross_cutting_deliverables (12.4) + simulation_scenarios_topology (7.6) + defi_master Phase 2–3   | ~27         | cross_cutting_deliverables, simulation_scenarios_topology, defi_master |
-| 8         | defi_catalogue close (27.2 remaining, 87%) + defi_simulation_realism final (0.7) + dex_perp close | ~29         | defi_catalogue, defi_simulation_realism, dex_perp_and_venue_data       |
-| 9         | batch_live_symmetry Tabs 4–7 + cme_polymarket_arb Phase 1 + promote_workflow_may23 residuals      | ~31         | batch_live_symmetry, cme_polymarket_arb, promote_workflow_may23        |
+| 1         | Main orchestrator (continuous, uncounted) + mega-audit Phase A coordination                       | —           | This LEDGER + mega_audit_and_plan_beefup_progression                   |
+| 2         | code_freeze Phase 2.6 close — KEEP (layer-3 manifest substrate)                                   | ~35         | code_freeze §2.6                                                       |
+| 3         | code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry T1-3 — KEEP (layer-3)                        | ~35         | code_freeze §2.0–2.5, batch_live_symmetry                              |
+| 4         | api_keys Phase 3–4 + defi_recursive_borrow Phase 3–4 — KEEP (credentials unblock data)            | ~34         | api_keys, defi_recursive_borrow                                        |
+| 5         | writegate Phase 6.6/6.7 + live_pipeline P3-5 — KEEP + own v8-backfill extension                   | ~30         | writegate (+ NEW v8-backfill phases), live_pipeline                    |
+| **6**     | **🔴 FROZEN — was deployment_ui_lifecycle_tabs. REASSIGNED to A3 DeFi MISSING_EXPECTED remediation** | ~30         | defi_upstream_46day_full_backfill (extended)                          |
+| **7**     | **🔴 FROZEN — was sim_scenarios + defi_master P2-3. REASSIGNED to A3 Sports + A2 off-season gap** | ~27         | sports_master (extended)                                              |
+| 8         | defi_catalogue close — KEEP (layer-1 reference)                                                   | ~29         | defi_catalogue, defi_simulation_realism, dex_perp_and_venue_data       |
+| **9**     | **🔴 FROZEN — was batch_live_symmetry T4-7 + cme_polymarket_arb + promote_workflow. REASSIGNED to A3 Prediction/TradFi/CeFi + A6 BATCH_ONLY** | ~31 | predictions_master, tradfi_master, cefi_master, batch_live_symmetry (extended) |
 | **Total** |                                                                                                   | **~251**    |                                                                        |
+
+### Slot 6 — REASSIGNED 2026-05-20 to A3 DeFi MISSING_EXPECTED remediation (~30 cal AI-days)
+
+**Why frozen**: deployment-UI lifecycle restructure is layer-N+1 — surfaces data
+status to operator while the data underneath is RED (3.66% captured + 0% v8).
+
+**New scope**:
+
+1. Walk every `MISSING_EXPECTED` cell in `plans/audit/results/manifest_divergence_2026_05_20.parquet`
+   filtered to `asset_group=='defi'` (184,512 cells). Group by (venue, data_type).
+2. For each (venue, data_type) pair with >100 missing cells, root-cause: handler wired
+   in MTDS orchestrator scope? IS catalogue exposing required `InstrumentRecord`s?
+   Credentials provisioned per `External Data Is Always Available`?
+3. Fix root cause + run backfill. Manifest-verify v8 rows landing per new writegate v8 phases.
+4. Re-run A3 against affected cells; assert 0 `MISSING_EXPECTED` post-fix.
+
+**Plan-of-record**: `defi_upstream_46day_full_backfill_2026_05_16.md` (extended 2026-05-20).
+
+### Slot 7 — REASSIGNED 2026-05-20 to A3 Sports + A2 off-season gap (~27 cal AI-days)
+
+**Why frozen**: simulation_scenarios_topology assumes data exists. Sports A3 shows
+25,652 MISSING_EXPECTED across ALL 11 bookmaker × data_type combos — simulation fits nothing.
+
+**New scope**:
+
+1. Build sports off-season calendar gap fix per A2 sidecar `expected_coverage_calendar_decisions_2026_05_20.md` §
+   "Sports off-season + no-fixture calendars". Pair with IS fixture data per recommendation.
+2. Re-run A2 + A3 against sports cells; honest-down off-season days (not real MISSING_EXPECTED).
+3. For residual real MISSING_EXPECTED cells, walk each (bookmaker, data_type) + root-cause per slot-6 recipe.
+4. Manifest-verify v8 rows for sports.
+
+**Plan-of-record**: `epics/sports_master_2026_05_07.md` (extended 2026-05-20).
+
+### Slot 9 — REASSIGNED 2026-05-20 to A3 Prediction/TradFi/CeFi + A6 BATCH_ONLY (~31 cal AI-days)
+
+**Why frozen**: promote_workflow + cme_polymarket_arb both presume captured + verified data exists.
+A3 shows 7,115 TradFi + 3,442 Prediction + 16,171 CeFi MISSING_EXPECTED — promotion cannot honestly happen.
+
+**New scope**:
+
+1. **Prediction (KALSHI/POLYMARKET trades — 3,442 cells)**: root-cause + backfill per
+   `epics/predictions_master_2026_05_07.md` extension.
+2. **TradFi (ICE/CME/NYSE/NASDAQ/YAHOO/FX — 7,115 MISSING + 1,546 ATTEMPTED_FAILED)**: root-cause + backfill per
+   `epics/tradfi_master_2026_05_07.md` extension. Investigate YAHOO_FINANCE ATTEMPTED_FAILED concentration.
+3. **CeFi (OKX/COINBASE/UPBIT + DERIBIT/BINANCE-FUTURES/BYBIT/ASTER chains — 33k MISSING+FAILED)**: per
+   `epics/cefi_master_2026_05_07.md` extension.
+4. **A6 BATCH_ONLY remediation (13 cells)**: build live equivalents per A6 CSV. Wire via
+   existing `batch_live_symmetry_2026_05_10.md`.
+
+**Plans-of-record**: `predictions_master`, `tradfi_master`, `cefi_master`, `batch_live_symmetry` (all extended 2026-05-20).
 
 ---
 

@@ -34,6 +34,18 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
 ---
 
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type)
+> cells have a batch adapter but no live equivalent (review-blocking per CLAUDE.md
+> "Batch = Live" + new HARD RULE "Data Pipeline Correctness Is The Heartbeat").
+> Plus 146 MISSING_BOTH cells where no adapter detected at all (caveat: regex
+> heuristic — some may be false negatives where venue isn't in the path/header).
+> Full per-cell list: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv`.
+>
+> Reassigned slot 9 portion to A6 BATCH_ONLY remediation per
+> `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED". Every BATCH_ONLY cell
+> MUST gain a live equivalent before paper-trade / strategy promotion proceeds for
+> the affected asset_group. **No deadline-driven cutbacks; closed-set deferral only
+> via BLOCKED-* status with operator ack.**
 
 ## Deferred work — migrated to:
 

@@ -4494,3 +4494,84 @@ Root cause: `run_validators.py --scope all` runs `validate_plan_links.py` which 
    blocks + inline code spans before link extraction.
 
 QG step 6 now: `OK: No broken links in plans/active/*.md` ✅
+
+---
+
+## Phase 7 — Manifest v8 full backfill (2026-05-20 addendum — operator P0 directive)
+
+> **Why this phase exists**: mega-audit Phase A4 (`plans/audit/results/manifest_v8_compliance_2026_05_20_*.csv`)
+> surfaced that **0% of 7.4M prod manifest rows are at v8** despite UTL's
+> `MANIFEST_SCHEMA_VERSION = 8` constant being set. Plus 1.3M NULL-schema-version
+> rows in DeFi/TradFi/Prediction. Per the new HARD RULE
+> "Data Pipeline Correctness Is The Heartbeat" + operator directive 2026-05-20,
+> all manifest rows MUST be migrated to v8 before any layer-N+1 work proceeds
+> for the affected asset_groups.
+
+**Owner**: slot 5 (writegate owner) + cross-side coordination with Harsh for VM operations.
+**Estimate**: ~12 cal AI-days (infrastructure 0.8× × 15 baseline).
+**Blocks**: A3 re-run (Phase A audit completion gate) + all Phase E execution per
+mega-audit tracker `mega_audit_and_plan_beefup_progression_2026_05_20.md`.
+
+### Phase 7.A — Diagnose the v8 writer-path gap (~2 cal AI-days)
+
+1. - [ ] **P0**. Walk every `record_captured` / `record_empty` / `record_failed`
+        callsite in unified-trading-library + each service. Confirm each goes through
+        the canonical writer that stamps `MANIFEST_SCHEMA_VERSION = 8`. If any path
+        writes with a stale constant or hardcoded older value, fix it.
+2. - [ ] **P0**. Identify the source of the 1.3M NULL-schema-version rows in DeFi
+        manifest. Likely an older code path that didn't stamp schema_version at all
+        (pre-v4 era). Document the path + fix it.
+3. - [ ] **P0**. Verify the consolidator (`_index/per_vm/*.parquet` → `availability_index.parquet`)
+        does NOT downgrade schema_version during merge. If it does, fix.
+
+### Phase 7.B — Forward-fix verification (~1 cal AI-day)
+
+1. - [ ] **P0**. After 7.A: every new `record_captured` write must land at v8.
+        Sample 100 most-recent rows per (asset_group, bucket); assert all `schema_version == 8`.
+2. - [ ] **P0**. Add QG step `scripts/quality_gates/check_manifest_schema_version_constants.py`
+        per A1 + A4 gap analysis. Ratchets workspace constants to v8.
+
+### Phase 7.C — Retrospective backfill of existing rows (~6 cal AI-days)
+
+Per single-walk discipline: bundle this into the existing Phase 2.2 GCS migration
+window if possible; otherwise schedule a dedicated v8 migration window with operator approval.
+
+Per-asset-group counts (from A4):
+- **CEFI**: 2,663,313 rows (12,361 v4 + 16,224 v5 + 2,246,785 v6 + 339,218 v7 + 30,704 v5 — mostly v6)
+- **DeFi**: 1,734,086 rows including 1,286,260 NULL-schema-version (CRITICAL — these need schema_version inferred or backfilled)
+- **TradFi**: 161,599 rows (mostly v6 + some NULL)
+- **Sports**: 2,833,196 rows (v2 + v4 + v5 + v6 + v7 mix)
+- **Prediction**: 20,752 rows
+
+1. - [ ] **P0**. Write `unified_trading_library/migrations/upgrade_manifest_to_v8.py`
+        that walks each `_index/availability_index.parquet` per bucket + rewrites every
+        row with `schema_version = 8`. Handle NULL rows by inferring from sibling columns
+        (`capture_status`, `data_type` presence) — never silently drop.
+3. - [ ] **P0**. Pre-migration drain per CLAUDE.md HARD RULE: stop all VMs across GCP + AWS,
+        consolidate manifests, snapshot to `_index/snapshots/pre_v8_migration_2026_05_XX.parquet`.
+4. - [ ] **P0**. Run migration per bucket. Asserts post-run: 100% v8 row count + 0 NULL rows.
+5. - [ ] **P0**. Post-migration: restart VMs, verify new writes land at v8.
+
+### Phase 7.D — Verification gate (~3 cal AI-days)
+
+1. - [ ] **P0**. Re-run A4 data side per `plans/audit/results/a4_manifest_v8_compliance.py`.
+        Assert 100% v8 + 0 NULL across all 10 buckets (5 MTDS + 5 IS).
+2. - [ ] **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells
+        introduced by the migration.
+3. - [ ] **P0**. Codex SSOT update — extend `codex/02-data/availability-manifest-and-data-status.md`
+        with the v8 migration completion banner + reference incident.
+
+### Phase 7 success criteria
+
+| Item | Cutover criterion | Continuous verification |
+|---|---|---|
+| 7.A writer-path | Every record_* callsite stamps v8 | New QG step (Phase 7.B) |
+| 7.B forward-fix | 100% of new writes at v8 | Sample-100-rows per bucket per day |
+| 7.C backfill | 100% existing rows at v8 + 0 NULL | A4 re-run returns 100% v8 |
+| 7.D verification | A3 + A4 GREEN | Continuous QG |
+
+### Phase 7 anti-patterns (review-blocking)
+
+- "Skip the 1.3M NULL rows — they're old data we don't query anyway" — banned. Every row in scope per HARD RULE.
+- "Bump the constant + add a NaN/None tolerance — that's good enough" — banned. The actual schema_version column must read 8 for every row.
+- "Migrate CEFI + DeFi but defer Sports/Prediction" — banned. Every asset_group is in scope.

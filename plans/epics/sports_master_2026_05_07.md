@@ -23,7 +23,24 @@ folds_in:
 related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
+  - audit/results/manifest_divergence_2026_05_20_summary.md
+  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
 ---
+
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for sports asset_group**:
+> 25,652 `MISSING_EXPECTED` cells across ALL 11 bookmaker × data_type combos
+> (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE × odds_snapshot + odds_movement).
+> The full window is missing — sports backfill has NOT run for any of these venues.
+> Reassigned slot 7 (was simulation_scenarios + defi_master P2-3) per
+> `work_split_2026_05_19_ikenna.md` § "Slot 7 — REASSIGNED" + CLAUDE.md HARD RULE
+> "Data Pipeline Correctness Is The Heartbeat". Includes A2 oracle gap remediation
+> for sports off-season calendars per
+> `audit/results/expected_coverage_calendar_decisions_2026_05_20.md`.
+>
+> **Scope MUST cover every bookmaker × data_type — no asset_group skipped, no
+> deadline-driven cutbacks** (operator directive 2026-05-20). Closed-set deferral
+> only via `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` /
+> `BLOCKED-UPSTREAM-OUTAGE` with operator ack.
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
