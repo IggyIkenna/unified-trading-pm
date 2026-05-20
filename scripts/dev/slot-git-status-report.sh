@@ -200,9 +200,12 @@ resolve_token_for_slot() {
     return 1
 }
 
-# Build + POST one slot's snapshot. Reads rows from stdin (TAB-separated).
+# Build + POST one slot's snapshot. Reads TSV rows passed as a single string arg
+# (NOT stdin — we previously used a heredoc which clobbered python's stdin with
+# its own source, hence "0 repos" for non-empty slots).
 post_snapshot() {
     local slot_id="$1"
+    local rows_tsv="$2"
     local token
     token=$(resolve_token_for_slot "${slot_id}") || {
         log "[skip:no-token] slot ${slot_id} — no readable token"
@@ -210,7 +213,7 @@ post_snapshot() {
     }
 
     local payload
-    payload=$(python3 - "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" <<'PYEOF'
+    payload=$(printf '%s' "${rows_tsv}" | python3 -c '
 import json, sys
 slot_id = int(sys.argv[1])
 host = sys.argv[2]
@@ -238,8 +241,7 @@ for line in sys.stdin:
         repo["dirty_oldest_mtime"] = dirty_oldest
     repos.append(repo)
 print(json.dumps({"reported_at": reported_at, "host": host, "repos": repos}))
-PYEOF
-)
+' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}")
     if [[ -z "${payload}" ]]; then
         log "[skip:empty-payload] slot ${slot_id}"
         return 0
@@ -267,13 +269,13 @@ for slot_dir in "${TABS_DIR}"/*/; do
     slot_id_str=$(basename "${slot_dir}")
     [[ "${slot_id_str}" =~ ^[0-9]+$ ]] || continue
 
-    {
-        for repo_dir in "${slot_dir}"*/; do
-            [[ -d "${repo_dir}" ]] || continue
-            [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
-            classify_repo "${repo_dir}"
-        done
-    } | post_snapshot "${slot_id_str}"
+    rows_tsv=""
+    for repo_dir in "${slot_dir}"*/; do
+        [[ -d "${repo_dir}" ]] || continue
+        [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
+    done
+    post_snapshot "${slot_id_str}" "${rows_tsv}"
 done
 
 log_quiet "=== git-status sweep complete (host=${HOSTNAME_SHORT}, workspace=${WORKSPACE_PATH}) ==="
