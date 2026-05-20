@@ -68,6 +68,22 @@ for handler_dir in "${HANDLER_DIRS[@]}"; do
     done < <(find "$handler_dir" -name "*_handler.py" -print0 2>/dev/null)
 done
 
+# Phase Qa/Qb: explicit file checks for strategy→execution boundary
+# These files contain write_instructions() / download_instructions_df() and MUST
+# have manifest emission (record_captured|record_empty|record_failed).
+SPECIFIC_FILES=(
+    "${REPO_ROOT}/strategy-service/strategy_service/engine/core/gcs_storage_service.py"
+    "${REPO_ROOT}/execution-service/execution_service/strategy_instructions/gcs.py"
+)
+
+for specific_file in "${SPECIFIC_FILES[@]}"; do
+    [[ -f "$specific_file" ]] || continue
+    if ! grep -qE 'record_captured|record_empty|record_failed' "$specific_file" 2>/dev/null; then
+        echo "SILENT-ABSENCE: $specific_file has no manifest emission (record_captured/record_empty/record_failed)"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+done
+
 if [[ $VIOLATIONS -gt 0 ]]; then
     echo "ERROR: $VIOLATIONS handler file(s) have no manifest emission (silent-absence violation)"
     echo "Each handle_*/collect_*/backfill_*/_fetch_* function MUST emit record_captured/record_empty/record_failed."
