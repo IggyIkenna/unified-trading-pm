@@ -464,13 +464,15 @@ Pre-audit artifact:
 Operator-validation question 2026-05-19 surfaced 4 gaps in the original 10-phase scope. Closing them now (before
 slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
 
-- [ ] **P0 NEW** [AGENT slot 4] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a) currently
-      covers the 7 `import`-consumer files from pre-audit § (b). Add: grep
+- [x] ✅ **P0 NEW** [AGENT slot 4] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a)
+      currently covers the 7 `import`-consumer files from pre-audit § (b). Add: grep
       `e2e-testing/scripts/{defi,sports,prediction}/`
   - `system-integration-tests/scripts/` + `e2e-testing/scripts/*.sh` for (i) shell invocations of
     `python -m {risk_and_exposure,position_balance_monitor,pnl_attribution}_service`, (ii) console-script names
     (`risk-monitor`, `position-monitor`, `pnl-attribution`, etc.), (iii) bare-Python entry-point invocations. Rewrite to
-    `python -m strategy_service --operation <op>`. Slot 4 extends Phase 4 (a) by ~0.5 cal-day.
+    `python -m strategy_service --operation <op>`. Slot 4 extends Phase 4 (a) by ~0.5 cal-day. — ✅ e2e-testing@ad55362
+    (2026-05-20): 4 run-full-pipeline.sh + data_layer_runner.py + colocated_engine.py rewritten to
+    strategy-service::{pnl-attribution,risk-monitor,position-recon}
 - [ ] **P0 NEW** [AGENT slot 7] Phase 8A — Console-script alias audit (PROMOTED from P2 to P0). Source repos define
       `[project.scripts]`: `risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`,
       `pnl-attribution-std`. These are invoked by name in deployment-service launchers, cron schedules, VM bootstrap
