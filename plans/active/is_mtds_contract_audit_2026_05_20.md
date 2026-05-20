@@ -228,8 +228,10 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
       same decision chain as above.
 - [ ] **P1. `position_data_handler.py` + `tick_data_handler.py` + `websocket_streaming_handler.py`**:
       remove partial fallback hardcodes.
-- [ ] **P1. Legacy intent audit** for `data_manifest_handler.py` / `replay_handler.py`:
-      either wire manifest emission OR document why exempt with `# legacy: no manifest emission, see <plan>` comment.
+- [x] ✅ **P1. Legacy intent audit** for `data_manifest_handler.py` / `replay_handler.py`:
+      both documented as exempt — `data_manifest_handler` is a read-only GCS scanner producing
+      deployment-UI JSON (not a capture handler); `replay_handler` uses `ReplayPublisher`
+      at the streaming layer (not a batch capture handler). — MTDS@5217c10
 
 ### Phase 4 — solana-defi bucket v4 → v8 migration
 
