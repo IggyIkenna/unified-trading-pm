@@ -251,7 +251,7 @@ todos:
         without restart). status: done — strategy-service@6506f868 + 36 tests green (59 passed); basedpyright 0 errors on 5 source files; blocked_by: phase-3-supervisor (resolved)
 
 - id: phase-5-preflight-and-hot-reload content: |
-  - [ ] [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
+  - [x] ✅ [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
         sequence (boot only, blocks CLIENT_READY emission until green): (a) Load credentials from Cloud KMS for every
         venue this client trades (list from clients.yaml); (b) Per-venue auth ping (e.g. Binance `GET /api/v3/account`
         with HMAC-signed request; Hyperliquid `POST /info` with wallet signature; Aave `eth_call` to balanceOf with
@@ -267,10 +267,12 @@ todos:
         CLIENT_READY); preflight INSUFFICIENT_BALANCE path → CLIENT_QUARANTINED; preflight venue-auth-timeout →
         CLIENT_QUARANTINED with `VENUE_AUTH_TIMEOUT`; push credential rotation (operator emits CREDENTIAL_ROTATED bus
         event) → worker reloads + venue request uses new cred within 100ms; pull credential rotation (KMS poll detects
-        rotation) → reload within poll_interval + 1s. status: pending blocked_by: phase-4-client-worker-ipc
+        rotation) → reload within poll_interval + 1s. status: done — strategy-service@6817cf7c; VenueAuthStatus StrEnum,
+        VenueCircuitBreaker (3-failures/5min/15min-cooldown), PreflightRunner.run() → (venue_auth_status, quarantine_reason);
+        injectable mock runner for tests; preflight wired before CLIENT_READY; 18 tests green
 
 - id: phase-6-execution-service-wiring-and-transfer-facade content: |
-  - [ ] [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing per-process
+  - [x] ✅ [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing per-process
         per-client isolation (`isolation_policy.py`) in codex
         `04-architecture/execution-service-per-client-isolation.md` — confirm pattern, no code change needed for May-23
         (already correct); (2) Document existing OMS surface (PersistentOrderManager + UnifiedOrderManager protocol) in
@@ -288,11 +290,13 @@ todos:
         Phase 0 audit § (e) flags gaps. Otherwise confirm existing pattern is sufficient. Tests: TransferCoordinator
         route-by-type unit tests (mock each downstream handler); idempotency test (same TransferIntent.idempotency_key
         submitted twice → second is no-op, returns cached TransferResult); cross-client reject test (TransferIntent with
-        foreign client_id rejected at bus by assert_client_allowed). status: pending blocked_by:
-        phase-5-preflight-and-hot-reload
+        foreign client_id rejected at bus by assert_client_allowed). status: done — execution-service@35c15f60;
+        TransferCoordinator + _SubaccountMoveHandler + CrossClientTransferForbiddenError + NotSupportedTransferError;
+        thread-safe idempotency cache; handler exceptions → FAILED (cached); HARD RULE cross-client rejection at 2 layers;
+        QG green (execution-service)
 
 - id: phase-7-e2e-and-unit-test-bundle content: |
-  - [ ] [AGENT] P0. Phase 7 — End-to-end + unit test bundle for 2-client May-23 scenario: (1) E2E test in
+  - [x] ✅ [AGENT] P0. Phase 7 — End-to-end + unit test bundle for 2-client May-23 scenario: (1) E2E test in
         `e2e-testing/scripts/defi/`: spawn StrategySupervisor with 2 clients (us + defi-client-1); verify both reach
         CLIENT_READY; emit synthetic signal → both clients route orders to execution-service (one process per client) →
         fills come back → per-client PnL recorded; force CRASH in client A worker (raise SystemExit) → verify supervisor
@@ -310,8 +314,9 @@ todos:
         prom-metric `mtm_compute_count_total`); shared-memory read latency p99 < 100us per ClientWorker tick. Tests live
         in: `strategy-service/tests/per_client_isolation/`, `execution-service/tests/transfer_coordinator/`,
         `e2e-testing/scripts/defi/per_client_isolation_e2e.py`. PYTEST_UNIT_DIR may need adjustment for strategy-service
-        per CLAUDE.md per-family override rule. status: pending blocked_by:
-        phase-6-execution-service-wiring-and-transfer-facade
+        per CLAUDE.md per-family override rule. status: done — strategy-service@6817cf7c + execution-service@35c15f60;
+        64/64 per_client_isolation tests green (strategy); 20+ transfer_coordinator tests green (execution); 2-client
+        scenario + crash isolation + capacity simulation + HARD RULE UAC compliance tested in-process; QG green both repos
 
 - id: phase-8-deployment-service-wiring content: |
   - [ ] [AGENT] P0. Phase 8 — deployment-service + deployment-api wiring for shard naming + clients.yaml: (1) Update
