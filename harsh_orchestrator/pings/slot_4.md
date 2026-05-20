@@ -553,3 +553,23 @@ Question: should `leveraged_funding_arb` archetype also be launched before May-2
 If yes → agent launches alongside existing VM. If no → 8A stays BLOCKED-POST-CUTOVER.
 
 Status: pings documented. Slot 4 moving to S4-DEX-PERP-EXPANSION.
+
+---
+
+[2026-05-20 UTC] slot 4 → operator — **BLOCKED-OPERATOR-DECISION: config_grid_archetype_extend_2026_05_20.md**
+
+Plan `config_grid_archetype_extend_2026_05_20.md` dispatched as "2 agent-doable items" but audit reveals all 3 items are blocked. Root cause: the plan's proposed `_DIMENSIONS_BY_ARCHETYPE` names DON'T match actual engine params.
+
+**Mismatch table**:
+| Family | Plan's proposed dims | Engine's actual params |
+|---|---|---|
+| `ML_DIRECTIONAL_CONTINUOUS` | `regime_window_days`, `confidence_threshold`, `position_size_pct`, `max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` |
+| `ML_DIRECTIONAL_EVENT_SETTLED` | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`, `slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` |
+| `MARKET_MAKING_EVENT_SETTLED` | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`, `max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` |
+| `ARBITRAGE_CROSS_DOMAIN_EVENT` | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`, `slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for this archetype |
+
+**Operator decisions needed**:
+1. Pick approach: **(a)** update plan dimension names to match actual engine params (implement-now), OR **(b)** add the proposed params to each engine first, then grid dimensions
+2. Decide on `ARBITRAGE_CROSS_DOMAIN_EVENT`: **(i)** implement engine first (blocks all 4-family completion), OR **(ii)** extend grid for 3 of 4 families (defer 4th to successor plan)
+
+All items tagged BLOCKED-OPERATOR-DECISION in plan. No agent action possible until operator picks approach.

@@ -57,15 +57,32 @@ Dimension choices required per family:
 
 ## Phased execution
 
-- [ ] [DESIGN] P0. **[BLOCKED-OPERATOR-DECISION]** Confirm per-archetype grid dimension names + coarse/medium/fine
-      value tuples. Source: `codex/09-strategy/mvp-universe-per-asset-group.md` author or operator direction.
-      Without this, `_DIMENSIONS_BY_ARCHETYPE` entries cannot be written without guessing.
+- [ ] **[BLOCKED-OPERATOR-DECISION 2026-05-20 slot-4]** [DESIGN] P0. Confirm per-archetype grid dimension names +
+      coarse/medium/fine value tuples. **CRITICAL MISMATCH FOUND**: the plan's proposed dimension names do NOT match
+      the actual engine params in `strategy_service/engine/strategies/v2/`:
 
-- [ ] [SCRIPT] P0. Add 4 `_DIMENSIONS_BY_ARCHETYPE` entries + `_dim_kwargs` branches + `_build_config_grid` branches
-      in `strategy-service/scripts/run_2yr_config_grid_backtest.py`. Extend `SUPPORTED_ARCHETYPES` tuple. Run QG.
+      | Family | Plan's proposed dims | Actual engine params |
+      |---|---|---|
+      | ml-continuous (`MLDirectionalContinuousEngine`) | `regime_window_days`, `confidence_threshold`, `position_size_pct`, `max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` (`regime_window_days` does NOT exist) |
+      | ml-settled (`MLDirectionalEventSettledEngine`) | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`, `slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` (none of the plan's names match) |
+      | arbitrage-sportsbook (`MarketMakingEventSettledEngine`) | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`, `max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` (none match) |
+      | arbitrage-event-markets (`ARBITRAGE_CROSS_DOMAIN_EVENT`) | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`, `slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for `ARBITRAGE_CROSS_DOMAIN_EVENT`. Grid sweep would crash at registration lookup. |
 
-- [ ] [SCRIPT] P0. Add `specs_for_archetype` smoke test per new family: 5-day synthetic window, coarse density,
-      assert grid CSV non-empty + P&L delta within expected range. Target: QG passes in <5 min on c3-highcpu-44.
+      Operator must choose: (a) update the plan's proposed dimension names to match the actual engine params, OR
+      (b) add the proposed params to each engine first, THEN implement the grid dimensions.
+      Separate decision needed for `ARBITRAGE_CROSS_DOMAIN_EVENT`: either (i) implement the engine first, or
+      (ii) defer this archetype and extend the grid for 3 of 4.
+      Ping: `harsh_orchestrator/pings/slot_4.md` [2026-05-20 UTC].
+
+- [ ] **[BLOCKED-OPERATOR-DECISION — depends on item 1]** [SCRIPT] P0. Add 4 `_DIMENSIONS_BY_ARCHETYPE` entries +
+      `_dim_kwargs` branches + `_build_config_grid` branches in
+      `strategy-service/scripts/run_2yr_config_grid_backtest.py`. Extend `SUPPORTED_ARCHETYPES` tuple. Run QG.
+      Cannot implement without confirmed dimension names from item 1. `ARBITRAGE_CROSS_DOMAIN_EVENT` additionally
+      requires engine factory registration before this item can close.
+
+- [ ] **[BLOCKED-OPERATOR-DECISION — depends on item 2]** [SCRIPT] P0. Add `specs_for_archetype` smoke test per new
+      family: 5-day synthetic window, coarse density, assert grid CSV non-empty + P&L delta within expected range.
+      Target: QG passes in <5 min on c3-highcpu-44.
 
 ## Done definition
 
