@@ -4419,3 +4419,42 @@ participate; this is not an ikenna-only migration. Cross-ping persists until
 operator fires the explicit Phase 2 freeze.
 
 — ikenna-main / slot-1
+
+---
+
+## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🔧 MASTER COORDINATOR PLAN UPDATED (round 5 re-sequencing)
+
+**Plan**: [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) updated with operator directive 2026-05-20 round 5:
+
+### Two new prerequisite phases ADDED before Phase 0
+
+**Phase -2: Strategy/ML/Features consolidation FINISH** — owned by **separate agent already drafting cross-slot ping (~20min ETA)** per operator. References:
+- [`plans/active/strategy_repo_consolidation_2026_05_19.md`](strategy_repo_consolidation_2026_05_19.md) (30/31 done; 1 P2 post-cutover open)
+- [`plans/active/ml_repo_consolidation_2026_05_19.md`](ml_repo_consolidation_2026_05_19.md) (appended in parallel)
+- [`plans/active/strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md) — operator decision on lines 378/384/388
+
+**Outstanding 4-bucket breakdown** (per operator 2026-05-20 round 5):
+1. **Operator-blocked**: `gh repo archive ml-training-service + ml-inference-service` (this file:41)
+2. **Operator-blocked**: bucket-strategy decision unified-vs-per-asset_group
+3. **Agent stale-ref cleanup**: 545 file refs to 5 archived services across 12 consumer repos (~50-150 real items: terraform destroy + grafana panels + deployment-ui service registry + UAC deprecated schema slugs + logger strings). Agent-doable + parallelizable.
+4. **Post-cutover deferred**: ml Phase 6 parity + strategy_archetype_logic_audit (waits on mega-audit A/C).
+
+**Phase -1: Workspace-wide QG green** — owned by **Harsh-side slots** (lint + QG focus). Every active repo: `bash scripts/quality-gates.sh` exit 0. Gates ALL ikenna-side migration work. Harsh-side absorbs improvements as ikenna pushes migration — coordinate via remote rebases.
+
+### Two new CLAUDE.md HARD RULES codified
+
+- **Quality Gates Are A Merge Prerequisite** — no PR merges without `quality-gates.sh` exit 0 for touched repo + cross-repo consumers. Plan-reviewer rejects PRs without QG-green evidence line.
+- **Every Active Ping Must Reference A Plan Item** — orphan pings (no plan ref) are review-blocking. Slot-1 main + harsh main audit weekly via `grep -L "plans/active\|plans/epics\|plans/audit\|plans/active/issues" <ping-file>` returns orphans.
+
+### Four new post-data phases ADDED (11-14)
+
+- **Phase 11**: Backfill to 100% per asset_group (DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k MISSING_EXPECTED → 0). Slots 6/7/9 unfrozen.
+- **Phase 12**: Live-data adapter completion master plan (covers A6 batch-live parity: 13 BATCH_ONLY cells + 146 MISSING_BOTH triaged). Slot 4 + slot 5.
+- **Phase 13**: Batch-live symmetry verification — live can start anytime without pricing gaps. Slot 3 + slot 9.
+- **Phase 14**: Strategy + execution deployment topology cleanup → ready-state for paper-trade → live promotion. Slot 5 + slot 8.
+
+### Harsh-side responsibility clarified
+
+Per operator round 5: **Harsh agents focus on lint + QG**. Understand that to merge to remote they'll need to absorb improvements from remote as ikenna agents push migration work. The QG-green prerequisite IS the Harsh-side deliverable that unblocks every ikenna-side migration commit.
+
+— ikenna-main / slot-1

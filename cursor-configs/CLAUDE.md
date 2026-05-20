@@ -648,9 +648,25 @@ keep being sloppy and keep missing out stuff."
 **Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
 **Operator-handoff entry point for migration coordination**: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
-— sequences AWS↔GCP bucket symmetry → code freeze → drain → GCS migration → AWS migration → Docker rebuild → manifest
-v8 backfill + label-flip → denominator/numerator UI fix → QG enforcement. References ALL existing related plans + audits
-without duplicating content. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do not reorder).
+— sequences (Phase -2) strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10)
+data-pipeline migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
+strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD
+(do not reorder). Per-phase plan-of-record + owner slot + verification criterion in the coordinator plan.
+
+**Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**:
+no code change merges to `live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the
+touched repo + any cross-repo consumers. Plan reviewers reject PRs that lack a QG-green evidence line. Harsh-side slots
+own the workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration work. Operator-tunable exemption
+only via `BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
+`Data Pipeline Correctness Is The Heartbeat`.
+
+**Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5)**:
+no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
+`harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record file path. Orphan pings (no plan ref)
+are review-blocking — author either (a) files a plan / extends an existing one, or (b) removes the ping. Slot-1 main +
+harsh main audit weekly. Audit recipe: `grep -L "plans/active\|plans/epics\|plans/audit\|plans/active/issues" <ping-file>`
+returns orphans. Composes with `Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo —
+pings just point at the todo).
 
 ---
 

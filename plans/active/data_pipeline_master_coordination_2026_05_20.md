@@ -13,6 +13,11 @@ estimate_calibrated_ai_days: 36
 parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: manifest_evolution_master_2026_05_08
 related_plans:
+  # Phase -2 consolidation prereqs (both being appended in parallel by another agent 2026-05-20 round 5)
+  - strategy_repo_consolidation_2026_05_19.md
+  - ml_repo_consolidation_2026_05_19.md
+  - features_repo_consolidation_2026_05_08.md
+  - strategy_execution_contract_remediation_2026_05_20.md  # operator bucket-strategy decision lines 378/384/388
   # Bucket naming + migration sequence
   - bucket_name_ssot_canonicalisation_2026_05_10.md
   - code_freeze_migrate_backfill_sequencing_2026_05_10.md
@@ -100,7 +105,26 @@ Symptoms the audit surfaced (linking to evidence):
 
 ## Critical-path ordering (DO NOT REORDER)
 
+> **2026-05-20 round 5 re-sequencing**: operator directive added two prereqs
+> BEFORE Phase 0 (strategy/ml/features consolidation + workspace-wide QG
+> green) and four post-data phases (11-14) for backfill-to-100% + live-data
+> + batch-live symmetry + strategy/execution topology cleanup.
+
 ```
+                            ┌──────────────────────────────────────┐
+                            │  Phase -2: Strategy/ML/Features      │
+                            │  repo consolidation FINISH           │
+                            │  (separate agent owns; ~20min ETA)   │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase -1: Workspace-wide QG green   │
+                            │  (Harsh-side owns; gating for all    │
+                            │  ikenna-side migration work)         │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
                             ┌──────────────────────────────────────┐
                             │  Phase 0: Pre-flight audits          │
                             │  (mega-audit Phase A — DONE)         │
@@ -181,7 +205,9 @@ accordingly.** No phase content duplicated here.
 
 | Phase | Plan(s)-of-record | Owner slot | Pre-req | Verification (when done) |
 |---|---|---|---|---|
-| **0. Pre-flight audits** | `audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md` + the 6 contract audits in `audit/` | slot-1 main (mega-audit owner — already DONE round 4) | — | All R-items in mega-audit § 6 have named owner + plan; this file exists |
+| **-2. Strategy/ML/Features consolidation finish** | `strategy_repo_consolidation_2026_05_19.md` (30/31 done; 1 P2 post-cutover open) + `ml_repo_consolidation_2026_05_19.md` + `features_repo_consolidation_2026_05_08.md`. **Outstanding work** (per operator write-up 2026-05-20 round 5): **Bucket 1** operator-blocked `gh repo archive ml-training-service + ml-inference-service` (`_agent_pings.md:41`); **Bucket 2** operator-blocked bucket-strategy decision unified-vs-per-asset_group (`strategy_execution_contract_remediation_2026_05_20.md:378/384/388`); **Bucket 3** 545 stale refs to 5 archived services across 12 consumer repos (~50-150 real cleanup items: terraform destroy on archived service dirs, grafana panels, deployment-ui service registry, UAC deprecated schema slugs, logger strings) — agent-doable + parallelizable; **Bucket 4** post-cutover deferred (ml Phase 6 parity + strategy_archetype_logic_audit waiting on mega-audit A/C) | **Separate agent already drafting cross-slot ping (~20min ETA)** for Buckets 1-3. Bucket 4 stays deferred. | — | Buckets 1+2 operator-acked; Bucket 3 grep returns 0 real-cleanup hits (docstrings/migration-history allowed) |
+| **-1. Workspace-wide QG green** | NEW CLAUDE.md HARD RULE this round + per-repo `bash scripts/quality-gates.sh` exit 0 | **Harsh-side slots** own the sweep (lint + QG focus per operator 2026-05-20 round 5); ikenna-side absorbs incoming improvements from remote during their migration work | Phase -2 GREEN | Every active repo: `bash scripts/quality-gates.sh` exit 0; QG-green evidence line on every PR going forward |
+| **0. Pre-flight audits** | `audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md` + the 6 contract audits in `audit/` | slot-1 main (mega-audit owner — already DONE round 4) | Phase -1 GREEN | All R-items in mega-audit § 6 have named owner + plan; this file exists |
 | **1. AWS↔GCP bucket-name symmetry audit + fix** | `bucket_name_ssot_canonicalisation_2026_05_10.md` (extension) + see new § "Phase 1 — bucket symmetry" below | **Slot 2 + Slot 3** (code_freeze owners — closest to bucket plumbing) | Phase 0 GREEN | A3 v2 re-run: AWS bucket names match GCP template (env-tier present, no `unified-trading-` prefix), all ≤63 chars |
 | **2. CODE FREEZE WINDOW** | This plan § "Phase 2 — code freeze protocol" | **Slot 1 main** (operator triggers; main broadcasts) | Phase 1 GREEN | All non-freeze slots ACK'd in `_agent_pings.md`; zombie watchdog + Cloud Run consolidators still RUNNING |
 | **3. VM fleet drain** | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 (existing) | **Slot 2 + Slot 3** | Phase 2 active | All non-essential VMs STOPPED; per-VM shards consolidated; manifest snapshot under `_index/snapshots/pre_migration_2026_05_XX.parquet` |
@@ -192,6 +218,10 @@ accordingly.** No phase content duplicated here.
 | **8. Code-freeze release** | This plan § "Phase 8 — release protocol" | **Slot 1 main** | Phase 7 GREEN | Broadcast UNFREEZE ping; resume slot themes per `work_split_2026_05_19_ikenna.md` |
 | **9. Denominator/numerator fix in deployment-UI** | `honest_coverage_formula_consolidation_2026_05_19.md` + `data_status_drilldown_shard_atom_alignment_2026_05_07.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` (post-unfreeze) | **Slot 6** (deployment-UI owner — unfrozen after Phase 8) | Phase 8 GREEN | UI shows: numerator = `captured` cells; denominator = `captured + empty_confirmed + attempted_failed + expected_unattempted` (everything we tried OR could have tried). Out-of-scope cells NOT in denominator |
 | **10. QG enforcement upgrade** | `canary_coverage_qg_enforcement_2026_05_20.md` (existing) + extend with manifest-v8 QG step + upstream-dep-check QG step | **Slot 5** + **Slot 2/3** | Phase 8 GREEN (parallel with Phase 9) | New QG steps: (a) `check_manifest_v8_writer_runtime.py` (samples recent writes for v8); (b) `check_dependency_fail_propagation.py` (per A5 findings); both ratchet to 0 violations workspace-wide |
+| **11. Backfill to 100% per asset_group** | mega-audit § 6 R1-R5 (DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k MISSING_EXPECTED) + `defi_upstream_46day_full_backfill_2026_05_16.md` extended + per-asset-group epic banners | Slots 6 / 7 / 9 (unfrozen post Phase 8); slot 5 owns v8-correctness verification | Phase 10 GREEN | A3 re-run per asset_group: 0 `MISSING_EXPECTED` cells without operator-acked `BLOCKED-*` status; numerator/denominator ratio per asset_group ≥ 99% (until proven otherwise per Phase 9 formula) |
+| **12. Live-data adapter completion (master plan)** | NEW master plan: `live_data_adapter_master_2026_05_20_or_later.md` (operator-authorise creation). Covers every venue × data_type having a live equivalent — see A6 batch-live parity findings + mega-audit R17 (13 BATCH_ONLY cells + 146 MISSING_BOTH triaged). Plus live pipeline: `live_pipeline_mtds_mdps_features_2026_05_08.md` (existing) extended | Slot 4 (live wiring; already in api_keys+defi_recursive_borrow theme) + slot 5 (live writer parity) | Phase 11 GREEN for the batch side | A6 re-run: 0 BATCH_ONLY cells (every venue × data_type has matching live adapter); live adapters confirmed running with manifest emission @ v8 |
+| **13. Batch-live symmetry verification** | `batch_live_symmetry_2026_05_10.md` (existing, extended this audit round) + new sub-plan if needed | Slot 3 (already owns batch_live_symmetry T1-3); slot 9 owns T4-7 post-unfreeze | Phase 12 GREEN | Live adapter can be started at any time for strategy-service consumption WITHOUT pricing-data gaps; batch-live formula identical across modes (per CLAUDE.md `Batch = Live (CRITICAL)`); cross-mode reconciler exit 0 |
+| **14. Strategy + execution deployment topology cleanup** | `strategy_execution_contract_remediation_2026_05_20.md` (existing) + `strategy_repo_consolidation_2026_05_19.md` residuals + execution-service deployment topology plans | Slot 5 (writegate + strategy is already there) + slot 8 (defi_catalogue close → defi_execution wiring) | Phase 13 GREEN | Strategy + execution deployment topology validated end-to-end with the new bucket layout + manifest v8 + live adapters. Ready-state for paper-trade → live-trade promotion per `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` |
 
 ## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
 
