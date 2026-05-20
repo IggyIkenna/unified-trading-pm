@@ -14,12 +14,12 @@ severity:
 launched_at: 2026-05-20
 ---
 
-> **🟡 LAUNCH PAUSED 2026-05-20** — operator authorized launch ("we should do this now, defi needs working"); slot-1
-> preflight found instruments-service launchers (`launch-instruments-backfill-vm.sh`, `launch-defi-backfill-vm.sh`)
-> have hardcoded END dates earlier than the 2026-04-01..2026-05-16 window and DO NOT accept `--start/--end` overrides.
-> No VMs launched. Operator decision required — see
-> `plans/active/issues/defi_46day_backfill_launch_status_2026_05_20.md` (options A/B/C/D). MTDS DeFi half is ready to
-> go once instruments-service path picked. Banner removed when manifest divergence A3 shows zero MISSING_EXPECTED for
+> **🟢 LAUNCHED 2026-05-20T01:22Z** — Option A executed. Launcher scripts edited
+> (`deployment-service@2f3c5a5` + `0bfc73b` — `--start/--end` + `--asset-group` filter + bash-3.x compat).
+> 12 VMs RUNNING in asia-northeast1-c covering window 2026-04-01..2026-05-16: 1 instruments-service DeFi VM
+> + 10 newly-launched MTDS DeFi VMs + 1 pre-existing `mtds-gas-fees-solana` (covers window). Expected wallclock
+> 2-4h. T+10min verification armed. See `plans/active/issues/defi_46day_backfill_launch_status_2026_05_20.md`
+> for VM table + execution notes. Banner removed when manifest divergence A3 shows zero MISSING_EXPECTED for
 > the 46-day window.
 
 ## What I found

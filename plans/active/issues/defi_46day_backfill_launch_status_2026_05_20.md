@@ -1,18 +1,21 @@
 ---
-title:
-  "DeFi 46-day upstream backfill launch — PAUSED at preflight (launcher-script blocker; operator decision required)"
+title: "DeFi 46-day upstream backfill launch — LAUNCHED (12 VMs in flight)"
 created: 2026-05-20
-author: ikenna-slot-1 (operator authorization 2026-05-20 "we should do this now, defi needs working")
+author: ikenna-slot-1 (operator authorization 2026-05-20 "we should do this now, defi needs working" + Option A pin)
 source:
   - "plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md (parent — operator approval granted 2026-05-20)"
-  - "deployment-service/scripts/vm/launch-defi-backfill-vm.sh (instruments DeFi launcher — hardcoded END=2026-04-04)"
-  - "deployment-service/scripts/vm/launch-instruments-backfill-vm.sh (multi-asset launcher — hardcoded DeFi END=2026-02-28)"
+  - "deployment-service@0bfc73b (launcher --start/--end + --asset-group + bash-3.x compat)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 severity:
-  P1 — paused preflight; no VMs launched. Resumes once operator picks instruments-launcher path (A/B/C below).
-launched_at: 2026-05-20  # task initiated; VMs NOT actually created — see PAUSE below
+  P1 — LAUNCHED 2026-05-20T01:22Z; closes when manifest divergence A3 confirms zero MISSING_EXPECTED for the 46-day window.
+launched_at: 2026-05-20T01:22Z  # 12 VMs RUNNING; T+10min verification armed
 ---
+
+> **🟢 LAUNCHED 2026-05-20T01:22Z** — Option A (launcher edit) executed. 12 VMs RUNNING in asia-northeast1-c:
+> 1 instruments-service DeFi (`instr-backfill-defi-20260516`) + 10 MTDS DeFi (relaunched) + 1 MTDS gas-fees-solana
+> (pre-existing, covers window). Window 2026-04-01..2026-05-16. Expected wallclock 2-4h. T+10min verification armed.
+> Banner removed when manifest divergence A3 confirms zero MISSING_EXPECTED.
 
 ## What I found
 
@@ -149,7 +152,54 @@ Total estimated VM compute: 12 VMs × ~2h avg = 24 VM-hours. e2-standard-4 ~$0.1
 
 ## Status
 
-**PAUSED — awaiting operator decision (A/B/C/D above).** No VMs launched 2026-05-20. ScheduleWakeup NOT armed. Banner
-NOT yet added to parent issue (will add on launch).
+**LAUNCHED 2026-05-20T01:22Z — Option A executed.** 12 VMs in flight covering window 2026-04-01..2026-05-16.
 
-When operator picks path, slot 1 resumes within same dispatch cycle.
+### Launched VMs (12 total)
+
+| VM name                                | Service                       | Range / Status                                         | Created (UTC)        |
+| -------------------------------------- | ----------------------------- | ------------------------------------------------------ | -------------------- |
+| `instr-backfill-defi-20260516`         | instruments-service DeFi      | 2026-04-01 → 2026-05-16 (Stage 1 — upstream universe) | 2026-05-20T01:22:05Z |
+| `mtds-solana-drift-backfill`           | MTDS DeFi (solana_drift)      | 2026-04-01 → 2026-05-16                                | 2026-05-20T01:13:59Z |
+| `mtds-dex-pools-backfill`              | MTDS DeFi (dex_pools)         | 2026-04-01 → 2026-05-16                                | 2026-05-20T01:15:12Z |
+| `mtds-eigenlayer-rewards-backfill`     | MTDS DeFi (eigenlayer)        | 2026-04-01 → 2026-05-16                                | 2026-05-20T01:15:44Z |
+| `mtds-liquidations-backfill`           | MTDS DeFi (liquidations)      | 2026-04-01 → 2026-05-16                                | 2026-05-20T01:16:17Z |
+| `mtds-perp-funding-backfill`           | MTDS DeFi (perp_funding)      | 2026-04-01 → 2026-05-16                                | 2026-05-20T01:16:55Z |
+| `mtds-lending-indices-20260520-091721` | MTDS DeFi (lending_indices)   | 2026-04-01 → 2026-05-16 (positional)                  | 2026-05-20T01:17:26Z |
+| `mtds-lst-rates-20260520-091740`       | MTDS DeFi (lst_rates)         | 2026-04-01 → 2026-05-16 (positional)                  | 2026-05-20T01:17:42Z |
+| `mtds-pyth-archive-20260520-091756`    | MTDS DeFi (pyth_archive)      | 2026-04-01 → 2026-05-16 (positional)                  | 2026-05-20T01:18:02Z |
+| `pyth-lst-backfill-20260520-091825`    | MTDS DeFi (pyth_lst)          | 2026-04-01 → 2026-05-16 (positional)                  | 2026-05-20T01:18:31Z |
+| `mtds-vault-share-price-20260520-091848` | MTDS DeFi (vault_share_price) | 2026-04-01 → 2026-05-16 (positional)                 | 2026-05-20T01:18:54Z |
+| `mtds-gas-fees-solana`                 | MTDS DeFi (gas_fees, Solana)  | 2021-01-01 → 2026-05-19 (pre-existing, covers window) | 2026-05-19T11:41:56Z |
+
+### Execution notes
+
+- **Option A (launcher edit)** picked + executed: `deployment-service@2f3c5a5` added `--start/--end` to
+  `launch-defi-backfill-vm.sh` + `--asset-group` filter + `--start/--end` overrides to
+  `launch-instruments-backfill-vm.sh`. `deployment-service@0bfc73b` fixed pre-existing bash-3.x compat bug
+  (`${var,,}` → `tr`) surfaced when launching from macOS host.
+- **Stage 1 attempt #1 FAILED** (`instr-backfill-defi-targeted-20260516` via `launch-defi-backfill-vm.sh`) — inner
+  script passes `--venues <list>` to instruments-service CLI which doesn't accept that flag. Filed as finding
+  below; relaunched via multi-VM launcher which doesn't pass `--venues`.
+- **Stage 2 sequencing**: instruments-service VM up ≥5min before MTDS fleet launched (avoided
+  `EXPECTED_DEPENDENCY_NOT_AVAILABLE` race).
+- **Stale-VM cleanup**: 4 TERMINATED MTDS VMs (`mtds-dex-pools-backfill`, `mtds-eigenlayer-rewards-backfill`,
+  `mtds-liquidations-backfill`, `mtds-perp-funding-backfill`) blocked relaunch — deleted + relaunched cleanly.
+- **gas-fees skipped**: `mtds-gas-fees-solana` already covers the window (per preflight inventory).
+
+### T+10min verification
+
+Background command armed at 2026-05-20T01:22Z (delay 600s) — verifies all 12 VMs RUNNING + per-VM run.log presence
+in `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/`.
+
+### Finding — `launch-defi-backfill-vm.sh --venues` flag is broken (P2)
+
+The inner `vm_instruments_backfill.sh` passes `--venues "CURVE-AVALANCHE CURVE-OPTIMISM ..."` to the instruments-service
+CLI, but the service CLI doesn't accept `--venues`. This is a pre-existing bug exposed by the 46-day backfill launch.
+The targeted-DeFi launcher is therefore broken for any execution path that reaches the service CLI. Workaround used:
+launch via `launch-instruments-backfill-vm.sh --asset-group DEFI`, which doesn't pass `--venues`. **Filed as P2 follow-up**:
+either add `--venues` to the instruments-service CLI or strip it from the inner script.
+
+- [ ] [P2] [FOLLOW-UP] Fix `vm_instruments_backfill.sh` → instruments-service CLI `--venues` mismatch. Either add
+  `--venues` to `instruments_service` argparse, or remove `VENUES_FLAG` propagation from the inner script.
+  Surfaced 2026-05-20 during Option A relaunch. Provenance: instruments-service `run.log` rc=2 at
+  `gs://deployment-scripts-central-element-323112/vm-logs/instr-backfill-defi-targeted-20260516/run.log`.
