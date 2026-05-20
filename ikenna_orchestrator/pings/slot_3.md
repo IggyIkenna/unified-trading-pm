@@ -8,21 +8,21 @@
 **Status**: ✅ Phase 1 UAC schemas shipped — `uac@82b7ad55`
 
 **Shipped**:
+
 - `unified_api_contracts/internal/strategy_pnl_stream.py` — `StrategyPnlStreamEvent`
 - `unified_api_contracts/internal/strategy_directives.py` — `ArchetypeAllocationDirective`
 - 12 unit tests in `tests/internal/unit/test_strategy_pnl_stream.py` + `test_strategy_directives.py`
 - Exports in `unified_api_contracts/internal/__init__.py`
 
-**Naming decision — OPERATOR ACK NEEDED**:
-The plan spec asks for `AllocationDirective` in `strategy_directives.py`, but `AllocationDirective` already exists
-in `internal/architecture_v2/schemas.py` (full multi-client post-cutover schema: `allocation_directive_id`,
-`client_id`, `allocator_id`, `directives: list[StrategyEquityDirective]`, etc.). Creating a second `AllocationDirective`
-in `strategy_directives.py` would shadow the existing export.
+**Naming decision — OPERATOR ACK NEEDED**: The plan spec asks for `AllocationDirective` in `strategy_directives.py`, but
+`AllocationDirective` already exists in `internal/architecture_v2/schemas.py` (full multi-client post-cutover schema:
+`allocation_directive_id`, `client_id`, `allocator_id`, `directives: list[StrategyEquityDirective]`, etc.). Creating a
+second `AllocationDirective` in `strategy_directives.py` would shadow the existing export.
 
-**Decision taken**: named it `ArchetypeAllocationDirective` to avoid collision. All consumer plans
-(Phase 2/5/6 agent prompts) use `AllocationDirective` — those need updating to `ArchetypeAllocationDirective`.
-Operator should confirm this naming is correct, or redirect to a different resolution (e.g. use the existing
-`architecture_v2.AllocationDirective` and extend it, or rename the existing one).
+**Decision taken**: named it `ArchetypeAllocationDirective` to avoid collision. All consumer plans (Phase 2/5/6 agent
+prompts) use `AllocationDirective` — those need updating to `ArchetypeAllocationDirective`. Operator should confirm this
+naming is correct, or redirect to a different resolution (e.g. use the existing `architecture_v2.AllocationDirective`
+and extend it, or rename the existing one).
 
 **Next**: Phases 2/3/4 are now unblocked (parallel). A4/A5/A6 background agents spawning.
 
@@ -1465,36 +1465,103 @@ Slot 3 CO-DUTY CLOSED. Phase 3.6 monitoring complete.
 
 ## 2026-05-20 — UAC SourceCapability metadata promotion plan ready for pickup
 
-**From**: slot-1 main ikenna
-**Plan**: [plans/active/uac_source_capability_metadata_promotion_2026_05_20.md](../../plans/active/uac_source_capability_metadata_promotion_2026_05_20.md)
-**Estimate**: 1.6 calibrated AI-days (refactor × 0.4)
-**Deadline**: 2026-05-25
-**Priority**: P3 — not on May-23 path, but unblocks mega-audit Phase A2 expected_coverage() oracle
+**From**: slot-1 main ikenna **Plan**:
+[plans/active/uac_source_capability_metadata_promotion_2026_05_20.md](../../plans/active/uac_source_capability_metadata_promotion_2026_05_20.md)
+**Estimate**: 1.6 calibrated AI-days (refactor × 0.4) **Deadline**: 2026-05-25 **Priority**: P3 — not on May-23 path,
+but unblocks mega-audit Phase A2 expected_coverage() oracle
 
 ### Why now
 
-Extended Starknet UAC declaration (UAC@2365885) halted on extending `SourceCapability` with 4 fields (`chain`, `kind`, `mandatory_user_agent`, `coverage_start`). Adding them workspace-wide is ~70-venue cross-cutting refactor — not appropriate for a single-venue PR. This plan does the structured promotion properly across all 70 venues.
+Extended Starknet UAC declaration (UAC@2365885) halted on extending `SourceCapability` with 4 fields (`chain`, `kind`,
+`mandatory_user_agent`, `coverage_start`). Adding them workspace-wide is ~70-venue cross-cutting refactor — not
+appropriate for a single-venue PR. This plan does the structured promotion properly across all 70 venues.
 
 ### Scope
 
-Promote 4 fields to first-class `SourceCapability` Pydantic fields + migrate 70 venue declarations + QG STEP 5.85 ratchet + Phase A2 `expected_coverage()` consumer wiring + codex SSOT updates.
+Promote 4 fields to first-class `SourceCapability` Pydantic fields + migrate 70 venue declarations + QG STEP 5.85
+ratchet + Phase A2 `expected_coverage()` consumer wiring + codex SSOT updates.
 
-**Explicit non-goal per operator 2026-05-20**: NO `entity` field. Cayman vs UK split stays implicit via per-secret labels in Secret Manager. Operator said "venue separation is overkill entity-wise".
+**Explicit non-goal per operator 2026-05-20**: NO `entity` field. Cayman vs UK split stays implicit via per-secret
+labels in Secret Manager. Operator said "venue separation is overkill entity-wise".
 
 ### Self-execution prompt
 
-Plan body § "Agent execution prompt (for slot 3 dispatch)" has the exact prompt to paste at task launch. Phases 0-5 are well-defined; Phase 0 + 1 can run in parallel.
+Plan body § "Agent execution prompt (for slot 3 dispatch)" has the exact prompt to paste at task launch. Phases 0-5 are
+well-defined; Phase 0 + 1 can run in parallel.
 
 ### Coordination notes
 
-- Builds on the 4-of-7-shipped foundation-gate QG patterns (no_silent_absence + no_hardcoded_venue_urls + no_hardcoded_venue_universe + no_adapter_contract_regression). Mirror those QG scripts as reference shape for STEP 5.85.
-- Touches: `unified-api-contracts/unified_api_contracts/registry/capability.py` + `capability_declarations/_*.py` (5 files) + `venue_launch_dates.py` + `data_source_continuity.py` consumer-side reads + new `expected_coverage()` integration.
+- Builds on the 4-of-7-shipped foundation-gate QG patterns (no_silent_absence + no_hardcoded_venue_urls +
+  no_hardcoded_venue_universe + no_adapter_contract_regression). Mirror those QG scripts as reference shape for STEP
+  5.85.
+- Touches: `unified-api-contracts/unified_api_contracts/registry/capability.py` + `capability_declarations/_*.py` (5
+  files) + `venue_launch_dates.py` + `data_source_continuity.py` consumer-side reads + new `expected_coverage()`
+  integration.
 - Does NOT touch per-venue adapter code in MTDS/execution-service — pure UAC + consumer layer.
 - Composes with mega-audit C9 (UAC consumer audit) — surfaces some of the same surface but at the data-shape level.
-- Coordinate with whoever picks up Phase A2 of the mega audit — that's the canonical consumer of the new `coverage_start` field.
+- Coordinate with whoever picks up Phase A2 of the mega audit — that's the canonical consumer of the new
+  `coverage_start` field.
 
 ### Success criterion
 
-70 venues populated with at minimum `chain` + `kind`. QG STEP 5.85 green workspace-wide. `expected_coverage()` reads `SourceCapability.coverage_start` for the source-level "earliest available" check.
+70 venues populated with at minimum `chain` + `kind`. QG STEP 5.85 green workspace-wide. `expected_coverage()` reads
+`SourceCapability.coverage_start` for the source-level "earliest available" check.
 
 — slot-1 main / ikenna
+
+---
+
+## 2026-05-20 — trading-agent-service Phase 1+4 shipped + A4/A5 P0 findings — OPERATOR ACTION REQUIRED
+
+**From**: slot-3 (tab/ikennaigboaka/3) **Plan**: trading_agent_service_architecture_unlock_2026_05_22.md
+
+### Phase 1 + 4 DONE
+
+- Phase 1: `StrategyPnlStreamEvent` + `ArchetypeAllocationDirective` — `uac@82b7ad55`
+- Phase 4: Root facade exports + integration tests — `uac@2bdc0f07`
+- **Naming decision (OPERATOR ACK NEEDED)**: Phase 1 ships `ArchetypeAllocationDirective` (not `AllocationDirective` as
+  spec says). Reason: `AllocationDirective` already exists in `internal/architecture_v2/schemas.py` line 390 — the full
+  multi-client post-cutover schema. Using same name would shadow it. Phases 5/6 agent prompts reference
+  `AllocationDirective` — need updating once you ack the `Archetype` prefix.
+
+### A4 + A5 COMPLETED — P0 findings requiring operator decision
+
+**A4 report**: `plans/audit/results/manifest_v8_compliance_2026_05_20.md` (PM@b084916ee)
+
+P0 (REVIEW-BLOCKING for live):
+
+1. **0% v8 compliance** across all 10 prod manifest buckets — 7,412,946 rows scanned, 0 at v8. Highest v7. Phase-3 GCS
+   migration migrated file paths but did NOT update `schema_version` in manifest index rows.
+2. `deployment-service/scripts/rebuild_sports_manifest.py` writes `schema_version=3` — active write-path violation.
+3. 1,336,749 NULL schema_version rows in defi MTDS bucket.
+4. `migrate_solana_defi_v4_to_v8.py` exists with `last_executed: NEVER` — migration tool built but never run.
+
+**A5 report**: `plans/audit/results/dependency_propagation_2026_05_20.md` (PM@2565bbfd5)
+
+P0 (CRITICAL — live-safety gate missing):
+
+1. **execution-service**: `assert_market_data_fresh()` defined + exported but **zero call sites** in any engine source
+   file. Execution can submit orders on stale/failed upstream data with no freshness gate.
+2. **strategy-service**: `assert_feature_fresh()` defined but **zero engine call sites**. Live signals can be emitted
+   from stale features with no SLA enforcement.
+3. `StaleUpstreamError` does not exist in workspace — equivalent is `DataStalenessError` in UAC
+   `internal/reference/data_freshness.py` but unwired in live paths.
+
+**A6** still running (batch-live adapter parity).
+
+### Phase 2 + 3 spawned (background agents, 2026-05-20)
+
+- Phase 2 (strategy-service PnL emission): background agent a07df2df86084d11d
+- Phase 3 (features performance_features + UAC EXPECTED_NO_PNL_STREAM): background agent abcd1c4a338f16c6a
+
+### What operator needs to decide
+
+1. **[ACK NEEDED] ArchetypeAllocationDirective naming** — ack `Archetype` prefix so Phases 5/6 agent prompts can be
+   updated
+2. **[ACK NEEDED] A4 v8 migration** — this requires a GCS walk. Must bundle into Phase 2 single-walk discipline (HARD
+   RULE: no new whole-corpus walk). Operator: is this bundled into an existing walk window, or does a new migration
+   window need scheduling?
+3. **[ACK NEEDED] A5 freshness gates** — two P0 live-safety gaps. Operator: should slot-3 wire these call sites in
+   strategy-service (Phase 2 is already touching that file) and flag execution-service for Harsh's slots?
+
+— slot-3 / ikenna
