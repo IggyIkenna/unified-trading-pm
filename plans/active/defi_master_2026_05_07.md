@@ -1202,7 +1202,7 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Comment above `allowed_chains` said "FUNDING_DISPERSION variant: on-chain perp venues are Drift (solana) +
       Hyperliquid (hyperliquid_l1)" — incorrect: Hyperliquid is CeFi; all 6 funding-rate-dispersion venues are CeFi
       perps so `allowed_chains` is irrelevant for Variant B. Also removed stale guidance to set `allowed_chains` to
-      on-chain perp legs — no such config path exists. — PM@pending
+      on-chain perp legs — no such config path exists. — PM@fbddce38
 
 ## `available_at` adapter stamping (coordinated)
 
