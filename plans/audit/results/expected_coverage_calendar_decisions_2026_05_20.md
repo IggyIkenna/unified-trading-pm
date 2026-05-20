@@ -126,6 +126,48 @@ calls that live elsewhere or are explicitly out of scope:
 - Whether to enumerate a date in the orchestrator's scope (the orchestrator
   enumerator + IS catalogue answer this, not the oracle).
 
+## Operator-acked scope decisions 2026-05-20 (round 2)
+
+These are `BLOCKED-OPERATOR-DECISION` scope removals — operator explicitly
+articulated the reason; agent never makes this call autonomously.
+
+### TradFi `tbbo` + `trades` cost-driven scope reduction
+
+**Operator directive 2026-05-20**: "we said for tradfi to focus on `ohlcv_1m`
+for now because of cost. VIX is different as not databento and same for yahoo
+finance data source. tbbo and trades are expensive we said to get 2 months one
+in 2023 one in 2024 as a max if at all for now"
+
+**Concrete scope** (effective until operator unblocks):
+
+| Venue | Data type | Status | Window in scope |
+|---|---|---|---|
+| CME | ohlcv_1m | IN SCOPE (full) | 2018-01-01 → today |
+| CME | tbbo | `BLOCKED-OPERATOR-DECISION` — sample only | one month in 2023 + one month in 2024 (operator picks the months) |
+| CME | trades | `BLOCKED-OPERATOR-DECISION` — sample only | same — one month in 2023 + one month in 2024 |
+| ICE | ohlcv_1m | IN SCOPE (full) | 2018-01-01 → today |
+| ICE | tbbo | `BLOCKED-OPERATOR-DECISION` — sample only | one month in 2023 + one month in 2024 |
+| ICE | trades | `BLOCKED-OPERATOR-DECISION` — sample only | one month in 2023 + one month in 2024 |
+| CBOE | ohlcv_15m (VIX) | IN SCOPE (full) | NOT Databento — Barchart preload + Yahoo rolling 60d + honest gap per `registry/data_source_continuity.py` |
+| NYSE | ohlcv_1m | IN SCOPE (full) | per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` |
+| NASDAQ | ohlcv_1m | IN SCOPE (full) | per same plan |
+| YAHOO_FINANCE | ohlcv_15m + ohlcv_24h | IN SCOPE (full) | NOT Databento — separate source per data_source_continuity |
+| FX | ohlcv_24h | IN SCOPE (full) | not Databento |
+
+**Named successor** (when the BLOCKED-OPERATOR-DECISION resolves): operator
+revisits cost vs research-value tradeoff; if approved, expand tbbo + trades to
+full window via Databento (or alternative tick provider).
+
+**Action required for A2 oracle**: the per-(venue, data_type) scope policy in
+`EXPECTED_COVERAGE_BY_ASSET_GROUP` should be narrowed for tradfi tbbo + trades
+OR the oracle should return `EXPECTED_EMPTY[EXPECTED_OUTSIDE_PROCESSING_SCOPE]`
+for cells outside the 2-month sample windows. Recommend the latter — keeps
+scope policy in-line with capability while reflecting operator scope.
+
+**Action required for A3 re-run**: cells outside the 2-month sample windows
+for tradfi tbbo + trades should NOT count as `MISSING_EXPECTED` — they should
+classify as `OK_OPERATOR_SCOPED_OUT`. New A3 classification status to add.
+
 ## Refresh cadence
 
 - **Annual**: refresh `US_MARKET_HOLIDAYS` + `HALF_DAY_SESSIONS` for the new year

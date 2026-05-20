@@ -1,12 +1,118 @@
-# Mega-audit Phase A — human-readable issues + sampling transparency
+# Mega-audit Phase A — human-readable issues + sampling transparency + delegation SSOT
 
-> Operator directive 2026-05-20: "I want human-readable summaries of the
-> issues so that I can audit what's actually wrong. I want to know where you
-> sampled and where you've looked at everything."
+> **This doc is the SSOT for delegating Phase-A remediation to Ikenna/Harsh
+> split slots.** Operator directive 2026-05-20: "the audit doc becomes the
+> SSOT for the delegation of PM active plan tasks to ikenna split agents to
+> complete the work needed to unblock data issues." Per-finding remediation
+> in § 6 is the canonical assignment table.
 >
-> This doc explains, per audit, what was scanned exhaustively vs sampled vs
-> approximated; the **specific issues** with venue + data_type + time-range
-> articulation; and the remediation handoff per issue.
+> Per CLAUDE.md HARD RULE `Data Pipeline Correctness Is The Heartbeat`:
+> every finding lands in an existing PM active plan; closed-set deferral
+> only via `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` /
+> `BLOCKED-UPSTREAM-OUTAGE` with operator ack.
+
+---
+
+## Section -1 — Operator Q&A 2026-05-20 (round 2 — answered inline)
+
+**Q1: "Sports off-season + DeFi protocol pauses — why not encoded? or are these issues being assigned to plans and agents?"**
+
+→ **Both, with clarification.** Sports off-season IS actually encoded in UAC:
+`unified_api_contracts.canonical.domain.sports.league_data.get_league_fixture_calendar(league_id, start, end)`
+returns only in-season dates per league. Plus `is_in_known_gap(source, data_type, iso_date)` for known coverage gaps.
+**My A2 oracle just wasn't integrating these helpers.** Fix: integrate sports off-season into oracle (item R7 below).
+DeFi venue-level deprecation IS also encoded: `unified_api_contracts.registry.capability_declarations._defi_coverage.EMPTY_OR_DEPRECATED_DEFI_VENUES`
++ `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` frozensets. **Genuinely missing**: per-protocol *time-windowed* pauses
+(e.g. Aave V2 → V3 migration windows 2024 Q1; Compound V2 wind-down 2024). Fix: build `PROTOCOL_PAUSE_WINDOWS` registry
++ integrate into oracle (item R8 below).
+
+**Q2: "per-symbol cells for a2 dump isn't using instruments and fixtures and markets or whatever for prediction markets already the symbol equivalent SSOT?"**
+
+→ **Correct — they ARE the symbol SSOTs and A2 v1 didn't use them.** The symbol SSOTs that should drive per-symbol A2:
+
+- **CeFi + DeFi + TradFi**: `instruments-service` catalogue (`InstrumentRecord` per (venue, symbol)). Read via the
+  IS GCS bucket `gs://instruments-store-{ag}-prd-central-element-323112/` parquets per asset_group.
+- **Sports**: `get_league_fixture_calendar(league_id, start, end)` per league + IS fixtures
+  (`unified_api_contracts.canonical.domain.sports.fixture.Fixture`). The fixture IS the "symbol equivalent".
+- **Prediction**: Polymarket markets + Kalshi markets. Polymarket exposed via IS Polymarket adapter; Kalshi via IS
+  Kalshi adapter. Each market is the symbol equivalent.
+
+Fix: A2 v2 per-symbol dump (item R9 below). A2 v1 dump at (venue, data_type, date) granularity remains valid as a
+coarse-grain check; v2 adds per-symbol axis for precise per-cell divergence (e.g. "BINANCE-SPOT BTC-USDT was missing
+2023-11-04 — but ETH-USDT was captured that day").
+
+**Q3: "A3 manifest divergence should be all services — is that planned and pinged?"**
+
+→ **Was a documented gap; now extended in this session.** A3 v2 reads:
+- 5 MTDS buckets (already done v1)
+- 5 IS buckets (added v2 — runs now per item R10)
+- features-* buckets (added v2 if `_index/availability_index.parquet` exists)
+- strategy-store-* + execution-store-* + ml-* buckets (added v2 best-effort)
+
+Caveat: not all services emit a master availability_index. Where one doesn't exist, A3 v2 flags the
+service as "no consolidated manifest" — that itself is a finding worth pinging.
+
+**Q4: "For A4 v8 deep — data: is the consolidator running? is that VM or now Cloud Run? any issues with it or lack of coverage in terms of what it consolidates?"**
+
+→ **Consolidator is a VM-based singleton**, NOT Cloud Run. Launcher:
+`deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh`. Per-env-tier singleton (one per prod/staging/dev).
+Polls every asset_group bucket on a fixed interval + merges `_index/per_vm/<vm_name>.parquet` shards into the canonical
+`_index/availability_index.parquet`. Source code: `unified_trading_library/unified_trading_library/manifest_consolidator.py`.
+
+**Coverage gaps in the consolidator** (verified by reading source):
+1. Consolidator only reads/writes `_index/availability_index.parquet`. Does NOT touch backup snapshot parquets
+   (`_index/availability_index.20260515-*.bak.parquet` etc. — visible in `gsutil ls`) — they get stale fast.
+2. Consolidator preserves the SOURCE row's `schema_version` value during merge; it does NOT upgrade to v8.
+   This is correct (no silent re-versioning) but means the v8 backfill must explicitly walk rows.
+3. The "singleton per env" guarantee is via a zone-lock — if the lock breaks or two VMs launch in the same env,
+   double-write contention may corrupt the manifest. **No P0 finding** today (verified single VM running)
+   but a continuous-verification audit item per item R11.
+4. Consolidator status NOT surfaced in deployment-UI today. Worth adding a panel in the deployment-UI
+   restructure (parked behind slot 6 unfreeze).
+
+Cloud Run migration: NOT currently planned. If you want to migrate consolidator → Cloud Run for better availability /
+auto-scaling, that's a separate plan (item R12 below — only proceed if you decide).
+
+**Q5: "For A4 v8 deep — code: do these missing cases exist and what should the SSOT be? Should refactor to SSOT so audit is easier and codex it to be the SSOT with claude.md reference to codex."**
+
+→ **The SSOT already exists** but is informally documented. Findings:
+
+- `MANIFEST_SCHEMA_VERSION = 8` constant in
+  `unified-trading-library/unified_trading_library/manifest_writer.py:145`.
+- `AvailabilityRowV4` dataclass (despite the v4 in the name — should be renamed) at `manifest_writer.py:986+`
+  with `schema_version: int = MANIFEST_SCHEMA_VERSION` as default. **This IS the v8 writer SSOT.**
+- Zero `schema_version=<8` hardcoded constants found anywhere in service code (verified via workspace-wide grep).
+  So new writes via this dataclass ARE landing at v8.
+- The 7.4M v<8 rows in prod are **historical artefacts** from before the v8 constant bumped (the rebuild was an
+  in-place constant change with no migration walk). The 1.3M NULL-schema-version rows are from a pre-v4-stamping era.
+
+Fix (items R13-R15 below):
+- **R13**: Rename `AvailabilityRowV4` → `AvailabilityRow` (drop the v4 suffix that misleads readers into thinking
+  the row is at v4). Add module-level docstring naming the dataclass as the v8 writer SSOT.
+- **R14**: Codex SSOT — new file `codex/02-data/manifest-writer-ssot.md` documenting the writer SSOT location +
+  invariant that `record_captured` / `record_empty` / `record_failed` MUST go through this dataclass. CLAUDE.md
+  pointer added (already exists implicitly under "Manifest + Honest Absence" section; tighten the pointer).
+- **R15**: QG step `check_manifest_writer_ssot.py` that asserts no `schema_version=` literal anywhere else in
+  workspace (only via the canonical default). Existing A1 check is similar but operates on text constants — R15
+  is stricter (AST-level + raises on any non-canonical-import write).
+
+**Q6: "A5 dependency-fail propagation and A6 batch-live adapter parity indeed we need to do these too"**
+
+→ **Done in this session** (commits in 84cc262eb bundle). Outputs:
+- A5: `plans/audit/results/dependency_propagation_2026_05_20.csv` + summary. Scanned 4,757 files across 15 consumer
+  repos; found 5 review-blocking silent-swallow files. Caveat: regex-strict; likely undercounts subtle patterns.
+- A6: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv` + summary. Scanned 573 adapter files;
+  found 1 GREEN / 13 BATCH_ONLY (review-blocking) / 146 MISSING_BOTH (heuristic — may have false negatives where
+  venue isn't in path). Pinged into slot 9 reassignment per § 6.
+
+**Q7: "I guess the findings would update the audit?"**
+
+→ **Yes — this doc is iterating.** Updated 2026-05-20 round 2 with operator Q&A + items R7-R15 in § 6.
+
+**Q8: "Maybe easier if you just complete the audit in full as per these and update the docs rather than giving away so the audit doc becomes SSOT for delegation."**
+
+→ **Done — this doc is now the delegation SSOT.** Every finding has a named slot + plan in § 6 below.
+Per CLAUDE.md HARD RULE additions, plan reviewer rejects any work that doesn't trace back to this audit.
 
 ---
 
@@ -277,7 +383,65 @@ operator-judgment input; the rest is implementation work).
 
 ---
 
-## Section 6 — Remediation roadmap (what each finding routes to)
+## Section 6 — Delegation SSOT (slot × plan × finding)
+
+> **This table is the canonical assignment for Phase-A remediation.** Per
+> operator directive 2026-05-20: "the audit doc becomes the SSOT for the
+> delegation of PM active plan tasks to ikenna split agents." Each remediation
+> item Rn has (a) a named slot, (b) a named plan-of-record, (c) a concrete
+> verification step. Plan reviewer rejects any work outside this table without
+> an operator-acked exception.
+
+| # | Finding | Owner slot | Plan-of-record | Verification (when GREEN) |
+|---|---|---|---|---|
+| **R1** | A3 DeFi: 184,512 `MISSING_EXPECTED` + 765 `DIVERGENT_EMPTY` | **Slot 6 🔴 (frozen → reassigned)** | `defi_upstream_46day_full_backfill_2026_05_16.md` (extended) | A3 re-run: 0 `MISSING_EXPECTED` + 0 `DIVERGENT_EMPTY` for `asset_group=='defi'` |
+| **R2** | A3 Sports: 25,652 `MISSING_EXPECTED` (all 11 bookmaker×data_type combos full window) | **Slot 7 🔴** | `epics/sports_master_2026_05_07.md` (extended) | A3 re-run post-off-season-integration: 0 `MISSING_EXPECTED` for sports |
+| **R3** | A3 CeFi: 16,171 `MISSING_EXPECTED` (OKX/COINBASE/UPBIT) + 17,207 `ATTEMPTED_FAILED` (DERIBIT/BINANCE-FUTURES/BYBIT/ASTER/HYPERLIQUID) | **Slot 9 🔴** (CeFi portion) | `epics/cefi_master_2026_05_07.md` (extended) | A3 re-run: 0 `MISSING_EXPECTED` for cefi; `ATTEMPTED_FAILED` reasons all in `EmptyConfirmedReason` enum |
+| **R4** | A3 TradFi: 7,115 `MISSING_EXPECTED` + 1,546 `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED`. **Operator-scoped 2026-05-20**: TradFi focus is **`ohlcv_1m` ONLY** (cost). `tbbo` + `trades` from Databento are EXPENSIVE — operator authorises a sample only: **one month in 2023 + one month in 2024 max** (if at all for now). VIX (CBOE) + Yahoo Finance + FX are NOT Databento and stay in full scope per existing source-continuity rules. | **Slot 9 🔴** (TradFi portion) | `epics/tradfi_master_2026_05_07.md` (extended) + `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (already-active MVP plan) | A3 re-run: 0 anomalies for `ohlcv_1m` + VIX + Yahoo + FX; tbbo + trades cells outside the 2-month sample windows return `EXPECTED_EMPTY[EXPECTED_OUTSIDE_PROCESSING_SCOPE]` (operator-acked scope removal); `UNEXPECTED_CAPTURED` 1,928 cells resolved (US_MARKET_HOLIDAYS list audit) |
+| **R5** | A3 Prediction: 3,442 `MISSING_EXPECTED` (KALSHI 1,756 + POLYMARKET 1,686 trades). **Credential status confirmed 2026-05-20**: Kalshi historical trades are **PUBLIC, no API key required** (`ENDPOINT_STATUS: PUBLIC_NO_AUTH` per `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`; base URL `https://trading-api.kalshi.com/trade-api/v2`; auth only needed for placing orders, not data read). Polymarket likewise uses public The Graph subgraph + public CLOB read endpoints. **No credential blocker** — both gaps are adapter-wiring / orchestrator-scope issues. | **Slot 9 🔴** (Prediction portion) | `epics/predictions_master_2026_05_07.md` (extended) | A3 re-run: 0 `MISSING_EXPECTED` for prediction |
+| **R6** | A4: 7.4M manifest rows at v<8 + 1.3M NULL-schema-version rows; **0% at v8** | **Slot 5** (writegate owner) | `writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 7 (added this session) | A4 re-run: 100% v8 + 0 NULL across all 10 buckets |
+| **R7** | A2 oracle gap — sports off-season NOT integrated (helpers exist in UAC) | **Slot 7** (paired with R2) | extend `expected_coverage.py` oracle to call `sports.league_data.get_league_fixture_calendar` + `is_in_known_gap` | A2 re-run: sports in-scope cells outside league season return `EXPECTED_EMPTY[EXPECTED_NO_FIXTURE]` |
+| **R8** | A2 oracle gap — DeFi protocol pause windows NOT encoded | **Slot 6** (paired with R1) | build new `unified_api_contracts/registry/protocol_pause_windows.py` SSOT + extend oracle. Operator-fillable scaffold; initial seeds for known pauses (Aave V2 deprecation, Compound V2 wind-down) | A2 re-run: cells inside pause windows return `EXPECTED_EMPTY[EXPECTED_PROTOCOL_PAUSED]` (new EmptyConfirmedReason enum member) |
+| **R9** | A2 per-symbol axis missing (operator chose v1 sans symbols; now revisited) | **Slot 5** (paired with R6) | extend A2 dump script to join with IS catalogue per asset_group + fixtures (sports) + markets (Polymarket/Kalshi). Output: per-symbol parquet `expected_coverage_dump_per_symbol_2026_05_20.parquet` | A3 v2 (per-symbol) shows divergence at per-symbol granularity, not just (venue, data_type, date) |
+| **R10** | A3 only covered MTDS — needs to extend to ALL service manifest indexes (IS + features-* + strategy + execution + ml-*) | **Slot 1 main** (orchestrator coordinates; assigns to slot reading each bucket) | extend `a3_manifest_divergence.py` script with `MANIFEST_BUCKETS` covering IS + features-* + strategy + execution + ml-*; emit "no consolidated manifest" flag for services that don't have one | A3 v2 covers all per-service buckets; "no consolidated manifest" services are pinged as separate finding |
+| **R11** | Consolidator continuous-verification gap (no dashboard panel; singleton-lock not actively monitored) | **Slot 6** (paired with R1 — needs deployment-UI restructure unfrozen after R1 GREEN) | add consolidator-health panel to `deployment-ui-lifecycle-tabs`; surface lag (time since last `_index/availability_index.parquet` update) per env | UI panel green; lag < 5min per env-tier; alert configured |
+| **R12** | Consolidator → Cloud Run migration (optional, operator-decision) | **OPERATOR DECISION** (no slot until decision) | new plan if approved; otherwise no-op | n/a — `BLOCKED-OPERATOR-DECISION` until you decide |
+| **R13** | Writer SSOT — rename `AvailabilityRowV4` → `AvailabilityRow` (v4 suffix misleads) + module-level SSOT docstring | **Slot 5** (paired with R6) | refactor in `manifest_writer.py` + update all imports across workspace | basedpyright clean; QG green; grep for `AvailabilityRowV4` returns 0 matches |
+| **R14** | Codex SSOT — `codex/02-data/manifest-writer-ssot.md` documenting writer dataclass as the v8 SSOT + CLAUDE.md pointer | **Slot 5** (paired with R6) | new codex file + CLAUDE.md § "Manifest + Honest Absence" pointer | Codex doc exists; CLAUDE.md cites it; sub-agent rules know the location |
+| **R15** | QG step `check_manifest_writer_ssot.py` — AST-level check no non-canonical schema_version writes | **Slot 5** (paired with R6) | new QG script in `unified-trading-pm/scripts/quality_gates/` + wired into UTL's `quality-gates.sh` | QG ratchets to 0 violations workspace-wide |
+| **R16** | A5 dependency-fail propagation — 5 review-blocking silent-swallow files (regex-undercounts) | **Slot 5** (paired with R6 — writegate owner inherits this) | per-file fix + new QG `check_dependency_fail_propagation.py` | A5 re-run: 0 review-blocking violations |
+| **R17** | A6 batch-live adapter parity — 1 GREEN / 13 BATCH_ONLY / 146 MISSING_BOTH | **Slot 9** (paired with R3-R5) | extend `batch_live_symmetry_2026_05_10.md` with the 13 BATCH_ONLY cells; verify 146 MISSING_BOTH for false-positive vs real-gap | A6 re-run: 0 BATCH_ONLY; MISSING_BOTH triaged |
+| **R18** | A1 GAP — `typed_empty_reason` QG step not yet built (81 raw-string `record_empty(reason="literal")` violations) | **Slot 5** (paired with R6 — UTL owner) | new QG `check_typed_empty_reason.py` + per-callsite migration | QG ratchets to 0 violations |
+| **R19** | A1 GAP — `uac_import_surface` QG step not yet built (995 deep imports) | **Slot 2 or 3** (code_freeze owners — closest to UAC plumbing) | new QG `check_uac_import_surface.py` + workspace-wide migration | QG ratchets to 0 violations |
+| **R20** | A1 GAP — `lifecycle_class` CI step not built | **Slot 6** (paired with R11 — deployment-UI / VM lifecycle area) | new QG `check_vm_lifecycle_class.py` | QG ratchets to 0 violations |
+| **R21** | AWS-side manifest indexes (cross-cloud divergence unaudited) | **OPERATOR DECISION** (do we still actively use AWS S3 manifest indexes?) | if yes: extend A3 to read AWS buckets. If no: archive `cloud-providers.yaml` AWS section as deprecated | `BLOCKED-OPERATOR-DECISION` until you decide |
+| **R22** | Backup snapshot parquets stale (consolidator doesn't touch them) | **Slot 5** (paired with R6) | extend consolidator to refresh backups OR move backups to a separate cron job; document in codex | Snapshot age < 24h per bucket |
+| **R23** | `_index/per_vm/*.parquet` shards not audited (A4 only looked at master) | **Slot 5** (paired with R6) | extend A4 to walk per_vm shards too; assert their schema_version distribution matches canonical | A4 re-run includes per_vm row counts |
+
+### Slot reassignment summary (per work_split_2026_05_19_ikenna.md)
+
+| Slot | Status | Primary R items | Secondary R items |
+|---|---|---|---|
+| 1 | Main orchestrator + Phase A coord | R10 | (assigns slots; tracks R12, R21 decisions) |
+| 2 | KEEP (code_freeze §2.6) | — | R19 (UAC import surface, can take on during code-freeze plumbing) |
+| 3 | KEEP (code_freeze §2.0-2.5) | — | R19 (alternative slot) |
+| 4 | KEEP (api_keys + defi_recursive_borrow) | — | unblocks credentials for any `BLOCKED-CREDENTIALS` from R1-R5 |
+| 5 | KEEP (writegate + live_pipeline) | **R6, R9, R13, R14, R15, R16, R18, R22, R23** | (anchor for all v8-writer-SSOT work) |
+| **6** | **🔴 FROZEN — reassigned to DeFi data** | **R1, R8, R11, R20** | post-GREEN: deployment-UI lifecycle work resumes |
+| **7** | **🔴 FROZEN — reassigned to Sports data** | **R2, R7** | post-GREEN: simulation_scenarios + defi_master P2-3 resume |
+| 8 | KEEP (defi_catalogue close) | — | unblocks IS-side dependencies for R1 |
+| **9** | **🔴 FROZEN — reassigned to Prediction/TradFi/CeFi + A6** | **R3, R4, R5, R17** | post-GREEN: cme_polymarket_arb + promote_workflow resume |
+
+### How slot agents consume this delegation SSOT
+
+1. Slot agent boots → reads its assigned `Rn` items from § 6.
+2. Opens the named plan-of-record + this audit doc URL.
+3. Executes the work; when verification step passes, flips a checkbox in the plan-of-record + links commit SHAs back here under § 6's row.
+4. When ALL `Rn` items for that slot are GREEN, slot unfreezes (slot 6/7/9) or reports back to slot 1 for re-themeing.
+
+---
+
+## Section 6 — (legacy) Remediation roadmap (what each finding routes to)
 
 Per operator directive: "I want every single issue that we found fully fixed,
 bad manifest data migrated, without exception."
