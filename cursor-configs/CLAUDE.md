@@ -603,7 +603,12 @@ Every plan MUST: (1) Pre-Audit Before Execution — workspace-wide grep for ever
 (2) Phased Execution DAG with explicit deps + QG gates between phases. (3) No Technical Debt — clean breaks, no shims.
 (4) Parallelization — independent items marked PARALLEL. (5) Success Criteria per phase — QG/basedpyright/ruff + test +
 deployment gates. (6) Downstream Consumer Updates — pre-audit EVERY workspace consumer for removed/renamed public
-symbols. (7) Single Source of Truth — types in UAC or `unified_api_contracts.internal`.
+symbols. (7) Single Source of Truth — types in UAC or `unified_api_contracts.internal`. (8) Foundation-Completion-Gate
+Discipline — no plan ships items in layer N+1 before layer N is GREEN-audited + manifest-divergence = 0 for affected
+asset_groups; parallel-up across asset_groups within a layer is encouraged, parallel-up across layers is
+review-blocking. Full layer table + application rules + anti-patterns:
+`codex/11-project-management/foundation-completion-gate-discipline.md`. Master tracker:
+`plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`.
 
 ---
 
