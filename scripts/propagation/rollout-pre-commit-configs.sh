@@ -148,6 +148,23 @@ for repo in $REPOS; do
     echo "  [ok]   $repo <- $template_label ($action)"
   fi
   updated=$((updated+1))
+
+  # Ensure .gitleaks.toml symlink points to PM SSOT (templates expect repo-root-relative .gitleaks.toml).
+  # PM itself owns the canonical .gitleaks.toml — skip symlinking it onto itself.
+  if [ "$repo" != "unified-trading-pm" ]; then
+    leaks_link="$repo_dir/.gitleaks.toml"
+    leaks_target="../unified-trading-pm/.gitleaks.toml"
+    if [ ! -L "$leaks_link" ] || [ "$(readlink "$leaks_link")" != "$leaks_target" ]; then
+      if [ "$DRY_RUN" = true ]; then
+        echo "  [dry]  $repo <- .gitleaks.toml symlink ($leaks_target)"
+      else
+        # Remove stale file/link if any, then create the symlink.
+        rm -f "$leaks_link"
+        ln -s "$leaks_target" "$leaks_link"
+        echo "  [ok]   $repo <- .gitleaks.toml -> $leaks_target"
+      fi
+    fi
+  fi
 done
 
 echo ""
