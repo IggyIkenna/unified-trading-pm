@@ -23,30 +23,51 @@ last_executed: P1 first-deploy 2026-05-19
 
 ## Where to access
 
-| Environment                         | URL                                                                     | Status                                                                            |
-| ----------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Staging (UAT) — **current primary** | `https://agent-orchestrator-staging-1060025368044.europe-west4.run.app` | Live (P1 shipped 2026-05-19)                                                      |
-| Staging custom domain               | `https://agent-orchestrator.staging.odum-research.com`                  | **LIVE** — P2 shipped 2026-05-19 (Firebase Hosting + Cloud Run rewrites verified) |
-| Production                          | `https://agent-orchestrator.odum-research.com`                          | Pending P5 prod cutover                                                           |
-| Legacy fallback                     | `https://orch.epiphanytechnologies.com`                                 | Harsh's laptop; 1-day fallback after P5, then decommissioned                      |
-| Local dev                           | `http://localhost:5173` (Vite) + backend `http://localhost:8026`        | `bash scripts/dev.sh` from `agent-orchestrator/`                                  |
+> **Cutover state 2026-05-20**: prod is now on a dedicated EC2 VM (`m8i.4xlarge`, `ap-northeast-1`, EIP `13.113.200.22`)
+> with its own systemd unit; the original Cloud Run staging in `europe-west4` is being decommissioned. Two-operator
+> model in effect: **Ikenna's backend is the EC2 VM**; **Harsh's backend is his laptop**. The Firebase-hosted dashboard
+> can switch between them via the backend dropdown — see § "Two-operator coordination" below.
 
-Until P5 cutover, use the staging URL for daily work. The legacy fallback is authoritative for live state (Harsh's
-laptop holds `state.db`).
+| Environment                            | URL (SPA dashboard / API)                                                                                      | Owner | Notes                                                                                                                                                                                                                                                            |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Production SPA (primary)**           | `https://agent-orchestrator.odum-research.com`                                                                 | both  | Firebase Hosting serves the SPA; the dashboard's backend dropdown picks which API to hit                                                                                                                                                                         |
+| **Ikenna VM (prod backend, default)**  | `https://api.agent-orchestrator.odum-research.com`                                                             | Ikenna | EC2 `i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`, `ap-northeast-1c`. systemd unit `orchestrator.service`. Let's Encrypt cert via certbot, auto-renew armed                                                                                                          |
+| **Harsh laptop (cross-side backend)**  | `https://orch.epiphanytechnologies.com`                                                                        | Harsh | Harsh's local fleet — always-on while his machine is up. Cross-side visibility requires Harsh adds an `ikenna` user to his `users.json` and the dashboard backend dropdown selects "Harsh (laptop)"                                                              |
+| **Staging SPA (UAT)**                  | `https://agent-orchestrator.staging.odum-research.com`                                                         | both  | Firebase Hosting `agent-orchestrator-uat-site` — same dashboard, points at staging backend if configured                                                                                                                                                         |
+| **Local dev**                          | `http://localhost:5173` (Vite) → `http://localhost:8765` (backend)                                             | self  | `cd agent-orchestrator && uvicorn server.server:app --port 8765` + `cd dashboard && npm run dev`                                                                                                                                                                 |
+
+VM SSH for ops:
+
+```bash
+# Mac ~/.ssh/config alias (added 2026-05-19, see docs/ikenna-vm-setup.md)
+ssh agent-orchestrator-vm                       # opens shell on the VM
+tmux ls                                         # see live spawned workers (orch-slot-<N>)
+sudo journalctl -u orchestrator -f              # tail orchestrator logs
+```
 
 ---
 
 ## How to log in
 
-**Pre-P3 (current)**: Auth is permissive — `ALLOW_ANONYMOUS=True`. Any non-empty credentials work on the staging Cloud
-Run endpoint. No bootstrap step needed today.
+Strict auth is in effect post-2026-05-19 cutover (`ALLOW_ANONYMOUS=False`).
 
-**Post-P3 (strict auth flip)**:
+1. Bootstrap your user once on the backend host (one-time setup per machine):
 
-1. Bootstrap your user once: `.venv/bin/python3 scripts/manage_users.py add <username>` on the server's host (or against
-   the staging Cloud Run DB via exec).
-2. Log in with that username + password at the dashboard sign-in page.
-3. JWT is issued (HS256, signed by `ORCHASTRATOR_JWT_SECRET` from GCP Secret Manager).
+   ```bash
+   ssh agent-orchestrator-vm   # or your own host
+   cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+   .venv/bin/python scripts/manage_users.py add <username>   # interactive prompt
+   .venv/bin/python scripts/manage_users.py list             # verify
+   ```
+
+2. Open `https://agent-orchestrator.odum-research.com`, pick the right backend from the dropdown (Ikenna VM = default),
+   sign in with the username + password from step 1.
+3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` from `~/.config/agent-orchestrator/jwt-secret` on the VM
+   or the equivalent path on the legacy host).
+
+Per-backend bootstrap: each backend has its own `data/config/users.json` — you authenticate against whichever backend
+the dropdown selected. Adding Ikenna as a user on Harsh's backend (so Ikenna can see Harsh's slots) requires Harsh to
+run `manage_users.py add ikenna` on HIS host and share the password.
 
 Full flip-day checklist: `agent-orchestrator/docs/AUTH_INVENTORY.md`.
 
@@ -72,14 +93,28 @@ cd dashboard && npm run dev &  # opens http://localhost:5173
 
 ## How to spawn a worker from the dashboard
 
-Full procedure: `agent-orchestrator/docs/OPERATIONS.md` § "Register your three core agents" and § "Spawn worker slots".
-Summary:
+**Path A (preferred, fully automated post-2026-05-20 spawn-fix)** — backend handles tmux + claude entirely:
 
 1. Open the dashboard Fleet panel → **+ Spawn worker**.
-2. Pick a slot ID (e.g. 2), account (e.g. `harsh-primary`), click **Copy**.
-3. Open a fresh Claude Code session: `claude`
-4. Paste the boot prompt. The agent calls `/api/slots/{id}/boot` and receives its first task.
-5. Repeat for as many slots as needed (typical: 5–10 workers).
+2. Pick a slot ID (e.g. 5), role (`worker` / `main` / `monitor` / etc.), model (`sonnet` / `opus` / `haiku`).
+3. (Optional) preview the rendered boot prompt — dashboard fetches via `GET /api/spawn/preview?slot_id=<N>&...`.
+4. Click **Spawn**. Backend:
+   - Runs pre-spawn dirty-state gate; if dirty, returns 409 with per-repo manifest + offers `dirty_state_resolution=stash`
+   - `tmux new-session -d -s orch-slot-<N> -c .tabs/<N>/ claude --dangerously-skip-permissions --model <X>`
+   - Auto-dismisses workspace-trust prompt (Enter) + bypass-permissions warning (`2`)
+   - Pastes the boot prompt via `tmux load-buffer` + `tmux paste-buffer` + Enter
+   - Writes `.tabs/<N>/.agent-claim` JSON (agent_id, role, model, operator, expires_at)
+5. Within ~30s the worker calls `/api/slots/<N>/boot` and receives its first task.
+
+Tail the live session: `ssh agent-orchestrator-vm && tmux attach -t orch-slot-<N>`.
+
+**Path B (legacy fallback)** — manual paste into a `claude` session, no backend orchestration:
+
+1. Dashboard → **+ Spawn worker** → click **Copy boot prompt** (instead of Spawn).
+2. Open a `claude` session locally and paste. Agent calls `/api/slots/{id}/boot` and is dispatched.
+
+Use Path B only if Path A returns 409 from a dirty-state-gate-block you don't want to stash through, or if the backend
+is unreachable but you want to keep working.
 
 ---
 
@@ -235,6 +270,57 @@ curl -sS -X POST http://localhost:8026/api/conditions/data-schema-shipped \
 
 ---
 
+## Reliability layer — 5 mitigations shipped 2026-05-20
+
+All 5 are live on the Ikenna VM backend. The original plan + per-phase commit shas are in
+[`plans/active/agent_reliability_mitigations_2026_05_20.md`](../../plans/active/agent_reliability_mitigations_2026_05_20.md).
+
+| # | Mitigation | Surface | What it does |
+| --- | --- | --- | --- |
+| 1 | Mirror-failure → orchestrator alert | `POST /api/mirror-events` (public webhook) + `GET /api/mirror-events` + `POST /api/mirror-events/<id>/ack` | `.github/workflows/tab-mirror-to-ldr.yml` POSTs every outcome to the orchestrator. Skip/race-lost surface as alerted=true so the dashboard can show "LDR mirror blocked on `<repo>@<sha>`" instead of work sitting orphaned on a tab branch |
+| 2 | Pre-spawn dirty-state gate | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes |
+| 3 | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim` | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership |
+| 4 | Heartbeat in-flight files | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files` | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP |
+| 5 | On-demand artifact pattern | `.tabs/<N>/` code-only; venvs / node_modules built on first need | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern" |
+
+## Two-operator coordination — Ikenna VM ↔ Harsh laptop
+
+The system is **multi-master**: Ikenna and Harsh each run their own backend with their own state. The Firebase-hosted
+SPA + the dashboard's backend dropdown let either operator switch perspective. There is **no shared state** between
+backends — each is authoritative for its own slot fleet. Cross-side coordination happens at the **plan layer**, not the
+runtime state layer.
+
+| Concern | Mechanism |
+| --- | --- |
+| Whose slot is whose? | Ikenna's slots live on the EC2 VM (`api.agent-orchestrator.odum-research.com`); Harsh's slots live on his laptop backend (`orch.epiphanytechnologies.com`). Slot IDs CAN collide between sides — there is no global slot ID space. Per Harsh's 2026-05-20 fleet topology: slots 1-20 = main agents (PM-only worktrees), slots 21-30 = workers (all 25 repos) — see `feat(worktrees): role-encode slot branches` in PM (200bbe774) |
+| Branch naming | Role-encoded prefix per `setup-tab-worktrees.sh` (200bbe774): `tab/${OPERATOR}m/<N>` for main (e.g. `tab/hkm/3`), `tab/${OPERATOR}/<N>` for worker (e.g. `tab/hk/21`). Ikenna picks his own prefixes — currently `tab/ikenna/<N>` legacy, migrating to role-encoded form |
+| Both backends visible from dashboard | `data/config/backends.json` in each backend's repo declares the cross-side URLs. Dashboard dropdown shows both; clicking switches the API the SPA talks to. Login is per-backend — see § "How to log in" |
+| Cross-side pings (work coordination) | Workspace-shared `plans/active/_agent_pings.md` (Ikenna ↔ Harsh, persistent until both ack). Per-slot pings stay intra-side under `<side>_orchestrator/pings/slot_<N>.md` |
+| Daily work-split | Each operator owns `plans/active/work_split_<YYYY_MM_DD>_<side>.md`. Slot 1 main on each side is authoritative for its own work-split; cross-side handoffs via pings |
+| Mirror events (cross-side via shared LDR) | `.github/workflows/tab-mirror-to-ldr.yml` runs in every repo; both operators' pushes to `tab/**` cascade through. Mirror events from either side land in **both** orchestrator backends if both are reachable (each repo POSTs to the SSOT webhook URL `https://api.agent-orchestrator.odum-research.com/api/mirror-events` — Harsh's backend currently doesn't accept; see Open Items) |
+
+## Deploying SSOT systemd unit changes
+
+Whenever `agent-orchestrator/scripts/orchestrator.service` is updated in the SSOT, push the changes to a VM via:
+
+```bash
+ssh agent-orchestrator-vm
+cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+git pull --ff-only origin main
+bash scripts/install-orchestrator-service.sh --operator ubuntu --dry-run    # preview rendered unit
+bash scripts/install-orchestrator-service.sh --operator ubuntu --restart    # apply + restart
+```
+
+The install script:
+- Substitutes `User=hk` / `/home/hk/` for `--operator <name>` paths
+- Diffs against current installed unit at `/etc/systemd/system/orchestrator.service`
+- `sudo cp` + `daemon-reload`; `--restart` also bounces the service
+- **KillMode=process** in the SSOT means already-spawned workers SURVIVE the restart (tmux sessions persist)
+
+Closes the historical drift footgun: pre-2026-05-20 the VM's installed unit lacked `ReadWritePaths=/tmp`, causing
+every spawn to silently fail. Root-cause + fix tracked in
+[`plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md`](../../plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md).
+
 ## When to escalate
 
 Escalate to the other operator or stop autonomous work when:
@@ -243,9 +329,11 @@ Escalate to the other operator or stop autonomous work when:
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `state.db` shows sign of corruption (queries fail, bootstraps fail) | STOP server; manually inspect via `sqlite3 data/state/state.db`; restore from tarball if needed |
 | ≥3 `slot_dual_flip_pattern_violation` events in 4h                  | Review those slot's plan-flip discipline; reassign if needed                                    |
-| Auth lockout on Cloud Run (403 on all endpoints)                    | Check Secret Manager `ORCHASTRATOR_JWT_SECRET` value; verify IAM binding on Cloud Run SA        |
-| Repeated stale slots from the same slot ID                          | Check tmux session health; consider worker-on-VM migration (successor plan)                     |
-| Slack webhook 401 errors in Cloud Run logs                          | Rotate `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in Secret Manager                                     |
+| Auth lockout (401 on all endpoints) post-deploy                     | Check `~/.config/agent-orchestrator/jwt-secret` exists + matches `.env.local`; restart unit     |
+| Repeated stale slots from the same slot ID                          | Check tmux session health (`tmux ls`); inspect `.agent-claim`; reassign if claim is fresh       |
+| Slack webhook 401 errors                                            | Rotate `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in Secret Manager + `.env.local`                      |
+| Mirror-events stop landing in `GET /api/mirror-events`              | GHA workflow may have errored — check Actions tab on a recent tab-branch push                   |
+| Spawn returns 30s `did not become ready`                            | Verify `/tmp` is in `ReadWritePaths`; re-run `install-orchestrator-service.sh --restart`        |
 
 For data-correctness issues (trading pipeline, manifest, GCS parquets): those are outside this service's scope —
 escalate via `plans/active/_agent_pings.md`.

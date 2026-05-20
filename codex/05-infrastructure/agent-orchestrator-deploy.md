@@ -1,16 +1,103 @@
 ---
-title: agent-orchestrator — Cloud Run deploy + infra reference
+title: agent-orchestrator — deploy + infra reference (EC2 VM primary, Cloud Run legacy)
 created: 2026-05-19
+last_updated: 2026-05-20
 author: ikenna-claude-subagent
 status: active
 ---
 
-# agent-orchestrator — Cloud Run Deploy + Infra Reference
+# agent-orchestrator — Deploy + Infra Reference
 
+> **Cutover state 2026-05-20**: Ikenna's prod backend now runs on a dedicated EC2 VM (`m8i.4xlarge`, EIP
+> `13.113.200.22`, `ap-northeast-1`) under systemd. The original Cloud Run shape (still documented below) is being
+> decommissioned for Ikenna's side; Harsh continues to run his backend on his laptop. See
+> `unified-trading-pm/docs/ikenna-vm-setup.md` for the VM provisioning log.
+>
 > Architecture SSOT: `codex/04-architecture/agent-orchestrator-overview.md` Operator runbook:
 > `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` Plan-of-record:
 > `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` Launcher SSOT:
 > `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers"
+
+---
+
+## EC2 VM deploy (current primary for Ikenna)
+
+| Resource | Value |
+| --- | --- |
+| Instance | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB Intel Granite Rapids) |
+| Region / AZ | `ap-northeast-1` / `ap-northeast-1c` |
+| Elastic IP | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`) |
+| OS | Ubuntu 24.04 LTS, kernel 6.17 |
+| Service | systemd unit `orchestrator.service`, runs as user `ubuntu` |
+| Listen | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt) |
+| Workspace root | `/home/ubuntu/unified-trading-system-repos/` |
+| Slot worktrees | `.tabs/1..12/` (currently 12 bootstrapped, code-only ~3.7 GB) |
+| Cost | ~$1/hr on-demand; AWS credits cover. Stop the instance when idle to halt compute |
+
+### SSH access
+
+```bash
+# One-time on operator's Mac: fetch the keypair from AWS Secrets Manager
+aws secretsmanager get-secret-value \
+  --region ap-northeast-1 --secret-id agent-orchestrator-vm-ssh-private \
+  --query SecretString --output text > ~/.ssh/agent-orchestrator-key
+chmod 600 ~/.ssh/agent-orchestrator-key
+
+# ~/.ssh/config alias (one-time)
+cat >> ~/.ssh/config <<'EOF'
+Host agent-orchestrator-vm
+  HostName 13.113.200.22
+  User ubuntu
+  IdentityFile ~/.ssh/agent-orchestrator-key
+  ServerAliveInterval 60
+EOF
+
+# Then any time:
+ssh agent-orchestrator-vm
+```
+
+### systemd unit deploy via install script (post-2026-05-20)
+
+The SSOT systemd unit lives at `agent-orchestrator/scripts/orchestrator.service`. To deploy changes:
+
+```bash
+ssh agent-orchestrator-vm
+cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+git pull --ff-only origin main
+bash scripts/install-orchestrator-service.sh --operator ubuntu --dry-run   # preview
+bash scripts/install-orchestrator-service.sh --operator ubuntu --restart   # apply
+```
+
+Closes the historical SSOT-drift footgun. Required flags in the SSOT that MUST stay:
+
+- `KillMode=process` — without this, `systemctl restart` SIGKILLs the whole cgroup, nuking all spawned workers
+- `PrivateTmp=no` — orchestrator + operator must share `/tmp/tmux-<uid>/default` socket for `has_session()` to work
+- `ReadWritePaths=/tmp` — `ProtectSystem=strict` makes `/tmp` read-only otherwise; tmux daemon silent-dies trying
+  to create `/tmp/tmux-<uid>/default`. This was the root cause of the 2026-05-20 spawn endpoint silent failure.
+- `ReadWritePaths=/home/<op>/.aws` + `.config` + `.claude` + `.cache` — spawned tmux+claude workers need these to
+  refresh OAuth tokens / read AWS creds / update gcloud ADC / cache
+
+Full root-cause + fix audit: `plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md`.
+
+### TLS + DNS
+
+- DNS A record `api.agent-orchestrator.odum-research.com` → `13.113.200.22` in Squarespace (managed under the
+  `odum-research.com` zone; despite Squarespace UI, actual DNS is on Google Cloud DNS post-Squarespace's 2023
+  Google Domains acquisition)
+- CAA record `0 issue "letsencrypt.org"` (alongside the existing `0 issue "pki.goog"`) — added 2026-05-19 to
+  unblock certbot
+- Cert issued via `sudo certbot --nginx -d api.agent-orchestrator.odum-research.com --email ikenna@odum-research.com
+  --agree-tos --non-interactive --redirect`; auto-renew via `certbot.timer`
+
+### CORS + SPA cross-origin
+
+The Firebase-hosted SPA at `https://agent-orchestrator.odum-research.com` calls the VM at
+`https://api.agent-orchestrator.odum-research.com` cross-origin. CORS allow-list is in `server/server.py` and
+includes both prod + staging SPA origins + the raw `*.web.app` Firebase URLs. Override via
+`ORCHESTRATOR_CORS_ORIGINS` env var (comma-separated).
+
+The SPA's `BOOTSTRAP_URL` (in `dashboard/src/App.tsx`) maps SPA hostname → companion api.* host explicitly. So
+the dashboard talks to the right backend without same-origin nginx proxy.
 
 ---
 
