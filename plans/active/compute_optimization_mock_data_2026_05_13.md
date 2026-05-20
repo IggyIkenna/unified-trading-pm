@@ -147,19 +147,12 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 > archetypes per `codex/09-strategy/mvp-universe-per-asset-group.md` (the 6 Tier A archetype families: ml-continuous,
 > ml-settled, arbitrage-funding-rate, arbitrage-sports-book, arbitrage-event-markets, defi-carry-family).
 
-- [ ] [SCRIPT] P0. **[BLOCKED-OPERATOR-DECISION]** **VERIFY** `strategy-service/scripts/run_2yr_config_grid_backtest.py` actually covers all 6 Tier A
-      archetype families + uses `target_universe/catalog.py` as the rollout-instance SSOT + uses UAC `StrategyArchetype`
-      enum for archetype iteration. If gaps found, **EXTEND** rather than rewrite. **VERIFY-2026-05-13** (slot 6):
-      Script `SUPPORTED_ARCHETYPES` currently only contains `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (2 of 53
-      enum members; covers ~2 of 6 Tier A families: defi-carry-family partial,
-      arbitrage-funding-rate=ARBITRAGE*PRICE_DISPERSION). **MISSING**: ml-continuous + ml-settled (need
-      `ML_DIRECTIONAL_CONTINUOUS` + `ML_DIRECTIONAL_EVENT_SETTLED` from `StrategyArchetype` enum), arbitrage-sports-book
-      (need sports vs Polymarket archetype), arbitrage-event-markets (need Polymarket vs CME from
-      `cme_polymarket_arb_2026_05_08.md`), plus 6 more defi-carry-family members (`CARRY_BASIS_DATED`,
-      `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `CARRY_BASIS_PERP_INV`, and
-      any other
-      `CARRY*\*`archetypes in v2 enum). EXTEND scope = add     per-archetype`\_DIMENSIONS_BY_ARCHETYPE`grid dimensions +`\_dim_kwargs`+`\_build_config_grid`branches +    `specs_for_archetype`integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension     sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate     window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.     **DEFERRED**: EXTEND to cover 4 missing archetype families (ml-continuous, ml-settled, arbitrage-sports-book,     arbitrage-event-markets) requires design call on per-archetype grid dimensions. Needs dedicated slot with     per-archetype domain expertise. Verification-only half done (slot 7 2026-05-14 — confirmed gaps, script reads     UAC`StrategyArchetype`enum +`specs_for_archetype`
-      from catalog correctly).
+- [x] [SCRIPT] P0. ✅ **VERIFY done; EXTEND DEFERRED → `plans/active/config_grid_archetype_extend_2026_05_20.md`**
+      VERIFY (slot 6/7): `run_2yr_config_grid_backtest.py` covers `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION`
+      (2 of 6 Tier-A families); reads UAC `StrategyArchetype` enum + `specs_for_archetype` from catalog correctly.
+      EXTEND (4 missing families: ml-continuous, ml-settled, arbitrage-sportsbook, arbitrage-event-markets) requires
+      per-archetype grid dimension design call — migrated to named successor plan with BLOCKED-OPERATOR-DECISION gate.
+      PM@slot8 2026-05-20.
 - [x] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
       `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE). (ALREADY SHIPPED:
       `run_2yr_config_grid_backtest.py` lines 819-823 — `--max-parallel` exists as `default=4` with note "Reserved for
