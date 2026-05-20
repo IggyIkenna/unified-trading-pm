@@ -115,13 +115,15 @@ todos:
 
   - id: phase-4-instruments-service-per-cluster-expiry
     content: |
-      - [ ] [SCRIPT] P1. **Phase 4 — instruments-service per-cluster expiry for daily binaries.** Daily ECBTC
-        EOM contracts have a different expiry (date) per (root, resolution_date, strike_threshold) tuple.
-        Per-cluster expiry stored in instruments-service catalog row alongside the existing futures
-        `expiry_date` (which lives in CanonicalFuturesContract per `tradfi_master` Q1 work). Reader-side helper
-        `unified_trading_library.event_contracts.expiry_for_cluster(root, resolution_date,
-        strike_threshold) -> datetime`.
-    status: todo
+      - [x] ✅ [SCRIPT] P1. **Phase 4 — instruments-service per-cluster expiry for daily binaries.**
+        **SHIPPED 2026-05-20** instruments-service@7a3db05 + UTL@3c004c1.
+        Databento adapter `_parse_row_to_record`: BAG + EC* prefix → EVENT_CONTRACT (previously SPOT_PAIR
+        default); underlying = EC root from raw_symbol split; `_estimate_available_since` adds EVENT_CONTRACT
+        branch (listing_months=1, ~30-day heuristic). UTL new module `event_contracts.py` with
+        `expiry_for_cluster(root, resolution_date, strike_threshold) -> datetime` exported via UTL facade;
+        settlement fixed at CME 21:00 UTC per resolution_date (strike_threshold accepted for forward-compat).
+        18 new unit tests (4 IS + 14 UTL). Both repos QG green. (slot 4 2026-05-20)
+    status: done
 
   - id: phase-5-strategy-execution-cross-venue-arb-pairs
     content: |
