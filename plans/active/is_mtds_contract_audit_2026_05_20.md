@@ -204,7 +204,7 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
       `get_solana_protocol_url`); add `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`;
       add manifest emission (`record_captured`/`record_empty`(EXPECTED_PAST_SOURCE_COVERAGE_END)/`record_failed`)
       to `_backfill_drift_s3_date`. All 3 QG scripts pass clean.
-      — MTDS@3c8ce40 + MTDS@4bea31e
+      — MTDS@3c8ce40 + MTDS@4bea31e + MTDS@3a43979 (slot-5 merge resolution)
 - [ ] **P0. `solana_defi_handler.py` (remaining)**: remove `_collect_drift` IS-bypass (line ~419 uses Drift
       data API directly instead of IS catalogue); remove `_PHOENIX_PAIRS` hardcoded universe (load from IS).
       Call IS DriftReferenceDataAdapter for full universe derivation.
