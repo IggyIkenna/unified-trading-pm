@@ -61,7 +61,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 | 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)      |
 | 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                          |
 | 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                     |
-| 2.B — MTDS cluster wiring                                                   | ❌         | Decision → α; build: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding      |
+| 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
 | 2.C — features-sports stamping                                              | ❌         | coaches/rounds ✅ (features-service@842ff741); open: fixture_lineups + fixture_player_stats + per-table available_at |
 | 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                |
 | 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                   |
@@ -1541,13 +1541,13 @@ grep.
       (deferred to multi-source merge plan). `sports_fixture_bundle` in `BUNDLED_DATA_TYPES` is a logical category; the
       actual `data_type` strings registered are the per-data_type entries above (`ODDS_SNAPSHOT`, etc.). Update Phase 1B
       `BUNDLED_DATA_TYPES` seed to include those concrete data_type names.
-- [ ] [SCRIPT] P0. GMX multi-chain — `perp_funding_handler.py:225` currently writes `chain=""`; emit per-chain Tier-2
-      fan-out per HANDOVER follow-up note.
-- [ ] [SCRIPT] P0. Skip-if-exists granularity — `tick_data_handler.py:166` currently calls `check_shard_freshness` at
+- [x] ✅ [SCRIPT] P0. GMX multi-chain — `perp_funding_handler.py:225` currently writes `chain=""`; emit per-chain Tier-2
+      fan-out per HANDOVER follow-up note. — market-tick-data-service@d5773c3 (_collect_gmx → dict[str, int], process() loops per chain)
+- [x] ✅ [SCRIPT] P0. Skip-if-exists granularity — `tick_data_handler.py:166` currently calls `check_shard_freshness` at
       `(venue, data_type, date)`; tighten to full v6 key including `quote_asset` + `margin_type` to avoid DERIBIT
-      inverse/linear suppression bug.
-- [ ] [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple; replace
-      with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT).
+      inverse/linear suppression bug. — market-tick-data-service@d5773c3 (preflight_captured_atoms composite atom includes quote_asset+margin_type)
+- [x] ✅ [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple; replace
+      with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT). — market-tick-data-service@d5773c3
 - [ ] [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
 - [ ] [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
       `record_failed(ClusterCoverageError)` fires + no parquet written.
