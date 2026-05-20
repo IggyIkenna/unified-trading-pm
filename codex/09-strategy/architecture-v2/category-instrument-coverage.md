@@ -622,36 +622,29 @@ CARRY_BASIS_PERP@hyperliquid-lighter-eth-usdc-prod
 > Family: [carry-and-yield](families/carry-and-yield.md). Code:
 > `strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`.
 
-Three-leg DeFi-native: stake (earn staking yield) + borrow against staked position (pay borrow rate) + perp hedge to
-stay delta-neutral (earn funding). Net yield = staking APY – borrow APY + funding APY.
+**Two-leg** DeFi-native (no borrow leg since 2026-05-04 engine rewrite): stake native asset → receive LST → deposit LST
+as perp cross-margin → short perp to stay delta-neutral. Net yield = staking APY + funding APY. The old 3-leg
+STAKE+LEND+BORROW path was deleted — see archetype doc § "Not in this archetype" for detail.
 
-#### Coverage
+#### Coverage (2026-05-20 — reflects post-Stream A venues with confirmed LST cross-margin)
 
-| Category                 | Instrument               | Status    | Representative venues                                                                | Signal variant                         | Notes / Gap                                                                                                                                                                                                                                                                                                                                          |
-| ------------------------ | ------------------------ | --------- | ------------------------------------------------------------------------------------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CeFi                     | any                      | N/A       | —                                                                                    | —                                      | No CeFi native staking                                                                                                                                                                                                                                                                                                                               |
-| DeFi (Ethereum)          | staking + lending + perp | SUPPORTED | Lido stETH + Aave V3 USDC + Hyperliquid ETH-perp (bridged) / GMX ETH-perp (Arbitrum) | staking APY + borrow APY + funding APY | ATOMIC 3-leg instruction; bridge path for cross-chain perp                                                                                                                                                                                                                                                                                           |
-| DeFi (Ethereum)          | staking + lending + perp | SUPPORTED | Rocket Pool rETH + Aave V3 + Hyperliquid ETH-perp                                    | same                                   | Same harness, different LST                                                                                                                                                                                                                                                                                                                          |
-| DeFi (Solana)            | staking + lending + perp | SUPPORTED | Jito JitoSOL + Kamino + Drift SOL-perp                                               | staking APY + borrow APY + funding APY | Solana-native 3-leg                                                                                                                                                                                                                                                                                                                                  |
-| DeFi (Solana)            | staking + lending + perp | SUPPORTED | Marinade mSOL + Kamino + Drift SOL-perp                                              | same                                   | Same harness, different LST                                                                                                                                                                                                                                                                                                                          |
-| DeFi (Solana DEX-native) | staking + lending + perp | RESEARCH  | Jito JitoSOL + Kamino + Pacifica-Solana SOL-perp                                     | same                                   | Pacifica-Solana onboarded 2026-05-07 as alternative SOL-perp hedge to Drift. Currently NO LST cross-margin acceptance verified for Pacifica (USDC-only matrix per `VENUE_COLLATERAL_MATRIX` 2026-05-05); slot rejected at preflight until matrix flips. Once accepted, gives a 2nd Solana SOL-perp venue for diversification + funding-rate routing. |
-| TradFi                   | any                      | N/A       | —                                                                                    | —                                      | No applicable concept                                                                                                                                                                                                                                                                                                                                |
-| Sports & Prediction      | any                      | N/A       | —                                                                                    | —                                      | No applicable concept                                                                                                                                                                                                                                                                                                                                |
+| Category            | Instrument      | Status    | Representative venues                               | Signal variant             | Notes / Gap                                                                                          |
+| ------------------- | --------------- | --------- | --------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| CeFi                | any             | N/A       | —                                                   | —                          | No CeFi native staking                                                                               |
+| DeFi (Ethereum)     | staking + perp  | SUPPORTED | Lido stETH → DERIBIT ETH-perp (7.5% haircut, X:PM) | staking APY + funding APY  | USDC margin; stETH deposited to Deribit X:Portfolio margin as cross-collateral                       |
+| DeFi (Ethereum)     | staking + perp  | SUPPORTED | Lido stETH → BYBIT UTA ETH-perp (10% haircut)      | staking APY + funding APY  | USDT margin; stETH deposited to Bybit Unified Trading Account as cross-collateral                    |
+| DeFi (Solana)       | staking + perp  | SUPPORTED | Jito JitoSOL → DRIFT SOL-perp (10% haircut)         | staking APY + funding APY  | USDC margin; JitoSOL posted directly as Drift cross-margin                                           |
+| DeFi (Solana)       | staking + perp  | SUPPORTED | Marinade mSOL → DRIFT SOL-perp (10% haircut)        | staking APY + funding APY  | USDC margin; mSOL posted directly as Drift cross-margin                                              |
+| TradFi              | any             | N/A       | —                                                   | —                          | No applicable concept                                                                                |
+| Sports & Prediction | any             | N/A       | —                                                   | —                          | No applicable concept                                                                                |
 
-#### Representative slot_labels
+#### Active slot_labels (2026-05-20, from `catalog.py _build_carry_staked_basis`)
 
 ```
-# Ethereum staked basis (Lido)
-CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-prod
-CARRY_STAKED_BASIS@lido-aave-gmx-arbitrum-eth-usdc-prod
-CARRY_STAKED_BASIS@rocketpool-aave-hyperliquid-eth-prod
-
-# Solana staked basis
-CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod
-CARRY_STAKED_BASIS@marinade-kamino-drift-sol-usdc-prod
-
-# Cross-LST comparison slot (v2 = LST swap)
-CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-v2-prod
+CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod     # JitoSOL × DRIFT (Solana, USDC)
+CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod # mSOL × DRIFT (Solana, USDC)
+CARRY_STAKED_BASIS@lido-deribit-f100-usdc-1h-usdc-v2-prod   # stETH × DERIBIT (ETH, USDC)
+CARRY_STAKED_BASIS@lido-bybit-f100-usdt-1h-usdt-v2-prod     # stETH × BYBIT UTA (ETH, USDT)
 ```
 
 ---
