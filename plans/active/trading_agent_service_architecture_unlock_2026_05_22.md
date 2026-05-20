@@ -73,8 +73,8 @@ strategy execution (live + continuous paper) → emits PnL → feeds back to top
 ```
 
 Architecture-unlock = the dataflow is wired end-to-end and operates **off-by-default**. NOT REQUIRED for May-23:
-continuous paper for non-DeFi archetypes, full ML/LLM intelligence, production allocator logic, automatic
-re-weighting. Those land post-cutover via epic §1.7 Phase 10.7 + § Allocator service.
+continuous paper for non-DeFi archetypes, full ML/LLM intelligence, production allocator logic, automatic re-weighting.
+Those land post-cutover via epic §1.7 Phase 10.7 + § Allocator service.
 
 ## Pre-Audit Before Execution (Citadel-Grade)
 
@@ -82,8 +82,8 @@ re-weighting. Those land post-cutover via epic §1.7 Phase 10.7 + § Allocator s
 
 - `unified_api_contracts/internal/strategy_pnl_stream.py` — does NOT exist (greenfield)
 - `unified_api_contracts/internal/strategy_directives.py` — does NOT exist (greenfield)
-- `strategy_service/portfolio_allocator/archetypes.py` — EXISTS (per master plan line 899); 8-archetype scaffold not
-  yet populated (epic line 269 P1 — post-cutover)
+- `strategy_service/portfolio_allocator/archetypes.py` — EXISTS (per master plan line 899); 8-archetype scaffold not yet
+  populated (epic line 269 P1 — post-cutover)
 - `strategy_service/config_reloaders.py` — EXISTS (4× duplicates per strategy-repo-consolidation Phase 5);
   `StrategyDirectiveReloader` adds 5th typed-reloader callsite
 - `features_service/performance_features/` — does NOT exist (greenfield subdomain)
@@ -91,8 +91,7 @@ re-weighting. Those land post-cutover via epic §1.7 Phase 10.7 + § Allocator s
   `trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md` — credentials rotation pending operator)
 - Schema-collision check with `uac_source_capability_metadata_promotion_2026_05_20.md`: slot-3 touches
   `unified_api_contracts/registry/capability.py` + `capability_declarations/`. THIS plan touches
-  `unified_api_contracts/internal/` — **non-overlapping directories**; both can land in parallel. Confirmed
-  2026-05-20.
+  `unified_api_contracts/internal/` — **non-overlapping directories**; both can land in parallel. Confirmed 2026-05-20.
 
 **No symbol removal / rename** in this plan — pure-additive UAC + service-scaffold work. Cleanup of duplicated
 declarations is out of scope (post-cutover via strategy-repo-consolidation Phase 5).
@@ -102,8 +101,8 @@ declarations is out of scope (post-cutover via strategy-repo-consolidation Phase
 **In scope (May-23)**:
 
 - UAC `StrategyPnlStreamEvent` + `AllocationDirective` Pydantic models
-- strategy-service emits `StrategyPnlStreamEvent` for `carry_staked_basis` + `arbitrage_price_dispersion` (May-23
-  lead pair)
+- strategy-service emits `StrategyPnlStreamEvent` for `carry_staked_basis` + `arbitrage_price_dispersion` (May-23 lead
+  pair)
 - features-service `performance_features/` subdomain — passthrough today (subscribes to PnL stream, emits unchanged)
 - strategy-service `StrategyDirectiveReloader` — defaults to no-override when no directive present; existing
   capital/equity allocator reads from directive value when one is present
@@ -150,12 +149,12 @@ their dependencies; Phase 7 is parallel-anytime; Phase 8 is the final doc-layer 
 
 **Foundation-gate feasibility check** (per CLAUDE.md "Plans Run To Actual Completion" + foundation_gate frontmatter):
 
-| Layer | Prerequisite                       | Effort       | Owner             | Achievable in May-23 window?                          |
-| ----- | ---------------------------------- | ------------ | ----------------- | ----------------------------------------------------- |
-| 4     | UAC schemas (Phase 1)              | ~0.5 day     | slot-1 or slot-N  | YES — Pydantic + tests + exports                      |
-| 5     | features performance_features (Ph3)| ~0.5 day     | features-slot     | YES — passthrough subscriber + manifest emit          |
-| 6     | strategy emits + reloader (Ph2+5)  | ~1.5 days    | strategy-slot     | YES — emit at 2 archetype boots; reloader is no-op    |
-| 7     | trading-agent-service (Ph6+7)      | ~2.5 days    | trading-agent slot| TIGHT — needs CI green (credential rotation) + scaffold; achievable with 1 dedicated slot |
+| Layer | Prerequisite                        | Effort    | Owner              | Achievable in May-23 window?                                                              |
+| ----- | ----------------------------------- | --------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| 4     | UAC schemas (Phase 1)               | ~0.5 day  | slot-1 or slot-N   | YES — Pydantic + tests + exports                                                          |
+| 5     | features performance_features (Ph3) | ~0.5 day  | features-slot      | YES — passthrough subscriber + manifest emit                                              |
+| 6     | strategy emits + reloader (Ph2+5)   | ~1.5 days | strategy-slot      | YES — emit at 2 archetype boots; reloader is no-op                                        |
+| 7     | trading-agent-service (Ph6+7)       | ~2.5 days | trading-agent slot | TIGHT — needs CI green (credential rotation) + scaffold; achievable with 1 dedicated slot |
 
 Total: 5 cal-AI-days across 4 layers, parallelisable to 2.8 cal-AI-days wall-clock. Fits May-22 deadline with 2 days
 slack against May-23 cutover.
@@ -224,8 +223,7 @@ actively modifying those per uac_source_capability_metadata_promotion plan).
 **Done criterion**: 2 modules ship + 12 unit tests pass + UAC QG green. Sub-agent reports back with
 `unified-api-contracts@<sha>`.
 
-**Continuous verification**: weekly UAC QG run on `live-defi-rollout` (existing); new tests live in
-`tests/internal/`.
+**Continuous verification**: weekly UAC QG run on `live-defi-rollout` (existing); new tests live in `tests/internal/`.
 
 ## Phase 2 — strategy-service emits PnL (P0, after Phase 1, ~1 day, layer-6)
 
@@ -261,8 +259,8 @@ Quality gate: `cd strategy-service && bash scripts/quality-gates.sh` green.
 
 **Done criterion**: 2 archetypes emit `StrategyPnlStreamEvent`; 4+ unit tests pass; strategy-service QG green.
 
-**Continuous verification**: existing strategy-service QG; add specific check `grep -l "StrategyPnlStreamEvent"
-strategy_service/engine/strategies/v2/` returns ≥2 matches.
+**Continuous verification**: existing strategy-service QG; add specific check
+`grep -l "StrategyPnlStreamEvent" strategy_service/engine/strategies/v2/` returns ≥2 matches.
 
 ## Phase 3 — features-service performance_features scaffold (P0, after Phase 1, ~0.5 days, layer-5, PARALLEL with Phase 2)
 
@@ -295,18 +293,16 @@ Tests:
 Quality gate: `cd features-service && bash scripts/quality-gates.sh` green.
 ```
 
-**Done criterion**: subdomain ships; 3 unit tests pass; features-service QG green; manifest shows
-`performance_features` row with `empty_confirmed` for the May-23 lead-pair date range (no PnL events yet → honest
-absence).
+**Done criterion**: subdomain ships; 3 unit tests pass; features-service QG green; manifest shows `performance_features`
+row with `empty_confirmed` for the May-23 lead-pair date range (no PnL events yet → honest absence).
 
-**Continuous verification**: features-service QG + manifest-status panel shows
-`performance_features` row for lead-pair date range.
+**Continuous verification**: features-service QG + manifest-status panel shows `performance_features` row for lead-pair
+date range.
 
-## Phase 4 — UAC __init__ exports + integration tests (P1, after Phase 1, ~0.2 days, PARALLEL)
+## Phase 4 — UAC **init** exports + integration tests (P1, after Phase 1, ~0.2 days, PARALLEL)
 
-**Agent execution prompt**: small follow-up to Phase 1 — ensure facades export the 2 models from
-`unified_api_contracts` root + add 2 integration tests that round-trip serialize/deserialize via JSON. Quality gate:
-UAC QG green.
+**Agent execution prompt**: small follow-up to Phase 1 — ensure facades export the 2 models from `unified_api_contracts`
+root + add 2 integration tests that round-trip serialize/deserialize via JSON. Quality gate: UAC QG green.
 
 ## Phase 5 — strategy-service StrategyDirectiveReloader (P0, after Phase 1+2, ~0.5 days, layer-6)
 
@@ -343,11 +339,11 @@ Tests:
 Quality gate: `cd strategy-service && bash scripts/quality-gates.sh` green.
 ```
 
-**Done criterion**: reloader class shipped; 4 unit tests pass; integration test demonstrates round-trip
-(directive emit → reloader receive → allocator return modified weight); QG green.
+**Done criterion**: reloader class shipped; 4 unit tests pass; integration test demonstrates round-trip (directive emit
+→ reloader receive → allocator return modified weight); QG green.
 
-**Continuous verification**: strategy-service QG; spot-check `grep -l "StrategyDirectiveReloader"
-strategy_service/config_reloaders.py` returns 1.
+**Continuous verification**: strategy-service QG; spot-check
+`grep -l "StrategyDirectiveReloader" strategy_service/config_reloaders.py` returns 1.
 
 ## Phase 6 — trading-agent-service core scaffold (P0, after Phases 1+2+3, ~2 days, layer-7)
 
@@ -406,15 +402,15 @@ Service-infrastructure compliance check (CLAUDE.md QG STEPs):
 
 **Done criterion**: 6 files ship; 7+ tests pass; QG green (local OR CI per Phase 7 ETA).
 
-**Continuous verification**: trading-agent-service workspace-qg green + per-repo QG green. Add
-trading-agent-service to deployment-stack restart script for local-dev smoke.
+**Continuous verification**: trading-agent-service workspace-qg green + per-repo QG green. Add trading-agent-service to
+deployment-stack restart script for local-dev smoke.
 
 ## Phase 6.5 — Backtest-replay infrastructure (P0, after Phase 6, ~1 day, layer-7)
 
-**Why this phase exists**: per operator directive 2026-05-20 "needs to be backtest-able as well i.e. no forward
-looking bias on the decision making even historically". The Phase 1 schemas already encode the substrate
-(`mode: Literal["live","paper","backtest_continuation"]`, `available_at`, `valid_from`/`valid_until`). This phase
-wires the RUNTIME enforcement so deterministic replay actually works.
+**Why this phase exists**: per operator directive 2026-05-20 "needs to be backtest-able as well i.e. no forward looking
+bias on the decision making even historically". The Phase 1 schemas already encode the substrate
+(`mode: Literal["live","paper","backtest_continuation"]`, `available_at`, `valid_from`/`valid_until`). This phase wires
+the RUNTIME enforcement so deterministic replay actually works.
 
 **Agent execution prompt**:
 
@@ -475,9 +471,9 @@ test passes for the May-23 archetypes (carry_staked_basis, arbitrage_price_dispe
 **Continuous verification**: no-leak gate test in QG. ANY archetype added later must pass this test before its
 directives are consumed by strategy-service in live mode (gate flips in Phase 2 of the post-cutover operational plan).
 
-**Foundation-gate alignment**: this phase is the operational substrate that elevates the agent service from
-"scaffold present, no-op default" to "scaffold present + provably leak-free". The gate test enforces that
-operationality cannot proceed (Phase 2 post-cutover) until leak-free is proven per archetype.
+**Foundation-gate alignment**: this phase is the operational substrate that elevates the agent service from "scaffold
+present, no-op default" to "scaffold present + provably leak-free". The gate test enforces that operationality cannot
+proceed (Phase 2 post-cutover) until leak-free is proven per archetype.
 
 ## Phase 7 — CI hygiene fix (P0, parallel-anytime, ~0.5 days)
 
@@ -547,23 +543,23 @@ Quality gate: PM repo doesn't have QG; verify via:
 ```
 
 **Done criterion**: all 7+1+1+1 plan-edit changes applied + codex SSOT shipped + inventory regenerated + master plan
-shows trading-agent-service in new Tier-1 sub-tier; commit message `docs(plans): apply trading-agent-unlock manifest
-M1-M6/PW1-PW2/F1/Q1-Q2/E1-E2 — PM@<sha>`.
+shows trading-agent-service in new Tier-1 sub-tier; commit message
+`docs(plans): apply trading-agent-unlock manifest M1-M6/PW1-PW2/F1/Q1-Q2/E1-E2 — PM@<sha>`.
 
 **Continuous verification**: daily inventory-regenerator catches drift.
 
 ## Success criteria (per phase — Citadel-Grade §5 + Continuous-verification)
 
-| Phase | Cutover criterion                                                                                                  | Continuous verification                                                                       | Last verified |
-| ----- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------- |
+| Phase | Cutover criterion                                                                                                                                                                                                                                                                                 | Continuous verification                                                                        | Last verified     |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------- |
 | 1     | ✅ UAC `StrategyPnlStreamEvent` + `ArchetypeAllocationDirective` ship + 12 unit tests pass — uac@82b7ad55. Note: named `ArchetypeAllocationDirective` (not `AllocationDirective`) to avoid collision with existing `architecture_v2.AllocationDirective` (full post-cutover multi-client schema). | UAC QG (per-commit) + grep `from unified_api_contracts.internal import StrategyPnlStreamEvent` | 2026-05-20 slot-3 |
-| 2     | strategy-service emits `StrategyPnlStreamEvent` for carry + APD; 4+ tests pass                                     | strategy-service QG + grep callsites in v2/ handlers (≥2)                                     | PENDING       |
-| 3     | features-service `performance_features/` subdomain ships passthrough subscriber; honest-absence path tested        | features-service QG + manifest row exists for lead-pair date range                            | PENDING       |
-| 4     | ✅ UAC facades export models; 2 integration tests pass — uac@2bdc0f07 (root + internal facade; 19 tests total)     | UAC QG                                                                                        | 2026-05-20 slot-3 |
-| 5     | strategy-service `StrategyDirectiveReloader` ships; no-op default + 4 tests pass                                   | strategy-service QG + integration test                                                        | PENDING       |
-| 6     | trading-agent-service core scaffold ships; ServiceBootstrap + Health API + reloader + 7+ tests; QG green           | trading-agent-service QG (local OR CI per Phase 7)                                            | PENDING       |
-| 7     | trading-agent-service workspace-qg green on live-defi-rollout                                                      | per-repo workspace-qg (per-commit)                                                            | PENDING       |
-| 8     | All manifest entries applied; codex SSOT shipped; inventory regenerated                                            | daily inventory-regenerator + plan-vs-codex doc-drift audit                                   | PENDING       |
+| 2     | ✅ strategy-service emits `StrategyPnlStreamEvent` for carry + APD; 6 tests pass — strategy-service@a0f87c66. UTL STRATEGY_PNL_STREAM constant: utl@de5ca0a0.                                                                                                                                     | strategy-service QG + grep callsites in v2/ handlers (≥2)                                      | 2026-05-20 slot-3 |
+| 3     | features-service `performance_features/` subdomain ships passthrough subscriber; honest-absence path tested                                                                                                                                                                                       | features-service QG + manifest row exists for lead-pair date range                             | PENDING           |
+| 4     | ✅ UAC facades export models; 2 integration tests pass — uac@2bdc0f07 (root + internal facade; 19 tests total)                                                                                                                                                                                    | UAC QG                                                                                         | 2026-05-20 slot-3 |
+| 5     | strategy-service `StrategyDirectiveReloader` ships; no-op default + 4 tests pass                                                                                                                                                                                                                  | strategy-service QG + integration test                                                         | PENDING           |
+| 6     | trading-agent-service core scaffold ships; ServiceBootstrap + Health API + reloader + 7+ tests; QG green                                                                                                                                                                                          | trading-agent-service QG (local OR CI per Phase 7)                                             | PENDING           |
+| 7     | trading-agent-service workspace-qg green on live-defi-rollout                                                                                                                                                                                                                                     | per-repo workspace-qg (per-commit)                                                             | PENDING           |
+| 8     | All manifest entries applied; codex SSOT shipped; inventory regenerated                                                                                                                                                                                                                           | daily inventory-regenerator + plan-vs-codex doc-drift audit                                    | PENDING           |
 
 ## Operator-attention list (decisions needed)
 
@@ -572,25 +568,26 @@ M1-M6/PW1-PW2/F1/Q1-Q2/E1-E2 — PM@<sha>`.
    `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`.
 2. **Slot allocation** — new plan has no assigned slot in current work-split. Operator: assign to existing slot
    (recommend slot with capacity post-mega-audit) OR allow slot-1-main to spawn sub-agents.
-3. **Confirm "off-by-default" semantics** — trading-agent-service emits `AllocationDirective` with weight = static
-   value (i.e. NO change to allocator behaviour at runtime). Operator confirms this is the intent vs. "service exists
-   but emits nothing".
+3. **Confirm "off-by-default" semantics** — trading-agent-service emits `AllocationDirective` with weight = static value
+   (i.e. NO change to allocator behaviour at runtime). Operator confirms this is the intent vs. "service exists but
+   emits nothing".
 4. **`param_overrides: dict[str, Any]` in AllocationDirective schema** — operator confirms `Any` value-type is
-   acceptable for May-23 (closed-set future-restrict post-cutover) OR requests specific Pydantic discriminated union now.
+   acceptable for May-23 (closed-set future-restrict post-cutover) OR requests specific Pydantic discriminated union
+   now.
 
 ## Temporary states + their canonical follow-up plans
 
 - **No-op directive emission** (Phase 6): trading-agent-service emits static-value directive. Successor:
-  `plans/epics/strategy_and_dart_master_2026_05_07.md` §1.7 Phase 10.7 (post-cutover) — production allocator logic
-  with 8 archetype engines.
+  `plans/epics/strategy_and_dart_master_2026_05_07.md` §1.7 Phase 10.7 (post-cutover) — production allocator logic with
+  8 archetype engines.
 - **STUB ML/LLM input subscribers** (Phase 6): the 3 stub-input subscribers (regime, narrative, ETA) and the ML+LLM
-  input wires are placeholder log-only handlers. Successor: epic §1.7 Phase 10.7 post-cutover + ML pipeline
-  integration plan (currently `plans/active/ml_repo_consolidation_2026_05_19.md` and successors).
+  input wires are placeholder log-only handlers. Successor: epic §1.7 Phase 10.7 post-cutover + ML pipeline integration
+  plan (currently `plans/active/ml_repo_consolidation_2026_05_19.md` and successors).
 - **`performance_features` passthrough** (Phase 3): no derivation today; raw PnL fields pass through unchanged.
   Successor: epic § Allocator service P1 post-cutover — real derivations (rolling sharpe, drawdown, attribution-by-leg).
 - **Per-archetype PnL emission limited to 2 archetypes** (Phase 2): only carry_staked_basis + arbitrage_price_dispersion
-  emit. Successor: `pvl-p18b-archetype-paper-runnable-matrix` post-cutover — populate emission per remaining 51 archetypes
-  as their continuous-paper infrastructure lands.
+  emit. Successor: `pvl-p18b-archetype-paper-runnable-matrix` post-cutover — populate emission per remaining 51
+  archetypes as their continuous-paper infrastructure lands.
 
 ## Codex SSOT updates (per "Post-Plan-Phase Codex Audit" HARD RULE)
 
