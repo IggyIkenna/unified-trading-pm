@@ -1411,7 +1411,7 @@ grep.
       Regression guard: `tests/unit/test_check_shard_freshness_granular_rows_only.py` (3 tests asserting freshness check
       works correctly with ONLY per-instrument rows present, including the missing-data_type and attempted_failed-only
       branches). Locked in BEFORE the delete so any future regression fails CI loudly.
-- [ ] [SCRIPT] P0. Wire v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) into
+- [x] ✅ [SCRIPT] P0. Wire v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) into
       `canonical_writer.add()` per the explicit decision rule below — no UAC-owner blocking dependency: **Wire (row
       carries v6-relevant info):** - CeFi: `derivative_adapter`, `futures_chain_adapter`, `options_chain_adapter` —
       populate `quote_asset` from instrument metadata (`USD` / `USDT` / `USDC` / `BTC` etc.) + `margin_type` (`linear` /
@@ -1426,6 +1426,9 @@ grep.
       verification todo: UAC owner confirms the wired set matches the v6 schema spec; flag any data_type whose row
       carries v6-relevant info we missed. [AUDIT 2026-05-07: FRESH — actionable; MDPS canonical_writer schema includes
       v6 columns but per-adapter population not yet audited. Tracked Open Question §3 also covers this. ~3-5 days work.]
+      — market-data-processing-service@5b95fb5 (_infer_v6_columns + _infer_cefi_quote_margin helpers wired into
+      write_candle_parquet + close_candle_streaming_writer; CeFi: DERIBIT/USDT/USDC inference; TradFi: outright/single
+      defaults; DeFi/sports/prediction: default "")
 - [x] [SCRIPT] P0. Add missing data_types to `_CEFI_TRADFI_DEFI_DATA_TYPES` in `orchestration_scanner.py:46–72`
       (`dex_pool_swaps`, `evm_defi_lending`, `evm_defi_amm`, `staking_yields`). [AUDIT 2026-05-07: DONE —
       `market_data_processing_service/app/core/orchestration_scanner.py:46-83` includes all 4 data_types
@@ -1434,12 +1437,14 @@ grep.
       `app/adapters/__init__.py` so decorators fire. [AUDIT 2026-05-07: DONE — MDPS@72b2d5f registered missing chain +
       DeFi adapters; `app/adapters/__init__.py:34-36` imports `DefiFxRateAdapter`, `DefiLiquidityAdapter`,
       `DefiMarketStateAdapter`.]
-- [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into MDPS chain-bundle write paths
+- [x] ✅ [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into MDPS chain-bundle write paths
       (futures_chain, options_chain). Use UAC `DATA_TYPE_TO_CLUSTER_REGISTRY` to look up the registry per data_type.
       [AUDIT 2026-05-07: FRESH — actionable; zero `expected_root_clusters` callsites in MDPS (`grep -r
       "expected_root_clusters" market_data_processing_service/` returns empty). MTDS has the wiring at
       orchestrator.py:2155 for ES.OPT only; MDPS chain-bundle adapters need parallel wiring. Couples to MTDS Phase 2.B
-      item below.]
+      item below.] — market-data-processing-service@5b95fb5 (_build_cluster_params: futures_chain →
+      FUTURES_CHAIN_BUCKETS + futures_expiry_bucket; options_chain → get_active_es_options_clusters_for_date +
+      extract_es_options_cluster; threaded into both write_candle_parquet + close_candle_streaming_writer)
 - [ ] [TEST] P0. Per-adapter integration test: simulate path A / path B / path C; assert correct manifest verb fires;
       assert NO 1440-row NaN parquet ever lands on disk. [AUDIT 2026-05-07: FRESH — actionable. Migration code shipped
       Tier 2A/C/D/E (MDPS@5b52d0b/b9f9328/80cf141/e9520a0); integration tests verifying the path-routing remain
