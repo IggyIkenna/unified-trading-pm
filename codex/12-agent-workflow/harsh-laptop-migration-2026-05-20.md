@@ -116,15 +116,16 @@ Harsh's laptop already has `${WORKSPACE_PATH}/unified-trading-system-repos/`. Br
 WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
 cd "${WORKSPACE_PATH}"
 
-# Per-repo branch convention:
-#   - agent-orchestrator → branch `main` (no LDR for this repo per 2026-05-20 decision)
-#   - everything else    → branch `live-defi-rollout`
+# Per-repo branch convention (2026-05-20 reversal — everything on LDR):
+#   - ALL repos including agent-orchestrator → branch `live-defi-rollout`
+#   - main is the production-promotion branch only; LDR is the integration branch
+#     (see codex/08-workflows/deployment-flow.md for the LDR → staging → main path)
 
-# Update agent-orchestrator first (gets the dashboard SPA + reporter contract)
+# Update agent-orchestrator (now on LDR like everything else)
 cd "${WORKSPACE_PATH}/agent-orchestrator"
-git fetch origin main
-git checkout main
-git pull --ff-only origin main
+git fetch origin live-defi-rollout
+git checkout live-defi-rollout
+git pull --ff-only origin live-defi-rollout
 
 # Update unified-trading-pm next (workspace SSOT)
 cd "${WORKSPACE_PATH}/unified-trading-pm"
@@ -320,8 +321,9 @@ logs for traffic patterns).
 
 ## Operating norms (read once, then it's just work)
 
-- **Branch per repo**: `agent-orchestrator` is on `main`; all other repos use `live-defi-rollout`. See
-  `cron-branch-overrides.txt` for the runtime SSOT used by the FF-pull cron.
+- **Branch per repo**: every workspace repo (including agent-orchestrator as of 2026-05-20 reversal) integrates on
+  `live-defi-rollout`. Main is reserved for production promotion only (LDR → staging → main per
+  `codex/08-workflows/deployment-flow.md`). `cron-branch-overrides.txt` is empty — no per-repo deviations.
 - **Commit + push + flip plan checkbox in same agent turn**: the workspace has a HARD RULE on this (see CLAUDE.md §
   "Commit + Push + Flip Plan Checkboxes As You Ship Each Item"). Backfill-flipping later is reviewer- rejected.
 - **Quality gates are a merge prerequisite**: `bash scripts/quality-gates.sh` exit 0 before any push. No exceptions
