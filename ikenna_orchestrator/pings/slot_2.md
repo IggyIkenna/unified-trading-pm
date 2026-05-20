@@ -884,8 +884,7 @@ awaiting operator write-pause signal to push.
 
 **Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` → CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent STEP 5.23 from running; source verified clean manually.
 
-**R19 remaining**:
-- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason` added to UAC facade first
+**R19 remaining**: none — all slot-2 assigned repos complete.
 
 **Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 dispatch table
 
