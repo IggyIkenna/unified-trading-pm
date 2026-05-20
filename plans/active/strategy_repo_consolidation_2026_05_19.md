@@ -230,20 +230,24 @@ todos:
 
   - id: phase-7-archive-source-repos
     content: |
-      - [x] ✅ AGENT-HALF DONE [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos.
-        Agent-half complete (2026-05-19):
+      - [x] ✅ [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos. COMPLETE 2026-05-20.
+        Agent-half (2026-05-19):
         1. ✅ DEPRECATION_NOTICE.md committed: risk@6e52257 + position@f602e58 + pnl@c1ac3f0
         2. ✅ strategy-service CHANGELOG + QGBA merged: strategy-service@607a411b
         3. ✅ workspace-manifest.json updated (status=pending-archive): PM@b6907afe0
         4. ✅ code-workspace folders list cleaned (29→26 entries): PM@b6907afe0
         5. ✅ setup-tab-worktrees.sh auto-skips repos with `archived_into` set — no edit needed
         6. ✅ operator ping filed in `_agent_pings.md`: PM@b6907afe0
-        OPERATOR ACTIONS STILL REQUIRED:
-        - `gh repo archive IggyIkenna/risk-and-exposure-service --confirm`
-        - `gh repo archive IggyIkenna/position-balance-monitor-service --confirm`
-        - `gh repo archive IggyIkenna/pnl-attribution-service --confirm`
-        - Verify: `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` × 3
-    status: todo
+        Operator actions (2026-05-20):
+        7. ✅ `gh repo archive IggyIkenna/risk-and-exposure-service --yes` — archived=true verified
+        8. ✅ `gh repo archive IggyIkenna/position-balance-monitor-service --yes` — archived=true verified
+        9. ✅ `gh repo archive IggyIkenna/pnl-attribution-service --yes` — archived=true verified
+        Agent follow-up (2026-05-20):
+        10. ✅ workspace-manifest.json status→archived + archived_into + archived_date: PM@ad31a6710
+        11. ✅ cursor-configs/unified-trading-system-repos.code-workspace: 24 git.ignoredRepositories entries removed (3 repos × 8 tabs): PM@ad31a6710
+        12. ✅ cursor-configs/workspace-complete.code-workspace: 3 folders entries removed: PM@ad31a6710
+        13. ✅ cursor-configs/workspace-trading.code-workspace: 3 folders entries removed: PM@ad31a6710
+    status: done
     blocked_by: phase-6-parity-test
 
   - id: phase-8a-launcher-migration
@@ -498,10 +502,10 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       cal-day. — ✅ strategy-service@25638f4b (2026-05-20): 76 occurrences across 34 files; config.service_name + API
       titles + log messages → "strategy-service"; UAC seed keys (\_SERVICE_NAME in emission/isolation policy) +
       filesystem path keys (mock_data_provider) preserved at legacy values; test assertions updated to match. 0
-      failures. Slot 4 extension @29e4f149: _SERVICE_NAME renamed to "strategy-service" in all 3 sub-packages
+      failures. Slot 4 extension @29e4f149: \_SERVICE_NAME renamed to "strategy-service" in all 3 sub-packages
       (position/risk/pnl isolation_policy.py + core sinks + mock_data_provider + 51 test assertions across 24 files);
-      uac@b3bb291 adds BLOCK_CRITICAL for (strategy-service, portfolio_state) + (strategy-service, risk_state);
-      4118 passed 0 failed.
+      uac@b3bb291 adds BLOCK_CRITICAL for (strategy-service, portfolio_state) + (strategy-service, risk_state); 4118
+      passed 0 failed.
 - [x] ✅ **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during subtree-merge.
       `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/` pulls package + tests +
       scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
