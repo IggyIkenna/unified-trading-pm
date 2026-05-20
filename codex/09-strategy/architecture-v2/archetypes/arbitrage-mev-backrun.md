@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_BACKRUN`
 
-> **Family:** `ARBITRAGE_STRUCTURAL`. **Settlement model:** Single tx with per-block ordering. **Code module:**
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** Single tx with per-block ordering. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/mev/backrun.py`.
 
 ## What it does

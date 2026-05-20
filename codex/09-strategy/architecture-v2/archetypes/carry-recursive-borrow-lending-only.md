@@ -8,10 +8,13 @@ topology_requirements:
   min_sla_tier: standard
 ---
 
-# CARRY_RECURSIVE_BORROW_LENDING_ONLY -- Family 1 archetype
+# CARRY_RECURSIVE_BORROW_LENDING_ONLY
 
-> **Sibling archetypes:** [carry-recursive-staked.md](./carry-recursive-staked.md) (Family 0) -
-> [carry-recursive-borrow-perp-hedged.md](./carry-recursive-borrow-perp-hedged.md) (Family 2)
+> **Family:** [Carry & Yield](../families/carry-and-yield.md) (`CARRY_AND_YIELD`). The "Family 0/1/2" labels below are
+> the recursive-borrow plan's internal numbering of the three recursive variants — **not** the `StrategyFamily`.
+>
+> **Recursive-variant siblings:** [carry-recursive-staked.md](./carry-recursive-staked.md) (variant 0) ·
+> [carry-basis-perp-inv.md](./carry-basis-perp-inv.md) (variant 2 — renamed from `CARRY_RECURSIVE_BORROW_PERP_HEDGED`)
 
 > **Status:** Design-shipped 2026-05-12 (UAC enum + ARCHETYPE_CONFIG_SEED + per-chain ReserveParams). Implementation
 > gated on Phase 4 Solidity + Phase 5 Python orchestrator per

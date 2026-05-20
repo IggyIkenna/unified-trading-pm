@@ -90,4 +90,4 @@ real-time delta breaches near expiry).
 
 - Family: [vol-trading.md](../families/vol-trading.md)
 - Short-vol carry that generates the pin-risk exposure: [vol-carry.md](vol-carry.md)
-- Gamma scalping archetype: [vol-arb-rv-iv.md](vol-arb-rv-iv.md)
+- Gamma scalping archetype: [vol-0dte-gamma-scalping.md](vol-0dte-gamma-scalping.md)

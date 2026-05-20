@@ -10,7 +10,8 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_CONCENTRATED`
 
-> **Family:** `MARKET_MAKING` (provides liquidity vs taking it). **Settlement model:** ATOMIC mint/burn via Uniswap V3
+> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING` — provides liquidity vs taking it).
+> **Settlement model:** ATOMIC mint/burn via Uniswap V3
 > NonfungiblePositionManager. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/concentrated.py`.
 
@@ -78,7 +79,9 @@ execution-service sequences them through the same V3 position manager.
 `InstructionActionV2.SWAP` with `params["lp_operation"] = "mint" | "burn"`. Position metadata (sqrt_price_lower,
 sqrt_price_upper, liquidity, amount0_initial, amount1_initial) carried in `params`.
 
-A future extension adds dedicated `LP_MINT` / `LP_BURN` enum values for clearer wire-level routing, but is not blocking.
+The dedicated `LP_MINT` / `LP_BURN` enum values now exist (actions 13/14 in the instruction catalog), but the engine
+still routes LP ops through `SWAP` + `lp_operation` (`concentrated.py` emits `lp_operation="mint"|"burn"|"rebalance"`);
+migrating to the dedicated actions for clearer wire-level routing is a non-blocking follow-up.
 
 ### LegController integration
 

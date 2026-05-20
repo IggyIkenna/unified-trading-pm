@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_POOL`
 
-> **Family:** `MARKET_MAKING`. **Settlement model:** atomic deposit / withdraw through pool contract. **Code module:**
+> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** atomic deposit / withdraw through pool contract. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/pool.py`.
 
 ## What it does
@@ -45,10 +45,15 @@ bleed; drift > `depeg_exit_bps` means exit immediately.**
 
 ## Execution semantics
 
-- `LP_DEPOSIT` action (multi-token) for entry into the pool
-- `LP_WITHDRAW` action (proportional or imbalanced) for exit
+- `InstructionActionV2.SWAP` with `params["lp_operation"] = "deposit"` (multi-token add-liquidity) for entry
+- `InstructionActionV2.SWAP` with `params["lp_operation"] = "withdraw"` (proportional or imbalanced) for exit
 - Single-pool: ATOMIC bundle (add-liquidity + receive LP token, or burn LP + receive underlying)
 - Cross-pool rotation: LEADER_HEDGE (withdraw → bridge → deposit)
+
+> The dedicated `LP_MINT` / `LP_BURN` enum values exist (actions 13/14 in the instruction catalog), but the `defi_lp`
+> engines route every LP op through `SWAP` + `lp_operation` today (`pool.py` emits `lp_operation="deposit"|"withdraw"`);
+> migrating to the dedicated actions is a non-blocking follow-up. Earlier drafts of this doc named `LP_DEPOSIT` /
+> `LP_WITHDRAW` actions — those enum values do not exist; corrected 2026-05-20.
 
 ### LegController integration
 

@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`
 
-> **Family:** `ARBITRAGE_STRUCTURAL`. **Settlement model:** ATOMIC mint / burn within a 2-block window. **Code module:**
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** ATOMIC mint / burn within a 2-block window. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py`.
 
 ## What it does

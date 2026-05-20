@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_VAULT`
 
-> **Family:** `MARKET_MAKING`. **Settlement model:** ERC-4626 deposit / redeem. **Code module (SHIPPED):**
+> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** ERC-4626 deposit / redeem. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py`.
 
 ## What it does

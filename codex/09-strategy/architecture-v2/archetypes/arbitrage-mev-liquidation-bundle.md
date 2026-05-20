@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`
 
-> **Family:** `ARBITRAGE_STRUCTURAL`. **Settlement model:** ATOMIC bundle — all-or-nothing within a single transaction.
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** ATOMIC bundle — all-or-nothing within a single transaction.
 > **Code module:** `strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py`.
 
 ## What it does

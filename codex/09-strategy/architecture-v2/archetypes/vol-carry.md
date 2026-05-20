@@ -164,6 +164,6 @@ VOL_CARRY@cboe-spx-iron-condor-weekly-usd-prod
 ## See also
 
 - Family: [vol-trading.md](../families/vol-trading.md)
-- Realised-vs-implied divergence view: [vol-arb-rv-iv.md](vol-arb-rv-iv.md) _(doc pending)_
-- Term structure carry arb: [vol-term-structure-arb.md](vol-term-structure-arb.md) _(doc pending)_
+- Realised-vs-implied divergence view: [vol-arb-rv-iv.md](vol-arb-rv-iv.md)
+- Term structure carry arb: [vol-term-structure-arb.md](vol-term-structure-arb.md)
 - Legacy options archetype: [vol-trading-options.md](vol-trading-options.md)

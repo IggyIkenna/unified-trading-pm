@@ -10,7 +10,7 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)
 
-> **Family:** `ARBITRAGE_STRUCTURAL`. **Status:** **TRACER ONLY.** No live engine exists or is factory-registered.
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Status:** **TRACER ONLY.** No live engine exists or is factory-registered.
 > **Code module:** `strategy-service/strategy_service/engine/strategies/v2/mev/sandwich_theoretical.py`.
 
 ## Why no live engine
