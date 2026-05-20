@@ -226,7 +226,8 @@ plan cites the audits that feed it + lists the full remediation backlog drawn fr
       Phase Q: PM@dc849b256 (no_silent_absence_handlers.sh extended) Codex SSOT: PM@b1197eda1
       (defi-execution-overview.md Data Pipeline section)
 - [x] ✅ **D7. Live adapters plan** — beef from C4, C8 (live mode rows): `emit_adapter_fetch_failed()` helper + 7 CCXT
-      adapters wired (binance/hyperliquid/bybit/coinbase/deribit/okx/upbit) — execution-service@d7ac3ffc3
+      adapters wired (binance/hyperliquid/bybit/coinbase/deribit/okx/upbit) — execution-service@d7ac3ffc3; DeFi retry
+      loop (C8-P0-2) classify + emit ADAPTER_FETCH_FAILED + FAIL-class short-circuit — execution-service@6085a9fb1
 - [ ] **D8. Perf upgrade plan** — beef from A1 (hot-path identification)
 - [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps). **Progress: 6/7 patterns
       SHIPPED as QG steps**: (a) `no_silent_absence_handlers.sh` STEP 5.70 (manifest emission), (b)
