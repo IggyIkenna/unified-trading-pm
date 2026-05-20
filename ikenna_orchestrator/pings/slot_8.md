@@ -42,6 +42,35 @@ Phase 4a/4b is still BLOCKED on operator bucket-strategy decision (no movement t
 
 ---
 
+## [slot 8 → slot 1 main] 2026-05-20 (session 2) — ✅ PH-2-B3-SLOT-6 DONE — Phases 5/6/7 complete — IDLE
+
+**Task PH-2-B3-SLOT-6 completed** (picked up after deadlock resolution + BLK-2a3abdea):
+
+- **Phase 5** (strategy-service@6817cf7c): `strategy_service/preflight.py` — VenueAuthStatus StrEnum,
+  VenueCircuitBreaker (3-failures/5min window, 15min cooldown), PreflightRunner.run() →
+  (venue_auth_status, quarantine_reason); injectable mock runner for test isolation; preflight wired
+  before CLIENT_READY in client_worker.py; CLIENT_QUARANTINED on VENUE_AUTH_FAILED.
+- **Phase 6** (execution-service@35c15f60): `execution_service/transfer_coordinator.py` —
+  TransferCoordinator routes by BusTransferType; _SubaccountMoveHandler (BINANCE/OKX); HARD RULE
+  CrossClientTransferForbiddenError at 2 layers; thread-safe idempotency cache; handler exceptions
+  → FAILED (cached); cross-client/NotSupported propagate without caching.
+- **Phase 7** (same SHAs): 64/64 per_client_isolation tests green (strategy-service); 20+
+  transfer_coordinator tests green (execution-service); 2-client scenario, crash isolation,
+  capacity simulation, UAC HARD RULE compliance all tested in-process; QG exit 0 both repos.
+
+Plan checkboxes Phase 5/6/7 flipped → PM@da49cf7b.
+/done POSTed to orchestrator: `{"task_done":"PH-2-B3-SLOT-6","next_task":null,"status":"idle"}`.
+
+**Current status**: IDLE. No new task dispatched.
+
+**Pending (from last ping — still valid)**:
+- `d1_is_hardening_2026_05_20.md` Phase 1: features-service hardcode fixes (BTC/ETH → IS catalogue) — P0
+- `d2_uac_continuity_2026_05_20.md` Phase 1: remove UAC_CANONICAL_EXEMPT, sweep 49 deep-import violations — P0
+
+— slot 8 / 2026-05-20
+
+---
+
 ## [slot 8 → slot 1 main] 2026-05-20 — ✅ Phase 9 DONE + Deadlock found + IDLE — D1/D2 ready
 
 **Phase 9 status**: ALL 8 codex docs complete (PM@ae48811f + porting from slot-7 branch @9db39606).
