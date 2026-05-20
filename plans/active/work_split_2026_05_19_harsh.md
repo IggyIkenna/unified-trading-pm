@@ -361,21 +361,9 @@ must exist). P1 code work can start immediately.
 - `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` — real value ✅
 - All 4 other Slack app secrets ✅
 
-1. - [ ] **P1 — Implement `server/notifications/slack.py`** (~1.2 cal) _(start immediately, no Cloud Run dependency)_
-   - `server/notifications/__init__.py` (empty)
-   - `server/notifications/slack.py` — `notify_slot_blocked()`, `notify_slot_stale()`, `notify_slot_failed()`, each
-     POSTing JSON to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` via `httpx.AsyncClient`; no-op if env var empty
-   - All calls wrapped in `try/except Exception: pass` — Slack outage never crashes server
-   - Add `httpx` to `pyproject.toml` flat `[project.dependencies]`
-   - Unit tests `tests/test_slack_notifications.py` — mock `httpx.AsyncClient.post`; assert payload shape for all 3
-     event types; assert no-op on empty webhook
-   - Full-exec: `bash scripts/check.sh` passes; basedpyright `server/notifications/` clean; unit tests green
+1. - [x] ✅ **P1 — Implement `server/notifications/slack.py`** — upgraded to Block Kit + retry in plan P2; 9 unit tests in tests/test_slack_notifications.py all pass; ruff+basedpyright clean. agent-orchestrator@cd04fc2. (slot 4 2026-05-20)
 
-2. - [ ] **P2 — Wire hooks into server event handlers** (~0.5 cal)
-   - `rg "add_blocked|stale|failed|blocked" server/ --type py` to locate all event emission points
-   - Wire `await notify_slot_blocked()` / `notify_slot_stale()` / `notify_slot_failed()` at each transition
-   - Full-exec: local smoke (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK=""` — no-op confirmed); `bash scripts/check.sh` still
-     passes
+2. - [x] ✅ **P2 — Wire hooks into server event handlers** — confirmed done at eea2f69: notify_slot_blocked in server.py L686, notify_slot_stale in health.py L110, notify_slot_failed in health.py L140. blocked_id now passed to notify_slot_blocked at cd04fc2. (slot 4 2026-05-20)
 
 3. - [ ] **P0 — Wire `--update-secrets` on Cloud Run staging** (~0.3 cal) _(after Slot 10 P1 done)_
    - Look up staging SA:

@@ -573,3 +573,30 @@ Plan `config_grid_archetype_extend_2026_05_20.md` dispatched as "2 agent-doable 
 2. Decide on `ARBITRAGE_CROSS_DOMAIN_EVENT`: **(i)** implement engine first (blocks all 4-family completion), OR **(ii)** extend grid for 3 of 4 families (defer 4th to successor plan)
 
 All items tagged BLOCKED-OPERATOR-DECISION in plan. No agent action possible until operator picks approach.
+
+---
+
+[2026-05-20 UTC] slot-4 harsh → ikenna-main — CREDENTIAL APPROVAL REQUEST: Slack webhook secret IAM bind
+
+**Context**: Slack notifications P3 (Cloud Run secret wiring) for agent-orchestrator.
+
+**Needs**: `secretmanager.secrets.setIamPolicy` permission on `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret in `central-element-323112`.
+
+**Command to run as ikenna (has secretmanager.admin)**:
+```bash
+gcloud secrets add-iam-policy-binding AGENT_ORCHESTRATOR_SLACK_WEBHOOK \
+  --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor" \
+  --project=central-element-323112
+
+gcloud run services update agent-orchestrator-staging \
+  --update-secrets AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest \
+  --region europe-west4 \
+  --project central-element-323112
+```
+
+**Then update deploy-agent-orchestrator.sh** to add `AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest` to the `RUNTIME_SECRETS` variable (so future deploys keep it).
+
+**Unblocks**: P3 (staging smoke) + P4 (codex). P2 code is shipped at agent-orchestrator@cd04fc2.
+
+— slot-4 harsh (2026-05-20)
