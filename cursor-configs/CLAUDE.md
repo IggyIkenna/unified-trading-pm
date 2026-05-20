@@ -383,6 +383,54 @@ planning decisions (slot 1 main, both sides). Writes between `<!-- AUTO-INVENTOR
 
 ---
 
+## Local slot host = VM slot host — symmetric worker model (HARD RULE codified 2026-05-20)
+
+> Operator 2026-05-20: "aren't we still pinging locally to the same server the UI and API sees so that locally we can
+> act like we are just another slot in the pipeline — that's what Harsh is doing or supposed to do, no? Should be fixed,
+> documented, tested, in CLAUDE.md."
+
+**Every host that owns slot worktrees follows the same contract**, regardless of whether it's the VM, the operator's
+laptop, or Harsh's laptop:
+
+| Behavior                                  | VM  | Operator laptop | Harsh laptop       |
+| ----------------------------------------- | --- | --------------- | ------------------ |
+| `slot-cron-ff-pull.sh` every 5 min        | ✓   | ✓               | ✓ (post-migration) |
+| `slot-git-status-report.sh` every 5 min   | ✓   | ✓               | ✓ (post-migration) |
+| Per-slot worktree on `tab/<operator>/<N>` | ✓   | ✓               | ✓                  |
+| Commit + Push + Flip same-turn HARD RULE  | ✓   | ✓               | ✓                  |
+| Spawn workers via `/api/slots/<N>/spawn`  | ✓   | optional        | optional           |
+| Interactive Claude Code chat as a slot    | ✓   | ✓               | ✓                  |
+
+**Operator's interactive session counts as a slot.** When the operator works in `.tabs/<N>/<repo>/` from a Cursor /
+Claude Code window, they ARE slot N for the purposes of:
+
+- The slot's branch convention (`tab/<operator>/<N>`)
+- The Commit + Push + Flip plan checkbox HARD RULE (no 9-hour-old uncommitted WIP; ship per shippable unit)
+- The git-status reporter (their dirty state shows on the dashboard alongside spawned workers)
+- The FF-pull cron (their worktree gets FF-pulled the same as a worker's)
+
+**The orchestrator does NOT differentiate** between "interactive operator session" and "spawned tmux worker" for these
+purposes. Both are slots. Both show on the Fleet tab. Both follow the same rules. The only operational difference is
+whether the slot is `paused` (interactive — operator controls it) or `working` (orchestrator dispatches tasks to it).
+
+**Verification (mandatory on every host setup)**: `bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh` —
+returns exit 0 if both crons are installed + last run within 10 min + last report posted to backend OK.
+
+**Why this matters**: a local 9-hour-old dirty WIP on the operator's own slot is the same anti-pattern as a worker
+sitting on uncommitted code for 9 hours. Both violate Commit+Push+Flip. Both block downstream FF-pulls. Both create the
+"stale code" problem the whole worktree model exists to prevent. The orchestrator can't tell the difference, which is
+the point: same model, same rules, same accountability.
+
+SSOTs:
+
+- `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` — Harsh's host onboarding recipe
+- `agent-orchestrator/agents/worker.md` — the slot-as-worker contract (applies to interactive sessions too)
+- `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` — FF-pull cron (works on macOS + Linux)
+- `unified-trading-pm/scripts/dev/slot-git-status-report.sh` — drift reporter (cross-platform)
+- `unified-trading-pm/scripts/verify-slot-host-symmetry.sh` — verification (test new hosts)
+
+---
+
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
 > **The #1 source of wasted reallocation + false-progress reporting.** Repeated violation observed 2026-05-14/15: slots
