@@ -886,6 +886,30 @@ awaiting operator write-pause signal to push.
 
 **R19 remaining**: none — all slot-2 assigned repos complete.
 
-**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 dispatch table
-
 **Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § slot dispatch table row 2 (R19)
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MDPS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-data-processing-service**:
+- **UAC@f3f5ee1** — exported 4 new symbols from facade `__init__.py`:
+  `FUTURES_CHAIN_BUCKETS`, `futures_expiry_bucket`, `get_active_es_options_clusters_for_date`, `RecordFailedReason`
+  (all from `canonical.crosscutting.honest_coverage`; previously required deep imports)
+- **MDPS@0b338d8 + a00ce6b** — rewrote all 4 deep `canonical.*` imports across 3 files:
+  - `app/core/canonical_writer.py`: merged `honest_coverage.{FUTURES_CHAIN_BUCKETS, futures_expiry_bucket, get_active_es_options_clusters_for_date}` + `source_priority.{emission_latency_ms_for_source, get_primary_source}` into existing facade block
+  - `app/core/dependency_checker.py`: `canonical.crosscutting.honest_coverage.RecordFailedReason` → `from unified_api_contracts import RecordFailedReason`
+  - `app/core/orchestration_service.py`: merged `RecordFailedReason` into existing facade import line
+
+**Verification**: `bash scripts/quality-gates.sh` → `✅ STEP 5.23: UAC import surface clean` (exit 0)
+
+**R19 slot-2 complete**: MTDS ✅ + deployment-api ✅ + MDPS ✅ (all 3 repos clean)
+
+**Remaining R19 workspace** (out of slot-2 scope — handled by other plans):
+- `instruments-service` + `execution-service`: covered by `d2_uac_continuity_2026_05_20.md` Phase 1 P0 (exempt-flag removal)
+- `unified-trading-system-ui`: UI facade layer, different team/plan
+- Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠ scripts/)
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
