@@ -310,7 +310,10 @@ key absent.
 
 ## Phase-F: paper VM relaunch + fills>0 verification (P0, ~0.5 day, SEQUENTIAL after A-E + G)
 
-- [ ] [SCRIPT] P0. **Rebuild e2e-testing tarball** with strategy-service consumer changes from Phase-A. Push.
+- [x] [SCRIPT] P0. **Rebuild e2e-testing tarball** with strategy-service consumer changes from Phase-A. Push. —
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI` 2026-05-20 11:28UTC;
+      features-service@c9729dce + strategy-service@35aeea77 + e2e-testing@2b48b1f now in
+      `gs://deployment-scripts-central-element-323112/code/` (23.2 MiB total, 0 pin-drift errors).
 
 - [ ] [SCRIPT] P0. **Relaunch paper VM** `strategy-paper-carry-staked-basis-{date}-{ts}` with same waivers as today
       (will reduce waivers as creds land separately).
