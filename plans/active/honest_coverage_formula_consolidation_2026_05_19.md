@@ -153,10 +153,13 @@ Phase 0 (✅ DONE)
 
 ### Phase 4 — deployment-api consumers
 
-- [ ] **P0. `data_status_service.py`**: replace the scattered helper functions with one
+- [x] ✅ **P0. `data_status_service.py`**: replace the scattered helper functions with one
       call to `compute_honest_coverage()` per (asset_group, data_type) panel cell.
       Remove the ~350 lines of inline numerator/denominator math.
-- [ ] **P0. `data_status_drilldown_service.py`**: same migration for shard-level drilldown.
+      — deployment-api@9d556fd; UAC `__all__` fix: unified-api-contracts@7da0545
+- [x] ✅ **P0. `data_status_drilldown_service.py`**: same migration for shard-level drilldown.
+      Allow `expected_unattempted` through status coercion gate.
+      — deployment-api@9d556fd
 - [ ] **P1. API response shape**: every endpoint returns
       `{"counts": CaptureStatusCounts.as_dict(), "coverage": float}` so the UI never has
       to re-derive.
