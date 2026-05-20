@@ -67,7 +67,6 @@
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.3.1",
-    "pnl-attribution-service": "0.1.0",
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.1.20",
     "unified-trading-library": "0.3.167",
@@ -166,7 +165,8 @@
       "status": "active",
       "cluster": "api-services",
       "serves_ui": ["unified-trading-system-ui"],
-      "proxies_service": "pnl-attribution-service",
+      "proxies_service": "strategy-service",
+      "proxies_service_note": "Reads from strategy-service/strategy_service/pnl/ sub-package (merged from pnl-attribution-service 2026-05-19 per strategy_repo_consolidation_2026_05_19).",
       "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients. Standalone client-reporting-ui archived under workspace-root archive/; reporting surfaces use unified-trading-system-ui.",
       "github_url": "https://github.com/IggyIkenna/client-reporting-api",
       "completion_path": "cefi",
@@ -220,15 +220,10 @@
           "name": "deployment-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "position-balance-monitor-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "completion_path": "cefi",
-      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1188,11 +1183,6 @@
           "required": true
         },
         {
-          "name": "risk-and-exposure-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "features-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1228,23 +1218,13 @@
           "required": true
         },
         {
-          "name": "position-balance-monitor-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "client-reporting-api",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "pnl-attribution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
       "completion_path": "cefi",
-      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
+      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1504,20 +1484,10 @@
           "name": "strategy-service",
           "version": ">=0.1.0,<1.0.0",
           "required": false
-        },
-        {
-          "name": "risk-and-exposure-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": false
-        },
-        {
-          "name": "position-balance-monitor-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": false
         }
       ],
       "completion_path": "infrastructure",
-      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline.",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
       "ci_status": "FAILING",
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -1595,20 +1565,14 @@
           "market-tick-data-service",
           "ml-inference-service",
           "ml-training-service",
-          "pnl-attribution-service",
           "strategy-service",
           "trading-agent-service"
         ]
       },
       {
         "level": 5,
-        "description": "Client-facing APIs and operational services.",
-        "repos": [
-          "client-reporting-api",
-          "position-balance-monitor-service",
-          "risk-and-exposure-service",
-          "unified-trading-api"
-        ]
+        "description": "Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.)",
+        "repos": ["client-reporting-api", "unified-trading-api"]
       },
       {
         "level": 6,
@@ -1799,9 +1763,9 @@
     "colocation_groups": [
       {
         "group_id": "execution-core",
-        "services": ["execution-service", "risk-and-exposure-service"],
+        "services": ["execution-service", "strategy-service"],
         "transport": "shared_memory",
-        "note": "Latency-critical path; must deploy together on same host; no network hop between them"
+        "note": "Latency-critical path; must deploy together on same host; no network hop between them. strategy-service supersedes risk-and-exposure-service in this group as of 2026-05-19 (risk sub-package merged into strategy_service/risk/ per strategy_repo_consolidation_2026_05_19)."
       }
     ],
     "infra_authority": {
@@ -1829,11 +1793,8 @@
         "features-volatility-service",
         "ml-training-service",
         "ml-inference-service",
-        "strategy-service (+ live mode seams)",
+        "strategy-service (+ live mode seams; subsumes risk/position/pnl sub-packages 2026-05-19)",
         "execution-service",
-        "pnl-attribution-service",
-        "risk-and-exposure-service",
-        "position-balance-monitor-service",
         "alerting-service"
       ],
       "required_api_services": ["unified-trading-api", "deployment-api", "auth-api", "client-reporting-api"],
@@ -1875,8 +1836,7 @@
         "unified-ml-interface",
         "ml-training-service",
         "ml-inference-service",
-        "strategy-service (sports strategy module)",
-        "pnl-attribution-service"
+        "strategy-service (sports strategy module + pnl sub-package, absorbed pnl-attribution-service 2026-05-19)"
       ],
       "requires_cefi_path": false,
       "note": "Sports services consolidated 2026-03-01: sports-reference-data-service merged into instruments-service, sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. features-sports-service and unified-sports-execution-interface remain standalone. Can develop sports ML pipeline in parallel with CeFi. Only needs USEI v1.0.0 for live execution."

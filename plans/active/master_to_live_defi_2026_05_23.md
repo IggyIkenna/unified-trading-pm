@@ -1115,6 +1115,44 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
 
 ---
 
+### Group H — Per-client isolation + multi-venue concurrency (added 2026-05-20)
+
+> Promoted from `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` per operator direction
+> 2026-05-20. May-23 needs 2 live clients (Odum Research UK + defi-client-1) on at least 1 archetype; architecture must
+> support hot-add/remove without VM restart and hard crash isolation between clients. Audit 2026-05-20 confirmed
+> strategy-service has local MTM compute → centralised MarkPriceAggregator in supervisor required. Execution-service
+> already per-process per-client (`isolation_policy.py`) — no rewrite, just documentation. Composes with un-deferred
+> Phase 5 UTL lifts (slot 5 in flight 2026-05-20).
+
+24. **Per-client subprocess isolation in strategy-service** — StrategySupervisor parent + ClientWorker subprocess per
+    client; hard crash isolation (segfault/OOM survived); centralised MarkPriceAggregator broadcasts via shared memory;
+    hybrid hot-reload (push REGISTER/DEREGISTER via UAC `ClientLifecycleEvent` bus, pull credential rotation from Cloud
+    KMS). E.0+E.1 ships May-23. Plan:
+    [`per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](./per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
+    Phases 0–9. Continuous verification: e2e crash-isolation test in
+    `e2e-testing/scripts/defi/per_client_isolation_e2e.py` nightly cron after May-23.
+
+25. **Execution-service per-client process isolation (confirm + document)** — existing
+    `execution-service/execution_service/isolation_policy.py` enforces single-tenant per process via `CLIENT_ID` env;
+    `assert_client_allowed()` rejects cross-client bus events. Documented in codex
+    `04-architecture/execution-service-per-client-isolation.md` (Phase 6 of Group H plan). Continuous verification: QG
+    step enforcing `isolation_policy.assert_client_allowed` is called from every event-bus subscriber in
+    execution-service (extend STEP 5.xx in scope after Phase 6).
+
+26. **OMS surface + multi-venue concurrent routing (confirm + document)** — `PersistentOrderManager` + asyncio.gather
+    - SmartOrderRouter already exist in execution-service. Documented in codex
+      `04-architecture/oms-protocol-and-state-machine.md` + `04-architecture/multi-venue-concurrent-routing.md`.
+      Per-venue circuit-breaker hardening only if Phase 0 audit flags gaps. Continuous verification: codex-doc-drift QG
+      (Phase 9 of Group H plan).
+
+27. **TransferCoordinator facade in execution-service** — single entry point for CEX withdraw / DeFi deposit/withdraw /
+    bridge / sub-account move; UAC `TransferIntent` + `TransferResult` events; idempotency via `idempotency_key`. May-23
+    minimum: 1 DeFi deposit (USDC → Aave) per client end-to-end. Cross-client rebalancing explicitly OUT-OF-SCOPE for
+    May-23 → Phase E.3 of Group H plan (target 2026-06-01). Sub-account transfers for non-Binance/OKX venues → named
+    successor `subaccount_transfers_phase_2_2026_06_01.md`.
+
+---
+
 ## Continuous Verification matrix — 23 items (per HARD RULE codified 2026-05-08)
 
 Per CLAUDE.md "Master Plan Continuous-Verification Column" HARD RULE: every Group A–G item MUST declare its periodic

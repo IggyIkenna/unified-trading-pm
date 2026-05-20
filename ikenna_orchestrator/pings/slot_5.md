@@ -1,6 +1,55 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 operator-direction reversal.** Booting agents: read the 2026-05-20 entry
-> at the top of this file FIRST, then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block 2026-05-20).
-> History below 2026-05-20 entry is audit-trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 dispatches.** Booting agents: read the TWO 2026-05-20 entries at the top
+> FIRST (un-defer + downstream Group H plan), then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block
+> 2026-05-20). History below 2026-05-20 entries is audit-trail only.
+
+---
+
+## [slot 1 main → slot 5] 2026-05-20 (later) — 🎯 NEW THEME — downstream Group H plan Phases 1+2 (UAC + UTL bases)
+
+**Your UTL lifts SHIPPED** (utl@e2445522 + strategy-service@054fae03; 22 new tests; basedpyright clean both repos —
+landed while this ping was being drafted). ✅ Phase 5 done.
+
+**New theme dispatched 2026-05-20**: Operator promoted a NEW plan into Group H of `master_to_live_defi_2026_05_23.md`:
+[`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`](../../plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md).
+Per-client subprocess isolation + multi-venue concurrent routing + TransferCoordinator facade for execution-service. 2
+clients live (Odum UK + defi-client-1) on May-23. Hard crash isolation between clients via subprocess (multiprocessing)
+— soft-isolation alternative rejected because segfault/OOM in one client can't be allowed to take down the other(s).
+
+**Your assignment** (slot 5 in the Group H plan's proposed allocation): Phases 1 + 2 — ~1.5 cal-AI-days:
+
+- **Phase 1 (UAC contracts)**: 6 new event types in `unified_api_contracts/canonical/crosscutting/` —
+  ClientLifecycleEvent, ClientReadyEvent, ClientQuarantinedEvent, ShardCapacityEvent, TransferIntent, TransferResult.
+  Schema-parity cassettes per UAC discipline. Full spec in the plan body.
+- **Phase 2 (UTL bases)**: 4 new UTL bases — `ClientLifecycleBusSubscriberBase` (extends your just-shipped
+  `KillSwitchBusSubscriberBase` — same scaffold, different event type), `ClientCredentialKmsPoller`,
+  `StrategySupervisorBase` (subprocess lifecycle manager), `ClientWorkerBase` (subprocess entry point).
+
+**Design alignment opportunity**: as you start Phase 2 UTL bases, evaluate whether `KillSwitchBusSubscriberBase` (just
+shipped) could become a generic `EventBusSubscriberBase[E: BusEvent]` that `ClientLifecycleBusSubscriberBase` inherits
+from. Two paths:
+
+- (a) Generic base clean in basedpyright → minor refactor of just-shipped `KillSwitchBusSubscriberBase` to parametrise
+  on event type; `ClientLifecycleBusSubscriberBase` becomes a thin subclass. Costs ~30 min.
+- (b) Generic base hits basedpyright friction → ship `ClientLifecycleBusSubscriberBase` as a parallel concrete lift;
+  both share the scaffold pattern but no shared base type. Costs ~0 extra.
+
+Pick (a) only if it's clean; otherwise (b) is fine. Same scaffold pattern preserved either way.
+
+**Sequencing in the Group H plan**:
+
+- Slot 5: Phases 1 + 2 (this dispatch)
+- Slot 4: Phase 3 (StrategySupervisor concrete impl in strategy-service) — blocks on your Phase 2
+- Slot 6: Phase 4 (ClientWorker + IPC) — blocks on slot 4 Phase 3
+- Slot 4: Phase 5 (preflight + hot reload) — blocks on slot 6 Phase 4
+- Slot 7: Phase 6 (execution-service docs + TransferCoordinator) — mostly doc-only, can parallel-start
+- Slot 6: Phase 7 (e2e + unit tests) — blocks on slot 7 Phase 6
+- Slot 7: Phase 8 (deployment-service wiring)
+- Slot 8: Phase 9 (codex SSOT) — mostly doc-only, parallel-start
+
+Target: full E.0+E.1 shipped by 2026-05-23 EOD. Auto-shard end-to-end (Phase E.2) + cross-client rebalancer (Phase E.3)
+are POST-MAY-23 with named anchors in the plan body.
+
+— slot 1 main / ikenna
 
 ---
 
