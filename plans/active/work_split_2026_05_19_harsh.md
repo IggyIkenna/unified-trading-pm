@@ -142,8 +142,13 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          `--apply` Summary `synced=5, skipped=5, failed=0`. Direct byte-parity check across the 4 data-bearing buckets
          confirms full migration (256,015 objects total): dex-pools src=152161 = dst=152161 OK dex-swaps src=68703 =
          dst=68703 OK solana-defi src=5037 = dst=5037 OK evm-defi src=30114 = dst=30114 OK (5 empty source buckets
-         skipped; no objects to copy.) Source `prod`-named buckets retained for the 30-day archival window per script
-         comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d. Discovery + fix (same turn): `--verify`
+         skipped; no objects to copy.) Source `prod`-named buckets: operator authorized immediate deletion (same
+         session) after a delta-sync no-op confirmed no concurrent writes; all 10 source buckets deleted via boto3
+         versioned cleanup (512,055 objects + versions + delete-markers cleared, then `delete_bucket`). The
+         30-day archival window noted in the script comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d
+         is therefore moot in practice (operator chose immediate cutover; data was *copied* not *moved*, byte-parity
+         already verified, `resolve_bucket_name()` SSOT means no live writer targets the old names). Discovery + fix
+         (same turn): `--verify`
          mode had two parser bugs — (a) `wc -l` + `set -o pipefail` interaction made transient S3 retries produce a
          two-line "N\n0" count that broke arithmetic compare; (b) `aws s3api head-bucket` exits non-zero for both
          NoSuchBucket and transient errors, mis-flagging real buckets as missing. Fixed in
