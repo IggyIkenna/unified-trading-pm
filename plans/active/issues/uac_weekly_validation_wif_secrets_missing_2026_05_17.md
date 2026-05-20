@@ -8,8 +8,40 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 severity: P3 — non-blocking (cron schema-validation only; per-PR CI unaffected)
-status: BLOCKED-OPERATOR-DECISION
+status: RESOLVED 2026-05-20
+resolved_by: ikenna-slot-1
+resolved_via:
+  - "unified-api-contracts@18c74a56 (canary scripts)"
+  - "WIF pool github-pool + provider github-actions in central-element-323112"
+  - "SA uac-weekly-validation-ci@central-element-323112.iam.gserviceaccount.com (roles/secretmanager.secretAccessor +
+    workloadIdentityUser bound to IggyIkenna/unified-api-contracts repo principal set)"
+  - "GH secrets WIF_PROVIDER + WIF_SERVICE_ACCOUNT + GCP_PROJECT_ID set on UAC repo"
+verified_via:
+  "gh run 26157265855 (workflow_dispatch on live-defi-rollout, all 17 steps green; auto-filed UAC issue #45 with 11/44
+  drift findings)"
 ---
+
+## Resolution (2026-05-20)
+
+Shipped Option A (Workload Identity Federation) **plus** the missing scripts the workflow was pointing at — the original
+issue doc surfaced only the WIF secret gap, but mid-execution it emerged that `scripts/collect_responses.py` and
+`scripts/validate_schemas.py` had never existed in git history (only `tests/test_schema_validation.py` shipped). So WIF
+alone would have produced a vacuous-green workflow. Both were built end-to-end.
+
+**Canary design (post-resolution SSOT)**: rather than a hand-built endpoint registry, the canary walks the existing VCR
+cassettes in `unified_api_contracts/external/*/mocks/*.yaml` and replays each cassette's first interaction against the
+live API (subject to a safe-replay filter that skips Authorization-headered cassettes, POST writes, internal hosts,
+negative-test cassettes, etc.). Validation is a structural diff of the live response vs the cassette's recorded body.
+See script docstrings for the full policy.
+
+**Follow-ups** (filed as separate issue docs):
+
+- `defunct_uac_provider_dirs_cleanup_2026_05_20.md` — 12 dirs operator flagged as defunct (glassnode, cryptoquant,
+  coinglass, cryptopanic, hyblock, lunarcrush, fear_greed, coingecko, sharpapi, dydx, prime_broker, regulatory).
+  Cross-repo because MTDS has a `sharpapi_adapter.py` and tests referencing fear_greed + dydx.
+- The auto-filed UAC issue **#45** ("Schema Validation Failed: 11/44 endpoints") captures live drift findings the canary
+  surfaced on first run: kalshi API migrated to `api.elections.kalshi.com`, manifold/polymarket/tardis schema changes,
+  yahoo_finance crumb issues. These are the canary doing its intended job, not bugs in the canary.
 
 ## What I found
 
