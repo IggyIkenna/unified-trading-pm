@@ -2,13 +2,23 @@
 name: canary_coverage_qg_enforcement_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-priority: P1
+priority: P0
 status: open
-target_slot: ikenna-slot-1
+target_slot: multi-slot-fanout
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-deadline: 2026-06-04
+deadline: 2026-05-23
+deadline_change_reason: "Operator pulled deadline 2026-05-20 from June-4 to May-23: 140 prod blind spots are inside live-DeFi cutover gate per Data Pipeline Correctness HARD RULE. Heavy slot fan-out required (~7 cal AI-days into 3 cal days = ~2.3x parallelism)."
+slot_allocation:
+  - "slot 1 main (Phase 1: assertions + 3 QG STEPs + canary CI wire-in)"
+  - "slot 2 (Phase 3 DeFi cassettes: Aave/Compound/Spark/Euler/Venus/Curve cluster ~6 protocols)"
+  - "slot 3 (Phase 3 DeFi cassettes: LST cluster Lido/RocketPool/cbETH/JitoSOL/mSOL/Jito/Marinade/Sanctum ~8 protocols)"
+  - "slot 4 (Phase 3 DeFi cassettes: yield/restaking cluster Ethena/Puffer/EtherFi/Pendle/Morpho/Beefy/Yearn/Convex/Karak/Solayer/Solblaze/Cambrian/Symbiotic/Idle/Picasso/Sky ~16 protocols)"
+  - "slot 5 (Phase 3 DEX cassettes: Uniswap/Curve/Balancer/Sushi/PancakeSwap/Phoenix/Orca/Raydium/Drift/Lifinity ~10 venues)"
+  - "slot 6 (Phase 3 CeFi blind + Sports/Execution cassettes: kraken-spot/futures/pacifica/extended + sportsbook scrapers + Copper/Tenderly/Socket/CCTP ~25 cassettes)"
+  - "slot 7 (Phase 4 WS recorder + 19 WS cassettes via MTDS scripts/record_ws_cassettes.py)"
+  - "slot 8 (Phase 5 orphan decisions + validate_schemas.py WS-handling + Phase 2 STEP wiring)"
 operator_directive: "Headline gap from the orphan-check audit should ALL be fixed — no deferrals (per Data Pipeline Correctness HARD RULE)."
 no_deferral_scope:
   - "Every cassette that has zero production consumer: either wire it to a consumer or delete it (no orphans)"
