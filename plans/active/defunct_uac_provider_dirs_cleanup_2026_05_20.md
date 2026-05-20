@@ -96,8 +96,26 @@ refs only).
 - [ ] [SCRIPT] P3. UAC `bash scripts/quality-gates.sh` — must pass green
 - [ ] [SCRIPT] P3. MTDS `bash scripts/quality-gates.sh` — must pass green
 - [ ] [SCRIPT] P3. Dispatch UAC `weekly-validation.yml` workflow + verify 12 venues are gone from output
-- [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@4aee80e1 + MTDS@adc56bc (semver-agent auto-bumps minor)
+- [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@df2c7543 + MTDS@adc56bc (semver-agent auto-bumps minor)
 - [ ] [SCRIPT] P3. Promote via quickmerge once both repos green
+
+### Phase 5 — Extend: kill Manifold (operator-added 2026-05-20)
+
+Operator directive 2026-05-20 (during audit synthesis review):
+> "play money prediction seems pointless. kill it entirely from docs, plans, uac and canary"
+
+Manifold Markets is a play-money ("Mana") prediction-market platform. The 5-finding audit established: zero
+production consumers reading any field except `probability` (with `or 0` fallback in the dormant MTDS adapter).
+Reconciles with the earlier "deprecated for future use, keep but don't actually use" classification — operator
+escalated to full deletion after seeing the canary noise from the BINARY-vs-MULTIPLE_CHOICE drift.
+
+- [ ] [SCRIPT] P3. Delete `unified-api-contracts/unified_api_contracts/external/manifold/` (whole dir, incl. cassette)
+- [ ] [SCRIPT] P3. Delete `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/manifold_adapter.py`
+- [ ] [SCRIPT] P3. Remove Manifold ripple refs across UAC: `__init__.py`, `normalize_utils/*`, `canonical/*`,
+      `registry/*`, `testing/vcr_endpoints.py`, `execution.py`, `provider_api_versions.yaml`
+- [ ] [SCRIPT] P3. Remove Manifold from PM/codex active plans + SSOT docs (archived plans left as historical record)
+- [ ] [SCRIPT] P3. Verify workspace-wide grep shows ~0 active-source manifold refs after cleanup
+- [ ] [SCRIPT] P3. Commit + push to UAC + MTDS + PM
 
 ## Success criteria
 
