@@ -1,3 +1,10 @@
+[2026-05-20 slot-8] → operator — 🔴 BLOCKED-OPERATOR: bucket_name_ssot_canonicalisation 4 open items all gated on Phase 2.6 (flat→env-tiered data migration + write-pause):
+1. Phase 0d flat-bucket data migration — needs operator write-pause + coordinated migration run
+2. dependency_checker.py migrate — blocked on UTL BaseDependencyChecker migration landing first
+3. get_bucket_name delegate flip — step 2.6.4, operator-triggered write-pause
+4. grep audit zero-drift verification — runs after 1+2+3 complete
+No agent action possible until Phase 2.6 window. All 4 items annotated BLOCKED in plan body. Pinging to surface for scheduling.
+
 [2026-05-19 15:00 UTC] slot-1-main → slot 8 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
 
 ---

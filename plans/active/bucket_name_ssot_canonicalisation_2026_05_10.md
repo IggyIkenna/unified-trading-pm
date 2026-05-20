@@ -199,7 +199,9 @@ this plan and **Q4** below (operator decision).
       volume). Post-migration: archive (don't delete) the flat buckets to a `*-archived-flat-2026-05-19/` prefix +
       retention policy 30 days, then delete after manifest + downstream verification confirms zero readers still hit the
       flat names. status: blocked — note: "DEFERRED-AFTER Phase 0c provisioning; Phase 2 of code_freeze umbrella; Harsh
-      slot 4 owns coordinated with operator for the write-pause window."
+      slot 4 owns coordinated with operator for the write-pause window." **[BLOCKED-OPERATOR 2026-05-20 slot-8]**:
+      operator must coordinate write-pause + run flat→env-tiered data migration (code_freeze Phase 2.6). No agent action
+      possible until then.
 
 #### Phase 0e through 0i — full (b+) env-aware bucket architecture extension (operator direction 2026-05-11)
 
@@ -447,7 +449,8 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `BaseDependencyChecker` migration if that lands first, whichever is sooner;
       `dependency_checker.get_output_bucket`/ `OUTPUT_BUCKETS` is a dead-code duplicate of the (now-migrated)
       `config.get_output_bucket` — the actual write path uses config.py's. Resumes after the UTL `BaseDependencyChecker`
-      migration + a `test_mode`-infra rewrite plan."
+      migration + a `test_mode`-infra rewrite plan." **[BLOCKED-UTL-MIGRATION 2026-05-20 slot-8]**: blocked on UTL
+      BaseDependencyChecker migration landing first, then same write-pause window as Phase 2.6.
 - [ ] **[SCRIPT] P1**. Delegate the legacy `unified_trading_library.cloud_interface.constants.get_bucket_name` +
       `BUCKET_PREFIXES` to `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud
       dispatch). The legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin
@@ -488,7 +491,8 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       batch-recon@`64dc955`; (3) strategy-service `strategy_config_loader.py` + `gcs_feature_provider.py` (3 legacy
       calls + 1 hardcoded bucket constant) — strategy@`5d6c963`. L3 wrapper (`cloud_interface/constants.py` +
       `core/cloud_constants.py`) still active — intentional; flips DURING write-pause (today's 2026-05-18 window,
-      operator-triggered)."
+      operator-triggered)." **[BLOCKED-PHASE-2.6 2026-05-20 slot-8]**: L3 delegate flip is step 2.6.4 in Phase-2.6
+      sub-sequence (operator-triggered write-pause). No agent action possible until then.
 - [x] **[SCRIPT] P1**. Workspace QG step (the inline-`f"gs://{bucket}/..."`/`f"s3://{bucket}/..."` formatter ratchet)
       AST-walks for these formatters; fails CI if any new ones land outside the resolver. **Design (slot 4
       2026-05-11)**: baseline-ratchet shape (count current `gs://`/`s3://` f-strings WITHOUT a `# noqa: gs-uri` marker
