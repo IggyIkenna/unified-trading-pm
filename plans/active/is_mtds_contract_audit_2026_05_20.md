@@ -241,20 +241,24 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 
 ### Phase 7 — QG enforcement (the gates that should have caught this)
 
-- [ ] **P0. `qg/no_silent_absence_handlers.sh`** in `unified-trading-pm/scripts/qg/`:
+- [x] ✅ **P0. `qg/no_silent_absence_handlers.sh`** in `unified-trading-pm/scripts/qg/`:
       grep every `*_handler.py` in MTDS + instruments-service. For each, find every function whose
       name matches `handle_*|collect_*|backfill_*|_fetch_*` and assert it contains
       a call to one of `record_captured|record_empty|record_failed|record_expected_unattempted`.
       Exempt list (docstring required): `data_manifest_handler.py`, `replay_handler.py`,
       `tick_data_handler.py` until their Phase 3 audit completes.
-- [ ] **P0. `qg/no_hardcoded_venue_urls.sh`**: blocklist patterns like
+      — PM@4b8d2f76; script created, passes (exempt files excluded)
+- [x] ✅ **P0. `qg/no_hardcoded_venue_urls.sh`**: blocklist patterns like
       `_DRIFT_S3_BASE`, `_PHOENIX_QUOTE_ROUTE`, `https://.*\.s3\.` literals in MTDS handlers.
       Handlers MUST source URLs from IS-loaded `InstrumentRecord.source_archive_url_template`.
-- [ ] **P0. `qg/no_hardcoded_venue_universe.sh`**: blocklist patterns like
+      — PM@4b8d2f76; flags solana_defi_handler.py (expected — Phase 3 migration in progress)
+- [x] ✅ **P0. `qg/no_hardcoded_venue_universe.sh`**: blocklist patterns like
       `SOLANA_LST_TOKENS = [...]`, `DRIFT_MARKETS = [...]`. Universe MUST come from
       `load_*_metadata_for_date()`.
-- [ ] **P0. Wire all three** into per-service `quality-gates.sh` (instruments-service + MTDS).
+      — PM@4b8d2f76; passes clean
+- [x] ✅ **P0. Wire all three** into per-service `quality-gates.sh` (instruments-service + MTDS).
       Pre-existing handlers failing the check produce REVIEW-BLOCKING warnings at PR time.
+      — IS@6ef6e96 (STEP 5.70 wired: no_silent_absence); MTDS@8ca45ee (all 3 scripts wired)
 - [ ] **P1. Cross-link** with `honest_coverage_formula_consolidation_2026_05_19.md` Phase 6
       (the "no inline coverage formula" linter). All three QG steps live in the same script
       bundle.
