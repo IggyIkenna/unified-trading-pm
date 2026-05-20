@@ -143,7 +143,7 @@ todos:
 
   - id: phase-2-skeleton-new-repo
     content: |
-      - [ ] [HUMAN+AGENT] P0. Phase 2 — Create NEW `ml-service` GitHub repo + bootstrap skeleton. Operator action:
+      - [x] **DEFERRED-OPERATOR-DECISION 2026-05-19 slot-5** [HUMAN+AGENT] P0. Phase 2 — Create NEW `ml-service` GitHub repo + bootstrap skeleton. Operator action:
         `gh repo create IggyIkenna/ml-service --private --add-readme` then operator pings agent. Agent then:
         (a) `git clone` ml-service locally into `.tabs/<N>/ml-service/`;
         (b) bootstrap directory structure mirroring features-service precedent: `ml_service/{api,cli,training,
@@ -161,12 +161,12 @@ todos:
         (h) add `ml-service` to `unified-trading-system-repos.code-workspace` folders + `workspace-manifest.json`
             repo registry + `setup-tab-worktrees.sh` enumeration if explicit;
         (i) commit empty skeleton on `main`, push, verify CI green.
-    status: todo
+    status: deferred-operator-decision
     blocked_by: phase-1-uac-utl-schema-prep
 
   - id: phase-3-subtree-merge
     content: |
-      - [ ] [AGENT] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git history
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git history
         preserved. For each of {ml-training-service, ml-inference-service}:
         ```bash
         cd ml-service
@@ -181,12 +181,12 @@ todos:
         ml_service/training/<file>` reaches pre-merge history. **Foot-gun**: subtree-merge does NOT rewrite import
         statements — `ml_service/training/__init__.py` still imports `from ml_training_service.app.core import ...`
         until Phase 4. QG WILL fail between Phase 3 and Phase 4; keep Phase 4 in the same agent turn.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-2-skeleton-new-repo
 
   - id: phase-4-fix-imports-and-cli
     content: |
-      - [ ] [AGENT] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package.
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package.
         (a) sed-rewrite every `from ml_training_service.*` → `from ml_service.training.*` and `from
             ml_inference_service.*` → `from ml_service.inference.*` inside the merged tree;
         (b) collapse 2 source `cli/main.py` entrypoints into `ml_service/cli/main.py` dispatcher keyed by
@@ -209,22 +209,22 @@ todos:
             one-time cost per VM bringup, not per-prediction. 55-60% size win would not buy a meaningful
             operational benefit on this topology. Flat-deps rule per CLAUDE.md `### Dependencies + builds`
             preserved workspace-wide; no exceptions added. Image-size regression cap removed from Phase 6 parity.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-3-subtree-merge
 
   - id: phase-5-lifts-to-utl
     content: |
-      - [ ] [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL where Phase 0 (f) audit identifies
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL where Phase 0 (f) audit identifies
         cross-source duplication. Specifically: model registry abstraction (`MlModelRegistry`), cloud feature
         provider (shared between training fit-time + inference predict-time), kill-switch bus subscriber for
         model-promotion events. Each lift = UTL PR + ml-service PR removing local copy. Defer to post-cutover if
         candidates <2 — lifts are correctness-neutral.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-4-fix-imports-and-cli
 
   - id: phase-6-parity-test
     content: |
-      - [ ] [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. Three parity gates:
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. Three parity gates:
         (1) **Boot parity**: `python -m ml_service --operation <op> --asset-group <ag> --mode batch` boots for
             every {operation × asset_group} pair the 2 source repos previously supported. STARTED captured per
             case. Startup-time regression >2× is a stop.
@@ -241,12 +241,12 @@ todos:
                 equality.
             Write `scripts/dev/ml_parity_diff.py` (mirroring `feature_parity_diff.py` from features-service
             precedent) to automate. Any RED gate → plan flips to `BLOCKED-CUTOVER`; archive does NOT proceed.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-4-fix-imports-and-cli
 
   - id: phase-7-archive-source-repos
     content: |
-      - [ ] [HUMAN+AGENT] P0. Phase 7 — Archive both source repos. Per-repo sequence:
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [HUMAN+AGENT] P0. Phase 7 — Archive both source repos. Per-repo sequence:
         1. Add `DEPRECATION_NOTICE.md` banner: "**ARCHIVED 2026-05-XX** — code merged into ml-service via
            ml_repo_consolidation_2026_05_19.md. New work + bug fixes go to ml-service/ml_service/<training|inference>/."
         2. Final commit: `chore(archive): merged into ml-service per ml_repo_consolidation_2026_05_19`. Push to main.
@@ -258,31 +258,31 @@ todos:
         6. Update `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh` if 2 source repos enumerated explicitly.
         7. Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` for both.
         **Foot-gun**: do NOT archive before Phase 6 parity green.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-6-parity-test
 
   - id: phase-8a-launcher-migration
     content: |
-      - [ ] [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`
         + `launch-ml-inference-vm.sh` collapse into a single `launch-ml-vm.sh` parameterised by `--operation`.
         Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` to drop ml-training / ml-inference prefixes and
         add ml-service prefix. Update Cloud Build refresh-tarballs config to remove 2 source services. Update
         Terraform service map — drop 2 entries, add ml-service.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-7-archive-source-repos
 
   - id: phase-8b-deployment-api-ui
     content: |
-      - [ ] [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints update
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints update
         to remove 2 source service IDs and expose per-operation health on ml-service. DART drilldown UI updates
         for training + inference surfaces to point at ml-service health endpoints. Update model registry
         references that hardcode source-repo names (Phase 0 (h) finding).
-    status: todo
+    status: formally-deferred
     blocked_by: phase-7-archive-source-repos
 
   - id: phase-9-codex-ssot-updates
     content: |
-      - [ ] [AGENT] P0. Phase 9 — Codex SSOT updates. MANDATORY per HARD RULE "Post-Plan-Phase Codex Audit":
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 9 — Codex SSOT updates. MANDATORY per HARD RULE "Post-Plan-Phase Codex Audit":
         (a) **NEW** `codex/04-architecture/ml-service-architecture.md` — full SSOT covering: 2 sub-packages
             (training + inference), CLI dispatch keyed by `--operation`, Health-API aggregator, model registry +
             promotion topology, feature-subscriber/prediction-publisher pub-sub wiring, ServiceBootstrap
@@ -299,18 +299,18 @@ todos:
             ml-service's 6+ operations.
         (h) **UPDATE** any other codex page surfaced by `rg "ml-training-service|ml-inference-service" codex/` —
             replace with `ml-service/<sub>/` or add SUPERSEDED banner.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-8a-launcher-migration
 
   - id: phase-10-workspace-qg-sweep
     content: |
-      - [ ] [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in every
+      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in every
         workspace repo touched. Run inventory regenerator. Remove "🟡 IN-FLIGHT REFACTOR" banners added in
         pre-plan-Phase-0 announcement. Verify deployment-service end-to-end smoke (ml-service VM boots,
         completes `--operation train` + `--operation batch-inference` runs, STOPPED events emitted, manifest
         rows written, model promoted into registry, downstream strategy-service pulls promoted model). Final
         commit + push + plan-flip sweep.
-    status: todo
+    status: formally-deferred
     blocked_by: phase-9-codex-ssot-updates
 
   - id: phase-0-side-effect-soft-freeze-announcement
@@ -439,32 +439,32 @@ Pre-audit artifact:
       apply to our long-lived VM topology; operator pushback was correct on cost-benefit. Plan Phase 4 (h) rewritten +
       risk-register entry marked RESOLVED + codex stub `ml-service-architecture.md` updated to remove Docker layer
       separation section.
-- [ ] **P1** [AGENT] Phase 5 lift — `pre_crash_checkpoint.py` (`register_pre_crash_handlers()`, `_memory_watchdog()`)
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P1** [AGENT] Phase 5 lift — `pre_crash_checkpoint.py` (`register_pre_crash_handlers()`, `_memory_watchdog()`)
       currently only in inference repo. Cross-cutting utility — lift to UTL
       `unified_trading_library.lifecycle.pre_crash`. Every service benefits.
-- [ ] **P1** [AGENT] Phase 5 lift — `config_reloaders.py` near-identical between the 2 source repos (verified via
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P1** [AGENT] Phase 5 lift — `config_reloaders.py` near-identical between the 2 source repos (verified via
       `diff -u`). Primary UTL lift candidate — `ConfigReloaderBase` in
       `unified_trading_library.config_interface.config_reloader_base`. Composes with strategy-twin plan's 4×
       config_reloaders lift (5 → 1 base class workspace-wide).
-- [ ] **P1** [AGENT] Phase 9 codex sweep scope confirmed — **455 file:line refs** across
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P1** [AGENT] Phase 9 codex sweep scope confirmed — **455 file:line refs** across
       `unified-trading-pm/cursor-configs/` + `unified-trading-pm/codex/` reference the 2 source repo names. Phase 9 (h)
       bulk-sed rewrite. Plan a single sed sweep across both directories; verify no false-positives in archived docs.
-- [ ] **P1** [AGENT] Phase 7 cleanup — legacy top-level `ml-training-service/tests/test_*.py` files (~30) duplicate the
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P1** [AGENT] Phase 7 cleanup — legacy top-level `ml-training-service/tests/test_*.py` files (~30) duplicate the
       structured `tests/unit/test_*.py` set. Consolidate during Phase 7 (post-archive); keep only the structured set in
       merged `ml-service/tests/training/`.
-- [ ] **P2** [AGENT] Phase 1 lift — `ML_MODEL_COORDINATION_TOPIC`, `CASCADE_TOPIC_NAME`, `MTF_TOPIC_NAMES` currently
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2** [AGENT] Phase 1 lift — `ML_MODEL_COORDINATION_TOPIC`, `CASCADE_TOPIC_NAME`, `MTF_TOPIC_NAMES` currently
       duplicated as string literals between publisher/subscriber. Lift to UAC
       `unified_api_contracts.canonical.crosscutting.events.topics` (or equivalent). NOT cutover-blocking; current
       literals match across repos so wire protocol is stable.
-- [ ] **P2** [AGENT] Phase 5 — ml-service is a candidate for `ManifestFreshnessCache` adoption (UTL
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2** [AGENT] Phase 5 — ml-service is a candidate for `ManifestFreshnessCache` adoption (UTL
       `unified_trading_library.manifest_freshness.ManifestFreshnessCache`). Neither source repo currently uses it.
       Post-merge consolidation phase.
-- [ ] **P2** [AGENT] Phase 4 (c) — `ml_inference_service.api.prediction_stream` SSE endpoint is INFERENCE-only; the
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2** [AGENT] Phase 4 (c) — `ml_inference_service.api.prediction_stream` SSE endpoint is INFERENCE-only; the
       merged `make_health_router` aggregator must continue routing `/stream/predictions` via the inference sub-app
       router (not a global ml-service router). Verify in Phase 4 (c) consolidation.
-- [ ] **P2** [AGENT] Phase 4 (g) verify `PYTEST_UNIT_DIR="tests/"` override applied — inference's `tests/perf/` exists
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2** [AGENT] Phase 4 (g) verify `PYTEST_UNIT_DIR="tests/"` override applied — inference's `tests/perf/` exists
       only in inference repo. Without the override the merged QG silently skips perf tests.
-- [ ] **P2** [AGENT] Phase 8B audit — `verify_service_token` from `auth_s2s.py` is built per-repo via
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2** [AGENT] Phase 8B audit — `verify_service_token` from `auth_s2s.py` is built per-repo via
       `create_s2s_auth_dependency("ml-{training,inference}-service")`. Post-merge → single
       `create_s2s_auth_dependency("ml-service")` BUT downstream callers in deployment-api / strategy-service may pass
       the old service names in S2S tokens. Audit S2S token issuance + verification cutover.
@@ -474,34 +474,34 @@ Pre-audit artifact:
 Operator-validation question 2026-05-19 surfaced 4 gaps in the original 10-phase scope. Closing now before
 slot 9 boots. All amendments bundle into slot 9's existing scope (~1.5 cal-day extension total).
 
-- [ ] **P0 NEW** [AGENT slot 9] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a)
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P0 NEW** [AGENT slot 9] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a)
   covers ~3-4 string-literal updates from pre-audit § (b). Add: grep `e2e-testing/scripts/` +
   `system-integration-tests/scripts/` + `e2e-testing/scripts/*.sh` for (i) shell invocations of
   `python -m ml_{training,inference}_service`, (ii) any console-script names, (iii) bare-Python entry-point
   invocations. Rewrite to `python -m ml_service --operation <op>`. ~0.25 cal-day.
-- [ ] **P1 NEW** [AGENT slot 9] Phase 4 (i) — Logging + observability config consolidation. Per-service
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P1 NEW** [AGENT slot 9] Phase 4 (i) — Logging + observability config consolidation. Per-service
   `setup_events()` callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package
   logger naming (`ml_service.training` / `ml_service.inference`) for filterability. OpenTelemetry tracers +
   Prometheus metrics + Cloud Trace spans — collapse `service.name=ml-{training,inference}-service` to
   `service.name=ml-service` and add `subsurface={training,inference}` label dimension. Mirrors strategy-twin
   Phase 4 (i); coordinate label naming via slot 4 (ConfigReloaderBase + log-naming might share UTL surface).
   ~0.5 cal-day.
-- [ ] **P2 NEW** [AGENT slot 9] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2 NEW** [AGENT slot 9] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
   subtree-merge. `git read-tree --prefix=ml_service/<sub>/` pulls package + tests + scripts only; `docs/`
   intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
   `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
   `codex/04-architecture/ml-service-architecture.md`."
-- [ ] **P2 NEW** [AGENT slot 9] Phase 2 addendum + Phase 8A addendum — GitHub Actions workflows. Phase 2 (g)
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2 NEW** [AGENT slot 9] Phase 2 addendum + Phase 8A addendum — GitHub Actions workflows. Phase 2 (g)
   already runs `rollout-workflow-templates.sh` to seed ml-service with templated workflows. Add: enumerate any
   per-source-repo CUSTOM workflows (cron-scheduled checks, scheduled retraining jobs, scheduled model-bake
   workflows) in source repos that AREN'T in the rollout template. For each: (a) migrate to ml-service workflow
   with `--operation` axis, OR (b) confirm purpose obsolete post-merge. ~0.25 cal-day.
-- [ ] **P3 NEW** [AGENT slot 9] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P3 NEW** [AGENT slot 9] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
   QUALITY_GATE_BYPASS_AUDIT.md / CONTRIBUTING.md / per-source-repo notes). Decision: (a) `CHANGELOG.md`
   content prepended to `ml-service/CHANGELOG.md` under "## Consolidation 2026-05-19" heading; (b)
   `QUALITY_GATE_BYPASS_AUDIT.md` merged into ml-service's QGBA per sub-package row; (c) `CONTRIBUTING.md` +
   ad-hoc per-repo markdown — preserve only the workspace-canonical version in ml-service root. ~0.1 cal-day.
-- [ ] **P3 NEW** [AGENT slot 9] Phase 2 addendum — GitHub repo settings on NEW ml-service repo. Phase 2 (a)
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P3 NEW** [AGENT slot 9] Phase 2 addendum — GitHub repo settings on NEW ml-service repo. Phase 2 (a)
   creates the repo via `gh repo create`. Add: configure branch protection on `main` (require `quality-gates`
   + `workspace-qg` + `staging-lock-check` status checks); enable semver-agent (write
   `.github/semver-agent.yml` per workspace template); enable required PR reviews; disable force-push on
