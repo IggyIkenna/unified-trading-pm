@@ -92,13 +92,13 @@ Violating any of these means you're doing something off-pattern — document why
 
 `create-code-tarballs.sh` supports four mutually-compatible scopes:
 
-| Flag                                                   | Scope                                              | Typical use                                                |
-| ------------------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------------- |
-| (none)                                                 | CORE only — UAC / UTL / MTDS / deployment-service  | UTL-only changes, CORE-only smoke                          |
-| `--all`                                                | CORE + every service repo (14+)                    | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
-| `--asset-group CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos              | Category-specific rollout                                  |
-| `--ml-training`                                        | CORE + ml-training-service + features-\* consumers | ML training runs (any category)                            |
-| `--include <repo>`                                     | CORE + the named repo (repeatable)                 | Surgical addition                                          |
+| Flag                                                   | Scope                                             | Typical use                                                |
+| ------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------- |
+| (none)                                                 | CORE only — UAC / UTL / MTDS / deployment-service | UTL-only changes, CORE-only smoke                          |
+| `--all`                                                | CORE + every service repo (14+)                   | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
+| `--asset-group CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos             | Category-specific rollout                                  |
+| `--ml-training`                                        | CORE + ml-service + features-\* consumers         | ML training runs (any category)                            |
+| `--include <repo>`                                     | CORE + the named repo (repeatable)                | Surgical addition                                          |
 
 **Category-to-repo mappings** are in `create-code-tarballs.sh` as bash arrays (`CEFI_REPOS`, `TRADFI_REPOS`,
 `DEFI_REPOS`, `SPORTS_REPOS`, `PREDICTION_REPOS`). Edit the script if you add a new service repo to a category.
@@ -182,30 +182,30 @@ from any of the above (the closest-shape anchor is the best starting point), not
 
 ---
 
-## ML training launcher (non-singleton, 2026-04-20)
+## ML launcher (non-singleton, consolidated 2026-05-20)
 
-`launch-ml-training-vm.sh` (CME Tier 1 Phase A) — trains a single ml-training-service
-instrument×target×timeframe×model-family combination on GCE, writing the artefact to the ml model_registry in GCS.
+`launch-ml-vm.sh` (consolidated from `launch-ml-training-vm.sh` per `ml_repo_consolidation_2026_05_19`) — runs training,
+inference, or evaluation for a single ml-service instrument×target×timeframe combination on GCE, writing artefacts to
+the ml model_registry in GCS. VM prefix: `ml-{instrument}-{ts}`.
 
 - **Not singleton-locked** — parallel training is expected (different instruments, different target types, different
-  hyper-param grids). ml-training-service does not share a rate-limited API key; it reads feature parquet + fits models
-  locally.
+  hyper-param grids). ml-service does not share a rate-limited API key; it reads feature parquet + fits models locally.
+- **`--operation` required** — selects sub-mode: `train|infer|evaluate|grid-search|pipeline`.
 - Machine choice via `--machine cpu|high|gpu`:
   - `cpu` (default) → `n2-highmem-8` (64 GB RAM). Enough for LightGBM / XGBoost / CatBoost on 5-year 1-minute data.
   - `high` → `n2-highmem-16` (128 GB RAM). For larger hyper-param grids / Optuna multi-trial runs.
-  - `gpu` → `n1-standard-8` + 1×T4 (~$0.35/h). Only when the harness config uses a GPU-enabled booster. Most
-    `swing_high` / `swing_low` models are fine on CPU.
-- Tarballs: prep with `bash create-code-tarballs.sh --ml-training` (CORE + ml-training-service + features-\* consumers).
-- Routing: launcher passes `VM_TASK=features-backfill` + `VM_BACKFILL_CMD="python -m ml_training_service ..."`, reusing
-  the features-backfill branch of `setup-data-pipeline-vm.sh` which already handles verbatim command execution (Phase B
-  will add a dedicated `VM_TASK=ml-training` branch).
+  - `gpu` → `n1-standard-8` + 1×T4 (~$0.35/h). Only when the harness config uses a GPU-enabled booster.
+- Tarballs: prep with `bash create-code-tarballs.sh --ml-training` (CORE + ml-service + features-\* consumers).
+- Routing: launcher passes `VM_TASK=features-backfill` + `VM_BACKFILL_CMD="python -m ml_service ..."`, reusing the
+  features-backfill branch of `setup-data-pipeline-vm.sh` which already handles verbatim command execution.
 - Observability: inherits the `STALL_TIMEOUT_SEC=600` log-mtime watchdog + `timeout 30s` run_heartbeat + py-spy stack
   dump + pkill-by-name fallback from `vm-exec-with-gcs-tee.sh` (deployed 2026-04-19 after the VM silent-hang class bug).
 
-Typical CME S&P 500 ML Tier 1 MVP invocation (once Phase B stitches the continuous ES series):
+Typical CME S&P 500 ML Tier 1 MVP invocation:
 
 ```bash
-bash launch-ml-training-vm.sh \
+bash launch-ml-vm.sh \
+  --operation train \
   --asset-group TRADFI --instruments ES_FRONT \
   --target-types 'swing_high;swing_low' --timeframes 1m \
   --start-date 2022-01-01 --end-date 2025-12-31 \

@@ -214,16 +214,16 @@ ledger:
     owner: ikenna
     replaces_what: "standalone repo for risk monitoring; folding into strategy-service"
     delete_condition: >
-      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete
-      (gh repo archive IggyIkenna/risk-and-exposure-service). All workspace consumers re-pointed to
-      strategy_service/risk/*. Source repo becomes read-only via GitHub archival.
+      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete (gh repo archive
+      IggyIkenna/risk-and-exposure-service). All workspace consumers re-pointed to strategy_service/risk/*. Source repo
+      becomes read-only via GitHub archival.
     known_import_count: 0
     replacement: strategy_service/risk/ (sub-package of strategy-service)
     target_wave: strategy_repo_consolidation_2026_05_19 Phase 7
     ready_to_delete: false
     notes: >
-      Pre-2026-05-23 cutover consolidation. Mirrors features-service precedent (2026-05-08).
-      Plan: plans/active/strategy_repo_consolidation_2026_05_19.md. Target architecture SSOT:
+      Pre-2026-05-23 cutover consolidation. Mirrors features-service precedent (2026-05-08). Plan:
+      plans/active/strategy_repo_consolidation_2026_05_19.md. Target architecture SSOT:
       codex/04-architecture/strategy-service-architecture.md (status: stub).
 
   - id: position_balance_monitor_service_repo_consolidation_2026_05_19
@@ -233,18 +233,18 @@ ledger:
     owner: ikenna
     replaces_what: "standalone repo for position + balance + PnL reconciliation; folding into strategy-service"
     delete_condition: >
-      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete
-      (gh repo archive IggyIkenna/position-balance-monitor-service). All workspace consumers re-pointed to
-      strategy_service/position/*. Source repo becomes read-only via GitHub archival.
+      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete (gh repo archive
+      IggyIkenna/position-balance-monitor-service). All workspace consumers re-pointed to strategy_service/position/*.
+      Source repo becomes read-only via GitHub archival.
     known_import_count: 0
     replacement: strategy_service/position/ (sub-package of strategy-service)
     target_wave: strategy_repo_consolidation_2026_05_19 Phase 7
     ready_to_delete: false
     notes: >
-      Pre-2026-05-23 cutover consolidation. Position-monitor-client calls between this service and
-      strategy-service become in-process function calls post-merge. Co-existing shim entries in this ledger
-      (pbm_lightweight_hf_route, pbm_defi_adapter_stubs) re-home to strategy_service/position/ paths.
-      Plan: plans/active/strategy_repo_consolidation_2026_05_19.md.
+      Pre-2026-05-23 cutover consolidation. Position-monitor-client calls between this service and strategy-service
+      become in-process function calls post-merge. Co-existing shim entries in this ledger (pbm_lightweight_hf_route,
+      pbm_defi_adapter_stubs) re-home to strategy_service/position/ paths. Plan:
+      plans/active/strategy_repo_consolidation_2026_05_19.md.
 
   - id: pnl_attribution_service_repo_consolidation_2026_05_19
     component: pnl-attribution-service (entire repo)
@@ -253,9 +253,9 @@ ledger:
     owner: ikenna
     replaces_what: "standalone repo for PnL attribution; folding into strategy-service"
     delete_condition: >
-      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete
-      (gh repo archive IggyIkenna/pnl-attribution-service). All workspace consumers re-pointed to
-      strategy_service/pnl/*. Source repo becomes read-only via GitHub archival.
+      strategy_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete (gh repo archive
+      IggyIkenna/pnl-attribution-service). All workspace consumers re-pointed to strategy_service/pnl/*. Source repo
+      becomes read-only via GitHub archival.
     known_import_count: 0
     replacement: strategy_service/pnl/ (sub-package of strategy-service)
     target_wave: strategy_repo_consolidation_2026_05_19 Phase 7
@@ -266,40 +266,40 @@ ledger:
   - id: ml_training_service_repo_consolidation_2026_05_19
     component: ml-training-service (entire repo)
     repo: ml-training-service
-    status: parallel
+    status: archived
     owner: ikenna
-    replaces_what: "standalone repo for ML training pipelines; folding into new ml-service"
+    replaces_what: "standalone repo for ML training pipelines; folded into ml-service"
     delete_condition: >
-      ml_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete
-      (gh repo archive IggyIkenna/ml-training-service). All workspace consumers re-pointed to
-      ml_service/training/*. Source repo becomes read-only via GitHub archival.
+      COMPLETE — DEPRECATION_NOTICE.md committed 2026-05-20 (ml-training-service@d6f92f7). Awaiting operator to run: gh
+      repo archive IggyIkenna/ml-training-service. All workspace consumers re-pointed to ml-service. Source repo becomes
+      read-only via GitHub archival.
     known_import_count: 0
-    replacement: ml_service/training/ (sub-package of new ml-service repo)
+    replacement: ml_service/training/ (sub-package of ml-service repo)
     target_wave: ml_repo_consolidation_2026_05_19 Phase 7
-    ready_to_delete: false
+    ready_to_delete: true
+    archive_date: "2026-05-20"
     notes: >
-      Pre-2026-05-23 cutover consolidation. ml-service repo is NEW (created in Phase 2). Training stack
-      (sklearn/xgboost/lightgbm/optuna/shap) gated behind [project.optional-dependencies] training so
-      live-inference Docker image does not bloat. Plan: plans/active/ml_repo_consolidation_2026_05_19.md.
+      Consolidated 2026-05-20. All 3 parity gates green. Deployment-service registries updated. Launcher:
+      launch-ml-vm.sh. Plan: plans/active/ml_repo_consolidation_2026_05_19.md.
 
   - id: ml_inference_service_repo_consolidation_2026_05_19
     component: ml-inference-service (entire repo)
     repo: ml-inference-service
-    status: parallel
+    status: archived
     owner: ikenna
-    replaces_what: "standalone repo for ML inference (batch + live + cascade); folding into new ml-service"
+    replaces_what: "standalone repo for ML inference (batch + live + cascade); folded into ml-service"
     delete_condition: >
-      ml_repo_consolidation_2026_05_19 Phase 6 parity green AND Phase 7 archive complete
-      (gh repo archive IggyIkenna/ml-inference-service). All workspace consumers re-pointed to
-      ml_service/inference/*. Source repo becomes read-only via GitHub archival.
+      COMPLETE — DEPRECATION_NOTICE.md committed 2026-05-20 (ml-inference-service@cb2307d). Awaiting operator to run: gh
+      repo archive IggyIkenna/ml-inference-service. All workspace consumers re-pointed to ml-service. Source repo
+      becomes read-only via GitHub archival.
     known_import_count: 0
-    replacement: ml_service/inference/ (sub-package of new ml-service repo)
+    replacement: ml_service/inference/ (sub-package of ml-service repo)
     target_wave: ml_repo_consolidation_2026_05_19 Phase 7
-    ready_to_delete: false
+    ready_to_delete: true
+    archive_date: "2026-05-20"
     notes: >
-      Pre-2026-05-23 cutover consolidation. Model-promotion subscriber + training-output publisher live in
-      same repo post-merge but UAC contracts remain SSOT for the event schema (downstream strategy-service
-      is also a consumer). Plan: plans/active/ml_repo_consolidation_2026_05_19.md.
+      Consolidated 2026-05-20. UAC contracts remain SSOT for event schema (downstream strategy-service is also a
+      consumer). Plan: plans/active/ml_repo_consolidation_2026_05_19.md.
 
 # Audit-trail entries (not active retirements, just recorded for history).
 audit_trail:

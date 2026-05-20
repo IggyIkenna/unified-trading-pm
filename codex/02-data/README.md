@@ -108,7 +108,7 @@ projects/{project}/topics/{topic-name}
 | `market-ohlcv`        | market-data-processing              | OHLCVCandle          | 7 days    |
 | `features-delta-one`  | features-service (delta-one family) | FeatureRow           | 7 days    |
 | `features-sports`     | features-service (sports family)    | SportsFeatureVector  | 7 days    |
-| `ml-predictions`      | ml-inference-service                | Prediction           | 7 days    |
+| `ml-predictions`      | ml-service (inference sub-package)  | Prediction           | 7 days    |
 | `strategy-signals`    | strategy-service                    | StrategyInstruction  | 30 days   |
 | `order-requests`      | execution-service                   | Order                | 30 days   |
 | `position-updates`    | execution-service                   | Position             | 30 days   |
@@ -223,8 +223,8 @@ if df["price"].min() <= 0 or df["price"].max() > 1_000_000:
 | features-volatility      | VolatilityFeatures   | timestamp, instrument_id, realized_vol, implied_vol | Parquet |
 | features-onchain         | OnchainFeatures      | timestamp, protocol, tvl, revenue                   | Parquet |
 | features-sports          | SportsFeatures       | timestamp, game_id, team_stats, odds                | Parquet |
-| ml-training              | ModelMetadata        | model_id, version, metrics, hyperparams             | JSON    |
-| ml-inference             | Prediction           | timestamp, instrument_id, prediction, confidence    | Parquet |
+| ml-service (training)    | ModelMetadata        | model_id, version, metrics, hyperparams             | JSON    |
+| ml-service (inference)   | Prediction           | timestamp, instrument_id, prediction, confidence    | Parquet |
 | strategy-service         | StrategyInstruction  | timestamp, instrument_id, direction, target         | Parquet |
 | execution-service        | Order                | order_id, instrument_id, side, qty, price, status   | Parquet |
 

@@ -98,12 +98,12 @@ For live services, support runtime adjustment:
 
 ### Current Violations (to be fixed)
 
-| Service                  | Violation                                                 | Fix                                                                                                                                                                                                                 |
-| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| instruments-service      | `--mode` used for operation, `--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live                                                                                                                                                             |
-| market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                                                                                                                                                                                  |
-| ~~ml-training-service~~  | ~~`--mode` used for operation (train/evaluate)~~          | **DONE** — `--operation` registered at `ml-training-service/ml_training_service/cli/parser.py:136`; CLI help (`:497-528`) shows `ml-training-service --operation train`. Stale per slot 8 audit ML-15 (2026-05-12). |
-| UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                                                                                                                                                                                   |
+| Service                  | Violation                                                 | Fix                                                                                                                                              |
+| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | -------- | ----------- | ----------------------- |
+| instruments-service      | `--mode` used for operation, `--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live                                                                                          |
+| market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                                                                                                               |
+| ~~ml-training-service~~  | ~~`--mode` used for operation (train/evaluate)~~          | **DONE + REPO ARCHIVED** — ml-training-service + ml-inference-service consolidated into `ml-service` (2026-05-20). `ml-service --operation train | infer | evaluate | grid-search | pipeline` is canonical. |
+| UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                                                                                                                |
 
 ### `--feature-family` for the consolidated features-service (2026-05-08)
 
@@ -132,6 +132,35 @@ Contract:
 
 Architecture SSOT:
 [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+
+### `--operation` for the consolidated ml-service (2026-05-20)
+
+The pre-2026-05-20 layout had 2 separate repos (`ml-training-service`, `ml-inference-service`) with distinct CLIs. The
+consolidated [`ml-service`](../../../ml-service/) replaces both with a single CLI dispatcher parameterised by
+`--operation`:
+
+```bash
+python -m ml_service \
+  --operation <train|infer|evaluate|grid-search|pre-selection|hyperparameter-grid|final-training|pipeline> \
+  --mode batch \
+  --asset-group TRADFI \
+  --instruments ES_FRONT \
+  --target-types swing_high swing_low \
+  --start-date 2022-01-01 --end-date 2025-12-31
+```
+
+| `--operation`         | Mode       | Description                                                   |
+| --------------------- | ---------- | ------------------------------------------------------------- |
+| `train`               | batch      | Final-training run per archetype × asset-group                |
+| `infer`               | batch/live | Batch or live inference against a recorded feature stream     |
+| `evaluate`            | batch      | Model evaluation against a held-out fold                      |
+| `grid-search`         | batch      | Hyperparameter grid search (coarse sweep)                     |
+| `pre-selection`       | batch      | Feature pre-selection / importance ranking                    |
+| `hyperparameter-grid` | batch      | Hyperparameter grid definition + validation                   |
+| `final-training`      | batch      | Final model training with validated hyperparameters           |
+| `pipeline`            | batch      | End-to-end ML pipeline (pre-select → grid → final → evaluate) |
+
+Architecture SSOT: [`../04-architecture/ml-service-architecture.md`](../04-architecture/ml-service-architecture.md).
 
 ### `--shard-key` for surgical per-shard recovery (2026-05-07)
 

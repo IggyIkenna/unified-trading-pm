@@ -482,11 +482,12 @@ services:
         - sports-arb
         - sports-value-betting
         - sports-kelly
-  - service: ml-training-service
+  - service: ml-service
     type: pipeline
+    # Consolidated from ml-training-service + ml-inference-service (2026-05-20).
     owner_default: CosmicTrader
     priority: P2-medium
-    milestone: Batch85
+    milestone: Live90
     pipeline_metadata:
       layer: 5
       group: ml
@@ -504,11 +505,12 @@ services:
       start_date: "2020-01-01"
       end_date: null
       batch_mode: true
-      live_mode: false
+      live_mode: true
     infrastructure:
       has_ui: false
       config_paths:
-        - configs/ml-training/batch.env
+        - configs/ml/batch.env
+        - configs/ml/live.env
       credentials:
         - GCS_BUCKET_ACCESS
         - BIGQUERY_DATASET_ACCESS
@@ -516,9 +518,9 @@ services:
         github_token_required: true
         cloud_build_auth: service-account
     readiness:
-      test_coverage: 25
+      test_coverage: 70
       test_coverage_target: 80
-      coding_standards_compliant: false
+      coding_standards_compliant: true
       cloud_compatibility:
         - GCP
     supports:
@@ -526,48 +528,6 @@ services:
         - ml-signals
       strategies:
         - ml-based-strategies
-  - service: ml-inference-service
-    type: pipeline
-    owner_default: Femi
-    priority: P2-medium
-    milestone: Live90
-    pipeline_metadata:
-      layer: 5
-      group: ml
-      upstream_dependencies:
-        - ml-training-service
-        - features-service (delta-one family)
-        - features-service (volatility family)
-        - features-service (onchain family)
-      output_bucket: gs://ml-predictions
-    domain_coverage:
-      venues:
-        - ALL
-      asset_groupes:
-        - ALL
-    data_coverage:
-      start_date: "2020-01-01"
-      end_date: null
-      batch_mode: true
-      live_mode: true
-    infrastructure:
-      has_ui: false
-      config_paths:
-        - configs/ml-inference/batch.env
-        - configs/ml-inference/live.env
-      credentials:
-        - GCS_BUCKET_ACCESS
-        - BIGQUERY_DATASET_ACCESS
-      deployment:
-        github_token_required: true
-        cloud_build_auth: service-account
-    readiness:
-      test_coverage: 20
-      test_coverage_target: 80
-      coding_standards_compliant: false
-      cloud_compatibility:
-        - GCP
-      latency_target: <500ms
   - service: strategy-service
     type: pipeline
     owner_default: Ikenna
@@ -577,7 +537,7 @@ services:
       layer: 6
       group: strategy-execution
       upstream_dependencies:
-        - ml-inference-service
+        - ml-service
         - features-service (delta-one family)
         - features-service (volatility family)
         - features-service (onchain family)
@@ -1166,8 +1126,7 @@ services:
         - TypeScript
         - Okta SSO
       backend_apis:
-        - ml-training-service
-        - ml-inference-service
+        - ml-service
       has_control_features: true
       deployment_type: cloud_run
     domain_coverage:
