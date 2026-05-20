@@ -6,9 +6,15 @@ priority: P1
 status: open
 target_slot: ikenna-slot-1
 estimate_class: infra
-estimate_baseline_ai_days: 6
-estimate_calibrated_ai_days: 4.8
+estimate_baseline_ai_days: 8
+estimate_calibrated_ai_days: 6.4
 deadline: 2026-06-04
+operator_directive: "Headline gap from the orphan-check audit should ALL be fixed — no deferrals (per Data Pipeline Correctness HARD RULE)."
+no_deferral_scope:
+  - "Every cassette that has zero production consumer: either wire it to a consumer or delete it (no orphans)"
+  - "Every production HTTP/WS host: must have a cassette + entry in capability declarations (no blind spots)"
+  - "Every venue with both batch + live adapters: must have BOTH a batch cassette and a WS cassette"
+  - "Every QG STEP wiring change: must be in scripts/quality-gates.sh (not informational tests)"
 parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: data_correctness
 related_plans:
@@ -20,6 +26,18 @@ codex_ssots:
   - codex/02-data/contracts-scope-and-layout.md
   - codex/02-data/data-pipeline-correctness-hard-rule.md
 ---
+
+## Operator directive (2026-05-20)
+
+> "Headline gap from the orphan-check audit shoudl all be fixed"
+> "enforcemnet for caanary coverage shodl be enforced codcumented in pan etc"
+
+Per CLAUDE.md "Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE — codified 2026-05-20)":
+**every** missing cassette is recorded, **every** orphan is resolved, **every** WS connector gets a frame cassette, **every** batch source is paired with its live equivalent. No "we'll skip this for the deadline." No "most cells captured, backfill rest later." Only legitimate deferral path is `BLOCKED-CREDENTIALS` (operator-acked) — and only for the SPECIFIC venue × endpoint blocked, not the whole class.
+
+The plan reviewer SHALL reject any partial-scope PR claiming this plan is "done with the rest deferred." Status field stays `in_progress` until **every** cell is either captured or operator-acked `BLOCKED-*`.
+
+
 
 # Canary coverage QG enforcement — close the 3 cassette↔prod blind spots
 
@@ -93,21 +111,74 @@ and no QG step enforces batch-cassette ↔ live-WS-cassette coexistence for venu
       file, require BOTH a REST cassette AND a WS cassette (one frame per data_type). Enforces "Batch = Live" at the
       cassette layer.
 
-### Phase 3 — Record missing cassettes for May-23 critical-path DeFi (~2 days)
+### Phase 3 — Record missing cassettes for ALL ~140 prod hosts (~3 days, NO DEFERRALS)
 
-- [ ] [SCRIPT] P1. Audit + record 1 cassette per DeFi protocol used in the `carry_staked_basis` archetype: Aave,
-      Compound, Spark, Euler, Venus, Curve, Lido, RocketPool, Coinbase cbETH, JitoSOL, mSOL, Jito, Marinade, Sanctum,
-      Ethena, Puffer, EtherFi, Pendle, Morpho, Beefy, Yearn, Convex.
-- [ ] [SCRIPT] P1. Audit + record 1 cassette per DEX used in `arbitrage_price_dispersion`: Uniswap V3, Curve, Balancer,
-      Sushi, PancakeSwap (already via thegraph), Phoenix, Orca, Raydium, Drift.
+Per operator directive "Headline gap should ALL be fixed" — every prod-host blind spot is in-scope. ~140 unique
+hosts surfaced by audit; below grouped by track. PARTIAL COMPLETION REJECTED — status stays `in_progress` until
+**every** entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 
-### Phase 4 — WS cassettes for the 19 missing live connectors (~1 day, post-cutover OK)
+**DeFi `carry_staked_basis`** (~28 protocols):
 
-- [ ] [SCRIPT] P2. Record 1 WS message cassette per live connector in MTDS: binance, bybit, coinbase, deribit,
-      hyperliquid, aster, kalshi, kraken-spot, kraken-futures, databento-tradfi, polymarket-clob, gateio (if kept), and
-      7 more. Use a recording mode in MTDS that emits the first 3 frames per subscription type to a YAML cassette in
-      `external/<venue>/mocks/<channel>_ws.yaml`.
-- [ ] [SCRIPT] P2. Update `validate_schemas.py` to handle WS cassettes (frames are JSON objects, not REST responses).
+- [ ] [SCRIPT] P1. REST cassette per: Aave, Compound, Spark, Euler, Venus, Curve, Lido (stETH), RocketPool (rETH),
+      Coinbase cbETH, JitoSOL, mSOL (Marinade), Jito, Sanctum, Ethena (USDe/sUSDe), Puffer, EtherFi (eETH/weETH),
+      Pendle, Morpho, Beefy, Yearn, Convex, Karak, Solayer, Solblaze, Cambrian, Symbiotic, Idle, Picasso, Sky.
+      For protocols with only on-chain reads (no REST): document with `<protocol>/mocks/onchain_<call>.yaml`
+      capturing the canonical contract call + decoded response.
+
+**DeFi `arbitrage_price_dispersion`** (~9 DEXes):
+
+- [ ] [SCRIPT] P1. REST/GraphQL cassette per: Uniswap V3, Curve (pools), Balancer, Sushi, PancakeSwap (via thegraph),
+      Phoenix, Orca, Raydium, Drift, Lifinity (Solana).
+
+**CeFi venues lacking cassette**:
+
+- [ ] [SCRIPT] P1. REST cassette per: kraken-spot, kraken-futures (in CLAUDE.md perp-funding list), pacifica,
+      extended (api.starknet.extended.exchange — Cayman venue).
+
+**Sports / Prediction**:
+
+- [ ] [SCRIPT] P1. Polymarket sports markets cassettes (see [[polymarket]] follow-up — sports-tag endpoint must be
+      live-recorded, not hand-crafted).
+- [ ] [SCRIPT] P1. Sportsbooks scraped via execution-service (1xbet, bet365, betvictor, 888sport, bwin, boylesports,
+      coral, ladbrokes, paddypower, sbobet, skybet, unibet, williamhill, betway) — record at least one cassette per
+      scraper to detect HTML structure drift.
+- [ ] [SCRIPT] P1. `api.oddspapi.io` (e2e-testing/scripts/sports/oddspapi_historical_backfill.py).
+
+**Execution / infra**:
+
+- [ ] [SCRIPT] P1. Copper (`api.copper.co`, `api.sandbox.copper.co`), Tenderly (`api.tenderly.co`), Socket
+      (`api.socket.tech`), Circle CCTP (`iris-api.circle.com`) — at least 1 read-only endpoint cassette each.
+
+### Phase 4 — WS cassettes for the 19+ missing live connectors (~1.5 days, NO DEFERRALS)
+
+The "Batch = Live" SSOT (CLAUDE.md CRITICAL) requires identical schemas batch vs live. Without WS frame cassettes
+the canary cannot detect when a venue silently renames a WS field — the highest-frequency drift mode for
+trade-frames. **No deferrals; every connector gets a cassette.**
+
+- [ ] [SCRIPT] P1. Build `MTDS scripts/record_ws_cassettes.py` helper that subscribes to each WS connector,
+      records the first 3 frames per channel/type, writes YAML to
+      `unified-api-contracts/external/<venue>/mocks/<channel>_ws.yaml`.
+- [ ] [SCRIPT] P1. Record WS cassettes for ALL connectors in `market-tick-data-service/market_tick_data_service/live/connectors/`:
+      binance-spot, binance-futures, bybit-spot, bybit-futures, coinbase-spot, deribit, hyperliquid-info,
+      hyperliquid-exchange, aster-futures, kalshi (post-URL-migration), kraken-spot, kraken-futures,
+      databento-tradfi-live, polymarket-clob, upbit, and any others discovered during recording. One frame per
+      subscription channel (trade / orderbook / ticker / funding etc.).
+- [ ] [SCRIPT] P1. Update `unified-api-contracts/scripts/validate_schemas.py` to handle WS cassettes — separate
+      replay path that connects, samples first N frames, structurally diffs.
+- [ ] [SCRIPT] P1. New `STEP 5.7X batch_live_cassette_coexistence.sh` (Phase 2) enforces no missing WS cassette
+      for any venue with a `live/connectors/<venue>_ws.py`. Once Phase 4 lands, this STEP guards regression.
+
+### Phase 5 — Resolve all 25% prod-orphan cassettes (~0.5 day, NO DEFERRALS)
+
+For each prod-orphan cassette (from 2026-05-20 audit list): WIRE-TO-CONSUMER or DELETE-CASSETTE. Document each
+decision in `unified-api-contracts/scripts/canary/orphan-decisions.yaml`. The orphan-check STEP (Phase 2) then
+asserts zero orphans = zero post-decision-log entries needing action.
+
+- [ ] [SCRIPT] P1. Decide + execute per orphan: `gateio`, `mexc`, `bitstamp`, `huobi` venues (full-orphan), and
+      per-cassette orphans in `alchemy/aave_get_reserve_data`, `alchemy/aave_get_user_account_data`,
+      `barchart/get_quote_es1`, `databento/batch_*` (3 cassettes), `databento/timeseries_get_range_*` (2),
+      `open_meteo/forecast_current_weather`, `tardis/datasets_csv_download`, `tardis/datasets_warmup`,
+      `yahoo_finance/earnings_msft`.
 
 ### Phase 5 — Wire canary into per-PR CI (~0.5 day)
 
@@ -117,12 +188,17 @@ and no QG step enforces batch-cassette ↔ live-WS-cassette coexistence for venu
 - [ ] [SCRIPT] P2. Optional weekly-validation also runs on every push to `live-defi-rollout` (matrix-build with
       schedule-trigger guarded so it doesn't fire 20× per day).
 
-## Success criteria
+## Success criteria — NO PARTIAL COMPLETION
 
-- All 3 new QG STEPs are wired into UAC `quality-gates.sh` + green on tab branch
-- `tests/test_cassette_orphan_checker.py` asserts zero orphans (or 0 + N allowlisted)
-- Every May-23 DeFi protocol in scope has at least 1 cassette in `external/<venue>/mocks/`
+- All 3 new QG STEPs (`cassette_prod_consumer_linkage.sh`, `prod_url_has_cassette.sh`,
+  `batch_live_cassette_coexistence.sh`) are wired into UAC `quality-gates.sh` + green on tab branch
+- `tests/test_cassette_orphan_checker.py` asserts `len(orphans) == 0` (currently informational)
+- Every ~140 prod HTTP/WS host has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping
 - Every live WS connector in MTDS has at least 1 frame cassette
+- Every prod-orphan cassette has a recorded decision (wire-or-delete) in `orphan-decisions.yaml` AND
+  the corresponding action has been executed
+- Weekly canary surface count: 140+ cassettes (vs current 91)
+- Per CLAUDE.md "Data Pipeline Correctness Is The Heartbeat" — every cell in scope, no exceptions
 - `canary_offline_check` runs on every PR to `live-defi-rollout`
 - Per CLAUDE.md "Data Pipeline Correctness Is The Heartbeat" — no cells silently missing
 
