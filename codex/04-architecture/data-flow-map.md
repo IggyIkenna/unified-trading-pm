@@ -1,12 +1,17 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-20
 ---
 
 # Data Flow Map -- Batch/Live Storage Topology
 
 > Generated 2026-03-14 by codebase analysis. This document maps GCS/S3 write and read paths across the Unified Trading
 > System, identifying the service that writes, the bucket path, and the service(s) that read from it.
+
+> **⚠️ Migration note (2026-05-20)**: `risk-and-exposure-service` → `strategy_service/risk/`,
+> `position-balance-monitor-service` → `strategy_service/position/`, `pnl-attribution-service` →
+> `strategy_service/pnl/`. Data paths and GCS layout unchanged; writer is now `strategy-service --operation <op>`.
+> See [`strategy-service-architecture.md`](strategy-service-architecture.md).
 
 ## Conventions
 

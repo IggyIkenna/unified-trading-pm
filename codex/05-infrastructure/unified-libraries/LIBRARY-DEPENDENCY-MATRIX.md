@@ -1,12 +1,16 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-20
 ---
 
 # Library Dependency Matrix
 
 > **Supersedes:** `archive/dependency-matrix.md` (2026-02-26). unified-api-contracts version table moved to
 > `02-data/unified-api-contracts-chain.md`.
+
+> **⚠️ Migration note (2026-05-20)**: `risk-and-exposure-service`, `position-balance-monitor-service`, and
+> `pnl-attribution-service` are now sub-packages of `strategy-service` (`strategy_service/{risk,position,pnl}/`).
+> Dependency matrix rows for those 3 repos are superseded by the single `strategy-service` row.
 
 > ⚠️ **THIS IS NOT THE TIER SSOT.**
 >

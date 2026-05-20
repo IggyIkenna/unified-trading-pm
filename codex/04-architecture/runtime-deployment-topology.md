@@ -1,9 +1,15 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 ---
 
 # Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, Cluster Shapes, Diagrams
+
+> **⚠️ Migration note (2026-05-20)**: The 3 monitoring services referenced throughout this document have been
+> consolidated into `strategy-service` sub-packages: `risk-and-exposure-service` → `strategy_service/risk/`,
+> `position-balance-monitor-service` → `strategy_service/position/`, `pnl-attribution-service` →
+> `strategy_service/pnl/`. Launch scripts collapsed to `launch-strategy-vm.sh --operation <op>`.
+> Current architecture: [`strategy-service-architecture.md`](strategy-service-architecture.md).
 
 > **Created 2026-05-08** (Phase E.1 of `plans/active/codex_refactor_2026_05_08.md`) by merging four prior docs into one
 > SSOT for the runtime + deployment topology surface:

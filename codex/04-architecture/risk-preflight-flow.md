@@ -1,9 +1,13 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-20
 ---
 
 # Risk Pre-Flight Flow
+
+> **⚠️ Migration note (2026-05-20)**: `risk-and-exposure-service` is now `strategy_service/risk/` (sub-package of
+> `strategy-service`). `position-balance-monitor-service` is now `strategy_service/position/`. CLI:
+> `strategy-service --operation risk-monitor`. See [`strategy-service-architecture.md`](strategy-service-architecture.md).
 
 > **What it is:** The order-submission path that every instruction takes from strategy emission to venue submission. The
 > UTL helper `risk_preflight(order, context) -> RiskPreflightResult` is the single integration point — every order goes

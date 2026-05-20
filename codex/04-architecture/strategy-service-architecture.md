@@ -1,16 +1,17 @@
 ---
 scope: [engineer, ml-engineer, admin]
-status: stub
-last_reviewed: 2026-05-19
+status: stable
+last_reviewed: 2026-05-20
 ---
 
 # strategy-service architecture
 
-> **🟡 STATUS: STUB (consolidation in-flight)** — this page describes the **target** post-consolidation architecture.
-> Until [`strategy_repo_consolidation_2026_05_19`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) Phase 9
-> lands, `strategy_service/risk/`, `/position/`, `/pnl/` sub-packages **do not yet physically exist** — code still lives
-> in the 3 source repos (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`).
-> Promoted to `status: stable` by that plan's Phase 9 (a). Mirrors the `features-service-architecture.md` template.
+> **Consolidation complete (2026-05-20).** The 3 predecessor repos (`risk-and-exposure-service`,
+> `position-balance-monitor-service`, `pnl-attribution-service`) have been subtree-merged into `strategy-service` as
+> sub-packages (`strategy_service/risk/`, `/position/`, `/pnl/`). Phase 6 parity gate: 4059 passed, 316 skipped,
+> 0 errors. Phase 8A launcher migration landed at deployment-service@7679dfe + @2ed3fdd.
+> See [`strategy_repo_consolidation_2026_05_19`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) for full
+> migration history. Mirrors the `features-service-architecture.md` template.
 
 ## TL;DR
 
