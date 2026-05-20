@@ -158,10 +158,13 @@ per tick.
       LstNativeRatesComputeRunner shipped; lst_native_rates registered in CLI parser FEATURE_GROUPS; 280-line test file
       confirms schema + Solana seed + value-parity with lst_yields
 
-- [ ] [AGENT] P1. **Strategy consumer wiring**: colocated_engine merges `features["lst_native_rate"]` from this group;
+- [x] [AGENT] P1. **Strategy consumer wiring**: colocated_engine merges `features["lst_native_rate"]` from this group;
       existing
       [staked_basis.py:419](../../strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py#L419)
-      Phase 6B dynamic hedge ratio will pick it up automatically.
+      Phase 6B dynamic hedge ratio will pick it up automatically. — features-service@c9729dce;
+      `compute_lst_native_rates_for_day` added to `lst_features.py`; emits `lst_native_rate` + `lst_native_rate_ts`;
+      colocated_engine already has `lst_native_rates` in `_FEATURE_GROUPS["DEFI"]` (line 181) + generic flattener
+      auto-picks up column; no colocated_engine change required.
 
 **Phase-C QG**: lst_native_rate parquets land + strategy reads non-None value per tick.
 
