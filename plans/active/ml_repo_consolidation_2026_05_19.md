@@ -217,7 +217,7 @@ todos:
   - id: phase-6-parity-test
     content: |
       - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. Three parity gates:
-        (1) **Boot parity**: `python -m ml_service --operation <op> --asset-group <ag> --mode batch` boots for
+        (1) **Boot parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@5fce11a. All 8 operations boot + emit ServiceRuntime/EventLogging STARTED. `python -m ml_service --operation <op> --asset-group <ag> --mode batch` boots for
             every {operation × asset_group} pair the 2 source repos previously supported. STARTED captured per
             case. Startup-time regression >2× is a stop.
         (2) **QG parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@16865a3. 2162 passed, 0 failed, 6 skipped.
