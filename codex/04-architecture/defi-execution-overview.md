@@ -5,6 +5,30 @@ last_reviewed: 2026-05-17
 
 # DeFi Execution Overview
 
+## Data Pipeline — Strategy→Execution Manifest Handoff
+
+The strategy→execution boundary has explicit manifest emission on both sides for the `strategy_instructions` data_type.
+
+**Writer (strategy-service)**:
+
+- `strategy_service/engine/core/gcs_storage_service.py` emits via `StrategyManifestRecorder`
+- Emits `record_captured(row_count=N)` on successful upload, `record_empty(reason=SOURCE_RETURNED_ZERO)` on hold-day,
+  `record_failed(error_message=...)` on error
+- `PipelineMode.BATCH_STRATEGY_SERVICE`; shard atom: `(client_id, strategy_id, day)`;
+  `data_type="strategy_instructions"`
+
+**Reader (execution-service)**:
+
+- `execution_service/strategy_instructions/gcs.py` `download_instructions_df()` emits via `ExecutionManifestRecorder`
+- Same 3-state emission: `record_captured` / `record_empty(SOURCE_RETURNED_ZERO)` / `record_failed`
+- 404 / NotFound / No such object → `record_empty(SOURCE_RETURNED_ZERO)` (hold day — no action)
+- Non-404 error → `record_failed` + `ADAPTER_FETCH_FAILED` event + re-raise
+
+**QG enforcement**: `unified-trading-pm/scripts/qg/no_silent_absence_handlers.sh` Phase Qa/Qb explicitly checks both
+files for presence of `record_captured|record_empty|record_failed`.
+
+SSOT: `plans/active/strategy_execution_contract_remediation_2026_05_20.md`.
+
 ## Live Execution Flow
 
 ```
