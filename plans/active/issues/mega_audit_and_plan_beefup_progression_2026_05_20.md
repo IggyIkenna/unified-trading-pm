@@ -263,7 +263,7 @@ feed it + lists the full remediation backlog drawn from those audits.
 - [ ] **D3. Manifest v8 finish + reason-enum wiring + divergence-detector plan** — beef from all C audits + A3
 - [ ] **D4. MTDS adapters preflight plan** — beef from C0, C4, C5
 - [ ] **D5. Features missing-data downgrade plan** — beef from C4, C6
-- [ ] **D6. Strategy + execution plan** — beef from C5, C6, C7, C8
+- [x] ✅ **D6. Strategy + execution plan** — beef from C5, C6, C7, C8 — plan written PM@ab0832c57, Phase 1 code shipped strategy-service@cd617891 (StrategyManifestRecorder + write_instructions manifest emission + PROCESSING_INCOMPLETE event), Phase 2-Q in-progress
 - [ ] **D7. Live adapters plan** — beef from C4, C8 (live mode rows)
 - [ ] **D8. Perf upgrade plan** — beef from A1 (hot-path identification)
 - [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps).

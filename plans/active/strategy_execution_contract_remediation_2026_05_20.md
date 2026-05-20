@@ -341,10 +341,10 @@ error code rather than full `classify_venue_error()`.
 
 ### Phase 1 — strategy-service (P0.1 + P0.4)
 
-- [ ] **[CODE] P0.** 1a. Write `strategy_service/engine/core/strategy_manifest.py` — StrategyManifestRecorder shim
-- [ ] **[CODE] P0.** 1b. Wire manifest recorder in `gcs_storage_service.py::write_instructions()`
-- [ ] **[CODE] P0.** 1c. Fix `batch_handler.py:501-508` — emit PROCESSING_INCOMPLETE event on batch incompleteness
-- [ ] **[QG] P0.** Phase 1 QG: `cd strategy-service && bash scripts/quality-gates.sh` GREEN
+- [x] ✅ **[CODE] P0.** 1a. Write `strategy_service/engine/core/strategy_manifest.py` — StrategyManifestRecorder shim — strategy-service@cd617891
+- [x] ✅ **[CODE] P0.** 1b. Wire manifest recorder in `gcs_storage_service.py::write_instructions()` — strategy-service@cd617891
+- [x] ✅ **[CODE] P0.** 1c. Fix `batch_handler.py:501-508` — emit PROCESSING_INCOMPLETE event on batch incompleteness — strategy-service@cd617891
+- [x] ✅ **[QG] P0.** Phase 1 QG: `cd strategy-service && bash scripts/quality-gates.sh` GREEN — 4118 passed, 5 pre-existing failures, basedpyright 0 errors
 
 ### Phase 2 — execution-service (P0.2)
 
