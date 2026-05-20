@@ -466,3 +466,17 @@ Completed this session: backfilled Tab5 Phase3/4 checkboxes (gcs_migration_bundl
 | Tab6 P1 — 7-day soak calibration | Blocked on Tab8 paper VM running | Daily reconciler run during Tab8 soak; tighten thresholds |
 
 **No wallet keys / kill-switch operations involved — these are VM launch + paper-mode only.**
+
+---
+
+[2026-05-20 UTC] slot-5 → operator — 🔄 **STARTED new task: is_mtds_contract_audit Phase 3+4 (MTDS handler hardcode removal + solana-defi v4→v8 patch).**
+
+work_split_2026_05_19_harsh.md Slot 5 items all ✅ (4 plans at max closeable state, PM@9d8f30e2). Now taking Phase 3 P0 items from `is_mtds_contract_audit_2026_05_20.md`:
+- `perp_funding_handler.py` line 145: Drift market hardcode removal
+- `lst_rates_handler.py` lines 135-160: Solana LST URL hardcodes
+- `native_staking_handler.py` line 85: hardcoded endpoint
+- `staking_yields_handler.py` lines 110-135: Lido/Marinade hardcodes
+- `solana_lst_archival.py` lines 75-95: Marinade/Jito hardcodes
+- Phase 4 P0: `data_manifest_handler.py:242` schema_version 4→8
+
+Deferring `solana_defi_handler.py` Drift S3 full rewrite — it's a large cross-cutting refactor that may require architectural discussion.

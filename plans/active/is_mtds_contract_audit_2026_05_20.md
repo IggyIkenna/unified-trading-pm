@@ -214,7 +214,7 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 
 ### Phase 4 — solana-defi bucket v4 → v8 migration
 
-- [ ] **P0. Patch `data_manifest_handler.py:242`** — hardcoded `schema_version=4` becomes `schema_version=8`.
+- [x] ✅ **P0. Patch `data_manifest_handler.py:242`** — hardcoded `schema_version=4` becomes `schema_version=8`. — MTDS@b8c340b (also added capture_status="captured", error_reason="", attempted_at="", pipeline_mode="" defaults)
 - [ ] **P0. Migration script** `instruments-service/scripts/migrate_solana_defi_v4_to_v8.py`:
       walk `gs://solana-defi-central-element-323112/_index/availability_index.parquet`,
       add v8 columns (`capture_status`, `error_reason`, …), backfill `capture_status='captured'` for
