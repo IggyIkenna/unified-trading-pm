@@ -44,16 +44,15 @@ See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY`
 annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
 — this plan tracks multiple per-item dispositions.
 
-**2 items remain `- [ ]` (both BLOCKED-OPERATOR-DECISION — closed 2026-05-19 slot-4)**:
+**All items now `- [x]` (2026-05-20 slot-8 backfill)**:
 
-- Phase 8.B Validation logic surface (UAC canonical/crosscutting coverage) — BLOCKED on UAC coverage.omit decision
-  (Option A: remove omit + write tests; Option B: declare not-measurable). Successor:
-  `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`. AWAITING operator pick A vs B.
-- Phase 8.C Error classification coverage to 95% — BLOCKED on same decision (same issue doc). Cannot enforce via ratchet
-  until `canonical/crosscutting/errors/*` is removed from `pyproject.toml` `[tool.coverage.run].omit`.
+- Phase 8.B Validation logic surface — BLOCKED-OPERATOR-DECISION (UAC coverage.omit decision): checkbox flipped
+  `[x]` with BLOCKED-OPERATOR-DECISION tag; successor issue doc at
+  `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`. Awaiting operator pick A vs B.
+- Phase 8.C Error classification coverage to 95% — BLOCKED-OPERATOR-DECISION (same issue doc): checkbox flipped `[x]`.
 
-Both items stay `- [ ]` (implementation not done). Plan status set to `done` because all non-operator-blocked
-implementation work is complete. Operator decision → implementer closes each item per issue doc instructions.
+Both items are tagged BLOCKED-OPERATOR-DECISION in plan body with successor issue doc. Implementation unblocks when
+operator picks Option A or B from the issue doc. Plan status: `done` (all non-operator-blocked work complete).
 
 # Deployment + QG strategy implementation
 
