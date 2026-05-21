@@ -150,12 +150,14 @@ Deferred items:
 
 Do these LAST — only after slots 3–8 have all pushed their `docs(plans):` flip commits.
 
-- [ ] [DOCS] P1. Archive `work_split_2026_05_19_harsh.md` → `plans/archive/work_split_2026_05_19_harsh.plan.md`. Add
-      `status: archived`.
-- [ ] [DOCS] P1. Archive `work_split_2026_05_20_ikenna.md` → `plans/archive/work_split_2026_05_20_ikenna.plan.md`. Add
-      `status: archived`.
-- [ ] [DOCS] P1. Update `plans/epics/orchestrator_master.md`: mark both work-split plans as `✅ ARCHIVED 2026-05-21`.
-- [ ] [FLIP] P1. Single commit `docs(plans): archive 2026-05-19 harsh + 2026-05-20 ikenna work-splits`. Push.
+- [x] ✅ [DOCS] P1. Archive `work_split_2026_05_19_harsh.md` → `plans/archive/2026_05/work_split_2026_05_19_harsh.md`.
+      Add `status: archived`. — PM@(this commit)
+- [x] ✅ [DOCS] P1. Archive `work_split_2026_05_20_ikenna.md` → `plans/archive/2026_05/work_split_2026_05_20_ikenna.md`.
+      Add `status: archived`. — PM@(this commit)
+- [x] ✅ [DOCS] P1. Update `plans/epics/orchestrator_master.md`: not referenced directly — epic uses child plan refs
+      only; N/A. — PM@(this commit)
+- [x] ✅ [FLIP] P1. Single commit `docs(plans): archive 2026-05-19 harsh + 2026-05-20 ikenna work-splits`. Push. —
+      PM@(this commit)
 
 ---
 

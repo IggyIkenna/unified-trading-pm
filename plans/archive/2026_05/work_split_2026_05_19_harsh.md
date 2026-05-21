@@ -1,6 +1,6 @@
 ---
 title: Harsh's daily work-split — 2026-05-19 (Cycle 2 Day-4; mechanical + infra sweep, ~116 cal AI-days)
-status: active
+status: archived
 created: 2026-05-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
@@ -446,6 +446,9 @@ must exist). P1 code work can start immediately.
   P1) + P3 (staging smoke → message in #agent-orchestrator-alerts) + P4 (codex). No human gates.
 
 ---
+
+> **ARCHIVED 2026-05-21** — All AI-executable items complete. Deferred items scoped to named successor plans
+> (writegate-6.x, post-cutover plans). Migrated to `plans/archive/2026_05/`.
 
 ## Spawn prompt — paste into each tab (slot N)
 
