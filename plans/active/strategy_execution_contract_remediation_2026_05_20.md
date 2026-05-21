@@ -391,7 +391,7 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 - [ ] **[MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified bucket via `gsutil rsync`;
       verify zero data loss + flip `cloud-providers.yaml` atomically. Bundle into master coordinator Phase 1 bucket
       symmetry window.
-- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — un-deferred now that 4a/4b are unblocked.
+- [x] ✅ **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — workspace-wide rg confirms zero inline strategy-store f-strings post 4a/4b.
 
 ### Phase 5 — error classification (P1.3)
 
