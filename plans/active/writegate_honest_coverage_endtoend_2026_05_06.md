@@ -58,7 +58,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 | 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
 | 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
 | 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
-| 2.C — features-sports stamping                                              | ✅ partial | fixture_lineups + fixture_player_stats + _ensure_timestamp delete + _FETCH_COMPLETED_AT cache + available_at stamping — features-service@47bf1984; open: per-table unit test + integration test            |
+| 2.C — features-sports stamping                                              | ✅ partial | fixture_lineups + fixture_player_stats + \_ensure_timestamp delete + \_FETCH_COMPLETED_AT cache + available_at stamping — features-service@47bf1984; open: per-table unit test + integration test           |
 | 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
 | 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
 | 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
@@ -1477,29 +1477,12 @@ grep.
       `market_tick_data_service/raw_tick_hive.py:60-104` `validate_day_partition_alignment()` shipped; raises
       `UpstreamTimestampBiasError` on mismatch. Wired into `engine/orchestrator.py:1008` so writes route through the
       gate.]
-- [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into every MTDS bundle write site (paths
-      corrected per audit 2026-05-06 amendment A — original plan listed non-existent files): -
-      `market_interface/adapters/tradfi/tardis_adapter.py:870` `finalise_and_write_cefi_shards()` (Tardis CeFi
-      options_chain + futures_chain bundle write; cluster = `underlying` per row, also splits by
-      `(underlying, quote_asset, margin_type)` for DERIBIT inverse/linear v6 disambiguation) + `tardis_adapter.py:1804`
-      (TradFi futures_chain via same shared helper). - `market_interface/adapters/tradfi/tradfi_shared.py:423`
-      `write_tradfi_shard()` (TradFi options_chain final upload; cluster_extractor:
-      `lambda symbol: re.match(r'^(E[1-5]A|EW[1-4]|EOM|ES)', symbol.upper()).group(0)` for ES.OPT 11-cluster
-      taxonomy). - `market_interface/adapters/tradfi/databento_adapter.py:822` `writer.write_chunk(df)` (Databento
-      TradFi options/futures bundle; cluster from `cls.underlying` set at line 981 — but Databento weekly-series cluster
-      E1A/EW1/etc. is in `raw_symbol` prefix, NOT exposed as a named field). **Gap**: requires UAC-side
-      `DatabentoClassification.root_cluster: str` enrichment — see todo immediately below. - `polymarket_adapter.py`
-      (uses `prediction_canonical_question_group` once Plan A predictions lands — for now, pass an empty registry →
-      cluster gate is a no-op, slot reserved per Plan A). **CRITICAL ROUTING FINDING from audit 2026-05-06 (amendment F,
-      escalated to Ikenna by harsh's `72ebe7a6`)**: ALL MTDS bundles flow through `writer_manifest.add()` at
-      `engine/orchestrator.py:1940`, NOT through `record_captured`. Phase 1A's `MissingClusterValidationError` guard
-      would never fire at the adapter layer. Two resolution options (pick by Ikenna): - **Option α (Claude recommends —
-      single SSOT)**: refactor `engine/orchestrator.py:1940` callsite to use `record_captured` instead of
-      `writer_manifest.add()`; pass `expected_root_clusters` + `cluster_extractor` per `data_type` lookup in UAC
-      `DATA_TYPE_TO_CLUSTER_REGISTRY`. Single change site, all bundles benefit, cluster guard fires correctly. -
-      **Option β**: refactor each bundle adapter to call `record_captured` directly instead of
-      `writer.write_chunk(df) + writer_manifest.add()`. More callsites, more code review, but keeps adapter-level write
-      atomicity. **Do NOT execute this Phase 2.B todo until amendment F is resolved by Ikenna.**
+- [x] ✅ [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into every MTDS bundle write site — Option α
+      (orchestrator boundary). `engine/orchestrator.py` finalize loop now gates on `data_type_key in BUNDLED_DATA_TYPES`
+      (not just `venue_name == "CME-OPTIONS"`). Dispatch: options_chain+CME-OPTIONS → ES.OPT 11-cluster snapshot;
+      futures_chain → `FUTURES_CHAIN_BUCKETS {front,back,spread}` min_count=1; other BUNDLED_DATA_TYPES → `{}` (no-op
+      gate until per-type registry ships). DERIBIT options_chain/trades stays on legacy `add()` path (not a bundle
+      type). — market-tick-data-service@668c17ab. 1886 unit tests green.
 - [x] ✅ [SCRIPT] P0. **UAC enrichment: `DatabentoClassification.root_cluster: str` field** (Phase 0 audit gap finding —
       lifted from "deferred follow-up plan" to in-scope Phase 2.B todo per workspace rule that no temporary state ships
       without a named successor; rather than naming a successor we just do it here). Databento TradFi options_chain
@@ -1561,10 +1544,16 @@ grep.
       includes quote_asset+margin_type)
 - [x] ✅ [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple;
       replace with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT). — market-tick-data-service@d5773c3
-- [ ] [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
-- [ ] [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
+- [x] ✅ [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
+      `test_write_chunk_partition_mismatch_no_parquet_flushed`: feeds CME-OPTIONS options_chain tick dated 2026-05-08 to
+      a 2026-05-09 writer → `UpstreamTimestampBiasError` raised + `StreamingParquetWriter.close` never called. —
+      market-tick-data-service@668c17ab (`tests/unit/test_writegate_phase2b_cluster_wiring.py`).
+- [x] ✅ [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
       `record_failed(ClusterCoverageError)` fires + no parquet written.
-- [ ] [QG] P0. MTDS quality-gates.sh green.
+      `test_partial_es_opt_8_of_11_clusters_routes_to_failed`: uses real `ES_OPTIONS_CLUSTERS` (11 UAC keys), observed
+      only 8 → `record_captured_from_counts` → `ATTEMPTED_FAILED`. — market-tick-data-service@668c17ab
+      (`tests/unit/test_writegate_phase2b_cluster_wiring.py`).
+- [x] ✅ [QG] P0. MTDS quality-gates.sh green. 1886 passed, 9 skipped, 0 failed. — market-tick-data-service@668c17ab.
 
 ### Phase 2.C — features-sports forward fixes
 
@@ -1588,7 +1577,8 @@ grep.
       populate in `_load_event_entities` from the `gcs_data["fixture_lineups"]` already being read; (iii) add
       `get_fetched_fixture_lineups()` accessor; (iv) implement `export_fixture_lineups()` using it. Then switch
       `fixture_lineups` out of `_POST_MATCH_TABLES` (currently incorrect rule applied) into the kickoff-offset stamping
-      path (`stamp_available_at_kickoff_offset(kickoff_col="kickoff_utc",     minutes=60)`). ✅ features-service@47bf1984
+      path (`stamp_available_at_kickoff_offset(kickoff_col="kickoff_utc",     minutes=60)`). ✅
+      features-service@47bf1984
 - [x] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173` logs
       row count but never stores. `export_fixture_player_stats()` returns empty. Fix: add `_fetched_player_stats`
       cache + accessor + real export. Stamping stays as `post_match` once wired. ✅ features-service@47bf1984
@@ -1615,10 +1605,10 @@ grep.
       `batch_write.py:88`) with the appropriate `availability_stamping.stamp_available_at_*` call per
       `UAC.AVAILABILITY_AT_SEMANTICS`. ✅ features-service@47bf1984
 - [x] [SCRIPT] P0. For each of the 14 `TABLE_TO_EXPORT` entries in `cli/handlers/batch_handler.py:76-91`, wire
-      write-time `available_at` stamping per UAC semantic ✅ features-service@47bf1984 (rules amended per audit findings 2026-05-06): - `fixtures` →
-      `stamp_available_at_offset(df, "kickoff_utc", offset=-7d)` — **synthesis-only** since no source exposes
-      announcement time (amendment B). Document `kickoff−7d` as canonical proxy until upstream source enrichment plan
-      lands. - `fixture_stats`, `fixture_player_stats` →
+      write-time `available_at` stamping per UAC semantic ✅ features-service@47bf1984 (rules amended per audit findings
+      2026-05-06): - `fixtures` → `stamp_available_at_offset(df, "kickoff_utc", offset=-7d)` — **synthesis-only** since
+      no source exposes announcement time (amendment B). Document `kickoff−7d` as canonical proxy until upstream source
+      enrichment plan lands. - `fixture_stats`, `fixture_player_stats` →
       `stamp_available_at_post_match(df, "kickoff_utc",       duration_min=120)` — **already wired**; `match_end_time`
       schema bump deferred to Stage 2 follow-up plan (amendment D). Current implementation is the maximum precision
       available. - `fixture_events` → `stamp_available_at_event_time(df, "event_time")` — `event_time` derived from
