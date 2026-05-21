@@ -129,3 +129,21 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
 **Status**: BLOCKED-CREDENTIALS until operator [ack]
 **Without it**: KaikoAdapter scaffold ships (fetch_instruments/fetch_trades/fetch_ohlcv, paginated via next_url, all CEX); UAC schemas at UAC@ce48ba6; integration tests dormant.
 **Plan-of-record**: ADAPTER-KAIKO-CEX-HISTORICAL (backlog task); MTDS@86d6baa; UAC@ce48ba6
+
+---
+
+[2026-05-21 slot-9 UTC] [slot 9 → main] — DONE: All ADAPTER scaffold tasks complete (session 2026-05-21).
+
+**Tasks shipped this session (8 total):**
+1. ADAPTER-POLYMARKET-FEED — MTDS@3d01043 (prior session, /done ✅)
+2. ADAPTER-KALSHI-FEED — MTDS@243913a (prior session, /done ✅)
+3. ADAPTER-DATABENTO-TRADFI — MTDS@386c5b8 (prior session, /done ✅)
+4. ADAPTER-THE-ODDS-API — MTDS@065cb49, /done ✅
+5. ADAPTER-POLYGON-IO-TRADFI-TICKS — MTDS@34edf56, /done ✅
+6. ADAPTER-FOOTYSTATS-FEED — MTDS@3294423, /done ✅
+7. ADAPTER-SPORTRADAR-FEED — MTDS@8444c64, UAC@ce48ba6, /done ✅
+8. ADAPTER-KAIKO-CEX-HISTORICAL — MTDS@86d6baa, UAC@ce48ba6, /done ✅
+
+**QG status:** MTDS QG green @605d12b; UAC QG green @35055b4 (fixed duplicate dict keys in source_priority.py).
+**BLOCKED-CREDENTIALS:** 6 credential requests filed (Polymarket, Kalshi, The-Odds-API, Polygon.io, FootyStats, Sportradar, Kaiko).
+**Idle:** No queued tasks — awaiting operator credential acks or new task assignment.
