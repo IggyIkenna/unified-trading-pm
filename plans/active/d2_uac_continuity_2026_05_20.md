@@ -59,12 +59,8 @@ related_plans:
 
 ### Phase 1 — UAC import surface compliance
 
-- [ ] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from execution-service `quality-gates.sh`:
-  - Identify which deep imports it was covering (run
-    `rg 'from unified_api_contracts\.canonical' execution_service/ --type py`)
-  - Fix each deep import to use root facade: `from unified_api_contracts import X`
-  - Re-run QG with exempt flag removed — must pass
-- [ ] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from IS-service `quality-gates.sh` — same process
+- [x] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from execution-service `quality-gates.sh`: ✅ — execution-service@a848ef61 (12 deep imports fixed across engine/defi/sports adapters; QG STEP 5.23 clean)
+- [x] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from IS-service `quality-gates.sh`: ✅ — instruments-service@b476663 + UAC@ceeaddd (5 IS files fixed; POLYMARKET_MARKET_TO_CANONICAL + slugify_canonical_name added to sports facade; QG STEP 5.23 clean)
 - [ ] [AGENT] P1. Sweep top 49 deep-import violations (A1 CSV:
       `plans/audit/results/codified_shape_compliance_2026_05_20.csv`):
   - Focus: files in execution-service, IS-service, features-service (highest violation count repos)
