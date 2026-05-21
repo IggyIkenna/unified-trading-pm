@@ -121,6 +121,13 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    **e2e-testing FIXED 2026-05-21 slot-11**: @24daef0 ✅ — add ruff dep, noqa C901 (5 integration tests), pip-audit ignores PYSEC-2024-277/PYSEC-2025-183/PYSEC-2026-87, ruff autoformat
    **system-integration-tests VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
    **ibkr-gateway-infra VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **alerting-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **batch-live-reconciliation-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **deployment-api VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **trading-agent-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **position-balance-monitor-service FIXED 2026-05-21 slot-11**: QG green locally @7c5f8b7 — pip-audit ignores PYSEC-2024-277/PYSEC-2025-183; PUSH-BLOCKED (repo archived on GitHub — operator must unarchive to merge to LDR)
+   **pnl-attribution-service FIXED 2026-05-21 slot-11**: QG green locally @db18812 — pip-audit ignores + session-scoped setup_events fixture in conftest.py; PUSH-BLOCKED (repo archived on GitHub)
+   **risk-and-exposure-service FIXED 2026-05-21 slot-11**: QG green locally @d350070 — corrected 8 wrong RiskMetrics field names in risk_metrics.py log_event call (concentration_pct→concentration, drawdown_pct→drawdown, etc.); PUSH-BLOCKED (repo archived on GitHub)
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
