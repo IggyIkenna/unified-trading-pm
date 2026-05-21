@@ -141,6 +141,12 @@ that plan was written (2026-05-09):
   - Cells are Drift S3 adapter-level bugs: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`
   - CSV: `plans/audit/results/divergence_2026-05-21.csv` (1,792,168 rows total, 765 DIVERGENT_EMPTY, 214,344 MISSING_EXPECTED)
   - These are pre-existing adapter bugs unresolved by schema migration; require MTDS handler backfill — tracked under D4 plan
+- [x] ✅ [AGENT] P0. Phase 7C triage — classify all 765 DIVERGENT_EMPTY cells; produce triage CSV (slot-5 2026-05-21)
+  - Triage CSV: `plans/audit/results/phase7c_divergent_empty_triage_2026_05_21.csv`
+  - All 765 cells → `phase_11_rebackfill` (any_captured=False, any_empty=True — genuinely empty, not mislabelled)
+  - AAVEV3-OPTIMISM: 705 cells across 5 data_types; COMPOUNDV3-BASE: 60 cells across 4 data_types
+  - 0 label-flip-applied (no captured data to restore); 0 operator-scope
+  - Phase 11 owner queues MTDS handler investigation for these venues
 
 ## Success criteria
 
