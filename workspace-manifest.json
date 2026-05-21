@@ -1175,6 +1175,7 @@
     },
     "ml-inference-service": {
       "type": "service",
+      "tier": 3,
       "status": "consolidated-into-ml-service",
       "archived_into": "ml-service",
       "archive_date": "2026-05-20",
@@ -1199,6 +1200,11 @@
       "testing_level": "none",
       "skipped_gates": [
         "all"
+      ],
+      "tags": [
+        "ml",
+        "archived",
+        "supporting"
       ]
     },
     "ml-service": {
@@ -1267,6 +1273,7 @@
     },
     "ml-training-service": {
       "type": "service",
+      "tier": 3,
       "status": "consolidated-into-ml-service",
       "archived_into": "ml-service",
       "archive_date": "2026-05-20",
@@ -1291,6 +1298,11 @@
       "testing_level": "none",
       "skipped_gates": [
         "all"
+      ],
+      "tags": [
+        "ml",
+        "archived",
+        "supporting"
       ]
     },
     "pnl-attribution-service": {
@@ -1943,6 +1955,7 @@
     },
     "agent-orchestrator": {
       "type": "tool",
+      "tier": 0,
       "arch_tier": "external",
       "doc_standard": "service-canonical",
       "github_url": "https://github.com/IggyIkenna/agent-orchestrator",
@@ -1956,7 +1969,12 @@
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "none",
-      "skipped_gates": []
+      "skipped_gates": [],
+      "tags": [
+        "infrastructure",
+        "monitoring",
+        "supporting"
+      ]
     }
   },
   "topologicalOrder": {

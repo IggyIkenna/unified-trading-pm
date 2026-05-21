@@ -265,12 +265,14 @@ services:
           - feature_group
           - date
     external_dependencies: []
-  ml-training-service:
-    description: Train ML models for predictions (3-stage pipeline)
+  # ml-training-service + ml-inference-service removed 2026-05-21:
+  # consolidated into ml-service (ml_repo_consolidation_2026_05_19.md)
+  ml-service:
+    description: Train ML models and generate predictions (consolidated from ml-training-service + ml-inference-service, 2026-05-20)
     upstream:
       - service: features-delta-one-service
         required: true
-        description: Training features
+        description: Features for training and inference
         check:
           bucket_template: features-delta-one-{category_lower}-{project_id}
           path_template: by_date/day={date}/
@@ -282,55 +284,28 @@ services:
           path_template: by_date/day={date}/
       - service: features-onchain-service
         required: false
-        description: Optional on-chain features (shared bucket, no category)
+        description: Optional on-chain features
         check:
           bucket_template: features-onchain-{category_lower}-{project_id}
           path_template: by_date/day={date}/
-      - service: market-tick-data-service
-        required: false
-        description: Optional - deployment flexibility for tick-level features
-        check:
-          bucket_template: market-data-tick-{category_lower}-{project_id}
-          path_template: raw_tick_data/by_date/day={date}/
       - service: features-calendar-service
         required: false
-        description: Optional - deployment flexibility for calendar features
+        description: Optional calendar features
         check:
           bucket_template: features-calendar-{project_id}
           path_template: calendar/category=temporal/by_date/day={date}/
+      - service: market-tick-data-service
+        required: false
+        description: Optional tick-level features
+        check:
+          bucket_template: market-data-tick-{category_lower}-{project_id}
+          path_template: raw_tick_data/by_date/day={date}/
       - service: market-data-processing-service
         required: false
-        description: Optional - deployment flexibility for candle-based features
+        description: Optional candle-based features
         check:
           bucket_template: market-data-tick-{category_lower}-{project_id}
           path_template: processed_candles/by_date/day={date}/
-    stage_dependencies:
-      pre-selection:
-        requires_stages: []
-        outputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-      hyperparameter-grid:
-        requires_stages:
-          - pre-selection
-        inputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-        outputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage2-hyperparams/model-{model_id}/training-period-{period}/best_hyperparams.json
-      final-training:
-        requires_stages:
-          - hyperparameter-grid
-          - pre-selection
-        inputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_templates:
-            - stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-            - stage2-hyperparams/model-{model_id}/training-period-{period}/best_hyperparams.json
-        outputs:
-          bucket_template: ml-models-store-{project_id}
-          path_template: models/{model_id}/training-period-{period}/model.joblib
     outputs:
       - name: trained_models
         bucket_template: ml-models-store-{project_id}
@@ -339,44 +314,6 @@ services:
           - instrument
           - timeframe
           - target_type
-      - name: model_registry
-        bucket_template: ml-models-store-{project_id}
-        path_template: model_registry/metadata/{model_id}/{version}/metadata.json
-    external_dependencies: []
-  ml-inference-service:
-    description: Generate ML predictions
-    upstream:
-      - service: ml-training-service
-        required: true
-        description: Needs trained models
-        check:
-          bucket_template: ml-models-store-{project_id}
-          path_template: model_registry/
-      - service: features-delta-one-service
-        required: true
-        description: Real-time features for inference
-        check:
-          bucket_template: features-delta-one-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-      - service: features-calendar-service
-        required: false
-        description: Optional - deployment flexibility for calendar features
-        check:
-          bucket_template: features-calendar-{project_id}
-          path_template: calendar/category=temporal/by_date/day={date}/
-      - service: features-volatility-service
-        required: false
-        description: Optional - deployment flexibility for volatility features
-        check:
-          bucket_template: features-volatility-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-      - service: features-onchain-service
-        required: false
-        description: Optional - deployment flexibility for on-chain features
-        check:
-          bucket_template: features-onchain-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-    outputs:
       - name: predictions
         bucket_template: ml-predictions-store-{project_id}
         path_template: predictions/{mode}/{date}/
@@ -406,7 +343,7 @@ services:
   strategy-service:
     description: Test trading signals and strategy logic
     upstream:
-      - service: ml-inference-service
+      - service: ml-service
         required: false
         description: ML predictions for ML-driven strategies
         check:
@@ -588,7 +525,7 @@ services:
       - service: strategy-service
         required: true
         description: Needs strategy outputs to compare batch vs live
-      - service: ml-inference-service
+      - service: ml-service
         required: false
         description: Optional — ML predictions for quality comparison
     outputs:
@@ -660,8 +597,8 @@ execution_order:
   - features-cross-instrument-service
   - features-multi-timeframe-service
   - features-commodity-service
-  - ml-training-service
-  - ml-inference-service
+  # ml-training-service + ml-inference-service removed 2026-05-21: consolidated into ml-service (ml_repo_consolidation_2026_05_19.md)
+  - ml-service
   - strategy-service
   - execution-service
   # position-balance-monitor-service, pnl-attribution-service, risk-and-exposure-service
