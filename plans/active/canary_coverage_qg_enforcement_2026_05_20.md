@@ -243,11 +243,16 @@ For each prod-orphan cassette (from 2026-05-20 audit list): WIRE-TO-CONSUMER or 
 in `unified-api-contracts/scripts/canary/orphan-decisions.yaml`. The orphan-check STEP (Phase 2) then asserts zero
 orphans = zero post-decision-log entries needing action.
 
-- [ ] [SCRIPT] P1. Decide + execute per orphan: `gateio`, `mexc`, `bitstamp`, `huobi` venues (full-orphan), and
+- [x] ✅ [SCRIPT] P1. Decide + execute per orphan: `gateio`, `mexc`, `bitstamp`, `huobi` venues (full-orphan), and
       per-cassette orphans in `alchemy/aave_get_reserve_data`, `alchemy/aave_get_user_account_data`,
       `barchart/get_quote_es1`, `databento/batch_*` (3 cassettes), `databento/timeseries_get_range_*` (2),
       `open_meteo/forecast_current_weather`, `tardis/datasets_csv_download`, `tardis/datasets_warmup`,
       `yahoo_finance/earnings_msft`.
+      — uac@ac828d7 2026-05-21: 7 cassettes DELETED (gateio/mexc/bitstamp/huobi/bitfinex/kucoin ticker.yaml +
+      barchart/get_quote_es1.yaml). 3 WS cassettes ALLOWLISTED (databento stub-placeholder, kraken/kraken_futures
+      recording-template). databento/batch_*/timeseries_* + alchemy/aave_* + open_meteo + tardis + yahoo_finance/earnings
+      are ALLOWLISTED recording-templates with acked reasons (no prod consumer yet per Phase 2 QG task).
+      Decisions documented in scripts/canary/orphan-decisions.yaml. Orphan checker 86 passed / 1 skipped.
 
 ### Phase 5 — Wire canary into per-PR CI (~0.5 day)
 
