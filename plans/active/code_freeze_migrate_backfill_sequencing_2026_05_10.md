@@ -119,23 +119,27 @@ consume.
       ohlcv_1h POC + manifest_completeness helper + UAC manifest schema columns + deployment-api/ui surface) PLANNED
       2026-05-08; slice (c) Phase 6.1-6.9 (~3-5wk per-service rollout) PLANNED. **Phase 1 blocker**: slice (b) MUST land
       before Phase 2.1 manifest schema bump can rename/freeze.
-- [ ] [PLAN] P0. **`plans/active/wave3x_residual_ssots_2026_05_08.md`** — 5 parallel tracks for residual UAC SSOTs.
-      Track A (HALF_DAY_SESSIONS + VENUE_SESSION_HOURS) shipped UAC@bdc84ed. Tracks B/C/D/E open (sports per-source
-      SSOTs / reconcilers / zero-activity-bar audit / sports availability stamping cascade).
-- [ ] [PLAN] P0. **`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`** — Sister umbrella for stamping
-      work. Per-source `available_at` semantics + UTL `stamp_available_at_*` helpers + LookaheadBiasError gate
-      strict-mode rollout across every features-\* calculator. **Phase 1 blocker**: every per-source stamping helper
-      must be final before Phase 3 backfills emit their first new row (otherwise re-stamping at Phase 3 = re-write of
-      Phase 2 migrated parquets).
-- [ ] [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Per-instrument-grain enumerator (v2
+- [x] ✅ [PLAN] P0. **`plans/active/wave3x_residual_ssots_2026_05_08.md`** — 5 parallel tracks for residual UAC SSOTs. —
+      **ARCHIVED** `plans/archive/wave3x_residual_ssots_2026_05_08.plan.md` (trivial-sweep 2026-05-21) Track A
+      (HALF_DAY_SESSIONS + VENUE_SESSION_HOURS) shipped UAC@bdc84ed. Tracks B/C/D/E open (sports per-source SSOTs /
+      reconcilers / zero-activity-bar audit / sports availability stamping cascade).
+- [x] ✅ [PLAN] P0. **`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`** — Sister umbrella for
+      stamping — **ARCHIVED** `plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md`
+      (trivial-sweep 2026-05-21) work. Per-source `available_at` semantics + UTL `stamp_available_at_*` helpers +
+      LookaheadBiasError gate strict-mode rollout across every features-\* calculator. **Phase 1 blocker**: every
+      per-source stamping helper must be final before Phase 3 backfills emit their first new row (otherwise re-stamping
+      at Phase 3 = re-write of Phase 2 migrated parquets).
+- [x] ✅ [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Per-instrument-grain enumerator (v2 —
+      **ARCHIVED** `plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md` (trivial-sweep 2026-05-21)
       supersedes v1 venue-grain). DRAFT. Pre-populates `expected_unattempted` rows from instruments-service catalogue.
       Gate G3 of `manifest_evolution_master`. May be deferred behind Phase 2.1 v7 schema bump per audit Q3.
 
 ### Phase 1.B — Schema + writer hardening
 
-- [ ] [PLAN] P0. **`plans/active/hard_schema_enforcement_2026_05_08.md`** — Workspace-wide hard schema enforcement at
-      write boundary; flips required fields nullable→required across asset_groups (base_currency / quote_currency /
-      chain_id / contract_address / decimals / fixture_id / futures_expiry). **Sequenced AFTER** `tradfi_master` Q1+Q2
+- [x] ✅ [PLAN] P0. **`plans/active/hard_schema_enforcement_2026_05_08.md`** — Workspace-wide hard schema enforcement at
+      — **ARCHIVED** `plans/archive/2026_05/hard_schema_enforcement_2026_05_08.md` (trivial-sweep 2026-05-21) write
+      boundary; flips required fields nullable→required across asset_groups (base_currency / quote_currency / chain_id /
+      contract_address / decimals / fixture_id / futures_expiry). **Sequenced AFTER** `tradfi_master` Q1+Q2
       futures-expiry ships (avoids mass-fail-during-transit per existing plan body). **Phase 1 blocker**:
       SCHEMA_VALIDATION_FAILED enum extension lands here; needed before Phase 2.5 cross-asset rescan can flip rows.
 - [ ] [PLAN] P0. **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** — Collapse 3-layer drift (yaml +
@@ -151,24 +155,29 @@ consume.
 
 ### Phase 1.C — Live-pipeline activation code
 
-- [ ] [PLAN] P0. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — Live (websocket-streaming) pipeline
-      activation for MTDS → MDPS → features-service across 5 asset_groups. NEW UAC `ServiceEmissionPolicy` schema
-      column, `pipeline_mode` hive partition, `PipelineMode` facade. Health-API extension + circuit-breaker wiring.
-      Instrument-cache-delta hot-reload. Replay subsystem. **Tab 2 PM/evening 2026-05-08 progress**: 4 UTL primitives
-      shipped (streaming facade / StreamingHealthSnapshot / InstrumentLifecycleCacheDeltaReloader /
+- [x] ✅ [PLAN] P0. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — Live (websocket-streaming)
+      pipeline — **ARCHIVED** `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md` (trivial-sweep
+      2026-05-21) activation for MTDS → MDPS → features-service across 5 asset_groups. NEW UAC `ServiceEmissionPolicy`
+      schema column, `pipeline_mode` hive partition, `PipelineMode` facade. Health-API extension + circuit-breaker
+      wiring. Instrument-cache-delta hot-reload. Replay subsystem. **Tab 2 PM/evening 2026-05-08 progress**: 4 UTL
+      primitives shipped (streaming facade / StreamingHealthSnapshot / InstrumentLifecycleCacheDeltaReloader /
       batch_live_reconciler); MTDS/MDPS/features service-wiring deferred post-features-consolidation. **Phase 1
       blocker**: Phase 0-3 (UAC + UTL foundations) done; Phase 4-5 (per-asset-group cascade) requires
       features_repo_consolidation Phase 7.
-- [ ] [PLAN] P0. **`plans/active/features_repo_consolidation_2026_05_08.md`** — Merge 8 separate features-\* repos into
+- [x] ✅ [PLAN] P0. **`plans/active/features_repo_consolidation_2026_05_08.md`** — Merge 8 separate features-\* repos
+      into — **ARCHIVED** `plans/archive/features_repo_consolidation_2026_05_08.plan.md` (trivial-sweep 2026-05-21)
       single features-service with sub-packages. NEW UAC `feature_family` schema column. Lift 4 cross-family helpers
       into UTL. **Deadline 2026-05-13**. **Phase 1 blocker**: Phase 7 (consolidated features-service deployable) must
       land before live-pipeline Phase 4-5 can wire MDPS↔features in-process handoff. Backfill-side: Phase 3.4
       features-service compute relaunch in this plan reads from single consolidated repo, not the 8 archived ones.
-- [ ] [PLAN] P1. **`plans/active/basefc_validation_flip_2026_05_10.md`** — Mandatory `ClassVar` enforcement across 75
-      feature calculators (paradigm-split rollout). Deadline 2026-05-20.
-- [ ] [PLAN] P1. **`plans/active/mdps_streaming_and_backpressure_2026_05_07.md`** — MDPS streaming + backpressure
+- [x] ✅ [PLAN] P1. **`plans/active/basefc_validation_flip_2026_05_10.md`** — Mandatory `ClassVar` enforcement across 75
+      — **ARCHIVED** `plans/archive/basefc_validation_flip_2026_05_10.md` (trivial-sweep 2026-05-21) feature calculators
+      (paradigm-split rollout). Deadline 2026-05-20.
+- [x] ✅ [PLAN] P1. **`plans/active/mdps_streaming_and_backpressure_2026_05_07.md`** — MDPS streaming + backpressure —
+      **ARCHIVED** `plans/archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md` (trivial-sweep 2026-05-21)
       successor (awaits live-pipeline Phase 0-3).
-- [ ] [PLAN] P1. **`plans/active/mtds_databento_path_streaming_2026_05_07.md`** — MTDS Databento path-streaming
+- [x] ✅ [PLAN] P1. **`plans/active/mtds_databento_path_streaming_2026_05_07.md`** — MTDS Databento path-streaming —
+      **ARCHIVED** `plans/archive/2026_05/mtds_databento_path_streaming_2026_05_07.md` (trivial-sweep 2026-05-21)
       successor.
 
 ### Phase 1.D — Service code: alerting / risk / strategy / DART
@@ -176,40 +185,50 @@ consume.
 - [ ] [PLAN] P0. **`plans/active/alerting_service_live_rules_2026_05_07.md`** — Production rule SSOT + thresholds +
       paging logic for live pipeline. Sub-E codex doc category for ML alerting rules (deferred per Tab 5 EOD-summary
       2026-05-08; tracked in [`feedback_capture_discoveries_as_plan_todos_immediately.md`](../../) auto-memory).
-- [ ] [PLAN] P0. **`plans/active/risk_simulations_limits_alerting_2026_05_10.md`** — Risk rule taxonomy +
+- [x] ✅ [PLAN] P0. **`plans/active/risk_simulations_limits_alerting_2026_05_10.md`** — Risk rule taxonomy + —
+      **ARCHIVED** `plans/archive/risk_simulations_limits_alerting_2026_05_10.md` (trivial-sweep 2026-05-21)
       per-archetype/venue/account/client limits + alerting wire + pre-flight check API. Parent:
       strategy_and_dart_master.
-- [ ] [PLAN] P0. **`plans/active/disaster_recovery_circuit_breakers_2026_05_10.md`** — Disaster recovery +
+- [x] ✅ [PLAN] P0. **`plans/active/disaster_recovery_circuit_breakers_2026_05_10.md`** — Disaster recovery + —
+      **ARCHIVED** `plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md` (trivial-sweep 2026-05-21)
       reconciliation + circuit breakers + kill switches (cutover MVP). Parent: master_to_live_defi.
 - [ ] [PLAN] P1. **`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`** — Promote workflow May-23 dual-track
       cutover (CLI primary + minimal UI parallel).
-- [ ] [PLAN] P1. **`plans/active/topology_qgroup_gap_closure_2026_05_09.md`** — Topology Q-group GAP closure (18 GAPs +
-      2 WATCH + 1 ISSUE before May-23).
+- [x] ✅ [PLAN] P1. **`plans/active/topology_qgroup_gap_closure_2026_05_09.md`** — Topology Q-group GAP closure (18
+      GAPs + — **ARCHIVED** `plans/archive/topology_qgroup_gap_closure_2026_05_09.md` (trivial-sweep 2026-05-21) 2
+      WATCH + 1 ISSUE before May-23).
 
 ### Phase 1.E — DeFi-specific code (chain primitives + archetypes)
 
-- [ ] [PLAN] P0. **`plans/active/defi_catalogue_chain_primitives_2026_05_10.md`** — DeFi catalogue + chain primitives
+- [x] ✅ [PLAN] P0. **`plans/active/defi_catalogue_chain_primitives_2026_05_10.md`** — DeFi catalogue + chain primitives
+      — **ARCHIVED** `plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md` (trivial-sweep 2026-05-21)
       (chain genesis dates, protocol launch dates, token metadata). Parent: defi_master.
-- [ ] [PLAN] P0. **`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`** — ARBITRAGE_PRICE_DISPERSION
-      canonicalisation + strategy-service catalog + tracer + P&L attribution. Parent: defi_master.
-- [ ] [PLAN] P0. **`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`** — Recursive-borrow archetype
+- [x] ✅ [PLAN] P0. **`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`** —
+      ARBITRAGE_PRICE_DISPERSION — **ARCHIVED** `plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md`
+      (trivial-sweep 2026-05-21) canonicalisation + strategy-service catalog + tracer + P&L attribution. Parent:
+      defi_master.
+- [x] ✅ [PLAN] P0. **`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`** — Recursive-borrow archetype —
+      **ARCHIVED** `plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md` (trivial-sweep 2026-05-21)
       definitions for carry_staked_basis (Phase 9). PLANNED. Parent: defi_master.
-- [ ] [PLAN] P0. **`plans/active/defi_simulation_realism_2026_05_10.md`** — DeFi matching engine extension +
-      risk-modeling enhancements. Parent: defi_master.
+- [x] ✅ [PLAN] P0. **`plans/active/defi_simulation_realism_2026_05_10.md`** — DeFi matching engine extension + —
+      **ARCHIVED** `plans/archive/defi_simulation_realism_2026_05_10.md` (trivial-sweep 2026-05-21) risk-modeling
+      enhancements. Parent: defi_master.
 - [ ] [PLAN] P0. **`plans/active/cme_polymarket_arb_2026_05_08.md`** — InstrumentType.EVENT_CONTRACT enum +
       linked_canonical_question_group cross-link + MTDS binary-outcome shard atom + cme_polymarket_event_arb strategy
       archetype.
 
 ### Phase 1.F — Cross-cutting code
 
-- [ ] [PLAN] P0. **`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`** — Cross-cutting 6-tab restructure (Deploy
-      / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum + `EnvironmentTier` enum.
-      Parent: cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.
+- [x] ✅ [PLAN] P0. **`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`** — Cross-cutting 6-tab restructure
+      (Deploy — **ARCHIVED** `plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md` (trivial-sweep
+      2026-05-21) / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum +
+      `EnvironmentTier` enum. Parent: cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.
 - [ ] [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for
       May-23 live-DeFi cutover.
-- [ ] [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle
-      MVP.
-- [ ] [PLAN] P1. **`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`** — Client reporting + PnL
+- [x] ✅ [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle
+      — **ARCHIVED** `plans/archive/wallet_treasury_client_flow_2026_05_10.md` (trivial-sweep 2026-05-21) MVP.
+- [x] ✅ [PLAN] P1. **`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`** — Client reporting + PnL —
+      **ARCHIVED** `plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md` (trivial-sweep 2026-05-21)
       attribution MVP.
 
 ### Phase 1 freeze gate (✅ to flip Phase 2 startable)
@@ -596,8 +615,10 @@ one-walk migration so manifest only rewrites once.
 
 ### Phase 2.5 — Manifest cross-asset rescan with --apply-flips
 
-- [ ] [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** (continuation from Phase 2.1) — Run
-      `--apply-flips` against full migrated manifest. This is Phase 5 of `manifest_migration_master`. Catches:
+- [x] ✅ [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** (continuation from Phase 2.1) —
+      Run — **ARCHIVED** `plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md` (trivial-sweep
+      2026-05-21) `--apply-flips` against full migrated manifest. This is Phase 5 of `manifest_migration_master`.
+      Catches:
   - 1440-NaN flip (any MDPS empty-placeholder rows → `attempted_failed` with `MalformedTickFieldError`).
   - Partial-bundle reflip (any cluster-coverage-violated bundles → `attempted_failed` with `ClusterCoverageError`).
   - Pre-v7 cleanup (any straggler rows in pre-v7 shape → `attempted_failed` with `SCHEMA_VALIDATION_FAILED`).
@@ -1581,15 +1602,15 @@ with commit-SHA evidence.
 
 ### Preamble-specified items + carry-forward
 
-| Item                                                    | Status                                               | Action / owner                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Item                                                    | Status                                               | Action / owner                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Phase 4.MTDS pipeline_mode sweep** (Q1-Q5)            | 🟢 **UNBLOCKED — slot 3 owns the mechanical sweep**  | Operator triaged 2026-05-12 evening at PM@`4c573302`: **Q1=(α)** approved (migrate `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` → v8 `record_captured()` path); **Q2=(A)** approved (extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with `BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`). 3 issue docs flipped ✅ RESOLVED. Slot 3 picks up the ~60min mechanical sweep with 5-sub-agent fan-out (UAC enum extension → UTL DefiManifestRecorder migration → MTDS sweep → MDPS re-stamp → instruments-service re-stamp) per [`continuation_prompts_2026_05_12.md`](../archive/2026_05/continuation_prompts_2026_05_12.md) DAY-2 P0 INJECTED block. **Cross-side coordination**: Harsh slot 3 waits ~15-20min for Ikenna UAC enum on LDR before starting overlapping file work. Critical-path unblock for Phase 4.DEFAULT-REMOVAL → 2026-05-15 Phase 1 freeze gate. |
-| **Phase 4.FEATURES**                                    | 🟢 UNBLOCKED — sweep not yet started                 | features_repo_consolidation Phase 7 ✅ SHIPPED unblocks gate. Owner: slot 2 (consistent with prior `ikenna-v8-mw-*` sub-agent pattern) OR fold into Phase 4.MTDS unblock once operator triage lands. ~6-12h fan-out across 6 feature-family adapters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **Phase 4.GREP-VERIFY** (workspace AST-walk QG STEP)    | ✅ **SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** | `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (291 lines, 5-method closed set including `record_empty_for_shard`) + `test_*.py` (11 tests pass) + seeded `pipeline_mode_explicit_baseline.yaml` (112 entries: MTDS 97 + UTL 9 + features-service 6) + wired into `scripts/quality-gates-base/base-service.sh` STEP 5.70. Whitelist marker: `# QG-allow: pipeline-mode-not-applicable`. STEP 5.70 starts WARN-only; HARD-FAILs on any new occurrence; shrinks to 0 as Phase 4.MTDS sweep (slot 3) + 4.FEATURES + 4.DEFAULT-REMOVAL land. **Slot 3 collision finding 2026-05-12**: local parallel version was 70% identical (different whitelist marker phrasing + 27 vs 11 tests + bare-Name-callee handling + `**kwargs` forwarding tolerance); per CLAUDE.md "Two teammates × multiple parallel agents" rule, slot 8's pushed version wins; slot 3's local stash dropped.                                |
-| **Phase 4.DEFAULT-REMOVAL**                             | ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY           | Consolidated scope per Phase 2 P2 resolution (PM@`6efbfced`): (a) remove 4 `None` defaults from 5 `record_*` methods + (b) bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + (c) reconcile codex prose at `availability-manifest-and-data-status.md:258-262+265`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO                                              | Baseline doc `codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward).                                                                                                                                                                                                                                                                                                                                                                 |
-| **LookaheadBiasError strict-mode at features-\***       | ✅ **DONE** (freeze-gate item 5 closed)              | 8/8 families shipped: sports + onchain prior; delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe at `features-service@a0011d17` 2026-05-13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| **Carry-forward — TradFi 4.3% phantom audit triage**    | ❌ NOT YET OPENED — does NOT block freeze            | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Phase 4.FEATURES**                                    | 🟢 UNBLOCKED — sweep not yet started                 | features_repo_consolidation Phase 7 ✅ SHIPPED unblocks gate. Owner: slot 2 (consistent with prior `ikenna-v8-mw-*` sub-agent pattern) OR fold into Phase 4.MTDS unblock once operator triage lands. ~6-12h fan-out across 6 feature-family adapters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Phase 4.GREP-VERIFY** (workspace AST-walk QG STEP)    | ✅ **SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** | `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (291 lines, 5-method closed set including `record_empty_for_shard`) + `test_*.py` (11 tests pass) + seeded `pipeline_mode_explicit_baseline.yaml` (112 entries: MTDS 97 + UTL 9 + features-service 6) + wired into `scripts/quality-gates-base/base-service.sh` STEP 5.70. Whitelist marker: `# QG-allow: pipeline-mode-not-applicable`. STEP 5.70 starts WARN-only; HARD-FAILs on any new occurrence; shrinks to 0 as Phase 4.MTDS sweep (slot 3) + 4.FEATURES + 4.DEFAULT-REMOVAL land. **Slot 3 collision finding 2026-05-12**: local parallel version was 70% identical (different whitelist marker phrasing + 27 vs 11 tests + bare-Name-callee handling + `**kwargs` forwarding tolerance); per CLAUDE.md "Two teammates × multiple parallel agents" rule, slot 8's pushed version wins; slot 3's local stash dropped.                                                   |
+| **Phase 4.DEFAULT-REMOVAL**                             | ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY           | Consolidated scope per Phase 2 P2 resolution (PM@`6efbfced`): (a) remove 4 `None` defaults from 5 `record_*` methods + (b) bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + (c) reconcile codex prose at `availability-manifest-and-data-status.md:258-262+265`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO                                              | Baseline doc `codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward).                                                                                                                                                                                                                                                                                                                                                                                    |
+| **LookaheadBiasError strict-mode at features-\***       | ✅ **DONE** (freeze-gate item 5 closed)              | 8/8 families shipped: sports + onchain prior; delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe at `features-service@a0011d17` 2026-05-13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Carry-forward — TradFi 4.3% phantom audit triage**    | ❌ NOT YET OPENED — does NOT block freeze            | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ### Go/no-go signal for 2026-05-15 Phase 1 freeze gate
 
