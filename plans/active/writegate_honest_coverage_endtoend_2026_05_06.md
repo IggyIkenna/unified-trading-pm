@@ -1754,10 +1754,11 @@ For each writer service in the order MTDS / MDPS / instruments-service / feature
       (4 post-fetch sites in batch_handler — TABLE_TO_EXPORT loop + odds_features + derived_features +
       fixture_features). MDPS adapter A/B/C migration shipped 2026-05-07 in Tier 2A/C/D/E (commits
       5b52d0b/b9f9328/80cf141/e9520a0); their A-path uses zero-row CandleOutput (no record_empty call needed).
-- [ ] [SCRIPT] P0. **Partial-bundle / cluster-coverage failures**: the existing `ClusterCoverageError` flow under
+- [x] ✅ [SCRIPT] P0. **Partial-bundle / cluster-coverage failures**: the existing `ClusterCoverageError` flow under
       `attempted_failed` stays. NEW: where a bundle is legitimately partial because some clusters didn't exist on that
       date (e.g. ES.OPT before a weekly was listed), emit `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`
-      for the missing-cluster sub-shards instead of `attempted_failed`.
+      for the missing-cluster sub-shards instead of `attempted_failed`. — mtds@06b6c0e1; snapshot-diff logic +
+      per-cluster sub-shard rows; 7/7 unit tests green; QG 1886 passed.
 - [x] [TEST] P0. Per-service: feed a calendar-skipped day → assert manifest has the right `EXPECTED_*` row, NOT "no row
       at all." **2026-05-07**: instruments-service `test_process_instruments_tradfi_non_trading_day_writes_manifest`
       asserts `record_expected_empty.call_count > 0` + reason ∈ {EXPECTED_HOLIDAY, EXPECTED_WEEKEND}; UAC
