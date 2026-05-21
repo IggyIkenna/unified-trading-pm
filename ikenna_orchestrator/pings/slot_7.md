@@ -2198,3 +2198,55 @@ gh pr create --base main --head tab/ikennaigboaka/7 \
 **Next dispatch**: slot 7 now idle. Awaiting Phase 8 unblock (requires Phase 7 from slot 6) or operator reassignment.
 
 — slot-7 worker / ikenna 2026-05-20
+
+---
+
+## 2026-05-21 — R2 Sports oracle fix SHIPPED + A3 re-run confirms 6,326 residual
+
+**From**: slot-7 worker (ikenna)
+
+**Plan item**: `mega_audit_phase_a_issues_human_readable_2026_05_20.md` § R2 + R7
+
+**Status**: ORACLE ROOT-CAUSE FIXED — 19,326 phantom MISSING_EXPECTED eliminated
+
+### What was fixed
+
+Root cause of 25,652 sports MISSING_EXPECTED: the `_SPORTS` dict in `expected_coverage.py` used wrong data_type names and wrong venue names:
+
+- **Data types**: `"odds"` → `"ODDS"` (ODDS_API), `"odds_snapshot"/"odds_movement"` → `"trades"` (all others)
+- **Betfair venues**: canonical `"BETFAIR"` → `"BETFAIR_SB_UK"`, `"BETFAIR_EX_UK"`, `"BETFAIR_EX_EU"` (MTDS sub-venue tokens)
+- **BET365 removed**: 0 manifest rows (DEFERRED-INDEFINITELY 2026-05-12 per operator)
+- **KNOWN_COVERAGE_GAPS populated**: pre-MTDS-launch window (2020-01-01–2020-05-31) for BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU, DRAFTKINGS, FANDUEL
+- **coverage_start added**: `_ODDS_API` (`{"ODDS": date(2020, 6, 6)}`) + `_PINNACLE` (`{"trades": date(2020, 6, 1)}`)
+
+Commit: **uac@02b8370** (QG exit 0, branch `tab/ikennaigboaka/7`)
+
+### A3 re-run results (2026-05-21 07:07 UTC)
+
+| Venue | data_type | MISSING_EXPECTED |
+|---|---|---|
+| BETFAIR_EX_EU | trades | 1,427 |
+| BETFAIR_EX_UK | trades | 1,407 |
+| BETFAIR_SB_UK | trades | 1,399 |
+| PINNACLE | trades | 708 |
+| FANDUEL | trades | 627 |
+| DRAFTKINGS | trades | 554 |
+| ODDS_API | ODDS | 204 |
+| **Total** | | **6,326** |
+
+**Reduction**: 25,652 → 6,326 (−19,326 phantom cells eliminated by oracle fix)
+
+### Residual 6,326 diagnosis
+
+All residual MISSING_EXPECTED are off-season days within the manifest date range (2020-06-01 to 2026-04-14). These are days where no league fixtures exist → adapters correctly don't run → no manifest rows. The oracle still says SHOULD_HAVE_DATA because it lacks per-league fixture calendar integration.
+
+**Owner**: R9 (slot 5) — per-symbol axis with `get_league_fixture_calendar` lookup.
+
+### Plan-of-record updates
+
+- R2 status updated in mega_audit doc with uac@02b8370 evidence (PM@53ac1d4c / PM@4d9ef32a)
+- R7 status extended: KNOWN_COVERAGE_GAPS now populated for all 5 new venues
+
+**Next dispatch**: slot 7 — R2 oracle code done; awaiting R9 (slot 5) for full GREEN. Operator may reassign slot 7.
+
+— slot-7 worker / ikenna 2026-05-21

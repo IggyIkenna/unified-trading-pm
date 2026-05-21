@@ -153,7 +153,7 @@ def main() -> int:
     expected = load_expected_dump()
     print(f"A2 dump rows: {len(expected):,}", flush=True)
 
-    fs = gcsfs.GCSFileSystem()
+    fs = gcsfs.GCSFileSystem(token="google_default")
 
     print("\nReading manifest indexes from prod GCS ...", flush=True)
     manifest_frames: list[pd.DataFrame] = []
