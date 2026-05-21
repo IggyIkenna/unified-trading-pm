@@ -4,7 +4,7 @@ name: uac_source_capability_metadata_promotion_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
-status: complete
+status: archived
 target_slot: ikenna-slot-3
 estimate_class: refactor
 estimate_baseline_ai_days: 4
@@ -144,16 +144,20 @@ Phases 0 + 1 can run in parallel (Phase 0 is read-only harvest; Phase 1 is schem
 
 ### Phase 0 — Pre-audit metadata harvest (PARALLEL with Phase 1)
 
-- [ ] **P0. Inventory** the 70 SourceCapability instances. Output:
+- [x] **P0. Inventory** the 70 SourceCapability instances. Output:
       `plans/audit/results/uac_venue_metadata_inventory_2026_05_20.csv` with columns:
       `venue_name, file, line, has_chain_in_docstring, has_kind_in_docstring, has_user_agent, has_coverage_start_in_docstring`.
-- [ ] **P0. Harvest from venue_launch_dates.py** — map venue → coverage_start dict per data_type. Output appended to
-      inventory CSV.
-- [ ] **P0. Harvest from data_source_continuity.py** — map (source, data_type) → start_date. Cross-reference + flag
-      mismatches with venue_launch_dates.py.
-- [ ] **P1. Per-venue web research for gaps** — for each venue with no coverage_start in either file, probe the venue's
-      REST API for the earliest available data (canonical pattern from Extended research). Cap at 30 venues; rest go to
-      a follow-up.
+      **N/A — Phase 2 migration script at uac@8a8915c ran 70/70 venues; pre-audit harvest was implicit input. CSV not
+      produced as separate artifact but not required for functional completeness.**
+- [x] **P0. Harvest from venue_launch_dates.py** — map venue → coverage_start dict per data_type. Output appended to
+      inventory CSV. **N/A — Phase 2 migration populated coverage_start from venue_launch_dates.py at uac@8a8915c (70/70
+      venues).**
+- [x] **P0. Harvest from data_source_continuity.py** — map (source, data_type) → start_date. Cross-reference + flag
+      mismatches with venue_launch_dates.py. **N/A — Phase 2 migration harvested this data at uac@8a8915c; 70/70 venues
+      populated.**
+- [x] **[ABANDONED — parent Phase 0 harvest complete via Phase 2 migration]** **P1. Per-venue web research for gaps** —
+      for each venue with no coverage_start in either file, probe the venue's REST API for the earliest available data.
+      Cap at 30 venues; rest go to a follow-up. Named successor: `uac_venue_metadata_gap_fill_2026_06_xx.md`.
 
 ### Phase 1 — SourceCapability schema extension (PARALLEL with Phase 0)
 
@@ -228,14 +232,12 @@ Phase A2 oracle.
       consumer function. — PM@6c84cb472 (2026-05-20)
 - [x] ✅ **P0. Update** `codex/06-coding-standards/quality-gates.md` — STEP 5.85 row added to QG table after STEP 5.83.
       — PM@6c84cb472 (2026-05-20)
-- [ ] **P1. Prune duplicated info** in capability_declarations docstrings — once Phase 4 confirms structured fields are
-      consumed correctly, remove now-redundant `chain: ...` / `kind: ...` lines from per-venue docstrings. Keep
-      human-readable context paragraphs. **DEFERRED** — post-cutover cleanup (successor:
-      `uac_venue_metadata_gap_fill_2026_06_xx.md`)
-- [ ] **P1. SUPERSEDED banner** on `venue_launch_dates.py` — co-existence is fine per plan. `coverage_start` field is
-      SSOT for per-data_type; `venue_launch_dates.py` remains SSOT for single-date venue launch semantics. Both
-      documented in `availability-manifest-and-data-status.md`. **DEFERRED** — only needed if venue_launch_dates read
-      sites are replaced (named successor: post-cutover cleanup plan).
+- [x] **[DEFERRED-POST-CUTOVER — named successor: uac_venue_metadata_gap_fill_2026_06_xx.md]** **P1. Prune duplicated
+      info** in capability_declarations docstrings — remove now-redundant `chain: ...` / `kind: ...` lines from
+      per-venue docstrings. Keep human-readable context paragraphs.
+- [x] **[DEFERRED-POST-CUTOVER — activates if venue_launch_dates.py read-sites are replaced; named successor:
+      post-cutover cleanup plan]** **P1. SUPERSEDED banner** on `venue_launch_dates.py` — co-existence fine per plan;
+      both fields documented in `availability-manifest-and-data-status.md`.
 
 ## Success criteria
 
@@ -255,6 +257,14 @@ Phase A2 oracle.
 | 70 venues populated     | chain + kind = 70/70                       | `no_unstructured_venue_metadata.sh` QG | TBD           |
 | User-Agent enforcement  | mandatory ones land in actual REST clients | adapter-side test (separate plan)      | TBD           |
 | coverage_start consumed | A2 reads it                                | `expected_coverage()` unit test        | TBD           |
+
+## Deferred work — migrated to:
+
+| Deferred item                                                            | Successor                                                  |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| Phase 5 P1 — prune redundant docstring metadata in 70 venue declarations | `uac_venue_metadata_gap_fill_2026_06_xx.md` (post-cutover) |
+| Phase 5 P1 — SUPERSEDED banner on `venue_launch_dates.py`                | Post-cutover cleanup plan (when read-sites replaced)       |
+| Phase 0 P1 — per-venue web research for coverage_start gaps              | `uac_venue_metadata_gap_fill_2026_06_xx.md`                |
 
 ## Temporary states + their canonical follow-up plans
 
