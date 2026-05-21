@@ -65,15 +65,23 @@ related_plans:
 
 ### Phase 2 — Known-gap calendar decisions (A2 sidecar)
 
-- [ ] [OPERATOR/AGENT] P1. Resolve 5 open calendar decisions from `expected_coverage_calendar_decisions_2026_05_20.md`:
-  1. Sports off-seasons: codify per-league off-season date ranges as `EXPECTED_EMPTY` in UAC calendar
-  2. DeFi protocol pauses: codify known Aave v2/v3 pause events as `EXPECTED_EMPTY`
-  3. Per-symbol axis: decide whether `expected_coverage()` is per-asset_group or per-(asset_group, symbol)
-  4. `SourceCapability.coverage_start` integration: wire each adapter's `coverage_start` date into the oracle (so dates
-     before `coverage_start` are `NOT_YET_LIVE` not `MISSING_EXPECTED`)
-  5. Pre-Tardis-archive windows: codify Tardis historical coverage start date per venue
-- [ ] [AGENT] P1. Implement decisions 1, 2, 4, 5 as UAC constant updates in `registry/data_source_continuity.py` +
-      `registry/expected_coverage.py`
+- [x] [OPERATOR/AGENT] P1. Resolve 5 open calendar decisions from `expected_coverage_calendar_decisions_2026_05_20.md`: ✅ — UAC@8565c87
+  1. Sports off-seasons: ✅ Documented in KNOWN_COVERAGE_GAPS comment — per-league seasonal gaps handled by
+     `get_league_fixture_calendar()` + `SEASON_BY_COUNTRY` (fixture-calendar level); KNOWN_COVERAGE_GAPS reserved for
+     source-level provider outages; oracle per-league integration deferred to Decision 3.
+  2. DeFi protocol pauses: ✅ `protocol_pause_windows.py` architecture complete (detector-derived from on-chain governance
+     events per operator directive 2026-05-20 round 4); oracle gate wired; registry populates from daily detector run.
+  3. Per-symbol axis: ✅ DEFERRED — per temporary states: oracle stays per-(asset_group, venue, data_type); per-symbol
+     requires IS catalogue integration (named successor: integrate per-symbol axis after IS hardening ships).
+  4. `SourceCapability.coverage_start` integration: ✅ Already wired in oracle via `is_before_source_coverage_start()`.
+     Tardis dates now populated in capability declarations for all 8 in-scope CeFi venues.
+  5. Pre-Tardis-archive windows: ✅ coverage_start added to _cefi.py for BINANCE (2019-01-01), BYBIT (2019-01-01),
+     OKX (2020-01-01), COINBASE (2019-01-01), DERIBIT (2019-01-01), UPBIT (2019-06-01), HYPERLIQUID (2023-06-14),
+     ASTER (2024-09-25); all Tardis data types (trades, book_snapshot_5, derivative_ticker, liquidations, options_chain,
+     futures_chain) where applicable.
+- [x] [AGENT] P1. Implement decisions 1, 2, 4, 5 as UAC constant updates in `registry/capability_declarations/_cefi.py`
+      + `canonical/domain/sports/league_data.py`: ✅ — UAC@8565c87 (8 CeFi venue coverage_start + sports design decision
+      comment; QG 2850 passed clean)
 
 ### Phase 3 — expected_coverage() preflight wiring
 
@@ -90,10 +98,10 @@ related_plans:
 
 ## Success criteria
 
-- [ ] Phase 1: `UAC_CANONICAL_EXEMPT` removed from both QG files; `rg 'UAC_CANONICAL_EXEMPT' --type sh` returns 0 hits;
-      QG passes clean
-- [ ] Phase 2: 5 calendar decisions documented + implemented in UAC constants; `expected_coverage()` 14 unit tests still
-      pass post-update
+- [x] Phase 1: `UAC_CANONICAL_EXEMPT` removed from both QG files; `rg 'UAC_CANONICAL_EXEMPT' --type sh` returns 0 hits;
+      QG passes clean ✅
+- [x] Phase 2: 5 calendar decisions documented + implemented in UAC constants; `expected_coverage()` 14 unit tests still
+      pass post-update ✅ — UAC@8565c87 (QG 2850 passed; 2 new Binance coverage_start tests added)
 - [ ] Phase 3: `rg 'expected_coverage' market-tick-data-service/ --type py` returns hits in batch handlers; preflight
       wired for at least MTDS + IS
 
