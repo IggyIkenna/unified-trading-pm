@@ -76,13 +76,16 @@ prerequisite_plans:
 
 ### Phase 1 — MTDS manifest emission (upstream prerequisite)
 
-- [ ] [AGENT] P0. Add `record_captured` / `record_empty(reason=...)` / `record_failed` to MTDS batch handlers:
-  - Every handler that writes a parquet to GCS MUST call `record_captured(...)` with cluster validation
-  - Empty data from upstream API → `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)`
-  - Exception during fetch → `record_failed(error_reason=...)`
-  - Scan: `rg 'record_captured|record_empty|record_failed' market-tick-data-service/ --type py` to find current gaps
-- [ ] [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
+- [x] ✅ [AGENT] P0. Add `record_captured` / `record_empty(reason=...)` / `record_failed` to MTDS batch handlers:
+  - VERIFIED DONE (2026-05-21): All 24 batch handlers writing to GCS already have these calls.
+    Handlers explicitly exempted with inline `# exempt:` comments: `data_manifest_handler.py` (read-only scanner),
+    `replay_handler.py` (ReplayPublisher manages manifest). `tick_data_handler.py` delegates to
+    `engine/orchestrator.py` which has extensive coverage. `canonical_write.py` is a shared utility —
+    manifest recording happens at handler level (callers). No actionable gaps found.
+- [x] ✅ [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
       manifest-visible
+  - VERIFIED DONE (2026-05-21): `live/websocket_runner.py` (lines 694-743) + `live/manifest_recorder.py`
+    (ShardManifestRecorder) provide `record_captured`/`record_empty`/`record_failed` for all live write paths.
 - [x] ✅ [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
       (not Int64 epoch-nanos); remove the runtime cast workaround in features-service once MTDS is fixed
       — MTDS@c1c17a4: GMX native + Messari paths converted `int(ts)` → `datetime.fromtimestamp(ts, tz=UTC)`;
