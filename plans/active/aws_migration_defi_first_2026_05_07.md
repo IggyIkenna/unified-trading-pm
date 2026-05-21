@@ -358,13 +358,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       (prod_write_protection / glue_read_access / athena_results_write), and 12 DeFi prod bucket targets. Actual
       `aws s3api put-bucket-policy` apply script still open — see TODO in yaml file and next item below.
       deployment-service@4550bc3.
-- [x] [QG] P0. Verify `aws s3 ls` shows 10 new buckets + `aws s3api get-bucket-policy` returns expected JSON for each.
-      **SHIPPED 2026-05-19** (slot 6): Phase 1.B — IAM matrix + bucket policy scripts landed
-      (deployment-service@f9fd4c0). `scripts/aws/setup-iam-roles.sh` creates 30 uts-{service}-{env} IAM roles (10 DeFi
-      services × prod/staging/dev), mirroring GCP SA matrix. `scripts/aws/apply-bucket-policies.sh` applies
-      prod_write_protection + glue_read_access + athena_results_write policies to 12 DeFi prod S3 buckets. Both scripts
-      idempotent, default dry-run. Operator next step: `aws auth admin_od` then
-      `bash scripts/aws/setup-iam-roles.sh --apply && bash scripts/aws/apply-bucket-policies.sh --apply`.
+- [x] ✅ [QG] P0. Verify `aws s3 ls` shows 10 new buckets + `aws s3api get-bucket-policy` returns expected JSON for
+      each. **SHIPPED 2026-05-19** (slot 6): Phase 1.B — IAM matrix + bucket policy scripts landed
+      (deployment-service@f9fd4c0). **APPLIED 2026-05-21** (slot 3): 30/30 uts-{service}-{env} IAM roles created
+      (deployment-service@086e6b9; fixed em-dash charset bug). 12/12 DeFi prod bucket policies applied
+      (deployment-service@a6903af; fixed wildcard Principal IAM pattern + canonical bucket names prd→{kind}-prd).
+      Verified: `aws s3api get-bucket-policy` returns valid JSON for all 12 buckets. IAM roles listed via
+      `aws iam list-roles --query Roles[?starts_with(RoleName,'uts-')].RoleName` = 30 roles ✅.
 - [x] [SCRIPT] P1. **DEFERRED** Add `defi-validation` key to `aws.storage` in `cloud-providers.yaml` — GCP has
       `${GCP_PROJECT_ID}-defi-validation` (line 195) but AWS section has no equivalent. DeFi validation VMs use
       `resolve_bucket_name(kind="defi-validation")` and will 404 on `CLOUD_PROVIDER=aws`. Fix: add
