@@ -2295,3 +2295,41 @@ Resume dispatch when ONE of:
 3. Operator explicit reassignment ping to this ledger
 
 — slot-7 worker / ikenna 2026-05-21
+
+---
+
+## 2026-05-21 — orchestrator v0.7 Phase 1 COMPLETE (registry + frontmatter + CLAUDE.md)
+
+**From**: slot-7 worker (ikenna)
+
+**Plan**: `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` Phase 1
+
+**Status**: ALL PHASE 1 ITEMS DONE — pushed to LDR (PM@663d597a)
+
+### Deliverables
+
+| Item | Commit | Detail |
+|---|---|---|
+| `orchestrator_vm_registry.yaml` | PM@e3f11893 | vm-0 (epic VM) + human-planning-vm (planning VM); `generated_at: 2026-05-21T00:00:00Z` |
+| `scripts/orchestrator/regen_vm_registry.py` | PM@e3f11893 | scans plans/epics/*.md + key actives; validates vm-ids; updates master_plans lists; bumps generated_at |
+| `assigned_vm:` frontmatter — 11 epics | PM@e3f11893 | cefi, cross_cutting, infrastructure, instruments_live, manifest_evolution, manifest_migration, ml_and_features, predictions, sports, strategy_and_dart, tradfi → all `assigned_vm: vm-0` |
+| `assigned_vm:` frontmatter — 3 actives | PM@e3f11893 | data_pipeline_master_coordination, master_to_live_defi → vm-0; orchestrator_v07 → human-planning-vm |
+| CLAUDE.md rule | PM@e3f11893 | "Master plans MUST declare `assigned_vm:` in frontmatter. regen_vm_registry.py --check must exit 0 before push." |
+| Phase 1 checkboxes flipped | PM@ce6370ab | All 4 Phase 1 todos marked `[x]` with evidence SHA |
+
+### Validation
+
+`python3 scripts/orchestrator/regen_vm_registry.py --check` → `OK — all assigned_vm values valid (2 vm-ids)` ✅
+
+### Bug fixed mid-session
+
+`orchestrator_v07_multi_vm_topology_2026_05_21.md` originally had `assigned_vm: planning-vm` (non-registry id) at line 15.
+Prior sed added a second `assigned_vm: human-planning-vm` at line 9 → duplicate field. Fixed: removed duplicate,
+replaced `planning-vm` with `human-planning-vm` (preserving inline comment). Registry now consistent.
+
+### Next
+
+Phase 2 (multi-VM dashboard) is unassigned. Slot 7 will hold for operator dispatch or UNFREEZE ping.
+Unblock conditions (same as previous ping): UNFREEZE signal, R9 lands, or explicit reassignment.
+
+— slot-7 worker / ikenna 2026-05-21
