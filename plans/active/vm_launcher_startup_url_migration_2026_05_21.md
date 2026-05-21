@@ -94,23 +94,42 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
       - `launch-gcs-migration-bundle-vm.sh`: runs PM migration scripts not in service tarball — needs tarball extension
         or new dedicated startup handler. Most complex.
 
-- [ ] [SCRIPT] P1. **Convert sports launchers** (3): `launch-sports-{entity-sweep,full-sweep,
-      instruments-reference}-vm.sh` → Pattern A. Entity-sweep: uses existing `sports-manifest-rescan` handler + per-entity
-      `VM_MIGRATION_CMD`. Full-sweep + instruments-reference: add new `VM_TASK=sports-full-sweep` handler to
-      `setup-data-pipeline-vm.sh` that fetches + runs `vm_instruments_reference.sh` from CODE_BUCKET.
+- [x] ✅ [SCRIPT] P1. **Convert sports launchers** (3): `launch-sports-{entity-sweep,full-sweep,
+      instruments-reference}-vm.sh` → Pattern A.
+      - `setup-data-pipeline-vm.sh`: added `VM_SPORTS_ENTITY` to `instruments-backfill` BASE_CLI (one line).
+      - All 3 launchers use `VM_TASK=instruments-backfill` + `VM_ASSET_GROUP=SPORTS`.
+      - Entity-sweep: per-entity `VM_VENUE` + `VM_SPORTS_ENTITY` metadata, 17 VMs parallel.
+      - Full-sweep: `VM_VENUE=API_FOOTBALL`, no entity filter, 8 year VMs parallel.
+      - Instruments-reference: 3 date-split VMs, removed Cloud Scheduler complexity (date passed).
+      — deployment-service@dbdfe40
 
-- [ ] [SCRIPT] P1. **Convert prediction launchers** (2): `launch-prediction-{features,pipeline}-vm.sh` → Pattern A.
-      Add `VM_TASK=prediction-features-backfill` (chunk loop) and `VM_TASK=prediction-pipeline` (3-stage sequence)
-      handlers to `setup-data-pipeline-vm.sh`.
+- [x] ✅ [SCRIPT] P2. **Convert `launch-cefi-migration-vm.sh`** → Pattern A via existing
+      `VM_TASK=canonical-migration` handler. `VM_MIGRATION_CMD=python scripts/migrate_cefi_instrument_types.py
+      --workers 16 --mixed-workers 1 --skip-cleanup`. Zone corrected us-central1-a →
+      asia-northeast1-c (workspace rule). — deployment-service@dbdfe40
 
-- [ ] [SCRIPT] P2. **Convert migration launchers** (2): `launch-{cefi-migration,gcs-migration-bundle}-vm.sh`. These
-      run custom Python scripts not in the standard service tarball path. Option: add `VM_TASK=script-runner` handler
-      that reads `VM_MIGRATION_CMD` and runs it verbatim (this handler already exists as `VM_TASK=sports-manifest-rescan`
-      which runs `VM_MIGRATION_CMD` in a specific dir — generalise it).
+- [ ] **[PATTERN B EXCEPTION]** P1. **`launch-prediction-features-vm.sh`** — DEFERRED / SUPERSEDED.
+      `launch-features-vm.sh` is the canonical replacement (already Pattern A, confirmed 2026-05-21).
+      The deprecation notice in the launcher itself says to use `launch-features-vm.sh --feature-family
+      cross_instrument --asset-group PREDICTION`. No Pattern A conversion needed; file stays as-is
+      pending archive once `launch-features-vm.sh` covers all its use-cases.
+
+- [ ] **[PATTERN B EXCEPTION]** P1. **`launch-prediction-pipeline-vm.sh`** — Pattern B exception.
+      3-service sequential pipeline (MDPS → features-cross-instrument → features-delta-one) with
+      per-service skip flags; each stage uses a different binary and different CLI shape. An inline
+      multi-stage handler would exceed `setup-data-pipeline-vm.sh` complexity budget and create
+      tight coupling across 6 repos. Stays Pattern B.
+
+- [ ] **[PATTERN B EXCEPTION]** P2. **`launch-gcs-migration-bundle-vm.sh`** — Pattern B exception.
+      Per-run migration script uploaded to timestamp-scoped GCS staging path at launch time; VM
+      downloads from that run-specific path. The pre-launch script-upload step cannot be expressed
+      as VM metadata, making a clean Pattern A conversion impractical without restructuring the
+      upload flow. Additionally, the migration script lives in unified-trading-pm (not any service
+      tarball). Stays Pattern B; consider moving script to CODE_BUCKET/scripts/ for a future pass.
 
 ## Pattern B confirmed exceptions (do NOT convert)
 
-The following 5 launchers are PERMANENT Pattern B exceptions per the decision matrix:
+The following 8 launchers are PERMANENT Pattern B exceptions per the decision matrix:
 
 | Launcher                                     | Reason                                     |
 | -------------------------------------------- | ------------------------------------------ |
@@ -119,16 +138,19 @@ The following 5 launchers are PERMANENT Pattern B exceptions per the decision ma
 | `launch-planning-vm.sh`                      | Orchestrator FastAPI daemon                |
 | `launch-aave-lending-rate-validation-vm.sh`  | Heartbeat-only validator, no manifest writes |
 | `launch-amm-golden-fixture-validation-vm.sh` | Heartbeat-only validator, no manifest writes |
+| `launch-prediction-features-vm.sh`          | SUPERSEDED by Pattern-A `launch-features-vm.sh` |
+| `launch-prediction-pipeline-vm.sh`          | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
+| `launch-gcs-migration-bundle-vm.sh`         | Per-run GCS script upload at launch; PM script not in service tarball |
 
 ## Full Execution Criterion
 
 Plan is operationally complete when:
 
-1. All 22 data pipeline inline launchers use `startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh`.
+1. All data pipeline launchers not in the Pattern B exception list use `startup-script-url`.
 2. QG smoke for at least one launcher per phase passes (manifest row written, heartbeat received, VM self-deletes).
-3. `grep -l 'metadata-from-file=startup-script' deployment-service/scripts/vm/launch-*.sh` returns only the 5
+3. `grep -l 'metadata-from-file=startup-script' deployment-service/scripts/vm/launch-*.sh` returns only the 8
    confirmed Pattern B exceptions.
-4. `codex/05-infrastructure/vm-tarball-deployment.md` updated if the decision matrix needs revision.
+4. `codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 8 exceptions (was 5).
 
 ## Temporary states + their canonical follow-up plans
 
