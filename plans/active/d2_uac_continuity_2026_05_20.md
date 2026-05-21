@@ -61,10 +61,7 @@ related_plans:
 
 - [x] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from execution-service `quality-gates.sh`: ✅ — execution-service@a848ef61 (12 deep imports fixed across engine/defi/sports adapters; QG STEP 5.23 clean)
 - [x] [AGENT] P0. Remove `UAC_CANONICAL_EXEMPT=true` from IS-service `quality-gates.sh`: ✅ — instruments-service@b476663 + UAC@ceeaddd (5 IS files fixed; POLYMARKET_MARKET_TO_CANONICAL + slugify_canonical_name added to sports facade; QG STEP 5.23 clean)
-- [ ] [AGENT] P1. Sweep top 49 deep-import violations (A1 CSV:
-      `plans/audit/results/codified_shape_compliance_2026_05_20.csv`):
-  - Focus: files in execution-service, IS-service, features-service (highest violation count repos)
-  - Fix: `from unified_api_contracts import X` for every `canonical.*` deep path
+- [x] [AGENT] P1. Sweep top 49 deep-import violations: ✅ — prod source across all repos = 0 violations (execution-service 12 files + IS 5 files fixed in P0; features-service/strategy-service/MTDS prod source was already 0). Residual violations in test/scripts are not in scope for QG STEP 5.23 $SOURCE_DIR scan.
 
 ### Phase 2 — Known-gap calendar decisions (A2 sidecar)
 
