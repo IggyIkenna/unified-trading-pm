@@ -25,29 +25,25 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
 
 ## Pre-conditions (blockers to resolve before migration)
 
-- [ ] [RESEARCH] P0. **`setup-data-pipeline-vm.sh` chunking support (MTDS)**. `vm_mtds_backfill.sh` uses 7-day
-      date-chunks (Tardis API rate limits) with its own venv at `${WORK_DIR}/.venv`. The canonical setup script uses
-      `/home/ikennaigboaka/venv` with no chunk loop. Either: (a) add `VM_CHUNK_DAYS` metadata + a chunk-loop handler to
-      `setup-data-pipeline-vm.sh`; or (b) modify `vm_mtds_backfill.sh` to use the existing venv path and stage it to
-      `CODE_BUCKET/vm/` as a downloadable helper. Option (b) is lower-risk. Document chosen path here before
-      implementation.
+- [x] ✅ [RESEARCH] P0. **`setup-data-pipeline-vm.sh` chunking support (MTDS)**. Chose option (a): inline chunk-loop
+      handler in `setup-data-pipeline-vm.sh` (no runner-script staging needed). Handler writes a self-contained
+      bash chunk-loop at `$WORKSPACE/mtds_chunk_loop.sh` at VM boot, using `$VENV` (the already-setup venv). Avoids
+      dual-venv conflict entirely. — deployment-service@2f49bad
 
-- [ ] [RESEARCH] P0. **`setup-data-pipeline-vm.sh` chunking support (instruments)**. `vm_instruments_backfill.sh`
-      uses 30-day chunks and its own venv. Same two options as above. Can share the same resolution as MTDS if option
-      (b) is chosen (stage runner script to GCS, download at VM boot, call from setup-data-pipeline-vm.sh handler).
+- [x] ✅ [RESEARCH] P0. **`setup-data-pipeline-vm.sh` chunking support (instruments)**. Same approach (a) as MTDS:
+      inline handler writes `$WORKSPACE/instruments_chunk_loop.sh`. Default chunk 30 days. — deployment-service@2f49bad
 
 ## Phase 1 — MTDS launchers (9 launchers)
 
-- [ ] [SCRIPT] P0. **Stage `vm_mtds_backfill.sh` to `CODE_BUCKET/vm/`**. Ensure the runner script uses
-      `/home/ikennaigboaka/venv` (not a local WORK_DIR venv). Add to `create-code-tarballs.sh` upload step or
-      upload separately in the launcher.
+- [x] ✅ [SCRIPT] P0. **Stage `vm_mtds_backfill.sh` to `CODE_BUCKET/vm/`** — SUPERSEDED. Chose inline handler (option
+      a) instead; no runner-script staging needed. — deployment-service@2f49bad
 
-- [ ] [SCRIPT] P0. **Add `VM_TASK=mtds-backfill` handler to `setup-data-pipeline-vm.sh`**. Handler: download
-      `vm_mtds_backfill.sh` from `CODE_BUCKET/vm/`, invoke with `--asset-group $VM_ASSET_GROUP --start-date
-      $VM_START_DATE --end-date $VM_END_DATE --chunk-size ${VM_CHUNK_DAYS:-7}`. Route through `_launch_with_tee`.
+- [x] ✅ [SCRIPT] P0. **Add `VM_TASK=mtds-backfill` handler to `setup-data-pipeline-vm.sh`**. Inline chunk-loop
+      (MTDS_CHUNK_LOOP_EOF heredoc), routes through `_launch_with_tee`. VM_CHUNK_DAYS default 7. Also added
+      `VM_TASK=instruments-backfill` handler (INSTR_CHUNK_LOOP_EOF, default 30 days). — deployment-service@2f49bad
 
-- [ ] [SCRIPT] P0. **Convert `launch-mtds-backfill-vm.sh`** to Pattern A (`startup-script-url`). Set
-      `VM_TASK=mtds-backfill`. Remove inline `STARTUP_FILE` heredoc + `--metadata-from-file`.
+- [x] ✅ [SCRIPT] P0. **Convert `launch-mtds-backfill-vm.sh`** to Pattern A. startup-script-url set, Steps 1+2
+      removed, singleton lock added, all backfill params passed as metadata. — deployment-service@2f49bad
 
 - [ ] [SCRIPT] P1. **Convert remaining 8 MTDS variant launchers** (`launch-mtds-{dex-pools,eigenlayer,gas-fees-fleet,
       liquidations,perp-funding,solana-drift,solana-gas,sports-odds}-backfill-vm.sh`). Each sets appropriate
@@ -59,11 +55,11 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
 
 ## Phase 2 — instruments launchers (2 launchers)
 
-- [ ] [SCRIPT] P0. **Stage `vm_instruments_backfill.sh` to `CODE_BUCKET/vm/`**. Fix venv path to use
-      `/home/ikennaigboaka/venv`.
+- [x] ✅ [SCRIPT] P0. **Stage `vm_instruments_backfill.sh` to `CODE_BUCKET/vm/`** — SUPERSEDED. Inline handler chosen
+      (no staging needed). — deployment-service@2f49bad
 
-- [ ] [SCRIPT] P0. **Add `VM_TASK=instruments-backfill` handler** (if not already present) to
-      `setup-data-pipeline-vm.sh`. Similar shape to mtds-backfill handler.
+- [x] ✅ [SCRIPT] P0. **Add `VM_TASK=instruments-backfill` handler** to `setup-data-pipeline-vm.sh`. Delivered in
+      same commit as mtds-backfill handler. — deployment-service@2f49bad
 
 - [ ] [SCRIPT] P0. **Convert `launch-cefi-instruments-backfill-vm.sh` + `launch-api-football-backfill-vm.sh`** to
       Pattern A.
