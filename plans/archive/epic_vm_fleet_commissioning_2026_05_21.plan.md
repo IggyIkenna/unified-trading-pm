@@ -2,7 +2,8 @@
 title: Epic VM fleet commissioning — planning VM finalization + 9 epic VMs launch
 parent_epic: orchestrator_master
 priority: P0
-status: active
+status: archived
+archived_date: 2026-05-22
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
@@ -11,6 +12,24 @@ locked_since: 2026-05-21
 related_plans:
   - agent_orchestrator_workers_on_vms_2026_05_19.md
   - agent_reliability_mitigations_2026_05_20.md
+---
+
+> **ARCHIVED 2026-05-22** — All phases complete. Fleet of 10 GCE epic VMs healthy (T+10min verification passed).
+> Deferred items migrated to `plans/epics/orchestrator_master.md` + `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
+> Codex alignment: `codex/04-architecture/agent-orchestrator-overview.md` +
+> `codex/05-infrastructure/agent-orchestrator-worker-topology.md` updated 2026-05-22.
+
+## Deferred work — migrated to:
+
+- **SSH-spawn per backend_id** → `plans/epics/orchestrator_master.md` (post-cutover)
+- **DNS wiring** → `plans/epics/orchestrator_master.md` (post-cutover)
+- **`worker-host-preflight.sh` in bootstrap** → `plans/epics/orchestrator_master.md` (ships with ssh-spawn)
+- **`.tabs/` 8-slot worktree population on epic VMs** → `plans/epics/orchestrator_master.md` (ships with ssh-spawn +
+  tarball)
+- **Codex SSOT `agent-orchestrator-worker-topology.md`** → COMPLETED at archive time 2026-05-22 (doc written)
+- **Spawn endpoint preflight** → `plans/epics/orchestrator_master.md` (ships with ssh-spawn)
+- **AWS cloud provider toggle** → `plans/active/aws_epic_vm_fleet_2026_05_22.md`
+
 ---
 
 # Epic VM Fleet Commissioning
@@ -26,8 +45,9 @@ Harsh PC. New model: 1 planning VM + 9 epic VMs, all running orchestrator + 8 wo
 
 Codex SSOTs:
 
-- `codex/04-architecture/agent-orchestrator-overview.md`
+- `codex/04-architecture/agent-orchestrator-overview.md` — updated 2026-05-22 (fleet topology, AWS toggle noted)
 - `codex/05-infrastructure/vm-tarball-deployment.md`
+- `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — written 2026-05-22 (was stub)
 
 ---
 
@@ -73,28 +93,3 @@ Codex SSOTs:
       superseded by this plan. Open deferred items (Phase 3 ssh-spawn, Phase 5 backend_id routing, Phase 6 codex SSOT,
       pending preflight items) migrated to Deferred section above. Archived to
       `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md`. pm@7c7f275.
-
-## Deferred (post-cutover)
-
-- **SSH-spawn per backend_id** (from workers_on_vms Phase 3+5): each slot maps to a backend_id; orchestrator ssh-tunnels
-  spawn. Ships post-cutover when all 9 epic VMs are stable.
-- **DNS wiring**: FQDNs (`api-<vm>.agent-orchestrator.odum-research.com`) pointing to each VM's IP or a load balancer.
-  Not needed for May-23 — direct IPs work.
-- **`worker-host-preflight.sh` in bootstrap**: auto-runs on each VM post-boot to set claude theme + folder-trust per
-  worktree. Ships with ssh-spawn work.
-- **`.tabs/` 8-slot worktree population on epic VMs**: `setup-tab-worktrees.sh --init --slots 8` requires service repos
-  to be cloned on the VM. Epic VMs currently only have the 4 cross-cutting repos (agent-orchestrator, UTL, UAC, PM).
-  Full slot population ships with ssh-spawn + tarball deploy work.
-- **Codex SSOT `codex/05-infrastructure/agent-orchestrator-worker-topology.md`**: New codex doc for worker topology
-  (10-VM fleet model). Update `agent-orchestrator-overview.md` Workers row +
-  `agent-orchestrator-e2e-operator-runbook.md`. Ships post-cutover. **MIGRATED FROM:**
-  `agent_orchestrator_workers_on_vms_2026_05_19.md` Phase 6.
-- **Spawn endpoint preflight**: folder-trust + onboarding flags in `~/.claude.json` for target worktree; `/tmp`
-  writability check; `worker-host-preflight.sh` as post-boot gate. Ships with ssh-spawn work. **MIGRATED FROM:**
-  `agent_orchestrator_workers_on_vms_2026_05_19.md` Pending preflight items.
-
-## Temporary states + canonical follow-up plans
-
-- Phase 1 config files in GCS: canonical location for all VM bootstraps going forward. Any config change updates the GCS
-  object + triggers rolling VM replacement (standard GCE pattern).
-- Planning VM external access is IP-direct until DNS is wired post-cutover.

@@ -30,16 +30,16 @@ Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-ope
 
 ## Tech stack
 
-| Layer      | Technology                                                                           |
-| ---------- | ------------------------------------------------------------------------------------ |
-| Backend    | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)          |
-| Frontend   | React + TypeScript + Vite (dashboard served by Firebase Hosting post-P2)             |
-| Auth       | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)             |
-| Workers    | tmux-spawn on operator's laptop (pre-P5); dedicated GCE VMs post workers-on-VMs plan |
-| State      | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)         |
-| GCS backup | `gs://agent-orchestrator-state-prod/` — set via `ORCHESTRATOR_GCS_BUCKET` env        |
-| Deps       | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                        |
-| QG         | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                       |
+| Layer      | Technology                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend    | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                       |
+| Frontend   | React + TypeScript + Vite (dashboard served by Firebase Hosting post-P2)                                                                          |
+| Auth       | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                                          |
+| Workers    | 10 epic GCE VMs (asia-northeast1-c), 8 slots each = 80 worker slots; 1 planning VM (34.146.53.106, 2 slots). See `orchestrator_vm_registry.yaml`. |
+| State      | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)                                                                      |
+| GCS backup | `gs://agent-orchestrator-state-prod/` — set via `ORCHESTRATOR_GCS_BUCKET` env                                                                     |
+| Deps       | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                     |
+| QG         | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                    |
 
 ---
 
@@ -217,18 +217,31 @@ Five mitigations added to close gaps in the multi-agent loop. All live on the Ik
 Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
 the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
-## Two-operator topology
+## Fleet topology (as of 2026-05-22)
 
-The system is **multi-master**. Each operator runs a fully autonomous backend:
+**1 planning VM + 10 epic GCE VMs**, all on GCP `asia-northeast1-c`, all running orchestrator v0.6.0+.
 
-| Operator | Backend host                                             | Public URL                                         | State                                             |
-| -------- | -------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------- |
-| Ikenna   | EC2 `m8i.4xlarge`, EIP `13.113.200.22`, `ap-northeast-1` | `https://api.agent-orchestrator.odum-research.com` | Independent `state.db`, users, slots, claim files |
-| Harsh    | Personal laptop                                          | `https://orch.epiphanytechnologies.com`            | Independent `state.db`, users, slots, claim files |
+| VM id            | IP             | Role     | Slots | Epics / workstreams        |
+| ---------------- | -------------- | -------- | ----- | -------------------------- |
+| planning-vm      | 34.146.53.106  | planning | 2     | Cross-cutting + governance |
+| vm-cefi          | 35.200.75.132  | epic     | 8     | CeFi adapters              |
+| vm-cross-cutting | 34.104.133.72  | epic     | 8     | Cross-cutting infra        |
+| vm-defi          | 35.200.55.185  | epic     | 8     | DeFi adapters              |
+| vm-ml            | 35.200.66.186  | epic     | 8     | ML / features              |
+| vm-operator-ops  | 34.85.27.215   | epic     | 8     | Operator ops               |
+| vm-orchestrator  | 35.194.106.13  | epic     | 8     | Orchestrator self          |
+| vm-prediction    | 136.110.98.16  | epic     | 8     | Predictions                |
+| vm-sports        | 34.146.32.46   | epic     | 8     | Sports                     |
+| vm-tradfi        | 35.200.59.184  | epic     | 8     | TradFi                     |
+| vm-trading-core  | 35.200.121.156 | epic     | 8     | Trading core               |
 
-The Firebase-hosted SPA at `https://agent-orchestrator.odum-research.com` is the SHARED entrypoint; the backend dropdown
-lets either operator pick which API the SPA hits. Login is per-backend (each `users.json` is distinct). There is no
-shared runtime state between backends — cross-side coordination happens through:
+Total worker capacity: 2 + 80 = **82 slots**. VM registry SSOT: `orchestrator_vm_registry.yaml`. Fleet commissioned
+2026-05-21; T+10min health verification PASSED 2026-05-22 (all `/health` = ok + GCS STARTED events).
+
+**Cloud provider**: GCP (current). AWS support planned — `CLOUD_PROVIDER=aws|gcp` toggle in launcher +
+`bootstrap_vm.sh`. AWS preferred long-term (existing credits). See `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
+
+Cross-side coordination:
 
 - `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
 - Daily work-split files `plans/active/work_split_<date>_<operator>.md`
@@ -244,8 +257,13 @@ Active successor plans:
 - `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5 shipped;
   auto `uv sync` hook deferred)
 - `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` — Slack push notifications (P1 + P2 shipped)
-- `plans/active/agent_orchestrator_workers_on_vms_2026_05_XX.md` — worker execution on VMs (planning)
-- `plans/active/agent_orchestrator_multi_account_failover_2026_05_XX.md` — multi-account failover (planning)
+- `plans/active/aws_epic_vm_fleet_2026_05_22.md` — AWS EC2 fleet (CLOUD_PROVIDER toggle; GCP working, AWS in progress)
+- `plans/epics/orchestrator_master.md` — multi-VM topology epic (SSH-spawn, DNS, preflight deferred items)
+
+Archived plans:
+
+- `plans/archive/epic_vm_fleet_commissioning_2026_05_21.plan.md` — GCP fleet commissioning (DONE 2026-05-22)
+- `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md` — old asymmetric model (superseded)
 
 Resolved/closed issues:
 
