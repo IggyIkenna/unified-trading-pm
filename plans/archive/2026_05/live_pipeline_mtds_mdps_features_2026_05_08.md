@@ -1498,9 +1498,9 @@ tracked here so the next agent picks up cleanly without re-reading session notes
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **`available_at` + lookahead-bias chain (Tab 2 share = links 0/3/4/5/8)**: No phases shipped this session. Open in
-  [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phases
-  0 / 3 / 4 / 5 / 8. Link 7 (`assert_available_at_present`) was already COVERED per that plan's status table (no action
-  required).
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+  Phases 0 / 3 / 4 / 5 / 8. Link 7 (`assert_available_at_present`) was already COVERED per that plan's status table (no
+  action required).
 - **Writegate Phase 5 ratchet**: Helper `unified_trading_library/honest_coverage_ratchet.py` shipped at UTL@59996210;
   baseline cell population (operator runs `measure-honest-coverage.py` on same-region GCE VM) + base-service.sh QG STEP
   wiring still open in

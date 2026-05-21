@@ -594,7 +594,7 @@ events). Rescan-design plan promoted DRAFT → active. **Q7(c) events env-tier R
 pnl/positions/risk shape-alignment still operator-pending.
 
 [2026-05-12 ~boot UTC] ikenna-main → harsh-main — 📋 **2026-05-12 HARSH-SIDE CONTINUATION PROMPTS shipped** at
-[`plans/active/continuation_prompts_2026_05_12_harsh.md`](continuation_prompts_2026_05_12_harsh.md). Mirror of
+[`plans/active/continuation_prompts_2026_05_12_harsh.md`](../archive/2026_05/continuation_prompts_2026_05_12_harsh.md). Mirror of
 Ikenna-side file — 7 paste-ready CONTINUE prompts (slots 2-8) keyed to new thematic assignments per
 `work_split_2026_05_12_harsh.md`. Format: status-line-first preamble (post 1-line STATUS-2026-05-11 ack in per-slot ping
 doc before pivoting) → READ list → SCOPE (~14-16 calibrated AI-days) → critical-path handshakes + cross-side handshakes
@@ -4453,7 +4453,8 @@ migration. Cross-ping persists until operator fires the explicit Phase 2 freeze.
 
 - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](strategy_repo_consolidation_2026_05_19.md) (30/31 done; 1
   P2 post-cutover open)
-- [`plans/active/ml_repo_consolidation_2026_05_19.md`](ml_repo_consolidation_2026_05_19.md) (appended in parallel)
+- [`plans/active/ml_repo_consolidation_2026_05_19.md`](../archive/2026_05/ml_repo_consolidation_2026_05_19.md) (appended
+  in parallel)
 - [`plans/active/strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md)
   — operator decision on lines 378/384/388
 
