@@ -92,8 +92,10 @@ that plan was written (2026-05-09):
     IS@a760e99 QG ✅. `reconcile_market_tick_manifest.py` (2× v5, attempted_failed + captured) — bumped to v8;
     MTDS@24dd75f QG ✅. Remaining grep hits were: config semver "1.0" (API schema, not manifest int),
     test files, reader-side stale-detection (intentional), historical migration scripts reading v<8 data.
-- [ ] [AGENT] P0. Fix `execution-service` live path: replace `ManifestWriter.add()` with
+- [x] ✅ [AGENT] P0. Fix `execution-service` live path: replace `ManifestWriter.add()` with
       `ManifestWriter.record_captured()` + v8 fields (C10 finding)
+  - UAC@c3f7a45: added BATCH_EXECUTION_SERVICE + execution_service SOURCE_PRIORITY + EMISSION_LATENCY + availability_semantics entries; UAC QG ✅
+  - ES@05ea467d: data_sink.py (LIVE_WEBSOCKET) + save_operations.py (BATCH_EXECUTION_SERVICE) both migrated; ES QG ✅ ALL QUALITY GATES PASSED
 
 ### Phase 2 — Reason-enum wiring
 
