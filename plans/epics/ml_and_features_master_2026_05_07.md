@@ -26,6 +26,7 @@ folds_in:
   - plans/archive/consolidated_ml_advanced_pipeline_2026_04_15.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+assigned_vm: vm-0
 ---
 
 # ML + Features Master (umbrella)

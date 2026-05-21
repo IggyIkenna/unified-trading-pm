@@ -13,6 +13,7 @@ asset_group: tradfi
 type: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+assigned_vm: vm-0
 folds_in:
   - instrument_schema_cohesion_and_market_hours_2026_03_31
   - sp500_ml_readiness_master_2026_05_05

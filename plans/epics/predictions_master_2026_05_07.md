@@ -13,6 +13,7 @@ asset_group: prediction
 type: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+assigned_vm: vm-0
 folds_in:
   - predictions_canonical_question_group_polymarket_migration_2026_05_06
   - sports_predictions_e2e_2026_05_05 # predictions ML half (sports half goes to sports_master)

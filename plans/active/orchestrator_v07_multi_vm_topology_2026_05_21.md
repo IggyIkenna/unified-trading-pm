@@ -11,7 +11,7 @@ co-operators: [harsh]
 estimate_class: infra
 estimate_baseline_ai_days: 60
 estimate_calibrated_ai_days: 48
-assigned_vm: planning-vm # this plan IS about VM topology; lives on the planning VM
+assigned_vm: human-planning-vm # this plan IS about VM topology; lives on the planning VM
 related_plans:
   # Existing orchestrator plans this supersedes / extends
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md

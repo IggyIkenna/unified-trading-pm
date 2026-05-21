@@ -1,0 +1,36 @@
+version: 1
+generated_at: 2026-05-21T00:00:00Z  # bumped by regen_vm_registry.py on each commit
+# Source of truth: plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md
+# DO NOT edit manually — run scripts/orchestrator/regen_vm_registry.py to regenerate.
+vms:
+  - id: human-planning-vm
+    fqdn: api-human-planning.agent-orchestrator.odum-research.com
+    role: planning
+    ssh_host: human-planning-vm
+    label: "Planning (Ikenna + Harsh interactive)"
+    operators: [ikenna, harsh]
+    accounts:
+      primary: ikennaigboaka@gmail.com
+      failover:
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+    master_plans: []  # planning VM doesn't execute
+
+  - id: vm-0  # agent-orchestrator-vm (existing DeFi fleet)
+    fqdn: api-vm-0.agent-orchestrator.odum-research.com
+    role: epic
+    ssh_host: agent-orchestrator-vm
+    label: "DeFi + data-pipeline master plan fleet"
+    accounts:
+      primary: ikenna@odum-research.com
+      failover:
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+    master_plans:
+      - plans/active/master_to_live_defi_2026_05_23.md
+      - plans/active/data_pipeline_master_coordination_2026_05_20.md
+
+  # vm-1 .. vm-7 provisioned as epic scope expands (see Phase 9 of orchestrator v0.7 plan)
+  # Each commissioned VM gets an entry here + regen_vm_registry.py re-runs.

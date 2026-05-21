@@ -9,6 +9,7 @@ status: active
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
+assigned_vm: vm-0
 estimate_class: infra
 estimate_baseline_ai_days: 45
 estimate_calibrated_ai_days: 36

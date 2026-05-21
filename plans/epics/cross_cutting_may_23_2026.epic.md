@@ -6,6 +6,7 @@ created: 2026-05-08
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+assigned_vm: vm-0
 name: cross-cutting-may-23-2026
 parent: master_to_live_defi_2026_05_23
 status: active

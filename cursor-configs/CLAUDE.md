@@ -362,6 +362,12 @@ Every todo: `- [x] [SCRIPT] P0. Description...`. SSOT: `plans/PLAN_FORMAT.md`.
 `plans/active/` = `<slug>.md`; `plans/archive/` = keep existing (DO NOT rename); `plans/ai/` = `<slug>.plan.md`. SSOTs:
 `plans/epics/README.md` + `plans/PLAN_FORMAT.md`.
 
+**`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
+`assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. Run
+`python3 scripts/orchestrator/regen_vm_registry.py --check` to validate; `--check` must exit 0 before push.
+Missing or unknown `assigned_vm` is review-blocking. SSOT:
+`plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
+
 ---
 
 ## Capture Discoveries As Plan Todos Immediately (HARD RULE)

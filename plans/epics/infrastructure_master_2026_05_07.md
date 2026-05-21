@@ -12,6 +12,7 @@ domain: infrastructure
 type: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+assigned_vm: vm-0
 folds_in:
   - shard_granularity_ssot_propagation_2026_05_06
   - shard_granularity_ssot_propagation_2026_05_06.HANDOVER # paired handover doc

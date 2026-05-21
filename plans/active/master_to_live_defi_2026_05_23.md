@@ -6,6 +6,7 @@ created: 2026-05-06
 last_updated: 2026-05-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
+assigned_vm: vm-0
 name: master-to-live-defi-2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
