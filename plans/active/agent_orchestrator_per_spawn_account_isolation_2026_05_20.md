@@ -16,6 +16,30 @@ parent_epic: orchestrator_master
 
 # Per-spawn account isolation (HOME-shim) — parallel multi-account throughput
 
+> ## ⚠️ SUPERSEDED 2026-05-21 by orchestrator_master.md § Auth & accounts r3 + Phase 4 r3
+>
+> This plan was authored before we discovered (2026-05-21 PM) that `claude setup-token` produces a **1-year long-lived
+> OAuth token** that authenticates via the `CLAUDE_CODE_OAUTH_TOKEN` env var — bypassing the entire
+> `.credentials.json`-file-contention problem this plan exists to solve.
+>
+> Under the long-lived-token architecture:
+>
+> - Each spawn just sets `CLAUDE_CODE_OAUTH_TOKEN=<account-N's token>` in its own environment before `exec claude`. No
+>   shared file. No HOME shim. No bind-mount. No file copy.
+> - Parallel multi-account throughput is the DEFAULT — different env vars per spawn = different accounts,
+>   simultaneously, with no contention.
+> - The whole "per-spawn HOME directory" complexity in this plan becomes unnecessary.
+>
+> **Action**: do NOT implement this plan as written. The Phase 4a refactor in `plans/epics/orchestrator_master.md`
+> (refactor `tmux_spawn.py` to source env file before claude exec) delivers the same outcome (parallel multi-account
+> spawns) with materially less complexity.
+>
+> Operator confirmed 2026-05-21 r3. The historical motivation + analysis below is preserved for context but the
+> implementation steps are abandoned. Archive after Phase 4a lands GREEN.
+>
+> Reference doc: operator-shared Claude CLI Multi-Account Headless Authentication Guide (long-lived setup-token via
+> CLAUDE_CODE_OAUTH_TOKEN env var, ~1y validity, multi-machine reuse).
+
 > **Provenance**: surfaced 2026-05-20 mid-failover-implementation discussion. The current swap_claude_account.sh design
 > works (file-copy + worker bounce) but constrains the fleet to ONE active Claude Max account at a time. With 2+ Max
 > accounts on the VM (harsh-primary + ikenna-backup as of 2026-05-20), we have ~2× message capacity that's idle today.

@@ -1,17 +1,18 @@
 ---
-title: Orchestrator v0.7 — multi-VM topology with per-epic isolation + safety + auth-failover + landing dashboard
-type: master-plan
+name: orchestrator_master
+type: epic
+tier: L5
 status: active
-created: 2026-05-21
 priority: P0
+assigned_vm: vm-orchestrator
+parent: master_to_live_defi_2026_05_23
+owner: ikenna
+co_operators: [harsh]
+created: 2026-05-21
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-operator: ikenna
-co-operators: [harsh]
-estimate_class: infra
-estimate_baseline_ai_days: 60
-estimate_calibrated_ai_days: 48
-assigned_vm: human-planning-vm # this plan IS about VM topology; lives on the planning VM
+asset_group: meta
 related_plans:
   - ../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - ../active/agent_orchestrator_dual_deployment_2026_05_19.md
@@ -20,27 +21,31 @@ related_plans:
   - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
   - ../active/agent_reliability_mitigations_2026_05_20.md
   - ../active/d0_orchestrator_migration_2026_05_20.md
-  # Existing orchestrator plans this supersedes / extends
-  - agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - agent_orchestrator_dual_deployment_2026_05_19.md
-  - agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
-  - agent_orchestrator_workers_on_vms_2026_05_19.md
-  - agent_orchestrator_slack_notifications_2026_05_19.md
-  - agent_reliability_mitigations_2026_05_20.md
-  # Coordination it composes with
-  - mtds_mdps_master.md
-  - human_work_backlog_2026_05_20.md
-  - issues/human_led_audit_pool_2026_05_21.md # NEW (to be created — operator-curated audit pool)
+  - ../active/issues/human_led_audit_pool_2026_05_21.md
 codex_ssots:
-  - codex/12-agent-workflow/orchestrator-v07-multi-vm-topology.md # NEW (this plan's permanent SSOT)
-  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md # NEW r3 2026-05-21 (operator-shared reference: long-lived setup-token pattern; the authoritative auth model)
+  - codex/11-project-management/epic-execution-with-sub-agents.md # pointer to plans/epics/README.md (epic-flow SSOT)
+  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md # operator-shared 2026-05-21: long-lived setup-token pattern
 external_references:
   - "Operator-shared 2026-05-21: Claude CLI Multi-Account Headless Authentication Guide (long-lived setup-token via
     CLAUDE_CODE_OAUTH_TOKEN env var, ~1y validity, multi-machine reuse, ANTHROPIC_API_KEY-precedence gotcha) — drives
     the r3 Auth & accounts revision and Phase 4 r3 rewrite"
 ---
 
-# Orchestrator v0.7 — multi-VM topology with per-epic isolation
+# Orchestrator Master (L5)
+
+**Owns**: agent-orchestrator multi-VM stack (planning-vm + 9 epic VMs); dashboard aggregation; auth failover (long-lived
+setup-token pattern); per-spawn account isolation; cross-VM observability; Telegram alert framework; safety mechanisms
+(stuck-agent respawn, auth failover without respawn, fresh-spawn dirty-commit, git staleness alerts).
+
+**Assigned VM**: `vm-orchestrator` (self-managing — the agent-orchestrator stack runs the agent-orchestrator stack).
+
+> Detailed multi-VM topology design + implementation phases below were originally the
+> `orchestrator_v07_multi_vm_topology_2026_05_21.md` plan body (promoted to this epic on 2026-05-21 per
+> [`README.md`](README.md) epic consolidation). Phase 0-12 implementation work continues against the assigned active
+> plans listed in the "## Assigned active plans" section below; as those phases ship + flip checkboxes, the body content
+> here becomes archaeology and the priority blocks drive new wrapper-plan dispatch.
+
+# Orchestrator v0.7 — multi-VM topology with per-epic isolation (implementation reference)
 
 > **Operator vision 2026-05-21**: "topology should be as follows ikenna and harsh pick master plans which agent groups
 > tackle over their time with 1 vm. we should be able to change these plans without restarting the vm... each vm and
@@ -815,23 +820,53 @@ When a VM restarts:
 >
 > - a much-simpler failover that just toggles which env file is sourced.
 
-**Phase 4a — refactor spawn path to env-var auth**:
+**Phase 4a — refactor spawn path to env-var auth** ✅ DONE 2026-05-21:
 
-- [ ] Refactor `tmux_spawn.py` `spawn()`: when launching claude for slot N with account_id X, source
-      `~/.claude-accounts/<X>.env` BEFORE the `claude` subprocess exec instead of relying on whatever's currently in
-      `.credentials.json`. Implementation: pass
-      `env={...os.environ, "CLAUDE_CODE_OAUTH_TOKEN": <token>, "ANTHROPIC_API_KEY": None}` to the subprocess call. Reads
-      the token at spawn time from the env file matching `account_id`.
-- [ ] Add `accounts.json` schema field: `oauth_token_env_file:     "~/.claude-accounts/<id>.env"` per account
-      (operator-managed, never committed). Backward- compat: if absent, fall back to existing .credentials.json swap so
-      the cutover can be gradual.
+<<<<<<< Updated upstream
+
+- [x] ✅ Refactor `tmux_spawn.py` `spawn()`: source `~/.claude-accounts/<X>.env` BEFORE exec claude. —
+      agent-orchestrator@d7b6ad6. `_start_session` + `spawn()` gain `env_file` param; uses
+      `bash -c 'set -e; source <env>; exec claude <flags>'` so CLAUDE_CODE_OAUTH_TOKEN is set + ANTHROPIC_API_KEY unset
+      BEFORE claude starts. Falls back to legacy direct-exec path when None (gradual cutover).
+- [x] ✅ Add `accounts.json` schema field `oauth_token_env_file: str | None`. — agent-orchestrator@d7b6ad6.
+      `server/accounts.py` AccountDef gains the field; operator writes per-account paths into accounts.json once env
+      files exist on the VM.
+- [x] ✅ Wire env-file lookup into HTTP spawn endpoint + auto-respawn path (Phase 3B). — agent-orchestrator@d7b6ad6.
+      Both look up `acc_def.oauth_token_env_file` + pass to `tmux_spawn.spawn`. Backward compat: when None, falls back
+      to existing `.credentials.json` behavior.
+- [x] ✅ Helper script `switch_active_account.sh` (PM repo, replaces deprecated `swap_claude_account.sh`). — PM commit
+      (this batch); writes `~/.claude/.active_account` sidecar; validates env file shape; direct Telegram alert. Does
+      NOT bounce running workers — rotation only affects future spawns.
 - [ ] Add `account_failover.py` with `pick_next_token(vm_id, current_account, exclude_failed)` using
-      lowest-weekly-pct-first across distinct-subscription accounts (per § B).
+      lowest-weekly-pct-first across distinct-subscription accounts (per § B). DEFERRED: no meaningful failover until
+      Sub-B / Sub-C exist (current roster = 1 distinct sub).
 - [ ] Wire failover into 401-detection paths in `worker_liveness.py` (when a tool call returns 401 mid-session) + spawn
       endpoint (when a fresh spawn's first heartbeat 401s). New token = next spawn for that slot; no in-memory token
-      swap mid-session (per the operator doc caveat — claude CLI doesn't re-read env mid-session).
-- [ ] Add `notify_account_failover` + `notify_all_accounts_exhausted` + `notify_setup_token_required` telegram helpers
-      (the last replaces the to-be-deprecated `notify_oauth_refresh_failed`).
+      swap mid-session (per the operator doc caveat — claude CLI doesn't re-read env mid-session). DEFERRED with above.
+- [ ] Add `notify_account_failover` + `notify_all_accounts_exhausted` + `notify_setup_token_required` telegram helpers.
+      The last replaces the to-be-deprecated `notify_oauth_refresh_failed` once Phase 4b lands. =======
+- [x] ✅ Refactor `tmux_spawn.py` `spawn()`: source `~/.claude-accounts/<X>.env` BEFORE exec claude. —
+      agent-orchestrator@d7b6ad6. `_start_session` + `spawn()` gain `env_file` param; uses
+      `bash -c 'set -e; source <env>; exec claude <flags>'` so CLAUDE_CODE_OAUTH_TOKEN is set + ANTHROPIC_API_KEY unset
+      BEFORE claude starts. Falls back to legacy direct-exec path when None (gradual cutover).
+- [x] ✅ Add `accounts.json` schema field `oauth_token_env_file: str | None`. — agent-orchestrator@d7b6ad6.
+      `server/accounts.py` AccountDef gains the field; operator writes per-account paths into accounts.json once env
+      files exist on the VM.
+- [x] ✅ Wire env-file lookup into HTTP spawn endpoint + auto-respawn path (Phase 3B). — agent-orchestrator@d7b6ad6.
+      Both look up `acc_def.oauth_token_env_file` + pass to `tmux_spawn.spawn`. Backward compat: when None, falls back
+      to existing `.credentials.json` behavior.
+- [x] ✅ Helper script `switch_active_account.sh` (PM repo, replaces deprecated `swap_claude_account.sh`). — PM commit
+      (this batch); writes `~/.claude/.active_account` sidecar; validates env file shape; direct Telegram alert. Does
+      NOT bounce running workers — rotation only affects future spawns.
+- [ ] Add `account_failover.py` with `pick_next_token(vm_id, current_account, exclude_failed)` using
+      lowest-weekly-pct-first across distinct-subscription accounts (per § B). DEFERRED: no meaningful failover until
+      Sub-B / Sub-C exist (current roster = 1 distinct sub).
+- [ ] Wire failover into 401-detection paths in `worker_liveness.py` (when a tool call returns 401 mid-session) + spawn
+      endpoint (when a fresh spawn's first heartbeat 401s). New token = next spawn for that slot; no in-memory token
+      swap mid-session (per the operator doc caveat — claude CLI doesn't re-read env mid-session). DEFERRED with above.
+- [ ] Add `notify_account_failover` + `notify_all_accounts_exhausted` + `notify_setup_token_required` telegram helpers.
+      The last replaces the to-be-deprecated `notify_oauth_refresh_failed` once Phase 4b lands.
+  > > > > > > > Stashed changes
 
 **Phase 4b — deprecate the old refresh chain**:
 
