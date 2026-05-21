@@ -655,6 +655,13 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     matrix
 14. **Full-window backfill** — ≥2 years of representative history captured (per CLAUDE.md "honest absence" + codex
     `02-data/per-asset-group-bucket-layouts.md`); n/a for runtime-only services
+15. **Coverage ratchet green — Path to 99%** — honest-coverage-ratchet.sh runs daily post-Phase 8 fleet verification; no
+    asset_group × data_type cell regresses >0.5pp day-over-day; goal: ≥99% `compute_honest_coverage()` ratio across all
+    IS + MTDS cells with no `expected_unattempted_pending_fetch` rows. Plan:
+    [`honest_coverage_formula_consolidation_2026_05_19.md`](./honest_coverage_formula_consolidation_2026_05_19.md)
+    Phase 8. Continuous verification: `cron:planning-vm` runs `honest-coverage-ratchet.sh` daily; ratchet snapshot in
+    `_index/snapshots/honest_coverage/`; any regression >0.5pp fires P0 alert (QG STEP 5.70 in MTDS + IS). **Added
+    2026-05-22 per honest_coverage Phase 8 dispatch (slot 8).**
 
 ### Group E — Operability (always-on)
 

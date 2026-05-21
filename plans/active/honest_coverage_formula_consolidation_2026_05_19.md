@@ -209,8 +209,10 @@ Phase 0 (✅ DONE)
       real number. Cells reporting 100% with 0 `expected_unattempted_pending_fetch` rows are SUSPICIOUS — denominator
       may be incomplete (Tier-3 sentinel propagation Phase 3D.5 pending per
       `expected_unattempted_validation_pending_phase3_2026_05_19.md`).
-- [ ] **P0. Master plan update**: add Group H "Path to 99% coverage" row with the continuous-verification path =
-      `honest-coverage-ratchet.sh` daily run + this plan's Phase 8 sweep result.
+- [x] ✅ **P0. Master plan update**: add "Path to 99% coverage" row (item 28) to master plan Group D with the
+      continuous-verification path = `honest-coverage-ratchet.sh` daily run + this plan's Phase 8 sweep result. NOTE:
+      Group H was already taken (per-client isolation added 2026-05-20); added as Group D item 28 instead. — PM@(this
+      commit)
 
 ## Downstream Consumer Updates
 
