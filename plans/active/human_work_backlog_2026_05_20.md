@@ -117,6 +117,7 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    **client-reporting-api FIXED 2026-05-21 slot-11**: @4eafab6 ✅ — ruff lint (RUF002/SIM105/B008), import patterns, test fixes (test_production_guard, test_get_invoice_by_id), pip-audit ignores, narrow except ArithmeticError
    **deployment-ui VERIFIED 2026-05-21 slot-11**: @ef3406b ✅ (0 fixes needed, npm install required first)
    **unified-trading-api FIXED 2026-05-21 slot-11**: @ac8a6b9 ✅ — noqa C901 on seed_all_domains, pip-audit ignores PYSEC-2024-277/PYSEC-2025-183
+   **unified-trading-system-ui FIXED 2026-05-21 slot-11**: @38f3e96e ✅ — TS errors (4 files), stale test assertions, briefings codex path, Suspense boundaries (questionnaire/reset-password/verify-email)
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
