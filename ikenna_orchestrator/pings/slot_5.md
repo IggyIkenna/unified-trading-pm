@@ -1,7 +1,29 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 dispatches (THREE entries now).** Booting agents: read the THREE
-> 2026-05-20 entries at the top FIRST (latest = Phase 11 UAC + UTL cleanup, then un-defer + downstream Group H
-> plan), then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block 2026-05-20). History below
-> 2026-05-20 entries is audit-trail only.
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 5 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 5] 2026-05-21 — 4 plan closes + trivial sweeps (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Close these 4 plans (read each, trivial sweep, execute remaining items, archive if 100%):
+
+1. `bucket_name_ssot_canonicalisation` (73% done, 2.7 cal — mechanical bucket-name refactor, QG each repo)
+2. `expected_universe_v2_design_2026_05_08` (73% done, 1.6 cal)
+3. `manifest_cross_asset_rescan_design_2026_05_08` (50% done, 1.2 cal)
+4. `available_at_lookahead_bias_completion_2026_05_08` (66% done — HARD STOP: Track E features-sports wire-in is
+   EXPLICITLY DEFERRED; mark those items [DEFERRED per SSOT], close everything else)
+
+**Trivial sweep policy**: before ANY real work on each plan, mark [x] immediately for: QG-run with existing green SHA |
+dry-run with recorded results | "don't deprecate" when repo active | "create successor" when successor exists | P3 with
+deferred P0/P1 → [ABANDONED]
+
+**Sweep bonus**: scan related_plans: links after all 4 — trivial-sweep any >90% linked plan.
+
+**Ack**: append `[2026-05-21 HH:MM UTC] slot-5 DONE — closed/archived N plans` here when done.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
@@ -14,11 +36,13 @@ services still present in consumer repos.
 **Your slice (slot 5, P0 — bundled across both consolidations into a single QG-per-repo pass)**:
 
 - **Plans**:
-  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11b** (UAC) + **Phase 11c** (UTL) — strategy side.
-  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11c** (UAC) + **Phase 11d** (UTL) — ML side.
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+    **Phase 11b** (UAC) + **Phase 11c** (UTL) — strategy side.
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase
+    11c** (UAC) + **Phase 11d** (UTL) — ML side.
 - **Scope (UAC, ~119 live refs total)**: rewire archived-service names to consolidated repos in:
-  - `canonical/crosscutting/risk_rule.py` (lines 20, 563, 695), `kill_switch.py:175`,
-    `service_emission_policy.py` (lines 190, 195), `circuit_breaker.py:5`.
+  - `canonical/crosscutting/risk_rule.py` (lines 20, 563, 695), `kill_switch.py:175`, `service_emission_policy.py`
+    (lines 190, 195), `circuit_breaker.py:5`.
   - `registry/` files — service-name enums / topology maps for all 5 archived services.
   - Replace `risk-and-exposure-service` / `position-balance-monitor-service` / `pnl-attribution-service` →
     `strategy-service`; `ml-training-service` / `ml-inference-service` → `ml-service`.
@@ -33,8 +57,8 @@ services still present in consumer repos.
 - **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip in same agent turn — flip BOTH plans'
   matching phase checkboxes per single repo PR (`docs(plans): flip Phase 11b+c (strategy + ml) — uac@<sha>`).
 
-**Compose-with**: your existing Group H downstream-plan Phase 1+2 dispatch is the priority; this Phase 11 work fits
-in the same quality-gate pass since both touch UAC. If you're mid-UAC anyway, bundle the cleanup into the same PR.
+**Compose-with**: your existing Group H downstream-plan Phase 1+2 dispatch is the priority; this Phase 11 work fits in
+the same quality-gate pass since both touch UAC. If you're mid-UAC anyway, bundle the cleanup into the same PR.
 
 ---
 
@@ -43,22 +67,25 @@ in the same quality-gate pass since both touch UAC. If you're mid-UAC anyway, bu
 **Phase 2 UTL bases shipped**: `utl@cae77ad9` — 58 tests pass, QG clean.
 
 4 new bases in `unified_trading_library/lifecycle/` + `unified_trading_library/services/`:
+
 - `ClientLifecycleBusSubscriberBase` — abstract bus subscriber for UAC `ClientLifecycleEvent`
 - `ClientCredentialKmsPoller` — KMS/Secret Manager polling daemon (CEX 60s / DEX 300s / Lending 600s)
 - `StrategySupervisorBase` — abstract per-client subprocess lifecycle manager (spawn, health-watch, restart)
 - `ClientWorkerBase` — abstract subprocess entry point (preflight → CLIENT_READY → event loop)
 
-QG: `broad_except` exemption added for `client_credential_kms_poller.py` in `scripts/quality-gates.sh` + documented
-in `QUALITY_GATE_BYPASS_AUDIT.md §2.1a`. Plan checkbox flipped: `per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phase 2 ✅.
+QG: `broad_except` exemption added for `client_credential_kms_poller.py` in `scripts/quality-gates.sh` + documented in
+`QUALITY_GATE_BYPASS_AUDIT.md §2.1a`. Plan checkbox flipped:
+`per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phase 2 ✅.
 
 **Current state** (2026-05-20): Slot 5 is **BLOCKED** on `phase-5-aws-migration-green` condition (set by Phase 5A/5B/5C
 AWS bucket migration, assigned to slot 4). All data pipeline tasks for slot 5 depend on this condition:
+
 - `PHASE-6A-DOCKER-IMAGE-REBUILD` (writer-fleet Docker images at v8 binaries)
 - `PHASE-7A-V8-SCHEMA-MIGRATE` through `PHASE-7D-V8-GREEN-FLIP`
 - `PHASE-10A-V8-WRITER-QG`
 
-**Action needed**: Slot 4 must complete Phase 5A/5B/5C (AWS s3 sync + provisioning idempotent + old bucket delete)
-to set `phase-5-aws-migration-green`. Slot 5 will auto-pick up Phase 6A immediately once unblocked.
+**Action needed**: Slot 4 must complete Phase 5A/5B/5C (AWS s3 sync + provisioning idempotent + old bucket delete) to
+set `phase-5-aws-migration-green`. Slot 5 will auto-pick up Phase 6A immediately once unblocked.
 
 — slot 5 / 2026-05-20
 
@@ -1094,8 +1121,7 @@ Without it: historical OHLCV rows have session=null/phase=null; new rows stamped
 ```
 
 **Script**: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py` **Commits**: MTDS@6873955
-(script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master.md` § "Databento session-type
-awareness"
+(script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master.md` § "Databento session-type awareness"
 
 **UPDATE 2026-05-15**: Databento account is ALSO locked (`403 auth_account_locked`). Tested key `databento-api-key-1`
 from Secret Manager — valid key, but account suspended (likely unpaid bill). Status upgraded to: 🔴 BLOCKED-CREDENTIALS
@@ -1173,7 +1199,7 @@ moving to next executable item (#3 Phase 5 QG ratchet, no external-data dependen
 | 1     | TradFi 1-week test backfill                            | 🔴 BLOCKED-CREDENTIALS                                             | Databento account-locked; combined unblock ask in this ping ledger (PM@`6d518a4f`)                                                                                                                                     |
 | 2     | Databento session-stamp backfill                       | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1; ask filed earlier 2026-05-15                                                                                                                                                                               |
 | 3     | TradFi Phase 5 QG ratchet                              | ✅ DONE (pre-existing)                                             | PM@`32c7ea52` shipped 2026-05-13                                                                                                                                                                                       |
-| **4** | **`tradfi_master` master plan refresh**     | 🟡 **DEFERRED (carries to 2026-05-16 work_split or next session)** | 38 open todos in the plan; large-scope research (~4.8 cal); not actionable in single-turn budget. Next pickup: bulk-verify line-by-line which open todos are already done by recent commits + flip in same agent turn. |
+| **4** | **`tradfi_master` master plan refresh**                | 🟡 **DEFERRED (carries to 2026-05-16 work_split or next session)** | 38 open todos in the plan; large-scope research (~4.8 cal); not actionable in single-turn budget. Next pickup: bulk-verify line-by-line which open todos are already done by recent commits + flip in same agent turn. |
 | 5     | TradFi venue + symbology coverage audit                | ✅ DONE                                                            | PM@`c63cdf2b` — ICE softs CT/CC/KC/SB/OJ/DX verified canonicalised in UAC                                                                                                                                              |
 | 6     | CME/EUREX 1-week test backfill                         | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1                                                                                                                                                                                                             |
 | 7     | strategy_service_qg_ltv_threshold_violations close     | ✅ DONE (pre-existing)                                             | STEP 5.37 already passes — CORRECT-LOCAL annotations in place (PM@`e604d6c3` flipped)                                                                                                                                  |
@@ -1476,9 +1502,8 @@ This session (slot-5 ikenna pickup of paused work from before-Databento-unblock)
 
 4. **UAC FEATURE_REQUIRED_INPUTS** — `unified-api-contracts@99a7614` — 8 tradfi feature_groups (`options_iv`,
    `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `futures_term_structure`, `tradfi_vol_surface`,
-   `vol_surface_term_structure`, `vix_features`). Closes `tradfi_master` P1 + registers the new
-   `compute_vix_features()` calc at FS@b3814675. Registry 59 → 67; `validate_required_inputs()` 0 issues; UAC local QG
-   green.
+   `vol_surface_term_structure`, `vix_features`). Closes `tradfi_master` P1 + registers the new `compute_vix_features()`
+   calc at FS@b3814675. Registry 59 → 67; `validate_required_inputs()` 0 issues; UAC local QG green.
 
 **Plan flips this session** (`docs(plans):` cadence per Half-2):
 

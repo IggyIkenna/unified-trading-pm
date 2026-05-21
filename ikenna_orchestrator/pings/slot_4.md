@@ -1,22 +1,52 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch + 2026-05-20 strategy-consolidation Phase 11
-> dispatch.** Booting agents: read BOTH 2026-05-20 entries below FIRST (the Phase 11 entry is the most-recent),
-> then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 3 + 5. History below
-> 2026-05-20 is audit-trail only.
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 4 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 4] 2026-05-21 — 7 plan closes + trivial sweeps (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Close these 7 plans (read each, trivial sweep, execute remaining items, archive if 100%):
+
+Priority order:
+
+1. `hedge_ratio_snapshot_persistence` — **WAS URGENT deadline 2026-05-21, do FIRST**
+2. `gate_3_phantom_audit_runbook` — must have owner/cadence/verifier/last_executed fields
+3. `api_football_minimal_flattening` (2 items)
+4. `tradfi_ohlcv_only_mvp_backfill` (2 items)
+5. `mock_data_pipeline_benchmarking` (94% done)
+6. `trigger_based_reference_data` (1.9 cal)
+7. `dex_perp_onboarding_handover` (6.0 cal — handover doc + implementation)
+
+**Trivial sweep policy**: before ANY real work on each plan, mark [x] immediately for: QG-run with existing green SHA |
+dry-run with recorded results | "don't deprecate" when repo active | "create successor" when successor exists | P3 item
+with deferred P0/P1 → [ABANDONED]
+
+Per-plan: commit trivials → execute real items → QG if code → commit per shippable unit → archive if 100%.
+
+**Sweep bonus**: after all 7, scan related_plans: links — trivial-sweep any >90%-done linked plan.
+
+**Ack**: append `[2026-05-21 HH:MM UTC] slot-4 DONE — closed/archived N plans` here when done.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
 ## [slot 1 main → slot 4] 2026-05-20 (later) — 🔴 P1 ADDITIONAL — strategy consolidation Phase 11g (strategy-service own-repo cleanup)
 
 **Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
-was just appended to `strategy_repo_consolidation_2026_05_19.md` after a workspace audit found 545 live-code refs to
-the 5 archived services still present in consumer repos.
+was just appended to `strategy_repo_consolidation_2026_05_19.md` after a workspace audit found 545 live-code refs to the
+5 archived services still present in consumer repos.
 
 **Your slice (slot 4, P1)**:
 
-- **Plan**: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11g** — strategy-service own-repo logger/string cleanup.
+- **Plan**:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  **Phase 11g** — strategy-service own-repo logger/string cleanup.
 - **Scope**: ~30 live logger format strings + CLI banner strings still saying old service names. Examples:
-  - `strategy-service/strategy_service/position/cli/main.py:53` — `"Starting position-balance-monitor-service (...)"`
-    → `"Starting strategy-service position sub-package (...)"`.
+  - `strategy-service/strategy_service/position/cli/main.py:53` — `"Starting position-balance-monitor-service (...)"` →
+    `"Starting strategy-service position sub-package (...)"`.
   - Equivalent in `strategy_service/risk/cli/` + `strategy_service/pnl/cli/`.
 - **Out of scope per operator answer 2026-05-20**: docstring module headers ("CLI entry point of
   position-balance-monitor-service") + CHANGELOG + migration-history. Leave intact as legitimate historical record.
@@ -25,34 +55,34 @@ the 5 archived services still present in consumer repos.
 - **Half-1+2 discipline**: ship code + flip the Phase 11g checkbox in the SAME agent turn
   (`docs(plans): flip Phase 11g — strategy-service@<sha>`).
 
-**Compose-with**: your existing Group H Phases 3+5 assignment is the priority; pick this up at next natural break.
-This is a single-repo cleanup — should take one focused session.
+**Compose-with**: your existing Group H Phases 3+5 assignment is the priority; pick this up at next natural break. This
+is a single-repo cleanup — should take one focused session.
 
 ---
 
 ## [slot 4 → main] 2026-05-20 — Phase 3 canary cassettes: yield/restaking cluster COMPLETE
 
-**Plan-of-record**: `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 3
-**UAC commits**: uac@31cb6a5 (coins/morpho/eigenlayer/solayer) + uac@66ffe71 (cambrian/picasso/sky) → live-defi-rollout
+**Plan-of-record**: `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 3 **UAC commits**: uac@31cb6a5
+(coins/morpho/eigenlayer/solayer) + uac@66ffe71 (cambrian/picasso/sky) → live-defi-rollout
 
 **Slot 4 yield/restaking cluster — 16/16 protocols covered**:
 
-| Protocol(s) | Cassette | Status |
-|------------|----------|--------|
-| Ethena, Pendle, Beefy, Yearn, Convex, Karak, Symbiotic, Idle | `defillama/mocks/yields.yaml` (existing) | ✅ live-recorded |
-| Puffer, EtherFi (eETH/weETH), Solblaze (bSOL) | `defillama/mocks/coins_historical.yaml` (new) | ✅ live-recorded |
-| Morpho | `morpho_blue_api/mocks/markets.yaml` (new) | ✅ live-recorded |
-| EigenLayer | `eigenlayer/mocks/earner_historical_rewards.yaml` | 🟡 BLOCKED-CREDENTIALS (Cloudflare) |
-| Solayer | `solayer/mocks/restaking_apy.yaml` | 🟡 BLOCKED-NO-ADAPTER |
-| Cambrian | `cambrian/mocks/restaking_rewards.yaml` | 🟡 BLOCKED-NO-ADAPTER |
-| Picasso | `picasso/mocks/restaking_rewards.yaml` | 🟡 BLOCKED-NO-ADAPTER |
-| Sky | `sky/mocks/savings_rate.yaml` | 🟡 BLOCKED-NO-ADAPTER |
+| Protocol(s)                                                  | Cassette                                          | Status                              |
+| ------------------------------------------------------------ | ------------------------------------------------- | ----------------------------------- |
+| Ethena, Pendle, Beefy, Yearn, Convex, Karak, Symbiotic, Idle | `defillama/mocks/yields.yaml` (existing)          | ✅ live-recorded                    |
+| Puffer, EtherFi (eETH/weETH), Solblaze (bSOL)                | `defillama/mocks/coins_historical.yaml` (new)     | ✅ live-recorded                    |
+| Morpho                                                       | `morpho_blue_api/mocks/markets.yaml` (new)        | ✅ live-recorded                    |
+| EigenLayer                                                   | `eigenlayer/mocks/earner_historical_rewards.yaml` | 🟡 BLOCKED-CREDENTIALS (Cloudflare) |
+| Solayer                                                      | `solayer/mocks/restaking_apy.yaml`                | 🟡 BLOCKED-NO-ADAPTER               |
+| Cambrian                                                     | `cambrian/mocks/restaking_rewards.yaml`           | 🟡 BLOCKED-NO-ADAPTER               |
+| Picasso                                                      | `picasso/mocks/restaking_rewards.yaml`            | 🟡 BLOCKED-NO-ADAPTER               |
+| Sky                                                          | `sky/mocks/savings_rate.yaml`                     | 🟡 BLOCKED-NO-ADAPTER               |
 
-All 4 BLOCKED stubs are orphan-allowlisted in `tests/cassette_orphan_allowlist.yaml`.
-QG green on both commits. Slot 4 Phase 3 assignment fully closed.
+All 4 BLOCKED stubs are orphan-allowlisted in `tests/cassette_orphan_allowlist.yaml`. QG green on both commits. Slot 4
+Phase 3 assignment fully closed.
 
-**Phase 5 status**: still BLOCKED-PHASE4 (waiting slot 6 Phase 4 ClientWorker, which waits slot 5 Phase 2 UTL bases).
-No orchestrator tasks queued.
+**Phase 5 status**: still BLOCKED-PHASE4 (waiting slot 6 Phase 4 ClientWorker, which waits slot 5 Phase 2 UTL bases). No
+orchestrator tasks queued.
 
 ---
 
@@ -61,16 +91,16 @@ No orchestrator tasks queued.
 **Plan-of-record**: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` (Group H)
 **Plan-of-record (bug fix)**: `plans/active/issues/strategy_dydx_venue_token_regression_2026_05_20.md`
 
-**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session).
-Phase 5 (preflight + hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on
-slot 5 Phase 2 (UTL bases: StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued
-tasks, all blocked by prereqs/collisions).
+**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session). Phase 5 (preflight +
+hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on slot 5 Phase 2 (UTL bases:
+StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued tasks, all blocked by
+prereqs/collisions).
 
 **Side fix shipped during idle period**: utl@672c0517 — `STRATEGY_PNL_STREAM` re-export was missing from
-`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at
-test collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking
-the 5 dydx failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green
-post-fix (exit 0). Dydx BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
+`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at test
+collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking the 5 dydx
+failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green post-fix (exit 0). Dydx
+BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
 
 **Status**: idle, waiting for Phase 4 (slot 6) to unblock Phase 5.
 
@@ -854,7 +884,7 @@ Half-1+Half-2 discipline acknowledged; will pair each code commit with `docs(pla
 | Item 4 — propagation chain Phase 3+4+PART C remainder          | ✅ VERIFIED — Phase 3.1/3.4 substantive + 3.2/3.3/3.6/4 NO-OP + Phase 3.5 sports DEFERRED with design-call successor; PART C SUBSTANTIALLY-DONE                                                                               | Phase 3.5 sports design call (operator triage); Phase 5 Pass 3+4 + Phase 6 validation gate `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover.                                                                                                                             |
 | Item 5 — `api_football_minimal_flattening_removal` close       | ✅ VERIFIED — Phase 5 closeout PM@36c40a10 (Slot 6 Wave 3, 2026-05-13)                                                                                                                                                        | Phase 3.B/3.C/4 `**DEFERRED**` per plan body — operator-executable post-cutover when API quota allows.                                                                                                                                                             |
 | Item 6 — `expected_universe_v2_design` (carry from slot 9 V2)  | ✅ DESIGN-COMPLETE — Phase 1 code + 65 unit tests (IS@5c5b1f8); Phase 2 launcher + watchdog (deployment-service@7313a39); Phase 3 sharding decision; Phase 5 codex 3-SSOT updates                                             | Phase 4 production launch (10 VMs ~3-4h parallel) `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover per plan body line 26-30 banner + Prerequisites line 318.                                                                                                             |
-| Item 7 — `sports_master` coverage audit             | ✅ VERIFIED — 14 active + 3 retired data_types confirmed (14 May sub-agent)                                                                                                                                                   | SP-6/SP-10/SP-12 gaps tracked in `cross_asset_group_catalogue_audit_2026_05_10.md`.                                                                                                                                                                                |
+| Item 7 — `sports_master` coverage audit                        | ✅ VERIFIED — 14 active + 3 retired data_types confirmed (14 May sub-agent)                                                                                                                                                   | SP-6/SP-10/SP-12 gaps tracked in `cross_asset_group_catalogue_audit_2026_05_10.md`.                                                                                                                                                                                |
 | Item 8 — `data_status_comprehensive_test_coverage` sports-half | ✅ VERIFIED — Categories A/B/C/D all `[x]` (deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12 + 12-test sports drilldown alignment @1ecef8a)                                                                             | n/a                                                                                                                                                                                                                                                                |
 | Item 9 — 3 sports classifier issues final verification         | ✅ VERIFIED — sfi_footystats / player_values / weather read-side all closed (uac@435abae + uac@17a0f82 + utl@79c72bad). Weather write-side `**DEFERRED**` per `sports_classifier_weather_no_fixture_2026_05_13.md` (PARTIAL). | Parent issue `sports_classifier_extension_followup` ✅ RESOLVED pm@48db1ae0.                                                                                                                                                                                       |
 | Item 10 — Reserve (in-stack pickup)                            | ✅ NOT TRIGGERED — no ambiguity surfaced during items 1-9                                                                                                                                                                     | n/a                                                                                                                                                                                                                                                                |
@@ -1498,7 +1528,7 @@ Updated **5 active plan files** to reflect actual vault state per spawn-prompt +
 | --------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `defi_simulation_realism_2026_05_10.md`             | Helius P2 ✅ UNBLOCKED                                                           | `helius-api-key` vaulted 2026-05-15 (MTDS@4cea371)                                                                                   |
 | `compound_kamino_lending_rates_gaps_2026_05_15.md`  | Helius BLOCKED-CREDENTIALS × 3 refs → UNBLOCKED                                  | Same                                                                                                                                 |
-| `defi_master.md`                         | Helius × 2 refs → UNBLOCKED + Tenderly/HL/Bybit banner → UNBLOCKED               | `tenderly-api-key`/`tenderly-fork-rpc-url`/`hyperliquid-testnet-trade-key`/`bybit_api_key`/`bybit_api_secret` all vaulted 2026-05-15 |
+| `defi_master.md`                                    | Helius × 2 refs → UNBLOCKED + Tenderly/HL/Bybit banner → UNBLOCKED               | `tenderly-api-key`/`tenderly-fork-rpc-url`/`hyperliquid-testnet-trade-key`/`bybit_api_key`/`bybit_api_secret` all vaulted 2026-05-15 |
 | `defi_recursive_borrow_archetypes_2026_05_10.md`    | 5 BLOCKED-CREDENTIALS → UNBLOCKED / restated as BLOCKED-OPERATOR-DECISION        | Tenderly + testnet creds vaulted; remaining gate is Phase-4-deployed receiver address (operator-deploy step, not credentials)        |
 | `solana_lst_native_staking_adapters_2026_05_14.md`  | Helius for adapter (line 149-153) → UNBLOCKED                                    | MTDS@4cea371 + MTDS@348c171 wired Jito MEV APY                                                                                       |
 | `api_keys_wallets_accounts_readiness_2026_05_10.md` | Per-venue vault audit: Binance/Bybit/OKX/Aster ✅; Bitfinex+Bitget still blocked | Direct `gcloud secrets list` check                                                                                                   |

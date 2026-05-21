@@ -36,6 +36,10 @@ Ack in your slot\_<N>.md ping file once your tab is clean.
 
 # Active pings
 
+[2026-05-21] slot-1-main → slots 2–8 — 🚀 DISPATCH: closeout + archive sweep. Plan pushed at pm@5eedc069a. Each slot has
+a dedicated section. Read `plans/active/plan_closeout_archive_2026_05_21.md` §Slot N then your
+`ikenna_orchestrator/pings/slot_N.md` for boot instructions. Ack DONE in your slot ping file when complete.
+
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived. Superseded by work_split_2026_05_19_ikenna.md. Booting agents: read your work-split — do NOT act on archived entries here. -->
 
 <!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18):
@@ -1004,10 +1008,14 @@ Source: `work_split_2026_05_14_ikenna.md` § Slot 10 items 4+5 (folded into slot
 ---
 
 <<<<<<< Updated upstream
+
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+
 =======
+
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:34:52Z — ⚠️ 33 orphan ping(s) detected (no plan/issue/audit reference)
->>>>>>> Stashed changes
+
+> > > > > > > Stashed changes
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -1076,18 +1084,17 @@ ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_20.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -1224,18 +1231,17 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_21.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -1275,18 +1281,17 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_21.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -1326,15 +1331,14 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_21.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).

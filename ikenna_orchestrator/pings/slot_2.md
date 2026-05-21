@@ -1,5 +1,31 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 2 for your tasks today. This file is kept for audit trail only.
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 2 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 2] 2026-05-21 — Closeout + archive sweep (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Archive 3 completed plans + update parent epics + add post-cutover banner to wave3x_track_d. Archive the
+two work-split plans LAST (after slots 3–8 ping DONE).
+
+**Plans to archive (pure markdown — no code)**:
+
+1. `wave3x_residual_ssots_2026_05_08.md` → parent epic: `epics/sports_master.md`
+2. `expected_unattempted_propagation_chain_2026_05_12.md` → parent epic: `epics/manifest_master.md`
+3. `features_repo_consolidation_2026_05_08.md` → parent epic: grep `epics/` for the reference
+4. `wave3x_track_d_implementation_2026_05_19.md` → add `[DEFERRED-POST-CUTOVER]` banner only, do NOT archive
+5. LAST: `work_split_2026_05_19_harsh.md` + `work_split_2026_05_20_ikenna.md` → `plans/archive/`; update
+   `epics/orchestrator_master.md`
+
+**Archival flow per plan**: (1) grep `^- \[ \]` → confirm 0 open; (2) confirm each DEFERRED has named successor; (3) add
+`## Deferred work — migrated to:` section; (4) add `status: archived`; (5) git mv active → archive; (6) update parent
+epic; (7) commit `docs(plans): archive <slug>` + push.
+
+**Ack**: When done, append `[2026-05-21 HH:MM UTC] slot-2 DONE — archived N plans, epics updated` to this file.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
@@ -834,18 +860,20 @@ awaiting operator write-pause signal to push.
 **Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
 
 **Phase 1 deliverables shipped (5/5)**:
+
 1. ✅ Audit CSV: `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` (65 rows, 62 asymmetries)
 2. ✅ Script audit: `setup-defi-buckets.sh` drift fixed (deployment-service@b9029ad)
 3. ✅ YAML alignment: `cloud-providers.yaml` AWS block rewritten 1:1 GCP (deployment-service@43fb886)
 4. ✅ 63-char cap: 0 violations across all clouds/envs/kinds
 5. ✅ DEPLOYMENT_ENV_SHORT consistency: both clouds identical 24-kind env-tiered set
 
-**UTL test updates**: unified-trading-library@dc107d15 (all test assertions updated for new templates)
-**Plan flips**: pm@b9700117 (Phase 1 deliverables 1-5 checked in mtds_mdps_master.md)
+**UTL test updates**: unified-trading-library@dc107d15 (all test assertions updated for new templates) **Plan flips**:
+pm@b9700117 (Phase 1 deliverables 1-5 checked in mtds_mdps_master.md)
 
 **Pre-existing QG issue (NOT caused by my changes)**:
-- deployment-service step 6/6: `ml-inference-service` / `ml-training-service` missing workspace-manifest.json fields
-  — same failure on clean HEAD without my changes. Not in my scope.
+
+- deployment-service step 6/6: `ml-inference-service` / `ml-training-service` missing workspace-manifest.json fields —
+  same failure on clean HEAD without my changes. Not in my scope.
 
 **Next**: R19 UAC import surface enforcement (consumer repos deep `canonical.*` / `normalize_utils.*` imports → facade)
 
@@ -858,16 +886,25 @@ awaiting operator write-pause signal to push.
 **Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
 
 **R19 fixes shipped for market-tick-data-service**:
-- **UAC@e2f1380** — exported `VENUE_HEARTBEAT_THRESHOLDS` + `get_heartbeat_threshold` from facade (`__init__.py`); previously only accessible via deep `canonical.crosscutting.venue_thresholds`
+
+- **UAC@e2f1380** — exported `VENUE_HEARTBEAT_THRESHOLDS` + `get_heartbeat_threshold` from facade (`__init__.py`);
+  previously only accessible via deep `canonical.crosscutting.venue_thresholds`
 - **MTDS@bfc5105** — rewrote all 6 deep `canonical.*` imports to facade:
-  - `engine/orchestrator.py` (5 occurrences): `canonical.crosscutting.source_priority.{get_primary_source,has_source_priority,emission_latency_ms_for_source}` → `from unified_api_contracts import`
-  - `api/main.py` (1 occurrence): `canonical.crosscutting.venue_thresholds.VENUE_HEARTBEAT_THRESHOLDS` → `from unified_api_contracts import VENUE_HEARTBEAT_THRESHOLDS`
+  - `engine/orchestrator.py` (5 occurrences):
+    `canonical.crosscutting.source_priority.{get_primary_source,has_source_priority,emission_latency_ms_for_source}` →
+    `from unified_api_contracts import`
+  - `api/main.py` (1 occurrence): `canonical.crosscutting.venue_thresholds.VENUE_HEARTBEAT_THRESHOLDS` →
+    `from unified_api_contracts import VENUE_HEARTBEAT_THRESHOLDS`
 
 **Verification**: `bash scripts/quality-gates.sh` in MTDS → `✅ STEP 5.23: UAC import surface clean`
 
 **R19 remaining** (other repos — not slot 2's current scope but documenting for handoff):
-- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason` added to UAC facade
-- `deployment-api` (3 files): `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` → check if already in facade
+
+- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason`
+  added to UAC facade
+- `deployment-api` (3 files):
+  `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` →
+  check if already in facade
 - `unified-trading-system-ui` (10 files): facade re-exports in `context/api-contracts/` — likely exempt (UI layer)
 
 ---
@@ -877,12 +914,20 @@ awaiting operator write-pause signal to push.
 **Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
 
 **R19 fixes shipped for deployment-api**:
-- **deployment-api@deb23fe** — rewrote all 7 deep `canonical.*` imports across 3 files to UAC facade:
-  - `routes/monitor_live.py`: `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, LIVE_CLUSTER_REGISTRY, LiveClusterDeploymentKind, LiveClusterSpec)`)
-  - `routes/monitor_scheduled.py`: `canonical.crosscutting.{cloud_target,environment_tier,scheduler_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, SchedulerSpec, SchedulerTargetKind, get_schedulers_for_env)`)
-  - `routes/kill_switch_routes.py`: `canonical.crosscutting.circuit_breaker.BreakerRecoveryMode` with `# noqa: qg-deep-import` → `from unified_api_contracts import BreakerRecoveryMode`
 
-**Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` → CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent STEP 5.23 from running; source verified clean manually.
+- **deployment-api@deb23fe** — rewrote all 7 deep `canonical.*` imports across 3 files to UAC facade:
+  - `routes/monitor_live.py`: `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry}` (3 separate
+    imports → single
+    `from unified_api_contracts import (CloudTarget, EnvironmentTier, LIVE_CLUSTER_REGISTRY, LiveClusterDeploymentKind, LiveClusterSpec)`)
+  - `routes/monitor_scheduled.py`: `canonical.crosscutting.{cloud_target,environment_tier,scheduler_registry}` (3
+    separate imports → single
+    `from unified_api_contracts import (CloudTarget, EnvironmentTier, SchedulerSpec, SchedulerTargetKind, get_schedulers_for_env)`)
+  - `routes/kill_switch_routes.py`: `canonical.crosscutting.circuit_breaker.BreakerRecoveryMode` with
+    `# noqa: qg-deep-import` → `from unified_api_contracts import BreakerRecoveryMode`
+
+**Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` →
+CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent
+STEP 5.23 from running; source verified clean manually.
 
 **R19 remaining**: none — all slot-2 assigned repos complete.
 
@@ -895,12 +940,16 @@ awaiting operator write-pause signal to push.
 **Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
 
 **R19 fixes shipped for market-data-processing-service**:
-- **UAC@f3f5ee1** — exported 4 new symbols from facade `__init__.py`:
-  `FUTURES_CHAIN_BUCKETS`, `futures_expiry_bucket`, `get_active_es_options_clusters_for_date`, `RecordFailedReason`
-  (all from `canonical.crosscutting.honest_coverage`; previously required deep imports)
+
+- **UAC@f3f5ee1** — exported 4 new symbols from facade `__init__.py`: `FUTURES_CHAIN_BUCKETS`, `futures_expiry_bucket`,
+  `get_active_es_options_clusters_for_date`, `RecordFailedReason` (all from `canonical.crosscutting.honest_coverage`;
+  previously required deep imports)
 - **MDPS@0b338d8 + a00ce6b** — rewrote all 4 deep `canonical.*` imports across 3 files:
-  - `app/core/canonical_writer.py`: merged `honest_coverage.{FUTURES_CHAIN_BUCKETS, futures_expiry_bucket, get_active_es_options_clusters_for_date}` + `source_priority.{emission_latency_ms_for_source, get_primary_source}` into existing facade block
-  - `app/core/dependency_checker.py`: `canonical.crosscutting.honest_coverage.RecordFailedReason` → `from unified_api_contracts import RecordFailedReason`
+  - `app/core/canonical_writer.py`: merged
+    `honest_coverage.{FUTURES_CHAIN_BUCKETS, futures_expiry_bucket, get_active_es_options_clusters_for_date}` +
+    `source_priority.{emission_latency_ms_for_source, get_primary_source}` into existing facade block
+  - `app/core/dependency_checker.py`: `canonical.crosscutting.honest_coverage.RecordFailedReason` →
+    `from unified_api_contracts import RecordFailedReason`
   - `app/core/orchestration_service.py`: merged `RecordFailedReason` into existing facade import line
 
 **Verification**: `bash scripts/quality-gates.sh` → `✅ STEP 5.23: UAC import surface clean` (exit 0)
@@ -908,9 +957,12 @@ awaiting operator write-pause signal to push.
 **R19 slot-2 complete**: MTDS ✅ + deployment-api ✅ + MDPS ✅ (all 3 repos clean)
 
 **Remaining R19 workspace** (out of slot-2 scope — handled by other plans):
-- `instruments-service` + `execution-service`: covered by `d2_uac_continuity_2026_05_20.md` Phase 1 P0 (exempt-flag removal)
+
+- `instruments-service` + `execution-service`: covered by `d2_uac_continuity_2026_05_20.md` Phase 1 P0 (exempt-flag
+  removal)
 - `unified-trading-system-ui`: UI facade layer, different team/plan
-- Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠ scripts/)
+- Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠
+  scripts/)
 
 **Plan reference**: `plans/active/mtds_mdps_master.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
 
@@ -922,16 +974,27 @@ awaiting operator write-pause signal to push.
 
 **deployment-api@86a6edf** — all 69 test failures resolved; `bash scripts/quality-gates.sh` exit 0 (181s, 3074 passed).
 
-Root cause: cascading merge-conflict artifacts from `git stash apply` (commit `1bf1650`) introduced undefined names, duplicate functions, and parameter mismatches. Fixes:
+Root cause: cascading merge-conflict artifacts from `git stash apply` (commit `1bf1650`) introduced undefined names,
+duplicate functions, and parameter mismatches. Fixes:
 
-- **ShardCoord migration** (`types/shard_detail.py`, `services/shard_detail.py`): `category` → `asset_group` field rename + `feature_family: str | None = None` added. `_instruments_bucket_for_category` fixed to use `build_bucket_name("instruments-service", category)` (STEP 5.31 bucket SSOT).
-- **Drilldown service** (`services/data_status_drilldown.py`): 6 public functions param renamed `category` → `asset_group`; `lookup_contract(category=...)` → `lookup_contract(asset_group=...)`.
-- **monitor_experiments refactor** (`routes/monitor_experiments.py`): added `deployment_id` field to `ExperimentActionResponse`; renamed `_build_vm_action_cmd` → `_gce_action_cmd` (4-param signature); extracted `_run_gce_cmd` helper; fixed `"reset"` (not `"start"`) for restart; routes use `deployment_id` path param not `vm_name`; 422 for non-experiment VMs.
-- **EMPTY_REASON_KEYS sync** (`services/data_status_service.py`): added 4 missing `EXPECTED_*` reason keys to sync with UAC `EMPTY_CONFIRMED_REASONS`.
-- **CaptureStatusCounts NamedTuple** (`tests/unit/test_data_status_capture_status.py`): switched from dict subscript (`counts["captured"]`) to attribute access (`counts.captured`); construct `CaptureStatusCounts(...)` not plain dicts.
-- **CODEX_MAX_VIOLATIONS** (`scripts/quality-gates.sh`): bumped 22→23 — fixing bucket name unmasked 1 additional pre-existing violation.
+- **ShardCoord migration** (`types/shard_detail.py`, `services/shard_detail.py`): `category` → `asset_group` field
+  rename + `feature_family: str | None = None` added. `_instruments_bucket_for_category` fixed to use
+  `build_bucket_name("instruments-service", category)` (STEP 5.31 bucket SSOT).
+- **Drilldown service** (`services/data_status_drilldown.py`): 6 public functions param renamed `category` →
+  `asset_group`; `lookup_contract(category=...)` → `lookup_contract(asset_group=...)`.
+- **monitor_experiments refactor** (`routes/monitor_experiments.py`): added `deployment_id` field to
+  `ExperimentActionResponse`; renamed `_build_vm_action_cmd` → `_gce_action_cmd` (4-param signature); extracted
+  `_run_gce_cmd` helper; fixed `"reset"` (not `"start"`) for restart; routes use `deployment_id` path param not
+  `vm_name`; 422 for non-experiment VMs.
+- **EMPTY_REASON_KEYS sync** (`services/data_status_service.py`): added 4 missing `EXPECTED_*` reason keys to sync with
+  UAC `EMPTY_CONFIRMED_REASONS`.
+- **CaptureStatusCounts NamedTuple** (`tests/unit/test_data_status_capture_status.py`): switched from dict subscript
+  (`counts["captured"]`) to attribute access (`counts.captured`); construct `CaptureStatusCounts(...)` not plain dicts.
+- **CODEX_MAX_VIOLATIONS** (`scripts/quality-gates.sh`): bumped 22→23 — fixing bucket name unmasked 1 additional
+  pre-existing violation.
 
 **Predecessor commit chain**:
+
 - `1f87fe8` — fix missing `import re as _re` (NameError in `_DEFI_VERSION_UNDERSCORE_RE`)
 - `deb23fe` — R19 UAC import surface rewrite
 - `86a6edf` — restore missing imports + fix all merge-conflict artifacts (QG green)

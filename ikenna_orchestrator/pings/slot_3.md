@@ -1,6 +1,28 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 strategy-consolidation Phase 11 dispatch (TOP).** Booting agents:
-> read the 2026-05-20 entry below FIRST, then your existing Group H assignments. History older than 2026-05-20
-> is audit-trail only.
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 3 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 3] 2026-05-21 — aws_migration full remaining scope (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Complete `aws_migration_defi_first_2026_05_07.md` — Phases 1.B, 1.C, 3, 4, 5, 6. Plan was ~14% done as of
+2026-05-19 with ~27.6 cal remaining in Phases 3–6.
+
+**FIRST**: trivial-todo sweep — mark [x] any item with QG-green SHA evidence already in plan body, or where dry-run
+results are already recorded. Commit as `docs(plans): trivial-sweep aws_migration`.
+
+**Then execute**: Phase 1.B (IAM matrix) → 1.C (ECR, needs AWS creds — file BLOCKED-CREDENTIALS if unavailable) → Phases
+3–6 (DeFi provisioning, rsync, code path, validation). Per-phase commit + push + flip. QG before any code push.
+Human-gate items (wallet keys, KMS) → BLOCKED-OPERATOR-DECISION ping, skip and continue.
+
+**If plan hits 100%**: git mv active → archive, add deferred-work section, update parent epic.
+
+**Ack**: When done, append
+`[2026-05-21 HH:MM UTC] slot-3 DONE — aws_migration phases 1.B+1.C+3-6 complete/blocked at <sha>` here.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
@@ -12,25 +34,27 @@ services still present in consumer repos.
 
 **Your slice (slot 3, P1 tail)**:
 
-- **Plan**: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11f**.
+- **Plan**:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  **Phase 11f**.
 - **Scope**: alerting-service + system-integration-tests + e2e-testing + trading-agent-service refs to the 3 archived
   strategy-consolidation services (risk-and-exposure / position-balance-monitor / pnl-attribution). ~30 live refs.
 - **Hot spots to fix first**:
   - `alerting-service/risk_rule_event_handler.py:3`, `core/system_health_aggregator.py:26`,
     `subscribers/batch_event_reader.py:40` — rewire to `strategy-service`.
-  - `trading-agent-service/config.py:126`, `adapters/risk_adapter.py:1,20` — HTTP client base URLs + adapter
-    imports → strategy-service.
+  - `trading-agent-service/config.py:126`, `adapters/risk_adapter.py:1,20` — HTTP client base URLs + adapter imports →
+    strategy-service.
   - `system-integration-tests/tests/smoke/test_deployment_smoke.py:178` + integration test skip-guards/service lists.
   - `e2e-testing/scripts/` — any archived-service references.
-- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history / docstring
-  module headers — leave intact.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history / docstring module
+  headers — leave intact.
 - **Gate**: per-repo `bash scripts/quality-gates.sh` GREEN.
 - **Estimate**: ~0.5 cal-AI-days.
-- **Half-1+2 discipline**: ship code + flip the Phase 11f checkbox in the SAME agent turn (`docs(plans): flip
-  Phase 11f — <repo>@<sha>`). See CLAUDE.md § "Commit + Push + Flip" HARD RULE.
+- **Half-1+2 discipline**: ship code + flip the Phase 11f checkbox in the SAME agent turn
+  (`docs(plans): flip Phase 11f — <repo>@<sha>`). See CLAUDE.md § "Commit + Push + Flip" HARD RULE.
 
-**Compose-with**: your existing Group H assignment is the priority; this is a P1 add-on that should fit in spare
-cycles or be picked up when Group H phases naturally complete.
+**Compose-with**: your existing Group H assignment is the priority; this is a P1 add-on that should fit in spare cycles
+or be picked up when Group H phases naturally complete.
 
 ---
 
@@ -1032,8 +1056,8 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 schema additions for remaining uncovered protocols 4. MTDS wiring for chain primitives
 
 **Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` +
-`plans/active/defi_catalogue_chain_primitives_2026_05_10.md` **NOTE**: Prior dispatch to `defi_master.md` is
-SUPERSEDED by this split. Skip defi_master.
+`plans/active/defi_catalogue_chain_primitives_2026_05_10.md` **NOTE**: Prior dispatch to `defi_master.md` is SUPERSEDED
+by this split. Skip defi_master.
 
 Acknowledge "STARTED UAC delegate-flip" within 10 min.
 
@@ -1111,14 +1135,13 @@ now.
 MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b) ✅ — all acked. Queue exhausted
 again.
 
-**New dispatch**: `defi_master.md` codex close-out — strategy codex in UAC/instruments territory (your
-domain).
+**New dispatch**: `defi_master.md` codex close-out — strategy codex in UAC/instruments territory (your domain).
 
 **Items**:
 
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections
-   (archetypes, primitives, operational docs). Skip Group F live-trading items (operator-gated).
+2. Read `plans/active/defi_master.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections (archetypes,
+   primitives, operational docs). Skip Group F live-trading items (operator-gated).
 3. Ship 2-3 items per batch. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC changes.
 4. Dual-flip defi_master + work_split `docs(plans):` in same turn per item.
 
@@ -1130,12 +1153,12 @@ Acknowledge "STARTED defi_master codex close-out" within 10 min.
 No ack visible in ping file. If active: post "STARTED defi_master" now + first item you're targeting. If blocked: drop
 one-liner. Plan: `plans/active/defi_master.md` codex/09-strategy/ unchecked items (skip Group F).
 
-[2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH:
-`defi_master.md` codex close-out — same theme, fresh context.**
+[2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH: `defi_master.md`
+codex close-out — same theme, fresh context.**
 
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/
-   (archetypes, primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
+2. Read `plans/active/defi_master.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/ (archetypes,
+   primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
 3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship.
    `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.
 4. Dual-flip: code commit + `docs(plans): flip defi_master item <N>` in same turn. **Acknowledge "STARTED defi_master
@@ -1616,15 +1639,21 @@ P0 (CRITICAL — live-safety gate missing):
 **Status**: ✅ ALL Phase 11f Bucket 3 items DONE for slot 3 scope
 
 **Shipped** (live-defi-rollout):
-- `trading-agent-service@9b2f3ee` — rewired RiskAdapter + UPSTREAM_SERVICES list from risk-and-exposure-service → strategy-service (4 files, QG exit 0)
-- `system-integration-tests@d3cdfda` — removed ml-service refs from SIT_SCOPE_REPOS + _SERVICE_MATRIX; rewired position-balance-monitor-service → strategy-service; fixed 3 pre-existing QG violations (PYSEC-2026-87 pip-audit ignore, RepoContext CORRECT-LOCAL, workspace-manifest deps alignment); QG exit 0
+
+- `trading-agent-service@9b2f3ee` — rewired RiskAdapter + UPSTREAM_SERVICES list from risk-and-exposure-service →
+  strategy-service (4 files, QG exit 0)
+- `system-integration-tests@d3cdfda` — removed ml-service refs from SIT_SCOPE_REPOS + \_SERVICE_MATRIX; rewired
+  position-balance-monitor-service → strategy-service; fixed 3 pre-existing QG violations (PYSEC-2026-87 pip-audit
+  ignore, RepoContext CORRECT-LOCAL, workspace-manifest deps alignment); QG exit 0
 - `unified-trading-pm@47bb1b37` — plan flips for both repos + workspace-manifest.json deps aligned
 
-**e2e-testing skip**: ml-service refs in `scripts/sports/run-full-pipeline.sh:120-122` left intact — ml-service skeleton not complete in slot 3 worktree (only pyproject.toml present). Captured as deferred per .boot.md "Out-of-scope" note.
+**e2e-testing skip**: ml-service refs in `scripts/sports/run-full-pipeline.sh:120-122` left intact — ml-service skeleton
+not complete in slot 3 worktree (only pyproject.toml present). Captured as deferred per .boot.md "Out-of-scope" note.
 
 **Phase 1** already GREEN (slot 8 proxy, `pm@3a8b7b77`). No new work to pick up.
 
-**Downstream unblocked phases** (Phase 2/3/4/13): all waiting for upstream phases to land. Orchestrator confirms no eligible tasks.
+**Downstream unblocked phases** (Phase 2/3/4/13): all waiting for upstream phases to land. Orchestrator confirms no
+eligible tasks.
 
 **Slot 3 is IDLE** — ready for reassignment when Phase 2/3/4/13 prereqs land.
 
@@ -1634,25 +1663,27 @@ P0 (CRITICAL — live-safety gate missing):
 
 **Status**: ⚠️ OPERATOR-ACK-NEEDED
 
-**Situation**: `PH-2-B3-SLOT-3` has been queued since ~20:00 UTC but cannot be dispatched.
-Orchestrator blocker: `"repos in use by slot(s) [8, 10] (set parallel_safe: true to override)"`.
+**Situation**: `PH-2-B3-SLOT-3` has been queued since ~20:00 UTC but cannot be dispatched. Orchestrator blocker:
+`"repos in use by slot(s) [8, 10] (set parallel_safe: true to override)"`.
 
-However: `/api/backlog?status=in_progress` returns `[]` — **no tasks are in-progress**.
-This is a stale slot registration lock (slots 8 and 10 held UAC + trading-agent repos from
-earlier tasks but did not release the lock when they finished).
+However: `/api/backlog?status=in_progress` returns `[]` — **no tasks are in-progress**. This is a stale slot
+registration lock (slots 8 and 10 held UAC + trading-agent repos from earlier tasks but did not release the lock when
+they finished).
 
 **The actual code work is ALREADY DONE** (shipped in previous context window):
+
 - `trading-agent-service@9b2f3ee` — Phase 11f risk-and-exposure-service → strategy-service rewiring
 - `unified-api-contracts@82b7ad55` — Phase 1 UAC schemas (from earlier)
 - `system-integration-tests@d3cdfda` — ml-service + position-balance-monitor-service refs removed
 - `unified-trading-pm@47bb1b37` — plan flips
 
 **What is needed**: Operator OR slot-1-main to either:
+
 1. Set `parallel_safe: true` on `PH-2-B3-SLOT-3` so it can be dispatched and `/done` called, OR
 2. Clear stale repo locks for slots 8 and 10 (force-release their repo claims)
 
-**Slot 3 is polling** — will retry boot every 15 minutes. Work is already done; just need
-dispatch to formally call `/done`.
+**Slot 3 is polling** — will retry boot every 15 minutes. Work is already done; just need dispatch to formally call
+`/done`.
 
 — slot-3 / ikenna
 
@@ -1665,19 +1696,18 @@ dispatch to formally call `/done`.
 **Duration**: ~12 hours (task queued since 2026-05-20 20:00 UTC)
 
 **Blocker**: `unified-trading-pm` locked by:
+
 - Slot 8: `ML-SERVICE-WORKTREE-WIRE-QG` (reassigned from slot 11 which went stale)
 - Slot 10: `PHASE-5A-AWS-OBJECT-MIGRATE` (running 12h+)
 
 **Work already shipped**:
+
 - `trading-agent-service@9b2f3ee`
 - `system-integration-tests@d3cdfda`
 - `unified-api-contracts@82b7ad55`
 - `unified-trading-pm@5354704b`
 
-**Operator action needed** (worker cannot do this):
-Edit `data/config/backlog.yaml` → set `parallel_safe: true` on `PH-2-B3-SLOT-3`
-→ `POST /api/backlog/reload`
-→ Slot 3 will immediately receive task and call `/done`
+**Operator action needed** (worker cannot do this): Edit `data/config/backlog.yaml` → set `parallel_safe: true` on
+`PH-2-B3-SLOT-3` → `POST /api/backlog/reload` → Slot 3 will immediately receive task and call `/done`
 
 — slot-3 / ikenna
-

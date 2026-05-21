@@ -1,7 +1,30 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch + 2026-05-20 strategy-consolidation Phase 11
-> dispatch.** Booting agents: read BOTH 2026-05-20 entries below FIRST (Phase 11 is the most-recent), then
-> `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 6 + 8. History below
-> 2026-05-20 is audit-trail only.
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 7 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 7] 2026-05-21 — QG Cluster C: strategy + execution + ml (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Run `bash scripts/quality-gates.sh` in strategy-service, execution-service, and ml-service (or
+ml-training + ml-inference-service). Fix until exit 0 on all repos. Push each fix.
+
+⚠️ STRATEGY-LOGIC FREEZE GATE ACTIVE:
+
+- ONLY fix surface failures: lint (ruff), type errors (basedpyright), docstrings, unused imports.
+- DO NOT touch: `strategy_service/engine/strategies/v2/`, `engine/allocator/`, collateral/liquidation/
+  cross-venue-transfer/venue-restriction code, deployment topology dynamic-config.
+- If a failure requires editing frozen surfaces → stop, post ping here describing it, skip that file.
+
+PYTEST*UNIT_DIR: if `find tests/unit/ -name 'test*_.py' | wc -l`< 5% of`find tests/ -name 'test\__.py' | wc
+-l`→ set`PYTEST_UNIT_DIR="tests/"` before sourcing base-service.sh in quality-gates.sh.
+
+Commit per shippable unit. Push to live-defi-rollout.
+
+**Ack**: append `[2026-05-21 HH:MM UTC] slot-7 DONE — QG green strategy@<sha> execution@<sha> ml@<sha>` here when done.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
@@ -9,20 +32,22 @@
 
 **Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
 was just appended to BOTH consolidation plans after a workspace audit found ~545 live-code refs to the 5 archived
-services still present in consumer repos. **deployment-service has the largest cleanup load (~142 live refs)** —
-this slot owns it because you already shipped Phase 8A launcher migration in the original plan.
+services still present in consumer repos. **deployment-service has the largest cleanup load (~142 live refs)** — this
+slot owns it because you already shipped Phase 8A launcher migration in the original plan.
 
 **Your slice (slot 7, P0 — deployment-service cleanup for both consolidations into a single QG pass)**:
 
 - **Plans**:
-  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11a** (deployment-service, strategy side).
-  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11b** (deployment-service, ML side).
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+    **Phase 11a** (deployment-service, strategy side).
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase
+    11b** (deployment-service, ML side).
 - **Scope (~142 live refs total)**:
-  1. **Terraform destroy** + dir removal for **5 archived service stacks** (`terraform/services/{risk-and-exposure-service,
-     position-balance-monitor-service, pnl-attribution-service, ml-training-service, ml-inference-service}/`):
+  1. **Terraform destroy** + dir removal for **5 archived service stacks**
+     (`terraform/services/{risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service, ml-training-service, ml-inference-service}/`):
      - Each has an ARCHIVED.md marker.
-     - Per service: `cd terraform/services/<svc>/gcp && terraform destroy`; same for `aws`. 5 services × 2 clouds =
-       **10 stack destroys**. Verify zero remaining cloud resources before deleting dirs.
+     - Per service: `cd terraform/services/<svc>/gcp && terraform destroy`; same for `aws`. 5 services × 2 clouds = **10
+       stack destroys**. Verify zero remaining cloud resources before deleting dirs.
   2. `terraform/shared/gcp/main.tf` lines 44-50 — remove all 5 archived service names from shared service lists.
   3. `cloud-build/{gcp,aws}/main.tf` + `cloud-build/refresh-tarballs.cloudbuild.yaml` lines 116-117 — remove tarball
      refresh entries for all 5 archived services; verify the consolidated entries (strategy-service, ml-service) are
@@ -33,20 +58,18 @@ this slot owns it because you already shipped Phase 8A launcher migration in the
      assertion lists.
   6. `deployment-api/` service registry endpoints — verify Phase 8B work covers the consolidated entries (~25 refs
      specifically in deployment-api for ML side).
-- **ML-side note**: ml-service-side terraform destroy is technically not blocked by the operator `gh repo archive`
-  ping (line 41 of `_agent_pings.md`) — you can destroy the cloud resources independently of the GitHub repo state.
-  But coordinate with `_agent_pings.md` line 41 ack to align timing.
-- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / ARCHIVED.md markers themselves — leave
-  intact; you DELETE the terraform dirs (containing ARCHIVED.md) only AFTER terraform destroy succeeds.
-- **Gate**: `cd deployment-service && bash scripts/quality-gates.sh` GREEN + `terraform plan` GREEN (no orphan
-  state).
+- **ML-side note**: ml-service-side terraform destroy is technically not blocked by the operator `gh repo archive` ping
+  (line 41 of `_agent_pings.md`) — you can destroy the cloud resources independently of the GitHub repo state. But
+  coordinate with `_agent_pings.md` line 41 ack to align timing.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / ARCHIVED.md markers themselves — leave intact;
+  you DELETE the terraform dirs (containing ARCHIVED.md) only AFTER terraform destroy succeeds.
+- **Gate**: `cd deployment-service && bash scripts/quality-gates.sh` GREEN + `terraform plan` GREEN (no orphan state).
 - **Estimate**: ~1.25 cal-AI-days bundled.
-- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip — flip BOTH plans' matching phase
-  checkboxes per single deployment-service PR
-  (`docs(plans): flip Phase 11a (strategy) + 11b (ml) — deployment-service@<sha>`).
+- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip — flip BOTH plans' matching phase checkboxes
+  per single deployment-service PR (`docs(plans): flip Phase 11a (strategy) + 11b (ml) — deployment-service@<sha>`).
 
-**Compose-with**: your existing Group H Phases 6 + 8 assignment is the priority; this Phase 11 work composes since
-both touch deployment-service infrastructure.
+**Compose-with**: your existing Group H Phases 6 + 8 assignment is the priority; this Phase 11 work composes since both
+touch deployment-service infrastructure.
 
 ---
 
@@ -2187,8 +2210,9 @@ Slot-3's plan: `plans/active/uac_source_capability_metadata_promotion_2026_05_20
 
 **QGs**: ALL PASSED (exit 0) before push
 
-**BLOCKER for operator**: `gh` CLI not installed on this VM + no GH_PAT token set → PR creation skipped.
-Branch is pushed to `origin/tab/ikennaigboaka/7`. Operator must create PR manually:
+**BLOCKER for operator**: `gh` CLI not installed on this VM + no GH_PAT token set → PR creation skipped. Branch is
+pushed to `origin/tab/ikennaigboaka/7`. Operator must create PR manually:
+
 ```
 gh pr create --base main --head tab/ikennaigboaka/7 \
   --title "docs(codex): slot 7 Phase 6 — execution-service codex docs (4 of 4)" \
@@ -2211,34 +2235,39 @@ gh pr create --base main --head tab/ikennaigboaka/7 \
 
 ### What was fixed
 
-Root cause of 25,652 sports MISSING_EXPECTED: the `_SPORTS` dict in `expected_coverage.py` used wrong data_type names and wrong venue names:
+Root cause of 25,652 sports MISSING_EXPECTED: the `_SPORTS` dict in `expected_coverage.py` used wrong data_type names
+and wrong venue names:
 
 - **Data types**: `"odds"` → `"ODDS"` (ODDS_API), `"odds_snapshot"/"odds_movement"` → `"trades"` (all others)
-- **Betfair venues**: canonical `"BETFAIR"` → `"BETFAIR_SB_UK"`, `"BETFAIR_EX_UK"`, `"BETFAIR_EX_EU"` (MTDS sub-venue tokens)
+- **Betfair venues**: canonical `"BETFAIR"` → `"BETFAIR_SB_UK"`, `"BETFAIR_EX_UK"`, `"BETFAIR_EX_EU"` (MTDS sub-venue
+  tokens)
 - **BET365 removed**: 0 manifest rows (DEFERRED-INDEFINITELY 2026-05-12 per operator)
-- **KNOWN_COVERAGE_GAPS populated**: pre-MTDS-launch window (2020-01-01–2020-05-31) for BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU, DRAFTKINGS, FANDUEL
+- **KNOWN_COVERAGE_GAPS populated**: pre-MTDS-launch window (2020-01-01–2020-05-31) for BETFAIR_SB_UK, BETFAIR_EX_UK,
+  BETFAIR_EX_EU, DRAFTKINGS, FANDUEL
 - **coverage_start added**: `_ODDS_API` (`{"ODDS": date(2020, 6, 6)}`) + `_PINNACLE` (`{"trades": date(2020, 6, 1)}`)
 
 Commit: **uac@02b8370** (QG exit 0, branch `tab/ikennaigboaka/7`)
 
 ### A3 re-run results (2026-05-21 07:07 UTC)
 
-| Venue | data_type | MISSING_EXPECTED |
-|---|---|---|
-| BETFAIR_EX_EU | trades | 1,427 |
-| BETFAIR_EX_UK | trades | 1,407 |
-| BETFAIR_SB_UK | trades | 1,399 |
-| PINNACLE | trades | 708 |
-| FANDUEL | trades | 627 |
-| DRAFTKINGS | trades | 554 |
-| ODDS_API | ODDS | 204 |
-| **Total** | | **6,326** |
+| Venue         | data_type | MISSING_EXPECTED |
+| ------------- | --------- | ---------------- |
+| BETFAIR_EX_EU | trades    | 1,427            |
+| BETFAIR_EX_UK | trades    | 1,407            |
+| BETFAIR_SB_UK | trades    | 1,399            |
+| PINNACLE      | trades    | 708              |
+| FANDUEL       | trades    | 627              |
+| DRAFTKINGS    | trades    | 554              |
+| ODDS_API      | ODDS      | 204              |
+| **Total**     |           | **6,326**        |
 
 **Reduction**: 25,652 → 6,326 (−19,326 phantom cells eliminated by oracle fix)
 
 ### Residual 6,326 diagnosis
 
-All residual MISSING_EXPECTED are off-season days within the manifest date range (2020-06-01 to 2026-04-14). These are days where no league fixtures exist → adapters correctly don't run → no manifest rows. The oracle still says SHOULD_HAVE_DATA because it lacks per-league fixture calendar integration.
+All residual MISSING_EXPECTED are off-season days within the manifest date range (2020-06-01 to 2026-04-14). These are
+days where no league fixtures exist → adapters correctly don't run → no manifest rows. The oracle still says
+SHOULD_HAVE_DATA because it lacks per-league fixture calendar integration.
 
 **Owner**: R9 (slot 5) — per-symbol axis with `get_league_fixture_calendar` lookup.
 
@@ -2263,15 +2292,15 @@ All residual MISSING_EXPECTED are off-season days within the manifest date range
 
 ### Summary of Phase -2 deliverables (this session)
 
-| Repo | Commit | Scope |
-|---|---|---|
-| deployment-service | aa34d91 | Phase 11b ML stale-ref cleanup (18 files: terraform/shared, cloud-build, cluster configs, bucket_config, sports-trigger-tiers, grafana) |
-| unified-trading-pm | a3048b85 | dependencies.yaml + workspace-manifest.json ML consolidation |
-| unified-trading-pm | c441febd | Phase 11b plan checkbox flip (deployment-service) |
-| deployment-api | 28633bc | Phase 11 ML stale-ref cleanup (16 files: routes, services, tests) |
-| unified-trading-pm | ef5be104 | Phase 11b plan evidence (deployment-api) |
-| deployment-service | d5f4779 | `git rm -r` all 5 archived-service terraform/services dirs (39 files) |
-| unified-trading-pm | e1c324d8 | BLOCKED-OPERATOR-DECISION → ✅ on both strategy + ML plan item 1 |
+| Repo               | Commit   | Scope                                                                                                                                   |
+| ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| deployment-service | aa34d91  | Phase 11b ML stale-ref cleanup (18 files: terraform/shared, cloud-build, cluster configs, bucket_config, sports-trigger-tiers, grafana) |
+| unified-trading-pm | a3048b85 | dependencies.yaml + workspace-manifest.json ML consolidation                                                                            |
+| unified-trading-pm | c441febd | Phase 11b plan checkbox flip (deployment-service)                                                                                       |
+| deployment-api     | 28633bc  | Phase 11 ML stale-ref cleanup (16 files: routes, services, tests)                                                                       |
+| unified-trading-pm | ef5be104 | Phase 11b plan evidence (deployment-api)                                                                                                |
+| deployment-service | d5f4779  | `git rm -r` all 5 archived-service terraform/services dirs (39 files)                                                                   |
+| unified-trading-pm | e1c324d8 | BLOCKED-OPERATOR-DECISION → ✅ on both strategy + ML plan item 1                                                                        |
 
 **Freeze protocol compliance**: no new LDR commits during freeze post-Phase-11 completion. Q2 stale note resolved in
 simulation plan (plan-update, permitted during freeze). This ping is the only write during freeze.
@@ -2283,12 +2312,13 @@ simulation plan (plan-update, permitted during freeze). This ping is the only wr
 - R7 off-season KNOWN_COVERAGE_GAPS: ✅ DONE (source-level extended; per-league calendar awaiting R9 slot 5)
 - Simulation scenarios plan: ✅ CLOSED (Harsh b3ede821 closed all 21 items 2026-05-19; Q2 confirmed resolved)
 - Cross-cutting may23 deliverables: ✅ slot-7 items done; remaining items are Harsh T6 (catalogue UI, archetype rows)
-- Phase 11 sports data backfill: NOT NEEDED for slot 7 — the 6,326 residual cells are legitimate off-season gaps;
-  R9 (slot 5) reclassifies them via `get_league_fixture_calendar`; no VM backfill required from slot 7.
+- Phase 11 sports data backfill: NOT NEEDED for slot 7 — the 6,326 residual cells are legitimate off-season gaps; R9
+  (slot 5) reclassifies them via `get_league_fixture_calendar`; no VM backfill required from slot 7.
 
 ### Unblock condition
 
 Resume dispatch when ONE of:
+
 1. `🟢 UNFREEZE` ping in `_agent_pings.md` (Phase 8 complete) → resume slot themes per work_split
 2. R9 lands (slot 5 ships `get_league_fixture_calendar` oracle integration) → A3 re-run confirms 0 sports
    MISSING_EXPECTED → R2/R7 fully GREEN
@@ -2308,14 +2338,14 @@ Resume dispatch when ONE of:
 
 ### Deliverables
 
-| Item | Commit | Detail |
-|---|---|---|
-| `orchestrator_vm_registry.yaml` | PM@e3f11893 | vm-0 (epic VM) + human-planning-vm (planning VM); `generated_at: 2026-05-21T00:00:00Z` |
-| `scripts/orchestrator/regen_vm_registry.py` | PM@e3f11893 | scans plans/epics/*.md + key actives; validates vm-ids; updates master_plans lists; bumps generated_at |
-| `assigned_vm:` frontmatter — 11 epics | PM@e3f11893 | cefi, cross_cutting, infrastructure, instruments_live, manifest_evolution, manifest_migration, ml_and_features, predictions, sports, strategy_and_dart, tradfi → all `assigned_vm: vm-0` |
-| `assigned_vm:` frontmatter — 3 actives | PM@e3f11893 | data_pipeline_master_coordination, master_to_live_defi → vm-0; orchestrator_v07 → human-planning-vm |
-| CLAUDE.md rule | PM@e3f11893 | "Master plans MUST declare `assigned_vm:` in frontmatter. regen_vm_registry.py --check must exit 0 before push." |
-| Phase 1 checkboxes flipped | PM@ce6370ab | All 4 Phase 1 todos marked `[x]` with evidence SHA |
+| Item                                        | Commit      | Detail                                                                                                                                                                                   |
+| ------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `orchestrator_vm_registry.yaml`             | PM@e3f11893 | vm-0 (epic VM) + human-planning-vm (planning VM); `generated_at: 2026-05-21T00:00:00Z`                                                                                                   |
+| `scripts/orchestrator/regen_vm_registry.py` | PM@e3f11893 | scans plans/epics/\*.md + key actives; validates vm-ids; updates master_plans lists; bumps generated_at                                                                                  |
+| `assigned_vm:` frontmatter — 11 epics       | PM@e3f11893 | cefi, cross_cutting, infrastructure, instruments_live, manifest_evolution, manifest_migration, ml_and_features, predictions, sports, strategy_and_dart, tradfi → all `assigned_vm: vm-0` |
+| `assigned_vm:` frontmatter — 3 actives      | PM@e3f11893 | data_pipeline_master_coordination, master_to_live_defi → vm-0; orchestrator_v07 → human-planning-vm                                                                                      |
+| CLAUDE.md rule                              | PM@e3f11893 | "Master plans MUST declare `assigned_vm:` in frontmatter. regen_vm_registry.py --check must exit 0 before push."                                                                         |
+| Phase 1 checkboxes flipped                  | PM@ce6370ab | All 4 Phase 1 todos marked `[x]` with evidence SHA                                                                                                                                       |
 
 ### Validation
 
@@ -2323,13 +2353,13 @@ Resume dispatch when ONE of:
 
 ### Bug fixed mid-session
 
-`orchestrator_v07_multi_vm_topology_2026_05_21.md` originally had `assigned_vm: planning-vm` (non-registry id) at line 15.
-Prior sed added a second `assigned_vm: human-planning-vm` at line 9 → duplicate field. Fixed: removed duplicate,
-replaced `planning-vm` with `human-planning-vm` (preserving inline comment). Registry now consistent.
+`orchestrator_v07_multi_vm_topology_2026_05_21.md` originally had `assigned_vm: planning-vm` (non-registry id) at
+line 15. Prior sed added a second `assigned_vm: human-planning-vm` at line 9 → duplicate field. Fixed: removed
+duplicate, replaced `planning-vm` with `human-planning-vm` (preserving inline comment). Registry now consistent.
 
 ### Next
 
-Phase 2 (multi-VM dashboard) is unassigned. Slot 7 will hold for operator dispatch or UNFREEZE ping.
-Unblock conditions (same as previous ping): UNFREEZE signal, R9 lands, or explicit reassignment.
+Phase 2 (multi-VM dashboard) is unassigned. Slot 7 will hold for operator dispatch or UNFREEZE ping. Unblock conditions
+(same as previous ping): UNFREEZE signal, R9 lands, or explicit reassignment.
 
 — slot-7 worker / ikenna 2026-05-21
