@@ -172,8 +172,18 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 
 **DeFi `arbitrage_price_dispersion`** (~9 DEXes):
 
-- [ ] [SCRIPT] P1. REST/GraphQL cassette per: Uniswap V3, Curve (pools), Balancer, Sushi, PancakeSwap (via thegraph),
-      Phoenix, Orca, Raydium, Drift, Lifinity (Solana).
+- [x] ✅ [SCRIPT] P1. REST/GraphQL cassette per: Uniswap V3, Curve (pools), Balancer, Sushi, PancakeSwap (via thegraph),
+      Phoenix, Orca, Raydium, Drift, Lifinity (Solana). — **ALL 10 DEX venues covered (9 new dirs + 2 TheGraph subgraph cassettes + Jupiter)**
+  - ✅ **slot 2 (DEX cluster) DONE** (uac@dd6d325 2026-05-21): Balancer (balancer/mocks/pools.yaml — api-v3.balancer.fi/graphql),
+    Orca (orca/mocks/whirlpool_list.yaml — api.mainnet.orca.so/v1/whirlpool/list),
+    Raydium (raydium/mocks/pools_info.yaml — api-v3.raydium.io/pools/info/list),
+    Drift (drift/mocks/markets.yaml — data.api.drift.trade/stats/markets),
+    Lifinity (lifinity/mocks/pools.yaml — api.lifinity.io/pools),
+    Phoenix (phoenix/mocks/markets.yaml — BLOCKED-UPSTREAM-OUTAGE api.phoenix.trade/markets deprecated 2026-05-15),
+    Jupiter (jupiter/mocks/tokens.yaml — tokens.jup.ag/tokens?tags=strict),
+    SushiSwap V3 (thegraph/mocks/sushiswap_v3_pools.yaml — gateway.thegraph.com subgraph 2tGWMrDha4164KkFAfkU3rDCtuxGb4q1emXmFdLLzJ8x),
+    PancakeSwap V3 (thegraph/mocks/pancakeswap_v3_pools.yaml — gateway.thegraph.com subgraph CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS).
+    Note: Uniswap V3 + Curve covered by pre-existing thegraph/mocks/uniswap_v3_pools.yaml + curve_fi/mocks/pools.yaml (slot 4/prior).
 
 **CeFi venues lacking cassette**:
 
