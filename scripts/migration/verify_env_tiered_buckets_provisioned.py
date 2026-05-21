@@ -148,7 +148,12 @@ def _provision_command(spec: BucketSpec) -> str:
             f"gcloud storage buckets create gs://{spec.name} --location=asia-northeast1 --uniform-bucket-level-access"
         )
     if spec.cloud == "aws":
-        return f"aws s3api create-bucket --bucket {spec.name} --region us-east-1"
+        # ap-northeast-1 (Tokyo) — operator-ratified 2026-05-11 per GAP-2.4.F; same region as GCS data
+        region = "ap-northeast-1"
+        return (
+            f"aws s3api create-bucket --bucket {spec.name} --region {region} "
+            f"--create-bucket-configuration LocationConstraint={region}"
+        )
     return f"# unknown cloud {spec.cloud}"
 
 

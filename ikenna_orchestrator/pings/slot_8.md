@@ -1738,4 +1738,35 @@ Ping slot-1 when each group ships (SHA + QG evidence).
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `honest_coverage_formula_consolidation_2026_05_19.md` +
 `batch_live_symmetry_2026_05_10.md`.
 
+---
+
+## [slot-1-main → slot-8] 2026-05-22 — 🔴 GCS WRITE FREEZE — DO NOT WRITE TO ANY BUCKET
+
+**CRITICAL — read before starting any work item in this dispatch.**
+
+Phase 4 GCS migration parity audit is ACTIVE. Both the flat bucket paths AND the env-tiered (`-prd-`) bucket paths are
+under live assessment. Writing to ANY GCS path — even as a side-effect of a QG smoke test or a script dry-run that
+accidentally emits — will corrupt the parity baseline we are comparing.
+
+**BANNED during this window (until UNFREEZE broadcast from slot-1-main):**
+
+- Any code path that emits to `gs://market-data-tick-*`, `gs://instruments-store-*`, `gs://features-*`, or any other
+  service bucket (flat or env-tiered)
+- Running local pipeline smoke tests that write parquet to GCS
+- Launching any VM that would backfill or write manifest rows
+- Running Cloud Run Slack smoke tests that touch any GCS manifest path as a side-effect
+
+**SAFE:**
+
+- Tab-branch code commits on PM, UAC, MDPS, features-volatility (no execution of GCS-writing scripts)
+- `bash scripts/quality-gates.sh` (unit tests only, mocked GCS)
+- Cloud Run Slack wiring (Slack secrets, no GCS I/O in that path)
+- Read-only `gcloud storage ls` / manifest reads
+
+**Your dispatch items (MDPS OHLCV nullability, Phase 2.E, features-volatility ServiceEmissionPolicy, Cloud Run Slack)
+are safe to proceed — none of these involve live GCS writes. If the Phase 2.E smoke test (item 3) requires writing to
+GCS, mark it `[BLOCKED-GCS-FREEZE]` and ping slot-1-main instead of running it.**
+
+Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
+
 — slot-1 main / ikenna / 2026-05-21

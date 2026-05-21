@@ -525,19 +525,22 @@ one-walk migration so manifest only rewrites once.
       clean | | config-store | config-store-central-element-323112 | unified-trading-config-store-prod-427895769566 |
       yaml SSOT ✅ | 🟢 clean | **Verdict**: Service-code SSOT-clean. One-off migration commands used hardcoded names
       (correct for manual ops). Yaml resolver asymmetry (GCP market-data tick- infix) already corrected. No drift found.
-- [ ] [SCRIPT] P0. **GAP-2.4.B (NEW per operator decision (b) 2026-05-11)** — Provision env-tiered buckets to match yaml
-      across **both clouds**, **all envs (staging / prod / development)**, and **all yaml `${DEPLOYMENT_ENV}`-bearing
-      kinds** (features-delta-one × {cefi, tradfi, defi, prediction, sports} × env, features-volatility × {cefi, tradfi,
-      defi, prediction, sports} × env, features-onchain × {cefi, defi, prediction, sports} × env, features-sports × env,
-      features-prediction × env, ml-models-store × env, ml-predictions-store × env, ml-configs-store × env,
-      strategy-store × {cefi, tradfi, defi, prediction} × env, execution-store × {cefi, tradfi, defi, prediction} × env,
-      dex-pools × env, dex-swaps × env, evm-defi × env, eigenlayer-rewards × env). Estimated total: ~180-300 new buckets
-      across both clouds × 3 envs. Implementation: extend `deployment-service/terraform/modules/storage_buckets` (or
-      `setup-buckets.sh`) with the resolver-derived name list; run `gcloud storage buckets create` / `aws s3 mb` per
-      name; verification probe `gcloud storage ls` / `aws s3 ls` per name. Owner: Harsh slot 4 (he provisions, per
-      operator's "assume harsh will provision the buckets" 2026-05-11). bucket_name_ssot plan Phase 0c.
-- [ ] [SCRIPT] P0. **GAP-2.4.C (NEW per operator decision (b) 2026-05-11)** — Migrate flat-bucket data into env-tiered
-      buckets (Phase 2 physical migration; data preservation critical). For every existing FLAT bucket on GCP
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.B (NEW per operator decision (b) 2026-05-11)** — Provision env-tiered buckets to match
+      yaml across **both clouds**, **all envs (staging / prod / development)**, and **all yaml
+      `${DEPLOYMENT_ENV}`-bearing kinds** (features-delta-one × {cefi, tradfi, defi, prediction, sports} × env,
+      features-volatility × {cefi, tradfi, defi, prediction, sports} × env, features-onchain × {cefi, defi, prediction,
+      sports} × env, features-sports × env, features-prediction × env, ml-models-store × env, ml-predictions-store ×
+      env, ml-configs-store × env, strategy-store × {cefi, tradfi, defi, prediction} × env, execution-store × {cefi,
+      tradfi, defi, prediction} × env, dex-pools × env, dex-swaps × env, evm-defi × env, eigenlayer-rewards × env).
+      Estimated total: ~180-300 new buckets across both clouds × 3 envs. Implementation: extend
+      `deployment-service/terraform/modules/storage_buckets` (or `setup-buckets.sh`) with the resolver-derived name
+      list; run `gcloud storage buckets create` / `aws s3 mb` per name; verification probe `gcloud storage ls` /
+      `aws s3 ls` per name. Owner: Harsh slot 4 (he provisions, per operator's "assume harsh will provision the buckets"
+      2026-05-11). bucket_name_ssot plan Phase 0c. **DONE 2026-05-21**: 21 GCP env-tiered + 32 AWS env-tiered = 53 new
+      buckets provisioned. `verify_env_tiered_buckets_provisioned.py` AWS region corrected to `ap-northeast-1`
+      (GAP-2.4.F). PM@this-commit.
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.C (NEW per operator decision (b) 2026-05-11)** — Migrate flat-bucket data into
+      env-tiered buckets (Phase 2 physical migration; data preservation critical). For every existing FLAT bucket on GCP
       (`features-delta-one-cefi-{pid}`, `features-onchain-{pid}`, `features-sports-{pid}`,
       `features-volatility-{ag}-{pid}`, `features-calendar-{pid}`, etc.) AND on AWS (existing flat counterparts if any
       beyond the 10 DeFi buckets created Phase 2 of aws_migration), copy ALL data into the new env-tiered prod bucket
@@ -547,7 +550,13 @@ one-walk migration so manifest only rewrites once.
       Post-migration: archive (don't delete) flat buckets to `*-archived-flat-2026-05-19/` prefix + 30-day retention;
       delete after manifest + downstream verification confirms zero readers still hit flat names. bucket_name_ssot plan
       Phase 0d. **Composes with Phase 2.5 cross-asset rescan**: rescan reads env-tiered buckets, not flat ones; rescan
-      launcher reads from yaml SSOT post-migration so the read-path matches the write-path.
+      launcher reads from yaml SSOT post-migration so the read-path matches the write-path. **DONE 2026-05-22
+      (parity-confirmed path)**: prd buckets already have identical day= partition coverage vs flat (services have been
+      writing to prd directly since YAML flip). Day-level diff: `comm` shows 0 missing dates for
+      cefi/defi/tradfi/sports. Pred: prd=352 partitions, flat=0 (prd-only since inception — no migration needed).
+      Sub-partition count diff (defi flat=2329/prd=2320, tradfi flat=2008/prd=1999) confirmed NOT date gaps. Group B
+      (features-\*) retains flat names — env-split deferred to `bucket_env_split_rollout_2026_06.md`.
+      `migrate-flat-to-env-tiered.sh` `_index/`/`_catalogue/` exclusion fix: deployment-service@pending. PM@this-commit.
 - [ ] [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
       Phase 0g cross-check)** — Update reader/writer audit table verifying every consumer post-Phase-0d hits env-tiered
       bucket names (not flat). bucket_name_ssot plan done-def #6 extension. **Includes the deployment-api

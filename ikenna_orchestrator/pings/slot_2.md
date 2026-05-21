@@ -1164,4 +1164,32 @@ evidence).
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `available_at_schema_lift_post_cutover_2026_05_19.md`
 Phase A + `code_freeze_migrate_backfill_sequencing_2026_05_10.md`.
 
+---
+
+## [slot-1-main → slot-2] 2026-05-22 — 🔴 GCS WRITE FREEZE — DO NOT WRITE TO ANY BUCKET
+
+**CRITICAL — read before starting any work item in this dispatch.**
+
+Phase 4 GCS migration parity audit is ACTIVE. Both the flat bucket paths AND the env-tiered (`-prd-`) bucket paths are
+under live assessment. Writing to ANY GCS path — even as a side-effect of a QG smoke test or a script dry-run that
+accidentally emits — will corrupt the parity baseline we are comparing.
+
+**BANNED during this window (until UNFREEZE broadcast from slot-1-main):**
+
+- Any code path that emits to `gs://market-data-tick-*`, `gs://instruments-store-*`, `gs://features-*`, or any other
+  service bucket (flat or env-tiered)
+- Running local pipeline smoke tests that write parquet to GCS
+- Launching any VM that would backfill or write manifest rows
+
+**SAFE:**
+
+- Tab-branch code commits on PM, UAC, deployment-service (no execution of GCS-writing scripts)
+- `bash scripts/quality-gates.sh` (unit tests only, mocked GCS)
+- Read-only `gcloud storage ls` / `gsutil ls` / manifest reads
+
+**Your dispatch items (UAC Protocol / codex audits) are all pure code + doc changes — no GCS I/O. Proceed with those
+only. If any item requires a live smoke test against GCS, mark it `[BLOCKED-GCS-FREEZE]` and ping slot-1-main.**
+
+Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
+
 — slot-1 main / ikenna / 2026-05-21
