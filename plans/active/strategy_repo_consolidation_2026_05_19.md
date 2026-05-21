@@ -718,16 +718,11 @@ phases:
             4. `e2e-testing/scripts/` — any archived-service references.
             Gate: per-repo `quality-gates.sh` GREEN.
 
-      - [ ] [AGENT slot 4] **P1. Phase 11g — strategy-service own-repo logger/string cleanup.** ~30 live refs in
+      - [x] ✅ [AGENT slot 4] **P1. Phase 11g — strategy-service own-repo logger/string cleanup.** ~30 live refs in
             strategy-service itself. Scope: logger format strings + CLI banner strings still saying
             `position-balance-monitor-service` / `risk-and-exposure-service` / `pnl-attribution-service`. Rewire to
-            `strategy-service.{position,risk,pnl}` sub-package naming. Examples:
-            - `strategy_service/position/cli/main.py:53` — `"Starting position-balance-monitor-service (...)"`
-              → `"Starting strategy-service position sub-package (...)"`.
-            - Equivalent in `strategy_service/risk/cli/` + `strategy_service/pnl/cli/`.
-            **Out of scope per operator directive**: docstring module headers ("CLI entry point of
-            position-balance-monitor-service") + CHANGELOG + migration-history — leave intact as legitimate
-            historical record.
+            `strategy-service.{position,risk,pnl}` sub-package naming. — strategy-service@b303a358 2026-05-21
+            11 callsites across 6 files cleaned; docstrings/CHANGELOG left intact per operator directive. QG green.
             Gate: `cd strategy-service && bash scripts/quality-gates.sh` GREEN + boot all 4 health endpoints.
 
       - [ ] [AGENT slot 6] **P0. Phase 11h — DEPRECATION_NOTICE audit + verification.** Verify each of the 3 archived
