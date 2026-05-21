@@ -1656,3 +1656,86 @@ When Phase 1A+2A+2B items done: post DONE + SHA to this ping file.
 `plans/epics/mtds_mdps_master.md` Phase 2.
 
 — slot 8 / 2026-05-21
+
+---
+
+## [main → slot 8] 2026-05-21 — PHASE 3 DISPATCH: writegate/honest-coverage freeze work
+
+**Context**: All 8 ACKs confirmed. Phase 3 drain complete (23 VMs stopped). Tab-branch implementation only — code to
+`tab/ikennaigboaka/8`, no LDR merge until UNFREEZE. You already shipped Phase 2.B (non-sports) + ACKed freeze. Pick up
+from the deferred sports items + Phase 2.A/2.E + honest_coverage_formula items.
+
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+
+**Priority stack (top → bottom):**
+
+### P0 — Writegate MDPS fixes (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+1. **Phase 2.A Step 4** — delete `_maybe_write_vix_gap_placeholder` in MDPS `orchestration_writer.py`:
+   - Find the method, confirm it writes a silent empty parquet, remove it entirely
+   - Replace any call sites with `record_empty(reason=<typed reason>)` per honest-absence rules
+   - Tab branch on MDPS.
+
+2. **Phase 2.A Step 5** — OHLCV nullability flip in MDPS `output_schemas.py:57-66`:
+   - Flip nullable columns that should be NOT NULL based on v8 schema contract
+   - Tab branch on MDPS (same commit as step 4 or separate).
+
+3. **Phase 2.A Step 6** — triple-SSOT candle pipeline audit:
+   - Three places define OHLCV column structure: UAC schema, MDPS output_schemas.py, and the write path
+   - Audit all three; fix any drift; single canonical SSOT (UAC wins per architecture rules)
+   - Tab branch on MDPS (+ UAC if needed).
+
+### P0 — Writegate Phase 2.E (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+4. **Phase 2.E.2** — `EXPECTED_INSTRUMENT_NOT_LISTED` for partial-bundle cluster sub-shards:
+   - When a bundled data_type emits a sub-shard for an instrument NOT in the expected universe, current code crashes or
+     emits ambiguous status
+   - Fix: classify as `EXPECTED_INSTRUMENT_NOT_LISTED` → `record_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`
+   - Tab branch on affected service(s).
+
+5. **Phase 2.E.3** — end-to-end smoke test:
+   - Write a test that runs 1 venue × 1 instrument × 7 days and produces a mix of `captured` / `empty_confirmed` /
+     `attempted_failed` statuses
+   - Assert schema matches v8 contract throughout
+   - Tab branch on test infrastructure.
+
+### P0 — Wave 4 ServiceEmissionPolicy rollout (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+6. **Phase 6.3 — features-volatility BUILD FROM SCRATCH** (first of the Wave 4 Phase 6.3-6.9 rollout):
+   - features-volatility service does NOT have `ServiceEmissionPolicy` wired
+   - Implement from scratch: `_resolve_policy_output_data_type` + `_publish_emission_check` + `ServiceBootstrap` +
+     `make_health_router` + `config_reloaders.py` typed config
+   - QG STEP 5.61/5.62 must pass after
+   - Tab branch on features-service (volatility sub-module).
+
+### P0 — honest_coverage_formula (from `honest_coverage_formula_consolidation_2026_05_19.md`)
+
+7. **Phase 8 P0 — Master plan Group H** ("Path to 99% coverage") row: add the row to `master_to_live_defi_2026_05_23.md`
+   § Groups A-G. Doc-only commit on PM tab branch.
+
+8. **Phase 4 P1 — deployment-api endpoint response shape**: add
+   `{"counts": CaptureStatusCounts.as_dict(), "coverage": float}` to the `/api/data-status` response. Tab branch on
+   deployment-api.
+
+9. **Phase 2 P1 — IS `/api/data-status` endpoint**: migrate instruments-service `/api/data-status` endpoint to use
+   `compute_honest_coverage()`. Tab branch on instruments-service.
+
+10. **Phase 1 P1 — per-service docstring rule**: write the codex doc rule ("every service's `/api/data-status` MUST call
+    `compute_honest_coverage()`, not re-implement") + add as a STEP in `base-service.sh` docs check. Tab branch on PM.
+
+### P0 — batch_live_symmetry threshold calibration
+
+11. **Tab 6 threshold-calibration analysis doc**: specify what the smoke reconciler's pass/fail threshold criteria
+    should be (based on the writegate honest-coverage formula). Pure design doc on PM tab branch — prep for post-freeze
+    smoke runs.
+
+**QG**: `cd <repo> && bash scripts/quality-gates.sh` after each commit. **Half-1+Half-2**: code commit immediately
+followed by `docs(plans):` flip. **Ordering**: start with MDPS fixes (items 1-3, same repo, batch in 1-2 commits) then
+Phase 2.E (items 4-5), then Phase 6.3 (item 6, biggest lift).
+
+Ping slot-1 when each group ships (SHA + QG evidence).
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `honest_coverage_formula_consolidation_2026_05_19.md` +
+`batch_live_symmetry_2026_05_10.md`.
+
+— slot-1 main / ikenna / 2026-05-21

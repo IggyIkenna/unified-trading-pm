@@ -1105,3 +1105,63 @@ Plan ref: `plans/epics/mtds_mdps_master.md` Phase 2. Writegate ref:
 `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`.
 
 — ikenna-main / slot-1 / 2026-05-21
+
+---
+
+## [main → slot 2] 2026-05-21 — PHASE 3 DISPATCH: UAC/cross-cutting freeze work
+
+**Context**: All 8 ACKs confirmed. Phase 3 drain complete (23 VMs stopped). You are clear to implement on tab branch —
+all items below are code-only (no LDR merge, no GCS writes, no VM launches). Merge after UNFREEZE broadcast.
+
+**FREEZE RULES REMINDER**: code to `tab/ikennaigboaka/2` (or your current tab branch). No
+`git push origin HEAD:live-defi-rollout` until UNFREEZE.
+
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+
+**Priority stack (top → bottom):**
+
+### P0 — Writegate UAC items (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+1. **Sports `BUNDLED_DATA_TYPES` registry seeding** — UAC: add sports data_types to the `BUNDLED_DATA_TYPES` registry so
+   the Phase 2.B sports shard-granularity code (slot 4) has the registry it needs. Plan lines ~1546 area. UAC tab
+   branch.
+
+2. **Wave 3 — UAC catalog-read interface contract** — define the Protocol class that v2 enumerators will implement
+   (`enumerate_expected_universe.py` v2). Pure UAC new file, tab branch.
+
+3. **Wave 3.S — UAC new enum values**: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS` in
+   `EmptyConfirmedReason` (or `EXPECTED_*` registry). Tab branch.
+
+4. **Wave 3.S — UAC `sports_per_source_rules.py`** — new file in UAC with per-source rules (understat vs Sportradar vs
+   Footystats) defining expected coverage windows + gap taxonomy. Tab branch.
+
+5. **Wave 3.S — UTL classifier extensions**: `_classify_sports` + `_classify_tradfi` additions to
+   `classify_venue_error()`. Tab branch.
+
+### P1 — UAC `AvailabilityRule` Protocol (from `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A)
+
+6. Phase A — all 5 items:
+   - Define `AvailabilityRule` Protocol in UAC
+   - `AvailabilityRow` base class
+   - Per-source migration (migrate existing availability checks to use the Protocol)
+   - Cleanup (remove inline availability logic)
+   - SSOT pointer updates in codex
+
+### P1 — Wave 3.X UAC SSOTs
+
+7. Half-day sessions + venue session hours + understat leagues + per-league season bounds — UAC new files backing the
+   Wave 3.S rules.
+
+### P0 — Codex doc audit
+
+8. Walk every codex doc the Phase 1 plans touch and verify no stale pointers.
+   `code_freeze_migrate_backfill_sequencing_2026_05_10.md` line ~1141. Pure read + doc commits on tab branch.
+
+**QG**: `cd <repo> && bash scripts/quality-gates.sh` after each UAC commit. **Half-1+Half-2**: code commit on tab branch
+immediately followed by `docs(plans):` checkbox flip on PM branch. **Ping slot-1 when each item ships** (SHA + QG
+evidence).
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `available_at_schema_lift_post_cutover_2026_05_19.md`
+Phase A + `code_freeze_migrate_backfill_sequencing_2026_05_10.md`.
+
+— slot-1 main / ikenna / 2026-05-21

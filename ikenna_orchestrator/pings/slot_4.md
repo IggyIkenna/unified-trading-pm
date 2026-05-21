@@ -2104,3 +2104,64 @@ all checkboxes are `[x] ✅` in the closeout plan when pulled.
 **[ACK 🔴 FREEZE 2026-05-21]** — archives done, holding for next dispatch.
 
 — slot-4 / ikenna / 2026-05-21
+
+---
+
+## [main → slot 4] 2026-05-21 — PHASE 3 DISPATCH: migration/infra freeze work
+
+**Context**: All 8 ACKs confirmed. Phase 3 drain complete (23 VMs stopped). Tab-branch implementation is your mode —
+code to `tab/ikennaigboaka/4`, no LDR merge until UNFREEZE.
+
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+
+**Priority stack (top → bottom):**
+
+### P0 — Writegate sports shard granularity (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+1. **Phase 2.B — Sports per-fixture_id shard granularity** (MTDS `orchestrator.py:1739` area):
+   - Expand sports orchestrator to emit one shard per `fixture_id` (not per-date batch)
+   - Full v5/v6 spec implementation: `partition_dt` + `fixture_id` + cluster coverage keys
+   - NOTE: slot 2 is seeding `BUNDLED_DATA_TYPES` for sports in parallel — coordinate; your code depends on that UAC
+     change
+   - Plan lines ~1523. Tab branch on MTDS.
+
+### P0 — QG enforcement step (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+2. **Phase 2.E.1 — QG step for `record_empty(reason=...)` AST walk**:
+   - Add QG script in `unified-trading-pm/scripts/quality-gates-base/` that AST-walks each service and rejects blank
+     `reason=` args to `record_empty()`
+   - Wire into `base-service.sh` as a new STEP number
+   - Possibly requires a UTL helper (`reason` arg enforcement at call site)
+   - Tab branch on PM + UTL.
+
+### P0 — v2 catalog-driven enumerators (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+3. **Phase 3.D.5 — `enumerate_expected_universe.py` v2** branches for each asset_group:
+   - NOTE: slot 2 is defining the Protocol class; your implementation depends on that
+   - Implement branches for: CeFi, TradFi, DeFi, Prediction (sports is lower priority — slot 8 may take it)
+   - Tab branch on features-service or relevant service.
+
+4. **Wave 3 — v2 enumerators** for CeFi, TradFi, DeFi, Prediction asset_groups: implement the catalog-driven enumerator
+   for each using the Protocol from slot 2's UAC work.
+
+### P1 — promote_workflow infra (from `promote_workflow_may23_cli_path_2026_05_10.md`)
+
+5. **Phase 1 P1 — `colocated_engine.py` StrategyDirectiveReloader no-op stub**:
+   - Instantiate `StrategyDirectiveReloader` in `colocated_engine.py` as a no-op stub (hook for post-cutover)
+   - Tab branch on strategy-service or e2e-testing.
+
+### P0 — GAP-2.4.D deployment-api design doc (from `code_freeze_migrate_backfill_sequencing_2026_05_10.md`)
+
+6. **GAP-2.4.D — deployment-api reader-repoint design** (~line 551 in plan): write the design doc on tab branch (PM).
+   Document how deployment-api readers get repointed from flat bucket paths → env-tiered bucket paths post-migration.
+
+**QG**: `cd <repo> && bash scripts/quality-gates.sh` after each commit. **Half-1+Half-2**: code commit immediately
+followed by `docs(plans):` flip on PM branch. **Dependency**: items 3+4 depend on slot 2 shipping the UAC Protocol —
+start with item 1 (sports shard granularity) + item 2 (QG step) first; pull slot 2's UAC branch when it lands.
+
+Ping slot-1 when each item ships (SHA + QG evidence).
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `promote_workflow_may23_cli_path_2026_05_10.md` +
+`code_freeze_migrate_backfill_sequencing_2026_05_10.md`.
+
+— slot-1 main / ikenna / 2026-05-21
