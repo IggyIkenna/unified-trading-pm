@@ -168,11 +168,15 @@ Phase 0 (✅ DONE)
 
 ### Phase 5 — deployment-ui consumers
 
-- [ ] **P0. `DataStatusPanel.tsx`**: render `counts` + `coverage` directly from API
+- [x] ✅ **P0. `DataStatusPanel.tsx`**: render `counts` + `coverage` directly from API
       response. Remove any client-side aggregation. Display all 5 fields in the drilldown
-      tooltip (not just captured/total).
-- [ ] **P1. Coverage % color thresholds**: define one threshold set workspace-wide
-      (green ≥99%, amber 95-99%, red <95% per master plan).
+      tooltip (not just captured/total). — deployment-ui@ef3406b (TurboSubDimension +
+      TurboAssetGroupStatus type expansion; mock-api _mkVenue/_mkCategory/sports all emit
+      5-field counts + coverage; Activity import + ServiceList test count pre-existing bugs
+      fixed)
+- [x] ✅ **P1. Coverage % color thresholds**: define one threshold set workspace-wide
+      (green ≥99%, amber 95-99%, red <95% per master plan). — deployment-ui@ef3406b
+      (getCompletionColor updated: was ≥100/≥80/≥50, now ≥99/≥95/<95)
 
 ### Phase 6 — CI ratchet
 
