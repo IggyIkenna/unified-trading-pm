@@ -15,7 +15,7 @@ related_plans:
   - ../active/bucket_name_ssot_canonicalisation_2026_05_10.md
   - ../active/d3_manifest_v8_finish_2026_05_20.md
   - ../active/d5_features_missing_data_downgrade_2026_05_20.md
-  - ../active/expected_unattempted_propagation_chain_2026_05_12.md
+  - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
   - ../active/gate_3_phantom_audit_runbook_2026_05_13.md
   - ../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
   - ../active/honest_coverage_formula_consolidation_2026_05_19.md
@@ -100,9 +100,10 @@ wiring + divergence-detector
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D5 — Features missing-data downgrade
 plan
 
-### [`expected_unattempted_propagation_chain_2026_05_12`](../active/expected_unattempted_propagation_chain_2026_05_12.md)
+### [`expected_unattempted_propagation_chain_2026_05_12`](../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md)
 
-**status**: active · **estimate**: 6.6 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-21 — runtime propagation code complete (Phases 0-5 shipped); production validation
+pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`
 
 ### [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 

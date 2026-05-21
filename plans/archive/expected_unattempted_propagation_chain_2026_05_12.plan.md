@@ -1,7 +1,7 @@
 ---
 title: "Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML"
 name: expected-unattempted-propagation-chain-2026-05-12
-status: active
+status: archived
 priority: P0
 created: 2026-05-12
 last_updated: 2026-05-12
@@ -25,6 +25,14 @@ model_tier: sonnet-doable
 thinking: high
 parent_epic: manifest_master
 ---
+
+## Deferred work — migrated to:
+
+| Item                                                                                              | Successor plan                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 6 validation — prod MTDS/MDPS run to verify `expected_unattempted` rows generated correctly | [`issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`](../active/issues/expected_unattempted_validation_pending_phase3_2026_05_19.md) — re-verify after Phase 3 MTDS VMs run |
+| Phase 3 sports + features per-shard upstream `capture_status` branching                           | [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 6.x                                                                    |
+| DeFi classifier catalog crossref (deferred P2)                                                    | [`issues/expected_unattempted_propagation_gap_2026_05_12.md`](../active/issues/expected_unattempted_propagation_gap_2026_05_12.md) — post-live-cutover                                        |
 
 # Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
 
