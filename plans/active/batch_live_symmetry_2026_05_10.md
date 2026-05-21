@@ -543,12 +543,16 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 - [x] ✅ [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
       import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
+- [x] ✅ [DOC] P0. **Threshold-calibration analysis doc** — pre-soak pass/fail criteria, 95p+2× margin derivation, 7-day
+      soak calibration procedure, decision authority table. — PM@(this commit);
+      `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
-      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
-      margin starting point). **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest VM to run + Step 4 paper VM
-      launch (both operator-gated). See pings/slot_5.md.
-- [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds.
-      **BLOCKED-OPERATOR 2026-05-20**: depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
+      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak criteria from
+      `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest
+      VM to run + Step 4 paper VM launch (both operator-gated). See pings/slot_5.md.
+- [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds per
+      calibration procedure in `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**:
+      depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
 
 ### Spawn prompt
 
