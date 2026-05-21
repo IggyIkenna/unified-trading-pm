@@ -85,13 +85,15 @@ that plan was written (2026-05-09):
 
 ### Phase 2 — Reason-enum wiring
 
-- [ ] [AGENT] P1. Replace string literal `"SOURCE_RETURNED_ZERO"` with `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` in:
+- [x] ✅ [AGENT] P1. Replace string literal `"SOURCE_RETURNED_ZERO"` with `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` in:
   - `features-service/calendar/engine/calendar_orchestrator.py:317`
   - `features-service/sports/cli/handlers/batch_handler.py:405,496`
   - All other callsites returned by: `rg '"SOURCE_RETURNED_ZERO"' --type py`
-- [ ] [AGENT] P1. Fix deep import
+  - features-service@2d5abdcd; QG ✅ ALL QUALITY GATES PASSED
+- [x] ✅ [AGENT] P1. Fix deep import
       `from unified_api_contracts.canonical.crosscutting.honest_coverage import EmptyConfirmedReason` →
       `from unified_api_contracts import EmptyConfirmedReason` (C9 finding; features-service perp_funding_handler.py:20)
+  - Already correct at root facade (`from unified_api_contracts import EmptyConfirmedReason` line 24); no edit needed
 
 ### Phase 3 — Data migration (requires Phase 1 green)
 
@@ -121,7 +123,7 @@ that plan was written (2026-05-09):
 ## Success criteria
 
 - [ ] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version)
-- [ ] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade
+- [x] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade ✅ — features-service@2d5abdcd
 - [ ] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups
 - [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group (primary target)
 
