@@ -162,10 +162,13 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     EXECUTION GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end
     per-asset-group when gates clear.
 
-14. **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — quickmerge + main-via-staging-and-SIT promotion path per
-    `codex/08-workflows/deployment-flow.md`. Drive a full LDR → staging → SIT → main promotion cycle on a non-critical
-    service to validate the flow before May-23 cutover. Composes with: `codex/08-workflows/deployment-flow.md` + the
-    PM/Codex fast-path rule (docs/plans → main directly). Est: 1 cal-AI-day.
+14. ✅ **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — deployment-ui@2b3123c + unified-trading-pm@baaced63.
+    PR #8 (LDR → staging) created at https://github.com/IggyIkenna/deployment-ui/pull/8.
+    Found + fixed 2 pre-existing CI blockers: (a) ui-quality-gates.yml + infra-quality-gates.yml used relative
+    `./` path for nested reusable workflow (invalid cross-repo — fixed to full IggyIkenna/unified-trading-pm/...@ldr);
+    (b) workspace-qg.yml in deployment-ui called python-quality-gates.yml (wrong template for TypeScript/React —
+    fixed to ui-quality-gates.yml). Staging ruleset requires `call-quality-gates / quality-gates` + `check-staging-lock`.
+    CI re-running with fixes applied; merge to staging + staging → main auto-promotion via semver-agent unblocked.
 
 15. **HUMAN-HARSH-LIVE-PIPELINE-VALIDATION** — Phase 12-13 of coordinator: live-mode adapter behavior matches batch-mode
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:
