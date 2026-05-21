@@ -599,12 +599,12 @@ When a VM restarts:
 
 ### Phase 1 — registry + frontmatter (1 cal AI-day)
 
-- [ ] Add `assigned_vm:` frontmatter to every existing master plan in `plans/epics/*.md` + the coordinator + key
-      actives. Default for unassigned plans: `vm-defi` (current single VM).
-- [ ] Author `unified-trading-pm/orchestrator_vm_registry.yaml` (initial: just `vm-defi` = current setup + `planning-vm`
-      placeholder).
-- [ ] Write `scripts/orchestrator/regen_vm_registry.py` + add to pre-commit hook.
-- [ ] CLAUDE.md addition: "Master plans MUST declare `assigned_vm:` in frontmatter."
+- [x] Add `assigned_vm:` frontmatter to every existing master plan in `plans/epics/*.md` + the coordinator + key
+      actives. Default for unassigned plans: `vm-defi` (current single VM). (PM@e3f11893)
+- [x] Author `unified-trading-pm/orchestrator_vm_registry.yaml` (initial: just `vm-0` = current setup + `human-planning-vm`
+      placeholder). (PM@e3f11893)
+- [x] Write `scripts/orchestrator/regen_vm_registry.py` + add to pre-commit hook. (PM@e3f11893)
+- [x] CLAUDE.md addition: "Master plans MUST declare `assigned_vm:` in frontmatter." (PM@e3f11893)
 
 ### Phase 2 — multi-VM dashboard (3 cal AI-days)
 
