@@ -16,9 +16,17 @@ depends_on:
 parent_epic: defi_master
 ---
 
+<<<<<<<< HEAD:plans/archive/2026_05/defi_protocol_outage_detector_2026_05_20.md
 > **ARCHIVED 2026-05-21** — Phases 0-6 complete (Aave/Compound/Hyperliquid pause detection shipped, mtds@c9ff1f7 +
 > uac@cc6a629). Phase 7.A (Curve emergency pause) DEFERRED-POST-CUTOVER; no further work needed before May-23. status:
 > active → archived.
+========
+## Deferred work — migrated to:
+
+| Item                                                                                     | Successor plan                                                                            |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Phase 7.A — Curve emergency pause detection (Curve `kill_me()` kill-switch; POST-MAY-23) | Post-cutover DeFi hardening scope — no named active plan yet; tracked in `defi_master.md` |
+>>>>>>>> 5353e40f7 (docs(plans): [unlock-plan] archive 5 completed plans — wave2 slot-A):plans/archive/2026_05/defi_protocol_outage_detector_2026_05_20.plan.md
 
 # DeFi protocol outage detector (R-NEW-6)
 

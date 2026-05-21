@@ -21,8 +21,16 @@ prerequisite_plans:
 parent_epic: manifest_master
 ---
 
+<<<<<<<< HEAD:plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md
 > **ARCHIVED 2026-05-21** — 100% complete (0 open todos after trivial-sweep). Phase 0 + Phase 1 (strategy-service) done.
 > P1 ml-service item DEFERRED → ml_service_hardening_2026_06_01.md (named successor). status: active → archived.
+========
+## Deferred work — migrated to:
+
+| Item                                                                                                                    | Successor plan                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Fix `ml-inference-service` + `ml-service` batch_handler.py:79,259 missing-data downgrade (P1, not May-23 critical path) | [`ml_service_hardening_2026_06_01.md`](../active/ml_service_hardening_2026_06_01.md) |
+>>>>>>>> 5353e40f7 (docs(plans): [unlock-plan] archive 5 completed plans — wave2 slot-A):plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.plan.md
 
 # D5 — Features missing-data downgrade plan
 

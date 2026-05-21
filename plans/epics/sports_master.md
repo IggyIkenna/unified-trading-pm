@@ -1036,8 +1036,7 @@ _(no plans currently assigned at this priority)_
 
 ### [`hard_schema_enforcement_2026_05_08`](../archive/2026_05/hard_schema_enforcement_2026_05_08.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all 7 todos shipped · **estimate**: 4.8 cal AI-days
-(class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all 7 todos shipped; deferred P3 items migrated to `tradfi_master.md`
 
 ### [`sports_scrapers_post_cutover_2026_06_01`](../active/sports_scrapers_post_cutover_2026_06_01.md)
 

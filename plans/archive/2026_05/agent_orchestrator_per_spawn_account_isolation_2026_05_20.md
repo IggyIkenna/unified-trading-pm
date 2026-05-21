@@ -13,6 +13,12 @@ related_plans:
   - master_to_live_defi_2026_05_23.md
 ---
 
+## Deferred work — migrated to:
+
+| Item                                                                                      | Successor plan                                                           |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 4b-cleanup: remove legacy credential-swap code once harsh-primary migrates to setup-token | [`orchestrator_master.md`](../epics/orchestrator_master.md) § 4b-cleanup |
+
 # Agent-Orchestrator Per-Spawn Account Isolation (HOME-shim)
 
 > **ARCHIVED 2026-05-21** — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`). No further work

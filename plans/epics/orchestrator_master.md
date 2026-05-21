@@ -164,8 +164,7 @@ _(no plans currently assigned at this priority)_
 
 ### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`); 0 open
-todos · **estimate**: 2.0 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-21 — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`); 4b-cleanup pending harsh setup-token
 
 ### [`agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)
 

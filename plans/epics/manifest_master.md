@@ -97,8 +97,7 @@ wiring + divergence-detector
 
 ### [`d5_features_missing_data_downgrade_2026_05_20`](../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-1 done; P1 ml-service item DEFERRED → ml_service_hardening_2026_06_01.md ·
-**estimate**: 0.8 cal AI-days (class: refactor) **title**: D5 — Features missing-data downgrade plan
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-1 done; P1 ml-service item DEFERRED → `ml_service_hardening_2026_06_01.md`
 
 ### [`expected_unattempted_propagation_chain_2026_05_12`](../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md)
 

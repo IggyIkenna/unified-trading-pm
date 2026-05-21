@@ -83,8 +83,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ### [`strategy_archetype_taxonomy_2026_05_12`](../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); taxonomy + share-class neutrality + recursive carry
-rename shipped · **estimate**: 4.8 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); taxonomy + share-class neutrality + recursive carry rename shipped
 
 ### [`strategy_repo_consolidation_2026_05_19`](../active/strategy_repo_consolidation_2026_05_19.md)
 
