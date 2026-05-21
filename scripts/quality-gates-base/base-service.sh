@@ -2159,6 +2159,25 @@ else
     log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
 fi
 
+# ── STEP 5.85: no-blank-record-empty-reason — every record_empty() must pass non-blank reason= ─
+#
+# AST-walks service source; rejects record_empty() without reason= kwarg or with reason="".
+# SSOT: plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 2.E.1.
+# Script: unified-trading-pm/scripts/qg/no_blank_record_empty_reason.py
+_BLANK_REASON_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/qg/no_blank_record_empty_reason.py"
+if [ -f "$_BLANK_REASON_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ]; then
+    _blank_reason_out=$(python3 "$_BLANK_REASON_CHECKER" "$SOURCE_DIR" 2>/dev/null)
+    if [ -z "$_blank_reason_out" ]; then
+        log_success "STEP 5.85: no-blank-record-empty-reason — all record_empty() callsites pass non-blank reason="
+    else
+        log_fail "STEP 5.85: no-blank-record-empty-reason — record_empty() called without non-blank reason= (pass a reason from EMPTY_CONFIRMED_REASONS):"
+        echo "$_blank_reason_out"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.85: no-blank-record-empty-reason — skipped (checker absent or SOURCE_DIR not set)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
