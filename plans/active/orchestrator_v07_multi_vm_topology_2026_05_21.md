@@ -709,7 +709,7 @@ calendar days end-to-end.
 - `plans/active/agent_reliability_mitigations_2026_05_20.md` — Phase 2 dirty-state gate; superseded by Phase 3
   (commit_and_push default).
 
-## Open questions resolved (operator r2)
+## All operator decisions captured
 
 1. ✅ **Planning VM host**: cloud VM named `human-planning-vm`; SSH from VSCode reusing the existing
    `agent-orchestrator-key` identity. Same shape as the current `agent-orchestrator-vm`.
@@ -722,10 +722,9 @@ calendar days end-to-end.
 5. ✅ **Per-VM operator RBAC**: out of scope for v0.7 (no current need — Ikenna + Harsh both see all VMs). Revisit if
    external collaborators ever get dashboard access.
 
-## Remaining open question
+6. ✅ **VM numbering for the existing fleet**: registry-mapping only. `id: vm-0 → ssh_host: agent-orchestrator-vm` in
+   `orchestrator_vm_registry.yaml`. Do NOT rename the VM in systemd or `~/.ssh/config` — operator's existing SSH config
+   keeps working unchanged. The `ssh_host:` field bridges the new numeric id convention to the existing Host directive.
+   Phase 1 implements this.
 
-- **VM numbering for the existing fleet**: should the current `agent-orchestrator-vm` be renamed in
-  systemd/SSH-config/registry to `vm-0` to match the new convention, OR keep the SSH Host directive
-  `agent-orchestrator-vm` (operator's existing ~/.ssh/config) and just map `id: vm-0` →
-  `ssh_host: agent-orchestrator-vm` in the registry? Phase 11 needs the decision. Default assumption: **map in registry
-  only, don't rename the VM** (zero risk to current sessions; the ssh_host field bridges the gap).
+**No open questions remaining.** Plan is ready for phase pickup.

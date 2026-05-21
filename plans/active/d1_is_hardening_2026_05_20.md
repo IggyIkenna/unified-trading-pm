@@ -84,11 +84,16 @@ related_plans:
 
 ### Phase 3 — strategy-service IS interaction hardening
 
-- [ ] [AGENT] P0. Fix `discover_instruments()` in strategy-service — add explicit GCS exception handling:
+- [x] ✅ [AGENT] P0. Fix `discover_instruments()` in strategy-service — add explicit GCS exception handling:
   - Catch `google.cloud.exceptions.GoogleCloudError` and similar
   - Raise `DependencyError(fail_fast=True)` instead of swallowing silently
   - Log `ADAPTER_FETCH_FAILED` event on exception
-- [ ] [AGENT] P0. Wire `gcs_storage_service.py` manifest emission (see also D5 Phase 3 — same finding from C2 and C6)
+  — DONE 2026-05-21: strategy-service@046d45a1. `classify_venue_error` + `log_event("ADAPTER_FETCH_FAILED")` + `raise
+  DependencyError(...)` replaces silent `return []`. Applied consistently to all 3 exception blocks in
+  `strategy_config_loader.py`.
+- [x] ✅ [AGENT] P0. Wire `gcs_storage_service.py` manifest emission (see also D5 Phase 3 — same finding from C2 and C6)
+  — DONE via D5/D6: strategy-service@cd617891 (StrategyManifestRecorder wired in write_instructions). Verified
+  `record_captured/empty/failed` present in gcs_storage_service.py.
 
 ### Phase 4 — execution-service bucket-SSOT fixes
 
