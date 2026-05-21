@@ -60,12 +60,12 @@ Codex SSOTs:
       all STATUS=RUNNING in asia-northeast1-c: vm-defi@35.200.55.185 · vm-cefi@35.200.75.132 · vm-tradfi@35.200.59.184 ·
       vm-sports@34.146.32.46 · vm-prediction@136.110.98.16 · vm-ml@35.200.66.186 · vm-trading-core@35.200.121.156 ·
       vm-operator-ops@34.85.27.215 · vm-cross-cutting@34.104.133.72 · vm-orchestrator@35.194.106.13
-- [x] ✅ [AGENT] P0. T+10min verification: all 10 epic VMs RUNNING + health ok — agent-orch@cbf25e0 All 10 VMs healthy
-      2026-05-22: cefi@35.200.75.132 · cross-cutting@34.104.133.72 · defi@35.200.55.185 · ml@35.200.66.186 ·
+- [x] ✅ [AGENT] P0. T+10min verification PASSED 2026-05-22 — all 10 epic VMs health=ok + GCS STARTED events confirmed.
+      All 10 VMs healthy: cefi@35.200.75.132 · cross-cutting@34.104.133.72 · defi@35.200.55.185 · ml@35.200.66.186 ·
       operator-ops@34.85.27.215 · orchestrator@35.194.106.13 · prediction@136.110.98.16 · sports@34.146.32.46 ·
-      tradfi@35.200.59.184 · trading-core@35.200.121.156. Fix landed: bootstrap_vm.sh uses `su -` login shell + explicit
-      path deps for venv creation (agent-orch@1d2603d). planning@34.146.53.106 also healthy. `.tabs/` dir exists
-      (ReadWritePaths satisfied) but slot worktrees empty — deferred with ssh-spawn work.
+      tradfi@35.200.59.184 · trading-core@35.200.121.156 — all `{"status":"ok"}`. GCS STARTED events confirmed at
+      gs://central-element-323112-events/orchestrator/epic/agent-orch-<vm>-20260521/STARTED for all 10. Fix:
+      bootstrap_vm.sh cbf25e0 — `su -` login shell + explicit path deps for venv creation.
 
 ## Phase 4 — Housekeeping
 
