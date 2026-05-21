@@ -96,7 +96,7 @@ jobs:
     name: Telegram — QG Failure
     needs: [quality-gates]
     if: always() && needs.quality-gates.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: IggyIkenna/unified-trading-pm/.github/workflows/notify-telegram.yml@live-defi-rollout
     with:
       message:
         "QG FAILED — ${{ github.event.repository.name }} (${{ github.head_ref || github.ref_name }}). View: ${{
