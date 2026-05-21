@@ -469,15 +469,16 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       must be consistent before reconciler runs). Ping filed: `ikenna_orchestrator/pings/slot_3.md` BLOCKED #3 covers
       Phase 5b Athena verification prerequisite.
 
-### Phase 5b — Athena / Glue catalog verification (IN PROGRESS)
+### Phase 5b — Athena / Glue catalog verification (DONE)
 
-- [ ] [QG] P0. Run Athena query against Glue catalog `unified_trading_defi` to verify DeFi data landed correctly from
-      GCS→S3 rsync. **IN PROGRESS 2026-05-21** (slot 3): All 5 DeFi crawlers started
-      (`unified-trading-defi-{dex-pools,events,evm-defi,instruments-store-defi,market-data-defi}-crawler`). As of query
-      time (16:xx UTC) 2 crawlers RUNNING, 3 already READY. Initial Athena query failed — TABLE_NOT_FOUND (crawlers had
-      not yet registered table metadata). Query to re-run once all crawlers reach READY:
-      `SELECT COUNT(*) FROM unified_trading_defi.market_data_tick_defi_prd LIMIT 1;` — expected: > 0 rows. **NEXT
-      ACTION**: verify crawlers READY → re-run Athena query. Can be done by operator or next slot.
+- [x] ✅ [QG] P0. Run Athena query against Glue catalog `unified_trading_defi` to verify DeFi data landed correctly from
+      GCS→S3 rsync. **DONE 2026-05-21** (slot 3): All 5 DeFi crawlers started + completed READY. Glue catalog
+      `unified_trading_defi` populated with hundreds of tables (dex*pools_chain*_, market*data_defi*_, evm*defi*_,
+      instruments*store_defi*_). Athena query:
+      `SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_data_type_dex_pool_state` → **293 rows** (QueryId:
+      9c2a70aa, SUCCEEDED). DeFi data confirmed present and queryable. Table naming: Glue used S3 path structure
+      (`market_data_defi_data_type_*`), not the bucket name. Note: `market_data_defi_asset_group_defi` has
+      HIVE_INVALID_METADATA (duplicate columns) — non-blocking, filed as **NICE-TO-HAVE** to fix Glue schema.
 
 ### Phase 6 — ECS Fargate / App Runner deployment of DeFi-live services (2 days)
 
