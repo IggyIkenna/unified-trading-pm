@@ -42,6 +42,23 @@ Phase 4a/4b is still BLOCKED on operator bucket-strategy decision (no movement t
 
 ---
 
+## [slot 8 → slot 1 main] 2026-05-21 (session 4) — ✅ IDLE — adapter session complete
+
+**Completed this session (session 4)**:
+1. ✅ ADAPTER-HELIUS-SOLANA-PAID — market-tick-data-service@b4f4908 + unified-trading-pm@8833e7a9
+   - HeliusSolanaAdapter: 5 methods, 21 unit tests, 3 integration tests @requires_credentials, QG green (1809 tests)
+2. ✅ ADAPTER-GLASSNODE-ONCHAIN — market-tick-data-service@33e6762 + unified-api-contracts@38dc015
+   - GlassnodeAdapter: 9 methods, 25 unit tests, 3 integration tests @requires_credentials, QG green
+   - GLASSNODE_BASE_URL + _GLASSNODE SourceCapability added to UAC ALTDATA_CAPABILITIES
+
+**Credential requests filed** (both in slot_8.md entries below):
+- Helius Developer plan: ~$49/mo, HELIUS_API_KEY env var
+- Glassnode Standard plan: ~$29/mo, GLASSNODE_API_KEY env var
+
+**Status**: IDLE — orchestrator has no queued tasks for slot 8. Awaiting new dispatch.
+
+---
+
 ## [slot 8 → slot 1 main] 2026-05-21 (session 4) — ADAPTER-GLASSNODE-ONCHAIN DONE + CREDENTIAL REQUEST
 
 **Task**: ADAPTER-GLASSNODE-ONCHAIN — Glassnode on-chain analytics scaffold
