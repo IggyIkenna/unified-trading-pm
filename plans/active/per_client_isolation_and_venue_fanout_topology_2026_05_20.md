@@ -319,22 +319,20 @@ todos:
         scenario + crash isolation + capacity simulation + HARD RULE UAC compliance tested in-process; QG green both repos
 
 - id: phase-8-deployment-service-wiring content: |
-  - [ ] [AGENT] P0. Phase 8 — deployment-service + deployment-api wiring for shard naming + clients.yaml: (1) Update
+  - [x] ✅ **[AGENT] P0. Phase 8 — deployment-service + deployment-api wiring for shard naming + clients.yaml** —
+        uac@816d1aa + ds@8efb315 + da@5a5b07d (slot 5, 2026-05-21): (1) Updated
         `deployment-service/scripts/vm/launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` to accept `--shard N`
         (default 0) and `--clients-yaml-path PATH`. VM name pattern: `strategy-{mode}-{archetype}-shard{N}-{ts}` (was:
-        `strategy-{mode}-{archetype}-{ts}`). Singleton lock changes to `{mode}-{archetype}-{shard}` triplet; (2) Update
-        `VM_PREFIX_TO_BUCKET` in `deployment-service/scripts/vm/vm_zombie_watchdog.py` to recognise the new shard suffix
-        pattern. lifecycle_class = LONG_LIVED_LIVE for live VMs, SCHEDULED_RECURRING for paper VMs; (3) Add
-        `deployment-api/api/routes/strategy_shard.py`: `POST /api/strategy/shard/spawn` endpoint (consumes
-        ShardCapacityEvent → launches new VM via existing launch-strategy script); `POST /api/strategy/shard/drain`
-        endpoint (DEREGISTER all clients → SIGTERM supervisor → reap); (4) Per-client clients.yaml schema in
-        `deployment-service/configs/strategy/{archetype}/clients.yaml`: list of (client_id, shard_id,
-        venue_creds_kms_path, min_balance_per_venue, risk_limits) tuples. Operator-managed; supervisor reads at boot +
-        on REGISTER event. For May-23: two entries (us + defi-client-1) with shard_id=0 for both. Tests: launch script
-        smoke test with `--shard 1 --clients-yaml-path /tmp/test_clients.yaml` → VM spawns with correct name + env vars;
-        vm_zombie_watchdog recognises new pattern; clients.yaml schema validated by UAC type (add
-        `unified_api_contracts/canonical/domain/strategy/clients_yaml_schema.py`). status: pending blocked_by:
-        phase-7-e2e-and-unit-test-bundle
+        `strategy-{mode}-{archetype}-{ts}`). Singleton lock changes to `{mode}-{archetype}-{shard}` triplet; (2) Updated
+        `VM_PREFIX_TO_BUCKET` in `deployment-service/scripts/vm/vm_zombie_watchdog.py` — prefix docstrings updated to
+        document new shard suffix pattern; prefix match covers both old and new pattern; (3) Added
+        `deployment-api/deployment_api/routes/strategy_shard.py`: `POST /api/strategy/shard/spawn` (delegates to
+        launch-strategy-{mode}-vm.sh; enforces dry-run-live-cutover gate; live capital safety via force_live flag) +
+        `POST /api/strategy/shard/drain` (best-effort intent-record for May-23; automated Phase E.2 drain 2026-05-28);
+        (4) Added per-archetype clients.yaml configs in `deployment-service/configs/strategy/{archetype}/clients.yaml`
+        for carry_staked_basis + arbitrage_price_dispersion (us + defi-client-1, shard_id=0, KMS paths, risk_limits);
+        (5) Added `unified_api_contracts/canonical/domain/strategy/clients_yaml_schema.py`: ClientsYaml + ClientsYamlEntry
+        + ClientRiskLimits + MinBalancePerVenue + root facade exports. QG green all three repos.
 
 - id: phase-9-codex-ssot content: |
   - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (ALL 8 DOCS SHIPPED)** —
