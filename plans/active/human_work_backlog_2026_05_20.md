@@ -114,6 +114,7 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    **CLUSTER A COMPLETE 2026-05-21 slot-11**: UAC @ceeaddd ✅ · UTL @4cbe9612 ✅ · instruments-service @b476663 ✅ (all pass with 0 fixes needed)
    **CLUSTER B COMPLETE 2026-05-21 slot-11**: MTDS @33e6762 ✅ · features-service @7a7d4a4c ✅ · MDPS @a00ce6b ✅ (all pass with 0 fixes needed)
    **CLUSTER C COMPLETE 2026-05-21 slot-11**: strategy-service @b303a358 ✅ · execution-service @a848ef61 ✅ · ml-service @ea9c187 ✅ (all pass with 0 fixes needed)
+   **client-reporting-api FIXED 2026-05-21 slot-11**: @4eafab6 ✅ — ruff lint (RUF002/SIM105/B008), import patterns, test fixes (test_production_guard, test_get_invoice_by_id), pip-audit ignores, narrow except ArithmeticError
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
