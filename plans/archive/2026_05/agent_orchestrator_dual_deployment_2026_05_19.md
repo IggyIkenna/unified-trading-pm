@@ -302,3 +302,9 @@ Beyond presence/absence: does the shipped code do what we _intended_? Read the c
 1. **D4 → per-backend JWT** — fix to scope the session key per backend-host (removes forced re-login on switch)?
 2. **WorkerLivenessKicker** — review false-positive safety / confirm we want the server typing into sessions?
 3. **Slack P2 false-green** — Block Kit (`cd04fc2`) is on `live-defi-rollout`, NOT main; forward-merge or annotate?
+
+## Deferred work — migrated to:
+
+| Item | Status | Successor |
+| ---- | ------ | --------- |
+| D14 — `DoneRequest` repo/branch + brain-side `git fetch` verify | DEFERRED-POST-CUTOVER (activates when Ikenna VM workers deploy) | `agent_orchestrator_workers_on_vms_2026_05_19.md` |

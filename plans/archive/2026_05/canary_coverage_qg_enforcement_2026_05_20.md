@@ -306,6 +306,10 @@ orphans = zero post-decision-log entries needing action.
 - `canary_offline_check` runs on every PR to `live-defi-rollout`
 - Per CLAUDE.md "Data Pipeline Correctness Is The Heartbeat" — no cells silently missing
 
+## Deferred work — migrated to:
+
+_(no deferred items — all phases shipped; all blind spots resolved or operator-acked BLOCKED-CREDENTIALS)_
+
 ## Cross-references
 
 - Audit surfaced this gap: 2026-05-20 orphan-check sub-agent (run during defunct-dirs-cleanup session)

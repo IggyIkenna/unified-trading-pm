@@ -80,6 +80,13 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` · `codex/08
       `codex/08-workflows/local-dev.md` (port 8026); CLAUDE.md "Key repo map" updated; README + OPERATIONS.md updated.
       (PM@`1277a0cb`, agent-orchestrator@`ac8c36e`)
 
+## Deferred work — migrated to:
+
+| Item                                                 | Status                                                                | Successor                                                   |
+| ---------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Phase 2 — first `firebase deploy --only hosting:uat` | BLOCKED-OPERATOR-DECISION (requires operator laptop + firebase login) | Operator manual step; activates on first firebase-tools run |
+| Phase 5 — prod cutover + laptop nginx shutdown       | BLOCKED-OPERATOR-DECISION (gated on workers-on-VMs D3)                | `agent_orchestrator_workers_on_vms_2026_05_19.md`           |
+
 ## Temporary states + canonical follow-up plans
 
 - Phase 5 prod cutover: gated on `agent_orchestrator_workers_on_vms_2026_05_19.md` D3.

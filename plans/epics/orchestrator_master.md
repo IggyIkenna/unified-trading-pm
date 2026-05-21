@@ -13,12 +13,12 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - ../active/agent_orchestrator_dual_deployment_2026_05_19.md
+  - ../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md
+  - ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md
   - ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
   - ../archive/agent_orchestrator_slack_notifications_2026_05_19.md
   - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
-  - ../active/agent_reliability_mitigations_2026_05_20.md
+  - ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md
   - ../active/d0_orchestrator_migration_2026_05_20.md
   - ../active/issues/human_led_audit_pool_2026_05_21.md
 codex_ssots:
