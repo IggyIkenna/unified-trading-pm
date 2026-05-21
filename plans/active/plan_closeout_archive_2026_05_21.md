@@ -132,12 +132,12 @@ Deferred items:
 
 - Phase 6 parity RUN → deferred to `features_service_qg_cleanup_2026_05_11.md` Phase 2 ✅
 
-- [ ] [DOCS] P0. Archive `features_repo_consolidation_2026_05_08.md` →
+- [x] ✅ [DOCS] P0. Archive `features_repo_consolidation_2026_05_08.md` →
       `plans/archive/features_repo_consolidation_2026_05_08.plan.md`. Add banner + `## Deferred work — migrated to:`
       section: Phase 6 parity → `features_service_qg_cleanup_2026_05_11.md`. Add `status: archived`. Remove from
-      `plans/active/`.
-- [ ] [DOCS] P0. Update parent epic (find by grep): mark plan as `✅ ARCHIVED 2026-05-21`.
-- [ ] [FLIP] P0. Commit + push.
+      `plans/active/`. — PM@93c95a76c
+- [x] ✅ [DOCS] P0. Update parent epic (find by grep): mark plan as `✅ ARCHIVED 2026-05-21`. — PM@93c95a76c
+- [x] ✅ [FLIP] P0. Commit + push. — PM@93c95a76c
 
 ### wave3x_track_d_implementation_2026_05_19 — status field only
 
