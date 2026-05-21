@@ -19,7 +19,7 @@ related_plans:
   - ../archive/agent_orchestrator_slack_notifications_2026_05_19.md
   - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
   - ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md
-  - ../active/d0_orchestrator_migration_2026_05_20.md
+  - ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md
   - ../active/issues/human_led_audit_pool_2026_05_21.md
 codex_ssots:
   - codex/11-project-management/epic-execution-with-sub-agents.md # pointer to plans/epics/README.md (epic-flow SSOT)
@@ -148,9 +148,9 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`d0_orchestrator_migration_2026_05_20`](../active/d0_orchestrator_migration_2026_05_20.md)
+### [`d0_orchestrator_migration_2026_05_20`](../archive/2026_05/d0_orchestrator_migration_2026_05_20.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: D0 — agent-orchestrator migration plan
+**status**: ✅ ARCHIVED 2026-05-21 — Port 8026 aligned, CORS confirmed, LEDGER.md deprecated, CLAUDE.md prod URL added. All phases done.
 
 ## P2 — useful; opportunistic
 

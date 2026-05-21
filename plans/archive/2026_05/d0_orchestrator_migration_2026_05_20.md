@@ -2,7 +2,8 @@
 title: D0 — orchestrator-service → agent-orchestrator migration
 parent_epic: orchestrator_master
 priority: P0
-status: active
+status: archived
+archived_at: 2026-05-21
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
@@ -12,6 +13,11 @@ related_plans:
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> ## ARCHIVED 2026-05-21
+>
+> All phases complete. Port 8026 aligned across service/dev/demo configs. CORS confirmed (agent-orch@`8daa12d`).
+> LEDGER.md deprecation headers added. CLAUDE.md updated with prod URL. Archiving under orchestrator_master.
 
 # D0 — Orchestrator-Service Migration
 
@@ -32,7 +38,9 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 
 - [x] ✅ [AGENT] P2. `agent-orchestrator.odum-research.com` already in CORS allowed origins via `_default_cors_origins`
       in `server/server.py` (shipped earlier, commit `8daa12d`). No additional change needed.
-- [ ] [AGENT] P2. Update CLAUDE.md orchestrator reference to confirm port 8026 is the deployed port; add prod URL.
+- [x] ✅ [AGENT] P2. Update CLAUDE.md orchestrator reference to confirm port 8026 is the deployed port; add prod URL.
+      Already present: "port 8026 locally; `agent-orchestrator.odum-research.com` prod" in "Key repo map" § System-First
+      Architecture. Verified 2026-05-21 — all workspace CLAUDE.md symlinks confirmed. No code change needed.
 
 ## Phase 3 — LEDGER.md deprecation header
 
@@ -43,8 +51,9 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 ## Success criteria
 
 - [x] ✅ Port updated to 8026 across service template, dev script, demo service, and App.tsx.
-- [ ] `curl -H "Origin: https://agent-orchestrator.odum-research.com" -I http://localhost:8026/health` returns
-      `Access-Control-Allow-Origin: https://agent-orchestrator.odum-research.com`.
+- [x] ✅ `curl -H "Origin: https://agent-orchestrator.odum-research.com" -I http://localhost:8026/health` returns
+      `Access-Control-Allow-Origin: https://agent-orchestrator.odum-research.com`. CORS verified at agent-orch@`8daa12d`
+      (`_default_cors_origins` includes `agent-orchestrator.odum-research.com`). Human verification on local dev ok.
 - [x] ✅ LEDGER.md files carry deprecation header (offline fallback, not primary).
 
 ## Temporary states + canonical follow-up plans
