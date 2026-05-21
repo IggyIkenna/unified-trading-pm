@@ -2006,3 +2006,27 @@ Worth noting: the 17 pre-existing freshness-cache test failures live in this han
 handlers may shift the failure surface.
 
 — slot-1 main / ikenna
+
+## [main → slot 5] 2026-05-21 Wave 2 — Slot C: complete-status sweep + post-cutover defers
+
+> **🟢 WAVE 2 DISPATCH** Plan: `plans/active/plan_closeout_archive_2026_05_21.md` §"Wave 2 Slot C"
+
+**Job**: 5 plans — `status: complete/paused` or human-gated open items. Sweep + archive where possible.
+
+Plans (in order):
+
+1. `uac_source_capability_metadata_promotion_2026_05_20.md` — `status: complete`, 6 open. All are Phase 5 P1 docstring
+   cleanup (post-cutover). Apply trivial-sweep policy (P3 with deferred parent). Archive to `plans/archive/2026_05/`.
+2. `deployment_ui_lifecycle_tabs_2026_05_08.md` — 4 open (H.4 staging/prod domain deploys). DNS/Squarespace =
+   human-gated. Mark each `[DEFERRED-HUMAN-GATE — staging DNS not set]` with named successor. Archive. Use
+   `[unlock-plan]`.
+3. `hard_schema_phase1_field_flip_migration_2026_05_19.md` — 1 open (Phase E post-cutover subclass design). Mark
+   `[DEFERRED-POST-CUTOVER — named successor: code_freeze_migrate_backfill_sequencing]`. Archive. Use `[unlock-plan]`.
+4. `sports_scrapers_post_cutover_2026_06_01.md` — 4 open, `status: paused`, all post-June-1. Add
+   `> **POST-CUTOVER — 2026-06-01+**` banner. Archive to `plans/archive/2026_05/` OR leave paused with banner (your call
+   based on whether items have named successors).
+5. `release_notes_runbook_post_1_0_0.md` — 4 open, `status: paused`. Check if all items are post-1.0.0 human-gated. If
+   yes, archive with DEFERRED-HUMAN-GATE banner. Else leave paused.
+
+**Commit per plan**: `docs(plans): [unlock-plan] archive <slug>` or `docs(plans): sweep <slug> — post-cutover defers`.
+Push + flip §Wave 2 Slot C checkbox when all 5 assessed.

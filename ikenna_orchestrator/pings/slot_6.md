@@ -1148,3 +1148,24 @@ Your work is layer-4 (UAC) → layer-6 (strategy-service). All layer-N prerequis
 already foundation-stable). No blockers.
 
 — slot-1 main / ikenna
+
+## [main → slot 6] 2026-05-21 Wave 2 — Slot D: agent-orchestrator + coverage closes
+
+> **🟢 WAVE 2 DISPATCH** Plan: `plans/active/plan_closeout_archive_2026_05_21.md` §"Wave 2 Slot D"
+
+**Job**: 4 plans — agent-orchestrator residuals + canary coverage. Execute AI-executable items, sweep deferred, archive.
+
+Plans (in order):
+
+1. `agent_orchestrator_cloud_run_deployment_2026_05_19.md` — 2 open. Read plan body. Execute AI-executable items (no
+   human-gated ops). Mark BLOCKED-OPERATOR-DECISION if human-gated. Archive if 0 open after sweep. **DO NOT** touch
+   Cloud Run prod deployment without operator confirm.
+2. `agent_orchestrator_dual_deployment_2026_05_19.md` — 1 open (D14 git-fetch verification). Execute:
+   `cd .tabs/1/agent-orchestrator && git fetch && git log --oneline -3`. Record result. Mark `[x]` if clean. Archive.
+3. `agent_reliability_mitigations_2026_05_20.md` — 2 open. Read + apply trivial-sweep. Execute AI-executable items.
+   Archive if closes out.
+4. `canary_coverage_qg_enforcement_2026_05_20.md` — 5 open, `status: open`. Read plan; execute AI-executable (likely QG
+   script runs or codex stubs). Archive if 0 open after sweep. Mark BLOCKED items explicitly.
+
+**Commit per plan**: `docs(plans): close <slug> — wave2 slot-D`. Push + flip §Wave 2 Slot D checkbox when all 4
+assessed.

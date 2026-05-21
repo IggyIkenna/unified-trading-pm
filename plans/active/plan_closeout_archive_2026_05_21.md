@@ -6,9 +6,10 @@ created: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 estimate_class: infra
-estimate_baseline_ai_days: 90
-estimate_calibrated_ai_days: 72
+estimate_baseline_ai_days: 170
+estimate_calibrated_ai_days: 136
 estimate_calibration_note: |
+  Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal additional. Total ~136 cal.
   Mixed class; dominant work is infra (0.8×) from aws_migration Phases 3-6 (~35 cal),
   plus design (0.6×) plan-close sweeps (~30 cal), docs/archival refactor (0.4×) (~7 cal).
   Weighted average ~0.8× on the infra-heavy slots. Per-slot rough:
@@ -322,11 +323,105 @@ These are lightweight updates that any slot can fold into their commit if they t
 
 ---
 
+---
+
+## Wave 2 — Extended archive sweep (~64 cal)
+
+Identified 2026-05-21 after Wave 1 slots completed. ~17 more plans archivable. Apply same trivial-todo sweep policy as
+Wave 1. Locked plans need `[unlock-plan]` in commit message.
+
+**Parent epics to update per plan** (grep `<plan_slug>` in `plans/epics/` to find reference):
+
+- hard*schema*\* → `tradfi_master.md`
+- strategy_archetype_taxonomy → `tradfi_master.md`
+- agent*orchestrator*\* → `orchestrator_master.md`
+- uac\_\* → find via grep
+- d3/d4/d5 (audit sub-plans) → `manifest_master.md` or `mtds_mdps_master.md`
+- deployment_ui_lifecycle_tabs → `orchestrator_master.md`
+- gcs_migration_bundle → `manifest_master.md`
+- defi_protocol_outage_detector → `defi_master.md` or `infrastructure_master.md`
+- sports_scrapers → `sports_master.md`
+
+---
+
+### Wave 2 Slot A — 5 direct archives (0 open todos, done/paused status) (~7 cal)
+
+All these have `status: done` or `status: paused` and **zero** open `- [ ]` items. Trivial archival only.
+
+- [ ] [DOCS] P0. Archive `hard_schema_enforcement_2026_05_08.md` → `plans/archive/2026_05/`. Add `status: archived`.
+      Update `plans/epics/tradfi_master.md`. Use `[unlock-plan]` in commit.
+- [ ] [DOCS] P0. Archive `strategy_archetype_taxonomy_2026_05_12.md` → `plans/archive/2026_05/`. Update
+      `tradfi_master.md`. Use `[unlock-plan]` in commit.
+- [ ] [DOCS] P0. Archive `agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` → `plans/archive/2026_05/`.
+      SUPERSEDED banner: superseded by oauth token env-var approach. Update `orchestrator_master.md`. Use
+      `[unlock-plan]` in commit.
+- [ ] [DOCS] P1. Archive `d5_features_missing_data_downgrade_2026_05_20.md` → `plans/archive/2026_05/`. All items `[x]`;
+      deferred items → `ml_service_hardening` (named successor). Update parent epic.
+- [ ] [DOCS] P1. Archive `defi_protocol_outage_detector_2026_05_20.md` → `plans/archive/2026_05/`. Phase 7 (Curve,
+      post-May-23) already deferred in plan body. Update parent epic.
+- [ ] [FLIP] P0. Commit `docs(plans): [unlock-plan] archive 5 completed plans — wave2 slot-A`. Push. Flip this checkbox.
+
+---
+
+### Wave 2 Slot B — 5 trivial-sweep then archive (~15 cal)
+
+Plans with 0–1 open todos where the remaining item is trivially deferred or BLOCKED-OPERATOR-DECISION.
+
+- [ ] [SWEEP+DOCS] P0. `gcs_migration_bundle_pipeline_mode_2026_05_08.md` — 1 open item (T+30d fallback removal). Apply
+      trivial-sweep: mark `[DEFERRED-writegate-6.x]` with named successor
+      `writegate_honest_coverage_endtoend_2026_05_06.md`. Then archive to `plans/archive/2026_05/`. Use `[unlock-plan]`
+      in commit.
+- [ ] [SWEEP+DOCS] P0. `mtds_databento_path_streaming_2026_05_07.md` — verify open items are Phase 2/3 conditional
+      (DEFERRED). Apply trivial-sweep policy, archive to `plans/archive/2026_05/`. Use `[unlock-plan]` in commit.
+- [ ] [SWEEP+DOCS] P1. `d3_manifest_v8_finish_2026_05_20.md` — 1 open item. If DEFERRED/BLOCKED, apply sweep + archive
+      to `plans/archive/2026_05/`. If not trivial, document as BLOCKED-OPERATOR-DECISION.
+- [ ] [SWEEP+DOCS] P1. `d4_mtds_adapters_preflight_2026_05_20.md` — 1 open (8 BLOCKED-OPERATOR-DECISION cells). Confirm
+      all 8 are in closed set → apply trivial sweep → archive to `plans/archive/2026_05/`.
+- [ ] [SWEEP+DOCS] P1. `strategy_repo_consolidation_2026_05_19.md` — 1 open (Phase 11 workspace stale-ref cleanup). If
+      cleanup is mechanical (grep + sed), execute it; else mark `[DEFERRED — stale-ref-cleanup-<date>]` with issue doc.
+      Archive after.
+- [ ] [FLIP] P0. Commit + push for each archived plan. Flip this checkbox when all 5 done.
+
+---
+
+### Wave 2 Slot C — 5 plans: complete-status sweep + post-cutover defers (~20 cal)
+
+- [ ] [SWEEP+DOCS] P0. `uac_source_capability_metadata_promotion_2026_05_20.md` — `status: complete`, 6 open items.
+      Apply trivial-sweep (Phase 5 P1 docstring cleanup = post-cutover). Archive to `plans/archive/2026_05/`.
+- [ ] [SWEEP+DOCS] P1. `deployment_ui_lifecycle_tabs_2026_05_08.md` — 4 open (H.4 staging/prod domain deploy items).
+      These are human-gated (DNS/Squarespace). Mark each `[DEFERRED-HUMAN-GATE — staging DNS]` with named successor.
+      Archive after. Use `[unlock-plan]` in commit.
+- [ ] [SWEEP+DOCS] P1. `hard_schema_phase1_field_flip_migration_2026_05_19.md` — 1 open (Phase E post-cutover subclass
+      design). Mark `[DEFERRED-POST-CUTOVER]` with named successor in active plans. Archive. Use `[unlock-plan]` in
+      commit.
+- [ ] [SWEEP+DOCS] P2. `sports_scrapers_post_cutover_2026_06_01.md` — 4 open, `status: paused`. Confirm all are
+      post-June-1. Add post-cutover banner if needed. Archive OR confirm `status: paused` is intentional and leave in
+      active with banner.
+- [ ] [SWEEP+DOCS] P2. `release_notes_runbook_post_1_0_0.md` — 4 open, `status: paused`. Check if items are post-1.0.0
+      graduation (human-gated). If all human-gated → archive with DEFERRED-HUMAN-GATE banner; else leave paused.
+- [ ] [FLIP] P0. Commit + push per plan. Flip this checkbox when all 5 assessed.
+
+---
+
+### Wave 2 Slot D — 4 agent-orchestrator + coverage closes (~22 cal)
+
+- [ ] [CLOSE] P0. `agent_orchestrator_cloud_run_deployment_2026_05_19.md` — 2 open items. Read plan body; if
+      AI-executable execute; else mark BLOCKED-OPERATOR-DECISION. Archive if 0 open after sweep.
+- [ ] [CLOSE] P1. `agent_orchestrator_dual_deployment_2026_05_19.md` — 1 open (D14 git-fetch verification). Execute
+      verification: `cd agent-orchestrator && git fetch && git log --oneline -3`. Mark result. Archive if done.
+- [ ] [CLOSE] P1. `agent_reliability_mitigations_2026_05_20.md` — 2 open. Read plan body; apply trivial-sweep; execute
+      AI-executable items; archive if 0 open after sweep.
+- [ ] [CLOSE] P1. `canary_coverage_qg_enforcement_2026_05_20.md` — 5 open, `status: open`. Read plan; execute
+      AI-executable items; mark BLOCKED items; archive if closeable.
+- [ ] [FLIP] P0. Commit + push per closed plan. Flip this checkbox.
+
+---
+
 ## Done criteria
 
 All slots have pushed `docs(plans):` flip commits for their assigned items. Slot 2 has archived all 3 completed plans +
 both work-split plans. Parent epics updated. `wave3x_track_d_implementation` has explicit post-cutover status banner.
-This wrapper plan's own items are `[x]`.
+Wave 2 slots A–D completed. This wrapper plan's own items are `[x]`.
 
 ## Temporary states + their canonical follow-up plans
 

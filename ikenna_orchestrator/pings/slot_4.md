@@ -2065,3 +2065,27 @@ Your work is layer-5 (features-service) → layer-7 (trading-agent-service). Lay
 service). All clear.
 
 — slot-1 main / ikenna
+
+## [main → slot 4] 2026-05-21 Wave 2 — Slot B: 5 trivial-sweep then archive
+
+> **🟢 WAVE 2 DISPATCH** Plan: `plans/active/plan_closeout_archive_2026_05_21.md` §"Wave 2 Slot B"
+
+**Job**: 5 plans with 0–1 open todos where remaining item is deferred/blocked. Sweep → archive.
+
+Plans (in order):
+
+1. `gcs_migration_bundle_pipeline_mode_2026_05_08.md` — 1 open (T+30d fallback removal). Mark
+   `[DEFERRED-writegate-6.x — successor: writegate_honest_coverage_endtoend_2026_05_06.md]`. Then archive. Use
+   `[unlock-plan]`.
+2. `mtds_databento_path_streaming_2026_05_07.md` — `status: done`. Verify any remaining `- [ ]` are Phase 2/3
+   conditional (deferred). Apply trivial-sweep, archive. Use `[unlock-plan]`.
+3. `d3_manifest_v8_finish_2026_05_20.md` — 1 open. Read it; if DEFERRED/BLOCKED apply sweep + archive. If not trivial,
+   mark `BLOCKED-OPERATOR-DECISION` and leave active.
+4. `d4_mtds_adapters_preflight_2026_05_20.md` — 1 open (8 BLOCKED-OPERATOR-DECISION cells confirmed). Confirm all are in
+   closed set, apply trivial-sweep, archive.
+5. `strategy_repo_consolidation_2026_05_19.md` — 1 open (Phase 11 stale-ref cleanup). If mechanical (grep/sed), execute.
+   Else mark DEFERRED with issue doc. Archive after.
+
+**For each**: `git fetch && git merge origin/live-defi-rollout --ff-only` before starting each plan. Commit per plan:
+`docs(plans): [unlock-plan] archive <slug>` (use [unlock-plan] for locked ones only). Push; flip §Wave 2 Slot B checkbox
+when all 5 done.

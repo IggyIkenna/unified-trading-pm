@@ -1000,3 +1000,30 @@ duplicate functions, and parameter mismatches. Fixes:
 - `86a6edf` — restore missing imports + fix all merge-conflict artifacts (QG green)
 
 **Plan reference**: `plans/active/work_split_2026_05_20_ikenna.md` § Slot 2 (Phase -1 QG green contribution)
+
+## [main → slot 2] 2026-05-21 Wave 2 — Slot A: 5 direct archives
+
+> **🟢 WAVE 2 DISPATCH** Plan: `plans/active/plan_closeout_archive_2026_05_21.md` §"Wave 2 Slot A"
+
+**Job**: Archive 5 plans that have `status: done/paused` and 0 open todos. Pure docs work — no code.
+
+Plans to archive (in this order):
+
+1. `plans/active/hard_schema_enforcement_2026_05_08.md` — `[unlock-plan]` in commit
+2. `plans/active/strategy_archetype_taxonomy_2026_05_12.md` — `[unlock-plan]` in commit
+3. `plans/active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` — `[unlock-plan]`, SUPERSEDED banner
+4. `plans/active/d5_features_missing_data_downgrade_2026_05_20.md`
+5. `plans/active/defi_protocol_outage_detector_2026_05_20.md`
+
+**For each plan**:
+
+1. `grep "^status:\|locked_by:\|parent_epic:" <file>` — note values
+2. Add `status: archived` to frontmatter
+3. Add `> **ARCHIVED 2026-05-21** — ...` banner after closing `---`
+4. `grep -n "DEFERRED\|POST-CUTOVER" <file>` — confirm each has named successor in plan body
+5. `git mv plans/active/<slug>.md plans/archive/2026_05/<slug>.md`
+6. `grep -rn "<slug>" plans/epics/` — find parent epic reference; add `✅ ARCHIVED 2026-05-21` note
+7. Commit per plan with `docs(plans): [unlock-plan] archive <slug>` (use `[unlock-plan]` only on locked ones)
+8. Push; flip §Wave 2 Slot A checkbox in closeout plan
+
+**Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only` first.
