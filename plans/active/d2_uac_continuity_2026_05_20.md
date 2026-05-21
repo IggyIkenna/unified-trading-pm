@@ -94,10 +94,14 @@ parent_epic: sports_master
     tests added (TestOraclePreflight); 22 tests pass; QG green.
   - IS, features-service, strategy-service: **DEFERRED** pending D2 Phase 3 P1 (DIVERGENT_EMPTY detector)
     and IS hardening (D1). Named successor: wire oracle into IS batch handlers after D1 IS catalogue lands.
-- [ ] [AGENT] P1. Wire DIVERGENT_EMPTY post-hoc check into divergence-detector script (`detect_manifest_divergence.py`
+- [x] ✅ [AGENT] P1. Wire DIVERGENT_EMPTY post-hoc check into divergence-detector script (`detect_manifest_divergence.py`
       from D3 Phase 4):
   - Use `expected_coverage()` as the oracle (not static CSV)
   - Emit `DIVERGENT_EMPTY` event when manifest shows 0 rows but `expected_coverage()` returns `SHOULD_HAVE_DATA`
+  — DONE 2026-05-21: UTL@0d1e489f. `_build_oracle_expected()` calls `expected_coverage()` per (venue, data_type, date);
+    date range derived from manifest min/max or explicit `--start-date`/`--end-date`. Legacy `--expected-coverage` parquet
+    mode retained for backward compat. 17 unit tests: classify logic, oracle builder, DIVERGENT_EMPTY integration. Ruff
+    clean; QG tests PASSED (pre-existing prod-readiness soft-fail unchanged).
 
 ## Success criteria
 
@@ -108,6 +112,9 @@ parent_epic: sports_master
 - [x] Phase 3 (MTDS): `rg 'expected_coverage' market-tick-data-service/ --type py` returns hits in
       `lending_indices_handler.py`; MTDS QG green; 22 tests pass ✅ — MTDS@2b63dc6
   - IS, features-service, strategy-service: deferred to named successor (IS hardening D1 prerequisite)
+- [x] Phase 3 (divergence-detector oracle): `detect_manifest_divergence.py` calls `expected_coverage()` directly;
+      oracle generates per-cell expected state (not static CSV); 17 unit tests including DIVERGENT_EMPTY integration
+      ✅ — UTL@0d1e489f
 
 ## Full-execution criterion
 
