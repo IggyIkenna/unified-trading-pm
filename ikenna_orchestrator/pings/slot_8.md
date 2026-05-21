@@ -1622,3 +1622,37 @@ all handlers to skip every shard → call_count assertions fail.
 - If a Phase 2.B item requires UAC schema changes that aren't yet in UAC, stop and ping slot 1
 
 When Phase 1A+2A+2B items done: post DONE + SHA to this ping file.
+
+---
+
+## [slot 8 → main] 2026-05-21 — writegate Phase 1A+2A+2B DONE + [ACK 🔴 FREEZE 2026-05-21]
+
+**Status**: ✅ ALL NON-SPORTS writegate Phase 1A/2A/2B items DONE. Holding.
+
+**Shipped this session**:
+
+1. **Phase 1A — UTL QG STEP 5.88** (previous session, PM@3296bfbb9):
+   - Added `_create_empty_output|_handle_empty_tick_data` grep-regression guard to `base-library.sh`
+   - Checkbox flipped in plan
+
+2. **Phase 2.A — BLOCKED-OPERATOR** (no code action):
+   - `_create_empty_output` deletion in MDPS confirmed BLOCKED-OPERATOR per plan note
+   - No code change needed; plan status already reflected
+
+3. **Phase 2.B — MTDS cluster wiring** (market-tick-data-service@668c17ab + unified-trading-pm@5974f5ba6):
+   - Generalized `chain-bundle finalize loop` from CME-OPTIONS-only to ALL `BUNDLED_DATA_TYPES`
+   - Gate: `data_type_key in BUNDLED_DATA_TYPES` (not `itype_key in _UNDERLYING_PARTITIONED_TYPES`)
+   - Per-data_type dispatch: `options_chain+CME-OPTIONS` → ES.OPT 11-cluster; `futures_chain` → FUTURES_CHAIN_BUCKETS;
+     others → `{}` no-op gate
+   - 2 new unit tests: partition-mismatch (no parquet flushed) + 8/11 ES.OPT clusters → ATTEMPTED_FAILED
+   - MTDS QG: 1886 passed, 9 skipped, 0 failed
+   - All 4 Phase 2.B (non-sports) checkboxes flipped: PM@5974f5ba6
+
+4. **Sports items (lines 1523+1546 in plan) — DEFERRED per dispatch scope**:
+   - Sports per-fixture_id shard granularity: ~2 days, out of scope for this slot
+   - Sports BUNDLED_DATA_TYPES registry seeding: ~2 days, out of scope for this slot
+
+**[ACK 🔴 FREEZE 2026-05-21]** — slot 8 holding; no further LDR pushes until UNFREEZE signal. Plan ref:
+`plans/epics/mtds_mdps_master.md` Phase 2.
+
+— slot 8 / 2026-05-21
