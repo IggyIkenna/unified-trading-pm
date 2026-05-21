@@ -358,7 +358,7 @@ Wave 1. Locked plans need `[unlock-plan]` in commit message.
 All these have `status: done` or `status: paused` and **zero** open `- [ ]` items. Trivial archival only.
 
 - [x] ✅ [DOCS] P0. Archive `hard_schema_enforcement_2026_05_08.md` → `plans/archive/2026_05/`. Add `status: archived`.
-      Update `plans/epics/sports_master.md`. Use `[unlock-plan]` in commit. — PM@b857bfdee
+      Update `plans/epics/sports_master.md`. Use `[unlock-plan]` in commit. — PM@b857bfdee / PM@47d3e69fe
 - [x] ✅ [DOCS] P0. Archive `strategy_archetype_taxonomy_2026_05_12.md` → `plans/archive/2026_05/`. Update
       `strategy_master.md`. Use `[unlock-plan]` in commit. — PM@b857bfdee
 - [x] ✅ [DOCS] P0. Archive `agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` → `plans/archive/2026_05/`.
