@@ -129,28 +129,36 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
 
 ## Pattern B confirmed exceptions (do NOT convert)
 
-The following 8 launchers are PERMANENT Pattern B exceptions per the decision matrix:
+The following 11 launchers are PERMANENT Pattern B exceptions per the decision matrix:
 
-| Launcher                                     | Reason                                     |
-| -------------------------------------------- | ------------------------------------------ |
-| `launch-cefi-fwd-daily-cron-vm.sh`           | Cron daemon; installs crontab              |
-| `launch-tradfi-fwd-daily-cron-vm.sh`         | Cron daemon; installs crontab              |
-| `launch-planning-vm.sh`                      | Orchestrator FastAPI daemon                |
-| `launch-aave-lending-rate-validation-vm.sh`  | Heartbeat-only validator, no manifest writes |
-| `launch-amm-golden-fixture-validation-vm.sh` | Heartbeat-only validator, no manifest writes |
-| `launch-prediction-features-vm.sh`          | SUPERSEDED by Pattern-A `launch-features-vm.sh` |
-| `launch-prediction-pipeline-vm.sh`          | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
-| `launch-gcs-migration-bundle-vm.sh`         | Per-run GCS script upload at launch; PM script not in service tarball |
+| Launcher                                         | Reason                                     |
+| ------------------------------------------------ | ------------------------------------------ |
+| `launch-cefi-fwd-daily-cron-vm.sh`              | Cron daemon; installs crontab              |
+| `launch-tradfi-fwd-daily-cron-vm.sh`            | Cron daemon; installs crontab              |
+| `launch-planning-vm.sh`                         | Orchestrator FastAPI daemon                |
+| `launch-epic-vm.sh`                             | Agent-orchestrator epic VM; boots long-lived orchestrator service |
+| `launch-vm-zombie-watchdog.sh`                  | Always-on daemon; polls every 5 min        |
+| `launch-aave-lending-rate-validation-vm.sh`     | Heartbeat-only validator, no manifest writes |
+| `launch-amm-golden-fixture-validation-vm.sh`    | Heartbeat-only validator, no manifest writes |
+| `launch-prediction-features-vm.sh`             | SUPERSEDED by Pattern-A `launch-features-vm.sh` |
+| `launch-features-sports-parallel-backfill-vm.sh` | SUPERSEDED by Pattern-A `launch-features-vm.sh` |
+| `launch-prediction-pipeline-vm.sh`             | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
+| `launch-gcs-migration-bundle-vm.sh`            | Per-run GCS script upload at launch; PM script not in service tarball |
+
+Note: cefi-fwd and tradfi-fwd cron launchers use `--metadata-from-file="startup-script=${STARTUP_FILE}"` (quoted
+key form) rather than `--metadata-from-file=startup-script="${STARTUP_FILE}"` — the criterion grep below will not
+catch them; verify manually or with `grep -l 'metadata-from-file' launch-{cefi,tradfi}-fwd-daily-cron-vm.sh`.
 
 ## Full Execution Criterion
 
 Plan is operationally complete when:
 
-1. All data pipeline launchers not in the Pattern B exception list use `startup-script-url`.
+1. All data pipeline launchers not in the Pattern B exception list use `startup-script-url`. ✅ 2026-05-21
 2. QG smoke for at least one launcher per phase passes (manifest row written, heartbeat received, VM self-deletes).
-3. `grep -l 'metadata-from-file=startup-script' deployment-service/scripts/vm/launch-*.sh` returns only the 8
-   confirmed Pattern B exceptions.
-4. `codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 8 exceptions (was 5).
+3. `grep -l 'metadata-from-file=startup-script' deployment-service/scripts/vm/launch-*.sh` returns only the 9
+   Pattern B exceptions with the unquoted form (aave, amm, epic, features-sports-parallel, gcs-migration-bundle,
+   planning, prediction-features, prediction-pipeline, zombie-watchdog). The 2 cron launchers use quoted form.
+4. `codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 11 exceptions. ✅ 2026-05-21
 
 ## Temporary states + their canonical follow-up plans
 
