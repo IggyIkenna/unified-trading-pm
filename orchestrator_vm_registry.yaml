@@ -32,5 +32,37 @@ vms:
       - plans/active/master_to_live_defi_2026_05_23.md
       - plans/active/data_pipeline_master_coordination_2026_05_20.md
 
+  - id: vm-defi
+    fqdn: api-vm-defi.agent-orchestrator.odum-research.com
+    role: epic
+    label: "DeFi protocols + manifest"
+    accounts:
+      primary: ikenna@odum-research.com
+    master_plans: []
+
+  - id: vm-cross-cutting
+    fqdn: api-vm-cross-cutting.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Cross-cutting: batch/live symmetry, observability, client isolation"
+    accounts:
+      primary: ikenna@odum-research.com
+    master_plans: []
+
+  - id: vm-operator-ops
+    fqdn: api-vm-operator-ops.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Operator ops: DART, promote workflow, deployment/user mgmt"
+    accounts:
+      primary: ikenna@odum-research.com
+    master_plans: []
+
+  - id: vm-trading-core
+    fqdn: api-vm-trading-core.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Trading core: execution, strategy, trading-agent"
+    accounts:
+      primary: ikenna@odum-research.com
+    master_plans: []
+
   # vm-1 .. vm-7 provisioned as epic scope expands (see Phase 9 of orchestrator v0.7 plan)
   # Each commissioned VM gets an entry here + regen_vm_registry.py re-runs.

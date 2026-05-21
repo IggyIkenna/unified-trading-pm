@@ -112,8 +112,9 @@ parent_epic: instruments_master
 ### Phase 5 — Quality gates
 
 - [ ] [AGENT] P0. Run `cd features-service && bash scripts/quality-gates.sh` — must be green
-- [ ] [AGENT] P0. Run `cd strategy-service && bash scripts/quality-gates.sh` — must be green
-- [ ] [AGENT] P0. Run `cd execution-service && bash scripts/quality-gates.sh` — must be green
+- [x] ✅ [AGENT] P0. Run `cd strategy-service && bash scripts/quality-gates.sh` — DONE 2026-05-21: exits 0
+- [x] ✅ [AGENT] P0. Run `cd execution-service && bash scripts/quality-gates.sh` — DONE 2026-05-21: exits 0
+    STEP 5.69: 0 violations; all QG soft-fail items are pre-existing
 
 ## Success criteria
 
