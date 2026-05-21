@@ -2250,3 +2250,48 @@ All residual MISSING_EXPECTED are off-season days within the manifest date range
 **Next dispatch**: slot 7 — R2 oracle code done; awaiting R9 (slot 5) for full GREEN. Operator may reassign slot 7.
 
 — slot-7 worker / ikenna 2026-05-21
+
+---
+
+## 2026-05-21 — Phase -2 FULLY COMPLETE + slot 7 idle (freeze-holding)
+
+**From**: slot-7 worker (ikenna)
+
+**Plan items**: `strategy_repo_consolidation_2026_05_19.md` Phase 11 + `ml_repo_consolidation_2026_05_19.md` Phase 11
+
+**Status**: ALL SLOT-7 PHASE -2 WORK DONE — freeze-holding, no permitted code work remaining
+
+### Summary of Phase -2 deliverables (this session)
+
+| Repo | Commit | Scope |
+|---|---|---|
+| deployment-service | aa34d91 | Phase 11b ML stale-ref cleanup (18 files: terraform/shared, cloud-build, cluster configs, bucket_config, sports-trigger-tiers, grafana) |
+| unified-trading-pm | a3048b85 | dependencies.yaml + workspace-manifest.json ML consolidation |
+| unified-trading-pm | c441febd | Phase 11b plan checkbox flip (deployment-service) |
+| deployment-api | 28633bc | Phase 11 ML stale-ref cleanup (16 files: routes, services, tests) |
+| unified-trading-pm | ef5be104 | Phase 11b plan evidence (deployment-api) |
+| deployment-service | d5f4779 | `git rm -r` all 5 archived-service terraform/services dirs (39 files) |
+| unified-trading-pm | e1c324d8 | BLOCKED-OPERATOR-DECISION → ✅ on both strategy + ML plan item 1 |
+
+**Freeze protocol compliance**: no new LDR commits during freeze post-Phase-11 completion. Q2 stale note resolved in
+simulation plan (plan-update, permitted during freeze). This ping is the only write during freeze.
+
+### Slot 7 exhaustion inventory
+
+- Phase -2 stale-ref cleanup: ✅ DONE (all 5 archived service dirs deleted; all consumer refs updated)
+- R2 sports oracle fix: ✅ DONE (uac@02b8370; 19,326 phantom cells eliminated; 6,326 residual = off-season gaps)
+- R7 off-season KNOWN_COVERAGE_GAPS: ✅ DONE (source-level extended; per-league calendar awaiting R9 slot 5)
+- Simulation scenarios plan: ✅ CLOSED (Harsh b3ede821 closed all 21 items 2026-05-19; Q2 confirmed resolved)
+- Cross-cutting may23 deliverables: ✅ slot-7 items done; remaining items are Harsh T6 (catalogue UI, archetype rows)
+- Phase 11 sports data backfill: NOT NEEDED for slot 7 — the 6,326 residual cells are legitimate off-season gaps;
+  R9 (slot 5) reclassifies them via `get_league_fixture_calendar`; no VM backfill required from slot 7.
+
+### Unblock condition
+
+Resume dispatch when ONE of:
+1. `🟢 UNFREEZE` ping in `_agent_pings.md` (Phase 8 complete) → resume slot themes per work_split
+2. R9 lands (slot 5 ships `get_league_fixture_calendar` oracle integration) → A3 re-run confirms 0 sports
+   MISSING_EXPECTED → R2/R7 fully GREEN
+3. Operator explicit reassignment ping to this ledger
+
+— slot-7 worker / ikenna 2026-05-21
