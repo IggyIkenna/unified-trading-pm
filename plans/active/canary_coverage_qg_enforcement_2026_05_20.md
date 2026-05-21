@@ -153,6 +153,11 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
       Pendle, Morpho, Beefy, Yearn, Convex, Karak, Solayer, Solblaze, Cambrian, Symbiotic, Idle, Picasso, Sky. For
       protocols with only on-chain reads (no REST): document with `<protocol>/mocks/onchain_<call>.yaml` capturing the
       canonical contract call + decoded response.
+  - ✅ **slot 4 DONE** (uac@31cb6a5 + uac@66ffe71 2026-05-20): yield/restaking cluster 16/16 covered —
+    Ethena/Pendle/Beefy/Yearn/Convex/Karak/Symbiotic/Idle (defillama/yields.yaml existing),
+    Puffer/EtherFi/Solblaze (defillama/coins_historical.yaml new), Morpho (morpho_blue_api/markets.yaml),
+    EigenLayer (BLOCKED-CREDENTIALS stub), Solayer/Cambrian/Picasso/Sky (BLOCKED-NO-ADAPTER stubs + orphan allowlist).
+    Awaiting slots 2+3 for full checkbox flip.
 
 **DeFi `arbitrage_price_dispersion`** (~9 DEXes):
 

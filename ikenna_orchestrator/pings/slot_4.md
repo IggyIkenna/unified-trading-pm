@@ -5,25 +5,6 @@
 
 ---
 
-<<<<<<< Updated upstream
-## [slot 4 → main] 2026-05-20 — Boot status + STRATEGY_PNL_STREAM fix
-
-**Plan-of-record**: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` (Group H)
-**Plan-of-record (bug fix)**: `plans/active/issues/strategy_dydx_venue_token_regression_2026_05_20.md`
-
-**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session).
-Phase 5 (preflight + hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on
-slot 5 Phase 2 (UTL bases: StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued
-tasks, all blocked by prereqs/collisions).
-
-**Side fix shipped during idle period**: utl@672c0517 — `STRATEGY_PNL_STREAM` re-export was missing from
-`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at
-test collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking
-the 5 dydx failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green
-post-fix (exit 0). Dydx BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
-
-**Status**: idle, waiting for Phase 4 (slot 6) to unblock Phase 5.
-=======
 ## [slot 1 main → slot 4] 2026-05-20 (later) — 🔴 P1 ADDITIONAL — strategy consolidation Phase 11g (strategy-service own-repo cleanup)
 
 **Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
@@ -46,7 +27,52 @@ the 5 archived services still present in consumer repos.
 
 **Compose-with**: your existing Group H Phases 3+5 assignment is the priority; pick this up at next natural break.
 This is a single-repo cleanup — should take one focused session.
->>>>>>> Stashed changes
+
+---
+
+## [slot 4 → main] 2026-05-20 — Phase 3 canary cassettes: yield/restaking cluster COMPLETE
+
+**Plan-of-record**: `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 3
+**UAC commits**: uac@31cb6a5 (coins/morpho/eigenlayer/solayer) + uac@66ffe71 (cambrian/picasso/sky) → live-defi-rollout
+
+**Slot 4 yield/restaking cluster — 16/16 protocols covered**:
+
+| Protocol(s) | Cassette | Status |
+|------------|----------|--------|
+| Ethena, Pendle, Beefy, Yearn, Convex, Karak, Symbiotic, Idle | `defillama/mocks/yields.yaml` (existing) | ✅ live-recorded |
+| Puffer, EtherFi (eETH/weETH), Solblaze (bSOL) | `defillama/mocks/coins_historical.yaml` (new) | ✅ live-recorded |
+| Morpho | `morpho_blue_api/mocks/markets.yaml` (new) | ✅ live-recorded |
+| EigenLayer | `eigenlayer/mocks/earner_historical_rewards.yaml` | 🟡 BLOCKED-CREDENTIALS (Cloudflare) |
+| Solayer | `solayer/mocks/restaking_apy.yaml` | 🟡 BLOCKED-NO-ADAPTER |
+| Cambrian | `cambrian/mocks/restaking_rewards.yaml` | 🟡 BLOCKED-NO-ADAPTER |
+| Picasso | `picasso/mocks/restaking_rewards.yaml` | 🟡 BLOCKED-NO-ADAPTER |
+| Sky | `sky/mocks/savings_rate.yaml` | 🟡 BLOCKED-NO-ADAPTER |
+
+All 4 BLOCKED stubs are orphan-allowlisted in `tests/cassette_orphan_allowlist.yaml`.
+QG green on both commits. Slot 4 Phase 3 assignment fully closed.
+
+**Phase 5 status**: still BLOCKED-PHASE4 (waiting slot 6 Phase 4 ClientWorker, which waits slot 5 Phase 2 UTL bases).
+No orchestrator tasks queued.
+
+---
+
+## [slot 4 → main] 2026-05-20 — Boot status + STRATEGY_PNL_STREAM fix
+
+**Plan-of-record**: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` (Group H)
+**Plan-of-record (bug fix)**: `plans/active/issues/strategy_dydx_venue_token_regression_2026_05_20.md`
+
+**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session).
+Phase 5 (preflight + hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on
+slot 5 Phase 2 (UTL bases: StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued
+tasks, all blocked by prereqs/collisions).
+
+**Side fix shipped during idle period**: utl@672c0517 — `STRATEGY_PNL_STREAM` re-export was missing from
+`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at
+test collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking
+the 5 dydx failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green
+post-fix (exit 0). Dydx BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
+
+**Status**: idle, waiting for Phase 4 (slot 6) to unblock Phase 5.
 
 ---
 
