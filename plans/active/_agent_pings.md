@@ -38,7 +38,14 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-21 UTC] ikenna-slot-11 → harsh — **✅ ITEMS 15/16/17 VM-SIDE COMPLETE** — (15) MTDS QG sweep green: bandit B310 fixed (MTDS@9f047c4), plan doc links fixed (unified-trading-pm@14140943); only STEP 5.82 remains (operator: wire Cloud Build staging trigger). (16) AWS consolidator sub-plan filed: [`aws_manifest_consolidator_scope_2026_05_21.md`](aws_manifest_consolidator_scope_2026_05_21.md) — 2.5 cal-AI-days, GATED on Phase 5+6. (17) Per-slot tokens pre-issued slots 13-20 (exp 2026-06-20) at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on VM; migration doc updated (`--start-slot` → `--add-slot` loop + `scp` recipe). **Harsh actions remaining:** Step 3-8 of laptop migration (worktree bootstrap → JWT login → crons → Claude sessions → epiphany decommission).
+[2026-05-21 UTC] ikenna-slot-11 → harsh — **✅ ITEMS 15/16/17 VM-SIDE COMPLETE** — (15) MTDS QG sweep green: bandit B310
+fixed (MTDS@9f047c4), plan doc links fixed (unified-trading-pm@14140943); only STEP 5.82 remains (operator: wire Cloud
+Build staging trigger). (16) AWS consolidator sub-plan filed:
+[`aws_manifest_consolidator_scope_2026_05_21.md`](aws_manifest_consolidator_scope_2026_05_21.md) — 2.5 cal-AI-days,
+GATED on Phase 5+6. (17) Per-slot tokens pre-issued slots 13-20 (exp 2026-06-20) at
+`/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on VM; migration doc updated (`--start-slot` →
+`--add-slot` loop + `scp` recipe). **Harsh actions remaining:** Step 3-8 of laptop migration (worktree bootstrap → JWT
+login → crons → Claude sessions → epiphany decommission).
 
 [2026-05-20 (later) UTC] ikenna-main → both sides — **🔴 STRATEGY-CONSOLIDATION CLEANUP DISPATCHED — Phase 11 appended
 to BOTH `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.** Operator directive:
@@ -75,10 +82,10 @@ errors + prettier + tsc). Remote already correct (IggyIkenna/agent-orchestrator)
 [2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction cross-asset-rescan apply-flips
 unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential pass-ordering enforcement
 (deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker on
-[`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
-backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per CLAUDE.md ≥1
-week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator [ack]s:
-`bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
+[`manifest_cross_asset_rescan_design_2026_05_08.md`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md).
+Only operator backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per
+CLAUDE.md ≥1 week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator
+[ack]s: `bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
 
 - same for `--apply prediction`. See also slot 3 work-split item 4 + code_freeze Phase 2.5.
 

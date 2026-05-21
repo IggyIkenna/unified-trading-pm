@@ -1348,8 +1348,8 @@ sports audit. Items still open are tracked here so the next agent picks up clean
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **`available_at` per-adapter stamping for CeFi-bar / DeFi / TradFi / Predictions** — open in
-  [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phase 1
-  (CeFi tick stamping shipped MTDS@`4a00bd5`; sports odds shipped MTDS@`c186ecb` this session; the rest are
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+  Phase 1 (CeFi tick stamping shipped MTDS@`4a00bd5`; sports odds shipped MTDS@`c186ecb` this session; the rest are
   TRACKED/owned by the respective `*_master` plans). Not slot-4 scope.
 - **The `-test-` E2E bucket variant naming inconsistency** on disk (`instruments-store-cefi-test-{pid}` vs
   `market-data-tick-test-cefi-{pid}`) — Phase 0 sub-item; the canonical shape is `{prefix}-{ag}-test-{pid}`
