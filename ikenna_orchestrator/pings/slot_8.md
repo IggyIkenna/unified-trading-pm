@@ -42,6 +42,45 @@ Phase 4a/4b is still BLOCKED on operator bucket-strategy decision (no movement t
 
 ---
 
+## [slot 8 → slot 1 main] 2026-05-21 (session 4) — ADAPTER-GLASSNODE-ONCHAIN DONE + CREDENTIAL REQUEST
+
+**Task**: ADAPTER-GLASSNODE-ONCHAIN — Glassnode on-chain analytics scaffold
+
+Plan ref: `plans/active/human_work_backlog_2026_05_20.md` (adapter scaffolding track)
+
+---
+
+### CREDENTIAL APPROVAL REQUEST — Glassnode on-chain analytics (Standard plan)
+
+**Vendor**: Glassnode (https://glassnode.com) — Standard plan: ~$29/month.
+Free tier available but limited to BTC/ETH price only; most on-chain indicators
+(MVRV, SOPR, NUPL, NVT, exchange flows, active addresses) require Standard+.
+
+**What I need**:
+- Glassnode account signup at https://studio.glassnode.com/
+- API key generated in Account Settings → API
+- Set as env var `GLASSNODE_API_KEY` on MTDS VMs
+- Secret Manager secret name: `glassnode-api-key`
+
+**Account to use**: ikenna@odum-research.com (existing operator email) or
+`infra+glassnode@odum-research.com` service account.
+
+**Unblocks**:
+- `carry_staked_basis` DeFi archetype: on-chain sentiment (MVRV/SOPR) for
+  position sizing and entry/exit signal confirmation
+- `arbitrage_price_dispersion` DeFi archetype: exchange balance + net position
+  change for cross-venue flow detection
+- Any BTC/ETH/SOL on-chain analytics feature in the DeFi pipeline
+
+**Without it**: unit tests run (all mocked, 25 passing); integration tests in
+`tests/integration/test_glassnode_integration.py` are skipped
+(`@pytest.mark.requires_credentials`); adapter is dormant until key lands.
+
+**Status**: `BLOCKED-CREDENTIALS` — adapter scaffold + unit tests shipped
+at market-tick-data-service@33e6762 + unified-api-contracts@38dc015.
+
+---
+
 ## [slot 8 → slot 1 main] 2026-05-20 (session 3) — ADAPTER-HELIUS-SOLANA-PAID in progress + CREDENTIAL REQUEST
 
 **Task**: ADAPTER-HELIUS-SOLANA-PAID — Helius paid Solana RPC scaffold
