@@ -50,3 +50,18 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
 **Status**: BLOCKED-CREDENTIALS until operator [ack]
 **Without it**: Public trade history tests ship; adapter fully functional for batch data collection; authenticated tests dormant.
 **Plan-of-record**: ADAPTER-KALSHI-FEED (backlog task)
+
+## CREDENTIAL APPROVAL REQUEST — The-Odds-API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: The-Odds-API (api.the-odds-api.com) — free tier (500 requests/month), paid tiers available
+**What I need**: API key from the-odds-api.com (sign up at the-odds-api.com/account)
+  - The API key is required for ALL endpoints (no public/unauthenticated access).
+  - Key unlocks: sports listing, live + pre-game odds across 40+ sports/leagues, scores.
+**Account to use**: New account at the-odds-api.com (free tier, email signup, no KYC)
+**Cost**: $0 for free tier (500 req/month); paid tiers from ~$3/month for higher quota
+**What it unblocks**: Integration tests in `tests/integration/test_odds_api_integration.py`; `TestFetchSportsLive` + `TestGetMarketsLive` classes currently skip with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: OddsApiAdapter scaffold + unit tests ship; integration tests dormant. Adapter fully functional once key provided.
+**Plan-of-record**: ADAPTER-THE-ODDS-API (backlog task); MTDS@065cb49
