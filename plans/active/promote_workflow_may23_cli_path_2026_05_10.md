@@ -277,10 +277,12 @@ paper/live deployment exists.
       IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered;
       launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
 
-- [ ] [CODE] P1. `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no directive
-      present); reloader reads from same config-hot-reload bus as existing `config_reloaders.py`. See
-      trading_agent_service_architecture_unlock plan Phase 5. Off-by-default for May-23: no upstream emitter wired
-      except no-op stub.
+- [ ] [CODE] P1. [FREEZE-HOLD 2026-05-21 — local commit only, push pending UNFREEZE] `colocated_engine.py` instantiates
+      `StrategyDirectiveReloader` at boot (no-op default if no directive present); reloader reads from same
+      config-hot-reload bus as existing `config_reloaders.py`. See trading_agent_service_architecture_unlock plan
+      Phase 5. Off-by-default for May-23: no upstream emitter wired except no-op stub. Code ready:
+      `start_directive_reloader(poll_interval_seconds=60)` after STARTED event + `stop_directive_reloader()` on both
+      success and exception paths. Push to e2e-testing when UNFREEZE lands.
 
 **Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
 
@@ -329,10 +331,12 @@ paper/live deployment exists.
       `TREASURY_LOW/HIGH` + `TREASURY_REBALANCE_NEEDED` + `TRANSFER_INITIATED` pipeline reacts automatically, emits
       `OPERATOR_CAPITAL_OVERRIDE_APPLIED` event. DeFi + `--continuous` + non-mock cloud only. (e2e-testing@89ea188 —
       colocated_engine.py + run-paper.sh)
-- [ ] [CODE] P1. `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no directive
-      present); reloader reads from same config-hot-reload bus as existing `config_reloaders.py`. See
-      trading_agent_service_architecture_unlock plan Phase 5. Off-by-default for May-23: no upstream emitter wired
-      except no-op stub.
+- [ ] [CODE] P1. [FREEZE-HOLD 2026-05-21 — local commit only, push pending UNFREEZE] `colocated_engine.py` instantiates
+      `StrategyDirectiveReloader` at boot (no-op default if no directive present); reloader reads from same
+      config-hot-reload bus as existing `config_reloaders.py`. See trading_agent_service_architecture_unlock plan
+      Phase 5. Off-by-default for May-23: no upstream emitter wired except no-op stub. Code ready:
+      `start_directive_reloader(poll_interval_seconds=60)` after STARTED event + `stop_directive_reloader()` on both
+      success and exception paths. Push to e2e-testing when UNFREEZE lands.
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
