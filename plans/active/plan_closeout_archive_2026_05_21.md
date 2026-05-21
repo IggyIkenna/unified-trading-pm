@@ -113,15 +113,15 @@ Deferred items to check before archiving:
 - Validation Phase 6 items (prod run verification) → deferred to Phase 3 window issue doc ✅
 - cefi 789k `attempted_failed` re-fetch → not in this plan's scope, already in issue docs ✅
 
-- [ ] [DOCS] P0. Archive `expected_unattempted_propagation_chain_2026_05_12.md` →
+- [x] [DOCS] P0. Archive `expected_unattempted_propagation_chain_2026_05_12.md` →
       `plans/archive/expected_unattempted_propagation_chain_2026_05_12.plan.md`. Add archived banner +
       `## Deferred work — migrated to:` section: Phase 6.x validation →
       `writegate_honest_coverage_endtoend_2026_05_06.md`; cefi re-fetch →
       `issues/cefi_attempted_failed_refetch_2026_05_12.md` (if exists, else note inline). Add `status: archived`. Remove
-      from `plans/active/`.
-- [ ] [DOCS] P0. Update `plans/epics/manifest_master.md`: mark `expected_unattempted_propagation_chain_2026_05_12` as
-      `✅ ARCHIVED 2026-05-21 — runtime propagation code complete; validation pending prod run`.
-- [ ] [FLIP] P0. Commit + push.
+      from `plans/active/`. — PM@d6d3d51e1
+- [x] [DOCS] P0. Update `plans/epics/manifest_master.md`: mark `expected_unattempted_propagation_chain_2026_05_12` as
+      `✅ ARCHIVED 2026-05-21 — runtime propagation code complete; validation pending prod run`. — PM@d6d3d51e1
+- [x] [FLIP] P0. Commit + push. — PM@d6d3d51e1
 
 ### Plan 3: features_repo_consolidation_2026_05_08
 
