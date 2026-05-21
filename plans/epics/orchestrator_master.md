@@ -4,7 +4,7 @@ type: epic
 tier: L5
 status: active
 priority: P0
-assigned_vm: vm-orchestrator
+assigned_vm: human-planning-vm
 parent: master_to_live_defi_2026_05_23
 owner: ikenna
 co_operators: [harsh]
