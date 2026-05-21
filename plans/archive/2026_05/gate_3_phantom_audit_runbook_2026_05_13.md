@@ -1,24 +1,18 @@
+> **ARCHIVED 2026-05-21** — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups; operator decision ACCEPT. TradFi
+> 5,212 legacy-blank apply-flips migrated to `tradfi_master.md`. Preserved for archaeology.
+
 ---
-title: "Gate 3 — Phantom-Audit Execution Runbook"
-created: 2026-05-13
-execution:
-  owner: "Ikenna Slot 1 main (operational runbook owner; actual execution may be Slot 1 or Slot 6)"
-  cadence: "one-shot (Gate 3 phase of 5-gate DAG; expected fire before 2026-05-15 freeze-gate)"
-  verifier:
-    "event-stream receipt (triage.jsonl row count vs manifest phantom count; manifest row state post-reconciliation)"
-  last_executed: "2026-05-17 14:32-14:42 UTC — FIRED ✅ (0 phantoms all 5 asset_groups)"
-estimate_class: infra
-estimate_baseline_ai_days: 1
-estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: |
-  Backfilled 2026-05-15 per CLAUDE.md HARD RULE (post-2026-05-11 plans require estimate_class).
-  One-shot operational runbook (VM launch + manifest reconciliation + verifier check); infra class
-  multiplier 0.8x. Baseline 1 AI-day. Calibrated 0.8 AI-day.
-parent_epic: manifest_master
-priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+
+title: "Gate 3 — Phantom-Audit Execution Runbook" created: 2026-05-13 execution: owner: "Ikenna Slot 1 main (operational
+runbook owner; actual execution may be Slot 1 or Slot 6)" cadence: "one-shot (Gate 3 phase of 5-gate DAG; expected fire
+before 2026-05-15 freeze-gate)" verifier: "event-stream receipt (triage.jsonl row count vs manifest phantom count;
+manifest row state post-reconciliation)" last_executed: "2026-05-17 14:32-14:42 UTC — FIRED ✅ (0 phantoms all 5
+asset_groups)" estimate_class: infra estimate_baseline_ai_days: 1 estimate_calibrated_ai_days: 0.8
+estimate_calibration_note: | Backfilled 2026-05-15 per CLAUDE.md HARD RULE (post-2026-05-11 plans require
+estimate_class). One-shot operational runbook (VM launch + manifest reconciliation + verifier check); infra class
+multiplier 0.8x. Baseline 1 AI-day. Calibrated 0.8 AI-day. parent_epic: manifest_master priority: P2 status: active
+locked_by: live-defi-rollout locked_since: 2026-05-21
+
 ---
 
 # Gate 3 — Phantom-Audit Execution Runbook

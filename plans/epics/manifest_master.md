@@ -16,7 +16,7 @@ related_plans:
   - ../active/d3_manifest_v8_finish_2026_05_20.md
   - ../active/d5_features_missing_data_downgrade_2026_05_20.md
   - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
-  - ../active/gate_3_phantom_audit_runbook_2026_05_13.md
+  - ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md
   - ../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
   - ../active/honest_coverage_formula_consolidation_2026_05_19.md
   - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
@@ -129,9 +129,10 @@ pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pend
 
 **status**: active · **estimate**: 10.0 cal AI-days (class: refactor)
 
-### [`gate_3_phantom_audit_runbook_2026_05_13`](../active/gate_3_phantom_audit_runbook_2026_05_13.md)
+### [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups · **estimate**: 0.8 cal
+AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 
