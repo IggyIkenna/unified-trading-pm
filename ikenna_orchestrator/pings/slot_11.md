@@ -196,3 +196,29 @@ Awaiting operator direction on which phase to tackle first (recommend Phase 1 MT
 **Plan**: `vm_launcher_startup_url_migration_2026_05_21.md` Phase 2 + Phase 3 audit flipped. — unified-trading-pm@8bf9fdfe
 
 **Remaining**: Phase 1 QG smoke (operator-run), Phase 3 conversions (7 launchers, 5 handlers to add).
+
+---
+
+## [2026-05-21] slot-11 — Phase 3 COMPLETE (O-1 consolidation effectively done)
+
+**deployment-service@dbdfe40** — Phase 3 P1 conversions:
+
+| Launcher | Change | Notes |
+| --- | --- | --- |
+| `launch-sports-entity-sweep-vm.sh` | Pattern B → A | 17 VMs, `instruments-backfill` + VM_SPORTS_ENTITY |
+| `launch-sports-full-sweep-vm.sh` | Pattern B → A | 8 year VMs, `instruments-backfill` + API_FOOTBALL |
+| `launch-sports-instruments-reference-vm.sh` | Pattern B → A | 3 date-split VMs; removed scheduler complexity |
+| `launch-cefi-migration-vm.sh` | Pattern B → A | `canonical-migration` handler; zone us-central1-a → asia-northeast1-c |
+| `setup-data-pipeline-vm.sh` | +1 line | `VM_SPORTS_ENTITY` added to `instruments-backfill` BASE_CLI |
+
+**Pattern B exceptions filed** (3 new, total now 8):
+- `prediction-features`: SUPERSEDED by `launch-features-vm.sh` (already Pattern A)
+- `prediction-pipeline`: 3-service sequential pipeline exceeds handler complexity budget
+- `gcs-migration-bundle`: per-run GCS staging; PM script outside tarball
+
+**Codex updated**: `codex/05-infrastructure/vm-tarball-deployment.md` — Pattern B table 5→8.
+**Plan**: `vm_launcher_startup_url_migration_2026_05_21.md` Phase 3 P1/P2 flipped — `unified-trading-pm@d5fb0af6`.
+
+**Remaining open item**: Phase 1 QG smoke test (operator-run required; real GCP VM launch).
+**Full Execution Criterion**: all checkable items done. Pending only: operator QG smoke + codex
+  decision-matrix revision to note 8 exceptions (handled above).
