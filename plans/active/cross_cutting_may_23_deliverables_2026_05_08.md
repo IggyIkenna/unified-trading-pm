@@ -29,7 +29,7 @@ parent_epic: defi_master
 
 ## Why this plan exists
 
-The [`cross_cutting_may_23_SUPERSEDED_2026_05_21`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md) epic
+The [`cross_cutting_may_23_SUPERSEDED_2026_05_21`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md) epic
 lists 5 non-negotiable deliverables for the May-23 cutover. Today's daily splits cover **#5 Infrastructure** (across
 Ikenna T2/T4/T5 + Harsh T3) but DO NOT cover deliverables **#1 Strategy catalogue, #2 Strategy IDs, #3 Clients +
 Accounts, #4 UI replication / DART manual-trade lane**. With 15 days to cutover and "non-negotiable + hard requirement"
@@ -235,14 +235,14 @@ This plan owns the 4 cross-cutting deliverables; downstream consumers reference 
   23 (DART manual-trade gate) is THIS plan's deliverable #4.
 - [`strategy_and_dart_master_SUPERSEDED_2026_05_21`](../epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md) — folds
   in this plan's catalogue + ID + client scope; this plan is the May-23 critical-path slice.
-- [`defi_master`](defi_master.md) — Fork 1 paper-trade smoke uses strategy IDs once shipped.
+- [`defi_master`](../epics/defi_master.md) — Fork 1 paper-trade smoke uses strategy IDs once shipped.
 - [`cefi_master`](../epics/cefi_master.md) — CeFi ML live archetype tagged with strategy IDs.
 - [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) — alerting rules emit strategy
   ID per fired alert (per cross_cutting epic #2 use-case "alerting (which strategy fired)").
 
 ## See also
 
-- [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md)
+- [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md)
   — parent epic
 - [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — 8-family / 18-archetype
   catalogue baseline (existing SSOT this plan extends)
@@ -677,7 +677,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 ### Cross-references (every external touchpoint)
 
 - **Parent epic**
-  [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md)
+  [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md)
   — the 5 cross-cutting deliverables. Deliverables #1+#2+#3+#4 are now resolved at the [DESIGN+UAC]+[DESIGN] tier in
   this plan-of-record (epic checkboxes auto-flip when this plan's parent-tier flips); #5 Infrastructure tracked across
   Ikenna T2/T4/T5 + Harsh T3.
@@ -686,7 +686,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
   refactor sweep ships. Group G item 23 (DART manual-trade gate) gates on Harsh T6's 5 DART builds.
 - **Granular masters**
   [`strategy_and_dart_master_SUPERSEDED_2026_05_21`](../epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md) +
-  [`defi_master`](defi_master.md) + [`cefi_master`](../epics/cefi_master.md) +
+  [`defi_master`](../epics/defi_master.md) + [`cefi_master`](../epics/cefi_master.md) +
   [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) — each consumes a slice of this
   plan's outputs (`ArchetypeConfig.archetype_kill_switch_thresholds` per Tab 5 alerting; `CapitalAllocation` per
   `defi_master` + `cefi_master`; `format_strategy_id` per all).

@@ -1148,7 +1148,7 @@ per-credential events; last_executed = NEVER (pending first operator run).
 
 ## DONE-2026-05-15 — slot 4 Day 1 (2026-05-12) `ikenna-keys-wallets-tab`
 
-Cycle scope (per [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) row 4): Phase 1 Copper KYB
+Cycle scope (per [`work_split_2026_05_12_ikenna.md`](../archive/2026_05/work_split_2026_05_12_ikenna.md) row 4): Phase 1 Copper KYB
 checklist + Phase 2 Fireblocks R9 dispatch + Phase 3 wallet provisioning schema. Density target 3.5-4 calibrated
 AI-days/day. **Day-1 actual: ~5 AI-days shipped end-to-end** (schema + R9 dispatch + plan flip + handshake ping +
 custody onboarding checklist + R9 codex propagation + Cloud-KMS issue doc); meets density target on Day 1.

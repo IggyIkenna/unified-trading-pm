@@ -94,13 +94,13 @@ its master plan's `## May-23 deliverable` section.
 
 | May-23 deliverable                      | Lives in master § "May-23 deliverable"                                                                                    | Scope                | Live/Batch | Archived epic (archaeology)                                                                           |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
-| Live DeFi rollout (carry archetypes)    | [`defi_master`](./defi_master.md#may-23-deliverable-folded-from-live_defi_rollout_may_23_2026epic-2026-05-08)             | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)   |
+| Live DeFi rollout (carry archetypes)    | [`defi_master`](../epics/defi_master.md#may-23-deliverable-folded-from-live_defi_rollout_may_23_2026epic-2026-05-08)             | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)   |
 | CeFi ML                                 | [`cefi_master`](../epics/cefi_master.md)                                                                                  | LIVE on real capital | Live       | [`archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md)                       |
 | S&P prediction (CME)                    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable A)                                                              | BATCH ML only        | Batch      | [`archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md)           |
 | Price arbitrage (CME futures + ETFs)    | [`tradfi_master`](../epics/tradfi_master.md) (deliverable B)                                                              | BACKTEST only        | Batch      | [`archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md)       |
 | Sports ML                               | [`sports_master`](../epics/sports_master.md)                                                                              | BACKTEST only        | Batch      | [`archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md)                   |
 | Prediction markets                      | [`predictions_master`](../epics/predictions_master.md)                                                                    | BACKTEST only        | Batch      | [`archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md) |
-| Cross-cutting (catalogue / IDs / infra) | [`epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md) | Workspace-wide       | Both       | (still active — workspace-wide concerns spanning all domains; explicitly NOT folded)                  |
+| Cross-cutting (catalogue / IDs / infra) | [`epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md) | Workspace-wide       | Both       | (still active — workspace-wide concerns spanning all domains; explicitly NOT folded)                  |
 
 Read [`plans/epics/README.md`](../epics/README.md) for the layer model + lifecycle. Each master plan enumerates its
 sub-plans; this master plan retains the cross-master readiness checklist + audit + Q&A below.
@@ -148,7 +148,7 @@ folded into the appropriate epic._
 | [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md)                               | manifest_evolution_SUPERSEDED_2026_05_21   | infra     | —          | —            | 4.8      | 2026-05-15                               |
 | [`hard_schema_enforcement_2026_05_08`](./hard_schema_enforcement_2026_05_08.md)                                                     | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | —          | —            | 4.8      | —                                        |
 | [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md)                                             | master                                     | design    | —          | —            | 4.8      | —                                        |
-| [`defi_master`](./defi_master.md)                                                                                                   | README                                     | design    | 78/118     | 66%          | 4.8      | —                                        |
+| [`defi_master`](../epics/defi_master.md)                                                                                            | README                                     | design    | 78/118     | 66%          | 4.8      | —                                        |
 | [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](./per_client_isolation_and_venue_fanout_topology_2026_05_20.md)       | master                                     | brand-new | 1/12       | 8%           | 4.6      | 2026-05-23                               |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                             | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 61/70      | 87%          | 3.9      | 2026-05-23                               |
 | [`agent_orchestrator_workers_on_vms_2026_05_19`](./agent_orchestrator_workers_on_vms_2026_05_19.md)                                 | infrastructure_master                      | infra     | 4/8        | 50%          | 3.2      | —                                        |
@@ -163,7 +163,7 @@ folded into the appropriate epic._
 | [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md)                                     | master                                     | research  | 0/5        | 0%           | 1.8      | —                                        |
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                 | manifest_evolution_SUPERSEDED_2026_05_21   | refactor  | 19/23      | 83%          | 1.7      | —                                        |
 | [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)                       | master                                     | infra     | 0/16       | 0%           | 1.6      | 2026-06-15                               |
-| [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md)                                                     | master                                     | design    | —          | —            | 1.5      | 2026-05-15                               |
+| [`AUDIT_pre_may_8_cleanup_2026_05_13`](../audit/results/AUDIT_pre_may_8_cleanup_2026_05_13.md)                                      | master                                     | design    | —          | —            | 1.5      | 2026-05-15                               |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                     | master                                     | design    | 52/79      | 66%          | 1.4      | 2026-05-23                               |
 | [`agent_reliability_mitigations_2026_05_20`](./agent_reliability_mitigations_2026_05_20.md)                                         | **orphan**                                 | infra     | —          | —            | 1.2      | 2026-05-22                               |
 | [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md)                                         | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | —          | —            | 1.2      | 2026-05-23                               |
@@ -176,7 +176,7 @@ folded into the appropriate epic._
 | [`agent_orchestrator_dual_deployment_2026_05_19`](./agent_orchestrator_dual_deployment_2026_05_19.md)                               | **orphan**                                 | design    | 0/7        | 0%           | 0.6      | —                                        |
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                     | **orphan**                                 | brand-new | 13/16      | 81%          | 0.6      | —                                        |
 | [`uac_source_capability_metadata_promotion_2026_05_20`](./uac_source_capability_metadata_promotion_2026_05_20.md)                   | **orphan**                                 | refactor  | 20/26      | 77%          | 0.4      | 2026-05-25                               |
-| [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md)                                                       | master                                     | design    | —          | —            | 0.3      | —                                        |
+| [`pm_coordination_ledger_2026_05_13`](../archive/2026_05/pm_coordination_ledger_2026_05_13.md)                                      | master                                     | design    | —          | —            | 0.3      | —                                        |
 | [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)         | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 7/7        | 100%         | 0.0      | 2026-08-31                               |
 | [`api_football_minimal_flattening_removal_2026_05_07`](./api_football_minimal_flattening_removal_2026_05_07.md)                     | master                                     | refactor  | 16/16      | 100%         | 0.0      | —                                        |
 | [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md)                       | cefi_master                                | design    | 47/47      | 100%         | 0.0      | —                                        |
@@ -1044,7 +1044,7 @@ item names what "done" looks like + the exact verification command/check):
 
 **Cross-plan banners** (mutual; ship with this fold-in):
 
-- [`defi_master.md`](./defi_master.md) — Tenderly fork + per-chain `paper_target_registry` compose with DeFi master.
+- [`defi_master.md`](../epics/defi_master.md) — Tenderly fork + per-chain `paper_target_registry` compose with DeFi master.
 - [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)
   — funding-rate-dispersion variant is half of the May-23 paper-mode evidence run; banner mutual.
 - [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) — **NEW
@@ -1778,7 +1778,7 @@ sign-off + Phase 7 cutover gate = next-cycle scope.
 
 **Workspace-coordination + post-cutover successor plans (folded 2026-05-13 — were orphan per inventory dashboard):**
 
-- [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) — P1 coordination doc (deadline
+- [`AUDIT_pre_may_8_cleanup_2026_05_13`](../audit/results/AUDIT_pre_may_8_cleanup_2026_05_13.md) — P1 coordination doc (deadline
   2026-05-15) auditing all 26 pre-May-8 plans for blockers, deferrals, and ownership; per-plan triage feeds the daily
   work-split. Folded into master 2026-05-13 (was orphan; no domain epic fit because spans all 26 cross-epic plans).
 - [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)
