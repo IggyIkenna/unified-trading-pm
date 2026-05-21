@@ -74,10 +74,16 @@ that plan was written (2026-05-09):
 
 ### Phase 1 — Code-side v8 hardcode fixes (pre-data-migration gate)
 
-- [ ] [AGENT] P0. Fix `unified-api-contracts/canonical/crosscutting/manifest_schema.py` — ensure
+- [x] ✅ [AGENT] P0. Fix `unified-api-contracts/canonical/crosscutting/manifest_schema.py` — ensure
       `MANIFEST_SCHEMA_VERSION = 8` is the ONLY version constant; remove all fallback branches
-- [ ] [AGENT] P0. Fix `unified-trading-library/manifest_writer.py` — remove v<8 fallback; v8 is unconditional
-- [ ] [AGENT] P0. Fix `deployment-service/scripts/rebuild_sports_manifest.py` — update schema_version constant to 8
+  - UAC@7e908c6: constant value `MANIFEST_SCHEMA_VERSION_V8 = 8` was already correct; stale docstring
+    saying `= 7` updated to `= 8`; UAC QG ✅ ALL QUALITY GATES PASSED
+- [x] ✅ [AGENT] P0. Fix `unified-trading-library/manifest_writer.py` — remove v<8 fallback; v8 is unconditional
+  - Already correct: `MANIFEST_SCHEMA_VERSION = 8` (line 145); reader-side `schema_version < MANIFEST_SCHEMA_VERSION`
+    at line 3847 is stale-row detection (intentional, not a writer fallback); no edit needed
+- [x] ✅ [AGENT] P0. Fix `deployment-service/scripts/rebuild_sports_manifest.py` — update schema_version constant to 8
+  - DS@abf0a31: only reference was stale docstring saying `schema_version=3`; script writes via `ManifestWriter`
+    which uses `MANIFEST_SCHEMA_VERSION = 8`; docstring updated; DS QG ✅ ALL QUALITY GATES PASSED
 - [ ] [AGENT] P1. Sweep 25 files with legacy-fallback patterns
       (`find . -type f -name '*.py' | xargs grep -l 'schema_version.*[0-7]'`); update to v8 unconditional
 - [ ] [AGENT] P0. Fix `execution-service` live path: replace `ManifestWriter.add()` with
