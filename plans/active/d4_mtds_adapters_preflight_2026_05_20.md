@@ -102,15 +102,17 @@ prerequisite_plans:
   - All 5 MTDS DEFI deps changed from `required=False` to `required=True` (P0-C4-1)
   - Module-level `_read_manifest_rows()` helper keeps `_check_mtds_manifest()` ≤50L (QG method size gate)
   - 3 routing tests updated; all 39 `test_defi_data_source_routing` tests green
-- [ ] [AGENT] P0. Wire MTDS preflight into remaining 8 handler families that don't use DependencyChecker:
-  - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream (preflight their manifest if applicable)
-  - `sports/cli/handlers/batch_handler.py` — MTDS not primary; verify IS dependency preflight
-  - `calendar/cli/handlers/batch_handler.py` — verify external dependency check
-  - `cefi/cli/handlers/perp_funding_handler.py` — reads MTDS perp-funding bucket directly; add manifest check
-- [ ] [AGENT] P0. Fix EIA adapters warn-but-proceed (A5 finding):
-  - `features_service/commodity/adapters/eia_ng.py:70` → replace `logger.warning("no data rows"); return {}` with
-    `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO); raise DependencyError`
-  - `features_service/commodity/adapters/eia_crude.py:61` → same fix
+- [x] ✅ [AGENT] P0. Wire MTDS preflight into handler families that read from MTDS directly — features-service@1da2c431
+  - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream, NOT MTDS; EIA raises ValueError on empty (handled at
+    handler level via _record_empty_manifest → record_empty(SOURCE_RETURNED_ZERO)); no MTDS manifest applicable
+  - `sports/cli/handlers/batch_handler.py` — sports data from IS/venues, not MTDS; no MTDS manifest applicable
+  - `calendar/cli/handlers/batch_handler.py` — FRED/yfinance/Polygon.io upstream; no MTDS manifest applicable
+  - `cefi/cli/handlers/perp_funding_handler.py` — DONE: added `_mtds_cefi_available(date_str)` preflight; reads
+    MTDS CeFi availability_index via `read_availability_index()`; skips day on attempted_failed/missing manifest row
+- [x] ✅ [AGENT] P0. Fix EIA adapters warn-but-proceed — ALREADY DONE in 906b902e (D5 Phase 1)
+  - `eia_ng.py:70` — raises `ValueError("SOURCE_RETURNED_ZERO: ...")` (not silent return {})
+  - `eia_crude.py:61` — same fix; batch_handler catches ValueError → `_record_empty_manifest` →
+    `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` — full chain verified
 
 ### Phase 3 — Batch-live parity (A6: 13 BATCH_ONLY cells)
 
