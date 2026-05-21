@@ -17,7 +17,7 @@ related_plans:
   - ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
   - ../active/defi_recursive_borrow_archetypes_2026_05_10.md
   - ../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
-  - ../active/strategy_archetype_taxonomy_2026_05_12.md
+  - ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md
   - ../active/strategy_execution_contract_remediation_2026_05_20.md
   - ../active/strategy_repo_consolidation_2026_05_19.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
@@ -81,9 +81,10 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 42.3 cal AI-days (class: design)
 
-### [`strategy_archetype_taxonomy_2026_05_12`](../active/strategy_archetype_taxonomy_2026_05_12.md)
+### [`strategy_archetype_taxonomy_2026_05_12`](../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md)
 
-**status**: done · **estimate**: 4.8 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); taxonomy + share-class neutrality + recursive carry
+rename shipped · **estimate**: 4.8 cal AI-days (class: design)
 
 ### [`strategy_repo_consolidation_2026_05_19`](../active/strategy_repo_consolidation_2026_05_19.md)
 

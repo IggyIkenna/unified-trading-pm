@@ -2,7 +2,7 @@
 title: agent-orchestrator per-spawn account isolation (HOME-shim) — SUPERSEDED
 parent_epic: orchestrator_master
 priority: P2
-status: paused
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
@@ -14,6 +14,9 @@ related_plans:
 ---
 
 # Agent-Orchestrator Per-Spawn Account Isolation (HOME-shim)
+
+> **ARCHIVED 2026-05-21** — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`). No further work
+> needed. 0 open todos. status: paused → archived.
 
 > **SUPERSEDED 2026-05-21** by `orchestrator_master.md` § Auth & accounts r3 + Phase 4 r3. `claude setup-token` produces
 > a 1-year long-lived OAuth token via `CLAUDE_CODE_OAUTH_TOKEN` env var — bypassing the

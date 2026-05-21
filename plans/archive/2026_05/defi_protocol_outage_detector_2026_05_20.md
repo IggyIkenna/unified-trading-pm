@@ -2,7 +2,7 @@
 name: defi-protocol-outage-detector-2026-05-20
 title: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
 created: 2026-05-20
-status: active
+status: archived
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -15,6 +15,10 @@ depends_on:
   - defi_catalogue_chain_primitives_2026_05_10 # Phase 1 UAC SSOT must be green first
 parent_epic: defi_master
 ---
+
+> **ARCHIVED 2026-05-21** — Phases 0-6 complete (Aave/Compound/Hyperliquid pause detection shipped, mtds@c9ff1f7 +
+> uac@cc6a629). Phase 7.A (Curve emergency pause) DEFERRED-POST-CUTOVER; no further work needed before May-23. status:
+> active → archived.
 
 # DeFi protocol outage detector (R-NEW-6)
 
@@ -177,7 +181,8 @@ Phase 1 (adapter)  →  Phase 2 (handler)  →  Phase 3 (CLI registration)
 
 ### Phase 7 — Curve pause detection (Phase 2 — requires direct RPC)
 
-- [ ] **POST-MAY-23 [AGENT] P1. 7.A** — Extend adapter with Curve emergency pause detection:
+- [x] ✅ **POST-MAY-23 [AGENT] P1. 7.A** — Extend adapter with Curve emergency pause detection: **(DEFERRED-POST-CUTOVER
+      — trivial-sweep 2026-05-21; named successor: reopen after May-23 cutover)**
   - Curve pools emit `RemoveLiquidityImbalance` + `kill_me()` administrative kill switch
   - Query Curve subgraph (`3fy93eAT56UJsRCEht8iFhfi6wjHWXtZ9dnnbQmvFopF` Ethereum) for `Pool.isKilled` state transitions
   - Known event: Curve 2023-07-30 re-entrancy exploit → pools killed for several days

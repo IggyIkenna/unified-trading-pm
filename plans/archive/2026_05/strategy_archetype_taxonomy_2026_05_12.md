@@ -2,7 +2,7 @@
 title:
   "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
   surface infra + doc completion"
-status: done
+status: archived
 priority: P0
 created: 2026-05-12
 promoted_from_issue: 2026-05-12
@@ -20,6 +20,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-12
 parent_epic: strategy_master
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete (0 open todos). Strategy archetype taxonomy + share-class neutrality +
+> recursive carry rename + cross-domain extensions + vol surface infra + doc completion all shipped. status: done →
+> archived.
 
 > **Promoted to standalone plan 2026-05-12** from
 > `plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md`. The issue body grew past 280 lines with

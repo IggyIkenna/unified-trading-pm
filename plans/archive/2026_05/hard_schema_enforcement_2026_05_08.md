@@ -7,7 +7,7 @@ locked_since: 2026-05-08
 name: hard-schema-enforcement-2026-05-08
 
 epic: epic-code-completion
-status: done
+status: archived
 
 completion_gates:
   code: C5
@@ -174,6 +174,10 @@ estimate_calibration_note: |
 parent_epic: sports_master
 priority: P2
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete (0 open todos). All 7 todos shipped: uac@3157f45 + uac@37d1ddb + uac@80aef10 +
+> instruments-service@3c2da42 + uac@436bed0 + UTL@0caa08e3 + PM@429b64b2. One item (expiry type-level flip) migrated to
+> tradfi_master P3 as DEFERRED. status: done → archived.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >

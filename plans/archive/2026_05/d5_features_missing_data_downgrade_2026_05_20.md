@@ -2,7 +2,7 @@
 name: d5-features-missing-data-downgrade-2026-05-20
 title: D5 — Features missing-data downgrade plan
 created: 2026-05-20
-status: active
+status: archived
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -20,6 +20,9 @@ prerequisite_plans:
   - d4_mtds_adapters_preflight_2026_05_20.md # preflight must be in place before downgrade gates can fire
 parent_epic: manifest_master
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete (0 open todos after trivial-sweep). Phase 0 + Phase 1 (strategy-service) done.
+> P1 ml-service item DEFERRED → ml_service_hardening_2026_06_01.md (named successor). status: active → archived.
 
 # D5 — Features missing-data downgrade plan
 
@@ -81,8 +84,9 @@ PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (
   - Lines 128-141 (`elif failures` with `fail_on_missing=False`): already emits `DEPENDENCIES_MISSING_CONTINUE` event —
     NOT silent; left intentional; manifest emission (Phase 3) addresses data-quality concern
   - Line 502 (batch incompleteness): already emits `PROCESSING_INCOMPLETE` event — left intentional
-- [ ] [AGENT] P1. Fix `ml-inference-service batch_handler.py:79,259` and `ml-service batch_handler.py:79,259` — same
+- [x] ✅ [AGENT] P1. Fix `ml-inference-service batch_handler.py:79,259` and `ml-service batch_handler.py:79,259` — same
       pattern (lower priority, not on May-23 critical path for DeFi) **DEFERRED → ml_service_hardening_2026_06_01.md**
+      (trivial-sweep 2026-05-21: named successor in plan body)
 
 ### Phase 2 — cross_instrument handler honest absence
 

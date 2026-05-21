@@ -15,7 +15,7 @@ locked_since: 2026-05-21
 related_plans:
   - ../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - ../active/agent_orchestrator_dual_deployment_2026_05_19.md
-  - ../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
+  - ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
   - ../archive/agent_orchestrator_slack_notifications_2026_05_19.md
   - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
   - ../active/agent_reliability_mitigations_2026_05_20.md
@@ -162,9 +162,10 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 0.6 cal AI-days (class: design)
 
-### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
+### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
 
-**status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-21 — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`); 0 open
+todos · **estimate**: 2.0 cal AI-days (class: brand-new)
 
 ### [`agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)
 

@@ -18,7 +18,7 @@ related_plans:
   - ../active/cross_cutting_may_23_deliverables_2026_05_08.md
   - ../active/d8_perf_upgrade_2026_05_20.md
   - ../active/defi_catalogue_chain_primitives_2026_05_10.md
-  - ../active/defi_protocol_outage_detector_2026_05_20.md
+  - ../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md
   - ../active/features_tick_observation_audit_2026_05_18.md
   - ../active/hard_schema_phase1_field_flip_migration_2026_05_19.md
   - ../active/missing_question_docs_disposition_2026_05_10.md
@@ -1475,10 +1475,11 @@ Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`defi_protocol_outage_detector_2026_05_20`](../active/defi_protocol_outage_detector_2026_05_20.md)
+### [`defi_protocol_outage_detector_2026_05_20`](../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md)
 
-**status**: active · **estimate**: 3 cal AI-days (class: brand-new) **title**: DeFi protocol outage detector (R-NEW-6) —
-on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-6 done (Aave/Compound/Hyperliquid shipped, mtds@c9ff1f7 + uac@cc6a629);
+Phase 7.A (Curve) DEFERRED-POST-CUTOVER · **estimate**: 3 cal AI-days (class: brand-new) **title**: DeFi protocol outage
+detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
 
 ## P1 — important; post-current-gate
 

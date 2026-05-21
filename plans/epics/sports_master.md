@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
-  - ../active/hard_schema_enforcement_2026_05_08.md
+  - ../archive/2026_05/hard_schema_enforcement_2026_05_08.md
   - ../active/sports_scrapers_post_cutover_2026_06_01.md
   - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
   - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
@@ -1034,9 +1034,10 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)
+### [`hard_schema_enforcement_2026_05_08`](../archive/2026_05/hard_schema_enforcement_2026_05_08.md)
 
-**status**: done · **estimate**: 4.8 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all 7 todos shipped · **estimate**: 4.8 cal AI-days
+(class: design)
 
 ### [`sports_scrapers_post_cutover_2026_06_01`](../active/sports_scrapers_post_cutover_2026_06_01.md)
 
