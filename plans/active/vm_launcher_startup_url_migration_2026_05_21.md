@@ -1,6 +1,7 @@
 ---
 title: "VM Launcher startup-script-url Migration (O-1 full consolidation)"
 status: active
+priority: P1
 assigned_vm: vm-cross-cutting
 parent_epic: infrastructure_master
 locked_by: live-defi-rollout
