@@ -1,17 +1,16 @@
 ---
 name: observability_master
+title: "Observability Master"
 type: epic
 tier: L4
 status: active
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
   - ../active/alerting_service_live_rules_2026_05_07.md

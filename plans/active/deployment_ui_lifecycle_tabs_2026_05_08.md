@@ -1,33 +1,11 @@
----plan_type: code+infra
-asset_group: cross-cutting
-owner: ikenna
+---
+title: "Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan"
 created: 2026-05-08
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 name: deployment-ui-lifecycle-tabs-2026-05-08
-overview: >-
-  Re-shape the deployment-UI + deployment-api into a single SSOT surface for everything deployable, monitorable, and
-  observable in the workspace, structured around four mutually-orthogonal axes: (1) Lifecycle class — EPHEMERAL_BATCH
-  (data + pricing pipeline jobs: instruments → MTDS → MDPS → features), EPHEMERAL_EXPERIMENT (ML / strategy / execution
-  research jobs each with a run_id), SCHEDULED_RECURRING (Cloud Scheduler / EventBridge / VM cron), LONG_LIVED_LIVE
-  (strategy / execution / live-MTDS / position-balance / risk / alerting clusters); (2) Cloud target GCP / AWS; (3)
-  Environment dev / staging / prod (resolved by domain — `localhost` = dev, `staging.<research-domain>` = staging,
-  `<research-domain>` = prod — same model the trading-system-UI followed; never an in-UI toggle); (4) Service /
-  asset_group axis (existing sidebar). Tab structure folds onto this: Deploy (fresh deployments only), Monitor (renamed
-  from History; sub-tabs Backfill / Experiments / Live / Scheduled — every action visible here: re-deploy, stop, start,
-  pause, drain, stream-logs, attach-events), Data Status (data + pricing only — instruments, MTDS, MDPS, features-*;
-  Batch / Scheduled-Today / Live mode toggle), Builds (single tab, cloud-toggle), Readiness (existing), Config
-  (existing). Header carries the cloud-target toggle (GCP / AWS — the only toggle that pays a network round-trip;
-  cross-mode prefetch keeps everything else instant) plus an env badge derived from the domain. Auth + credentials
-  always-available — `UnifiedCloudConfig` loads both clouds at api-boot; toggling never re-authenticates. NEW UAC SSOTs:
-  `LifecycleClass` enum (4 members), scheduler registry, live-cluster registry, experiment registry. "Deploy-missing
-  schedulers" mirrors batch deploy-missing against the registry. VM naming- convention extends to encode
-  `lifecycle_class`. Most infrastructure already exists (SSE event-stream, CloudProviderContext, deploy-missing,
-  data-status drilldown, vm-launcher registry, vitest+forks); this plan is mostly re-shape + wire-in, with one
-  greenfield slice (Experiments tracker) and one infra slice (env-tiered hosting of deployment-UI/API itself).
 
-type: mixed
 epic: epic-deployment
 status: active
 
@@ -508,6 +486,7 @@ todos:
       - [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
         env-tier hosting. B6 gate.
 parent_epic: deployment_and_user_management_master
+priority: P2
 ---
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan

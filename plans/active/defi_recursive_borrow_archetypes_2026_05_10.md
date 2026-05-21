@@ -1,7 +1,7 @@
----title:
+---
+title:
   DeFi recursive-borrow archetypes — Family 1 (recursive lending arb) + Family 2 (long-funding-perp recursive-borrow)
   implementation
-type: implementation
 status: active
 created: 2026-05-10
 descope_reversed: 2026-05-13
@@ -18,13 +18,8 @@ prior_descope: 2026-05-14 by harsh-slot-9 (now REVERSED per operator direction 2
 successor_plan: plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
   (NOTE: post-cutover plan now covers ONLY post-cutover scope-expansion items, NOT the May-23 implementation
   half which is back in this plan's scope per operator direction 2026-05-13)
-author: ikenna
-operator: ikenna
 target_deadline: 2026-05-23
-horizon: pre-cutover (FULL implementation incl. Phases 4-11; ready-to-go-live not live-at-cutover)
 priority: P0
-companion_to: plans/active/master_to_live_defi_2026_05_23.md
-spawned_from: plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md
 related_plans:
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
@@ -33,14 +28,6 @@ related_plans:
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-related_codex:
-  - codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
-  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
-  - codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md
-  - codex/04-architecture/flash-loan-receiver.md
-  - codex/09-strategy/strategy-summary.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 estimate_class: design

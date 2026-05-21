@@ -1,7 +1,6 @@
 ---
 title: BATCH_EIA PipelineMode added without SOURCE_PRIORITY entries
 created: 2026-05-20
-author: slot-1 main ikenna (surfaced during Phase 1 canary QG run)
 source:
   - "unified-api-contracts@fb3751e8 — feat(uac): add BATCH_EIA to PipelineMode for commodity features manifest"
   - "tests/unit/test_pipeline_mode.py::test_every_batch_pipeline_mode_maps_to_source_priority_source"

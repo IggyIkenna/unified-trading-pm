@@ -1,12 +1,8 @@
----title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
-type: plan
+---
+title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
 status: scheduled
 target_start: 2026-06-01
 created: 2026-05-10
-deadline: post-cutover (target 2026-07-15)
-horizon: scope-bounded (~6-9 weeks after cutover)
-parent_plan: plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-companion_to: plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
 migrated_from:
   simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C
   Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
@@ -19,6 +15,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: defi_master
+priority: P2
 ---
 
 ## Deferred work — migrated to:

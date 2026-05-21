@@ -1,12 +1,7 @@
----title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
-type: plan
+---
+title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
 status: active
 created: 2026-05-09
-deadline: 2026-05-23
-horizon: 14-day pre-cutover sprint
-companion_to:
-  master_to_live_defi_2026_05_23.md (Group F items 17 paper-trade smoke, 18 2-yr batch backtest, 20 circuit-breakers +
-  kill-switches + alerting + auto-recovery, 21 batch-vs-live reconciliation, 22 P&L attribution)
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 related_plans:
@@ -20,17 +15,6 @@ related_plans:
   - plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md
   - plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md
   - plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/backtest-groups.md
-  - codex/04-architecture/tenderly-execution-provider.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/05-infrastructure/live-pipeline-architecture.md
-  - codex/05-infrastructure/replay-subsystem.md
-  - codex/06-coding-standards/integration-testing-layers.md
-  - codex/09-strategy/strategy-summary.md
 estimate_class: design
 estimate_baseline_ai_days: 33.5
 estimate_calibrated_ai_days: 20.1
@@ -38,6 +22,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1, ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: defi_master
+priority: P2
 ---
 
 # Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
@@ -830,8 +815,8 @@ This plan composes with — read these before touching any of the surfaces:
 ### Q2 — [slot-7 sub-agent, 2026-05-13] — Phase 1 topology design push requires rebase on live-defi-rollout
 
 **Status**: ✅ RESOLVED 2026-05-21 — PM@`12e1090b` confirmed on `live-defi-rollout` (verified via
-`git branch --contains 12e1090b` from slot-7 worktree). The 6 `[DESIGN] P0. 1.T*` todos landed on LDR.
-Harsh's `b3ede821` subsequently closed all 21 open items in this plan (2026-05-19).
+`git branch --contains 12e1090b` from slot-7 worktree). The 6 `[DESIGN] P0. 1.T*` todos landed on LDR. Harsh's
+`b3ede821` subsequently closed all 21 open items in this plan (2026-05-19).
 
 ### Q1 — [harsh-slot-6, 2026-05-12 12:59 UTC] — Phase 10.A/B authority + epic file missing
 

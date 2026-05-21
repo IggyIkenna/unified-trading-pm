@@ -1,11 +1,7 @@
----title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
-type: scratch
+---
+title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
 status: CLOSED 2026-05-19 slot-5 — gating deps both landed; fan-out not needed; work done by Ikenna slot 3 directly
 created: 2026-05-12
-companion_to:
-  plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (freeze-gate item 3, line ~153) +
-  plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (slice (c) Phase 6) +
-  plans/active/manifest_schema_final_gate_2026_05_09.md (Phase 4)
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 last_updated: 2026-05-19
@@ -18,6 +14,7 @@ estimate_calibration_note: |
   (mechanical sweep, well-defined target). Baseline 2 AI-days for the full sweep across MTDS;
   calibrated 0.8 AI-day.
 parent_epic: mtds_mdps_master
+priority: P2
 ---
 
 ## ✅ CLOSED 2026-05-19 slot-5

@@ -1,30 +1,16 @@
----type: plan
-asset_group: cross-cutting
+---
+title: AWS migration — DeFi-first dual-cloud active (post-cutover)
+parent_epic: infrastructure_master
 priority: P1
-deadline: 2026-06-04
-prior_deadline: 2026-05-23
-deadline_change_reason: |
-  Operator direction 2026-05-13: AWS migration runs AFTER GCP backfills + manifest quality verification.
-  Rationale — don't double cloud load before data quality is confirmed green on the primary cloud.
-  May-23 cutover ships on GCP-only; AWS dual-cloud parity becomes a post-cutover stabilisation goal.
-  Downgraded P0 → P1; deadline 2026-05-23 → 2026-06-04 (≤2 weeks post-cutover, sliding by GCP-green-date).
-parent: master_to_live_defi_2026_05_23
+status: active
+estimate_class: infra
+estimate_baseline_ai_days: 20.0
+estimate_calibrated_ai_days: 16.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-status: active
-date: 2026-05-07
-gates:
-  - master_to_live_defi_2026_05_23:work-stream-D
-  - master_to_live_defi_2026_05_23:Group-D
-  - master_to_live_defi_2026_05_23:Group-F
-supersedes_recommendation:
-  - plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md
-estimate_class: infra
-estimate_baseline_ai_days: 40
-estimate_calibrated_ai_days: 32
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 72 todos, 8 done; 64 remaining infra-heavy work (cross-cloud rsync + bucket SSOT alignment + Phase 5 cutover + drift verification). Baseline 40 (~0.6 AI-day per remaining infra todo factoring in real-infra verification overhead per CLAUDE.md "Plans Run To Actual Completion"); × 0.8 = 32.
-parent_epic: infrastructure_master
+related_plans:
+  - master_to_live_defi_2026_05_23.md
+  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
 ---
 
 > **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)

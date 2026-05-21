@@ -1,7 +1,6 @@
 ---
 title: UAC weekly-validation workflow failing — WIF_PROVIDER/WIF_SERVICE_ACCOUNT secrets not configured
 created: 2026-05-17
-author: ikenna-slot-3
 source:
   - "gh run 25660560812 (2026-05-11 cron) + 4 prior failures back to 2026-04-13"
   - unified-api-contracts/.github/workflows/weekly-validation.yml:42-45
@@ -19,6 +18,7 @@ resolved_via:
 verified_via:
   "gh run 26157265855 (workflow_dispatch on live-defi-rollout, all 17 steps green; auto-filed UAC issue #45 with 11/44
   drift findings)"
+priority: P2
 ---
 
 ## Resolution (2026-05-20)

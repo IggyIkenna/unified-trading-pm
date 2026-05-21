@@ -1,16 +1,14 @@
----name: d5-features-missing-data-downgrade-2026-05-20
+---
+name: d5-features-missing-data-downgrade-2026-05-20
 title: D5 — Features missing-data downgrade plan
 created: 2026-05-20
-author: ikenna (slot-8)
 status: active
 priority: P0
-deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-parent_plan: master_to_live_defi_2026_05_23.md
 source_audits:
   - plans/audit/mtds_features_contract_audit_2026_05_20.md # C4
   - plans/audit/features_strategy_contract_audit_2026_05_20.md # C6
@@ -113,8 +111,8 @@ PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (
   - DONE (2026-05-21): strategy-service@5e0e2ccf
   - `"ARBITRAGE_PRICE_DISPERSION": ["paired_price_dispersion"]` added to `_MULTI_GROUP_STRATEGIES`
   - APD now routes through `get_merged_features(["paired_price_dispersion"])` instead of wrong `get_candles()` default
-- [x] ✅ [AGENT] P0. Add per-pair viability filter: before processing a pair, check that both legs have non-stale features
-      manifest rows; emit `VENUE_DATA_ABSENT` event when a configured venue is missing from APD features dict
+- [x] ✅ [AGENT] P0. Add per-pair viability filter: before processing a pair, check that both legs have non-stale
+      features manifest rows; emit `VENUE_DATA_ABSENT` event when a configured venue is missing from APD features dict
   - DONE (2026-05-21): strategy-service@5e0e2ccf + uac@9a66a3d
   - `_check_apd_venue_viability()` static method added to BatchHandler
   - Checks each (left_venue, right_venue) pair in loaded DataFrame for all-null spread_bps
@@ -134,15 +132,15 @@ PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (
 
 - [x] ✅ Phase 1: `rg 'warn.*no data\|return {}.*warning' features_service/commodity/ --type py` returns 0 hits for EIA
       adapters; strategy warn-but-proceed removed — features-service@906b902e, strategy-service@de349378
-- [x] ✅ Phase 2: `rg 'record_empty' features_service/cross_instrument/ --type py` returns hits; no `_persist_results` path
-      without record_empty — features-service@bd5a1c0e
+- [x] ✅ Phase 2: `rg 'record_empty' features_service/cross_instrument/ --type py` returns hits; no `_persist_results`
+      path without record_empty — features-service@bd5a1c0e
 - [x] ✅ Phase 3: `rg 'record_captured' strategy-service/ --type py` returns hits on write paths; no inline
-      `strategy-store-` f-strings on D5-scoped write paths
-  — VERIFIED 2026-05-21: `record_captured` in batch_handler.py (D5 target) + strategy_manifest.py;
-    strategy-service@de349378 fixed batch_handler.py:1276; strategy-service@36e6bc88 fixed service_entry.py:159
-    (adjacent violation found during Phase 5 verification). Remaining `strategy-store-` f-strings in
-    `engine/core/cloud_strategy_storage.py` + `v2/carry_and_yield/` are pre-existing baseline (QG STEP 5.69
-    ratchet passes) — v2/ entries BLOCKED by strategy-logic freeze; engine/core entries tracked post-unfreeze.
+      `strategy-store-` f-strings on D5-scoped write paths — VERIFIED 2026-05-21: `record_captured` in batch_handler.py
+      (D5 target) + strategy_manifest.py; strategy-service@de349378 fixed batch_handler.py:1276;
+      strategy-service@36e6bc88 fixed service_entry.py:159 (adjacent violation found during Phase 5 verification).
+      Remaining `strategy-store-` f-strings in `engine/core/cloud_strategy_storage.py` + `v2/carry_and_yield/` are
+      pre-existing baseline (QG STEP 5.69 ratchet passes) — v2/ entries BLOCKED by strategy-logic freeze; engine/core
+      entries tracked post-unfreeze.
 - [x] ✅ Phase 4: `rg 'paired_price_dispersion' strategy-service/ --type py` returns hits in APD engine consumer map;
       APD engine no longer re-derives spread from raw — strategy-service@5e0e2ccf
 - [x] ✅ Phase 5: strategy-service QG green (verified @5e0e2ccf); features-service QG green (verified @1da2c431);

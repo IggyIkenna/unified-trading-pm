@@ -1,16 +1,14 @@
----name: d8-perf-upgrade-2026-05-20
+---
+name: d8-perf-upgrade-2026-05-20
 title: D8 — Performance upgrade plan (hot-path identification from A1)
 created: 2026-05-20
-author: ikenna (slot-8)
 status: active
 priority: P2
-deadline: 2026-06-04
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-parent_plan: master_to_live_defi_2026_05_23.md
 source_audits:
   - plans/audit/results/codified_shape_compliance_2026_05_20.csv # A1 hot-path data
 related_plans:

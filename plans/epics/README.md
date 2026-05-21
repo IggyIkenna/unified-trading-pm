@@ -76,26 +76,31 @@ Every epic file in `plans/epics/<slug>.md` MUST carry:
 ```yaml
 ---
 name: <slug> # kebab-case, matches filename, NO date suffix
+title: "<human-readable title>" # REQUIRED (2026-05-21+)
 type: epic
 tier: L0|L1|L2|L3|L4|L5 # which layer this epic sits in (see registry below)
 status: active|paused|cancelled # NEVER "complete" — epics are everlasting
 priority: P0|P1|P2|P3 # rolls up to cutover master scoring
 assigned_vm: vm-<id> # registry-resolved VM that owns this epic
 parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutover ships)
-owner: ikenna|harsh|claude-code
 created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout
 locked_since: YYYY-MM-DD
-asset_group: cefi|defi|tradfi|sports|prediction|cross-cutting|infrastructure|meta
 related_plans:
   - plans/active/<sub-plan>.md # the list grows continuously as audits spawn new active plans
   - plans/active/<another-sub-plan>.md
 ---
 ```
 
+**Required**: `name`, `title`, `priority`, `status`. All other fields are strongly recommended.
+
 **Forbidden on epics**: `deadline:`, `estimate_class:`, `estimate_baseline_ai_days:`, `estimate_calibrated_ai_days:`.
 Epics are everlasting — they have no deadline. AI-day estimation lives on the active plans they reference.
+
+**Deprecated on epics** (2026-05-21): `owner:`, `asset_group:`. These fields are deprecated workspace-wide as part of
+the plan hygiene automation sweep. Remove them from existing epics when touching the file; do not add to new ones.
+`check_frontmatter.sh` flags them as violations.
 
 ## Active plan frontmatter (must declare parent_epic)
 

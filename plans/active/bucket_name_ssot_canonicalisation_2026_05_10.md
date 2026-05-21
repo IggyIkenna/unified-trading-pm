@@ -1,13 +1,9 @@
----title:
+---
+title:
   "Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one +
   provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)"
 status: active
 created: 2026-05-10
-deadline:
-  2026-05-15 freeze gate (Phase 1 code-complete) for SSOT collapse + yaml-add-missing-keys; 2026-05-19 Phase 2 window
-  for env-tier provisioning + flat→tiered data migration
-horizon: cross-cycle (Phase 1 code-complete in ~2 days, Phase 2 physical migration in 4-day window)
-spawned_from: plans/archive/issues/bucket_name_ssot_triple_drift_2026_05_10.md (archived 2026-05-10)
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
@@ -29,6 +25,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-13, ~3, ~5-7, ~0.5, + 2 more). Class inferred from filename (refactor, multiplier 0.4×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: manifest_master
+priority: P0
 ---
 
 # Bucket-name SSOT canonicalisation

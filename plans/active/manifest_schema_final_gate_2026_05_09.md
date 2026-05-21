@@ -1,24 +1,10 @@
----name: manifest-schema-final-gate-2026-05-09
-overview: |
-  One-shot maximalist plan that lands the BEST manifest (v8 with all designed columns) on real GCS infra by
-  2026-05-23 — no partial state, no deferred items, every plan checkbox flipped `[x]` before cutover. Bundled
-  Phase 3 parquet walk does FIVE migrations in ONE pass to fit the 14-day window: (1) `pipeline_mode=` hive
-  partition, (2) `category=` → `asset_group=` rekey, (3) 5 drift axes from 2026-05-04 phantom audit, (4) v8
-  NULL-column backfill (`service_emission_state` + `last_emission_decision_at` +
-  `expected_window_completeness_fraction`), (5) cross-asset rescan class-A auto-fixes. Closed-set
-  `ServiceEmissionStateEnum` ratified inline (4 values: `PUBLISHED_OK` / `PUBLISHED_DEGRADED` /
-  `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`) — slice b spec landed as part of this plan. Workspace-wide Phase 4
-  consumer sweep across 8 repos is critical-path. Two-stage MTDS bounce-sweep: drain May 12, full launch May 16.
-  E3 7-item launcher checklist ratified verbatim by operator 2026-05-09. Hard-stop: no schema additions between
-  2026-05-09 and 2026-05-23 — every new column proposal defers to post-cutover.
-type: infra
+---
+title: "Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)"
+name: manifest-schema-final-gate-2026-05-09
 epic: epic-infra
 status: active
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
-spawned_from: plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 created: 2026-05-09

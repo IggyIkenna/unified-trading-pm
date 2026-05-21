@@ -1,4 +1,5 @@
 ---
+title: "UAC SourceCapability metadata promotion — 2026-05-20"
 name: uac_source_capability_metadata_promotion_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -8,8 +9,6 @@ target_slot: ikenna-slot-3
 estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
-deadline: 2026-05-25
-parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: data_correctness
 related_plans:
   - mega_audit_and_plan_beefup_progression_2026_05_20.md

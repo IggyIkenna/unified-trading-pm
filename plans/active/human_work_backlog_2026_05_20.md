@@ -2,11 +2,9 @@
 title:
   Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination
   supervision
-type: organizing-plan
 status: active
 created: 2026-05-20
 updated: 2026-05-20 # split principles + Phase 7/14 sub-splits + supervision-checkpoint wiring
-operator: ikenna
 co-operators: [harsh]
 related:
   - cursor-configs/CLAUDE.md § "Human-vs-Agent work split"
@@ -14,6 +12,13 @@ related:
   - plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md
   - plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md
   - codex/08-workflows/deployment-flow.md # CI/CD + main-via-staging-and-sit path Harsh owns
+parent_epic: orchestrator_master
+priority: P1
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
 ---
 
 # Human-work backlog — slots 1 (Ikenna) + 2 (Harsh) — 2026-05-20 r2
@@ -107,74 +112,93 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
 
 ### Harsh (slot 2) — backfills / deployment-UI / GCP VMs / AWS copies / CI/CD / Phase 7a+14-exec
 
-8. ✅ **HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP** — Phase -1 of coordinator: per-repo `bash scripts/quality-gates.sh` exit 0
-   workspace-wide. Composes with: `Quality Gates Are A Merge Prerequisite` HARD RULE. Cluster split (per
+8. ✅ **HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP** — Phase -1 of coordinator: per-repo `bash scripts/quality-gates.sh` exit
+   0 workspace-wide. Composes with: `Quality Gates Are A Merge Prerequisite` HARD RULE. Cluster split (per
    `work_split_2026_05_20_ikenna.md` Slots 9-11): A=UAC+UTL+IS / B=MTDS+features+MDPS / C=strategy+execution+ml. Est: 3
-   cal-AI-days (1 per cluster).
-   **CLUSTER A COMPLETE 2026-05-21 slot-11**: UAC @ceeaddd ✅ · UTL @4cbe9612 ✅ · instruments-service @b476663 ✅ (all pass with 0 fixes needed)
-   **CLUSTER B COMPLETE 2026-05-21 slot-11**: MTDS @33e6762 ✅ · features-service @7a7d4a4c ✅ · MDPS @a00ce6b ✅ (all pass with 0 fixes needed)
-   **CLUSTER C COMPLETE 2026-05-21 slot-11**: strategy-service @b303a358 ✅ · execution-service @a848ef61 ✅ · ml-service @ea9c187 ✅ (all pass with 0 fixes needed)
-   **client-reporting-api FIXED 2026-05-21 slot-11**: @4eafab6 ✅ — ruff lint (RUF002/SIM105/B008), import patterns, test fixes (test_production_guard, test_get_invoice_by_id), pip-audit ignores, narrow except ArithmeticError
-   **deployment-ui VERIFIED 2026-05-21 slot-11**: @ef3406b ✅ (0 fixes needed, npm install required first)
-   **unified-trading-api FIXED 2026-05-21 slot-11**: @ac8a6b9 ✅ — noqa C901 on seed_all_domains, pip-audit ignores PYSEC-2024-277/PYSEC-2025-183
-   **unified-trading-system-ui FIXED 2026-05-21 slot-11**: @38f3e96e ✅ — TS errors (4 files), stale test assertions, briefings codex path, Suspense boundaries (questionnaire/reset-password/verify-email)
-   **e2e-testing FIXED 2026-05-21 slot-11**: @24daef0 ✅ — add ruff dep, noqa C901 (5 integration tests), pip-audit ignores PYSEC-2024-277/PYSEC-2025-183/PYSEC-2026-87, ruff autoformat
-   **system-integration-tests VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **ibkr-gateway-infra VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **alerting-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **batch-live-reconciliation-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **deployment-api VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **trading-agent-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
-   **position-balance-monitor-service FIXED 2026-05-21 slot-11**: QG green locally @7c5f8b7 — pip-audit ignores PYSEC-2024-277/PYSEC-2025-183; PUSH-BLOCKED (repo archived on GitHub — operator must unarchive to merge to LDR)
-   **pnl-attribution-service FIXED 2026-05-21 slot-11**: QG green locally @db18812 — pip-audit ignores + session-scoped setup_events fixture in conftest.py; PUSH-BLOCKED (repo archived on GitHub)
-   **risk-and-exposure-service FIXED 2026-05-21 slot-11**: QG green locally @d350070 — corrected 8 wrong RiskMetrics field names in risk_metrics.py log_event call (concentration_pct→concentration, drawdown_pct→drawdown, etc.); PUSH-BLOCKED (repo archived on GitHub)
-   **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external, no quality-gates.sh — out of scope for this sweep
-   **deployment-service SKIPPED 2026-05-21 slot-11**: locked by slot-10; not verified this sweep
-   **SWEEP COMPLETE 2026-05-21 slot-11**: all in-scope service repos verified or locally-fixed; 3 archived repos (position-balance-monitor, pnl-attribution, risk-and-exposure) require operator unarchive before LDR merge
+   cal-AI-days (1 per cluster). **CLUSTER A COMPLETE 2026-05-21 slot-11**: UAC @ceeaddd ✅ · UTL @4cbe9612 ✅ ·
+   instruments-service @b476663 ✅ (all pass with 0 fixes needed) **CLUSTER B COMPLETE 2026-05-21 slot-11**: MTDS
+   @33e6762 ✅ · features-service @7a7d4a4c ✅ · MDPS @a00ce6b ✅ (all pass with 0 fixes needed) **CLUSTER C COMPLETE
+   2026-05-21 slot-11**: strategy-service @b303a358 ✅ · execution-service @a848ef61 ✅ · ml-service @ea9c187 ✅ (all
+   pass with 0 fixes needed) **client-reporting-api FIXED 2026-05-21 slot-11**: @4eafab6 ✅ — ruff lint
+   (RUF002/SIM105/B008), import patterns, test fixes (test_production_guard, test_get_invoice_by_id), pip-audit ignores,
+   narrow except ArithmeticError **deployment-ui VERIFIED 2026-05-21 slot-11**: @ef3406b ✅ (0 fixes needed, npm install
+   required first) **unified-trading-api FIXED 2026-05-21 slot-11**: @ac8a6b9 ✅ — noqa C901 on seed_all_domains,
+   pip-audit ignores PYSEC-2024-277/PYSEC-2025-183 **unified-trading-system-ui FIXED 2026-05-21 slot-11**: @38f3e96e ✅
+   — TS errors (4 files), stale test assertions, briefings codex path, Suspense boundaries
+   (questionnaire/reset-password/verify-email) **e2e-testing FIXED 2026-05-21 slot-11**: @24daef0 ✅ — add ruff dep,
+   noqa C901 (5 integration tests), pip-audit ignores PYSEC-2024-277/PYSEC-2025-183/PYSEC-2026-87, ruff autoformat
+   **system-integration-tests VERIFIED 2026-05-21 slot-11**: green (0 fixes needed) **ibkr-gateway-infra VERIFIED
+   2026-05-21 slot-11**: green (0 fixes needed) **alerting-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **batch-live-reconciliation-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed) **deployment-api VERIFIED
+   2026-05-21 slot-11**: green (0 fixes needed) **trading-agent-service VERIFIED 2026-05-21 slot-11**: green (0 fixes
+   needed) **position-balance-monitor-service FIXED 2026-05-21 slot-11**: QG green locally @7c5f8b7 — pip-audit ignores
+   PYSEC-2024-277/PYSEC-2025-183; PUSH-BLOCKED (repo archived on GitHub — operator must unarchive to merge to LDR)
+   **pnl-attribution-service FIXED 2026-05-21 slot-11**: QG green locally @db18812 — pip-audit ignores + session-scoped
+   setup_events fixture in conftest.py; PUSH-BLOCKED (repo archived on GitHub) **risk-and-exposure-service FIXED
+   2026-05-21 slot-11**: QG green locally @d350070 — corrected 8 wrong RiskMetrics field names in risk_metrics.py
+   log_event call (concentration_pct→concentration, drawdown_pct→drawdown, etc.); PUSH-BLOCKED (repo archived on GitHub)
+   **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external, no quality-gates.sh — out of scope for this
+   sweep **deployment-service SKIPPED 2026-05-21 slot-11**: locked by slot-10; not verified this sweep **SWEEP COMPLETE
+   2026-05-21 slot-11**: all in-scope service repos verified or locally-fixed; 3 archived repos
+   (position-balance-monitor, pnl-attribution, risk-and-exposure) require operator unarchive before LDR merge
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
    `aws_migration_defi_first_2026_05_07.md` + Phase 1 cloud-providers.yaml AWS-side templates (already shipped
-   2026-05-20 per coordinator Phase 1 GREEN). Est: 5 cal-AI-days.
-   **SCRIPT READY 2026-05-21 slot-11**: deployment-service@de78a42 — `scripts/aws/migrate-bucket-names-unified-to-canonical.sh` ships 61 rename pairs; dry-run verified (152,161 dex-pools + 68,703 dex-swaps + 30,114 evm-defi + 5,037 solana-defi objects to sync; all target buckets confirmed existing). EXECUTION GATED on coordinator Phase 2 (CODE FREEZE, operator action) → Phase 3 (drain) → Phase 4 (GCS migration GREEN). Pass `--phase4-green --apply` when gate clears.
+   2026-05-20 per coordinator Phase 1 GREEN). Est: 5 cal-AI-days. **SCRIPT READY 2026-05-21 slot-11**:
+   deployment-service@de78a42 — `scripts/aws/migrate-bucket-names-unified-to-canonical.sh` ships 61 rename pairs;
+   dry-run verified (152,161 dex-pools + 68,703 dex-swaps + 30,114 evm-defi + 5,037 solana-defi objects to sync; all
+   target buckets confirmed existing). EXECUTION GATED on coordinator Phase 2 (CODE FREEZE, operator action) → Phase 3
+   (drain) → Phase 4 (GCS migration GREEN). Pass `--phase4-green --apply` when gate clears.
 
 10. ✅ **HUMAN-HARSH-PHASE-6-DOCKER-VM-FLEET-REDEPLOY** — Phase 6 of coordinator: Docker image build + writer fleet VM
     restart so steady-state writers produce v8 rows. Composes with: `writegate_honest_coverage_endtoend_2026_05_06.md` §
     Phase 7.A. Verification: 100 newest manifest rows per bucket sampled, ALL at `schema_version=8`. Est: 2 cal-AI-days.
-    **SCRIPTS READY 2026-05-21 slot-11**: deployment-service@71b9855 (phase3-drain) + deployment-service@ac97607 (phase6-restart). Phase 7.A audit: MANIFEST_SCHEMA_VERSION=8 confirmed in UTL@c205166fb012; consolidator keep="last" verified (new v8 wins); legacy NULL rows source identified (_backfill_columns sets schema_version=1). All service tarballs rebuilt and uploaded to GCS (2026-05-21 14:32Z): UAC@28ac3cde + UTL@c205166f + MTDS@54f46cab + instruments@3d8816465 + MDPS@f8fb8485 + ml@29cc7b20 + strategy@b24556a9 + execution@6b2a186d + pnl-attribution@b54c4f5a + risk-exposure@878da65d + position-balance@775d6ef7 + batch-live-recon@36fffbd8. EXECUTION GATED on Phase 2 CODE FREEZE (operator) → Phase 3 drain (`--apply`) → Phase 4 GCS → Phase 5 AWS (`--phase4-green --apply`) → Phase 6 restart (`--phase5-green --apply`).
+    **SCRIPTS READY 2026-05-21 slot-11**: deployment-service@71b9855 (phase3-drain) + deployment-service@ac97607
+    (phase6-restart). Phase 7.A audit: MANIFEST_SCHEMA_VERSION=8 confirmed in UTL@c205166fb012; consolidator keep="last"
+    verified (new v8 wins); legacy NULL rows source identified (\_backfill_columns sets schema_version=1). All service
+    tarballs rebuilt and uploaded to GCS (2026-05-21 14:32Z): UAC@28ac3cde + UTL@c205166f + MTDS@54f46cab +
+    instruments@3d8816465 + MDPS@f8fb8485 + ml@29cc7b20 + strategy@b24556a9 + execution@6b2a186d +
+    pnl-attribution@b54c4f5a + risk-exposure@878da65d + position-balance@775d6ef7 + batch-live-recon@36fffbd8. EXECUTION
+    GATED on Phase 2 CODE FREEZE (operator) → Phase 3 drain (`--apply`) → Phase 4 GCS → Phase 5 AWS
+    (`--phase4-green --apply`) → Phase 6 restart (`--phase5-green --apply`).
 
 11. ✅ **HUMAN-HARSH-PHASE-7A-SCHEMA-MIGRATION** — Phase 7 SCHEMA half of coordinator (Phase 7b triage is Ikenna's).
     Migrate every v<8 row → v8 schema mechanically. Composes with: `d3_manifest_v8_finish_2026_05_20.md` +
     `hard_schema_phase1_field_flip_migration_2026_05_19.md`. Verification: A4 v1 re-run shows 100% v8 + 0 NULL across
-    all 10 buckets BEFORE 7b triage begins. Est: 4 cal-AI-days.
-    **SCRIPT + TESTS READY 2026-05-21 slot-11**: UTL@ec788bad — `unified_trading_library/migrations/upgrade_manifest_to_v8.py` ships complete migration logic + `__main__` CLI (`--asset-group`, `--apply`/dry-run) + 16 unit tests (all pass, basedpyright 0 errors). Invoke: `python -m unified_trading_library.migrations.upgrade_manifest_to_v8 --asset-group all --apply`. EXECUTION GATED on Phase 6 restart (VMs must be writing v8 steady-state BEFORE bulk migration to avoid race). Verification: re-run A4 audit after migration; 100% v8 + 0 NULL required before Phase 7b triage begins.
+    all 10 buckets BEFORE 7b triage begins. Est: 4 cal-AI-days. **SCRIPT + TESTS READY 2026-05-21 slot-11**:
+    UTL@ec788bad — `unified_trading_library/migrations/upgrade_manifest_to_v8.py` ships complete migration logic +
+    `__main__` CLI (`--asset-group`, `--apply`/dry-run) + 16 unit tests (all pass, basedpyright 0 errors). Invoke:
+    `python -m unified_trading_library.migrations.upgrade_manifest_to_v8 --asset-group all --apply`. EXECUTION GATED on
+    Phase 6 restart (VMs must be writing v8 steady-state BEFORE bulk migration to avoid race). Verification: re-run A4
+    audit after migration; 100% v8 + 0 NULL required before Phase 7b triage begins.
 
-12. ✅ **HUMAN-HARSH-PHASE-9-DEPLOYMENT-UI-DENOMINATOR-FIX** — deployment-ui@643a22e — `HonestCoverageStatusCounts` split
-    into 5-field canonical formula (expected_unattempted_known_empty + expected_unattempted_pending_fetch); coverage_pct
-    comment corrected; CoverageBar renders 5 segments; tooltip fixed; color thresholds green ≥99%/amber ≥95%/red <95%;
-    legend updated; test fixture updated; QG green (68 tests, 0 TS errors). Phase 5 of honest_coverage_formula_consolidation
-    complete. Phase 8 (master plan Group H re-pull) is separate item — see plan.
+12. ✅ **HUMAN-HARSH-PHASE-9-DEPLOYMENT-UI-DENOMINATOR-FIX** — deployment-ui@643a22e — `HonestCoverageStatusCounts`
+    split into 5-field canonical formula (expected_unattempted_known_empty + expected_unattempted_pending_fetch);
+    coverage_pct comment corrected; CoverageBar renders 5 segments; tooltip fixed; color thresholds green ≥99%/amber
+    ≥95%/red <95%; legend updated; test fixture updated; QG green (68 tests, 0 TS errors). Phase 5 of
+    honest_coverage_formula_consolidation complete. Phase 8 (master plan Group H re-pull) is separate item — see plan.
 
 13. ✅ **HUMAN-HARSH-PHASE-11-BACKFILL-TO-100PCT** — deployment-service@e81ad9f —
     `scripts/vm/phase11-backfill-coordinator.sh`: sequences IS → MTDS → features launchers in dependency order across
     all 5 asset_groups; hard gate (--phase6-green + --phase7a-green required before --apply); dry-run default; no
-    fire-and-forget (each tier waits TERMINATED before next). Dry-run exit 0 verified (28 launchers listed).
-    EXECUTION GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end
-    per-asset-group when gates clear.
+    fire-and-forget (each tier waits TERMINATED before next). Dry-run exit 0 verified (28 launchers listed). EXECUTION
+    GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end per-asset-group
+    when gates clear.
 
-14. 🟡 **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — BLOCKED (operator action required). PR #8 (LDR → staging) open
-    at https://github.com/IggyIkenna/deployment-ui/pull/8. Six pre-existing CI blockers found and fixed:
-    (a) GitHub cross-repo private-repo reusable workflow restriction — fixed by creating local copy
-        deployment-ui/.github/workflows/ui-quality-gates.yml (within-repo calls work for private repos);
-    (b) workspace-qg.yml called python-quality-gates.yml instead of ui-quality-gates.yml (wrong template);
-    (c) notify-telegram.yml had duplicate `inputs:` key — merged into single block;
-    (d) notify-failure job in ui/infra-quality-gates.yml had relative `./` path (invalid cross-repo) — removed;
-    (e) GH_PAT: required: true caused GitHub to reject the reusable workflow call — changed to required: false;
-    (f) top-level `concurrency` block in local reusable workflow causes "workflow file issue" — removed.
-    **BLOCKER**: unified-trading-pm is a private repo. GH_PAT is required to clone it for quality-gates.sh.
-    deployment-ui does NOT have GH_PAT in its GitHub Actions secrets. Without GH_PAT, CI fails at "Clone PM" step.
-    **OPERATOR ACTION**: Add GH_PAT (PAT with repo-read scope) to deployment-ui GitHub Actions secrets.
-    Once GH_PAT is added, re-run CI → merge PR #8 → staging → semver-agent promotes to main. Est: 5 min operator.
+14. 🟡 **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — BLOCKED (operator action required). PR #8 (LDR → staging) open at
+    https://github.com/IggyIkenna/deployment-ui/pull/8. Six pre-existing CI blockers found and fixed: (a) GitHub
+    cross-repo private-repo reusable workflow restriction — fixed by creating local copy
+    deployment-ui/.github/workflows/ui-quality-gates.yml (within-repo calls work for private repos); (b)
+    workspace-qg.yml called python-quality-gates.yml instead of ui-quality-gates.yml (wrong template); (c)
+    notify-telegram.yml had duplicate `inputs:` key — merged into single block; (d) notify-failure job in
+    ui/infra-quality-gates.yml had relative `./` path (invalid cross-repo) — removed; (e) GH_PAT: required: true caused
+    GitHub to reject the reusable workflow call — changed to required: false; (f) top-level `concurrency` block in local
+    reusable workflow causes "workflow file issue" — removed. **BLOCKER**: unified-trading-pm is a private repo. GH_PAT
+    is required to clone it for quality-gates.sh. deployment-ui does NOT have GH_PAT in its GitHub Actions secrets.
+    Without GH_PAT, CI fails at "Clone PM" step. **OPERATOR ACTION**: Add GH_PAT (PAT with repo-read scope) to
+    deployment-ui GitHub Actions secrets. Once GH_PAT is added, re-run CI → merge PR #8 → staging → semver-agent
+    promotes to main. Est: 5 min operator.
 
 15. **HUMAN-HARSH-LIVE-PIPELINE-VALIDATION** — Phase 12-13 of coordinator: live-mode adapter behavior matches batch-mode
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:

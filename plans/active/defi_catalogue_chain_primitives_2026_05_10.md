@@ -1,26 +1,10 @@
----name: defi-catalogue-chain-primitives
-overview:
-  Full DeFi-protocol catalogue buildout (vaults / lending / LSTs / restaking-LRTs / perp DEXes / spot DEXes) + chain
-  primitives (Solana Jito MEV / Tenderly bundle-sim policy / per-chain RPC redundancy / margin-tier tables) for May-23
-  cutover per all-in-scope operator directive.
-type: plan
+---
+title: "DeFi catalogue + chain primitives buildout (May-23 cutover)"
+name: defi-catalogue-chain-primitives
 status: active
 created: 2026-05-10
-deadline: 2026-05-23
-horizon: ~13 calendar days; ~80-130 AI-days at full multi-agent saturation
-operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-spawned_from: plans/questions/defi_readiness_catalogue_2026_05_08.md
-related_codex:
-  - codex/02-data/defi-venue-protocol-catalogue.md
-  - codex/02-data/defi-data-type-taxonomy.md
-  - codex/05-infrastructure/chain-rpc-mev-tenderly.md
-  - codex/04-architecture/interface-credential-convention.md
-  - codex/04-architecture/flash-loan-receiver.md
-  - codex/04-architecture/mev-protection.md
-  - codex/04-architecture/tenderly-execution-provider.md
-  - codex/02-data/availability-manifest-and-data-status.md
 related_plans:
   - plans/active/defi_master.md
   - plans/active/master_to_live_defi_2026_05_23.md
@@ -34,6 +18,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45, ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: defi_master
+priority: P0
 ---
 
 ## Deferred work — migrated to:

@@ -1,29 +1,10 @@
----name: gcs-migration-bundle-pipeline-mode-2026-05-08
-overview:
-  Bundled overnight GCS migration that walks every parquet ONCE and applies the full set of pending hive-vocab +
-  partition-column changes in a single pass, so the canonical manifest is rewritten once instead of N times. Three
-  changes ride together: (1) NEW `pipeline_mode={batch_databento, batch_tardis, batch_ccxt, batch_databento_replay,
-  live_websocket, ...}` hive partition column added to every existing parquet path (millions of parquets across cefi /
-  defi / tradfi / sports / prediction asset_groups), with the existing batch parquets receiving `pipeline_mode=batch_*`
-  per their source priority entry; (2) finish the dual-vocab `category=` → `asset_group=` rekey that CLAUDE.md preserves
-  as a transitional state — every legacy `category=` directory becomes canonical `asset_group=` on disk, the legacy
-  reader fallback in `reader.py` is deleted, manifest's regex `(?:category|asset_group)=` collapses to the canonical
-  form; (3) sweep up the 5 drift axes from the 2026-05-04 phantom-audit incident (legacy `path-prefix=day=*/` vs
-  canonical `raw_tick_data/by_date/day=*/`, instrument_type casing PERPETUAL vs perpetual, schema-4 empty
-  instrument_type, chain-bundle equivalence option↔options_chain) so the residual 354 phantom rows + any drift-class
-  duplicates clear in the same pass. The manifest_migration_SUPERSEDED_2026_05_21 stages (sports rename, writegate Phase
-  2.A residuals, etc.) are coordinated with — Stage 1+2+3 of that plan complete BEFORE this bundle starts, and any
-  Stage 4 migrations they own that share the parquet walk land here too. Reader fallback paths are kept for ≤30 days
-  post-migration then deleted (workspace "no double SSOT" rule). Pre-requisite for live-pipeline activation
-  (`live_pipeline_mtds_mdps_features_2026_05_08`) — the live-mode write path needs the `pipeline_mode` column live in
-  the manifest schema before MTDS / MDPS / features-service can route writes correctly.
-type: infra
+---
+title: "GCS migration bundle — pipeline_mode partition + category→asset_group rekey + drift cleanup (2026-05-08)"
+name: gcs-migration-bundle-pipeline-mode-2026-05-08
 epic: epic-infra
 status: active
 
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-15
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08

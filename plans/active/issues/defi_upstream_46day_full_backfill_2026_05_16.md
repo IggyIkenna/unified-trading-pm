@@ -2,7 +2,6 @@
 title:
   "DeFi upstream 46-day full backfill — operator approval required (instruments-service DeFi + MTDS DeFi raw_tick_data)"
 created: 2026-05-16
-author: ikenna-main (continuous orchestrator loop)
 source:
   - "ikenna-slot-3 finding at plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md (LST ✅, MDPS ❌)"
   - "MDPS DeFi backfill VM (mdps-backfill-defi-20260516-205843 FAILED rc=1, self-deleted) surfaced upstream gap"
@@ -12,6 +11,8 @@ severity:
   P1 — non-blocking for B-015 paper-trade (5-day window pre-authorized in parallel ping); blocking for live DeFi data
   correctness across full historical window
 launched_at: 2026-05-20
+priority: P2
+status: active
 ---
 
 > **🔴 P0 SCOPE EXPANSION 2026-05-20 — mega-audit A3 absorbed**: in addition to the 46-day window currently in flight,
@@ -106,8 +107,8 @@ needed.
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN  
-**Triaged by**: slot-8 triage sweep  
+**Status**: OPEN
+**Triaged by**: slot-8 triage sweep
 **Reason**: Operator approval pending for 46-day backfill execution
 
 ---

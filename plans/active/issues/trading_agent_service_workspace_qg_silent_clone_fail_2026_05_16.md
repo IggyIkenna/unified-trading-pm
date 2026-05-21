@@ -1,7 +1,6 @@
 ---
 title: "trading-agent-service workspace-qg clone step silently fails to clone unified-trading-library"
 created: 2026-05-16
-author: ikenna-main (workspace-qg Phase B failure-mode sweep)
 source:
   - github.com/IggyIkenna/trading-agent-service/actions/runs/25970374394 (post-fix retrigger)
   - github.com/IggyIkenna/trading-agent-service/actions/runs/25969164753 (pre-fix initial)
@@ -10,6 +9,8 @@ locked_since: 2026-05-16
 severity:
   P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for
   layer-7 service
+priority: P2
+status: active
 ---
 
 ## What I found

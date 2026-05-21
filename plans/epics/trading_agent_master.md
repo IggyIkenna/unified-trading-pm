@@ -1,17 +1,16 @@
 ---
 name: trading_agent_master
+title: "Trading Agent Master"
 type: epic
 tier: L2
 status: active
 priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---

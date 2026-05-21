@@ -1,6 +1,6 @@
----title: "DeFi archetypes canonicalisation + venue-collateral matrix correction (multi-stream)"
+---
+title: "DeFi archetypes canonicalisation + venue-collateral matrix correction (multi-stream)"
 created: 2026-05-07
-author: claude-session
 source:
   - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up)
   - unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT)
@@ -25,6 +25,10 @@ estimate_calibration_note: |
 related_plans:
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 parent_epic: strategy_master
+priority: P1
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see

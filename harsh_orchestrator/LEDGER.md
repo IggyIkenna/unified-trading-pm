@@ -8,6 +8,11 @@ locked_since: 2026-05-08
 
 # Main Agent Ledger (Harsh side)
 
+> ⚠️ **OFFLINE FALLBACK ONLY** — primary work-split surface is the agent-orchestrator dashboard at
+> `https://orch.epiphanytechnologies.com` (Harsh's brain) or `https://agent-orchestrator.odum-research.com` (Ikenna's
+> brain). This file is a last-resort reference when the backend is unreachable. Do NOT treat it as authoritative during
+> normal operations. Updated: D0 Phase 3 — 2026-05-21 per `plans/active/d0_orchestrator_migration_2026_05_20.md`.
+
 > Tracks today's slot assignments and live state. Universal mechanics and reading order →
 > [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md). Full task briefs → today's work-split. History → `git log`.
 
@@ -388,8 +393,8 @@ repos.
   hedge venue list); only need separate confirm on bankroll-per-archetype.
 
   **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
-  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green
-    end-to-end" means for `arbitrage_price_dispersion`.
+  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green end-to-end" means
+    for `arbitrage_price_dispersion`.
   - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists for the dispersion-eligible
     pairs (USDC-margin perps across Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster); (b) MTDS DeFi market-data
     parquets exist for last 30 days; (c) `features-service` price-dispersion feature parquets exist; (d)
@@ -482,8 +487,7 @@ repos.
 - **Task — 3-phase**: (1) cross-side prereq check; (2) launch paper backtest; (3) 30-day monitor + verify.
 
   **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
-  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green
-    end-to-end" means.
+  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green end-to-end" means.
   - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists in GCS at
     `gs://central-element-323112-instruments-defi/...`; (b) MTDS DeFi market-data parquets exist for last 30 days; (c)
     `features-service` DeFi feature parquets exist; (d) `strategy-service` `carry_staked_basis` archetype factory

@@ -1,14 +1,11 @@
----title:
+---
+title:
   "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
   surface infra + doc completion"
-type: design
 status: done
-asset_group: cross-cutting
 priority: P0
 created: 2026-05-12
 promoted_from_issue: 2026-05-12
-author: ikenna-main-slot1
-owner: split across slots 2 / 5 / 6 / 8 (see Routing section)
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8

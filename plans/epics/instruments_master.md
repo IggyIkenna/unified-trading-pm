@@ -1,17 +1,16 @@
 ---
 name: instruments_master
+title: "Instruments Live — Master Activation Plan"
 type: epic
 tier: L1
 status: active
 priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-08
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-asset_group: cross-cutting
 related_plans:
   - ../active/d1_is_hardening_2026_05_20.md
   - ../active/expected_universe_v2_design_2026_05_08.md

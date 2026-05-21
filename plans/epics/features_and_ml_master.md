@@ -1,17 +1,16 @@
 ---
 name: features_and_ml_master
+title: "ML + Features Master (umbrella)"
 type: epic
 tier: L1
 status: active
 priority: P1
 assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-07
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-asset_group: cross-cutting
 related_plans:
   - ../active/features_repo_consolidation_2026_05_08.md
   - ../active/features_service_qg_cleanup_2026_05_11.md

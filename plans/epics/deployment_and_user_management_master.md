@@ -1,17 +1,16 @@
 ---
 name: deployment_and_user_management_master
+title: "Deployment And User Management Master"
 type: epic
 tier: L3
 status: active
 priority: P0
 assigned_vm: vm-operator-ops
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/deployment_ui_lifecycle_tabs_2026_05_08.md
 ---

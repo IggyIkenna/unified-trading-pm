@@ -1,23 +1,10 @@
----name: ml-repo-consolidation-2026-05-19
-overview:
-  Merge `ml-training-service` + `ml-inference-service` into a single NEW `ml-service` repo with sub-packages
-  `ml_service/training/` and `ml_service/inference/`; archive both source repos. ONE Docker image, ONE flat
-  `pyproject.toml`, ONE Health-API exposing aggregated freshness, ONE CLI with `--operation` discriminating
-  train / evaluate / hyperparam / batch-inference / live-inference / cascade-inference. Mirrors the
-  `features-repo-consolidation-2026-05-08` pattern (10-phase: pre-audit → schema → skeleton → subtree-merge →
-  fixup → lifts → parity → archive → downstream → codex → QG sweep). Motivation: training and inference are
-  colocated activities in terms of deployment topology + share model registry + share UAC feature contracts +
-  share archetype/strategy mapping — separate repos add coordination overhead without operational gain. Both
-  source repos have zero direct Python imports of each other today (event-bus + GCS model registry decoupled),
-  so subtree-merge has zero compile-time collisions. Pre-cutover race for 2026-05-23 live-DeFi launch — if Phase 6
-  parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
-type: infra
+---
+name: ml-repo-consolidation-2026-05-19
+title: "ML repo consolidation — ml-service + ml-training + ml-inference merge (2026-05-19)"
 epic: features_and_ml_master
 status: done
 
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-19

@@ -4,7 +4,6 @@ title:
   staleness"
 created: 2026-05-21
 updated: 2026-05-21
-author: ip-172-31-5-118 main agent (agt-5566ea)
 priority: P1
 status:
   FILED 2026-05-21 14:24 UTC by main agent (this VM) per operator request after a recurring `/login` prompt cycle during
@@ -19,6 +18,8 @@ related_plans:
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## 1. Symptoms (what the operator + agents see)

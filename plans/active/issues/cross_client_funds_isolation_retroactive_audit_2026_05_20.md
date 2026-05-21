@@ -1,13 +1,14 @@
 ---
 title: Cross-Client Funds Isolation — Retroactive Audit (execution-service, 2026-05-20)
 created: 2026-05-20
-author: slot 1 main (Explore sub-agent audit)
 locked_by: live-defi-rollout
 source:
   - codex/04-architecture/client-funds-isolation.md (HARD RULE SSOT)
   - plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md (Group H plan)
 consumer:
   - slot 7 Phase 6 — TransferCoordinator facade builder
+priority: P2
+status: active
 ---
 
 # Cross-Client Funds Isolation — Retroactive Audit

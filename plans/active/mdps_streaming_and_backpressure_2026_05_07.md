@@ -1,15 +1,10 @@
----name: mdps-streaming-and-backpressure
-overview:
-  Successor plan covering DEFERRED MDPS Units 1+2+3 (incremental candles flush, eager → row-group iterator read,
-  ResourceProfiler admission control) — band-aid VM-launcher memory bump shipped (deployment-service@02ee6d6); the
-  durable streaming + backpressure path is owed.
-type: code
+---
+title: "MDPS streaming + backpressure successor plan (2026-05-07)"
+name: mdps-streaming-and-backpressure
 epic: epic-code-completion
 status: active
 
-asset_group: cross-cutting
 priority: P1
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07

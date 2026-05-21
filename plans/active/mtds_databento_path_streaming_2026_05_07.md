@@ -1,15 +1,10 @@
----name: mtds-databento-path-streaming
-overview:
-  Successor plan for DEFERRED MTDS Databento adapter path-streaming work — pass `path=<tempfile>` to
-  `client.timeseries.get_range(...)` + iterate `to_df(count=N)` chunks to bound peak memory; optional outer-loop
-  parallelisation + UTL `streaming_dbn_writer` helper if the pattern proves shareable.
-type: code
+---
+title: "MTDS Databento path-streaming successor plan (2026-05-07)"
+name: mtds-databento-path-streaming
 epic: epic-code-completion
 status: done
 
-asset_group: cross-cutting
 priority: P1
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07

@@ -1,16 +1,13 @@
----title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
-type: plan
+---
+title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
 status: active
 created: 2026-05-12
-deadline: 2026-08-31
 last_reviewed: 2026-05-17
 execution:
   owner: "alerting-platform + DART operability owner"
   cadence: "post-cutover backlog drain (open until 2026-08-31)"
   verifier: "groups A-G success-criteria all flipped per plan body"
   last_executed: "Groups A/C/E/F shipped 2026-05-14; D/G remain DEFERRED to UI slot"
-horizon: 3-month post-cutover backlog
-companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 migrated_from: codex_vs_citadel_infrastructure_audit_2026_05_10 (POST_CUTOVER Phase 5)
@@ -22,6 +19,7 @@ estimate_class: design
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 2.4
 parent_epic: observability_master
+priority: P2
 ---
 
 # Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)

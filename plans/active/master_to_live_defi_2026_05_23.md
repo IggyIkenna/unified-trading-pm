@@ -1,7 +1,5 @@
 ---
-plan_type: meta
-asset_group: cross-cutting
-owner: ikenna
+title: "May-23 Cutover Master — Live DeFi Trading by 2026-05-23"
 created: 2026-05-06
 last_updated: 2026-05-11
 locked_by: live-defi-rollout
@@ -23,21 +21,9 @@ estimate_calibration_note: |
   prediction for the cutover = sum-of-sub-plan-calibrated-ai-days / 5-8 effective concurrent slots (bounded by the
   serial-dependency floor — code-freeze → migrate → backfill phases cannot fully parallelise).
   SSOT: codex/08-workflows/estimation-calibration.md § "Parallelism axis".
-overview:
-  Master rollup plan from now (2026-05-06) to live DeFi trading on a real wallet by 2026-05-23. Three deliverables in
-  one doc - (1) master plan tracking surface that orchestrates the ~175 active sub-plans without duplicating them, (2)
-  audit cross-referencing existing codex SSOTs and flagging plan/doc/code drift, (3) Q&A surface for decisions that
-  cascade through everything else. The headline goal is two DeFi archetypes trading live on a real wallet for greater
-  than or equal to seven continuous days - carry_staked_basis (ultimate priority - recursive LST staking with CeFi/DeFi
-  perp short hedge) and ARBITRAGE_PRICE_DISPERSION (cross-venue funding spread). Per-archetype venue subsets: carry_staked_basis uses
-  3 LST-margin-capable venues (Deribit + Bybit + OKX); ARBITRAGE_PRICE_DISPERSION uses all 6 (Bybit, Deribit, Binance, OKX,
-  Hyperliquid, Aster). Concurrent goal is full AWS plus
-  GCP cloud parity by May 23 - DeFi-relevant data migrated to AWS, batch backfill plus backtest plus ML plus live
-  trading all runnable on AWS, seamless switch between AWS-live, AWS-batch, GCP-live, GCP-batch. TradFi, Sports,
-  Prediction stage to ML pipeline running on representative sample but not live this cycle. The plan never duplicates
-  sub-plans - it references and orchestrates them. Doc-touchpoint map is bi-directional (read before working, update
-  after changing) and a plan-doc-code drift audit table flags pre-existing drift that must be resolved before agents
-  start writing code in the affected area.
+parent_epic: orchestrator_master
+priority: P0
+status: active
 ---
 
 > 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4
@@ -125,7 +111,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-20 13:33 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-21 18:56 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 

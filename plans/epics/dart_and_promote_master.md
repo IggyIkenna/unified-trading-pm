@@ -1,17 +1,16 @@
 ---
 name: dart_and_promote_master
+title: "DART + Promote Workflow Master (L3)"
 type: epic
 tier: L3
 status: active
 priority: P0
 assigned_vm: vm-operator-ops
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/promote_workflow_may23_cli_path_2026_05_10.md
   - ../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md

@@ -1,11 +1,12 @@
 ---
 title: QG daily snapshot cron VM stale — last run 2026-05-14 (4 days)
 created: 2026-05-18
-author: harsh-slot-7
 source:
   - work_split_2026_05_18_harsh.md § Slot 7 item 3
   - plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 4.A (B-018)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

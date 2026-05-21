@@ -1,17 +1,16 @@
 ---
 name: cefi_master
+title: "CeFi Master — asset_group umbrella"
 type: epic
 tier: L0
 status: active
 priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
-owner: claude-code
 created: 2026-05-07
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-asset_group: cefi
 related_plans:
   - ../active/venue_heartbeat_calibration_2026_05_post23.md
 ---
@@ -561,7 +560,8 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_1 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -574,6 +574,7 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`venue_heartbeat_calibration_2026_05_post23`](../active/venue_heartbeat_calibration_2026_05_post23.md)
+
 **status**: active · **estimate**: 1.8 cal AI-days (class: research)
 
 ## P3 — backlog; revisit quarterly

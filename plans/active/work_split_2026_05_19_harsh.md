@@ -1,11 +1,7 @@
 ---
 title: Harsh's daily work-split — 2026-05-19 (Cycle 2 Day-4; mechanical + infra sweep, ~116 cal AI-days)
-type: coordination-doc
 status: active
 created: 2026-05-19
-deadline: 2026-05-23
-horizon: 4 calendar days (19 May → 23 May); Cycle 2 close + Cycle 3 paper-smoke
-companion_to: plans/active/work_split_2026_05_19_ikenna.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 estimate_class: infra
@@ -18,6 +14,8 @@ estimate_calibration_note: |
   work is on Ikenna side. Harsh stays in implement-from-spec mode. Carries S3-S20 SUSTAIN
   queue from May-18 split (all open). pvl-p18a (paper VM) still monitored by dedicated
   Harsh slot — confirm still running before all else.
+parent_epic: orchestrator_master
+priority: P1
 ---
 
 # Harsh's daily work-split — 2026-05-19 (mechanical + infra sweep)

@@ -1,10 +1,11 @@
 ---
 title: "Workspace unused-import audit — 2026-05-18"
 created: 2026-05-18
-author: slot-4
 source:
   - work_split_2026_05_18_harsh.md § slot-4 item 15
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

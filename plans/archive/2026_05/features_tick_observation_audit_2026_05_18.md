@@ -1,6 +1,6 @@
----title: "features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain"
+---
+title: "features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain"
 created: 2026-05-18
-author: harsh-slot-6
 source:
   - plans/active/_agent_pings.md (ikenna-main → harsh-main 2026-05-18 11:38 + 11:43 + 12:17 UTC)
   - plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md (pattern source)
@@ -17,6 +17,8 @@ estimate_calibration_note: |
 locked_by: live-defi-rollout
 locked_since: 2026-05-18
 parent_epic: defi_master
+priority: P2
+status: active
 ---
 
 # features-tick-observation-audit: per-tick feature snapshot + MTDS provenance

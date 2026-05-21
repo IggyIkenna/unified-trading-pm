@@ -1,17 +1,16 @@
 ---
 name: infrastructure_master
+title: "Infrastructure Master — shard / data-status / deployment-build umbrella"
 type: epic
 tier: L4
 status: active
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-owner: claude-code
 created: 2026-05-07
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-asset_group: infrastructure
 related_plans:
   - ../active/aws_migration_defi_first_2026_05_07.md
 ---

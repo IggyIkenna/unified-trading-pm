@@ -1,274 +1,72 @@
----plan_type: code+infra
-asset_group: cross-cutting
-owner: ikenna
-created: 2026-05-08
-last_updated: 2026-05-15
+---
+title: CME x Polymarket cross-venue event-arb
+parent_epic: tradfi_master
+priority: P1
+status: active
+estimate_class: brand-new
+estimate_baseline_ai_days: 15.0
+estimate_calibrated_ai_days: 15.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 related_plans:
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-data_dependency: |
-  Operator confirmation 2026-05-15: "cme_polymarket_arb dependency on tick data - i think ohlcv 1m
-  is enough to get a feel for arb backtest". Plan does NOT require Databento trades/tbbo/mbp_10 (L1-L3
-  tick data — deferred to post-cutover per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`). OHLCV-1m
-  bars are sufficient for the cross-venue basis spread backtest. Live execution-tuning may need tick
-  data once the L1-L3 successor plan ships (post-cutover); for May-23 backtest scope this is
-  unblocked.
-name: cme-polymarket-arb-2026-05-08
-overview: >-
-  Cross-venue arbitrage between CME event-contracts (9 roots: ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E /
-  ECNQ) and Polymarket binary outcomes. Source RFC: archived issue
-  `plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md` (26KB design doc spanning UAC +
-  instruments-service + MTDS + strategy-service + execution-service — 5 layers). Operator decision 2026-05-08: Option
-  (a) split — Phase 0 (catalog backfill, the unblocking move) lives in `tradfi_master` scope; Phases 1-5 (structural
-  fixes) live HERE. Post-May-23 critical path; the CME × Polymarket arb is the option value of the live-trading
-  deadline, NOT the deadline itself. Plan is small + focused — single new sub-plan rather than two-plan-track per
-  operator's "no 20 new plans" direction.
-
-estimate_class: brand-new
-estimate_baseline_ai_days: 15
-estimate_calibrated_ai_days: 15
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 6 phase-todos, 1 done (Phase 1 EVENT_CONTRACT enum shipped uac@b95d146). 5 phases remaining across 5 repos (UAC + instruments + MTDS + strategy + execution) for a novel cross-venue arb pattern. brand-new class (no prior CME × prediction-market template). Baseline 15 (~3 AI-day per remaining phase × 5 = 15, multi-repo plumbing per phase); × 1.0 = 15.
-
-type: mixed
-epic: epic-business
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-
-repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-
-depends_on:
-  - tradfi-master-2026-05-07
-  - predictions-master-2026-05-07
-  - writegate-honest-coverage-endtoend-2026-05-06
-
-todos:
-  - id: phase-1-instrument-type-event-contract
-    content: |
-      - [x] [SCRIPT] P1. **Phase 1 — `InstrumentType.EVENT_CONTRACT` enum addition** to UAC
-        `unified_api_contracts/_instrument_enums.py` (canonical SSOT location — re-exported via
-        `canonical/domain` and the top-level `unified_api_contracts` facade). Today the 9 CME roots are classified as
-        `InstrumentType.OPTION` but they're semantically identical to Polymarket binary outcomes (resolved YES/NO
-        with strike threshold). New enum member + Databento classifier mapping (Databento returns these as
-        `instrument_class=BAG` per Databento docs; classifier maps BAG-with-event-contract-root to
-        `InstrumentType.EVENT_CONTRACT`). **SHIPPED 2026-05-08** uac@b95d146 — InstrumentType.EVENT_CONTRACT enum
-        added; `_instrument_class_to_type` extended to take `raw_symbol` and dispatch BAG (current Databento
-        encoding) or O (legacy) on EC* root prefix to EVENT_CONTRACT; INSTRUMENT_TYPES_BY_VENUE[CME] gains
-        EVENT_CONTRACT; INSTRUMENT_TYPE_FOLDER_MAP seeded with `event_contracts` GCS subfolder; 4 new tests in
-        tests/integration/test_registry_completeness.py (BAG+EC* → EVENT_CONTRACT; vanilla OPTION/FUTURE
-        preserved; BAG-without-EC* → COMBO). Originally cited `_tradfi.py` per RFC but real SSOT is
-        `_instrument_enums.py` (cycle-free design).
-    status: done
-
-  - id: phase-2-canonical-question-group-cross-link
-    content: |
-      - [ ] [SCRIPT] P1. **Phase 2 — `linked_canonical_question_group` cross-link field on EVENT_CONTRACT instrument
-        rows**. Each CME event-contract root maps to a Polymarket canonical_question_group (e.g. ECBTC EOM strike →
-        `BTC_UP_DOWN_DAILY` group). NEW UAC SSOT
-        `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` declares per-CME-root the canonical
-        question group. **DEPENDS ON `predictions_master` Phase 5** (canonical-groups backfill must
-        complete for the 6 new Polymarket groups: ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E side — see archived issue Phase 5
-        list). Until Phase 5 ships, only ECES/ECBTC have valid links.
-    status: blocked
-    blocked_by: predictions-master-2026-05-07
-    note: "Phase 5 of predictions_master ships the 6 new canonical_question_groups."
-
-  - id: phase-3-mtds-binary-outcome-shard-atom
-    content: |
-      - [x] ✅ [SCRIPT] P1. **Phase 3 — MTDS binary-outcome shard atom** for EVENT_CONTRACT data_type. Per CLAUDE.md
-        "Shard-granularity SSOT" — for cefi options/futures the shard atom is `(asset_group, venue, data_type,
-        chain=options_chain, root, day)`. For CME event-contracts the shard is bundled by `(asset_group=tradfi,
-        venue=CME, data_type=EVENT_CONTRACT, root, resolution_date, day)` — `resolution_date` joins per-day
-        snapshots that resolve at the same expiry; `strike_threshold` differs per cluster within the bundle.
-        Cluster validation per Phase 1A of writegate: `expected_root_clusters = {(root, resolution_date,
-        strike_threshold): expected_count}` per UAC SSOT.
-        **SHIPPED 2026-05-19** mtds@b59b63e — PartitionedTickWriter event_contract_bundle_counts + envelope
-        properties; orchestrator finalize loop with record_captured_from_counts per (root, resolution_month) bundle;
-        UAC event_contract in BUNDLED_DATA_TYPES (uac@f70b975); extract_event_contract_shard_key exported (uac@f70b975);
-        EVENT_CONTRACT_ROOT_CLUSTERS (9 roots, _per_cluster_min_rows=1) + DATA_TYPE_TO_CLUSTER_REGISTRY wired (uac@2751910).
-        TEMPORARY: expected == observed until Phase 4 instruments-service catalog.
-    status: done
-
-  - id: phase-4-instruments-service-per-cluster-expiry
-    content: |
-      - [x] ✅ [SCRIPT] P1. **Phase 4 — instruments-service per-cluster expiry for daily binaries.**
-        **SHIPPED 2026-05-20** instruments-service@7a3db05 + UTL@3c004c1.
-        Databento adapter `_parse_row_to_record`: BAG + EC* prefix → EVENT_CONTRACT (previously SPOT_PAIR
-        default); underlying = EC root from raw_symbol split; `_estimate_available_since` adds EVENT_CONTRACT
-        branch (listing_months=1, ~30-day heuristic). UTL new module `event_contracts.py` with
-        `expiry_for_cluster(root, resolution_date, strike_threshold) -> datetime` exported via UTL facade;
-        settlement fixed at CME 21:00 UTC per resolution_date (strike_threshold accepted for forward-compat).
-        18 new unit tests (4 IS + 14 UTL). Both repos QG green. (slot 4 2026-05-20)
-    status: done
-
-  - id: phase-5-strategy-execution-cross-venue-arb-pairs
-    content: |
-      - [ ] [SCRIPT] P1. **Phase 5 — strategy-service cross-venue arb pairs.** New archetype
-        `cme_polymarket_event_arb` under
-        `strategy-service/strategies/archetypes/`. Config: `cme_root + polymarket_canonical_question_group +
-        max_basis_threshold + min_liquidity_per_leg`. Strategy reads CME event-contract bid/ask + Polymarket
-        market price; computes basis; sizes a paired position when basis exceeds threshold. Execution-service
-        cross-venue order-routing wires the CME leg to Databento-broker connector + Polymarket leg to existing
-        Polymarket execution adapter.
-    status: todo
-
-  - id: codex-update
-    content: |
-      - [x] [AGENT] P1. **Codex updates**: (1) extend
-        `codex/02-data/per-asset-group-bucket-layouts.md` with the EVENT_CONTRACT shard atom shape; (2) extend
-        `codex/09-strategy/architecture-v2/category-instrument-coverage.md` with the cross-venue-arb pattern;
-        (3) NEW codex doc `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` capturing the strategy archetype
-        spec, basis-calc reference, leg-balancing assumptions, kill-switch rules. **SHIPPED 2026-05-08** as STUB —
-        per-asset-group-bucket-layouts.md gained "TradFi EVENT_CONTRACT" bullet in the multi-axis correction banner
-        (shard atom + cluster validation + folder-map ref); category-instrument-coverage.md Family 4
-        ARBITRAGE_PRICE_DISPERSION gained "TradFi ↔ Prediction event_contract" coverage row + slot-label cluster
-        cme-polymarket-{spx|btc}-up-down-daily-usd-prod; NEW codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md
-        playbook stub with TL;DR, 9-root mapping table, basis-calc reference, leg-balancing assumptions,
-        kill-switch rules, anti-patterns. Full content lands as Phases 2-5 ship.
-    status: done
-parent_epic: tradfi_master
+  - trading_agent_service_architecture_unlock_2026_05_22.md
+  - tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
+  - master_to_live_defi_2026_05_23.md
 ---
 
-> **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
-> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
-> plan's May-23 scope.
+# CME x Polymarket Cross-Venue Event-Arb Plan
 
-## Deferred work — migrated to:
+Cross-venue arbitrage between CME event-contracts (9 roots: ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ) and
+Polymarket binary outcomes. Both resolve YES/NO at a strike threshold — same economics, different venues, different
+schemas. Source RFC archived at `plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.
+Post-May-23 critical path; not a deadline blocker. Operator note 2026-05-15: OHLCV-1m sufficient for arb backtest (no
+tick-data dependency).
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
-annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
-— this plan tracks multiple per-item dispositions.
+Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
+`codex/09-strategy/architecture-v2/category-instrument-coverage.md` ·
+`codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`
 
-> **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
-> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
-> plan's May-23 scope.
+---
 
-# CME × Polymarket Cross-Venue Event-Arb Plan
+## Phase 1 — `InstrumentType.EVENT_CONTRACT` enum
 
-## Why this plan exists (post-May-23 critical path)
+- [x] [SCRIPT] P1. UAC `InstrumentType.EVENT_CONTRACT` + Databento BAG classifier; `INSTRUMENT_TYPES_BY_VENUE[CME]`
+      gains EVENT_CONTRACT; `INSTRUMENT_TYPE_FOLDER_MAP` seeded with `event_contracts`; 4 integration tests.
+      (unified-api-contracts@`b95d146`)
 
-The 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E / ECNQ) are semantically
-identical to Polymarket binary outcomes — both resolve YES / NO at a strike threshold on a known resolution date. Today
-they sit in different asset_groups (CME = tradfi, Polymarket = prediction) with different schemas + different shard
-atoms. A cross-venue basis exists (sometimes >50bps annualised on liquid roots) and is exploitable but invisible to the
-workspace because no strategy can read both venues with a unified understanding.
+## Phase 2 — `linked_canonical_question_group` cross-link
 
-Operator decision 2026-05-08: split scope between `tradfi_master` (Phase 0 catalog backfill — the unblocking move) and
-this plan (Phases 1-5 structural fixes). NOT a May-23 critical-path item; cross-venue arb is the option value of being
-live, not the deadline itself.
+- [ ] [SCRIPT] P1. NEW UAC SSOT `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` — per-CME-root
+      canonical_question_group map. **BLOCKED**: predictions_master Phase 5 (6 new canonical_question_groups) must ship
+      first. Until then, only ECES/ECBTC have valid links.
 
-## Architecture (cross-references the source RFC)
+## Phase 3 — MTDS binary-outcome shard atom
 
-The 26KB source RFC is archived at
-`plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`. Read it for the full design
-intent + per-phase blast-radius analysis. This plan is the migration shell — every Phase 1-5 todo above references the
-corresponding section of the archived RFC.
+- [x] ✅ [SCRIPT] P1. MTDS `PartitionedTickWriter` event_contract_bundle_counts; orchestrator finalize loop with
+      `record_captured_from_counts` per (root, resolution_month) bundle; UAC `EVENT_CONTRACT` in `BUNDLED_DATA_TYPES`;
+      `extract_event_contract_shard_key`; `EVENT_CONTRACT_ROOT_CLUSTERS` (9 roots) + `DATA_TYPE_TO_CLUSTER_REGISTRY`
+      wired. TEMPORARY: expected == observed until Phase 4 IS catalog. (mtds@`b59b63e`, uac@`f70b975`, uac@`2751910`)
 
-## Sibling plan relationships
+## Phase 4 — instruments-service per-cluster expiry
 
-- `tradfi_master.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows before the
-  EVENT_CONTRACT classifier has anything to classify).
-- `predictions_master.md` — owns canonical_question_group backfill for the 6 new groups
-  (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E); blocks Phase 2 cross-link.
-- `writegate_honest_coverage_endtoend_2026_05_06.md` — Phase 1A bundled-data-type cluster validation; Phase 3 here
-  registers EVENT_CONTRACT in `BUNDLED_DATA_TYPES`.
-- `tradfi_master` Q1+Q2 work (`CanonicalFuturesContract.expiry_date` etc.) — Phase 4 per-cluster expiry builds on top of
-  the futures schema.
-- `master_to_live_defi_2026_05_23.md` — explicitly OUT of May-23 scope; this plan ships post-cutover.
+- [x] ✅ [SCRIPT] P1. Databento adapter: BAG + EC\* prefix -> EVENT_CONTRACT; `_estimate_available_since` EVENT_CONTRACT
+      branch; UTL `event_contracts.py` with `expiry_for_cluster(root, resolution_date, strike_threshold)` at CME 21:00
+      UTC settlement; 18 new unit tests. (instruments-service@`7a3db05`, UTL@`3c004c1`)
 
-## Out of scope
+## Phase 5 — strategy-service cross-venue arb archetype
 
-- Live trading the strategy: `cme_polymarket_event_arb` archetype must complete the standard onboarding checklist
-  (paper-trade in staging, soak-test, operator approval) before going live. NOT a fast-path archetype.
-- Other CME event-contract families beyond the 9 named roots — extend in a follow-up if liquidity grows.
+- [ ] [SCRIPT] P1. New archetype `cme_polymarket_event_arb` in strategy-service: reads CME event-contract bid/ask +
+      Polymarket market price; computes basis; sizes paired position when basis exceeds threshold. Execution-service
+      cross-venue routing: CME leg via Databento-broker connector + Polymarket leg via existing execution adapter.
 
-## Plan-format compliance
+## Codex updates
 
-Follows `unified-trading-pm/plans/PLAN_FORMAT.md`: 3-tier readiness (C5 / D3 / B3); per-repo gates; Cursor checkboxes on
-every todo; sibling-plan dependencies declared in `depends_on`; SSOT-first (codex docs in the codex-update todo own
-intent, plan owns activation); pre-audit complete via the source RFC archived to `plans/archive/issues/`.
+- [x] ✅ [AGENT] P1. `per-asset-group-bucket-layouts.md` EVENT_CONTRACT shard atom bullet;
+      `category-instrument-coverage.md` Family 4 ARBITRAGE_PRICE_DISPERSION cross-venue row; NEW
+      `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` stub. (PM@2026-05-08)
 
-## DONE-2026-05-08 — Tab 5 cycle (Phase 1 + codex stub only; Phases 2-5 blocked)
+## Temporary states + canonical follow-up plans
 
-Tab: `cme-polymarket-phase1-tab` (Harsh-side, Tab 5 sub-agent under `mechanical-refactor-tab` parent). Scope per task
-spec: Phase 1 + codex updates only. Phases 2-5 deferred to subsequent cycles per blocker analysis (Phase 2 blocked on
-`predictions-master-2026-05-07` Phase 5; Phases 3-4 blocked on `tradfi_master` Q1+Q2; Phase 5 depends on Phases 2-4).
-
-### Code commits
-
-- **uac@b95d146** — `feat(uac): add InstrumentType.EVENT_CONTRACT + Databento BAG classifier`
-  - `unified_api_contracts/_instrument_enums.py` — `InstrumentType.EVENT_CONTRACT` enum value (cycle-free SSOT location;
-    re-exported via canonical/domain + facade).
-  - `unified_api_contracts/external/databento/normalize.py` — extended `_instrument_class_to_type` to accept
-    `raw_symbol`; dispatches `BAG` (current Databento encoding) or `O` (legacy) on EC\* root prefix to `EVENT_CONTRACT`.
-    Plain `BAG` without EC\* root → `COMBO`. Both `normalize_databento_definition` and `normalize_databento_symbol`
-    updated to pass `raw_symbol`.
-  - `unified_api_contracts/registry/venue_constants.py` — added `EVENT_CONTRACT` to `INSTRUMENT_TYPES_BY_VENUE[CME]`
-    - `INSTRUMENT_TYPE_FOLDER_MAP["EVENT_CONTRACT"] = "event_contracts"`.
-  - `tests/integration/test_registry_completeness.py` — 4 new tests:
-    `test_cme_event_contract_bag_maps_to_event_contract` (BAG+EC\* → EVENT_CONTRACT, both BAG and legacy O encodings);
-    `test_regular_option_still_classifies_as_option` (vanilla ES.OPT/SPX.OPT preserved);
-    `test_regular_future_still_classifies_as_future` (F instrument_class unaffected by EC\* root);
-    `test_bag_without_event_contract_root_maps_to_combo` (generic BAG → COMBO).
-
-### Plan-flip + codex commits
-
-- **pm@&lt;next sha&gt;** — `plan(cme-polymarket-arb): flip Phase 1 + codex-update checkboxes; ship codex stubs` (this
-  commit — flips Phase 1 and codex-update todos, extends 2 codex docs, creates 1 NEW codex playbook stub, appends this
-  DONE block).
-  - `codex/02-data/per-asset-group-bucket-layouts.md` — EXTENDED multi-axis correction banner with "TradFi
-    EVENT_CONTRACT" shard atom bullet (root, resolution_date, day) + cluster validation kwargs + GCS subfolder
-    reference.
-  - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — EXTENDED Family 4 `ARBITRAGE_PRICE_DISPERSION`
-    coverage table with "TradFi ↔ Prediction event_contract" PARTIAL row covering 9 CME roots; added slot-label cluster
-    `ARBITRAGE_PRICE_DISPERSION@cme-polymarket-{spx,btc}-up-down-daily-usd-prod`.
-  - `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` — **NEW STUB** playbook with frontmatter
-    `scope: [strategist, engineer]`; documents archetype name (`cme_polymarket_event_arb`), 9-root → canonical-group
-    mapping table, basis-calc reference (annualised bps), leg-balancing assumptions (notional matching, expiry
-    alignment, strike matching, settlement-rule equivalence), kill-switch rules (per-leg fill failure, mid-position
-    resolution divergence, liquidity floor, per-trade clip), DART manual-trade gate (live-only), anti-patterns (don't
-    skip canonical-question-group cross-link, don't treat ECBTC as vanilla option, don't reuse ES.OPT cluster taxonomy,
-    don't trade without paper-trade soak). Full content TBD as Phases 2-5 ship.
-
-### Findings raised during the cycle
-
-- **Case-1 (in-scope)**: `INSTRUMENT_TYPE_FOLDER_MAP` test in `test_registry_completeness.py` failed initially on
-  missing EVENT_CONTRACT key. Fixed in same commit by seeding folder name `event_contracts`. No external finding
-  required.
-- **Case-3 / Case-4**: zero. Phase 1 changes are additive (new enum value + new classifier branch); existing `OPTION`
-  consumers unaffected because the EC\* override is gated on the EC\* root prefix.
-
-### What is NOT in this cycle (still `- [ ]`)
-
-- Phase 2 — `linked_canonical_question_group` cross-link + `cme_polymarket_link.py` SSOT.
-- Phase 3 — MTDS binary-outcome shard atom registration + cluster validation kwargs.
-- Phase 4 — instruments-service per-cluster expiry handling for daily binaries.
-- Phase 5 — strategy-service `cme_polymarket_event_arb` archetype + execution-service CME ClearPort connector.
-- Re-classification migration of existing on-disk manifest rows from `instrument_type=OPTION` to
-  `instrument_type=EVENT_CONTRACT` for the 9 EC\* roots — deferred until Phase 3 ships (manifest migration shape same as
-  `migrate_local_sfi_to_canonical.py` precedent per CLAUDE.md "Manifest migration, NOT fallback" rule).
+- Phase 2 blocked: `predictions_master` Phase 5 (6 new canonical_question_groups for non-BTC/SPX roots).
+- Phase 5 post-cutover: full `cme_polymarket_event_arb` archetype via standard paper-trade onboarding checklist.
+- Manifest re-classification of existing `instrument_type=OPTION` rows for 9 EC\* roots: deferred until Phase 3 ships.

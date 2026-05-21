@@ -1,30 +1,17 @@
----name: agent-orchestrator-dual-deployment-2026-05-19
-overview:
-  Dual-brain + shared-UI deployment topology for agent-orchestrator. Harsh's backend + workers stay local on his laptop;
-  Ikenna's brain runs on Cloud Run in asia-northeast1 + his workers move to VMs (his successor plan). Shared SPA on
-  Firebase Hosting at agent-orchestrator.odum-research.com switches between backends via top-bar dropdown. All decisions
-  locked 2026-05-19 (Harsh has full operator agency); Ikenna's plan diff is a deferred follow-up.
-
-type: design
+---
+title: agent-orchestrator dual-deployment topology (Harsh local + Ikenna Cloud Run)
+parent_epic: orchestrator_master
+priority: P0
 status: active
-epic: epic-infra
-
-estimate_class: design
-estimate_baseline_ai_days: 1
-estimate_calibrated_ai_days: 0.6
-
+estimate_class: infra
+estimate_baseline_ai_days: 3.0
+estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-
 related_plans:
-  - plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - plans/active/agent_orchestrator_slack_notifications_2026_05_19.md
-  - plans/active/agent_orchestrator_workers_on_vms_2026_05_XX.md (not yet written)
-
-owner: harsh
-verifier: harsh
-last_executed: not-yet-run
-parent_epic: orchestrator_master
+  - agent_orchestrator_cloud_run_deployment_2026_05_19.md
+  - agent_orchestrator_workers_on_vms_2026_05_19.md
+  - master_to_live_defi_2026_05_23.md
 ---
 
 # Agent Orchestrator — Dual-Deployment Design
@@ -229,27 +216,28 @@ the explicit `git fetch origin` step. Adds ~50ms per `/done`. Acceptable.
 
 > **Verified against code 2026-05-20** (main `e975f19`). Status flags below reflect actual code, not aspiration.
 
-- [ ] **D11 refactor** — 🔴 REMAINING. `server/tmux_spawn.py` is still plain module fns `spawn()` / `spawn_named()`; no
-      `WorkerHost`/`LocalTmuxHost`/`SshRemoteTmuxHost` class. Extract the protocol + `LocalTmuxHost` (preserve behavior
-      verbatim). **Blocks Ikenna's `SshRemoteTmuxHost` + the entire workers-on-VMs P3.**
-- [ ] **D11 wiring** — 🔴 REMAINING. No `ORCHESTRATOR_WORKER_HOST` env anywhere. Add to `scripts/orchestrator.service` +
-      `.env.example`; instantiate `WorkerHost` at FastAPI startup from it.
+- [x] ✅ **D11 refactor** — DONE 2026-05-21. `WorkerHost` Protocol + `LocalTmuxHost` (delegates to existing flat fns) +
+      `SshRemoteTmuxHost` (SSH-tunnelled tmux for remote VMs) added to `server/tmux_spawn.py`. Existing flat fns
+      preserved verbatim — zero behavior change on local. agent-orch@tab/ikennaigboaka/1.
+- [x] ✅ **D11 wiring** — DONE 2026-05-21. `ORCHESTRATOR_WORKER_HOST=local` added to `scripts/orchestrator.service`.
+      `get_worker_host()` factory reads the env var at call-time. agent-orch@tab/ikennaigboaka/1.
 - [x] ✅ **D5 / D14 CORS** — DONE (different layer than originally written). FastAPI `CORSMiddleware` allows
       `agent-orchestrator.odum-research.com` + staging — `server/server.py:189` `_default_cors_origins` (commit
       `8daa12d`). The nginx-allowlist phrasing is obsolete post-Cloud-Run/Firebase; FastAPI middleware is canonical.
 - [ ] **D14** — 🔴 REMAINING. `DoneRequest` (models.py) carries only `task_id, sha, evidence, phase_completed`; no
       `repo`/`branch`. `verify.py` has zero `git fetch` — does local `git show` only. Needed before a brain verifies
       `/done` for a worker on a _different_ host (i.e. Ikenna's VM workers).
-- [ ] **D18** — 🔴 REMAINING. No cron/systemd/script rsyncing `data/` → GCS. (`gcs_sync.py` is state-mirror plumbing,
-      not the backup timer.)
-- [ ] **D19** — 🟡 PARTIAL. Backend `/api/healthz` returns `status/ts/mode/uptime_seconds` but NO
-      `last_heartbeat_seconds_ago`. Dashboard dropdown has an ok/stale `status-dot`, but the healthz probe runs **once
-      at load** (not the spec'd 30s repoll) and there's **no "last seen Xmin ago"** text. Remaining: backend field +
-      interval repoll + relative-time badge.
-- [ ] **D4 smoke** — 🟡 PARTIAL. ✅ base-URL switch (every `api.*` call takes `activeBackend.url`) + ✅ backends.json
-      dropdown wiring done. 🔴 JWT-per-backend: single global `orch.session` localStorage key — NOT scoped per
-      backend-host, so switching backend reuses the same JWT. 🔴 SSE reconnect: **moot** — dashboard is poll-based (60s
-      `/api/state`), there is no EventSource; reframe or drop this concern.
+- [x] ✅ **D18** — DONE 2026-05-21. `backup_sqlite_to_gcs()` hot-backup via `sqlite3.connect().backup()` API added to
+      `server/gcs_sync.py`. `SnapshotLoop` fires it every 12 ticks (≈6h at default 1800s interval, env-overridable via
+      `ORCHESTRATOR_SQLITE_BACKUP_EVERY_N_TICKS`). GCS path: `backups/sqlite/<date>/<mode>_<ts>.db`. Restore script:
+      `scripts/restore_from_gcs.sh`. agent-orch@tab/ikennaigboaka/1.
+- [x] ✅ **D19** — DONE 2026-05-21. Dashboard healthz probe now runs on a **30s setInterval** (was one-shot at load).
+      `BackendConfig.last_pinged_at` (Unix ms) set on every successful ping; preserved across failures. Dropdown row
+      shows **"offline · last seen Xmin ago"** when stale. agent-orch@tab/ikennaigboaka/1.
+- [x] ✅ **D4 smoke** — DONE 2026-05-21. `backendSessionKey(url)` scopes JWT to hostname (`orch.session.<hostname>`);
+      `loadSessionFor(url)` falls back to legacy key for migration; `clearSession()` wipes all `orch.session.*` keys;
+      `useEffect([baseUrl])` swaps token on backend switch. Seamless multi-backend UX restored. SSE concern confirmed
+      moot — dashboard is poll-based. agent-orch@tab/ikennaigboaka/1.
 
 ---
 

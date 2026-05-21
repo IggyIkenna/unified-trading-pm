@@ -1,37 +1,20 @@
----title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
-type: implementation-plan
+---
+title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
+parent_epic: batch_live_symmetry_master
+priority: P0
 status: active
-created: 2026-05-10
-deadline: 2026-05-23
-horizon: ~10 calendar days (7 active shipping + 7 paper-soak overlap)
-operator: ikenna
+estimate_class: design
+estimate_baseline_ai_days: 50.0
+estimate_calibrated_ai_days: 30.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-spawned_from: unified-trading-pm/plans/questions/batch_live_design_symmetry_2026_05_08.md
-preaudit_manifest: unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md
-related_codex:
-  - unified-trading-pm/codex/04-architecture/batch-live-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/replay-subsystem.md
-  - unified-trading-pm/codex/02-data/pipeline-mode-partition.md
-  - unified-trading-pm/codex/06-coding-standards/quality-gates.md
 related_plans:
-  - unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md
-  - unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md
-  - unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md
-  - unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md
-  - unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md
-  - unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md
-  - unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - unified-trading-pm/plans/active/defi_master.md
-estimate_class: design
-estimate_baseline_ai_days: 50
-estimate_calibrated_ai_days: 30
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
-parent_epic: batch_live_symmetry_master
+  - master_to_live_defi_2026_05_23.md
+  - live_pipeline_mtds_mdps_features_2026_05_08.md
+  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
+  - manifest_schema_final_gate_2026_05_09.md
+  - available_at_lookahead_bias_completion_2026_05_08.md
+  - alerting_service_live_rules_2026_05_07.md
 ---
 
 > **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type) cells have a batch adapter

@@ -1,17 +1,16 @@
 ---
 name: client_isolation_and_governance_master
+title: "Client Isolation + Governance Master (L4)"
 type: epic
 tier: L4
 status: active
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md

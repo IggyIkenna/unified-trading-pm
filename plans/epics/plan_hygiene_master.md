@@ -1,0 +1,97 @@
+---
+name: plan_hygiene_master
+title: "Plan hygiene — continuous format + integrity + alignment enforcement"
+priority: P1
+status: active
+vm: planning-vm
+cadence: daily-cron + on-demand
+estimate_class: infra
+estimate_baseline_ai_days: 8.0
+estimate_calibrated_ai_days: 6.4
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+---
+
+# Plan Hygiene Master
+
+Routine maintenance of `plans/active/` and `plans/epics/` run by Ikenna and Harsh on the planning VM. Prevents the
+recurring failure mode where agent refactors silently collapse todos, leave orphaned plans, or let the plan corpus drift
+from codex.
+
+**Why this epic exists**: this sweep has been done manually 5+ times. Each time it surfaces 50-100 lost todos, stale
+frontmatter, broken codex refs, and orphaned plans. Automating the checks and making the runbook a standard daily step
+removes the manual cost and catches regressions before they compound.
+
+Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` ·
+`codex/11-project-management/issue-doc-lifecycle.md` · `plans/epics/README.md` · `plans/PLAN_FORMAT.md`
+
+---
+
+## Phase 1 — Core scripts (tooling that makes everything else automatable)
+
+- [ ] [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/active/*.md` `^- \[ \]` count
+      vs `origin/live-defi-rollout` baseline; exit 1 if any plan lost open todos. Wire as pre-push hook + optional QG
+      step. **Root-cause fix for the todo-collapse failure mode.**
+- [ ] [SCRIPT] P0. `scripts/plan-hygiene/check_frontmatter.sh` — for every `plans/active/*.md` + `plans/epics/*.md`:
+      assert `---` on own first line; required fields present (`parent_epic` for plans, `name` for epics); deprecated
+      fields absent (`slug`, `type`, `deadline`, `owner`, `asset_group`, `horizon`); `estimate_*` fields numeric. Exit 1
+      on any violation, print file + field.
+- [ ] [SCRIPT] P1. `scripts/plan-hygiene/check_line_caps.sh` — soft-warn >500L, hard-fail >1000L. Umbrella plans with
+      `locked_by` AND >247 todos are exempt (writegate pattern). Print sorted table of offenders.
+- [ ] [SCRIPT] P1. `scripts/plan-hygiene/check_codex_refs.sh` — grep all `codex/...` paths cited in active plans;
+      resolve relative to workspace root; report broken refs (file moved, renamed, or deleted).
+- [ ] [SCRIPT] P1. `scripts/plan-hygiene/check_archive_candidates.sh` — find plans where `^- \[ \]` count == 0 AND all
+      `^- \[x\]` > 0; print candidates with todo counts. Does not archive — outputs a list for operator review.
+- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify `estimate_calibrated_ai_days` ≈
+      `estimate_baseline_ai_days × multiplier` for the declared `estimate_class` (refactor 0.4×, design 0.6×, infra
+      0.8×, brand-new 1.0×, research 1.2×). Flag >20% drift as typos.
+- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/active/` for filenames or body
+      text containing `SUPERSEDED`; those plans should be in `plans/archive/`.
+
+## Phase 2 — Runbook (what Ikenna and Harsh run daily on the planning VM)
+
+- [ ] [SCRIPT] P0. `scripts/plan-hygiene/run_hygiene_sweep.sh` — orchestrates all Phase 1 checks in sequence; prints a
+      per-check PASS/FAIL table; exits 0 only if all hard checks pass. Soft checks (line caps, estimates) print warnings
+      but don't fail. Output is human-readable and agent-parseable.
+- [ ] [SCRIPT] P0. `scripts/plan-hygiene/run_hygiene_sweep.sh` — also runs
+      `python3 scripts/plans/regenerate_active_plan_inventory.py` at end so the master plan auto-inventory is always
+      fresh after a sweep.
+- [ ] [SCRIPT] P1. Wire `run_hygiene_sweep.sh` into both `ikenna_orchestrator/LEDGER.md` and
+      `harsh_orchestrator/LEDGER.md` as a **morning boot step** (after `git fetch`, before picking up work).
+
+## Phase 3 — Cron on planning VM
+
+- [ ] [SCRIPT] P1. Add `run_hygiene_sweep.sh` to planning-VM cron: `0 5 * * *` UTC (before both teams' work day starts).
+      Output appended to `logs/plan-hygiene/YYYY-MM-DD.log`. Failures append a `## [hygiene-cron]` notification block to
+      both orchestrator `_agent_pings.md` files (same pattern as orphan-ping-audit cron).
+- [ ] [SCRIPT] P2. Add the cron job to `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf` (or a new
+      adjacent `.tf` file) so it deploys alongside the existing orphan-ping-audit Cloud Run job.
+
+## Phase 4 — Codex alignment audit (agent work)
+
+> Script checks (Phase 1-3) are blind to SEMANTIC drift — a plan can pass all formatting checks but reference a codex
+> doc that contradicts what it says to do. That requires agent judgment.
+
+- [ ] [AGENT] P1. Spawn a read-only agent against `plans/active/` + `codex/`: for each plan, verify the codex SSOTs it
+      cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for operator review.
+      Output: `plans/active/issues/codex_alignment_deviations_<date>.md`.
+- [ ] [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
+      codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments
+      or plan updates.
+- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings in
+      active plans; verify each file exists at that path. Catches renames/deletes but not semantic drift. Runnable as a
+      soft check in `run_hygiene_sweep.sh`.
+
+## Phase 5 — Pre-push hook (prevent regressions at commit time)
+
+- [ ] [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
+      `check_frontmatter.sh` as `.git/hooks/pre-push` in the `unified-trading-pm` repo. Agents call this once after
+      workspace setup.
+- [ ] [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
+      — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`).
+
+## Temporary states + canonical follow-up plans
+
+- Phase 1 scripts are new files; no migration needed.
+- Cron job (Phase 3) is blocked on Phase 1 + Phase 2 completion.
+- Pre-push hook (Phase 4) is blocked on Phase 1 completion.

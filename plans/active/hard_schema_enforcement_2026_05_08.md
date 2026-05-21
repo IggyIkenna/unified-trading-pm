@@ -1,24 +1,11 @@
----plan_type: code+infra
-asset_group: cross-cutting
-owner: ikenna
+---
+title: "Hard Schema Enforcement at Write Boundary — Workspace-Wide"
 created: 2026-05-08
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 name: hard-schema-enforcement-2026-05-08
-overview: >-
-  Workspace-wide hard schema enforcement at the write boundary. Source RFC: archived issue
-  `plans/archive/issues/hard_schema_enforcement_at_write_boundary_2026_05_08.md`. Today only predictions has
-  hard-required lifecycle enforcement; every other asset_group leaves required fields nullable (base_currency /
-  quote_currency / chain_id / contract_address / decimals / fixture_id) and the write path fails venue-shard-wide rather
-  than per-row, masking partial-data bugs as "all-or-nothing" failures. Sports adapters minimal-flatten (18-30 columns
-  dropped at normalize-time). Root-cause for lookahead bias / partial-bundle / minimal- flattening incidents
-  compounding. Fix is workspace-wide UAC schema audit + per-row record_failed gate refactor + sports adapter full-column
-  capture + manifest row_key shape validation + QG static assertion. Operator decision 2026-05-08: SEQUENCE this plan
-  AFTER the futures-expiry work in `tradfi_master` Q1+Q2 ships, to avoid mass-fail-during-transit on existing futures
-  rows. Sub-plan-of `infrastructure_master`.
 
-type: mixed
 epic: epic-code-completion
 status: done
 
@@ -185,6 +172,7 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: sports_master
+priority: P2
 ---
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)

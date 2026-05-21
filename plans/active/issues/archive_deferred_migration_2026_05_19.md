@@ -1,7 +1,10 @@
 ---
 title: Archive DEFERRED-item migration audit — 24 plans with open items
 created: 2026-05-19
-author: slot-1
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found

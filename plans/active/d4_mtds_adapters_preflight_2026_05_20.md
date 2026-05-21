@@ -1,16 +1,14 @@
----name: d4-mtds-adapters-preflight-2026-05-20
+---
+name: d4-mtds-adapters-preflight-2026-05-20
 title: D4 — MTDS adapters preflight + batch-live parity
 created: 2026-05-20
-author: ikenna (slot-8)
 status: active
 priority: P0
-deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-parent_plan: master_to_live_defi_2026_05_23.md
 source_audits:
   - plans/audit/is_mtds_contract_audit_2026_05_20.md # C0
   - plans/audit/mtds_features_contract_audit_2026_05_20.md # C4

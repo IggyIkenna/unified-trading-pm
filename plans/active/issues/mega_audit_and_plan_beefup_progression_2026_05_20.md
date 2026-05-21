@@ -1,7 +1,6 @@
 ---
 title: Mega audit + plan beef-up progression tracker — 2026-05-20
 created: 2026-05-20
-author: ikenna (slot-1 main)
 source:
   - operator directive 2026-05-20 "we got loose ends in 3+ places... done so many ai DAYS ITS UNACCEPTABLE"
   - drift S3 silent-absence bug 2026-05-19
@@ -10,6 +9,8 @@ locked_by: live-defi-rollout
 related_plans:
   - is_mtds_contract_audit_2026_05_20.md
   - master_to_live_defi_2026_05_23.md
+priority: P2
+status: active
 ---
 
 ## What this tracks

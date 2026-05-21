@@ -1,13 +1,10 @@
----name: expected-unattempted-propagation-chain-2026-05-12
-type: plan
-plan_type: implementation
-asset_group: cross-cutting
-owner: ikenna
+---
+title: "Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML"
+name: expected-unattempted-propagation-chain-2026-05-12
 status: active
 priority: P0
 created: 2026-05-12
 last_updated: 2026-05-12
-deadline: 2026-05-15
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 related_plans:
   - manifest_evolution_SUPERSEDED_2026_05_21

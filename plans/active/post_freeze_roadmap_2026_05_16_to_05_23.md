@@ -1,11 +1,8 @@
----title:
+---
+title:
   Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
-type: coordination-doc
 status: active
 created: 2026-05-12
-deadline: 2026-06-04
-horizon: 20 calendar days, 5 cycles
-companion_to: plans/active/work_split_2026_05_12_ikenna.md + plans/active/work_split_2026_05_12_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 estimate_class: design
@@ -13,6 +10,7 @@ estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
 parent_epic: defi_master
+priority: P2
 ---
 
 # Post-freeze roadmap — 2026-05-16 → 2026-06-04

@@ -1,16 +1,14 @@
----name: d3-manifest-v8-finish-2026-05-20
+---
+name: d3-manifest-v8-finish-2026-05-20
 title: D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 created: 2026-05-20
-author: ikenna (slot-8)
 status: active
 priority: P0
-deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-parent_plan: master_to_live_defi_2026_05_23.md
 source_audits:
   - plans/audit/results/manifest_v8_compliance_2026_05_20_summary.md # A4
   - plans/audit/results/manifest_divergence_2026_05_20_summary.md # A3

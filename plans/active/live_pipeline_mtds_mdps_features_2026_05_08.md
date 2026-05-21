@@ -1,29 +1,10 @@
----name: live-pipeline-mtds-mdps-features-2026-05-08
-overview:
-  Activate the live (websocket-streaming) pipeline for MTDS → MDPS → features-service across all five asset_groups
-  ahead of the 2026-05-23 DeFi cutover. Topology: MTDS as a standalone cluster (websocket connection-pool concerns
-  isolated from compute); MDPS + features-service-asset-scoped colocated per asset_group with in-process MDPS→features
-  handoff; features-service-cross-cutting as a separate flavor of the same consolidated image, subscribing to multiple
-  asset_groups' Redis Streams. Cascade: MTDS emits `CANDLE_BOUNDARY_CROSSED` on Redis Streams every aligned 15s with a
-  small grace window; MDPS aggregates ticks → emits `CANDLE_COMPUTED`; features-service consumes `CANDLE_COMPUTED` and
-  runs feature_groups whose UAC `required_inputs` DAG is satisfied. UTC midnight alignment is enforced end-to-end so
-  batch-vs-live reconciliation is purely a `pipeline_mode=` GROUP-BY (no partial-candle cleanup; services boot at any
-  order and sync at the next aligned boundary). Gap semantics extend the existing 4-category tree to live with the
-  stale-not-missing rule wired to `ServiceEmissionPolicy.PUBLISHED_DEGRADED` (strategy refuses new signals on degraded,
-  allows exits, fully blocks on `BLOCKED`). Health-API (already QG-enforced as ERROR per workspace STEP 5.62) extends
-  with `last_candle_emitted_at` / `staleness_seconds` / `degraded_ratio_60s` / `cluster_pct_skipped_60s`; alerting-
-  service polls + subscribes + drives circuit breakers wired to strategy-service. Instrument-lifecycle change handling
-  uses the event-publish + downstream cache-delta hot-reload pattern (mirrors `ApiKeyReloader` — NOT a new dedicated
-  stream). Replay subsystem covers intraday-restart gap windows with smooth handoff to live at the next aligned
-  boundary. Pre-requisite: `features_repo_consolidation_2026_05_08` reaches Phase 7 (8 repos archived, consolidated
-  features-service deployable) before Phase 5 here.
-type: code
+---
+title: "Live pipeline (MTDS / MDPS / features-service) for 2026-05-23 DeFi cutover"
+name: live-pipeline-mtds-mdps-features-2026-05-08
 epic: epic-deployment
 status: active
 
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -122,7 +103,12 @@ todos:
             require ≥5) to UTL's deps or whether it's already present.
         Output committed under `plans/active/issues/`. Subsequent phases reference the artifact.
     status: done
-    note: "PM@12483f5b — 408-line audit doc shipped 2026-05-08 by tab2-pre-audit sub-agent. Covers all 7 audit subsections (a-g) with file:line / commit-sha / count evidence + 10 cross-cutting Phase-3-13 sub-todos + per-consumer wire-in tables for Phases 8 + 10. Notable: MTDS RSS-pause WIRED 2026-05-08 (cli/main.py:103-128) — auto-memory `project_mtds_parallelization_fix_2026_05_07` 'RSS-pause PENDING' claim is now stale; `redis>=5.0` already declared in UTL pyproject."
+    note:
+      "PM@12483f5b — 408-line audit doc shipped 2026-05-08 by tab2-pre-audit sub-agent. Covers all 7 audit subsections
+      (a-g) with file:line / commit-sha / count evidence + 10 cross-cutting Phase-3-13 sub-todos + per-consumer wire-in
+      tables for Phases 8 + 10. Notable: MTDS RSS-pause WIRED 2026-05-08 (cli/main.py:103-128) — auto-memory
+      `project_mtds_parallelization_fix_2026_05_07` 'RSS-pause PENDING' claim is now stale; `redis>=5.0` already
+      declared in UTL pyproject."
 
   - id: phase-1-uac-streaming-events
     content: |
@@ -192,7 +178,16 @@ todos:
 
         QG: UAC quality-gates.sh clean.
     status: done
-    note: "UAC@8bc3f2a (PipelineMode SSOT) + UAC@b643c9a (Phase 1 streaming events: CandleBoundaryCrossedEvent / CandleComputedEvent / InstrumentCacheRefreshTriggerEvent + EmissionOutcome closed-set + parse_timeframe + 17 unit tests) + UAC@b02335d (top-level facade: PipelineMode + is_batch / is_live / source_string_for / pipeline_mode_for_source surfaced from `unified_api_contracts` per Citadel Import Rules). Module at `unified_api_contracts/events/streaming.py`. CandleComputedEvent carries BOTH `emission_policy` (POLICY) AND orthogonal `emission_outcome` (OUTCOME — PUBLISHED_OK / PUBLISHED_DEGRADED / STALE_DATA / BLOCKED). All events default `pipeline_mode` to LIVE_WEBSOCKET. **QG state 2026-05-08 PM (RESOLVED)**: foreign blockers cleared — ORACLE_COVERAGE_START shipped at UAC@3adee82 (Tab 1 DeFi-launch); EN DASH at alerting/thresholds.py:60 already replaced by HYPHEN-MINUS. Issue `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md` marked RESOLVED."
+    note:
+      "UAC@8bc3f2a (PipelineMode SSOT) + UAC@b643c9a (Phase 1 streaming events: CandleBoundaryCrossedEvent /
+      CandleComputedEvent / InstrumentCacheRefreshTriggerEvent + EmissionOutcome closed-set + parse_timeframe + 17 unit
+      tests) + UAC@b02335d (top-level facade: PipelineMode + is_batch / is_live / source_string_for /
+      pipeline_mode_for_source surfaced from `unified_api_contracts` per Citadel Import Rules). Module at
+      `unified_api_contracts/events/streaming.py`. CandleComputedEvent carries BOTH `emission_policy` (POLICY) AND
+      orthogonal `emission_outcome` (OUTCOME — PUBLISHED_OK / PUBLISHED_DEGRADED / STALE_DATA / BLOCKED). All events
+      default `pipeline_mode` to LIVE_WEBSOCKET. **QG state 2026-05-08 PM (RESOLVED)**: foreign blockers cleared —
+      ORACLE_COVERAGE_START shipped at UAC@3adee82 (Tab 1 DeFi-launch); EN DASH at alerting/thresholds.py:60 already
+      replaced by HYPHEN-MINUS. Issue `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md` marked RESOLVED."
 
   - id: phase-2a-utl-redis-streams-client
     content: |
@@ -239,7 +234,13 @@ todos:
 
         QG: UTL quality-gates.sh clean.
     status: done
-    note: "UTL@f24e651b — `unified_trading_library/streaming/redis_stream.py` (StreamPublisher + StreamConsumerGroup; XADD + MAXLEN ~ + XREADGROUP + XACK + XAUTOCLAIM + idempotent XGROUP CREATE) + `replay.py`. 6 unit tests via fakeredis. Event-class-agnostic (generic BaseModel TypeVar). fakeredis>=2.20 added to pyproject (flat-deps). `redis>=5.0` already present. Companion UTL@87134364 added pipeline_mode kwarg to ManifestWriter (gcs_migration plan Phase 1B). UTL QG blocked by foreign UAC breakage at conftest import — see `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md`."
+    note:
+      "UTL@f24e651b — `unified_trading_library/streaming/redis_stream.py` (StreamPublisher + StreamConsumerGroup; XADD +
+      MAXLEN ~ + XREADGROUP + XACK + XAUTOCLAIM + idempotent XGROUP CREATE) + `replay.py`. 6 unit tests via fakeredis.
+      Event-class-agnostic (generic BaseModel TypeVar). fakeredis>=2.20 added to pyproject (flat-deps). `redis>=5.0`
+      already present. Companion UTL@87134364 added pipeline_mode kwarg to ManifestWriter (gcs_migration plan Phase 1B).
+      UTL QG blocked by foreign UAC breakage at conftest import — see
+      `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md`."
 
   - id: phase-2b-utl-utc-aligned-scheduler
     content: |
@@ -280,7 +281,12 @@ todos:
 
         QG: UTL quality-gates.sh clean.
     status: done
-    note: "UTL@8c67df5d — `unified_trading_library/streaming/utc_aligned_scheduler.py` ships UTCAlignedScheduler async class + BoundaryTick frozen dataclass; supports 15s/1m/5m/15m/1h/1d timeframes; recomputes next-fire time against datetime.now(UTC) each iteration (NTP-tolerant); 5 tests via freezegun. UTL@858f3c84 — package `unified_trading_library.streaming.__init__.py` now publishes UTCAlignedScheduler + BoundaryTick + StreamPublisher + StreamConsumerGroup + ReplayPublisher + ReplayWatermarkKV from one import surface (Citadel facade pattern)."
+    note:
+      "UTL@8c67df5d — `unified_trading_library/streaming/utc_aligned_scheduler.py` ships UTCAlignedScheduler async class
+      + BoundaryTick frozen dataclass; supports 15s/1m/5m/15m/1h/1d timeframes; recomputes next-fire time against
+      datetime.now(UTC) each iteration (NTP-tolerant); 5 tests via freezegun. UTL@858f3c84 — package
+      `unified_trading_library.streaming.__init__.py` now publishes UTCAlignedScheduler + BoundaryTick + StreamPublisher
+      + StreamConsumerGroup + ReplayPublisher + ReplayWatermarkKV from one import surface (Citadel facade pattern)."
 
   - id: phase-2c-utl-replay-cascade-helpers
     content: |
@@ -322,7 +328,13 @@ todos:
 
         QG: UTL quality-gates.sh clean.
     status: done
-    note: "UTL@f24e651b — `unified_trading_library/streaming/replay.py` ships ReplayPublisher.publish_window (preserves original period_end + refuses publish for period_end ≤ current_watermark) + ReplayPublisher.finalize (advances per-shard watermark KV; rejects backwards) + ReplayWatermarkKV at `replay_watermark.{shard_key}` → ISO-8601 UTC. 4 unit tests via fakeredis (publish-window round-trip, finalize-advance, double-publish-protection, watermark-tail-handoff). UTL@858f3c84 lifted ReplayPublisher + ReplayWatermarkKV into the `unified_trading_library.streaming` package surface."
+    note:
+      "UTL@f24e651b — `unified_trading_library/streaming/replay.py` ships ReplayPublisher.publish_window (preserves
+      original period_end + refuses publish for period_end ≤ current_watermark) + ReplayPublisher.finalize (advances
+      per-shard watermark KV; rejects backwards) + ReplayWatermarkKV at `replay_watermark.{shard_key}` → ISO-8601 UTC. 4
+      unit tests via fakeredis (publish-window round-trip, finalize-advance, double-publish-protection,
+      watermark-tail-handoff). UTL@858f3c84 lifted ReplayPublisher + ReplayWatermarkKV into the
+      `unified_trading_library.streaming` package surface."
 
   - id: phase-3-mtds-streaming-rollout
     content: |
@@ -391,7 +403,32 @@ todos:
         Databento has a WS endpoint distinct from get_range. Phase 3.5d agent reads that plan's audit
         notes before designing the tradfi WS adapter; banner mutually.
     status: helper-shipped
-    note: "2026-05-11 harsh-live-pipeline-impl-tab — 3.1 (runner orchestration + CLI surface) + 3.3 (pool-size config) + 3.4 (InstrumentCacheRefreshConsumer) SHIPPED at mtds@97b2224. **3.2 DONE 2026-05-18 slot-6 — pop_reconnect_flag() set-and-reset contract tests for all 16 WSFeedConnectors (MTDS@a6a045a)**; 3.5 (per-venue WSFeedConnector implementations: defi→cefi spot/perp→cefi options/futures→tradfi→sports→prediction). **3.5a/b: 13 WSFeedConnectors landed 2026-05-16 (slot-3) — DRIFT-SOLANA, HYPERLIQUID, BINANCE-FUTURES, BYBIT-FUTURES, OKX-FUTURES, DERIBIT, ASTER, BINANCE-SPOT, BYBIT-SPOT, COINBASE-SPOT, OKX-SPOT, KRAKEN-SPOT, KRAKEN-FUTURES. Latest: MTDS@df3fa2f. 90 unit tests pass; basedpyright clean. All 13 verified producing live trades. ALL 8 CEFI PERP VENUES (7 cutover + Kraken-Futures) + 5 CEFI SPOT + DRIFT. Side-mapping codified per venue.** **3.5a-PHOENIX: SHIPPED 2026-05-17 (slot-3) at MTDS@f6a56c1 — PhoenixWSFeedConnector via Jupiter lite-api polling (Phoenix own REST DNS-dead; Jupiter routes live quotes through Phoenix on-chain CLOB). 3s poll interval for SOL-USDC/WBTC-USDC/WBTC-SOL. Reconnect-flag semantics preserved. 21 unit tests pass (1 live-integration skipped). Venue key: 'phoenix'.** **3.5d-TRADFI-DATABENTO: SHIPPED 2026-05-17 (slot-3) at MTDS@946bab0 — DatabentoTradfiWSFeedConnector for CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS. Bridges Databento Live thread-backed callback to async generator via asyncio.Queue + call_soon_threadsafe. 30 unit tests pass (1 live-integration skipped). Status: BLOCKED-CREDENTIALS (Real-Time Databento key needed; ping in ikenna_orchestrator/pings/slot_3.md).** **3.5e-SPORTS-ODDS_API: SHIPPED 2026-05-17 (slot-3) at MTDS@cab6f57 — OddsApiWSFeedConnector polling adapter (no native WS). Venue key: 'odds_api'. Instrument: ODDS_API:SPORT:{sport_key}. 60s poll interval (credit-aware). 29 unit tests pass (1 live-integration skipped). Status: BLOCKED-CREDENTIALS (odds-api-key credit quota; ping in ikenna_orchestrator/pings/slot_3.md).** **3.5f-PREDICTION-POLYMARKET-KALSHI: SHIPPED 2026-05-17 (slot-3) at MTDS@99fc7b3 — PolymarketWSFeedConnector (Gamma API polling, 30s, public/no credentials) + KalshiWSFeedConnector (native WS public ticker channel, no credentials). 53 unit tests pass (2 live-integration skipped). Venue keys: 'polymarket' + 'kalshi'. PHASE 3.5 COMPLETE — all WSFeedConnectors shipped across defi/cefi/tradfi/sports/prediction. ShardManifestRecorder ManifestWriter wiring: ALREADY COMPLETE per MTDS@ab17cc3 (slot-7, 2026-05-12).** NOTE: per ikenna_orchestrator ledger commit 1e01433c the operator reassigned slot-5's Phase 3/5/6/15 to Ikenna slot 7."
+    note:
+      "2026-05-11 harsh-live-pipeline-impl-tab — 3.1 (runner orchestration + CLI surface) + 3.3 (pool-size config) + 3.4
+      (InstrumentCacheRefreshConsumer) SHIPPED at mtds@97b2224. **3.2 DONE 2026-05-18 slot-6 — pop_reconnect_flag()
+      set-and-reset contract tests for all 16 WSFeedConnectors (MTDS@a6a045a)**; 3.5 (per-venue WSFeedConnector
+      implementations: defi→cefi spot/perp→cefi options/futures→tradfi→sports→prediction). **3.5a/b: 13 WSFeedConnectors
+      landed 2026-05-16 (slot-3) — DRIFT-SOLANA, HYPERLIQUID, BINANCE-FUTURES, BYBIT-FUTURES, OKX-FUTURES, DERIBIT,
+      ASTER, BINANCE-SPOT, BYBIT-SPOT, COINBASE-SPOT, OKX-SPOT, KRAKEN-SPOT, KRAKEN-FUTURES. Latest: MTDS@df3fa2f. 90
+      unit tests pass; basedpyright clean. All 13 verified producing live trades. ALL 8 CEFI PERP VENUES (7 cutover +
+      Kraken-Futures) + 5 CEFI SPOT + DRIFT. Side-mapping codified per venue.** **3.5a-PHOENIX: SHIPPED 2026-05-17
+      (slot-3) at MTDS@f6a56c1 — PhoenixWSFeedConnector via Jupiter lite-api polling (Phoenix own REST DNS-dead; Jupiter
+      routes live quotes through Phoenix on-chain CLOB). 3s poll interval for SOL-USDC/WBTC-USDC/WBTC-SOL.
+      Reconnect-flag semantics preserved. 21 unit tests pass (1 live-integration skipped). Venue key: 'phoenix'.**
+      **3.5d-TRADFI-DATABENTO: SHIPPED 2026-05-17 (slot-3) at MTDS@946bab0 — DatabentoTradfiWSFeedConnector for
+      CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS. Bridges Databento Live thread-backed callback to async generator via
+      asyncio.Queue + call_soon_threadsafe. 30 unit tests pass (1 live-integration skipped). Status: BLOCKED-CREDENTIALS
+      (Real-Time Databento key needed; ping in ikenna_orchestrator/pings/slot_3.md).** **3.5e-SPORTS-ODDS_API: SHIPPED
+      2026-05-17 (slot-3) at MTDS@cab6f57 — OddsApiWSFeedConnector polling adapter (no native WS). Venue key:
+      'odds_api'. Instrument: ODDS_API:SPORT:{sport_key}. 60s poll interval (credit-aware). 29 unit tests pass (1
+      live-integration skipped). Status: BLOCKED-CREDENTIALS (odds-api-key credit quota; ping in
+      ikenna_orchestrator/pings/slot_3.md).** **3.5f-PREDICTION-POLYMARKET-KALSHI: SHIPPED 2026-05-17 (slot-3) at
+      MTDS@99fc7b3 — PolymarketWSFeedConnector (Gamma API polling, 30s, public/no credentials) + KalshiWSFeedConnector
+      (native WS public ticker channel, no credentials). 53 unit tests pass (2 live-integration skipped). Venue keys:
+      'polymarket' + 'kalshi'. PHASE 3.5 COMPLETE — all WSFeedConnectors shipped across
+      defi/cefi/tradfi/sports/prediction. ShardManifestRecorder ManifestWriter wiring: ALREADY COMPLETE per MTDS@ab17cc3
+      (slot-7, 2026-05-12).** NOTE: per ikenna_orchestrator ledger commit 1e01433c the operator reassigned slot-5's
+      Phase 3/5/6/15 to Ikenna slot 7."
 
   - id: phase-4-mdps-streaming-aggregation
     content: |
@@ -470,7 +507,29 @@ todos:
         rename, same single-`record_captured` per shard). That plan must reach its Phase 1.2 (MDPS
         callsite migration) before Phase 4 here lands.
     status: done
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@ee64481a per slot 1 RE-TASK ping (features_repo_consolidation Phase 7 cleared 2026-05-08; spawn-prompt gate was stale). Real impl: full async run loop wrapping sync StreamConsumerGroup via asyncio.to_thread; shard-level failure isolation (per-event exception logs + skip-ack so XAUTOCLAIM re-claims); aggregate_window() decision tree across all 4 categories (FRESH/A + ZERO_ACTIVITY_BAR/D + no-emit/A' + STALE/B'C); per-shard _ShardState tracking with consecutive-empty-windows counter for Cat E gating; cascade_parent_candle partial impl (degraded-propagation + fanout validation; per-shard buffering across run loop iterations DEFERRED). 14 unit tests cover all categories. Per-service MDPS consumer wire-in shipped 2026-05-11 by Harsh slot 5 at mdps@`0068b2f`: `market_data_processing_service/app/core/live_aggregator.py` — LiveStreamAggregator orchestrator + 7 Protocol adapters (_MDPSTickFetcher GCS read at pipeline_mode=live_websocket; mdps_ohlcv_aggregator wrapping create_candle_from_interval per Live=batch; _MDPSInstrumentCatalogGate caller-injected alive/venue-open predicates; _MDPSPriorLTPProvider; _MDPSManifestRecorder→record_empty_for_shard; _MDPSTimeframeDAG closed-set DAG) + StreamConsumerGroup/StreamPublisher wiring + emission_publisher publishing CandleComputedEvent + CANDLE_COMPUTED progress event; `cli/parser.py` + `cli/handlers/live_aggregator_handler.py` add `--mode live --operation streaming-aggregation --shard-spec asset_group:venue:data_type`; `config.py` adds streaming_redis_url + vm_name fields; 12 unit tests (pure adapters + 4-category wired-aggregator paths + construction + shard-spec parsing); ruff + basedpyright clean. DEFERRED follow-ups (P1, captured in module docstring + Phase 4 deferred-items list below): (a) candle-parquet persistence — MDPSStreamingAggregator computes OHLCV but the CandleComputedEvent carries metadata only; needs a `candle_persister` Protocol or open_candle_writer integration in the aggregator; (b) publish_with_policy SSOT-policy resolution on the emission boundary (the event already carries emission_policy/outcome from a hardcoded default); (c) catalog-aware (A) vs (D) split wiring (instruments-service cache + venue_trading_calendar) per writegate Phase 3.D.5 Waves 2/3."
+    note:
+      "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@ee64481a per slot 1 RE-TASK
+      ping (features_repo_consolidation Phase 7 cleared 2026-05-08; spawn-prompt gate was stale). Real impl: full async
+      run loop wrapping sync StreamConsumerGroup via asyncio.to_thread; shard-level failure isolation (per-event
+      exception logs + skip-ack so XAUTOCLAIM re-claims); aggregate_window() decision tree across all 4 categories
+      (FRESH/A + ZERO_ACTIVITY_BAR/D + no-emit/A' + STALE/B'C); per-shard _ShardState tracking with
+      consecutive-empty-windows counter for Cat E gating; cascade_parent_candle partial impl (degraded-propagation +
+      fanout validation; per-shard buffering across run loop iterations DEFERRED). 14 unit tests cover all categories.
+      Per-service MDPS consumer wire-in shipped 2026-05-11 by Harsh slot 5 at mdps@`0068b2f`:
+      `market_data_processing_service/app/core/live_aggregator.py` — LiveStreamAggregator orchestrator + 7 Protocol
+      adapters (_MDPSTickFetcher GCS read at pipeline_mode=live_websocket; mdps_ohlcv_aggregator wrapping
+      create_candle_from_interval per Live=batch; _MDPSInstrumentCatalogGate caller-injected alive/venue-open
+      predicates; _MDPSPriorLTPProvider; _MDPSManifestRecorder→record_empty_for_shard; _MDPSTimeframeDAG closed-set DAG)
+      + StreamConsumerGroup/StreamPublisher wiring + emission_publisher publishing CandleComputedEvent + CANDLE_COMPUTED
+      progress event; `cli/parser.py` + `cli/handlers/live_aggregator_handler.py` add `--mode live --operation
+      streaming-aggregation --shard-spec asset_group:venue:data_type`; `config.py` adds streaming_redis_url + vm_name
+      fields; 12 unit tests (pure adapters + 4-category wired-aggregator paths + construction + shard-spec parsing);
+      ruff + basedpyright clean. DEFERRED follow-ups (P1, captured in module docstring + Phase 4 deferred-items list
+      below): (a) candle-parquet persistence — MDPSStreamingAggregator computes OHLCV but the CandleComputedEvent
+      carries metadata only; needs a `candle_persister` Protocol or open_candle_writer integration in the aggregator;
+      (b) publish_with_policy SSOT-policy resolution on the emission boundary (the event already carries
+      emission_policy/outcome from a hardcoded default); (c) catalog-aware (A) vs (D) split wiring (instruments-service
+      cache + venue_trading_calendar) per writegate Phase 3.D.5 Waves 2/3."
 
   - id: phase-5-features-asset-scoped-flavor
     content: |
@@ -544,7 +603,13 @@ todos:
         repos archived, consolidated repo deployable). Banner that plan with
         `🔴 BLOCKER FOR live_pipeline Phase 5`.
     status: done
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 per slot 1 RE-TASK ping. Real impl: full async run loop subscribing to streaming.{ag}.candle_computed; per-event decision tree (BLOCKED upstream skip → no-resolved-groups skip → for each fired feature_group call FeatureComputeRunner + publish FeaturesComputedEvent with degraded propagation pass-through); shard-level failure isolation. Pairs with UAC@e55651b (FeaturesComputedEvent). Per-service features-service consumer wire-in (per-family live/ module instantiating with family-specific compute) is Harsh slot 5 scope."
+    note:
+      "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 per slot 1 RE-TASK
+      ping. Real impl: full async run loop subscribing to streaming.{ag}.candle_computed; per-event decision tree
+      (BLOCKED upstream skip → no-resolved-groups skip → for each fired feature_group call FeatureComputeRunner +
+      publish FeaturesComputedEvent with degraded propagation pass-through); shard-level failure isolation. Pairs with
+      UAC@e55651b (FeaturesComputedEvent). Per-service features-service consumer wire-in (per-family live/ module
+      instantiating with family-specific compute) is Harsh slot 5 scope."
 
   - id: phase-6-features-cross-cutting-flavor
     content: |
@@ -600,7 +665,13 @@ todos:
 
         QG: features-service quality-gates.sh clean.
     status: done
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 alongside Phase 5 runner. Real impl: parallel asyncio.gather over N upstream consumers; process_aligned_window with Phase 6.2 worst-of propagation (BLOCKED-skip / PUBLISHED_DEGRADED-pass-through / STALE-freshness-pass-through); per-shard fields nullable on cross-cutting events (features aggregate across shards). Watermark-buffered fan-in scheduler (per-period bucketing + grace-deadline STALE_DATA emission) is partial — process_aligned_window is real; integrated buffer DEFERRED. Per-service features-service cross-cutting consumer wire-in is Harsh slot 5 scope."
+    note:
+      "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 alongside Phase 5
+      runner. Real impl: parallel asyncio.gather over N upstream consumers; process_aligned_window with Phase 6.2
+      worst-of propagation (BLOCKED-skip / PUBLISHED_DEGRADED-pass-through / STALE-freshness-pass-through); per-shard
+      fields nullable on cross-cutting events (features aggregate across shards). Watermark-buffered fan-in scheduler
+      (per-period bucketing + grace-deadline STALE_DATA emission) is partial — process_aligned_window is real;
+      integrated buffer DEFERRED. Per-service features-service cross-cutting consumer wire-in is Harsh slot 5 scope."
 
   - id: phase-7-replay-subsystem
     content: |
@@ -655,7 +726,13 @@ todos:
         --start --end --shard-key` flags; register `replay-` VM-name prefix in `VM_PREFIX_TO_BUCKET` per
         workspace VM-naming rule.
     status: done
-    note: "2026-05-14 slot-3 ikenna — MTDS@9358c54 ships 7.1 (ReplayRunner + HistoricalWindowFetcher + InstrumentWindowData + ReplayHandler + operation 'replay' registration) + 7.3 smooth handoff (finalize at last period_end) + 7.4 backstop (REPLAY_BACKSTOP_REACHED + halt at coverage_limit). 7.2 MDPS consumer reuse is pre-existing (live_aggregator.py Phase 3 MDPS consumer is already replay-unaware by design — events flow through same XREADGROUP calls). 12 unit tests: N-window stream, handoff finalize, double-publish None-return, backstop halt+event. QG clean. Per-venue HistoricalWindowFetcher factories ship with Phase 3.5 de-risk rollout."
+    note:
+      "2026-05-14 slot-3 ikenna — MTDS@9358c54 ships 7.1 (ReplayRunner + HistoricalWindowFetcher + InstrumentWindowData
+      + ReplayHandler + operation 'replay' registration) + 7.3 smooth handoff (finalize at last period_end) + 7.4
+      backstop (REPLAY_BACKSTOP_REACHED + halt at coverage_limit). 7.2 MDPS consumer reuse is pre-existing
+      (live_aggregator.py Phase 3 MDPS consumer is already replay-unaware by design — events flow through same
+      XREADGROUP calls). 12 unit tests: N-window stream, handoff finalize, double-publish None-return, backstop
+      halt+event. QG clean. Per-venue HistoricalWindowFetcher factories ship with Phase 3.5 de-risk rollout."
 
   - id: phase-8-health-api-extension
     content: |
@@ -705,7 +782,16 @@ todos:
 
         QG: each of MTDS / MDPS / features-service quality-gates.sh clean.
     status: done
-    note: "UTL@d08c50c3 — `unified_trading_library/streaming/streaming_health.py` ships `StreamingHealthSnapshot` (frozen dataclass) + `compute_streaming_health(redis_client, stream_name, consumer_group, watermark_key)` that services plug into their existing `make_health_router(data_freshness=...)` callback. Snapshot fields: stream_name, consumer_group, last_event_age_seconds (XREVRANGE), consumer_lag_pending (XPENDING), replay_watermark (per-shard ISO-8601 from KV), zero_activity_bar_rate (fraction of recent events flagged data_freshness=ZERO_ACTIVITY_BAR per CLAUDE.md rule D), sample_size. 6 unit tests via fakeredis. Per-service `data_freshness` callback wire-in is a 1-liner — services map directly to the snapshot.as_dict() shape; the wire-in across MTDS / MDPS / features-service ships with their respective Phase 3/4/5 live-mode rollouts (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency)."
+    note:
+      "UTL@d08c50c3 — `unified_trading_library/streaming/streaming_health.py` ships `StreamingHealthSnapshot` (frozen
+      dataclass) + `compute_streaming_health(redis_client, stream_name, consumer_group, watermark_key)` that services
+      plug into their existing `make_health_router(data_freshness=...)` callback. Snapshot fields: stream_name,
+      consumer_group, last_event_age_seconds (XREVRANGE), consumer_lag_pending (XPENDING), replay_watermark (per-shard
+      ISO-8601 from KV), zero_activity_bar_rate (fraction of recent events flagged data_freshness=ZERO_ACTIVITY_BAR per
+      CLAUDE.md rule D), sample_size. 6 unit tests via fakeredis. Per-service `data_freshness` callback wire-in is a
+      1-liner — services map directly to the snapshot.as_dict() shape; the wire-in across MTDS / MDPS / features-service
+      ships with their respective Phase 3/4/5 live-mode rollouts (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per
+      Harsh Tab 2 dependency)."
 
   - id: phase-9-alerting-tier-up-and-circuit-breakers
     content: |
@@ -728,6 +814,9 @@ todos:
              | Signal | Condition | Severity |
              |
 parent_epic: mtds_mdps_master
+estimate_class: infra
+estimate_baseline_ai_days: 12.0
+estimate_calibrated_ai_days: 9.6
 ---
 
 | --- | --- | | One shard skipped, others healthy | `cluster_pct_skipped_60s` < 5% | Info — self-reconciles | | Many

@@ -1,4 +1,5 @@
 ---
+title: "Canary coverage QG enforcement — close the 3 cassette↔prod blind spots"
 name: canary_coverage_qg_enforcement_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -8,7 +9,6 @@ target_slot: multi-slot-fanout
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-deadline: 2026-05-23
 deadline_change_reason:
   "Operator pulled deadline 2026-05-20 from June-4 to May-23: 140 prod blind spots are inside live-DeFi cutover gate per
   Data Pipeline Correctness HARD RULE. Heavy slot fan-out required (~7 cal AI-days into 3 cal days = ~2.3x parallelism)."
@@ -33,7 +33,6 @@ no_deferral_scope:
   - "Every production HTTP/WS host: must have a cassette + entry in capability declarations (no blind spots)"
   - "Every venue with both batch + live adapters: must have BOTH a batch cassette and a WS cassette"
   - "Every QG STEP wiring change: must be in scripts/quality-gates.sh (not informational tests)"
-parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: data_correctness
 related_plans:
   - defunct_uac_provider_dirs_cleanup_2026_05_20.md

@@ -1,76 +1,52 @@
----name: d0-orchestrator-migration-2026-05-20
-title: D0 — agent-orchestrator migration plan
-created: 2026-05-20
-author: ikenna (slot-8)
+---
+title: D0 — orchestrator-service → agent-orchestrator migration
+parent_epic: orchestrator_master
+priority: P0
 status: active
-priority: P1
-deadline: 2026-05-23
+estimate_class: refactor
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-estimate_class: refactor
-estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.2
-parent_plan: master_to_live_defi_2026_05_23.md
-source_audits:
-  - plans/audit/orchestrator_service_contract_audit_2026_05_20.md # C11
 related_plans:
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - agent_orchestrator_dual_deployment_2026_05_19.md
-parent_epic: orchestrator_master
+  - master_to_live_defi_2026_05_23.md
 ---
 
-# D0 — agent-orchestrator migration plan
+# D0 — Orchestrator-Service Migration
 
-> **Ordering step 0** in the Phase-E execution chain (runs in parallel with others — no D1+ dependency).
->
-> C11 audit found **0 P0 findings** for the orchestrator. The agent-orchestrator is operator tooling, NOT a trading
-> service — standard trading-service contract patterns (manifest emission, DependencyError) do not apply. Remaining gaps
-> are P2/P3 correctness improvements.
+Port alignment, CORS, LEDGER.md deprecation for the orchestrator-service → agent-orchestrator rename. Ensures all
+workspace configs consistently use port 8026 and the new `agent-orchestrator.odum-research.com` domain.
 
-## P2/P3 findings from C11
+Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 
-| Finding                                                                                        | Severity | File                     |
-| ---------------------------------------------------------------------------------------------- | -------- | ------------------------ |
-| Port mismatch: orchestrator uses 8765 internally but workspace port registry lists 8026        | P2       | orchestrator config      |
-| CORS origin missing prod domain `agent-orchestrator.odum-research.com`                         | P2       | orchestrator CORS config |
-| Dashboard work-split surface not yet fully replacing LEDGER.md as the authoritative split tool | P3       | process gap              |
+---
 
-## Remediation backlog
+## Phase 1 — Port 8026 alignment
 
-### Phase 1 — Port alignment
+- [x] ✅ [AGENT] P2. Align orchestrator port: updated `scripts/orchestrator.service`, `scripts/dev.sh`,
+      `scripts/orchestrator-demo.service`, `scripts/populate_demo.py` from 8765 → 8026. App.tsx BOOTSTRAP_URL also
+      updated. agent-orch@tab/ikennaigboaka/1 2026-05-21.
 
-- [ ] [AGENT] P2. Align orchestrator port: update internal config to use 8026 (workspace standard per port registry
-      `unified-trading-pm/scripts/dev/ui-api-mapping.json`); update any LEDGER.md or continuation-prompt references that
-      mention 8765
-- [ ] [AGENT] P2. Update CLAUDE.md orchestrator reference (already shows 8026) to confirm this is the deployed port; add
-      a port-check assertion to the orchestrator startup log
+## Phase 2 — CORS + CLAUDE.md update
 
-### Phase 2 — CORS fix
+- [x] ✅ [AGENT] P2. `agent-orchestrator.odum-research.com` already in CORS allowed origins via `_default_cors_origins`
+      in `server/server.py` (shipped earlier, commit `8daa12d`). No additional change needed.
+- [ ] [AGENT] P2. Update CLAUDE.md orchestrator reference to confirm port 8026 is the deployed port; add prod URL.
 
-- [ ] [AGENT] P2. Add `agent-orchestrator.odum-research.com` to CORS allowed origins in orchestrator FastAPI app config
-  - Current: likely `localhost:*` only
-  - Required: prod domain + localhost for local dev
+## Phase 3 — LEDGER.md deprecation header
 
-### Phase 3 — Dashboard → LEDGER deprecation
-
-- [ ] [AGENT] P3. Annotate `ikenna_orchestrator/LEDGER.md` and `harsh_orchestrator/LEDGER.md` with deprecation header
-      pointing to dashboard at `agent-orchestrator.odum-research.com` as authoritative source
-  - Dashboard is already authoritative per CLAUDE.md § "Daily Work-Split Process"
-  - LEDGER.md stays as offline fallback but should not be primary read surface
+- [x] ✅ [AGENT] P3. `ikenna_orchestrator/LEDGER.md` and `harsh_orchestrator/LEDGER.md` annotated with deprecation
+      banner: "⚠️ OFFLINE FALLBACK ONLY — primary work-split surface is the agent-orchestrator dashboard."
+      pm-repo@tab/ikennaigboaka/1 2026-05-21.
 
 ## Success criteria
 
-- [ ] Phase 1: orchestrator health endpoint responds on port 8026 in local dev; port registry is consistent
-- [ ] Phase 2: `curl -H "Origin: https://agent-orchestrator.odum-research.com" -I http://localhost:8026/health` returns
-      `Access-Control-Allow-Origin: https://agent-orchestrator.odum-research.com`
-- [ ] Phase 3: LEDGER.md files carry deprecation header (offline fallback, not primary)
+- [x] ✅ Port updated to 8026 across service template, dev script, demo service, and App.tsx.
+- [ ] `curl -H "Origin: https://agent-orchestrator.odum-research.com" -I http://localhost:8026/health` returns
+      `Access-Control-Allow-Origin: https://agent-orchestrator.odum-research.com`.
+- [x] ✅ LEDGER.md files carry deprecation header (offline fallback, not primary).
 
-## Full-execution criterion
+## Temporary states + canonical follow-up plans
 
-> Orchestrator boots on 8026 in local dev (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`) and prod
-> CORS request from `agent-orchestrator.odum-research.com` succeeds. No service-contract P0 gaps identified in C11 —
-> this plan is predominantly correctness cleanup.
-
-## Temporary states
-
-None — these are all direct fixes with no transitional state required.
+- Phases 1-3 are low-complexity config cleanups; no downstream dependencies.

@@ -1,8 +1,6 @@
----name: manifest-cross-asset-rescan-design-2026-05-08
-type: plan
-plan_type: design
-asset_group: cross-cutting
-owner: ikenna
+---
+title: "Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)"
+name: manifest-cross-asset-rescan-design-2026-05-08
 status: done
 priority: P1
 created: 2026-05-08

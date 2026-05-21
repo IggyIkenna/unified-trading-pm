@@ -1,5 +1,5 @@
----title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
-type: implementation
+---
+title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
 status: scope-narrowed
 created: 2026-05-14
 descope_reversed: 2026-05-13
@@ -10,12 +10,8 @@ descope_reversal_reason: |
   scope-expansion items beyond the original Phase 1-13 surface (multi-archetype-family expansion, additional
   venue support, perf optimization based on production observations). May-23 ships with Phases 4-13
   READY-TO-GO-LIVE (live trading toggle OFF, code + tests + backtests + paper-trade testnet smoke verified).
-author: harsh-slot-9 (original) — scope narrowed 2026-05-13 (audit slot per operator)
-operator: ikenna
 target_deadline: 2026-06-15 (post-cutover scope-expansion only)
-horizon: post-may23-cutover (scope-expansion follow-on; NOT implementation deferral)
 migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md (REVERSED for Phases 4-13)
-companion_to: plans/active/master_to_live_defi_2026_05_23.md
 related_plans:
   - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
@@ -32,6 +28,7 @@ estimate_calibration_note: |
   Phase 9 cost-model ~3 + Phase 10 codex ~1 + Phase 11 UI/API ~2 + Phase 12 backtest ~2 + Phase 13 live ~1.
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
 parent_epic: strategy_master
+priority: P2
 ---
 
 # DeFi recursive-borrow archetypes — post-cutover implementation (Phases 4-13)

@@ -1,7 +1,6 @@
----type: plan
-asset_group: cross-cutting
+---
+title: "Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging"
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -13,8 +12,6 @@ gates:
   - master_to_live_defi_2026_05_23:Group-F
   - master_to_live_defi_2026_05_23:Group-G
 status: active
-date: 2026-05-07
-owner: Ikenna (plan), Harsh (alerting-service code)
 estimate_class: design
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2

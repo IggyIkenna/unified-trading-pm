@@ -1,19 +1,8 @@
----name: promote-workflow-may23-dual-track
-overview:
-  Dual-track promote workflow for the May-23 live-DeFi cutover. PRIMARY = operator-CLI path (run-paper.sh + run-live.sh
-  + colocated_engine.py) hardened for safety-net certainty. SECONDARY = minimal-but-real UI promote pipeline (Promote
-  button → backend → minimal CandidateManifest → DART manual-trade gate UI) shipping in parallel so operator can drive
-  cutover via UI with CLI as fallback. Both archetypes (carry_staked_basis lead +
-  ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion hedge) running ≥7 continuous days on real custody + real venues +
-  real wallet. Heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration
-  deferred to post-cutover plan.
-type: plan
+---
+title: "Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)"
+name: promote-workflow-may23-dual-track
 status: active
 created: 2026-05-10
-deadline: 2026-05-23
-horizon: 13 days
-spawned_from: plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
-companion_to: plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 related_plans:
@@ -23,12 +12,6 @@ related_plans:
   - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
   - plans/active/defi_master.md
   - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
-related_codex:
-  - codex/09-strategy/operational/cli-promote-paths.md
-  - codex/04-architecture/promote-workflow-architecture.md
-  - codex/05-infrastructure/strategy-vm-launcher-shape.md
-  - codex/04-architecture/custody-providers.md
-  - codex/05-infrastructure/launcher-script-ssot.md
 estimate_class: design
 estimate_baseline_ai_days: 7.0
 estimate_calibrated_ai_days: 4.2
@@ -36,6 +19,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: dart_and_promote_master
+priority: P1
 ---
 
 ## Deferred work — migrated to:

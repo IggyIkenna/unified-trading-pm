@@ -1,15 +1,8 @@
----name: promote-workflow-post-cutover-ui-pipeline
-overview:
-  Build the UI-driven promote workflow + state-machine consolidation + cross-service auto-registration + candidate
-  manifest enrichment. Picks up everything DEFERRED from the May-23 cutover plan. Scoped 4-6 weeks post-cutover (target
-  completion 2026-07-04).
-type: plan
+---
+title: "Promote Workflow — Post-cutover UI pipeline + state-machine consolidation"
+name: promote-workflow-post-cutover-ui-pipeline
 status: active
 created: 2026-05-10
-deadline: 2026-07-04
-horizon: 6-8 weeks (starts after May-23 live cutover)
-spawned_from: plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
-companion_to: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 related_plans:
@@ -19,20 +12,6 @@ related_plans:
   - plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
   - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
   - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
-related_codex:
-  - codex/04-architecture/strategy-lifecycle-state-machine.md
-  - codex/04-architecture/live-deployment-manifest.md
-  - codex/04-architecture/operational-modes.md
-  - codex/04-architecture/paper-vs-live-execution-seam.md
-  - codex/04-architecture/promote-workflow-architecture.md
-  - codex/03-observability/lifecycle-events.md
-  - codex/05-infrastructure/live-deployment-monitoring.md
-  - codex/05-infrastructure/per-venue-paper-policy.md
-  - codex/14-customer-journeys/dart/mode-toggle.md
-  - codex/14-customer-journeys/promote-pipeline-backend.md
-  - codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md
-  - codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md
-  - codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md
 estimate_class: infra
 estimate_baseline_ai_days: 25
 estimate_calibrated_ai_days: 20.0
@@ -40,6 +19,7 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: dart_and_promote_master
+priority: P2
 ---
 
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation

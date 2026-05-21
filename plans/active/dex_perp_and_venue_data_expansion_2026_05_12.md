@@ -1,11 +1,9 @@
----title:
+---
+title:
   "DEX perp + venue data expansion — Lighter/Kraken-Futures/BitFinex-Derivatives/Drift/Pacifica funding + EigenLayer
   yield aggregation"
-type: plan
 status: active
 created: 2026-05-12
-deadline: 2026-05-23
-asset_group: cefi,defi
 priority: P1
 parent: master_to_live_defi_2026_05_23
 epic: live_defi_rollout

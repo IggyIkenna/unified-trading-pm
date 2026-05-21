@@ -3,7 +3,6 @@ title:
   "deployment-api shard_detail.py + cloud_storage_client.py are GCS-locked — should use cloud-agnostic
   resolve_bucket_uri()"
 created: 2026-05-17
-author: ikenna-slot-3 (surfaced during inline-bucket-uri ratchet sweep at deployment-api@4b9dbbf)
 source:
   - deployment-api/deployment_api/services/shard_detail.py (27 baseline + 3 newly-noqa'd inline `gs://` formatters)
   - unified_trading_library/config_interface/paths/registry.py:243 (legacy `build_bucket()` helper — GCS-only by
@@ -15,6 +14,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-17
 severity: P2 (post-cutover hygiene; not blocking May-23 since GCS is the May-23 cloud)
 status: filed (deferred; cloud-agnostic migration is a refactor sprint, not a sweep item)
+priority: P2
 ---
 
 ## What I found
@@ -100,6 +100,6 @@ rationale linking to this issue doc. QG baseline restored to 27. No regression.
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN  
-**Triaged by**: slot-8 triage sweep  
+**Status**: OPEN
+**Triaged by**: slot-8 triage sweep
 **Reason**: Structural cloud-agnostic migration gap; P2 deferred

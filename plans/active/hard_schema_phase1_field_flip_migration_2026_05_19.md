@@ -1,22 +1,11 @@
----plan_type: code+infra
-asset_group: cross-cutting
-owner: ikenna
+---
+title: "Hard Schema Phase 1 — Field-Flip Migration Plan"
 created: 2026-05-19
 last_updated: 2026-05-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 name: hard-schema-phase1-field-flip-migration-2026-05-19
-overview: >-
-  Design+audit output from slot 7 re-dispatch (work_split_2026_05_19_ikenna item 10). Successor plan to
-  hard_schema_enforcement_2026_05_08.md Phase 1 (status: helper-shipped). Phase 1's "nullable → required" scope audit
-  reveals that the original framing was partially incorrect: base_asset/quote_asset are already non-nullable (str = ""),
-  expiry stays nullable at declaration level (legitimately None for non-futures types), DeFi disjunctive fields can't
-  flip without subclass refactor. The REAL outstanding Phase 1 work is: (a) DeFi decimals model_validator rules
-  (base_asset_decimals + quote_asset_decimals — NOT yet enforced); (b) back-fill audit for null decimals in historical
-  DeFi instrument rows. All other "flips" are either already enforced by model_validator, already non-optional at
-  declaration level, or require the subclass refactor which is post-cutover scope.
 
-type: mixed
 epic: epic-code-completion
 status: active
 
@@ -114,51 +103,44 @@ todos:
         | Field | Current type | Model validator | Declaration flip needed? |
         |
 parent_epic: defi_master
----|---|---|---|
-        | `base_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str; add Field(min_length=1) if desired |
-        | `quote_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str |
-        | `pool_address` | `str \| None` | ✅ Rule 2 (disjunctive) | No — disjunctive can't express in type alone |
-        | `base_asset_contract_address` | `str \| None` | ✅ Rule 2 (disjunctive) | No — same |
-        | `base_asset_decimals` | `int \| None` | ❌ NOT YET (Phase A this plan) | Phase A ships validator; declaration stays Optional |
-        | `quote_asset_decimals` | `int \| None` | ❌ NOT YET for POOL (Phase A) | Phase A ships validator for POOL type |
-        | `expiry` | `datetime \| None` | ✅ Rules 3/4/5 (FUTURE/OPTION/EVENT_CONTRACT) | No — legitimately None for non-futures |
-        | Sports `fixture_id` | `str` on all per-fixture entities | Already non-optional | None needed |
-        | `CanonicalInjury.fixture_id` | `str \| None` | N/A — legitimate optional | Pre-season injuries don't have a fixture_id |
-    status: todo
+---
 
-  - id: phase-e-subclass-design-deferred
-    content: |
-      - [ ] **DEFERRED post-cutover** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
-        For fields where the declaration flip would add real type-safety value but can't be
-        expressed without subclasses (primarily `expiry` for FUTURE/OPTION):
-        The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)` with
-        `expiry: datetime` non-optional) requires:
-        (a) instruments-service adapters return typed subclasses (not base InstrumentRecord)
-        (b) consumers narrow the type at read boundaries
-        (c) parquet read path infers the subtype from `instrument_type` column
-        This is a significant refactor. Defer until after May-23 cutover. Named successor:
-        this plan itself (`hard_schema_phase1_field_flip_migration_2026_05_19.md`).
-        **DO NOT move this to a different post-cutover plan without operator ack.**
-    status: todo
+|---|---|---| | `base_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str; add Field(min_length=1) if desired | |
+`quote_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str | | `pool_address` | `str \| None` | ✅ Rule 2
+(disjunctive) | No — disjunctive can't express in type alone | | `base_asset_contract_address` | `str \| None` | ✅ Rule
+2 (disjunctive) | No — same | | `base_asset_decimals` | `int \| None` | ❌ NOT YET (Phase A this plan) | Phase A ships
+validator; declaration stays Optional | | `quote_asset_decimals` | `int \| None` | ❌ NOT YET for POOL (Phase A) | Phase
+A ships validator for POOL type | | `expiry` | `datetime \| None` | ✅ Rules 3/4/5 (FUTURE/OPTION/EVENT_CONTRACT) | No —
+legitimately None for non-futures | | Sports `fixture_id` | `str` on all per-fixture entities | Already non-optional |
+None needed | | `CanonicalInjury.fixture_id` | `str \| None` | N/A — legitimate optional | Pre-season injuries don't
+have a fixture_id | status: todo
 
-  - id: phase-f-codex-update
-    content: |
-      - [x] ✅ [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.** — unified-trading-pm (this commit). `codex/06-coding-standards/validation-and-errors.md` new §7 "InstrumentRecord hard-required field enforcement" with full 7-rule table, DEFI_ONCHAIN_INSTRUMENT_TYPES, audit script pointers, SSOT cross-ref. (slot 4 2026-05-19)
-        Update `codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord
-        hard-required field enforcement" with the corrected scope table (same as Phase D
-        but in the codex SSOT). Cross-reference this plan + `hard_schema_enforcement_2026_05_08.md`.
-    status: todo
+- id: phase-e-subclass-design-deferred content: |
+  - [ ] **DEFERRED post-cutover** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED
+        post-cutover).** For fields where the declaration flip would add real type-safety value but can't be expressed
+        without subclasses (primarily `expiry` for FUTURE/OPTION): The subclass approach (e.g.
+        `FuturesInstrumentRecord(InstrumentRecord)` with `expiry: datetime` non-optional) requires: (a)
+        instruments-service adapters return typed subclasses (not base InstrumentRecord) (b) consumers narrow the type
+        at read boundaries (c) parquet read path infers the subtype from `instrument_type` column This is a significant
+        refactor. Defer until after May-23 cutover. Named successor: this plan itself
+        (`hard_schema_phase1_field_flip_migration_2026_05_19.md`). **DO NOT move this to a different post-cutover plan
+        without operator ack.** status: todo
 
-isProject: false
-estimate_class: refactor
-estimate_baseline_ai_days: 5
-estimate_calibrated_ai_days: 2.0
-estimate_calibration_note: |
-  Design+audit phase completed 2026-05-19 slot 7 re-dispatch (work_split item 10). Remaining
-  work: Phase A (1 validator rule extension, ~1 AI-day), Phase B (1 audit script, ~0.5 AI-day),
-  Phase C (1 audit script, ~0.3 AI-day), Phases D/F (docs, ~0.2 AI-day). Total ~2 cal AI-days.
-  refactor class (0.4× multiplier) because majority of work is extending existing Phase 1
-  model_validator + writing audit scripts with existing tooling pattern.
+- id: phase-f-codex-update content: |
+  - [x] ✅ [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.** — unified-trading-pm (this
+        commit). `codex/06-coding-standards/validation-and-errors.md` new §7 "InstrumentRecord hard-required field
+        enforcement" with full 7-rule table, DEFI_ONCHAIN_INSTRUMENT_TYPES, audit script pointers, SSOT cross-ref. (slot
+        4 2026-05-19) Update `codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord hard-required
+        field enforcement" with the corrected scope table (same as Phase D but in the codex SSOT). Cross-reference this
+        plan + `hard_schema_enforcement_2026_05_08.md`. status: todo
+
+isProject: false estimate_class: refactor estimate_baseline_ai_days: 5 estimate_calibrated_ai_days: 2.0
+estimate_calibration_note: | Design+audit phase completed 2026-05-19 slot 7 re-dispatch (work_split item 10). Remaining
+work: Phase A (1 validator rule extension, ~1 AI-day), Phase B (1 audit script, ~0.5 AI-day), Phase C (1 audit script,
+~0.3 AI-day), Phases D/F (docs, ~0.2 AI-day). Total ~2 cal AI-days. refactor class (0.4× multiplier) because majority of
+work is extending existing Phase 1 model_validator + writing audit scripts with existing tooling pattern. priority: P2
+priority: P0 estimate_class: infra estimate_baseline_ai_days: 3.0 estimate_calibrated_ai_days: 2.4
+
 ---
 
 > **Successor to**: [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) Phase 1 (status:

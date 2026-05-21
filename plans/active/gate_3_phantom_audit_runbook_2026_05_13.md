@@ -1,7 +1,6 @@
----title: "Gate 3 — Phantom-Audit Execution Runbook"
+---
+title: "Gate 3 — Phantom-Audit Execution Runbook"
 created: 2026-05-13
-author: ikenna-main
-type: runbook
 execution:
   owner: "Ikenna Slot 1 main (operational runbook owner; actual execution may be Slot 1 or Slot 6)"
   cadence: "one-shot (Gate 3 phase of 5-gate DAG; expected fire before 2026-05-15 freeze-gate)"
@@ -16,6 +15,10 @@ estimate_calibration_note: |
   One-shot operational runbook (VM launch + manifest reconciliation + verifier check); infra class
   multiplier 0.8x. Baseline 1 AI-day. Calibrated 0.8 AI-day.
 parent_epic: manifest_master
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Gate 3 — Phantom-Audit Execution Runbook

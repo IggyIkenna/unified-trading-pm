@@ -1,7 +1,6 @@
 ---
 title: "Plan-change manifest — trading-agent-service architecture unlock (May-23 path)"
 created: 2026-05-20
-author: ikenna-slot-1 (audit sweep per operator directive 2026-05-20)
 source:
   - operator directive 2026-05-20 "architecture unlocked even if not paper tested yet"
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md (new actionable plan)
@@ -18,6 +17,8 @@ related_plans:
   - plans/active/features_repo_consolidation_2026_05_08.md
   - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
   - plans/active/issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md
+priority: P2
+status: active
 ---
 
 # Plan-change manifest — trading-agent-service architecture unlock (May-23)

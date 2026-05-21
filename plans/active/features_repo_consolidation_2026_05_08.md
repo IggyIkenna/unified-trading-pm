@@ -1,22 +1,10 @@
----name: features-repo-consolidation-2026-05-08
-overview:
-  Merge the 8 separate `features-*-service` repos (calendar / commodity / cross-instrument / delta-one / multi-timeframe
-  / onchain / sports / volatility) into a single `features-service` repo with sub-packages per family, ONE Docker image
-  parameterised by a CLI `--feature-family` flag, ONE flat `pyproject.toml`, ONE Health-API endpoint exposing per-family
-  freshness, and a NEW UAC schema column `feature_family` (additive sibling-or-prefix of `feature_group` in the v5
-  manifest). Pre-requisite for `live_pipeline_mtds_mdps_features_2026_05_08` because the live topology assumes a single
-  deployable image with per-family deployment flavors. Mirrors the UMI→MTDS and UCI→UTL precedents —
-  packages-within-packages, no behavioural change to calculator logic, lift duplicated cross-family helpers
-  (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate) into UTL. Naming explicitly
-  disambiguated from `ml_and_features_master` Phase 2's "feature-store consolidation sidecar" which is feature-DATA
-  consolidation (pre-joined wide parquet for ml-training reads) — this plan is REPO consolidation.
-type: code
+---
+title: "features-\* repo consolidation (2026-05-08)"
+name: features-repo-consolidation-2026-05-08
 epic: epic-code-completion
 status: active
 
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-13
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08

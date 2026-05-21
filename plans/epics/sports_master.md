@@ -1,17 +1,16 @@
 ---
 name: sports_master
+title: "Sports Master — asset_group umbrella"
 type: epic
 tier: L0
 status: active
 priority: P1
 assigned_vm: vm-sports
 parent: master_to_live_defi_2026_05_23
-owner: claude-code
 created: 2026-05-07
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-asset_group: sports
 related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
   - ../active/hard_schema_enforcement_2026_05_08.md

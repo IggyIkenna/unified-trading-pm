@@ -1,17 +1,16 @@
 ---
 name: tradfi_master
+title: "TradFi Master — asset_group umbrella"
 type: epic
 tier: L0
 status: active
 priority: P1
 assigned_vm: vm-tradfi
 parent: master_to_live_defi_2026_05_23
-owner: claude-code
 created: 2026-05-07
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-asset_group: tradfi
 related_plans:
   - ../active/cme_polymarket_arb_2026_05_08.md
   - ../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md

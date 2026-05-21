@@ -1,17 +1,16 @@
 ---
 name: mtds_mdps_master
+title: "Data pipeline master coordination — 2026-05-20"
 type: epic
 tier: L1
 status: active
 priority: P0
 assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-20
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-asset_group: cross-cutting
 related_plans:
   - ../active/available_at_lookahead_bias_completion_2026_05_08.md
   - ../active/d4_mtds_adapters_preflight_2026_05_20.md

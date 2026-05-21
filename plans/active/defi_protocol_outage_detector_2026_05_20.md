@@ -1,7 +1,7 @@
----name: defi-protocol-outage-detector-2026-05-20
+---
+name: defi-protocol-outage-detector-2026-05-20
 title: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
 created: 2026-05-20
-author: ikenna (slot 8)
 status: active
 priority: P0
 locked_by: live-defi-rollout
@@ -9,14 +9,10 @@ locked_since: 2026-05-20
 estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-parent_plan: mtds_mdps_master.md
 related_plans:
   - defi_catalogue_chain_primitives_2026_05_10.md
-related_codex:
-  - codex/02-data/defi-venue-protocol-catalogue.md
-spawned_from: audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md  # R-NEW-6
 depends_on:
-  - defi_catalogue_chain_primitives_2026_05_10  # Phase 1 UAC SSOT must be green first
+  - defi_catalogue_chain_primitives_2026_05_10 # Phase 1 UAC SSOT must be green first
 parent_epic: defi_master
 ---
 

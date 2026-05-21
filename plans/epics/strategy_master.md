@@ -1,17 +1,16 @@
 ---
 name: strategy_master
+title: "Strategy Master (L2)"
 type: epic
 tier: L2
 status: active
 priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/compute_optimization_mock_data_2026_05_13.md
   - ../active/config_grid_archetype_extend_2026_05_20.md

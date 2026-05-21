@@ -1,24 +1,10 @@
----name: strategy-repo-consolidation-2026-05-19
-overview:
-  Subtree-merge `risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service` INTO the
-  existing `strategy-service` repo as sub-packages (`strategy_service/risk/`, `strategy_service/position/`,
-  `strategy_service/pnl/`), then archive the 3 source repos. ONE Docker image, ONE flat `pyproject.toml`, ONE
-  Health-API exposing aggregated freshness, ONE CLI with `--operation` discriminating risk-monitor / position-recon /
-  pnl-attribution / strategy-batch / strategy-live / backtest. Mirrors the `features-repo-consolidation-2026-05-08`
-  pattern (10-phase: pre-audit → schema → skeleton → subtree-merge → fixup → lifts → parity → archive → downstream →
-  codex → QG sweep). Motivation: paper trading, live trading, batch backtest for strategy + the three monitoring
-  services are colocated on the same VM in deployment topology — separate repos add merge-coordination overhead
-  without operational gain. `strategy-service` is the umbrella (largest package, owns promote target + V2 strategies
-  + portfolio allocator); the 3 monitoring services become sub-packages. Cross-repo imports today = zero (event-bus
-  decoupled), so subtree-merge has zero compile-time collisions. Pre-cutover race for 2026-05-23 live-DeFi launch —
-  if Phase 6 parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
-type: infra
+---
+name: strategy-repo-consolidation-2026-05-19
+title: "Strategy repo consolidation — post-merge strategy-service cleanup (2026-05-19)"
 epic: strategy_and_dart_master_SUPERSEDED_2026_05_21
 status: active-cleanup-phase-11
 
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-19

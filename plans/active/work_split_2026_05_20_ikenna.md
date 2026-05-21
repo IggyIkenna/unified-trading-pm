@@ -1,11 +1,8 @@
 ---
 name: work-split-2026-05-20-ikenna
 title: Ikenna work-split 2026-05-20 — Phase -2 + -1 + background QG sweep on slots 9-11
-date: 2026-05-20
-operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-parent_plan: mtds_mdps_master.md
 supersedes: work_split_2026_05_19_ikenna.md
 related_plans:
   - mtds_mdps_master.md
@@ -13,6 +10,12 @@ related_plans:
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
   - issues/mega_audit_and_plan_beefup_progression_2026_05_20.md
+parent_epic: orchestrator_master
+priority: P1
+status: active
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
 ---
 
 # Ikenna work-split 2026-05-20

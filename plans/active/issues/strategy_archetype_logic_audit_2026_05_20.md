@@ -2,7 +2,6 @@
 title: Strategy archetype logic audit — separate from data-sanity mega audit + strategy MAP
 created: 2026-05-20
 updated: 2026-05-21
-author: ikenna-slot-1 main
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P0

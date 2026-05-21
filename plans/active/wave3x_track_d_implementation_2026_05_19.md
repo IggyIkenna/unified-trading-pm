@@ -1,9 +1,7 @@
----title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
-type: sub-plan
+---
+title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
 status: active
 created: 2026-05-19
-deadline: post-2026-05-23
-parent_plan: wave3x_residual_ssots_2026_05_08.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 estimate_class: brand-new
@@ -14,6 +12,7 @@ estimate_calibration_note: |
   catalog threading + per-adapter wire-in across MTDS/MDPS/features-service.
   Audit docs from wave3x Track D are the spec.
 parent_epic: mtds_mdps_master
+priority: P2
 ---
 
 **MIGRATED FROM:** `wave3x_residual_ssots_2026_05_08.md` § Track D items 1-4. Audit work completed 2026-05-11 (slot 3).

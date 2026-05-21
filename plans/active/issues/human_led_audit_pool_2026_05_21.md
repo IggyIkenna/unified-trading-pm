@@ -1,7 +1,6 @@
 ---
 title: Human-led audit pool — issue catalogue for background-agent remediation
 created: 2026-05-21
-author: ikenna-slot-1 main
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 priority: P0

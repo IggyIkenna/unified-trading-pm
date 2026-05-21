@@ -1,7 +1,6 @@
 ---
 title: UAC root-level tests are pre-existing broken (318 failures)
 created: 2026-05-20
-author: slot-1 main ikenna (Phase 1 canary coverage)
 source:
   - "unified-api-contracts@HEAD bash scripts/quality-gates.sh — 2026-05-20"
   - "plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 1"

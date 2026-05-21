@@ -2,12 +2,13 @@
 title: Orchestrator /api/slots/<N>/spawn — tmux session silent-fail + workspace-trust prompt unhandled
 created: 2026-05-20
 resolved: 2026-05-20
-author: ikenna-main / slot-1
 source:
   - agent-orchestrator/server/tmux_spawn.py
   - agent-orchestrator/scripts/orchestrator.service
 locked_by: live-defi-rollout
 status: RESOLVED
+parent_epic: orchestrator_master
+priority: P2
 ---
 
 ## ✅ RESOLVED 2026-05-20

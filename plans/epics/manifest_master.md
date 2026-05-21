@@ -1,17 +1,16 @@
 ---
 name: manifest_master
+title: "Manifest Master (L1)"
 type: epic
 tier: L1
 status: active
 priority: P0
 assigned_vm: vm-defi
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - ../active/bucket_name_ssot_canonicalisation_2026_05_10.md
   - ../active/d3_manifest_v8_finish_2026_05_20.md

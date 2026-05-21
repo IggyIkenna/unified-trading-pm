@@ -1,11 +1,11 @@
----type: plan
+---
+title: "Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)"
 role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: infrastructure_master.md # legacy peer ref; superseded by parent above (folded into manifest_evolution_master 2026-05-08)
 related:
   - predictions_master.md # folds in predictions_canonical_question_group_polymarket_migration
   - infrastructure_master.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
@@ -22,6 +22,7 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: sports_master
+priority: P0
 ---
 
 > **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active

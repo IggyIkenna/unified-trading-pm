@@ -1,15 +1,15 @@
----name: honest_coverage_formula_consolidation_2026_05_19
+---
+title: "Honest-Coverage Formula Consolidation — 2026-05-19"
+name: honest_coverage_formula_consolidation_2026_05_19
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
 status: in-flight
-deadline: 2026-05-23
 priority: P0
 parent_epic: manifest_master
 epic_secondary: instruments_master
-parent_plan: master_to_live_defi_2026_05_23.md
 ---
 
 # Honest-Coverage Formula Consolidation — 2026-05-19
@@ -167,8 +167,8 @@ Phase 0 (✅ DONE)
 
 - [x] **P0. ✅ `HonestCoverageCard.tsx` + `client.ts`**: deployment-ui@643a22e — split expected_unattempted into
       expected_unattempted_known_empty + expected_unattempted_pending_fetch; coverage_pct comment corrected to canonical
-      formula; CoverageBar renders all 5 fields as separate segments; tooltip text corrected; test fixture updated;
-      QG green (68 tests, 0 TS errors, build pass). NOTE: `DataStatusPanel.tsx` is separate from `HonestCoverageCard` —
+      formula; CoverageBar renders all 5 fields as separate segments; tooltip text corrected; test fixture updated; QG
+      green (68 tests, 0 TS errors, build pass). NOTE: `DataStatusPanel.tsx` is separate from `HonestCoverageCard` —
       Phase 5 scope was HonestCoverageCard per item 12. DataStatusPanel migration is tracked in Phase 4 P1 if needed.
 - [x] **P1. ✅ Coverage % color thresholds**: green ≥99%, amber ≥95%, red <95% applied to `HonestCoverageCard.tsx`
       deployment-ui@643a22e.
