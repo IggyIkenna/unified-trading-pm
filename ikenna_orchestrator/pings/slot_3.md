@@ -1812,3 +1812,31 @@ state. Plan ref: `aws_migration_defi_first_2026_05_07.md` Phases 6–8.
 **Maximum-closeable state reached**: this slot has executed all non-human-gated items in Phases 1.B + 1.C + 2 + 3
 (ECR/buildspec) + 4 (secrets mirror, ApiKeyReloader verified) + 5 (data transfer validated). Remaining work requires
 operator decisions or human-gated operations.
+
+---
+
+## [slot-3 → main] 2026-05-21 — DONE ack — aws_migration phases 1.B+1.C+3-6
+
+[2026-05-21 UTC] slot-3 DONE — aws_migration phases 1.B+1.C+3-6 complete/blocked at PM@330ab9580
+
+**Max-closeable state reached. Summary of what was shipped this session:**
+
+| Phase               | Items                                                        | Status                                    | SHAs                                       |
+| ------------------- | ------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------ |
+| Phase 1.B           | IAM matrix (30 roles) + bucket policies (12 buckets)         | ✅ DONE                                   | deployment-service@086e6b9 + @a6903af      |
+| Phase 1.C           | ECR repos (prior) + buildspec.aws.yaml (prior) + Phase 2 QG  | ✅ DONE                                   | deployment-service@10dcea9 (prior session) |
+| Phase 2 QG          | IAM roles + bucket policies verified                         | ✅ DONE                                   | PM@c262712cc                               |
+| Phase 3 (items 1–2) | ECR + buildspec shipped prior                                | ✅ DONE (prior)                           | —                                          |
+| Phase 3 (items 3–5) | CodeBuild webhooks                                           | BLOCKED-OPERATOR-DECISION #2              | Ping filed PM@330ab9580                    |
+| Phase 4 (items 1–2) | 165 GCP secrets inventoried; 156 non-wallet synced to AWS SM | ✅ DONE                                   | deployment-service@66bebce                 |
+| Phase 4 (item 3)    | Wallet key rotation                                          | BLOCKED-OPERATOR-DECISION #1              | Ping filed PM@330ab9580                    |
+| Phase 4 (item 4)    | ApiKeyReloader AWS wiring                                    | ✅ VERIFIED (UTL factory.py pre-existing) | —                                          |
+| Phase 4 (item 5)    | Smoke test                                                   | BLOCKED (needs wallet keys + ECS)         | —                                          |
+| Phase 5 (items 1–5) | Data rsync 346,920 objects / 36.83 GB                        | ✅ DONE (Tab 4 2026-05-08)                | —                                          |
+| Phase 5 (item 6)    | Phantom reconciler AWS backend                               | BLOCKED (--backend aws flag open)         | —                                          |
+| Phase 5b            | Athena/Glue verification                                     | BLOCKED-OPERATOR-DECISION #3              | Ping filed PM@330ab9580                    |
+| Phases 6–8          | ECS Fargate deployment + cutover                             | BLOCKED-OPERATOR-DECISION #4              | Ping filed PM@330ab9580                    |
+
+**Operator action required to advance**: Complete BLOCKED #1–4 from ping file. After wallet key rotation + ECS
+deployment, Phases 5 item 6 (phantom reconciler) and Phase 4 item 5 (smoke test) unblock automatically. Plan archive
+will be possible once Phase 6+ completes.
