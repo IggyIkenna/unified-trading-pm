@@ -13,12 +13,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-20
 related_plans:
   - ../active/available_at_lookahead_bias_completion_2026_05_08.md
-  - ../active/d4_mtds_adapters_preflight_2026_05_20.md
+  - ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md
   - ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md
   - ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
   - ../active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - ../active/mdps_streaming_and_backpressure_2026_05_07.md
-  - ../active/mtds_databento_path_streaming_2026_05_07.md
+  - ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md
   - ../active/mtds_per_instrument_download_api_2026_04_24.md
   - ../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
   - ../active/wave3x_track_d_implementation_2026_05_19.md
@@ -525,10 +525,11 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`d4_mtds_adapters_preflight_2026_05_20`](../active/d4_mtds_adapters_preflight_2026_05_20.md)
+### [`d4_mtds_adapters_preflight_2026_05_20`](../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: D4 — MTDS adapters preflight + batch-live
-parity
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-4 done; 8 BATCH_ONLY cells BLOCKED-OPERATOR-DECISION
+(hyperliquid/aster/curve/jito/morpho/kalshi/polymarket) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D4 —
+MTDS adapters preflight + batch-live parity
 
 ### [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 
@@ -544,9 +545,10 @@ parity
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design)
 
-### [`mtds_databento_path_streaming_2026_05_07`](../active/mtds_databento_path_streaming_2026_05_07.md)
+### [`mtds_databento_path_streaming_2026_05_07`](../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md)
 
-**status**: done · **estimate**: 1.2 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all Databento path-streaming phases done ·
+**estimate**: 1.2 cal AI-days (class: design)
 
 ## P2 — useful; opportunistic
 

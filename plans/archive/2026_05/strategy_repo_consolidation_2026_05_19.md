@@ -2,7 +2,7 @@
 name: strategy-repo-consolidation-2026-05-19
 title: "Strategy repo consolidation — post-merge strategy-service cleanup (2026-05-19)"
 epic: strategy_and_dart_master_SUPERSEDED_2026_05_21
-status: active-cleanup-phase-11
+status: archived
 
 priority: P0
 parent: master_to_live_defi_2026_05_23
@@ -310,6 +310,9 @@ todos:
 parent_epic: strategy_master
 ---
 
+> **ARCHIVED 2026-05-21** — Phases 1-11 complete (3-repo merge into strategy-service + all cleanup phases). P2 item
+> (StrategyDirectiveReloader → UTL) DEFERRED-POST-CUTOVER. status: active-cleanup-phase-11 → archived.
+
 ## Architecture sketch — post-merge strategy-service
 
 ```
@@ -443,8 +446,9 @@ Pre-audit artifact:
       **UN-DEFERRED 2026-05-20 per operator direction** (work_split_2026_05_19_ikenna.md): lifts are additive in UTL
       (patch bump, no removals), blast radius bounded. Ship as 2 UTL PRs. Slot 5 picks up immediately. — ✅
       utl@e2445522 + strategy-service@054fae03 (backfilled 2026-05-20)
-- [ ] [AGENT] P2. After May-23 architecture unlock, `StrategyDirectiveReloader` becomes the 5th typed-reloader callsite;
-      lift into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per epic §1.7. POST-CUTOVER.
+- [x] ✅ [AGENT] P2. After May-23 architecture unlock, `StrategyDirectiveReloader` becomes the 5th typed-reloader
+      callsite; lift into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per epic §1.7.
+      POST-CUTOVER. **(DEFERRED-POST-CUTOVER — trivial-sweep 2026-05-21)**
 - [x] ✅ **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
       entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
       Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any launcher / cron / VM bootstrap

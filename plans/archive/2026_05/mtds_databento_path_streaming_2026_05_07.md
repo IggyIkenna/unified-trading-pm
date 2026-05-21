@@ -2,7 +2,7 @@
 title: "MTDS Databento path-streaming successor plan (2026-05-07)"
 name: mtds-databento-path-streaming
 epic: epic-code-completion
-status: done
+status: archived
 
 priority: P1
 parent: master_to_live_defi_2026_05_23
@@ -196,6 +196,9 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: mtds_mdps_master
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete (0 open todos). All Phases 1-4 complete (Databento path-streaming + WS
+> reconnect storm fix). Folded into `live_pipeline_mtds_mdps_features_2026_05_08` umbrella. status: done → archived.
 
 # MTDS Databento path-streaming successor plan (2026-05-07)
 

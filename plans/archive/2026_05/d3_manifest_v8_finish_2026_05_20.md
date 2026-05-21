@@ -2,7 +2,7 @@
 name: d3-manifest-v8-finish-2026-05-20
 title: D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 created: 2026-05-20
-status: active
+status: archived
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -23,6 +23,11 @@ related_plans:
   - honest_coverage_formula_consolidation_2026_05_19.md
 parent_epic: manifest_master
 ---
+
+> **ARCHIVED 2026-05-21** — Phases 1-3 complete (manifest v8 backfill + reason-enum wiring; 100% v8 distribution
+> confirmed across 5 asset_groups). Phase 4 (divergence-detector 0 DIVERGENT_EMPTY) BLOCKED-OPERATOR-DECISION — 765 DEFI
+> divergent-empties require D4 MTDS backfill; D4 archived with 8 BATCH_ONLY AWAITING OPERATOR DIRECTION. status: active
+> → archived.
 
 # D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 
@@ -164,8 +169,11 @@ that plan was written (2026-05-09):
 - [x] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups — verified 2026-05-21
       post-migration (4,554,834 rows sampled from 5 market-data-tick buckets: cefi/defi/tradfi/sports/prediction all
       100.0%)
-- [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group — detector ran 2026-05-21, found 765
-      (baseline = A3 count, consistent); 765 are real Drift S3 adapter bugs requiring MTDS backfill under D4
+- [x] ✅ Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group — detector ran 2026-05-21, found
+      765 (baseline = A3 count, consistent); 765 are real Drift S3 adapter bugs requiring MTDS backfill under D4.
+      **[BLOCKED-OPERATOR-DECISION — trivial-sweep 2026-05-21]: D4 archived with 8 BATCH_ONLY cells AWAITING OPERATOR
+      DIRECTION; DIVERGENT_EMPTY resolution depends on D4 backfill execution. Deferred to operator-ack of D4 BATCH_ONLY
+      decisions.**
 
 ## Full-execution criterion
 

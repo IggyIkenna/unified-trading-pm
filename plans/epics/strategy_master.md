@@ -19,7 +19,7 @@ related_plans:
   - ../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
   - ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md
   - ../active/strategy_execution_contract_remediation_2026_05_20.md
-  - ../active/strategy_repo_consolidation_2026_05_19.md
+  - ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
@@ -85,9 +85,10 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); taxonomy + share-class neutrality + recursive carry rename shipped
 
-### [`strategy_repo_consolidation_2026_05_19`](../active/strategy_repo_consolidation_2026_05_19.md)
+### [`strategy_repo_consolidation_2026_05_19`](../archive/2026_05/strategy_repo_consolidation_2026_05_19.md)
 
-**status**: active-cleanup-phase-11 · **estimate**: 12 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-11 done (3-repo merge + all cleanup); P2 StrategyDirectiveReloader
+DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 

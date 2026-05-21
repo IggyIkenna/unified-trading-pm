@@ -13,11 +13,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
   - ../active/bucket_name_ssot_canonicalisation_2026_05_10.md
-  - ../active/d3_manifest_v8_finish_2026_05_20.md
+  - ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md
   - ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md
   - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
   - ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md
-  - ../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
+  - ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md
   - ../active/honest_coverage_formula_consolidation_2026_05_19.md
   - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
   - ../active/manifest_schema_final_gate_2026_05_09.md
@@ -90,10 +90,11 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`d3_manifest_v8_finish_2026_05_20`](../active/d3_manifest_v8_finish_2026_05_20.md)
+### [`d3_manifest_v8_finish_2026_05_20`](../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: D3 — Manifest v8 finish + reason-enum
-wiring + divergence-detector
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-3 done (100% v8 dist confirmed); Phase 4 BLOCKED-OPERATOR-DECISION (765
+DIVERGENT_EMPTY → D4 resolution) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D3 — Manifest v8 finish +
+reason-enum wiring + divergence-detector
 
 ### [`d5_features_missing_data_downgrade_2026_05_20`](../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md)
 
@@ -104,9 +105,10 @@ wiring + divergence-detector
 **status**: ✅ ARCHIVED 2026-05-21 — runtime propagation code complete (Phases 0-5 shipped); production validation
 pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`
 
-### [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+### [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-7 done; Phase 8 DEFERRED-writegate-6.x (2026-06-15 date-gate) ·
+**estimate**: 4.8 cal AI-days (class: infra)
 
 ### [`honest_coverage_formula_consolidation_2026_05_19`](../active/honest_coverage_formula_consolidation_2026_05_19.md)
 

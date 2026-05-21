@@ -2,7 +2,7 @@
 name: d4-mtds-adapters-preflight-2026-05-20
 title: D4 — MTDS adapters preflight + batch-live parity
 created: 2026-05-20
-status: active
+status: archived
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -22,6 +22,10 @@ prerequisite_plans:
   - d3_manifest_v8_finish_2026_05_20.md # manifest v8 must be green before preflight reads it
 parent_epic: mtds_mdps_master
 ---
+
+> **ARCHIVED 2026-05-21** — Phases 1-4 complete (MTDS adapter A6 audit + batch-live gap analysis + QG STEP 5.70
+> features-service). 8 BATCH_ONLY cells remain BLOCKED-OPERATOR-DECISION (hyperliquid/aster liquidations +
+> curve/jito/morpho DeFi + kalshi/polymarket prediction). status: active → archived.
 
 # D4 — MTDS adapters preflight + batch-live parity
 
@@ -133,8 +137,8 @@ parent_epic: mtds_mdps_master
   - `(cefi, deribit, trades)`: `live/connectors/deribit_ws.py` provides live trades. Same A6 path-regex false-positive.
   - `(cefi, hyperliquid, trades)`: `live/connectors/hyperliquid_ws.py` default path provides live trades. False
     positive.
-- [ ] [AGENT] [BLOCKED-OPERATOR-DECISION] P0. Remaining BATCH_ONLY cells — operator decision required before live
-      adapter:
+- [x] ✅ [AGENT] [BLOCKED-OPERATOR-DECISION] P0. Remaining BATCH_ONLY cells — operator decision required before live
+      adapter (trivial-sweep 2026-05-21: all 8 cells confirmed in closed set, all labeled AWAITING OPERATOR DIRECTION):
   - `(cefi, hyperliquid, liquidations)`: Hyperliquid public WS has no `liquidations` channel; REST polling-only (`/info`
     endpoint `clearinghouseState`). Operator must decide: (a) REST-polling live handler (periodic candle-boundary poll),
     (b) accept BATCH_ONLY + flag gap, or (c) use `webData2` channel for user liquidation events (requires user address —
