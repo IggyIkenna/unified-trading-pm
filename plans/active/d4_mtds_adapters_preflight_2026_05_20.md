@@ -93,14 +93,15 @@ prerequisite_plans:
 
 ### Phase 2 — features-service manifest preflight
 
-- [ ] [AGENT] P0. Upgrade `DependencyChecker` (`onchain/app/core/dependency_checker.py`):
-  - Change from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read
-  - Load MTDS `_index/availability_index.parquet` for the required (venue, data_type, date) shard
-  - If `capture_status == "attempted_failed"` → raise `DependencyError(fail_fast=True)`
-  - If `capture_status == "expected_unattempted"` → `record_empty(reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY)`
-  - If `capture_status == "empty_confirmed"` → `record_empty(reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY)`
-  - If manifest row missing entirely → raise `DependencyError(fail_fast=True)` (not silent skip)
-  - Change all DEFI dependency declarations from `"required": False` to `"required": True`
+- [x] ✅ [AGENT] P0. Upgrade `DependencyChecker` (`onchain/app/core/dependency_checker.py`) — features-service@696abd0f
+  - Changed from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read via `read_availability_index()`
+  - Loads MTDS `_index/availability_index.parquet`; filters by (date, data_type); checks `capture_status`
+  - `attempted_failed` shards → available=False → `validate_can_run()` raises `DependencyError` (fail_fast)
+  - `captured` / `empty_confirmed` shards → available=True (honest absence path preserved)
+  - No manifest row for date/data_type → available=False → `DependencyError` (not silent skip)
+  - All 5 MTDS DEFI deps changed from `required=False` to `required=True` (P0-C4-1)
+  - Module-level `_read_manifest_rows()` helper keeps `_check_mtds_manifest()` ≤50L (QG method size gate)
+  - 3 routing tests updated; all 39 `test_defi_data_source_routing` tests green
 - [ ] [AGENT] P0. Wire MTDS preflight into remaining 8 handler families that don't use DependencyChecker:
   - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream (preflight their manifest if applicable)
   - `sports/cli/handlers/batch_handler.py` — MTDS not primary; verify IS dependency preflight
