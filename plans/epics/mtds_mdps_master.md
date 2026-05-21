@@ -284,19 +284,18 @@ paths are identical — readers + writers don't branch on cloud.
 
 **Phase 1 deliverables**:
 
-1. - [ ] **AWS bucket inventory audit** — every kind in `deployment-service/configs/cloud-providers.yaml` `aws:` block:
-         list current bucket name + target symmetric name + 63-char-cap check. Output:
-         `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv`.
-2. - [ ] **Bucket-spawning script audit** — every script in `deployment-service/scripts/` that provisions buckets on
-         either cloud: confirm it consults the YAML template + that the YAML is the SSOT. Surface drift cases (hardcoded
-         bucket names, alternate naming, missing env-tier).
-3. - [ ] **YAML template alignment** — update `cloud-providers.yaml` `aws:` block templates to mirror `gcp:` templates
-         (one-line-per-kind diff). Pre-existing GCP shape `{kind}-{ag}-${DEPLOYMENT_ENV_SHORT}-${PROJECT_ID}` must apply
-         with `${AWS_ACCOUNT_ID}` swap on AWS.
-4. - [ ] **63-char cap re-verification** — automated check that every resolved bucket name on BOTH clouds is ≤63 chars
-         across the full (env × kind × asset_group) matrix.
-5. - [ ] **`prd`/`stg`/`dev` consistency** — confirm DEPLOYMENT_ENV_SHORT 3-char form used on BOTH clouds (currently GCP
-         uses `prd`, AWS may use a different form per its older templates).
+1. - [x] ✅ **AWS bucket inventory audit** — 64-row CSV produced (64 kind×ag pairs; 34 drift, 3 already_symmetric).
+         deployment-service@`43fb886` (backfill 2026-05-21). Evidence:
+         `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` + summary.
+2. - [x] ✅ **Bucket-spawning script audit** — 11 scripts audited; 2 drift fixes applied (manual-audit + audit-records);
+         1 legacy bootstrap_aws.sh noted (intentional — not in normal flow). deployment-service@`68e3558` + `b9029ad`.
+3. - [x] ✅ **YAML template alignment** — 34 kinds updated to drop `unified-trading-` prefix + add missing infixes
+         (`tick-`, `-store-`). 4 known structural divergences documented in `check_symmetry.py`.
+         deployment-service@`43fb886`.
+4. - [x] ✅ **63-char cap re-verification** — all clear: 64 current names max 56 chars; 64 target max 40 chars.
+         Automated going forward via `scripts/bucket_naming/check_symmetry.sh`. deployment-service@`68e3558`.
+5. - [x] ✅ **`prd`/`stg`/`dev` consistency** — DEPLOYMENT_ENV_SHORT 3-char form (`dev`/`stg`/`prd`) used uniformly on
+         both clouds; `check_symmetry.sh` covers this going forward. deployment-service@`68e3558`.
 
 ## Phase 2 — code freeze protocol
 
