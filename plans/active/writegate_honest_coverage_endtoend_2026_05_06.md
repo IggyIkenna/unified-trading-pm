@@ -1733,8 +1733,10 @@ carries the SSOT table.
 - [x] [TEST] P0. UTL unit tests cover: known reason → row has `error_reason=<reason>`; unknown reason →
       `UnknownEmptyConfirmedReasonError`; `record_expected_empty` rejects non-`EXPECTED_*` reasons. 14 tests in
       `tests/unit/test_manifest_writer_record_empty_reason.py` shipped UTL@958634f9 2026-05-07.
-- [ ] [QG] P0. UTL `quality-gates.sh` step asserts every `record_empty(reason=...)` callsite outside UTL passes a reason
-      from the closed set (static AST walk, mirrors STEP 5.64's bundled-data_type guard).
+- [x] ✅ [QG] P0. UTL `quality-gates.sh` step asserts every `record_empty(reason=...)` callsite outside UTL passes a
+      reason from the closed set (static AST walk, mirrors STEP 5.64's bundled-data_type guard). — PM@fd9ab9fae;
+      check_record_empty_reason_closed_set.py (32-member set, excludes manifest_writer.py + tests) wired as STEP 5.89 in
+      base-service.sh; MTDS + UTL verified clean.
 
 #### Phase 2.E.2 — Per-service writer migration (parallel after 2.E.1; one commit per service)
 
