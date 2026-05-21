@@ -107,6 +107,10 @@ todos:
 parent_epic: defi_master
 ---
 
+> **ARCHIVED 2026-05-21** — Phases A-D complete (field-flip validators for CeFi/DeFi + InstrumentRecord validators + QG
+> STEP). Phase E (subclass design for expiry declaration-level enforcement) DEFERRED-POST-CUTOVER → successor:
+> `uac_venue_metadata_gap_fill_2026_06_xx.md`. status: active → archived.
+
 |---|---|---| | `base_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str; add Field(min_length=1) if desired | |
 `quote_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str | | `pool_address` | `str \| None` | ✅ Rule 2
 (disjunctive) | No — disjunctive can't express in type alone | | `base_asset_contract_address` | `str \| None` | ✅ Rule
@@ -118,8 +122,8 @@ None needed | | `CanonicalInjury.fixture_id` | `str \| None` | N/A — legitimat
 have a fixture_id | status: todo
 
 - id: phase-e-subclass-design-deferred content: |
-  - [x] **[DEFERRED-POST-CUTOVER — stays in this archived plan; activates post-May-23. DO NOT move without operator
-        ack.]** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
+  - [x] ✅ **DEFERRED-POST-CUTOVER — stays in this archived plan; activates post-May-23. DO NOT move without operator
+        ack.** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
         For fields where the declaration flip would add real type-safety value but can't be expressed without subclasses
         (primarily `expiry` for FUTURE/OPTION): The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)`
         with `expiry: datetime` non-optional) requires: (a) instruments-service adapters return typed subclasses (not

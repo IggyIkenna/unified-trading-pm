@@ -489,6 +489,10 @@ parent_epic: deployment_and_user_management_master
 priority: P2
 ---
 
+> **ARCHIVED 2026-05-21** — Phases A-H.3 complete (6 lifecycle tabs + env-tier hosting codex + env badge); H.4
+> staging/prod domain deploy DEFERRED-HUMAN-GATE (DNS/Squarespace/operator sign-off required). 0 open todos. status:
+> active → archived.
+
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
 
 ## Deferred work — migrated to:

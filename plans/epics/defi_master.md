@@ -1477,7 +1477,8 @@ Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ### [`defi_protocol_outage_detector_2026_05_20`](../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-6 done (Aave/Compound/Hyperliquid shipped, mtds@c9ff1f7 + uac@cc6a629); Phase 7.A (Curve) DEFERRED-POST-CUTOVER
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-6 done (Aave/Compound/Hyperliquid shipped, mtds@c9ff1f7 + uac@cc6a629);
+Phase 7.A (Curve) DEFERRED-POST-CUTOVER
 
 ## P1 — important; post-current-gate
 

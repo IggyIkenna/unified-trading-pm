@@ -11,14 +11,9 @@ locked_since: 2026-05-12
 related_plans: []
 ---
 
-## Deferred work — migrated to:
-
-| Deferred item                                                                         | Successor                                                     |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| All 4 items (auto-generate, per-service notes, operator summary, semver-agent wiring) | This plan activates on 1.0.0 graduation trigger (human-gated) |
-
-> **DEFERRED-HUMAN-GATE — all items gated on 1.0.0 graduation trigger (operator declaration of stability, or first repo
-> semver-agent bump to 1.0.0). No agent work until trigger fires.**
+> **ARCHIVED 2026-05-21** — Stub plan; all 4 P3 items DEFERRED-POST-1.0.0. Activates when any repo reaches 1.0.0
+> graduation or operator declares stability gate reached (DeFi+CeFi+TradFi clean ≥30 days). Current changelog surface:
+> `CHANGELOG.md` at unified-trading-pm root. status: paused → archived.
 
 # Release-Notes Runbook — Post-1.0.0 Graduation
 
@@ -32,19 +27,25 @@ Runbook owner: ikenna · Cadence: at-1.0.0-graduation · Verifier: ikenna · Las
 
 ## Scope (when activated)
 
-- [x] **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Auto-generate per-version sections from
-      conventional-commit history (// prefixes already in use).
-- [x] **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Per-service release notes (separate from
-      workspace-level changelog).
-- [x] **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [AGENT] P3. Operator-facing summary (one-paragraph per
-      version) + agent-facing diff (full commit list).
-- [x] **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Wire into semver-agent's bump workflow so
-      version bumps auto-add a section.
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Auto-generate per-version sections from
+      conventional-commit history (// prefixes already in use). (trivial-sweep 2026-05-21)
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Per-service release notes (separate from
+      workspace-level changelog). (trivial-sweep 2026-05-21)
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [AGENT] P3. Operator-facing summary (one-paragraph per
+      version) + agent-facing diff (full commit list). (trivial-sweep 2026-05-21)
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Wire into semver-agent's bump workflow so
+      version bumps auto-add a section. (trivial-sweep 2026-05-21)
 
 ## Trigger condition
 
 Moves from to when: a repo bumps to 1.0.0 (via ), OR operator declares stability gate reached (DeFi + CeFi + TradFi all
 running clean ≥30 days).
+
+## Deferred work — migrated to:
+
+| Deferred item                                                                         | Successor                                                     |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| All 4 items (auto-generate, per-service notes, operator summary, semver-agent wiring) | This plan activates on 1.0.0 graduation trigger (human-gated) |
 
 ## Temporary states + canonical follow-up plans
 
