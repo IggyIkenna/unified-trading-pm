@@ -1,6 +1,6 @@
 ---
 title: Wave 3.X residual SSOTs + classifier extensions + reconcilers — 2026-05-08
-status: active
+status: archived
 created: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -13,6 +13,13 @@ estimate_calibration_note: |
 parent_epic: sports_master
 priority: P2
 ---
+
+## Deferred work — migrated to:
+
+| Item                                                                                                     | Successor plan                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Track D — case-D zero-activity-bar implementation (MTDS/MDPS/features wire-in + per-adapter smoke tests) | [`wave3x_track_d_implementation_2026_05_19.md`](../active/wave3x_track_d_implementation_2026_05_19.md) — post-2026-05-23 cutover                      |
+| Track E — features-sports stamp-helper calculator wire-in at emission boundaries                         | [`available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md) Phase B — post-consolidation |
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >

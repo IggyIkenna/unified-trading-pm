@@ -15,7 +15,7 @@ related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
   - ../active/hard_schema_enforcement_2026_05_08.md
   - ../active/sports_scrapers_post_cutover_2026_06_01.md
-  - ../active/wave3x_residual_ssots_2026_05_08.md
+  - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
   - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
 ---
 
@@ -1043,9 +1043,11 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 20 cal AI-days (class: brand-new) **title**: Sports book scrapers — post-cutover
 successor (14 UK/EU + 2 US adapters)
 
-### [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)
+### [`wave3x_residual_ssots_2026_05_08`](../archive/wave3x_residual_ssots_2026_05_08.plan.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 3.6 cal AI-days (class: design) — all tracks shipped; Track D
+implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in →
+`available_at_lookahead_bias_completion_2026_05_08` Phase B
 
 ### [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)
 
