@@ -136,8 +136,13 @@ PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (
       adapters; strategy warn-but-proceed removed — features-service@906b902e, strategy-service@de349378
 - [x] ✅ Phase 2: `rg 'record_empty' features_service/cross_instrument/ --type py` returns hits; no `_persist_results` path
       without record_empty — features-service@bd5a1c0e
-- [x] ✅ Phase 3: `rg 'record_captured' strategy-service/ --type py` returns hits on write paths; `strategy-store-`
-      inline f-string at batch_handler.py:1276 replaced with `resolve_bucket_name()` — strategy-service@de349378
+- [x] ✅ Phase 3: `rg 'record_captured' strategy-service/ --type py` returns hits on write paths; no inline
+      `strategy-store-` f-strings on D5-scoped write paths
+  — VERIFIED 2026-05-21: `record_captured` in batch_handler.py (D5 target) + strategy_manifest.py;
+    strategy-service@de349378 fixed batch_handler.py:1276; strategy-service@36e6bc88 fixed service_entry.py:159
+    (adjacent violation found during Phase 5 verification). Remaining `strategy-store-` f-strings in
+    `engine/core/cloud_strategy_storage.py` + `v2/carry_and_yield/` are pre-existing baseline (QG STEP 5.69
+    ratchet passes) — v2/ entries BLOCKED by strategy-logic freeze; engine/core entries tracked post-unfreeze.
 - [x] ✅ Phase 4: `rg 'paired_price_dispersion' strategy-service/ --type py` returns hits in APD engine consumer map;
       APD engine no longer re-derives spread from raw — strategy-service@5e0e2ccf
 - [x] ✅ Phase 5: strategy-service QG green (verified @5e0e2ccf); features-service QG green (verified @1da2c431);
