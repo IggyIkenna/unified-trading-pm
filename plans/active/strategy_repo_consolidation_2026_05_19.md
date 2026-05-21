@@ -646,10 +646,11 @@ phases:
   - id: phase-11-workspace-stale-ref-cleanup
     todos:
       - [x] ✅ [AGENT slot 7] **P0. Phase 11a — deployment-service stale-ref cleanup.** — deployment-service@09c45f4 2026-05-21
-            Items 2-6 DONE; item 1 BLOCKED-OPERATOR-DECISION (terraform destroy pending `gh repo archive` confirmation).
-            1. **BLOCKED-OPERATOR-DECISION** — `terraform destroy` + dir removal for
+            All items DONE (item 1 unblocked 2026-05-21 — all 3 strategy repos confirmed gh-archived).
+            1. ✅ `terraform destroy` + dir removal for
                `terraform/services/{risk-and-exposure-service,position-balance-monitor-service,pnl-attribution-service}/`
-               Pre-condition: operator confirms `gh repo archive` for each repo. Each dir has ARCHIVED.md marker.
+               Confirmed gh-archived (isArchived: true). Backends used literal {project_id} placeholders — stacks never
+               initialized/applied; no live resources. Dirs deleted — deployment-service@d5f4779.
             2. ✅ `terraform/shared/gcp/main.tf` — removed 3 services — deployment-service@e555eb9
             3. ✅ `cloud-build/` — already had consolidation comments; no live refs
             4. ✅ Grafana dashboards — panel titles/descriptions updated — deployment-service@09c45f4

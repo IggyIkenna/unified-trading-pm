@@ -548,9 +548,11 @@ phases:
     todos:
       - [x] ✅ [AGENT slot 7] **P0. Phase 11b — deployment-service stale-ref cleanup (ML side).** ~62 live refs across
             ml-training-service + ml-inference-service. Scope:
-            1. [BLOCKED-OPERATOR-DECISION] `terraform destroy` + dir removal for
+            1. ✅ `terraform destroy` + dir removal for
                `deployment-service/terraform/services/{ml-training-service,ml-inference-service}/` (2 dirs ×
-               {gcp,aws} = 4 stack destroys). Requires operator to confirm `gh repo archive` first.
+               {gcp,aws} = 4 stack destroys). Both repos confirmed gh-archived (isArchived: true, 2026-05-20).
+               Backends used literal {project_id} placeholders — stacks never initialized/applied; no live resources.
+               Dirs deleted — deployment-service@d5f4779.
             2. ✅ `terraform/shared/gcp/main.tf` — removed ml-training + ml-inference from shared service lists.
             3. ✅ `cloud-build/{gcp,aws}/main.tf` + `refresh-tarballs.cloudbuild.yaml` — removed tarball refresh entries,
                replaced with single `ml-service` entry.
