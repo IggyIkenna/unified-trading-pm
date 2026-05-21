@@ -425,12 +425,80 @@ remaining as overrides.
 
 ## Auth & accounts
 
-### 4 accounts (rename to email-derived ids)
+### Finding (2026-05-21 r2 OAuth recovery): two of the four emails are aliases
 
-Current per-account snapshots:
+> Discovered while restoring tokens 2026-05-21 ~14:00 UTC: `ikennaigboaka@gmail.com` and `ikenna@odum-research.com`
+> resolve to the **same** Anthropic Max subscription (orgId `728fa3b5-83e3-458b-9ac0-b95a735c3c94`). They are sign-in
+> aliases, NOT distinct accounts. Verified empirically: refreshing one's refresh_token immediately returned
+> `invalid_grant` on the other's stored token (Anthropic enforces one active refresh_token per account; rotation is
+> atomic across all aliases).
+>
+> **Consequence**: the roster needs to be revised. The "4 accounts per VM" architecture gets at most 3 DISTINCT
+> subscriptions per VM, not 4, given current account set. Don't waste a roster slot on the second alias — they fail over
+> to each other = no-op.
 
-- `~/.claude/.credentials.ikenna-backup.json` → rename to `~/.claude/.credentials.ikennaigboaka_at_gmail.com.json`
-- `~/.claude/.credentials.harsh-primary.json` → rename to `~/.claude/.credentials.ikenna_at_odum-research.com.json`
+### Distinct-subscription roster (revised)
+
+| Subscription        | Email(s) on it                                                   | Status today                                                                                                |
+| ------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Sub-A: Ikenna's Max | `ikennaigboaka@gmail.com` + `ikenna@odum-research.com` (aliases) | ✅ logged in on `agent-orchestrator-vm` (active under id `harsh-primary` historically)                      |
+| Sub-B: iggy2london  | `iggy2london@gmail.com`                                          | ⏳ Not yet seeded; operator can `setup-token` from any browser session that isn't already signed into Sub-A |
+| Sub-C: Harsh's Max  | `harshkantariyawork@gmail.com`                                   | ⏳ Not yet seeded; requires Harsh's action (different person, different Anthropic account)                  |
+
+So a VM can roster **up to 3 distinct OAuth accounts** (one of each subscription). With 8 epic VMs + 3 subscriptions,
+sharing math becomes:
+
+- Each subscription is primary on either 2 or 3 VMs (8 ÷ 3 ≈ 2.67)
+- Failover order: lowest-weekly-pct-first across the other 2 subscriptions
+- Primary round-robin updated accordingly (table below uses subscription labels, not the 4-account layout)
+
+### File naming
+
+Existing per-account snapshots (use Sub-A naming reflecting aliases):
+
+- `~/.claude/.credentials.harsh-primary.json` → rename to `~/.claude/.credentials.sub-a-ikenna.json` (kept as Sub-A; the
+  `harsh-primary` id is historical/misleading — both alias emails on this sub)
+
+New per-subscription files to seed (each requires one-time browser auth, then GCS upload per
+[claude_credentials_rotation_in_memory_staleness § 9e](../active/issues/claude_credentials_rotation_in_memory_staleness_2026_05_21.md)):
+
+- `~/.claude/.credentials.sub-b-iggy2london.json` — operator's separate Max sub (sign in with `iggy2london@gmail.com`)
+- `~/.claude/.credentials.sub-c-harsh.json` — Harsh's separate Max sub (Harsh signs in with
+  `harshkantariyawork@gmail.com`)
+
+Naming convention: `sub-<letter>-<short-id>` for clarity that each is a SUBSCRIPTION, not an email alias. Avoids the
+"ikenna-backup is for ikenna's BACKUP email" confusion that bit us today.
+
+### Original "rename to email-derived ids" plan (SUPERSEDED — only ship if Sub-B/C are confirmed distinct)
+
+Original per-account snapshot rename (kept for reference; do NOT execute without first confirming each email backs a
+SEPARATE subscription):
+
+- ~~`~/.claude/.credentials.ikenna-backup.json` → `~/.claude/.credentials.ikennaigboaka_at_gmail.com.json`~~ (same sub
+  as below — would create alias collision)
+- ~~`~/.claude/.credentials.harsh-primary.json` → `~/.claude/.credentials.ikenna_at_odum-research.com.json`~~ (same sub
+  as above)
+
+### Verify-distinct-subscription test before seeding
+
+For any candidate new account, before adding to the roster, confirm it's a DISTINCT subscription:
+
+```bash
+# 1. Auth as candidate account, save creds
+claude setup-token   # sign in with candidate email
+cp ~/.claude/.credentials.json /tmp/candidate-creds.json
+
+# 2. Compare orgId vs known accounts
+python3 -c "import json; print(json.load(open('/tmp/candidate-creds.json'))['claudeAiOauth'].get('organizationId'))"
+# (orgId is NOT in the file body currently; need to call /api/organizations or claude auth status)
+claude auth status | grep orgId
+
+# 3. If orgId matches an existing roster entry -> alias, SKIP
+# If orgId differs -> distinct subscription, ADD to roster
+```
+
+(The `oauth_refresh` module could grow an `account_org_id` field on AccountView so the dashboard flags aliases
+automatically. Track as v0.7 plan add-on.)
 
 New accounts to add (operator one-time `claude /login` per VM):
 
@@ -608,8 +676,8 @@ When a VM restarts:
 
 - [x] Add `assigned_vm:` frontmatter to every existing master plan in `plans/epics/*.md` + the coordinator + key
       actives. Default for unassigned plans: `vm-defi` (current single VM). (PM@e3f11893)
-- [x] Author `unified-trading-pm/orchestrator_vm_registry.yaml` (initial: just `vm-0` = current setup + `human-planning-vm`
-      placeholder). (PM@e3f11893)
+- [x] Author `unified-trading-pm/orchestrator_vm_registry.yaml` (initial: just `vm-0` = current setup +
+      `human-planning-vm` placeholder). (PM@e3f11893)
 - [x] Write `scripts/orchestrator/regen_vm_registry.py` + add to pre-commit hook. (PM@e3f11893)
 - [x] CLAUDE.md addition: "Master plans MUST declare `assigned_vm:` in frontmatter." (PM@e3f11893)
 
@@ -738,7 +806,8 @@ calendar days end-to-end.
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_7 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -747,30 +816,35 @@ _(no plans currently assigned at this priority)_
 ## P1 — important; post-current-gate
 
 ### [`d0_orchestrator_migration_2026_05_20`](../active/d0_orchestrator_migration_2026_05_20.md)
-**status**: active · **estimate**: 0.2 cal AI-days (class: refactor)
-**title**: D0 — agent-orchestrator migration plan
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: D0 — agent-orchestrator migration plan
 
 ## P2 — useful; opportunistic
 
 ### [`agent_orchestrator_cloud_run_deployment_2026_05_19`](../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md)
+
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ### [`agent_orchestrator_dual_deployment_2026_05_19`](../active/agent_orchestrator_dual_deployment_2026_05_19.md)
+
 **status**: active · **estimate**: 0.6 cal AI-days (class: design)
 
 ### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
+
 **status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
 
 ### [`agent_orchestrator_slack_notifications_2026_05_19`](../active/agent_orchestrator_slack_notifications_2026_05_19.md)
+
 **status**: active · **estimate**: 2.0 cal AI-days (class: infra)
 
 ### [`agent_orchestrator_workers_on_vms_2026_05_19`](../active/agent_orchestrator_workers_on_vms_2026_05_19.md)
+
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra)
 
 ### [`agent_reliability_mitigations_2026_05_20`](../active/agent_reliability_mitigations_2026_05_20.md)
+
 **status**: active · **estimate**: 1.2 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-
