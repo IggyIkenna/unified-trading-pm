@@ -544,7 +544,7 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
       import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
 - [x] ✅ [DOC] P0. **Threshold-calibration analysis doc** — pre-soak pass/fail criteria, 95p+2× margin derivation, 7-day
-      soak calibration procedure, decision authority table. — PM@(this commit);
+      soak calibration procedure, decision authority table. — PM@257bb3fb8;
       `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
       VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak criteria from
