@@ -155,11 +155,12 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     legend updated; test fixture updated; QG green (68 tests, 0 TS errors). Phase 5 of honest_coverage_formula_consolidation
     complete. Phase 8 (master plan Group H re-pull) is separate item — see plan.
 
-13. **HUMAN-HARSH-PHASE-11-BACKFILL-TO-100PCT** — Phase 11 of coordinator: operational data backfill against the
-    now-clean v8 + correctly-labelled manifest. DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k
-    MISSING_EXPECTED cells + the Phase-11-rebackfill subset from Ikenna's Phase 7b triage CSV. Single-walk discipline
-    (HARD RULE) + every new write at v8 + typed reason. Composes with: mega-audit § 6 R1-R5 +
-    `defi_upstream_46day_full_backfill_2026_05_16.md`. Est: 6 cal-AI-days fan-out across asset_groups.
+13. ✅ **HUMAN-HARSH-PHASE-11-BACKFILL-TO-100PCT** — deployment-service@e81ad9f —
+    `scripts/vm/phase11-backfill-coordinator.sh`: sequences IS → MTDS → features launchers in dependency order across
+    all 5 asset_groups; hard gate (--phase6-green + --phase7a-green required before --apply); dry-run default; no
+    fire-and-forget (each tier waits TERMINATED before next). Dry-run exit 0 verified (28 launchers listed).
+    EXECUTION GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end
+    per-asset-group when gates clear.
 
 14. **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — quickmerge + main-via-staging-and-SIT promotion path per
     `codex/08-workflows/deployment-flow.md`. Drive a full LDR → staging → SIT → main promotion cycle on a non-critical
