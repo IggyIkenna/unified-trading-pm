@@ -396,20 +396,20 @@ Plans with 0–1 open todos where the remaining item is trivially deferred or BL
 
 ### Wave 2 Slot C — 5 plans: complete-status sweep + post-cutover defers (~20 cal)
 
-- [ ] [SWEEP+DOCS] P0. `uac_source_capability_metadata_promotion_2026_05_20.md` — `status: complete`, 6 open items.
-      Apply trivial-sweep (Phase 5 P1 docstring cleanup = post-cutover). Archive to `plans/archive/2026_05/`.
-- [ ] [SWEEP+DOCS] P1. `deployment_ui_lifecycle_tabs_2026_05_08.md` — 4 open (H.4 staging/prod domain deploy items).
-      These are human-gated (DNS/Squarespace). Mark each `[DEFERRED-HUMAN-GATE — staging DNS]` with named successor.
-      Archive after. Use `[unlock-plan]` in commit.
-- [ ] [SWEEP+DOCS] P1. `hard_schema_phase1_field_flip_migration_2026_05_19.md` — 1 open (Phase E post-cutover subclass
-      design). Mark `[DEFERRED-POST-CUTOVER]` with named successor in active plans. Archive. Use `[unlock-plan]` in
-      commit.
-- [ ] [SWEEP+DOCS] P2. `sports_scrapers_post_cutover_2026_06_01.md` — 4 open, `status: paused`. Confirm all are
-      post-June-1. Add post-cutover banner if needed. Archive OR confirm `status: paused` is intentional and leave in
-      active with banner.
-- [ ] [SWEEP+DOCS] P2. `release_notes_runbook_post_1_0_0.md` — 4 open, `status: paused`. Check if items are post-1.0.0
-      graduation (human-gated). If all human-gated → archive with DEFERRED-HUMAN-GATE banner; else leave paused.
-- [ ] [FLIP] P0. Commit + push per plan. Flip this checkbox when all 5 assessed.
+- [x] ✅ [SWEEP+DOCS] P0. `uac_source_capability_metadata_promotion_2026_05_20.md` — Phase 0 trivial-sweep (70/70 venues
+      ran at uac@8a8915c); Phase 5 P1 DEFERRED-POST-CUTOVER. Archived → `plans/archive/2026_05/`. — PM@c62ba2392
+      (rebased, pushed PM@2dbc40e3e)
+- [x] ✅ [SWEEP+DOCS] P1. `deployment_ui_lifecycle_tabs_2026_05_08.md` — 0 open `- [ ]` items (H4/G2/G3 already
+      `[x] [DEFERRED-OPERATOR-DECISION]`). Added `## Deferred work` section. Archived. Updated
+      `deployment_and_user_management_master.md`. — PM@b8a5a8b50
+- [x] ✅ [SWEEP+DOCS] P1. `hard_schema_phase1_field_flip_migration_2026_05_19.md` — Phase E marked
+      `[DEFERRED-POST-CUTOVER — stays in plan; DO NOT move without operator ack]`. Archived. `defi_master.md` updated. —
+      PM@b7f5ffcbd
+- [x] ✅ [SWEEP+DOCS] P2. `sports_scrapers_post_cutover_2026_06_01.md` — all 4 items BLOCKED-OPERATOR-DECISION or
+      DEFERRED-POST-CUTOVER-2026-06-01+. Added post-cutover banner. Archived. `sports_master.md` updated. — PM@0bca3fe29
+- [x] ✅ [SWEEP+DOCS] P2. `release_notes_runbook_post_1_0_0.md` — all 4 P3 items DEFERRED-HUMAN-GATE on 1.0.0 graduation
+      (human-gated trigger). Archived. — PM@6193f08bd
+- [x] ✅ [FLIP] P0. All 5 plans assessed + archived. Pushed PM@2dbc40e3e. This checkbox flip.
 
 ---
 
