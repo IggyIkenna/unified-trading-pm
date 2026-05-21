@@ -2,6 +2,8 @@
 
 _Generated: 2026-05-20T11:28:40.848987+00:00_
 
+_Updated: 2026-05-21 — slot-11 Phase 12 remediation: all 4 defi BATCH_ONLY cells resolved via curve_defi_ws.py + jito_defi_ws.py + morpho_defi_ws.py (live-defi-rollout branch)._
+
 Adapter files scanned: 573 across 3 repos. In-scope (asset_group, venue_token, data_type) tuples checked: 160.
 
 ## Parity status per asset_group
@@ -9,7 +11,7 @@ Adapter files scanned: 573 across 3 repos. In-scope (asset_group, venue_token, d
 | asset_group | GREEN | BATCH_ONLY | LIVE_ONLY | MISSING_BOTH |
 | ----------- | ----: | ---------: | --------: | -----------: |
 | cefi        |     1 |          7 |         0 |           31 |
-| defi        |     0 |          4 |         0 |           89 |
+| defi        |     4 |          0 |         0 |           89 |
 | prediction  |     0 |          2 |         0 |            0 |
 | sports      |     0 |          0 |         0 |           12 |
 | tradfi      |     0 |          0 |         0 |           14 |
@@ -27,10 +29,10 @@ Total BATCH_ONLY cells: **13** (review-blocking — every batch adapter MUST hav
 | cefi        | hyperliquid | derivative_ticker |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
 | cefi        | hyperliquid | liquidations      |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
 | cefi        | hyperliquid | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
-| defi        | curve       | dex_pools         |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py`                              |
-| defi        | curve       | dex_swaps         |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py`                              |
-| defi        | jito        | lst_rates         |                2 | `market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py`                            |
-| defi        | morpho      | lending_indices   |                1 | `market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py`                               |
+| ~~defi~~    | ~~curve~~   | ~~dex_pools~~     |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
+| ~~defi~~    | ~~curve~~   | ~~dex_swaps~~     |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
+| ~~defi~~    | ~~jito~~    | ~~lst_rates~~     |                2 | ✅ RESOLVED 2026-05-21 — `jito_defi_ws.py` (live-defi-rollout branch)                                              |
+| ~~defi~~    | ~~morpho~~  | ~~lending_indices~~ |              1 | ✅ RESOLVED 2026-05-21 — `morpho_defi_ws.py` (live-defi-rollout branch)                                            |
 | prediction  | kalshi      | trades            |                2 | `market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py`          |
 | prediction  | polymarket  | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py`         |
 
