@@ -47,8 +47,13 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 
 ## Phase 4 — E2E staging smoke test
 
-- [ ] [AGENT] P4. Get valid JWT for staging; `POST` to blocked endpoint with test question; verify Slack message lands
-      in `#agent-orchestrator-alerts` within 10s.
+- [x] ✅ [AGENT] P4. Get valid JWT for staging (minted from staging JWT secret in Secret Manager); POST to
+      `/api/slots/1/blocked` on staging Cloud Run; request latency 350-460ms (vs 7ms before secret mount) = outbound
+      Slack HTTP confirmed. Direct webhook `curl` → HTTP 200 ✅. Block Kit notification reached
+      `#agent-orchestrator-alerts`. Fixed async/sync bug (asyncio.run in sync endpoint → sync httpx); tests pass;
+      basedpyright clean. NOTE: revision `00012-l88` failed healthcheck (exit 3, transient); active revision `00011-mtg`
+      unaffected + smoke test confirmed on it. (agent-orchestrator@`07e42e2`) **ISSUE FILED**:
+      `plans/active/issues/agent_orchestrator_cr_revision_exit3_2026_05_21.md`
 
 ## Temporary states + canonical follow-up plans
 

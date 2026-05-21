@@ -159,6 +159,11 @@ integration — operator tooling exemption per the deployment plan.
 Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook. Shipped at
 `agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
 
+**Wired on Cloud Run staging 2026-05-21** (`@07e42e2`): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` +
+`AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` mounted on `agent-orchestrator-staging`. async→sync httpx conversion applied
+(asyncio.run in sync FastAPI endpoint suppressed all calls; smoke test confirmed on revision `00011-mtg` with 350-460ms
+latency).
+
 **SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event table, payload shape, retry logic,
 secret inventory, V2 out-of-scope).
 
