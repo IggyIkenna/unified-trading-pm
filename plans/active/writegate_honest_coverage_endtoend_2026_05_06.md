@@ -58,7 +58,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 | 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
 | 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
 | 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
-| 2.C — features-sports stamping                                              | ✅ partial | fixture_lineups + fixture_player_stats + \_ensure_timestamp delete + \_FETCH_COMPLETED_AT cache + available_at stamping — features-service@47bf1984; open: per-table unit test + integration test           |
+| 2.C — features-sports stamping                                              | ✅         | fixture_lineups/player_stats wired + _ensure_timestamp deleted + _FETCH_COMPLETED_AT cache + 14-table available_at stamping + 27 tests — features-service@6040ee81                                        |
 | 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
 | 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
 | 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
@@ -1626,11 +1626,12 @@ grep.
       tables at the moment the GCS read returns. Accessor: `get_fetch_completed_at(table_name) -> datetime`. Today's
       `datetime.now(UTC)` at stamp time is architecturally safe (slightly pessimistic — run-start, not per-entity fetch
       finish) but will be replaced by precise per-entity timestamps after this work lands. ✅ features-service@47bf1984
-- [ ] [TEST] P0. Per-table unit test: build a fixture row → call export → assert `available_at` column present + matches
-      semantic + would pass `LookaheadBiasError` for a feature at `kickoff − 24h` window.
-- [ ] [TEST] P0. Integration test: run batch over 1 day × 1 league × all 14 tables; assert manifest reflects honest
+- [x] [TEST] P0. Per-table unit test: build a fixture row → call export → assert `available_at` column present + matches
+      semantic + would pass `LookaheadBiasError` for a feature at `kickoff − 24h` window. ✅ 25 tests,
+      features-service@6040ee81
+- [x] [TEST] P0. Integration test: run batch over 1 day × 1 league × all 14 tables; assert manifest reflects honest
       verbs; assert `available_at` populated on every parquet; assert no row has `available_at > kickoff_utc + 4h`
-      (sanity bound for post-match).
+      (sanity bound for post-match). ✅ 2 tests (TestAvailableAtStampingIntegration), features-service@6040ee81
 - [x] [QG] P0. features-sports quality-gates.sh green. ✅ exit 0 features-service@47bf1984
 
 ### Phase 2.D — instruments-service sports schema bumps + write-time stamping
