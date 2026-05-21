@@ -12,7 +12,7 @@ domain: cross-cutting
 type: coordination
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-0
+assigned_vm: vm-defi
 references:
   - sports_master
   - predictions_master

@@ -25,7 +25,7 @@ folds_in:
   - plans/archive/consolidated_ml_advanced_pipeline_2026_04_15.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-0
+assigned_vm: vm-ml
 related_plans:
   - ../active/features_repo_consolidation_2026_05_08.md
   - ../active/features_service_qg_cleanup_2026_05_11.md

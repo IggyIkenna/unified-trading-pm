@@ -8,7 +8,7 @@ priority: P0
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-assigned_vm: vm-0
+assigned_vm: vm-defi
 folds_in:
   - writegate_honest_coverage_endtoend_2026_05_06 # Phase 2.E reason taxonomy + Phase 3.D.5 + Wave 4 service emission policy
   - hard_schema_enforcement_2026_05_08 # Phase 5 SCHEMA_VALIDATION_FAILED + cluster validation AST guard

@@ -17,10 +17,6 @@ on:
       TELEGRAM_BOT_TOKEN:
         required: false
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
@@ -46,9 +42,19 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
+          if [ -z "${GH_PAT}" ]; then
+            echo "::warning::GH_PAT secret not configured in this repo — quality gates will fail."
+            echo "  Add GH_PAT (a PAT with repo read scope) to this repo's GitHub Actions secrets."
+            exit 0
+          fi
           BRANCH="${DEP_BRANCH:-main}"
-          (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null \
-            || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null) || true
+          git clone --depth=1 -b "$BRANCH" \
+            "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" \
+            ../unified-trading-pm 2>/dev/null \
+            || git clone --depth=1 -b main \
+              "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" \
+              ../unified-trading-pm 2>/dev/null \
+            || true
 
       - name: Install dependencies
         shell: bash

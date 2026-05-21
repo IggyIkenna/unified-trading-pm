@@ -13,7 +13,7 @@ asset_group: cefi
 type: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-0
+assigned_vm: vm-cefi
 folds_in:
   - cefi_venue_universe_expansion_2026_05_01
   - cefi_tradfi_tick_data_backfill_2026_04_10 # CeFi half (TradFi half goes to tradfi_master)

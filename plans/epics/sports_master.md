@@ -12,7 +12,7 @@ asset_group: sports
 type: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-0
+assigned_vm: vm-sports
 folds_in:
   - features_sports_honest_coverage_2026_05_05
   - sports_data_available_at_rename_2026_05_07

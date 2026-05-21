@@ -6,7 +6,7 @@ last_updated: 2026-05-08
 deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-assigned_vm: vm-0
+assigned_vm: vm-trading-core
 name: instruments-live-master-2026-05-08
 overview: >-
   Orchestration plan to take the instruments-service live across all five asset_groups (cefi / defi / tradfi / sports /
