@@ -789,6 +789,43 @@ if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_SOURCE_CAPABILIT
     fi
 fi
 
+# ── STEP 5.86: UAC cassette → prod-consumer linkage (orphan checker) ─────────
+# Fails QG if any cassette in external/<venue>/mocks/ has no production consumer
+# (import, pydantic class reference, or URL host match in a service repo).
+# Allowlist: tests/cassette_orphan_allowlist.yaml (documented exceptions).
+# Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
+# SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
+_UAC_CASSETTE_LINKAGE_CHECKER="${PROJECT_ROOT}/scripts/check_cassette_prod_consumer_linkage.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_CASSETTE_LINKAGE_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_CASSETTE_LINKAGE_CHECKER" >/tmp/uac_cassette_linkage_qg.log 2>&1; then
+        log_ok "STEP 5.86: UAC cassette→prod-consumer linkage OK (no unallowlisted orphans)"
+    else
+        log_fail "STEP 5.86: Unallowlisted orphan cassette(s) found:"
+        cat /tmp/uac_cassette_linkage_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.87: UAC prod-URL → cassette coverage (warn-only, tracks gap) ──────
+# Warns if a production HTTP/WS host in service repos has no UAC cassette.
+# Run in --warn-only mode: surfaces gaps without blocking QG.
+# Fix: add cassette OR add host to scripts/quality-gates-allowlists/prod-url-no-cassette.txt
+# Switch to strict mode (remove --warn-only) once coverage reaches ~80%.
+# SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
+_UAC_PROD_URL_CHECKER="${PROJECT_ROOT}/scripts/check_prod_url_cassette_coverage.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_PROD_URL_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_PROD_URL_CHECKER" --warn-only >/tmp/uac_prod_url_coverage_qg.log 2>&1; then
+        if grep -q "STEP 5.87.*WARN" /tmp/uac_prod_url_coverage_qg.log 2>/dev/null; then
+            log_warn "STEP 5.87: prod-URL→cassette coverage gap (run scripts/check_prod_url_cassette_coverage.py for full list)"
+        else
+            log_ok "STEP 5.87: All prod URL hosts have cassette coverage or are allowlisted"
+        fi
+    else
+        log_warn "STEP 5.87: prod_url_has_cassette checker error:"
+        cat /tmp/uac_prod_url_coverage_qg.log
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
