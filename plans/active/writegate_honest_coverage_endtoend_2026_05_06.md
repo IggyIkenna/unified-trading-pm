@@ -1195,13 +1195,15 @@ opaque):
       `record_captured` calls `assert_available_at_present` and raises `LookaheadBiasError` on missing/null
       `available_at`. - `record_empty` accepts `attempted_at` + writes manifest row only. - `record_failed` accepts each
       new typed error variant + writes appropriate `error_reason`.
-- [ ] [QG] P0. Add UTL `quality-gates.sh` step that fails if `_create_empty_output`-style placeholder return patterns
+- [x] ✅ [QG] P0. Add UTL `quality-gates.sh` step that fails if `_create_empty_output`-style placeholder return patterns
       are reintroduced (grep-based static check; can be fooled but catches the obvious). [AUDIT 2026-05-07: FRESH —
       actionable; no grep against `_create_empty_output|_handle_empty_tick_data` regression in
       unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.] **[BLOCKED-UTL-LIBRARY 2026-05-20 slot-6]: STEP
       5.67 lives in base-service.sh (service QG) only. UTL uses base-library.sh which does NOT include STEP 5.67. Adding
       requires UTL repo + PM template edits — cross-repo scope outside this slot's assignment. Requires explicit slot
-      allocation targeting UTL + PM SSOT template propagation.]**
+      allocation targeting UTL + PM SSOT template propagation.]** — STEP 5.88 added to
+      `unified-trading-pm/scripts/quality-gates-base/base-library.sh` (grep-based; runs for all library repos including
+      UTL). PM@slot-8-2026-05-21.
 - [x] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. (verified 2026-05-07:
       semver-agent auto-bumped on UTL@958634f9 + UTL@c5c2669e merges) [AUDIT 2026-05-07: STALE — semver-agent auto-fires
       on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped post-merge bumps. This

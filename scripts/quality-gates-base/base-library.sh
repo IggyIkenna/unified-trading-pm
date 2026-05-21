@@ -826,6 +826,27 @@ if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_PROD_URL_CHECKER
     fi
 fi
 
+# ── STEP 5.88: No _create_empty_output / _handle_empty_tick_data re-introduction ─
+# Grep-based regression guard: catches the banned NaN-placeholder pattern
+# (_create_empty_output, _handle_empty_tick_data) being re-introduced into
+# library source. Services have the full AST-walk via base-service.sh STEP 5.67;
+# this step adds a fast grep-level guard so library repos (UTL, UAC, etc.)
+# can't silently grow the pattern either.
+if [ -d "$SOURCE_DIR/" ]; then
+    _placeholder_hits=$(grep -r --include="*.py" \
+        -E '_create_empty_output|_handle_empty_tick_data' \
+        "$SOURCE_DIR/" \
+        --exclude-dir=".venv" --exclude-dir="__pycache__" 2>/dev/null || true)
+    if [ -n "$_placeholder_hits" ]; then
+        log_fail "STEP 5.88: Banned NaN-placeholder method detected in ${SOURCE_DIR}/. Delete it — emit record_empty(reason=...) / record_captured() instead:"
+        echo "$_placeholder_hits"
+        log_fail "         (CLAUDE.md 'Honest absence vs fake placeholders' + writegate Phase 2.A contract)"
+        exit 1
+    else
+        log_ok "STEP 5.88: No banned NaN-placeholder methods (_create_empty_output / _handle_empty_tick_data)"
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
