@@ -148,11 +148,11 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 
 **DeFi `carry_staked_basis`** (~28 protocols):
 
-- [ ] [SCRIPT] P1. REST cassette per: Aave, Compound, Spark, Euler, Venus, Curve, Lido (stETH), RocketPool (rETH),
+- [x] ✅ [SCRIPT] P1. REST cassette per: Aave, Compound, Spark, Euler, Venus, Curve, Lido (stETH), RocketPool (rETH),
       Coinbase cbETH, JitoSOL, mSOL (Marinade), Jito, Sanctum, Ethena (USDe/sUSDe), Puffer, EtherFi (eETH/weETH),
       Pendle, Morpho, Beefy, Yearn, Convex, Karak, Solayer, Solblaze, Cambrian, Symbiotic, Idle, Picasso, Sky. For
       protocols with only on-chain reads (no REST): document with `<protocol>/mocks/onchain_<call>.yaml` capturing the
-      canonical contract call + decoded response.
+      canonical contract call + decoded response. — **ALL 28 protocols covered across 3 slots**
   - ✅ **slot 4 DONE** (uac@31cb6a5 + uac@66ffe71 2026-05-20): yield/restaking cluster 16/16 covered —
     Ethena/Pendle/Beefy/Yearn/Convex/Karak/Symbiotic/Idle (defillama/yields.yaml existing),
     Puffer/EtherFi/Solblaze (defillama/coins_historical.yaml new), Morpho (morpho_blue_api/markets.yaml),
@@ -162,7 +162,13 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
     Curve (curve_fi/mocks/pools.yaml — api.curve.finance/v1/getPools/ethereum/main),
     Euler V2 (euler_v2/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, EVM eth_call pattern documented),
     Venus (venus/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, BNB Chain RPC pattern documented).
-    Awaiting slot 3 (LST cluster: Lido/RocketPool/cbETH/JitoSOL/mSOL/Jito/Marinade/Sanctum) for full checkbox flip.
+  - ✅ **slot 2 (LST cluster) DONE** (uac@5f6446b 2026-05-21): LST cluster 8/8 covered — Lido (lido/mocks/steth_apr.yaml —
+    api.lido.fi/v1/protocol/steth/apr/last), Jito/JitoSOL (jito/mocks/stake_pool_stats.yaml — kobe.mainnet.jito.network),
+    Marinade/mSOL (marinade/mocks/msol_apy.yaml — api.marinade.finance/msol/apy/30d+365d),
+    RocketPool/rETH (rocket_pool/mocks/onchain_reth.yaml — BLOCKED-NO-DIRECT-REST-API, pure static IS adapter, APY via
+    defillama/yields.yaml project:rocket-pool), Sanctum/INF/jupSOL/laineSOL
+    (sanctum/mocks/lst_static_registry.yaml — pure static IS adapter, capability stub),
+    Coinbase cbETH (covered by defillama/yields.yaml project:coinbase-wrapped-staked-eth pre-existing).
 
 **DeFi `arbitrage_price_dispersion`** (~9 DEXes):
 
