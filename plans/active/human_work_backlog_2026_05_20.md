@@ -162,13 +162,19 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     EXECUTION GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end
     per-asset-group when gates clear.
 
-14. ✅ **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — deployment-ui@2b3123c + unified-trading-pm@baaced63.
-    PR #8 (LDR → staging) created at https://github.com/IggyIkenna/deployment-ui/pull/8.
-    Found + fixed 2 pre-existing CI blockers: (a) ui-quality-gates.yml + infra-quality-gates.yml used relative
-    `./` path for nested reusable workflow (invalid cross-repo — fixed to full IggyIkenna/unified-trading-pm/...@ldr);
-    (b) workspace-qg.yml in deployment-ui called python-quality-gates.yml (wrong template for TypeScript/React —
-    fixed to ui-quality-gates.yml). Staging ruleset requires `call-quality-gates / quality-gates` + `check-staging-lock`.
-    CI re-running with fixes applied; merge to staging + staging → main auto-promotion via semver-agent unblocked.
+14. 🟡 **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — BLOCKED (operator action required). PR #8 (LDR → staging) open
+    at https://github.com/IggyIkenna/deployment-ui/pull/8. Six pre-existing CI blockers found and fixed:
+    (a) GitHub cross-repo private-repo reusable workflow restriction — fixed by creating local copy
+        deployment-ui/.github/workflows/ui-quality-gates.yml (within-repo calls work for private repos);
+    (b) workspace-qg.yml called python-quality-gates.yml instead of ui-quality-gates.yml (wrong template);
+    (c) notify-telegram.yml had duplicate `inputs:` key — merged into single block;
+    (d) notify-failure job in ui/infra-quality-gates.yml had relative `./` path (invalid cross-repo) — removed;
+    (e) GH_PAT: required: true caused GitHub to reject the reusable workflow call — changed to required: false;
+    (f) top-level `concurrency` block in local reusable workflow causes "workflow file issue" — removed.
+    **BLOCKER**: unified-trading-pm is a private repo. GH_PAT is required to clone it for quality-gates.sh.
+    deployment-ui does NOT have GH_PAT in its GitHub Actions secrets. Without GH_PAT, CI fails at "Clone PM" step.
+    **OPERATOR ACTION**: Add GH_PAT (PAT with repo-read scope) to deployment-ui GitHub Actions secrets.
+    Once GH_PAT is added, re-run CI → merge PR #8 → staging → semver-agent promotes to main. Est: 5 min operator.
 
 15. **HUMAN-HARSH-LIVE-PIPELINE-VALIDATION** — Phase 12-13 of coordinator: live-mode adapter behavior matches batch-mode
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:
