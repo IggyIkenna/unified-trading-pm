@@ -180,14 +180,15 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:
     `live_pipeline_mtds_mdps_features_2026_05_08.md` + `batch_live_symmetry_2026_05_10.md`. Est: 2 cal-AI-days.
 
-16. **HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-COPY** — AWS-side copy of the GCP Cloud Run manifest consolidator stack (10
-    jobs / `*/1 * * * *` schedule per `codex/05-infrastructure/manifest-consolidator-ssot.md`). Currently AWS-side
-    consolidation is NOT in scope (per the codex SSOT); this task is to scope + estimate the AWS port. Outcome: either a
-    new sub-plan filed + estimated, OR a `BLOCKED-OPERATOR-DECISION` ping with the explicit "leave AWS without
-    consolidator" articulation. Est: 0.5 cal-AI-day for scoping.
+16. 🟡 **HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-COPY** — Sub-plan filed 2026-05-21 slot-11: [`aws_manifest_consolidator_scope_2026_05_21.md`](./aws_manifest_consolidator_scope_2026_05_21.md)
+    — 2.5 cal-AI-days; UTL consolidator is cloud-agnostic + AWS Batch/EventBridge Terraform modules already exist →
+    Terraform authoring only; GATED on Phase 5 cross-cloud rsync + Phase 6 ECS Fargate.
+    Decision: sub-plan (not BLOCKED-OPERATOR-DECISION) — AWS consolidator is required once Phase 6 VMs run.
 
-17. **HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE** — `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` Steps
-    1-8. Self-onboarding to the shared agent-orchestrator from `orch.epiphanytechnologies.com`. Est: 0.5 cal-AI-day.
+17. 🟡 **HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE** — VM-side prep COMPLETE 2026-05-21 slot-11: per-slot tokens for slots
+    13-20 issued (exp 2026-06-20) at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/`. Migration doc
+    updated: `--start-slot` → `--add-slot` loop, token `scp` recipe added. Steps 1-7 remain laptop-side (Harsh action).
+    Step 8 DNS cutover = joint (Harsh stops epiphany service, Ikenna removes Cloudflare CNAME).
 
 ### Co-owned (claim by bandwidth) — adapter scaffolding for BLOCKED-CREDENTIALS
 

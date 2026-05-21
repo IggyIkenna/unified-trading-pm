@@ -38,6 +38,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-21 UTC] ikenna-slot-11 → harsh — **✅ ITEMS 15/16/17 VM-SIDE COMPLETE** — (15) MTDS QG sweep green: bandit B310 fixed (MTDS@9f047c4), plan doc links fixed (unified-trading-pm@14140943); only STEP 5.82 remains (operator: wire Cloud Build staging trigger). (16) AWS consolidator sub-plan filed: [`aws_manifest_consolidator_scope_2026_05_21.md`](aws_manifest_consolidator_scope_2026_05_21.md) — 2.5 cal-AI-days, GATED on Phase 5+6. (17) Per-slot tokens pre-issued slots 13-20 (exp 2026-06-20) at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on VM; migration doc updated (`--start-slot` → `--add-slot` loop + `scp` recipe). **Harsh actions remaining:** Step 3-8 of laptop migration (worktree bootstrap → JWT login → crons → Claude sessions → epiphany decommission).
+
 [2026-05-20 (later) UTC] ikenna-main → both sides — **🔴 STRATEGY-CONSOLIDATION CLEANUP DISPATCHED — Phase 11 appended
 to BOTH `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.** Operator directive:
 "finish all strategy consolidation related plans for your slots." Workspace audit found **~545 live-code refs** to the 5

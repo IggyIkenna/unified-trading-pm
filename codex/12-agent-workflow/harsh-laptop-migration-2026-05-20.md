@@ -150,12 +150,8 @@ contain a per-repo worktree on branch `tab/harsh/<N>`.
 
 ```bash
 cd "${WORKSPACE_PATH}"
-bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8 --start-slot 13 --operator harsh
-```
-
-Note: `--start-slot` may not yet exist; if not, run `--add-slot <N>` in a loop:
-
-```bash
+# --start-slot is NOT supported by setup-tab-worktrees.sh (verified 2026-05-21).
+# Use --add-slot in a loop:
 for N in 13 14 15 16 17 18 19 20; do
     bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot $N --operator harsh
 done
@@ -189,9 +185,23 @@ curl -sS https://api.agent-orchestrator.odum-research.com/api/mode \
     -H "Authorization: Bearer $TOKEN"
 ```
 
-For per-slot worker tokens (used by the worker's `/boot` + `/heartbeat`), Ikenna issues those server-side (using the
-orchestrator JWT secret) and drops them at `${WORKSPACE_PATH}/.tabs/<N>/.orch_token`. Ping Ikenna to issue tokens for
-slots 13-20 after Step 3 lands.
+Per-slot worker tokens (used by the worker's `/boot` + `/heartbeat`) have been pre-issued by slot 11 on the VM
+(2026-05-21, exp 2026-06-20) and staged at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on
+the shared VM. Copy them to your laptop after Step 3:
+
+```bash
+WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
+VM="ubuntu@<vm-ip>"   # ask Ikenna for the IP or use the SSH alias
+
+for N in 13 14 15 16 17 18 19 20; do
+    mkdir -p "${WORKSPACE_PATH}/.tabs/${N}"
+    scp "${VM}:/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/slot-${N}.orch_token" \
+        "${WORKSPACE_PATH}/.tabs/${N}/.orch_token"
+    chmod 600 "${WORKSPACE_PATH}/.tabs/${N}/.orch_token"
+done
+```
+
+If tokens have expired (30-day TTL): ping Ikenna to re-issue (runs the same `issue_token('harsh', ...)` script on the VM).
 
 ---
 
@@ -383,6 +393,7 @@ ssh agent-orchestrator-vm "TOKEN=\$(cat /home/ubuntu/unified-trading-system-repo
 | Date       | Change                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------- |
 | 2026-05-20 | Initial doc — covers shared-backend migration, slot range 13-20, FF-pull + git-status-report crons |
+| 2026-05-21 | Step 3: drop `--start-slot` (not implemented — use `--add-slot` loop). Step 4: per-slot tokens pre-issued on VM at `.tabs/harsh-slot-tokens/`, exp 2026-06-20; added `scp` copy recipe. |
 
 Future updates land here as the shared setup evolves (e.g. new cron, new agent.md spec, new dashboard panel that
 requires opt-in).
