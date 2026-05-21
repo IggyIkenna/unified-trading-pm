@@ -357,18 +357,19 @@ Wave 1. Locked plans need `[unlock-plan]` in commit message.
 
 All these have `status: done` or `status: paused` and **zero** open `- [ ]` items. Trivial archival only.
 
-- [ ] [DOCS] P0. Archive `hard_schema_enforcement_2026_05_08.md` → `plans/archive/2026_05/`. Add `status: archived`.
-      Update `plans/epics/tradfi_master.md`. Use `[unlock-plan]` in commit.
-- [ ] [DOCS] P0. Archive `strategy_archetype_taxonomy_2026_05_12.md` → `plans/archive/2026_05/`. Update
-      `tradfi_master.md`. Use `[unlock-plan]` in commit.
-- [ ] [DOCS] P0. Archive `agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` → `plans/archive/2026_05/`.
+- [x] ✅ [DOCS] P0. Archive `hard_schema_enforcement_2026_05_08.md` → `plans/archive/2026_05/`. Add `status: archived`.
+      Update `plans/epics/sports_master.md`. Use `[unlock-plan]` in commit. — PM@b857bfdee
+- [x] ✅ [DOCS] P0. Archive `strategy_archetype_taxonomy_2026_05_12.md` → `plans/archive/2026_05/`. Update
+      `strategy_master.md`. Use `[unlock-plan]` in commit. — PM@b857bfdee
+- [x] ✅ [DOCS] P0. Archive `agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` → `plans/archive/2026_05/`.
       SUPERSEDED banner: superseded by oauth token env-var approach. Update `orchestrator_master.md`. Use
-      `[unlock-plan]` in commit.
-- [ ] [DOCS] P1. Archive `d5_features_missing_data_downgrade_2026_05_20.md` → `plans/archive/2026_05/`. All items `[x]`;
-      deferred items → `ml_service_hardening` (named successor). Update parent epic.
-- [ ] [DOCS] P1. Archive `defi_protocol_outage_detector_2026_05_20.md` → `plans/archive/2026_05/`. Phase 7 (Curve,
-      post-May-23) already deferred in plan body. Update parent epic.
-- [ ] [FLIP] P0. Commit `docs(plans): [unlock-plan] archive 5 completed plans — wave2 slot-A`. Push. Flip this checkbox.
+      `[unlock-plan]` in commit. — PM@b857bfdee
+- [x] ✅ [DOCS] P1. Archive `d5_features_missing_data_downgrade_2026_05_20.md` → `plans/archive/2026_05/`. All items
+      `[x]`; deferred items → `ml_service_hardening` (named successor). Update parent epic. — PM@b857bfdee
+- [x] ✅ [DOCS] P1. Archive `defi_protocol_outage_detector_2026_05_20.md` → `plans/archive/2026_05/`. Phase 7 (Curve,
+      post-May-23) already deferred in plan body. Update parent epic. — PM@b857bfdee
+- [x] ✅ [FLIP] P0. Commit `docs(plans): [unlock-plan] archive 5 completed plans — wave2 slot-A`. Push. Flip this
+      checkbox. — PM@b857bfdee
 
 ---
 
