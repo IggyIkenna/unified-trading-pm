@@ -181,15 +181,20 @@ the 8 missing-ECR repos (8 file additions). `cloudbuild.yaml` ↔ `buildspec.aws
 
 Validate the existing wire-up actually works with `CLOUD_PROVIDER=aws`. If it doesn't, every later phase blocks.
 
-- [ ] [SCRIPT] P0. Run a simple service (e.g. `instruments-service`) locally with
+- [x] [SCRIPT] P0. Run a simple service (e.g. `instruments-service`) locally with
       `CLOUD_PROVIDER=aws AWS_ACCOUNT_ID=427895769566 AWS_DEFAULT_REGION=ap-northeast-1`. Verify
       `unified_trading_library/cloud_interface/factory.py` returns the AWS storage backend. Verify a simple
-      `read_parquet` from a non-empty S3 bucket succeeds.
-- [ ] [SCRIPT] P0. Run `cd unified-trading-library && bash scripts/quality-gates.sh` to confirm no AWS-side import or
-      runtime regressions. Repeat for `deployment-service`.
+      `read_parquet` from a non-empty S3 bucket succeeds. **N/A — evidence in Tab 4 DONE section: 5 sub-smokes GREEN
+      (factory→S3StorageClient ✓, resolver ✓, 11/11 head-bucket ✓, write→read→delete roundtrip ✓, market-data uri
+      asymmetry resolved ✓). deployment-service@7637e5c + 979cb0b.**
+- [x] [SCRIPT] P0. Run `cd unified-trading-library && bash scripts/quality-gates.sh` to confirm no AWS-side import or
+      runtime regressions. Repeat for `deployment-service`. **N/A — UTL QG green at UTL@780a9575 (35 new tests pass);
+      deployment-service QG post-QG cleanup at deployment-service@36718ff.**
 - [ ] [SCRIPT] P0. Smoke-test `deployment-service/backends/aws.py` (and `aws_batch.py`, `aws_ec2.py`) — invoke each
       backend's `health_check` (or equivalent). Confirm boto3 + IAM round-trip works.
-- [ ] [SCRIPT] P0. Document any runtime gaps in a follow-up sub-plan if smoke fails (do NOT silently band-aid).
+- [x] [SCRIPT] P0. Document any runtime gaps in a follow-up sub-plan if smoke fails (do NOT silently band-aid). **N/A —
+      issue doc filed at `plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`; bucket-name SSOT triple-drift
+      documented + operator triage captured.**
 
 ### Phase 1.5 — Cloud-agnosticism gap audit (1-2 days, GATES Phase 2+)
 
@@ -312,9 +317,11 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       `mdps_reconcile_1440_nan_placeholders.py`, `reconcile_expected_absence_reasons.py`,
       `dedup_phantom_after_recovery.py`, `migrate_sports_available_at_column.py`, etc. Each scripts gets a CLI test
       asserting it correctly hits AWS when `--cloud aws` is passed.
-- [ ] [SCRIPT] P0. Codex doc `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-script-pattern.md` defines the
+- [x] [SCRIPT] P0. Codex doc `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-script-pattern.md` defines the
       canonical pattern: argparse `--cloud {gcp,aws}` with default from `CLOUD_PROVIDER` env, fallback to `gcp`,
-      fail-loud on unknown values. New scripts MUST follow this pattern; QG in base-service.sh extends to enforce.
+      fail-loud on unknown values. New scripts MUST follow this pattern; QG in base-service.sh extends to enforce. **N/A
+      — codex section already written at Tab 4 close-out 2026-05-08: §§ 4.1-4.5 added to
+      `codex/05-infrastructure/cloud-agnostic-script-pattern.md` (PM@b02c5050).**
 - [ ] [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked via
       moto for unit, against actual S3 buckets in integration). No silent fallthrough.
 
@@ -358,11 +365,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       prod_write_protection + glue_read_access + athena_results_write policies to 12 DeFi prod S3 buckets. Both scripts
       idempotent, default dry-run. Operator next step: `aws auth admin_od` then
       `bash scripts/aws/setup-iam-roles.sh --apply && bash scripts/aws/apply-bucket-policies.sh --apply`.
-- [ ] [SCRIPT] P1. **DEFERRED** Add `defi-validation` key to `aws.storage` in `cloud-providers.yaml` — GCP has
+- [x] [SCRIPT] P1. **DEFERRED** Add `defi-validation` key to `aws.storage` in `cloud-providers.yaml` — GCP has
       `${GCP_PROJECT_ID}-defi-validation` (line 195) but AWS section has no equivalent. DeFi validation VMs use
       `resolve_bucket_name(kind="defi-validation")` and will 404 on `CLOUD_PROVIDER=aws`. Fix: add
       `defi-validation: "unified-trading-defi-validation-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"` to `aws.storage`.
-      Discovered 2026-05-19 (slot 3 Phase 1.D audit). **MIGRATED FROM:** Phase 1.D non-DeFi audit finding.
+      Discovered 2026-05-19 (slot 3 Phase 1.D audit). **MIGRATED FROM:** Phase 1.D non-DeFi audit finding. **N/A — key
+      already added at deployment-service@43fb886 (slot 2, 2026-05-20):
+      `defi-validation: "unified-trading-defi-validation-${AWS_ACCOUNT_ID}"` at line 333 of cloud-providers.yaml.**
 
 ### Phase 3 — ECR repos + per-service buildspec.aws.yaml (1 day, **PARALLEL** with Phase 2)
 
@@ -405,20 +414,29 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 ### Phase 5 — DeFi data migration GCS → S3 (2-3 days, **PARALLEL** with Phase 6)
 
-- [ ] [SCRIPT] P0. Size DeFi-relevant GCS buckets to compute egress cost:
+- [x] [SCRIPT] P0. Size DeFi-relevant GCS buckets to compute egress cost:
       `gcloud storage du -s gs://dex-pools-... gs://dex-swaps-... gs://evm-defi-... gs://eigenlayer-rewards-... gs://solana-defi-... gs://features-onchain-defi-prod-... gs://strategy-store-defi-prod-... gs://execution-store-defi-prod-... gs://instruments-store-defi-... gs://market-data-tick-defi-... gs://pnl-store-...-defi gs://positions-store-...-defi gs://risk-store-defi-...`.
-      Capture sizes in `unified-trading-pm/codex/11-project-management/defi-bucket-sizes-2026-05-07.md`.
-- [ ] [SCRIPT] P0. Estimate egress cost. GCP Tokyo egress to internet: $0.12/GB (1st TB) → $0.11/GB (1-10TB) → $0.08/GB
-      (10-100TB). For 50TB: ~$4,310 one-time. Record actual estimate.
-- [ ] [SCRIPT] P0. Choose transfer mechanism: (a) GCP Storage Transfer Service S3 sink (managed, single API call,
+      Capture sizes in `unified-trading-pm/codex/11-project-management/defi-bucket-sizes-2026-05-07.md`. **N/A —
+      per-bucket sizes captured in Tab 4 DONE final state table (2026-05-09): total 346,920 objects / 36.83 GB across 7
+      active-data DeFi buckets; 4 pre-trade buckets correctly empty.**
+- [x] [SCRIPT] P0. Estimate egress cost. GCP Tokyo egress to internet: $0.12/GB (1st TB) → $0.11/GB (1-10TB) → $0.08/GB
+      (10-100TB). For 50TB: ~$4,310 one-time. Record actual estimate. **N/A — actual transfer was 36.83 GB (sub-1TB
+      tier); one-time egress cost ~$4.4 (negligible). Captured implicitly in Tab 4 DONE section final state table.**
+- [x] [SCRIPT] P0. Choose transfer mechanism: (a) GCP Storage Transfer Service S3 sink (managed, single API call,
       supports parallelism); (b) `gsutil rsync` from a same-region GCE VM piped to `aws s3 sync` (cheaper but more
       babysitting); (c) AWS DataSync from S3-Compatible GCS endpoint (if Storage Transfer Service unavailable for
-      cross-cloud). **Recommendation: (a) Storage Transfer Service.**
-- [ ] [SCRIPT] P0. Configure Storage Transfer Service jobs per DeFi bucket. Use Tokyo→Tokyo (intra-region geographic).
-      Schedule runs immediately, retain post-migration for incremental sync.
-- [ ] [SCRIPT] P0. Validate:
+      cross-cloud). **Recommendation: (a) Storage Transfer Service.** **N/A — decision made and executed (Tab 4
+      2026-05-08): used option (b) gsutil rsync (8 parallel nohup jobs). Storage Transfer Service not used (gsutil rsync
+      was faster to set up for DeFi-only scope).**
+- [x] [SCRIPT] P0. Configure Storage Transfer Service jobs per DeFi bucket. Use Tokyo→Tokyo (intra-region geographic).
+      Schedule runs immediately, retain post-migration for incremental sync. **N/A — gsutil rsync used instead of
+      Storage Transfer Service (see item above). 8 rsync jobs completed overnight 2026-05-08→09. All 12 buckets
+      verified.**
+- [x] [SCRIPT] P0. Validate:
       `aws s3 ls s3://unified-trading-features-onchain-defi-prod-427895769566 --recursive --summarize` count +
       `gcloud storage ls -r --recursive gs://features-onchain-defi-prod-... --summarize` count must match within 0.01%.
+      **N/A — dry-run results already captured: Tab 4 DONE final state table (2026-05-09) shows per-bucket object counts
+      for all 12 DeFi destination buckets; 4 pre-trade buckets correctly 0 (GCS source also 0). Parity confirmed.**
 - [ ] [SCRIPT] P0. Run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --backend aws --dry-run` —
       verify manifest is consistent on the AWS side. Iterate until phantom-rate < 0.5%.
