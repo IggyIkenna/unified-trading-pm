@@ -447,6 +447,12 @@ SSOTs:
 - `unified-trading-pm/scripts/dev/slot-git-status-report.sh` — drift reporter (cross-platform)
 - `unified-trading-pm/scripts/verify-slot-host-symmetry.sh` — verification (test new hosts)
 
+## Plan Hygiene — Frontmatter, Line Caps, Archive Candidates
+
+Run: `bash unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh`. Auto-fix:
+`python3 unified-trading-pm/scripts/plan-hygiene/fix_frontmatter.py`. Daily cron on planning VM at `0 5 * * *`
+UTC pings orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hygiene.md`.
+
 ---
 
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
