@@ -64,19 +64,44 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
 - [x] ✅ [SCRIPT] P0. **Add `VM_TASK=instruments-backfill` handler** to `setup-data-pipeline-vm.sh`. Delivered in
       same commit as mtds-backfill handler. — deployment-service@2f49bad
 
-- [ ] [SCRIPT] P0. **Convert `launch-cefi-instruments-backfill-vm.sh` + `launch-api-football-backfill-vm.sh`** to
-      Pattern A.
+- [x] ✅ [SCRIPT] P0. **Convert `launch-cefi-instruments-backfill-vm.sh` + `launch-api-football-backfill-vm.sh`** to
+      Pattern A. — **ALREADY Pattern A** (pre-converted; no action needed). `launch-cefi-instruments-backfill.sh`
+      uses `VM_TASK=cefi-instruments-backfill`; `launch-api-football-backfill-vm.sh` uses `VM_TASK=sports-backfill`.
+      Verified 2026-05-21.
 
-## Phase 3 — sports/prediction/migration launchers (remaining ~11)
+- [x] ✅ [SCRIPT] P0. **Convert `launch-instruments-backfill-vm.sh` + `launch-defi-backfill-vm.sh`** to Pattern A.
+      Both were Pattern B inline-startup launchers not in the original plan scope (discovered during Phase 3 audit).
+      `launch-instruments-backfill-vm.sh`: 6-VM fleet (cefi-1/2/3, defi, tradfi, sports), `VM_TASK=instruments-backfill`,
+      `VM_CHUNK_DAYS=30`, `--asset-group` filter + `--start/--end` override.
+      `launch-defi-backfill-vm.sh`: single-VM targeted DeFi (7 venues), `VM_TASK=instruments-backfill`,
+      `VM_ASSET_GROUP=DEFI`, `VM_CHUNK_DAYS=30`. — deployment-service@e2a0fdb
 
-- [ ] [SCRIPT] P1. **Audit remaining inline launchers** (sports entity-sweep, full-sweep, instruments-reference;
-      prediction features + pipeline; cefi-migration, gcs-migration-bundle). For each: determine if `VM_TASK` routing
-      already exists in `setup-data-pipeline-vm.sh` or needs a new handler. File sub-items here after audit.
+## Phase 3 — sports/prediction/migration launchers (remaining ~7)
+
+- [x] ✅ [RESEARCH] P1. **Audit remaining inline launchers** (sports entity-sweep, full-sweep, instruments-reference;
+      prediction features + pipeline; cefi-migration, gcs-migration-bundle). Routing analysis complete 2026-05-21:
+      - `launch-sports-entity-sweep-vm.sh`: 17 VMs (one per entity), each uses `VM_MIGRATION_CMD` — routes via existing
+        `VM_TASK=sports-manifest-rescan` handler. Straightforward conversion.
+      - `launch-sports-full-sweep-vm.sh`: 8 VMs; calls `vm_instruments_reference.sh` bash runner staged to GCS. Needs
+        new `VM_TASK=sports-full-sweep` handler in `setup-data-pipeline-vm.sh` OR stage the runner script.
+      - `launch-sports-instruments-reference-vm.sh`: 3 VMs; same runner as full-sweep. Same new handler needed.
+      - `launch-prediction-features-vm.sh`: chunk loop over `features-cross-instrument-service`. Needs new
+        `VM_TASK=prediction-features-backfill` handler.
+      - `launch-prediction-pipeline-vm.sh`: 3-stage (MDPS → features → strategy). Needs new
+        `VM_TASK=prediction-pipeline` handler or multi-step startup sequence.
+      - `launch-cefi-migration-vm.sh`: `VM_MIGRATION_CMD` pattern — routes via `VM_TASK=sports-manifest-rescan`
+        (generalise handler to not hardcode sports dir) or new `VM_TASK=script-runner`.
+      - `launch-gcs-migration-bundle-vm.sh`: runs PM migration scripts not in service tarball — needs tarball extension
+        or new dedicated startup handler. Most complex.
 
 - [ ] [SCRIPT] P1. **Convert sports launchers** (3): `launch-sports-{entity-sweep,full-sweep,
-      instruments-reference}-vm.sh` → Pattern A using existing or new `VM_TASK` handlers.
+      instruments-reference}-vm.sh` → Pattern A. Entity-sweep: uses existing `sports-manifest-rescan` handler + per-entity
+      `VM_MIGRATION_CMD`. Full-sweep + instruments-reference: add new `VM_TASK=sports-full-sweep` handler to
+      `setup-data-pipeline-vm.sh` that fetches + runs `vm_instruments_reference.sh` from CODE_BUCKET.
 
 - [ ] [SCRIPT] P1. **Convert prediction launchers** (2): `launch-prediction-{features,pipeline}-vm.sh` → Pattern A.
+      Add `VM_TASK=prediction-features-backfill` (chunk loop) and `VM_TASK=prediction-pipeline` (3-stage sequence)
+      handlers to `setup-data-pipeline-vm.sh`.
 
 - [ ] [SCRIPT] P2. **Convert migration launchers** (2): `launch-{cefi-migration,gcs-migration-bundle}-vm.sh`. These
       run custom Python scripts not in the standard service tarball path. Option: add `VM_TASK=script-runner` handler
