@@ -2161,6 +2161,41 @@ else
     log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
 fi
 
+# ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
+#
+# Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
+# that passes a literal string ``reason=`` kwarg must use a value from
+# ``unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS``.
+#
+# UTL's ManifestWriter already raises UnknownEmptyConfirmedReasonError at runtime,
+# but this static check catches the error before tests run with precise file:line.
+#
+# Attribute-access forms (EmptyConfirmedReason.X, SomeEnum.X.value) pass through —
+# they are validated by the type system. Only literal strings are checked.
+#
+# Exemptions: manifest_writer.py (UTL definition site), test_*.py (negative tests),
+# per-line ``# QG-allow: record-empty-reason``.
+#
+# SSOT: writegate_honest_coverage_endtoend_2026_05_06.md Phase 2.E.1 / STEP 5.89.
+_RECORD_EMPTY_REASON_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_record_empty_reason_closed_set.py"
+if [ -f "$_RECORD_EMPTY_REASON_CHECKER" ]; then
+    _RER_REPO=$(basename "$PROJECT_ROOT")
+    _RER_WS="$REPO_ROOT"
+    _RER_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _RER_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_RECORD_EMPTY_REASON_CHECKER" \
+            --workspace-root "$_RER_WS" --scope "$_RER_REPO" "${_RER_SRC_ARG[@]}" >/tmp/record_empty_reason_qg.log 2>&1; then
+        log_success "STEP 5.89: All record_empty/record_expected_empty literal reasons are in EMPTY_CONFIRMED_REASONS"
+    else
+        log_fail "STEP 5.89: record_empty/record_expected_empty called with unknown/blank literal reason. Use EmptyConfirmedReason enum member or a known string from EMPTY_CONFIRMED_REASONS (writegate Phase 2.E.1):"
+        cat /tmp/record_empty_reason_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_record_empty_reason_closed_set.py --workspace-root $_RER_WS --scope $_RER_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.89: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
