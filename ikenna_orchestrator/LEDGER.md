@@ -30,6 +30,7 @@ you're being asked to be the main orchestrator:
 2. Read [`../cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md) § "Daily Work-Split Process" — full spec for Model
    A (fixed thematic tabs) + Model B (1-main + dynamic spawned tabs).
 3. Run boot checklist:
+   - From `unified-trading-pm/`: `bash scripts/plan-hygiene/run_hygiene_sweep.sh` — confirm 0 hard failures before any work.
    - From `unified-trading-pm/`: `git status`, `git rev-list --left-right --count HEAD...origin/live-defi-rollout`,
      `git log --oneline -5 origin/live-defi-rollout` — see local-ahead state + recent origin activity.
    - `cat ikenna_orchestrator/_agent_pings.md` — see active intra-side pings.
