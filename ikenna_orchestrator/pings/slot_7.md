@@ -15,12 +15,18 @@ ml-training + ml-inference-service). Fix until exit 0 on all repos. Push each fi
   cross-venue-transfer/venue-restriction code, deployment topology dynamic-config.
 - If a failure requires editing frozen surfaces → stop, post ping here describing it, skip that file.
 
-PYTEST*UNIT_DIR: if `find tests/unit/ -name 'test*_.py' | wc -l`< 5% of`find tests/ -name 'test\__.py' | wc
+PYTEST*UNIT_DIR: if `find tests/unit/ -name 'test*\_.py' | wc -l`< 5% of`find tests/ -name 'test\_\_.py' | wc
 -l`→ set`PYTEST_UNIT_DIR="tests/"` before sourcing base-service.sh in quality-gates.sh.
 
 Commit per shippable unit. Push to live-defi-rollout.
 
 **Ack**: append `[2026-05-21 HH:MM UTC] slot-7 DONE — QG green strategy@<sha> execution@<sha> ml@<sha>` here when done.
+
+[2026-05-21] slot-7 DONE — QG Cluster C complete. strategy-service@72beb56c execution-service@8a3cbe48f
+ml-service@29cc7b2. All 3 repos exit 0. Notes: (1) strategy-service required only plan link fixes in unified-trading-pm
+(no code changes); (2) execution-service polymarket_clob adapter regression non-blocking (tracked in
+lint_sweep_774602ea8_regression_audit_2026_05_20.md); (3) ml-service used PYTEST_UNIT_DIR="tests/" override (1.2% tests
+in tests/unit/). §Slot 7 items flipped in plan_closeout_archive_2026_05_21.md.
 
 ---
 

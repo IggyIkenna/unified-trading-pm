@@ -275,11 +275,17 @@ cd execution-service && bash scripts/quality-gates.sh
 cd ml-service && bash scripts/quality-gates.sh    # if exists; try ml-training + ml-inference-service
 ```
 
-- [ ] [QG] P0. `strategy-service` QG green. Fix surface failures only. Commit per shippable unit; push.
-- [ ] [QG] P0. `execution-service` QG green. Fix surface failures only.
-- [ ] [QG] P0. `ml-service` (or `ml-training` + `ml-inference-service`) QG green. Fix surface failures.
-- [ ] [FLIP] P0. Flip Slot 11 items in `work_split_2026_05_20_ikenna.md`.
-      `docs(plans): flip ikenna slot-11 QG Cluster C`. Push.
+- [x] ✅ [QG] P0. `strategy-service` QG green. Fix surface failures only. Commit per shippable unit; push. —
+      strategy-service@72beb56c (no code changes needed; only plan link fixes in unified-trading-pm)
+- [x] ✅ [QG] P0. `execution-service` QG green. Fix surface failures only. — execution-service@8a3cbe48f exit 0;
+      polymarket_clob adapter regression warning is non-blocking (already tracked in
+      lint_sweep_774602ea8_regression_audit_2026_05_20.md)
+- [x] ✅ [QG] P0. `ml-service` (or `ml-training` + `ml-inference-service`) QG green. Fix surface failures. —
+      ml-service@29cc7b2 exit 0 (PYTEST_UNIT_DIR="tests/" override applied; 2/168 tests in tests/unit/ = 1.2% < 5%
+      threshold)
+- [x] ✅ [FLIP] P0. Flip Slot 11 items in `work_split_2026_05_20_ikenna.md`. **N/A — work_split_2026_05_20_ikenna.md
+      already archived 2026-05-21 by Slot 2 with no open checkboxes.** `docs(plans): flip ikenna slot-11 QG Cluster C`.
+      Push.
 
 ---
 
