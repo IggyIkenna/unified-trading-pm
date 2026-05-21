@@ -16,7 +16,7 @@ related_plans:
   - ../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - ../active/agent_orchestrator_dual_deployment_2026_05_19.md
   - ../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
-  - ../active/agent_orchestrator_slack_notifications_2026_05_19.md
+  - ../archive/agent_orchestrator_slack_notifications_2026_05_19.md
   - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
   - ../active/agent_reliability_mitigations_2026_05_20.md
   - ../active/d0_orchestrator_migration_2026_05_20.md
@@ -166,9 +166,9 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
 
-### [`agent_orchestrator_slack_notifications_2026_05_19`](../active/agent_orchestrator_slack_notifications_2026_05_19.md)
+### [`agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)
 
-**status**: active · **estimate**: 2.0 cal AI-days (class: infra)
+**status**: ✅ archived 2026-05-21 · **estimate**: 2.0 cal AI-days (class: infra) · all 4 phases shipped
 
 ### [`agent_orchestrator_workers_on_vms_2026_05_19`](../active/agent_orchestrator_workers_on_vms_2026_05_19.md)
 

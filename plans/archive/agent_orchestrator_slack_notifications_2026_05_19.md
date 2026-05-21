@@ -2,7 +2,8 @@
 title: agent-orchestrator Slack notifications (Block Kit + retry + wiring)
 parent_epic: orchestrator_master
 priority: P1
-status: active
+status: archived
+archived_date: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
@@ -12,6 +13,10 @@ related_plans:
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — All 4 phases shipped. Slack Block Kit notifications live on Cloud Run staging
+> (`agent-orchestrator-staging-00011-mtg`). async→sync fix applied. Smoke test confirmed. No deferred items. Open issue:
+> `plans/active/issues/agent_orchestrator_cr_revision_exit3_2026_05_21.md` (revision 00012 exit 3).
 
 # Agent-Orchestrator Slack Notifications
 

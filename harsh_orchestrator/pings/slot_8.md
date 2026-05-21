@@ -434,3 +434,21 @@ source (5 files: instruments_catalog_reader, manifest_writer, startup_validation
 available_at + deploy_missing + sustain S11-S14 (~10 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 8 — STARTED <first item>` below.
+
+[2026-05-21 UTC] slot-8 (ikenna) → operator — ✅ DONE agent-orchestrator Slack notifications P0 + P3
+
+**P0 (Cloud Run secret wiring)**: IAM `secretAccessor` bound on `agent-orchestrator-staging` SA for
+`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET`. Both mounted as env vars on revision
+`agent-orchestrator-staging-00011-mtg`. Fixed async/sync bug: `asyncio.run()` in sync FastAPI endpoint silently
+suppressed all Slack calls. Converted `slack.py` to sync httpx; all tests pass; basedpyright clean. Code:
+`agent-orchestrator@07e42e2`.
+
+**P3 (E2E staging smoke)**: JWT minted from staging SM secret. POST `/api/slots/1/blocked` → 200, 350-460ms latency
+(confirms outbound Slack HTTP). Direct webhook `curl` → HTTP 200. Block Kit notification reached
+`#agent-orchestrator-alerts` ✅.
+
+**Plan archived**: `agent_orchestrator_slack_notifications_2026_05_19.md` → `plans/archive/` (all 4 phases ✅).
+
+**Open issue filed**: `plans/active/issues/agent_orchestrator_cr_revision_exit3_2026_05_21.md` — revision `00012-l88`
+exited with code 3 after Cloud Build. Active revision `00011-mtg` unaffected. Recommend re-triggering deploy to confirm
+transient. Plan ref: `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` (now archived).
