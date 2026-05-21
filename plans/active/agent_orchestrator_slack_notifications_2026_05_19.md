@@ -38,9 +38,12 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 
 ## Phase 3 — Cloud Run secret wiring
 
-- [ ] [AGENT] P3. Confirm Cloud Run staging SA has `secretAccessor` on `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`; mount webhook
-      secret as env var `ORCHESTRATOR_SLACK_WEBHOOK` via `--set-secrets`; update `deploy-agent-orchestrator.sh` to
-      include the secret mount; verify via `gcloud run services describe`.
+- [x] ✅ [AGENT] P3. Confirm Cloud Run staging SA has `secretAccessor` on `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`; mount
+      webhook secret as env var `ORCHESTRATOR_SLACK_WEBHOOK` via `--update-secrets`; update
+      `deploy-agent-orchestrator.sh` to include the secret mount; verify via `gcloud run services describe`. IAM bound +
+      secrets mounted on revision `agent-orchestrator-staging-00011-mtg`. Fixed async/sync bug: `asyncio.run()` in sync
+      endpoint suppressed all notifications; converted to sync httpx. Direct webhook test: HTTP 200.
+      (agent-orchestrator@`07e42e2`)
 
 ## Phase 4 — E2E staging smoke test
 
