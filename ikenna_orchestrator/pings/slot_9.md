@@ -35,3 +35,18 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
 **Status**: BLOCKED-CREDENTIALS until operator [ack]
 **Without it**: Public-endpoint unit + integration tests ship; adapter is fully functional for batch data collection (Gamma + Data API both work without auth); authenticated CLOB tests dormant.
 **Plan-of-record**: ADAPTER-POLYMARKET-FEED (backlog task)
+
+## CREDENTIAL APPROVAL REQUEST — Kalshi Member API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: Kalshi (trading-api.kalshi.com) — Member API (KYC-required for trading)
+**What I need**: Kalshi Member API key + secret (HMAC-SHA256 signing)
+  - Public trade history + market metadata require NO credentials.
+  - Member API key unlocks: portfolio positions, order placement, private fills.
+**Account to use**: Existing Kalshi account or new account at kalshi.com (US-regulated, KYC required)
+**Cost**: $0 for read-only API usage; trading requires funded account
+**What it unblocks**: Authenticated member API tests in `tests/integration/test_kalshi_integration.py`
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: Public trade history tests ship; adapter fully functional for batch data collection; authenticated tests dormant.
+**Plan-of-record**: ADAPTER-KALSHI-FEED (backlog task)
