@@ -40,9 +40,12 @@ Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` · `
 
 ## Phase 3 — Wire into morning boot
 
-- [ ] [SCRIPT] P0. Add `bash scripts/plan-hygiene/run_hygiene_sweep.sh` as first step in `ikenna_orchestrator/LEDGER.md`
-      § "Morning boot sequence" (after `git fetch`).
-- [ ] [SCRIPT] P0. Same addition to `harsh_orchestrator/LEDGER.md` § "Morning boot sequence".
+~~LEDGER.md wiring — dropped~~ `ikenna_orchestrator/LEDGER.md` and `harsh_orchestrator/LEDGER.md` are **offline
+fallback only** since D0 migration (`d0_orchestrator_migration_2026_05_20`; CLAUDE.md). VMs do not reboot daily.
+Canonical wiring path is Phase 6 (daily cron on planning VM). These todos are superseded:
+
+- [x] ~~[SCRIPT] P0. Add `run_hygiene_sweep.sh` to `ikenna_orchestrator/LEDGER.md` boot sequence~~ — N/A: LEDGER is offline fallback only per D0.
+- [x] ~~[SCRIPT] P0. Same addition to `harsh_orchestrator/LEDGER.md`~~ — N/A: cron (Phase 6) is the VM-side path.
 
 ## Phase 4 — Additional checks
 
@@ -60,14 +63,17 @@ Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` · `
 - [ ] [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
       `check_frontmatter.sh` as `.git/hooks/pre-push` in `unified-trading-pm`. Prevents regressions at commit time.
 
-## Phase 6 — Cron on planning VM
+## Phase 6 — Cron on planning VM (primary wiring path)
 
-- [ ] [SCRIPT] P1. Add `run_hygiene_sweep.sh --ci` to planning-VM Cloud Run job (alongside orphan-ping-audit cron).
+- [ ] [SCRIPT] P0. Add `run_hygiene_sweep.sh --ci` to planning-VM Cloud Run job (alongside orphan-ping-audit cron).
       Schedule `0 5 * * *` UTC. Failures append `## [hygiene-cron]` block to both orchestrator `_agent_pings.md` files.
-- [ ] [SCRIPT] P2. Add cron job to `deployment-service/terraform/gcp/` Terraform (adjacent to
+      Assign to VM via `plan_hygiene_master` `assigned_vm:` field in epic frontmatter.
+- [ ] [SCRIPT] P1. Add cron job to `deployment-service/terraform/gcp/` Terraform (adjacent to
       `orphan_ping_audit_scheduler.tf`).
+      Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh` (clone PM @ LDR, run sweep --ci,
+      commit + push failure pings).
 
 ## Temporary states + canonical follow-up plans
 
 - Phase 4-6 are not May-23 blockers — post-cutover scope.
-- Phase 3 (morning boot wiring) is the highest-value non-shipped item.
+- Phase 6 (daily cron on planning VM) is the highest-value non-shipped item; replaces Phase 3.
