@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/features_repo_consolidation_2026_05_08.md
+  - ../archive/features_repo_consolidation_2026_05_08.plan.md
   - ../active/features_service_qg_cleanup_2026_05_11.md
   - ../active/ml_repo_consolidation_2026_05_19.md
   - ../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
@@ -811,9 +811,11 @@ _4 active plans declare `parent_epic: features_and_ml_master` in their frontmatt
 
 ## P0 — must complete before next foundation gate
 
-### [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md)
+### [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-10 shipped; Phase 6 parity RUN deferred to
+`features_service_qg_cleanup_2026_05_11` Phase 2; performance_features wire-in deferred to
+`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19` Phase-H
 
 ### [`ml_repo_consolidation_2026_05_19`](../active/ml_repo_consolidation_2026_05_19.md)
 

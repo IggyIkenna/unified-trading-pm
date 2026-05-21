@@ -2,7 +2,7 @@
 title: "features-\* repo consolidation (2026-05-08)"
 name: features-repo-consolidation-2026-05-08
 epic: epic-code-completion
-status: active
+status: archived
 
 priority: P0
 parent: master_to_live_defi_2026_05_23
@@ -932,6 +932,13 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: features_and_ml_master
 ---
+
+## Deferred work — migrated to:
+
+| Item                                                                                                             | Successor plan                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 6 parity RUN — byte-for-byte feature output diff across all 8 families (blocked by 7-day live-data window) | [`features_service_qg_cleanup_2026_05_11.md`](../active/features_service_qg_cleanup_2026_05_11.md) Phase 2                                           |
+| Phase 5 performance_features subdomain wire-in (scaffold complete at features@2a7af305)                          | [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md`](../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md) Phase-H |
 
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
