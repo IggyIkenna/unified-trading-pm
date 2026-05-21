@@ -1,36 +1,25 @@
+> **ARCHIVED 2026-05-21** — 100% complete (34 done items, 0 open). All 6 phases shipped: UAC registry + MTDS adapters +
+> EigenLayer features + archetype docs + instruments preflight + backfill VMs. Preserved for archaeology.
+
 ---
-title:
-  "DEX perp + venue data expansion — Lighter/Kraken-Futures/BitFinex-Derivatives/Drift/Pacifica funding + EigenLayer
-  yield aggregation"
-status: active
-created: 2026-05-12
-priority: P1
-parent: master_to_live_defi_2026_05_23
-epic: live_defi_rollout
-locked_by: live-defi-rollout
-locked_since: 2026-05-12
-repos_touched:
-  - unified-api-contracts # Phase 1 — UAC registry additions
-  - market-tick-data-service # Phase 2 — MTDS adapter additions
-  - features-service # Phase 3 — EigenLayer yield aggregation
-  - unified-trading-pm # Phase 4 — archetype docs + codex
-  - instruments-service # Phase 6 — pre-flight registration for all new venues
-estimate_class: brand-new
-estimate_baseline_ai_days: 8
-estimate_calibrated_ai_days: 8
-effective_concurrent_slots: 3
-depends_on:
-  - dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
-related:
-  - defi_master.md
-  - arbitrage_price_dispersion_finalisation_2026_05_09.md
-  - writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
-parent_epic: mtds_mdps_master
+
+title: "DEX perp + venue data expansion — Lighter/Kraken-Futures/BitFinex-Derivatives/Drift/Pacifica funding +
+EigenLayer yield aggregation" status: active created: 2026-05-12 priority: P1 parent: master_to_live_defi_2026_05_23
+epic: live_defi_rollout locked_by: live-defi-rollout locked_since: 2026-05-12 repos_touched:
+
+- unified-api-contracts # Phase 1 — UAC registry additions
+- market-tick-data-service # Phase 2 — MTDS adapter additions
+- features-service # Phase 3 — EigenLayer yield aggregation
+- unified-trading-pm # Phase 4 — archetype docs + codex
+- instruments-service # Phase 6 — pre-flight registration for all new venues estimate_class: brand-new
+  estimate_baseline_ai_days: 8 estimate_calibrated_ai_days: 8 effective_concurrent_slots: 3 depends_on:
+- dex_perp_onboarding_handover_2026_05_07.HANDOVER.md related:
+- defi_master.md
+- arbitrage_price_dispersion_finalisation_2026_05_09.md
+- writegate_honest_coverage_endtoend_2026_05_06.md
+- plans/active/trading_agent_service_architecture_unlock_2026_05_22.md completion_gates: code: C5 deployment: D3
+  business: B4 parent_epic: mtds_mdps_master
+
 ---
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see

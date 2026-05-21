@@ -1,13 +1,13 @@
----title: DEX perp onboarding handover — Lighter / Pacifica / Extended (2026-05-07)
-locked_by: live-defi-rollout
-locked_since: 2026-05-07
-created: 2026-05-07
-estimate_class: design
-estimate_baseline_ai_days: 10
-estimate_calibrated_ai_days: 6
-estimate_calibration_note: |
-  Backfilled 2026-05-13: handover doc, 14 follow-up todos / 0 done — funding-rate forward-poll wiring + per-venue strategy archetype slots + cross-venue arb config. Design class (per-DEX integration shape decisions). Baseline 10 (~0.7 AI-day per substantive follow-up); × 0.6 = 6.
-parent_epic: mtds_mdps_master
+> **ARCHIVED 2026-05-21** — All tracked checkboxes complete (C sections done 2026-05-19 at mtds@4f0cdbd). Items A/B/D/E
+> carried forward to `dex_perp_and_venue_data_expansion_2026_05_12.md` (also archived). Preserved for archaeology.
+
+---title: DEX perp onboarding handover — Lighter / Pacifica / Extended (2026-05-07) locked_by: live-defi-rollout
+locked_since: 2026-05-07 created: 2026-05-07 estimate_class: design estimate_baseline_ai_days: 10
+estimate_calibrated_ai_days: 6 estimate_calibration_note: | Backfilled 2026-05-13: handover doc, 14 follow-up todos / 0
+done — funding-rate forward-poll wiring + per-venue strategy archetype slots + cross-venue arb config. Design class
+(per-DEX integration shape decisions). Baseline 10 (~0.7 AI-day per substantive follow-up); × 0.6 = 6. parent_epic:
+mtds_mdps_master
+
 ---
 
 # DEX perp onboarding — what shipped, what's open, how to make money on these venues

@@ -14,8 +14,8 @@ locked_since: 2026-05-20
 related_plans:
   - ../active/available_at_lookahead_bias_completion_2026_05_08.md
   - ../active/d4_mtds_adapters_preflight_2026_05_20.md
-  - ../active/dex_perp_and_venue_data_expansion_2026_05_12.md
-  - ../active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
+  - ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md
+  - ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
   - ../active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - ../active/mdps_streaming_and_backpressure_2026_05_07.md
   - ../active/mtds_databento_path_streaming_2026_05_07.md
@@ -536,9 +536,9 @@ parity
 
 ## P1 — important; post-current-gate
 
-### [`dex_perp_and_venue_data_expansion_2026_05_12`](../active/dex_perp_and_venue_data_expansion_2026_05_12.md)
+### [`dex_perp_and_venue_data_expansion_2026_05_12`](../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md)
 
-**status**: active · **estimate**: 8 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 8 cal AI-days (class: brand-new)
 
 ### [`mdps_streaming_and_backpressure_2026_05_07`](../active/mdps_streaming_and_backpressure_2026_05_07.md)
 
@@ -555,9 +555,10 @@ parity
 **status**: active · **estimate**: 1.5 cal AI-days (class: design) **title**: available_at + lookahead-bias master —
 SINGLE OWNER for all stamping work
 
-### [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](../active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)
+### [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)
 
-**status**: active · **estimate**: 6 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — all tracked checkboxes done; follow-on expansion also archived · **estimate**: 6
+cal AI-days (class: design)
 
 ### [`mtds_per_instrument_download_api_2026_04_24`](../active/mtds_per_instrument_download_api_2026_04_24.md)
 
