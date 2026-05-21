@@ -47,6 +47,24 @@ codex_ssots:
 - Plan → VM assignment: **frontmatter on plan is source of truth + registry regen script**.
 - Failover order: **lowest-weekly-pct-first** across the 3 non-primary accounts.
 
+**Operator follow-up decisions 2026-05-21 r2**:
+
+- **Planning VM**: cloud-hosted (NOT operator's mac); SSH from VSCode like every other VM. Named
+  **`human-planning-vm`**. SSH config pattern:
+  `Host human-planning-vm / HostName <ip> / User ubuntu / IdentityFile ~/.ssh/agent-orchestrator-key` (reuse the
+  existing key — same access model as `agent-orchestrator-vm`).
+- **VM naming**: keep current `agent-orchestrator-vm` (becomes vm-0 / the existing DeFi-focused fleet); add `vm-1`,
+  `vm-2`, ... `vm-N` as epics are spun up. Dashboard landing page shows a dropdown listing every VM in the registry.
+- **DNS**: single UI URL (`agent-orchestrator.odum-research.com`) is non-negotiable. API endpoints live under the
+  sub-domain — wildcard `*.agent-orchestrator.odum-research.com` is acceptable if it saves work over per-VM A records
+  (operator-pref: less work). Per-VM API URLs become `api-vm-N.agent-orchestrator.odum-research.com` (matching the
+  numeric VM id).
+- **KMS**: same key per VM (one shared `agent-orchestrator-state-encrypt` key in GCP, one in AWS). Less rotation
+  overhead.
+- **Cold-start**: <5 min target confirmed.
+- **Per-VM RBAC**: out of scope for v0.7 (no current need — every operator sees every VM). Revisit if/when contractors
+  or external collaborators get dashboard access.
+
 ## Why this plan exists
 
 Today's orchestrator runs ONE VM, ONE main agent, ONE backlog. It has scaled to ~11 slots but hits recurring failure
@@ -79,24 +97,24 @@ planning VM** for human work + a **dashboard landing page** that aggregates.
 └─────────────────────────────────────────────────────────────────────────────────┘
        │ /api/vms/list                                          │ /api/* per VM
        ▼                                                        ▼
-┌─────────────────────────┐                            ┌────────────────────────┐
-│  Planning VM            │                            │  Epic VM #1            │
-│  api-planning.<domain>  │                            │  api-defi.<domain>     │
-│                         │                            │                        │
-│  Slot 1: Ikenna iact    │                            │  Slot 1: main (Opus)   │
-│  Slot 2: Harsh iact     │                            │  Slot 2: review (Sonnet)│
-│  (no centralised slots) │                            │  Slot 3-18: workers    │
-│                         │                            │  4 accounts (1 primary,│
-│  4 accounts             │                            │   3 failover)          │
-│                         │                            │  Owns: master plan X   │
-└─────────────────────────┘                            └────────────────────────┘
+┌──────────────────────────────┐                       ┌──────────────────────────────┐
+│  human-planning-vm           │                       │  agent-orchestrator-vm (vm-0)│
+│  api-human-planning.<domain> │                       │  api-vm-0.<domain>           │
+│                              │                       │                              │
+│  Slot 1: Ikenna iact         │                       │  Slot 1: main (Opus 1M)      │
+│  Slot 2: Harsh iact          │                       │  Slot 2: review (Sonnet)     │
+│  (no centralised slots)      │                       │  Slot 3-18: workers          │
+│                              │                       │  4 accounts (1 primary,      │
+│  4 accounts (shared visi)    │                       │   3 failover)                │
+│                              │                       │  Owns: defi master plan      │
+└──────────────────────────────┘                       └──────────────────────────────┘
                                                                 ⋮
-                                                       ┌────────────────────────┐
-                                                       │  Epic VM #8            │
-                                                       │  api-<epic>.<domain>   │
-                                                       │  Same shape            │
-                                                       │  Owns: master plan Y   │
-                                                       └────────────────────────┘
+                                                       ┌──────────────────────────────┐
+                                                       │  vm-N                        │
+                                                       │  api-vm-N.<domain>           │
+                                                       │  Same shape                  │
+                                                       │  Owns: <epic> master plan    │
+                                                       └──────────────────────────────┘
 ```
 
 ### Per-VM agent shape (epic VMs)
@@ -124,7 +142,7 @@ Every master plan (`plans/epics/*.md` + `plans/active/*master*.md`) declares:
 ```yaml
 ---
 title: ...
-assigned_vm: vm-defi # or vm-cefi, vm-tradfi, vm-infra, vm-ml, vm-sports, vm-prediction, vm-orchestrator, planning-vm
+assigned_vm: vm-0 # vm-0 .. vm-7 = epic VMs (see registry for current label mapping); human-planning-vm = humans only
 ---
 ```
 
@@ -139,9 +157,11 @@ Ikenna+Harsh edit + commit to LDR to change assignment. No VM restart needed; ba
 version: 1
 generated_at: 2026-05-21T12:00:00Z # bumped by regen script
 vms:
-  - id: planning-vm
-    fqdn: api-planning.agent-orchestrator.odum-research.com
+  - id: human-planning-vm
+    fqdn: api-human-planning.agent-orchestrator.odum-research.com
     role: planning
+    ssh_host: human-planning-vm # matches ~/.ssh/config Host directive
+    label: "Planning (Ikenna + Harsh interactive)"
     operators: [ikenna, harsh]
     accounts:
       {
@@ -149,9 +169,11 @@ vms:
         failover: [ikenna@odum-research.com, iggy2london@gmail.com, harshkantariyawork@gmail.com],
       }
     master_plans: [] # planning VM doesn't execute
-  - id: vm-defi
-    fqdn: api-defi.agent-orchestrator.odum-research.com
+  - id: vm-0 # the current agent-orchestrator-vm (kept; just numbered into the topology)
+    fqdn: api-vm-0.agent-orchestrator.odum-research.com
     role: epic
+    ssh_host: agent-orchestrator-vm
+    label: "DeFi master plan fleet (existing)"
     accounts:
       {
         primary: ikenna@odum-research.com,
@@ -160,14 +182,25 @@ vms:
     master_plans:
       - plans/active/data_pipeline_master_coordination_2026_05_20.md
       - plans/active/master_to_live_defi_2026_05_23.md
-  - id: vm-cefi
-    fqdn: api-cefi.agent-orchestrator.odum-research.com
+  - id: vm-1
+    fqdn: api-vm-1.agent-orchestrator.odum-research.com
     role: epic
-    accounts: { primary: iggy2london@gmail.com, failover: [...] }
+    ssh_host: vm-1
+    label: "CeFi master plan fleet"
+    accounts:
+      {
+        primary: iggy2london@gmail.com,
+        failover: [harshkantariyawork@gmail.com, ikennaigboaka@gmail.com, ikenna@odum-research.com],
+      }
     master_plans:
       - plans/epics/cefi_master_2026_05_07.md
-  # ...etc
+  # ...vm-2 .. vm-7 as epics get spun up
 ```
+
+Naming convention: VMs are numeric (`vm-0` = current `agent-orchestrator-vm`, `vm-1` ... `vm-N` as epics land). The
+`label:` field is what shows in the dashboard dropdown so humans see "DeFi master plan fleet" not "vm-0". `ssh_host:`
+matches a Host directive in `~/.ssh/config` for direct VSCode SSH (operator-pref: reuse the existing
+`agent-orchestrator-key` identity file — same access model as the current VM).
 
 **Regen script**: `unified-trading-pm/scripts/orchestrator/regen_vm_registry.py` greps every master plan's
 `assigned_vm:` frontmatter + writes the yaml. Runs in pre-commit hook + on-demand. Hard rule: no two epic VMs may own
@@ -418,17 +451,20 @@ Naming convention: replace `@` with `_at_` for filesystem safety. Display name i
 
 ### Primary round-robin across VMs
 
-| VM              | Primary                      | Failover #1   | Failover #2   | Failover #3   |
-| --------------- | ---------------------------- | ------------- | ------------- | ------------- |
-| vm-defi         | ikenna@odum-research.com     | iggy2london   | harshKw       | ikennaigboaka |
-| vm-cefi         | iggy2london@gmail.com        | harshKw       | ikennaigboaka | ikenna@odum   |
-| vm-tradfi       | harshkantariyawork@gmail.com | ikennaigboaka | ikenna@odum   | iggy2london   |
-| vm-ml           | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
-| vm-sports       | ikenna@odum-research.com     | iggy2london   | harshKw       | ikennaigboaka |
-| vm-prediction   | iggy2london@gmail.com        | harshKw       | ikennaigboaka | ikenna@odum   |
-| vm-infra        | harshkantariyawork@gmail.com | ikennaigboaka | ikenna@odum   | iggy2london   |
-| vm-orchestrator | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
-| planning-vm     | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
+| VM (id)           | Label (dashboard dropdown)            | Primary                      | Failover #1   | Failover #2   | Failover #3   |
+| ----------------- | ------------------------------------- | ---------------------------- | ------------- | ------------- | ------------- |
+| vm-0              | DeFi master plan fleet (existing)     | ikenna@odum-research.com     | iggy2london   | harshKw       | ikennaigboaka |
+| vm-1              | CeFi master plan fleet                | iggy2london@gmail.com        | harshKw       | ikennaigboaka | ikenna@odum   |
+| vm-2              | TradFi master plan fleet              | harshkantariyawork@gmail.com | ikennaigboaka | ikenna@odum   | iggy2london   |
+| vm-3              | ML/features master plan fleet         | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
+| vm-4              | Sports master plan fleet              | ikenna@odum-research.com     | iggy2london   | harshKw       | ikennaigboaka |
+| vm-5              | Prediction master plan fleet          | iggy2london@gmail.com        | harshKw       | ikennaigboaka | ikenna@odum   |
+| vm-6              | Infra master plan fleet               | harshkantariyawork@gmail.com | ikennaigboaka | ikenna@odum   | iggy2london   |
+| vm-7              | Agent-orchestrator master plan fleet  | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
+| human-planning-vm | Planning (Ikenna + Harsh interactive) | ikennaigboaka@gmail.com      | ikenna@odum   | iggy2london   | harshKw       |
+
+Labels are operator-editable in the registry yaml (the human-readable dropdown name); ids are immutable once a VM is
+provisioned.
 
 Each account is primary on 2 VMs (failover-only on the other 7). Failover order in the table is the STATIC fallback;
 runtime selection is `lowest-weekly-pct-first` per § B.
@@ -673,13 +709,23 @@ calendar days end-to-end.
 - `plans/active/agent_reliability_mitigations_2026_05_20.md` — Phase 2 dirty-state gate; superseded by Phase 3
   (commit_and_push default).
 
-## Open questions for operator (post-draft)
+## Open questions resolved (operator r2)
 
-1. **Planning VM host**: dedicated cloud VM, or operator's mac (current setup but isolated as "planning-vm" id)? Phase 7
-   needs the decision.
-2. **DNS**: `*.agent-orchestrator.odum-research.com` wildcard already configured, or per-VM A record needed? Phase 11
-   needs.
-3. **GCS/S3 KMS key**: existing project keys OK, or new dedicated key per VM? Phase 8 needs.
-4. **Cold-start budget**: <5 min target acceptable, or stricter? Phase 9 needs.
-5. **Cross-VM RBAC**: today every operator sees every VM. Per-VM operator filter ever? Out of scope for v0.7 but flag if
-   needed sooner.
+1. ✅ **Planning VM host**: cloud VM named `human-planning-vm`; SSH from VSCode reusing the existing
+   `agent-orchestrator-key` identity. Same shape as the current `agent-orchestrator-vm`.
+2. ✅ **DNS**: wildcard `*.agent-orchestrator.odum-research.com` (operator-pref: less work over per-VM A records).
+   Single dashboard UI URL non-negotiable; APIs live under the sub-domain as
+   `api-<vm-id>.agent-orchestrator.odum-research.com`. Phase 11 verifies the wildcard is provisioned (or files a
+   one-time DNS change ticket).
+3. ✅ **GCS/S3 KMS key**: same shared key per cloud (one in GCP, one in AWS). Less rotation overhead.
+4. ✅ **Cold-start budget**: <5 min target confirmed.
+5. ✅ **Per-VM operator RBAC**: out of scope for v0.7 (no current need — Ikenna + Harsh both see all VMs). Revisit if
+   external collaborators ever get dashboard access.
+
+## Remaining open question
+
+- **VM numbering for the existing fleet**: should the current `agent-orchestrator-vm` be renamed in
+  systemd/SSH-config/registry to `vm-0` to match the new convention, OR keep the SSH Host directive
+  `agent-orchestrator-vm` (operator's existing ~/.ssh/config) and just map `id: vm-0` →
+  `ssh_host: agent-orchestrator-vm` in the registry? Phase 11 needs the decision. Default assumption: **map in registry
+  only, don't rename the VM** (zero risk to current sessions; the ssh_host field bridges the gap).
