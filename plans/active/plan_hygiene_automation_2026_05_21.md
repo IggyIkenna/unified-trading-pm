@@ -40,11 +40,12 @@ Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` · `
 
 ## Phase 3 — Wire into morning boot
 
-~~LEDGER.md wiring — dropped~~ `ikenna_orchestrator/LEDGER.md` and `harsh_orchestrator/LEDGER.md` are **offline
-fallback only** since D0 migration (`d0_orchestrator_migration_2026_05_20`; CLAUDE.md). VMs do not reboot daily.
-Canonical wiring path is Phase 6 (daily cron on planning VM). These todos are superseded:
+~~LEDGER.md wiring — dropped~~ `ikenna_orchestrator/LEDGER.md` and `harsh_orchestrator/LEDGER.md` are **offline fallback
+only** since D0 migration (`d0_orchestrator_migration_2026_05_20`; CLAUDE.md). VMs do not reboot daily. Canonical wiring
+path is Phase 6 (daily cron on planning VM). These todos are superseded:
 
-- [x] ~~[SCRIPT] P0. Add `run_hygiene_sweep.sh` to `ikenna_orchestrator/LEDGER.md` boot sequence~~ — N/A: LEDGER is offline fallback only per D0.
+- [x] ~~[SCRIPT] P0. Add `run_hygiene_sweep.sh` to `ikenna_orchestrator/LEDGER.md` boot sequence~~ — N/A: LEDGER is
+      offline fallback only per D0.
 - [x] ~~[SCRIPT] P0. Same addition to `harsh_orchestrator/LEDGER.md`~~ — N/A: cron (Phase 6) is the VM-side path.
 
 ## Phase 4 — Additional checks
@@ -65,13 +66,13 @@ Canonical wiring path is Phase 6 (daily cron on planning VM). These todos are su
 
 ## Phase 6 — Cron on planning VM (primary wiring path)
 
-- [ ] [SCRIPT] P0. Add `run_hygiene_sweep.sh --ci` to planning-VM Cloud Run job (alongside orphan-ping-audit cron).
+- [x] ✅ [SCRIPT] P0. Add `run_hygiene_sweep.sh --ci` to planning-VM Cloud Run job (alongside orphan-ping-audit cron).
       Schedule `0 5 * * *` UTC. Failures append `## [hygiene-cron]` block to both orchestrator `_agent_pings.md` files.
-      Assign to VM via `plan_hygiene_master` `assigned_vm:` field in epic frontmatter.
-- [ ] [SCRIPT] P1. Add cron job to `deployment-service/terraform/gcp/` Terraform (adjacent to
-      `orphan_ping_audit_scheduler.tf`).
-      Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh` (clone PM @ LDR, run sweep --ci,
-      commit + push failure pings).
+      Assign to VM via `plan_hygiene_master` `assigned_vm:` field in epic frontmatter. — deployment-service
+      `terraform/gcp/plan_hygiene_scheduler.tf` + `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`
+- [x] ✅ [SCRIPT] P1. Add cron job to `deployment-service/terraform/gcp/` Terraform (adjacent to
+      `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh` (clone PM @
+      LDR, run sweep --ci, commit + push failure pings). — deployment-service `terraform/gcp/plan_hygiene_scheduler.tf`
 
 ## Temporary states + canonical follow-up plans
 
