@@ -160,9 +160,11 @@ Phase 0 (✅ DONE)
 - [x] ✅ **P0. `data_status_drilldown_service.py`**: same migration for shard-level drilldown.
       Allow `expected_unattempted` through status coercion gate.
       — deployment-api@9d556fd
-- [ ] **P1. API response shape**: every endpoint returns
+- [x] ✅ **P1. API response shape**: every endpoint returns
       `{"counts": CaptureStatusCounts.as_dict(), "coverage": float}` so the UI never has
-      to re-derive.
+      to re-derive. — deployment-api@fa94b7a (4 call-sites patched: _build_coverage_metrics,
+      _build_category_data_status, _build_venue_breakdown full entry + zero-row placeholder;
+      5 new tests in TestBuildCoverageMetricsCanonicalFields)
 
 ### Phase 5 — deployment-ui consumers
 
