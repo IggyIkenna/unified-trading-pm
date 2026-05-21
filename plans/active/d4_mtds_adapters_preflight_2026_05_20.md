@@ -129,9 +129,15 @@ prerequisite_plans:
 
 ### Phase 4 — Quality gates + verification
 
-- [ ] [AGENT] P1. Add `no_silent_absence_handlers.sh` QG step to features-service QG (STEP 5.70 equivalent): checks
+- [x] ✅ [AGENT] P1. Add `no_silent_absence_handlers.sh` QG step to features-service QG (STEP 5.70 equivalent): checks
       every handler for `record_captured` or `record_empty` calls
-- [ ] [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
+  - VERIFIED DONE (2026-05-21): features-service@7a7d4a4c — STEP 5.70 added to quality-gates.sh.
+    Part A: wires no_silent_absence_handlers.sh (workspace MTDS/IS check). Part B: inline check on all
+    batch_handler.py + perp_funding_handler.py for record_captured|record_empty|DependencyError|DependencyChecker|
+    EmptyConfirmedReason. Exempt: calendar (FRED/yfinance), multi_timeframe (delegates to orchestrator).
+    7/7 non-exempt handlers green. QG passes (✅ ALL QUALITY GATES PASSED).
+- [x] ✅ [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
+  - VERIFIED DONE 2026-05-21: QG green (7616 passed, 23 skipped, 0 failed) — features-service@1da2c431
 - [ ] [OPERATOR] P0. Smoke test: run features-service onchain handler for one DeFi shard with MTDS mock returning
       `attempted_failed` → verify `DependencyError` is raised, not silent skip
 
