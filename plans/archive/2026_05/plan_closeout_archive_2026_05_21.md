@@ -1,7 +1,8 @@
 ---
 title: "Plan closeout + archive sweep — 2026-05-21"
 name: plan-closeout-archive-2026-05-21
-status: active
+status: archived
+archived_at: 2026-05-21
 created: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -18,6 +19,11 @@ parent_epic: orchestrator_master
 assigned_vm: vm-operator-ops
 priority: P1
 ---
+
+> ## ARCHIVED 2026-05-21
+>
+> All 72/72 checkboxes complete across Wave 1 + Wave 2 Slots A-D. 30+ plans archived across 8 agent slots. Wrapper
+> plan done criteria fully met. Archiving under orchestrator_master.
 
 # Plan closeout + archive sweep — 2026-05-21
 
