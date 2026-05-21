@@ -23,6 +23,12 @@ deferred P0/P1 → [ABANDONED] | codex stub already in doc
 
 **Ack**: append `[2026-05-21 HH:MM UTC] slot-6 DONE — closed/archived N plans` here when done.
 
+**[2026-05-21 09:30 UTC] slot-6 DONE** — Wave 1: archived 7 plans (6 assigned + sweep bonus
+`mock_data_pipeline_benchmarking`); `features_service_qg_cleanup` kept active (Phase 2 BLOCKED-UPSTREAM 7-day window).
+Wave 2 Slot D: assessed 4 plans (agent_orchestrator_cloud_run, agent_orchestrator_dual_deployment,
+agent_reliability_mitigations, canary_coverage_qg_enforcement). All §Slot 6 items + §Wave 2 Slot D wrapper flipped.
+`plan_closeout_archive_2026_05_21` archived at PM@c38098ec (72/72 done). Slot queue exhausted — awaiting next dispatch.
+
 ---
 
 > **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
