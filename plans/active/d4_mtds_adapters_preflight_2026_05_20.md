@@ -172,8 +172,12 @@ prerequisite_plans:
     7/7 non-exempt handlers green. QG passes (✅ ALL QUALITY GATES PASSED).
 - [x] ✅ [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
   - VERIFIED DONE 2026-05-21: QG green (7616 passed, 23 skipped, 0 failed) — features-service@1da2c431
-- [ ] [OPERATOR] P0. Smoke test: run features-service onchain handler for one DeFi shard with MTDS mock returning
+- [x] ✅ [OPERATOR] P0. Smoke test: run features-service onchain handler for one DeFi shard with MTDS mock returning
       `attempted_failed` → verify `DependencyError` is raised, not silent skip
+  - VERIFIED DONE 2026-05-21: Both tests passed — Test 1: attempted_failed manifest → DependencyError("missing 5
+    required dependencies") raised for all 5 MTDS DEFI deps (vault_share_price/lst_rates/lending_indices/
+    oracle_prices/perp_funding); Test 2: captured manifest → validate_can_run() returns True (no error).
+    MTDS optional dep (MDPS) logged as warning only (required=False). Not silent skip. ✅
 
 ## Success criteria
 
@@ -192,8 +196,10 @@ prerequisite_plans:
   3 cells confirmed false positives (aster/trades, deribit/trades, hyperliquid/trades — live connectors exist,
   A6 path-regex missed them); 8 cells tagged BLOCKED-OPERATOR-DECISION with full diagnosis documented in Phase 3.
   0 cells silently ignored.
-- [ ] Phase 4: features-service QG green; smoke test passes
-  — QG ✅ verified (features-service@1da2c431). Smoke test OPERATOR-owned (see Phase 4 item above).
+- [x] ✅ Phase 4: features-service QG green; smoke test passes
+  — QG ✅ verified (features-service@1da2c431, 7616 passed, 23 skipped, 0 failed). Smoke test PASS 2026-05-21:
+  Test 1 (attempted_failed → DependencyError("missing 5 required dependencies"), all 5 MTDS DEFI deps logged);
+  Test 2 (captured → validate_can_run() returns True). Not silent skip. ✅
 
 ## Full-execution criterion
 
