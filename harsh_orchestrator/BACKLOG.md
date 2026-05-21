@@ -231,7 +231,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
   leg fills, LST margin positions. Monitor event stream.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h (launch + monitor) · **Model**: Sonnet
-- **Plan-ref**: `plans/active/defi_master_2026_05_07.md` § "paper-trade gate"
+- **Plan-ref**: `plans/active/defi_master.md` § "paper-trade gate"
 - **Prereq**: DeFi pipeline green end-to-end (instruments → MTDS → features → strategy → execution); Ikenna confirms
   backtest start date ready
 
@@ -243,7 +243,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Task**: Same shape as B-015 for `arbitrage_price_dispersion`. Parallel with B-015 if separate slots.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h · **Model**: Sonnet
-- **Plan-ref**: `plans/active/defi_master_2026_05_07.md` § "paper-trade gate"
+- **Plan-ref**: `plans/active/defi_master.md` § "paper-trade gate"
 - **Prereq**: Same as B-015
 
 ### B-017 · defi_recursive_borrow DESCOPE — successor plan filing (doc-only)

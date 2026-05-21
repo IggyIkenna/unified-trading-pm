@@ -6,7 +6,7 @@ operator: ikenna (offline ~5h from 23:00 UTC 2026-05-20 — wake check)
 audience: harsh
 related:
   - ../plans/active/human_work_backlog_2026_05_20.md
-  - ../plans/active/data_pipeline_master_coordination_2026_05_20.md
+  - ../plans/active/mtds_mdps_master.md
   - ~/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-1/memory/project_orchestrator_overnight_2026_05_20.md
 ---
 
@@ -26,7 +26,7 @@ Pushed:
 | Kicker scrollback widened to 500 lines for context% extraction on actively-working slots                                                                                                                                           | agent-orch@4436771                                                           |
 | Account-failover triggers codified (weekly + sonnet + 5h + rate_limited_until, all four conditions)                                                                                                                                | agent-orch@e7c78d3 in agents/main.md                                         |
 | Human-work backlog r2 — 14 new items (6 Ikenna + 8 Harsh) for post-May-23 parallel-prep tracks (paper-trade DeFi audit, archetype mechanics for CeFi/TradFi/Sports/Prediction, batch ML/strategy/exec wiring, paper-trade harness) | PM@ff62c2137 in plans/active/human_work_backlog_2026_05_20.md                |
-| Coordinator supervision-layer preamble (Phase 7 split 7a Harsh / 7b Ikenna; Phase 14 joint Ikenna-design / Harsh-exec)                                                                                                             | PM@b62330b86 in plans/active/data_pipeline_master_coordination_2026_05_20.md |
+| Coordinator supervision-layer preamble (Phase 7 split 7a Harsh / 7b Ikenna; Phase 14 joint Ikenna-design / Harsh-exec)                                                                                                             | PM@b62330b86 in plans/active/mtds_mdps_master.md |
 | 36 new backlog.yaml entries (HUMAN-HARSH-_ + HUMAN-IKENNA-_ + ADAPTER-\*) reloaded into orchestrator                                                                                                                               | PM@c19ecebbc + /api/backlog/reload                                           |
 | 24 archived ml-\* worktrees removed from VM (.tabs/<N>/{ml-inference-service,ml-training-service})                                                                                                                                 | reconcile-archived-worktrees.sh --apply                                      |
 | Slots 13-20 provisioned on VM (.tabs/13-20/<repos>)                                                                                                                                                                                | setup-tab-worktrees.sh --add-slot                                            |
@@ -96,7 +96,7 @@ Each = ~0.3-0.5 cal-AI-day. Whoever takes one ships:
 
 ## Coordinator-phase ↔ owner cross-reference
 
-For data_pipeline_master_coordination_2026_05_20.md phases:
+For mtds_mdps_master.md phases:
 
 | Phase                                         | Owner                                                            | Status                                                        |
 | --------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -185,7 +185,7 @@ your queue + the slot 2 card.
 ## Composes with
 
 - `plans/active/human_work_backlog_2026_05_20.md` — full split principles + sequencing
-- `plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase ordering DAG
+- `plans/active/mtds_mdps_master.md` — phase ordering DAG
 - `agent-orchestrator/agents/worker.md` — /boot-per-shippable-unit HARD RULE
 - `cursor-configs/CLAUDE.md` § "Commit + Push + Flip Plan Checkboxes As You Ship Each Item" — same-turn Half-1 +
   Half-2 + Half-3

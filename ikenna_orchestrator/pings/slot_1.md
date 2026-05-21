@@ -240,10 +240,10 @@ These are scoped in the new plan with P0/P1 prioritization. Operator sign-off on
 
 Both new plans were orphaned (had `parent_plan: master_to_live_defi_2026_05_23.md` but no epic link). Now wired to:
 
-- **Primary epic**: `manifest_evolution_master_2026_05_08` — explicitly the "schema + writer code + GCS data layout
+- **Primary epic**: `manifest_evolution_SUPERSEDED_2026_05_21` — explicitly the "schema + writer code + GCS data layout
   co-evolve" umbrella. Both new plans add rows to its `folds_in:` list AND the body "Folded sub-plans" table with gate
   mappings (G1 / G4 / G6 / G7).
-- **Secondary epic**: `instruments_live_master_2026_05_08` — referenced in plan frontmatter `epic_secondary` for the
+- **Secondary epic**: `instruments_master` — referenced in plan frontmatter `epic_secondary` for the
   IS-adapter completion side.
 
 The eleven-child count now: 9 pre-existing + honest_coverage + is_mtds_contract = 11. Epic body updated accordingly.
@@ -1366,7 +1366,7 @@ Operator is AFK — do not ping for further authorization on items already in yo
 
 **Plan filed**:
 [`plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`](../../plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
-**Folded into**: [`plans/epics/tradfi_master_2026_05_07.md`](../../plans/epics/tradfi_master_2026_05_07.md) —
+**Folded into**: [`plans/epics/tradfi_master.md`](../../plans/epics/tradfi_master.md) —
 frontmatter `folds_in` + critical-path table updated.
 
 ### Scope summary
@@ -1403,7 +1403,7 @@ reassignment ask" section:
   - **Item**: TradFi OHLCV-only MVP backfill
   - **Continuous-verification**: data-status rollup ≥99% OHLCV coverage 2019-2026 across CME/ICE/NASDAQ/NYSE
   - **Last verified**: TBD post Phase 7
-- Master plan's existing TradFi line items mentioning `trades` / `tbbo` (per `tradfi_master_2026_05_07.md` Phase ES_OPT
+- Master plan's existing TradFi line items mentioning `trades` / `tbbo` (per `tradfi_master.md` Phase ES_OPT
   2020-2022 fill + IBIT NASDAQ trades cold backfill) need a
   `**DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**` annotation.
 
@@ -3547,7 +3547,7 @@ expected: 09:27 UTC today.
 **Slot state** (08:49 UTC):
 
 - Slot-2: batch-97 complete; execution-service Phase B paused (heavy 100L+ bucket is post-cutover)
-- Slot-3: fresh-theme dispatched — defi_master_2026_05_07.md codex residuals; ack pending
+- Slot-3: fresh-theme dispatched — defi_master.md codex residuals; ack pending
 - Slot-4: batch-13 done (allowlist 68→63, cumulative 55 files cleared); dispatched item 5 (defi_basedpyright final 3
   items)
 - Slot-5: dispatched to execution-service Phase 9 hardening (item 16 in work-split)
@@ -3709,7 +3709,7 @@ item 14 stays queued — ikenna slots will pick up live_pipeline work after cuto
 
 **Actions taken**:
 
-- Harsh slot-3: ALL 19 items done 🏆 → re-dispatched to `defi_master_2026_05_07.md` codex residuals (74 items, 9.8 cal)
+- Harsh slot-3: ALL 19 items done 🏆 → re-dispatched to `defi_master.md` codex residuals (74 items, 9.8 cal)
 - Harsh slot-7: all 17 done + soak-gate → dispatched `mock_data_pipeline_benchmarking` final 2 items → chain
   `expected_unattempted_propagation_chain` (10 items)
 
@@ -3957,7 +3957,7 @@ ratchets still completing in parallel for audit trail.
 **Actions this tick**:
 
 - **slot_3 DONE** (MTDS already at 0, Phase 6.5 already complete, UAC enums comment fixed) → REDISPATCHED to
-  `defi_master_2026_05_07.md` codex close-out (strategy/archetypes/primitives, UAC territory)
+  `defi_master.md` codex close-out (strategy/archetypes/primitives, UAC territory)
 - Slots 7/8: check-ins from 09:57 (7 min ago) — within normal response window; monitoring
 
 **Slot states** (10:04 UTC):

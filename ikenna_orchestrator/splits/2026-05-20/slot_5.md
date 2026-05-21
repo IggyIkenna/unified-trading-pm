@@ -1,7 +1,7 @@
 # Slot 5 — writegate + v8 backfill + writer SSOT + label-flip + dep-prop QG (Phase 6, 7, 10, 14 — the v8-backfill anchor)
 
 **Host**: AWS VM (`/home/ubuntu/unified-trading-system-repos/.tabs/5/`) **Model**: Sonnet 4.6 · high effort **Master
-coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` **Work-split row**:
+coordinator**: `unified-trading-pm/plans/active/mtds_mdps_master.md` **Work-split row**:
 `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 5
 
 ---
@@ -64,7 +64,7 @@ another whole-corpus GCS walk is review-blocking.
 ## Plans-of-record (read these in order)
 
 1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace HARD RULES
-2. `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase DAG + dependencies
+2. `unified-trading-pm/plans/active/mtds_mdps_master.md` — phase DAG + dependencies
 3. `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 5 — your dispatch row
 4. `unified-trading-pm/ikenna_orchestrator/pings/slot_5.md` — pings from slot-1 main with detailed assignments
 5. (slot-specific plan-refs listed under "future phases" above)

@@ -1,7 +1,7 @@
 # Slot 3 — code_freeze §2.0-2.5 + batch_live_symmetry T1-3 (Phase 1, 3, 4, 13 ownership) + Phase 11f Bucket 3
 
 **Host**: AWS VM (`/home/ubuntu/unified-trading-system-repos/.tabs/3/`) **Model**: Sonnet 4.6 · high effort **Master
-coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` **Work-split row**:
+coordinator**: `unified-trading-pm/plans/active/mtds_mdps_master.md` **Work-split row**:
 `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 3
 
 ---
@@ -64,7 +64,7 @@ coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordinatio
 ## Plans-of-record (read these in order)
 
 1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace HARD RULES
-2. `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase DAG + dependencies
+2. `unified-trading-pm/plans/active/mtds_mdps_master.md` — phase DAG + dependencies
 3. `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 3 — your dispatch row
 4. `unified-trading-pm/ikenna_orchestrator/pings/slot_3.md` — pings from slot-1 main with detailed assignments
 5. (slot-specific plan-refs listed under "future phases" above)

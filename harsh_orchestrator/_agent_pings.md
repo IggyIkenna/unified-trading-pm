@@ -110,7 +110,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
 ---
@@ -160,7 +160,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
-`plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase -1 (workspace-discipline prereq).
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -208,7 +208,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
-`plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase -1 (workspace-discipline prereq).
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -258,5 +258,5 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).

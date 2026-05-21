@@ -115,7 +115,7 @@ directly — Tab 1 is your conversational dispatcher.
 5. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules. Read if YOU spawn `Task` sub-agents
    from inside your tab; for most tabs this is informational.
 6. **Your plan-of-record** — the specific plan named in your tab entry (e.g.
-   [`plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md) for `defi-launch-tab`). This is
+   [`plans/active/defi_master.md`](../plans/active/defi_master.md) for `defi-launch-tab`). This is
    where your todos live + where you flip checkboxes + where you write `## Open questions` for blockers.
 
 ## The 5 things you must internalise (everything else is in CLAUDE.md)

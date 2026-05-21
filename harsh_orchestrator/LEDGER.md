@@ -388,7 +388,7 @@ repos.
   hedge venue list); only need separate confirm on bankroll-per-archetype.
 
   **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
-  - Read `plans/active/defi_master_2026_05_07.md` § "paper-trade gate" for context on what "DeFi pipeline green
+  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green
     end-to-end" means for `arbitrage_price_dispersion`.
   - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists for the dispersion-eligible
     pairs (USDC-margin perps across Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster); (b) MTDS DeFi market-data
@@ -482,7 +482,7 @@ repos.
 - **Task — 3-phase**: (1) cross-side prereq check; (2) launch paper backtest; (3) 30-day monitor + verify.
 
   **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
-  - Read `plans/active/defi_master_2026_05_07.md` § "paper-trade gate" for context on what "DeFi pipeline green
+  - Read `plans/active/defi_master.md` § "paper-trade gate" for context on what "DeFi pipeline green
     end-to-end" means.
   - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists in GCS at
     `gs://central-element-323112-instruments-defi/...`; (b) MTDS DeFi market-data parquets exist for last 30 days; (c)

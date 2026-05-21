@@ -1,7 +1,7 @@
 # Slot 2 — code_freeze §2.6 + R19 UAC import surface (Phase 1, 3, 4, 10 ownership)
 
 **Host**: AWS VM (`/home/ubuntu/unified-trading-system-repos/.tabs/2/`) **Model**: Sonnet 4.6 · high effort **Master
-coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` **Work-split row**:
+coordinator**: `unified-trading-pm/plans/active/mtds_mdps_master.md` **Work-split row**:
 `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 2
 
 ---
@@ -57,7 +57,7 @@ rewrite to top-level `from unified_api_contracts import X`.
 ## Plans-of-record (read these in order)
 
 1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace HARD RULES
-2. `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase DAG + dependencies
+2. `unified-trading-pm/plans/active/mtds_mdps_master.md` — phase DAG + dependencies
 3. `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 2 — your dispatch row
 4. `unified-trading-pm/ikenna_orchestrator/pings/slot_2.md` — pings from slot-1 main with detailed assignments
 5. (slot-specific plan-refs listed under "future phases" above)

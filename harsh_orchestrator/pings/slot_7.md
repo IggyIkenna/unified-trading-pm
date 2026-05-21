@@ -779,7 +779,7 @@ Note: 1.B (IAM roles) must be resolved first for any AWS EC2 launch to work (har
 
 ## [2026-05-20] CREDENTIAL APPROVAL REQUEST — Copper sandbox (slot 7)
 
-**Context**: `defi_master_2026_05_07.md` line 738 Copper sandbox integration test. `CopperCustodyProvider` is fully
+**Context**: `defi_master.md` line 738 Copper sandbox integration test. `CopperCustodyProvider` is fully
 implemented at `execution-service/execution_service/custody/copper.py`. 25 unit tests pass. Integration test scaffold is
 in place and auto-skips when creds absent.
 

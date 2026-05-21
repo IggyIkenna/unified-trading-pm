@@ -47,7 +47,7 @@ baseline_files:
 - rule: A-deferred-no-banner
   path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/plans/active/work_split_2026_05_18_ikenna.md
 - rule: A-deferred-no-banner
-  path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/plans/active/defi_master_2026_05_07.md
+  path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/plans/active/defi_master.md
 - rule: A-deferred-no-banner
   path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/plans/active/continuation_prompts_2026_05_11_pm.md
 - rule: A-deferred-no-banner

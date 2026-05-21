@@ -1,7 +1,7 @@
 # Slot 4 — api_keys + defi_recursive_borrow + AWS migration owner (Phase 5, 12 ownership)
 
 **Host**: AWS VM (`/home/ubuntu/unified-trading-system-repos/.tabs/4/`) **Model**: Sonnet 4.6 · high effort **Master
-coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` **Work-split row**:
+coordinator**: `unified-trading-pm/plans/active/mtds_mdps_master.md` **Work-split row**:
 `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 4
 
 ---
@@ -63,7 +63,7 @@ scaffold, error-code wiring) without blocking on bucket migration:
 ## Plans-of-record (read these in order)
 
 1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace HARD RULES
-2. `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase DAG + dependencies
+2. `unified-trading-pm/plans/active/mtds_mdps_master.md` — phase DAG + dependencies
 3. `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 4 — your dispatch row
 4. `unified-trading-pm/ikenna_orchestrator/pings/slot_4.md` — pings from slot-1 main with detailed assignments
 5. (slot-specific plan-refs listed under "future phases" above)

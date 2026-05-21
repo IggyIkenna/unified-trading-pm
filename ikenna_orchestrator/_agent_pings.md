@@ -14,7 +14,7 @@ Format (one line per active ping):
   [YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
 
 Examples:
-  [2026-05-08 09:14 UTC] defi-launch-tab — STARTED Tab 2 (plans/active/defi_master_2026_05_07.md)
+  [2026-05-08 09:14 UTC] defi-launch-tab — STARTED Tab 2 (plans/active/defi_master.md)
   [2026-05-08 09:32 UTC] live-pipeline-tab — Q on Phase 4 MDPS reader template; see plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   [2026-05-08 10:01 UTC] alerting-tab — DONE Tab 6 Phase 2 KillSwitchBus rule wiring; see plans/active/alerting_service_live_rules_2026_05_07.md
 
@@ -712,7 +712,7 @@ PM@`e611d0d6` / T1#3 expected_universe_v2 promoted design→execution PM@`181785
 uac@`8aaf7de` + MTDS@`c1a0988` + PM@`0439bb18` / T2#5 PROTOCOL_LAUNCH_DATES +45 pairs via 5-sub-agent fan-out
 uac@`458f17d` + PM@`c71b10c7` / T2#6 Stream C C-enum.1+2 PM@`642f2c7b`). DEFERRED-TO-BACKPORT (all captured in named
 successors): Stream C C-enum.3+4 → `leveraged_leg_controller_2026_05_01.plan.md`; TradFi Polygon adapter + Barchart
-preload → `tradfi_master_2026_05_07`; expected_universe_v2 Phases 1-5 BLOCKED on G4 v8 manifest schema; SolBlaze
+preload → `tradfi_master`; expected_universe_v2 Phases 1-5 BLOCKED on G4 v8 manifest schema; SolBlaze
 pool-creation-tx audit → `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`. **Pivoting to
 `defi_recursive_borrow_archetypes_2026_05_10.md` Phases 1-2** (Family 1 + Family 2 archetype topology — per-chain config
 grids: collateral / debt / LTV ceiling / target leverage / rebalance thresholds / oracle deps). Day-3 dep on slot 2
@@ -763,7 +763,7 @@ design + Phase 6 HL LIVE wire-up DESIGN + Phase 7/8/10/11 design completions. Da
 @uac@`d721b6a` wired into Family 1/2 catalog config row spec via P1 todo (extend builders with
 `wallet_provisioning_config_ref` field per WalletProvisioningConfig registry). Cross-plan annotations queued (NOT yet
 edited foreign-file-safe): defi_catalogue Phase 3 (funding-rate adapter HL/Bybit + Arb/Base reserve listings) +
-defi_simulation_realism (stress-shape fixtures for scenarios B1-B5+C4) + defi_master_2026_05_07 (Base/Arb SwapRouter02
+defi_simulation_realism (stress-shape fixtures for scenarios B1-B5+C4) + defi_master (Base/Arb SwapRouter02
 addresses) + master_to_live_defi Group F item 18 (scenario ID set ref). DONE-2026-05-15 block + scoreboard in plan body
 @PM@`<next-commit>`. No 🟡 BLOCKED.
 
@@ -1086,7 +1086,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
 ---
@@ -1136,7 +1136,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
-`plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase -1 (workspace-discipline prereq).
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -1184,7 +1184,7 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
-`plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase -1 (workspace-discipline prereq).
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 
 ---
 
@@ -1234,5 +1234,5 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).

@@ -1032,7 +1032,7 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 schema additions for remaining uncovered protocols 4. MTDS wiring for chain primitives
 
 **Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` +
-`plans/active/defi_catalogue_chain_primitives_2026_05_10.md` **NOTE**: Prior dispatch to `defi_master_2026_05_07.md` is
+`plans/active/defi_catalogue_chain_primitives_2026_05_10.md` **NOTE**: Prior dispatch to `defi_master.md` is
 SUPERSEDED by this split. Skip defi_master.
 
 Acknowledge "STARTED UAC delegate-flip" within 10 min.
@@ -1111,13 +1111,13 @@ now.
 MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b) ✅ — all acked. Queue exhausted
 again.
 
-**New dispatch**: `defi_master_2026_05_07.md` codex close-out — strategy codex in UAC/instruments territory (your
+**New dispatch**: `defi_master.md` codex close-out — strategy codex in UAC/instruments territory (your
 domain).
 
 **Items**:
 
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections
+2. Read `plans/active/defi_master.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections
    (archetypes, primitives, operational docs). Skip Group F live-trading items (operator-gated).
 3. Ship 2-3 items per batch. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC changes.
 4. Dual-flip defi_master + work_split `docs(plans):` in same turn per item.
@@ -1128,13 +1128,13 @@ Acknowledge "STARTED defi_master codex close-out" within 10 min.
 
 [2026-05-18 10:39 UTC] [main → slot 3] — 🟡 **35-MIN SILENCE CHECK** — defi_master codex close-out dispatched 10:04 UTC.
 No ack visible in ping file. If active: post "STARTED defi_master" now + first item you're targeting. If blocked: drop
-one-liner. Plan: `plans/active/defi_master_2026_05_07.md` codex/09-strategy/ unchecked items (skip Group F).
+one-liner. Plan: `plans/active/defi_master.md` codex/09-strategy/ unchecked items (skip Group F).
 
 [2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH:
-`defi_master_2026_05_07.md` codex close-out — same theme, fresh context.**
+`defi_master.md` codex close-out — same theme, fresh context.**
 
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master_2026_05_07.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/
+2. Read `plans/active/defi_master.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/
    (archetypes, primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
 3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship.
    `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.

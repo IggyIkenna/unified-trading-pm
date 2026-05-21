@@ -151,5 +151,5 @@ features-service fixes applied:
 
 Plan flip: work_split_2026_05_20_ikenna.md @ 407992b7 — slot 10 🟢 DONE
 
-References: plans/active/work_split_2026_05_20_ikenna.md § Slot 10 + data_pipeline_master_coordination_2026_05_20.md
+References: plans/active/work_split_2026_05_20_ikenna.md § Slot 10 + mtds_mdps_master.md
 Phase -1

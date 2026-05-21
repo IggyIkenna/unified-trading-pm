@@ -841,7 +841,7 @@ awaiting operator write-pause signal to push.
 5. ✅ DEPLOYMENT_ENV_SHORT consistency: both clouds identical 24-kind env-tiered set
 
 **UTL test updates**: unified-trading-library@dc107d15 (all test assertions updated for new templates)
-**Plan flips**: pm@b9700117 (Phase 1 deliverables 1-5 checked in data_pipeline_master_coordination_2026_05_20.md)
+**Plan flips**: pm@b9700117 (Phase 1 deliverables 1-5 checked in mtds_mdps_master.md)
 
 **Pre-existing QG issue (NOT caused by my changes)**:
 - deployment-service step 6/6: `ml-inference-service` / `ml-training-service` missing workspace-manifest.json fields
@@ -849,7 +849,7 @@ awaiting operator write-pause signal to push.
 
 **Next**: R19 UAC import surface enforcement (consumer repos deep `canonical.*` / `normalize_utils.*` imports → facade)
 
-**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase 1
+**Plan reference**: `plans/active/mtds_mdps_master.md` Phase 1
 
 ---
 
@@ -886,7 +886,7 @@ awaiting operator write-pause signal to push.
 
 **R19 remaining**: none — all slot-2 assigned repos complete.
 
-**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § slot dispatch table row 2 (R19)
+**Plan reference**: `plans/active/mtds_mdps_master.md` § slot dispatch table row 2 (R19)
 
 ---
 
@@ -912,7 +912,7 @@ awaiting operator write-pause signal to push.
 - `unified-trading-system-ui`: UI facade layer, different team/plan
 - Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠ scripts/)
 
-**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
+**Plan reference**: `plans/active/mtds_mdps_master.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
 
 ---
 

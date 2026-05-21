@@ -281,7 +281,7 @@ Reference:
 - Pattern: use existing wave test files as templates (e.g. `test_transfer_window_calculator.py`,
   `test_halftime_calculator.py`)
 - Test goal: 95%+ coverage per calculator
-- Per wave: 1 commit features-service + 1 docs(plans) flip in `plans/epics/sports_master_2026_05_07.md`
+- Per wave: 1 commit features-service + 1 docs(plans) flip in `plans/epics/sports_master.md`
 
 Ship waves 41-55 (one per calculator). Ping here per wave batch (3-5 at a time).
 
@@ -395,7 +395,7 @@ deployment-service Phase 13 launcher. SWEEP-16 slot-5 reserve stack exhausted.
 - `mtds_databento_path_streaming`: status done (0 open)
 - `live_pipeline_mtds_mdps_features`: 0 open items
 - `code_freeze MTDS-3.2.C` (DeFi backfill VMs: Pyth Solana + Chainlink EVM + DEX-perp): **OPERATOR APPROVAL NEEDED** for
-  multi-year backfill scope (≥1 week rule applies — ref: `defi_master_2026_05_07` Phase 9 history)
+  multi-year backfill scope (≥1 week rule applies — ref: `defi_master` Phase 9 history)
 
 **ACTION NEEDED from main/operator**:
 
@@ -482,7 +482,7 @@ slot-5 polling for new assignments.
 
 ### Session-close deferred scoreboard
 
-Full table in `plans/epics/sports_master_2026_05_07.md` § "Deferred work after 2026-05-12 slot-5 session".
+Full table in `plans/epics/sports_master.md` § "Deferred work after 2026-05-12 slot-5 session".
 
 **Best next-agent entry points** (no blockers):
 
@@ -1094,7 +1094,7 @@ Without it: historical OHLCV rows have session=null/phase=null; new rows stamped
 ```
 
 **Script**: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py` **Commits**: MTDS@6873955
-(script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master_2026_05_07.md` § "Databento session-type
+(script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master.md` § "Databento session-type
 awareness"
 
 **UPDATE 2026-05-15**: Databento account is ALSO locked (`403 auth_account_locked`). Tested key `databento-api-key-1`
@@ -1173,7 +1173,7 @@ moving to next executable item (#3 Phase 5 QG ratchet, no external-data dependen
 | 1     | TradFi 1-week test backfill                            | 🔴 BLOCKED-CREDENTIALS                                             | Databento account-locked; combined unblock ask in this ping ledger (PM@`6d518a4f`)                                                                                                                                     |
 | 2     | Databento session-stamp backfill                       | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1; ask filed earlier 2026-05-15                                                                                                                                                                               |
 | 3     | TradFi Phase 5 QG ratchet                              | ✅ DONE (pre-existing)                                             | PM@`32c7ea52` shipped 2026-05-13                                                                                                                                                                                       |
-| **4** | **`tradfi_master_2026_05_07` master plan refresh**     | 🟡 **DEFERRED (carries to 2026-05-16 work_split or next session)** | 38 open todos in the plan; large-scope research (~4.8 cal); not actionable in single-turn budget. Next pickup: bulk-verify line-by-line which open todos are already done by recent commits + flip in same agent turn. |
+| **4** | **`tradfi_master` master plan refresh**     | 🟡 **DEFERRED (carries to 2026-05-16 work_split or next session)** | 38 open todos in the plan; large-scope research (~4.8 cal); not actionable in single-turn budget. Next pickup: bulk-verify line-by-line which open todos are already done by recent commits + flip in same agent turn. |
 | 5     | TradFi venue + symbology coverage audit                | ✅ DONE                                                            | PM@`c63cdf2b` — ICE softs CT/CC/KC/SB/OJ/DX verified canonicalised in UAC                                                                                                                                              |
 | 6     | CME/EUREX 1-week test backfill                         | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1                                                                                                                                                                                                             |
 | 7     | strategy_service_qg_ltv_threshold_violations close     | ✅ DONE (pre-existing)                                             | STEP 5.37 already passes — CORRECT-LOCAL annotations in place (PM@`e604d6c3` flipped)                                                                                                                                  |
@@ -1476,15 +1476,15 @@ This session (slot-5 ikenna pickup of paused work from before-Databento-unblock)
 
 4. **UAC FEATURE_REQUIRED_INPUTS** — `unified-api-contracts@99a7614` — 8 tradfi feature_groups (`options_iv`,
    `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `futures_term_structure`, `tradfi_vol_surface`,
-   `vol_surface_term_structure`, `vix_features`). Closes `tradfi_master_2026_05_07` P1 + registers the new
+   `vol_surface_term_structure`, `vix_features`). Closes `tradfi_master` P1 + registers the new
    `compute_vix_features()` calc at FS@b3814675. Registry 59 → 67; `validate_required_inputs()` 0 issues; UAC local QG
    green.
 
 **Plan flips this session** (`docs(plans):` cadence per Half-2):
 
-- `tradfi_master_2026_05_07` line 185 (expiry guard P1)
-- `tradfi_master_2026_05_07` line 207 (VIX feature calc P3)
-- `tradfi_master_2026_05_07` line 472 (TradFi feature_groups → UAC P1)
+- `tradfi_master` line 185 (expiry guard P1)
+- `tradfi_master` line 207 (VIX feature calc P3)
+- `tradfi_master` line 472 (TradFi feature_groups → UAC P1)
 - `work_split_2026_05_15_ikenna.md` slot 5 item #2 (session-stamp ✅ ack — leveraged the parallel agent's
   `canonical-migration-tradfi-sessionstamp-20260516-135034` successful run, 24,944 migrated / 0 errors / 96 min)
 - `work_split_2026_05_15_ikenna.md` slot 5 item #4 (tradfi_master refresh — 3 epic items + verify discovery)

@@ -345,7 +345,7 @@ Unblocks:
 
 - `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5.B.2
 - prediction asset_group × `arbitrage_price_dispersion` archetype (Kalshi vs Polymarket spread detection)
-- `predictions_master_2026_05_07.md` prediction execution pipeline
+- `predictions_master.md` prediction execution pipeline
 
 Without it: integration tests skip (`@pytest.mark.requires_credentials`); unit tests + full adapter already ship at
 `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth, place/

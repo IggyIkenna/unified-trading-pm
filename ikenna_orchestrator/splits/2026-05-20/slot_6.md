@@ -1,7 +1,7 @@
 # Slot 6 — A3 DeFi MISSING_EXPECTED remediation (current) + Phase 9 + Phase 11 (post-unfreeze)
 
 **Host**: AWS VM (`/home/ubuntu/unified-trading-system-repos/.tabs/6/`) **Model**: Sonnet 4.6 · high effort **Master
-coordinator**: `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` **Work-split row**:
+coordinator**: `unified-trading-pm/plans/active/mtds_mdps_master.md` **Work-split row**:
 `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 6
 
 ---
@@ -58,7 +58,7 @@ unfreeze. Until then, your work is closing every DeFi `MISSING_EXPECTED` cell fr
 ## Plans-of-record (read these in order)
 
 1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace HARD RULES
-2. `unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md` — phase DAG + dependencies
+2. `unified-trading-pm/plans/active/mtds_mdps_master.md` — phase DAG + dependencies
 3. `unified-trading-pm/plans/active/work_split_2026_05_20_ikenna.md` § Slot 6 — your dispatch row
 4. `unified-trading-pm/ikenna_orchestrator/pings/slot_6.md` — pings from slot-1 main with detailed assignments
 5. (slot-specific plan-refs listed under "future phases" above)
