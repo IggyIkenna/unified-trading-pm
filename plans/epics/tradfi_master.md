@@ -1,24 +1,17 @@
----name: tradfi-master
-slug: tradfi_master
-date: 2026-05-07
-deadline: 2026-05-23
-last_updated: 2026-05-15
-owner: claude-code
+---
+name: tradfi_master
+type: epic
+tier: L0
 status: active
 priority: P1
-phase: pending_approval
-domain: tradfi
-asset_group: tradfi
-type: umbrella
+assigned_vm: vm-tradfi
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-tradfi
-folds_in:
-  - instrument_schema_cohesion_and_market_hours_2026_03_31
-  - sp500_ml_readiness_master_2026_05_05
-  - cefi_tradfi_tick_data_backfill_2026_04_10 # TradFi half (CeFi half went to cefi_master)
-  - market_tick_data_to_100pct_2026_05_05 # TradFi slice
-  - tradfi_ohlcv_only_mvp_backfill_2026_05_15 # OHLCV-only MVP scope narrow (drops L1-L3 to post-cutover)
+asset_group: tradfi
 related_plans:
   - ../active/cme_polymarket_arb_2026_05_08.md
   - ../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md

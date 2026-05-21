@@ -1,4 +1,5 @@
----name: observability_master
+---
+name: observability_master
 type: epic
 tier: L4
 status: active
@@ -14,7 +15,7 @@ asset_group: cross-cutting
 related_plans:
   - ../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
   - ../active/alerting_service_live_rules_2026_05_07.md
-
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Observability Master

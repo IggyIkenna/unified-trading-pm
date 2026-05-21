@@ -1,4 +1,5 @@
----name: dart_and_promote_master
+---
+name: dart_and_promote_master
 type: epic
 tier: L3
 status: active
@@ -14,7 +15,6 @@ asset_group: cross-cutting
 related_plans:
   - ../active/promote_workflow_may23_cli_path_2026_05_10.md
   - ../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
-
 ---
 
 # DART + Promote Workflow Master (L3)

@@ -1,4 +1,5 @@
----name: batch_live_symmetry_master
+---
+name: batch_live_symmetry_master
 type: epic
 tier: L4
 status: active
@@ -14,7 +15,6 @@ asset_group: cross-cutting
 related_plans:
   - ../active/available_at_schema_lift_post_cutover_2026_05_19.md
   - ../active/batch_live_symmetry_2026_05_10.md
-
 ---
 
 # Batch Live Symmetry Master

@@ -1,5 +1,5 @@
 ---
-ame: execution_master
+name: execution_master
 type: epic
 tier: L2
 status: active
@@ -12,9 +12,8 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 asset_group: cross-cutting
-related_plans:[]
-
-
+related_plans:
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Execution Master

@@ -1,4 +1,5 @@
----name: client_isolation_and_governance_master
+---
+name: client_isolation_and_governance_master
 type: epic
 tier: L4
 status: active
@@ -13,7 +14,7 @@ locked_since: 2026-05-21
 asset_group: cross-cutting
 related_plans:
   - ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
-
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Client Isolation + Governance Master (L4)

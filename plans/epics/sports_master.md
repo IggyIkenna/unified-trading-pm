@@ -1,25 +1,17 @@
----name: sports-master
-slug: sports_master
-date: 2026-05-07
-deadline: 2026-05-23
-last_updated: 2026-05-08
-owner: claude-code
+---
+name: sports_master
+type: epic
+tier: L0
 status: active
 priority: P1
-phase: pending_approval
-domain: sports
-asset_group: sports
-type: umbrella
+assigned_vm: vm-sports
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-sports
-folds_in:
-  - features_sports_honest_coverage_2026_05_05
-  - sports_data_available_at_rename_2026_05_07
-  - sports_fixtures_truthset_recovery_2026_05_06
-  - sports_phantom_recon_and_failure_triage_2026_05_01
-  - sports_predictions_e2e_2026_05_05 # sports half (predictions half goes to predictions_master)
-  - market_tick_data_to_100pct_2026_05_05 # sports slice
+asset_group: sports
 related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
   - ../active/hard_schema_enforcement_2026_05_08.md

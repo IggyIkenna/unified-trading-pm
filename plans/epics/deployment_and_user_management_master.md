@@ -1,4 +1,5 @@
----name: deployment_and_user_management_master
+---
+name: deployment_and_user_management_master
 type: epic
 tier: L3
 status: active
@@ -13,7 +14,6 @@ locked_since: 2026-05-21
 asset_group: cross-cutting
 related_plans:
   - ../active/deployment_ui_lifecycle_tabs_2026_05_08.md
-
 ---
 
 # Deployment And User Management Master

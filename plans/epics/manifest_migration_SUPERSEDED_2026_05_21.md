@@ -5,7 +5,7 @@ date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
 owner: claude-code
-status: active
+status: superseded
 priority: P0
 phase: pending_approval
 domain: cross-cutting

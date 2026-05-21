@@ -1,7 +1,7 @@
 ---
 title: "Manifest evolution master — single owner for schema + writer code + GCS data layout (3-axis batch invariant)"
 type: master
-status: active
+status: superseded
 created: 2026-05-08
 deadline: 2026-05-23
 priority: P0

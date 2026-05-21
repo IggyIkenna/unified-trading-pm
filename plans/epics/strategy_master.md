@@ -1,4 +1,5 @@
----name: strategy_master
+---
+name: strategy_master
 type: epic
 tier: L2
 status: active
@@ -20,7 +21,7 @@ related_plans:
   - ../active/strategy_archetype_taxonomy_2026_05_12.md
   - ../active/strategy_execution_contract_remediation_2026_05_20.md
   - ../active/strategy_repo_consolidation_2026_05_19.md
-
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Strategy Master (L2)

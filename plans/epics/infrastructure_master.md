@@ -1,23 +1,17 @@
----name: infrastructure-master
-slug: infrastructure_master
-date: 2026-05-07
-deadline: 2026-05-23
-last_updated: 2026-05-08
-owner: claude-code
+---
+name: infrastructure_master
+type: epic
+tier: L4
 status: active
 priority: P0
-phase: pending_approval
-domain: infrastructure
-type: umbrella
+assigned_vm: vm-cross-cutting
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-operator-ops
-folds_in:
-  - shard_granularity_ssot_propagation_2026_05_06
-  - shard_granularity_ssot_propagation_2026_05_06.HANDOVER # paired handover doc
-  - data_status_multi_axis_shard_propagation_2026_05_06
-  - deployment_service_build_infrastructure_repair_2026_04_22
-  - venue_axis_asset_group_vocabulary_2026_04_25 # 2 absorbed SSOT-cleanup items: venue_start_dates deletion + dashboard SSOT verify
+asset_group: infrastructure
 related_plans:
   - ../active/aws_migration_defi_first_2026_05_07.md
 ---

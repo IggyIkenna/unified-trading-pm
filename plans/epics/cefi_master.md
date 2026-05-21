@@ -1,26 +1,19 @@
 ---
-name: cefi-master
-slug: cefi_master
-date: 2026-05-07
-deadline: 2026-05-23
-last_updated: 2026-05-08
-owner: claude-code
+name: cefi_master
+type: epic
+tier: L0
 status: active
 priority: P0
-phase: pending_approval
-domain: cefi
-asset_group: cefi
-type: umbrella
+assigned_vm: vm-cefi
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-cefi
-folds_in:
-  - cefi_venue_universe_expansion_2026_05_01
-  - cefi_tradfi_tick_data_backfill_2026_04_10 # CeFi half (TradFi half goes to tradfi_master)
-  - market_tick_data_to_100pct_2026_05_05 # CeFi slice (per asset_group split)
+asset_group: cefi
 related_plans:
   - ../active/venue_heartbeat_calibration_2026_05_post23.md
-
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see

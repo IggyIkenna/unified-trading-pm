@@ -1,4 +1,5 @@
----name: manifest_master
+---
+name: manifest_master
 type: epic
 tier: L1
 status: active
@@ -21,7 +22,6 @@ related_plans:
   - ../active/honest_coverage_formula_consolidation_2026_05_19.md
   - ../active/manifest_cross_asset_rescan_design_2026_05_08.md
   - ../active/manifest_schema_final_gate_2026_05_09.md
-
 ---
 
 # Manifest Master (L1)

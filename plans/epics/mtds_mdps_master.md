@@ -1,19 +1,17 @@
----name: data-pipeline-master-coordination-2026-05-20
-title:
-  Data pipeline master coordination — bucket symmetry → code freeze → GCS+AWS migration → manifest v8 → label-flip →
-  denominator/numerator fix → QG enforcement
-created: 2026-05-20
-author: ikenna (slot-1 main, mega-audit round 5)
+---
+name: mtds_mdps_master
+type: epic
+tier: L1
 status: active
 priority: P0
+assigned_vm: vm-ml
+parent: master_to_live_defi_2026_05_23
+owner: ikenna
+created: 2026-05-20
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-assigned_vm: vm-defi
-estimate_class: infra
-estimate_baseline_ai_days: 45
-estimate_calibrated_ai_days: 36
-parent_plan: master_to_live_defi_2026_05_23.md
-parent_epic: manifest_evolution_SUPERSEDED_2026_05_21
+asset_group: cross-cutting
 related_plans:
   - ../active/available_at_lookahead_bias_completion_2026_05_08.md
   - ../active/d4_mtds_adapters_preflight_2026_05_20.md
@@ -25,29 +23,24 @@ related_plans:
   - ../active/mtds_per_instrument_download_api_2026_04_24.md
   - ../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
   - ../active/wave3x_track_d_implementation_2026_05_19.md
-  # Phase -2 consolidation prereqs (both being appended in parallel by another agent 2026-05-20 round 5)
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
   - features_repo_consolidation_2026_05_08.md
   - strategy_execution_contract_remediation_2026_05_20.md # operator bucket-strategy decision lines 378/384/388
-  # Bucket naming + migration sequence
   - bucket_name_ssot_canonicalisation_2026_05_10.md
   - code_freeze_migrate_backfill_sequencing_2026_05_10.md
   - aws_migration_defi_first_2026_05_07.md
   - gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  # Manifest v8 + writegate
   - writegate_honest_coverage_endtoend_2026_05_06.md
   - d3_manifest_v8_finish_2026_05_20.md
   - manifest_cross_asset_rescan_design_2026_05_08.md
   - manifest_schema_final_gate_2026_05_09.md
   - hard_schema_phase1_field_flip_migration_2026_05_19.md
-  # Denominator / honest coverage / UI
   - honest_coverage_formula_consolidation_2026_05_19.md
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
   - canary_coverage_qg_enforcement_2026_05_20.md
   - deployment_ui_lifecycle_tabs_2026_05_08.md
   - issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md
-  # Audits feeding this coordination
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
   - audit/results/manifest_v8_compliance_2026_05_20_summary.md
   - audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md
@@ -59,7 +52,6 @@ related_plans:
   - audit/strategy_execution_contract_audit_2026_05_20.md
   - audit/utl_consumer_contract_audit_2026_05_20.md
   - audit/uac_consumer_contract_audit_2026_05_20.md
-  # Codex SSOTs
   - ../../codex/02-data/data-pipeline-correctness-hard-rule.md
   - ../../codex/05-infrastructure/manifest-consolidator-ssot.md
   - ../../codex/11-project-management/foundation-completion-gate-discipline.md

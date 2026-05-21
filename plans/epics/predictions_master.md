@@ -1,22 +1,17 @@
----name: predictions-master
-slug: predictions_master
-date: 2026-05-07
-deadline: 2026-05-23
-last_updated: 2026-05-08
-owner: claude-code
+---
+name: predictions_master
+type: epic
+tier: L0
 status: active
 priority: P1
-phase: pending_approval
-domain: prediction
-asset_group: prediction
-type: umbrella
+assigned_vm: vm-prediction
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-prediction
-folds_in:
-  - predictions_canonical_question_group_polymarket_migration_2026_05_06
-  - sports_predictions_e2e_2026_05_05 # predictions ML half (sports half goes to sports_master)
-  - market_tick_data_to_100pct_2026_05_05 # predictions slice
+asset_group: prediction
 related_plans:
   - ../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
 ---

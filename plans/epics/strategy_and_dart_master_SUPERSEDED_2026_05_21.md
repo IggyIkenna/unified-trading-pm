@@ -1,7 +1,7 @@
 ---
 title: Strategy + DART Master (umbrella)
 type: plan
-status: active
+status: superseded
 created: 2026-05-07
 deadline: 2026-05-23 (live DeFi) — only manual-trade gate verification + Group F prereq parts; rest post-May-23
 owner_repos:

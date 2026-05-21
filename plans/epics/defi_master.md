@@ -1,21 +1,17 @@
----name: defi-master
-slug: defi_master
-date: 2026-05-07
-owner: claude-code
+---
+name: defi_master
+type: epic
+tier: L0
 status: active
 priority: P0
-phase: pending_approval
-domain: defi
-asset_group: defi
-type: umbrella
+assigned_vm: vm-defi
+parent: master_to_live_defi_2026_05_23
+owner: claude-code
+created: 2026-05-07
+last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-folds_in:
-  - consolidated_defi_data_pipeline_2026_04_15
-  - defi_e2e_pipeline_2026_04_30
-  - dex_historical_replay_lighter_extended_pacifica_2026_05_07
-  - market_tick_data_to_100pct_2026_05_05 # DeFi slice
-  - cefi_venue_universe_expansion_2026_05_01 # DEX-perp half (Extended / Pacifica / Lighter)
+asset_group: defi
 related_plans:
   - ../active/api_keys_wallets_accounts_readiness_2026_05_10.md
   - ../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
@@ -32,12 +28,6 @@ related_plans:
   - ../active/ruff_workspace_cleanup_2026_05_12.md
   - ../active/simulation_scenarios_post_cutover_2026_06_01.md
   - ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-estimate_class: design
-estimate_baseline_ai_days: 23.5
-estimate_calibrated_ai_days: 14.1
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-12, ~1.5, ~2.5, ~2, + 5 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see

@@ -1,4 +1,5 @@
----name: trading_agent_master
+---
+name: trading_agent_master
 type: epic
 tier: L2
 status: active
@@ -13,7 +14,6 @@ locked_since: 2026-05-21
 asset_group: cross-cutting
 related_plans:
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
-
 ---
 
 # Trading Agent Master
