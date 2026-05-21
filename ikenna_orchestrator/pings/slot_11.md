@@ -222,3 +222,40 @@ Awaiting operator direction on which phase to tackle first (recommend Phase 1 MT
 **Remaining open item**: Phase 1 QG smoke test (operator-run required; real GCP VM launch).
 **Full Execution Criterion**: all checkable items done. Pending only: operator QG smoke + codex
   decision-matrix revision to note 8 exceptions (handled above).
+
+---
+
+## [2026-05-21] slot-11 — O-1 plan cleanup + epic VM fleet health check
+
+**O-1 plan cleanup**: flipped 3 Pattern B exception items to `[x] ✅` (decision documented, not
+  conversions to execute). Plan now shows 16/17 done; only open item is QG smoke (operator-run).
+  — `unified-trading-pm@<pending>`
+
+**Epic VM fleet health check** (`epic_vm_fleet_commissioning_2026_05_21.md` Phase 3 T+10min):
+
+| VM | IP | Port 8026 status |
+| --- | --- | --- |
+| planning-vm | 34.146.53.106 | ✅ HEALTHY (HTTP 200) |
+| vm-defi | 35.200.55.185 | ❌ Connection refused |
+| vm-cefi | 35.200.75.132 | ❌ Connection refused |
+| vm-tradfi | 35.200.59.184 | ❌ Connection refused |
+| vm-sports | 34.146.32.46 | ❌ Connection refused |
+| vm-prediction | 136.110.98.16 | ❌ Connection refused |
+| vm-ml | 35.200.66.186 | ❌ Connection refused |
+| vm-trading-core | 35.200.121.156 | ❌ Connection refused |
+| vm-operator-ops | 34.85.27.215 | ❌ Connection refused |
+| vm-cross-cutting | 34.104.133.72 | ❌ Connection refused |
+| vm-orchestrator | 35.194.106.13 | ❌ Connection refused |
+
+**"Connection refused"** (not timeout) = host reachable, port 8026 not listening. Orchestrator
+service either failed to start or is not installed on the epic VMs. `gcloud` not available in
+slot-11 environment — cannot check VM state or SSH logs. **Operator action needed**:
+
+```bash
+# Check if orchestrator service is running on any epic VM
+gcloud compute ssh agent-orch-vm-cross-cutting-20260521 \
+  --zone=asia-northeast1-c --project=central-element-323112 \
+  -- 'systemctl status orchestrator.service; sudo tail -50 /var/log/epic-vm-bootstrap.log'
+```
+
+Plan ref: `plans/active/epic_vm_fleet_commissioning_2026_05_21.md` Phase 3 T+10min.

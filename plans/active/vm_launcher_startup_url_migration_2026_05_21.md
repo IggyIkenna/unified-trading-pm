@@ -108,24 +108,25 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
       --workers 16 --mixed-workers 1 --skip-cleanup`. Zone corrected us-central1-a →
       asia-northeast1-c (workspace rule). — deployment-service@dbdfe40
 
-- [ ] **[PATTERN B EXCEPTION]** P1. **`launch-prediction-features-vm.sh`** — DEFERRED / SUPERSEDED.
+- [x] ✅ **[PATTERN B EXCEPTION]** P1. **`launch-prediction-features-vm.sh`** — DEFERRED / SUPERSEDED.
       `launch-features-vm.sh` is the canonical replacement (already Pattern A, confirmed 2026-05-21).
       The deprecation notice in the launcher itself says to use `launch-features-vm.sh --feature-family
       cross_instrument --asset-group PREDICTION`. No Pattern A conversion needed; file stays as-is
-      pending archive once `launch-features-vm.sh` covers all its use-cases.
+      pending archive once `launch-features-vm.sh` covers all its use-cases. Decision documented 2026-05-21.
 
-- [ ] **[PATTERN B EXCEPTION]** P1. **`launch-prediction-pipeline-vm.sh`** — Pattern B exception.
+- [x] ✅ **[PATTERN B EXCEPTION]** P1. **`launch-prediction-pipeline-vm.sh`** — Pattern B exception.
       3-service sequential pipeline (MDPS → features-cross-instrument → features-delta-one) with
       per-service skip flags; each stage uses a different binary and different CLI shape. An inline
       multi-stage handler would exceed `setup-data-pipeline-vm.sh` complexity budget and create
-      tight coupling across 6 repos. Stays Pattern B.
+      tight coupling across 6 repos. Stays Pattern B. Decision documented 2026-05-21.
 
-- [ ] **[PATTERN B EXCEPTION]** P2. **`launch-gcs-migration-bundle-vm.sh`** — Pattern B exception.
+- [x] ✅ **[PATTERN B EXCEPTION]** P2. **`launch-gcs-migration-bundle-vm.sh`** — Pattern B exception.
       Per-run migration script uploaded to timestamp-scoped GCS staging path at launch time; VM
       downloads from that run-specific path. The pre-launch script-upload step cannot be expressed
       as VM metadata, making a clean Pattern A conversion impractical without restructuring the
       upload flow. Additionally, the migration script lives in unified-trading-pm (not any service
       tarball). Stays Pattern B; consider moving script to CODE_BUCKET/scripts/ for a future pass.
+      Decision documented 2026-05-21.
 
 ## Pattern B confirmed exceptions (do NOT convert)
 
