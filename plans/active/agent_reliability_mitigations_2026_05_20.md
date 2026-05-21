@@ -30,7 +30,7 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
       `server/server.py`. `mirror_events` table; `slot.mirror_blocked_at` set on non-ff decisions. agent-orch (shipped
       prior to 2026-05-21 session).
 - [x] ✅ [AGENT] P0. `tab-mirror-to-ldr.yml` adds final step POSTing result to `/api/mirror-events` — fire-and-forget,
-      exits 0 either way. Rolled out PM@b0af9ba3a.
+      exits 0 either way. Rolled out PM@b0af9ba3a. Verified deployed to 8/8 repos with tab-mirror-to-ldr.yml.
 
 ## Phase 2 — Pre-spawn dirty-state gate
 
