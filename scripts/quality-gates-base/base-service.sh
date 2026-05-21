@@ -2196,6 +2196,27 @@ else
     log_success "STEP 5.89: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.90: GET /data-status endpoint must use canonical coverage helper ───
+#
+# Every Python file that defines a GET /data-status route MUST import
+# compute_coverage_for_bucket (UTL) or compute_honest_coverage (UAC).
+# Inline re-implementations of the manifest read or the coverage formula are
+# review-blocking per codex/06-coding-standards/data-status-endpoint-contract.md.
+#
+# SSOT: honest_coverage_formula_consolidation_2026_05_19.md Phase 1 P1 / STEP 5.90.
+_DS_CANONICAL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_data_status_endpoint_canonical.sh"
+if [ -f "$_DS_CANONICAL_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    if bash "$_DS_CANONICAL_CHECKER" "$SOURCE_DIR" >/tmp/data_status_canonical_qg.log 2>&1; then
+        log_success "STEP 5.90: GET /data-status endpoint uses compute_coverage_for_bucket or compute_honest_coverage"
+    else
+        log_fail "STEP 5.90: GET /data-status route file does not use canonical coverage helper (see codex/06-coding-standards/data-status-endpoint-contract.md):"
+        cat /tmp/data_status_canonical_qg.log
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.90: skipped (checker absent or SOURCE_DIR not set)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
