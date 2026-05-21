@@ -1,6 +1,27 @@
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
 > §Slot 7 and the spawn prompt from operator. History below is audit-trail only.
 
+## [slot 7] 2026-05-22 — Epic VM Fleet Commissioning complete (pm@7c7f275)
+
+**Timestamp**: 2026-05-22 | **Status**: 🟢 DONE
+
+**Plan**: `plans/active/epic_vm_fleet_commissioning_2026_05_21.md`
+
+**Completed this session**:
+
+- Phase 3 (T+10min): All 11 VMs (10 epic + planning) RUNNING + health checks green. Bootstrap root cause: missing
+  `unified-api-contracts` (UTL path dep) + uv needing Python 3.13 + `cd /tmp` workaround for uv.toml CWD issue. Fixes:
+  agent-orch@c859cbf → 553c0a4 → 1d2603d.
+- Phase 4: Archived `agent_orchestrator_workers_on_vms_2026_05_19.md` → `plans/archive/`. Deferred items (ssh-spawn,
+  backend_id routing, codex SSOT, preflight) migrated to Deferred section.
+- Plan flips: pm@7c7f275.
+
+**Open from prior dispatch (Phase 11 deployment-service cleanup)**:
+
+- Plans: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md` Phase 11b.
+- Scope: terraform destroy 5 archived stacks, shared TF + cloud-build cleanup, grafana dashboards, test assertions.
+- Status: still pending — this session was consumed entirely by epic VM bootstrap fixes.
+
 ## [main → slot 7] 2026-05-21 — QG Cluster C: strategy + execution + ml (pm@5eedc069a)
 
 **Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH

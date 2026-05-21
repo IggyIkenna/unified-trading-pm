@@ -63,16 +63,16 @@ Codex SSOTs:
 - [x] ✅ [AGENT] P0. T+10min verification: all 10 epic VMs RUNNING + health ok — agent-orch@cbf25e0 All 10 VMs healthy
       2026-05-22: cefi@35.200.75.132 · cross-cutting@34.104.133.72 · defi@35.200.55.185 · ml@35.200.66.186 ·
       operator-ops@34.85.27.215 · orchestrator@35.194.106.13 · prediction@136.110.98.16 · sports@34.146.32.46 ·
-      tradfi@35.200.59.184 · trading-core@35.200.121.156. Fix landed: bootstrap_vm.sh uses `su -` login shell +
-      explicit path deps for venv creation (agent-orch@1d2603d). planning@34.146.53.106 also healthy.
-      `.tabs/` dir exists (ReadWritePaths satisfied) but slot worktrees empty — deferred with ssh-spawn work.
+      tradfi@35.200.59.184 · trading-core@35.200.121.156. Fix landed: bootstrap_vm.sh uses `su -` login shell + explicit
+      path deps for venv creation (agent-orch@1d2603d). planning@34.146.53.106 also healthy. `.tabs/` dir exists
+      (ReadWritePaths satisfied) but slot worktrees empty — deferred with ssh-spawn work.
 
 ## Phase 4 — Housekeeping
 
 - [x] ✅ [AGENT] P2. Archive `agent_orchestrator_workers_on_vms_2026_05_19.md` — old asymmetric Ikenna+Harsh model
       superseded by this plan. Open deferred items (Phase 3 ssh-spawn, Phase 5 backend_id routing, Phase 6 codex SSOT,
       pending preflight items) migrated to Deferred section above. Archived to
-      `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md`. pm@<sha-pending>.
+      `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md`. pm@7c7f275.
 
 ## Deferred (post-cutover)
 
