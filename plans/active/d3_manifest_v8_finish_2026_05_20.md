@@ -126,12 +126,13 @@ that plan was written (2026-05-09):
 
 ### Phase 4 — Divergence-detector tooling
 
-- [ ] [AGENT] P0. Implement `scripts/detect_manifest_divergence.py`:
+- [x] ✅ [AGENT] P0. Implement `scripts/detect_manifest_divergence.py`:
   - Reads `expected_coverage()` dump (A2 output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`)
   - Joins against each bucket's `_index/availability_index.parquet`
   - Emits `DIVERGENT_EMPTY` log event for every cell where expected=`SHOULD_HAVE_DATA` but actual=0 rows
   - Outputs CSV + summary to `plans/audit/results/divergence_<date>.csv`
-- [ ] [AGENT] P1. Wire divergence-detector as QG smoke (deferred to D2 plan runtime harness — mark DEFERRED here)
+  - UTL@8ffd7083: `scripts/detect_manifest_divergence.py` — uses `resolve_bucket_name` + UTL `client.download_bytes` (not gcsfs); `--asset-group all|defi|...` CLI; UTL QG ✅ ALL QUALITY GATES PASSED
+- [x] ✅ [AGENT] P1. Wire divergence-detector as QG smoke — **DEFERRED** to D2 plan runtime harness per plan spec; marked DEFERRED here
 - [ ] [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in A3)
 
 ## Success criteria
