@@ -157,7 +157,12 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
     Ethena/Pendle/Beefy/Yearn/Convex/Karak/Symbiotic/Idle (defillama/yields.yaml existing),
     Puffer/EtherFi/Solblaze (defillama/coins_historical.yaml new), Morpho (morpho_blue_api/markets.yaml),
     EigenLayer (BLOCKED-CREDENTIALS stub), Solayer/Cambrian/Picasso/Sky (BLOCKED-NO-ADAPTER stubs + orphan allowlist).
-    Awaiting slots 2+3 for full checkbox flip.
+  - ✅ **slot 2 DONE** (uac@58ac508 2026-05-21): lending cluster 6/6 covered — Aave V3 (thegraph/mocks/aave_v3_reserves.yaml
+    pre-existing), Compound V3 (thegraph/mocks/compound_v3_markets.yaml new), Spark (thegraph/mocks/spark_markets.yaml new),
+    Curve (curve_fi/mocks/pools.yaml — api.curve.finance/v1/getPools/ethereum/main),
+    Euler V2 (euler_v2/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, EVM eth_call pattern documented),
+    Venus (venus/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, BNB Chain RPC pattern documented).
+    Awaiting slot 3 (LST cluster: Lido/RocketPool/cbETH/JitoSOL/mSOL/Jito/Marinade/Sanctum) for full checkbox flip.
 
 **DeFi `arbitrage_price_dispersion`** (~9 DEXes):
 
