@@ -535,7 +535,7 @@ one-walk migration so manifest only rewrites once.
       delete after manifest + downstream verification confirms zero readers still hit flat names. bucket_name_ssot plan
       Phase 0d. **Composes with Phase 2.5 cross-asset rescan**: rescan reads env-tiered buckets, not flat ones; rescan
       launcher reads from yaml SSOT post-migration so the read-path matches the write-path.
-- [ ] [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
+- [x] ✅ [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
       Phase 0g cross-check)** — Update reader/writer audit table verifying every consumer post-Phase-0d hits env-tiered
       bucket names (not flat). bucket_name_ssot plan done-def #6 extension. **Includes the deployment-api
       reader-repoint** (Layer 5 in the bucket_name_ssot pre-audit manifest): replace deployment-api's internal
@@ -548,7 +548,12 @@ one-walk migration so manifest only rewrites once.
       bucket_name_ssot Done-def #3 / A6). Reconcile the L5.1↔L5.2 `ml-*` template drift in the same pass (yaml SSOT
       wins: `ml-models-store` / `ml-predictions-store`). Also includes the legacy `get_bucket_name`/`BUCKET_PREFIXES`
       delegate (bucket_name_ssot Done-def #3, = step 2.6.4 in the Done-def #3 sub-sequence). basedpyright
-      deployment-api + smoke the data-status UI post-repoint.
+      deployment-api + smoke the data-status UI post-repoint. ✅ Design doc shipped PM@tab/4 —
+      `plans/active/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md`. Audit:
+      `data_status_drilldown.build_bucket_name` already delegates to `resolve_bucket_name`; `upcoming_fixtures` +
+      `batch_config_utils` already clean. Remaining: `DataStatusService.build_bucket_name` +
+      `DataQueryService.build_bucket_name` flat methods (execution gated on Phase-0d cutover). ml-\* drift RESOLVED
+      (both `_SERVICE_TO_KIND` dicts already use `ml-models-store`).
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.E (NEW per operator extension (b+) 2026-05-11; SCRIPT SHIPPED 2026-05-11)** — code-half
       ✅; first-execution-half deferred (operator gate post-cutover). Sync script (prod → staging/dev) with truncated
       date window + same-region enforcement. **Shipped** `deployment-service@fc1cfa0` (prod → {staging,dev} bucket sync
