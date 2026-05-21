@@ -1027,3 +1027,46 @@ Plans to archive (in this order):
 8. Push; flip §Wave 2 Slot A checkbox in closeout plan
 
 **Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only` first.
+
+## [main → slot 2] 2026-05-21 — writegate follow-on (Phase 2C/2D/2E/4A/4B) — start AFTER Wave 2 Slot A done
+
+> **🟢 DISPATCH (follow-on)** Plan: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`
+
+**Prerequisite**: Complete Wave 2 Slot A archives first (5 direct archives). Then pick this up.
+
+**Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only`. Read `## STATUS BOARD`. Confirm slot 8 has
+shipped Phase 1A before starting 2.C (Phase 1A blocks all Phase 2 — check git log for `writegate Phase 1A` commit).
+
+**Scope**: Non-migration code items only. Skip Phase 3.x (GCS/parquet backfill) and Phase 5 (validation).
+
+**Work in parallel track with slot 8** (these are independent of 2.A/2.B):
+
+### Phase 2.C — features-sports forward fixes (9 open items)
+
+- Read `### Phase 2.C` — wire `available_at`, delete `_ensure_timestamp` callsites in `batch_handler.py`, wire
+  `fixture_lineups`/`fixture_player_stats` stubs
+- Key callsites: `_fetch_runner.py:171`, `_fetch_runner.py:173`, `batch_handler.py:146`, `cli/batch_write.py:38`,
+  `batch_handler.py:383,465,528,597`
+- Commit per file changed → push → flip
+
+### Phase 2.D — instruments-service sports schema bumps + write-time stamping (3 open items)
+
+- Read `### Phase 2.D` — `event_time` column + `match_end_time` detection cascade + `announced_at` backfill
+- Per-operator decision 2026-05-12 (in STATUS BOARD): `event_time` ships now; `match_end_time` SFI freeze-detection
+  in-scope
+- Commit per schema/callsite changed → push → flip
+
+### Phase 2.E — Expanded reason taxonomy + per-service consumer-class audit (2 open items)
+
+- Read `### Phase 2.E` — UAC `EMPTY_CONFIRMED_REASONS` additions + per-service skip/alert audit
+- Commit → push → flip
+
+### Phase 4.A/4.B — deployment-api + deployment-ui (2 open items, parallel)
+
+- Read `### Phase 4.A` and `### Phase 4.B` — data-status UI wiring
+- 1 item each — quick
+
+**Hard stops**: same as slot 8 — no GCS backfill, no Phase 3.x, no strategy-logic changes.
+
+When 2C/2D/2E/4A/4B done: post DONE + SHA to this ping file. Slot 3 (aws_migration owner) coordinates Phase 3.x
+sequencing post-migration.

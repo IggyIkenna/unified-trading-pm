@@ -1585,3 +1585,40 @@ all handlers to skip every shard → call_count assertions fail.
 - Available for next dispatch — polling remote for new work
 
 — slot 8
+
+## [main → slot 8] 2026-05-21 — writegate non-migration code (Phase 1A → 2A/2B)
+
+> **🟢 DISPATCH** Plan: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`
+
+**Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only` first. Read `## STATUS BOARD` at top of plan.
+
+**Scope**: Non-migration code items only. DO NOT touch Phase 3.B/3.C/3.D (GCS/parquet backfill) or Phase 5 (validation)
+— those are blocked by Phase 2 physical migration gate.
+
+**Work in this order** (Phase 1A blocks 2.x — start there):
+
+### Phase 1A — UTL contract changes (1 open item, blocks all Phase 2)
+
+- Read `## Phase 1A — UTL contract changes` in plan
+- 1 open `- [ ]` item — execute it (UTL QG step or contract enforcement)
+- Commit: `feat(utl): writegate Phase 1A — <description>` → push to live-defi-rollout
+- Flip the checkbox immediately after push
+
+### Phase 2.A — MDPS `_create_empty_output` deletion (1 open item)
+
+- Read `### Phase 2.A` — delete the `_create_empty_output` pattern from MDPS
+- Commit per shippable unit → push → flip
+
+### Phase 2.B — MTDS partitioner validation + cluster wiring (6 open items)
+
+- Read `### Phase 2.B` — wire `expected_root_clusters` + `cluster_extractor` at MTDS bundle write sites
+- These are the cluster validation wiring todos at specific file:line callsites
+- Commit per file/bundle-type changed → push → flip each checkbox
+
+**Hard stops**:
+
+- DO NOT touch `strategy_service/engine/strategies/v2/` or `engine/allocator/` — strategy-logic freeze gate
+- DO NOT run GCS backfill scripts (Phase 3.x)
+- If a Phase 2.B item requires UAC schema changes that aren't yet in UAC, stop and ping slot 1
+
+When Phase 1A+2A+2B items done: post DONE + SHA to this ping file.
