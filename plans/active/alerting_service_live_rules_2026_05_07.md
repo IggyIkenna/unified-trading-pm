@@ -115,8 +115,8 @@ Affected files / consumers when shipping:
   `_default_routing_rules` with UAC SSOT consumption
 - [alerting-service/alerting_service/circuit_breaker.py](alerting-service/alerting_service/circuit_breaker.py) — wire
   UAC threshold lookups
-- [risk-and-exposure-service/](risk-and-exposure-service/) — emit alerts using UAC closed taxonomy
-- [position-balance-monitor-service/](position-balance-monitor-service/) — same
+- `risk-and-exposure-service/` — emit alerts using UAC closed taxonomy
+- `position-balance-monitor-service/` — same
 - [execution-service/](execution-service/) — circuit-breaker subscriber + KILL_SWITCH emitter
 - [features-service/features_service/onchain/](features-service/features_service/onchain/) — emit
   `DEFI_HEALTH_FACTOR_CRITICAL`, `DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers

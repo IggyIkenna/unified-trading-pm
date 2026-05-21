@@ -46,8 +46,8 @@ priority: P2
 > integration
 >
 > - 7-layer wire-in to the post-cutover successor plan
->   [`simulation_scenarios_post_cutover_2026_06_01.md`](simulation_scenarios_post_cutover_2026_06_01.md)\*\* (NEW,
->   sibling plan, ~6-9 weeks scope including the deferred Phases 4-9 of this plan body).
+>   [`simulation_scenarios_post_cutover_2026_06_01.md`](../archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md)\*\*
+>   (NEW, sibling plan, ~6-9 weeks scope including the deferred Phases 4-9 of this plan body).
 >
 > **Pre-cutover compressed scope (~3-5 AI-days, ~15 todos)**:
 >

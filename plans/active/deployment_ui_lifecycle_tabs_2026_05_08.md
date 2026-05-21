@@ -955,6 +955,6 @@ re-shape; its completion unblocks Phase B-H + Ikenna Tab 5 audit-log integration
 > (NOT this deployment-ui plan). Cross_cutting epic deliverable #1 [BUILD] subitem implementation = enrichment of
 > existing `/api/trading/strategies/catalog` route +
 > `unified-trading-system-ui/lib/architecture-v2/catalogue-filter.ts`, per scope decision in
-> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) § "Strategy
-> catalogue UI route — scope assignment (2026-05-08, Tab 6.C)". This deployment-ui plan does not own that surface —
-> append-only banner for read symmetry across plans.
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](../archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)
+> § "Strategy catalogue UI route — scope assignment (2026-05-08, Tab 6.C)". This deployment-ui plan does not own that
+> surface — append-only banner for read symmetry across plans.

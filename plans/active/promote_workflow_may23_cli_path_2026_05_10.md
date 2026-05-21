@@ -58,9 +58,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > (CLI is the operational floor; UI is the upgrade ramp). Both paths enforce identical gates (custody connected / venue
 > keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) so either
 > selection is safe. **G23 (DART manual-trade gate)** scope split with
-> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross*cutting
-> owns \_design + DART surface*; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate enforcement_. After
-> cutover, UI evolution continues via
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](../archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)
+> #4: cross*cutting owns \_design + DART surface*; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate
+> enforcement_. After cutover, UI evolution continues via
 > [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 > Phase 9 (full pre-flight pipeline) which EXTENDS this plan's Phase U3 to the canonical UI path; CLI track persists as
 > long-term operational floor for ops/runbooks.
