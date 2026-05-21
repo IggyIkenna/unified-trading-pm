@@ -689,12 +689,20 @@ When a VM restarts:
 - [ ] VM-list config in SPA (read from registry on initial load).
 - [ ] Deploy to Firebase.
 
-### Phase 3 — safety mechanisms (3 cal AI-days)
+### Phase 3 — safety mechanisms (3 cal AI-days) ✅ DONE 2026-05-21
 
-- [ ] Implement stuck-detection per § A in `worker_liveness.py`. New env var `ORCHESTRATOR_STUCK_THRESHOLD_MINUTES=15`.
-- [ ] Implement auto-respawn flow with telegram alert.
-- [ ] Implement fresh-spawn dirty-commit per § E (replace REFUSE default with `commit_and_push`).
-- [ ] Implement git-staleness alert per § D.
+- [x] ✅ Implement stuck-detection per § A in `worker_liveness.py`. New env var
+      `ORCHESTRATOR_STUCK_THRESHOLD_MINUTES=15`. — agent-orchestrator@72b4b0a (`_maybe_auto_respawn_stuck_slot` in
+      `worker_liveness.py`)
+- [x] ✅ Implement auto-respawn flow with telegram alert. — agent-orchestrator@72b4b0a (commit+push WIP → tmux kill →
+      tmux_spawn.spawn with recovery prompt → verify within 30s; telegram `notify_agent_stuck_respawned` on success /
+      `notify_agent_stuck_escalation` on failure)
+- [x] ✅ Implement fresh-spawn dirty-commit per § E (replace REFUSE default with `commit_and_push`). —
+      agent-orchestrator@72b4b0a (new `DirtyStateResolution.COMMIT_AND_PUSH` is default; `commit_and_push_dirty_repos()`
+      in `worktree_clean_check.py`)
+- [x] ✅ Implement git-staleness alert per § D. — agent-orchestrator@72b4b0a (`_maybe_alert_git_staleness` in
+      `worker_liveness.py`; telegram `notify_git_staleness_red` fires when slot RED >15min AND cron stale >5min,
+      throttled 30min/slot)
 
 ### Phase 4 — auth failover (2 cal AI-days)
 
