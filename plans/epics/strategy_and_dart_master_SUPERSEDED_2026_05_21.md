@@ -28,12 +28,22 @@ locked_since: 2026-05-07
 assigned_vm: vm-0
 ---
 
-# Strategy + DART Master (umbrella)
+# Strategy + DART Master — SUPERSEDED 2026-05-21
 
-> **Consolidation 2026-05-07**: this umbrella folds 3 previously-standalone plans (strategy_architecture_v2_finalization
-> / dart_ux_cockpit_refactor / consolidated_strategy_and_ui) into one SSOT covering archetype lifecycle (engine v2
-> finalization), DART operator UX cockpit, and cross-domain alpha + UI walkthrough. Source plans archived with ARCHIVED
-> banner; all open todos preserved in Phase 1-3 below.
+> **⚠️ SUPERSEDED-BY 2026-05-21**: This umbrella was split into two everlasting epics per the epic consolidation:
+>
+> - **Strategy archetype + allocator + risk/position/pnl scope** → [`strategy_master.md`](strategy_master.md) (L2)
+> - **DART operator UX + promote workflow + state machine scope** →
+>   [`dart_and_promote_master.md`](dart_and_promote_master.md) (L3)
+>
+> This file is kept as **archaeology only** — DO NOT add new work here. New active plans assigned to the split scopes
+> declare `parent_epic: strategy_master` OR `parent_epic: dart_and_promote_master` in their frontmatter. Full epic-flow
+> SSOT: [`README.md`](README.md).
+
+> **Consolidation 2026-05-07** (historical): this umbrella folded 3 previously-standalone plans
+> (strategy_architecture_v2_finalization / dart_ux_cockpit_refactor / consolidated_strategy_and_ui) into one SSOT
+> covering archetype lifecycle (engine v2 finalization), DART operator UX cockpit, and cross-domain alpha + UI
+> walkthrough. Source plans archived with ARCHIVED banner; all open todos preserved in Phase 1-3 below.
 
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the audit-driven
 > promote workflow plans

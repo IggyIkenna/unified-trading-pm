@@ -1,5 +1,4 @@
----
-name: predictions-master
+---name: predictions-master
 slug: predictions_master
 date: 2026-05-07
 deadline: 2026-05-23
@@ -747,7 +746,8 @@ features predict.
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_1 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -756,6 +756,7 @@ _(no plans currently assigned at this priority)_
 ## P1 — important; post-current-gate
 
 ### [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md)
+
 **status**: open · **estimate**: 1.0 cal AI-days (class: refactor)
 
 ## P2 — useful; opportunistic

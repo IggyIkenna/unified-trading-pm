@@ -25,6 +25,18 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
 ---
 
+# SUPERSEDED 2026-05-21
+
+> **⚠️ SUPERSEDED-BY 2026-05-21**: This master was consolidated with `manifest_evolution_SUPERSEDED_2026_05_21` into a
+> single everlasting epic: [`manifest_master.md`](manifest_master.md) (L1, vm-defi).
+>
+> All open scope (manifest v8 backfill stages 0-4, sports atomic rename, MDPS placeholder cleanup, MTDS reconcilers,
+> raw-tables migration, expected-absence backfill) continues there. This file is kept as **archaeology only** — DO NOT
+> add new work here. New active plans declare `parent_epic: manifest_master` in frontmatter. Full epic-flow SSOT:
+> [`README.md`](README.md).
+
+---
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)

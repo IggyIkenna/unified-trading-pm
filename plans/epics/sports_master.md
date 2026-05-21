@@ -1,5 +1,4 @@
----
-name: sports-master
+---name: sports-master
 slug: sports_master
 date: 2026-05-07
 deadline: 2026-05-23
@@ -1028,13 +1027,15 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_5 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`d2_uac_continuity_2026_05_20`](../active/d2_uac_continuity_2026_05_20.md)
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
-**title**: D2 — UAC continuity + known-gap calendars + expected_coverage integration
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: D2 — UAC continuity + known-gap calendars +
+expected_coverage integration
 
 ## P1 — important; post-current-gate
 
@@ -1043,16 +1044,20 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)
+
 **status**: done · **estimate**: 4.8 cal AI-days (class: design)
 
 ### [`sports_scrapers_post_cutover_2026_06_01`](../active/sports_scrapers_post_cutover_2026_06_01.md)
-**status**: active · **estimate**: 20 cal AI-days (class: brand-new)
-**title**: Sports book scrapers — post-cutover successor (14 UK/EU + 2 US adapters)
+
+**status**: active · **estimate**: 20 cal AI-days (class: brand-new) **title**: Sports book scrapers — post-cutover
+successor (14 UK/EU + 2 US adapters)
 
 ### [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)
+
 **status**: active · **estimate**: 3.6 cal AI-days (class: design)
 
 ### [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)
+
 **status**: drafted · **estimate**: 24.0 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly

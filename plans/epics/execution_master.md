@@ -1,5 +1,5 @@
 ---
-name: execution_master
+ame: execution_master
 type: epic
 tier: L2
 status: active
@@ -29,5 +29,5 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
-
+_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as
+they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_

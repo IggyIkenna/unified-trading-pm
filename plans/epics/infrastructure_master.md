@@ -1,5 +1,4 @@
----
-name: infrastructure-master
+---name: infrastructure-master
 slug: infrastructure_master
 date: 2026-05-07
 deadline: 2026-05-23
@@ -424,7 +423,8 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_1 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -433,6 +433,7 @@ _(no plans currently assigned at this priority)_
 ## P1 — important; post-current-gate
 
 ### [`aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)
+
 **status**: active · **estimate**: 32 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic

@@ -1,5 +1,4 @@
----
-name: strategy_master
+---name: strategy_master
 type: epic
 tier: L2
 status: active
@@ -45,13 +44,13 @@ strategy side**:
 - **Portfolio allocator** + risk_rules + position-balance-monitor + pnl-attribution (consolidated into strategy-service
   2026-05-19).
 
-DART operator UX + promote workflow scope went to [`dart_and_promote_master.md`](dart_and_promote_master.md) (L3).
-Full archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_dart_master_SUPERSEDED_2026_05_21.md).
+DART operator UX + promote workflow scope went to [`dart_and_promote_master.md`](dart_and_promote_master.md) (L3). Full
+archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_dart_master_SUPERSEDED_2026_05_21.md).
 
 ## Codex SSOTs
 
 - [`codex/09-strategy/architecture-v2/`](../../codex/09-strategy/architecture-v2/) — strategy v2 SSOT (53 archetypes
-  + 7 axes + 11 cross-cutting + 2 architecture docs)
+  - 7 axes + 11 cross-cutting + 2 architecture docs)
 - [`codex/04-architecture/shadow-deployment-pattern.md`](../../codex/04-architecture/shadow-deployment-pattern.md) —
   shadow window contract for archetype builds
 - [`codex/11-project-management/epic-execution-with-sub-agents.md`](../../codex/11-project-management/epic-execution-with-sub-agents.md)
@@ -68,39 +67,52 @@ Full archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy
 
 ## Assigned active plans
 
-_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## Assigned active plans
+
+_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`defi_recursive_borrow_archetypes_2026_05_10`](../active/defi_recursive_borrow_archetypes_2026_05_10.md)
+
 **status**: active · **estimate**: 42.3 cal AI-days (class: design)
 
 ### [`strategy_archetype_taxonomy_2026_05_12`](../active/strategy_archetype_taxonomy_2026_05_12.md)
+
 **status**: done · **estimate**: 4.8 cal AI-days (class: design)
 
 ### [`strategy_repo_consolidation_2026_05_19`](../active/strategy_repo_consolidation_2026_05_19.md)
+
 **status**: active-cleanup-phase-11 · **estimate**: 12 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
+
 **status**: active · **estimate**: 4.8 cal AI-days (class: design)
 
 ### [`config_grid_archetype_extend_2026_05_20`](../active/config_grid_archetype_extend_2026_05_20.md)
+
 **status**: active · **estimate**: 2.4 cal AI-days (class: design)
 
 ## P2 — useful; opportunistic
 
 ### [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+
 **status**: active · **estimate**: 12 cal AI-days (class: design)
 
 ### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+
 **status**: scope-narrowed · **estimate**: 24 cal AI-days (class: brand-new)
 
 ### [`strategy_execution_contract_remediation_2026_05_20`](../active/strategy_execution_contract_remediation_2026_05_20.md)
+
 **status**: in-progress · **estimate**: 3.0 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

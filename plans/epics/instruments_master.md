@@ -1,5 +1,4 @@
----
-plan_type: meta
+---plan_type: meta
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
@@ -1058,22 +1057,24 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_3 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`d1_is_hardening_2026_05_20`](../active/d1_is_hardening_2026_05_20.md)
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
-**title**: D1 — instruments-service hardening plan
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D1 — instruments-service hardening plan
 
 ## P1 — important; post-current-gate
 
 ### [`expected_universe_v2_design_2026_05_08`](../active/expected_universe_v2_design_2026_05_08.md)
+
 **status**: active · **estimate**: 6 cal AI-days (class: design)
 
 ### [`trigger_based_reference_data_2026_04_13`](../active/trigger_based_reference_data_2026_04_13.md)
-**status**: active · **estimate**: 3 cal AI-days (class: design)
-**title**: Trigger-Based Sports Reference Data Refresh
+
+**status**: active · **estimate**: 3 cal AI-days (class: design) **title**: Trigger-Based Sports Reference Data Refresh
 
 ## P2 — useful; opportunistic
 
@@ -1082,4 +1083,3 @@ _(no plans currently assigned at this priority)_
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

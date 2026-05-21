@@ -1,5 +1,4 @@
----
-name: batch_live_symmetry_master
+---name: batch_live_symmetry_master
 type: epic
 tier: L4
 status: active
@@ -29,7 +28,8 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_2 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority
+order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -42,13 +42,14 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`available_at_schema_lift_post_cutover_2026_05_19`](../active/available_at_schema_lift_post_cutover_2026_05_19.md)
-**status**: todo · **estimate**: 5 cal AI-days (class: brand-new)
-**title**: available_at schema-level invariant lift + QG hardening (post-cutover architectural slice)
+
+**status**: todo · **estimate**: 5 cal AI-days (class: brand-new) **title**: available_at schema-level invariant lift +
+QG hardening (post-cutover architectural slice)
 
 ### [`batch_live_symmetry_2026_05_10`](../active/batch_live_symmetry_2026_05_10.md)
+
 **status**: active · **estimate**: 30 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

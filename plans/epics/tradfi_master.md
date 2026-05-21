@@ -1,5 +1,4 @@
----
-name: tradfi-master
+---name: tradfi-master
 slug: tradfi_master
 date: 2026-05-07
 deadline: 2026-05-23
@@ -634,7 +633,8 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -643,17 +643,20 @@ _(no plans currently assigned at this priority)_
 ## P1 — important; post-current-gate
 
 ### [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
-**title**: TradFi MVP — OHLCV-only Databento backfill (drop L1-L3 to post-cutover)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: TradFi MVP — OHLCV-only Databento backfill
+(drop L1-L3 to post-cutover)
 
 ## P2 — useful; opportunistic
 
 ### [`cme_polymarket_arb_2026_05_08`](../active/cme_polymarket_arb_2026_05_08.md)
+
 **status**: active · **estimate**: 15 cal AI-days (class: brand-new)
 
 ### [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
-**title**: TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi L1-L3 tick data (trades / tbbo /
+mbp_10) — restoration post-cutover
 
 ## P3 — backlog; revisit quarterly
 

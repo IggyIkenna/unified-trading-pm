@@ -1,5 +1,4 @@
----
-name: trading_agent_master
+---name: trading_agent_master
 type: epic
 tier: L2
 status: active
@@ -28,11 +27,13 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: trading_agent_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_1 active plans declare `parent_epic: trading_agent_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`trading_agent_service_architecture_unlock_2026_05_22`](../active/trading_agent_service_architecture_unlock_2026_05_22.md)
+
 **status**: in-progress · **estimate**: 3.2 cal AI-days (class: refactor)
 
 ## P1 — important; post-current-gate
@@ -46,4 +47,3 @@ _(no plans currently assigned at this priority)_
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

@@ -38,7 +38,16 @@ isProject: false
 > by re-migration risk — reviewers reject any plan that lands manifest-schema-affecting scope after the Phase 2 freeze
 > gate fires.
 
-# Manifest evolution master — schema + writer code + GCS data layout co-evolve (3-axis batch invariant)
+# Manifest evolution master — SUPERSEDED 2026-05-21
+
+> **⚠️ SUPERSEDED-BY 2026-05-21**: This master was consolidated with `manifest_migration_master_SUPERSEDED_2026_05_21`
+> into a single everlasting epic: [`manifest_master.md`](manifest_master.md) (L1, vm-defi).
+>
+> All open scope (schema v8, honest absence taxonomy, writer code, GCS data layout, IS↔MTDS contract enforcement)
+> continues there. This file is kept as **archaeology only** — DO NOT add new work here. New active plans declare
+> `parent_epic: manifest_master` in frontmatter. Full epic-flow SSOT: [`README.md`](README.md).
+
+# Manifest evolution master — schema + writer code + GCS data layout co-evolve (3-axis batch invariant) — archaeology
 
 > **🟡 SINGLE-OWNER UMBRELLA — codified 2026-05-08.** Seven previously-isolated manifest-touching plans now batch
 > through this umbrella's gates. Isolated execution is BANNED — see § "Banned anti-patterns" below. Operator direction:

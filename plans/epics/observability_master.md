@@ -1,5 +1,4 @@
----
-name: observability_master
+---name: observability_master
 type: epic
 tier: L4
 status: active
@@ -29,11 +28,13 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_2 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.md)
+
 **status**: active · **estimate**: 13.2 cal AI-days (class: design)
 
 ## P1 — important; post-current-gate
@@ -43,9 +44,9 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
+
 **status**: active · **estimate**: 2.4 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

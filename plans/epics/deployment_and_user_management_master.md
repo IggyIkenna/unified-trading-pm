@@ -1,5 +1,4 @@
----
-name: deployment_and_user_management_master
+---name: deployment_and_user_management_master
 type: epic
 tier: L3
 status: active
@@ -28,7 +27,8 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_1 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -41,9 +41,9 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`deployment_ui_lifecycle_tabs_2026_05_08`](../active/deployment_ui_lifecycle_tabs_2026_05_08.md)
+
 **status**: active · **estimate**: 30 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
-

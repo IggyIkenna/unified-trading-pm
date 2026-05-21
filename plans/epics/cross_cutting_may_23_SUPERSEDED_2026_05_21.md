@@ -13,7 +13,19 @@ status: active
 deadline: 2026-05-23
 ---
 
-# Epic — Cross-Cutting (May 23 2026)
+# Epic — Cross-Cutting (May 23 2026) — SUPERSEDED 2026-05-21
+
+> **⚠️ SUPERSEDED-BY 2026-05-21**: The everlasting workspace-wide scope (clients, strategy catalogue, UI replication,
+> infrastructure, jurisdiction, share-class, UAC schema, hardcoded-value cleanup) is absorbed into the L4 epic
+> [`client_isolation_and_governance_master.md`](client_isolation_and_governance_master.md) (extended scope) +
+> [`infrastructure_master.md`](infrastructure_master.md) (infra-specific parts) +
+> [`observability_master.md`](observability_master.md) (alerting + monitoring).
+>
+> This file is kept as **archaeology only** — DO NOT add new work here. New active plans declare the appropriate
+> `parent_epic:` (typically `client_isolation_and_governance_master` for cross-cutting governance work). Full epic-flow
+> SSOT: [`README.md`](README.md).
+
+---
 
 ## Why this epic exists
 

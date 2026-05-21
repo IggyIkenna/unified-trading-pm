@@ -1,5 +1,4 @@
----
-name: defi-master
+---name: defi-master
 slug: defi_master
 date: 2026-05-07
 owner: claude-code
@@ -1482,13 +1481,15 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_15 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`defi_protocol_outage_detector_2026_05_20`](../active/defi_protocol_outage_detector_2026_05_20.md)
-**status**: active · **estimate**: 3 cal AI-days (class: brand-new)
-**title**: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
+
+**status**: active · **estimate**: 3 cal AI-days (class: brand-new) **title**: DeFi protocol outage detector (R-NEW-6) —
+on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
 
 ## P1 — important; post-current-gate
 
@@ -1497,46 +1498,60 @@ _(no plans currently assigned at this priority)_
 ## P2 — useful; opportunistic
 
 ### [`api_keys_wallets_accounts_readiness_2026_05_10`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+
 **status**: active · **estimate**: 64.5 cal AI-days (class: design)
 
 ### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+
 **status**: active · **estimate**: 162.0 cal AI-days (class: infra)
 
 ### [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md)
+
 **status**: active · **estimate**: 15.6 cal AI-days (class: research)
 
 ### [`cross_cutting_may_23_deliverables_2026_05_08`](../active/cross_cutting_may_23_deliverables_2026_05_08.md)
+
 **status**: active · **estimate**: 30.9 cal AI-days (class: design)
 
 ### [`d8_perf_upgrade_2026_05_20`](../active/d8_perf_upgrade_2026_05_20.md)
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
-**title**: D8 — Performance upgrade plan (hot-path identification from A1)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade plan (hot-path
+identification from A1)
 
 ### [`defi_catalogue_chain_primitives_2026_05_10`](../active/defi_catalogue_chain_primitives_2026_05_10.md)
+
 **status**: active · **estimate**: 205.5 cal AI-days (class: design)
 
 ### [`features_tick_observation_audit_2026_05_18`](../active/features_tick_observation_audit_2026_05_18.md)
+
 **status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
 
 ### [`hard_schema_phase1_field_flip_migration_2026_05_19`](../active/hard_schema_phase1_field_flip_migration_2026_05_19.md)
+
 **status**: active
 
 ### [`missing_question_docs_disposition_2026_05_10`](../active/missing_question_docs_disposition_2026_05_10.md)
+
 **status**: active · **estimate**: 0.9 cal AI-days (class: design)
 
 ### [`mock_data_pipeline_benchmarking_2026_05_10`](../active/mock_data_pipeline_benchmarking_2026_05_10.md)
+
 **status**: active · **estimate**: 7.0 cal AI-days (class: design)
 
 ### [`post_freeze_roadmap_2026_05_16_to_05_23`](../active/post_freeze_roadmap_2026_05_16_to_05_23.md)
+
 **status**: active · **estimate**: 2.4 cal AI-days (class: design)
 
 ### [`ruff_workspace_cleanup_2026_05_12`](../active/ruff_workspace_cleanup_2026_05_12.md)
+
 **status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
 
 ### [`simulation_scenarios_post_cutover_2026_06_01`](../active/simulation_scenarios_post_cutover_2026_06_01.md)
+
 **status**: scheduled · **estimate**: 15.2 cal AI-days (class: infra)
 
 ### [`simulation_scenarios_topology_price_shocks_2026_05_09`](../active/simulation_scenarios_topology_price_shocks_2026_05_09.md)
+
 **status**: active · **estimate**: 20.1 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly

@@ -1,12 +1,25 @@
-version: 1
-generated_at: 2026-05-21T00:00:00Z  # bumped by regen_vm_registry.py on each commit
-# Source of truth: plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md
-# DO NOT edit manually — run scripts/orchestrator/regen_vm_registry.py to regenerate.
+# Orchestrator VM registry — SSOT for which VM owns which epic master plans.
+#
+# Source of truth: plans/epics/README.md (the 19-epic × 5-tier × 10-VM map)
+# VM topology spec:  plans/epics/orchestrator_master.md (was orchestrator_v07_multi_vm_topology_2026_05_21.md)
+# Epic flow SSOT:    plans/epics/README.md (planning VM → audit pool → wrapper plan → epic VM dispatch)
+#
+# DO NOT edit manually — run scripts/orchestrator/regen_vm_registry.py to regenerate from each epic's
+# assigned_vm: frontmatter. This file is the inverted index over those fields.
+
+version: 2
+generated_at: 2026-05-21T00:00:00Z
+schema_notes: |
+  Bumped to v2 on 2026-05-21 epic consolidation. v1 used dated epic slugs + placeholder VM stubs;
+  v2 uses everlasting epic slugs + populated master_plans per VM.
+
 vms:
-  - id: human-planning-vm
-    fqdn: api-human-planning.agent-orchestrator.odum-research.com
-    role: planning
+  # ---------- Planning VM ----------
+
+  - id: planning-vm
+    fqdn: api-planning.agent-orchestrator.odum-research.com
     ssh_host: human-planning-vm
+    role: planning
     label: "Planning (Ikenna + Harsh interactive)"
     operators: [ikenna, harsh]
     accounts:
@@ -15,13 +28,17 @@ vms:
         - ikenna@odum-research.com
         - iggy2london@gmail.com
         - harshkantariyawork@gmail.com
-    master_plans: []  # planning VM doesn't execute
+    master_plans: [] # planning VM doesn't execute — produces wrapper plans for epic VMs
+    notes: |
+      Slot 1 = Ikenna interactive (Opus 4.7 1M); slot 2 = Harsh interactive. No centralised workers.
+      Both operators see each other's chats via /api/agents/by-role/main/history view.
 
-  - id: vm-0  # agent-orchestrator-vm (existing DeFi fleet)
-    fqdn: api-vm-0.agent-orchestrator.odum-research.com
+  # ---------- L0 Asset-group VMs (5) ----------
+
+  - id: vm-defi
+    fqdn: api-defi.agent-orchestrator.odum-research.com
     role: epic
-    ssh_host: agent-orchestrator-vm
-    label: "DeFi + data-pipeline master plan fleet"
+    label: "DeFi master + manifest master (manifest backfill co-located)"
     accounts:
       primary: ikenna@odum-research.com
       failover:
@@ -29,40 +46,193 @@ vms:
         - harshkantariyawork@gmail.com
         - ikennaigboaka@gmail.com
     master_plans:
-      - plans/active/master_to_live_defi_2026_05_23.md
-      - plans/active/data_pipeline_master_coordination_2026_05_20.md
+      - plans/epics/defi_master.md
+      - plans/epics/manifest_master.md
 
-  - id: vm-defi
-    fqdn: api-vm-defi.agent-orchestrator.odum-research.com
+  - id: vm-cefi
+    fqdn: api-cefi.agent-orchestrator.odum-research.com
     role: epic
-    label: "DeFi protocols + manifest"
+    label: "CeFi master + instruments master (universe SSOT co-located)"
+    accounts:
+      primary: iggy2london@gmail.com
+      failover:
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+        - ikenna@odum-research.com
+    master_plans:
+      - plans/epics/cefi_master.md
+      - plans/epics/instruments_master.md
+
+  - id: vm-tradfi
+    fqdn: api-tradfi.agent-orchestrator.odum-research.com
+    role: epic
+    label: "TradFi master (Databento + OPRA + CME + Yahoo + FRED + ECB)"
+    accounts:
+      primary: harshkantariyawork@gmail.com
+      failover:
+        - ikennaigboaka@gmail.com
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+    master_plans:
+      - plans/epics/tradfi_master.md
+
+  - id: vm-sports
+    fqdn: api-sports.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Sports master (Sportradar + Betfair + Smarkets + GBP settlement)"
     accounts:
       primary: ikenna@odum-research.com
-    master_plans: []
+      failover:
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+    master_plans:
+      - plans/epics/sports_master.md
 
-  - id: vm-cross-cutting
-    fqdn: api-vm-cross-cutting.agent-orchestrator.odum-research.com
+  - id: vm-prediction
+    fqdn: api-prediction.agent-orchestrator.odum-research.com
     role: epic
-    label: "Cross-cutting: batch/live symmetry, observability, client isolation"
+    label: "Predictions master (Polymarket + Kalshi)"
     accounts:
-      primary: ikenna@odum-research.com
-    master_plans: []
+      primary: iggy2london@gmail.com
+      failover:
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+        - ikenna@odum-research.com
+    master_plans:
+      - plans/epics/predictions_master.md
 
-  - id: vm-operator-ops
-    fqdn: api-vm-operator-ops.agent-orchestrator.odum-research.com
+  # ---------- L1 Data pipeline (1 dedicated VM; instruments + manifest co-located on L0 VMs above) ----------
+
+  - id: vm-ml
+    fqdn: api-ml.agent-orchestrator.odum-research.com
     role: epic
-    label: "Operator ops: DART, promote workflow, deployment/user mgmt"
+    label: "MTDS/MDPS master + features+ML master (data → features → ML chain)"
     accounts:
-      primary: ikenna@odum-research.com
-    master_plans: []
+      primary: ikennaigboaka@gmail.com
+      failover:
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+    master_plans:
+      - plans/epics/mtds_mdps_master.md
+      - plans/epics/features_and_ml_master.md
+    notes: |
+      ml-service (inference + training post-consolidation 2026-05-20) co-located with MTDS/MDPS + features-service.
+      Machine type: n2-highmem-8 default; upgrades to highmem-16 / GPU per workload.
+
+  # ---------- L2 Trading core (1 VM serving 3 tightly-coupled epics) ----------
 
   - id: vm-trading-core
-    fqdn: api-vm-trading-core.agent-orchestrator.odum-research.com
+    fqdn: api-trading-core.agent-orchestrator.odum-research.com
     role: epic
-    label: "Trading core: execution, strategy, trading-agent"
+    label: "Strategy + execution + trading-agent (tightly-coupled trading machinery)"
     accounts:
       primary: ikenna@odum-research.com
-    master_plans: []
+      failover:
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+    master_plans:
+      - plans/epics/strategy_master.md
+      - plans/epics/execution_master.md
+      - plans/epics/trading_agent_master.md
+    notes: |
+      Tightly coupled: strategy emit ↔ execution consume ↔ trading-agent allocator directive loop.
+      53 archetypes + portfolio_allocator + risk/position/pnl (strategy-service post-consolidation 2026-05-19).
+      ClientWorker subprocess-per-client isolation per per_client_isolation_and_venue_fanout_topology.
 
-  # vm-1 .. vm-7 provisioned as epic scope expands (see Phase 9 of orchestrator v0.7 plan)
-  # Each commissioned VM gets an entry here + regen_vm_registry.py re-runs.
+  # ---------- L3 Operator surfaces (1 VM serving 2 epics) ----------
+
+  - id: vm-operator-ops
+    fqdn: api-operator-ops.agent-orchestrator.odum-research.com
+    role: epic
+    label: "DART + promote workflow + deployment-ui + user-management"
+    accounts:
+      primary: harshkantariyawork@gmail.com
+      failover:
+        - ikennaigboaka@gmail.com
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+    master_plans:
+      - plans/epics/dart_and_promote_master.md
+      - plans/epics/deployment_and_user_management_master.md
+    notes: |
+      DART UI + ManualTradeGateDialog + promote workflow CLI/UI; deployment-api + deployment-ui + user-management.
+      Web-stack lifecycle (Cloud Run / Cloud Scheduler) — always-on.
+
+  # ---------- L4 Cross-cutting (1 VM serving 4 epics) ----------
+
+  - id: vm-cross-cutting
+    fqdn: api-cross-cutting.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Cross-cutting: infrastructure + observability + batch=live + client isolation + governance"
+    accounts:
+      primary: iggy2london@gmail.com
+      failover:
+        - harshkantariyawork@gmail.com
+        - ikennaigboaka@gmail.com
+        - ikenna@odum-research.com
+    master_plans:
+      - plans/epics/infrastructure_master.md
+      - plans/epics/observability_master.md
+      - plans/epics/batch_live_symmetry_master.md
+      - plans/epics/client_isolation_and_governance_master.md
+    notes: |
+      Workspace-wide audit cadence; no single asset-group bias.
+      Includes: VM/tarball/per-tab/cloud provisioning; alerting-service + 3am-auto-recovery; per-service batch=live
+      audit + reconciliation; per-client subprocess isolation + funds isolation HARD RULE + jurisdiction restrictions +
+      share-class enum reconciliation + UAC schema evolution + hardcoded-value cleanup.
+
+  # ---------- L5 Meta (orchestrator self-managing) ----------
+
+  - id: vm-orchestrator
+    fqdn: api-orchestrator.agent-orchestrator.odum-research.com
+    role: epic
+    label: "Orchestrator master (the agent-orchestrator multi-VM stack itself)"
+    accounts:
+      primary: ikennaigboaka@gmail.com
+      failover:
+        - ikenna@odum-research.com
+        - iggy2london@gmail.com
+        - harshkantariyawork@gmail.com
+    master_plans:
+      - plans/epics/orchestrator_master.md
+    notes: |
+      Manages dashboard aggregation, auth failover, planning VM coordination, sub-agent spawn (per-spawn account
+      isolation per agent_orchestrator_per_spawn_account_isolation_2026_05_20).
+
+# ---------- Account-to-VM round-robin (informational; runtime selection is lowest-weekly-pct-first per failover order) ----------
+
+accounts:
+  - account_id: ikennaigboaka@gmail.com
+    label: Ikenna (personal)
+    tier: max20
+    weekly_msg_limit: 1200
+    primary_on: [planning-vm, vm-ml, vm-orchestrator]
+
+  - account_id: ikenna@odum-research.com
+    label: Ikenna (Odum work)
+    tier: max20
+    weekly_msg_limit: 1200
+    primary_on: [vm-defi, vm-sports, vm-trading-core]
+
+  - account_id: iggy2london@gmail.com
+    label: Ikenna (secondary)
+    tier: max20
+    weekly_msg_limit: 1200
+    primary_on: [vm-cefi, vm-prediction, vm-cross-cutting]
+
+  - account_id: harshkantariyawork@gmail.com
+    label: Harsh (work)
+    tier: max20
+    weekly_msg_limit: 1200
+    primary_on: [vm-tradfi, vm-operator-ops]
+
+# ---------- Cutover master (NOT an epic; orchestrated cross-VM) ----------
+cutover_master:
+  path: plans/active/master_to_live_defi_2026_05_23.md
+  notes: |
+    Dated, one-shot plan tracking May-23 live DeFi rollout across all 19 epics.
+    Archives after May-23 cutover. NOT in plans/epics/ — lives in plans/active/.
+    Cross-VM coordination point; each epic VM's main agent reads it for cross-epic readiness rollup.
