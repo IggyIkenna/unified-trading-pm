@@ -129,8 +129,9 @@ Phase 0 (✅ DONE)
 - [x] **P0. ✅ Test**: full roundtrip suite in `tests/unit/test_manifest_writer_coverage_counts.py` — all 4 statuses
       split correctly, data_type + date_range filters, empty manifest → zero counts, `compute_coverage_for_bucket` tuple
       output. 3792 passed, 2 pre-existing unrelated failures. — `unified-trading-library@8d66204`
-- [ ] **P1. Per-service docstring rule**: every service's `/api/data-status` endpoint MUST call this helper, not
-      re-implement the manifest read.
+- [x] ✅ **P1. Per-service docstring rule**: every service's `/api/data-status` endpoint MUST call this helper, not
+      re-implement the manifest read. — PM@b0b1d9915; codex doc at
+      `codex/06-coding-standards/data-status-endpoint-contract.md`; QG STEP 5.90 wired in base-service.sh.
 
 ### Phase 2 — instruments-service migration
 
