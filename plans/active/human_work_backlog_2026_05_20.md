@@ -118,6 +118,9 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    **deployment-ui VERIFIED 2026-05-21 slot-11**: @ef3406b ✅ (0 fixes needed, npm install required first)
    **unified-trading-api FIXED 2026-05-21 slot-11**: @ac8a6b9 ✅ — noqa C901 on seed_all_domains, pip-audit ignores PYSEC-2024-277/PYSEC-2025-183
    **unified-trading-system-ui FIXED 2026-05-21 slot-11**: @38f3e96e ✅ — TS errors (4 files), stale test assertions, briefings codex path, Suspense boundaries (questionnaire/reset-password/verify-email)
+   **e2e-testing FIXED 2026-05-21 slot-11**: @24daef0 ✅ — add ruff dep, noqa C901 (5 integration tests), pip-audit ignores PYSEC-2024-277/PYSEC-2025-183/PYSEC-2026-87, ruff autoformat
+   **system-integration-tests VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **ibkr-gateway-infra VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
