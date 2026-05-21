@@ -1,3 +1,10 @@
+## [slot-2 ACK] 2026-05-21 — Code Freeze ACK
+
+[2026-05-21 UTC] slot-2 ACK — CODE FREEZE received. Holding all pushes to `live-defi-rollout`. Tab-branch work only
+until UNFREEZE broadcast. No in-flight code changes pending on this slot.
+
+---
+
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
 > §Slot 2 and the spawn prompt from operator. History below is audit-trail only.
 
@@ -23,7 +30,10 @@ epic; (7) commit `docs(plans): archive <slug>` + push.
 
 **Ack**: When done, append `[2026-05-21 HH:MM UTC] slot-2 DONE — archived N plans, epics updated` to this file.
 
-[2026-05-21 UTC] slot-2 DONE — archive sweep: all 3 plans already archived + wave3x_track_d banner + both work_splits archived by prior session. writegate Phase 2.C also SHIPPED this session: fixture_lineups/player_stats stubs wired, _ensure_timestamp deleted, _FETCH_COMPLETED_AT cache added, 14-table available_at stamping wired, QG exit 0 — features-service@47bf1984, PM@ac7c4942.
+[2026-05-21 UTC] slot-2 DONE — archive sweep: all 3 plans already archived + wave3x_track_d banner + both work_splits
+archived by prior session. writegate Phase 2.C also SHIPPED this session: fixture_lineups/player_stats stubs wired,
+\_ensure_timestamp deleted, \_FETCH_COMPLETED_AT cache added, 14-table available_at stamping wired, QG exit 0 —
+features-service@47bf1984, PM@ac7c4942.
 
 ---
 
