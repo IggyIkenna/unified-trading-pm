@@ -138,9 +138,10 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    2026-05-20 per coordinator Phase 1 GREEN). Est: 5 cal-AI-days.
    **SCRIPT READY 2026-05-21 slot-11**: deployment-service@de78a42 — `scripts/aws/migrate-bucket-names-unified-to-canonical.sh` ships 61 rename pairs; dry-run verified (152,161 dex-pools + 68,703 dex-swaps + 30,114 evm-defi + 5,037 solana-defi objects to sync; all target buckets confirmed existing). EXECUTION GATED on coordinator Phase 2 (CODE FREEZE, operator action) → Phase 3 (drain) → Phase 4 (GCS migration GREEN). Pass `--phase4-green --apply` when gate clears.
 
-10. **HUMAN-HARSH-PHASE-6-DOCKER-VM-FLEET-REDEPLOY** — Phase 6 of coordinator: Docker image build + writer fleet VM
+10. ✅ **HUMAN-HARSH-PHASE-6-DOCKER-VM-FLEET-REDEPLOY** — Phase 6 of coordinator: Docker image build + writer fleet VM
     restart so steady-state writers produce v8 rows. Composes with: `writegate_honest_coverage_endtoend_2026_05_06.md` §
     Phase 7.A. Verification: 100 newest manifest rows per bucket sampled, ALL at `schema_version=8`. Est: 2 cal-AI-days.
+    **SCRIPTS READY 2026-05-21 slot-11**: deployment-service@71b9855 (phase3-drain) + deployment-service@ac97607 (phase6-restart). Phase 7.A audit: MANIFEST_SCHEMA_VERSION=8 confirmed in UTL@c205166fb012; consolidator keep="last" verified (new v8 wins); legacy NULL rows source identified (_backfill_columns sets schema_version=1). All service tarballs rebuilt and uploaded to GCS (2026-05-21 14:32Z): UAC@28ac3cde + UTL@c205166f + MTDS@54f46cab + instruments@3d8816465 + MDPS@f8fb8485 + ml@29cc7b20 + strategy@b24556a9 + execution@6b2a186d + pnl-attribution@b54c4f5a + risk-exposure@878da65d + position-balance@775d6ef7 + batch-live-recon@36fffbd8. EXECUTION GATED on Phase 2 CODE FREEZE (operator) → Phase 3 drain (`--apply`) → Phase 4 GCS → Phase 5 AWS (`--phase4-green --apply`) → Phase 6 restart (`--phase5-green --apply`).
 
 11. **HUMAN-HARSH-PHASE-7A-SCHEMA-MIGRATION** — Phase 7 SCHEMA half of coordinator (Phase 7b triage is Ikenna's).
     Migrate every v<8 row → v8 schema mechanically. Composes with: `d3_manifest_v8_finish_2026_05_20.md` +
