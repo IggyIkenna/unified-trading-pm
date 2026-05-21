@@ -154,41 +154,48 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
       protocols with only on-chain reads (no REST): document with `<protocol>/mocks/onchain_<call>.yaml` capturing the
       canonical contract call + decoded response. — **ALL 28 protocols covered across 3 slots**
   - ✅ **slot 4 DONE** (uac@31cb6a5 + uac@66ffe71 2026-05-20): yield/restaking cluster 16/16 covered —
-    Ethena/Pendle/Beefy/Yearn/Convex/Karak/Symbiotic/Idle (defillama/yields.yaml existing),
-    Puffer/EtherFi/Solblaze (defillama/coins_historical.yaml new), Morpho (morpho_blue_api/markets.yaml),
-    EigenLayer (BLOCKED-CREDENTIALS stub), Solayer/Cambrian/Picasso/Sky (BLOCKED-NO-ADAPTER stubs + orphan allowlist).
-  - ✅ **slot 2 DONE** (uac@58ac508 2026-05-21): lending cluster 6/6 covered — Aave V3 (thegraph/mocks/aave_v3_reserves.yaml
-    pre-existing), Compound V3 (thegraph/mocks/compound_v3_markets.yaml new), Spark (thegraph/mocks/spark_markets.yaml new),
-    Curve (curve_fi/mocks/pools.yaml — api.curve.finance/v1/getPools/ethereum/main),
-    Euler V2 (euler_v2/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, EVM eth_call pattern documented),
-    Venus (venus/mocks/onchain_lending_market.yaml — BLOCKED-NO-DIRECT-REST-API, BNB Chain RPC pattern documented).
-  - ✅ **slot 2 (LST cluster) DONE** (uac@5f6446b 2026-05-21): LST cluster 8/8 covered — Lido (lido/mocks/steth_apr.yaml —
-    api.lido.fi/v1/protocol/steth/apr/last), Jito/JitoSOL (jito/mocks/stake_pool_stats.yaml — kobe.mainnet.jito.network),
-    Marinade/mSOL (marinade/mocks/msol_apy.yaml — api.marinade.finance/msol/apy/30d+365d),
+    Ethena/Pendle/Beefy/Yearn/Convex/Karak/Symbiotic/Idle (defillama/yields.yaml existing), Puffer/EtherFi/Solblaze
+    (defillama/coins_historical.yaml new), Morpho (morpho_blue_api/markets.yaml), EigenLayer (BLOCKED-CREDENTIALS stub),
+    Solayer/Cambrian/Picasso/Sky (BLOCKED-NO-ADAPTER stubs + orphan allowlist).
+  - ✅ **slot 2 DONE** (uac@58ac508 2026-05-21): lending cluster 6/6 covered — Aave V3
+    (thegraph/mocks/aave_v3_reserves.yaml pre-existing), Compound V3 (thegraph/mocks/compound_v3_markets.yaml new),
+    Spark (thegraph/mocks/spark_markets.yaml new), Curve (curve_fi/mocks/pools.yaml —
+    api.curve.finance/v1/getPools/ethereum/main), Euler V2 (euler_v2/mocks/onchain_lending_market.yaml —
+    BLOCKED-NO-DIRECT-REST-API, EVM eth_call pattern documented), Venus (venus/mocks/onchain_lending_market.yaml —
+    BLOCKED-NO-DIRECT-REST-API, BNB Chain RPC pattern documented).
+  - ✅ **slot 2 (LST cluster) DONE** (uac@5f6446b 2026-05-21): LST cluster 8/8 covered — Lido (lido/mocks/steth_apr.yaml
+    — api.lido.fi/v1/protocol/steth/apr/last), Jito/JitoSOL (jito/mocks/stake_pool_stats.yaml —
+    kobe.mainnet.jito.network), Marinade/mSOL (marinade/mocks/msol_apy.yaml — api.marinade.finance/msol/apy/30d+365d),
     RocketPool/rETH (rocket_pool/mocks/onchain_reth.yaml — BLOCKED-NO-DIRECT-REST-API, pure static IS adapter, APY via
-    defillama/yields.yaml project:rocket-pool), Sanctum/INF/jupSOL/laineSOL
-    (sanctum/mocks/lst_static_registry.yaml — pure static IS adapter, capability stub),
-    Coinbase cbETH (covered by defillama/yields.yaml project:coinbase-wrapped-staked-eth pre-existing).
+    defillama/yields.yaml project:rocket-pool), Sanctum/INF/jupSOL/laineSOL (sanctum/mocks/lst_static_registry.yaml —
+    pure static IS adapter, capability stub), Coinbase cbETH (covered by defillama/yields.yaml
+    project:coinbase-wrapped-staked-eth pre-existing).
 
 **DeFi `arbitrage_price_dispersion`** (~9 DEXes):
 
 - [x] ✅ [SCRIPT] P1. REST/GraphQL cassette per: Uniswap V3, Curve (pools), Balancer, Sushi, PancakeSwap (via thegraph),
-      Phoenix, Orca, Raydium, Drift, Lifinity (Solana). — **ALL 10 DEX venues covered (9 new dirs + 2 TheGraph subgraph cassettes + Jupiter)**
-  - ✅ **slot 2 (DEX cluster) DONE** (uac@dd6d325 2026-05-21): Balancer (balancer/mocks/pools.yaml — api-v3.balancer.fi/graphql),
-    Orca (orca/mocks/whirlpool_list.yaml — api.mainnet.orca.so/v1/whirlpool/list),
-    Raydium (raydium/mocks/pools_info.yaml — api-v3.raydium.io/pools/info/list),
-    Drift (drift/mocks/markets.yaml — data.api.drift.trade/stats/markets),
-    Lifinity (lifinity/mocks/pools.yaml — api.lifinity.io/pools),
-    Phoenix (phoenix/mocks/markets.yaml — BLOCKED-UPSTREAM-OUTAGE api.phoenix.trade/markets deprecated 2026-05-15),
-    Jupiter (jupiter/mocks/tokens.yaml — tokens.jup.ag/tokens?tags=strict),
-    SushiSwap V3 (thegraph/mocks/sushiswap_v3_pools.yaml — gateway.thegraph.com subgraph 2tGWMrDha4164KkFAfkU3rDCtuxGb4q1emXmFdLLzJ8x),
-    PancakeSwap V3 (thegraph/mocks/pancakeswap_v3_pools.yaml — gateway.thegraph.com subgraph CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS).
-    Note: Uniswap V3 + Curve covered by pre-existing thegraph/mocks/uniswap_v3_pools.yaml + curve_fi/mocks/pools.yaml (slot 4/prior).
+      Phoenix, Orca, Raydium, Drift, Lifinity (Solana). — **ALL 10 DEX venues covered (9 new dirs + 2 TheGraph subgraph
+      cassettes + Jupiter)**
+  - ✅ **slot 2 (DEX cluster) DONE** (uac@dd6d325 2026-05-21): Balancer (balancer/mocks/pools.yaml —
+    api-v3.balancer.fi/graphql), Orca (orca/mocks/whirlpool_list.yaml — api.mainnet.orca.so/v1/whirlpool/list), Raydium
+    (raydium/mocks/pools_info.yaml — api-v3.raydium.io/pools/info/list), Drift (drift/mocks/markets.yaml —
+    data.api.drift.trade/stats/markets), Lifinity (lifinity/mocks/pools.yaml — api.lifinity.io/pools), Phoenix
+    (phoenix/mocks/markets.yaml — BLOCKED-UPSTREAM-OUTAGE api.phoenix.trade/markets deprecated 2026-05-15), Jupiter
+    (jupiter/mocks/tokens.yaml — tokens.jup.ag/tokens?tags=strict), SushiSwap V3 (thegraph/mocks/sushiswap_v3_pools.yaml
+    — gateway.thegraph.com subgraph 2tGWMrDha4164KkFAfkU3rDCtuxGb4q1emXmFdLLzJ8x), PancakeSwap V3
+    (thegraph/mocks/pancakeswap_v3_pools.yaml — gateway.thegraph.com subgraph
+    CJYGNhb7RvnhfBDjqpRnD3oxgyhibzc7fkAMa38YV3oS). Note: Uniswap V3 + Curve covered by pre-existing
+    thegraph/mocks/uniswap_v3_pools.yaml + curve_fi/mocks/pools.yaml (slot 4/prior).
 
 **CeFi venues lacking cassette**:
 
-- [ ] [SCRIPT] P1. REST cassette per: kraken-spot, kraken-futures (in CLAUDE.md perp-funding list), pacifica, extended
-      (api.starknet.extended.exchange — Cayman venue).
+- [x] ✅ [SCRIPT] P1. REST cassette per: kraken-spot, kraken-futures (in CLAUDE.md perp-funding list), pacifica, extended
+      (api.starknet.extended.exchange — Cayman venue). — **ALL 4 CeFi blind spots covered (uac@2f9b8a2)**
+  - ✅ **slot 2 (CeFi blind spots) DONE** (uac@2f9b8a2 2026-05-21): kraken (kraken/mocks/ticker.yaml —
+    api.kraken.com/0/public/Ticker), kraken_futures (kraken_futures/mocks/tickers.yaml —
+    futures.kraken.com/derivatives/api/v3/tickers), pacifica (pacifica/mocks/funding_rate_history.yaml —
+    api.pacifica.fi/api/v1/funding_rate/history), extended (extended/mocks/markets.yaml —
+    api.starknet.extended.exchange/api/v1/info/markets).
 
 **Sports / Prediction**:
 
@@ -201,8 +208,13 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 
 **Execution / infra**:
 
-- [ ] [SCRIPT] P1. Copper (`api.copper.co`, `api.sandbox.copper.co`), Tenderly (`api.tenderly.co`), Socket
-      (`api.socket.tech`), Circle CCTP (`iris-api.circle.com`) — at least 1 read-only endpoint cassette each.
+- [x] ✅ [SCRIPT] P1. Copper (`api.copper.co`, `api.sandbox.copper.co`), Tenderly (`api.tenderly.co`), Socket
+      (`api.socket.tech`), Circle CCTP (`iris-api.circle.com`) — at least 1 read-only endpoint cassette each. — **ALL 4 infra services covered (uac@2f9b8a2)**
+  - ✅ **slot 2 (Execution/infra) DONE** (uac@2f9b8a2 2026-05-21): copper (copper/mocks/wallet_balances.yaml —
+    capability-declaration-only BLOCKED-CREDENTIALS June-1), tenderly (tenderly/mocks/create_vnet.yaml —
+    capability-declaration-only auth required), socket (socket/mocks/bridge_quote.yaml —
+    capability-declaration-only BLOCKED-CREDENTIALS socket-api-key), circle_cctp
+    (circle_cctp/mocks/attestation.yaml — iris-api.circle.com/v1/attestations, public endpoint).
 
 ### Phase 4 — WS cassettes for the 19+ missing live connectors (~1.5 days, NO DEFERRALS)
 
