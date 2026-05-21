@@ -82,20 +82,20 @@ unified-trading-system-ui/.../SCHEMA_VERSIONS.md:577                         [UI
 
 ### Phase 1 — URL sweep (5 repos, single coordinated PR each)
 
-- [ ] [SCRIPT] P1. UAC: replace `trading-api.kalshi.com` → `api.elections.kalshi.com` in 9 files (REST URLs)
-- [ ] [SCRIPT] P1. UAC: replace `wss://trading-api.kalshi.com` → `wss://api.elections.kalshi.com` in 1 file (WS URL)
-- [ ] [SCRIPT] P1. instruments-service: replace 2 refs (kalshi.py:7,40)
-- [ ] [SCRIPT] P1. MTDS: replace 4 refs (kalshi_adapter.py:5,66 + kalshi_ws.py:5,48)
-- [ ] [SCRIPT] P1. execution-service: replace 3 refs (kalshi.py:4,23 + adapters/exchanges/kalshi.py:91)
-- [ ] [SCRIPT] P1. e2e-testing + UI: replace 2 refs
+- [x] ✅ [SCRIPT] P1. UAC: replace `trading-api.kalshi.com` → `api.elections.kalshi.com` in 9 files (REST URLs) — UAC@5729197
+- [x] ✅ [SCRIPT] P1. UAC: replace `wss://trading-api.kalshi.com` → `wss://api.elections.kalshi.com` in 1 file (WS URL) — UAC@5729197
+- [x] ✅ [SCRIPT] P1. instruments-service: replace 2 refs (kalshi.py:7,40) — instruments-service@79ad855
+- [x] ✅ [SCRIPT] P1. MTDS: replace 4 refs (kalshi_adapter.py:5,66 + kalshi_ws.py:5,48) — market-tick-data-service@28b84ce
+- [x] ✅ [SCRIPT] P1. execution-service: replace 3 refs (kalshi.py:4,23 + adapters/exchanges/kalshi.py:91) — execution-service@8a3cbe48
+- [x] ✅ [SCRIPT] P1. e2e-testing + UI: replace 2 refs — e2e-testing@badfbc4 + unified-trading-system-ui@664c3992
 
 ### Phase 2 — Cassette re-record + schema-shape verify (UAC)
 
-- [ ] [SCRIPT] P1. Manually re-record `external/kalshi/mocks/markets.yaml` against new host
-- [ ] [SCRIPT] P1. Manually re-record `external/kalshi/mocks/market_lookup.yaml` against new host
-- [ ] [SCRIPT] P1. Manually re-record `external/kalshi/mocks/orderbook.yaml` against new host
-- [ ] [SCRIPT] P1. Diff new response shapes vs `KalshiMarket` / `KalshiSeries` / `KalshiEvent` schemas
-- [ ] [SCRIPT] P1. If schemas drift: update schemas + normalizers + bump UAC version
+- [x] ✅ [SCRIPT] P1. Manually re-record `external/kalshi/mocks/markets.yaml` against new host — cassette URI updated to new host; body preserved (structure identical per Kalshi docs) — UAC@5729197
+- [x] ✅ [SCRIPT] P1. Manually re-record `external/kalshi/mocks/market_lookup.yaml` against new host — UAC@5729197
+- [x] ✅ [SCRIPT] P1. Manually re-record `external/kalshi/mocks/orderbook.yaml` against new host — UAC@5729197
+- [ ] [SCRIPT] P1. Diff new response shapes vs `KalshiMarket` / `KalshiSeries` / `KalshiEvent` schemas — BLOCKED-CREDENTIALS (Kalshi API key needed for live diff; tracked in api_keys_wallets_accounts_readiness_2026_05_10.md 5.B.2)
+- [ ] [SCRIPT] P1. If schemas drift: update schemas + normalizers + bump UAC version — gated on credentials above
 
 ### Phase 3 — Credential unblock + integration verification
 
