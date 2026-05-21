@@ -141,10 +141,10 @@ Deferred items:
 
 ### wave3x_track_d_implementation_2026_05_19 — status field only
 
-- [ ] [DOCS] P1. Confirm `wave3x_track_d_implementation_2026_05_19.md` frontmatter has `status: active` and add a
+- [x] ✅ [DOCS] P1. Confirm `wave3x_track_d_implementation_2026_05_19.md` frontmatter has `status: active` and add a
       `> **All items [DEFERRED-POST-CUTOVER] per operator decision. No agent work until post-2026-05-23.**` banner at
-      top if not already present. No code. No archive.
-- [ ] [FLIP] P1. Commit + push.
+      top if not already present. No code. No archive. — PM@d8abeb52a
+- [x] ✅ [FLIP] P1. Commit + push. — PM@d8abeb52a
 
 ### Work-split archive (after all other slots complete and ping DONE)
 
