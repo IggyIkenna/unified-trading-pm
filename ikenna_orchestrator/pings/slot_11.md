@@ -150,3 +150,26 @@ Main blocker: chunking support (VM_CHUNK_DAYS or staged runner scripts) for MTDS
 
 **Status**: O-18 complete. Full startup-script-url migration (O-1 full) is next work in this plan.
 Awaiting operator direction on which phase to tackle first (recommend Phase 1 MTDS — largest group, clearest blocker).
+
+---
+
+## [2026-05-21] slot-11 — Phase 1 P1 DONE: all 8 remaining MTDS variant launchers converted to Pattern A
+
+**deployment-service@330c770** — all 8 MTDS variant launchers now Pattern A:
+
+| Launcher | VM_TASK | Handler |
+| --- | --- | --- |
+| dex-pools | `defi-backfill` | generic (`collect-dex-pools`) |
+| eigenlayer-rewards | `defi-backfill` | generic (`collect-eigenlayer-rewards`) |
+| liquidations | `defi-backfill` | generic (`collect-liquidations`) |
+| perp-funding | `defi-backfill` | generic (`collect-perp-funding`) |
+| solana-drift | `solana-drift-backfill` | new dedicated handler; passes `--solana-protocols drift --solana-drift-backfill --solana-drift-market $VM_DRIFT_MARKET` |
+| solana-gas | `solana-gas-backfill` | new dedicated handler; exports `GAS_FEE_SOLANA=true` + `--gas-fee-chains 99999` |
+| sports-odds | `mtds-backfill` | existing chunked handler; `VM_ASSET_GROUP=SPORTS` + `VM_TIER` |
+| gas-fees-fleet | `defi-backfill` | generic with new `VM_GAS_FEE_CHAINS` + `VM_GAS_FEE_SAMPLE_INTERVAL` keys |
+
+`setup-data-pipeline-vm.sh` additions: `solana-drift-backfill` handler, `solana-gas-backfill` handler, `VM_GAS_FEE_CHAINS` + `VM_GAS_FEE_SAMPLE_INTERVAL` support in generic handler.
+
+**Plan**: [`vm_launcher_startup_url_migration_2026_05_21.md`](../plans/active/vm_launcher_startup_url_migration_2026_05_21.md) Phase 1 P1 checkbox flipped.
+
+**Remaining Phase 1**: QG smoke test (P0) still pending. Phase 2 (instruments launchers) and Phase 3 (sports/prediction/migration) not yet started.

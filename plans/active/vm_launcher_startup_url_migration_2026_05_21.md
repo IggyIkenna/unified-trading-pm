@@ -45,9 +45,12 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
 - [x] ✅ [SCRIPT] P0. **Convert `launch-mtds-backfill-vm.sh`** to Pattern A. startup-script-url set, Steps 1+2
       removed, singleton lock added, all backfill params passed as metadata. — deployment-service@2f49bad
 
-- [ ] [SCRIPT] P1. **Convert remaining 8 MTDS variant launchers** (`launch-mtds-{dex-pools,eigenlayer,gas-fees-fleet,
-      liquidations,perp-funding,solana-drift,solana-gas,sports-odds}-backfill-vm.sh`). Each sets appropriate
-      `VM_ASSET_GROUP` + `VM_TASK=mtds-backfill`.
+- [x] ✅ [SCRIPT] P1. **Convert remaining 8 MTDS variant launchers** (`launch-mtds-{dex-pools,eigenlayer,gas-fees-fleet,
+      liquidations,perp-funding,solana-drift,solana-gas,sports-odds}-backfill-vm.sh`). DeFi-specific ones use
+      `VM_TASK=defi-backfill` + `VM_OPERATION`; solana-drift/solana-gas use new dedicated handlers in
+      `setup-data-pipeline-vm.sh`; sports-odds uses `VM_TASK=mtds-backfill` + `VM_ASSET_GROUP=SPORTS`;
+      gas-fees-fleet uses generic handler with new `VM_GAS_FEE_CHAINS`/`VM_GAS_FEE_SAMPLE_INTERVAL` metadata keys.
+      — deployment-service@330c770
 
 - [ ] [SCRIPT] P0. **QG smoke**: launch one MTDS backfill VM with `--dry-run` equivalent (short date range on
       staging). Verify startup-script-url is fetched, vm_mtds_backfill.sh runs, heartbeat daemon starts, manifest
