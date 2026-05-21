@@ -37,7 +37,7 @@ related_plans:
   - hard_schema_phase1_field_flip_migration_2026_05_19.md
   - honest_coverage_formula_consolidation_2026_05_19.md
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-  - canary_coverage_qg_enforcement_2026_05_20.md
+  - archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md  # ✅ ARCHIVED 2026-05-21 (all 20/20 items done)
   - deployment_ui_lifecycle_tabs_2026_05_08.md
   - issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
