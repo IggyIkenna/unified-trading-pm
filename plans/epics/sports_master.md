@@ -14,7 +14,7 @@ locked_since: 2026-05-07
 related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
   - ../archive/2026_05/hard_schema_enforcement_2026_05_08.md
-  - ../active/sports_scrapers_post_cutover_2026_06_01.md
+  - ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md
   - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
   - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
 ---
@@ -207,10 +207,11 @@ Closes:
   deletion + 4-row rewrite).
 
 **Successor plan (2026-05-14)**:
-[`plans/active/sports_scrapers_post_cutover_2026_06_01.md`](../active/sports_scrapers_post_cutover_2026_06_01.md) —
-`BLOCKED-OPERATOR-DECISION`; CREDENTIAL APPROVAL REQUEST pre-filled per CLAUDE.md "External Data Is Always Available"
+[`plans/archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md`](../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md)
+— `BLOCKED-OPERATOR-DECISION`; CREDENTIAL APPROVAL REQUEST pre-filled per CLAUDE.md "External Data Is Always Available"
 HARD RULE. Status cross-linked to `master_to_live_defi_2026_05_23.md` § "Workspace-coordination + post-cutover successor
-plans" (PM@`82d73711`).
+plans" (PM@`82d73711`). **ARCHIVED 2026-05-21 — all 4 items DEFERRED-POST-CUTOVER; activates post-2026-06-01 when
+operator acks account provisioning.**
 
 ## Current state (2026-05-07)
 
@@ -1038,10 +1039,10 @@ _(no plans currently assigned at this priority)_
 
 **status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all 7 todos shipped; deferred P3 items migrated to `tradfi_master.md`
 
-### [`sports_scrapers_post_cutover_2026_06_01`](../active/sports_scrapers_post_cutover_2026_06_01.md)
+### [`sports_scrapers_post_cutover_2026_06_01`](../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md)
 
-**status**: active · **estimate**: 20 cal AI-days (class: brand-new) **title**: Sports book scrapers — post-cutover
-successor (14 UK/EU + 2 US adapters)
+**status**: ✅ ARCHIVED 2026-05-21 — BLOCKED-OPERATOR-DECISION; all phases DEFERRED-POST-CUTOVER-2026-06-01+; activates
+on operator account-provisioning ack · **estimate**: 20 cal AI-days (class: brand-new)
 
 ### [`wave3x_residual_ssots_2026_05_08`](../archive/wave3x_residual_ssots_2026_05_08.plan.md)
 
