@@ -84,8 +84,14 @@ that plan was written (2026-05-09):
 - [x] ✅ [AGENT] P0. Fix `deployment-service/scripts/rebuild_sports_manifest.py` — update schema_version constant to 8
   - DS@abf0a31: only reference was stale docstring saying `schema_version=3`; script writes via `ManifestWriter`
     which uses `MANIFEST_SCHEMA_VERSION = 8`; docstring updated; DS QG ✅ ALL QUALITY GATES PASSED
-- [ ] [AGENT] P1. Sweep 25 files with legacy-fallback patterns
+- [x] ✅ [AGENT] P1. Sweep 25 files with legacy-fallback patterns
       (`find . -type f -name '*.py' | xargs grep -l 'schema_version.*[0-7]'`); update to v8 unconditional
+  - Scanned workspace; real writer-side hardcodes in 5 locations across IS + MTDS:
+    `rescan_sports_manifest.py` (v4), `reconcile_manifest_from_per_league_parquets.py` (v5),
+    `rescan_sports_fixtures_canonical.py` (v5), `migrate_bare_to_per_league.py` (v5) — all bumped to v8;
+    IS@a760e99 QG ✅. `reconcile_market_tick_manifest.py` (2× v5, attempted_failed + captured) — bumped to v8;
+    MTDS@24dd75f QG ✅. Remaining grep hits were: config semver "1.0" (API schema, not manifest int),
+    test files, reader-side stale-detection (intentional), historical migration scripts reading v<8 data.
 - [ ] [AGENT] P0. Fix `execution-service` live path: replace `ManifestWriter.add()` with
       `ManifestWriter.record_captured()` + v8 fields (C10 finding)
 
