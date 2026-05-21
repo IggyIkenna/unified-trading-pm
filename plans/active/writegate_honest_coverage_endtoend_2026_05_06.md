@@ -58,7 +58,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 | 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
 | 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
 | 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
-| 2.C — features-sports stamping                                              | ❌         | coaches/rounds ✅ (features-service@842ff741); open: fixture_lineups + fixture_player_stats + per-table available_at                                                                                        |
+| 2.C — features-sports stamping                                              | ✅ partial | fixture_lineups + fixture_player_stats + _ensure_timestamp delete + _FETCH_COMPLETED_AT cache + available_at stamping — features-service@47bf1984; open: per-table unit test + integration test            |
 | 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
 | 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
 | 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
@@ -1582,16 +1582,16 @@ grep.
 
 #### Phase 2.C prerequisites — wire export stubs (amendment E)
 
-- [ ] [SCRIPT] P0. **Wire `fixture_lineups` stub.** `_fetch_runner.py:171` reads GCS lineup data but **discards it** (no
+- [x] [SCRIPT] P0. **Wire `fixture_lineups` stub.** `_fetch_runner.py:171` reads GCS lineup data but **discards it** (no
       `_fetched_fixture_lineups` cache). `export_fixture_lineups()` at `exporters/exports.py:70-71` always returns
       `_empty_df`. Fix: (i) add `_fetched_fixture_lineups: list[dict]` module-level cache in `_fetch_runner.py`; (ii)
       populate in `_load_event_entities` from the `gcs_data["fixture_lineups"]` already being read; (iii) add
       `get_fetched_fixture_lineups()` accessor; (iv) implement `export_fixture_lineups()` using it. Then switch
       `fixture_lineups` out of `_POST_MATCH_TABLES` (currently incorrect rule applied) into the kickoff-offset stamping
-      path (`stamp_available_at_kickoff_offset(kickoff_col="kickoff_utc",     minutes=60)`).
-- [ ] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173` logs
+      path (`stamp_available_at_kickoff_offset(kickoff_col="kickoff_utc",     minutes=60)`). ✅ features-service@47bf1984
+- [x] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173` logs
       row count but never stores. `export_fixture_player_stats()` returns empty. Fix: add `_fetched_player_stats`
-      cache + accessor + real export. Stamping stays as `post_match` once wired.
+      cache + accessor + real export. Stamping stays as `post_match` once wired. ✅ features-service@47bf1984
 - [x] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
       empty; no source fetch is implemented anywhere in `_fetch_runner.py`. Decide: (a) implement an
       `api_football /coachs` endpoint fetch path, OR (b) explicitly mark `coaches` as deferred + emit
@@ -1609,13 +1609,13 @@ grep.
 
 #### Phase 2.C body — `available_at` stamping migration (post-amendments)
 
-- [ ] [SCRIPT] P0. Delete `_ensure_timestamp` from `cli/handlers/batch_handler.py:146` AND `cli/batch_write.py:38`. No
-      shim, no fallback.
-- [ ] [SCRIPT] P0. Replace 4 `_ensure_timestamp` callsites in `batch_handler.py:383, 465, 528, 597` (and 1 in
+- [x] [SCRIPT] P0. Delete `_ensure_timestamp` from `cli/handlers/batch_handler.py:146` AND `cli/batch_write.py:38`. No
+      shim, no fallback. ✅ features-service@47bf1984
+- [x] [SCRIPT] P0. Replace 4 `_ensure_timestamp` callsites in `batch_handler.py:383, 465, 528, 597` (and 1 in
       `batch_write.py:88`) with the appropriate `availability_stamping.stamp_available_at_*` call per
-      `UAC.AVAILABILITY_AT_SEMANTICS`.
-- [ ] [SCRIPT] P0. For each of the 14 `TABLE_TO_EXPORT` entries in `cli/handlers/batch_handler.py:76-91`, wire
-      write-time `available_at` stamping per UAC semantic (rules amended per audit findings 2026-05-06): - `fixtures` →
+      `UAC.AVAILABILITY_AT_SEMANTICS`. ✅ features-service@47bf1984
+- [x] [SCRIPT] P0. For each of the 14 `TABLE_TO_EXPORT` entries in `cli/handlers/batch_handler.py:76-91`, wire
+      write-time `available_at` stamping per UAC semantic ✅ features-service@47bf1984 (rules amended per audit findings 2026-05-06): - `fixtures` →
       `stamp_available_at_offset(df, "kickoff_utc", offset=-7d)` — **synthesis-only** since no source exposes
       announcement time (amendment B). Document `kickoff−7d` as canonical proxy until upstream source enrichment plan
       lands. - `fixture_stats`, `fixture_player_stats` →
@@ -1631,17 +1631,17 @@ grep.
       `sports_forward_poll_timestamps_2026*<TBD>.md`).     - 8 reference tables → `stamp_available_at_explicit(df,
       fetch_completed_at)`where `fetch_completed_at`    comes from`\_FETCH_COMPLETED_AT[table_name]` cache populated at
       fetch time.
-- [ ] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in `_fetch_runner.py` (verified
+- [x] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in `_fetch_runner.py` (verified
       location via audit 2026-05-06; currently does not exist). Populate inside each `run_fetch_*` for the 8 reference
       tables at the moment the GCS read returns. Accessor: `get_fetch_completed_at(table_name) -> datetime`. Today's
       `datetime.now(UTC)` at stamp time is architecturally safe (slightly pessimistic — run-start, not per-entity fetch
-      finish) but will be replaced by precise per-entity timestamps after this work lands.
+      finish) but will be replaced by precise per-entity timestamps after this work lands. ✅ features-service@47bf1984
 - [ ] [TEST] P0. Per-table unit test: build a fixture row → call export → assert `available_at` column present + matches
       semantic + would pass `LookaheadBiasError` for a feature at `kickoff − 24h` window.
 - [ ] [TEST] P0. Integration test: run batch over 1 day × 1 league × all 14 tables; assert manifest reflects honest
       verbs; assert `available_at` populated on every parquet; assert no row has `available_at > kickoff_utc + 4h`
       (sanity bound for post-match).
-- [ ] [QG] P0. features-sports quality-gates.sh green.
+- [x] [QG] P0. features-sports quality-gates.sh green. ✅ exit 0 features-service@47bf1984
 
 ### Phase 2.D — instruments-service sports schema bumps + write-time stamping
 
