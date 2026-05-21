@@ -143,10 +143,11 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     Phase 7.A. Verification: 100 newest manifest rows per bucket sampled, ALL at `schema_version=8`. Est: 2 cal-AI-days.
     **SCRIPTS READY 2026-05-21 slot-11**: deployment-service@71b9855 (phase3-drain) + deployment-service@ac97607 (phase6-restart). Phase 7.A audit: MANIFEST_SCHEMA_VERSION=8 confirmed in UTL@c205166fb012; consolidator keep="last" verified (new v8 wins); legacy NULL rows source identified (_backfill_columns sets schema_version=1). All service tarballs rebuilt and uploaded to GCS (2026-05-21 14:32Z): UAC@28ac3cde + UTL@c205166f + MTDS@54f46cab + instruments@3d8816465 + MDPS@f8fb8485 + ml@29cc7b20 + strategy@b24556a9 + execution@6b2a186d + pnl-attribution@b54c4f5a + risk-exposure@878da65d + position-balance@775d6ef7 + batch-live-recon@36fffbd8. EXECUTION GATED on Phase 2 CODE FREEZE (operator) → Phase 3 drain (`--apply`) → Phase 4 GCS → Phase 5 AWS (`--phase4-green --apply`) → Phase 6 restart (`--phase5-green --apply`).
 
-11. **HUMAN-HARSH-PHASE-7A-SCHEMA-MIGRATION** — Phase 7 SCHEMA half of coordinator (Phase 7b triage is Ikenna's).
+11. ✅ **HUMAN-HARSH-PHASE-7A-SCHEMA-MIGRATION** — Phase 7 SCHEMA half of coordinator (Phase 7b triage is Ikenna's).
     Migrate every v<8 row → v8 schema mechanically. Composes with: `d3_manifest_v8_finish_2026_05_20.md` +
     `hard_schema_phase1_field_flip_migration_2026_05_19.md`. Verification: A4 v1 re-run shows 100% v8 + 0 NULL across
     all 10 buckets BEFORE 7b triage begins. Est: 4 cal-AI-days.
+    **SCRIPT + TESTS READY 2026-05-21 slot-11**: UTL@ec788bad — `unified_trading_library/migrations/upgrade_manifest_to_v8.py` ships complete migration logic + `__main__` CLI (`--asset-group`, `--apply`/dry-run) + 16 unit tests (all pass, basedpyright 0 errors). Invoke: `python -m unified_trading_library.migrations.upgrade_manifest_to_v8 --asset-group all --apply`. EXECUTION GATED on Phase 6 restart (VMs must be writing v8 steady-state BEFORE bulk migration to avoid race). Verification: re-run A4 audit after migration; 100% v8 + 0 NULL required before Phase 7b triage begins.
 
 12. **HUMAN-HARSH-PHASE-9-DEPLOYMENT-UI-DENOMINATOR-FIX** — Phase 9 of coordinator: deployment-UI numerator/denominator
     formula consolidation. Composes with: `honest_coverage_formula_consolidation_2026_05_19.md` +
