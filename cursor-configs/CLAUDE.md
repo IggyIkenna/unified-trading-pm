@@ -373,9 +373,9 @@ topology + audit→plan→epic flow + lifecycle).
 
 **`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
 `assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. Run
-`python3 scripts/orchestrator/regen_vm_registry.py --check` to validate; `--check` must exit 0 before push.
-Missing or unknown `assigned_vm` is review-blocking. SSOT:
-`plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
+`python3 scripts/orchestrator/regen_vm_registry.py --check` to validate; `--check` must exit 0 before push. Missing or
+unknown `assigned_vm` is review-blocking. SSOT: `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` §
+Phase 1.
 
 ---
 
@@ -450,8 +450,8 @@ SSOTs:
 ## Plan Hygiene — Frontmatter, Line Caps, Archive Candidates
 
 Run: `bash unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh`. Auto-fix:
-`python3 unified-trading-pm/scripts/plan-hygiene/fix_frontmatter.py`. Daily cron on planning VM at `0 5 * * *`
-UTC pings orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hygiene.md`.
+`python3 unified-trading-pm/scripts/plan-hygiene/fix_frontmatter.py`. Daily cron on planning VM at `0 5 * * *` UTC pings
+orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hygiene.md`.
 
 ---
 
@@ -724,7 +724,7 @@ keep being sloppy and keep missing out stuff."
 
 **Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
-**Operator-handoff entry point for migration coordination**: `plans/active/mtds_mdps_master.md` — sequences (Phase -2)
+**Operator-handoff entry point for migration coordination**: `plans/epics/mtds_mdps_master.md` — sequences (Phase -2)
 strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline
 migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
 strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do

@@ -102,3 +102,11 @@ The 2026-05-19 → 2026-05-20 audit cycle that produced the mega-audit framework
 (deployment-service@6b4610c), Drift S3 silent-absence (`is_mtds_contract_audit_2026_05_20.md`), and the discovery that
 6+ MTDS handlers hardcode venue URLs despite IS providing the canonical adapter. All three are layer-N (data
 correctness) gaps that the master plan walked past on its way to layer-7 (paper trade).
+
+## Worked example — MTDS/MDPS migration layers 1-3
+
+`plans/epics/mtds_mdps_master.md` is the concrete instantiation of this gate for the MTDS/MDPS data-pipeline migration.
+Phases -2 → 2 are layers 1-3 (QG-green foundation → bucket SSOT canonicalisation → physical GCS migrations). Phase 3 (VM
+relaunches + live adapter cutover) is layer-4 and is hard-blocked by the Phase 2 gate. Any plan proposing Phase 3 work
+while Phase 2 items are still open is a direct violation of this rule. Agents should read that epic before scheduling
+any migration-adjacent work.

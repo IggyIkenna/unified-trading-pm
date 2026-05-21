@@ -156,3 +156,10 @@ rg "asset_group" path/to/plan.md | head
 
 Do NOT update Invariant 1 (universal scope) without operator approval — that's the canonical
 scope-removal-requires-operator clause.
+
+## Canonical execution-ordering coordinator
+
+`plans/epics/mtds_mdps_master.md` is the operator-handoff entry point for migration sequencing. It encodes the
+phase-ordering (Phase -2 through Phase 14) and owns broadcast + ACK tracking for the cross-slot freeze protocol (§
+Invariant 4). When a slot needs to understand the execution order for data-pipeline migration items, that plan is the
+canonical reference — not agent memory, not inline comments.

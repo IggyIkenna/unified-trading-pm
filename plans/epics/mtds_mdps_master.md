@@ -12,15 +12,15 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 related_plans:
-  - ../active/available_at_lookahead_bias_completion_2026_05_08.md
+  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
   - ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md
   - ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md
   - ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
-  - ../active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - ../active/mdps_streaming_and_backpressure_2026_05_07.md
+  - ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md
+  - ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md
   - ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md
-  - ../active/mtds_per_instrument_download_api_2026_04_24.md
-  - ../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
+  - ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md
+  - ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
   - ../active/wave3x_track_d_implementation_2026_05_19.md
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
@@ -37,7 +37,7 @@ related_plans:
   - hard_schema_phase1_field_flip_migration_2026_05_19.md
   - honest_coverage_formula_consolidation_2026_05_19.md
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-  - archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md  # ✅ ARCHIVED 2026-05-21 (all 20/20 items done)
+  - archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md # ✅ ARCHIVED 2026-05-21 (all 20/20 items done)
   - deployment_ui_lifecycle_tabs_2026_05_08.md
   - issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
@@ -511,12 +511,12 @@ layer**, not a re-statement of the work.
 
 ## Codex SSOT updates (per CLAUDE.md Post-Plan-Phase Audit)
 
-- [ ] `codex/02-data/data-pipeline-correctness-hard-rule.md` — add pointer to this coordinator plan as the canonical
-      execution-ordering reference.
-- [ ] `codex/11-project-management/foundation-completion-gate-discipline.md` — cite this plan as the example of how
-      layers 1-3 are sequenced together for a major migration.
-- [ ] CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — add one-line pointer to this plan as the
-      operator-handoff entry point.
+- [x] ✅ `codex/02-data/data-pipeline-correctness-hard-rule.md` — add pointer to this coordinator plan as the canonical
+      execution-ordering reference. — pm@HEAD
+- [x] ✅ `codex/11-project-management/foundation-completion-gate-discipline.md` — cite this plan as the example of how
+      layers 1-3 are sequenced together for a major migration. — pm@HEAD
+- [x] ✅ CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — path corrected `plans/active/` → `plans/epics/`
+      (pointer already existed, wrong path). — pm@HEAD
 
 ## Assigned active plans
 
@@ -531,7 +531,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 (hyperliquid/aster/curve/jito/morpho/kalshi/polymarket) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D4 —
 MTDS adapters preflight + batch-live parity
 
-### [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+### [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 
 **status**: active
 
@@ -541,7 +541,7 @@ MTDS adapters preflight + batch-live parity
 
 **status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 8 cal AI-days (class: brand-new)
 
-### [`mdps_streaming_and_backpressure_2026_05_07`](../active/mdps_streaming_and_backpressure_2026_05_07.md)
+### [`mdps_streaming_and_backpressure_2026_05_07`](../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md)
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design)
 
@@ -552,7 +552,7 @@ MTDS adapters preflight + batch-live parity
 
 ## P2 — useful; opportunistic
 
-### [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 
 **status**: active · **estimate**: 1.5 cal AI-days (class: design) **title**: available_at + lookahead-bias master —
 SINGLE OWNER for all stamping work
@@ -562,11 +562,11 @@ SINGLE OWNER for all stamping work
 **status**: ✅ ARCHIVED 2026-05-21 — all tracked checkboxes done; follow-on expansion also archived · **estimate**: 6
 cal AI-days (class: design)
 
-### [`mtds_per_instrument_download_api_2026_04_24`](../active/mtds_per_instrument_download_api_2026_04_24.md)
+### [`mtds_per_instrument_download_api_2026_04_24`](../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: design)
 
-### [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
+### [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
 
