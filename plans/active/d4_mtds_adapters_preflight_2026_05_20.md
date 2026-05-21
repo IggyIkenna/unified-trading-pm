@@ -83,8 +83,10 @@ prerequisite_plans:
   - Scan: `rg 'record_captured|record_empty|record_failed' market-tick-data-service/ --type py` to find current gaps
 - [ ] [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
       manifest-visible
-- [ ] [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
+- [x] ✅ [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
       (not Int64 epoch-nanos); remove the runtime cast workaround in features-service once MTDS is fixed
+      — MTDS@c1c17a4: GMX native + Messari paths converted `int(ts)` → `datetime.fromtimestamp(ts, tz=UTC)`;
+      no features-service workaround existed to remove.
 
 ### Phase 2 — features-service manifest preflight
 
