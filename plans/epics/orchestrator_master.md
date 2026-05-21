@@ -33,6 +33,11 @@ related_plans:
   - issues/human_led_audit_pool_2026_05_21.md # NEW (to be created — operator-curated audit pool)
 codex_ssots:
   - codex/12-agent-workflow/orchestrator-v07-multi-vm-topology.md # NEW (this plan's permanent SSOT)
+  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md # NEW r3 2026-05-21 (operator-shared reference: long-lived setup-token pattern; the authoritative auth model)
+external_references:
+  - "Operator-shared 2026-05-21: Claude CLI Multi-Account Headless Authentication Guide (long-lived setup-token via
+    CLAUDE_CODE_OAUTH_TOKEN env var, ~1y validity, multi-machine reuse, ANTHROPIC_API_KEY-precedence gotcha) — drives
+    the r3 Auth & accounts revision and Phase 4 r3 rewrite"
 ---
 
 # Orchestrator v0.7 — multi-VM topology with per-epic isolation
@@ -425,13 +430,100 @@ remaining as overrides.
 
 ## Auth & accounts
 
-### Finding (2026-05-21 r2 OAuth recovery): two of the four emails are aliases
+### r3 architecture revision (2026-05-21): long-lived `setup-token` env-var pattern (supersedes the .credentials.json swap design)
+
+> **Operator reference doc 2026-05-21**: `Claude CLI Multi-Account Headless Authentication Guide` (shared in chat —
+> should be checked into a codex SSOT next). Discovered that `claude setup-token` produces a **1-year long-lived OAuth
+> token** (format `sk-ant-oat01-...`) that:
+>
+> - Authenticates against the Max subscription (correct billing — not metered API)
+> - Lasts ~1 year (NOT the 8-hour access-token-with-refresh-token chain we initially built against)
+> - Works headlessly via the `CLAUDE_CODE_OAUTH_TOKEN` env var
+> - Is account-scoped — one token per account, independent of others
+> - **Can be used on multiple machines simultaneously** (all share that account's quota)
+> - Is shown ONCE at generation time
+>
+> This is the OFFICIAL Anthropic-sanctioned path for CI/CD + headless automation. The `.credentials.json` file we've
+> been swapping is the regular interactive-session refresh-token chain — a different mechanism that the doc explicitly
+> warns "Do NOT copy between machines" (causes refresh-token-rotation lockouts, which is exactly what bit us 2026-05-21
+> morning).
+
+**Critical gotcha (must enforce workspace-wide)**: if `ANTHROPIC_API_KEY` is set in the env when claude runs, it takes
+precedence over `CLAUDE_CODE_OAUTH_TOKEN` → billing flips to **metered API credits** instead of Max subscription quota.
+Every claude-spawning code path MUST `unset ANTHROPIC_API_KEY` before launching. Verified 2026-05-21: systemd
+orchestrator has no ANTHROPIC_API_KEY set, so spawned workers correctly use Max.
+
+### Architecture (revised — supersedes earlier .credentials.json swap design)
+
+| Concern                  | Old design (now deprecated)                                   | New design (this section)                                                                   |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Token storage            | `~/.claude/.credentials.<id>.json` per account                | `~/.claude-accounts/<id>.env` per account (chmod 600)                                       |
+| Active account selection | `swap_claude_account.sh` copies file into `.credentials.json` | `source ~/.claude-accounts/<id>.env` before launching claude (sets CLAUDE_CODE_OAUTH_TOKEN) |
+| Token lifetime           | 8h access + refresh-token chain (rotation race)               | 1-year long-lived token (no rotation)                                                       |
+| Refresh mechanism        | POST `platform.claude.com/v1/oauth/token` every 30 min        | None needed; tokens last ~1 year                                                            |
+| Multi-VM coordination    | GCS backplane with single elected refresher (§9e)             | Just copy the env file across VMs; same token works on N machines                           |
+| Operator regen cadence   | Every ~13h when refresh-chain broke                           | Every ~1 year (set a calendar reminder)                                                     |
+| Switch account mid-spawn | Swap creds file + race against in-memory tokens               | Set CLAUDE_CODE_OAUTH_TOKEN to next env file before next spawn                              |
+
+### Env-file shape (per-account, lives on every VM)
+
+`~/.claude-accounts/sub-a-ikenna.env` (chmod 600):
+
+```bash
+# Always unset first — ANTHROPIC_API_KEY overrides CLAUDE_CODE_OAUTH_TOKEN if both set,
+# silently flipping billing to metered API.
+unset ANTHROPIC_API_KEY
+export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+export CLAUDE_ACCOUNT_LABEL=sub-a-ikenna  # for logging / dashboard
+```
+
+Operator workflow per account:
+
+1. **Once on operator's laptop** (browser-available machine):
+   - Sign into the target account at claude.ai
+   - Run `claude setup-token` → approve OAuth in browser → copy the printed token (shown ONCE)
+2. Operator pastes token to me OR writes it to `~/.claude-accounts/<id>.env` directly on each VM
+3. VM uses the env file for any claude invocation; no refresh dance, no daily login
+
+### Active-token security + GCS distribution
+
+For multi-VM consistency without operator re-pasting on every VM:
+
+- Operator runs `bash scripts/orchestrator/push_creds_to_gcs.sh <account_id>` (shipped 2026-05-21 for the old design;
+  refactor for env-file payload — Phase 4 r3 below)
+- GCS bucket holds the env files (KMS-encrypted)
+- VMs pull on boot + periodic sync (5 min via `GCSCredsPoller` — already shipped, just point at env-file payloads
+  instead of .json)
+- One-year cadence means refresh-token-rotation races no longer exist; GCS just acts as the distribution mechanism for
+  the operator's `setup-token` output
+
+### Things being deprecated
+
+- ❌ `~/.claude/.credentials.<id>.json` per-account snapshots
+- ❌ `swap_claude_account.sh` (copies credentials.json between files — exactly what the operator doc warns against)
+- ❌ `oauth_refresh.refresh()` POSTing to `platform.claude.com/v1/oauth/token` every 30 min
+- ❌ `notify_oauth_token_expiring` firing at 1h-out (1-year tokens use 30-day-out warning instead)
+- ❌ `OAuthBadge` countdown showing 8h-cycle expiry (repurposed: show 1-year expiry date)
+
+### Things being kept / repurposed
+
+- ✅ `usage_poller` (claude /usage probe) — still valuable to read 5h/weekly bars for rotation trigger logic
+- ✅ `GCSCredsPoller` daemon — repurposed to sync env files instead of .credentials.<id>.json
+- ✅ Telegram alerts — repurposed: `notify_oauth_token_expiring` fires at 30-day-out + crit at 7-day-out;
+  `notify_oauth_refresh_failed` becomes `notify_setup_token_required` when 1-year token is dead
+- ✅ Dashboard account panel — `OAuthBadge` shows "1-year token expires 2027-05-21" instead of countdown
+
+### Alias finding (still relevant under r3): two of the four emails are aliases
 
 > Discovered while restoring tokens 2026-05-21 ~14:00 UTC: `ikennaigboaka@gmail.com` and `ikenna@odum-research.com`
 > resolve to the **same** Anthropic Max subscription (orgId `728fa3b5-83e3-458b-9ac0-b95a735c3c94`). They are sign-in
 > aliases, NOT distinct accounts. Verified empirically: refreshing one's refresh_token immediately returned
 > `invalid_grant` on the other's stored token (Anthropic enforces one active refresh_token per account; rotation is
 > atomic across all aliases).
+>
+> **Under r3 long-lived-token architecture, this still matters**: generating `setup-token` against an alias produces a
+> token for the SAME orgId — same 5h/weekly quota — so rotating between alias tokens buys nothing. The roster must use
+> DISTINCT subscriptions (different orgId).
 >
 > **Consequence**: the roster needs to be revised. The "4 accounts per VM" architecture gets at most 3 DISTINCT
 > subscriptions per VM, not 4, given current account set. Don't waste a roster slot on the second alias — they fail over
@@ -714,19 +806,76 @@ When a VM restarts:
       `worker_liveness.py`; telegram `notify_git_staleness_red` fires when slot RED >15min AND cron stale >5min,
       throttled 30min/slot)
 
-### Phase 4 — auth failover (2 cal AI-days)
+### Phase 4 — auth migration to long-lived setup-token (1.5 cal AI-day) **REVISED 2026-05-21 r3**
 
-- [ ] Implement `account_failover.py` with `pick_failover_account()` per § B.
-- [ ] Wire failover into existing 401-detection paths in `worker_liveness.py` + spawn endpoint.
-- [ ] Add `notify_account_failover` + `notify_all_accounts_exhausted` telegram helpers.
-- [ ] Rename existing accounts to email-derived ids (data migration script).
+> Phase 4 was originally "auth failover with lowest-pct-first across .credentials.<id>.json snapshots". Per the r3
+> architecture revision in § Auth & accounts above, the underlying mechanism is wrong (.credentials.json swap causes
+> rotation lockouts per the operator's reference doc). Phase 4 r3 is the migration to the long-lived `setup-token`
+> env-var pattern
+>
+> - a much-simpler failover that just toggles which env file is sourced.
 
-### Phase 5 — account roster expansion (1 cal AI-day + operator action)
+**Phase 4a — refactor spawn path to env-var auth**:
 
-- [ ] Add `iggy2london@gmail.com` + `harshkantariyawork@gmail.com` to `accounts.json` on current VM.
-- [ ] Operator: `claude /login` for iggy2london (Ikenna can do).
-- [ ] Harsh: `claude /login` for harshkantariyawork (Harsh's own action).
-- [ ] Auto-refresher picks up new accounts on next tick.
+- [ ] Refactor `tmux_spawn.py` `spawn()`: when launching claude for slot N with account_id X, source
+      `~/.claude-accounts/<X>.env` BEFORE the `claude` subprocess exec instead of relying on whatever's currently in
+      `.credentials.json`. Implementation: pass
+      `env={...os.environ, "CLAUDE_CODE_OAUTH_TOKEN": <token>, "ANTHROPIC_API_KEY": None}` to the subprocess call. Reads
+      the token at spawn time from the env file matching `account_id`.
+- [ ] Add `accounts.json` schema field: `oauth_token_env_file:     "~/.claude-accounts/<id>.env"` per account
+      (operator-managed, never committed). Backward- compat: if absent, fall back to existing .credentials.json swap so
+      the cutover can be gradual.
+- [ ] Add `account_failover.py` with `pick_next_token(vm_id, current_account, exclude_failed)` using
+      lowest-weekly-pct-first across distinct-subscription accounts (per § B).
+- [ ] Wire failover into 401-detection paths in `worker_liveness.py` (when a tool call returns 401 mid-session) + spawn
+      endpoint (when a fresh spawn's first heartbeat 401s). New token = next spawn for that slot; no in-memory token
+      swap mid-session (per the operator doc caveat — claude CLI doesn't re-read env mid-session).
+- [ ] Add `notify_account_failover` + `notify_all_accounts_exhausted` + `notify_setup_token_required` telegram helpers
+      (the last replaces the to-be-deprecated `notify_oauth_refresh_failed`).
+
+**Phase 4b — deprecate the old refresh chain**:
+
+- [ ] Mark `swap_claude_account.sh` deprecated; replace with `switch_active_account.sh     <account_id>` that just
+      sources the env file (no .credentials.json copy)
+- [ ] Disable `oauth_refresh.refresh()` auto-call in `usage_poller._monitor_and_refresh_oauth` (long-lived tokens don't
+      need this); keep the module for the rare manual-refresh case (operator-triggered via the dashboard if a token is
+      somehow rotated)
+- [ ] Remove `.credentials.<id>.json` files from VMs after env-file migration verified
+- [ ] Update CLAUDE.md HARD RULE: "Claude auth on VMs uses long-lived `setup-token` via `CLAUDE_CODE_OAUTH_TOKEN` env
+      var. Do NOT copy `.credentials.json` between machines."
+
+**Phase 4c — repurpose existing dashboard surfaces**:
+
+- [ ] `OAuthBadge` in dashboard SPA: show "1-year token expires <date>" instead of countdown to 8h expiry. Yellow at
+      30-day-out, red at 7-day-out.
+- [ ] AccountView OAuth fields: keep `oauth_expires_at` (now means 1-year token expiry); change `oauth_expired`
+      semantics to "tokens with <7d remaining or already expired = expired"; operator gets the renew-reminder long
+      before it's an outage.
+- [ ] Telegram alerts: `notify_oauth_token_expiring` becomes 30-day + 7-day cadence.
+
+### Phase 5 — account roster expansion (operator action) **REVISED 2026-05-21 r3**
+
+> Original Phase 5 was "operator runs `claude /login` per VM per account". Per r3, each account only needs the
+> `setup-token` flow ONCE on the operator's laptop; the resulting long-lived token is reused across all VMs via env
+> files. Hugely cheaper operator action.
+
+- [ ] **Operator** (on laptop): for each distinct Max subscription (Sub-A / Sub-B / Sub-C):
+  - Sign into the target account at claude.ai
+  - Run `claude setup-token` → approve in browser → copy the printed token (shown ONCE)
+  - Paste the token to me OR write it directly to `~/.claude-accounts/<sub>.env` on the target VMs
+- [ ] **Verify distinct subscription before adding to roster**: per the alias-finding lesson, compare orgId of the new
+      token's `claude auth status` output against existing roster entries. If same orgId → alias, SKIP (no failover
+      benefit). If different orgId → add as new entry.
+- [ ] **Distribution**: upload to GCS via `push_creds_to_gcs.sh <sub_id>` (refactor to handle env-file payloads); every
+      VM auto-syncs within 5 min via `GCSCredsPoller`.
+- [ ] **Roster targets** (per Phase 4a):
+  - Sub-A (`ikennaigboaka@gmail.com` + `ikenna@odum-research.com` aliases) — already accessible; gen token from either
+    alias
+  - Sub-B (`iggy2london@gmail.com`) — operator action; needs incognito or sign-out-of-Sub-A first
+  - Sub-C (`harshkantariyawork@gmail.com`) — Harsh's action; different Anthropic account
+- [ ] **June 15, 2026 watch**: per the operator's reference doc, `claude -p` and Agent SDK usage on subscription plans
+      draw from a separate monthly Agent SDK credit bucket from that date. Re-check rotation quota math after the change
+      rolls out.
 
 ### Phase 6 — backlog auto-gen from plans (2 cal AI-days)
 
@@ -819,6 +968,12 @@ calendar days end-to-end.
    `orchestrator_vm_registry.yaml`. Do NOT rename the VM in systemd or `~/.ssh/config` — operator's existing SSH config
    keeps working unchanged. The `ssh_host:` field bridges the new numeric id convention to the existing Host directive.
    Phase 1 implements this.
+
+7. ✅ **Auth architecture r3 (2026-05-21)**: long-lived `setup-token` via `CLAUDE_CODE_OAUTH_TOKEN` env var per the
+   operator-shared reference doc (Claude CLI Multi-Account Headless Authentication Guide). Supersedes the earlier
+   `.credentials.json` swap design that caused the 2026-05-21 morning cascade. Phase 4 r3 migrates the spawn path to
+   env-file auth; old refresh-chain code deprecated but not yet removed. See § Auth & accounts r3 for the full table of
+   what's deprecated / kept / repurposed.
 
 **No open questions remaining.** Plan is ready for phase pickup.
 

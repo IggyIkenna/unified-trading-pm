@@ -287,6 +287,16 @@ CLI/extension bug).
 
 ### 9e. GCS-backed credentials backplane for cross-VM rotation coordination (HIGH leverage, MEDIUM effort) — **multi-VM solution**
 
+> **r3 supersedence note (2026-05-21 ~16:00 UTC)**: the operator shared a reference doc (Claude CLI Multi-Account
+> Headless Authentication Guide) confirming that `claude setup-token` produces a **1-year long-lived OAuth token** that
+> is account-scoped, multi-machine-safe, and does NOT participate in the refresh-token-rotation chain that motivated
+> this issue. Under the long-lived-token architecture (plans/epics/orchestrator_master.md § Auth & accounts r3 + Phase 4
+> r3), the cross-VM rotation race §9e was solving no longer exists. The GCS-backed distribution mechanism is still
+> useful — it becomes "GCS as SSOT for the operator's `setup-token` outputs" (env files instead of `.credentials.json`)
+> — but the elected-refresher complexity becomes a no-op since the tokens don't rotate. Keep §9e shipped; refactor the
+> payload from `.json` to env file in Phase 4b. The §9a-9d local-snapshot-drift fixes also become moot once we stop
+> using `.credentials.json` per-account snapshots entirely.
+
 > **Added 2026-05-21 r2 by Harsh** (`harsh@odum-research.com`): "the thing about using the same account across different
 > vms is a classic problem that i used to face when using same trading account from multiple pc. so the auth token gets
 > refreshed everytime we login. so if other vms are using the old token they will receive the 401 error and once we
