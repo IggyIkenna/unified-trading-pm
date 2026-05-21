@@ -24,7 +24,7 @@ decision (May-23 OHLCV-only scope) and the post-cutover restoration boundary. No
 ## Predecessor
 
 This plan is the named successor to
-[`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) per the
+[`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) per the
 `## Temporary states + their canonical follow-up plans` section there. The predecessor collapsed TradFi MVP
 data-acquisition to OHLCV-only (L0) and held the prior tick-window scope in two `_DEFERRED_*` constants for forward
 restore.
@@ -119,8 +119,8 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ## Cross-plan impact
 
-- [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) — predecessor. Banner
-  this plan in its `## Temporary states` section + flag it for archival once Phase 7 lands.
+- [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) —
+  predecessor. Banner this plan in its `## Temporary states` section + flag it for archival once Phase 7 lands.
 - [`tradfi_master.md`](../epics/tradfi_master.md) — re-enable the trades/tbbo rows in the epic's Phase X residual that
   the predecessor parked.
 

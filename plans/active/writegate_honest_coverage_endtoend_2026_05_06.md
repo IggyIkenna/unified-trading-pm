@@ -3874,8 +3874,8 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 ## DONE-2026-05-11 — Slot 2 (ikenna-writegate-slice-b-tab) — Slice (b) close-out
 
 Tab: `ikenna-writegate-slice-b-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (b) Phase 5.1-5.7
-per [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § "Slot 2" + the operator's Q1 RESOLVED option
-(b) re-thread (PM@`39ab61e5`).
+per [`work_split_2026_05_11_ikenna.md`](../archive/work_split_2026_05_11_ikenna.md) § "Slot 2" + the operator's Q1
+RESOLVED option (b) re-thread (PM@`39ab61e5`).
 
 ### Commits
 
@@ -4209,9 +4209,10 @@ Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:c
 writegate plan body's own phase numbering is canonical. `EXPECTED_KNOWN_SOURCE_GAP` value addition routed to
 manifest_schema_final_gate Phase 1 (not slot 2's scope).
 
-The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) §
-"Slot 2") names "writegate slice (b) Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`,
-`pipeline_mode`, `feature_family`)". Cross-reading this plan body's Phase 5.1-5.7 (lines 2811-2922) + the active P0 plan
+The slot-1 work-split task brief for slot 2
+([`work_split_2026_05_11_ikenna.md`](../archive/work_split_2026_05_11_ikenna.md) § "Slot 2") names "writegate slice (b)
+Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`, `pipeline_mode`, `feature_family`)".
+Cross-reading this plan body's Phase 5.1-5.7 (lines 2811-2922) + the active P0 plan
 [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 + the cross-side ping
 [plans/active/\_agent_pings.md:89-93](_agent_pings.md) (harsh-main 2026-05-11 07:10 UTC F3 v8-schema-owner ambiguity)
 surfaces **three concrete contradictions** the work-split brief did not account for:

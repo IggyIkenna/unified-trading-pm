@@ -34,8 +34,8 @@ priority: P2
 # DeFi recursive-borrow archetypes — post-cutover implementation (Phases 4-13)
 
 > **MIGRATED FROM**
-> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) per
-> CLAUDE.md "Plan Archival" HARD RULE.
+> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
+> per CLAUDE.md "Plan Archival" HARD RULE.
 >
 > Descope decision 2026-05-14: `recursive_borrow` is NOT in the May-23 live cutover scope. Master plan commits only
 > `carry_staked_basis` + `arbitrage_price_dispersion` for live by 2026-05-23. The **archetype-documented half** (UAC
@@ -46,7 +46,7 @@ priority: P2
 ## Design SSOT (read before implementing)
 
 All architectural decisions, design specs, and paste-ready code are in the **original plan**:
-[`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md)
+[`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 
 Key sections to read before implementing each phase:
 

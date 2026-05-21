@@ -552,7 +552,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 - [x] [HUMAN+AGENT] P0. **4.A — Production wallets per chain × per archetype (multi-wallet R7).** N archetypes × M
       chains = N×M wallets. For May-23: `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION` (config variant
       `funding_rate_dispersion` — canonical name per
-      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](../archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       and codex
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
       §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
@@ -835,7 +835,7 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       `unified-api-contracts/config/credentials_per_archetype.yaml`. Per archetype: minimum-viable credential subset to
       run live. Archetypes in scope per R4: `carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION` (canonical archetype;
       DeFi/CeFi cutover use the `funding_rate_dispersion` config variant per
-      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](../archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       — superseded the legacy `leveraged_funding_arb` standalone-archetype name; the prediction cutover use the
       cross-venue price-dispersion config variant of the same archetype), sports archetypes
       (`MARKET_MAKING_EVENT_SETTLED`, `ML_DIRECTIONAL_EVENT_SETTLED`, `RULES_DIRECTIONAL_EVENT_SETTLED`), prediction
@@ -1141,10 +1141,10 @@ per-credential events; last_executed = NEVER (pending first operator run).
 
 ## DONE-2026-05-15 — slot 4 Day 1 (2026-05-12) `ikenna-keys-wallets-tab`
 
-Cycle scope (per [`work_split_2026_05_12_ikenna.md`](../archive/2026_05/work_split_2026_05_12_ikenna.md) row 4): Phase 1 Copper KYB
-checklist + Phase 2 Fireblocks R9 dispatch + Phase 3 wallet provisioning schema. Density target 3.5-4 calibrated
-AI-days/day. **Day-1 actual: ~5 AI-days shipped end-to-end** (schema + R9 dispatch + plan flip + handshake ping +
-custody onboarding checklist + R9 codex propagation + Cloud-KMS issue doc); meets density target on Day 1.
+Cycle scope (per [`work_split_2026_05_12_ikenna.md`](../archive/2026_05/work_split_2026_05_12_ikenna.md) row 4): Phase 1
+Copper KYB checklist + Phase 2 Fireblocks R9 dispatch + Phase 3 wallet provisioning schema. Density target 3.5-4
+calibrated AI-days/day. **Day-1 actual: ~5 AI-days shipped end-to-end** (schema + R9 dispatch + plan flip + handshake
+ping + custody onboarding checklist + R9 codex propagation + Cloud-KMS issue doc); meets density target on Day 1.
 
 ### What shipped Day 1 (2026-05-12)
 

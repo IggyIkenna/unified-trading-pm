@@ -507,10 +507,10 @@ priority: P2
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation + features-repo consolidation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 11 adds a NEW
-> `LiveDataStatusTab` mirroring the existing DataStatusTab shape with per-shard staleness + degraded columns + a "live
-> vs batch" pivot toggle. Coordinate with this plan's existing tabs surface to avoid collision — `LiveDataStatusTab`
-> reuses `TypedReasonBadges` + `FailurePillarStack` + `LeafSchemaModal` from writegate Phase 4.
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+> Phase 11 adds a NEW `LiveDataStatusTab` mirroring the existing DataStatusTab shape with per-shard staleness + degraded
+> columns + a "live vs batch" pivot toggle. Coordinate with this plan's existing tabs surface to avoid collision —
+> `LiveDataStatusTab` reuses `TypedReasonBadges` + `FailurePillarStack` + `LeafSchemaModal` from writegate Phase 4.
 >
 > [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) Phase 8B surfaces a new
 > `feature_family` drilldown axis in DataStatusTab. Mutually banner.

@@ -43,11 +43,11 @@ parent_epic: observability_master
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 9 EXTENDS this
-> plan's surface with live-pipeline tier rules (cluster_pct_skipped_60s, degraded_ratio_60s, staleness_seconds
-> thresholds), a new `streaming.alerting.circuit_breaker` Redis Stream wired to strategy-service, and 3 circuit-breaker
-> actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan owns the AlertCode
-> taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+> Phase 9 EXTENDS this plan's surface with live-pipeline tier rules (cluster_pct_skipped_60s, degraded_ratio_60s,
+> staleness_seconds thresholds), a new `streaming.alerting.circuit_breaker` Redis Stream wired to strategy-service, and
+> 3 circuit-breaker actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan
+> owns the AlertCode taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
 
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the
 > [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) UI track Phase U3

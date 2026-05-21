@@ -438,7 +438,7 @@ scenario primitives + Phase 3 integration spec LANDED — Harsh slot 5 cleared t
 Day-3 AM**. UAC@`33630a6` (`canonical/crosscutting/scenario_overlay.py` +
 `registry/scenarios/{cefi,defi,cross_asset}.py` 10 ScenarioOverlay instances + 53 tests). UTL@`3797fed5`
 (`scenario/{applier,checker,runner}.py` + 51 tests). **Cross-side handshake material — read these 3 artefacts**: (a)
-[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md)
+[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md)
 plan body lines 60-65 (compressed-scope); (b)
 [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) — full
 3-step matching-engine adversarial mode recipe + 3 consumer shapes (position-balance / risk / alerting) with code
@@ -493,7 +493,7 @@ DAY-2 P0 INJECTED scope coming up.
 [2026-05-12 19:35 UTC] ikenna-scenarios-topology-tab (slot 7) → harsh-main / harsh-slot-5 (risk + alerting + DR impl) —
 ✅ **`simulation_scenarios_topology_price_shocks` Day-1 DESIGN-SHIPPED (PM@`bea269b1`)**. 10 scenarios authored covering
 both cutover archetypes (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION`) — see
-[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md) §
+[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md) §
 "Day-1 scenario designs" + per-scenario fragments at `plans/active/scratch_scenarios_day1/{01..11}.md` (~995 lines).
 **Topology (6)** via 6-sub-agent fan-out: `cefi_venue_circuit_breaker_trip` / `defi_chain_rpc_outage_solana` /
 `defi_liquidity_drain_lending_pool` / `defi_oracle_deviation_30sigma` / `defi_gas_surge_50x` /
