@@ -23,9 +23,11 @@ prerequisite_plans:
 parent_epic: mtds_mdps_master
 ---
 
-> **ARCHIVED 2026-05-21** — Phases 1-4 complete (MTDS adapter A6 audit + batch-live gap analysis + QG STEP 5.70
-> features-service). 8 BATCH_ONLY cells remain BLOCKED-OPERATOR-DECISION (hyperliquid/aster liquidations +
-> curve/jito/morpho DeFi + kalshi/polymarket prediction). status: active → archived.
+## Deferred work — migrated to:
+
+| Item                                                                                                                                                                                                                                                                                                                                                                            | Successor plan                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Phase 3 BLOCKED-OPERATOR-DECISION cells (8 cells: cefi/hyperliquid/liquidations, cefi/aster/liquidations, defi/curve/dex_pools, defi/curve/dex_swaps, defi/jito/lst_rates, defi/morpho/lending_indices, prediction/kalshi/trades, prediction/polymarket/trades) — all require operator architecture decision (REST-polling live handler vs BATCH_ONLY vs cross-service routing) | [`epics/mtds_mdps_master.md`](../epics/mtds_mdps_master.md) — open issue for operator direction |
 
 # D4 — MTDS adapters preflight + batch-live parity
 

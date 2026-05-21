@@ -24,10 +24,11 @@ related_plans:
 parent_epic: manifest_master
 ---
 
-> **ARCHIVED 2026-05-21** — Phases 1-3 complete (manifest v8 backfill + reason-enum wiring; 100% v8 distribution
-> confirmed across 5 asset_groups). Phase 4 (divergence-detector 0 DIVERGENT_EMPTY) BLOCKED-OPERATOR-DECISION — 765 DEFI
-> divergent-empties require D4 MTDS backfill; D4 archived with 8 BATCH_ONLY AWAITING OPERATOR DIRECTION. status: active
-> → archived.
+## Deferred work — migrated to:
+
+| Item                                                                                                  | Successor plan                                                                                   |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Phase 4: divergence-detector DIVERGENT_EMPTY → 0 for DEFI (765 Drift S3 bugs requiring MTDS backfill) | [`d4_mtds_adapters_preflight_2026_05_20.md`](../active/d4_mtds_adapters_preflight_2026_05_20.md) |
 
 # D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 

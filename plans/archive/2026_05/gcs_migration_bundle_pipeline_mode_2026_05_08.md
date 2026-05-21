@@ -579,11 +579,11 @@ todos:
 
   - id: phase-8-fallback-removal-followup
     content: |
-      - [x] ✅ [AGENT] P2. Phase 8 — Reader fallback removal (T+30 days post-migration).
-        DEFERRED-PER-DESIGN to 2026-06-15. **[BLOCKED-DATE-GATE 2026-05-20 slot-6]: not actionable
+      - [x] **[DEFERRED-writegate-6.x 2026-06-15]** [AGENT] P2. Phase 8 — Reader fallback removal (T+30 days post-migration).
+        DEFERRED-PER-DESIGN to 2026-06-15. Named successor: `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.x.
+        **[BLOCKED-DATE-GATE 2026-05-20 slot-6]: not actionable
         before 2026-06-15 — requires 30d of zero READER_FELL_BACK_TO_LEGACY_PATH events post-migration.
         Migration completed ~2026-05-15; earliest unlock ~2026-06-15. Agent items exhausted.]**
-        **(trivial-sweep 2026-05-21: DEFERRED-writegate-6.x — named successor: writegate_honest_coverage_endtoend_2026_05_06.md)**
 
         After 30 days of zero `READER_FELL_BACK_TO_LEGACY_PATH` events workspace-wide, delete the legacy
         fallback paths from:
@@ -641,10 +641,6 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: manifest_master
 ---
-
-> **ARCHIVED 2026-05-21** — Phase 1-7 complete (pipeline_mode partition + category→asset_group rekey + drift cleanup).
-> Phase 8 (T+30d reader fallback removal) DEFERRED-writegate-6.x → writegate_honest_coverage_endtoend_2026_05_06.md
-> (earliest 2026-06-15 unlock). status: active → archived.
 
 ## Deferred work — migrated to:
 

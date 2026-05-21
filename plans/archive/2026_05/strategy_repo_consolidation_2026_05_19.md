@@ -310,8 +310,17 @@ todos:
 parent_epic: strategy_master
 ---
 
-> **ARCHIVED 2026-05-21** — Phases 1-11 complete (3-repo merge into strategy-service + all cleanup phases). P2 item
-> (StrategyDirectiveReloader → UTL) DEFERRED-POST-CUTOVER. status: active-cleanup-phase-11 → archived.
+## Deferred work — migrated to:
+
+| Item                                                                                              | Successor plan                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 11b — unified-api-contracts stale-ref cleanup (~75 live refs)                               | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| Phase 11c — unified-trading-library stale-ref cleanup (~33 live refs)                             | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| Phase 11d — unified-trading-system-ui stale-ref cleanup (~50 live refs)                           | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| Phase 11e — execution-service stale-ref cleanup (~18 live refs)                                   | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| Phase 11f — tail consumer cleanup: alerting + sys-int-tests + e2e + trading-agent (~30 live refs) | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| Phase 11h — DEPRECATION_NOTICE audit + verification                                               | [`issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md`](./issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md) |
+| P2 StrategyDirectiveReloader → UTL make_directive_reloader()                                      | POST-CUTOVER — [`epics/strategy_master.md`](../epics/strategy_master.md)                                                                           |
 
 ## Architecture sketch — post-merge strategy-service
 
@@ -648,7 +657,7 @@ phases:
             configs/dependencies.yaml (PM) all cleaned — deployment-service@cbe93a9, unified-trading-pm@6b5e5e93
             Gate: QG GREEN ✅ (deployment-service@09c45f4)
 
-      - [ ] [AGENT slot 5] **P0. Phase 11b — unified-api-contracts stale-ref cleanup.** ~75 live refs across 3
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 5] **P0. Phase 11b — unified-api-contracts stale-ref cleanup.** ~75 live refs across 3
             archived strategy-consolidation services. Scope:
             1. `canonical/crosscutting/risk_rule.py` (lines 20, 563, 695) — service topology refs need
                `strategy-service` substitution (risk_rule is consumed by strategy_service/risk/, not a separate
@@ -662,7 +671,7 @@ phases:
                obsolete. DEPRECATION_NOTICE / migration-history left intact.
             Gate: `cd unified-api-contracts && bash scripts/quality-gates.sh` GREEN + cassette parity test green.
 
-      - [ ] [AGENT slot 5] **P0. Phase 11c — unified-trading-library stale-ref cleanup.** ~33 live refs across 3
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 5] **P0. Phase 11c — unified-trading-library stale-ref cleanup.** ~33 live refs across 3
             archived strategy-consolidation services. Scope:
             1. `tests/unit/test_emission_publisher.py` (lines 106, 194, 500, 511) — test fixtures using archived
                service names; rewire to `strategy-service` with sub-package filter.
@@ -672,7 +681,7 @@ phases:
                archived-service names — all refs should be in tests only).
             Gate: `cd unified-trading-library && bash scripts/quality-gates.sh` GREEN.
 
-      - [ ] [AGENT slot 6] **P0. Phase 11d — unified-trading-system-ui stale-ref cleanup.** ~50 live refs across 3
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 6] **P0. Phase 11d — unified-trading-system-ui stale-ref cleanup.** ~50 live refs across 3
             archived strategy-consolidation services. Scope:
             1. `context/pm/data-flow-manifest.json` (lines 10, 19, 74, 83, 92, 101, 166, 176) — service registry
                entries. Replace with `strategy-service` + sub-package metadata.
@@ -683,7 +692,7 @@ phases:
             4. Monitoring panels — service-filter dropdowns / hardcoded lists.
             Gate: `cd unified-trading-system-ui && bash scripts/quality-gates.sh` GREEN + dev-tier 0 boot test.
 
-      - [ ] [AGENT slot 8] **P1. Phase 11e — execution-service stale-ref cleanup.** ~18 live refs across 3 archived
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 8] **P1. Phase 11e — execution-service stale-ref cleanup.** ~18 live refs across 3 archived
             strategy-consolidation services. Scope:
             1. `execution_service/preflight.py:28` — hardcoded risk-service URL (HIGH: live runtime ref) → replace
                with strategy-service URL or remove if pre-flight gate is satisfied by strategy_service/risk/.
@@ -694,7 +703,7 @@ phases:
             Gate: `cd execution-service && bash scripts/quality-gates.sh` GREEN. Composes with slot-8's open
             Phase 4a/4b work on `strategy_execution_contract_remediation_2026_05_20.md`.
 
-      - [ ] [AGENT slot 3] **P1. Phase 11f — tail consumer cleanup (alerting + sys-int-tests + e2e + trading-agent).**
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 3] **P1. Phase 11f — tail consumer cleanup (alerting + sys-int-tests + e2e + trading-agent).**
             ~30 live refs across 3 archived strategy-consolidation services. Scope:
             1. `alerting-service/risk_rule_event_handler.py:3`, `core/system_health_aggregator.py:26`,
                `subscribers/batch_event_reader.py:40` — rewire to strategy-service.
@@ -712,7 +721,7 @@ phases:
             11 callsites across 6 files cleaned; docstrings/CHANGELOG left intact per operator directive. QG green.
             Gate: `cd strategy-service && bash scripts/quality-gates.sh` GREEN + boot all 4 health endpoints.
 
-      - [ ] [AGENT slot 6] **P0. Phase 11h — DEPRECATION_NOTICE audit + verification.** Verify each of the 3 archived
+      - [x] **[DEFERRED-stale-ref-cleanup 2026-05-21 → issues/strategy_consolidation_phase11_stale_ref_cleanup_2026_05_21.md]** [AGENT slot 6] **P0. Phase 11h — DEPRECATION_NOTICE audit + verification.** Verify each of the 3 archived
             source repos (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`)
             has a correct `DEPRECATION_NOTICE.md` at repo root pointing to the new home (strategy_service/risk,
             strategy_service/position, strategy_service/pnl). Recipe:
