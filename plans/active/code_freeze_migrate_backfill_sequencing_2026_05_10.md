@@ -9,8 +9,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-10
 companion_to:
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/manifest_evolution_master_2026_05_08.md
-  - plans/epics/manifest_migration_master_2026_05_07.md
+  - plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md
+  - plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md
   - plans/active/available_at_lookahead_bias_completion_2026_05_08.md
 estimate_class: infra
 estimate_baseline_ai_days: 202.5
@@ -34,10 +34,10 @@ This plan is the **execution-sequencing umbrella** for the May-23 cutover. It do
 plans — it indexes them, sequences them into a strict three-phase model, and closes the gaps the audit surfaced. The
 durable readiness model lives in [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md);
 the schema/writer/data-layout co-evolution gates live in
-[`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md); the migration
-coordinator lives in
-[`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md). This plan
-composes them along the time axis.
+[`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md); the
+migration coordinator lives in
+[`plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md`](../epics/manifest_migration_SUPERSEDED_2026_05_21.md). This
+plan composes them along the time axis.
 
 The principle: **code shape decisions → migration → backfill, in that order, no doubling back.** Every migration of
 physical files (manifest schema bump, GCS hive-vocab rekey, OHLCV legacy filename → per-instrument rename, pipeline_mode
@@ -112,8 +112,8 @@ real infrastructure with verification probes, not just a green QG.
 ## Phase 1 — Code-complete inventory
 
 Plans in this section MUST run to ✅ shipped before Phase 2 starts. The umbrella enforcer is
-[`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md) gates **G1
-(reason taxonomy) → G2 (cluster validation) → G3 (enumerator launch)**; this section indexes the plans those gates
+[`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md) gates
+**G1 (reason taxonomy) → G2 (cluster validation) → G3 (enumerator launch)**; this section indexes the plans those gates
 consume.
 
 ### Phase 1.A — UAC + UTL foundation (writegate / honest coverage)
@@ -210,7 +210,7 @@ consume.
 
 - [ ] [PLAN] P0. **`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`** — Cross-cutting 6-tab restructure (Deploy
       / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum + `EnvironmentTier` enum.
-      Parent: cross_cutting_may_23_2026.epic.
+      Parent: cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.
 - [ ] [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for
       May-23 live-DeFi cutover.
 - [ ] [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle
@@ -334,7 +334,7 @@ technical enforcer; this section is the operator-readable checklist.
 Plans in this section run AFTER Phase 1 freeze gate. They MUST run to operational completion (not just code-shipped) per
 CLAUDE.md _"Plans Run To Actual Completion"_ HARD RULE. The umbrella enforcer is `manifest_evolution_master` gate **G4
 (v8 schema atomic rename) + G5 (rescan apply-flips)**; the migration coordinator is
-`manifest_migration_master_2026_05_07`.
+`manifest_migration_SUPERSEDED_2026_05_21`.
 
 ### Phase 2.0 — Pre-migration VM drain + state freeze (GAP — to formalize)
 
@@ -352,14 +352,14 @@ concurrent CAS write produces drift between writer-version-N and writer-version-
 > in the runbook ledger so future executors can confirm without re-deriving.
 
 **Disposition** (per AskUserQuestion answer 2026-05-10): add as a pre-phase to
-`plans/epics/manifest_migration_master_2026_05_07.md` Stage 1, NOT a standalone plan.
+`plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md` Stage 1, NOT a standalone plan.
 
 - [x] ✅ [SCRIPT] P0. **GAP-2.0.A** — Add **Stage 0 pre-drain phase** to
-      [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) ahead of
-      Stage 1. **Shipped** PM@`d7bc3cea` (Phase 2.6 detailed playbook — per-bucket order + per-VM rsync sizing + 7-wave
-      gating) + PM@`df659ed5` (dry-run runbook) + `deployment-service@d92806b` (launch-bucket-rsync-vm.sh — Phase 2.6
-      cutover Wave 2-5 rsync worker; gap-2.6.A+2.6.D registration). **Backfilled 2026-05-15 by slot-1-main during
-      code_freeze Half-2 audit.** Original line follows: Stage 1. Body content:
+      [`plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md`](../epics/manifest_migration_SUPERSEDED_2026_05_21.md)
+      ahead of Stage 1. **Shipped** PM@`d7bc3cea` (Phase 2.6 detailed playbook — per-bucket order + per-VM rsync
+      sizing + 7-wave gating) + PM@`df659ed5` (dry-run runbook) + `deployment-service@d92806b`
+      (launch-bucket-rsync-vm.sh — Phase 2.6 cutover Wave 2-5 rsync worker; gap-2.6.A+2.6.D registration). **Backfilled
+      2026-05-15 by slot-1-main during code_freeze Half-2 audit.** Original line follows: Stage 1. Body content:
   1. Inventory every running backfill VM via the per-prefix watchdog
      (`deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry — bare
      `gcloud compute instances list` filtered by prefix).
@@ -620,8 +620,8 @@ real-infra CLI + verifier + duration + rollback.
 
 **Pre-conditions** (all must be ✅ before Phase 2.6 starts):
 
-1. Phase 2.0 pre-drain Stage 0 complete (`manifest_migration_master_2026_05_07` Stage 0; per `GAP-2.0.A`). Zero RUNNING
-   MTDS / MDPS / instruments / features VMs.
+1. Phase 2.0 pre-drain Stage 0 complete (`manifest_migration_SUPERSEDED_2026_05_21` Stage 0; per `GAP-2.0.A`). Zero
+   RUNNING MTDS / MDPS / instruments / features VMs.
 2. Phase 2.1-2.5 complete (manifest v8 atomic rename + GCS bundled migration + OHLCV rename + AWS cloud-parity rsync +
    cross-asset rescan `--apply-flips` completed). Manifest snapshot `_index/snapshots/pre_migration_2026_05_15.parquet`
    in place.
@@ -970,7 +970,7 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
   Done-def #3 (L3 delegate flip) + Done-def #6 (L5 reader-repoint).
 - `aws_migration_defi_first_2026_05_07.md` Phase 5 cross-cloud rsync (must complete BEFORE Step 2.6.2 to avoid
   double-walk).
-- `manifest_migration_master_2026_05_07.md` Stage 0 (pre-drain) + Stage 6 (manifest snapshot post-Phase-2.5).
+- `manifest_migration_SUPERSEDED_2026_05_21.md` Stage 0 (pre-drain) + Stage 6 (manifest snapshot post-Phase-2.5).
 - Phase 2.0 / 2.1 / 2.2 / 2.3 / 2.4 / 2.5 (all preconditions per § "Pre-conditions" above).
 - `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 freeze gate (lines 252-259) — Phase 2.6 done-def
   closes 3/6 freeze-gate items (manifest schema v8 + GCS bundled + cross-asset rescan all upstream).
@@ -1009,18 +1009,18 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 ### Phase 3.1 — Instruments-service catalogue forward-fill
 
-- [ ] [PLAN] P0. **`plans/epics/instruments_live_master_2026_05_08.md`** — Instruments-service live activation across 5
-      asset_groups. Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT, Sports trigger-driven (daily
-      fixture re-poll + season-roll + transfer-window + weather), Predictions 15-min market-discovery. Cloud Scheduler
-      driver + new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F (live activation) starts after Phase 2
-      freeze; until then stays in Phase A-E (preflight DAG).
+- [ ] [PLAN] P0. **`plans/epics/instruments_master.md`** — Instruments-service live activation across 5 asset_groups.
+      Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT, Sports trigger-driven (daily fixture
+      re-poll + season-roll + transfer-window + weather), Predictions 15-min market-discovery. Cloud Scheduler driver +
+      new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F (live activation) starts after Phase 2 freeze;
+      until then stays in Phase A-E (preflight DAG).
 
 ### Phase 3.2 — MTDS multi-venue backfill VM relaunch
 
 - [ ] [SCRIPT] P0. **MTDS-3.2.A** — Relaunch CeFi backfill VMs (15 venues — Bybit / Binance / OKX / Bitfinex / Bitget /
-      Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master_2026_05_07` Phase 1A). Per-VM shard isolation
-      enforced (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget
-      VM launches" HARD RULE.
+      Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master` Phase 1A). Per-VM shard isolation enforced
+      (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget VM
+      launches" HARD RULE.
 - [x] ✅ **[SCRIPT] P0. MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — TradFi backfill VMs relaunched per
       `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 (OHLCV-only MVP scope per operator direction
       2026-05-15). **63 tradfi-bf VMs launched** spanning CME (futures 6 roots × 8 years + ES.OPT 11-cluster × 8
@@ -1030,11 +1030,11 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
       override at `market-tick-data-service@f1621c0`. ICE held pending operator decision on roots
       (`tradfi-bf-ice-ohlcv-1m.sh` scaffolding shipped, `ICE_ROOTS=()`).
 - [ ] [SCRIPT] P0. **MTDS-3.2.C** — Relaunch DeFi backfill VMs (Pyth Solana + Chainlink EVM oracle prices + DEX-perp
-      forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master_2026_05_07` Phase 9).
-- [ ] [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master_2026_05_07`
-      Phase 1; OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
-- [ ] [SCRIPT] P0. **MTDS-3.2.E** — Relaunch Predictions backfill VMs (Polymarket + Kalshi per
-      `predictions_master_2026_05_07` Phase 1; canonical_question_group rekey already in Phase 2.2).
+      forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master` Phase 9).
+- [ ] [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master` Phase 1;
+      OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
+- [ ] [SCRIPT] P0. **MTDS-3.2.E** — Relaunch Predictions backfill VMs (Polymarket + Kalshi per `predictions_master`
+      Phase 1; canonical_question_group rekey already in Phase 2.2).
 
 ### Phase 3.3 — MDPS bar reprocessor relaunch
 
@@ -1054,9 +1054,9 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 ### Phase 3.5 — ML training + inference relaunch
 
-- [ ] [PLAN] P0. **`plans/epics/ml_and_features_master_2026_05_07.md`** Phase 1A-2E — UAC feature-DAG SSOT +
-      features-service writers + pre-join consolidation. **Critical path subset only**; Phase 4 (ML model lifecycle) is
-      mostly post-May-23.
+- [ ] [PLAN] P0. **`plans/epics/features_and_ml_master.md`** Phase 1A-2E — UAC feature-DAG SSOT + features-service
+      writers + pre-join consolidation. **Critical path subset only**; Phase 4 (ML model lifecycle) is mostly
+      post-May-23.
 - [ ] [SCRIPT] P0. **ML-3.5.A** — Relaunch ml-training jobs against migrated features. Sanity replay on 3 representative
       shards per `ml_and_features_master` Phase 5.
 - [ ] [SCRIPT] P0. **ML-3.5.B** — Relaunch ml-inference for live-pipeline serving. Tier-up alerting per
@@ -1064,17 +1064,17 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 ### Phase 3.6 — Strategy archetype paper-trade smoke
 
-- [ ] [PLAN] P0. **`plans/active/defi_master_2026_05_07.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke
+- [ ] [PLAN] P0. **`plans/active/defi_master.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke
       (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION).
-- [ ] [PLAN] P0. **`plans/epics/strategy_and_dart_master_2026_05_07.md`** — Strategy archetype paper-trade smoke for
-      CeFi / TradFi / Sports / Predictions; DART manual-trade UI live for human override.
+- [ ] [PLAN] P0. **`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`** — Strategy archetype paper-trade
+      smoke for CeFi / TradFi / Sports / Predictions; DART manual-trade UI live for human override.
 - [ ] [PLAN] P1. **`plans/active/batch_live_symmetry_2026_05_10.md`** — 8-tab design symmetry (May-23 cutover-blocking
       subset).
 
 ### Phase 3.7 — 7-day continuous live-DeFi run on real wallet
 
-- [ ] [PLAN] P0. **`plans/active/defi_master_2026_05_07.md`** Phase 11+ — 7-day continuous run gate on real wallet.
-      **Final cutover gate per master plan Group F-G live-only items.**
+- [ ] [PLAN] P0. **`plans/active/defi_master.md`** Phase 11+ — 7-day continuous run gate on real wallet. **Final cutover
+      gate per master plan Group F-G live-only items.**
 
 ### Phase 3 freeze gate (✅ to declare May-23 cutover ready)
 
@@ -1146,10 +1146,10 @@ following plans MUST receive a banner pointing back here in a follow-up commit:
 - [x] [DOC] P0. **`plans/active/master_to_live_defi_2026_05_23.md`** — top-of-file
       `> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing**` banner pointing here. BE AWARE tag. **✅ Verified by slot 5
       audit 2026-05-11 + slot 3 re-verify 2026-05-12** — banner at line 41.
-- [x] [DOC] P0. **`plans/epics/manifest_evolution_master_2026_05_08.md`** — same banner. BLOCK tag (Phase 2 cannot start
-      before this plan's Phase 1 freeze gate). **✅ Verified — banner at line 29.**
-- [x] [DOC] P0. **`plans/epics/manifest_migration_master_2026_05_07.md`** — same banner. BLOCK tag for Stage 1 onwards
-      (must wait Phase 2.0 pre-drain). **✅ Verified — banner at line 27.**
+- [x] [DOC] P0. **`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`** — same banner. BLOCK tag (Phase 2 cannot
+      start before this plan's Phase 1 freeze gate). **✅ Verified — banner at line 29.**
+- [x] [DOC] P0. **`plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md`** — same banner. BLOCK tag for Stage 1
+      onwards (must wait Phase 2.0 pre-drain). **✅ Verified — banner at line 27.**
 - [x] [DOC] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — banner notes that Phase 2.X (OHLCV
       rename) and verification of all Phase 1 schema columns are gap-closure work to land in this plan. **✅ Verified —
       banner at line 552.**
@@ -1211,7 +1211,7 @@ The plan is done when ALL of the following are true:
   - **Verification**: `gcloud storage ls gs://${PID}-events/events/.../{YYYY-MM-DD}/...` shows STARTED + progress +
     STOPPED; `gcloud storage cat gs://.../availability_index.parquet` shows v7 schema everywhere; sample parquet read
     returns populated rows (no NaN placeholders).
-- ✅ Live-DeFi 7-day continuous run shipped per `defi_master_2026_05_07` Phase 11+.
+- ✅ Live-DeFi 7-day continuous run shipped per `defi_master` Phase 11+.
 
 **Handoff exception(s)**: Post-cutover plans (`simulation_scenarios_post_cutover_2026_06_01.md` etc.) explicitly
 deferred per anti-sequencing audit; out of scope for this plan.
@@ -1225,8 +1225,8 @@ deferred per anti-sequencing audit; out of scope for this plan.
   resolving codex_audit F3); rescan flip schema + apply-flips execution owned by
   `manifest_cross_asset_rescan_design_2026_05_08.md`. Writegate slice (b) Phase 5.2 SUPERSEDED — bannered in writegate
   plan, slice (b) retains UTL helper + MDPS POC + deployment-api/ui surfaces.
-- **GAP-2.0 VM drain + state freeze procedure** — successor: addition to `manifest_migration_master_2026_05_07.md` Stage
-  0 per disposition.
+- **GAP-2.0 VM drain + state freeze procedure** — successor: addition to `manifest_migration_SUPERSEDED_2026_05_21.md`
+  Stage 0 per disposition.
 - **GAP-2.3 OHLCV legacy filename rename** — successor: addition to `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
   Phase 2.X per disposition.
 
@@ -1245,8 +1245,8 @@ deferred per anti-sequencing audit; out of scope for this plan.
   session; this plan is the captured output.
 - `master_to_live_defi_2026_05_23.md` — the readiness model; this plan is the time-axis sequencing of how the readiness
   model fills in.
-- `manifest_evolution_master_2026_05_08.md` — the schema-axis enforcer; this plan is the time-axis enforcer.
-- `manifest_migration_master_2026_05_07.md` — the migration-stage coordinator; this plan adds Stage 0 (VM drain) and
+- `manifest_evolution_SUPERSEDED_2026_05_21.md` — the schema-axis enforcer; this plan is the time-axis enforcer.
+- `manifest_migration_SUPERSEDED_2026_05_21.md` — the migration-stage coordinator; this plan adds Stage 0 (VM drain) and
   Phase 3 (backfill resumption) as bookends.
 
 ## DONE-2026-05-11 — slot 6 (harsh-workspace-qg-tab) day-1 status (freeze-gate items 8 + 9)
@@ -1356,9 +1356,9 @@ wrap-up signal). Per-shippable-unit pushes throughout, so Ikenna's side has the 
    for both new buckets: `dex-pools-{pid}` → 75983 rows, `liquidations-{pid}` → 38134 rows written to their canonical
    `_index/availability_index.parquet` (so there \_was* real un-consolidated data, not just future-proofing). Other
    asset_groups (CeFi options/futures, TradFi futures, prediction, sports) write to their asset-group canonical buckets
-   which are already polled — no gap. Plan-flips + findings: `defi_master_2026_05_07.md` § "Discoveries during Priority
-   #5" (the consolidator P1 item flipped `[x]`; P2 future-gap item — features-\*/execution/ml buckets + the code_freeze
-   Phase 2.6 bucket-rename lockstep + the watchdog-dict `mtds-{gas-fees,lst-rates,dex-pools,liquidations,perp-funding}-`
+   which are already polled — no gap. Plan-flips + findings: `defi_master.md` § "Discoveries during Priority #5" (the
+   consolidator P1 item flipped `[x]`; P2 future-gap item — features-\*/execution/ml buckets + the code_freeze Phase 2.6
+   bucket-rename lockstep + the watchdog-dict `mtds-{gas-fees,lst-rates,dex-pools,liquidations,perp-funding}-`
    imprecision sub-finding). `harsh_orchestrator/pings/slot_6.md` 2026-05-11 13:40/13:45 UTC.
 2. **MTDS ruff fix** — `market-tick-data-service@61f872d`: stray `test_adapter_watchdog_wiring.py` ruff-line-collapse
    (origin was out-of-sync with `ruff format`). Mechanical; cleared the slot's working tree.
@@ -1386,18 +1386,18 @@ wrap-up signal). Per-shippable-unit pushes throughout, so Ikenna's side has the 
      (`venue=EIGENLAYER`/`data_type=rewards`; data exists at `…/data_type=eigenlayer_rewards/rewards.parquet`; audit
      probes the manifest's `data_type=rewards/`). Root cause = **shard-key-SSOT violation** in
      `eigenlayer_rewards_handler.py` (`record_captured(data_type="rewards")` but `to_parquet` path uses
-     `data_type="eigenlayer_rewards"`; stale docstring too). **DeFi real residual = 0.** → `defi_master_2026_05_07.md` §
+     `data_type="eigenlayer_rewards"`; stale docstring too). **DeFi real residual = 0.** → `defi_master.md` §
      Discoveries (P1; fix = align `_EIGENLAYER_DATA_TYPE` to `"eigenlayer_rewards"` + one-time manifest migration + fix
      docstring; defi-pipeline owner).
    - **CeFi** (`defi-phantom-recon-cefi-20260511-193451`): 1290706 real / 2223 phantom (0.17% — UNDER the <0.5%
      `cefi_master` criterion). Residual = blank `venue` 1453 / DERIBIT 136 (mostly `options_chain`+`futures_chain`
-     bundled) / `venue=UNKNOWN` 111 / Bitfinex `*F0` ~400 — drift-axis-suspicious. → `cefi_master_2026_05_07.md` § "Port
+     bundled) / `venue=UNKNOWN` 111 / Bitfinex `*F0` ~400 — drift-axis-suspicious. → `cefi_master.md` § "Port
      phantom-audit" todo (per-cluster real-vs-false-positive triage pending — cefi owner).
    - **TradFi** (`defi-phantom-recon-tradfi-20260511-194845`): 92125 real / 3976 phantom (~4.3% — **ABOVE bar**; highest
      of any asset_group). Residual = `trades` 1017 + `tbbo` 1017 (identical ⇒ Databento `trades;tbbo` per-schema-bundle
-     drift) + `venue=UNKNOWN` 565 + `venue=YAHOO_FINANCE` 21 (VIX 15m) + ~1356 other. → `tradfi_master_2026_05_07.md` §
-     "Port phantom-audit" todo (**P0** — verify whether the parquet exists bundled vs per-schema; add the
-     per-schema-bundle drift axis to the audit; tradfi owner).
+     drift) + `venue=UNKNOWN` 565 + `venue=YAHOO_FINANCE` 21 (VIX 15m) + ~1356 other. → `tradfi_master.md` § "Port
+     phantom-audit" todo (**P0** — verify whether the parquet exists bundled vs per-schema; add the per-schema-bundle
+     drift axis to the audit; tradfi owner).
    - **Prediction** (`defi-phantom-recon-prediction-20260511-195513`): 14403 real / 71 phantom (0.49% — at bar).
      Residual = `venue=POLYMARKET` 50 + `venue=UNKNOWN` 21, all `data_type=trades` — small; predictions owner to triage
      (likely canonical_question_group bundling vs per-market_id path).
@@ -1408,9 +1408,8 @@ wrap-up signal). Per-shippable-unit pushes throughout, so Ikenna's side has the 
      must use the CURRENT layout (the 2026-04-29 incident: stale `entity=odds/` vs `entity=footystats_odds/` → false 26%
      ODDS phantom — same failure class) AND apply the UAC
      `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START`/`KNOWN_COVERAGE_GAPS` date-range clips (the
-     STANDINGS/SFI_LEAGUES/INJURIES clusters smell like un-clipped pre-launch-date rows). →
-     `sports_master_2026_05_07.md` § "Phantom recon" row (routes to the consumed
-     `sports_phantom_recon_and_failure_triage` plan).
+     STANDINGS/SFI_LEAGUES/INJURIES clusters smell like un-clipped pre-launch-date rows). → `sports_master.md` §
+     "Phantom recon" row (routes to the consumed `sports_phantom_recon_and_failure_triage` plan).
    - **Cross-asset finding** (workspace-level): `venue=UNKNOWN`/blank-venue phantoms across cefi (1453+111) / tradfi
      (565) / prediction (21) ≈ ~2150 — the manifest writer should never record `venue=UNKNOWN`/blank per the "Never
      overload venue with non-venue data" rule; needs root-cause = which adapter(s) write venue-less manifest rows.
@@ -1596,7 +1595,7 @@ with commit-SHA evidence.
 | **Phase 4.DEFAULT-REMOVAL**                             | ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY           | Consolidated scope per Phase 2 P2 resolution (PM@`6efbfced`): (a) remove 4 `None` defaults from 5 `record_*` methods + (b) bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + (c) reconcile codex prose at `availability-manifest-and-data-status.md:258-262+265`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO                                              | Baseline doc `codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward).                                                                                                                                                                                                                                                                                                                                                                 |
 | **LookaheadBiasError strict-mode at features-\***       | ✅ **DONE** (freeze-gate item 5 closed)              | 8/8 families shipped: sports + onchain prior; delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe at `features-service@a0011d17` 2026-05-13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| **Carry-forward — TradFi 4.3% phantom audit triage**    | ❌ NOT YET OPENED — does NOT block freeze            | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master_2026_05_07.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Carry-forward — TradFi 4.3% phantom audit triage**    | ❌ NOT YET OPENED — does NOT block freeze            | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Go/no-go signal for 2026-05-15 Phase 1 freeze gate
 

@@ -54,15 +54,15 @@ The 23 active plans (20 audited 2026-05-07 + 3 new keystones) cover everything.
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Live-trading critical path / Group A-G readiness                                            | [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md)                                                                      |
 | Manifest write-side honesty (record_empty / record_failed / record_expected_empty)          | [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)                                        |
-| Manifest legacy-row migration (write-side back-fill)                                        | [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)                                                 |
+| Manifest legacy-row migration (write-side back-fill)                                        | [`manifest_migration_SUPERSEDED_2026_05_21.md`](../epics/manifest_migration_SUPERSEDED_2026_05_21.md)                                         |
 | Strategy engine v2 finalization (V1-RETIRE done, futures-roll + Unity UAT remain)           | [`strategy_architecture_v2_finalization_2026_04_19.plan.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.plan.md)             |
 | DART operator UX (substantively shipped, 7 polish items)                                    | [`dart_ux_cockpit_refactor_2026_04_29.plan.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.plan.md)                                       |
-| **CeFi backfills, venues, instruments, date ranges**                                        | [`cefi_master_2026_05_07.md`](../epics/cefi_master_2026_05_07.md)                                                                             |
-| **DeFi backfills, protocols, chains, LST tokens, 6 perp-venue hedges**                      | [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md)                                                                                      |
-| **TradFi backfills, ES.OPT 11-cluster, Databento, MDPS**                                    | [`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md)                                                                         |
-| **Sports backfills, 6 sources, leagues, fixture/odds/lineups/weather**                      | [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md)                                                                         |
-| **Predictions / Polymarket / Kalshi canonical-question-group**                              | [`predictions_master_2026_05_07.md`](../epics/predictions_master_2026_05_07.md)                                                               |
-| **Shard granularity SSOT, data-status drilldown, deployment-build infra**                   | [`infrastructure_master_2026_05_07.md`](../epics/infrastructure_master_2026_05_07.md)                                                         |
+| **CeFi backfills, venues, instruments, date ranges**                                        | [`cefi_master.md`](../epics/cefi_master.md)                                                                                                   |
+| **DeFi backfills, protocols, chains, LST tokens, 6 perp-venue hedges**                      | [`defi_master.md`](defi_master.md)                                                                                                            |
+| **TradFi backfills, ES.OPT 11-cluster, Databento, MDPS**                                    | [`tradfi_master.md`](../epics/tradfi_master.md)                                                                                               |
+| **Sports backfills, 6 sources, leagues, fixture/odds/lineups/weather**                      | [`sports_master.md`](../epics/sports_master.md)                                                                                               |
+| **Predictions / Polymarket / Kalshi canonical-question-group**                              | [`predictions_master.md`](../epics/predictions_master.md)                                                                                     |
+| **Shard granularity SSOT, data-status drilldown, deployment-build infra**                   | [`infrastructure_master.md`](../epics/infrastructure_master.md)                                                                               |
 | Asset-group vocabulary (3 absorbed items remain)                                            | [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md)                     |
 | Instruments-service + MTDS completion                                                       | [`instruments_and_market_tick_data_completion_2026_05_01.plan.md`](../archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md) |
 | MTDS per-instrument download API                                                            | [`mtds_per_instrument_download_api_2026_04_24.md`](mtds_per_instrument_download_api_2026_04_24.md)                                            |
@@ -213,13 +213,13 @@ against 37 currently-running VMs, and cross-referenced sibling plans for blocker
 | **writegate_honest_coverage_endtoend_2026_05_06**          |                         87 |                             15 |                            1 |                       1 |     1 | keep active; Phase 4.A typed-error rendering = highest leverage next                                                             |
 | **dart_ux_cockpit_refactor_2026_04_29**                    |                          7 |                              0 |                            0 |                       0 |     0 | substantively shipped; 7 polish/SSOT items not live-blocking                                                                     |
 | **strategy_architecture_v2_finalization_2026_04_19**       |                         67 |                              9 |                            0 |                       1 |     4 | rescope: split into 4 successor plans (post-V1-RETIRE cleanup, futures-roll, UI service-split fold-in, Unity UAT)                |
-| **manifest_migration_master_2026_05_07**                   |                         18 |                              0 |                            0 |                       8 |     0 | keep active; convert to codex SSOT after Stage 4                                                                                 |
-| **cefi_master_2026_05_07**                                 |                         22 |                              4 |                  12 (24 VMs) |                       6 |     2 | keep active; VM-tied work draining 2026-05-08 to 2026-05-09                                                                      |
-| **defi_master_2026_05_07**                                 |                         32 |                              2 |                            0 |                       6 |     0 | **TOP-PRIORITY P0** (May-23 headline)                                                                                            |
-| **tradfi_master_2026_05_07**                               |                         18 |                              1 |                   5+ (5 VMs) |                       2 |     2 | keep active; P1 batch-only this cycle                                                                                            |
-| **sports_master_2026_05_07**                               |                         70 |                              0 |                    3 (4 VMs) |                      22 |     0 | keep active; heavy P0 surface, cross-plan coupling                                                                               |
-| **predictions_master_2026_05_07**                          |                         35 |                              1 |                            0 |                      13 |     0 | keep active; P1, 14 P0 items in 16 days = tight                                                                                  |
-| **infrastructure_master_2026_05_07**                       |                         30 |                              0 |              33 (live tests) |                      17 |     4 | keep active; 9 actionable + 17 blocked                                                                                           |
+| **manifest_migration_SUPERSEDED_2026_05_21**               |                         18 |                              0 |                            0 |                       8 |     0 | keep active; convert to codex SSOT after Stage 4                                                                                 |
+| **cefi_master**                                            |                         22 |                              4 |                  12 (24 VMs) |                       6 |     2 | keep active; VM-tied work draining 2026-05-08 to 2026-05-09                                                                      |
+| **defi_master**                                            |                         32 |                              2 |                            0 |                       6 |     0 | **TOP-PRIORITY P0** (May-23 headline)                                                                                            |
+| **tradfi_master**                                          |                         18 |                              1 |                   5+ (5 VMs) |                       2 |     2 | keep active; P1 batch-only this cycle                                                                                            |
+| **sports_master**                                          |                         70 |                              0 |                    3 (4 VMs) |                      22 |     0 | keep active; heavy P0 surface, cross-plan coupling                                                                               |
+| **predictions_master**                                     |                         35 |                              1 |                            0 |                      13 |     0 | keep active; P1, 14 P0 items in 16 days = tight                                                                                  |
+| **infrastructure_master**                                  |                         30 |                              0 |              33 (live tests) |                      17 |     4 | keep active; 9 actionable + 17 blocked                                                                                           |
 | **venue_axis_asset_group_vocabulary_2026_04_25**           |                          3 |                              0 |                            0 |                       1 |     0 | **archive-ready** after folding 3 absorbed items into umbrellas                                                                  |
 | **instruments_and_market_tick_data_completion_2026_05_01** |                         22 |                              0 |           26 (sports + cefi) |                      13 |     2 | keep active; gates master operator-facing data-status                                                                            |
 | **mtds_per_instrument_download_api_2026_04_24**            |                         11 |                              1 |                            0 |                       6 |     1 | keep active; Phase 1.5 critical-path for May-23 (DeFi multi-chain)                                                               |
@@ -267,14 +267,14 @@ blocked / ~26 stale.
       │ blocked by
       ▼
 ┌─────────────────────────────────────┐
-│ manifest_migration_master_2026_05_07│
+│ manifest_migration_SUPERSEDED_2026_05_21│
 │ Stage 1: sports rename (operator)   │
 │ Stage 4: cross-asset rescan         │
 └─────┬───────────────────────────────┘
       │ blocked by
       ▼
 ┌──────────────────────────────────────┐
-│ infrastructure_master_2026_05_07     │◀─── 33 backfill VMs are
+│ infrastructure_master     │◀─── 33 backfill VMs are
 │ shard-axis SSOT · drilldown · build  │     LIVE TESTS of this
 │ raw-tables-migration (cross-asset)   │     plan's shipped infra
 └──────────────────────────────────────┘
@@ -398,7 +398,7 @@ progress.
 
 ### CeFi historical (24 VMs) — ETA 2026-05-07 to 2026-05-09
 
-Owner plan: **cefi_master_2026_05_07**.
+Owner plan: **cefi_master**.
 
 | Group                          | VMs                                                         | Created             | Elapsed | Heavy/light          | ETA              |
 | ------------------------------ | ----------------------------------------------------------- | ------------------- | ------: | -------------------- | ---------------- |
@@ -412,13 +412,13 @@ Owner plan: **cefi_master_2026_05_07**.
 
 ### TradFi MDPS (5 VMs) — ETA 2026-05-08
 
-Owner plan: **tradfi_master_2026_05_07**.
+Owner plan: **tradfi_master**.
 
 - `mdps-tradfi-{2021,22,23,24,25}-...` created 2026-05-06T05:00, T+22h, ETA 2026-05-08
 
 ### Sports recovery (4 VMs) — ETA 2026-05-07 to 2026-05-08
 
-Owner plan: **sports_master_2026_05_07**.
+Owner plan: **sports_master**.
 
 - `af-backfill-20260507-033214` (api_football, T+0h)
 - `fs-backfill-20260507-010724` (footystats, T+5h)
@@ -432,9 +432,8 @@ Owner plan: **sports_master_2026_05_07**.
 
 ### NOT currently running (ETAs N/A)
 
-- DeFi backfills: 0 running. **defi_master_2026_05_07** has no in-flight VM cover; needs new launches for May-23
-  critical path.
-- Predictions backfills: 0 running. **predictions_master_2026_05_07** same.
+- DeFi backfills: 0 running. **defi_master** has no in-flight VM cover; needs new launches for May-23 critical path.
+- Predictions backfills: 0 running. **predictions_master** same.
 - ml-training/inference VMs: 0 running.
 
 ---
@@ -461,8 +460,8 @@ Closest candidates (not yet — listed for follow-up tracking):
    at ship time" (CLAUDE.md hard rule per `896c9bc5`) is exactly this lesson.
 2. **Plan-body references to folded plans**: `master_to_live_defi` body references `defi_e2e_pipeline_2026_04_30`,
    `leveraged_leg_controller_ 2026_05_01`, `defi_pipeline_extension_2026_05_01` as live plans — all folded into
-   `defi_master_2026_05_07` per Stage 7 batch consolidation. Work-stream-E EXTEND items + critical-path Week-1 alerting
-   line need updating to point at `defi_master:Fork 1`.
+   `defi_master` per Stage 7 batch consolidation. Work-stream-E EXTEND items + critical-path Week-1 alerting line need
+   updating to point at `defi_master:Fork 1`.
 3. **Service readiness matrix in master plan** lists `manual_trade_booking_reconciliation_2026_03_22` as "to archive"
    but Stage 1 already archived it. Matrix row should now reference only
    `consolidated_operational_validation_2026_04_15`.

@@ -792,9 +792,9 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 - **`master_to_live_defi_2026_05_23.md`** — sibling. DeFi-live (the master plan's headline goal) does NOT depend on most
   of this plan, but the DeFi instruments-live triggers (cefi 15-min CCXT for hedge legs on Bybit/Deribit/
-  Binance/OKX/Hyperliquid/Aster, plus DeFi-onchain instruments triggers covered separately by `defi_master_2026_05_07`)
-  ARE in the master critical path. Phase D + the AWS-mirror in F.3 are the parts of THIS plan that the master needs by
-  2026-05-23; everything else (sports / tradfi / prediction live) is post-2026-05-23.
+  Binance/OKX/Hyperliquid/Aster, plus DeFi-onchain instruments triggers covered separately by `defi_master`) ARE in the
+  master critical path. Phase D + the AWS-mirror in F.3 are the parts of THIS plan that the master needs by 2026-05-23;
+  everything else (sports / tradfi / prediction live) is post-2026-05-23.
 - **`writegate_honest_coverage_endtoend_2026_05_06.md`** — depends_on. Live-mode `record_captured` / `record_empty`
   semantics inherit from writegate Phase 2.D; this plan does NOT re-derive write-gate rules.
 - **`alerting_service_live_rules_2026_05_07.md`** — depends_on. Owns the rule engine; THIS plan adds the
@@ -851,12 +851,11 @@ single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
 ## Out of scope (referenced but owned elsewhere)
 
 - DeFi onchain instruments live triggers (governance params, RPC discovery, contract-event indexing) → owned by
-  `defi_master_2026_05_07.md`. This plan's matrix above does NOT include defi rows because the asset_group's live
-  triggers are intrinsically onchain-event-driven, not wall-clock; they ride a different architecture surface.
+  `defi_master.md`. This plan's matrix above does NOT include defi rows because the asset_group's live triggers are
+  intrinsically onchain-event-driven, not wall-clock; they ride a different architecture surface.
 - Per-shard market-tick capture (MTDS market data, NOT instruments) — owned by per-asset-group MTDS plans
-  (`cefi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`, `predictions_master_2026_05_07`).
-  Phases C.2, D.1, E.2 above touch MTDS only because tradfi/cefi/prediction "instruments" 15-min OHLCV cadence sits
-  inside MTDS adapters, not instruments-service.
+  (`cefi_master`, `tradfi_master`, `sports_master`, `predictions_master`). Phases C.2, D.1, E.2 above touch MTDS only
+  because tradfi/cefi/prediction "instruments" 15-min OHLCV cadence sits inside MTDS adapters, not instruments-service.
 - Telegram bot infra and the alerting-service rule engine — owned by `alerting_service_live_rules_2026_05_07`.
 
 ## Parallelisation strategy

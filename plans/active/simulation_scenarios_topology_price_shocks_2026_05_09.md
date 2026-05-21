@@ -1,5 +1,4 @@
----
-title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
+---title: Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
 type: plan
 status: active
 created: 2026-05-09
@@ -12,7 +11,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-09
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master_2026_05_07.md # SSOT for "May-23 deliverable" — the live_defi_rollout_2026_05_23.epic was SUPERSEDED 2026-05-08 (3-layer → 2-layer collapse) and folded into defi_master § "May-23 deliverable" per operator direction
+  - plans/active/defi_master.md # SSOT for "May-23 deliverable" — the live_defi_rollout_2026_05_23.epic was SUPERSEDED 2026-05-08 (3-layer → 2-layer collapse) and folded into defi_master § "May-23 deliverable" per operator direction
   - plans/epics/cross_cutting_2026_05_23.epic.md
   - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
@@ -38,6 +37,7 @@ estimate_calibrated_ai_days: 20.1
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1, ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: defi_master
 ---
 
 # Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
@@ -143,8 +143,8 @@ This is **not**:
 - A DR / chaos drill harness (that's `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`; this plan
   **provides** the synthetic injection primitives that DR drills will reuse).
 - A separate "backtest engine" — every scenario runs through the unified pipeline (MTDS → MDPS → features-\* →
-  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded
-  overlay layer.
+  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded overlay
+  layer.
 
 It **is**: a 14-day sprint that ships UAC scenario contracts, UTL injection primitives, per-layer wire-ins, an
 asset-group-scoped scenario library, a per-archetype regression matrix run on real VMs, and the pre-cutover gate
@@ -791,11 +791,10 @@ engine state) and emits a real `ScenarioReport` parquet.
       Q1.A resolution; Group F item 17.5 added to master_to_live_defi_2026_05_23.md)
 - [x] [AGENT] P0. **10.B `defi_master` § "May-23 deliverable" annotation.** _(Re-routed 2026-05-12 — the
       originally-referenced `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into
-      `defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file
-      at `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)_
-      `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's
-      scenario-regression-matrix gate (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6
-      2026-05-12)
+      `defi_master.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file at
+      `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)_ `defi_master.md` §
+      "May-23 deliverable" success-criteria table gains a row pointing at this plan's scenario-regression-matrix gate
+      (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6 2026-05-12)
 - [x] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
       Phase 9 is green. Per the banner-remove-owner-by-launcher rule. **DEFERRED-POST-CUTOVER** — gates on Phase 9 green
       (BLOCKED-UPSTREAM-OUTAGE). → successor plan.
@@ -843,8 +842,8 @@ within ≤24h of cutover; matrix run as part of pre-cutover dress rehearsal") ad
 `master_to_live_defi_2026_05_23.md`. Phase 10.A checkbox flipped above with slot-1 attribution.
 
 **A2 (Phase 10.B)**: `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into
-`defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse. Main fixed 4 stale references in
-this plan body pointing at the old epic path. Phase 10.B re-routed to defi_master; row added by slot-6 (PM@9cc8f04b).
+`defi_master.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse. Main fixed 4 stale references in this plan
+body pointing at the old epic path. Phase 10.B re-routed to defi_master; row added by slot-6 (PM@9cc8f04b).
 
 ## Deferred work after 2026-05-09 plan-creation session
 
@@ -1326,19 +1325,19 @@ Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § C
 
 ## Deferred work after 2026-05-12 Harsh slot-6 Day-3 session
 
-| Phase / item                                                             | Status as of 2026-05-12                                                                                                  | Successor / blocker                                                                  |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Phase 3.A/B/C/D/G                                                        | DEFERRED-PER-COMPRESSED-SCOPE (annotations added this session)                                                           | `simulation_scenarios_post_cutover_2026_06_01.md` Phases 3.A/B/C/D/G                 |
-| Phase 6 (backtest CLI)                                                   | DEFERRED-PER-COMPRESSED-SCOPE                                                                                            | Successor plan Phase 6                                                               |
-| Phase 7 (UI surface)                                                     | DEFERRED-PER-COMPRESSED-SCOPE                                                                                            | Successor plan Phase 7                                                               |
-| Phases 8.B-I (codex updates)                                             | DEFERRED-PER-COMPRESSED-SCOPE                                                                                            | Successor plan Phase 8                                                               |
-| Phase 9 (real-VM matrix runs)                                            | DEFERRED-PER-COMPRESSED-SCOPE                                                                                            | Successor plan Phase 9                                                               |
-| Phase 10.A (master plan extension)                                       | 🟡 BLOCKED — slot-1 territory per CLAUDE.md G-14                                                                         | Main orchestrator slot-1 to add Group F item 17.5                                    |
-| Phase 10.B (defi_master § "May-23 deliverable" annotation)               | ✅ Q1 RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md`; re-routed | Successor plan adds row to `defi_master` "May-23 deliverable" success-criteria table |
-| Phase 10.C (banner removal)                                              | Blocked on Phase 9                                                                                                       | Successor plan                                                                       |
-| Phase 10.D (cron VM)                                                     | Blocked on Phase 9 + operator-runnable                                                                                   | Successor plan + operator                                                            |
-| DART scenario fold-in (cross_cutting #4)                                 | Not in pre-cutover scope: Phase 7 (UI) DEFERRED; BUILD #1/#4/#5 Ikenna-blocked                                           | Successor plan Phase 7 / post-Ikenna-D1/D4 resolution                                |
-| Scenario taxonomy SSOT alignment with slot-5 recursive-borrow SCN-B1..B5 | Needs operator call (option a or b above)                                                                                | `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 owner                      |
+| Phase / item                                                             | Status as of 2026-05-12                                                                                       | Successor / blocker                                                                  |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Phase 3.A/B/C/D/G                                                        | DEFERRED-PER-COMPRESSED-SCOPE (annotations added this session)                                                | `simulation_scenarios_post_cutover_2026_06_01.md` Phases 3.A/B/C/D/G                 |
+| Phase 6 (backtest CLI)                                                   | DEFERRED-PER-COMPRESSED-SCOPE                                                                                 | Successor plan Phase 6                                                               |
+| Phase 7 (UI surface)                                                     | DEFERRED-PER-COMPRESSED-SCOPE                                                                                 | Successor plan Phase 7                                                               |
+| Phases 8.B-I (codex updates)                                             | DEFERRED-PER-COMPRESSED-SCOPE                                                                                 | Successor plan Phase 8                                                               |
+| Phase 9 (real-VM matrix runs)                                            | DEFERRED-PER-COMPRESSED-SCOPE                                                                                 | Successor plan Phase 9                                                               |
+| Phase 10.A (master plan extension)                                       | 🟡 BLOCKED — slot-1 territory per CLAUDE.md G-14                                                              | Main orchestrator slot-1 to add Group F item 17.5                                    |
+| Phase 10.B (defi_master § "May-23 deliverable" annotation)               | ✅ Q1 RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master.md`; re-routed | Successor plan adds row to `defi_master` "May-23 deliverable" success-criteria table |
+| Phase 10.C (banner removal)                                              | Blocked on Phase 9                                                                                            | Successor plan                                                                       |
+| Phase 10.D (cron VM)                                                     | Blocked on Phase 9 + operator-runnable                                                                        | Successor plan + operator                                                            |
+| DART scenario fold-in (cross_cutting #4)                                 | Not in pre-cutover scope: Phase 7 (UI) DEFERRED; BUILD #1/#4/#5 Ikenna-blocked                                | Successor plan Phase 7 / post-Ikenna-D1/D4 resolution                                |
+| Scenario taxonomy SSOT alignment with slot-5 recursive-borrow SCN-B1..B5 | Needs operator call (option a or b above)                                                                     | `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 owner                      |
 
 ## Phase 1 — Topology shock scenario designs (supplemental, slot 7 2026-05-13)
 
@@ -1644,8 +1643,8 @@ is COMPLETE.
 
 - Phase 10.A: G-14 slot-1 territory (✅ being taken by slot-1 main 2026-05-12 — item 17.5 added to
   `master_to_live_defi_2026_05_23.md` Group F)
-- Phase 10.B: ✅ RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md`
-  § "May-23 deliverable"; re-routed (successor plan adds the row there, not to a non-existent epic file)
+- Phase 10.B: ✅ RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master.md` § "May-23
+  deliverable"; re-routed (successor plan adds the row there, not to a non-existent epic file)
 
 ## Phase 6 — Per-archetype coverage matrix expansion (Day-2-4 scope extension, 2026-05-13)
 

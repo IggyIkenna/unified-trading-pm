@@ -6,7 +6,7 @@ status: active
 created: 2026-05-17
 deadline: 2026-06-15
 owner: ikenna
-parent_epic: tradfi_master_2026_05_07
+parent_epic: tradfi_master
 asset_group: tradfi
 priority: P2
 locked_by: live-defi-rollout
@@ -16,7 +16,7 @@ estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 related_plans:
   - master_to_live_defi_2026_05_23
-  - tradfi_master_2026_05_07
+  - tradfi_master
   - tradfi_ohlcv_only_mvp_backfill_2026_05_15
 codex_ssots:
   - codex/02-data/mtds-data-source-coverage-matrix.md
@@ -131,8 +131,8 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 - [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) — predecessor. Banner
   this plan in its `## Temporary states` section + flag it for archival once Phase 7 lands.
-- [`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md) — re-enable the trades/tbbo rows in the epic's
-  Phase X residual that the predecessor parked.
+- [`tradfi_master.md`](../epics/tradfi_master.md) — re-enable the trades/tbbo rows in the epic's Phase X residual that
+  the predecessor parked.
 
 ## Full-Execution Criterion
 

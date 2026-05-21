@@ -1,5 +1,4 @@
----
-title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
+---title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
 type: sub-plan
 status: active
 created: 2026-05-19
@@ -14,6 +13,7 @@ estimate_calibration_note: |
   New implementation (brand-new class, 1.0× multiplier). Scope: UTL primitive +
   catalog threading + per-adapter wire-in across MTDS/MDPS/features-service.
   Audit docs from wave3x Track D are the spec.
+parent_epic: mtds_mdps_master
 ---
 
 **MIGRATED FROM:** `wave3x_residual_ssots_2026_05_08.md` § Track D items 1-4. Audit work completed 2026-05-11 (slot 3).

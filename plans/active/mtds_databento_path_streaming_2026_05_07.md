@@ -1,5 +1,4 @@
----
-name: mtds-databento-path-streaming
+---name: mtds-databento-path-streaming
 overview:
   Successor plan for DEFERRED MTDS Databento adapter path-streaming work — pass `path=<tempfile>` to
   `client.timeseries.get_range(...)` + iterate `to_df(count=N)` chunks to bound peak memory; optional outer-loop
@@ -200,6 +199,7 @@ estimate_calibrated_ai_days: 1.2
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: mtds_mdps_master
 ---
 
 # MTDS Databento path-streaming successor plan (2026-05-07)
@@ -243,7 +243,7 @@ successor for that deferred Databento work, distinct from the (already-shipped) 
   optionally builds on `asyncio.gather` semantics that the parallelisation fix established.
 - **Master:** `master_to_live_defi_2026_05_23.md` — Group D (Coverage & shard) item 14, item 16 (Operability under
   load).
-- **Umbrella:** `infrastructure_master_2026_05_07.md` — folds in shard-granularity SSOT propagation.
+- **Umbrella:** `infrastructure_master.md` — folds in shard-granularity SSOT propagation.
 - **Sibling successor plan (also created 2026-05-07):** `mdps_streaming_and_backpressure_2026_05_07.md` — same general
   theme (streaming flush + admission control) but for MDPS not MTDS, and a different writer (canonical_writer /
   StreamingParquetWriter vs Databento DBNStore). Independent; no shared code.

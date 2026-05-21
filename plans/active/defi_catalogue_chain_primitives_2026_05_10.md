@@ -1,5 +1,4 @@
----
-name: defi-catalogue-chain-primitives
+---name: defi-catalogue-chain-primitives
 overview:
   Full DeFi-protocol catalogue buildout (vaults / lending / LSTs / restaking-LRTs / perp DEXes / spot DEXes) + chain
   primitives (Solana Jito MEV / Tenderly bundle-sim policy / per-chain RPC redundancy / margin-tier tables) for May-23
@@ -23,7 +22,7 @@ related_codex:
   - codex/04-architecture/tenderly-execution-provider.md
   - codex/02-data/availability-manifest-and-data-status.md
 related_plans:
-  - plans/active/defi_master_2026_05_07.md
+  - plans/active/defi_master.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/defi_simulation_realism_2026_05_10.md
   - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
@@ -34,6 +33,7 @@ estimate_calibrated_ai_days: 205.5
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45, ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: defi_master
 ---
 
 ## Deferred work — migrated to:
@@ -316,7 +316,7 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       disambiguate from the new module visually), which is mechanical refactor across the 2 live consumers + facade
       re-export — DEFERRED to post-cutover plan since not May-23-blocking.
 - [x] [AGENT] P0. **1G — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification.** Confirm presence at the documented location
-      (per `defi_master_2026_05_07.md` Phase 9.1A); if missing, add as
+      (per `defi_master.md` Phase 9.1A); if missing, add as
       `unified_api_contracts/canonical/domain/predictions/lifecycle.py` sibling for LSTs at
       `canonical/domain/onchain/lst_protocol_mapping.py`. Map: `(lst_token_symbol, chain) → (protocol, base_asset)`.
       **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at UAC@`961af767`. **Actual SSOT location**:
@@ -402,10 +402,10 @@ Owner: harsh + parallel agents per protocol.
 > **Shard-granularity SSOT compliance** (per
 > [`codex/04-architecture/shard-level-failure-isolation.md`](../../codex/04-architecture/shard-level-failure-isolation.md)
 >
-> - `plans/epics/infrastructure_master_2026_05_07.md`): shard atom MUST be identical across (a) writer atomicity, (b)
->   manifest row key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown. Per the
->   matrix above, the shard atom for each protocol family is documented here as the SSOT; Phase 2 adapter
->   implementations MUST honor this matrix; deployment-UI drilldowns roll up to this same granularity.
+> - `plans/epics/infrastructure_master.md`): shard atom MUST be identical across (a) writer atomicity, (b) manifest row
+>   key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown. Per the matrix above, the
+>   shard atom for each protocol family is documented here as the SSOT; Phase 2 adapter implementations MUST honor this
+>   matrix; deployment-UI drilldowns roll up to this same granularity.
 >
 > **Codex SSOT update** (Phase 2 boundary, per HARD RULE Post-Plan-Phase Codex Audit) — slot 2 extends
 > [`codex/02-data/defi-venue-protocol-catalogue.md`](../../codex/02-data/defi-venue-protocol-catalogue.md) with a
@@ -684,13 +684,13 @@ Owner: harsh + parallel agents per protocol.
 >       when subgraph returns zero rows, current behaviour writes `empty_confirmed`. Per CLAUDE.md "Honest absence vs
 >       fake placeholders" — should classify per the 4-category tree: if catalog says alive AND day in coverage, attempt
 >       failed → `record_failed` with typed reason; only legitimate empties get `empty_confirmed`. **✅ CLOSED AS STALE
->       FRAMING 2026-05-11 by slot 3 + verified 2026-05-12 by slot 2.** Per `defi_master_2026_05_07.md` DONE-2026-05-12
->       block: "routing config absent" framing was stale; data exists on-disk (LINEA 2025-03-01 = 475 real rows, BSC
->       2024-06-01 = 316 real rows — NOT 1440-NaN placeholders). The actual gap was operational (canonical manifest
->       stale vs per-VM shards) — closed by slot 3 manual consolidator + Case-5 bucket fix
->       (deployment-service@`ad4d448`, slot 6@`2a76a2a`). Aave V3 Ethereum 0/343 silent-zero specifically: slot 3
->       confirmed the ~576 stale "404 GET https" `attempted_failed` rows reclaimed. No code change needed — root cause
->       was consolidator dispatch + per-VM shard reconciliation, not adapter classification.
+>       FRAMING 2026-05-11 by slot 3 + verified 2026-05-12 by slot 2.** Per `defi_master.md` DONE-2026-05-12 block:
+>       "routing config absent" framing was stale; data exists on-disk (LINEA 2025-03-01 = 475 real rows, BSC 2024-06-01
+>       = 316 real rows — NOT 1440-NaN placeholders). The actual gap was operational (canonical manifest stale vs per-VM
+>       shards) — closed by slot 3 manual consolidator + Case-5 bucket fix (deployment-service@`ad4d448`, slot
+>       6@`2a76a2a`). Aave V3 Ethereum 0/343 silent-zero specifically: slot 3 confirmed the ~576 stale "404 GET https"
+>       `attempted_failed` rows reclaimed. No code change needed — root cause was consolidator dispatch + per-VM shard
+>       reconciliation, not adapter classification.
 > - [x] [MTDS] P0. **3-LENDING.2 — Bug 2: Compound V3 multi-chain subgraph routing**. Compound V3 has separate subgraphs
 >       per chain (Ethereum / Arbitrum / Base). Adapter must dispatch per chain; per-chain failures are isolated. \*\*✅
 >       CLOSED AS STALE FRAMING 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab) — pre-audit verified at MTDS
@@ -725,17 +725,17 @@ Owner: harsh + parallel agents per protocol.
 >       `gs://lending-indices-central-element-323112/_index/availability_index.parquet` — 65 captured rows for
 >       2026-05-07..2026-05-11 (13/day across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains + SPARK × 1 chain = 12
 >       protocol-chain combos). 2026-05-12+ → `empty_confirmed` (legitimate — The Graph subgraphs lag ~1 day behind
->       real-time; not a data gap). **Priority #5 in `defi_master_2026_05_07.md` cleared** — slot 3's handoff item (a)
->       "Recent-days catch-up" done.
+>       real-time; not a data gap). **Priority #5 in `defi_master.md` cleared** — slot 3's handoff item (a) "Recent-days
+>       catch-up" done.
 >
 > Original PARTIAL annotation from 2026-05-11 by slot 3 retained for provenance: launcher exists at
 > `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` (verified at slot 3 status note);
 > 2026-05-11 full-history backfill VM `mtds-lending-indices-20260511-181115` killed at ~3373 events / ~375 dates
 > (operator decision — `lending_indices_handler` re-downloads already-`captured` data; no manifest-freshness skip).
 > **Remaining work**: (a) recent-days catch-up `2026-05-07..today` 5-10min scoped run with event-stream verification
-> (`STARTED+progress+STOPPED`); (b) ManifestFreshnessCache wire-in (P1 from `defi_master_2026_05_07.md` DONE-2026-05-12
-> block § Discoveries during Priority #5); (c) clean full-history re-run after (b) lands. **Slot 5 Family-1 design NOT
-> blocked** — pulls fix Day 3 per spec above.
+> (`STARTED+progress+STOPPED`); (b) ManifestFreshnessCache wire-in (P1 from `defi_master.md` DONE-2026-05-12 block §
+> Discoveries during Priority #5); (c) clean full-history re-run after (b) lands. **Slot 5 Family-1 design NOT blocked**
+> — pulls fix Day 3 per spec above.
 >
 > - [x] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**. ✅ **SHIPPED 2026-05-16 by slot 2 via sub-agent
 >       dispatch** at `instruments-service@88d48da` (10 unit tests green; basedpyright 0 errors). Script at
@@ -1081,8 +1081,8 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       `connector.connect(config={...})` credential injection shape as the Phase 1–3 [connectors]". Key Files table
       covers all 13 Phase 4 protocol connectors + cost models + matching engine surfaces. Backtest replay status
       documented as `BLOCKED-DATA` until lending-indices ≥1yr backfill lands (target 2026-05-19→23).
-- [x] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
-      refreshed. ✅ Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
+- [x] [AGENT] P0. **7H — `defi_master.md`** body — gap-fill priorities + per-archetype readiness matrix refreshed. ✅
+      Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
       `mtds-lending-indices-20260511-204908` + manifest verification of 65 captured rows).
 - [x] ✅ [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed. —
       PM@`75560065` 2026-05-18. Row 20 Last verified updated → 2026-05-18 (B-015 paper VM
@@ -1097,17 +1097,16 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       (DeFi-side catalogue completeness) ✅ MOSTLY DONE per Phase 1J codex refresh. Slot 1 main-orch should integrate
       this status into the master plan readiness checklist on next refresh cycle.
 - [x] [AGENT] P1. **7J — ManifestFreshnessCache wire-in into MTDS DeFi backfill handlers (NEW — folded in from
-      `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block item (b))**. Per CLAUDE.md "Manifest concurrency
-      principle" rule + the existing primitive at
-      `unified-trading-library/unified_trading_library/manifest_freshness.py:136` `class ManifestFreshnessCache`
-      (single-bucket TTL-cached row-key membership set; `is_now_captured(row_key)` API; `bulk_load()` warm-up).
-      **DESIGN-SHIPPED 2026-05-13 (Day 4) by slot 2; IMPLEMENTATION HANDED TO HARSH SLOT 2** (per cross-side handshake
-      "Ikenna designs, Harsh implements"). **Workspace-grep audit 2026-05-13**: zero current handlers wire
-      `ManifestFreshnessCache` (`grep -rn     ManifestFreshnessCache market-tick-data-service/market_tick_data_service/`
-      returns 0 hits). 9 candidate handlers identified at
-      `market-tick-data-service/market_tick_data_service/cli/handlers/`: `lending_indices_handler.py` /
-      `gas_fee_handler.py` / `lst_rates_handler.py` / `dex_swaps_handler.py` / `dex_pools_handler.py` /
-      `liquidations_handler.py` / `liquidation_events_handler.py` / `perp_funding_handler.py` /
+      `defi_master.md` DONE-2026-05-12 handover-block item (b))**. Per CLAUDE.md "Manifest concurrency principle" rule +
+      the existing primitive at `unified-trading-library/unified_trading_library/manifest_freshness.py:136`
+      `class ManifestFreshnessCache` (single-bucket TTL-cached row-key membership set; `is_now_captured(row_key)` API;
+      `bulk_load()` warm-up). **DESIGN-SHIPPED 2026-05-13 (Day 4) by slot 2; IMPLEMENTATION HANDED TO HARSH SLOT 2**
+      (per cross-side handshake "Ikenna designs, Harsh implements"). **Workspace-grep audit 2026-05-13**: zero current
+      handlers wire `ManifestFreshnessCache`
+      (`grep -rn     ManifestFreshnessCache market-tick-data-service/market_tick_data_service/` returns 0 hits). 9
+      candidate handlers identified at `market-tick-data-service/market_tick_data_service/cli/handlers/`:
+      `lending_indices_handler.py` / `gas_fee_handler.py` / `lst_rates_handler.py` / `dex_swaps_handler.py` /
+      `dex_pools_handler.py` / `liquidations_handler.py` / `liquidation_events_handler.py` / `perp_funding_handler.py` /
       `solana_lst_archival.py`. **Wire-in pattern** (consistent across all 9 handlers): ```python from
       unified_trading_library import ManifestFreshnessCache
 
@@ -1132,7 +1131,7 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       - `solana_lst_archival.py` → `solana-defi-{pid}`
       **Tests** (per handler): mock `ManifestFreshnessCache` to return `True` for a known row_key and assert
       `expensive_remote_fetch` is NOT called for that shard. Add unit test class `TestFreshnessSkip` in each
-      handler's existing test file. **Closes** `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block (b) +
+      handler's existing test file. **Closes** `defi_master.md` DONE-2026-05-12 handover-block (b) +
       unlocks clean full-history re-run (block-c). **Why P1 not P0**: not 2026-05-23-blocking — the catch-up VM
       already closed the operational gap for Priority #5; the wire-in is the durable fix preventing future
       re-download waste on multi-worker concurrent backfills.
@@ -1148,7 +1147,7 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
         with `None` default for backwards compat). perp_funding asset_group=cefi per FLAG 1 RESOLVED 2026-05-10.
         9 tests passing.
       **Total**: 9 handlers / 27 unit tests / `MANIFEST_FRESHNESS_SKIP` events emit per skip for observability.
-      **Closes**: `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block item (b) FULLY. Item (c) clean
+      **Closes**: `defi_master.md` DONE-2026-05-12 handover-block item (b) FULLY. Item (c) clean
       full-history re-run after (b) lands is now unblocked — Harsh slot 2 can launch the clean backfill VM
       knowing concurrent workers will skip captured shards rather than re-downloading.
 
@@ -1221,21 +1220,21 @@ archive boundary.
 
 ## Deferred work after 2026-05-16 — slot-2 session
 
-| Plan item                                                                                 | Status                | Reason                                                                                                      | Successor / Unblock                                                                    |
-| ----------------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **3-LENDING.5** Manifest reconciler one-shot                                              | `🟡 DEFERRED`         | Body marks: defer until ManifestFreshnessCache (7J) lands clean full-history re-run                         | Block (c) of `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block; tracked there |
-| **3K** Update `availability-manifest-and-data-status.md` with Phase 1A bundled data_types | `🟡 OPEN`             | Doc update (~3-5 cal AI-day); requires sub-agent fan-out across 26 protocols × per-data-type bundling rules | Next slot-2 session; sub-agent fan-out with shard-atom matrix as reference             |
-| **6B** Aave V3 multi-chain backfill (9 non-ETH chains)                                    | `🔴 BLOCKED-OPERATOR` | ≥1 week GCS backfill requires operator [ack]                                                                | Filed at slot-2 ping (BACKFILL APPROVAL REQUEST pattern)                               |
-| **6C** Solana LST historical backfill                                                     | `🔴 BLOCKED-OPERATOR` | Pyth Hermes ≥1 year backfill; ping filed 2026-05-14 awaiting [ack]                                          | `pings/slot_2.md` § 2026-05-14 Pyth LST oracle_prices BACKFILL APPROVAL REQUEST        |
-| **6D** Lighter/Pacifica/Extended OHLCV backfill                                           | `🟡 PARTIAL`          | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779`       | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md`         |
-| **6E** Vaults + restaking + DEX historical (26 protocols)                                 | `🟡 OPEN`             | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack]                                           | Aggregated approval request to filed once protocol selection narrowed                  |
-| **6F** Manifest phantom audit post-backfill                                               | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race  | After slot 6 #1 Phase 7.G operator sign-off lands                                      |
-| **6J** Codex update for Phase 6 backfill coverage                                         | `✅ DONE`             | PM@`48e635d40` 2026-05-19 slot 8 — per-protocol coverage table added                                        | Table refreshes after 6C/6E VMs complete                                               |
-| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update                    | `✅ DONE`             | Phase 3K PM@`aab47b12`; 6J portion PM@`48e635d40` 2026-05-19 slot 8                                         | —                                                                                      |
-| **7I** Master plan Group F items 17-20 status row refresh                                 | `🔴 DEFERRED-SLOT-1`  | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence"                         | Slot 1 main during next daily inventory regenerator cycle                              |
-| **8A** Paper-trade run all archetypes on Tenderly/devnet                                  | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing                                                                          | Once Phase 6 hits ≥99% captured per protocol                                           |
-| **8B** Reconciliation rule (live ⊥ batch P&L delta)                                       | `🟡 BLOCKED-UPSTREAM` | Gated on 8A                                                                                                 | After 8A reaches paper-trade state                                                     |
-| **8C** 7-day continuous live-trade proof                                                  | `🔴 BLOCKED-OPERATOR` | Gated on 8A + 8B + Group F items 17/18/21 + Group G item 23                                                 | Master plan critical path; multi-slot coordination                                     |
+| Plan item                                                                                 | Status                | Reason                                                                                                      | Successor / Unblock                                                             |
+| ----------------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **3-LENDING.5** Manifest reconciler one-shot                                              | `🟡 DEFERRED`         | Body marks: defer until ManifestFreshnessCache (7J) lands clean full-history re-run                         | Block (c) of `defi_master.md` DONE-2026-05-12 handover-block; tracked there     |
+| **3K** Update `availability-manifest-and-data-status.md` with Phase 1A bundled data_types | `🟡 OPEN`             | Doc update (~3-5 cal AI-day); requires sub-agent fan-out across 26 protocols × per-data-type bundling rules | Next slot-2 session; sub-agent fan-out with shard-atom matrix as reference      |
+| **6B** Aave V3 multi-chain backfill (9 non-ETH chains)                                    | `🔴 BLOCKED-OPERATOR` | ≥1 week GCS backfill requires operator [ack]                                                                | Filed at slot-2 ping (BACKFILL APPROVAL REQUEST pattern)                        |
+| **6C** Solana LST historical backfill                                                     | `🔴 BLOCKED-OPERATOR` | Pyth Hermes ≥1 year backfill; ping filed 2026-05-14 awaiting [ack]                                          | `pings/slot_2.md` § 2026-05-14 Pyth LST oracle_prices BACKFILL APPROVAL REQUEST |
+| **6D** Lighter/Pacifica/Extended OHLCV backfill                                           | `🟡 PARTIAL`          | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779`       | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md`  |
+| **6E** Vaults + restaking + DEX historical (26 protocols)                                 | `🟡 OPEN`             | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack]                                           | Aggregated approval request to filed once protocol selection narrowed           |
+| **6F** Manifest phantom audit post-backfill                                               | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race  | After slot 6 #1 Phase 7.G operator sign-off lands                               |
+| **6J** Codex update for Phase 6 backfill coverage                                         | `✅ DONE`             | PM@`48e635d40` 2026-05-19 slot 8 — per-protocol coverage table added                                        | Table refreshes after 6C/6E VMs complete                                        |
+| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update                    | `✅ DONE`             | Phase 3K PM@`aab47b12`; 6J portion PM@`48e635d40` 2026-05-19 slot 8                                         | —                                                                               |
+| **7I** Master plan Group F items 17-20 status row refresh                                 | `🔴 DEFERRED-SLOT-1`  | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence"                         | Slot 1 main during next daily inventory regenerator cycle                       |
+| **8A** Paper-trade run all archetypes on Tenderly/devnet                                  | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing                                                                          | Once Phase 6 hits ≥99% captured per protocol                                    |
+| **8B** Reconciliation rule (live ⊥ batch P&L delta)                                       | `🟡 BLOCKED-UPSTREAM` | Gated on 8A                                                                                                 | After 8A reaches paper-trade state                                              |
+| **8C** 7-day continuous live-trade proof                                                  | `🔴 BLOCKED-OPERATOR` | Gated on 8A + 8B + Group F items 17/18/21 + Group G item 23                                                 | Master plan critical path; multi-slot coordination                              |
 
 **Closed-as-stale 2026-05-16 by slot 2** (separate from above — these were flipped during today's audit):
 
@@ -1274,18 +1273,18 @@ Family-1 design.
 
 ### Deferred work after 2026-05-12 session (carry-forward to Day 2 morning)
 
-| Phase / item                                                                                                                  | Status as of 2026-05-12 EOD           | Successor / blocker                                                                                                                                                                                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1H — UAC QG green                                                                                                             | deferred-to-day-2                     | Quick local QG run by slot 2 Day 2 AM (`bash scripts/quality-gates.sh` from UAC) — edits Day 1 were small/clean, deferring to start-of-day batch verify                                                                                                                                                               |
-| 3-LENDING.4 — recent-days catch-up VM                                                                                         | deferred-to-day-2                     | 5-10min scoped run on `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 today` + event-stream verify per CLAUDE.md "No fire-and-forget VM launches". NOT slot-5-blocking (Family-1 design has 2-year+ horizon already available). Slot 2 Day 2 AM action — closes `defi_master_2026_05_07.md` Priority #5 `[x]`. |
-| 3-LENDING.5 reconciler one-shot wrapper                                                                                       | deferred-after-3-LENDING.4            | Phantom-audit script wrapper for pre-fix drift cleanup; daemon already running per slot 3 manual consolidator (`manifest-consolidator-20260511-181538`). Defer until 3-LENDING.4 catch-up lands.                                                                                                                      |
-| ManifestFreshnessCache wire-in (P1, from `defi_master` handover-block (b))                                                    | deferred-after-3-LENDING.4            | Refactor across `lending_indices_handler` + sibling MTDS DeFi backfill handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`). Slot 2 or Harsh slot 2 Day 2-3 work. Not 2026-05-23-blocking but unlocks clean full-history re-run.                                                               |
-| Clean full-history all-chains lending-indices re-run (P2)                                                                     | deferred-after-ManifestFreshnessCache | Cosmetic cleanup of ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`.                                                                                                                                                                                                     |
-| `create-code-tarballs.sh` stale-repo list (P1, from `defi_master` handover-block (d))                                         | deferred-after-ManifestFreshnessCache | Tooling debt; not May-23-blocking.                                                                                                                                                                                                                                                                                    |
-| Phase 2 codex matrix subsection in `defi-venue-protocol-catalogue.md`                                                         | ✅ DONE 2026-05-12 Day-2              | 8-row shard-atom matrix mirrored into codex "Per-protocol shard-atom matrix" section (before Lending protocols). PM@see next commit.                                                                                                                                                                                  |
-| Optional rename `cefi_margin_tiers.py` → `perp_margin_tiers.py` (visual clarity)                                              | deferred-post-cutover                 | Mechanical refactor; not May-23-blocking.                                                                                                                                                                                                                                                                             |
-| Optional rename legacy `canonical/domain/prediction/` → `prediction_mapping/` (visual disambiguation from new `predictions/`) | deferred-post-cutover                 | Mechanical refactor across 2 live consumers + facade re-export; not May-23-blocking.                                                                                                                                                                                                                                  |
-| Polygon zkEVM `CHAIN_GENESIS_DATES` entry                                                                                     | deferred-until-needed                 | Add `"POLYGON_ZKEVM": "2023-03-27"` only when a protocol on that chain enters Phase 1A scope.                                                                                                                                                                                                                         |
+| Phase / item                                                                                                                  | Status as of 2026-05-12 EOD           | Successor / blocker                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1H — UAC QG green                                                                                                             | deferred-to-day-2                     | Quick local QG run by slot 2 Day 2 AM (`bash scripts/quality-gates.sh` from UAC) — edits Day 1 were small/clean, deferring to start-of-day batch verify                                                                                                                                                    |
+| 3-LENDING.4 — recent-days catch-up VM                                                                                         | deferred-to-day-2                     | 5-10min scoped run on `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 today` + event-stream verify per CLAUDE.md "No fire-and-forget VM launches". NOT slot-5-blocking (Family-1 design has 2-year+ horizon already available). Slot 2 Day 2 AM action — closes `defi_master.md` Priority #5 `[x]`. |
+| 3-LENDING.5 reconciler one-shot wrapper                                                                                       | deferred-after-3-LENDING.4            | Phantom-audit script wrapper for pre-fix drift cleanup; daemon already running per slot 3 manual consolidator (`manifest-consolidator-20260511-181538`). Defer until 3-LENDING.4 catch-up lands.                                                                                                           |
+| ManifestFreshnessCache wire-in (P1, from `defi_master` handover-block (b))                                                    | deferred-after-3-LENDING.4            | Refactor across `lending_indices_handler` + sibling MTDS DeFi backfill handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`). Slot 2 or Harsh slot 2 Day 2-3 work. Not 2026-05-23-blocking but unlocks clean full-history re-run.                                                    |
+| Clean full-history all-chains lending-indices re-run (P2)                                                                     | deferred-after-ManifestFreshnessCache | Cosmetic cleanup of ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`.                                                                                                                                                                                          |
+| `create-code-tarballs.sh` stale-repo list (P1, from `defi_master` handover-block (d))                                         | deferred-after-ManifestFreshnessCache | Tooling debt; not May-23-blocking.                                                                                                                                                                                                                                                                         |
+| Phase 2 codex matrix subsection in `defi-venue-protocol-catalogue.md`                                                         | ✅ DONE 2026-05-12 Day-2              | 8-row shard-atom matrix mirrored into codex "Per-protocol shard-atom matrix" section (before Lending protocols). PM@see next commit.                                                                                                                                                                       |
+| Optional rename `cefi_margin_tiers.py` → `perp_margin_tiers.py` (visual clarity)                                              | deferred-post-cutover                 | Mechanical refactor; not May-23-blocking.                                                                                                                                                                                                                                                                  |
+| Optional rename legacy `canonical/domain/prediction/` → `prediction_mapping/` (visual disambiguation from new `predictions/`) | deferred-post-cutover                 | Mechanical refactor across 2 live consumers + facade re-export; not May-23-blocking.                                                                                                                                                                                                                       |
+| Polygon zkEVM `CHAIN_GENESIS_DATES` entry                                                                                     | deferred-until-needed                 | Add `"POLYGON_ZKEVM": "2023-03-27"` only when a protocol on that chain enters Phase 1A scope.                                                                                                                                                                                                              |
 
 ### Cross-side handshakes for Harsh slot 2 (Day 2 morning pickup)
 

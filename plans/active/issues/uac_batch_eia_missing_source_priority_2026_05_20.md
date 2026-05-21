@@ -49,4 +49,4 @@ Estimated effort: <30 minutes once the owner identifies the right (asset_group, 
 ## Cross-references
 
 - Parent (discovery context): `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 1.
-- Related: `tradfi_master_2026_05_07.md` (commodity-features owner).
+- Related: `tradfi_master.md` (commodity-features owner).

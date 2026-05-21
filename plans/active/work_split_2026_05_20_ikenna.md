@@ -5,10 +5,10 @@ date: 2026-05-20
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-parent_plan: data_pipeline_master_coordination_2026_05_20.md
+parent_plan: mtds_mdps_master.md
 supersedes: work_split_2026_05_19_ikenna.md
 related_plans:
-  - data_pipeline_master_coordination_2026_05_20.md
+  - mtds_mdps_master.md
   - issues/strategy_archetype_logic_audit_2026_05_20.md
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
@@ -18,8 +18,8 @@ related_plans:
 # Ikenna work-split 2026-05-20
 
 > **Supersedes** `work_split_2026_05_19_ikenna.md` — slot 6/7/9 freeze gates remain; slots 9/10/11 re-themed to QG green
-> background sweep on the Ikenna AWS VM while Harsh is offline (India timezone). Master plan
-> `data_pipeline_master_coordination_2026_05_20.md` is the canonical ordering layer.
+> background sweep on the Ikenna AWS VM while Harsh is offline (India timezone). Master plan `mtds_mdps_master.md` is
+> the canonical ordering layer.
 
 ## Slot stack — local laptop (slots 1-8) + AWS VM background (slots 9-11)
 
@@ -55,7 +55,7 @@ bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>
 
 # 2. Boot context: read CLAUDE.md HARD RULE + master coordinator Phase -1
 cat unified-trading-pm/cursor-configs/CLAUDE.md   # § "Quality Gates Are A Merge Prerequisite"
-cat unified-trading-pm/plans/active/data_pipeline_master_coordination_2026_05_20.md   # § "Phase -1: Workspace-wide QG green"
+cat unified-trading-pm/plans/active/mtds_mdps_master.md   # § "Phase -1: Workspace-wide QG green"
 
 # 3. For EACH repo in the cluster, run:
 cd <repo> && bash scripts/quality-gates.sh

@@ -1,5 +1,4 @@
----
-title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
+---title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
 type: plan
 status: active
 created: 2026-05-12
@@ -22,6 +21,7 @@ related_plans:
 estimate_class: design
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 2.4
+parent_epic: observability_master
 ---
 
 # Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)

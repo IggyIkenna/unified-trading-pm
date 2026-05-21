@@ -1,5 +1,4 @@
----
-title: Extend run_2yr_config_grid_backtest.py to all 6 Tier-A archetype families
+---title: Extend run_2yr_config_grid_backtest.py to all 6 Tier-A archetype families
 type: plan
 status: active
 created: 2026-05-20
@@ -9,7 +8,7 @@ companion_to: compute_optimization_mock_data_2026_05_13.md (Phase 1 EXTEND)
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P1
-parent_epic: strategy_and_dart_master_2026_05_07.md
+parent_epic: strategy_master
 spawned_from: |
   MIGRATED FROM compute_optimization_mock_data_2026_05_13.md Phase 1 EXTEND.
   Verification (slot 7, 2026-05-14) confirmed run_2yr_config_grid_backtest.py covers only

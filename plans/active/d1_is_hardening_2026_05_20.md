@@ -1,5 +1,4 @@
----
-name: d1-is-hardening-2026-05-20
+---name: d1-is-hardening-2026-05-20
 title: D1 — instruments-service hardening plan
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -20,6 +19,7 @@ source_audits:
 related_plans:
   - d4_mtds_adapters_preflight_2026_05_20.md
   - live_pipeline_mtds_mdps_features_2026_05_08.md
+parent_epic: instruments_master
 ---
 
 # D1 — instruments-service hardening plan

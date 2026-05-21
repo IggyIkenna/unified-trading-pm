@@ -4,17 +4,17 @@ role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
-parent: manifest_evolution_master_2026_05_08
+parent: manifest_evolution_SUPERSEDED_2026_05_21
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: infrastructure_master_2026_05_07.md # legacy peer ref; superseded by parent above (folded into manifest_evolution_master 2026-05-08)
+parent_plan: infrastructure_master.md # legacy peer ref; superseded by parent above (folded into manifest_evolution_master 2026-05-08)
 related:
-  - predictions_master_2026_05_07.md # folds in predictions_canonical_question_group_polymarket_migration
-  - infrastructure_master_2026_05_07.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
+  - predictions_master.md # folds in predictions_canonical_question_group_polymarket_migration
+  - infrastructure_master.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
 supersedes_phases:
   - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
   - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at,
     paused — now scoped here)
-manifest_migration_coordinator: manifest_migration_master_2026_05_07.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
+manifest_migration_coordinator: manifest_migration_SUPERSEDED_2026_05_21.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
 status: drafted
 estimate_class: design
 estimate_baseline_ai_days: 40
@@ -86,8 +86,8 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 ### Active blockers (external)
 
-- **P0-2 Step 5** ← `hard_schema_enforcement_2026_05_08` ← `tradfi_master_2026_05_07` (futures-expiry)
-- **1B PREDICTION_GROUPS** ← `predictions_master_2026_05_07` Phase 1A
+- **P0-2 Step 5** ← `hard_schema_enforcement_2026_05_08` ← `tradfi_master` (futures-expiry)
+- **1B PREDICTION_GROUPS** ← `predictions_master` Phase 1A
 - **Phase 5 write-gate quartet test** ← Phase 1A NanRatioExceededError + SchemaMismatchError (future open)
 
 ### Top 5 recommended next actions
@@ -100,14 +100,15 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 ---
 
-> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
 > direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
 > don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
 > data layout co-evolve.
 >
-> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+> Child of:
+> [`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md)
 >
 > This plan's phases land in gate(s): **G1** (reason taxonomy) + **G2** (cluster validation) + **G7**
 > (ServiceEmissionPolicy + workspace audit)
@@ -138,13 +139,12 @@ annotations next to each `- [ ]` item in body for the specific successor / block
   UTL@958634f9 + MDPS Tier 2A/C/D/E commits. **Untracked WIP detected**:
   `features-service (sports family)/scripts/features_sports_reconcile_available_at.py` (16718 bytes, untracked, dated
   04:18 — another agent's in-flight work per "Two teammates" rule. NOT touched by this audit.)
-- **Blocked by**: predictions_master_2026_05_07 — Phase 2.A prediction silent-drop fix (line 1030) substantially shipped
-  but row_key shape fully resolves only when canonical_question_group SSOT lands in predictions plan. Reconciler in
-  Phase 3.A re-flips after.
+- **Blocked by**: predictions_master — Phase 2.A prediction silent-drop fix (line 1030) substantially shipped but
+  row_key shape fully resolves only when canonical_question_group SSOT lands in predictions plan. Reconciler in Phase
+  3.A re-flips after.
 - **Blocks**:
-  - `defi_master_2026_05_07` (relies on writegate Phase 1A/2.A typed-error contract for DeFi reconcilers)
-  - `infrastructure_master_2026_05_07` (data_status_multi_axis Phase 2/3 needs writegate Phase 4.A typed-error rendering
-    surface)
+  - `defi_master` (relies on writegate Phase 1A/2.A typed-error contract for DeFi reconcilers)
+  - `infrastructure_master` (data_status_multi_axis Phase 2/3 needs writegate Phase 4.A typed-error rendering surface)
   - `master_to_live_defi_2026_05_23` Group F trading prereqs (need honest manifest reasons for batch-vs-live
     reconciliation + alerting)
 - **Last meaningful commit**: instruments-service@21aef51 Tier 3D.2 reconciler refactor importing UTL classifier;
@@ -924,7 +924,7 @@ ikenna-slot8-p0-2-surgery:
       write removed — that's the P0-2 critical-path win.
 - [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
       **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
-      `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
+      `tradfi_master` futures-expiry shipping. Per task instructions, skipped.
 - [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
       instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a
       live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live →
@@ -954,7 +954,7 @@ next agent picks up cleanly without re-reading session notes.
 | Step 2 — TradFi ohlcv_passthrough 1440-NaN-bar fix                                            | `done` (`mdps@93883b7`)   | `_create_full_day_empty_output` deleted; `process_to_candles` empty branch returns `_make_empty_candle_output()` (zero-row Path A).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Step 3 — Delete `_create_closed_market_candle` dup + TRADFI branch refactor + VIX gap interim | `done` (`mdps@2f163c1`)   | Both copies deleted. `_handle_empty_tick_data` TRADFI special-case removed; `record_empty_for_shard` is the canonical path for every asset_group. `_maybe_write_vix_gap_placeholder` refactored from the deleted helper to `record_empty(SOURCE_RETURNED_ZERO)` interim.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Step 4 — VIX gap reason upgrade to EXPECTED_KNOWN_SOURCE_GAP                                  | `done` (`mdps@fd270eb`)   | `record_empty_for_shard` + `_emit_status_for_shard` now accept `reason: EmptyConfirmedReason = SOURCE_RETURNED_ZERO` (backward-compat default for cefi/defi/tradfi `_handle_empty_tick_data` callers); `_maybe_write_vix_gap_placeholder` passes `reason=EXPECTED_KNOWN_SOURCE_GAP` (UAC@017b332 enum rebased in from origin/live-defi-rollout). Operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2.                                                                                                                                                                                                                                       |
-| Step 5 — `output_schemas.py:57-66` OHLCV nullability flip                                     | `todo` (checkbox `- [ ]`) | **OUT-OF-SCOPE for this session** per task instructions — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Step 5 — `output_schemas.py:57-66` OHLCV nullability flip                                     | `todo` (checkbox `- [ ]`) | **OUT-OF-SCOPE for this session** per task instructions — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master` futures-expiry shipping.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Step 6 — Triple-SSOT CandleProcessingService audit + deletion                                 | `done` (`mdps@fd62764`)   | Audited + deleted: 4 source files (`market_data_processing_service.py` 253L + `candle_processing_service.py` 870L + `batch_processor.py` + `candle_metadata_helpers.py` 171L) + 5 test files (`test_market_data_processing_service.py` 185L + `test_candle_processing_service.py` 136L + `test_batch_processor.py` + `test_candle_metadata_helpers.py` 299L + `test_candle_processing_e2e.py` 169L). Surgical edits: `types.py` drops `CandleServiceConfigDict`; `test_timestamp_date_alignment.py` drops the dead-service inspect-getsource class. Net ~2090L deleted; coverage rose 73.18% → 74.63%. No production CLI consumer touched — only the dead branch + tests. |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
@@ -988,8 +988,8 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   - 4-pillar gate live path with the dead `CandleProcessingService` branch removed and VIX gap correctly tagged
     `EXPECTED_KNOWN_SOURCE_GAP`.
 - **Step 5** (`output_schemas.py:57-66` OHLCV nullability flip) remains `todo`; per task brief out-of-scope, blocked by
-  `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.
-  No change from prior DONE-2026-05-11 state.
+  `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master` futures-expiry shipping. No change
+  from prior DONE-2026-05-11 state.
 
 ### Step 6 follow-on 2026-05-11 — Slot 8 OutputWriterService dead-branch deletion
 
@@ -2102,10 +2102,10 @@ sub-phase ships the enumerator that physically writes those rows.
       `EXPECTED_PRE_VENUE_LAUNCH` across 13 post-2018 venues) on `expected-universe-enum-cefi-20260507-154922`. -
       **Prediction** — 2,280 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928: POLYMARKET 974 +
       KALSHI 1306 `EXPECTED_PRE_VENUE_LAUNCH`) on `expected-universe-enum-prediction-20260507-155030`. Per-instrument
-      lifecycle (`PREDICTION_GROUPS` registry) tracked separately under `predictions_master_2026_05_07.md`. Each VM
-      emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all
-      5 per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285
-      after the `ArrowTypeError` on `instrument_count` was patched).
+      lifecycle (`PREDICTION_GROUPS` registry) tracked separately under `predictions_master.md`. Each VM emitted
+      ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all 5
+      per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285 after
+      the `ArrowTypeError` on `instrument_count` was patched).
 - [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
       all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and drilldown
       % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel. Fine-grained
@@ -2233,7 +2233,7 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we mark individual
       pools/positions correctly.
 - [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
-      `predictions_master_2026_05_07.md`. Once that ships, cross-product
+      `predictions_master.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
       `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor; v2 adds
       canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years) so per-day coverage
@@ -2249,11 +2249,11 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
 per-asset-group umbrella plans. Reference cross-plan banners (CLAUDE.md "Cross-Plan Coordination Banners" rule) — the
 Phase 3.D.5 v2 enumerator must align with:
 
-- `cefi_master_2026_05_07.md` — CeFi instrument catalog scope + lifecycle field schema
-- `predictions_master_2026_05_07.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
-- `sports_master_2026_05_07.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
-- `tradfi_master_2026_05_07.md` — Databento instrument catalog scope + cluster taxonomy
-- `defi_master_2026_05_07.md` — per-pool catalog expansion (currently sparse)
+- `cefi_master.md` — CeFi instrument catalog scope + lifecycle field schema
+- `predictions_master.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
+- `sports_master.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
+- `tradfi_master.md` — Databento instrument catalog scope + cluster taxonomy
+- `defi_master.md` — per-pool catalog expansion (currently sparse)
 
 Each asset_group's v2 enumerator implementation lives under instruments-service/scripts/, but the catalog schema + read
 interface lives in UAC. The v1 enumerator stays in place during the v2 buildout — v2 is a strictly additive layer; v1's
@@ -2600,7 +2600,7 @@ odds_api, weather) gate their expected universe on this catalog with per-source 
 **2. Prediction markets = same model.**
 
 - Per-market lifecycle (`market_created_at`, `resolution_time`, `settlement_time`) lives in instruments-service catalog
-  (per `predictions_master_2026_05_07.md`).
+  (per `predictions_master.md`).
 - Pre-`market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED` (per-market grain).
 - Post-`settlement_time` → `EXPECTED_INSTRUMENT_DELISTED`.
 - Within active window with no trades that day → `empty_confirmed/SOURCE_RETURNED_ZERO` (legit per msg 6 — sparse
@@ -2652,7 +2652,7 @@ been empty_confirmed" finding adds:
       `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
       the shards we DO expect; emits `empty_confirmed` with the right EXPECTED\_\* for shards we DON'T expect.
 - [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
-      UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.md`). Yields `expected_unattempted` for active markets,
+      UAC `PREDICTION_GROUPS` per `predictions_master.md`). Yields `expected_unattempted` for active markets,
       `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
 - [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
       typed-reason-taxonomy expansion process.
@@ -4142,8 +4142,8 @@ shards bitfinex/bitget/kraken futures+spot 2020-2026): (1) captured rows at bund
 `instrument_id`) instead of per-instrument; (2) PROCESSING_COMPLETED events omit `rows_captured` field, violating "no
 fire-and-forget" SSOT. Both contradict CLAUDE.md SSOTs.
 
-**Cross-plan banner**: `cefi_master_2026_05_07` operational decision required — re-rescan vs accept-batch vs in-place
-rewrite for the 37-VM in-flight output once this section's Option A/B/C decision lands. Coordinate.
+**Cross-plan banner**: `cefi_master` operational decision required — re-rescan vs accept-batch vs in-place rewrite for
+the 37-VM in-flight output once this section's Option A/B/C decision lands. Coordinate.
 
 - [ ] [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
       Tardis data (clean but expensive); B = accept the bundle-shape rows + run a one-shot manifest migration that
@@ -4487,8 +4487,8 @@ test files in MTDS) — not caused by my changes, not my files; committed direct
 
 Root cause: `run_validators.py --scope all` runs `validate_plan_links.py` which found 2 broken links:
 
-1. `_agent_pings.md:922` — link `(../plans/active/defi_master_2026_05_07.md)` navigated to `plans/plans/active/`
-   (wrong); fixed to `(defi_master_2026_05_07.md)`.
+1. `_agent_pings.md:922` — link `(../plans/active/defi_master.md)` navigated to `plans/plans/active/` (wrong); fixed to
+   `(defi_master.md)`.
 2. `wave2_polymarket_record_captured_from_counts_2026_05_09.md:152` — regex pattern `["'](options_chain|...)["']` inside
    a backtick code span was false-positived by the validator's raw-text link regex. Fixed validator to strip fenced
    blocks + inline code spans before link extraction.

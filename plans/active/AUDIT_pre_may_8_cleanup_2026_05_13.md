@@ -43,9 +43,8 @@ real time.
 4. **defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md** (23 TODOs) — 17/40 done. Streams A+B ✅; Streams
    C/D/E open. **Blocker:** None. **Next:** Assign Streams C/D/E to slots (codex backports + config schema, est. 2–3d).
 
-5. **defi_master_2026_05_07.md** (80 TODOs) — 23/103 done (22%). Multi-slot umbrella (14.1 cal AI-days baseline).
-   **Blocker:** None (executors assigned per daily splits). **Next:** Delegate per-phase ownership per master plan
-   priority ordering.
+5. **defi_master.md** (80 TODOs) — 23/103 done (22%). Multi-slot umbrella (14.1 cal AI-days baseline). **Blocker:** None
+   (executors assigned per daily splits). **Next:** Delegate per-phase ownership per master plan priority ordering.
 
 6. **deploy_missing_auto_launch_2026_05_07.md** (8 TODOs) — 6/14 done. Phases 0-1 ✅; Phases 2–4 straightforward (UI +
    docs). **Blocker:** Resolved (Q1 on calendar pre-skip logic). **Next:** Ship Phases 2–4 (est. 1-2d) OR defer if lower

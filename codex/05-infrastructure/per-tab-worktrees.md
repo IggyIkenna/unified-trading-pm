@@ -199,7 +199,7 @@ daily work-split plan. Example for Harsh:
 | Slot | Theme                    | Plan-of-record / scope                                         |
 | ---- | ------------------------ | -------------------------------------------------------------- |
 | 1    | main orchestrator        | (this LEDGER) — direction-setting + Q&A dispatch + ping triage |
-| 2    | mtds prediction smoke    | plans/active/predictions_master_2026_05_07.md                  |
+| 2    | mtds prediction smoke    | plans/active/predictions_master.md                             |
 | 3    | features-onchain Phase 5 | plans/active/features_repo_consolidation_2026_05_08.md         |
 | 4    | (idle)                   | —                                                              |
 | 5    | (idle)                   | —                                                              |
@@ -311,9 +311,9 @@ Example LEDGER slot↔theme table:
 | Slot | Theme                       | Plan-of-record                                                |
 | ---- | --------------------------- | ------------------------------------------------------------- |
 | 1    | main orchestrator + on-call | (this LEDGER)                                                 |
-| 2    | cefi-master                 | plans/active/cefi_master_2026_05_07.md                        |
+| 2    | cefi-master                 | plans/active/cefi_master.md                                   |
 | 3    | writegate Wave 4 slice (b)  | plans/active/writegate_honest_coverage_endtoend_2026_05_06.md |
-| 4    | defi paper-trade smoke      | plans/active/defi_master_2026_05_07.md                        |
+| 4    | defi paper-trade smoke      | plans/active/defi_master.md                                   |
 | 5    | (idle)                      | —                                                             |
 ```
 

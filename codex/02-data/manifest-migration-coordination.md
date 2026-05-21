@@ -8,7 +8,7 @@ authoritative_for:
   rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so
   concurrent agents don't clobber the migration.
 referenced_by:
-  - plans/epics/manifest_migration_master_2026_05_07.md
+  - plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md
   - plans/active/manifest_schema_final_gate_2026_05_09.md
 related:
   - codex/02-data/availability-manifest-and-data-status.md
@@ -130,7 +130,7 @@ Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`manifest_migration_master`](../../plans/epics/manifest_migration_master_2026_05_07.md).
+  [`manifest_migration_master`](../../plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
 - **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM,

@@ -157,9 +157,8 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    per-symbol stale tracking (last_message_at/update_count), TickerCallback dispatch. 9 new tests. basedpyright clean.
    Public WS DONE. Private WS streams (own_trades, openOrders) are a follow-up — need GetWebSocketsToken REST call gate;
    deferred to a successor commit (filed as in-scope, not blocked).
-2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
-   `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **FULLY DONE 2026-05-16 (slot-3)**:
-   Drift/Orca/Raydium already wired in
+2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per `defi_master`
+   venue matrix. (design 0.6×, ~5 = 3.0 cal) **FULLY DONE 2026-05-16 (slot-3)**: Drift/Orca/Raydium already wired in
    `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`. Phoenix: shipped
    `MTDS@696f188` — Phoenix's own REST is dead (DNS unresolved), but on-chain program alive per Jupiter registry.
    `_collect_phoenix()` queries `lite-api.jup.ag/swap/v1/quote?dexes=Phoenix` for 3 major pairs (SOL/USDC, WBTC/USDC,
@@ -258,10 +257,9 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    integration test (DEFERRED, same blocker) + 1 Phase 2 singleton-lock shell-test (DEFERRED, gcloud mock harness). Slot
    4 has no further implementer surface here until G4 v8 lands; checkbox ✅ on the design half. (Slot-4 evidence note:
    `unified-trading-pm@<TBD>` after this flip lands.)
-7. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs
-   `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May
-   sub-agent audit already shipped per `work_split_2026_05_14_ikenna.md` line 238-243 — 14 active data_types confirmed
-   (FIXTURES/STANDINGS/INJURIES/
+7. ✅ **`sports_master` data_type universe coverage audit** — cross-ref vs `cross_asset_group_catalogue_audit`.
+   (research 1.2×, ~3 = 3.6 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May sub-agent audit already shipped per
+   `work_split_2026_05_14_ikenna.md` line 238-243 — 14 active data_types confirmed (FIXTURES/STANDINGS/INJURIES/
    FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/PREDICTIONS/MATCHES/XG/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
    WEATHER/ODDS); 3 retired confirmed (TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS); gaps PLAYER_VALUES +
    SFI_PROGRESSIVE_STATS missing from UAC DATA_TYPE_CAPABILITY_REGISTRY documented in
@@ -291,7 +289,7 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
 ### Slot 5 — TradFi backfills + master refresh + Phase 5 QG + LTV thresholds — ~20 cal AI-days
 
 Plan fan-out: TradFi Item 2 Phase 5 QG ratchet (carry from 14 May #3) + tradfi backfills (Databento + CME/EUREX 1-week
-each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
+each, operator-approval pending) + `tradfi_master` master refresh +
 `strategy_service_qg_ltv_threshold_violations_2026_05_15` + `mtf_intraday_micro_regime_policy` (carry from slot 9) +
 `sports_retired_data_types_code_cleanup` non-sports half.
 
@@ -319,20 +317,20 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    7 unit tests green). Confirmed at
    `plans/active/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md:183-201` — "✅ COMPLETE
    2026-05-13". Carry-flag was bookkeeping only.
-4. ✅ **`tradfi_master_2026_05_07` master plan refresh** (carry from 14 May #5) — push remaining open todos
-   workspace-wide. (research 1.2×, ~4 = 4.8 cal) — **DONE 2026-05-16 (slot 5 ikenna)**: shipped 3 epic-level open todos
-   (1) expiry guard `instruments-service@c3782ba` (P1) + 4 tests; (2) VIX-specific feature calculator
-   `features-service@b3814675` (P3) — `compute_vix_features()` + 10 tests; (3) TradFi feature_groups → UAC
-   `FEATURE_REQUIRED_INPUTS` `unified-api-contracts@99a7614` (P1) — 8 feature_groups (options_iv + 6 vol kin +
-   `vix_features`). Remaining open items in tradfi_master are pipeline-VM runs (P3/P4 features-delta-one /
-   features-volatility / ml-training smoke), BLOCKED-CREDENTIALS (ES_OPT 2020-2022), TRACKED-ELSEWHERE pointers
-   (hard_schema_enforcement, available_at_lookahead_bias), VERIFY P0 spot-check (no `futures_contracts.parquet` files
-   written in prod yet — confirmed via `gsutil ls` against 2024-2026 dates × all venues; write path
-   `_write_futures_contracts` exists in IS@2be7e4b but recent backfills haven't exercised it; surfacing as discovery for
-   Phase 4.2 follow-up), and end-state May-23 success criteria gated on full pipeline run.
-5. ✅ **`tradfi_master_2026_05_07` venue + symbology coverage audit** (carry from 14 May #8). (research 1.2×, ~3 = 3.6
-   cal) — **AUDIT 2026-05-16**: cross-referenced against `cross_asset_group_catalogue_audit_2026_05_10.md` § ICE US
-   softs action item (Phase 5B pending). Found ICE US softs (CT/CC/KC/SB/OJ/DX) **already canonicalised** in UAC:
+4. ✅ **`tradfi_master` master plan refresh** (carry from 14 May #5) — push remaining open todos workspace-wide.
+   (research 1.2×, ~4 = 4.8 cal) — **DONE 2026-05-16 (slot 5 ikenna)**: shipped 3 epic-level open todos (1) expiry guard
+   `instruments-service@c3782ba` (P1) + 4 tests; (2) VIX-specific feature calculator `features-service@b3814675` (P3) —
+   `compute_vix_features()` + 10 tests; (3) TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`
+   `unified-api-contracts@99a7614` (P1) — 8 feature_groups (options_iv + 6 vol kin + `vix_features`). Remaining open
+   items in tradfi_master are pipeline-VM runs (P3/P4 features-delta-one / features-volatility / ml-training smoke),
+   BLOCKED-CREDENTIALS (ES_OPT 2020-2022), TRACKED-ELSEWHERE pointers (hard_schema_enforcement,
+   available_at_lookahead_bias), VERIFY P0 spot-check (no `futures_contracts.parquet` files written in prod yet —
+   confirmed via `gsutil ls` against 2024-2026 dates × all venues; write path `_write_futures_contracts` exists in
+   IS@2be7e4b but recent backfills haven't exercised it; surfacing as discovery for Phase 4.2 follow-up), and end-state
+   May-23 success criteria gated on full pipeline run.
+5. ✅ **`tradfi_master` venue + symbology coverage audit** (carry from 14 May #8). (research 1.2×, ~3 = 3.6 cal) —
+   **AUDIT 2026-05-16**: cross-referenced against `cross_asset_group_catalogue_audit_2026_05_10.md` § ICE US softs
+   action item (Phase 5B pending). Found ICE US softs (CT/CC/KC/SB/OJ/DX) **already canonicalised** in UAC:
    `canonical/domain/derivatives/tradfi_roots.py:242-247` registers all 6 as `CATEGORY_ICE_FUTURES` with
    `DATASET_ICE_US`
    - exchange="ICE"; `registry/tradfi_instrument_universe.py:233-239` `_ICE_US_FUTURES` list has all 6 as
@@ -348,8 +346,8 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    **EUREX descoped**: not in current TradFi adapter universe (`EUREX` exists in
    `unified_api_contracts/registry/venue_session_hours.py` + `half_day_sessions.py` for calendar logic only; no entries
    in `tradfi_roots.py` / `tradfi_instrument_universe.py` / `launch-tradfi-backfill-vm.sh`). EUREX coverage is a
-   separate adapter-buildout task, NOT a backfill smoke. Moved to `tradfi_master_2026_05_07.md` § "Eurex venue
-   expansion" follow-up todo (P2, post-cutover).
+   separate adapter-buildout task, NOT a backfill smoke. Moved to `tradfi_master.md` § "Eurex venue expansion" follow-up
+   todo (P2, post-cutover).
 7. ✅ **`strategy_service_qg_ltv_threshold_violations_2026_05_15` close** (carry from 14 May #11) — migrate to UAC
    `LIQUIDATION_PARAMS_REGISTRY`. (refactor 0.4×, ~1 = 0.4 cal) — **VERIFIED ALREADY CLEAN 2026-05-15**: ran exact STEP
    5.37 regex on `strategy_service/engine/` — every match is annotated `# CORRECT-LOCAL` (gas uplift, runtime config,
@@ -551,8 +549,8 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
      (already shipping Phase 2.6 playbook per `slot_3.md`).
    - 🟡 **Codex audit for 11 Phase 1.A/1.B/1.C plans (P2)** — depth-audit follow-up beyond slot-6 day-1 breadth; not
      blocking; carry into post-cutover sweep.
-   - 🟡 **TradFi 4.3% phantom audit triage (P2)** — no named owner; routed to `tradfi_master_2026_05_07.md` § "Port
-     phantom-audit" P0 todo; POST-CUTOVER scope per plan body.
+   - 🟡 **TradFi 4.3% phantom audit triage (P2)** — no named owner; routed to `tradfi_master.md` § "Port phantom-audit"
+     P0 todo; POST-CUTOVER scope per plan body.
    - 🟡 **Phase 2 freeze gate × 6 items** — blocked on physical migration (Phase 2.0-2.6 window 05-15→05-19).
      Audit-summary flip; substantive items routed/blocked. (research 1.2×, ~3 = 3.6 cal)
 6. ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook

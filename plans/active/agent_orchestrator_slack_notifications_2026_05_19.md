@@ -1,5 +1,4 @@
----
-name: agent-orchestrator-slack-notifications-2026-05-19
+---name: agent-orchestrator-slack-notifications-2026-05-19
 overview: >
   Wire Slack push notifications into the agent-orchestrator Cloud Run service — blocked/stale/failed slot events POST to
   #agent-orchestrator-alerts via incoming webhook. All 6 Slack secrets are already in GCP Secret Manager
@@ -136,6 +135,7 @@ todos:
     status: done
 
 isProject: true
+parent_epic: orchestrator_master
 ---
 
 # agent-orchestrator Slack Notifications (V1)

@@ -6,7 +6,7 @@ created: 2026-04-13
 last_updated: 2026-05-14
 locked_by: live-defi-rollout
 locked_since: 2026-04-13
-parent_epic: instruments_live_master_2026_05_08
+parent_epic: instruments_master
 promotion_note: |
   Promoted from plans/ai/ to plans/active/ on 2026-05-14 per operator decision (option b):
   keep as sibling sports-trigger sub-plan of instruments_live_master and complete in parallel
@@ -79,14 +79,14 @@ Transfer window dates: **already in UAC** (`transfer_windows.py`). Season start 
 
 ### A2. Entity Classification
 
-| Entity                                                                                      | Provider(s)                 | Type    | Trigger                                                   |
-| ------------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------- |
-| Leagues                                                                                     | UAC SSOT (hardcoded)        | Static  | Never refresh — fixed universe choice                     |
-| Teams per league                                                                            | API Football, Transfermarkt | Trigger | Season start + promotion/relegation                       |
-| Player values (squad market values)                                                         | Transfermarkt               | Trigger | Window open + window close                                |
+| Entity                                                                                   | Provider(s)                 | Type    | Trigger                                                   |
+| ---------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------- |
+| Leagues                                                                                  | UAC SSOT (hardcoded)        | Static  | Never refresh — fixed universe choice                     |
+| Teams per league                                                                         | API Football, Transfermarkt | Trigger | Season start + promotion/relegation                       |
+| Player values (squad market values)                                                      | Transfermarkt               | Trigger | Window open + window close                                |
 | Team canonical mappings (API Football ID ↔ canonical ↔ Transfermarkt ID ↔ FootyStats ID) | All providers               | Trigger | Same as teams (new teams need mapping)                    |
-| SFI leagues                                                                                 | SoccerFootball.info         | Trigger | Season start only (slow-moving)                           |
-| SFI standings                                                                               | SoccerFootball.info         | Weekly  | After each match round (not trigger-based, but NOT daily) |
+| SFI leagues                                                                              | SoccerFootball.info         | Trigger | Season start only (slow-moving)                           |
+| SFI standings                                                                            | SoccerFootball.info         | Weekly  | After each match round (not trigger-based, but NOT daily) |
 
 ### A3. GCS Target Shape
 
@@ -152,8 +152,7 @@ The availability manifest denominator must understand:
 | Injuries                                    | All calendar days in season | Season start/end from UAC           |
 
 - [x] [CODE] P0. Wire `is_transfer_data_expected()` into deployment-api for Transfermarkt entities
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Wire trigger-date denominator for mapping entities (after
-      Phase A)
+- [x] ✅ [MIGRATED → sports_master.md] [CODE] P1. Wire trigger-date denominator for mapping entities (after Phase A)
 
 ---
 
@@ -209,47 +208,42 @@ Workstreams B and C1a are done. Workstream A is the remaining substantial work.
 - [x] ✅ [CODE] P0. Refactor `_fetch_transfermarkt_data` to accept `season` parameter — **ALREADY SHIPPED**: function
       signature `_fetch_transfermarkt_data(..., season: int | None = None, ...)` at orchestrator.py:5616.
       IS@pre-existing.
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Change GCS write path for mappings: `master/`
-      (append-only) + `snapshots/` (trigger-dated)
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Make team_mapping append-only (read existing, merge new,
-      write back)
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. `bash scripts/quality-gates.sh` on instruments-service
-      (follows A2.4-5)
+- [x] ✅ [MIGRATED → sports_master.md] [CODE] P1. Change GCS write path for mappings: `master/` (append-only) +
+      `snapshots/` (trigger-dated)
+- [x] ✅ [MIGRATED → sports_master.md] [CODE] P1. Make team_mapping append-only (read existing, merge new, write back)
+- [x] ✅ [MIGRATED → sports_master.md] [QG] P0. `bash scripts/quality-gates.sh` on instruments-service (follows A2.4-5)
 
 ## Phase A3 — Historical Backfill
 
 - [x] ✅ [CODE] P0. Add `--season` CLI arg to instruments-service — **ALREADY SHIPPED**: `--season` arg in
       `instruments_service/cli/main.py` (parsed at InstrumentsHandler line ~119; wired to `season_override` in
       orchestrator). IS@pre-existing.
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [SCRIPT] P0. Backfill script: for each league, for each trigger date
-      2019-2026, fetch `season=X`
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [SCRIPT] P1. Run on VM fleet (parallelize by league)
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. Validate GCS snapshots exist for all trigger dates (follows
-      A3.2-3)
+- [x] ✅ [MIGRATED → sports_master.md] [SCRIPT] P0. Backfill script: for each league, for each trigger date 2019-2026,
+      fetch `season=X`
+- [x] ✅ [MIGRATED → sports_master.md] [SCRIPT] P1. Run on VM fleet (parallelize by league)
+- [x] ✅ [MIGRATED → sports_master.md] [QG] P0. Validate GCS snapshots exist for all trigger dates (follows A3.2-3)
 
 ## Phase A4 — Trigger Denominator in Data Status
 
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Add trigger-date denominator for mapping entities in
-      deployment-api
-- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. `bash scripts/quality-gates.sh` on deployment-api (follows
-      A4.1)
+- [x] ✅ [MIGRATED → sports_master.md] [CODE] P1. Add trigger-date denominator for mapping entities in deployment-api
+- [x] ✅ [MIGRATED → sports_master.md] [QG] P0. `bash scripts/quality-gates.sh` on deployment-api (follows A4.1)
 
 ---
 
 ## Deferred work — migrated to
 
-All deferred items → `plans/epics/sports_master_2026_05_07.md` § "Trigger-based mapping storage + backfill (migrated
-from trigger_based_reference_data_2026_04_13)":
+All deferred items → `plans/epics/sports_master.md` § "Trigger-based mapping storage + backfill (migrated from
+trigger_based_reference_data_2026_04_13)":
 
-| Item                                                      | Deferred To                 | Blocker                                         |
-| --------------------------------------------------------- | --------------------------- | ----------------------------------------------- |
-| A2.4: GCS write path master/ + snapshots/                 | sports_master_2026_05_07.md | Architectural — requires GCS migration planning |
-| A2.5: team_mapping append-only                            | sports_master_2026_05_07.md | Depends on A2.4                                 |
-| A3.2: Backfill script (trigger-date per league 2019-2026) | sports_master_2026_05_07.md | Depends on A2.4 write-path                      |
-| A3.3: VM fleet run                                        | sports_master_2026_05_07.md | Operational — depends on A3.2                   |
-| A3.4: Validate GCS snapshots                              | sports_master_2026_05_07.md | Depends on A3.3                                 |
-| A4.1: Trigger-date denominator in deployment-api          | sports_master_2026_05_07.md | Depends on A2.4 write-path                      |
-| C1b: Wire trigger-date denominator for mapping entities   | sports_master_2026_05_07.md | Depends on A4.1                                 |
+| Item                                                      | Deferred To      | Blocker                                         |
+| --------------------------------------------------------- | ---------------- | ----------------------------------------------- |
+| A2.4: GCS write path master/ + snapshots/                 | sports_master.md | Architectural — requires GCS migration planning |
+| A2.5: team_mapping append-only                            | sports_master.md | Depends on A2.4                                 |
+| A3.2: Backfill script (trigger-date per league 2019-2026) | sports_master.md | Depends on A2.4 write-path                      |
+| A3.3: VM fleet run                                        | sports_master.md | Operational — depends on A3.2                   |
+| A3.4: Validate GCS snapshots                              | sports_master.md | Depends on A3.3                                 |
+| A4.1: Trigger-date denominator in deployment-api          | sports_master.md | Depends on A2.4 write-path                      |
+| C1b: Wire trigger-date denominator for mapping entities   | sports_master.md | Depends on A4.1                                 |
 
 ---
 

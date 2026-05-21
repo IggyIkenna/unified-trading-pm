@@ -1,6 +1,6 @@
 ---
 name: infrastructure-master
-slug: infrastructure_master_2026_05_07
+slug: infrastructure_master
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
@@ -37,7 +37,7 @@ related_plans:
   not gate these directly — they validate the shipped infrastructure.
 - **Blocked by**: writegate `writegate_honest_coverage_endtoend_2026_05_06` Phase 2.A (legacy `_create_empty_output`
   deletion gates `_ensure_timestamp` shim deletion since the per-source `stamp_available_at_*` helpers in UTL@`cf312f66`
-  are the migration target); `manifest_migration_master_2026_05_07` Stage 4 (raw-tables migration ordering)
+  are the migration target); `manifest_migration_SUPERSEDED_2026_05_21` Stage 4 (raw-tables migration ordering)
 - **Blocks**: `master_to_live_defi_2026_05_23` operator-facing data-status drilldown UX (B.2 + C.13 audit findings);
   `cefi_master` / `defi_master` / `tradfi_master` / `sports_master` / `predictions_master` umbrellas (each consumes the
   shard-axis matrix endpoint shipped here)
@@ -120,8 +120,8 @@ Covers:
 
 **Cross-plan coordination**: this umbrella's raw-tables migration + `_ensure_timestamp` shim deletion are **Stage 4** of
 the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing DAG, conflicts, VM
-impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
+[`manifest_migration_SUPERSEDED_2026_05_21.md`](./manifest_migration_SUPERSEDED_2026_05_21.md) for sequencing DAG,
+conflicts, VM impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
 `_ensure_timestamp` shim DELETE is GATED on raw-tables migration completion; raw-tables migration runs AFTER Stage 3
 reconcilers + `mtds-s4-10` rescan complete.
 
@@ -140,7 +140,7 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [AGENT] P0. **Raw tables migration** (next slice — needs design): 14 entries in `TABLE_TO_EXPORT`. Source-of-truth
       gap: pick canonical shape per table. [AUDIT 2026-05-07: FRESH — actionable; `TABLE_TO_EXPORT` confirmed at
       `features-sports-service/features_sports_service/cli/batch_write.py:20` with 8+ test mock sites; Stage 4 of
-      `manifest_migration_master_2026_05_07` per plan body]
+      `manifest_migration_SUPERSEDED_2026_05_21` per plan body]
 - [ ] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
       Coordinated with writegate Phase 2.C. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:raw-tables-migration;
       verified `_ensure_timestamp` still defined at
@@ -430,8 +430,7 @@ sub-plan; this section is a pointer.
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Asset_group vocabulary:
   [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
-- Per-asset-group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
-  `sports_master_2026_05_07`, `predictions_master_2026_05_07`.
+- Per-asset-group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Manifest SSOT codex: `codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Referenced sub-plans (active, added 2026-05-14)
@@ -459,5 +458,5 @@ Active sub-plans owned by or closely coordinated with this epic:
   todos lifted above.
 - `deployment_service_build_infrastructure_repair_2026_04_22.md` — Cloud Build + UTL base-image rebuild.
 - `venue_axis_asset_group_vocabulary_2026_04_25.md` — 2 absorbed SSOT-cleanup items (`venue_start_dates` deletion
-  - dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master_2026_05_07`;
-    Waves A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.
+  - dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master`; Waves
+    A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.

@@ -1,5 +1,4 @@
----
-title: Agent reliability mitigations — close the multi-agent loop gaps (2026-05-20)
+---title: Agent reliability mitigations — close the multi-agent loop gaps (2026-05-20)
 type: implementation-plan
 status: active
 created: 2026-05-20
@@ -10,6 +9,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 companion_to: codex/05-infrastructure/per-tab-worktrees.md
+parent_epic: orchestrator_master
 ---
 
 # Agent reliability mitigations — close the multi-agent loop gaps
@@ -151,17 +151,16 @@ After phases land, update:
 
 ### Phase 5 — Gitignored-on-demand pattern (Harsh-side already done locally; replicate for Ikenna-side + VM)
 
-Surfaced 2026-05-20 mid-session by operator: Harsh already implemented this pattern for his
-local machine (`.tabs/` = 3.7G code-only; venvs build on-demand when worker first spawns).
-We need to replicate for:
+Surfaced 2026-05-20 mid-session by operator: Harsh already implemented this pattern for his local machine (`.tabs/` =
+3.7G code-only; venvs build on-demand when worker first spawns). We need to replicate for:
 
 - **Ikenna's Mac** (`/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/`)
 - **The VM** (`/home/ubuntu/unified-trading-system-repos/.tabs/`)
 
 Scope (closed set):
 
-- `.venv/` per-repo and `.venv-workspace/` — gitignored, never propagated across slots, built
-  on first spawn via `uv sync` / equivalent
+- `.venv/` per-repo and `.venv-workspace/` — gitignored, never propagated across slots, built on first spawn via
+  `uv sync` / equivalent
 - `node_modules/` per-frontend-repo — same
 - Build artifacts (`dist/`, `build/`, `__pycache__/`, `.next/`) — same
 - Local `data/` caches — gitignored if not source-of-truth; built or hydrated on demand
@@ -169,16 +168,17 @@ Scope (closed set):
 - **EXCLUDED from on-demand purge**: credentials (`~/.aws/credentials`, `~/.config/gcloud/`,
   `~/.claude/.credentials.json`) — these stay where they are, NOT in slot worktrees anyway
 
-Composes with Phase 2 dirty-state gate: `git status --porcelain` already excludes gitignored
-content so this work doesn't interact with the gate — but it does reduce disk pressure
-(`.tabs/` from ~50-100G per spawn down to ~3-4G code-only).
+Composes with Phase 2 dirty-state gate: `git status --porcelain` already excludes gitignored content so this work
+doesn't interact with the gate — but it does reduce disk pressure (`.tabs/` from ~50-100G per spawn down to ~3-4G
+code-only).
 
 Implementation:
+
 1. Audit `.gitignore` across the 27 repos — confirm venv / build / cache patterns are all listed
-2. Add a "first-spawn hook" to `tmux_spawn.py`: detect missing `.venv` in primary repo of slot,
-   trigger `uv sync` async, log progress to the dashboard
-3. Periodic prune cron on Mac + VM: scrub `.venv` / `node_modules` from slot worktrees that
-   haven't been spawned-into in N days (configurable, default 7d)
+2. Add a "first-spawn hook" to `tmux_spawn.py`: detect missing `.venv` in primary repo of slot, trigger `uv sync` async,
+   log progress to the dashboard
+3. Periodic prune cron on Mac + VM: scrub `.venv` / `node_modules` from slot worktrees that haven't been spawned-into in
+   N days (configurable, default 7d)
 4. Document in `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern"
 
 Status: ON HOLD until Phase 3 + Phase 4 land. Operator-acked 2026-05-20 mid-session.

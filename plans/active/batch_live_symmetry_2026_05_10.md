@@ -1,5 +1,4 @@
----
-title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
+---title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
 type: implementation-plan
 status: active
 created: 2026-05-10
@@ -26,12 +25,13 @@ related_plans:
   - unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md
   - unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md
   - unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - unified-trading-pm/plans/active/defi_master_2026_05_07.md
+  - unified-trading-pm/plans/active/defi_master.md
 estimate_class: design
 estimate_baseline_ai_days: 50
 estimate_calibrated_ai_days: 30
 estimate_calibration_note: |
   Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
+parent_epic: batch_live_symmetry_master
 ---
 
 > **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type) cells have a batch adapter
@@ -132,16 +132,16 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
       `alerting_service_live_rules_2026_05_07.md`. (Pre-audit § 4) (PM@HEAD)
 - [x] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
       · `manifest_schema_final_gate_2026_05_09.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
-      `defi_master_2026_05_07.md`. (PM@harsh-main 2026-05-14)
+      `defi_master.md`. (PM@harsh-main 2026-05-14)
 - [x] ✅ [AGENT] P0. Land 🔴 BLOCK banners from Tab 3 onto: `available_at_lookahead_bias_completion_2026_05_08.md` ·
       `writegate_honest_coverage_endtoend_2026_05_06.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
       `features_repo_consolidation_2026_05_08.md` (until workspace QG green). **DONE 2026-05-20**: Tab 3 complete (QG
       STEPs L1/L2/L3/L5/L7 all enabled at PM@fac14af3); landed 🟢 RESOLVED banners (informational — QG green before
       banner landing) on all 4 plans. — PM@this-commit
-- [x] ✅ [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` ·
-      `defi_master_2026_05_07.md` · `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills). **BLOCKED-OPERATOR
-      2026-05-20**: Tab 8 VMs not yet launched (backtest + paper-deploy both `- [ ]`); banners land when operator
-      triggers Tab 8 Step 1 Backtest VM launch. No premature VM RUNNING banner landed.
+- [x] ✅ [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` · `defi_master.md` ·
+      `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills). **BLOCKED-OPERATOR 2026-05-20**: Tab 8 VMs not yet
+      launched (backtest + paper-deploy both `- [ ]`); banners land when operator triggers Tab 8 Step 1 Backtest VM
+      launch. No premature VM RUNNING banner landed.
 - [x] ✅ [AGENT] P1. Land Tab 4/5/6/7 banners per pre-audit manifest § 4 (medium-priority — own-Tab agent lands when
       starting their work). **DONE 2026-05-20**: Tab 4 COMPLETE banners landed on
       `features_repo_consolidation_2026_05_08.md` + `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. Tab 5/6/7
@@ -178,12 +178,11 @@ banners.
       timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
 - [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
-      cross-refs, successor pointer to tradfi_master_2026_05_07.md). Cross-link from cefi-batch-live.md remains
-      symmetric.
+      cross-refs, successor pointer to tradfi_master.md). Cross-link from cefi-batch-live.md remains symmetric.
 - [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues, canonical_question_group
       axis cross-link, prediction-specific empty reasons (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS /
-      SOURCE_RETURNED_ZERO), successor pointer to predictions_master_2026_05_07.md.
+      SOURCE_RETURNED_ZERO), successor pointer to predictions_master.md.
 
 ### Spawn prompt
 
@@ -720,7 +719,7 @@ BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 8
   2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
   3. unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md § Group F items 17-22
-  4. unified-trading-pm/plans/active/defi_master_2026_05_07.md
+  4. unified-trading-pm/plans/active/defi_master.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab8-carry-staked-basis.

@@ -1,5 +1,4 @@
----
-name: phase5-features-streaming-carry-staked-basis-mvp
+---name: phase5-features-streaming-carry-staked-basis-mvp
 overview:
   Ship the minimum-viable Phase 5 (features-service streaming) subset that unblocks carry_staked_basis
   paper-evidence run for May-23 cutover. Concretely: produce live + 30-day-backfilled values for the 4
@@ -31,6 +30,7 @@ estimate_calibration_note: |
   +3 cal-AI-days for Phase G MatchingEngineExecutionProvider (matcher exists; wrapper + L2 depth
   source + funding-PnL loop + factory wiring + tests). Operator pace 2026-05-12 → 2026-05-19
   averaged ~180 cal-AI-days/day, so 15 cal-AI-days fits a ≤4-day calendar window with 3+ slots.
+parent_epic: features_and_ml_master
 ---
 
 ## Why this plan exists

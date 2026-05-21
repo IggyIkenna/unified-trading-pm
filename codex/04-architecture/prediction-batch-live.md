@@ -62,10 +62,10 @@ batch + live runs produce identically-shaped parquets keyed by
 - [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) — partition-key contract.
 - [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) — 4-axis cartesian
   rules + anti-pattern list.
-- `unified-trading-pm/plans/epics/predictions_master_2026_05_07.md` — cutover-week prediction delivery plan.
+- `unified-trading-pm/plans/epics/predictions_master.md` — cutover-week prediction delivery plan.
 
 ## §6 Successor
 
 Post-cutover follow-up: replace this placeholder with the full per-instrument-type narrative once Polymarket live
-streaming + canonical-question-group cross-venue mapping fully land. Tracked in `predictions_master_2026_05_07.md`
-"post-cutover follow-ups" section.
+streaming + canonical-question-group cross-venue mapping fully land. Tracked in `predictions_master.md` "post-cutover
+follow-ups" section.

@@ -4,7 +4,7 @@ doc_kind: gaps_register
 status: active
 ssot_for: prediction_market_codification_gaps
 execution:
-  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master_2026_05_07.md`)
+  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`)
   cadence:
     per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps
     register; weekly sweep during the May-23 cutover window to close gaps as they land

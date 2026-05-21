@@ -201,8 +201,8 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 | `empty_confirmed`  | `EXPECTED_PRE_SEASON`                             | Sports — day is before season `schedule_announced_at` per league registry. Distinct from `EXPECTED_PRE_SOURCE_COVERAGE_START` (per-source archive start). Operator msg 9 audit dim #6.                                                                                                                                                                                                                                  | NO                                                             |
 | `empty_confirmed`  | `EXPECTED_POST_SEASON`                            | Sports — day is after season-end (playoff close + offseason). Mirror of `EXPECTED_PRE_SEASON`. Operator msg 9 audit dim #6.                                                                                                                                                                                                                                                                                             | NO                                                             |
 | `empty_confirmed`  | `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`           | Sports — operator-documented "this source does not cover this league" (e.g. Odds API has no MLB). Distinct from `EXPECTED_PAUSED_LEAGUE` (league exists but is paused). Wave 3.X dim #7.                                                                                                                                                                                                                                | NO                                                             |
-| `empty_confirmed`  | `EXPECTED_DEPRECATED_DATA_TYPE`                   | Data_type retired at a known date; rows after that date are expected empty. Plan: `manifest_migration_master_2026_05_07.md` § C.1.                                                                                                                                                                                                                                                                                      | NO                                                             |
-| `empty_confirmed`  | `EXPECTED_REFDATA_CADENCE_CHANGE`                 | Reference-data refresh cadence changed at a known date (e.g. daily → weekly). Distinct from `EXPECTED_DEPRECATED_DATA_TYPE`. Plan: `manifest_migration_master_2026_05_07.md` § C.11.                                                                                                                                                                                                                                    | NO                                                             |
+| `empty_confirmed`  | `EXPECTED_DEPRECATED_DATA_TYPE`                   | Data_type retired at a known date; rows after that date are expected empty. Plan: `manifest_migration_SUPERSEDED_2026_05_21.md` § C.1.                                                                                                                                                                                                                                                                                  | NO                                                             |
+| `empty_confirmed`  | `EXPECTED_REFDATA_CADENCE_CHANGE`                 | Reference-data refresh cadence changed at a known date (e.g. daily → weekly). Distinct from `EXPECTED_DEPRECATED_DATA_TYPE`. Plan: `manifest_migration_SUPERSEDED_2026_05_21.md` § C.11.                                                                                                                                                                                                                                | NO                                                             |
 | `empty_confirmed`  | `EXPECTED_KNOWN_SOURCE_GAP`                       | Documented mid-history source gap that doesn't fit the venue-launch / source-coverage-start / pre-genesis primitives. Reference uses: **VIX 15m gap** (`2025-11-13` → `today − 60d`; Yahoo rolling window can't reach + Barchart preload stopped 2025-11-12) + sports `KNOWN_COVERAGE_GAPS` ranges (operator-documented multi-day outages / paused windows). Shipped UAC@`174f401` 2026-05-11.                          | NO                                                             |
 | `empty_confirmed`  | `SOURCE_RETURNED_ZERO`                            | Source called, returned legitimately empty (path A from old 3-category model); data was expected but the upstream had nothing                                                                                                                                                                                                                                                                                           | NO                                                             |
 | `attempted_failed` | `UpstreamTimestampBiasError(...)`                 | Path B — source returned ticks ALL outside requested day after interval filter; upstream partition mislabeled                                                                                                                                                                                                                                                                                                           | NO                                                             |
@@ -535,8 +535,7 @@ Reference: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 
 
 ## Session-typed availability (writegate Phase 2.E.2)
 
-> Shipped 2026-05-15 — MTDS@038a611, tradfi_master_2026_05_07.md § "Replace zero-volume bars during non-tradeable
-> sessions."
+> Shipped 2026-05-15 — MTDS@038a611, tradfi_master.md § "Replace zero-volume bars during non-tradeable sessions."
 
 ### What changed
 
@@ -608,7 +607,7 @@ denominator actually used. See worked example in the "20-day MA" section above f
 
 ## Expected universe v2 — denominator impact on consumers (2026-05-15)
 
-When the v2 instrument-grain enumerator lands (sequenced under `manifest_evolution_master_2026_05_08` gate G3), the
+When the v2 instrument-grain enumerator lands (sequenced under `manifest_evolution_SUPERSEDED_2026_05_21` gate G3), the
 manifest's `expected_unattempted` denominator grows by ~100× (from ~1.4M venue-grain rows to ~190M instrument-grain
 rows). Downstream consumers that compute honest-coverage percentages must handle this volume change:
 
@@ -632,8 +631,8 @@ This note is pre-emptive — v2 has not yet launched. Update this section after 
 - Intra-day session classifier: `unified_api_contracts.canonical.crosscutting.market_session.classify_session`.
 - Feature calculator pattern for session-aware rolling windows:
   [`../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md`](../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md).
-- Writegate Phase 2.E.2 plan item: `plans/epics/tradfi_master_2026_05_07.md` § "Replace zero-volume bars during
-  non-tradeable sessions."
+- Writegate Phase 2.E.2 plan item: `plans/epics/tradfi_master.md` § "Replace zero-volume bars during non-tradeable
+  sessions."
 
 ## Phase 8 honest-coverage VM cron pattern (B-018 Phase 8.A, 2026-05-15)
 

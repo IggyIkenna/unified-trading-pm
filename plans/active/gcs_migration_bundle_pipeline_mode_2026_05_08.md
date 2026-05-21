@@ -12,7 +12,7 @@ overview:
   form; (3) sweep up the 5 drift axes from the 2026-05-04 phantom-audit incident (legacy `path-prefix=day=*/` vs
   canonical `raw_tick_data/by_date/day=*/`, instrument_type casing PERPETUAL vs perpetual, schema-4 empty
   instrument_type, chain-bundle equivalence option↔options_chain) so the residual 354 phantom rows + any drift-class
-  duplicates clear in the same pass. The manifest_migration_master_2026_05_07 stages (sports rename, writegate Phase
+  duplicates clear in the same pass. The manifest_migration_SUPERSEDED_2026_05_21 stages (sports rename, writegate Phase
   2.A residuals, etc.) are coordinated with — Stage 1+2+3 of that plan complete BEFORE this bundle starts, and any
   Stage 4 migrations they own that share the parquet walk land here too. Reader fallback paths are kept for ≤30 days
   post-migration then deleted (workspace "no double SSOT" rule). Pre-requisite for live-pipeline activation
@@ -118,7 +118,7 @@ todos:
         (e) 354 residual phantom rows from 2026-05-04 audit — re-run
             `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --dry-run` per asset_group and
             record the current count + drift-axis classification for each;
-        (f) coordination check with `manifest_migration_master_2026_05_07` — verify which of its Stage 1/2/3
+        (f) coordination check with `manifest_migration_SUPERSEDED_2026_05_21` — verify which of its Stage 1/2/3
             migrations have shipped + which are still pending; pending Stage 4 items become candidates for
             bundling here;
         (g) cost estimate — per-bucket migration cost (Class A operations × file count + egress within-region);
@@ -540,7 +540,7 @@ todos:
         each remaining phantom (likely a 6th drift axis the migration didn't anticipate) + add a one-shot
         targeted fix.
 
-        Coordination: `manifest_migration_master_2026_05_07` Stage 4 has overlapping cleanup items; coordinate
+        Coordination: `manifest_migration_SUPERSEDED_2026_05_21` Stage 4 has overlapping cleanup items; coordinate
         ownership — that plan's agents run their stages first, this phase's agent picks up the residual.
 
         QG: instruments-service quality-gates.sh clean (the script lives there per workspace history). Phantom
@@ -674,14 +674,15 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > / cross_instrument / multi_timeframe / calendar) lifted to UTL `ModeHandler` ABC at features-service@519625f7.
 > Bare-class compat-paths scheduled for hard-delete post-prod-deploy. No impact on GCS pipeline_mode migration phases.
 
-> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
 > direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
 > don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
 > data layout co-evolve.
 >
-> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+> Child of:
+> [`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md)
 >
 > This plan's phases land in gate(s): **G6** (pipeline_mode= hive partition + writer kwarg adoption) + **G7** (workspace
 > audit)
@@ -713,7 +714,7 @@ But the workspace also has standing GCS migration debt:
 - The 2026-05-04 phantom-audit incident identified 5 drift axes (path-prefix, hive-vocab, instrument_type casing, empty
   schema-4 instrument_type, chain-bundle equivalence) producing 130k+ false-positive phantom rows; reconciler fixes most
   but a 354-row residual remains (per CLAUDE.md "Manifest phantom audit" section).
-- `manifest_migration_master_2026_05_07` Stage 4 has multiple residual sweeps that share the GCS-walk concern.
+- `manifest_migration_SUPERSEDED_2026_05_21` Stage 4 has multiple residual sweeps that share the GCS-walk concern.
 
 Running 4 separate overnight migrations is wasteful — each walks every parquet (millions across asset_groups) +
 re-writes the manifest. The user's directive (2026-05-08) is **bundle**: one walk, one manifest re-index, all migrations
@@ -807,22 +808,21 @@ Per phase — see each todo. Plan-level final gate:
 - **`features_repo_consolidation_2026_05_08`** — independent; no overlap. Features manifest writes pass through the same
   `ManifestWriter` so they pick up the new `pipeline_mode` kwarg from Phase 1B; Phase 4 sweep covers features-service's
   call sites.
-- **`manifest_migration_master_2026_05_07`** — coordinated parent. That plan's Stage 1+2+3 should land BEFORE Phase 3 of
-  this plan starts so we don't bundle work that's still in flight elsewhere. Phase 0 § (f) verifies. Stage 4 residual
-  sweeps coordinate with this plan's Phase 6.
+- **`manifest_migration_SUPERSEDED_2026_05_21`** — coordinated parent. That plan's Stage 1+2+3 should land BEFORE Phase
+  3 of this plan starts so we don't bundle work that's still in flight elsewhere. Phase 0 § (f) verifies. Stage 4
+  residual sweeps coordinate with this plan's Phase 6.
 - **`writegate_honest_coverage_endtoend_2026_05_06`** — Phase 2.A residual sweeps (placeholder method deletion + v6
   column wiring) are coordinated; either land in writegate plan + this plan's Phase 0 § (f) confirms the source state,
   or fold any unfinished items into this bundle's Phase 4 sweep.
 - **`master_to_live_defi_2026_05_23`** — parent. Add a Group F sub-bullet pointing here: "GCS migration bundle
   (pipeline_mode + category→asset_group + drift cleanup) per `gcs_migration_bundle_pipeline_mode_2026_05_08.md` —
   pre-req for live-pipeline activation."
-- **`infrastructure_master_2026_05_07`** — umbrella; Phase 7 codex SSOT updates may overlap with infrastructure master
-  codex sweeps. Coordinate via banner.
-- **`sports_master_2026_05_07`** — sports-specific GCS structure overlaps; banner that plan during the sports
-  asset_group migration window.
-- **`predictions_master_2026_05_07`** + **`defi_master_2026_05_07`** + **`tradfi_master_2026_05_07`** +
-  **`cefi_master_2026_05_07`** — banner each during their asset_group's migration window (per Phase 3 estimated
-  wall-clock).
+- **`infrastructure_master`** — umbrella; Phase 7 codex SSOT updates may overlap with infrastructure master codex
+  sweeps. Coordinate via banner.
+- **`sports_master`** — sports-specific GCS structure overlaps; banner that plan during the sports asset_group migration
+  window.
+- **`predictions_master`** + **`defi_master`** + **`tradfi_master`** + **`cefi_master`** — banner each during their
+  asset_group's migration window (per Phase 3 estimated wall-clock).
 
 ## Deferred work after 2026-05-19 slot-3 CO-DUTY session
 
@@ -892,7 +892,7 @@ session. Phases shipped on `live-defi-rollout`:
 [`../archive/issues/foot_gun_3_double_strike_2026_05_08.md`](../archive/issues/foot_gun_3_double_strike_2026_05_08.md)):**
 
 1. PM@`784f2bfe` — sub-agent's commit message says "Phase 0 pre-audit doc" but actual diff is +58 lines to Tab 1's
-   defi_master_2026_05_07.md (foreign content under sub-agent's message).
+   defi_master.md (foreign content under sub-agent's message).
 2. PM@`12483f5b` — sub-agent's plan-flip commit (correct +/-8) but ALSO bundled Tab 4's
    `live_pipeline_preaudit_2026_05_08.md` (+408 lines).
 3. PM@`351e0a2e` — Tab 5's deploy_missing commit hijacked Tab 3's foot_gun issue doc into ITS commit.

@@ -145,7 +145,7 @@ Backfill flag: items 2 + 3 may need <1-week test backfills — OK without approv
 
 Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
 `emerging_perp_adapters_diagnosed_2026_05_*` (P0) + `helius_solana_rpc_for_validation` (P1) +
-`solana_defi_coverage_gaps` (successor A) + `defi_master_2026_05_07` Drift/Jito subset.
+`solana_defi_coverage_gaps` (successor A) + `defi_master` Drift/Jito subset.
 
 1. ✅ **`emerging_perp_venue_adapters_broken` P0 root-cause fix** — adapter-level fixes for the broken-perp-venue list;
    each fix lands as separate commit. (research 1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): MTDS@7d45b21 — ASTER
@@ -162,11 +162,11 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    `plans/active/solana_lst_native_staking_adapters_2026_05_14.md` created (6 phases,
    SANCTUM+SOLBLAZE+Pyth+native_staking_rates+backfill).
 5. ✅ **DEX perp + venue data expansion** — pickup from yesterday's Harsh slot 10 close; extend to additional venues per
-   `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal) **DONE** (2026-05-14):
-   market-tick-data-service@78e3b28 — PACIFICA-SOLANA (REST, api.pacifica.fi/v1/funding_rate/history, gated
-   2025-06-01) + LIGHTER-ZKSYNC (Tardis market_stats CSV, datasets.tardis.dev/v1/lighter-zksync/market_stats, gated
-   2026-04-17, Tardis API key via Secret Manager). Both wired into DEFAULT_PROTOCOLS +
-   \_collect_pacifica/\_collect_lighter. EXTENDED-STARKNET omitted (BLOCKED-OPERATOR-DECISION per defi_master Item C).
+   `defi_master` venue matrix. (infra 0.8×, ~5 = 4.0 cal) **DONE** (2026-05-14): market-tick-data-service@78e3b28 —
+   PACIFICA-SOLANA (REST, api.pacifica.fi/v1/funding_rate/history, gated 2025-06-01) + LIGHTER-ZKSYNC (Tardis
+   market_stats CSV, datasets.tardis.dev/v1/lighter-zksync/market_stats, gated 2026-04-17, Tardis API key via Secret
+   Manager). Both wired into DEFAULT_PROTOCOLS + \_collect_pacifica/\_collect_lighter. EXTENDED-STARKNET omitted
+   (BLOCKED-OPERATOR-DECISION per defi_master Item C).
 6. ✅ **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
    (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): strategy-service@6ff86fe — DRIFT-SOLANA perp_funding in UAC; xfail
    test removed; TestDriftSolanaLstEligibility + perp_hedge_candidates test added; jito-drift + marinade-drift slots
@@ -208,7 +208,7 @@ Backfill flag: item 3 + 5 + 6 — Solana validation backfills <1 week OK without
 Plan-of-record fan-out: 3 sports classifier issue docs (sfi_footystats / player_values / weather) +
 `sports_classifier_extension_followup` (parent) + propagation chain Phase 3.1-3.N +
 `expected_unattempted_propagation_gap` P1 + sports/prediction phantom apply-flips +
-`api_football_minimal_flattening_removal_2026_05_07` + `sports_master_2026_05_07`.
+`api_football_minimal_flattening_removal_2026_05_07` + `sports_master`.
 
 1. ✅ **3 sports classifier gap issues** — sfi_footystats / player_values / weather classifications missing branches.
    (refactor 0.4×, ~3 = 1.2 cal) **DONE** (2026-05-14 prior session): sfi_footystats → uac@435abae + utl@79c72bad;
@@ -235,7 +235,7 @@ Plan-of-record fan-out: 3 sports classifier issue docs (sfi_footystats / player_
    the cluster-level remainder). (refactor 0.4×, ~2 = 0.8 cal) **DONE**: strategy-service@3a3f20b —
    `load_strategy_config_by_type` moved `get_storage_client()` inside try/except so ValueError (no GCP_PROJECT_ID)
    returns None gracefully instead of propagating; 3 test_v2_batch_parity failures → 0; 1715 pass total.
-8. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — gather + cross-ref against
+8. ✅ **`sports_master` data_type universe coverage audit** — gather + cross-ref against
    `cross_asset_group_catalogue_audit`. (research 1.2×, ~4 = 4.8 cal) **DONE** (2026-05-15 sub-agent): 14 active
    data_types confirmed (FIXTURES/STANDINGS/INJURIES/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/
    PREDICTIONS/MATCHES/XG/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/WEATHER/ODDS); 3 retired confirmed (TRANSFERMARKT_LEAGUES/
@@ -268,8 +268,7 @@ Backfill flag: item 6 (phantom apply-flips) — reconciles existing manifest row
 ### Slot 5 — TradFi Item 2 cascade + tradfi backfill prep + Solana C — ~25 cal AI-days
 
 Plan-of-record fan-out: `tradfi_canonical_futures_contract_hard_required_fields_2026_05_13` (TradFi Item 2 Phase 3-5) +
-`tradfi_master_2026_05_07` (master plan refresh) + tradfi 1-week test backfill + `solana_defi_coverage_gaps` (successor
-C).
+`tradfi_master` (master plan refresh) + tradfi 1-week test backfill + `solana_defi_coverage_gaps` (successor C).
 
 1. ✅ **TradFi Item 2 Phase 3 migration script** — futures contract migration script (operator GREENLIT 2026-05-13).
    (refactor 0.4×, ~4 = 1.6 cal) — IS@db070da + IS@e1ca983 (15 tests) + IS@e29ebf3 (23 test extensions). **Backfilled
@@ -284,11 +283,11 @@ C).
    on same-region GCE VM, verify sample parquets OHLC-populated + manifest captured rows match planned scope. (infra
    0.8×, ~3 = 2.4 cal) **DONE**: 4-venue OHLCV backfill (CME/ICE/NASDAQ/NYSE) from 2019-01-01 → present; ≥99%
    honest-fill per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 validation. **Backfilled 2026-05-17.**
-5. ✅ **`tradfi_master_2026_05_07` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4
-   = 4.8 cal) **DONE 2026-05-17**: (a) ES_OPT 2020-2026 confirmed captured (1,932 manifest rows, 100% captured); (b)
-   ES_OPT plan item flipped to `[x] ✅`; (c) GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING; (d)
-   Remaining P3/P4 items (features-delta-one, features-volatility, ML backtest) are post-cutover scope; (e) 2019 data
-   gap confirmed as expected (Databento earliest = 2020-01-02 for options chain).
+5. ✅ **`tradfi_master` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4 = 4.8 cal)
+   **DONE 2026-05-17**: (a) ES_OPT 2020-2026 confirmed captured (1,932 manifest rows, 100% captured); (b) ES_OPT plan
+   item flipped to `[x] ✅`; (c) GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING; (d) Remaining
+   P3/P4 items (features-delta-one, features-volatility, ML backtest) are post-cutover scope; (e) 2019 data gap
+   confirmed as expected (Databento earliest = 2020-01-02 for options chain).
 6. ✅ **`solana_defi_coverage_gaps` successor plan C** — Jito MEV / restaking integration design. (design 0.6×, ~4 = 2.4
    cal) **DONE**: 5 Solana AMM/oracle adapters (Meteora/Phoenix/Jupiter/Lifinity/Pyth) + 78 tests — IS@5665de8 +
    UAC@2dd984e + PM@d3b75916. All 25 plan checkboxes done.
@@ -297,11 +296,11 @@ C).
    **DONE**: UAC@5662ff5 — `TRANSFERMARKT_VALUES` removed from `SPORTS_DATA_TYPE_TO_SOURCE`; IS@2a024ab removed from
    `_sports_per_league_entities`. Remaining open: deployment-api smoke-test validation (data-status panel renders
    empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE for retired types — scheduled for next vm cycle).
-8. ✅ **`tradfi_master_2026_05_07` venue + symbology coverage audit** — cross-ref against
-   `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal) **DONE 2026-05-17**:
-   `cross_asset_group_catalogue_audit_2026_05_10` archived at 100% per 2026-05-17 audit. ICE US softs disambiguation
-   plan (`ice_us_softs_dataset_disambiguation`) is tracked separately as a post-cutover item. Venue/symbology coverage
-   is complete for the May-23 MVP instrument universe (CME/ICE/NASDAQ/NYSE per OHLCV-only plan).
+8. ✅ **`tradfi_master` venue + symbology coverage audit** — cross-ref against `cross_asset_group_catalogue_audit`.
+   (research 1.2×, ~3 = 3.6 cal) **DONE 2026-05-17**: `cross_asset_group_catalogue_audit_2026_05_10` archived at 100%
+   per 2026-05-17 audit. ICE US softs disambiguation plan (`ice_us_softs_dataset_disambiguation`) is tracked separately
+   as a post-cutover item. Venue/symbology coverage is complete for the May-23 MVP instrument universe
+   (CME/ICE/NASDAQ/NYSE per OHLCV-only plan).
 9. ✅ **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
    schedules where possible, time unconstrained). (design 0.6×, ~3 = 1.8 cal) — UAC@f4d0cec (`classify_session`
    facade) + MTDS@038a611 (non-trading-day `record_expected_empty`) + MTDS@6873955 (migrate_tradfi_ohlcv_session_stamps
@@ -745,9 +744,9 @@ slot 10.
    (research 1.2×, ~0.5 = 0.6 cal)
 4. ✅ **Sports scrapers `BLOCKED-OPERATOR-DECISION` cross-link verification** — per operator pick 2026-05-14 (B + light
    C): (a) `master_to_live_defi_2026_05_23.md` row — `dba80b61` on LDR ✅. (b) successor plan
-   `plans/active/sports_scrapers_post_cutover_2026_06_01.md` — exists in tab/4 PM ✅. (c)
-   `sports_master_2026_05_07.md:201` has `[plans/active/sports_scrapers_post_cutover_2026_06_01.md]` cross-link with
-   `BLOCKED-OPERATOR-DECISION` annotation ✅. All verifications pass. (design 0.6×, ~1 = 0.6 cal)
+   `plans/active/sports_scrapers_post_cutover_2026_06_01.md` — exists in tab/4 PM ✅. (c) `sports_master.md:201` has
+   `[plans/active/sports_scrapers_post_cutover_2026_06_01.md]` cross-link with `BLOCKED-OPERATOR-DECISION` annotation
+   ✅. All verifications pass. (design 0.6×, ~1 = 0.6 cal)
 5. ✅ **Phase 1 freeze-gate audit** (absorbed from Harsh slot 6) — read-only verification that master plan freeze-gate
    items #1-#6 are actually green on disk; file gap issue docs if mismatch. (research 1.2×, ~1.5 = 1.8 cal) **DONE
    2026-05-15**: master plan lines 1112-1126 confirm 6/6 ✅ ALL ITEMS GREEN — Day-3 audit 2026-05-14 by slot 6.
@@ -820,8 +819,8 @@ If the item is already shipped by Harsh → flip absorbed item to `[x] (harsh-sh
 
 ## Cross-side handshakes (Ikenna ↔ Harsh)
 
-- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that
-  depends on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
+- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that depends
+  on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
 - **Ikenna slot 6+7 wallet_treasury Phase 1+3** (pulled forward to pre-May-15) is independent of Harsh today; ack-only.
 - **batch_live_symmetry** entirely Harsh slots 5+8; Ikenna does NOT touch. If Harsh files an Ikenna-touching UAC
   ratchet, slot 8 owner picks up via \_agent_pings.md.

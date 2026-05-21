@@ -16,7 +16,7 @@ related_plans:
   - plans/active/strategy_repo_consolidation_2026_05_19.md
   - plans/active/strategy_archetype_taxonomy_2026_05_12.md
   - plans/active/features_repo_consolidation_2026_05_08.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
+  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
   - plans/active/issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md
 ---
 
@@ -34,7 +34,7 @@ related_plans:
 | Bucket                                  | Count | Plans                                                                                                                                                                                                                                                                                                                                                                                                             |
 | --------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **MUST change — core architecture**     | 4     | `master_to_live_defi_2026_05_23.md` · `promote_workflow_may23_cli_path_2026_05_10.md` · `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` · `issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md`                                                                                                                                                                            |
-| **MUST change — cross-cutting epic**    | 1     | `plans/epics/strategy_and_dart_master_2026_05_07.md` (Phase 10.7 allocator-split is the architectural home of the directive emission path)                                                                                                                                                                                                                                                                        |
+| **MUST change — cross-cutting epic**    | 1     | `plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` (Phase 10.7 allocator-split is the architectural home of the directive emission path)                                                                                                                                                                                                                                                             |
 | **NEW — actionable plan**               | 1     | `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md` (this manifest's companion)                                                                                                                                                                                                                                                                                                                |
 | **SHOULD change — secondary**           | 3     | `strategy_repo_consolidation_2026_05_19.md` · `strategy_archetype_taxonomy_2026_05_12.md` · `features_repo_consolidation_2026_05_08.md`                                                                                                                                                                                                                                                                           |
 | **Coordinate / sequence (no conflict)** | 1     | `uac_source_capability_metadata_promotion_2026_05_20.md` (orthogonal UAC dirs — no edit needed, sequencing note in new plan)                                                                                                                                                                                                                                                                                      |
@@ -216,7 +216,7 @@ new actionable plan at 2.8 cal-AI-days (refactor × 0.4).
 
 ---
 
-### 6. `plans/epics/strategy_and_dart_master_2026_05_07.md` — MUST CHANGE (P0, epic-level scaffolding)
+### 6. `plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` — MUST CHANGE (P0, epic-level scaffolding)
 
 - **Audit finding**: epic line 196-206 (§1.7 Phase 10.7 — Allocator-as-shared-service split) already scopes
   `IM-side allocator`, `Trading-platform-side allocator`, `Shared allocator core`, `AllocationDirective` emission path
@@ -299,11 +299,11 @@ Plans (deferred to follow-up sweep — NOT blocking the new architecture-unlock 
 - `plans/active/cme_polymarket_arb_2026_05_08.md`
 - `plans/active/dex_perp_and_venue_data_expansion_2026_05_12.md`
 - `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`
-- `plans/epics/cefi_master_2026_05_07.md`
-- `plans/epics/defi_master_2026_05_07.md`
-- `plans/epics/sports_master_2026_05_07.md`
-- `plans/epics/predictions_master_2026_05_07.md`
-- `plans/epics/tradfi_master_2026_05_07.md`
+- `plans/epics/cefi_master.md`
+- `plans/epics/defi_master.md`
+- `plans/epics/sports_master.md`
+- `plans/epics/predictions_master.md`
+- `plans/epics/tradfi_master.md`
 
 ---
 

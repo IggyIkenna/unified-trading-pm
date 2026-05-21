@@ -1,5 +1,4 @@
----
-plan_type: code+refactor
+---plan_type: code+refactor
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-19
@@ -21,6 +20,7 @@ overview: >-
 type: refactor
 epic: epic-code-completion
 status: todo
+parent_epic: batch_live_symmetry_master
 ---
 
 # available_at Schema-Level Invariant Lift (Post-Cutover)

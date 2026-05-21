@@ -8,7 +8,7 @@ estimate_calibrated_ai_days: 2.4
 status: complete
 deadline: 2026-05-23
 priority: P0
-parent_epic: manifest_evolution_master_2026_05_08
+parent_epic: manifest_evolution_SUPERSEDED_2026_05_21
 parent_plan: master_to_live_defi_2026_05_23.md
 related_plans:
   - is_mtds_contract_audit_2026_05_20.md
@@ -234,8 +234,8 @@ propagate to features-service as silently-empty compute runs.
 
 ### Dim 2 — features-service MTDS-consumption status per family
 
-| Family / Key module                                                               | MTDS read mechanism                                                                              | Status                                                                                                | Evidence      |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------- |
+| Family / Key module                                                               | MTDS read mechanism                                                                              | Status                                                                                               | Evidence      |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------- |
 | `onchain/app/core/data_loader.py` — `load_derivative_ticker()`                    | `_resolve_mtds_parquet_files("perp_funding", date_str)` → `list_blobs` on perp-funding bucket    | ⚠ Reads MTDS GCS directly; NO manifest preflight; has Int64→Datetime cast workaround (lines 529-543) | lines 509-548 |
 | `onchain/app/core/data_loader.py` — `load_rate_indices()`                         | `_resolve_mtds_parquet_files("rate_indices", date_str)` → `list_blobs` on lending-indices bucket | ⚠ Reads MTDS GCS directly; NO manifest preflight; empty = silent return                              | lines 433-464 |
 | `onchain/app/core/data_loader.py` — `load_oracle_prices()`                        | `_resolve_mtds_parquet_files("oracle_prices", date_str)` → `list_blobs` on oracle-prices bucket  | ⚠ Reads MTDS GCS directly; NO manifest preflight                                                     | lines 475-506 |
@@ -243,19 +243,19 @@ propagate to features-service as silently-empty compute runs.
 | `cefi/calculators/perp_funding_rates.py` — `compute_cefi_funding_rates()`         | Direct `pl.read_parquet(gcs_uri)` on MTDS market-data-tick-cefi bucket                           | ⚠ Direct parquet read; NO manifest preflight; exception → `_empty_schema()`                          | lines 96-105  |
 | `onchain/calculators/perp_funding_rates_defi.py` — `compute_defi_funding_rates()` | Direct `pl.read_parquet(gcs_glob)` on MTDS perp-funding-defi bucket                              | ⚠ Direct parquet read; NO manifest preflight; exception → `_empty_schema()`                          | lines 89-98   |
 | `onchain/app/core/dependency_checker.py` — `check_dependencies()`                 | `DependencyChecker.UPSTREAM_DEPS_DEFI` probes GCS prefix existence (list_blobs)                  | ⚠ Existence check only — does NOT read MTDS manifest capture_status                                  | lines 91-176  |
-| `commodity/adapters/eia_ng.py` — `EIAWeeklyStorageAdapter.fetch()`                | External EIA API (not MTDS); empty rows → warn + `return {}`                                     | **❌ A5 VIOLATION — warn-but-proceed; no manifest record_empty**                                      | lines 69-71   |
-| `commodity/adapters/eia_crude.py` — `EIAWeeklyCrudeStorageAdapter.fetch()`        | External EIA API (not MTDS); empty rows → warn + `return {}`                                     | **❌ A5 VIOLATION — warn-but-proceed; no manifest record_empty**                                      | lines 60-62   |
+| `commodity/adapters/eia_ng.py` — `EIAWeeklyStorageAdapter.fetch()`                | External EIA API (not MTDS); empty rows → warn + `return {}`                                     | **❌ A5 VIOLATION — warn-but-proceed; no manifest record_empty**                                     | lines 69-71   |
+| `commodity/adapters/eia_crude.py` — `EIAWeeklyCrudeStorageAdapter.fetch()`        | External EIA API (not MTDS); empty rows → warn + `return {}`                                     | **❌ A5 VIOLATION — warn-but-proceed; no manifest record_empty**                                     | lines 60-62   |
 
 ### Dim 3 — Manifest emission discipline per handler (features-service output side)
 
-| Handler                                          | Status                                                                                                                              | Evidence                 |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `sports/cli/handlers/batch_handler.py`           | ✅ Emits `record_captured`, `record_empty(reason=...)`, `record_failed` per shard                                                   | lines 394-427, 488-515   |
-| `volatility/cli/handlers/batch_handler.py`       | ✅ `record_captured` + `record_expected_unattempted` via `_record_out_of_scope_instruments`                                         | lines 281-322            |
+| Handler                                          | Status                                                                                                                             | Evidence                 |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `sports/cli/handlers/batch_handler.py`           | ✅ Emits `record_captured`, `record_empty(reason=...)`, `record_failed` per shard                                                  | lines 394-427, 488-515   |
+| `volatility/cli/handlers/batch_handler.py`       | ✅ `record_captured` + `record_expected_unattempted` via `_record_out_of_scope_instruments`                                        | lines 281-322            |
 | `cefi/cli/handlers/perp_funding_handler.py`      | ⚠ `record_empty` call **commented out** at line 81; docstring says caller should invoke it but caller (CLI dispatcher) has no wire | line 81                  |
-| `onchain/cli/handlers/batch_handler.py`          | **❌ Silent absence** — 6 except blocks; all exit with `logger.warning` only; 0 `record_*` calls                                    | lines 97-161             |
-| `commodity/cli/handlers/batch_handler.py`        | **❌ Silent absence** — commodity family has no manifest writes; batch runs invisibly                                               | grep: 0 record\_\* calls |
-| `multi_timeframe/cli/handlers/batch_handler.py`  | **❌ Silent absence** — 0 manifest record\_\* calls found                                                                           | grep: 0 hits             |
+| `onchain/cli/handlers/batch_handler.py`          | **❌ Silent absence** — 6 except blocks; all exit with `logger.warning` only; 0 `record_*` calls                                   | lines 97-161             |
+| `commodity/cli/handlers/batch_handler.py`        | **❌ Silent absence** — commodity family has no manifest writes; batch runs invisibly                                              | grep: 0 record\_\* calls |
+| `multi_timeframe/cli/handlers/batch_handler.py`  | **❌ Silent absence** — 0 manifest record\_\* calls found                                                                          | grep: 0 hits             |
 | `cross_instrument/cli/handlers/batch_handler.py` | ⚠ `paired_spec_resolver.py` has record calls; top-level handler unclear; A1 CSV shows 4 violations                                 | A1 CSV                   |
 | `calendar/engine/calendar_orchestrator.py`       | ⚠ `record_empty(reason="SOURCE_RETURNED_ZERO")` emitted but uses string literal not enum                                           | line 317                 |
 
@@ -417,7 +417,7 @@ C4 audit per mega_audit triage (issue file line 13).
 | ----------------------------------- | --------------------------- | -------------------------------------------------- | ----------------------------------- |
 | `timestamp`                         | `Int64` (epoch nanoseconds) | `Datetime('ns', 'UTC')` or `Datetime('us', 'UTC')` | **DRIFT**                           |
 | `funding_rate`                      | `Float64` or `Decimal`      | `Float64`                                          | OK (Decimal→float cast at line 145) |
-| `symbol` / `instrument_id` / `coin` | varies by shard origin      | dynamic fallback (lines 102-105)                   | ⚠ fragile                          |
+| `symbol` / `instrument_id` / `coin` | varies by shard origin      | dynamic fallback (lines 102-105)                   | ⚠ fragile                           |
 
 ---
 

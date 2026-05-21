@@ -1,5 +1,4 @@
----
-name: trading-agent-service-architecture-unlock
+---name: trading-agent-service-architecture-unlock
 overview:
   Wire the trading-agent-service closed-loop allocator architecture end-to-end by 2026-05-22, off-by-default.
   Data flow: features (slow + regime + ETA + ML + LLM context) + strategy PnL streams (live + paper + shadow) →
@@ -16,7 +15,7 @@ horizon: 2 days
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 parent_plan: master_to_live_defi_2026_05_23.md
-parent_epic: plans/epics/strategy_and_dart_master_2026_05_07.md (§1.7 Phase 10.7 + § Allocator service)
+parent_epic: trading_agent_master
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
@@ -35,7 +34,7 @@ related_plans:
   - plans/active/strategy_repo_consolidation_2026_05_19.md
   - plans/active/issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md
   - plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
+  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 related_codex:
   - codex/06-coding-standards/config-reloader-pattern.md
   - codex/04-architecture/promote-workflow-architecture.md
@@ -518,7 +517,7 @@ Order of application:
 2. Promote-workflow changes PW1-PW2 (promote_workflow_may23_cli_path_2026_05_10.md)
 3. Phase-5 features change F1 (phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 4. Issue changes Q1-Q2 (issues/trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md)
-5. Epic changes E1-E2 (plans/epics/strategy_and_dart_master_2026_05_07.md)
+5. Epic changes E1-E2 (plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md)
 6. Secondary changes SR1 + SA1 + FC1 (strategy_repo_consolidation, strategy_archetype_taxonomy,
    features_repo_consolidation)
 7. Per-archetype follow-up sweep (10 plans) — single-line additions
@@ -579,8 +578,8 @@ shows trading-agent-service in new Tier-1 sub-tier; commit message
 ## Temporary states + their canonical follow-up plans
 
 - **No-op directive emission** (Phase 6): trading-agent-service emits static-value directive. Successor:
-  `plans/epics/strategy_and_dart_master_2026_05_07.md` §1.7 Phase 10.7 (post-cutover) — production allocator logic with
-  8 archetype engines.
+  `plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` §1.7 Phase 10.7 (post-cutover) — production allocator
+  logic with 8 archetype engines.
 - **STUB ML/LLM input subscribers** (Phase 6): the 3 stub-input subscribers (regime, narrative, ETA) and the ML+LLM
   input wires are placeholder log-only handlers. Successor: epic §1.7 Phase 10.7 post-cutover + ML pipeline integration
   plan (currently `plans/active/ml_repo_consolidation_2026_05_19.md` and successors).

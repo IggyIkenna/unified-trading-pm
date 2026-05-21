@@ -536,8 +536,8 @@ In rough priority order:
    every venue-keyed dict across all asset_groups; fixes CF-3 + SP-3 + DF-4/5/17.
 8. **pytest-timeout missing** in deployment-service `.venv` (slot 5 pre-existing QG blocker). Add to dependencies +
    verify QG green.
-9. **TradFi parallel track** next phase (per `epics/tradfi_master_2026_05_07.md` — pick next open item).
-10. **Sports parallel track** next phase (per `epics/sports_master_2026_05_07.md` — pick next open item).
+9. **TradFi parallel track** next phase (per `epics/tradfi_master.md` — pick next open item).
+10. **Sports parallel track** next phase (per `epics/sports_master.md` — pick next open item).
 
 ### Pre-lunch spawn recommendations
 

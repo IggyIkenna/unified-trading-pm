@@ -1,5 +1,4 @@
----
-title: "Gate 3 — Phantom-Audit Execution Runbook"
+---title: "Gate 3 — Phantom-Audit Execution Runbook"
 created: 2026-05-13
 author: ikenna-main
 type: runbook
@@ -16,6 +15,7 @@ estimate_calibration_note: |
   Backfilled 2026-05-15 per CLAUDE.md HARD RULE (post-2026-05-11 plans require estimate_class).
   One-shot operational runbook (VM launch + manifest reconciliation + verifier check); infra class
   multiplier 0.8x. Baseline 1 AI-day. Calibrated 0.8 AI-day.
+parent_epic: manifest_master
 ---
 
 # Gate 3 — Phantom-Audit Execution Runbook
@@ -264,7 +264,7 @@ would upgrade if `--apply-flips` were passed:
 **Required action**: Run `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a VM.
 
 **Status**:
-`- [x] ✅ [MIGRATED] P2. TradFi 5,212 legacy-blank apply-flips run — migrated to tradfi_master_2026_05_07.md § "TradFi 5,212 legacy-blank apply-flips run" (pm@ca914697). pm@<flip-sha>.`
+`- [x] ✅ [MIGRATED] P2. TradFi 5,212 legacy-blank apply-flips run — migrated to tradfi_master.md § "TradFi 5,212 legacy-blank apply-flips run" (pm@ca914697). pm@<flip-sha>.`
 
 **Why not done now**: The CSV report was on the VM (now self-deleted). A fresh VM run with `--apply-flips` is safe
 (scan-only already confirmed the upgrade logic is correct; 0 uncertain cases).
@@ -296,9 +296,9 @@ would upgrade if `--apply-flips` were passed:
 
 ## Deferred work — migrated to
 
-| Item                                      | Migrated To                                                                             | Status                                                                                                                                                                  |
-| ----------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TradFi 5,212 legacy-blank apply-flips run | `plans/epics/tradfi_master_2026_05_07.md` § "TradFi 5,212 legacy-blank apply-flips run" | `- [ ] [SCRIPT] P2` — **BLOCKED-OPERATOR 2026-05-20 slot-6**: requires VM run with `--apply-flips`; operator must schedule + approve VM launch; ping filed `slot_6.md`. |
+| Item                                      | Migrated To                                                                  | Status                                                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TradFi 5,212 legacy-blank apply-flips run | `plans/epics/tradfi_master.md` § "TradFi 5,212 legacy-blank apply-flips run" | `- [ ] [SCRIPT] P2` — **BLOCKED-OPERATOR 2026-05-20 slot-6**: requires VM run with `--apply-flips`; operator must schedule + approve VM launch; ping filed `slot_6.md`. |
 
 ---
 

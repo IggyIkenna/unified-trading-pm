@@ -1,6 +1,6 @@
 ---
 name: defi-master
-slug: defi_master_2026_05_07
+slug: defi_master
 date: 2026-05-07
 owner: claude-code
 status: active
@@ -184,7 +184,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   MTDS@10aa715/51fecd5/d898985/fc53a97 + UAC@e890022; UAC `VENUES_BY_ASSET_GROUP['defi']` already includes
   Lighter/Pacifica per UAC@7cb9068 / 405cbf5 venue declarations)
 - **In-flight (running VMs)**: 0 — NO defi/features-onchain VMs in current `gcloud` snapshot
-- **Blocked by**: `manifest_migration_master_2026_05_07:Stage 4` (rescan-all-manifests gates the 988-dates-missing
+- **Blocked by**: `manifest_migration_SUPERSEDED_2026_05_21:Stage 4` (rescan-all-manifests gates the 988-dates-missing
   diagnosis); `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder deletion for honest coverage %);
   `cefi_master:24-VM drain` (carry_staked_basis perp hedges need cefi backfill)
 - **Blocks**: THIS IS THE HEADLINE GOAL OF 2026-05-23. Blocks `master_to_live_defi_2026_05_23:F` (Group F live trading
@@ -283,11 +283,12 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       (Chainlink Arb/Base/Optimism/Polygon via \_CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
-      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) — MUST run AFTER all
-      Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup + Predictions
-      Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across services. NO
-      VM pause needed — consolidator handles concurrent writes per CLAUDE.md `§ Manifest     concurrency principle`.
-      [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 3]
+      [`manifest_migration_SUPERSEDED_2026_05_21.md`](../epics/manifest_migration_SUPERSEDED_2026_05_21.md) — MUST run
+      AFTER all Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup +
+      Predictions Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across
+      services. NO VM pause needed — consolidator handles concurrent writes per CLAUDE.md
+      `§ Manifest     concurrency principle`. [AUDIT 2026-05-07: BLOCKED-ON
+      manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [ ] [HUMAN+AGENT] P0. defi-e2e-validate: DeFi pipeline E2E — run full batch, verify features-onchain reads correctly.
       [AUDIT 2026-05-07: FRESH — actionable; gates Group F]
 - [ ] [HUMAN+AGENT] P0. defi-coverage-validate: DeFi full coverage — run each handler locally for 1 day, verify GCS.
@@ -707,7 +708,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 2. **Kebab/snake `data_type` vocab inconsistency** — most per-data_type DeFi buckets contain BOTH forms for the SAME
    data (e.g. `lending-indices-{pid}` has 24,976 kebab + 12,024 snake_case rows). Read-time canonicaliser handles it
    today but it's a real follow-up: write a one-shot migration to rewrite kebab → snake then delete the canonicaliser.
-   No named successor plan yet — could be filed as a small follow-up under `manifest_migration_master_2026_05_07`.
+   No named successor plan yet — could be filed as a small follow-up under `manifest_migration_SUPERSEDED_2026_05_21`.
 3. **`solana-defi-{pid}` is 3+ weeks stale** — last write 2026-04-13. Worth confirming whether that handler is
    intentionally paused or has been broken.
 4. **`launch-mtds-perp-funding-backfill-vm.sh`** — **CORRECTION 2026-05-08 audit**: launcher EXISTS at
@@ -982,9 +983,9 @@ shipping with the Fork-1 prep batches below).
       also add the `data_type=eigenlayer_rewards`-on-disk-vs-manifest layout to
       `reconcile_phantom_manifest_rows_all.py`'s DeFi drift-axis list as a safety net, but the root fix is the handler's
       shard-key consistency. **Owner**: defi-pipeline / `defi_master` (the eigenlayer Phase-2 event handler) —
-      coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit
-      result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the
-      shard-key drift is a latent inconsistency that needs the handler fix.
+      coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master.md`). **Net phantom-audit result for
+      DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the shard-key
+      drift is a latent inconsistency that needs the handler fix.
 - [x] ✅ **[FIXED — deployment-service@a2b3c92]** [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list +
       non-graceful skip** — its `DEFI_REPOS`/EXTRA*REPOS list references `features-service (onchain family)`
       (consolidated into `features-service` by the 2026-05-08 features-* consolidation); the "SKIP <repo> — not found"
@@ -997,7 +998,7 @@ shipping with the Fork-1 prep batches below).
       of`features-service     (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually
       `continue`past`set     -e`(e.g.`if [[-d "$path"]]; then create_tarball ...; else log "SKIP ...";     fi`). Owner:
       features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`(archived?)
-      or`infrastructure_master_2026_05_07`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+      or`infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
       2026-05-11).** Root cause of the Priority-#5 full-history backfill VM blowing up from a ~60-90min estimate to
@@ -1013,20 +1014,20 @@ shipping with the Fork-1 prep batches below).
       already-captured OPTIMISM/ARBITRUM AAVEV3 history (idempotent — same parquet path+content, same `captured` row —
       so no corruption, just wasted compute + subgraph rate-limit quota). The UTL primitive **already exists**
       (`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` — shipped per
-      `ml_and_features_master_2026_05_07.md` P0 `[x]`); the handlers just don't use it. **This is the "refactor existing
-      MTDS per-venue VMs" debt item** from CLAUDE.md "Manifest concurrency principle" ("New backfill scripts MUST
-      include this pattern; refactor existing scripts that run multi-VM ... MTDS per-venue VMs ... to add it"). **Fix**:
-      in `lending_indices_handler` (and the sibling per-data_type MTDS DeFi backfill handlers — `gas_fees_handler` /
+      `features_and_ml_master.md` P0 `[x]`); the handlers just don't use it. **This is the "refactor existing MTDS
+      per-venue VMs" debt item** from CLAUDE.md "Manifest concurrency principle" ("New backfill scripts MUST include
+      this pattern; refactor existing scripts that run multi-VM ... MTDS per-venue VMs ... to add it"). **Fix**: in
+      `lending_indices_handler` (and the sibling per-data_type MTDS DeFi backfill handlers — `gas_fees_handler` /
       `lst_rates_handler` / `dex_pools_handler` / `liquidations_handler` / `perp_funding_handler`), at startup bulk-read
       the canonical manifest once, cache the skip-set (`captured`/`empty_confirmed`/`attempted_failed`), derive the
       missing-days list, and skip the fetch for already-resolved days; mid-run, a TTL-refreshed targeted lookup of the
       row_key before each expensive fetch (per `/tmp/fill_missing_ohlcv.py`'s `_refresh_captured_cache` /
       `_is_now_captured`). Then a full-history re-run only fetches the genuinely-missing days. Owner: defi-pipeline /
-      `defi_master` (coordinate with the shard-granularity-SSOT umbrella `infrastructure_master_2026_05_07`).
-      Operational lesson (separate): scope backfill VMs to the actual gap window, not full-history-all-chains, unless a
-      full refresh is the explicit intent. **HANDED TO IKENNA** (Harsh tab 3 end-of-shift handover 2026-05-11) along
-      with the recent-days catch-up (`launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 2026-05-11`) + a clean
-      full-history re-run AFTER this wire-in.
+      `defi_master` (coordinate with the shard-granularity-SSOT umbrella `infrastructure_master`). Operational lesson
+      (separate): scope backfill VMs to the actual gap window, not full-history-all-chains, unless a full refresh is the
+      explicit intent. **HANDED TO IKENNA** (Harsh tab 3 end-of-shift handover 2026-05-11) along with the recent-days
+      catch-up (`launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 2026-05-11`) + a clean full-history re-run AFTER
+      this wire-in.
 
 ### Chain coverage + CLOB-on-chain venues (migrated from `defi_chain_coverage_and_clob_venues_2026_05_08`)
 
@@ -1186,7 +1187,7 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
 - [x] ✅ [AGENT] P1. **Verification recipe automation.** Post-VM-launch silent-zero detector — Cloud Scheduler job that
       checks the last 24h of lending-indices manifest rows for unexpected zero-rows-per-instrument; alerts via Telegram
       if a venue × chain pair flatlines. Generalisable to other DeFi handlers; not just lending. Coordinate with
-      `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor. DONE 2026-05-20 slot 7:
+      `instruments_master` Phase A.11 upstream-staleness monitor. DONE 2026-05-20 slot 7:
       `scripts/detect_zero_row_defi_manifest.py` in MTDS — generalised via --data-type-filter; runbook fields declared;
       last_executed=NEVER pending Cloud Scheduler wire-up (Phase A.11 upstream). mtds@507774e.
 
@@ -1339,8 +1340,8 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, UI replication of
-  manual-trade DART, infrastructure baseline.
+- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue, strategy IDs, client wiring, UI
+  replication of manual-trade DART, infrastructure baseline.
 - **Provides to:** `cefi_master` cefi_ml deliverable (CeFi venue connectivity overlap on Bybit / Binance / OKX — same
   execution-service adapters, same alerting rules, same kill-switch wiring; only strategy-decision layer differs between
   rules-based carry and ML signal).
@@ -1471,8 +1472,7 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md).
-- Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
-  `predictions_master_2026_05_07`.
+- Sibling asset_group umbrellas: `cefi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Carry tracer pipeline handoff: `plans/ai/carry_tracer_pipeline_handoff_2026_05_06.md` (in-flight Phase 9 catalog).
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
   [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
@@ -1509,7 +1509,7 @@ Active sub-plans owned by or closely coordinated with this epic:
   DeFi asset_group; CeFi venues (Bitfinex / Bitget / Kraken) lifted into `cefi_master`.
 - `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (1 absorbed item) — `poolGetSnapshots` historical-TVL DeFi-pool
   query item lifted into "Tail-chain / mid-tier protocol coverage" above; remaining 2 absorbed items
-  (`venue_start_dates` deletion + dashboard SSOT verify) folded into `infrastructure_master_2026_05_07`.
+  (`venue_start_dates` deletion + dashboard SSOT verify) folded into `infrastructure_master`.
 
 ## DONE-2026-05-08-tab1 (defi-fork1-completion-tab — Ikenna split)
 

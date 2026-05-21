@@ -8,8 +8,8 @@ estimate_calibrated_ai_days: 5.6
 status: in-flight
 deadline: 2026-05-23
 priority: P0
-parent_epic: manifest_evolution_master_2026_05_08
-epic_secondary: instruments_live_master_2026_05_08
+parent_epic: manifest_evolution_SUPERSEDED_2026_05_21
+epic_secondary: instruments_master
 parent_plan: master_to_live_defi_2026_05_23.md
 related_plans:
   - honest_coverage_formula_consolidation_2026_05_19.md
@@ -95,14 +95,14 @@ Banned in MTDS handlers:
 | `token_transfers_handler.py`     | ✅ Reads IS                                                | lines 100-125                |
 | `vault_share_price_handler.py`   | ✅ Reads IS                                                | lines 80-105                 |
 | **`solana_defi_handler.py`**     | **❌ Hardcodes Drift S3 + Phoenix + Solana protocol URLs** | **lines 164-203, 1101-1199** |
-| **`perp_funding_handler.py`**    | **⚠ Hardcodes Drift market list**                         | **line 145**                 |
-| **`lst_rates_handler.py`**       | **⚠ Hardcodes Solana LST URLs**                           | **lines 135-160**            |
-| **`native_staking_handler.py`**  | **⚠ Hardcodes Solana staking endpoint**                   | **line 85**                  |
-| **`staking_yields_handler.py`**  | **⚠ Hardcodes Lido/Marinade URLs**                        | **lines 110-135**            |
-| **`solana_lst_archival.py`**     | **⚠ Hardcodes Marinade/Jito endpoints**                   | **lines 75-95**              |
-| `position_data_handler.py`       | ⚠ Partial — fallback hardcodes some exchanges             | lines 200-215                |
-| `tick_data_handler.py`           | ⚠ Partial — fallback hardcodes exchange list              | line 200                     |
-| `websocket_streaming_handler.py` | ⚠ Partial — hardcodes Solana RPC                          | line 220                     |
+| **`perp_funding_handler.py`**    | **⚠ Hardcodes Drift market list**                          | **line 145**                 |
+| **`lst_rates_handler.py`**       | **⚠ Hardcodes Solana LST URLs**                            | **lines 135-160**            |
+| **`native_staking_handler.py`**  | **⚠ Hardcodes Solana staking endpoint**                    | **line 85**                  |
+| **`staking_yields_handler.py`**  | **⚠ Hardcodes Lido/Marinade URLs**                         | **lines 110-135**            |
+| **`solana_lst_archival.py`**     | **⚠ Hardcodes Marinade/Jito endpoints**                    | **lines 75-95**              |
+| `position_data_handler.py`       | ⚠ Partial — fallback hardcodes some exchanges              | lines 200-215                |
+| `tick_data_handler.py`           | ⚠ Partial — fallback hardcodes exchange list               | line 200                     |
+| `websocket_streaming_handler.py` | ⚠ Partial — hardcodes Solana RPC                           | line 220                     |
 | `data_manifest_handler.py`       | (legacy generator, separate scope)                         | —                            |
 | `replay_handler.py`              | (legacy replay, separate scope)                            | —                            |
 

@@ -21,7 +21,7 @@ related_plans:
   - agent_orchestrator_slack_notifications_2026_05_19.md
   - agent_reliability_mitigations_2026_05_20.md
   # Coordination it composes with
-  - data_pipeline_master_coordination_2026_05_20.md
+  - mtds_mdps_master.md
   - human_work_backlog_2026_05_20.md
   - issues/human_led_audit_pool_2026_05_21.md # NEW (to be created — operator-curated audit pool)
 codex_ssots:
@@ -180,7 +180,7 @@ vms:
         failover: [iggy2london@gmail.com, harshkantariyawork@gmail.com, ikennaigboaka@gmail.com],
       }
     master_plans:
-      - plans/active/data_pipeline_master_coordination_2026_05_20.md
+      - plans/active/mtds_mdps_master.md
       - plans/active/master_to_live_defi_2026_05_23.md
   - id: vm-1
     fqdn: api-vm-1.agent-orchestrator.odum-research.com
@@ -193,7 +193,7 @@ vms:
         failover: [harshkantariyawork@gmail.com, ikennaigboaka@gmail.com, ikenna@odum-research.com],
       }
     master_plans:
-      - plans/epics/cefi_master_2026_05_07.md
+      - plans/epics/cefi_master.md
   # ...vm-2 .. vm-7 as epics get spun up
 ```
 
@@ -289,7 +289,7 @@ New endpoint **on each backend**: `GET /api/vm/summary` returns:
   "vm_id": "vm-defi",
   "fqdn": "api-defi.agent-orchestrator.odum-research.com",
   "role": "epic",
-  "master_plans": ["data_pipeline_master_coordination_2026_05_20.md"],
+  "master_plans": ["mtds_mdps_master.md"],
   "slots_total": 12,
   "slots_working": 8,
   "slots_idle": 2,

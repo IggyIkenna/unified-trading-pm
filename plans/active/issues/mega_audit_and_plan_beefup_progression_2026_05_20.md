@@ -19,11 +19,11 @@ true loose-ends count (not the plan-derived one) and turn it into a beefed-up ac
 between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 
 > **🚨 OPERATOR-HANDOFF ENTRY POINT (round 5 — 2026-05-20)**: hand
-> [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](../data_pipeline_master_coordination_2026_05_20.md)
-> to an orchestrator for the execution-ordering layer over this delegation SSOT. That plan sequences AWS↔GCP bucket
-> symmetry → code freeze → drain → GCS migration → AWS migration → Docker rebuild → manifest v8 backfill + label-flip →
-> denominator/numerator UI fix → QG enforcement, with named owner slot + plan-of-record + verification per phase. This
-> issue doc remains the per-finding delegation SSOT; the coordinator plan is the sequence-and-pacing layer above it.
+> [`plans/active/mtds_mdps_master.md`](../mtds_mdps_master.md) to an orchestrator for the execution-ordering layer over
+> this delegation SSOT. That plan sequences AWS↔GCP bucket symmetry → code freeze → drain → GCS migration → AWS
+> migration → Docker rebuild → manifest v8 backfill + label-flip → denominator/numerator UI fix → QG enforcement, with
+> named owner slot + plan-of-record + verification per phase. This issue doc remains the per-finding delegation SSOT;
+> the coordinator plan is the sequence-and-pacing layer above it.
 
 > **🟢 PARALLEL Opus-1M operator-orchestrated session (2026-05-20 round 5)**:
 > [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md) re-prioritised P0 +

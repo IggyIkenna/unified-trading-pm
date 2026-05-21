@@ -1,5 +1,4 @@
----
-name: promote-workflow-may23-dual-track
+---name: promote-workflow-may23-dual-track
 overview:
   Dual-track promote workflow for the May-23 live-DeFi cutover. PRIMARY = operator-CLI path (run-paper.sh + run-live.sh
   + colocated_engine.py) hardened for safety-net certainty. SECONDARY = minimal-but-real UI promote pipeline (Promote
@@ -22,8 +21,8 @@ related_plans:
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
   - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/defi_master_2026_05_07.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
+  - plans/active/defi_master.md
+  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 related_codex:
   - codex/09-strategy/operational/cli-promote-paths.md
   - codex/04-architecture/promote-workflow-architecture.md
@@ -36,6 +35,7 @@ estimate_calibrated_ai_days: 4.2
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: dart_and_promote_master
 ---
 
 ## Deferred work — migrated to:

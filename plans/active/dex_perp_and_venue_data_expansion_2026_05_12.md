@@ -1,5 +1,4 @@
----
-title:
+---title:
   "DEX perp + venue data expansion — Lighter/Kraken-Futures/BitFinex-Derivatives/Drift/Pacifica funding + EigenLayer
   yield aggregation"
 type: plan
@@ -25,7 +24,7 @@ effective_concurrent_slots: 3
 depends_on:
   - dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
 related:
-  - defi_master_2026_05_07.md
+  - defi_master.md
   - arbitrage_price_dispersion_finalisation_2026_05_09.md
   - writegate_honest_coverage_endtoend_2026_05_06.md
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
@@ -33,6 +32,7 @@ completion_gates:
   code: C5
   deployment: D3
   business: B4
+parent_epic: mtds_mdps_master
 ---
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
@@ -266,9 +266,9 @@ feature available to downstream strategy-service consumers.
       May-23 cutover.** Outline: (1) validate CLMM slippage math via Dune SQL (free, exploratory — proof-of-concept
       before committing infra); (2) production path = Graph Studio custom subgraph emitting per-tick liquidity per block
       on Mint/Burn/Swap events; (3) Alchemy archive `eth_call` for spot-check at 26 CU/call. Write findings as a todo in
-      `defi_master_2026_05_07.md` research section once validated, NOT as a code commitment here. **DEFERRED: no
-      implementation this plan — research only.** **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2
-      (R-S2-DEX-PERP-VENUE-DATA-EXPANSION): plan explicitly deferred this to post-cutover research. Named successor:
+      `defi_master.md` research section once validated, NOT as a code commitment here. **DEFERRED: no implementation
+      this plan — research only.** **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2 (R-S2-DEX-PERP-VENUE-DATA-EXPANSION):
+      plan explicitly deferred this to post-cutover research. Named successor:
       `plans/active/uniswap_v3_tick_subgraph_<date>.md` (create when Dune SQL validation confirms CLMM math). Not
       blocking May-23.
 

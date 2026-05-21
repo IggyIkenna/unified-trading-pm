@@ -177,7 +177,7 @@ Phase 1.B OR successor plan `simulation_scenarios_post_cutover_2026_06_01.md`:
 | `LENDING_POOL_UNAVAILABLE_SECONDS` breaker missing from `CircuitBreakerId` closed-set                                                                             | `disaster_recovery_circuit_breakers` Phase 4 OR successor                        | P1                        |
 | `OracleStaleError` / `OracleDeviationError` exception classes likely missing from UTL honest-coverage taxonomy                                                    | `writegate_honest_coverage_endtoend_2026_05_06` Phase 2.A extension OR successor | P1                        |
 | First-class `LendingFeatureSpike` + `VenueOutage` mutation members missing from `ScenarioMutationSpec` closed-union (composed via primitives in compressed scope) | successor `simulation_scenarios_post_cutover_2026_06_01.md` Phase 1.B            | P3 (post-cutover cleanup) |
-| Solana microlamports → USD normalisation for `GAS_BUDGET_PER_ARCHETYPE`'s USD-50 ceiling needs `tx_cost_estimate_usd` contract confirmation                       | `defi_master_2026_05_07.md` Phase 1.E or features-onchain                        | P2                        |
+| Solana microlamports → USD normalisation for `GAS_BUDGET_PER_ARCHETYPE`'s USD-50 ceiling needs `tx_cost_estimate_usd` contract confirmation                       | `defi_master.md` Phase 1.E or features-onchain                                   | P2                        |
 
 ## Day-2 handshake checkpoint (operator review)
 

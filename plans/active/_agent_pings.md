@@ -25,9 +25,9 @@ Format (one line per active ping):
   [YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
 
 Examples (cross-side hard-gate signalling):
-  [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract shipped UAC+UTL; Harsh Tab 1 MTDS migration unblocked; see predictions_master_2026_05_07.md
+  [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract shipped UAC+UTL; Harsh Tab 1 MTDS migration unblocked; see predictions_master.md
   [2026-05-08 09:14 UTC] harsh-main — UAC AlertCode taxonomy SSOT shipped under canonical/alerting/; Ikenna Tab 6 alerting-phase2 unblocked; see alerting_service_live_rules_2026_05_07.md
-  [2026-05-08 11:00 UTC] ikenna-main — 🟢 VM RUNNING: 4 mtds-tradfi VMs launched (ETA 2026-05-09 06:00 UTC); see tradfi_master_2026_05_07.md
+  [2026-05-08 11:00 UTC] ikenna-main — 🟢 VM RUNNING: 4 mtds-tradfi VMs launched (ETA 2026-05-09 06:00 UTC); see tradfi_master.md
 
 This file is EPHEMERAL — entries are removed when handled. Full Q&A history lives
 in the referenced plan doc's `## Open questions` section (status badges 🟡 BLOCKED
@@ -1243,7 +1243,7 @@ clarifications 2026-05-13 post earlier ping).
    - **Both** — same archetype family, exit-rule distinguishes:
      - `CARRY_BASIS_DATED` (held to expiry capturing basis convergence)
      - `ARBITRAGE_PRICE_DISPERSION` config variant `dated-cross-venue` (closed early when convergence sufficient)
-   - **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** — DeFi master owns
+   - **Owner plan**: [`plans/active/defi_master.md`](defi_master.md) **Fork 1** — DeFi master owns
      the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
    - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
      Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -1253,7 +1253,7 @@ clarifications 2026-05-13 post earlier ping).
    - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype,
      `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
 
-- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** —
+- **Owner plan**: [`plans/active/defi_master.md`](defi_master.md) **Fork 1** —
   DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
   - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
     Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -1453,8 +1453,8 @@ strategies + concurrent loops):
 **Action items SPAWNED by this timeline** (orchestrator should ping epic owners to add per-checkpoint dates to plan
 bodies):
 
-1. `ml_and_features_master_2026_05_07.md` — add per-asset_group ML kickoff date (2026-05-19)
-2. `defi_master_2026_05_07.md` — add DeFi strategy + execution backtest start date (2026-05-19)
+1. `features_and_ml_master.md` — add per-asset_group ML kickoff date (2026-05-19)
+2. `defi_master.md` — add DeFi strategy + execution backtest start date (2026-05-19)
 3. `wallet_treasury_client_flow_2026_05_10.md` — add live wallet funding + CeFi credentials gate (2026-05-20)
 4. `dart_manual_trade_ux_refactor_2026_05_13.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — add ready-for-cutover
    date (2026-05-20)
@@ -4389,11 +4389,9 @@ compliance.
 
 ## [ikenna-main → harsh-main + ALL slots both sides] 2026-05-20 UTC — 🚨 DATA-PIPELINE MASTER COORDINATION POSTED — awaiting operator code-freeze trigger
 
-**Plan**:
-[`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) — the
-single operator-handoff entry point sequencing all data-pipeline work under one critical path: AWS↔GCP bucket symmetry
-→ code freeze → drain → GCS migration → AWS migration → Docker rebuild → manifest v8 backfill + label-flip →
-denominator/numerator UI fix → QG enforcement.
+**Plan**: [`plans/active/mtds_mdps_master.md`](mtds_mdps_master.md) — the single operator-handoff entry point sequencing
+all data-pipeline work under one critical path: AWS↔GCP bucket symmetry → code freeze → drain → GCS migration → AWS
+migration → Docker rebuild → manifest v8 backfill + label-flip → denominator/numerator UI fix → QG enforcement.
 
 **Why now**: mega-audit Phase A (rounds 1-4) surfaced interlocking findings that share one critical-path. Existing plans
 cover individual slices but nothing sequences them. Operator directive 2026-05-20 round 5:
@@ -4437,9 +4435,7 @@ migration. Cross-ping persists until operator fires the explicit Phase 2 freeze.
 
 ## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🔧 MASTER COORDINATOR PLAN UPDATED (round 5 re-sequencing)
 
-**Plan**:
-[`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md)
-updated with operator directive 2026-05-20 round 5:
+**Plan**: [`plans/active/mtds_mdps_master.md`](mtds_mdps_master.md) updated with operator directive 2026-05-20 round 5:
 
 ### Two new prerequisite phases ADDED before Phase 0
 
@@ -4512,9 +4508,7 @@ blocked just do it." No further action needed on this bucket.
 4. `gsutil rsync` per-AG strategy data into the unified bucket; verify zero data loss; flip yaml atomically.
 5. Phase 4 QG (no `gs://` f-strings, STEP 5.69) un-deferred.
 
-**Bundled into**: master coordinator
-[`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) Phase 1
-(bucket-name symmetry).
+**Bundled into**: master coordinator [`mtds_mdps_master.md`](mtds_mdps_master.md) Phase 1 (bucket-name symmetry).
 
 **Bucket 4 (strategy_archetype_logic_audit)**: 🟢 **ACKED to run TONIGHT in parallel** with Phase 11 consolidation tail.
 Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orchestrated session per
@@ -4526,8 +4520,7 @@ Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orch
 
 ## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🟡 STRATEGY-SERVICE LOGIC FREEZE — surface cleanup CONTINUES, logic edits WAIT for operator Opus-1M audit
 
-**Plan**: [`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) § "round
-6 — strategy-service LOGIC freeze gate" +
+**Plan**: [`mtds_mdps_master.md`](mtds_mdps_master.md) § "round 6 — strategy-service LOGIC freeze gate" +
 [`issues/strategy_archetype_logic_audit_2026_05_20.md`](issues/strategy_archetype_logic_audit_2026_05_20.md) (extended
 with dimensions 9-14).
 

@@ -1,6 +1,6 @@
 ---
 name: cefi-master
-slug: cefi_master_2026_05_07
+slug: cefi_master
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
@@ -112,8 +112,8 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 - **In-flight (running VMs)**: 24 VMs (8 venues × multi-year shards), all on `live-defi-rollout` tarball,
   asia-northeast1-c. Bitfinex spot (5) + futures (4), Bitget futures (3), Coinbase spot (4), Hyperliquid (2), Kraken
   futures (1) + Kraken spot (7). ETA 2026-05-07 to 2026-05-09.
-- **Blocked by**: `manifest_migration_master_2026_05_07:Stage 4` (rescan-all-manifests gates MTDS-to-100% verification);
-  `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder deletion gates honest-coverage % numbers)
+- **Blocked by**: `manifest_migration_SUPERSEDED_2026_05_21:Stage 4` (rescan-all-manifests gates MTDS-to-100%
+  verification); `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder deletion gates honest-coverage % numbers)
 - **Blocks**: `master_to_live_defi_2026_05_23:F` (live-only trading prerequisites); `defi_master:carry_staked_basis`
   (needs CeFi perp hedges live)
 - **Last meaningful commit**: MTDS@`b12ecb5` (tardis kraken slash→hyphen URL normalization); UAC@`e890022` (ohlcv_1m
@@ -142,11 +142,11 @@ CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge leg
 
 **Not covered here** (out of asset_group scope):
 
-- TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master_2026_05_07.md`.
-- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master_2026_05_07.md`. Note: Lighter
-  / Extended / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're DeFi by
+- TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master.md`.
+- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master.md`. Note: Lighter / Extended
+  / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're DeFi by
   asset_group.
-- Sports / Predictions → see `sports_master_2026_05_07.md` / `predictions_master_2026_05_07.md`.
+- Sports / Predictions → see `sports_master.md` / `predictions_master.md`.
 - Cross-cutting concerns (writegate, shard-granularity, data-status, instruments+MTDS infra) → see master plan + the
   named cross-cutting plans.
 
@@ -421,7 +421,7 @@ These were originally scoped in `cefi_venue_universe_expansion`; deferring expan
 because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are already live.
 
 - [x] [DEFERRED-POST-CUTOVER] P2. Extended / Pacifica / Lighter DEX-perp venues — these are DeFi asset_group, not CeFi.
-      Move-out into `defi_master_2026_05_07.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical via
+      Move-out into `defi_master.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical via
       MTDS@10aa715/51fecd5/d898985/fc53a97 + UAC@e890022 (per MEMORY entry project_dex_perp_onboarding_2026_05_07);
       Extended pending per dex_perp_onboarding_handover_2026_05_07.HANDOVER.md Item C; this todo is the move-out
       announcement which IS DONE]
@@ -538,8 +538,8 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, infrastructure
-  baseline.
+- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue, strategy IDs, client wiring,
+  infrastructure baseline.
 - **Shares with:** `live_defi_rollout` (CeFi venue connectivity overlap on Bybit / Binance / OKX; same execution-service
   adapters + alerting rules).
 - **Provides to:** `sp_prediction` + `sports_ml` + `prediction_markets` (shared ML lifecycle infrastructure: model
@@ -579,8 +579,7 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Shard granularity:
   [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md).
-- Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
-  `predictions_master_2026_05_07`.
+- Sibling asset_group umbrellas: `defi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
   [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.

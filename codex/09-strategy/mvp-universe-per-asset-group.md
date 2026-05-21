@@ -73,7 +73,7 @@ follows.
 
 ### CeFi (data capture: ~30 MVP coins + dust-conversion spot coins; backtest scope: same set)
 
-**Backtest universe** (30 MVP coins, exact list owned by `cefi_master_2026_05_07.md` + per-venue catalog):
+**Backtest universe** (30 MVP coins, exact list owned by `cefi_master.md` + per-venue catalog):
 
 - Top-30 by cross-venue volume + perp open-interest concentration.
 - All 6 perp venues in scope: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster.
@@ -114,7 +114,7 @@ Barchart preload (VIX 15m historical). All per UAC `SOURCE_PRIORITY` rules.
 
 ### Sports (data capture: unconstrained; backtest scope: Top-5 European football)
 
-**Backtest universe** (RESOLVED 2026-05-08 in `sports_master_2026_05_07.md`):
+**Backtest universe** (RESOLVED 2026-05-08 in `sports_master.md`):
 
 - **Leagues**: EPL + LaLiga + Serie A + Bundesliga + Ligue 1 (deepest historical coverage, tightest market-making, most
   consistent fixture metadata)
@@ -130,8 +130,7 @@ backtest-scope SUBSET.
 **Backtest universe**:
 
 - **Polymarket** in scope for May-23 backtest + live trading (operator direction 2026-05-13).
-- Canonical question groups: BTC_UP_DOWN_HOURLY + other prediction-market archetypes per
-  `predictions_master_2026_05_07.md`.
+- Canonical question groups: BTC_UP_DOWN_HOURLY + other prediction-market archetypes per `predictions_master.md`.
 
 **Prediction data capture**: Polymarket + Kalshi + opinion.trade all captured at MTDS layer.
 
@@ -230,8 +229,8 @@ These archetypes MUST have a runnable 2-year backtest config-grid by 2026-05-23.
 
 **Both archetypes**:
 
-- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md) Fork 1 (DeFi
-  master owns the archetype family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
+- **Owner plan**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1 (DeFi master owns the
+  archetype family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
 - **Shared infrastructure**: `paired_price_dispersion` calculator in `features-cross-instrument-service` powers BOTH
   (per defi_master line ~342). Catalog pair specs at UAC
   `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -272,7 +271,7 @@ For Tier A archetypes (May-23 backtest scope), per `compute_optimization_mock_da
 | -------------------------------- | -----------------------------------------: | -------------------------: | -----------------------------: |
 | ml-continuous (CeFi + ES)        |                        30 CeFi + 1 ES = 31 |                        ~15 |              ~340K worker-runs |
 | ml-settled (Sports)              |                 ~5000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
-| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |           ~1.3M worker-runs ⚠ |
+| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |            ~1.3M worker-runs ⚠ |
 | arbitrage-sports-book            |      Top-5 EU × ~1000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
 | arbitrage-event-markets          |           ~20 simultaneous Poly+CME events |                        ~10 |              ~150K worker-runs |
 | defi-carry-family (5 archetypes) |                  12 LST × 4 AMM × 730 days | ~15 per archetype × 5 = 75 |              ~440K worker-runs |
@@ -294,12 +293,11 @@ full Tier A backtest. Fits cutover window.
 
 ## References
 
-- Sports MVP resolved at `plans/epics/sports_master_2026_05_07.md` § "Leagues in scope" (2026-05-08).
-- TradFi MVP at `plans/epics/tradfi_master_2026_05_07.md` deliverable A.
-- DeFi archetypes + LST family at `plans/active/defi_master_2026_05_07.md` +
-  `codex/09-strategy/architecture-v2/archetypes/`.
-- CeFi MVP coin list at `plans/epics/cefi_master_2026_05_07.md` (catalog).
-- Prediction MVP at `plans/epics/predictions_master_2026_05_07.md` +
+- Sports MVP resolved at `plans/epics/sports_master.md` § "Leagues in scope" (2026-05-08).
+- TradFi MVP at `plans/epics/tradfi_master.md` deliverable A.
+- DeFi archetypes + LST family at `plans/active/defi_master.md` + `codex/09-strategy/architecture-v2/archetypes/`.
+- CeFi MVP coin list at `plans/epics/cefi_master.md` (catalog).
+- Prediction MVP at `plans/epics/predictions_master.md` +
   `plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md`.
 - Backtest config-grid scale + per-stage SKU at `plans/active/compute_optimization_mock_data_2026_05_13.md`.
 - 2-yr config-grid backtest gates Group F item 18 of master plan.

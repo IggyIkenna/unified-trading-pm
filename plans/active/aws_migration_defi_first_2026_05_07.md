@@ -1,5 +1,4 @@
----
-type: plan
+---type: plan
 asset_group: cross-cutting
 priority: P1
 deadline: 2026-06-04
@@ -25,6 +24,7 @@ estimate_baseline_ai_days: 40
 estimate_calibrated_ai_days: 32
 estimate_calibration_note: |
   Backfilled 2026-05-13: 72 todos, 8 done; 64 remaining infra-heavy work (cross-cloud rsync + bucket SSOT alignment + Phase 5 cutover + drift verification). Baseline 40 (~0.6 AI-day per remaining infra todo factoring in real-infra verification overhead per CLAUDE.md "Plans Run To Actual Completion"); × 0.8 = 32.
+parent_epic: infrastructure_master
 ---
 
 > **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
@@ -579,7 +579,7 @@ sports/predictions/tradfi/cefi GCP-resident until post-deadline rollout.
 
 - `master_to_live_defi_2026_05_23:Group D` (cloud parity verification).
 - `master_to_live_defi_2026_05_23:Group F` (live trading prereqs include AWS deployment if DeFi-on-AWS mandate stands).
-- `defi_master_2026_05_07:carry_staked_basis-live` + `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`).
+- `defi_master:carry_staked_basis-live` + `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`).
 - `alerting_service_live_rules_2026_05_07:Phase 4` (paging credentials must land in AWS Secrets Manager too).
 
 ## Coordination notes

@@ -1,5 +1,4 @@
----
-name: d0-orchestrator-migration-2026-05-20
+---name: d0-orchestrator-migration-2026-05-20
 title: D0 — agent-orchestrator migration plan
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -17,6 +16,7 @@ source_audits:
 related_plans:
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - agent_orchestrator_dual_deployment_2026_05_19.md
+parent_epic: orchestrator_master
 ---
 
 # D0 — agent-orchestrator migration plan

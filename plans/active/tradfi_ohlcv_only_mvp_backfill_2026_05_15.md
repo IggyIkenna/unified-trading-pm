@@ -6,7 +6,7 @@ status: active
 created: 2026-05-15
 deadline: 2026-05-23
 owner: ikenna
-parent_epic: tradfi_master_2026_05_07
+parent_epic: tradfi_master
 asset_group: tradfi
 priority: P1
 locked_by: live-defi-rollout
@@ -17,7 +17,7 @@ estimate_calibrated_ai_days: 3.2
 related_plans:
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
-  - tradfi_master_2026_05_07
+  - tradfi_master
   - cefi_tradfi_tick_data_backfill_2026_04_10
   - market_tick_data_to_100pct_2026_05_05
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
@@ -327,9 +327,9 @@ Recommended slot mapping:
 
 ## Cross-plan impact
 
-- [`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md) — this plan supersedes the `trades` / `tbbo`
-  references in the TradFi-half tick-data backfill items. Epic's Phase X "5-VM-drain ETA 2026-05-08" residual + IBIT
-  NASDAQ trades cold-backfill + ES_OPT trades backfill items are all DEFERRED-post-cutover by this scope change.
+- [`tradfi_master.md`](../epics/tradfi_master.md) — this plan supersedes the `trades` / `tbbo` references in the
+  TradFi-half tick-data backfill items. Epic's Phase X "5-VM-drain ETA 2026-05-08" residual + IBIT NASDAQ trades
+  cold-backfill + ES_OPT trades backfill items are all DEFERRED-post-cutover by this scope change.
 - [`cefi_tradfi_tick_data_backfill_2026_04_10`](../archive/cefi_tradfi_tick_data_backfill_2026_04_10.plan.md) — TradFi
   half effectively scope-narrowed to OHLCV-only.
 - [`cme_polymarket_arb_2026_05_08.md`](./cme_polymarket_arb_2026_05_08.md) — confirm archetype runs on OHLCV-only (no

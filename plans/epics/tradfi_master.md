@@ -1,6 +1,6 @@
 ---
 name: tradfi-master
-slug: tradfi_master_2026_05_07
+slug: tradfi_master
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-15
@@ -617,8 +617,8 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Cross-epic handshakes (both deliverables)
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue completeness (S&P + price-arb archetypes × all
-  venue combos enumerated even if not launching this cycle).
+- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue completeness (S&P + price-arb
+  archetypes × all venue combos enumerated even if not launching this cycle).
 - **Shares with:** `cefi_ml_may_23_2026` (now in `cefi_master`) shares ML lifecycle infrastructure (training pipeline,
   model registry, features-service consolidation). Both S&P and price-arb deliverables share ES/MES + ETF instrument +
   MTDS data — same TradFi backfill clean.
@@ -638,8 +638,7 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
-- Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `sports_master_2026_05_07`,
-  `predictions_master_2026_05_07`.
+- Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `sports_master`, `predictions_master`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.
 - Venue trading calendar: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:

@@ -10,9 +10,9 @@ estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
 deadline: 2026-05-23
 parent_plan: master_to_live_defi_2026_05_23.md
-parent_epic: predictions_master_2026_05_07
+parent_epic: predictions_master
 related_plans:
-  - predictions_master_2026_05_07.md
+  - predictions_master.md
   - api_keys_wallets_accounts_readiness_2026_05_10.md
   - defunct_uac_provider_dirs_cleanup_2026_05_20.md
 codex_ssots:
@@ -31,8 +31,8 @@ codex_ssots:
 ## Why this plan exists
 
 Kalshi is a CFTC-regulated event-derivatives venue and a MAY-23 PREDICTION- TRACK MVP venue (per
-[[predictions_master_2026_05_07]]). The `arbitrage_price_dispersion` × prediction archetype depends on
-Kalshi-vs-Polymarket spread detection. Our codebase already has:
+[[predictions_master]]). The `arbitrage_price_dispersion` × prediction archetype depends on Kalshi-vs-Polymarket spread
+detection. Our codebase already has:
 
 - `unified-api-contracts/unified_api_contracts/external/kalshi/` (schemas + cassettes)
 - `instruments-service/.../reference_data/adapters/prediction/kalshi.py`
@@ -134,6 +134,6 @@ unified-trading-system-ui/.../SCHEMA_VERSIONS.md:577                         [UI
 - Parent issue (RESOLVED): `plans/archive/2026_05/uac_weekly_validation_wif_secrets_missing_2026_05_17.md`
 - Sibling cleanup plan: [[defunct_uac_provider_dirs_cleanup_2026_05_20]]
 - Credential-provisioning sibling: [[api_keys_wallets_accounts_readiness_2026_05_10]] § 5.B.2
-- Predictions epic: [[predictions_master_2026_05_07]]
+- Predictions epic: [[predictions_master]]
 - Operator-classified per CLAUDE.md "Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE
   codified 2026-05-20)": this is a `BLOCKED-CREDENTIALS` + drift finding that must be fixed in full, not deferred.

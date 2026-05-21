@@ -133,7 +133,7 @@ data. The "batch" mode fetches instrument universe from source providers.
 | sports | `triggers/sports_fixtures_daily_repoll.py`      | GREEN           | Sports fixtures live re-poll trigger (Phase B.1); writes same GCS path as batch  |
 
 **IS live mode is at Phase B.1 (sports trigger only).** Phases B.2–E (cefi/defi/tradfi/prediction live catalog refresh)
-are planned but not yet implemented per `plans/epics/instruments_live_master_2026_05_08.md`.
+are planned but not yet implemented per `plans/epics/instruments_master.md`.
 
 ---
 
@@ -375,4 +375,4 @@ compound-name venue.**
 5. **Sports bookmakers** (PINNACLE, BETFAIR): have batch adapters in `market_interface/adapters/sports/` but no live WS
    connector.
 6. **IS live phases B.2-E** (cefi/defi/prediction instrument catalog refresh): planned but not yet shipped per
-   `plans/epics/instruments_live_master_2026_05_08.md`.
+   `plans/epics/instruments_master.md`.

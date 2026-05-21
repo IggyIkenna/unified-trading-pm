@@ -8,7 +8,7 @@ estimate_calibrated_ai_days: 1.2
 status: in-flight
 deadline: 2026-05-23
 priority: P0
-parent_epic: manifest_evolution_master_2026_05_08
+parent_epic: manifest_evolution_SUPERSEDED_2026_05_21
 parent_plan: master_to_live_defi_2026_05_23.md
 related_plans:
   - is_mtds_contract_audit_2026_05_20.md
@@ -147,16 +147,16 @@ path is only triggered when the caller explicitly passes `fail_on_missing_deps=F
 Strategy-service is a **consumer** of MTDS-derived data (via features-service), not a writer to MTDS buckets. For the
 strategy OUTPUT side:
 
-| Write path                                                     | Manifest status                                                                   | Evidence                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `CloudStorageService.write_instructions()`                     | ❌ **Zero manifest emission**                                                     | `gcs_storage_service.py:159-198` — no `record_*` call |
-| `CloudStorageService.write_backtest_result_full()`             | ❌ **Zero manifest emission**                                                     | `gcs_storage_service.py:287-374` — no `record_*` call |
+| Write path                                                     | Manifest status                                                                  | Evidence                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `CloudStorageService.write_instructions()`                     | ❌ **Zero manifest emission**                                                    | `gcs_storage_service.py:159-198` — no `record_*` call |
+| `CloudStorageService.write_backtest_result_full()`             | ❌ **Zero manifest emission**                                                    | `gcs_storage_service.py:287-374` — no `record_*` call |
 | `CloudStrategyStorage.store_orders()`                          | ⚠ Uses legacy `ManifestWriter.add()` + `writer.write()` (NOT `record_captured`)  | `cloud_strategy_storage.py:187-199`                   |
 | `CloudStrategyStorage.store_positions()`                       | ⚠ Uses legacy `ManifestWriter.add()` + `writer.write()` (NOT `record_captured`)  | `cloud_strategy_storage.py:264-276`                   |
 | `CloudStrategyStorage.store_pnl()`                             | ⚠ Uses legacy `ManifestWriter.add()` + `writer.write()` (NOT `record_captured`)  | `cloud_strategy_storage.py:340-353`                   |
 | `decision_context_writer.py`                                   | ⚠ `record_captured` with `# QG-allow: emission-policy-not-applicable` suppressor | `decision_context_writer.py:152`                      |
 | `hedge_ratio_writer.py`                                        | ⚠ `record_captured` with `# QG-allow: emission-policy-not-applicable` suppressor | `hedge_ratio_writer.py:139`                           |
-| `_write_instructions_to_gcs()` in `batch_handler.py:1261-1296` | ❌ **Zero manifest emission**                                                     | Direct `storage.upload_bytes()` with no `record_*`    |
+| `_write_instructions_to_gcs()` in `batch_handler.py:1261-1296` | ❌ **Zero manifest emission**                                                    | Direct `storage.upload_bytes()` with no `record_*`    |
 | `risk_snapshot_sink.py`                                        | ⚠ Uses `ManifestWriter` (legacy API, no `record_captured`)                       | `risk_snapshot_sink.py:179-190`                       |
 | `pnl/cli/handlers/compute_handler.py`                          | ⚠ Uses `ManifestWriter` (legacy API)                                             | `compute_handler.py:233-244`                          |
 

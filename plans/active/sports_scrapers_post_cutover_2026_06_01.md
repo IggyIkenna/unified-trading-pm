@@ -3,14 +3,14 @@ title: "Sports book scrapers — post-cutover successor (14 UK/EU + 2 US adapter
 created: 2026-05-14
 type: plan
 status: BLOCKED-OPERATOR-DECISION (May-23 out-of-scope; activation post-cutover at operator option)
-predecessor: plans/epics/sports_master_2026_05_07.md § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator"
+predecessor: plans/epics/sports_master.md § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator"
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 deadline: post-cutover (target 2026-06-01)
 estimate_class: brand-new
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 20
-parent_epic: plans/epics/sports_master_2026_05_07.md
+parent_epic: plans/epics/sports_master.md
 priority: P2 (post-cutover; not blocking May-23)
 ---
 
@@ -33,13 +33,12 @@ named successor.
 `bet365` · `888sport` · `betfred` · `betvictor` · `betway` · `boylesports` · `bwin` · `coral` · `ladbrokes` ·
 `paddypower` · `sbo` · `skybet` · `unibet` · `williamhill`
 
-Source files retained as scaffolding (per `sports_master_2026_05_07.md:153-176`); production-forbidden via registry
-gate.
+Source files retained as scaffolding (per `sports_master.md:153-176`); production-forbidden via registry gate.
 
 ### 2 US browser adapters
 
-Specifics in `sports_master_2026_05_07.md` § "DEFERRED-INDEFINITELY". US books gated additionally by GeoComply / XPoint
-state-level licensing checks.
+Specifics in `sports_master.md` § "DEFERRED-INDEFINITELY". US books gated additionally by GeoComply / XPoint state-level
+licensing checks.
 
 ## Activation prerequisites (operator-side; not blockers — operator decision needed first)
 
@@ -107,7 +106,7 @@ For each of 16 books:
 
 ## Cross-references
 
-- **Predecessor (the silent-defer this plan formalises)**: `plans/epics/sports_master_2026_05_07.md:153-176`
+- **Predecessor (the silent-defer this plan formalises)**: `plans/epics/sports_master.md:153-176`
 - **HARD RULE this plan satisfies**: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters
   (HARD RULE codified 2026-05-14)"
 - **Sports MVP path that ships May-23 (without scrapers)**: api-football + the-odds-api + OddsJam + SFI Footystats

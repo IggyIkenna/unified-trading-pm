@@ -1,5 +1,4 @@
----
-name: mdps-streaming-and-backpressure
+---name: mdps-streaming-and-backpressure
 overview:
   Successor plan covering DEFERRED MDPS Units 1+2+3 (incremental candles flush, eager → row-group iterator read,
   ResourceProfiler admission control) — band-aid VM-launcher memory bump shipped (deployment-service@02ee6d6); the
@@ -401,6 +400,7 @@ estimate_calibrated_ai_days: 3.0
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: mtds_mdps_master
 ---
 
 # MDPS streaming + backpressure successor plan (2026-05-07)
@@ -462,8 +462,8 @@ this up can cross-reference the original audit findings without re-deriving them
     new submissions — is identical.
 - **Master:** `master_to_live_defi_2026_05_23.md` — Group D (Coverage & shard) item 14, "Operability under load"
   item 16. This plan satisfies item 16 for MDPS specifically.
-- **Umbrella:** `infrastructure_master_2026_05_07.md` — folds in shard-granularity SSOT propagation and related
-  cross-cutting plumbing.
+- **Umbrella:** `infrastructure_master.md` — folds in shard-granularity SSOT propagation and related cross-cutting
+  plumbing.
 
 ## Execution DAG
 

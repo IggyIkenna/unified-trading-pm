@@ -1,5 +1,4 @@
----
-name: per-client-isolation-and-venue-fanout-topology-2026-05-20
+---name: per-client-isolation-and-venue-fanout-topology-2026-05-20
 overview:
   Wire per-client subprocess isolation into strategy-service + confirm/document the existing per-client process isolation
   in execution-service + formalise multi-venue concurrent routing through the existing OMS, by 2026-05-23 live DeFi
@@ -69,7 +68,7 @@ repo_gates:
 depends_on:
   - strategy_repo_consolidation_2026_05_19  # Phase 5 UTL lifts must land first (ConfigReloaderBase + KillSwitchBusSubscriberBase)
   - promote_workflow_may23_cli_path_2026_05_10  # VM launcher pattern this extends
-
+parent_epic: client_isolation_and_governance_master
 ---
 
 ## Context
@@ -185,8 +184,8 @@ todos:
         fee, gas_used). Tests: schema-parity cassettes per UAC discipline (every commit
         `pytest tests/test_cassette_schema_parity.py`). QG: STEP 5.69 bucket-name SSOT compliant (no inline bucket
         strings in event payloads). — uac@d0f72fd (7 files, 879 insertions: client_lifecycle_events.py +
-        transfer_events.py + 37 unit tests + __init__ exports + source_priority + availability_semantics fixes)
-        status: done
+        transfer_events.py + 37 unit tests + **init** exports + source_priority + availability_semantics fixes) status:
+        done
 
 - id: phase-2-utl-bases content: |
   - [x] ✅ [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
@@ -206,8 +205,8 @@ todos:
         publishes TransferIntent / Order events. Sub-classes implement per-archetype trading logic. **Composes with
         Phase 5 strategy_repo_consolidation**: ConfigReloaderBase + KillSwitchBusSubscriberBase must land FIRST (slot 5
         is doing those NOW per un-defer 2026-05-20). This Phase 2 inherits from those bases. Tests: unit tests for each
-        base (mock subprocess + mock event bus + mock KMS); basedpyright clean.
-        — utl@cae77ad9 (58 unit tests, 4 bases, QG codex-compliant) status: done
+        base (mock subprocess + mock event bus + mock KMS); basedpyright clean. — utl@cae77ad9 (58 unit tests, 4 bases,
+        QG codex-compliant) status: done
 
 - id: phase-3-supervisor content: |
   - [x] ✅ [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
@@ -226,7 +225,8 @@ todos:
         `clients/<archetype>/<shard>/clients.yaml` (operator-managed; loaded at boot, hot-reloadable via
         ClientLifecycleEvent.REGISTER). Tests: unit tests with mocked subprocess + mocked shared_memory + mocked event
         bus (simulate REGISTER → spawn → READY → DEREGISTER → reap; simulate crash → restart → quarantine after 5
-        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98% coverage, 24 tests pass
+        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98%
+        coverage, 24 tests pass
 
 - id: phase-4-client-worker-ipc content: |
   - [x] ✅ [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
@@ -248,32 +248,34 @@ todos:
         into ClientWorker.run(). Tests: unit tests for ClientWorker lifecycle (start → preflight → ready →
         process-event-loop → graceful-shutdown); crash test (raise unhandled exception in worker → supervisor detects
         via pipe close → restart logic); IPC test (parent emits credential-rotation → worker reloads CredentialStore
-        without restart). status: done — strategy-service@6506f868 + 36 tests green (59 passed); basedpyright 0 errors on 5 source files; blocked_by: phase-3-supervisor (resolved)
+        without restart). status: done — strategy-service@6506f868 + 36 tests green (59 passed); basedpyright 0 errors
+        on 5 source files; blocked_by: phase-3-supervisor (resolved)
 
 - id: phase-5-preflight-and-hot-reload content: |
-  - [x] ✅ [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
-        sequence (boot only, blocks CLIENT_READY emission until green): (a) Load credentials from Cloud KMS for every
-        venue this client trades (list from clients.yaml); (b) Per-venue auth ping (e.g. Binance `GET /api/v3/account`
-        with HMAC-signed request; Hyperliquid `POST /info` with wallet signature; Aave `eth_call` to balanceOf with
-        wallet address); (c) Per-venue balance fetch (asserts ≥ minimum_threshold from clients.yaml, else emit
-        CLIENT_QUARANTINED with `INSUFFICIENT_BALANCE`); (d) Emit CLIENT_READY with `venue_auth_status` dict; (2)
-        Hot-reload sequence (runs continuously alongside main event loop): (a) ClientCredentialKmsPoller polls KMS at
-        configured interval per (client_id, venue); (b) On rotation detected → emit in-process CredentialRotatedSignal →
-        CredentialStore reloads → next venue request uses new cred. Old creds discarded after grace period (10s) for
-        in-flight requests; (c) On ClientLifecycleEvent.CREDENTIAL_ROTATED (push from operator via bus) → same flow but
-        bypasses KMS poll (immediate); (3) Per-venue circuit breaker: track per-venue auth-failure count + balance-fetch
-        failure count; trip breaker (15min cooldown) after 3 consecutive failures within 5min. Trip emits
-        `VENUE_CIRCUIT_TRIPPED` event for alerting-service. Tests: preflight green path (mock KMS + mock venue auth →
-        CLIENT_READY); preflight INSUFFICIENT_BALANCE path → CLIENT_QUARANTINED; preflight venue-auth-timeout →
-        CLIENT_QUARANTINED with `VENUE_AUTH_TIMEOUT`; push credential rotation (operator emits CREDENTIAL_ROTATED bus
-        event) → worker reloads + venue request uses new cred within 100ms; pull credential rotation (KMS poll detects
-        rotation) → reload within poll_interval + 1s. status: done — strategy-service@6817cf7c; VenueAuthStatus StrEnum,
-        VenueCircuitBreaker (3-failures/5min/15min-cooldown), PreflightRunner.run() → (venue_auth_status, quarantine_reason);
-        injectable mock runner for tests; preflight wired before CLIENT_READY; 18 tests green
+  - [x] ✅ [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1)
+        Preflight sequence (boot only, blocks CLIENT_READY emission until green): (a) Load credentials from Cloud KMS
+        for every venue this client trades (list from clients.yaml); (b) Per-venue auth ping (e.g. Binance
+        `GET /api/v3/account` with HMAC-signed request; Hyperliquid `POST /info` with wallet signature; Aave `eth_call`
+        to balanceOf with wallet address); (c) Per-venue balance fetch (asserts ≥ minimum_threshold from clients.yaml,
+        else emit CLIENT_QUARANTINED with `INSUFFICIENT_BALANCE`); (d) Emit CLIENT_READY with `venue_auth_status` dict;
+        (2) Hot-reload sequence (runs continuously alongside main event loop): (a) ClientCredentialKmsPoller polls KMS
+        at configured interval per (client_id, venue); (b) On rotation detected → emit in-process
+        CredentialRotatedSignal → CredentialStore reloads → next venue request uses new cred. Old creds discarded after
+        grace period (10s) for in-flight requests; (c) On ClientLifecycleEvent.CREDENTIAL_ROTATED (push from operator
+        via bus) → same flow but bypasses KMS poll (immediate); (3) Per-venue circuit breaker: track per-venue
+        auth-failure count + balance-fetch failure count; trip breaker (15min cooldown) after 3 consecutive failures
+        within 5min. Trip emits `VENUE_CIRCUIT_TRIPPED` event for alerting-service. Tests: preflight green path (mock
+        KMS + mock venue auth → CLIENT_READY); preflight INSUFFICIENT_BALANCE path → CLIENT_QUARANTINED; preflight
+        venue-auth-timeout → CLIENT_QUARANTINED with `VENUE_AUTH_TIMEOUT`; push credential rotation (operator emits
+        CREDENTIAL_ROTATED bus event) → worker reloads + venue request uses new cred within 100ms; pull credential
+        rotation (KMS poll detects rotation) → reload within poll_interval + 1s. status: done —
+        strategy-service@6817cf7c; VenueAuthStatus StrEnum, VenueCircuitBreaker (3-failures/5min/15min-cooldown),
+        PreflightRunner.run() → (venue_auth_status, quarantine_reason); injectable mock runner for tests; preflight
+        wired before CLIENT_READY; 18 tests green
 
 - id: phase-6-execution-service-wiring-and-transfer-facade content: |
-  - [x] ✅ [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing per-process
-        per-client isolation (`isolation_policy.py`) in codex
+  - [x] ✅ [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing
+        per-process per-client isolation (`isolation_policy.py`) in codex
         `04-architecture/execution-service-per-client-isolation.md` — confirm pattern, no code change needed for May-23
         (already correct); (2) Document existing OMS surface (PersistentOrderManager + UnifiedOrderManager protocol) in
         codex `04-architecture/oms-protocol-and-state-machine.md`; (3) Document existing multi-venue concurrent routing
@@ -291,9 +293,9 @@ todos:
         route-by-type unit tests (mock each downstream handler); idempotency test (same TransferIntent.idempotency_key
         submitted twice → second is no-op, returns cached TransferResult); cross-client reject test (TransferIntent with
         foreign client_id rejected at bus by assert_client_allowed). status: done — execution-service@35c15f60;
-        TransferCoordinator + _SubaccountMoveHandler + CrossClientTransferForbiddenError + NotSupportedTransferError;
-        thread-safe idempotency cache; handler exceptions → FAILED (cached); HARD RULE cross-client rejection at 2 layers;
-        QG green (execution-service)
+        TransferCoordinator + \_SubaccountMoveHandler + CrossClientTransferForbiddenError + NotSupportedTransferError;
+        thread-safe idempotency cache; handler exceptions → FAILED (cached); HARD RULE cross-client rejection at 2
+        layers; QG green (execution-service)
 
 - id: phase-7-e2e-and-unit-test-bundle content: |
   - [x] ✅ [AGENT] P0. Phase 7 — End-to-end + unit test bundle for 2-client May-23 scenario: (1) E2E test in
@@ -316,7 +318,8 @@ todos:
         `e2e-testing/scripts/defi/per_client_isolation_e2e.py`. PYTEST_UNIT_DIR may need adjustment for strategy-service
         per CLAUDE.md per-family override rule. status: done — strategy-service@6817cf7c + execution-service@35c15f60;
         64/64 per_client_isolation tests green (strategy); 20+ transfer_coordinator tests green (execution); 2-client
-        scenario + crash isolation + capacity simulation + HARD RULE UAC compliance tested in-process; QG green both repos
+        scenario + crash isolation + capacity simulation + HARD RULE UAC compliance tested in-process; QG green both
+        repos
 
 - id: phase-8-deployment-service-wiring content: |
   - [x] ✅ **[AGENT] P0. Phase 8 — deployment-service + deployment-api wiring for shard naming + clients.yaml** —
@@ -335,19 +338,20 @@ todos:
         + ClientRiskLimits + MinBalancePerVenue + root facade exports. QG green all three repos.
 
 - id: phase-9-codex-ssot content: |
-  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (ALL 8 DOCS SHIPPED)** —
-        PM@32d1929db (slot 8 2026-05-20) + PM@b1664fe8 (slot 7 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
+  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (ALL 8 DOCS SHIPPED)** — PM@32d1929db (slot 8 2026-05-20) +
+        PM@b1664fe8 (slot 7 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
         supervisor + ClientWorker subprocess, MarkPriceAggregator, hybrid hot-reload, preflight, crash isolation, GIL
         rationale, clients.yaml - ✅ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — SHIPPED
-        slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` — SHIPPED
-        slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (5)
-        `codex/04-architecture/transfer-coordinator.md` — SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (6)
-        `codex/04-architecture/client-lifecycle-event-bus.md` — REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED,
-        push-vs-pull, ShardCapacityEvent, supervisor subscription code snippet - ✅ (7)
-        `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, capacity thresholds, shard auto-spawn,
-        vm_zombie_watchdog prefix mapping, drain-before-migration rule - ✅ (8)
+        slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` —
+        SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (4) `codex/04-architecture/multi-venue-concurrent-routing.md`
+        — SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (5) `codex/04-architecture/transfer-coordinator.md` —
+        SHIPPED slot 7 Phase 6 PM@b1664fe8 2026-05-20 - ✅ (6) `codex/04-architecture/client-lifecycle-event-bus.md` —
+        REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED, push-vs-pull, ShardCapacityEvent, supervisor subscription
+        code snippet - ✅ (7) `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, capacity thresholds,
+        shard auto-spawn, vm_zombie_watchdog prefix mapping, drain-before-migration rule - ✅ (8)
         `codex/04-architecture/promote-workflow-architecture.md` UPDATED — per-client + per-shard taxonomy added,
-        shard-invisible-to-promote clarified, E.2 listed in deferred status: done (all 8 docs shipped across slot 8 + slot 7)
+        shard-invisible-to-promote clarified, E.2 listed in deferred status: done (all 8 docs shipped across slot 8 +
+        slot 7)
 
 - id: phase-e2-auto-shard-supervisor-signal content: |
   - [ ] **POST-MAY-23** [AGENT] P1. Phase E.2 — Auto-shard supervisor signal end-to-end: Wire deployment-service to

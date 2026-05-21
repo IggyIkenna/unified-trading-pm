@@ -6,10 +6,10 @@ scope: [strategist, engineer]
 
 > **Status (2026-05-08)**: STUB. Phase 1 of `cme_polymarket_arb_2026_05_08` plan shipped (UAC
 > `InstrumentType.EVENT_CONTRACT` + Databento `BAG` classifier on EC\* roots — UAC@b95d146). Phases 2–5 are blocked on
-> `predictions_master_2026_05_07` Phase 5 (canonical-question-group backfill for 6 underlyings) and
-> `tradfi_master_2026_05_07` Q1+Q2 (`CanonicalFuturesContract` per-cluster expiry). Full content lands as those phases
-> ship; this stub captures the intent and signposts forward per the codex stub-vs-full-content rule (see CLAUDE.md §
-> "Post-Plan-Phase Codex Audit HARD RULE").
+> `predictions_master` Phase 5 (canonical-question-group backfill for 6 underlyings) and `tradfi_master` Q1+Q2
+> (`CanonicalFuturesContract` per-cluster expiry). Full content lands as those phases ship; this stub captures the
+> intent and signposts forward per the codex stub-vs-full-content rule (see CLAUDE.md § "Post-Plan-Phase Codex Audit
+> HARD RULE").
 
 **Plan SSOT**:
 [`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
@@ -21,8 +21,8 @@ scope: [strategist, engineer]
 **Composes with**:
 
 - [`category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md) § "Family 4:
-  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" +
-  slot-label cluster `cme-polymarket-*-up-down-daily-*`.
+  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" + slot-label
+  cluster `cme-polymarket-*-up-down-daily-*`.
 - [`per-category-bucket-layouts.md`](../../02-data/per-category-bucket-layouts.md) § "Multi-axis correction" → "TradFi
   EVENT_CONTRACT" shard atom bullet.
 

@@ -1,5 +1,4 @@
----
-name: d3-manifest-v8-finish-2026-05-20
+---name: d3-manifest-v8-finish-2026-05-20
 title: D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -24,6 +23,7 @@ related_plans:
   - manifest_schema_final_gate_2026_05_09.md
   - manifest_cross_asset_rescan_design_2026_05_08.md
   - honest_coverage_formula_consolidation_2026_05_19.md
+parent_epic: manifest_master
 ---
 
 # D3 — Manifest v8 finish + reason-enum wiring + divergence-detector
@@ -76,30 +76,33 @@ that plan was written (2026-05-09):
 
 - [x] ✅ [AGENT] P0. Fix `unified-api-contracts/canonical/crosscutting/manifest_schema.py` — ensure
       `MANIFEST_SCHEMA_VERSION = 8` is the ONLY version constant; remove all fallback branches
-  - UAC@7e908c6: constant value `MANIFEST_SCHEMA_VERSION_V8 = 8` was already correct; stale docstring
-    saying `= 7` updated to `= 8`; UAC QG ✅ ALL QUALITY GATES PASSED
+  - UAC@7e908c6: constant value `MANIFEST_SCHEMA_VERSION_V8 = 8` was already correct; stale docstring saying `= 7`
+    updated to `= 8`; UAC QG ✅ ALL QUALITY GATES PASSED
 - [x] ✅ [AGENT] P0. Fix `unified-trading-library/manifest_writer.py` — remove v<8 fallback; v8 is unconditional
-  - Already correct: `MANIFEST_SCHEMA_VERSION = 8` (line 145); reader-side `schema_version < MANIFEST_SCHEMA_VERSION`
-    at line 3847 is stale-row detection (intentional, not a writer fallback); no edit needed
+  - Already correct: `MANIFEST_SCHEMA_VERSION = 8` (line 145); reader-side `schema_version < MANIFEST_SCHEMA_VERSION` at
+    line 3847 is stale-row detection (intentional, not a writer fallback); no edit needed
 - [x] ✅ [AGENT] P0. Fix `deployment-service/scripts/rebuild_sports_manifest.py` — update schema_version constant to 8
-  - DS@abf0a31: only reference was stale docstring saying `schema_version=3`; script writes via `ManifestWriter`
-    which uses `MANIFEST_SCHEMA_VERSION = 8`; docstring updated; DS QG ✅ ALL QUALITY GATES PASSED
+  - DS@abf0a31: only reference was stale docstring saying `schema_version=3`; script writes via `ManifestWriter` which
+    uses `MANIFEST_SCHEMA_VERSION = 8`; docstring updated; DS QG ✅ ALL QUALITY GATES PASSED
 - [x] ✅ [AGENT] P1. Sweep 25 files with legacy-fallback patterns
       (`find . -type f -name '*.py' | xargs grep -l 'schema_version.*[0-7]'`); update to v8 unconditional
-  - Scanned workspace; real writer-side hardcodes in 5 locations across IS + MTDS:
-    `rescan_sports_manifest.py` (v4), `reconcile_manifest_from_per_league_parquets.py` (v5),
-    `rescan_sports_fixtures_canonical.py` (v5), `migrate_bare_to_per_league.py` (v5) — all bumped to v8;
-    IS@a760e99 QG ✅. `reconcile_market_tick_manifest.py` (2× v5, attempted_failed + captured) — bumped to v8;
-    MTDS@24dd75f QG ✅. Remaining grep hits were: config semver "1.0" (API schema, not manifest int),
-    test files, reader-side stale-detection (intentional), historical migration scripts reading v<8 data.
+  - Scanned workspace; real writer-side hardcodes in 5 locations across IS + MTDS: `rescan_sports_manifest.py` (v4),
+    `reconcile_manifest_from_per_league_parquets.py` (v5), `rescan_sports_fixtures_canonical.py` (v5),
+    `migrate_bare_to_per_league.py` (v5) — all bumped to v8; IS@a760e99 QG ✅. `reconcile_market_tick_manifest.py` (2×
+    v5, attempted_failed + captured) — bumped to v8; MTDS@24dd75f QG ✅. Remaining grep hits were: config semver "1.0"
+    (API schema, not manifest int), test files, reader-side stale-detection (intentional), historical migration scripts
+    reading v<8 data.
 - [x] ✅ [AGENT] P0. Fix `execution-service` live path: replace `ManifestWriter.add()` with
       `ManifestWriter.record_captured()` + v8 fields (C10 finding)
-  - UAC@c3f7a45: added BATCH_EXECUTION_SERVICE + execution_service SOURCE_PRIORITY + EMISSION_LATENCY + availability_semantics entries; UAC QG ✅
-  - ES@05ea467d: data_sink.py (LIVE_WEBSOCKET) + save_operations.py (BATCH_EXECUTION_SERVICE) both migrated; ES QG ✅ ALL QUALITY GATES PASSED
+  - UAC@c3f7a45: added BATCH_EXECUTION_SERVICE + execution_service SOURCE_PRIORITY + EMISSION_LATENCY +
+    availability_semantics entries; UAC QG ✅
+  - ES@05ea467d: data_sink.py (LIVE_WEBSOCKET) + save_operations.py (BATCH_EXECUTION_SERVICE) both migrated; ES QG ✅
+    ALL QUALITY GATES PASSED
 
 ### Phase 2 — Reason-enum wiring
 
-- [x] ✅ [AGENT] P1. Replace string literal `"SOURCE_RETURNED_ZERO"` with `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` in:
+- [x] ✅ [AGENT] P1. Replace string literal `"SOURCE_RETURNED_ZERO"` with `EmptyConfirmedReason.SOURCE_RETURNED_ZERO`
+      in:
   - `features-service/calendar/engine/calendar_orchestrator.py:317`
   - `features-service/sports/cli/handlers/batch_handler.py:405,496`
   - All other callsites returned by: `rg '"SOURCE_RETURNED_ZERO"' --type py`
@@ -125,7 +128,8 @@ that plan was written (2026-05-09):
   - Dry-run 2026-05-21: 43 buckets, 11 needing migration, 7,412,953 rows, 0 errors
 - [x] ✅ [OPERATOR] P0. After dry-run passes: run live migration; verify `schema_version` distribution shows 100% v8
   - Live migration 2026-05-21: 11 buckets upgraded, 7,412,953 rows migrated, 0 errors
-  - Verified 100% v8: cefi 2,632,931 ✅ / defi 1,606,190 ✅ / tradfi 141,401 ✅ / sports 157,500 ✅ / prediction 16,812 ✅
+  - Verified 100% v8: cefi 2,632,931 ✅ / defi 1,606,190 ✅ / tradfi 141,401 ✅ / sports 157,500 ✅ / prediction 16,812
+    ✅
 
 ### Phase 4 — Divergence-detector tooling
 
@@ -134,13 +138,18 @@ that plan was written (2026-05-09):
   - Joins against each bucket's `_index/availability_index.parquet`
   - Emits `DIVERGENT_EMPTY` log event for every cell where expected=`SHOULD_HAVE_DATA` but actual=0 rows
   - Outputs CSV + summary to `plans/audit/results/divergence_<date>.csv`
-  - UTL@8ffd7083: `scripts/detect_manifest_divergence.py` — uses `resolve_bucket_name` + UTL `client.download_bytes` (not gcsfs); `--asset-group all|defi|...` CLI; UTL QG ✅ ALL QUALITY GATES PASSED
-- [x] ✅ [AGENT] P1. Wire divergence-detector as QG smoke — **DEFERRED** to D2 plan runtime harness per plan spec; marked DEFERRED here
-- [x] ✅ [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in A3)
+  - UTL@8ffd7083: `scripts/detect_manifest_divergence.py` — uses `resolve_bucket_name` + UTL `client.download_bytes`
+    (not gcsfs); `--asset-group all|defi|...` CLI; UTL QG ✅ ALL QUALITY GATES PASSED
+- [x] ✅ [AGENT] P1. Wire divergence-detector as QG smoke — **DEFERRED** to D2 plan runtime harness per plan spec;
+      marked DEFERRED here
+- [x] ✅ [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in
+      A3)
   - Detector ran 2026-05-21 post-migration: DIVERGENT_EMPTY=765 (matches A3 exactly) — detector working correctly
   - Cells are Drift S3 adapter-level bugs: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`
-  - CSV: `plans/audit/results/divergence_2026-05-21.csv` (1,792,168 rows total, 765 DIVERGENT_EMPTY, 214,344 MISSING_EXPECTED)
-  - These are pre-existing adapter bugs unresolved by schema migration; require MTDS handler backfill — tracked under D4 plan
+  - CSV: `plans/audit/results/divergence_2026-05-21.csv` (1,792,168 rows total, 765 DIVERGENT_EMPTY, 214,344
+    MISSING_EXPECTED)
+  - These are pre-existing adapter bugs unresolved by schema migration; require MTDS handler backfill — tracked under D4
+    plan
 - [x] ✅ [AGENT] P0. Phase 7C triage — classify all 765 DIVERGENT_EMPTY cells; produce triage CSV (slot-5 2026-05-21)
   - Triage CSV: `plans/audit/results/phase7c_divergent_empty_triage_2026_05_21.csv`
   - All 765 cells → `phase_11_rebackfill` (any_captured=False, any_empty=True — genuinely empty, not mislabelled)
@@ -150,10 +159,15 @@ that plan was written (2026-05-09):
 
 ## Success criteria
 
-- [x] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version) — confirmed by UAC/IS/MTDS/DS/ES QG ✅ runs across all Phase 1 items
-- [x] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade ✅ — features-service@2d5abdcd
-- [x] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups — verified 2026-05-21 post-migration (4,554,834 rows sampled from 5 market-data-tick buckets: cefi/defi/tradfi/sports/prediction all 100.0%)
-- [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group — detector ran 2026-05-21, found 765 (baseline = A3 count, consistent); 765 are real Drift S3 adapter bugs requiring MTDS backfill under D4
+- [x] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version) —
+      confirmed by UAC/IS/MTDS/DS/ES QG ✅ runs across all Phase 1 items
+- [x] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade ✅ —
+      features-service@2d5abdcd
+- [x] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups — verified 2026-05-21
+      post-migration (4,554,834 rows sampled from 5 market-data-tick buckets: cefi/defi/tradfi/sports/prediction all
+      100.0%)
+- [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group — detector ran 2026-05-21, found 765
+      (baseline = A3 count, consistent); 765 are real Drift S3 adapter bugs requiring MTDS backfill under D4
 
 ## Full-execution criterion
 
@@ -166,6 +180,8 @@ that plan was written (2026-05-09):
 - Rows with NULL backfilled v8 enhanced columns (service_emission_state=NULL) — acceptable until services start writing
   v8 rows natively (post-Phase 3 migration). Follow-up: services start writing real `service_emission_state` values as
   they process new shards.
-- DIVERGENT_EMPTY cells in defi (765 cells: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`) — Drift S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require MTDS handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
+- DIVERGENT_EMPTY cells in defi (765 cells: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`) — Drift
+  S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require MTDS
+  handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
 - DIVERGENT_EMPTY cells in sports/prediction/cefi/tradfi — addressed per their D4/D5/D1 plans after this D3 migration
   lands.

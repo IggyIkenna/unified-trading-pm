@@ -1,5 +1,4 @@
----
-name: expected-universe-v2-design-2026-05-08
+---name: expected-universe-v2-design-2026-05-08
 type: plan
 plan_type: execution
 asset_group: cross-cutting
@@ -12,7 +11,7 @@ parent: writegate_honest_coverage_endtoend_2026_05_06
 related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
   - gcs_migration_bundle_pipeline_mode_2026_05_08
-  - manifest_migration_master_2026_05_07
+  - manifest_migration_SUPERSEDED_2026_05_21
   - manifest_schema_final_gate_2026_05_09
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -21,6 +20,7 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 6
 estimate_calibration_note: |
   Backfilled 2026-05-13: 15 todos / 0 done; v2 enumerator extends v1 with instruments-catalog × dates × data_types cross-product at per-instrument grain. BLOCKED on G4 v8 schema (manifest_schema_final_gate). Design class (UAC SSOT design + enumerator semantics across 5 asset_groups). Baseline 10 (~0.7 AI-day per substantive todo); × 0.6 = 6.
+parent_epic: instruments_master
 ---
 
 > **🟡 BLOCKED-ON G4 Phase 7 GCS MIGRATION FLEET** (updated 2026-05-19 slot 8) — CODE GATE DONE: v7→v8 rename
@@ -29,14 +29,15 @@ estimate_calibration_note: |
 > — HUMAN+AGENT; requires operator to launch migration VMs + sign off). Phase 4 VM launches (this plan) can proceed
 > immediately after Phase 7.G sign-off.
 
-> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
 > direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
 > don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
 > data layout co-evolve.
 >
-> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+> Child of:
+> [`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md)
 >
 > This plan's phases land in gate(s): **G3** (per-instrument enumerator launch — sequenced AFTER G4 v8 schema)
 
@@ -144,15 +145,15 @@ canonical manifest post-v2.
   toward venue-sharding so a single VM doesn't burn a full Tardis catalog read just to enumerate.
 - Q2 — read-time denominator query: pyarrow scans 190M rows in ~30s on a same-region VM. Cache the denominator in redis
   with 24h TTL? Or compute live per-request? Defer to deployment-api scope.
-- Q3 — **RESOLVED 2026-05-10** (per `manifest_evolution_master_2026_05_08.md` § G3: "Decision: launch AFTER G4" + this
-  plan's frontmatter line 29 "sequenced AFTER G4 v8 schema"). v8 schema migration runs first (read-once + write-once +
-  blocking via `manifest_schema_final_gate_2026_05_09` consolidated v8 SSOT); v2 enumerator launches AFTER on the v8
-  manifest, writing `service_emission_state` + 2 sibling columns directly. Avoids doubling compute cost of running v2
-  pre-v8 then re-running post-v8.
+- Q3 — **RESOLVED 2026-05-10** (per `manifest_evolution_SUPERSEDED_2026_05_21.md` § G3: "Decision: launch AFTER G4" +
+  this plan's frontmatter line 29 "sequenced AFTER G4 v8 schema"). v8 schema migration runs first (read-once +
+  write-once + blocking via `manifest_schema_final_gate_2026_05_09` consolidated v8 SSOT); v2 enumerator launches AFTER
+  on the v8 manifest, writing `service_emission_state` + 2 sibling columns directly. Avoids doubling compute cost of
+  running v2 pre-v8 then re-running post-v8.
 
 ## Cross-plan coordination
 
-- `manifest_migration_master_2026_05_07` — Stage 4 includes residual sweeps that overlap with v2 launch. Coordinate
+- `manifest_migration_SUPERSEDED_2026_05_21` — Stage 4 includes residual sweeps that overlap with v2 launch. Coordinate
   banner during v2 launch window.
 - `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived
   `manifest_v7_schema_migration_design_2026_05_08`) — both plans touch manifest schema + enumeration. v2 launch should
@@ -285,7 +286,7 @@ using pyarrow column-projection on the 190M-row manifest (pyarrow scans in ~30s 
 
 - [x] [CODEX] P1. UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Expected universe": extend to
       describe v1 (venue-grain) vs v2 (instrument-grain), with the per-asset-group grain table from this plan body.
-      Reference: this plan + the umbrella `manifest_evolution_master_2026_05_08.md` G3. — **pre-existing at lines
+      Reference: this plan + the umbrella `manifest_evolution_SUPERSEDED_2026_05_21.md` G3. — **pre-existing at lines
       1022-1035; v1/v2 section + per-asset-group grain matrix already present. No new content needed (pm@fc0d527c).**
 - [x] [CODEX] P1. UPDATE `codex/02-data/honest-absence-downstream-handling.md`: add note that v2's
       `record_expected_unattempted` rows at instrument grain mean honest-coverage % calculations have a 100× larger

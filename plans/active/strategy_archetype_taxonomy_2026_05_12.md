@@ -1,5 +1,4 @@
----
-title:
+---title:
   "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
   surface infra + doc completion"
 type: design
@@ -22,6 +21,7 @@ source:
   - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
+parent_epic: strategy_master
 ---
 
 > **Promoted to standalone plan 2026-05-12** from
@@ -493,7 +493,7 @@ Slot-3 found and updated 6 codex docs + 1 active plan that still referenced the 
 Additional active references found and fixed in follow-on commits (PM@`d17236bb`, `e9e5f976`):
 
 - `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` ✅ — Family 2 definition + ground-truth note annotated
-- `plans/active/defi_master_2026_05_07.md` ✅ — IN-FLIGHT banner + ready-to-go-live list
+- `plans/active/defi_master.md` ✅ — IN-FLIGHT banner + ready-to-go-live list
 
 All remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` references in the PM repo are now in historical change-log narratives
 (correct context; intentionally preserved). Full workspace audit confirmed clean.

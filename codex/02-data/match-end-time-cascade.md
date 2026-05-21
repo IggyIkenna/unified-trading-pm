@@ -115,7 +115,7 @@ Unit tests at `unified-trading-library/tests/unit/test_fixtures_resolver.py` (UT
 
 ## Cross-references
 
-- **Plan**: `plans/epics/sports_master_2026_05_07.md` § "C.6 + C.10 match_end_time cascade"
+- **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
 - **Implementation**: `unified-trading-library/unified_trading_library/fixtures.py`
 - **Batch=live SSOT**: `codex/04-architecture/batch-live-architecture.md`
 - **Availability stamping**: `codex/02-data/availability-manifest-and-data-status.md`

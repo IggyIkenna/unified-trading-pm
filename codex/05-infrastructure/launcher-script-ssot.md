@@ -381,7 +381,7 @@ Added in Phase 2 of
 total per full production launch).
 
 **Status**: launcher shipped; Phase 4 (VM launches) blocked on G4 v8 schema landing + operator backfill approval (≥1
-week GCS write). Phase 4 sequenced under `manifest_evolution_master_2026_05_08` gate G3.
+week GCS write). Phase 4 sequenced under `manifest_evolution_SUPERSEDED_2026_05_21` gate G3.
 
 ---
 

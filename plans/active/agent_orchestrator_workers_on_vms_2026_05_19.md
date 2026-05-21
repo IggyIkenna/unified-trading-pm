@@ -1,5 +1,4 @@
----
-name: agent-orchestrator-workers-on-vms-2026-05-19
+---name: agent-orchestrator-workers-on-vms-2026-05-19
 overview: |
   Move worker tmux execution off operator laptops onto an asymmetric box mix:
   Ikenna-primary = dedicated GCE VM; Ikenna-backup = laptop; Harsh-primary = local PC;
@@ -107,6 +106,7 @@ todos:
     status: todo
 
 isProject: true
+parent_epic: orchestrator_master
 ---
 
 # Workers-on-VMs (asymmetric design) — 2026-05-19

@@ -20,7 +20,7 @@ scope: [engineer, admin]
 > **Plan-of-record**:
 > [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
 > deliverable #4. **Parent epic**:
-> [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../../plans/epics/cross_cutting_may_23_2026.epic.md).
+> [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`](../../../../plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md).
 > **Live-only success criterion**:
 > [`master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G item 23
 > (DART manual-trade gate).
@@ -59,7 +59,7 @@ The strategy layer emits a polymorphic `StrategyInstruction` whose actions are e
 `LP_BURN`). DART must replicate each action that a May-23 critical-path archetype emits in manual mode. The matrix below
 covers the 11 actions in scope for the May-23 cycle; `CONVERT_DUST` + `LP_MINT` + `LP_BURN` ride alongside the DeFi LP
 archetype activation per
-[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
+[`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](../../../../plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md).
 
 **Legend**: ✅ = required for May-23 cutover (live archetypes that emit this action). ◐ = backtest exec validation only
 (archetype emits this action but archetype is backtest-only this cycle). ✗ = post-May-23 (no live or backtest archetype
@@ -75,7 +75,7 @@ emits this action this cycle, OR the action lives in a deferred archetype family
 | `UNSTAKE`   | ✅             | **CARRY_STAKED_BASIS** (close-out: redeem LST → underlying)                                                                                                                                   | Same panel as `STAKE`; mode toggle.                                                                                                                                                                                                                                                                                     | ✅                                |
 | `QUOTE`     | ✗              | `MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED` (both post-May-23)                                                                                                                  | Out-of-scope this cycle. Manual quote surface is post-May-23 work paired with market-making archetype activation.                                                                                                                                                                                                       | ✗ (when activated: ✅)            |
 | `TRANSFER`  | ✅             | **CARRY_STAKED_BASIS** (operator funds DeFi wallet from CEX), **CARRY_BASIS_PERP** (cross-venue rebalance)                                                                                    | New DART panel: per-(source, dest) account transfer. CEX → DeFi wallet (Binance/OKX/Bybit → on-chain wallet). Sub-account moves within CeFi venue. Wires through `execution-service` `INTERNAL_SUBACCOUNT` + `CEX_WITHDRAWAL_DEPOSIT` + `ON_CHAIN_TRANSFER` primitives per `strategy-summary.md` § Transfer primitives. | ✅                                |
-| `BRIDGE`    | ✅             | **CARRY_STAKED_BASIS** (cross-chain rebalance), `YIELD_ROTATION_LENDING` (post-May-23)                                                                                                        | Same DART panel as `TRANSFER`; mode toggle for cross-chain. Across / Stargate / LayerZero per `strategy-summary.md`. Required cross-chain pairs: Ethereum ↔ Arbitrum, Ethereum ↔ Base, Solana ↔ Ethereum (via Wormhole / Allbridge if Across not yet supported on Solana — confirm at impl time).                    | ✅                                |
+| `BRIDGE`    | ✅             | **CARRY_STAKED_BASIS** (cross-chain rebalance), `YIELD_ROTATION_LENDING` (post-May-23)                                                                                                        | Same DART panel as `TRANSFER`; mode toggle for cross-chain. Across / Stargate / LayerZero per `strategy-summary.md`. Required cross-chain pairs: Ethereum ↔ Arbitrum, Ethereum ↔ Base, Solana ↔ Ethereum (via Wormhole / Allbridge if Across not yet supported on Solana — confirm at impl time).                       | ✅                                |
 | `ATOMIC`    | ✅             | **CARRY_STAKED_BASIS** (flash-loan-backed open: Aave flash loan → swap → stake → deposit → borrow → repay, all in one tx)                                                                     | New DART panel: bundled action submission. Wires through `execution-service` flash-loan receiver (`FlashLoanReceiver.sol` deployed per chain). Operator submits the bundle shape via UI, backend executes atomically.                                                                                                   | ✅                                |
 | `CANCEL`    | ✅             | All archetypes that emit live orders (`TRADE`, pending DEX swaps, pending bridges)                                                                                                            | Already covered by `/manual/cancel` endpoint per [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md). DART surface = "cancel my last in-flight" button per archetype context.                                                                                                                 | ✅                                |
 
@@ -88,7 +88,7 @@ requirement is enumerated below.
 
 > **Scope note.** Post-May-23 archetypes (full Phase 9 expansions: MEV, DeFi LP, market-making sub-variants, full vol
 > surface, prediction MM, cross-domain event arb, portfolio sleeves) extend this spec under
-> [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md)
+> [`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](../../../../plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md)
 > § post-May-23 archetypes. The UAC enum is the always-authoritative count; this doc cites the live + backtest subset by
 > name.
 
@@ -122,8 +122,8 @@ requirement is enumerated below.
 
 The following archetypes are NOT in scope for May-23 manual surfaces. They will land their manual surfaces alongside
 their archetype activation in the post-May-23 roadmap (see
-[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md) §
-post-May-23 archetypes).
+[`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](../../../../plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md)
+§ post-May-23 archetypes).
 
 - **MARKET_MAKING_CONTINUOUS** + **MARKET_MAKING_EVENT_SETTLED** — `QUOTE` action surfaces deferred.
 - **EVENT_DRIVEN** — macro / earnings / scheduled-event surfaces deferred.
@@ -181,8 +181,8 @@ of existing surfaces** (not greenfield UI). Each row references the existing sur
    - **Backend**: backtest matching engine — no live wiring. Operator submits a bet (instrument = fixture_id, side =
      home / away / draw), matching engine returns simulated fill. Wires to `execution-service` matching-engine path with
      `OperationalMode.BACKTEST`.
-   - **Backtest-only**. Live wiring is deferred per
-     [`sports_master_2026_05_07.md`](../../../../plans/epics/sports_master_2026_05_07.md) post-May-23 scope.
+   - **Backtest-only**. Live wiring is deferred per [`sports_master.md`](../../../../plans/epics/sports_master.md)
+     post-May-23 scope.
 
 5. **DART manual prediction-market trade** — Polymarket / Kalshi / Opinion-Trade / CME-event-arb (backtest-only).
    - **Existing surface**: `manual-trading-panel.tsx` may already support prediction category. Verify.
@@ -260,14 +260,14 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
   activation in the post-May-23 roadmap.
 - **`QUOTE` action manual surface** — deferred (no live archetype emits `QUOTE` this cycle).
 - **DART v2 archetype roadmap** (full 46-archetype + 9-family rollout per UAC v2 enum) — tracked in
-  [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
+  [`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](../../../../plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md).
 
 ## 8. Cross-references
 
 - [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
   — plan-of-record (this doc is its deliverable #4).
-- [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../../plans/epics/cross_cutting_may_23_2026.epic.md) — parent
-  epic (5 non-negotiable deliverables for May-23).
+- [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`](../../../../plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md)
+  — parent epic (5 non-negotiable deliverables for May-23).
 - [`plans/active/master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G
   item 23 — live-only success criterion (DART manual-trade gate).
 - [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)

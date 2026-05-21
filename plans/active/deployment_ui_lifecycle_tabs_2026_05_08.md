@@ -1,5 +1,4 @@
----
-plan_type: code+infra
+---plan_type: code+infra
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
@@ -203,7 +202,7 @@ todos:
       - [x] ✅ [SCRIPT] P0. Add a 3-way mode toggle (Batch / Scheduled-Today / Live) at the top of `DataStatusTab.tsx`.
         Each mode reads from a different bucket-set / time-slice: Batch = the historical buckets the tab already
         reads; Scheduled-Today = today's-date slice (what should have run today + has it run); Live = live-write
-        buckets per asset_group (per `instruments_live_master_2026_05_08.md` Phase 1 — same path as batch in
+        buckets per asset_group (per `instruments_master.md` Phase 1 — same path as batch in
         most cases, but the UI surfaces "freshness" as the metric instead of "coverage"). Toggle invalidates the
         `/api/data-status` query key and refetches. NO new bucket convention — reuses the same paths the rest of
         the workspace already writes to (per `batch-live-architecture.md` SSOT).
@@ -214,7 +213,7 @@ todos:
       - [x] ✅ [SCRIPT] P1. NEW `LiveFreshnessPanel` component rendered when DataStatus mode-toggle = Live. Per
         (asset_group, data_type, shard) shows: last-write-timestamp, expected-cadence (from Phase D scheduler
         registry), staleness-indicator (green = fresh, amber = within tolerance, red = beyond tolerance + auto-
-        emits `INSTRUMENTS_LIVE_UPSTREAM_STALE` per `instruments_live_master_2026_05_08.md` Phase A.5 if not
+        emits `INSTRUMENTS_LIVE_UPSTREAM_STALE` per `instruments_master.md` Phase A.5 if not
         already emitted). Reads from the SAME `/api/data-status` endpoint; the freshness math is a UI computation
         over the existing `available_at` per-row column.
         — deployment-ui@567c8a1 (component 2026-05-13) + @1771932 (wired 2026-05-19 slot 6)
@@ -323,7 +322,7 @@ todos:
         expected_max_runtime, max_consecutive_failures_before_page, env_tiers: list[EnvironmentTier])`. The
         `env_tiers` field declares which environments the scheduler is expected to exist in; staging and prod
         usually share, but dev typically only runs a subset (no live-instruments triggers in dev, e.g.). Phase 1
-        entries: every instruments-live trigger from `instruments_live_master_2026_05_08` Phase A.3 +
+        entries: every instruments-live trigger from `instruments_master` Phase A.3 +
         manifest-consolidator-60s + data-status rollup + manifest-aggregation cron + T+1 audit. Adding a new
         scheduler in any plan = adding a row here; "deploy-missing schedulers" reads from this registry filtered
         by `(cloud_target, environment_tier)`. NO ad-hoc `gcloud scheduler jobs create` outside this registry.
@@ -344,7 +343,7 @@ todos:
       - [x] ✅ [SCRIPT] P0. Implement pause + resume per cloud-target — gcloud scheduler jobs pause/resume / EventBridge
         `disable-rule`/`enable-rule`. State persists across the toggle. UI shows the paused-state from the
         scheduled list. Auto-pause on Phase H circuit-breaker trip per
-        `instruments_live_master_2026_05_08.md` Phase H.2 — operator manual-resume only.
+        `instruments_master.md` Phase H.2 — operator manual-resume only.
         — deployment-api@56287ff (2026-05-19 slot 6). SchedulerActionResponse + pause/resume endpoints for
         GCP (gcloud scheduler jobs pause/resume) and AWS (disable-rule/enable-rule). Same 14 unit tests.
 
@@ -508,6 +507,7 @@ todos:
     content: |
       - [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
         env-tier hosting. B6 gate.
+parent_epic: deployment_and_user_management_master
 ---
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
@@ -696,7 +696,7 @@ four coordinates visible + togglable without conflating them.
 
 ## Sibling plan relationships
 
-- `instruments_live_master_2026_05_08.md` — sibling. Phase G of that plan delegates UI scope here. Cross-link both ways.
+- `instruments_master.md` — sibling. Phase G of that plan delegates UI scope here. Cross-link both ways.
 - `master_to_live_defi_2026_05_23.md` — sibling. The 6 long-lived deployment clusters that DeFi-live needs by May-23 are
   entered into Phase E.1 registry on first commit; staging deploy + drain test are part of master's D3 gate.
 - `deployment_api_work_stream_a_2026_05_07.plan.md` — depends_on. Owns programmatic VM launch + event-tail; reused for
@@ -704,7 +704,7 @@ four coordinates visible + togglable without conflating them.
 - `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` — depends_on. Owns the launcher SSOT migration;
   Phase D.2 deploy-missing-schedulers writes scheduler-deploy commands into the same
   `deployment-service/scripts/scheduler/` root.
-- `infrastructure_master_2026_05_07.md` — depends_on. Existing UI iteration cadence.
+- `infrastructure_master.md` — depends_on. Existing UI iteration cadence.
 - `firebase-split-topology.md` (codex SSOT, not a plan) — Phase H env-tier hosting follows the same pattern this doc
   establishes for the trading-system-UI.
 
@@ -760,8 +760,8 @@ Phase G (workspace QG + D3 staging + B6 operator sign-off)
 - Replacing the existing service-axis sidebar — operator still navigates by service within each tab.
 - Building NEW long-lived clusters — registry entries Phase E.1 are operator-curated; service code is owned by
   per-service plans.
-- Cloud Scheduler config files themselves — those are `instruments_live_master_2026_05_08.md` Phase F.1 scope. THIS plan
-  owns the UI surface that lists / deploys / pauses them, NOT the YAML content.
+- Cloud Scheduler config files themselves — those are `instruments_master.md` Phase F.1 scope. THIS plan owns the UI
+  surface that lists / deploys / pauses them, NOT the YAML content.
 - Building a model registry or full MLflow-equivalent — Phase BB experiment tracker is intentionally file-system + GCS
   only, not a relational store. If MLflow becomes warranted, it's a separate plan.
 

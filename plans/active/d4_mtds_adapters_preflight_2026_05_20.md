@@ -1,5 +1,4 @@
----
-name: d4-mtds-adapters-preflight-2026-05-20
+---name: d4-mtds-adapters-preflight-2026-05-20
 title: D4 — MTDS adapters preflight + batch-live parity
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -23,6 +22,7 @@ related_plans:
   - defi_catalogue_chain_primitives_2026_05_10.md
 prerequisite_plans:
   - d3_manifest_v8_finish_2026_05_20.md # manifest v8 must be green before preflight reads it
+parent_epic: mtds_mdps_master
 ---
 
 # D4 — MTDS adapters preflight + batch-live parity
@@ -77,24 +77,25 @@ prerequisite_plans:
 ### Phase 1 — MTDS manifest emission (upstream prerequisite)
 
 - [x] ✅ [AGENT] P0. Add `record_captured` / `record_empty(reason=...)` / `record_failed` to MTDS batch handlers:
-  - VERIFIED DONE (2026-05-21): All 24 batch handlers writing to GCS already have these calls.
-    Handlers explicitly exempted with inline `# exempt:` comments: `data_manifest_handler.py` (read-only scanner),
-    `replay_handler.py` (ReplayPublisher manages manifest). `tick_data_handler.py` delegates to
-    `engine/orchestrator.py` which has extensive coverage. `canonical_write.py` is a shared utility —
-    manifest recording happens at handler level (callers). No actionable gaps found.
+  - VERIFIED DONE (2026-05-21): All 24 batch handlers writing to GCS already have these calls. Handlers explicitly
+    exempted with inline `# exempt:` comments: `data_manifest_handler.py` (read-only scanner), `replay_handler.py`
+    (ReplayPublisher manages manifest). `tick_data_handler.py` delegates to `engine/orchestrator.py` which has extensive
+    coverage. `canonical_write.py` is a shared utility — manifest recording happens at handler level (callers). No
+    actionable gaps found.
 - [x] ✅ [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
       manifest-visible
   - VERIFIED DONE (2026-05-21): `live/websocket_runner.py` (lines 694-743) + `live/manifest_recorder.py`
     (ShardManifestRecorder) provide `record_captured`/`record_empty`/`record_failed` for all live write paths.
-- [x] ✅ [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
-      (not Int64 epoch-nanos); remove the runtime cast workaround in features-service once MTDS is fixed
-      — MTDS@c1c17a4: GMX native + Messari paths converted `int(ts)` → `datetime.fromtimestamp(ts, tz=UTC)`;
-      no features-service workaround existed to remove.
+- [x] ✅ [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as
+      `Datetime` (not Int64 epoch-nanos); remove the runtime cast workaround in features-service once MTDS is fixed —
+      MTDS@c1c17a4: GMX native + Messari paths converted `int(ts)` → `datetime.fromtimestamp(ts, tz=UTC)`; no
+      features-service workaround existed to remove.
 
 ### Phase 2 — features-service manifest preflight
 
 - [x] ✅ [AGENT] P0. Upgrade `DependencyChecker` (`onchain/app/core/dependency_checker.py`) — features-service@696abd0f
-  - Changed from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read via `read_availability_index()`
+  - Changed from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read via
+    `read_availability_index()`
   - Loads MTDS `_index/availability_index.parquet`; filters by (date, data_type); checks `capture_status`
   - `attempted_failed` shards → available=False → `validate_can_run()` raises `DependencyError` (fail_fast)
   - `captured` / `empty_confirmed` shards → available=True (honest absence path preserved)
@@ -104,11 +105,11 @@ prerequisite_plans:
   - 3 routing tests updated; all 39 `test_defi_data_source_routing` tests green
 - [x] ✅ [AGENT] P0. Wire MTDS preflight into handler families that read from MTDS directly — features-service@1da2c431
   - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream, NOT MTDS; EIA raises ValueError on empty (handled at
-    handler level via _record_empty_manifest → record_empty(SOURCE_RETURNED_ZERO)); no MTDS manifest applicable
+    handler level via \_record_empty_manifest → record_empty(SOURCE_RETURNED_ZERO)); no MTDS manifest applicable
   - `sports/cli/handlers/batch_handler.py` — sports data from IS/venues, not MTDS; no MTDS manifest applicable
   - `calendar/cli/handlers/batch_handler.py` — FRED/yfinance/Polygon.io upstream; no MTDS manifest applicable
-  - `cefi/cli/handlers/perp_funding_handler.py` — DONE: added `_mtds_cefi_available(date_str)` preflight; reads
-    MTDS CeFi availability_index via `read_availability_index()`; skips day on attempted_failed/missing manifest row
+  - `cefi/cli/handlers/perp_funding_handler.py` — DONE: added `_mtds_cefi_available(date_str)` preflight; reads MTDS
+    CeFi availability_index via `read_availability_index()`; skips day on attempted_failed/missing manifest row
 - [x] ✅ [AGENT] P0. Fix EIA adapters warn-but-proceed — ALREADY DONE in 906b902e (D5 Phase 1)
   - `eia_ng.py:70` — raises `ValueError("SOURCE_RETURNED_ZERO: ...")` (not silent return {})
   - `eia_crude.py:61` — same fix; batch_handler catches ValueError → `_record_empty_manifest` →
@@ -116,7 +117,8 @@ prerequisite_plans:
 
 ### Phase 3 — Batch-live parity (A6: 13 BATCH_ONLY cells)
 
-- [x] ✅ [AGENT] P0. Hyperliquid live connectors — (cefi, hyperliquid, book_snapshot_5) + (cefi, hyperliquid, derivative_ticker)
+- [x] ✅ [AGENT] P0. Hyperliquid live connectors — (cefi, hyperliquid, book_snapshot_5) + (cefi, hyperliquid,
+      derivative_ticker)
   - DONE (2026-05-21): MTDS@5608230
   - `hyperliquid_l2book_ws.py`: HyperliquidL2BookWSConnector — l2Book WS channel, nSigFigs=5, schema matches
     `adapters/hyperliquid_s3.py::fetch_l2_book()` exactly (bid_px_00..bid_px_04, bid_sz_00..bid_sz_04,
@@ -124,40 +126,42 @@ prerequisite_plans:
   - `hyperliquid_ticker_ws.py`: HyperliquidTickerWSConnector — activeAssetCtx WS channel, schema matches
     `adapters/hyperliquid_s3.py::_fetch_funding_via_rest()` exactly (funding_rate, predicted_funding_rate,
     open_interest, mark_price, index_price, mid_price, day_volume, timestamp).
-  - `hyperliquid_ws.py` factory updated to dispatch by data_type:
-    book_snapshot_5 → L2BookWSConnector; derivative_ticker → TickerWSConnector; trades → existing WSFeedConnector.
+  - `hyperliquid_ws.py` factory updated to dispatch by data_type: book_snapshot_5 → L2BookWSConnector; derivative_ticker
+    → TickerWSConnector; trades → existing WSFeedConnector.
   - Unit tests: 17 cases (l2book parser + factory dispatch) + 13 cases (ticker parser + factory dispatch). QG ✅.
 - [x] ✅ [AGENT] P0. A6 audit false positives documented — these cells are GREEN (live connectors exist):
-  - `(cefi, aster, trades)`: `live/connectors/aster_ws.py` provides live trades. A6 missed it because the file does
-    not contain an explicit `data_type="trades"` string (data_type is a constructor param). No action needed.
+  - `(cefi, aster, trades)`: `live/connectors/aster_ws.py` provides live trades. A6 missed it because the file does not
+    contain an explicit `data_type="trades"` string (data_type is a constructor param). No action needed.
   - `(cefi, deribit, trades)`: `live/connectors/deribit_ws.py` provides live trades. Same A6 path-regex false-positive.
-  - `(cefi, hyperliquid, trades)`: `live/connectors/hyperliquid_ws.py` default path provides live trades. False positive.
-- [ ] [AGENT] [BLOCKED-OPERATOR-DECISION] P0. Remaining BATCH_ONLY cells — operator decision required before live adapter:
-  - `(cefi, hyperliquid, liquidations)`: Hyperliquid public WS has no `liquidations` channel; REST polling-only
-    (`/info` endpoint `clearinghouseState`). Operator must decide: (a) REST-polling live handler (periodic candle-boundary
-    poll), (b) accept BATCH_ONLY + flag gap, or (c) use `webData2` channel for user liquidation events (requires user
-    address — not suitable for market-wide). AWAITING OPERATOR DIRECTION.
-  - `(cefi, aster, liquidations)`: Aster is Binance-compatible. Binance has `forceOrder` WS stream for liquidations.
-    But Aster's specific WS URL/auth is not documented — the existing `aster_ws.py` uses `_ASTER_WS_URL`. Operator must
+  - `(cefi, hyperliquid, trades)`: `live/connectors/hyperliquid_ws.py` default path provides live trades. False
+    positive.
+- [ ] [AGENT] [BLOCKED-OPERATOR-DECISION] P0. Remaining BATCH_ONLY cells — operator decision required before live
+      adapter:
+  - `(cefi, hyperliquid, liquidations)`: Hyperliquid public WS has no `liquidations` channel; REST polling-only (`/info`
+    endpoint `clearinghouseState`). Operator must decide: (a) REST-polling live handler (periodic candle-boundary poll),
+    (b) accept BATCH_ONLY + flag gap, or (c) use `webData2` channel for user liquidation events (requires user address —
+    not suitable for market-wide). AWAITING OPERATOR DIRECTION.
+  - `(cefi, aster, liquidations)`: Aster is Binance-compatible. Binance has `forceOrder` WS stream for liquidations. But
+    Aster's specific WS URL/auth is not documented — the existing `aster_ws.py` uses `_ASTER_WS_URL`. Operator must
     confirm whether Aster exposes a `forceOrder` stream and provide URL. AWAITING OPERATOR DIRECTION.
-  - `(defi, curve, dex_pools)` + `(defi, curve, dex_swaps)`: Curve uses Ethereum on-chain events; no WebSocket
-    stream equivalent. MTDS live infra is WS-only — no polling-live handler pattern exists yet. Operator must decide:
-    (a) implement REST/on-chain polling live handler (new infra pattern), (b) accept BATCH_ONLY for these cells.
-    AWAITING OPERATOR DIRECTION.
-  - `(defi, jito, lst_rates)`: Jito SDK is REST polling only (no WS stream). Same infra gap as curve.
-    AWAITING OPERATOR DIRECTION.
-  - `(defi, morpho, lending_indices)`: Morpho uses The Graph / REST; no WS stream. Same infra gap.
-    AWAITING OPERATOR DIRECTION.
+  - `(defi, curve, dex_pools)` + `(defi, curve, dex_swaps)`: Curve uses Ethereum on-chain events; no WebSocket stream
+    equivalent. MTDS live infra is WS-only — no polling-live handler pattern exists yet. Operator must decide: (a)
+    implement REST/on-chain polling live handler (new infra pattern), (b) accept BATCH_ONLY for these cells. AWAITING
+    OPERATOR DIRECTION.
+  - `(defi, jito, lst_rates)`: Jito SDK is REST polling only (no WS stream). Same infra gap as curve. AWAITING OPERATOR
+    DIRECTION.
+  - `(defi, morpho, lending_indices)`: Morpho uses The Graph / REST; no WS stream. Same infra gap. AWAITING OPERATOR
+    DIRECTION.
   - `(prediction, kalshi, trades)`: Existing `live/connectors/kalshi_ws.py` emits `ticker` data_type (price/spread/
-    volume). The batch `trades` adapter is in MDPS (`market_data_processing_service/app/adapters/prediction/
-    trades_adapter.py`). Operator must decide: (a) add trades data_type path to MTDS kalshi_ws.py, (b) build trades
-    live path in MDPS, or (c) accept BATCH_ONLY (kalshi public trades WS exists, no credentials required).
-    AWAITING OPERATOR DIRECTION.
+    volume). The batch `trades` adapter is in MDPS
+    (`market_data_processing_service/app/adapters/prediction/ trades_adapter.py`). Operator must decide: (a) add trades
+    data_type path to MTDS kalshi_ws.py, (b) build trades live path in MDPS, or (c) accept BATCH_ONLY (kalshi public
+    trades WS exists, no credentials required). AWAITING OPERATOR DIRECTION.
   - `(prediction, polymarket, trades)`: Same cross-service gap — batch is in MDPS, live connector in MTDS emits
-    different data_type. Operator must decide: (a) MTDS polymarket_ws.py trades path, (b) MDPS live path.
-    AWAITING OPERATOR DIRECTION.
-- [x] ✅ [AGENT] P1. File `BLOCKED-CREDENTIALS` pings for any batch-live gap where live adapter needs credentials not yet
-      provisioned
+    different data_type. Operator must decide: (a) MTDS polymarket_ws.py trades path, (b) MDPS live path. AWAITING
+    OPERATOR DIRECTION.
+- [x] ✅ [AGENT] P1. File `BLOCKED-CREDENTIALS` pings for any batch-live gap where live adapter needs credentials not
+      yet provisioned
   - VERIFIED DONE (2026-05-21): All remaining BATCH_ONLY gaps are BLOCKED-OPERATOR-DECISION (architecture/direction
     needed), not BLOCKED-CREDENTIALS. No new credential requests required for these cells.
 
@@ -165,41 +169,41 @@ prerequisite_plans:
 
 - [x] ✅ [AGENT] P1. Add `no_silent_absence_handlers.sh` QG step to features-service QG (STEP 5.70 equivalent): checks
       every handler for `record_captured` or `record_empty` calls
-  - VERIFIED DONE (2026-05-21): features-service@7a7d4a4c — STEP 5.70 added to quality-gates.sh.
-    Part A: wires no_silent_absence_handlers.sh (workspace MTDS/IS check). Part B: inline check on all
-    batch_handler.py + perp_funding_handler.py for record_captured|record_empty|DependencyError|DependencyChecker|
-    EmptyConfirmedReason. Exempt: calendar (FRED/yfinance), multi_timeframe (delegates to orchestrator).
-    7/7 non-exempt handlers green. QG passes (✅ ALL QUALITY GATES PASSED).
-- [x] ✅ [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
+  - VERIFIED DONE (2026-05-21): features-service@7a7d4a4c — STEP 5.70 added to quality-gates.sh. Part A: wires
+    no_silent_absence_handlers.sh (workspace MTDS/IS check). Part B: inline check on all batch_handler.py +
+    perp_funding_handler.py for record_captured|record_empty|DependencyError|DependencyChecker| EmptyConfirmedReason.
+    Exempt: calendar (FRED/yfinance), multi_timeframe (delegates to orchestrator). 7/7 non-exempt handlers green. QG
+    passes (✅ ALL QUALITY GATES PASSED).
+- [x] ✅ [OPERATOR] P0. Run full features-service QG post-Phase-2:
+      `cd features-service && bash scripts/quality-gates.sh`
   - VERIFIED DONE 2026-05-21: QG green (7616 passed, 23 skipped, 0 failed) — features-service@1da2c431
 - [x] ✅ [OPERATOR] P0. Smoke test: run features-service onchain handler for one DeFi shard with MTDS mock returning
       `attempted_failed` → verify `DependencyError` is raised, not silent skip
   - VERIFIED DONE 2026-05-21: Both tests passed — Test 1: attempted_failed manifest → DependencyError("missing 5
     required dependencies") raised for all 5 MTDS DEFI deps (vault_share_price/lst_rates/lending_indices/
-    oracle_prices/perp_funding); Test 2: captured manifest → validate_can_run() returns True (no error).
-    MTDS optional dep (MDPS) logged as warning only (required=False). Not silent skip. ✅
+    oracle_prices/perp_funding); Test 2: captured manifest → validate_can_run() returns True (no error). MTDS optional
+    dep (MDPS) logged as warning only (required=False). Not silent skip. ✅
 
 ## Success criteria
 
 - [x] ✅ Phase 1: MTDS QG green; every MTDS batch+live handler has `record_captured` / `record_empty` / `record_failed`
-  — VERIFIED (2026-05-21): MTDS QG ✅ (69s). All 24 batch handlers + live websocket_runner.py + manifest_recorder.py
-  have manifest recording. Verified in Phase 1 items above.
-- [x] ✅ Phase 2: `rg 'DependencyError' features-service/ --type py` returns hits in MTDS-consuming handler families
-  — NOTE: Original criterion said "ALL 9 families" which was over-broad. Correct criterion: families consuming MTDS
-  have DependencyError (onchain, delta_one, volatility via DependencyChecker) or explicit record_empty absent-signal
-  (cefi perp_funding via `_mtds_cefi_available()`, cross_instrument via record_empty/record_captured). Families
-  without MTDS dependency (commodity=EIA/FRED, sports=IS/venues, calendar=FRED/yfinance, multi_timeframe=delegates)
-  correctly have no DependencyError. 5/5 MTDS-consuming families have explicit absence handling. ✅
-  — features-service QG green (7616 passed) — features-service@1da2c431.
-- [x] ✅ Phase 3: A6 BATCH_ONLY cells: 0 unaddressed cells
-  — 13 cells addressed: 2 live adapters shipped (hyperliquid book_snapshot_5 + derivative_ticker, MTDS@5608230);
-  3 cells confirmed false positives (aster/trades, deribit/trades, hyperliquid/trades — live connectors exist,
-  A6 path-regex missed them); 8 cells tagged BLOCKED-OPERATOR-DECISION with full diagnosis documented in Phase 3.
-  0 cells silently ignored.
-- [x] ✅ Phase 4: features-service QG green; smoke test passes
-  — QG ✅ verified (features-service@1da2c431, 7616 passed, 23 skipped, 0 failed). Smoke test PASS 2026-05-21:
-  Test 1 (attempted_failed → DependencyError("missing 5 required dependencies"), all 5 MTDS DEFI deps logged);
-  Test 2 (captured → validate_can_run() returns True). Not silent skip. ✅
+      — VERIFIED (2026-05-21): MTDS QG ✅ (69s). All 24 batch handlers + live websocket_runner.py + manifest_recorder.py
+      have manifest recording. Verified in Phase 1 items above.
+- [x] ✅ Phase 2: `rg 'DependencyError' features-service/ --type py` returns hits in MTDS-consuming handler families —
+      NOTE: Original criterion said "ALL 9 families" which was over-broad. Correct criterion: families consuming MTDS
+      have DependencyError (onchain, delta_one, volatility via DependencyChecker) or explicit record_empty absent-signal
+      (cefi perp_funding via `_mtds_cefi_available()`, cross_instrument via record_empty/record_captured). Families
+      without MTDS dependency (commodity=EIA/FRED, sports=IS/venues, calendar=FRED/yfinance, multi_timeframe=delegates)
+      correctly have no DependencyError. 5/5 MTDS-consuming families have explicit absence handling. ✅ —
+      features-service QG green (7616 passed) — features-service@1da2c431.
+- [x] ✅ Phase 3: A6 BATCH_ONLY cells: 0 unaddressed cells — 13 cells addressed: 2 live adapters shipped (hyperliquid
+      book_snapshot_5 + derivative_ticker, MTDS@5608230); 3 cells confirmed false positives (aster/trades,
+      deribit/trades, hyperliquid/trades — live connectors exist, A6 path-regex missed them); 8 cells tagged
+      BLOCKED-OPERATOR-DECISION with full diagnosis documented in Phase 3. 0 cells silently ignored.
+- [x] ✅ Phase 4: features-service QG green; smoke test passes — QG ✅ verified (features-service@1da2c431, 7616 passed,
+      23 skipped, 0 failed). Smoke test PASS 2026-05-21: Test 1 (attempted_failed → DependencyError("missing 5 required
+      dependencies"), all 5 MTDS DEFI deps logged); Test 2 (captured → validate_can_run() returns True). Not silent
+      skip. ✅
 
 ## Full-execution criterion
 

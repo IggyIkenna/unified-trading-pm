@@ -11,7 +11,7 @@ related_plans:
   - master_to_live_defi_2026_05_23.md
   - mega_audit_and_plan_beefup_progression_2026_05_20.md
   - strategy_archetype_logic_audit_2026_05_20.md
-  - data_pipeline_master_coordination_2026_05_20.md
+  - mtds_mdps_master.md
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
@@ -98,32 +98,32 @@ remediation execution defaults to Sonnet 4.6.
 
 ### #1. Strategy archetype audit (53 archetypes, cross-codebase)
 
-| Field             | Value                                                                                                                                                                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Track             | AUDIT-EXISTING                                                                                                                                                                                                                                                |
-| Owner-side        | Ikenna (in-flight via parallel Opus-1M agent)                                                                                                                                                                                                                 |
-| Mockability       | n/a — audit reads code + plans + codex                                                                                                                                                                                                                        |
-| Deps              | Post strategy-service consolidation (Phase 11) clean                                                                                                                                                                                                          |
-| Wrapper plan      | TBD post-audit                                                                                                                                                                                                                                                |
-| Wraps existing    | [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md), `strategy_and_dart_master_2026_05_07.md`, `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`, `defi_recursive_borrow_archetypes_2026_05_10.md` |
-| Operator approval | n/a — already acked 2026-05-20                                                                                                                                                                                                                                |
-| Status            | `IN-FLIGHT`                                                                                                                                                                                                                                                   |
+| Field             | Value                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Track             | AUDIT-EXISTING                                                                                                                                                                                                                                                           |
+| Owner-side        | Ikenna (in-flight via parallel Opus-1M agent)                                                                                                                                                                                                                            |
+| Mockability       | n/a — audit reads code + plans + codex                                                                                                                                                                                                                                   |
+| Deps              | Post strategy-service consolidation (Phase 11) clean                                                                                                                                                                                                                     |
+| Wrapper plan      | TBD post-audit                                                                                                                                                                                                                                                           |
+| Wraps existing    | [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md), `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`, `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`, `defi_recursive_borrow_archetypes_2026_05_10.md` |
+| Operator approval | n/a — already acked 2026-05-20                                                                                                                                                                                                                                           |
+| Status            | `IN-FLIGHT`                                                                                                                                                                                                                                                              |
 
 Owns: per-archetype logic audit + master strategy plan deliverable. Not in scope for re-pickup — included for inventory
 completeness.
 
 ### #2. Data pipeline mega audit (Phase A → D)
 
-| Field             | Value                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Track             | AUDIT-EXISTING                                                                                                           |
-| Owner-side        | Ikenna (mega audit Phase A complete; B/C/D in-flight)                                                                    |
-| Mockability       | n/a — audit reads code + manifest data + GCS/S3 reality                                                                  |
-| Deps              | Phase -2 / -1 consolidation tail                                                                                         |
-| Wrapper plan      | [`data_pipeline_master_coordination_2026_05_20.md`](../data_pipeline_master_coordination_2026_05_20.md) (already exists) |
-| Wraps existing    | `mega_audit_and_plan_beefup_progression_2026_05_20.md` + 8 sequenced ordering-step plans                                 |
-| Operator approval | n/a — already acked 2026-05-20                                                                                           |
-| Status            | `IN-FLIGHT` (Phase A GREEN; B/C/D pending)                                                                               |
+| Field             | Value                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| Track             | AUDIT-EXISTING                                                                           |
+| Owner-side        | Ikenna (mega audit Phase A complete; B/C/D in-flight)                                    |
+| Mockability       | n/a — audit reads code + manifest data + GCS/S3 reality                                  |
+| Deps              | Phase -2 / -1 consolidation tail                                                         |
+| Wrapper plan      | [`mtds_mdps_master.md`](../mtds_mdps_master.md) (already exists)                         |
+| Wraps existing    | `mega_audit_and_plan_beefup_progression_2026_05_20.md` + 8 sequenced ordering-step plans |
+| Operator approval | n/a — already acked 2026-05-20                                                           |
+| Status            | `IN-FLIGHT` (Phase A GREEN; B/C/D pending)                                               |
 
 Owns: data-pipeline correctness (manifest divergence / v8 backfill / expected_coverage / IS↔MTDS contract). Included for
 inventory completeness; not for re-pickup.
@@ -324,16 +324,16 @@ Two layers: code-only audit (does the diff logic work on mock?) + paper/live tes
 
 ### #14. Batch ↔ live symmetry audit (workspace-wide overarching theme)
 
-| Field             | Value                                                                                                 |
-| ----------------- | ----------------------------------------------------------------------------------------------------- |
-| Track             | AUDIT-EXISTING                                                                                        |
-| Owner-side        | Ikenna (cross-cutting)                                                                                |
-| Mockability       | n/a — audit reads code (schemas / data_types / handlers) per service                                  |
-| Deps              | Per-service consolidation tail; mega-audit Phase B/C/D (data-pipeline correctness substrate)          |
-| Wrapper plan      | `plans/active/batch_live_symmetry_remediation_2026_05_21.md` (TBD)                                    |
-| Wraps existing    | `writegate_honest_coverage_endtoend_2026_05_06.md`, `data_pipeline_master_coordination_2026_05_20.md` |
-| Operator approval | required for any service identified as batch-only with no live partner                                |
-| Status            | `SEEDED`                                                                                              |
+| Field             | Value                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| Track             | AUDIT-EXISTING                                                                               |
+| Owner-side        | Ikenna (cross-cutting)                                                                       |
+| Mockability       | n/a — audit reads code (schemas / data_types / handlers) per service                         |
+| Deps              | Per-service consolidation tail; mega-audit Phase B/C/D (data-pipeline correctness substrate) |
+| Wrapper plan      | `plans/active/batch_live_symmetry_remediation_2026_05_21.md` (TBD)                           |
+| Wraps existing    | `writegate_honest_coverage_endtoend_2026_05_06.md`, `mtds_mdps_master.md`                    |
+| Operator approval | required for any service identified as batch-only with no live partner                       |
+| Status            | `SEEDED`                                                                                     |
 
 Scope: every service that has batch MUST have live for the same data_types + schemas. Translations / data sources can
 differ; the surface MUST look and feel the same. Audits per-service: which data_types ship batch only? Why? Operator-ack

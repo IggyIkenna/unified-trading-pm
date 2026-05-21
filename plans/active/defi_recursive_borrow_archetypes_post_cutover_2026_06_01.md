@@ -1,5 +1,4 @@
----
-title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
+---title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
 type: implementation
 status: scope-narrowed
 created: 2026-05-14
@@ -20,7 +19,7 @@ companion_to: plans/active/master_to_live_defi_2026_05_23.md
 related_plans:
   - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
-  - plans/active/defi_master_2026_05_07.md
+  - plans/active/defi_master.md
   - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
@@ -32,6 +31,7 @@ estimate_calibration_note: |
   Phase 5 orchestrator ~4 + Phase 6 HL LIVE ~3 + Phase 7 PerpHedgeSizer ~2 + Phase 8 HealthFactor ~2 +
   Phase 9 cost-model ~3 + Phase 10 codex ~1 + Phase 11 UI/API ~2 + Phase 12 backtest ~2 + Phase 13 live ~1.
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
+parent_epic: strategy_master
 ---
 
 # DeFi recursive-borrow archetypes — post-cutover implementation (Phases 4-13)
@@ -98,8 +98,8 @@ started).
       pointing at this successor plan's Phase 12. **SLOT-1-ONLY** — queued for slot 1 on next master-plan refresh.
       **[DEFERRED-SLOT-1-ONLY]** 2026-05-19 slot 2: SLOT-1-ONLY designation; slot 2 cannot execute. Will land on next
       slot-1 master-plan refresh per daily work-split SSOT.
-- [x] ✅ [PM] P0. Update top-of-file banner in `defi_master_2026_05_07.md` to reference post-cutover plan as canonical
-      Phase 10+ implementation track; pre-cutover Phases 1-9 carrier clarified as `2026_05_10.md`. — 2026-05-18 slot 3.
+- [x] ✅ [PM] P0. Update top-of-file banner in `defi_master.md` to reference post-cutover plan as canonical Phase 10+
+      implementation track; pre-cutover Phases 1-9 carrier clarified as `2026_05_10.md`. — 2026-05-18 slot 3.
 - [x] ✅ [PM] P0. Update top-of-file banner in `alerting_service_live_rules_2026_05_07.md` to reference Phase 8 of
       post-cutover plan (`HealthFactorMonitor` + `LiquidationProximityCircuit`; kill-switch tier-up). — 2026-05-18
       slot 3.

@@ -1,5 +1,4 @@
----
-name: live-pipeline-mtds-mdps-features-2026-05-08
+---name: live-pipeline-mtds-mdps-features-2026-05-08
 overview:
   Activate the live (websocket-streaming) pipeline for MTDS → MDPS → features-service across all five asset_groups
   ahead of the 2026-05-23 DeFi cutover. Topology: MTDS as a standalone cluster (websocket connection-pool concerns
@@ -727,13 +726,15 @@ todos:
 
         9.3 — Tiered alert rules (NEW under `alerting_service/rules/live_pipeline_rules.py`):
              | Signal | Condition | Severity |
-             | --- | --- | --- |
-             | One shard skipped, others healthy | `cluster_pct_skipped_60s` < 5% | Info — self-reconciles |
-             | Many shards skipped, service alive | `cluster_pct_skipped_60s` > 30% | Warning |
-             | Service emitting STALE > 30% of last 60s | `degraded_ratio_60s` > 0.3 | Warning |
-             | Health endpoint unreachable > 30s | timeout | **CRITICAL** |
-             | last_candle_emitted_at > 2× cadence on alive shard | staleness > 30s for 15s timeframe | **CRITICAL** |
-             | REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
+             |
+parent_epic: mtds_mdps_master
+---
+
+| --- | --- | | One shard skipped, others healthy | `cluster_pct_skipped_60s` < 5% | Info — self-reconciles | | Many
+shards skipped, service alive | `cluster_pct_skipped_60s` > 30% | Warning | | Service emitting STALE > 30% of last 60s |
+`degraded_ratio_60s` > 0.3 | Warning | | Health endpoint unreachable > 30s | timeout | **CRITICAL** | |
+last_candle_emitted_at > 2× cadence on alive shard | staleness > 30s for 15s timeframe | **CRITICAL** | |
+REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
 
         9.4 — Circuit-breaker bridge to strategy-service: alerting-service publishes
              `CIRCUIT_BREAKER_TRIPPED` events on a dedicated stream `streaming.alerting.circuit_breaker`
@@ -761,14 +762,12 @@ todos:
     status: design-shipped
     note: "Phase 9 design contract shipped: PM codex `codex/05-infrastructure/live-pipeline-architecture.md` § 'Live-pipeline alerting tier-up' table maps three-tier rules (tier-1 paging, tier-2 KILL_SWITCH_STREAM_LAG `force_exit_only`, tier-3 KILL_SWITCH_PIPELINE_DEAD `halt_strategy`) to `StreamingHealthSnapshot` field references. UAC `AlertCode` taxonomy entries + alerting-service rule wiring + executive-service kill-switch consumer wiring is **DEFERRED to Tab 5** per `alerting_service_live_rules_2026_05_07.md` — Tab 2 design owns the contract, Tab 5 owns the implementation."
 
-  - id: phase-10-instrument-cache-delta-hot-reload-pattern
-    content: |
-      - [x] [AGENT] P0. Phase 10 — Instrument-cache-delta hot-reload pattern (workspace-wide). PARALLEL
-        with Phase 9.
+- id: phase-10-instrument-cache-delta-hot-reload-pattern content: |
+  - [x] [AGENT] P0. Phase 10 — Instrument-cache-delta hot-reload pattern (workspace-wide). PARALLEL with Phase 9.
 
         10.1 — instruments-service publishes `INSTRUMENT_CACHE_REFRESH_TRIGGER` event after every successful
               catalog refresh (verify via grep + add if missing). Event schema per Phase 1. Coordinate with
-              `instruments_live_master_2026_05_08` — that plan owns the publish-side; this phase wires the
+              `instruments_master` — that plan owns the publish-side; this phase wires the
               consume-side.
 
         10.2 — NEW UTL helper `unified_trading_library/instrument_cache/cache_delta_reloader.py`:
@@ -809,14 +808,20 @@ todos:
 
         QG: UTL + MTDS + MDPS + features-service quality-gates.sh clean.
 
-        **Coordination**: `instruments_live_master_2026_05_08` owns the publish-side; banner mutually.
-    status: done
-    note: "UTL@54d658e8 ships InstrumentLifecycleCacheDeltaReloader mirroring the ApiKeyReloader pattern + CatalogDelta frozen dataclass; 7 unit tests cover bootstrap, raise-before-bootstrap, idempotent-unchanged refresh, added/removed/modified detection, callback exception isolation, and snapshot immutability. Per-service consumer wire-in (MTDS / MDPS / features-service config_reloaders.py) ships with their respective Phase 3/4/5 live-mode rollouts."
+        **Coordination**: `instruments_master` owns the publish-side; banner mutually.
 
-  - id: phase-11-deployment-ui-live-tab
-    content: |
-      - [x] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters. **DONE 2026-05-11** — checkbox flip 2026-05-15 slot-3 (stale). All 4 sub-items fully shipped: deployment-api@9b0e81d + b7d3a4c + 98b6b6e + dd2adb6; deployment-ui@5738237 + 657ed68.
-        PARALLEL with Phase 9 + 10. (11.1 endpoint real-wired @deployment-api@`9b0e81d`; 11.3 scaffold @deployment-ui@`f3204ce`; 11.2 + 11.4 DEFERRED on Phase 13 launchers; Health-API HTTP join DEFERRED on per-service URL registry.)
+    status: done note: "UTL@54d658e8 ships InstrumentLifecycleCacheDeltaReloader mirroring the ApiKeyReloader pattern +
+    CatalogDelta frozen dataclass; 7 unit tests cover bootstrap, raise-before-bootstrap, idempotent-unchanged refresh,
+    added/removed/modified detection, callback exception isolation, and snapshot immutability. Per-service consumer
+    wire-in (MTDS / MDPS / features-service config_reloaders.py) ships with their respective Phase 3/4/5 live-mode
+    rollouts."
+
+- id: phase-11-deployment-ui-live-tab content: |
+  - [x] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters. **DONE 2026-05-11** — checkbox
+        flip 2026-05-15 slot-3 (stale). All 4 sub-items fully shipped: deployment-api@9b0e81d + b7d3a4c + 98b6b6e +
+        dd2adb6; deployment-ui@5738237 + 657ed68. PARALLEL with Phase 9 + 10. (11.1 endpoint real-wired
+        @deployment-api@`9b0e81d`; 11.3 scaffold @deployment-ui@`f3204ce`; 11.2 + 11.4 DEFERRED on Phase 13 launchers;
+        Health-API HTTP join DEFERRED on per-service URL registry.)
 
         **REAL WIRING shipped 2026-05-11 (Ikenna slot 4 RE-TASK)**:
         - deployment-api@`9b0e81d` (promoted from `7d95dc9` design-only stub): `GET /api/data-status/live`
@@ -876,13 +881,21 @@ todos:
 
         **Coordination**: `deployment_ui_lifecycle_tabs_2026_05_08` owns the existing tabs surface;
         banner mutually.
-    status: done
-    note: "2026-05-11 ikenna-live-pipeline-tab — ALL 4 phase-11 sub-items FULLY SHIPPED. Phase 11.1 endpoint REAL (deployment-api@9b0e81d manifest-read + b7d3a4c Health-API HTTP join). Phase 11.2 `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` registry shipped (deployment-api@98b6b6e — new dict keyed by live-cluster role separate from `_SERVICE_LAUNCHER_SCRIPTS`). Phase 11.3 widget reuse REAL (deployment-ui@5738237 with FailurePillarStack + colored capture_status/staleness badges + summary panel; 8/8 vitest). Phase 11.4 Deploy-live-cluster UI button + endpoint REAL: deployment-api@dd2adb6 ships `POST /deploy-live-cluster-preview` + `GET /deploy-live-cluster-roles` + `build_live_cluster_launch_preview` builder with closed-set validation (4 roles × 5 asset_groups × 3 envs × replay-window guard) + 12 unit tests; deployment-ui@657ed68 ships `DeployLiveClusterButton` with role/asset-group/env/replay-window form + bash command preview + copy-to-clipboard + 8 vitest tests; integrated into `LiveDataStatusTab` header. Operational launch boundary: Phase 15 named runner."
 
-  - id: phase-12-batch-vs-live-reconciliation-gate
-    content: |
-      - [x] [AGENT] P0. Phase 12 — Batch-vs-live reconciliation gate (May-23 readiness criterion).
-        SEQUENTIAL after Phase 5/6/7 land + first 7 days of live data captured.
+    status: done note: "2026-05-11 ikenna-live-pipeline-tab — ALL 4 phase-11 sub-items FULLY SHIPPED. Phase 11.1
+    endpoint REAL (deployment-api@9b0e81d manifest-read + b7d3a4c Health-API HTTP join). Phase 11.2
+    `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` registry shipped (deployment-api@98b6b6e — new dict keyed by live-cluster role
+    separate from `_SERVICE_LAUNCHER_SCRIPTS`). Phase 11.3 widget reuse REAL (deployment-ui@5738237 with
+    FailurePillarStack + colored capture_status/staleness badges + summary panel; 8/8 vitest). Phase 11.4
+    Deploy-live-cluster UI button + endpoint REAL: deployment-api@dd2adb6 ships `POST /deploy-live-cluster-preview` +
+    `GET /deploy-live-cluster-roles` + `build_live_cluster_launch_preview` builder with closed-set validation (4 roles ×
+    5 asset_groups × 3 envs × replay-window guard) + 12 unit tests; deployment-ui@657ed68 ships
+    `DeployLiveClusterButton` with role/asset-group/env/replay-window form + bash command preview + copy-to-clipboard +
+    8 vitest tests; integrated into `LiveDataStatusTab` header. Operational launch boundary: Phase 15 named runner."
+
+- id: phase-12-batch-vs-live-reconciliation-gate content: |
+  - [x] [AGENT] P0. Phase 12 — Batch-vs-live reconciliation gate (May-23 readiness criterion). SEQUENTIAL after Phase
+        5/6/7 land + first 7 days of live data captured.
 
         Site: `batch-live-reconciliation-service` (status = ✗ in master plan service matrix; per master
         Group F item 21 P0 follow-up the service must be code-complete before May-23 cutover; coordinate
@@ -912,12 +925,21 @@ todos:
         QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report ships as a runtime
         artefact via `manifest_schema_final_gate_2026_05_09` Phase 12.B (`batch_live_reconciler` UTL@908b1647 helper
         run + delta-< 5bps tolerance check); no separate issue doc required.
-    status: helper-shipped
-    note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)` returning a frozen `BatchLiveReconciliationReport` with verdict ∈ {MATCH, ROW_COUNT_MISMATCH, SCHEMA_MISMATCH, VALUE_MISMATCH}. Default `ohlcv_close_within(rel_tolerance=1e-4)` row comparator handles None + zero-baseline. 9 unit tests cover all four verdict paths + custom-comparator + comparator edge cases + frozen-dataclass immutability. **Helper is the primitive**; the deployment-api scheduled job + 7-day live-vs-batch run + reconciliation report commit (12.4) DEFER to after Phase 3/4/5/6/7 ship 7 continuous days of live-mode parquet (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency). When 7 days are captured, the same helper runs in batch-live-reconciliation-service to produce the cutover gate."
 
-  - id: phase-13-launchers-and-vm-naming
-    content: |
-      - [x] [AGENT] P0. Phase 13 — VM launchers + zombie watchdog updates. PARALLEL with Phase 11. (deployment-service@<shipped> shipped 2026-05-11 slot 4; 4 launchers code-ready in (b+) env-aware shape; watchdog dict registered.)
+    status: helper-shipped note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships
+    `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)`
+    returning a frozen `BatchLiveReconciliationReport` with verdict ∈ {MATCH, ROW_COUNT_MISMATCH, SCHEMA_MISMATCH,
+    VALUE_MISMATCH}. Default `ohlcv_close_within(rel_tolerance=1e-4)` row comparator handles None + zero-baseline. 9
+    unit tests cover all four verdict paths + custom-comparator + comparator edge cases + frozen-dataclass immutability.
+    **Helper is the primitive**; the deployment-api scheduled job + 7-day live-vs-batch run + reconciliation report
+    commit (12.4) DEFER to after Phase 3/4/5/6/7 ship 7 continuous days of live-mode parquet (currently
+    DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency). When 7 days are captured, the same helper runs in
+    batch-live-reconciliation-service to produce the cutover gate."
+
+- id: phase-13-launchers-and-vm-naming content: |
+  - [x] [AGENT] P0. Phase 13 — VM launchers + zombie watchdog updates. PARALLEL with Phase 11.
+        (deployment-service@<shipped> shipped 2026-05-11 slot 4; 4 launchers code-ready in (b+) env-aware shape;
+        watchdog dict registered.)
 
         Per workspace VM launcher SSOT rule + VM naming convention (CLAUDE.md):
 
@@ -949,19 +971,27 @@ todos:
               to refuse a duplicate launch in the same zone. Decision per Phase 0 audit § (a).
 
         QG: deployment-service quality-gates.sh clean.
-    status: helper-shipped
-    note: "2026-05-11 ikenna-live-pipeline-tab — 4 launchers shipped code-ready in (b+) env-aware shape (`--asset-group <ag> --env <env>` propagated to VM metadata; resolver-aware bucket naming via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name`). Files: `launch-mtds-live.sh` (parameterised, one-per-asset_group) + `launch-mdps-features-live.sh` (parameterised) + `launch-features-cross-cutting.sh` (singleton) + `launch-replay-cascade.sh` (singleton + window-parameterised). Watchdog dict registered 14 new prefixes (5 mtds-live-{ag} + 5 mdps-features-live-{ag} + features-xc- + replay-). Phase 11.2 registry shipped at deployment-api `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` (4 entries keyed by live-cluster role, NOT service-slug). **DEFERRED**: 13.4 watchdog VM relaunch (operational step — Phase 15 runs alongside the actual cluster bootstrap, not as a standalone code-ready ship). Operational launch boundary: Phase 15 (workspace-wide QG sweep + 7-day live smoke) handoff per Plans-Run-To-Actual-Completion rule + named successor."
 
-  - id: phase-14-codex-ssot-updates
-    content: |
-      - [x] [AGENT] P0. Phase 14 — Codex SSOT updates. **DONE 2026-05-16 (slot-3 flip)**: 6 of 8 items shipped 2026-05-11
-        per status note (live-pipeline-architecture.md / availability-manifest-and-data-status.md / batch-live-architecture.md /
-        alerting-batch-live.md / runtime-tiers-and-deployment.md / 00-SSOT-INDEX.md). Items 2 (replay-subsystem
-        empirical benchmarks) + 3 (instrument-lifecycle callback tables) DEFERRED-PER-HARD-RULE per the workspace
-        "Post-Plan-Phase Codex Audit" rule — they enhance codex docs WHEN the matching implementation phase ships
-        (Phase 5/6/7/10 land actual benchmarks + wired callbacks). Stale `- [ ]` checkbox flip only.
-        "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase enhances the
-        plan-driven stubs created at plan-draft time + updates 5 existing docs.
+    status: helper-shipped note: "2026-05-11 ikenna-live-pipeline-tab — 4 launchers shipped code-ready in (b+) env-aware
+    shape (`--asset-group <ag> --env <env>` propagated to VM metadata; resolver-aware bucket naming via
+    `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name`). Files: `launch-mtds-live.sh`
+    (parameterised, one-per-asset_group) + `launch-mdps-features-live.sh` (parameterised) +
+    `launch-features-cross-cutting.sh` (singleton) + `launch-replay-cascade.sh` (singleton + window-parameterised).
+    Watchdog dict registered 14 new prefixes (5 mtds-live-{ag} + 5 mdps-features-live-{ag} + features-xc- + replay-).
+    Phase 11.2 registry shipped at deployment-api `_LIVE_CLUSTER_LAUNCHER_SCRIPTS` (4 entries keyed by live-cluster
+    role, NOT service-slug). **DEFERRED**: 13.4 watchdog VM relaunch (operational step — Phase 15 runs alongside the
+    actual cluster bootstrap, not as a standalone code-ready ship). Operational launch boundary: Phase 15
+    (workspace-wide QG sweep + 7-day live smoke) handoff per Plans-Run-To-Actual-Completion rule + named successor."
+
+- id: phase-14-codex-ssot-updates content: |
+  - [x] [AGENT] P0. Phase 14 — Codex SSOT updates. **DONE 2026-05-16 (slot-3 flip)**: 6 of 8 items shipped 2026-05-11
+        per status note (live-pipeline-architecture.md / availability-manifest-and-data-status.md /
+        batch-live-architecture.md / alerting-batch-live.md / runtime-tiers-and-deployment.md / 00-SSOT-INDEX.md). Items
+        2 (replay-subsystem empirical benchmarks) + 3 (instrument-lifecycle callback tables) DEFERRED-PER-HARD-RULE per
+        the workspace "Post-Plan-Phase Codex Audit" rule — they enhance codex docs WHEN the matching implementation
+        phase ships (Phase 5/6/7/10 land actual benchmarks + wired callbacks). Stale `- [ ]` checkbox flip only.
+        "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase enhances the plan-driven stubs
+        created at plan-draft time + updates 5 existing docs.
 
         **PARTIAL shipped 2026-05-11 (Ikenna slot 4)**: PM@<this commit> extended
         [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
@@ -1007,14 +1037,19 @@ todos:
            + the replay box prefix.
 
         QG: `unified-trading-pm` quality-gates.sh clean.
-    status: done
-    note: "2026-05-20 slot-7 — ALL 8 Phase 14 items now SHIPPED. Item 2: replay-subsystem.md enhanced (PM@a22aee69) — MTDS-side components (ReplayRunner / HistoricalWindowFetcher Protocol / InstrumentWindowData / ReplayHandler CLI / factory registry) added to implementation status table; corrected REPLAY_BACKSTOP_REACHED emitter attribution (ReplayRunner.run() not ReplayPublisher.finalize()); added MTDS implementation layer section with constructor parameter table, lifecycle events, CLI arg table, throughput benchmark placeholders; updated last_reviewed to 2026-05-20. Item 3: instrument-lifecycle callback tables — done per prior slot. Items 1 + 4-8: SHIPPED 2026-05-11 (PM@33f5618b). All 8/8 done."
 
-  - id: phase-15-workspace-wide-qg-sweep-and-smoke
-    content: |
-      - [x] [AGENT] P0. Phase 15 — Workspace-wide QG sweep + 7-day live smoke. Final phase.
-        **DEFERRED-POST-CUTOVER** — gates on Phases 3-13 completing (all deferred per table below).
-        Phases 3/4/5/6 gate on features_repo_consolidation Phase 1-4. Phase 15 → successor plan.
+    status: done note: "2026-05-20 slot-7 — ALL 8 Phase 14 items now SHIPPED. Item 2: replay-subsystem.md enhanced
+    (PM@a22aee69) — MTDS-side components (ReplayRunner / HistoricalWindowFetcher Protocol / InstrumentWindowData /
+    ReplayHandler CLI / factory registry) added to implementation status table; corrected REPLAY_BACKSTOP_REACHED
+    emitter attribution (ReplayRunner.run() not ReplayPublisher.finalize()); added MTDS implementation layer section
+    with constructor parameter table, lifecycle events, CLI arg table, throughput benchmark placeholders; updated
+    last_reviewed to 2026-05-20. Item 3: instrument-lifecycle callback tables — done per prior slot. Items 1 + 4-8:
+    SHIPPED 2026-05-11 (PM@33f5618b). All 8/8 done."
+
+- id: phase-15-workspace-wide-qg-sweep-and-smoke content: |
+  - [x] [AGENT] P0. Phase 15 — Workspace-wide QG sweep + 7-day live smoke. Final phase. **DEFERRED-POST-CUTOVER** —
+        gates on Phases 3-13 completing (all deferred per table below). Phases 3/4/5/6 gate on
+        features_repo_consolidation Phase 1-4. Phase 15 → successor plan.
 
         15.1 — Workspace-wide QG sweep across all 12 affected repos (per `repo_gates`).
 
@@ -1038,16 +1073,14 @@ todos:
         reconciliation diff zero.
 
         QG: every workspace repo green simultaneously.
-    status: todo
-    note: ""
 
-isProject: false
-estimate_class: design
-estimate_baseline_ai_days: 25
-estimate_calibrated_ai_days: 15.0
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+    status: todo note: ""
+
+isProject: false estimate_class: design estimate_baseline_ai_days: 25 estimate_calibrated_ai_days: 15.0
+estimate_calibration_note: | No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred
+from filename (design, multiplier 0.6×). Owner agent: fill baseline + multiply × 0.6 per
+codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
 ---
 
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
@@ -1267,8 +1300,8 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
   rules + circuit-breaker bridge. Banner mutually.
 - **`writegate_honest_coverage_endtoend_2026_05_06`** — provides the 4-state manifest taxonomy + reason taxonomy +
   `ServiceEmissionPolicy` SSOT this plan consumes. No collision; banner not required.
-- **`instruments_live_master_2026_05_08`** — Phase 10 here consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event that
-  plan publishes. Banner mutually.
+- **`instruments_master`** — Phase 10 here consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event that plan publishes.
+  Banner mutually.
 - **`mdps_streaming_and_backpressure_2026_05_07`** — Phase 4 here re-uses the `open_candle_writer` /
   `close_candle_writer` UTL lifecycle that plan ships. Phase 4.4 here re-uses the RSS-pause integration. Banner mutually
   with explicit dependency tag.
@@ -1280,11 +1313,11 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
   `deployment-service/scripts/vm/`. No collision; that plan's surface is migration of existing launchers.
 - **`master_to_live_defi_2026_05_23`** — parent. Add a Group F sub-bullet pointing here: "Live pipeline activation per
   `live_pipeline_mtds_mdps_features_2026_05_08.md` — covers items 21 + 22 for live-mode."
-- **`infrastructure_master_2026_05_07`** — umbrella; no direct collision.
-- **`ml_and_features_master_2026_05_07`** — overlaps on features compute path. Phase 5 here defines the live features
-  compute; that plan's batch features compute work continues in parallel. Banner mutually.
-- **`defi_master_2026_05_07`** — DeFi-side critical-path consumer of this work. The 2 archetypes need this plan's Phase
-  6 cross-cutting features by 2026-05-21. Banner mutually.
+- **`infrastructure_master`** — umbrella; no direct collision.
+- **`features_and_ml_master`** — overlaps on features compute path. Phase 5 here defines the live features compute; that
+  plan's batch features compute work continues in parallel. Banner mutually.
+- **`defi_master`** — DeFi-side critical-path consumer of this work. The 2 archetypes need this plan's Phase 6
+  cross-cutting features by 2026-05-21. Banner mutually.
 
 ## Open questions
 
@@ -1515,12 +1548,12 @@ CrossCuttingFeaturesRunner follow-up).
   that lifecycle) + the next Harsh slot-5 session for the MDPS-side consumer wiring.
 - **In-process MDPS→features handoff** is intentionally deferred (Phase 5.2) — initial rollout uses Redis Stream hop
   only. Successor: post-May-23 perf optimisation if benchmarks show Redis-hop is the latency bottleneck. Track under
-  `infrastructure_master_2026_05_07` post-cutover follow-ups.
+  `infrastructure_master` post-cutover follow-ups.
 - **Cross-cutting features watermark grace window** — default 500ms intra-zone. Successor: per-feature_group tuning
-  post-cutover with empirical latency benchmarks. Track under `ml_and_features_master_2026_05_07` Phase 4.
+  post-cutover with empirical latency benchmarks. Track under `features_and_ml_master` Phase 4.
 - **Multi-hour-outage backstop manual gate** (Phase 7.4) — initial implementation halts + alerts; auto-recovery for
   known transient failure classes (per `codex/04-architecture/autonomous-recovery-matrix.md`) lands post- cutover. Track
-  under `infrastructure_master_2026_05_07`.
+  under `infrastructure_master`.
 
 ## Risk register
 

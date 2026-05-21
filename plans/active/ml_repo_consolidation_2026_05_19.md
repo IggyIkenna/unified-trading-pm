@@ -1,5 +1,4 @@
----
-name: ml-repo-consolidation-2026-05-19
+---name: ml-repo-consolidation-2026-05-19
 overview:
   Merge `ml-training-service` + `ml-inference-service` into a single NEW `ml-service` repo with sub-packages
   `ml_service/training/` and `ml_service/inference/`; archive both source repos. ONE Docker image, ONE flat
@@ -13,7 +12,7 @@ overview:
   so subtree-merge has zero compile-time collisions. Pre-cutover race for 2026-05-23 live-DeFi launch — if Phase 6
   parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
 type: infra
-epic: ml_and_features_master_2026_05_07
+epic: features_and_ml_master
 status: done
 
 asset_group: cross-cutting
@@ -315,6 +314,7 @@ todos:
         strategy_repo_consolidation_2026_05_19, work_split_2026_05_13_harsh, work_split_2026_05_18_ikenna,
         work_split_2026_05_19_ikenna, writegate_honest_coverage_endtoend_2026_05_06.
     status: done
+parent_epic: features_and_ml_master
 ---
 
 ## Architecture sketch — post-merge ml-service
@@ -363,7 +363,7 @@ strategy twin** (only 2 source repos, smaller surface, simpler import audit). Ri
 - **Cross-repo import audit (fact-report 2026-05-19)**: ZERO Python imports between the 2 repos today. Coupling is via
   model-registry GCS bucket + pub-sub model-promotion events + UAC feature contracts. Subtree-merge is collision-free.
 - **Operator confirmation 2026-05-19**: fresh `ml-service` repo (NOT in-place); soft freeze on structural changes; race
-  2026-05-23 cutover; fold under existing `ml_and_features_master_2026_05_07` epic.
+  2026-05-23 cutover; fold under existing `features_and_ml_master` epic.
 - **Strategy twin plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md` mirrors this pattern for the 4-repo
   strategy-service merge. Independent execution; both target same 2026-05-23 deadline. The two plans MAY share a Phase 0
   audit agent (parallel sub-agents, shared grep harness over the same workspace).
@@ -506,27 +506,27 @@ See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 
 ## Phase 11 — Archive finalisation + workspace-wide stale-ref cleanup (REOPENED 2026-05-20 per operator directive)
 
 > **Reopen note (2026-05-20)**: operator directed an audit-and-finalise sweep covering both strategy + ML
-> consolidations. Phase 7 (gh repo archive of ml-training-service + ml-inference-service) is BLOCKED on operator
-> action (ping filed 2026-05-20 11:30 UTC in `_agent_pings.md`). Workspace-wide grep also found **~330 LIVE-CODE refs**
-> to `ml-training-service` / `ml-inference-service` across consumer repos (excluding DEPRECATION_NOTICE / ARCHIVED.md
-> / CHANGELOG / migration-history). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit
-> only** — skip docstrings, CHANGELOG, migration-history.
+> consolidations. Phase 7 (gh repo archive of ml-training-service + ml-inference-service) is BLOCKED on operator action
+> (ping filed 2026-05-20 11:30 UTC in `_agent_pings.md`). Workspace-wide grep also found **~330 LIVE-CODE refs** to
+> `ml-training-service` / `ml-inference-service` across consumer repos (excluding DEPRECATION_NOTICE / ARCHIVED.md /
+> CHANGELOG / migration-history). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit only** —
+> skip docstrings, CHANGELOG, migration-history.
 >
 > Counts (live-code refs only, 2 ML-consolidation services):
 >
-> | Repo                          | ml-train | ml-infer | Total live refs | Owner slot      | Est cal-AI-days |
-> | ----------------------------- | -------- | -------- | --------------- | --------------- | --------------- |
-> | deployment-service            | 30       | 32       | ~62             | slot 7          | 0.5             |
-> | unified-trading-system-ui     | 15       | 23       | ~38             | slot 6          | 0.5             |
-> | unified-api-contracts         | 21       | 23       | ~44             | slot 5          | 0.5             |
-> | unified-trading-library       | 16       | 8        | ~24             | slot 5          | 0.25            |
-> | ml-service (own repo cleanup) | 34       | 35       | ~69             | slot 8          | 0.25            |
-> | deployment-api                | 16       | 9        | ~25             | slot 7          | 0.25            |
-> | execution + sys-int + tail    | tail     | tail     | ~30             | slot 8          | 0.25            |
+> | Repo                          | ml-train | ml-infer | Total live refs | Owner slot | Est cal-AI-days |
+> | ----------------------------- | -------- | -------- | --------------- | ---------- | --------------- |
+> | deployment-service            | 30       | 32       | ~62             | slot 7     | 0.5             |
+> | unified-trading-system-ui     | 15       | 23       | ~38             | slot 6     | 0.5             |
+> | unified-api-contracts         | 21       | 23       | ~44             | slot 5     | 0.5             |
+> | unified-trading-library       | 16       | 8        | ~24             | slot 5     | 0.25            |
+> | ml-service (own repo cleanup) | 34       | 35       | ~69             | slot 8     | 0.25            |
+> | deployment-api                | 16       | 9        | ~25             | slot 7     | 0.25            |
+> | execution + sys-int + tail    | tail     | tail     | ~30             | slot 8     | 0.25            |
 >
 > **Total: ~2.5 cal-AI-days, fan-out to slots 5/6/7/8.**
 
-```yaml
+````yaml
 phases:
   - id: phase-11a-operator-archive-action
     todos:
@@ -628,7 +628,7 @@ phases:
             Gate: ack in Phase 7 audit trail + flip checkbox.
     status: pending
     blocked_by: phase-11a-operator-archive-action
-```
+````
 
 **Compose-with**: `strategy_repo_consolidation_2026_05_19.md` Phase 11 (parallel strategy-side cleanup — same slots).
 Slots 5, 6, 7 each do BOTH strategy + ML cleanup in their consumer repo in a single QG run. Slot 8 does ML own-repo +

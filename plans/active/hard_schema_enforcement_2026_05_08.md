@@ -16,8 +16,8 @@ overview: >-
   dropped at normalize-time). Root-cause for lookahead bias / partial-bundle / minimal- flattening incidents
   compounding. Fix is workspace-wide UAC schema audit + per-row record_failed gate refactor + sports adapter full-column
   capture + manifest row_key shape validation + QG static assertion. Operator decision 2026-05-08: SEQUENCE this plan
-  AFTER the futures-expiry work in `tradfi_master_2026_05_07` Q1+Q2 ships, to avoid mass-fail-during-transit on existing
-  futures rows. Sub-plan-of `infrastructure_master_2026_05_07`.
+  AFTER the futures-expiry work in `tradfi_master` Q1+Q2 ships, to avoid mass-fail-during-transit on existing futures
+  rows. Sub-plan-of `infrastructure_master`.
 
 type: mixed
 epic: epic-code-completion
@@ -187,22 +187,23 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
-> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
 > direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
 > don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
 > data layout co-evolve.
 >
-> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+> Child of:
+> [`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md)
 >
 > This plan's phases land in gate(s): **G2** (cluster validation AST guard) + **G7** (workspace audit)
 
-## Deferred work — migrated to: `tradfi_master_2026_05_07.md`
+## Deferred work — migrated to: `tradfi_master.md`
 
 - **InstrumentRecord.expiry full type-level nullable→required flip** (FUTURE + OPTION): model_validator (uac@80aef10)
   provides runtime enforcement. Full Pydantic type-level flip is a post-May-23 breaking change; migrated to
-  tradfi_master_2026_05_07.md as DEFERRED P3 item. 2026-05-19 slot 4.
+  tradfi_master.md as DEFERRED P3 item. 2026-05-19 slot 4.
 
 ## Closure note (2026-05-19 slot 4)
 
@@ -250,14 +251,13 @@ partial commit would mass-fail every existing futures row mid-migration.
 
 ## Sibling plan relationships
 
-- `tradfi_master_2026_05_07.md` Q1+Q2 (futures expiry hard-required + options expiration flip) — sequenced BEFORE Phase
-  1 here.
-- `sports_master_2026_05_07.md` Phase 3 C.7 — overlaps with Phase 3 here on STANDINGS / XG / MATCHES flatten work;
-  coordinate to avoid duplicating cassette parity tests.
+- `tradfi_master.md` Q1+Q2 (futures expiry hard-required + options expiration flip) — sequenced BEFORE Phase 1 here.
+- `sports_master.md` Phase 3 C.7 — overlaps with Phase 3 here on STANDINGS / XG / MATCHES flatten work; coordinate to
+  avoid duplicating cassette parity tests.
 - `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A — Phase 4 row_key shape validation extends the writegate
   per-row failure routing.
-- `infrastructure_master_2026_05_07.md` — parent umbrella; this plan is referenced from the "Hard schema enforcement at
-  write boundary" pointer section.
+- `infrastructure_master.md` — parent umbrella; this plan is referenced from the "Hard schema enforcement at write
+  boundary" pointer section.
 
 ## Plan-format compliance
 

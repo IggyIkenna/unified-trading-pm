@@ -368,8 +368,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
       UAC@0e7ba95 + features-cross-instrument `190bea1`/`2804f47`/`071604f`/`d1da107`.)
 - [ ] [AGENT] P0. **cda-p2-defi-alpha**: Add DeFi-specific alpha features to features-onchain-service. (features-onchain
       has aave\_\*, block_priority_gas_distribution, concentrated_liquidity_il_realised, cryptoquant_exchange_flow
-      shipped; the named "alpha features" catalogue is unspecified. Likely overlap with `defi_master_2026_05_07`
-      umbrella — verify scope before re-scoping.)
+      shipped; the named "alpha features" catalogue is unspecified. Likely overlap with `defi_master` umbrella — verify
+      scope before re-scoping.)
 - [ ] [AGENT] P0. **cda-p2-sla-integration**: Integrate SLA engine into all feature services. BLOCKED-ON
       cda-p1-utl-sla-engine.
 - [ ] [AGENT] P0. **cda-p2-dqs-mtds**: Integrate DataQualityScorer into market-tick-data-service. BLOCKED-ON
@@ -517,7 +517,7 @@ ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage
 
 ## Coordination with sibling plans
 
-- **`ml_and_features_master_2026_05_07`**: Phase 4D (strategy-service calibrated-signal consumption
+- **`features_and_ml_master`**: Phase 4D (strategy-service calibrated-signal consumption
   - cost-aware filtering) overlaps with this umbrella's Phase 3.4 `slv-p2-*` ML lineage items and Phase 3.5
     `slv-p3-ml-dashboard`. Calibrated-signal consumption is owned by ml_and_features_master Phase 4D (model lifecycle);
     strategy-service-side consumer wiring is the boundary.
@@ -526,9 +526,9 @@ ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage
   matrix should re-run after writegate Phase 4.A lands so the typed `error_reason` badges render correctly.
 - **`master_to_live_defi_2026_05_23`**: Phase 1.9 fold-in residuals (subset) feeds master Group F items 17-22; Phase 2.2
   manual-trade gate is master Group G item 23. Coordinate completion-flip cadence with master refresh agent.
-- **`defi_master_2026_05_07`**: `carry_staked_basis` lead archetype lives in defi_master Fork 1; Phase 1.9
-  action-handler engine is the upstream that defi_master strategy-config consumes. Coordinate timing — action-handler
-  engine should ship before carry_staked_basis live-mode validation.
+- **`defi_master`**: `carry_staked_basis` lead archetype lives in defi_master Fork 1; Phase 1.9 action-handler engine is
+  the upstream that defi_master strategy-config consumes. Coordinate timing — action-handler engine should ship before
+  carry_staked_basis live-mode validation.
 
 ## Already-shipped from sources (per 2026-05-07 audit)
 
@@ -571,9 +571,9 @@ ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage
 - **Mis-marked DONE → flipped**: 1 — `cda-p2-microstructure` flipped to `[x]`. Verified: features-delta-one-service
   ships `app/calculators/microstructure.py` with `tests/unit/test_feature_groups/test_microstructure.py`.
 - **In-flight (running VMs)**: none directly — backfill VMs feed the features that strategy will consume.
-- **Blocked by**: `consolidated_ml_advanced_pipeline_2026_04_15` Phase 4 (now folded into
-  `ml_and_features_master_2026_05_07`); `feature_dag_uac_ssot_and_features_coverage_2026_05_06` (also now folded into
-  `ml_and_features_master_2026_05_07`); `dart_ux_cockpit_refactor_2026_04_29` (sibling — now Phase 2 of THIS umbrella).
+- **Blocked by**: `consolidated_ml_advanced_pipeline_2026_04_15` Phase 4 (now folded into `features_and_ml_master`);
+  `feature_dag_uac_ssot_and_features_coverage_2026_05_06` (also now folded into `features_and_ml_master`);
+  `dart_ux_cockpit_refactor_2026_04_29` (sibling — now Phase 2 of THIS umbrella).
 - **Blocks**: `master_to_live_defi_2026_05_23` Group F (Trading prereqs) — cost-aware filtering + calibrated signals;
   Group G (Operator UX) — Strategy & ML dashboards.
 - **Last meaningful commit**: strategy-service `e4a0cdd` (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION Phase 9 Phase

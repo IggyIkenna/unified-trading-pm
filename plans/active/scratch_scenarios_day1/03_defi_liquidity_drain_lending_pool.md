@@ -174,8 +174,8 @@ Per-pause-mode contract — both sub-shapes asserted in the matrix:
   (stablecoin-leverage) both depend on lending-pool borrow availability for deleverage; protocol governance pause is a
   documented Family-1 + Family-2 shared shock mode (per plan body — paused / utilization / borrow_cap vocabulary). This
   scenario is the synthetic-simulation analogue of the live shock those archetypes were designed to survive.
-- defi_master plan `defi_master_2026_05_07.md` — sources `lending_indices` data_type from features-onchain; this
-  scenario's FEATURE-layer tap injects into that exact emission path.
+- defi_master plan `defi_master.md` — sources `lending_indices` data_type from features-onchain; this scenario's
+  FEATURE-layer tap injects into that exact emission path.
 - features-onchain lending-indices source: `features-service/features_service/onchain/lending_indices/` (per
   `defi_master` references; scenario harness must register `ScenarioOverlayApplier` for the `FEATURE` layer at the
   lending-indices adapter exit per parent plan Phase 3.C).
@@ -201,5 +201,4 @@ Per-pause-mode contract — both sub-shapes asserted in the matrix:
   `record_captured(paused=true)` — current honest-absence taxonomy in
   `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" does not enumerate `LENDING_POOL_PAUSED` as
   an `EMPTY_CONFIRMED_REASONS` member (it's a failure mode, not an honest gap). No change needed if the adapter raises a
-  typed exception via `classify_venue_error()`; verification owned by `defi_master_2026_05_07.md` features-onchain
-  phase.
+  typed exception via `classify_venue_error()`; verification owned by `defi_master.md` features-onchain phase.

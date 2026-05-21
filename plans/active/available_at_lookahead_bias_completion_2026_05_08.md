@@ -11,7 +11,7 @@ title: "available_at + lookahead-bias master — SINGLE OWNER for all stamping w
 folds_in:
   - api_football_minimal_flattening_removal_2026_05_07 # Phase 3 stamping wiring scope
   - wave3x_residual_ssots_2026_05_08 # Track E sports stamping helpers
-  - sports_master_2026_05_07 # Phase 1-2 per-adapter wiring scope
+  - sports_master # Phase 1-2 per-adapter wiring scope
   # Implicit children (no separate plan): every CeFi/DeFi/TradFi tick adapter that needs
   # tick.timestamp + UAC SOURCE_PRIORITY scrape latency stamping per CLAUDE.md
   # "available_at semantics".
@@ -168,7 +168,7 @@ estimate_calibration_note: |
 - **Cross-plan blockers**:
   - This plan BLOCKS `master_to_live_defi_2026_05_23` Group F trading prereqs (batch-vs-live reconciliation needs honest
     `available_at` for lookahead-free batch P&L attribution)
-  - This plan BLOCKS `strategy_and_dart_master_2026_05_07` strategy-alpha measurement (per writegate audit)
+  - This plan BLOCKS `strategy_and_dart_master_SUPERSEDED_2026_05_21` strategy-alpha measurement (per writegate audit)
   - Phase 0 (MDPS bar boundary) BLOCKS chain link 1 (adapter stamping) for MDPS-derived data_types — bars must be
     canonical before downstream stamping can stand on them
   - Chain link 1 BLOCKS chain link 6 (Tab 12 wiring) — calculator/writer enforcement is dead code until adapters stamp
@@ -289,7 +289,7 @@ todos:
       `wave3x_residual_ssots_2026_05_08.md` Track E sequencing. (2) **non-ODDS_SNAPSHOT sports paths** — fixture_lineups
       / fixture_player_stats / fixture_stats / fixture_events / injuries / weather / reference-tables stamping is NOT in
       the MTDS write path (sports backfill VMs `af-backfill-` / `fs-backfill-` / `sfi-backfill-` etc. own those writes),
-      remains in `sports_master_2026_05_07` Phase 1-2 scope per the existing track. (3) **column-presence assertion at
+      remains in `sports_master` Phase 1-2 scope per the existing track. (3) **column-presence assertion at
       `StreamingParquetWriter.write_chunk`** — sports path uses `record_captured_from_counts`, so the writegate
       `assert_available_at_present(df)` guard doesn't fire on this path today. Filed as Phase 1 P1 follow-up todo below.
 
@@ -319,17 +319,16 @@ todos:
 - [x] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
       lending rates, Pyth Solana price feeds (re-added 2026-05-06 for LST-yield Solana coverage), Chainlink (EVM
       oracle), staking-yield aggregators (jitoSOL / mSOL / bSOL), perp-funding adapters (Hyperliquid, Lighter, Pacifica,
-      Aster). Each gets a stamping call before `record_captured`. Add as Phase-2-equivalent todos to
-      `defi_master_2026_05_07` referencing this plan. **Coordinator:** this plan tracks completion; ship in
-      `defi_master`.
+      Aster). Each gets a stamping call before `record_captured`. Add as Phase-2-equivalent todos to `defi_master`
+      referencing this plan. **Coordinator:** this plan tracks completion; ship in `defi_master`.
 
 - [x] [SCRIPT] P0. **CeFi adapter stamping**. Per-adapter `available_at` stamping for: Bybit, Binance, OKX, Deribit,
       Bitfinex, Bitget, Coinbase, Hyperliquid, Kraken, Aster — across ohlcv*\*, trades, funding_rate, perp*\*,
       options_chain, futures_chain. For tick-level: `available_at = tick_timestamp + source_priority_scrape_latency` per
       UAC `SOURCE_PRIORITY`. For bar data: depends on Phase 0 (MDPS-side stamping). Add Phase-2-equivalent todos to
-      `cefi_master_2026_05_07` referencing this plan. Shipped MTDS@4a00bd5 + UAC@e197173 + UTL@29555212. Per the F2
-      issue doc reshape (per-callsite at writer boundary, NOT 10 per-venue files), MTDS today routes cefi tick data
-      through `PartitionedTickWriter` (not direct UTL `record_captured` callsites), so the right wiring lives at
+      `cefi_master` referencing this plan. Shipped MTDS@4a00bd5 + UAC@e197173 + UTL@29555212. Per the F2 issue doc
+      reshape (per-callsite at writer boundary, NOT 10 per-venue files), MTDS today routes cefi tick data through
+      `PartitionedTickWriter` (not direct UTL `record_captured` callsites), so the right wiring lives at
       `engine/orchestrator.py` write-chunk time. `PartitionedTickWriter.write_chunk` now stamps
       `available_at = timestamp + emission_latency_ms_for_source(primary_source)` via
       `stamp_available_at_cefi_tick(...)` when asset_group=="cefi" and the df lacks the column. Primary source resolved
@@ -342,29 +341,29 @@ todos:
 - [x] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
       options), Polygon, Yahoo Finance (VIX 15m fallback), Barchart historical preload. CME options chain + ES.OPT
       11-cluster bundles need per-cluster `available_at` (= cluster bar close time). Add Phase-2-equivalent todos to
-      `tradfi_master_2026_05_07` referencing this plan. **PARTIAL SHIPPED 2026-05-11 by slot 5
-      (ikenna-aggressive-may15-tab, RE-TASK item 2) at MTDS@`48254d2`**: extended `PartitionedTickWriter.write_chunk` to
-      handle tradfi via UAC `SOURCE_PRIORITY[("tradfi", dt_str)]` → `databento` (10ms microsecond-grade) for trades /
-      tbbo / ohlcv_1m / ohlcv_15m / options_chain / futures_chain. Smoke-import verified all tradfi data_types resolve
-      to databento. **VIX 15m Yahoo fallback CLOSED 2026-05-11 @uac@8aaf7de + MTDS@c1a0988**: added `yahoo: 900_000` to
-      UAC `EMISSION_LATENCY_MS_BY_SOURCE` (Yahoo Finance free-tier 15min intraday delay) + extended
+      `tradfi_master` referencing this plan. **PARTIAL SHIPPED 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab,
+      RE-TASK item 2) at MTDS@`48254d2`**: extended `PartitionedTickWriter.write_chunk` to handle tradfi via UAC
+      `SOURCE_PRIORITY[("tradfi", dt_str)]` → `databento` (10ms microsecond-grade) for trades / tbbo / ohlcv_1m /
+      ohlcv_15m / options_chain / futures_chain. Smoke-import verified all tradfi data_types resolve to databento. **VIX
+      15m Yahoo fallback CLOSED 2026-05-11 @uac@8aaf7de + MTDS@c1a0988**: added `yahoo: 900_000` to UAC
+      `EMISSION_LATENCY_MS_BY_SOURCE` (Yahoo Finance free-tier 15min intraday delay) + extended
       `SOURCE_PRIORITY[("tradfi", "ohlcv_15m")]` to `["databento", "yahoo"]` (databento primary; yahoo secondary
       documents the rolling-60d fallback route); MTDS `_fetch_yahoo_vix_15m` now stamps
       `available_at = ts_event + 900_000ms` BEFORE handing to `PartitionedTickWriter` (writer's
       `"available_at" not in df.columns` guard preserves the stamp). Smoke-tested via PYTHONPATH-scoped eval. **STILL
-      OPEN — DEFERRED to tradfi_master_2026_05_07**: Polygon adapter (TradFi venues Databento doesn't cover; usage scope
-      to verify) + Barchart historical preload (one-time bulk import; correct semantic = stamp via Yahoo latency since
+      OPEN — DEFERRED to tradfi_master**: Polygon adapter (TradFi venues Databento doesn't cover; usage scope to
+      verify) + Barchart historical preload (one-time bulk import; correct semantic = stamp via Yahoo latency since
       Barchart is the live-equivalent historical proxy for the same CBOE source).
 
-- [x] [SCRIPT] P0. **Predictions lifecycle-bounded `available_at`**. Per `predictions_master_2026_05_07` Phase 2
-      (BLOCKED-ON Phase 1 lifecycle ingestion shipping): each prediction-market tick must have
+- [x] [SCRIPT] P0. **Predictions lifecycle-bounded `available_at`**. Per `predictions_master` Phase 2 (BLOCKED-ON Phase
+      1 lifecycle ingestion shipping): each prediction-market tick must have
       `available_at = max(tick_ts, market_created_at)` and must NOT carry rows past `market_settlement_time`.
       instruments-service MARKET_LIFECYCLE writer is the gate — track + flip when ships. **VERIFIED 2026-05-11 by slot
       5**: Prediction adapters (Polymarket / Kalshi) already stamp `available_at` at the adapter level — verified via
       grep `stamp_available_at` in MTDS prediction adapter paths + the `PartitionedTickWriter.write_chunk` per-row
       envelope-tracking logic (`orchestrator.py:1230+`) reads `available_at` from the input df (already populated by the
       adapter). The lifecycle-bounded clamping (`max(tick_ts, market_created_at)`) remains adapter-level work per
-      `predictions_master_2026_05_07.md` Phase 2; this todo can flip fully `[x]` once that clamp wires.
+      `predictions_master.md` Phase 2; this todo can flip fully `[x]` once that clamp wires.
 
 - [x] ✅ [TRACKED] P0. **TRACK — features-onchain `suppress(LookaheadBiasError)` removal**. SHIPPED 2026-05-17:
       `features-service@7b1ede28`. Chain link 1 shipped (UTL@`8b0fb816` + MTDS@`bbdbf55`); removed
@@ -387,8 +386,7 @@ todos:
 
 - [x] ✅ [SCRIPT] P1. **Per-asset-group reconciler runs**. **DEFERRED** — script shipped at instruments-service@8d89e6b.
       Operational runs (tradfi → cefi → defi → predictions) deferred to respective asset_group master plans after each
-      Phase 1 ships. Successors: `tradfi_master_2026_05_07` / `cefi_master_2026_05_07` / `defi_master_2026_05_07` /
-      `predictions_master_2026_05_07`.
+      Phase 1 ships. Successors: `tradfi_master` / `cefi_master` / `defi_master` / `predictions_master`.
 
 ---
 
@@ -396,9 +394,9 @@ todos:
 
 todos:
 
-- [x] ✅ [TRACKED] P1. **TRACK — reader column propagation**. **DEFERRED** — flip when
-      `ml_and_features_master_2026_05_07` Phase 3A + `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 5 both mark
-      done. Owning plans track status; no action here.
+- [x] ✅ [TRACKED] P1. **TRACK — reader column propagation**. **DEFERRED** — flip when `features_and_ml_master` Phase
+      3A + `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 5 both mark done. Owning plans track status; no action
+      here.
 
 ---
 
@@ -416,7 +414,7 @@ todos:
       currently declare `["target_fixtures", "fixtures_history"]`-style symbolic inputs not yet a UAC pair. Sources of
       truth: `features-service (sports family)/features_sports_service/calculators/` calculator metadata + the existing
       "Temporary states" entry in `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`. Successor: ship here AFTER
-      `sports_master_2026_05_07` Phase 1-2 stabilises sports data_type vocabulary.
+      `sports_master` Phase 1-2 stabilises sports data_type vocabulary.
 
 - [x] [SCRIPT] P0. **CeFi + TradFi feature_groups → UAC** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
       Added 12 cefi/tradfi cross-instrument feature_groups: `regime_detection`, `cross_venue_spreads`,
@@ -536,21 +534,20 @@ todos:
 
 This plan is a **coordinator**. Banners must be added to:
 
-- [x] [SCRIPT] P0. **Banner — `defi_master_2026_05_07`**. Top-of-file:
+- [x] [SCRIPT] P0. **Banner — `defi_master`**. Top-of-file:
       `> 🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping owned coordinated by available_at_lookahead_bias_completion_2026_05_08 Phase 1. Re-verify per-DeFi-adapter stamping wiring before adding new defi adapters.`
       **DONE 2026-05-14**: banner added after existing refactor banners before `## Codex SSOTs`.
-- [x] [SCRIPT] P0. **Banner — `cefi_master_2026_05_07`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner
-      added after `# CeFi Master — asset_group umbrella` heading.
-- [x] [SCRIPT] P0. **Banner — `tradfi_master_2026_05_07`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner
-      added after `# TradFi Master — asset_group umbrella` heading.
-- [x] [SCRIPT] P0. **Banner — `predictions_master_2026_05_07`**. Phase 1 + lifecycle-bounded clip. **DONE 2026-05-14**:
-      banner added after `# Predictions Master — asset_group umbrella` heading.
-- [x] [SCRIPT] P0. **Banner — `sports_master_2026_05_07`**. Phase 1 partial-shipped pointer + Phase 4 expansion pointer.
-      **DONE 2026-05-14**: banner added after `# Sports Master — asset_group umbrella` heading (note: existing STAMPING
-      SCOPE banner is sports-specific; this is the general coordination banner).
-- [x] [SCRIPT] P0. **Banner — `ml_and_features_master_2026_05_07`**. Tab 12 (Phase 6) + FEATURE_REQUIRED_INPUTS
-      expansion (Phase 4) reference. **DONE 2026-05-14**: banner added after existing repo consolidation + live pipeline
-      banners.
+- [x] [SCRIPT] P0. **Banner — `cefi_master`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner added after
+      `# CeFi Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `tradfi_master`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner added after
+      `# TradFi Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `predictions_master`**. Phase 1 + lifecycle-bounded clip. **DONE 2026-05-14**: banner
+      added after `# Predictions Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `sports_master`**. Phase 1 partial-shipped pointer + Phase 4 expansion pointer. **DONE
+      2026-05-14**: banner added after `# Sports Master — asset_group umbrella` heading (note: existing STAMPING SCOPE
+      banner is sports-specific; this is the general coordination banner).
+- [x] [SCRIPT] P0. **Banner — `features_and_ml_master`**. Tab 12 (Phase 6) + FEATURE_REQUIRED_INPUTS expansion (Phase 4)
+      reference. **DONE 2026-05-14**: banner added after existing repo consolidation + live pipeline banners.
 - [x] [SCRIPT] P0. **Banner — `features_repo_consolidation_2026_05_08`**. Tab 12 wiring (Phase 5.c) sequenced after this
       plan's Phase 0+1. **DONE 2026-05-14**: banner added after H1 heading at line 959, with Phase 5.c lift reference.
 - [x] [SCRIPT] P0. **Banner — `live_pipeline_mtds_mdps_features_2026_05_08`**. MDPS bar boundary contract (Phase 0 here)
@@ -591,8 +588,8 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   slot 4 owns the design-ahead this cycle.
 - **Per-adapter `available_at` stamping wiring (CeFi tick / TradFi / Predictions / DeFi)**: Harsh slot 4 scope.
   Cross-side ping landed in `plans/active/_agent_pings.md` on Phase 0.1/0.2 close so Harsh slot 4 unblocks.
-- **features-onchain `suppress(LookaheadBiasError)` removal**: open in `ml_and_features_master_2026_05_07` Phase 2A;
-  gated on chain link 1 (per-adapter stamping) shipping for onchain adapters.
+- **features-onchain `suppress(LookaheadBiasError)` removal**: open in `features_and_ml_master` Phase 2A; gated on chain
+  link 1 (per-adapter stamping) shipping for onchain adapters.
 
 ---
 

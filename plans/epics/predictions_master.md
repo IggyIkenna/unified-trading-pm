@@ -1,6 +1,6 @@
 ---
 name: predictions-master
-slug: predictions_master_2026_05_07
+slug: predictions_master
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
@@ -74,9 +74,9 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 - **Mis-marked DONE → flipped**: 0
 - **In-flight (running VMs)**: 0 — NO mtds-prediction VMs in current snapshot
 - **Blocked by**: `sports_master:Group E gate` (predictions ML half is gated on sports half completion of
-  `sports_predictions_e2e` per explicit GATE marker); `manifest_migration_master_2026_05_07:Stage 3` (Polymarket parquet
-  rewrite + manifest reflip is Stage 3); `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder method deletion
-  must complete before manifest migration)
+  `sports_predictions_e2e` per explicit GATE marker); `manifest_migration_SUPERSEDED_2026_05_21:Stage 3` (Polymarket
+  parquet rewrite + manifest reflip is Stage 3); `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder method
+  deletion must complete before manifest migration)
 - **Blocks**: `master_to_live_defi_2026_05_23:G` (DART manual-trade gate — features pipeline running on representative
   sample is required readiness floor for predictions); does NOT block live trading per master plan
   ("features-pipeline-running, no ML this cycle")
@@ -524,16 +524,16 @@ Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_20
 ### Manifest + parquet migration
 
 **Cross-plan coordination**: Polymarket parquet rewrite + manifest reflip is **Stage 3** of the workspace-wide manifest
-migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing
-DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window; resume ONLY
-after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not legacy
-per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
+migration. See [`manifest_migration_SUPERSEDED_2026_05_21.md`](./manifest_migration_SUPERSEDED_2026_05_21.md) for
+sequencing DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window;
+resume ONLY after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not
+legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
 
 - [ ] [SCRIPT] P0. New script `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` (in scripts/). [AUDIT
-      2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 3 + writegate Phase 2.A]
+      2026-05-07: BLOCKED-ON manifest_migration_SUPERSEDED_2026_05_21:Stage 3 + writegate Phase 2.A]
 - [ ] [SCRIPT] P0. Manifest reflip script `mtds_reflip_polymarket_per_base_asset.py` per
       `unified_trading_library.run_lifecycle` pattern. [AUDIT 2026-05-07: BLOCKED-ON
-      manifest_migration_master_2026_05_07:Stage 3]
+      manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [ ] [SCRIPT] P0. Old parquet deletion — only AFTER (a) new parquets verified by hand-inspection (sample 10 random
       groups × random days), (b) downstream features compute clean, (c) operator approval. [AUDIT 2026-05-07: BLOCKED-ON
       predictions_master:above migration scripts run + verified]
@@ -720,7 +720,7 @@ features predict.
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (4 prediction archetypes × all
+- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue (4 prediction archetypes × all
   canonical-question-groups + venues enumerated). Cross-asset features depend on `tradfi_master` (S&P features) +
   `sports_master` (sports features) + DeFi/CeFi crypto features (`defi_master` + `cefi_master`).
 - **Shares with:** Cross-asset features pipeline shared with all other ML/backtest deliverables.
@@ -753,9 +753,8 @@ features predict.
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
-- Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
-  `sports_master_2026_05_07`.
-- Sports half of e2e: `sports_master_2026_05_07.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
+- Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`.
+- Sports half of e2e: `sports_master.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
   [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.

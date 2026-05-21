@@ -1,5 +1,4 @@
----
-name: honest_coverage_formula_consolidation_2026_05_19
+---name: honest_coverage_formula_consolidation_2026_05_19
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 estimate_class: refactor
@@ -8,8 +7,8 @@ estimate_calibrated_ai_days: 2.4
 status: in-flight
 deadline: 2026-05-23
 priority: P0
-parent_epic: manifest_evolution_master_2026_05_08
-epic_secondary: instruments_live_master_2026_05_08
+parent_epic: manifest_master
+epic_secondary: instruments_master
 parent_plan: master_to_live_defi_2026_05_23.md
 ---
 

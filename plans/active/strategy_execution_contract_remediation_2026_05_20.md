@@ -1,5 +1,4 @@
----
-title: strategy→execution contract remediation — manifest emission + bucket SSOT + preflight gate
+---title: strategy→execution contract remediation — manifest emission + bucket SSOT + preflight gate
 created: 2026-05-20
 author: slot-8
 source:
@@ -11,6 +10,7 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
 status: in-progress
+parent_epic: strategy_master
 ---
 
 # strategy→execution contract remediation — 2026-05-20
@@ -378,9 +378,8 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 > **🟢 UNBLOCKED 2026-05-20 round 5 — operator decision**: **Unified bucket**. Add flat `strategy-store` yaml entry;
 > write + read paths both use `strategy-store-${GCP_PROJECT_ID}`. Cross-asset strategies (portfolio allocator spanning
 > CEFI+DEFI+TRADFI) read/write the same bucket. Migration: copy existing per-AG strategy data into the flat bucket, then
-> delete per-AG entries from `cloud-providers.yaml`. Sequenced under master coordinator
-> `data_pipeline_master_coordination_2026_05_20.md` Phase 1 (bucket-name symmetry — extends to this strategy-store
-> consolidation).
+> delete per-AG entries from `cloud-providers.yaml`. Sequenced under master coordinator `mtds_mdps_master.md` Phase 1
+> (bucket-name symmetry — extends to this strategy-store consolidation).
 
 - [ ] **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` → `resolve_bucket_name("strategy-store")` (unified, no
       asset_group arg). Remove per-AG dict from `cloud-providers.yaml`; add flat entry

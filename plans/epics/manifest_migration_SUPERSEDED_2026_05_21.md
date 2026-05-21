@@ -1,6 +1,6 @@
 ---
 name: manifest-migration-master
-slug: manifest_migration_master_2026_05_07
+slug: manifest_migration_SUPERSEDED_2026_05_21
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
@@ -14,10 +14,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 assigned_vm: vm-0
 references:
-  - sports_master_2026_05_07
-  - predictions_master_2026_05_07
-  - defi_master_2026_05_07
-  - infrastructure_master_2026_05_07
+  - sports_master
+  - predictions_master
+  - defi_master
+  - infrastructure_master
   - writegate_honest_coverage_endtoend_2026_05_06
   - master_to_live_defi_2026_05_23
 related_plans:
@@ -62,16 +62,16 @@ related_plans:
     scope.
   - Stage 4 final sweeps: PENDING.
 - **Blocked by**:
-  - `manifest_migration_master:Stage 1 Phase 2-4` blocked by `sports_master_2026_05_07:Stage A1` (operator-gated GCE
-    migration + atomic 4-repo source rename).
+  - `manifest_migration_master:Stage 1 Phase 2-4` blocked by `sports_master:Stage A1` (operator-gated GCE migration +
+    atomic 4-repo source rename).
   - `manifest_migration_master:Stage 2.C` blocked by `manifest_migration_master:Stage 1 Phase 3` (sports rename) AND by
     `writegate_honest_coverage_endtoend_2026_05_06:Phase 2.A` (placeholder method deletion).
   - `manifest_migration_master:Stage 3.A reflip` blocked by `writegate_honest_coverage_endtoend_2026_05_06:Phase 2.A`
     deletions completing.
-  - `manifest_migration_master:Stage 4 mtds-s4-10 rescan` blocked by `defi_master_2026_05_07:mtds-s4-10` ownership AND
-    all Stage 3 streams completing.
+  - `manifest_migration_master:Stage 4 mtds-s4-10 rescan` blocked by `defi_master:mtds-s4-10` ownership AND all Stage 3
+    streams completing.
   - `manifest_migration_master:Stage 4 raw-tables migration + _ensure_timestamp DELETE` blocked by
-    `infrastructure_master_2026_05_07:raw-tables`.
+    `infrastructure_master:raw-tables`.
   - **Audit-findings C.1 + C.11 + C.8 todos** (lines 411-470) blocked by writegate Phase 2.E reason-taxonomy SSOT (UAC
     `EMPTY_CONFIRMED_REASONS` extension is the entry point for the new `EXPECTED_DEPRECATED_DATA_TYPE` +
     `EXPECTED_REFDATA_CADENCE_CHANGE` codes).
@@ -80,9 +80,8 @@ related_plans:
     (LookaheadBiasError strict-mode flip — sports `record_captured` would hard-fail workspace-wide if flip ships first).
   - `manifest_migration_master:Stage 4 mtds-s4-10 rescan` BLOCKS final post-migration verification across every
     per-service manifest.
-  - `manifest_migration_master:audit-findings C.1 + C.11` BLOCK `sports_master_2026_05_07` data-status panel
-    cadence-aware denominator rendering (3046 daily LEAGUES + TEAMS shards stay inflated until kill +
-    per-(league,season) migration).
+  - `manifest_migration_master:audit-findings C.1 + C.11` BLOCK `sports_master` data-status panel cadence-aware
+    denominator rendering (3046 daily LEAGUES + TEAMS shards stay inflated until kill + per-(league,season) migration).
 - **Last meaningful commit on this plan file**: PM@7d3fe376 ("absorb 2026-05-07 deployment-ui audit findings into
   asset_group masters") — added the C.1 / C.8 / C.11 audit-findings section. Prior: PM@e87ea712 (conflicts + VM impact +
   operational guidance), PM@e06b278f (initial creation).
@@ -208,8 +207,8 @@ Phase 3 happen in parallel within Stage 3 (no inter-dependency among them). Afte
 
 ### Stage 1 — Sports `data_available_at` → `available_at`
 
-**Owner plan**: `sports_master_2026_05_07` (Sports `data_available_at` → `available_at` rename section). **Folded plan
-in archive**: `plans/archive/sports_data_available_at_rename_2026_05_07.md`.
+**Owner plan**: `sports_master` (Sports `data_available_at` → `available_at` rename section). **Folded plan in
+archive**: `plans/archive/sports_data_available_at_rename_2026_05_07.md`.
 
 | Phase | Item                                                                                                                              | Status                                               | Owner    |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------- |
@@ -247,18 +246,18 @@ target; not folded into infrastructure_master because writegate covers write-sid
 | **Writegate Phase 3.A**              | `writegate_honest_coverage_endtoend_2026_05_06` | 1440-NaN flip + partial-bundle reflip (ES.OPT 18-date single-parent fills) — `record_captured` → `record_failed` for malformed bundles                                                                                                                                                                                                                 | scoped  |
 | **Writegate Phase 3.B**              | `writegate_honest_coverage_endtoend_2026_05_06` | One-time GCS `available_at` per-row backfill across all asset_groups                                                                                                                                                                                                                                                                                   | scoped  |
 | **Writegate Phase 3.C**              | `writegate_honest_coverage_endtoend_2026_05_06` | Pre-v6 manifest cleanup — delete v3-shape rows after Phase 2.A v3-path delete                                                                                                                                                                                                                                                                          | scoped  |
-| **Predictions migration**            | `predictions_master_2026_05_07`                 | `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` parquet rewrite + `mtds_reflip_polymarket_per_base_asset.py` manifest reflip (with `run_lifecycle` + `--max-flips-per-run=10000` halt safety + CSV audit) + old parquet deletion + `migrate_polymarket_canonical.py` confirmation + delete `category=prediction` legacy fallback reader | scoped  |
-| **Sports ODDS_API legacy migration** | `sports_master_2026_05_07`                      | 288M legacy `venue=ODDS_API` rows → canonical `(asset_group=sports, source=odds_api, data_type, league_id, day)` re-key + MDPS `SportsBucketAssignmentAdapter` 8-horizon bucketing on migrated rows                                                                                                                                                    | scoped  |
-| **Sports fixture truthset recovery** | `sports_master_2026_05_07`                      | Phase 4 drift audit + manifest rescan post-recovery; SFI_STANDINGS 100% phantom triage; api-football + understat UAC `SOURCE_COVERAGE_START` reconcile                                                                                                                                                                                                 | partial |
+| **Predictions migration**            | `predictions_master`                            | `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` parquet rewrite + `mtds_reflip_polymarket_per_base_asset.py` manifest reflip (with `run_lifecycle` + `--max-flips-per-run=10000` halt safety + CSV audit) + old parquet deletion + `migrate_polymarket_canonical.py` confirmation + delete `category=prediction` legacy fallback reader | scoped  |
+| **Sports ODDS_API legacy migration** | `sports_master`                                 | 288M legacy `venue=ODDS_API` rows → canonical `(asset_group=sports, source=odds_api, data_type, league_id, day)` re-key + MDPS `SportsBucketAssignmentAdapter` 8-horizon bucketing on migrated rows                                                                                                                                                    | scoped  |
+| **Sports fixture truthset recovery** | `sports_master`                                 | Phase 4 drift audit + manifest rescan post-recovery; SFI_STANDINGS 100% phantom triage; api-football + understat UAC `SOURCE_COVERAGE_START` reconcile                                                                                                                                                                                                 | partial |
 
 ### Stage 4 — Final sweeps (sequenced after Stage 3)
 
-| Item                                                                                  | Owner                              | Notes                                                                                                                          |
-| ------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `mtds-s4-10-rescan-all-manifests` — re-scan ALL availability indexes after migrations | `defi_master_2026_05_07`           | P0; sweeps every per-service manifest (CeFi / DeFi / TradFi / Sports / Predictions / instruments / MTDS / MDPS / features-\*). |
-| Raw tables migration — 14 entries in `TABLE_TO_EXPORT` per canonical shape            | `infrastructure_master_2026_05_07` | Source-of-truth gap; needs design per table.                                                                                   |
-| `_ensure_timestamp` shim DELETE                                                       | `infrastructure_master_2026_05_07` | Gated on raw-tables migration.                                                                                                 |
-| Conditional `feature_group` column backfill                                           | `infrastructure_master_2026_05_07` | Only if per-service writer never populated; check via Phase 1A audit.                                                          |
+| Item                                                                                  | Owner                   | Notes                                                                                                                          |
+| ------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `mtds-s4-10-rescan-all-manifests` — re-scan ALL availability indexes after migrations | `defi_master`           | P0; sweeps every per-service manifest (CeFi / DeFi / TradFi / Sports / Predictions / instruments / MTDS / MDPS / features-\*). |
+| Raw tables migration — 14 entries in `TABLE_TO_EXPORT` per canonical shape            | `infrastructure_master` | Source-of-truth gap; needs design per table.                                                                                   |
+| `_ensure_timestamp` shim DELETE                                                       | `infrastructure_master` | Gated on raw-tables migration.                                                                                                 |
+| Conditional `feature_group` column backfill                                           | `infrastructure_master` | Only if per-service writer never populated; check via Phase 1A audit.                                                          |
 
 ### Already-shipped (historical schema migrations)
 
@@ -305,12 +304,11 @@ This is the operator-visible view — what the human needs to do, when, in what 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Write-gate (Stage 2 + 3):
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
-- Sports rename (Stage 1): [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § Sports `data_available_at` →
-  `available_at` rename.
-- Predictions Phase 3 migration: [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md).
-- Final rescan: [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) § mtds-s4-10.
-- Raw tables + `_ensure_timestamp` deletion:
-  [`infrastructure_master_2026_05_07.md`](./infrastructure_master_2026_05_07.md).
+- Sports rename (Stage 1): [`sports_master.md`](./sports_master.md) § Sports `data_available_at` → `available_at`
+  rename.
+- Predictions Phase 3 migration: [`predictions_master.md`](./predictions_master.md).
+- Final rescan: [`defi_master.md`](../active/defi_master.md) § mtds-s4-10.
+- Raw tables + `_ensure_timestamp` deletion: [`infrastructure_master.md`](./infrastructure_master.md).
 - Workspace rule: CLAUDE.md `§ Manifest migration, NOT fallback` — when manifest drifts from canonical shape, write a
   one-time migration script and **remove** the fallback reader. No compat shims.
 - Workspace rule: CLAUDE.md `§ Per-VM shard isolation for concurrent backfills`.
@@ -653,7 +651,7 @@ Targets to audit (per-source, per-normalizer):
 - [ ] [AGENT] P0. Per-source: read normalize.py, confirm nested arrays unpack to `list[dict]`, confirm pyarrow doesn't
       drop fields silently. For each finding: file a follow-up flatten todo here under the same sports_master B.1
       pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity). DeFi findings file under
-      `defi_master_2026_05_07.md` instead (asset_group ownership).
+      `defi_master.md` instead (asset_group ownership).
 - [ ] [TEST] P0. Add `tests/test_normalizer_no_stub_pass_through.py` to UAC: AST-walks every `external/*/normalize.py`
       function, asserts the function body has at least one nested-array unpack OR an explicit
       `# stub-pass-through-acknowledged` comment with a justification. Catches regression at QG.

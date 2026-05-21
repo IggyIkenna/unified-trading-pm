@@ -1,5 +1,4 @@
----
-title: "MTDS per-instrument download API — bundle + per-symbol search via predicate pushdown"
+---title: "MTDS per-instrument download API — bundle + per-symbol search via predicate pushdown"
 status: active
 created: 2026-04-24
 locked_by: live-defi-rollout
@@ -10,6 +9,7 @@ estimate_calibrated_ai_days: 4.8
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: mtds_mdps_master
 ---
 
 ## Deferred work — migrated to:
@@ -30,8 +30,8 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 - **Blocked by**: none on Phase 1.5 chain axis (UAC `CHAIN_RPC_TEMPLATES` is shipped); Phase 1.5 prediction
   `canonical_question_group` axis depends on UAC `PREDICTION_GROUPS` registry (UAC `bb24aba` ships skeleton + `af2bc9b`
   SSOT lifecycle, so SSOT is partially landed)
-- **Blocks**: `infrastructure_master_2026_05_07` Phase B.2/C.13 drilldown shard-atom alignment — per-instrument access
-  from the data-status drilldown's per-day icons would consume this API
+- **Blocks**: `infrastructure_master` Phase B.2/C.13 drilldown shard-atom alignment — per-instrument access from the
+  data-status drilldown's per-day icons would consume this API
 - **Last meaningful commit**: MTDS `2095d1b` (2026-04-24) — `CanonicalParquetReader` shipped at
   `market_tick_data_service/reader.py` (428 lines + `tests/market_interface/unit/test_canonical_parquet_reader.py` 472
   lines)
@@ -147,7 +147,7 @@ class CanonicalParquetReader:
 >   Currently flagged as "most likely greenfield bit" — UAC SSOT for `market_id → canonical_question_group` mapping may
 >   not exist yet. Prediction reads need this once the UAC SSOT lands.
 >
-> **Coordination**: see `infrastructure_master_2026_05_07.md` (folds in
+> **Coordination**: see `infrastructure_master.md` (folds in
 > `plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`). Phase 1 follow-up is to extend
 > `read_shard()` signature with optional `chain: str | None = None` (validated against UAC `CHAIN_RPC_TEMPLATES`) and
 > `canonical_question_group: str | None = None` (validated against the prediction SSOT once it lands). The original

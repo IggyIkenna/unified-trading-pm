@@ -285,7 +285,7 @@ smoke begins.
       scenario_ids); backtest-groups.md § "Scenario-overlay mode" (fourth axis on Group B/C + axes table + CLI flag).
 - [x] ✅ **13. DEEP RESERVE — carry_staked_basis + APD archetype cross-link audit in codex** — PM@38ff42f0. 5 fixes: (1)
       carry-staked-basis SHIPPED label; (2) plans/ai/ → plans/active/ stale-dir fix; (3) ## See also expanded with
-      defi_master_2026_05_07 + defi_archetypes_canonicalisation active plan links; (4) APD ## See also:
+      defi_master + defi_archetypes_canonicalisation active plan links; (4) APD ## See also:
       defi_archetypes_canonicalisation (Stream B+D) + arbitrage_price_dispersion_finalisation (Phase A) links added.
 - [x] ✅ **14. MEGA RESERVE — defi_catalogue_chain_primitives codex-side residuals (85%, 58/68)** — surveyed all 10
       unchecked items; 0 codex items available (6J/7E BLOCKED-UPSTREAM on Phase 6 backfills; 7I DEFERRED+slot-1-owned;

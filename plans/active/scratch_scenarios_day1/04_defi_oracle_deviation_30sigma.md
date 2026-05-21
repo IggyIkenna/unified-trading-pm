@@ -178,8 +178,8 @@ variant is "stale → recover → stale again" repeated 4× within 1hr.
   (KillSwitchId / KillSwitchProvenance / KillSwitchArmRequest+ArmedEvent+DisarmEvent).
 - Risk plan `risk_simulations_limits_alerting_2026_05_10.md` § GLOBAL_DATA_STALENESS_HALT semantics + § Phase 1.F
   recovery-mode wiring.
-- `defi_master_2026_05_07.md` Pyth + Chainlink architecture context (Pyth-unban 2026-05-06 for Solana on-chain;
-  Chainlink retained for Ethereum/L2; oracle dual-stack policy).
+- `defi_master.md` Pyth + Chainlink architecture context (Pyth-unban 2026-05-06 for Solana on-chain; Chainlink retained
+  for Ethereum/L2; oracle dual-stack policy).
 - UAC `CHAIN_RPC_TEMPLATES`: `registry/capability_declarations/_defi.py` — SSOT for chain→RPC mapping referenced by
   stale_hold variant when staleness is sourced from RPC layer.
 - UAC `config/testnet_contracts.yaml` (validated by `unified-config-interface/testnet_contracts.py` `PROTOCOL_SCHEMAS`)

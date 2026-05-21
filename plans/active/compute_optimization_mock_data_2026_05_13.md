@@ -1,5 +1,4 @@
----
-title: Compute-bound stage optimization via mock data — parallelize + big-machine the slow stages before cutover
+---title: Compute-bound stage optimization via mock data — parallelize + big-machine the slow stages before cutover
 type: plan
 status: active
 created: 2026-05-13
@@ -9,7 +8,7 @@ companion_to: master_to_live_defi_2026_05_23.md (Group F items 17/18/20/21)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 priority: P1
-parent_epic: strategy_and_dart_master_2026_05_07.md
+parent_epic: strategy_master
 mvp_universe_ssot: codex/09-strategy/mvp-universe-per-asset-group.md
 spawned_from:
   operator direction 2026-05-13 — "instrument backfill may take 1-2 days, MTDS similar even when working; features + 3

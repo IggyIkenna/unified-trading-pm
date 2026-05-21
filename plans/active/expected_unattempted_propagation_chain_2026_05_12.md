@@ -1,5 +1,4 @@
----
-name: expected-unattempted-propagation-chain-2026-05-12
+---name: expected-unattempted-propagation-chain-2026-05-12
 type: plan
 plan_type: implementation
 asset_group: cross-cutting
@@ -9,9 +8,9 @@ priority: P0
 created: 2026-05-12
 last_updated: 2026-05-12
 deadline: 2026-05-15
-parent: manifest_evolution_master_2026_05_08
+parent: manifest_evolution_SUPERSEDED_2026_05_21
 related_plans:
-  - manifest_evolution_master_2026_05_08
+  - manifest_evolution_SUPERSEDED_2026_05_21
   - manifest_cross_asset_rescan_design_2026_05_08
   - writegate_honest_coverage_endtoend_2026_05_06
   - expected_universe_v2_design_2026_05_08
@@ -27,6 +26,7 @@ estimate_calibration_note: |
 effective_concurrent_slots: 4
 model_tier: sonnet-doable
 thinking: high
+parent_epic: manifest_master
 ---
 
 # Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
@@ -822,7 +822,7 @@ Distribution by data_type:
 
 **88,737 of the 99,620 "phantoms" are LEGACY rows from RETIRED data types.** These are NOT real phantoms (the data type
 itself no longer exists). They should be flipped to `empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` per
-`manifest_migration_master_2026_05_07.md` § C.1 LEAGUES kill (UAC reason code shipped `uac@97dccc3`).
+`manifest_migration_SUPERSEDED_2026_05_21.md` § C.1 LEAGUES kill (UAC reason code shipped `uac@97dccc3`).
 
 **Why this matters**: Running `--unphantom` on sports would flip 88,737 retired-data-type rows to `attempted_failed`,
 which is the WRONG state. The migration script approach is correct: flip to
@@ -871,7 +871,7 @@ codex SSOT).
 
 ## Cross-plan coordination
 
-- **manifest_evolution_master_2026_05_08 G3**: enumerator CAN proceed independently; this plan's runtime chain + G3
+- **manifest_evolution_SUPERSEDED_2026_05_21 G3**: enumerator CAN proceed independently; this plan's runtime chain + G3
   batch fill are complementary. G3 runs on top of the runtime chain, not instead.
 - **manifest_cross_asset_rescan_design_2026_05_08**: `--apply-flips` in Phase 5B replaces the rescan plan's Pass 1–4
   command set (same scripts, now correctly ordered). Update rescan plan after Phase 5B.

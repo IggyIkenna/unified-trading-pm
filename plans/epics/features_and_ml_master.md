@@ -635,8 +635,9 @@ respectively).
 
 - [ ] [AGENT] P0. **mlr-p4-strategy-calibrated-signals**: Update strategy-service to consume calibrated confidences
       (GENUINELY_PENDING — strategy-service grep `calibrated.*confidence|consume.*calibrated|calibration.*signal` → 0
-      hits). Ownership overlaps with `strategy_and_dart_master_2026_05_07` Phase 3.4 (slv-p2-\* lifecycle items) — was
-      `consolidated_strategy_and_ui:Group D` pre-2026-05-07 umbrella consolidation. **Live trading prereq for May-23.**
+      hits). Ownership overlaps with `strategy_and_dart_master_SUPERSEDED_2026_05_21` Phase 3.4 (slv-p2-\* lifecycle
+      items) — was `consolidated_strategy_and_ui:Group D` pre-2026-05-07 umbrella consolidation. **Live trading prereq
+      for May-23.**
 - [ ] [AGENT] P0. **mlr-p4-cost-aware-strategy**: Add cost-aware signal filtering in strategy-service (GENUINELY_PENDING
       — execution-service has `services/execution_cost_estimator.py` and `v2/cost_models.py` (the producer side);
       strategy-service has no consumer wiring). **Live trading prereq for May-23.**
@@ -762,8 +763,8 @@ respectively).
   any of those, treat as a writegate amendment not a fork.
 - **master_to_live_defi_2026_05_23**: Phase 4D is the May-23 hard floor (Group F live trading prereqs). Phase 1A is
   highest-leverage 1-day spike that gates everything downstream.
-- **strategy_and_dart_master_2026_05_07** (was `consolidated_strategy_and_ui_2026_04_15` pre-2026-05-07 umbrella
-  consolidation): Phase 4D `strategy-service calibrated-signal consumption` overlaps with that plan's Phase 3.4
+- **strategy_and_dart_master_SUPERSEDED_2026_05_21** (was `consolidated_strategy_and_ui_2026_04_15` pre-2026-05-07
+  umbrella consolidation): Phase 4D `strategy-service calibrated-signal consumption` overlaps with that plan's Phase 3.4
   (slv-p2-\* lifecycle items + slv-p3-research-shell) — coordinate ownership before starting.
 
 ## Closed items (from sources, retained for audit trail)

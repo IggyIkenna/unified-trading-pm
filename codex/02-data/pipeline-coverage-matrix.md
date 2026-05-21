@@ -214,7 +214,7 @@ Adapters: `market_interface/adapters/{binance,bybit,okx,deribit,coinbase}.py`,
 `derivative_ticker` perp-only. ¹ `trades` for LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET is **live-only, no
 historical tape** — upstream adapters lack an archival endpoint; strategies needing per-trade history must use
 `ohlcv_1m` bars or forward-poll history built post-launch (LIGHTER ≥2026-04-17, PACIFICA ≥2025-06-01, EXTENDED
-BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master_2026_05_07.md` item 2.P3.
+BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master.md` item 2.P3.
 
 ### DEFI (data_types by category)
 

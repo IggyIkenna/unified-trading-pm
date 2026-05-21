@@ -1,5 +1,4 @@
----
-name: manifest-cross-asset-rescan-design-2026-05-08
+---name: manifest-cross-asset-rescan-design-2026-05-08
 type: plan
 plan_type: design
 asset_group: cross-cutting
@@ -8,9 +7,9 @@ status: done
 priority: P1
 created: 2026-05-08
 last_updated: 2026-05-12
-parent: manifest_migration_master_2026_05_07
+parent: manifest_migration_SUPERSEDED_2026_05_21
 related_plans:
-  - manifest_migration_master_2026_05_07
+  - manifest_migration_SUPERSEDED_2026_05_21
   - gcs_migration_bundle_pipeline_mode_2026_05_08
   - writegate_honest_coverage_endtoend_2026_05_06
 locked_by: live-defi-rollout
@@ -22,6 +21,7 @@ estimate_calibration_note: |
   Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis extensions). Using infra class (0.8×).
   Baseline 3 AI-days covers: axis 7-8-9 extension (0.5d), 5-VM dry-runs + log analysis (1.0d), apply-flips per AG (1.0d), codex updates (0.5d).
   Updated 2026-05-13 (slot 6 substantive touch).
+parent_epic: manifest_master
 ---
 
 > **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC;
@@ -30,14 +30,15 @@ estimate_calibration_note: |
 > Sports/prediction Scripts 1+2 apply-flips deferred (separate authorized slot needed; 99,620 sports + 50 prediction
 > phantoms).
 
-> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_SUPERSEDED_2026_05_21`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
 > direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
 > don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
 > data layout co-evolve.
 >
-> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+> Child of:
+> [`plans/epics/manifest_evolution_SUPERSEDED_2026_05_21.md`](../epics/manifest_evolution_SUPERSEDED_2026_05_21.md)
 >
 > This plan's phases land in gate(s): **G5** (rescan --apply-flips against full v8 manifest)
 
@@ -51,7 +52,7 @@ estimate_calibration_note: |
 
 ## Why
 
-`manifest_migration_master_2026_05_07` Stage 4 needs a cross-asset rescan post-CeFi VM drain. The rescan walks every
+`manifest_migration_SUPERSEDED_2026_05_21` Stage 4 needs a cross-asset rescan post-CeFi VM drain. The rescan walks every
 parquet on disk + cross-checks vs the canonical manifest; flips disagreements vs immutable; routes triage cases to
 operator. This is a superset of the 2026-05-04 phantom audit (which produced 354 residual phantoms after auto-fixing
 130k); the rescan should drop residual phantom count to 0 across all 5 asset_groups.
@@ -132,7 +133,7 @@ Per CLAUDE.md "Cross-Plan Coordination Banners":
 - During the rescan window, banner the following plans with
   `🟡 IN-FLIGHT REFACTOR — cross-asset rescan running 2026-05-XX → 2026-05-YY`:
   - `gcs_migration_bundle_pipeline_mode_2026_05_08`
-  - `manifest_migration_master_2026_05_07`
+  - `manifest_migration_SUPERSEDED_2026_05_21`
   - `writegate_honest_coverage_endtoend_2026_05_06`
 - Other agents pause new VM launches in the affected asset_groups until the banner is removed.
 
@@ -304,8 +305,8 @@ All four passes flip rows at the **same shard atom** the writer used, the manife
 drilldown reads, and downstream pre-flight gates check. Atoms: `(asset_group, day, venue, data_type)` for MTDS + MDPS;
 `(asset_group, day, family, feature_key)` for features; `(asset_group, day, venue)` for instruments-service. Drift
 between writer atom + manifest atom + reconciliation flip atom is a silent correctness bug per CLAUDE.md
-"Shard-granularity SSOT (CRITICAL)" + `plans/epics/infrastructure_master_2026_05_07.md` 4-pillar validation. Reconcilers
-derive the atom from the manifest schema at runtime; do NOT introduce reconciler-specific shard partitioning.
+"Shard-granularity SSOT (CRITICAL)" + `plans/epics/infrastructure_master.md` 4-pillar validation. Reconcilers derive the
+atom from the manifest schema at runtime; do NOT introduce reconciler-specific shard partitioning.
 
 ### Cross-references
 
@@ -462,11 +463,11 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Script 1+2 apply-flips cefi/defi/tradfi                          | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps)                                                          | —                                                                                                                 |
 | Script 3 apply-flips (defi/sports/prediction)                    | ✅ CLOSED — 0 upgrades (TypeError resolved 2026-05-14; apply-flips would produce 0 changes; HOLD per Ikenna direction moot) | Issue `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` CLOSED                                         |
-| Sports/prediction apply-flips Scripts 1+2                        | ⏸ DEFERRED — not in slot 6 scope                                                                                           | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50                                         |
-| `--data-types` pass-ordering for apply-flips                     | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering                                      | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
-| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`)  | ⏸ DEFERRED — spec written in plan; script not yet shipped                                                                  | Blocker: reconciliation pass ordering must be settled first                                                       |
-| `resolve_bucket_name` migration for 3 reconciler scripts         | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6)                                                | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first                                       |
-| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands                                           | Ship with cross-asset-rescan launcher                                                                             |
+| Sports/prediction apply-flips Scripts 1+2                        | ⏸ DEFERRED — not in slot 6 scope                                                                                            | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50                                         |
+| `--data-types` pass-ordering for apply-flips                     | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering                                       | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
+| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`)  | ⏸ DEFERRED — spec written in plan; script not yet shipped                                                                   | Blocker: reconciliation pass ordering must be settled first                                                       |
+| `resolve_bucket_name` migration for 3 reconciler scripts         | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6)                                                 | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first                                       |
+| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands                                            | Ship with cross-asset-rescan launcher                                                                             |
 
 ## Open questions
 
@@ -480,7 +481,7 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
 ## Cross-plan coordination
 
 - `gcs_migration_bundle_pipeline_mode_2026_05_08` — STRICT BLOCKER: rescan runs AFTER Phase 3 + Phase 6 of that plan.
-- `manifest_migration_master_2026_05_07` — parent. Stage 4 includes this rescan.
+- `manifest_migration_SUPERSEDED_2026_05_21` — parent. Stage 4 includes this rescan.
 - `writegate_honest_coverage_endtoend_2026_05_06` Phase 4 (typed-error rendering) — consumes `error_reason` populated by
   class A flips during the rescan.
 - `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived
@@ -494,7 +495,7 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.A (deployment-service@c8a1cd4) |
 | `cross_asset_rescan.py` script + 5-axis drift fix               | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.D                              |
-| Sports/prediction apply-flips (99,620 sports phantoms)          | `sports_master_2026_05_07.md` § "Phantom recon + failure triage"                                |
+| Sports/prediction apply-flips (99,620 sports phantoms)          | `sports_master.md` § "Phantom recon + failure triage"                                           |
 | `resolve_bucket_name` migration for 3 reconciler scripts        | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6                                     |
 | Operator sign-off (class-C triage + sign-off section)           | `manifest_schema_final_gate_2026_05_09.md` Phase 8.A + 8.B                                      |
 | Codex SSOT updates (phantom audit doc + rescan stub)            | `manifest_schema_final_gate_2026_05_09.md` Phase codex items                                    |

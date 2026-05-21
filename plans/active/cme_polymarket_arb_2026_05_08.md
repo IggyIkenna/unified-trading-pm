@@ -21,10 +21,10 @@ overview: >-
   ECNQ) and Polymarket binary outcomes. Source RFC: archived issue
   `plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md` (26KB design doc spanning UAC +
   instruments-service + MTDS + strategy-service + execution-service — 5 layers). Operator decision 2026-05-08: Option
-  (a) split — Phase 0 (catalog backfill, the unblocking move) lives in `tradfi_master_2026_05_07` scope; Phases 1-5
-  (structural fixes) live HERE. Post-May-23 critical path; the CME × Polymarket arb is the option value of the
-  live-trading deadline, NOT the deadline itself. Plan is small + focused — single new sub-plan rather than
-  two-plan-track per operator's "no 20 new plans" direction.
+  (a) split — Phase 0 (catalog backfill, the unblocking move) lives in `tradfi_master` scope; Phases 1-5 (structural
+  fixes) live HERE. Post-May-23 critical path; the CME × Polymarket arb is the option value of the live-trading
+  deadline, NOT the deadline itself. Plan is small + focused — single new sub-plan rather than two-plan-track per
+  operator's "no 20 new plans" direction.
 
 estimate_class: brand-new
 estimate_baseline_ai_days: 15
@@ -92,7 +92,7 @@ todos:
         rows**. Each CME event-contract root maps to a Polymarket canonical_question_group (e.g. ECBTC EOM strike →
         `BTC_UP_DOWN_DAILY` group). NEW UAC SSOT
         `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` declares per-CME-root the canonical
-        question group. **DEPENDS ON `predictions_master_2026_05_07` Phase 5** (canonical-groups backfill must
+        question group. **DEPENDS ON `predictions_master` Phase 5** (canonical-groups backfill must
         complete for the 6 new Polymarket groups: ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E side — see archived issue Phase 5
         list). Until Phase 5 ships, only ECES/ECBTC have valid links.
     status: blocked
@@ -178,9 +178,9 @@ they sit in different asset_groups (CME = tradfi, Polymarket = prediction) with 
 atoms. A cross-venue basis exists (sometimes >50bps annualised on liquid roots) and is exploitable but invisible to the
 workspace because no strategy can read both venues with a unified understanding.
 
-Operator decision 2026-05-08: split scope between `tradfi_master_2026_05_07` (Phase 0 catalog backfill — the unblocking
-move) and this plan (Phases 1-5 structural fixes). NOT a May-23 critical-path item; cross-venue arb is the option value
-of being live, not the deadline itself.
+Operator decision 2026-05-08: split scope between `tradfi_master` (Phase 0 catalog backfill — the unblocking move) and
+this plan (Phases 1-5 structural fixes). NOT a May-23 critical-path item; cross-venue arb is the option value of being
+live, not the deadline itself.
 
 ## Architecture (cross-references the source RFC)
 
@@ -191,14 +191,14 @@ corresponding section of the archived RFC.
 
 ## Sibling plan relationships
 
-- `tradfi_master_2026_05_07.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows before the
+- `tradfi_master.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows before the
   EVENT_CONTRACT classifier has anything to classify).
-- `predictions_master_2026_05_07.md` — owns canonical_question_group backfill for the 6 new groups
+- `predictions_master.md` — owns canonical_question_group backfill for the 6 new groups
   (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E); blocks Phase 2 cross-link.
 - `writegate_honest_coverage_endtoend_2026_05_06.md` — Phase 1A bundled-data-type cluster validation; Phase 3 here
   registers EVENT_CONTRACT in `BUNDLED_DATA_TYPES`.
-- `tradfi_master_2026_05_07` Q1+Q2 work (`CanonicalFuturesContract.expiry_date` etc.) — Phase 4 per-cluster expiry
-  builds on top of the futures schema.
+- `tradfi_master` Q1+Q2 work (`CanonicalFuturesContract.expiry_date` etc.) — Phase 4 per-cluster expiry builds on top of
+  the futures schema.
 - `master_to_live_defi_2026_05_23.md` — explicitly OUT of May-23 scope; this plan ships post-cutover.
 
 ## Out of scope
@@ -217,8 +217,7 @@ intent, plan owns activation); pre-audit complete via the source RFC archived to
 
 Tab: `cme-polymarket-phase1-tab` (Harsh-side, Tab 5 sub-agent under `mechanical-refactor-tab` parent). Scope per task
 spec: Phase 1 + codex updates only. Phases 2-5 deferred to subsequent cycles per blocker analysis (Phase 2 blocked on
-`predictions-master-2026-05-07` Phase 5; Phases 3-4 blocked on `tradfi_master_2026_05_07` Q1+Q2; Phase 5 depends on
-Phases 2-4).
+`predictions-master-2026-05-07` Phase 5; Phases 3-4 blocked on `tradfi_master` Q1+Q2; Phase 5 depends on Phases 2-4).
 
 ### Code commits
 

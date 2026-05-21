@@ -1,5 +1,4 @@
----
-title: agent-orchestrator — per-spawn account isolation (HOME-shim) for parallel multi-account throughput
+---title: agent-orchestrator — per-spawn account isolation (HOME-shim) for parallel multi-account throughput
 type: implementation-plan
 status: active
 created: 2026-05-20
@@ -12,6 +11,7 @@ estimate_calibrated_ai_days: 2.0
 companion_to:
   - codex/04-architecture/agent-orchestrator-overview.md
   - plans/active/agent_reliability_mitigations_2026_05_20.md
+parent_epic: orchestrator_master
 ---
 
 # Per-spawn account isolation (HOME-shim) — parallel multi-account throughput

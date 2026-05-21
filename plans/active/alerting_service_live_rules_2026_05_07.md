@@ -1,5 +1,4 @@
----
-type: plan
+---type: plan
 asset_group: cross-cutting
 priority: P0
 deadline: 2026-05-23
@@ -21,6 +20,7 @@ estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2
 estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
+parent_epic: observability_master
 ---
 
 > **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20
@@ -613,8 +613,8 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
       commit message per CLAUDE.md "alerting-service is Harsh's repo"; follows existing `_find_kill_switch_rule`
       precedent.
 - [x] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
-      live-instruments-failure-rules section (already extended in `instruments_live_master_2026_05_08` Phase A.4 — land
-      both updates same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
+      live-instruments-failure-rules section (already extended in `instruments_master` Phase A.4 — land both updates
+      same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
       [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) covers all 4
       AlertCodes + the 30s coalesce semantics + cross-refs to UAC + alerting-service + tests.
 
@@ -665,9 +665,9 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
 - `master_to_live_defi_2026_05_23:work-stream-E` — alerting / kill-switch verification.
 - `master_to_live_defi_2026_05_23:Group F` — live trading prereqs include alerting.
 - `master_to_live_defi_2026_05_23:Group G` — DART operator UX includes Active Alerts panel.
-- `defi_master_2026_05_07:carry_staked_basis live wiring` — needs `DEFI_HEALTH_FACTOR_CRITICAL` + `DEFI_WEETH_DEPEG` +
+- `defi_master:carry_staked_basis live wiring` — needs `DEFI_HEALTH_FACTOR_CRITICAL` + `DEFI_WEETH_DEPEG` +
   `DEFI_FEATURE_STALE` rules live.
-- `defi_master_2026_05_07:ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) — needs `DEFI_FUNDING_RATE_FLIP`.
+- `defi_master:ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) — needs `DEFI_FUNDING_RATE_FLIP`.
 - `dart_ux_cockpit_refactor_2026_04_29:Layer-2-badges` — Active Alerts widget shares badges + maturity flags.
 
 ## Coordination notes

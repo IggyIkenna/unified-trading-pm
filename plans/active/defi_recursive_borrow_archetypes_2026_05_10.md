@@ -1,5 +1,4 @@
----
-title:
+---title:
   DeFi recursive-borrow archetypes — Family 1 (recursive lending arb) + Family 2 (long-funding-perp recursive-borrow)
   implementation
 type: implementation
@@ -29,7 +28,7 @@ spawned_from: plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md
 related_plans:
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
-  - plans/active/defi_master_2026_05_07.md
+  - plans/active/defi_master.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
@@ -50,6 +49,7 @@ estimate_calibrated_ai_days: 42.3
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~17, ~11, ~14, ~0.5, + 13 more). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: strategy_master
 ---
 
 # DeFi recursive-borrow archetypes — Family 1 + Family 2 implementation
@@ -187,7 +187,7 @@ Add these banners (per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE) to
       pointing at this plan; Group F item 17 (real gas / matching engine / cost+yield precision) gets a sub-bullet
       pointing at Phase 9. **SLOT-1-ONLY** — queued in pings/slot_2.md for slot 1 to apply on next master-plan refresh.
       **DEFERRED-SLOT-1-ONLY** — closed 2026-05-19 slot-6; not valid for non-slot-1 agents per annotation above.
-- [x] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner added. (commit below unified-trading-pm 2026-05-15)
+- [x] **[BANNER]** `defi_master.md` — top-of-file banner added. (commit below unified-trading-pm 2026-05-15)
 - [x] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner added. (commit below
       unified-trading-pm 2026-05-15)
 
@@ -388,7 +388,7 @@ These items annotate other plans (Findings Triage — fits another active plan):
   `DAI`, `WETH`, `WBTC`, `WSTETH`, `WEETH`, `RETH`, `ARB`, `LINK`) and BASE Aave V3 (`USDC`, `USDBC`, `WETH`, `CBBTC`,
   `WSTETH`, `WEETH`, `CBETH`) — without these the MTDS `lending_indices` adapter has no instrument universe for
   non-Ethereum chains.
-- **Annotation needed** in `defi_master_2026_05_07.md`: `UniswapConnector.swap_exact_input` SwapRouter02 address
+- **Annotation needed** in `defi_master.md`: `UniswapConnector.swap_exact_input` SwapRouter02 address
   `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` is **Ethereum mainnet**. Base + Arbitrum SwapRouter02 addresses differ —
   Family 1 loop unwinds on those chains need separate connector config.
 
@@ -1927,7 +1927,7 @@ edit collision per CLAUDE.md "Two teammates × multiple parallel agents" rule):
   stress-shape variants.
 - **simulation_scenarios_topology_price_shocks_2026_05_09.md**: Category B scenarios align with topology-shock taxonomy;
   check for SSOT overlap (closed-set scenario IDs should NOT drift between plans).
-- **defi_master_2026_05_07.md**: `UniswapConnector.swap_exact_input` SwapRouter02 address
+- **defi_master.md**: `UniswapConnector.swap_exact_input` SwapRouter02 address
   `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` is **Ethereum mainnet**. Base + Arbitrum SwapRouter02 addresses differ —
   Family 1 loop unwinds on those chains need separate connector config.
 - **master_to_live_defi_2026_05_23.md Group F item 18** (2-year batch backtest run): Phase 12 satisfies via full

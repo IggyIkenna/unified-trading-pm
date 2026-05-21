@@ -159,7 +159,7 @@ bookmaker × data_type combos — simulation fits nothing.
 3. For residual real MISSING_EXPECTED cells, walk each (bookmaker, data_type) + root-cause per slot-6 recipe.
 4. Manifest-verify v8 rows for sports.
 
-**Plan-of-record**: `epics/sports_master_2026_05_07.md` (extended 2026-05-20).
+**Plan-of-record**: `epics/sports_master.md` (extended 2026-05-20).
 
 ### Slot 9 — REASSIGNED 2026-05-20 to A3 Prediction/TradFi/CeFi + A6 BATCH_ONLY (~31 cal AI-days)
 
@@ -168,12 +168,12 @@ TradFi + 3,442 Prediction + 16,171 CeFi MISSING_EXPECTED — promotion cannot ho
 
 **New scope**:
 
-1. **Prediction (KALSHI/POLYMARKET trades — 3,442 cells)**: root-cause + backfill per
-   `epics/predictions_master_2026_05_07.md` extension.
+1. **Prediction (KALSHI/POLYMARKET trades — 3,442 cells)**: root-cause + backfill per `epics/predictions_master.md`
+   extension.
 2. **TradFi (ICE/CME/NYSE/NASDAQ/YAHOO/FX — 7,115 MISSING + 1,546 ATTEMPTED_FAILED)**: root-cause + backfill per
-   `epics/tradfi_master_2026_05_07.md` extension. Investigate YAHOO_FINANCE ATTEMPTED_FAILED concentration.
+   `epics/tradfi_master.md` extension. Investigate YAHOO_FINANCE ATTEMPTED_FAILED concentration.
 3. **CeFi (OKX/COINBASE/UPBIT + DERIBIT/BINANCE-FUTURES/BYBIT/ASTER chains — 33k MISSING+FAILED)**: per
-   `epics/cefi_master_2026_05_07.md` extension.
+   `epics/cefi_master.md` extension.
 4. **A6 BATCH_ONLY remediation (13 cells)**: build live equivalents per A6 CSV. Wire via existing
    `batch_live_symmetry_2026_05_10.md`.
 

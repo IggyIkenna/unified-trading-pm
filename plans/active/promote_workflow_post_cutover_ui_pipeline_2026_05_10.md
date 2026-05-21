@@ -1,5 +1,4 @@
----
-name: promote-workflow-post-cutover-ui-pipeline
+---name: promote-workflow-post-cutover-ui-pipeline
 overview:
   Build the UI-driven promote workflow + state-machine consolidation + cross-service auto-registration + candidate
   manifest enrichment. Picks up everything DEFERRED from the May-23 cutover plan. Scoped 4-6 weeks post-cutover (target
@@ -19,7 +18,7 @@ related_plans:
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
   - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
+  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 related_codex:
   - codex/04-architecture/strategy-lifecycle-state-machine.md
   - codex/04-architecture/live-deployment-manifest.md
@@ -40,6 +39,7 @@ estimate_calibrated_ai_days: 20.0
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: dart_and_promote_master
 ---
 
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation

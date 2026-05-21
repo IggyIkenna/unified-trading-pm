@@ -1,6 +1,6 @@
 ---
 name: sports-master
-slug: sports_master_2026_05_07
+slug: sports_master
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
@@ -120,7 +120,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   watchdog). Note: `fs-backfill` and `weather-backfill` named in plan are NOT in current snapshot — either completed
   already, were renamed, or named differently. ETA for active 3: 4-12h depending on date range, so 2026-05-07 to
   2026-05-08
-- **Blocked by**: `manifest_migration_master_2026_05_07:Stage 1` (sports `data_available_at` rename Phase 2 =
+- **Blocked by**: `manifest_migration_SUPERSEDED_2026_05_21:Stage 1` (sports `data_available_at` rename Phase 2 =
   operator-triggered GCE migration); `writegate_honest_coverage_endtoend:Phase 2.C` (`_ensure_timestamp` shim deletion
   intersects rename Phase 3)
 - **Blocks**: `master_to_live_defi_2026_05_23:G` (DART manual-trade gate); `predictions_master:ML half` (gated on sports
@@ -155,7 +155,7 @@ Covers:
   - feature-store run. (Predictions ML training half lives in `predictions_master`.)
 
 **Not covered here**: predictions ML training + arb_calculator + Group E ML walk-forward (those belong in
-`predictions_master_2026_05_07.md`).
+`predictions_master.md`).
 
 ## Sub-plans (referenced from this epic)
 
@@ -251,10 +251,10 @@ plans" (PM@`82d73711`).
 ### Sports `data_available_at` → `available_at` rename (folded 2026-05-07; full DAG below)
 
 **Cross-plan coordination**: this rename is **Stage 1** of the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for the sequencing DAG, conflicts
-(esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume guidance. Stage
-1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase 2.C
-`_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
+[`manifest_migration_SUPERSEDED_2026_05_21.md`](./manifest_migration_SUPERSEDED_2026_05_21.md) for the sequencing DAG,
+conflicts (esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume
+guidance. Stage 1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase
+2.C `_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
 
 **Folded from `sports_data_available_at_rename_2026_05_07.md`.** Original plan archived at
 `plans/archive/sports_data_available_at_rename_2026_05_07.md`. Phase 1 SHIPPED via `instruments-service@8050477`
@@ -285,11 +285,11 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 #### Phase 2 — Operator runs migration (PENDING — sequenced after Phase 1)
 
 - [ ] [OPERATOR] P0. Pause sports forward-poll VMs (`af-fwd-*`, `fs-fwd-*`, `tm-fwd-*`, `sfi-fwd-*`, `us-fwd-*`,
-      `openmeteo-fwd-*`). [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 1 sequencing — Phase
-      2 starts after current 4 recovery VMs drain (2026-05-08)]
+      `openmeteo-fwd-*`). [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_SUPERSEDED_2026_05_21:Stage 1 sequencing —
+      Phase 2 starts after current 4 recovery VMs drain (2026-05-08)]
 - [ ] [OPERATOR] P0. Pause sports backfill VMs (`af-backfill-*`, `fs-backfill-*`, etc.). [AUDIT 2026-05-07: BLOCKED-ON
-      manifest_migration_master_2026_05_07:Stage 1 — coordinate with current `af-backfill`/`sfi-backfill`/`us-backfill`
-      recovery VMs]
+      manifest_migration_SUPERSEDED_2026_05_21:Stage 1 — coordinate with current
+      `af-backfill`/`sfi-backfill`/`us-backfill` recovery VMs]
 - [ ] [OPERATOR] P0. Launch migration VM in `asia-northeast1-c` per CLAUDE.md "same-region GCE VM" rule. VM name
       `sports-migrate-available-at-{ts}` (add prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first). Run
       `--dry-run` first; review; then full run. [AUDIT 2026-05-07: FRESH — actionable post recovery-VM-drain]
@@ -432,7 +432,7 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
       `(asset_group=sports, source=odds_api, data_type, league_id, day)`). [AUDIT 2026-05-07: FRESH — actionable;
-      coordinate with manifest_migration_master_2026_05_07:Stage 3]
+      coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [ ] [SCRIPT] P0. Run MDPS `SportsBucketAssignmentAdapter` on migrated rows for 1 recent week (smoke pass) — all 8
       horizons (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0). [AUDIT 2026-05-07: BLOCKED-ON
       sports_master:288M migration above]
@@ -518,7 +518,7 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
-      [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_master_2026_05_07:Stage 3]
+      [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
       `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
       skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
@@ -771,10 +771,10 @@ cancellations.
 
 ### Match HT/ET/PEN timestamps + score-distinction columns + pre-features extractor (Q5 + Q6 + Q7 from `instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08`)
 
-Source issue archived. Q1+Q2 (futures + options expiry) are migrated to `tradfi_master_2026_05_07` (Batch D); Q4 is
-already covered by the C.6 match_end_time cascade above; Q3 (predictions) is gold standard, no work. Q5+Q6+Q7 land here
-in sports_master Phase 3 (per operator decision 2026-05-08: tradfi_master owns Q1+Q2; sports_master owns Q4-Q7; operator
-chose Option (a) for Q7 — UTL helper at instruments-service write-time, NOT a separate pre-features extractor service).
+Source issue archived. Q1+Q2 (futures + options expiry) are migrated to `tradfi_master` (Batch D); Q4 is already covered
+by the C.6 match_end_time cascade above; Q3 (predictions) is gold standard, no work. Q5+Q6+Q7 land here in sports_master
+Phase 3 (per operator decision 2026-05-08: tradfi_master owns Q1+Q2; sports_master owns Q4-Q7; operator chose Option (a)
+for Q7 — UTL helper at instruments-service write-time, NOT a separate pre-features extractor service).
 
 - [ ] [SCRIPT] P0. UAC `CanonicalFixtureSchedule` extension (Q5): `halftime_start_time`, `halftime_end_time`,
       `extra_time_first_half_start_time`, `extra_time_first_half_end_time`, `extra_time_second_half_start_time`,
@@ -815,7 +815,7 @@ FIXTURES_SCHEDULE rows (Phase 4 of source issue documented this dependency). Coo
       / INJURIES. Replace `for league_id in leagues: for date in dates: fetch(league, date)` with
       `for fixture in     captured_fixtures_today(league_id, date): fetch(fixture.fixture_id)`. Pre-flight: depends on
       FIXTURES_SCHEDULE rows existing for the (league, date) pair (validate via Phase A.10 preflight from
-      `instruments_live_master_2026_05_08`).
+      `instruments_master`).
 - [ ] [SCRIPT] P0. Manifest row_key extension: `fixture_id` becomes a first-class shard axis for the 4 per-fixture
       data_types. v6 ManifestWriter already supports arbitrary row_keys; just wire the column. Per-instrument shard atom
       per CLAUDE.md "shard-granularity SSOT" — for sports per-fixture data, row_key =
@@ -907,8 +907,8 @@ backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes i
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (sports ML archetype + venues), infrastructure
-  baseline, UI replication of backtest harness.
+- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue (sports ML archetype + venues),
+  infrastructure baseline, UI replication of backtest harness.
 - **Shares with:** `cefi_ml`, `sp_prediction`, `prediction_markets` (now folded into respective masters) share ML
   lifecycle (training pipeline, model registry, drift detection, batch backtest harness).
 - **Provides to:** `predictions_master` (folded `prediction_markets`) may consume sports ML signals as inputs to
@@ -1030,8 +1030,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
-- Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
-  `predictions_master_2026_05_07`.
+- Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `predictions_master`.
 - Sports rename plan (KEPT ACTIVE — its own DAG):
   [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.

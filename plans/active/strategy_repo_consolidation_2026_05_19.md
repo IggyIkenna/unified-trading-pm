@@ -14,7 +14,7 @@ overview:
   decoupled), so subtree-merge has zero compile-time collisions. Pre-cutover race for 2026-05-23 live-DeFi launch —
   if Phase 6 parity slips, plan flips to `BLOCKED-CUTOVER` and lands post-cutover; no late-binding hacks.
 type: infra
-epic: strategy_and_dart_master_2026_05_07
+epic: strategy_and_dart_master_SUPERSEDED_2026_05_21
 status: active-cleanup-phase-11
 
 asset_group: cross-cutting
@@ -380,8 +380,8 @@ parallelized. **Feasible but tight** given strategy-service is the workspace's l
   Operational coupling is via kill-switch events + position-monitor-client calls; these become in-process function calls
   post-merge (latency win, no semantic change).
 - **Operator confirmation 2026-05-19**: in-place merge into existing strategy-service (NOT fresh repo); soft freeze (NOT
-  hard); race the 2026-05-23 cutover; fold under existing `strategy_and_dart_master_2026_05_07` epic (NOT new standalone
-  epic). Operator + colleague aligned on approach.
+  hard); race the 2026-05-23 cutover; fold under existing `strategy_and_dart_master_SUPERSEDED_2026_05_21` epic (NOT new
+  standalone epic). Operator + colleague aligned on approach.
 - **ML twin plan**: `plans/active/ml_repo_consolidation_2026_05_19.md` mirrors this pattern for the
   ml-training-service + ml-inference-service merge into new `ml-service` repo. Independent execution; both target same
   2026-05-23 deadline.
@@ -554,21 +554,19 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       dict: `risk-and-exposure-service` → `strategy-service`, removed `position-balance-monitor`),
       `subscribers/batch_event_reader.py` (`_EVENT_SOURCE_SERVICES`: removed `risk-and-exposure-service`,
       `position-balance-monitor-service`, `pnl-attribution-service`, `ml-training-service`, `ml-inference-service`).
-      Also: fixed legacy package imports in `notifiers/pagerduty.py` + `notifiers/slack.py`, wired
-      `make_health_router` (STEP 5.62), wired `dispatch-cloud-build` (STEP 5.82), added pip-audit ignores for
-      PYSEC-2024-277/PYSEC-2025-183, flattened pyproject.toml deps. QG: exit 0 (all steps pass). —
-      alerting-service@a43e83c (2026-05-20)
+      Also: fixed legacy package imports in `notifiers/pagerduty.py` + `notifiers/slack.py`, wired `make_health_router`
+      (STEP 5.62), wired `dispatch-cloud-build` (STEP 5.82), added pip-audit ignores for PYSEC-2024-277/PYSEC-2025-183,
+      flattened pyproject.toml deps. QG: exit 0 (all steps pass). — alerting-service@a43e83c (2026-05-20)
 
 - [x] ✅ **P0 NEW** [AGENT slot 3] Phase 11f — Bucket 3 stale-ref sweep: trading-agent-service. Rewired
       `adapters/__init__.py` docstring (`risk-and-exposure-service` → `strategy-service`), `adapters/risk_adapter.py`
       module + class docstrings (lines 1, 20), `config.py` field description, `engine/mock_data_provider.py`
-      (`UPSTREAM_SERVICES` list + `risk_path` seed base). QG: exit 0. —
-      trading-agent-service@9b2f3ee (2026-05-20)
+      (`UPSTREAM_SERVICES` list + `risk_path` seed base). QG: exit 0. — trading-agent-service@9b2f3ee (2026-05-20)
 
 - [x] ✅ **P0 NEW** [AGENT slot 3] Phase 11f — Bucket 3 stale-ref sweep: system-integration-tests. Removed
-      `ml-inference-service` + `ml-training-service` from `SIT_SCOPE_REPOS` and `_SERVICE_MATRIX` (both archived → ml-service);
-      removed stale `risk-and-exposure-service` tuple from `_SERVICE_MATRIX` (already merged into strategy-service);
-      rewired `position-balance-monitor-service` → `strategy-service` in `defi_scenarios.py`; updated
+      `ml-inference-service` + `ml-training-service` from `SIT_SCOPE_REPOS` and `_SERVICE_MATRIX` (both archived →
+      ml-service); removed stale `risk-and-exposure-service` tuple from `_SERVICE_MATRIX` (already merged into
+      strategy-service); rewired `position-balance-monitor-service` → `strategy-service` in `defi_scenarios.py`; updated
       `test_deployment_smoke.py` known_services; updated `test_contract_normalization.py` service refs. Also fixed 3
       pre-existing QG violations: pip-audit PYSEC-2026-87/2024-277/2025-183 ignores added to `quality-gates.sh`,
       `RepoContext` marked `# CORRECT-LOCAL`, workspace-manifest.json deps aligned. QG: exit 0. —
@@ -620,28 +618,28 @@ See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 
 
 ## Phase 11 — Workspace-wide stale-ref cleanup (REOPENED 2026-05-20 per operator directive)
 
-> **Reopen note (2026-05-20)**: operator directed an audit-and-finalise sweep for "anything to do with the services
-> that were consolidated into strategy-service". Phase 7 archive (gh repo archive) of the 3 source repos completed
-> 2026-05-20 — but workspace-wide grep found **205 LIVE-CODE refs** to the 3 archived service names across consumer
-> repos (excluding DEPRECATION_NOTICE / ARCHIVED.md / CHANGELOG / migration-history, which stay as legitimate
-> historical record). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit only** — skip
-> docstrings, CHANGELOG, migration-history.
+> **Reopen note (2026-05-20)**: operator directed an audit-and-finalise sweep for "anything to do with the services that
+> were consolidated into strategy-service". Phase 7 archive (gh repo archive) of the 3 source repos completed 2026-05-20
+> — but workspace-wide grep found **205 LIVE-CODE refs** to the 3 archived service names across consumer repos
+> (excluding DEPRECATION_NOTICE / ARCHIVED.md / CHANGELOG / migration-history, which stay as legitimate historical
+> record). Scope per operator answer 2026-05-20: **live code + DEPRECATION_NOTICE audit only** — skip docstrings,
+> CHANGELOG, migration-history.
 >
 > Counts (live-code refs only, 3 strategy-consolidation services):
 >
-> | Repo                          | risk | position | pnl | Total live refs | Owner slot      | Est cal-AI-days |
-> | ----------------------------- | ---- | -------- | --- | --------------- | --------------- | --------------- |
-> | deployment-service            | 29   | 24       | 21  | ~80             | slot 7          | 0.75            |
-> | unified-trading-system-ui     | 16   | 17       | 15  | ~50             | slot 6          | 0.5             |
-> | unified-api-contracts         | 33   | 25       | 17  | ~75             | slot 5          | 0.75            |
-> | unified-trading-library       | 14   | 12       | 7   | ~33             | slot 5          | 0.25            |
-> | execution-service             | 13   | 3        | 2   | ~18             | slot 8          | 0.25            |
-> | alerting + sys-int + e2e + ta | tail | tail     | tail| ~30             | slot 3          | 0.5             |
-> | strategy-service (own)        | 37   | 34       | 31  | ~30 (logger str)| slot 4          | 0.25            |
+> | Repo                          | risk | position | pnl  | Total live refs  | Owner slot | Est cal-AI-days |
+> | ----------------------------- | ---- | -------- | ---- | ---------------- | ---------- | --------------- |
+> | deployment-service            | 29   | 24       | 21   | ~80              | slot 7     | 0.75            |
+> | unified-trading-system-ui     | 16   | 17       | 15   | ~50              | slot 6     | 0.5             |
+> | unified-api-contracts         | 33   | 25       | 17   | ~75              | slot 5     | 0.75            |
+> | unified-trading-library       | 14   | 12       | 7    | ~33              | slot 5     | 0.25            |
+> | execution-service             | 13   | 3        | 2    | ~18              | slot 8     | 0.25            |
+> | alerting + sys-int + e2e + ta | tail | tail     | tail | ~30              | slot 3     | 0.5             |
+> | strategy-service (own)        | 37   | 34       | 31   | ~30 (logger str) | slot 4     | 0.25            |
 >
 > **Total: ~3.25 cal-AI-days, fan-out to slots 3/4/5/6/7/8.**
 
-```yaml
+````yaml
 phases:
   - id: phase-11-workspace-stale-ref-cleanup
     todos:
@@ -739,11 +737,10 @@ phases:
 
     status: pending
     blocked_by: phase-7-archive-source-repos
-```
+````
 
 **Compose-with**: `ml_repo_consolidation_2026_05_19.md` Phase 11 (parallel ML-side cleanup — slots 6 + 8 own UI +
 ml-service test cleanup respectively). Operator pings still open for ml-archive (`gh repo archive`) and
 strategy/execution Phase 4 (bucket-strategy decision) — both pre-existing and unchanged by this phase.
 
 **Done = all 8 sub-phases (11a-11h) flipped + per-repo QG green + DEPRECATION_NOTICE audit ack.**
-

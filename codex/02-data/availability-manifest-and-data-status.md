@@ -1021,18 +1021,18 @@ reference, OR a default initialisation that was never overwritten when the manif
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
-**Action**: file under `infrastructure_master_2026_05_07.md` § Data-status multi-axis follow-up — the rollup worker must
-derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected denominator.
-Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner: data-status
+**Action**: file under `infrastructure_master.md` § Data-status multi-axis follow-up — the rollup worker must derive
+`dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected denominator. Without
+this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner: data-status
 multi-axis stream.
 
 > **D-14 resolution status (2026-05-13)**: This finding is logged here AND in the codex doc audit findings issue
 > [`codex_audit_data_2026_05_12.md`](../../plans/archive/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
-> been explicitly added as a new todo in `infrastructure_master_2026_05_07.md` (verified by grep 2026-05-13: the rollup
-> worker P5 task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔
-> `capture_status_counts`). The finding remains OPEN — the rollup worker still derives `dates_found` from a different
-> source than `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD
-> include this reconciliation. Tracked via Sweep 4 of
+> been explicitly added as a new todo in `infrastructure_master.md` (verified by grep 2026-05-13: the rollup worker P5
+> task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔ `capture_status_counts`). The
+> finding remains OPEN — the rollup worker still derives `dates_found` from a different source than
+> `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD include this
+> reconciliation. Tracked via Sweep 4 of
 > [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
@@ -1115,13 +1115,13 @@ at expected-row generation, not just at write-side).
   per-VM launcher.
 - **v2 (in-flight design)** — instrument-grain expected universe; ~190M row estimate. Designed in
   [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
-  (folded into `manifest_evolution_master_2026_05_08` umbrella; sequenced AFTER v8 schema in gate G3). v2 cross-joins
-  v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle (cefi
-  `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi `protocol_launch_date`,
-  sports per-fixture). v2 plan body owns the canonical per-asset-group grain matrix (cefi spot/perp per-instrument; cefi
-  options/futures per-root; tradfi futures/options per-root; tradfi ETFs per-instrument; defi
-  per-protocol-or-instrument; sports per-fixture for fixture-native data_types; prediction per-canonical_question_group)
-  — point at the plan as SSOT for the v2 grain matrix until v2 lands.
+  (folded into `manifest_evolution_SUPERSEDED_2026_05_21` umbrella; sequenced AFTER v8 schema in gate G3). v2
+  cross-joins v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument
+  lifecycle (cefi `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi
+  `protocol_launch_date`, sports per-fixture). v2 plan body owns the canonical per-asset-group grain matrix (cefi
+  spot/perp per-instrument; cefi options/futures per-root; tradfi futures/options per-root; tradfi ETFs per-instrument;
+  defi per-protocol-or-instrument; sports per-fixture for fixture-native data_types; prediction
+  per-canonical_question_group) — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
 ### Architectural framing — why `empty_confirmed + EXPECTED_*` is identical to "not_attempted" placeholder
 

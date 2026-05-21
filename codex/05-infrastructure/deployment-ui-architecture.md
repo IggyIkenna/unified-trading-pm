@@ -7,7 +7,7 @@ codified: 2026-05-08
 last_reviewed: 2026-05-15
 sources:
   - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
-  - plans/epics/instruments_live_master_2026_05_08.md (Phase G delegates UI scope here)
+  - plans/epics/instruments_master.md (Phase G delegates UI scope here)
   - plans/active/master_to_live_defi_2026_05_23.md
   - codex/04-architecture/runtime-deployment-topology.md
   - codex/05-infrastructure/launcher-script-ssot.md
@@ -174,9 +174,9 @@ live-cluster / experiment) by the resolved tier. Bucket suffixes per env follow
 
 The UI is asymmetric on purpose:
 
-- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST
-  feel like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in
-  the deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
+- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel
+  like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in the
+  deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
 
   ```
   /api/monitor/backfill?cloud=<gcp|aws>
@@ -188,10 +188,10 @@ The UI is asymmetric on purpose:
   Cache TTL 60s default. The operator clicks between sub-tabs without paying network latency. A unit test asserts no
   network call fires on sub-tab switch when the cache is warm; performance budget <50ms perceptible delay.
 
-- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a
-  loading spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the
-  toggle. Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region,
-  different SDK, different auth context), not a quick navigation.
+- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a loading
+  spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the toggle.
+  Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region, different
+  SDK, different auth context), not a quick navigation.
 
 The asymmetry is correct because the cost shapes are different: sub-tabs share a backend session (one round-trip fetches
 the full lifecycle-class cube for one cloud); cloud-toggle re-targets the SDK clients deployment-api dispatches on,
@@ -403,8 +403,8 @@ system (deployment-ui@e2b7a81).
   — the active plan that owns the activation work this doc captures.
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md)
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
-- [`plans/epics/instruments_live_master_2026_05_08.md`](../../plans/epics/instruments_live_master_2026_05_08.md) — Phase
-  G of that plan delegates UI scope here.
+- [`plans/epics/instruments_master.md`](../../plans/epics/instruments_master.md) — Phase G of that plan delegates UI
+  scope here.
 - [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) — the 6
   long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster registry on
   first commit; staging deploy + drain test are part of master's D3 gate.
