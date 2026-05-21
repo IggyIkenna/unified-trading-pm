@@ -454,18 +454,6 @@ services:
         check:
           bucket_template: features-calendar-{project_id}
           path_template: calendar/category=temporal/by_date/day={date}/
-      - service: risk-and-exposure-service
-        required: false
-        description: Optional - deployment flexibility for pre-trade risk checks (talks to strategy)
-        check:
-          bucket_template: risk-store-{project_id}-{category_lower}
-          path_template: risk/{venue}/{date}/
-      - service: position-balance-monitor-service
-        required: false
-        description: Optional - deployment flexibility for position queries
-        check:
-          bucket_template: positions-store-{project_id}-{category_lower}
-          path_template: positions/{venue}/{date}/
     outputs:
       - name: strategy_instructions
         bucket_template: strategy-store-{category_lower}-{project_id}
@@ -526,118 +514,8 @@ services:
           - date
           - instruction_type
     external_dependencies: []
-  position-balance-monitor-service:
-    upstream:
-      - execution-service
-      - instruments-service
-    description: Monitor and reconcile positions from execution fills
-    inputs:
-      - name: execution_fills
-        bucket_template: execution-store-{project_id}
-        path_template: results/date={date}/strategy_id=*/instruction_type=*/run_id=*/positions.parquet
-        required: true
-        description: Position data from execution-service (execution writes positions, not just fills)
-      - name: execution_positions
-        bucket_template: execution-store-{project_id}
-        path_template: results/date={date}/strategy_id={strategy_id}/instruction_type={instruction_type}/run_id={run_id}/positions.parquet
-        required: true
-        description: Position snapshots from execution-service backtest engine
-      - name: instruments
-        bucket_template: instruments-store-{category_lower}-{project_id}
-        path_template: instrument_availability/by_date/day={date}/instruments.parquet
-        required: true
-        description: Instrument definitions for position normalization
-    outputs:
-      - name: reconciled_positions
-        bucket_template: positions-store-{project_id}
-        path_template: by_date/day={date}/account={account_key}/snapshot_type={snapshot_type}/positions.parquet
-        required_dimensions:
-          - date
-          - account_key
-          - snapshot_type
-        description: Hive-partitioned positions by date and account (venue_client_accounttype)
-      - name: reconciliation_snapshots
-        bucket_template: positions-store-{project_id}
-        path_template: reconciliation/by_date/day={date}/account={account_key}/snapshots.parquet
-        required_dimensions:
-          - date
-          - account_key
-        description: Reconciliation results comparing internal vs exchange positions
-    external_dependencies: []
-  risk-and-exposure-service:
-    upstream:
-      - service: position-balance-monitor-service
-        required: true
-        description: Reconciled positions for risk calculation
-        check:
-          bucket_template: positions-store-{project_id}-{category_lower}
-          path_template: positions/{venue}/{date}/
-      - service: market-data-processing-service
-        required: true
-        description: Market prices for mark-to-market risk
-        check:
-          bucket_template: market-data-tick-{category_lower}-{project_id}
-          path_template: processed_candles/by_date/day={date}/
-      - service: pnl-attribution-service
-        required: false
-        description: Optional - deployment flexibility for P&L-based risk attribution
-        check:
-          bucket_template: pnl-store-{project_id}-{category_lower}
-          path_template: pnl/{venue}/{date}/
-    description:
-      Calculate risk metrics and exposure limits from positions and market data. Does NOT execute orders - talks to
-      strategy-service for risk management.
-    inputs:
-      - name: reconciled_positions
-        bucket_template: positions-store-{project_id}-{category_lower}
-        path_template: positions/{venue}/{date}/positions_*.parquet
-        required: true
-        description: Reconciled positions from position-balance-monitor-service
-      - name: processed_candles
-        bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: by_date/day={date}/data_type=tbbo/instrument_type=*/venue={venue}/*.parquet
-        required: true
-        description: Market prices for mark-to-market risk calculations
-    outputs:
-      - name: risk_metrics
-        bucket_template: risk-store-{project_id}-{category_lower}
-        path_template: risk/{venue}/{date}/risk_metrics_*.parquet
-        required_dimensions:
-          - category
-          - venue
-          - date
-    external_dependencies: []
-  pnl-attribution-service:
-    upstream:
-      - position-balance-monitor-service
-      - market-data-processing-service
-      - instruments-service
-    description: Calculate P&L attribution from positions and market prices
-    inputs:
-      - name: positions
-        bucket_template: positions-store-{project_id}-{category_lower}
-        path_template: positions/{venue}/{date}/positions_*.parquet
-        required: true
-        description: Position data for P&L calculation
-      - name: mark_prices
-        bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: by_date/day={date}/data_type=tbbo/instrument_type=*/venue={venue}/*.parquet
-        required: true
-        description: Mark prices for mark-to-market P&L
-      - name: instruments
-        bucket_template: instruments-store-{project_id}
-        path_template: instruments/{category}/{venue}/{date}/instruments_*.parquet
-        required: true
-        description: Instrument metadata for P&L calculations
-    outputs:
-      - name: pnl_attribution
-        bucket_template: pnl-store-{project_id}-{category_lower}
-        path_template: pnl/{client_id}/{date}/pnl_attribution_*.parquet
-        required_dimensions:
-          - category
-          - client_id
-          - date
-    external_dependencies: []
+  # position-balance-monitor-service, pnl-attribution-service, risk-and-exposure-service
+  # removed 2026-05-21: consolidated into strategy-service (strategy_repo_consolidation_2026_05_19.md)
   features-sports-service:
     description: >-
       Pre-match ML features for sports (team form, H2H, referee, venue, weather, market odds). Post-commercialization
@@ -786,9 +664,8 @@ execution_order:
   - ml-inference-service
   - strategy-service
   - execution-service
-  - position-balance-monitor-service
-  - pnl-attribution-service
-  - risk-and-exposure-service
+  # position-balance-monitor-service, pnl-attribution-service, risk-and-exposure-service
+  # removed 2026-05-21: consolidated into strategy-service (strategy_repo_consolidation_2026_05_19.md)
   - batch-live-reconciliation-service
 category_domain_mapping:
   CEFI: cefi
