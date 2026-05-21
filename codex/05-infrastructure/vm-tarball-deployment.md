@@ -141,6 +141,9 @@ Use this table to decide which startup pattern to use when writing a new `launch
 | `launch-cefi-fwd-daily-cron-vm.sh`           | `MANIFEST_PER_VM_SHARDS`   | Cron daemon; no direct manifest writes            |
 | `launch-tradfi-fwd-daily-cron-vm.sh`         | `MANIFEST_PER_VM_SHARDS`   | Cron daemon; no direct manifest writes            |
 | `launch-planning-vm.sh`                      | `MANIFEST_PER_VM_SHARDS`   | Orchestrator daemon; no manifest writes           |
+| `launch-prediction-features-vm.sh`          | startup-script-url          | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived |
+| `launch-prediction-pipeline-vm.sh`          | startup-script-url          | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
+| `launch-gcs-migration-bundle-vm.sh`         | startup-script-url          | Per-run GCS script staging; PM migration script not in any service tarball |
 
 ---
 
