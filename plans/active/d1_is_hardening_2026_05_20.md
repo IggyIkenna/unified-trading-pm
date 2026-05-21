@@ -102,9 +102,12 @@ related_plans:
     points to first line of implicit concatenation, not the gs:// line). All are legitimate
     URI composers (bucket already resolved); added # noqa: gs-uri to first-line of each.
     QG STEP 5.69: 0 violations == baseline 0. QG exits 0.
-- [ ] [AGENT] P0. Fix Deribit tick_size fetched from live API (`execution_service/venues/deribit.py`):
-  - Load `tick_size` from IS `InstrumentRecord` cache instead of making live API call at startup
-  - Live API call on startup = wrong; IS is the SSOT for instrument metadata per CLAUDE.md
+- [x] ✅ [AGENT] P0. Fix Deribit tick_size from IS InstrumentRecord cache (not live API):
+  — DONE 2026-05-21: execution-service@dd9e75d0. Added _is_tick_size_cache populated
+    in connect() via _load_is_instrument_cache() (reads IS cefi parquet for DERIBIT
+    venue today). _format_deribit_instrument() prefers IS tick_size; falls back silently
+    to live API if IS unavailable. 6 unit tests verify: cache population, graceful
+    degradation, IS preference, live fallback, no /public/get_instruments at startup.
 
 ### Phase 5 — Quality gates
 
