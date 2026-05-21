@@ -58,7 +58,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 | 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
 | 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
 | 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
-| 2.C — features-sports stamping                                              | ✅         | fixture_lineups/player_stats wired + _ensure_timestamp deleted + _FETCH_COMPLETED_AT cache + 14-table available_at stamping + 27 tests — features-service@6040ee81                                        |
+| 2.C — features-sports stamping                                              | ✅         | fixture_lineups/player_stats wired + \_ensure_timestamp deleted + \_FETCH_COMPLETED_AT cache + 14-table available_at stamping + 27 tests — features-service@6040ee81                                        |
 | 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
 | 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
 | 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
@@ -926,7 +926,7 @@ ikenna-slot8-p0-2-surgery:
 - [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
       **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
       `tradfi_master` futures-expiry shipping. Per task instructions, skipped.
-- [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
+- [x] ✅ **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
       instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a
       live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live →
       delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
@@ -969,6 +969,14 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 - **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in
   [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
   after futures-expiry tradfi work.
+- [ ] **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
+      mismatches found during Step 6 audit (2026-05-22 slot 8): (1) `CandleOutput.trade_count` → schema column named
+      `count`; (2) `CandleOutput.liquidation_count` + `liquidation_volume` → schema columns named
+      `liquidation_cascade_event_count` + `liquidation_cascade_total_volume` + `liquidation_cascade_max_cluster_size`.
+      These are NOT Step-6-scope (Step 6 was about the triple-SSOT _class_ audit). Remediation: rename schema columns to
+      match `CandleOutput` field names (one-way migration; consumers must update column reads). File as standalone
+      cleanup plan under `plans/active/mdps_candle_schema_column_name_drift_<YYYY_MM_DD>.md` when operator allocates a
+      slot to this. **DEFERRED** — named successor: standalone cleanup plan (non-blocking for May-23 gate).
 
 ### Finalization 2026-05-11 — slot 8 P0-2 finalize sub-agent
 
