@@ -1070,3 +1070,26 @@ shipped Phase 1A before starting 2.C (Phase 1A blocks all Phase 2 — check git 
 
 When 2C/2D/2E/4A/4B done: post DONE + SHA to this ping file. Slot 3 (aws_migration owner) coordinates Phase 3.x
 sequencing post-migration.
+
+---
+
+## [slot-1 → slot-2] 2026-05-21 — Freeze ACK + Phase 2.6 follow-on after writegate items
+
+🔴 **CODE FREEZE ACTIVE** — no LDR pushes. Writegate Phase 2C/2D/2E/4A/4B work continues on tab branch
+`tab/ikennaigboaka/2` — do NOT merge to LDR until UNFREEZE.
+
+**ACK**: append `[ACK 🔴 FREEZE 2026-05-21] — slot-2` below.
+
+**Current work** (writegate non-migration items — finish these first):
+
+- Phase 2C, 2D, 2E (UAC/UTL items), Phase 4A/4B (deployment-api/ui wiring) per prior dispatch
+
+**After writegate items done** — if slot 3 hasn't shipped `migrate-flat-to-env-tiered.sh` yet, you own it as fallback.
+Otherwise hold for Phase 3 (VM drain) coordination dispatch which comes after all slots ACK freeze.
+
+Post DONE SHA for writegate + ACK when ready.
+
+Plan ref: `plans/epics/mtds_mdps_master.md` Phase 2. Writegate ref:
+`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`.
+
+— ikenna-main / slot-1 / 2026-05-21

@@ -1342,3 +1342,28 @@ Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
 `plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## 🔴 IKENNA-SIDE FREEZE BROADCAST 2026-05-21 [slot-1-main]
+
+Phase 1 GREEN (`pm@a38640531`). Freeze window active per `plans/epics/mtds_mdps_master.md` § Phase 2.
+
+**Freeze rules**: no LDR pushes, no new backfill VMs. Tab-branch work: allowed.
+
+**Slot assignments during freeze** (implement on tab branches; hold merge until UNFREEZE):
+
+| Slot  | Current state                      | Freeze-window task                                                                                  |
+| ----- | ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **2** | Writegate 2C/2D/2E/4A/4B in-flight | Finish writegate items → then: `migrate-flat-to-env-tiered.sh` (see slot_2.md)                      |
+| **3** | aws_migration max-closeable        | Immediately: `migrate-flat-to-env-tiered.sh` + `verify_flat_to_env_tiered_drift.py` (see slot_3.md) |
+| **4** | Wave 2 Slot B archives             | Finish archives → ACK freeze → hold for next dispatch                                               |
+| **5** | Wave 2 Slot C sweeps               | Finish sweeps → ACK freeze → hold for next dispatch                                                 |
+| **6** | Wave 2 Slot D closes               | Finish closes → ACK freeze → hold for next dispatch                                                 |
+| **7** | Waiting for UNFREEZE               | **UNBLOCKED NOW**: `verify_env_tiered_buckets_provisioned.py` (see slot_7.md)                       |
+| **8** | Writegate 1A/2A/2B                 | Finish writegate items → ACK freeze → hold                                                          |
+
+ACK by appending `[ACK 🔴 FREEZE 2026-05-21]` to your slot ping file. Plan ref: `plans/epics/mtds_mdps_master.md`
+Phase 2.
+
+— ikenna-main / slot-1 / 2026-05-21

@@ -2369,3 +2369,49 @@ Phase 2 (multi-VM dashboard) is unassigned. Slot 7 will hold for operator dispat
 (same as previous ping): UNFREEZE signal, R9 lands, or explicit reassignment.
 
 — slot-7 worker / ikenna 2026-05-21
+
+---
+
+## [slot-1 → slot-7] 2026-05-21 — UNBLOCKED: Phase 2.6 verifier script dispatch
+
+You were holding for UNFREEZE / R9 / explicit reassignment. **You are now explicitly reassigned.**
+
+🔴 **CODE FREEZE ACTIVE** — work on tab branch `tab/ikennaigboaka/7`; do NOT push to `live-defi-rollout` until UNFREEZE
+ping.
+
+**ACK**: append `[ACK 🔴 FREEZE 2026-05-21] — slot-7` below before starting.
+
+---
+
+### Your assignment: 1 script, unified-trading-pm
+
+**Script — `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`** (Phase 2.6 Step 2.6.1
+verifier)
+
+Full spec in `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 Step 2.6.1.
+
+Shape:
+
+```bash
+python unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py --env prod --cloud both
+python unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py --env staging --cloud gcp
+```
+
+Requirements:
+
+- Read `deployment-service/configs/cloud-providers.yaml` — enumerate every `${DEPLOYMENT_ENV_SHORT}`-bearing kind ×
+  asset_group × env (prod / staging / dev) × cloud (gcp / aws)
+- GCP check: `gcloud storage ls gs://<resolved-name>` → bucket exists?
+- AWS check: `aws s3api head-bucket --bucket <resolved-name>` → bucket exists?
+- Report: per (kind, asset_group, env, cloud) row → PRESENT / MISSING / DRIFT
+- Output: summary table + CSV `plans/audit/results/env_tiered_buckets_provisioned_<date>.csv`; exit 0 only if 0 MISSING
+  for `--env prod`
+
+This verifier is the go/no-go gate for Phase 2.6.1. Step 2.6.2 (data copy) must NOT start until this exits 0 for prod.
+
+Done-criterion: script committed to tab branch; run against real GCP + AWS (ADC + AWS creds available); output CSV
+committed to PM. Post DONE SHA to this ping.
+
+Plan ref: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 Step 2.6.1.
+
+— ikenna-main / slot-1 / 2026-05-21

@@ -1840,3 +1840,72 @@ operator decisions or human-gated operations.
 **Operator action required to advance**: Complete BLOCKED #1–4 from ping file. After wallet key rotation + ECS
 deployment, Phases 5 item 6 (phantom reconciler) and Phase 4 item 5 (smoke test) unblock automatically. Plan archive
 will be possible once Phase 6+ completes.
+
+---
+
+## [slot-1 → slot-3] 2026-05-21 — Phase 2.6 migration scripts dispatch (IMMEDIATE)
+
+🔴 **FREEZE ACTIVE** — work on tab branch `tab/ikennaigboaka/3`; do NOT push to `live-defi-rollout` until UNFREEZE.
+
+**ACK**: append `[ACK 🔴 FREEZE 2026-05-21] — slot-3` below before starting.
+
+---
+
+### Your assignment: 2 scripts, deployment-service + unified-trading-pm
+
+**Why slot 3**: you own `deployment-service` context from aws_migration (bucket scripts, setup-defi-buckets.sh). These
+scripts sit in the same surface.
+
+**Script 1 — `deployment-service/scripts/migrate-flat-to-env-tiered.sh`** (CRITICAL PATH — Phase 2.6 Step 2.6.2)
+
+Full spec in `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 Step 2.6.2.
+
+Shape:
+
+```bash
+bash deployment-service/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud gcp --dry-run
+bash deployment-service/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud gcp --apply
+bash deployment-service-/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud aws --apply
+```
+
+Implementation requirements:
+
+- Read `configs/cloud-providers.yaml` — enumerate every flat (no `${DEPLOYMENT_ENV_SHORT}`) kind × asset_group → resolve
+  to target env-tiered name
+- GCP copy: use `unified_trading_library.cloud_interface.gcs_copy_object` (NOT `gcloud storage cp` / `gsutil`) — 250×
+  faster, per CLAUDE.md "GCS object ops in migration scripts"
+- AWS copy: `aws s3 sync s3://<flat>/ s3://<env-tiered-prod>/`
+- Dry-run prints plan: source bucket → dest bucket, object count, estimated bytes. No copy.
+- Apply mode: parallel workers (8-32), per-object progress log, exit 0 on success, exit 1 on any error
+- Known flat buckets to migrate: all Group B kinds without `${DEPLOYMENT_ENV_SHORT}` in yaml (features-delta-one,
+  features-volatility, features-onchain, features-xinstrument, features-mtf, strategy-store, execution-store,
+  ml-artifacts, ml-training-artifacts) + Group A flat buckets (dex-pools, dex-swaps, evm-defi, eigenlayer-rewards,
+  solana-defi etc.)
+- **Single-walk discipline**: this script is THE one migration run. No partial re-runs on same objects.
+
+**Script 2 — `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py`** (Phase 2.6 Step 2.6.2 verifier)
+
+Full spec in code_freeze plan § Step 2.6.2 "Verifier" block.
+
+Shape:
+
+```bash
+python unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py --bucket market-data --env prod
+python unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py --all --env prod
+```
+
+Requirements:
+
+- Per (kind, asset_group): `gcloud storage du gs://<flat>` vs `gcloud storage du gs://<env-tiered-prod>` — byte parity
+  assert ≤0.01% drift
+- Sample 100 random parquets from env-tiered-prod via `pd.read_parquet`: schema + non-empty rows assert
+- Output: pass/fail per bucket + summary CSV; exit 0 only if all pass
+
+---
+
+Done-criterion: both scripts committed to tab branch + `bash scripts/quality-gates.sh` exit 0 in deployment-service.
+Post DONE SHA to this ping file.
+
+Plan ref: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 Steps 2.6.1-2.6.2.
+
+— ikenna-main / slot-1 / 2026-05-21

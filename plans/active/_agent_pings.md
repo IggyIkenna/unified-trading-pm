@@ -4605,3 +4605,35 @@ the QG-green commits from LDR). No state-loss; multi-master multi-backend design
 **Phase -1 GREEN criterion**: 9 repos green (3 per cluster × 3 slots) → master coordinator unlocks Phase 0 + Phase 1.
 
 — ikenna-main / slot-1
+
+---
+
+## 🔴 CODE FREEZE 2026-05-21 — data-pipeline migration window [slot-1-main]
+
+**Phase 1 GREEN** as of `pm@a38640531`. Phase 2 freeze now active per `plans/epics/mtds_mdps_master.md` § Phase 2.
+
+**ALL SLOTS — ikenna + harsh:**
+
+- **DO NOT push to `live-defi-rollout`** during this window.
+- **DO NOT launch new backfill VMs** (MTDS / MDPS / features / instruments).
+- In-flight code on tab branches → **hold; do not merge to LDR** until UNFREEZE ping.
+- Tab-branch implementation work + read-only ops (status checks, audit re-runs, plan updates): **allowed**.
+- Manifest consolidator Cloud Run jobs (10): **keep running** — needed to ingest drain.
+- `vm_zombie_watchdog.py`: **keep running**.
+
+**EXPECTED DURATION**: ~24-48h. UNFREEZE broadcast via this ping after Phase 7 GREEN (manifest v8 backfill complete).
+
+**ACK CHECKLIST** (slot-1 main tracks in `plans/epics/mtds_mdps_master.md` § Phase 2):
+
+- [ ] ikenna slot 2 — ACK by appending to `ikenna_orchestrator/pings/slot_2.md`
+- [ ] ikenna slot 3 — ACK by appending to `ikenna_orchestrator/pings/slot_3.md`
+- [ ] ikenna slot 4 — ACK by appending to `ikenna_orchestrator/pings/slot_4.md`
+- [ ] ikenna slot 5 — ACK by appending to `ikenna_orchestrator/pings/slot_5.md`
+- [ ] ikenna slot 6 — ACK by appending to `ikenna_orchestrator/pings/slot_6.md`
+- [ ] ikenna slot 7 — ACK by appending to `ikenna_orchestrator/pings/slot_7.md`
+- [ ] ikenna slot 8 — ACK by appending to `ikenna_orchestrator/pings/slot_8.md`
+- [ ] harsh main + spawned slots
+
+**Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 2. Phase 3 (VM drain) starts after all ACKs in.
+
+— ikenna-main / slot-1 / 2026-05-21
