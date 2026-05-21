@@ -23,28 +23,45 @@ tasks:
   priority: 10
   repos:
   - orchestrator
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "In scripts/populate_demo.py, the script currently raises a urllib\ntraceback if the server is not running on localhost:8765. Improve the\nerror handling: catch ConnectionRefusedError / URLError\
-    \ at the top of\nmain() and print a one-line message like:\n\n    Cannot reach server at http://localhost:8765. Start it with:\n      ORCHESTRATOR_MODE=mock python3 -m uvicorn server.server:app --port\
+  brief: "In scripts/populate_demo.py, the script currently raises a urllib\ntraceback\
+    \ if the server is not running on localhost:8765. Improve the\nerror handling:\
+    \ catch ConnectionRefusedError / URLError at the top of\nmain() and print a one-line\
+    \ message like:\n\n    Cannot reach server at http://localhost:8765. Start it\
+    \ with:\n      ORCHESTRATOR_MODE=mock python3 -m uvicorn server.server:app --port\
     \ 8765\n\nThen exit(1). No stack trace.\n"
-  done_definition: "- Running `python3 scripts/populate_demo.py` with no server up prints\n  the friendly message and exits with code 1 (not a traceback)\n- With server up, the script still works exactly\
-    \ as before\n- Commit with conventional message: \"fix(scripts): friendlier error\n  when populate_demo cannot reach the server\"\n"
+  done_definition: "- Running `python3 scripts/populate_demo.py` with no server up\
+    \ prints\n  the friendly message and exits with code 1 (not a traceback)\n- With\
+    \ server up, the script still works exactly as before\n- Commit with conventional\
+    \ message: \"fix(scripts): friendlier error\n  when populate_demo cannot reach\
+    \ the server\"\n"
   plan_ref: first live-mode validation task
   est_hours: 0.5
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-002
   title: Document the /api/admin/* endpoints in dashboard/API_REFERENCE.md
   tier: 1
   priority: 20
   repos:
   - orchestrator
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "The dashboard/API_REFERENCE.md was written before the admin endpoints\nexisted. Add a new section after \"Write endpoints\" titled \"Admin\nendpoints (mock mode only)\" documenting:\n\n  - GET\
-    \  /api/mode\n  - POST /api/admin/populate\n  - POST /api/admin/reset\n\nMatch the format of the existing endpoint sections (TypeScript\nresponse shape + one-line description). Note that the admin endpoints\n\
+  brief: "The dashboard/API_REFERENCE.md was written before the admin endpoints\n\
+    existed. Add a new section after \"Write endpoints\" titled \"Admin\nendpoints\
+    \ (mock mode only)\" documenting:\n\n  - GET  /api/mode\n  - POST /api/admin/populate\n\
+    \  - POST /api/admin/reset\n\nMatch the format of the existing endpoint sections\
+    \ (TypeScript\nresponse shape + one-line description). Note that the admin endpoints\n\
     return 403 in live mode.\n"
   done_definition: '- New section present in dashboard/API_REFERENCE.md
 
@@ -56,12 +73,19 @@ tasks:
   plan_ref: dashboard/API_REFERENCE.md was last edited before mode work
   est_hours: 0.5
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-003
   title: Add uptime_seconds field to /healthz response
   tier: 1
   priority: 30
   repos:
   - orchestrator
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -79,44 +103,74 @@ tasks:
     (set in lifespan; accessible via get_started_at()).
 
     '
-  done_definition: "- curl http://localhost:8765/healthz returns\n  {status: \"ok\", ts: \"...\", mode: \"...\", uptime_seconds: N}\n  where N is a non-negative integer\n- No new tests required (this is\
-    \ a trivial extension)\n- Conventional commit: \"feat(server): expose uptime_seconds in /healthz\"\n"
+  done_definition: "- curl http://localhost:8765/healthz returns\n  {status: \"ok\"\
+    , ts: \"...\", mode: \"...\", uptime_seconds: N}\n  where N is a non-negative\
+    \ integer\n- No new tests required (this is a trivial extension)\n- Conventional\
+    \ commit: \"feat(server): expose uptime_seconds in /healthz\"\n"
   plan_ref: first live-mode validation task
   est_hours: 0.5
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-004
   title: Document /api/slots/{id}/heartbeat in dashboard/API_REFERENCE.md
   tier: 1
   priority: 40
   repos:
   - orchestrator
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "The /api/slots/{id}/heartbeat endpoint was added after API_REFERENCE.md\nwas last touched, so it's undocumented.\n\nIn dashboard/API_REFERENCE.md, under section \"## 1. Read endpoints\"\n(or alongside\
-    \ the worker write endpoints \u2014 pick whichever fits the\nexisting structure better \u2014 heartbeat is technically POST but it's\na polling endpoint), add a subsection for /api/slots/{id}/heartbeat\n\
-    documenting:\n\n  Request shape (HeartbeatRequest):\n    - context_used_pct: int      (0-100, worker's current usage)\n    - message: string | null     (optional last_msg update for the\n          \
-    \                         dashboard slot row)\n\n  Response shape (HeartbeatResponse):\n    - ok: boolean\n    - new_task: TaskBrief | null (if a task became available, dispatched)\n    - dispatch_reason:\
-    \ string | null\n    - messages: string[]         (operator/main agent messages to read)\n    - status: SlotStatus\n    - backlog_queued: int        (how many tasks are queued)\n\nMatch the format of\
-    \ existing endpoint subsections. Briefly explain\nthat this is the polling endpoint idle workers use to pick up\nmessages + newly-available tasks without a full /boot.\n\nReference: server/server.py\
-    \ @app.post(\"/api/slots/{slot_id}/heartbeat\")\n"
-  done_definition: "- New subsection in dashboard/API_REFERENCE.md documenting\n  /api/slots/{id}/heartbeat with request + response TypeScript\n  interfaces\n- Conventional commit: \"docs(api): document\
-    \ /heartbeat endpoint\"\n"
+  brief: "The /api/slots/{id}/heartbeat endpoint was added after API_REFERENCE.md\n\
+    was last touched, so it's undocumented.\n\nIn dashboard/API_REFERENCE.md, under\
+    \ section \"## 1. Read endpoints\"\n(or alongside the worker write endpoints —\
+    \ pick whichever fits the\nexisting structure better — heartbeat is technically\
+    \ POST but it's\na polling endpoint), add a subsection for /api/slots/{id}/heartbeat\n\
+    documenting:\n\n  Request shape (HeartbeatRequest):\n    - context_used_pct: int\
+    \      (0-100, worker's current usage)\n    - message: string | null     (optional\
+    \ last_msg update for the\n                                   dashboard slot row)\n\
+    \n  Response shape (HeartbeatResponse):\n    - ok: boolean\n    - new_task: TaskBrief\
+    \ | null (if a task became available, dispatched)\n    - dispatch_reason: string\
+    \ | null\n    - messages: string[]         (operator/main agent messages to read)\n\
+    \    - status: SlotStatus\n    - backlog_queued: int        (how many tasks are\
+    \ queued)\n\nMatch the format of existing endpoint subsections. Briefly explain\n\
+    that this is the polling endpoint idle workers use to pick up\nmessages + newly-available\
+    \ tasks without a full /boot.\n\nReference: server/server.py @app.post(\"/api/slots/{slot_id}/heartbeat\"\
+    )\n"
+  done_definition: "- New subsection in dashboard/API_REFERENCE.md documenting\n \
+    \ /api/slots/{id}/heartbeat with request + response TypeScript\n  interfaces\n\
+    - Conventional commit: \"docs(api): document /heartbeat endpoint\"\n"
   plan_ref: follow-up after heartbeat shipped (commit dc66e4c + f6c69a9)
   est_hours: 0.3
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-005
-  title: "[PARKED \u2014 prereq blocked] bucket_name_ssot dependency_checker.py migration"
+  title: '[PARKED — prereq blocked] bucket_name_ssot dependency_checker.py migration'
   tier: 1
   priority: 999
   repos:
   - features-service
   - unified-trading-library
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - utl-base-dependency-checker-migrated
-  brief: "PARKED \u2014 see plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md\nline ~423. UTL BaseDependencyChecker migration must ship first.\n"
+  brief: 'PARKED — see plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md
+
+    line ~423. UTL BaseDependencyChecker migration must ship first.
+
+    '
   done_definition: '- 3 features-service dependency_checker.py files migrated to resolve_bucket(...)
 
     - QG green on features-service
@@ -127,16 +181,24 @@ tasks:
   plan_ref: plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md line ~423
   est_hours: 6.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-006
-  title: "bucket_name_ssot \u2014 workspace-wide grep audit + drift table (P1)"
+  title: bucket_name_ssot — workspace-wide grep audit + drift table (P1)
   tier: 1
   priority: 60
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: 'Per plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md line ~527 [AGENT] P1.
+  brief: 'Per plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md line ~527
+    [AGENT] P1.
 
     Workspace-wide grep for inline gs:// f-strings that bypass resolve_bucket_name.
 
@@ -151,12 +213,20 @@ tasks:
   plan_ref: plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md line ~527
   est_hours: 0.7
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-007
-  title: "manifest_cross_asset_rescan_design \u2014 Reconciliation execution order section (P1)"
+  title: manifest_cross_asset_rescan_design — Reconciliation execution order section
+    (P1)
   tier: 1
   priority: 70
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -175,16 +245,27 @@ tasks:
   plan_ref: plans/active/manifest_cross_asset_rescan_design_2026_05_08.md line ~202
   est_hours: 0.8
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-008
-  title: "Codex hygiene \u2014 sweep codex/04-architecture/ for stale URDI / Phantom refs"
+  title: Codex hygiene — sweep codex/04-architecture/ for stale URDI / Phantom refs
   tier: 1
   priority: 80
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "CLAUDE.md: \"URDI is a phantom name \u2014 does NOT exist\". Sweep codex/04-architecture/\nfor stale URDI / Elysium / Arkham / Bloxroute / Infura refs.\n"
+  brief: 'CLAUDE.md: "URDI is a phantom name — does NOT exist". Sweep codex/04-architecture/
+
+    for stale URDI / Elysium / Arkham / Bloxroute / Infura refs.
+
+    '
   done_definition: '- 0 active URDI references in codex/04-architecture/
 
     - 0 active references to retired DeFi providers
@@ -193,82 +274,115 @@ tasks:
   plan_ref: CLAUDE.md 'URDI is a phantom name' workspace rule
   est_hours: 1.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: R-009
-  title: "Plan archival sweep \u2014 move 100%-done plans to plans/archive/"
+  title: Plan archival sweep — move 100%-done plans to plans/archive/
   tier: 1
   priority: 90
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per CLAUDE.md \"Plan archival (HARD RULE)\". Move \u22653 plans at 100% done from\nplans/active/ to plans/archive/ with banner.\n"
+  brief: 'Per CLAUDE.md "Plan archival (HARD RULE)". Move ≥3 plans at 100% done from
+
+    plans/active/ to plans/archive/ with banner.
+
+    '
   done_definition: '- At least 3 plans archived with banner
 
     '
   plan_ref: CLAUDE.md 'Plan archival (HARD RULE)'
   est_hours: 1.5
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: QG-CLUSTER-A
-  title: "QG green sweep \u2014 Cluster A (UAC + UTL + IS)"
+  title: QG green sweep — Cluster A (UAC + UTL + IS)
   tier: 1
   priority: 5
   repos:
   - unified-api-contracts
   - unified-trading-library
   - instruments-service
-  target_slot: 9
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Phase -1 of master coordinator. For each repo IN ORDER (UAC \u2192 UTL \u2192 IS):\ncd <repo> && bash scripts/quality-gates.sh. Fix every QG failure.\n"
+  brief: 'Phase -1 of master coordinator. For each repo IN ORDER (UAC → UTL → IS):
+
+    cd <repo> && bash scripts/quality-gates.sh. Fix every QG failure.
+
+    '
   done_definition: '- bash scripts/quality-gates.sh exit 0 on all 3 repos
 
     - All fixes committed + pushed to live-defi-rollout
 
     '
-  plan_ref: "plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1 + work_split_2026_05_20_ikenna.md \xA7 Slot 9"
-  est_hours: 3
+  plan_ref: plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1
+    + work_split_2026_05_20_ikenna.md § Slot 9
+  est_hours: 3.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 9
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: QG-CLUSTER-B
-  title: "QG green sweep \u2014 Cluster B (MTDS + features + MDPS)"
+  title: QG green sweep — Cluster B (MTDS + features + MDPS)
   tier: 1
   priority: 5
   repos:
   - market-tick-data-service
   - features-service
   - market-data-processing-service
-  target_slot: 10
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
   brief: 'Phase -1 Cluster B. For each repo: cd <repo> && bash scripts/quality-gates.sh.
 
     '
-  done_definition: '- bash scripts/quality-gates.sh exit 0 on MTDS, features-service, MDPS
+  done_definition: '- bash scripts/quality-gates.sh exit 0 on MTDS, features-service,
+    MDPS
 
     - Fixes pushed to live-defi-rollout
 
     '
-  plan_ref: "plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1 + work_split_2026_05_20_ikenna.md \xA7 Slot 10"
-  est_hours: 3
+  plan_ref: plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1
+    + work_split_2026_05_20_ikenna.md § Slot 10
+  est_hours: 3.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 10
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: QG-CLUSTER-C
-  title: "QG green sweep \u2014 Cluster C (strategy + execution + ml \u2014 surface only)"
+  title: QG green sweep — Cluster C (strategy + execution — surface only)
   tier: 1
   priority: 5
   repos:
   - strategy-service
   - execution-service
-  - ml-service
-  target_slot: 11
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: 'Phase -1 Cluster C. STRATEGY-LOGIC freeze gate active per master coordinator round 6:
+  brief: 'Phase -1 Cluster C. STRATEGY-LOGIC freeze gate active per master coordinator
+    round 6:
 
     SURFACE-ONLY fixes (lint, type-ignore cleanup, docstrings, codex).
 
@@ -279,33 +393,45 @@ tasks:
 
     If a QG failure would require editing the above, /blocked.
 
+
+    ml-service handed off to cosmictrader on another VM (2026-05-21) — out of scope here.
+
     '
-  done_definition: '- bash scripts/quality-gates.sh exit 0 on strategy-service, execution-service, ml-service
+  done_definition: '- bash scripts/quality-gates.sh exit 0 on strategy-service, execution-service
 
     - No edits in frozen LOGIC surfaces
 
     - Fixes pushed to live-defi-rollout
 
     '
-  plan_ref: "plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1 + \xA7 round 6 LOGIC freeze + work_split_2026_05_20_ikenna.md \xA7 Slot 11"
-  est_hours: 3
+  plan_ref: plans/active/data_pipeline_master_coordination_2026_05_20.md Phase -1
+    + § round 6 LOGIC freeze + work_split_2026_05_20_ikenna.md § Slot 11
+  est_hours: 3.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 11
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PHASE-1-BUCKET-SYMMETRY
-  title: "Phase 1 \u2014 AWS\u2194GCP bucket-name symmetry audit + YAML alignment"
+  title: Phase 1 — AWS↔GCP bucket-name symmetry audit + YAML alignment
   tier: 1
   priority: 10
   repos:
   - deployment-service
   - unified-trading-pm
-  target_slot: 2
-  affinity: low
-  parallel_safe: false
   collision_group: phase-1-bucket-symmetry
   prereqs:
     completed_tasks: []
     conditions:
     - phase-minus-1-qg-green
-  brief: "Per master coordinator \xA7 Phase 1. 5 deliverables: audit CSV + script audit +\nYAML alignment + 63-char cap re-verify + prd/stg/dev consistency.\n"
+  brief: 'Per master coordinator § Phase 1. 5 deliverables: audit CSV + script audit
+    +
+
+    YAML alignment + 63-char cap re-verify + prd/stg/dev consistency.
+
+    '
   done_definition: '- plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv exists
 
     - cloud-providers.yaml aws: block mirrors gcp: block
@@ -317,54 +443,67 @@ tasks:
     - main agent flips phase-1-bucket-symmetry-green
 
     '
-  plan_ref: "plans/active/data_pipeline_master_coordination_2026_05_20.md \xA7 Phase 1"
-  est_hours: 24
-  estimate_class: infra
+  plan_ref: plans/active/data_pipeline_master_coordination_2026_05_20.md § Phase 1
+  est_hours: 24.0
   model: sonnet
   sub_agent_fanout: 2
+  parallel_safe: false
+  estimate_class: infra
+  target_slot: 2
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-1B-YAML-ALIGN
-  title: "Phase 1B \u2014 cloud-providers.yaml AWS alignment + symmetry check script"
+  title: Phase 1B — cloud-providers.yaml AWS alignment + symmetry check script
   tier: 1
   priority: 12
   repos:
   - deployment-service
   - unified-trading-pm
-  target_slot: 2
-  affinity: low
-  parallel_safe: false
   collision_group: phase-1-bucket-symmetry
   prereqs:
     completed_tasks:
     - PHASE-1-BUCKET-SYMMETRY
     conditions: []
-  brief: "PHASE-1-BUCKET-SYMMETRY (slot 10, sha 96af136e) shipped item 1 only \u2014 the audit CSV.\nThis task closes items 2-5: bucket-spawning script audit + YAML alignment +\ncheck_symmetry.sh + prd/stg/dev\
-    \ consistency check.\n"
-  done_definition: '- cloud-providers.yaml aws: block templates updated for 24 prefix_drift + 10 infix_missing kinds
+  brief: 'PHASE-1-BUCKET-SYMMETRY (slot 10, sha 96af136e) shipped item 1 only — the
+    audit CSV.
+
+    This task closes items 2-5: bucket-spawning script audit + YAML alignment +
+
+    check_symmetry.sh + prd/stg/dev consistency check.
+
+    '
+  done_definition: '- cloud-providers.yaml aws: block templates updated for 24 prefix_drift
+    + 10 infix_missing kinds
 
     - deployment-service/scripts/bucket_naming/check_symmetry.sh exists; exits 0
 
-    - aws_gcp_bucket_symmetry_2026_05_20_summary.md extended with "Spawning scripts audit"
+    - aws_gcp_bucket_symmetry_2026_05_20_summary.md extended with "Spawning scripts
+    audit"
 
     - QG green on deployment-service
 
     - main agent flips phase-1-bucket-symmetry-green
 
     '
-  plan_ref: "plans/active/data_pipeline_master_coordination_2026_05_20.md \xA7 Phase 1 items 2-5"
-  est_hours: 18
-  estimate_class: infra
+  plan_ref: plans/active/data_pipeline_master_coordination_2026_05_20.md § Phase 1
+    items 2-5
+  est_hours: 18.0
   model: sonnet
   sub_agent_fanout: 2
+  parallel_safe: false
+  estimate_class: infra
+  target_slot: 2
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-3
-  title: "Phase -2 Bucket 3 + trading_agent Phase 1 continuation \u2014 slot 3 scope"
+  title: Phase -2 Bucket 3 + trading_agent Phase 1 continuation — slot 3 scope
   tier: 1
   priority: 8
   repos:
   - unified-api-contracts
   - trading-agent-service
   - unified-trading-pm
-  target_slot: 3
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -379,14 +518,21 @@ tasks:
     consumer surface (within slot 3 worktree scope).
 
     '
-  done_definition: '- Continue ping-tracked work; /done with SHA when shippable unit ready
+  done_definition: '- Continue ping-tracked work; /done with SHA when shippable unit
+    ready
 
     - No edits to strategy_service/engine LOGIC surfaces (freeze gate active)
 
     '
-  plan_ref: "ikenna_orchestrator/pings/slot_3.md + master_coord \xA7 Phase -2 Bucket 3"
-  est_hours: 6
+  plan_ref: ikenna_orchestrator/pings/slot_3.md + master_coord § Phase -2 Bucket 3
+  est_hours: 6.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: true
+  estimate_class: null
+  target_slot: 3
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-4
   title: Group H Phase 3 StrategySupervisor + Phase 5 preflight (slot 4)
   tier: 1
@@ -395,14 +541,23 @@ tasks:
   - strategy-service
   - unified-trading-library
   - unified-trading-pm
-  target_slot: 4
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per ikenna_orchestrator/pings/slot_4.md \u2014 Group H Phases 3+5\n(per_client_isolation_and_venue_fanout_topology_2026_05_20.md).\nMarkPriceAggregator + StrategySupervisor concrete impl + preflight\
-    \ + hot-reload.\n~1.8 cal AI-days. STRATEGY-LOGIC freeze applies to v2/allocator surfaces;\nGroup H Phase 3 is ALLOWED (supervisor scaffolding \u2260 archetype logic per\noperator's round-6 carve-out,\
-    \ but flag if uncertain).\n"
+  brief: 'Per ikenna_orchestrator/pings/slot_4.md — Group H Phases 3+5
+
+    (per_client_isolation_and_venue_fanout_topology_2026_05_20.md).
+
+    MarkPriceAggregator + StrategySupervisor concrete impl + preflight + hot-reload.
+
+    ~1.8 cal AI-days. STRATEGY-LOGIC freeze applies to v2/allocator surfaces;
+
+    Group H Phase 3 is ALLOWED (supervisor scaffolding ≠ archetype logic per
+
+    operator''s round-6 carve-out, but flag if uncertain).
+
+    '
   done_definition: '- StrategySupervisor concrete subclass shipped to strategy-service
 
     - Preflight sequence + hot-reload wiring per Phase 5
@@ -410,9 +565,16 @@ tasks:
     - QG green; commit pushed
 
     '
-  plan_ref: "plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md \xA7 Phases 3+5"
-  est_hours: 14
+  plan_ref: plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+    § Phases 3+5
+  est_hours: 14.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 4
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-5
   title: Group H Phase 1+2 UAC + UTL bases (slot 5)
   tier: 1
@@ -421,18 +583,35 @@ tasks:
   - unified-api-contracts
   - unified-trading-library
   - unified-trading-pm
-  target_slot: 5
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per ikenna_orchestrator/pings/slot_5.md \u2014 Group H Phase 1 (6 new UAC event types\nin canonical/crosscutting) + Phase 2 (4 UTL bases). Schema-parity cassettes\nper UAC discipline. ~1.5 cal\
-    \ AI-days. UTL lifts already shipped (utl@e2445522\n+ strategy-service@054fae03; 22 tests).\n"
-  done_definition: "- 6 UAC event types shipped: ClientLifecycleEvent + ClientReadyEvent +\n  ClientQuarantinedEvent + ShardCapacityEvent + TransferIntent + TransferResult\n- 4 UTL bases shipped: ClientLifecycleBusSubscriberBase\
-    \ + ClientCredentialKmsPoller\n  + StrategySupervisorBase + ClientWorkerBase\n- basedpyright clean on UAC + UTL\n"
-  plan_ref: "plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md \xA7 Phases 1+2"
-  est_hours: 12
+  brief: 'Per ikenna_orchestrator/pings/slot_5.md — Group H Phase 1 (6 new UAC event
+    types
+
+    in canonical/crosscutting) + Phase 2 (4 UTL bases). Schema-parity cassettes
+
+    per UAC discipline. ~1.5 cal AI-days. UTL lifts already shipped (utl@e2445522
+
+    + strategy-service@054fae03; 22 tests).
+
+    '
+  done_definition: "- 6 UAC event types shipped: ClientLifecycleEvent + ClientReadyEvent\
+    \ +\n  ClientQuarantinedEvent + ShardCapacityEvent + TransferIntent + TransferResult\n\
+    - 4 UTL bases shipped: ClientLifecycleBusSubscriberBase + ClientCredentialKmsPoller\n\
+    \  + StrategySupervisorBase + ClientWorkerBase\n- basedpyright clean on UAC +\
+    \ UTL\n"
+  plan_ref: plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+    § Phases 1+2
+  est_hours: 12.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-6
   title: Group H Phase 4 ClientWorker subprocess + Phase 7 e2e (slot 6)
   tier: 1
@@ -441,32 +620,61 @@ tasks:
   - strategy-service
   - execution-service
   - unified-trading-pm
-  target_slot: 6
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per ikenna_orchestrator/pings/slot_6.md \u2014 Group H Phases 4+7\n(ClientWorker subprocess + IPC wiring + e2e + unit tests). ~2.5 cal AI-days.\nSlot 6 frozen on deployment-UI lifecycle (resumes\
-    \ post Phase 8 unfreeze) \u2014\nGroup H is allowed parallel.\n"
-  done_definition: "- ClientWorkerBase concrete subprocess + IPC wired\n- e2e + unit tests added (\u226580% line coverage on new surfaces)\n- QG green; commit pushed\n"
-  plan_ref: "plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md \xA7 Phases 4+7"
-  est_hours: 20
+  brief: 'Per ikenna_orchestrator/pings/slot_6.md — Group H Phases 4+7
+
+    (ClientWorker subprocess + IPC wiring + e2e + unit tests). ~2.5 cal AI-days.
+
+    Slot 6 frozen on deployment-UI lifecycle (resumes post Phase 8 unfreeze) —
+
+    Group H is allowed parallel.
+
+    '
+  done_definition: '- ClientWorkerBase concrete subprocess + IPC wired
+
+    - e2e + unit tests added (≥80% line coverage on new surfaces)
+
+    - QG green; commit pushed
+
+    '
+  plan_ref: plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+    § Phases 4+7
+  est_hours: 20.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 6
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-7
-  title: Group H Phase 6 execution-service docs + Phase 8 deployment-service (slot 7)
+  title: Group H Phase 6 execution-service docs + Phase 8 deployment-service (slot
+    7)
   tier: 1
   priority: 8
   repos:
   - execution-service
   - deployment-service
   - unified-trading-pm
-  target_slot: 7
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per ikenna_orchestrator/pings/slot_7.md \u2014 Group H Phases 6+8\n(execution-service docs + TransferCoordinator facade + deployment-service wiring).\n~1.5 cal AI-days. Slot 7 last_msg @19:53:\
-    \ \"IDLE. Phase 6 codex docs shipped +\nQGs green. Branch tab/ikennaigboaka/7 @ e1140...\" \u2014 Phase 6 likely DONE; Phase 8\nremains.\n"
+  brief: 'Per ikenna_orchestrator/pings/slot_7.md — Group H Phases 6+8
+
+    (execution-service docs + TransferCoordinator facade + deployment-service wiring).
+
+    ~1.5 cal AI-days. Slot 7 last_msg @19:53: "IDLE. Phase 6 codex docs shipped +
+
+    QGs green. Branch tab/ikennaigboaka/7 @ e1140..." — Phase 6 likely DONE; Phase
+    8
+
+    remains.
+
+    '
   done_definition: '- Codex docs: per-client-isolation execution architecture + TransferCoordinator
 
     - deployment-service wiring per Phase 8 spec
@@ -474,23 +682,38 @@ tasks:
     - QG green; commit pushed
 
     '
-  plan_ref: "plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md \xA7 Phases 6+8"
-  est_hours: 12
+  plan_ref: plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+    § Phases 6+8
+  est_hours: 12.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 7
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PH-2-B3-SLOT-8
-  title: "Group H Phase 9 codex SSOT updates (slot 8) \u2014 secondary after PHASE-1B"
+  title: Group H Phase 9 codex SSOT updates (slot 8) — secondary after PHASE-1B
   tier: 1
   priority: 8
   repos:
   - unified-trading-pm
-  target_slot: 8
-  affinity: high
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-1B-YAML-ALIGN
     conditions: []
-  brief: "Per ikenna_orchestrator/pings/slot_8.md \u2014 Group H Phase 9 (8 codex docs:\nper-client-isolation-architecture + supervisor pattern + MarkPriceAggregator\ncentralisation rationale + hybrid hot-reload\
-    \ + preflight sequence + crash\nisolation + GIL-subprocess rationale + audit pointers). ~0.5 cal AI-days.\nDoc-only \u2014 slot 8 currently working PHASE-1B-YAML-ALIGN; this queues after.\n"
+  brief: 'Per ikenna_orchestrator/pings/slot_8.md — Group H Phase 9 (8 codex docs:
+
+    per-client-isolation-architecture + supervisor pattern + MarkPriceAggregator
+
+    centralisation rationale + hybrid hot-reload + preflight sequence + crash
+
+    isolation + GIL-subprocess rationale + audit pointers). ~0.5 cal AI-days.
+
+    Doc-only — slot 8 currently working PHASE-1B-YAML-ALIGN; this queues after.
+
+    '
   done_definition: '- 8 codex docs shipped under codex/04-architecture/ + codex/05-infrastructure/
 
     - Cross-links from CLAUDE.md to per-client-isolation-architecture.md
@@ -498,73 +721,106 @@ tasks:
     - Commit pushed
 
     '
-  plan_ref: "plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md \xA7 Phase 9"
-  est_hours: 4
+  plan_ref: plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+    § Phase 9
+  est_hours: 4.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 8
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: PHASE-5A-AWS-OBJECT-MIGRATE
-  title: "Phase 5A \u2014 aws s3 sync from current bucket names to symmetric target names"
+  title: Phase 5A — aws s3 sync from current bucket names to symmetric target names
   tier: 1
   priority: 50
   repos:
   - deployment-service
   - unified-trading-pm
-  target_slot: 4
-  affinity: low
-  parallel_safe: false
   collision_group: phase-5-aws-migration
   prereqs:
     completed_tasks: []
     conditions:
     - phase-1-bucket-symmetry-green
-  brief: "Per master_coord \xA7 Phase 5 item 1 + aws_migration_defi_first_2026_05_07.md.\naws s3 sync per (env \xD7 kind \xD7 asset_group) from current \u2192 target bucket names\nfrom the Phase 1 audit\
-    \ CSV. Single-walk discipline per asset group.\n"
-  done_definition: '- Every object copied to target bucket; source bucket unchanged until Phase 5C
+  brief: 'Per master_coord § Phase 5 item 1 + aws_migration_defi_first_2026_05_07.md.
+
+    aws s3 sync per (env × kind × asset_group) from current → target bucket names
+
+    from the Phase 1 audit CSV. Single-walk discipline per asset group.
+
+    '
+  done_definition: '- Every object copied to target bucket; source bucket unchanged
+    until Phase 5C
 
     - Spot-check 5 objects per kind for byte-identity + ACL preservation
 
     - sync report committed at plans/audit/results/phase5_aws_object_migrate.csv
 
     '
-  plan_ref: "master_coord \xA7 Phase 5 + aws_migration_defi_first_2026_05_07.md"
-  est_hours: 16
+  plan_ref: master_coord § Phase 5 + aws_migration_defi_first_2026_05_07.md
+  est_hours: 16.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 4
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-5B-AWS-PROVISIONING-IDEMPOTENT
-  title: "Phase 5B \u2014 AWS bucket provisioning scripts idempotent on new names"
+  title: Phase 5B — AWS bucket provisioning scripts idempotent on new names
   tier: 1
   priority: 52
   repos:
   - deployment-service
-  target_slot: 4
-  affinity: low
-  parallel_safe: false
   collision_group: phase-5-aws-migration
   prereqs:
     completed_tasks:
     - PHASE-5A-AWS-OBJECT-MIGRATE
     conditions: []
-  brief: "Per master_coord \xA7 Phase 5 item 2. Confirm every target AWS bucket has a\nTerraform / boto3 provisioning step that creates it idempotently. Update\ndeployment-service/scripts/aws_*.{sh,py}\
-    \ as needed.\n"
-  done_definition: "- Re-run provisioning on existing buckets is no-op exit 0\n- New bucket creation works for any (env \xD7 kind \xD7 asset_group) tuple\n- QG green on deployment-service\n"
-  plan_ref: "master_coord \xA7 Phase 5"
-  est_hours: 8
+  brief: 'Per master_coord § Phase 5 item 2. Confirm every target AWS bucket has a
+
+    Terraform / boto3 provisioning step that creates it idempotently. Update
+
+    deployment-service/scripts/aws_*.{sh,py} as needed.
+
+    '
+  done_definition: '- Re-run provisioning on existing buckets is no-op exit 0
+
+    - New bucket creation works for any (env × kind × asset_group) tuple
+
+    - QG green on deployment-service
+
+    '
+  plan_ref: master_coord § Phase 5
+  est_hours: 8.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 4
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-5C-AWS-OLD-BUCKET-DELETE
-  title: "Phase 5C \u2014 delete old AWS bucket names (after Phase 7 GREEN + 30-day retention)"
+  title: Phase 5C — delete old AWS bucket names (after Phase 7 GREEN + 30-day retention)
   tier: 1
   priority: 54
   repos:
   - deployment-service
   - unified-trading-pm
-  target_slot: 4
-  affinity: low
-  parallel_safe: false
   collision_group: phase-5-aws-migration
   prereqs:
     completed_tasks:
     - PHASE-5B-AWS-PROVISIONING-IDEMPOTENT
     conditions:
     - phase-7-v8-backfill-green
-  brief: "Per master_coord \xA7 Phase 5 item 3. ONLY after Phase 7 GREEN + 30-day\nretention check passes. Operator must confirm via /blocked before any\ndestructive aws s3 rb.\n"
+  brief: 'Per master_coord § Phase 5 item 3. ONLY after Phase 7 GREEN + 30-day
+
+    retention check passes. Operator must confirm via /blocked before any
+
+    destructive aws s3 rb.
+
+    '
   done_definition: '- Operator confirmation logged in plans/audit/results/phase5c_deletion_log.md
 
     - aws s3 rb on each old bucket; verify with aws s3 ls
@@ -572,25 +828,35 @@ tasks:
     - main agent flips phase-5-aws-migration-green on completion
 
     '
-  plan_ref: "master_coord \xA7 Phase 5 item 3"
-  est_hours: 4
+  plan_ref: master_coord § Phase 5 item 3
+  est_hours: 4.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 4
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-6A-DOCKER-IMAGE-REBUILD
-  title: "Phase 6A \u2014 rebuild writer-fleet Docker images at v8 binaries"
+  title: Phase 6A — rebuild writer-fleet Docker images at v8 binaries
   tier: 1
   priority: 60
   repos:
   - market-tick-data-service
   - deployment-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - phase-5-aws-migration-green
-  brief: "Per master_coord \xA7 Phase 6 + writegate_honest_coverage_endtoend_2026_05_06.md\n\xA7 Phase 7.A. Rebuild Docker images for writer fleet so v8 schema constant\nis baked into binaries. Tag + push\
-    \ to Artifact Registry.\n"
+  brief: 'Per master_coord § Phase 6 + writegate_honest_coverage_endtoend_2026_05_06.md
+
+    § Phase 7.A. Rebuild Docker images for writer fleet so v8 schema constant
+
+    is baked into binaries. Tag + push to Artifact Registry.
+
+    '
   done_definition: '- All writer images rebuilt; tagged v8.0.0-YYYYMMDD
 
     - Images pushed to Artifact Registry; pull-test from a clean VM succeeds
@@ -598,18 +864,23 @@ tasks:
     - Image manifest committed at plans/audit/results/phase6_image_manifest.json
 
     '
-  plan_ref: "master_coord \xA7 Phase 6"
-  est_hours: 8
+  plan_ref: master_coord § Phase 6
+  est_hours: 8.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-6B-FLEET-REDEPLOY
-  title: "Phase 6B \u2014 redeploy writer VMs onto rebuilt v8 images"
+  title: Phase 6B — redeploy writer VMs onto rebuilt v8 images
   tier: 1
   priority: 62
   repos:
   - deployment-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-6A-DOCKER-IMAGE-REBUILD
@@ -619,25 +890,31 @@ tasks:
     VM before proceeding to next; bail on first failure.
 
     '
-  done_definition: '- 100% of writer VMs on v8 image (verify via instance-metadata tag)
+  done_definition: '- 100% of writer VMs on v8 image (verify via instance-metadata
+    tag)
 
     - Sample 100 newest manifest writes per bucket; all at schema_version=8
 
     - Rollback procedure documented if any VM fails
 
     '
-  plan_ref: "master_coord \xA7 Phase 6"
-  est_hours: 6
+  plan_ref: master_coord § Phase 6
+  est_hours: 6.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-6C-WRITER-V8-VERIFY
-  title: "Phase 6C \u2014 sample-verify writers emit v8; flip phase-6-docker-rebuild-green"
+  title: Phase 6C — sample-verify writers emit v8; flip phase-6-docker-rebuild-green
   tier: 1
   priority: 64
   repos:
   - market-tick-data-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-6B-FLEET-REDEPLOY
@@ -649,70 +926,104 @@ tasks:
     phase-6-docker-rebuild-green on /done.
 
     '
-  done_definition: "- Sample report at plans/audit/results/phase6c_sample_verify.csv shows\n  100% v8 across all 10 buckets\n- main agent flips phase-6-docker-rebuild-green\n"
-  plan_ref: "master_coord \xA7 Phase 6"
-  est_hours: 3
+  done_definition: "- Sample report at plans/audit/results/phase6c_sample_verify.csv\
+    \ shows\n  100% v8 across all 10 buckets\n- main agent flips phase-6-docker-rebuild-green\n"
+  plan_ref: master_coord § Phase 6
+  est_hours: 3.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-7A-V8-SCHEMA-MIGRATE
-  title: "Phase 7A \u2014 migrate every v<8 row to v8 schema (existing manifest rows)"
+  title: Phase 7A — migrate every v<8 row to v8 schema (existing manifest rows)
   tier: 1
   priority: 70
   repos:
   - market-tick-data-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - phase-6-docker-rebuild-green
-  brief: "Per master_coord \xA7 Phase 7(a) + d3_manifest_v8_finish_2026_05_20.md +\nhard_schema_phase1_field_flip_migration_2026_05_19.md. Migrate every v<8\nrow to v8 schema across all manifest shards.\
-    \ NOT operational data backfill\n\u2014 that's Phase 11.\n"
+  brief: 'Per master_coord § Phase 7(a) + d3_manifest_v8_finish_2026_05_20.md +
+
+    hard_schema_phase1_field_flip_migration_2026_05_19.md. Migrate every v<8
+
+    row to v8 schema across all manifest shards. NOT operational data backfill
+
+    — that''s Phase 11.
+
+    '
   done_definition: '- A4 v1 + A4 v2 both re-run show 100% v8 across all manifests
 
     - Migration script idempotent; can re-run safely
 
     '
-  plan_ref: "master_coord \xA7 Phase 7(a)"
-  est_hours: 12
+  plan_ref: master_coord § Phase 7(a)
+  est_hours: 12.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-7B-LABEL-FLIP-EMPTY-REASON
-  title: "Phase 7B \u2014 flip empty_confirmed.reason to typed EmptyConfirmedReason enum"
+  title: Phase 7B — flip empty_confirmed.reason to typed EmptyConfirmedReason enum
   tier: 1
   priority: 72
   repos:
   - market-tick-data-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-7A-V8-SCHEMA-MIGRATE
     conditions: []
-  brief: "Per master_coord \xA7 Phase 7(b). Flip every bad/blank empty_confirmed.reason\nto typed EmptyConfirmedReason enum value across all manifest rows.\n"
+  brief: 'Per master_coord § Phase 7(b). Flip every bad/blank empty_confirmed.reason
+
+    to typed EmptyConfirmedReason enum value across all manifest rows.
+
+    '
   done_definition: '- 0 NULL or invalid empty_confirmed.reason values workspace-wide
 
     - reconciler outputs 0 mismatches
 
     '
-  plan_ref: "master_coord \xA7 Phase 7(b) + hard_schema_phase1_field_flip_migration_2026_05_19.md"
-  est_hours: 6
+  plan_ref: master_coord § Phase 7(b) + hard_schema_phase1_field_flip_migration_2026_05_19.md
+  est_hours: 6.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-7C-DIVERGENT-EMPTY-TRIAGE
-  title: "Phase 7C \u2014 triage 765 DIVERGENT_EMPTY cells (label-flip vs Phase 11 re-fetch)"
+  title: Phase 7C — triage 765 DIVERGENT_EMPTY cells (label-flip vs Phase 11 re-fetch)
   tier: 1
   priority: 74
   repos:
   - market-tick-data-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-7B-LABEL-FLIP-EMPTY-REASON
     conditions: []
-  brief: "Per master_coord \xA7 Phase 7(c) + A3 audit. Per-cell decision for 765\nDIVERGENT_EMPTY cells: label-flip-applied (was captured-but-mislabelled) vs\nPhase-11-rebackfill (genuinely needs re-fetch)\
-    \ vs operator-scope. Output:\nplans/audit/results/phase7c_divergent_empty_triage.csv.\n"
+  brief: 'Per master_coord § Phase 7(c) + A3 audit. Per-cell decision for 765
+
+    DIVERGENT_EMPTY cells: label-flip-applied (was captured-but-mislabelled) vs
+
+    Phase-11-rebackfill (genuinely needs re-fetch) vs operator-scope. Output:
+
+    plans/audit/results/phase7c_divergent_empty_triage.csv.
+
+    '
   done_definition: '- Triage CSV produced with per-cell classification (3 buckets)
 
     - Label-flip subset applied in this phase
@@ -720,17 +1031,22 @@ tasks:
     - Phase 11 subset queued for re-fetch (operational backfill)
 
     '
-  plan_ref: "master_coord \xA7 Phase 7(c)"
-  est_hours: 8
+  plan_ref: master_coord § Phase 7(c)
+  est_hours: 8.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-7D-V8-GREEN-FLIP
-  title: "Phase 7D \u2014 confirm 100% v8 + 0 NULL + flip phase-7-v8-backfill-green"
+  title: Phase 7D — confirm 100% v8 + 0 NULL + flip phase-7-v8-backfill-green
   tier: 1
   priority: 76
   repos:
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-7C-DIVERGENT-EMPTY-TRIAGE
@@ -745,24 +1061,36 @@ tasks:
     - main agent flips phase-7-v8-backfill-green condition
 
     '
-  plan_ref: "master_coord \xA7 Phase 7 verification"
-  est_hours: 2
+  plan_ref: master_coord § Phase 7 verification
+  est_hours: 2.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-9A-FORMULA-CONSOLIDATE
-  title: "Phase 9A \u2014 consolidate honest-coverage formula across deployment-api consumers"
+  title: Phase 9A — consolidate honest-coverage formula across deployment-api consumers
   tier: 1
   priority: 90
   repos:
   - deployment-api
   - unified-trading-pm
-  target_slot: 6
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - phase-7-v8-backfill-green
-  brief: "Per master_coord \xA7 Phase 9 + honest_coverage_formula_consolidation_2026_05_19.md.\nSingle formula: numerator = count(capture_status=captured); denominator =\ncount(capture_status in {captured,\
-    \ empty_confirmed, attempted_failed,\nexpected_unattempted}). EXCLUDE out_of_scope / NOT_IN_SCOPE per A2 oracle.\n"
+  brief: 'Per master_coord § Phase 9 + honest_coverage_formula_consolidation_2026_05_19.md.
+
+    Single formula: numerator = count(capture_status=captured); denominator =
+
+    count(capture_status in {captured, empty_confirmed, attempted_failed,
+
+    expected_unattempted}). EXCLUDE out_of_scope / NOT_IN_SCOPE per A2 oracle.
+
+    '
   done_definition: '- Single honest_coverage() function in deployment-api SDK
 
     - All consumers migrated to use it (delete the 3-4 existing variants)
@@ -770,36 +1098,59 @@ tasks:
     - Unit tests cover the formula edge cases
 
     '
-  plan_ref: "master_coord \xA7 Phase 9 + honest_coverage_formula_consolidation_2026_05_19.md"
-  est_hours: 8
+  plan_ref: master_coord § Phase 9 + honest_coverage_formula_consolidation_2026_05_19.md
+  est_hours: 8.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 6
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-9B-DEPLOYMENT-UI-WIRE
-  title: "Phase 9B \u2014 wire deployment-UI to show numerator/denominator + breakdown panel"
+  title: Phase 9B — wire deployment-UI to show numerator/denominator + breakdown panel
   tier: 1
   priority: 92
   repos:
   - deployment-ui
   - unified-trading-pm
-  target_slot: 6
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-9A-FORMULA-CONSOLIDATE
     conditions: []
-  brief: "Per master_coord \xA7 Phase 9. UI shows \"% of in-scope cells captured\" with\nbreakdown panel for 4-state distribution. Surface DIVERGENT_EMPTY cells as\n\"lost data\" investigation alerts.\n"
-  done_definition: "- UI shows correct numerator/denominator per honest_coverage()\n- Breakdown panel renders 4-state distribution per asset group\n- DIVERGENT_EMPTY cells surface as alerts with linkable\
-    \ detail\n- Spot-check 3 known buckets \u2014 math matches\n"
-  plan_ref: "master_coord \xA7 Phase 9"
-  est_hours: 12
+  brief: 'Per master_coord § Phase 9. UI shows "% of in-scope cells captured" with
+
+    breakdown panel for 4-state distribution. Surface DIVERGENT_EMPTY cells as
+
+    "lost data" investigation alerts.
+
+    '
+  done_definition: '- UI shows correct numerator/denominator per honest_coverage()
+
+    - Breakdown panel renders 4-state distribution per asset group
+
+    - DIVERGENT_EMPTY cells surface as alerts with linkable detail
+
+    - Spot-check 3 known buckets — math matches
+
+    '
+  plan_ref: master_coord § Phase 9
+  est_hours: 12.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 6
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-9C-GREEN-FLIP
-  title: "Phase 9C \u2014 flip phase-9-denominator-ui-green"
+  title: Phase 9C — flip phase-9-denominator-ui-green
   tier: 1
   priority: 94
   repos:
   - unified-trading-pm
-  target_slot: 6
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks:
     - PHASE-9B-DEPLOYMENT-UI-WIRE
@@ -814,24 +1165,35 @@ tasks:
     - main agent flips phase-9-denominator-ui-green
 
     '
-  plan_ref: "master_coord \xA7 Phase 9 verification"
-  est_hours: 1
+  plan_ref: master_coord § Phase 9 verification
+  est_hours: 1.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 6
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-10A-V8-WRITER-QG
-  title: "Phase 10A \u2014 check_manifest_v8_writer_runtime.py QG step (writer-runtime sample)"
+  title: Phase 10A — check_manifest_v8_writer_runtime.py QG step (writer-runtime sample)
   tier: 1
   priority: 100
   repos:
   - market-tick-data-service
   - deployment-service
   - unified-trading-pm
-  target_slot: 5
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - phase-7-v8-backfill-green
-  brief: "Per master_coord \xA7 Phase 10. New QG step: samples 100 newest manifest\nwrites per writer process; asserts schema_version=8 + typed reason.\nRatchets to 0 violations workspace-wide.\n"
+  brief: 'Per master_coord § Phase 10. New QG step: samples 100 newest manifest
+
+    writes per writer process; asserts schema_version=8 + typed reason.
+
+    Ratchets to 0 violations workspace-wide.
+
+    '
   done_definition: '- scripts/qg/check_manifest_v8_writer_runtime.py shipped
 
     - Wired into bash scripts/quality-gates.sh
@@ -839,23 +1201,34 @@ tasks:
     - 0 violations across writer fleet sample
 
     '
-  plan_ref: "master_coord \xA7 Phase 10 + canary_coverage_qg_enforcement_2026_05_20.md"
-  est_hours: 6
+  plan_ref: master_coord § Phase 10 + canary_coverage_qg_enforcement_2026_05_20.md
+  est_hours: 6.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 5
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: PHASE-10B-DEP-PROP-QG
-  title: "Phase 10B \u2014 check_dependency_fail_propagation.py QG step (per A5 findings)"
+  title: Phase 10B — check_dependency_fail_propagation.py QG step (per A5 findings)
   tier: 1
   priority: 102
   repos:
   - unified-trading-library
   - unified-trading-pm
-  target_slot: 2
-  affinity: low
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
     - phase-7-v8-backfill-green
-  brief: "Per master_coord \xA7 Phase 10 + A5 findings. New QG step: verifies upstream\ndependency failures propagate to downstream consumers correctly (no\nsilent-pass cases). Ratchets to 0 violations.\n"
+  brief: 'Per master_coord § Phase 10 + A5 findings. New QG step: verifies upstream
+
+    dependency failures propagate to downstream consumers correctly (no
+
+    silent-pass cases). Ratchets to 0 violations.
+
+    '
   done_definition: '- scripts/qg/check_dependency_fail_propagation.py shipped
 
     - 0 silent-pass cases across workspace
@@ -863,110 +1236,226 @@ tasks:
     - main agent flips phase-10-qg-enforcement-green after BOTH 10A + 10B land
 
     '
-  plan_ref: "master_coord \xA7 Phase 10 + A5"
-  est_hours: 5
+  plan_ref: master_coord § Phase 10 + A5
+  est_hours: 5.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: low
+  target_slot_timeout_seconds: 600
 - id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-A
-  title: "Harsh: workspace QG green sweep \u2014 cluster A (UAC + UTL + IS)"
+  title: 'Harsh: workspace QG green sweep — cluster A (UAC + UTL + IS)'
   tier: 1
   priority: 100
-  target_slot: 2
-  affinity: high
   repos:
   - unified-api-contracts
   - unified-trading-library
   - instruments-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per CLAUDE.md HARD RULE \"Quality Gates Are A Merge Prerequisite\" and\ndata_pipeline_master_coordination_2026_05_20.md Phase -1.\n\nFor each of: unified-api-contracts, unified-trading-library,\n\
-    instruments-service \u2014 run `bash scripts/quality-gates.sh`, fix any\nfailures (no new features, just QG-fix work), commit + push to\nlive-defi-rollout with conventional-commit prefix.\n\nComposes\
-    \ with: plans/active/human_work_backlog_2026_05_20.md item 8\n(HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP).\n\nEstimated: 1 cal-AI-day for this cluster.\n"
-  done_definition: "- All 3 repos: bash scripts/quality-gates.sh exit 0\n- Plan flip: HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP item flipped with\n  per-repo SHA evidence\n- No new features added; only QG-fix\
-    \ work\n"
-- id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-B
-  title: "Harsh: workspace QG green sweep \u2014 cluster B (MTDS + features + MDPS)"
-  tier: 1
-  priority: 110
+  brief: 'Per CLAUDE.md HARD RULE "Quality Gates Are A Merge Prerequisite" and
+
+    data_pipeline_master_coordination_2026_05_20.md Phase -1.
+
+
+    For each of: unified-api-contracts, unified-trading-library,
+
+    instruments-service — run `bash scripts/quality-gates.sh`, fix any
+
+    failures (no new features, just QG-fix work), commit + push to
+
+    live-defi-rollout with conventional-commit prefix.
+
+
+    Composes with: plans/active/human_work_backlog_2026_05_20.md item 8
+
+    (HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP).
+
+
+    Estimated: 1 cal-AI-day for this cluster.
+
+    '
+  done_definition: "- All 3 repos: bash scripts/quality-gates.sh exit 0\n- Plan flip:\
+    \ HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP item flipped with\n  per-repo SHA evidence\n\
+    - No new features added; only QG-fix work\n"
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-B
+  title: 'Harsh: workspace QG green sweep — cluster B (MTDS + features + MDPS)'
+  tier: 1
+  priority: 110
   repos:
   - market-tick-data-service
   - features-service
   - market-data-processing-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Same as HUMAN-HARSH-WORKSPACE-QG-CLUSTER-A but for cluster B:\nmarket-tick-data-service, features-service,\nmarket-data-processing-service.\n\nPYTEST_UNIT_DIR override may be needed for features-service\
-    \ (per-family\ntest layout). See CLAUDE.md \xA7 \"PYTEST_UNIT_DIR per-family override\".\n"
+  brief: 'Same as HUMAN-HARSH-WORKSPACE-QG-CLUSTER-A but for cluster B:
+
+    market-tick-data-service, features-service,
+
+    market-data-processing-service.
+
+
+    PYTEST_UNIT_DIR override may be needed for features-service (per-family
+
+    test layout). See CLAUDE.md § "PYTEST_UNIT_DIR per-family override".
+
+    '
   done_definition: '- All 3 repos: bash scripts/quality-gates.sh exit 0
 
     - Plan flip evidence per repo
 
     '
-- id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-C
-  title: "Harsh: workspace QG green sweep \u2014 cluster C (strategy + execution + ml \u2014 surface-only under freeze)"
-  tier: 1
-  priority: 120
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-HARSH-WORKSPACE-QG-CLUSTER-C
+  title: 'Harsh: workspace QG green sweep — cluster C (strategy + execution —
+    surface-only under freeze)'
+  tier: 1
+  priority: 120
   repos:
   - strategy-service
   - execution-service
-  - ml-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Cluster C: strategy-service, execution-service, ml-service.\n\nSTRATEGY-LOGIC FREEZE GATE active (per coordinator plan): do NOT\nmodify strategy_service/engine/strategies/v2/, engine/allocator/,\n\
-    collateral/, liquidation/, cross-venue-transfer/. Surface-only QG\nfixes allowed (imports, type hints, dead code). If a fix requires\nlogic touch \u2192 file as BLOCKED + ping operator.\n\nml-service\
-    \ is archived \u2014 confirm QG moot or skip per repo state.\n"
-  done_definition: '- strategy-service + execution-service: QG green via surface-only fixes
+  brief: 'Cluster C: strategy-service, execution-service.
 
-    - ml-service: confirmed archived OR QG green
+
+    STRATEGY-LOGIC FREEZE GATE active (per coordinator plan): do NOT
+
+    modify strategy_service/engine/strategies/v2/, engine/allocator/,
+
+    collateral/, liquidation/, cross-venue-transfer/. Surface-only QG
+
+    fixes allowed (imports, type hints, dead code). If a fix requires
+
+    logic touch → file as BLOCKED + ping operator.
+
+
+    ml-service handed off to cosmictrader on another VM (2026-05-21) — out of scope here.
+
+    '
+  done_definition: '- strategy-service + execution-service: QG green via surface-only
+    fixes
 
     - Per-repo SHA evidence
 
     '
-- id: HUMAN-HARSH-CI-CD-PROMOTION-TEST
-  title: "Harsh: drive full LDR \u2192 staging \u2192 SIT \u2192 main promotion cycle on a non-critical service"
-  tier: 1
-  priority: 150
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-HARSH-CI-CD-PROMOTION-TEST
+  title: 'Harsh: drive full LDR → staging → SIT → main promotion cycle on a non-critical
+    service'
+  tier: 1
+  priority: 150
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per codex/08-workflows/deployment-flow.md + plans/active/human_work_backlog_2026_05_20.md\nitem 14 (HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE).\n\nPick a non-critical service (e.g. alerting-service\
-    \ or a small util\npackage), drive a full promotion cycle:\n  1. LDR \u2192 staging via quickmerge with --agent (lint/format/typecheck/codex)\n  2. staging \u2192 SIT via the SDLC workflow\n  3. SIT\
-    \ \u2192 main via promotion workflow\nVerify each step exits clean. Capture timing + any QG bumps.\nOutcome: documented dry-run + any pre-cutover fixes needed before May-23.\n"
-  done_definition: "- Full LDR \u2192 staging \u2192 SIT \u2192 main cycle completed on one non-critical service\n- Document timing + any workflow bumps in commit message + plan flip\n- Pre-cutover gaps\
-    \ filed as issues if found\n"
-- id: HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-SCOPING
-  title: 'Harsh: scope AWS-side manifest consolidator (currently only GCP has Cloud Run jobs)'
-  tier: 1
-  priority: 160
+  brief: "Per codex/08-workflows/deployment-flow.md + plans/active/human_work_backlog_2026_05_20.md\n\
+    item 14 (HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE).\n\nPick a non-critical service\
+    \ (e.g. alerting-service or a small util\npackage), drive a full promotion cycle:\n\
+    \  1. LDR → staging via quickmerge with --agent (lint/format/typecheck/codex)\n\
+    \  2. staging → SIT via the SDLC workflow\n  3. SIT → main via promotion workflow\n\
+    Verify each step exits clean. Capture timing + any QG bumps.\nOutcome: documented\
+    \ dry-run + any pre-cutover fixes needed before May-23.\n"
+  done_definition: '- Full LDR → staging → SIT → main cycle completed on one non-critical
+    service
+
+    - Document timing + any workflow bumps in commit message + plan flip
+
+    - Pre-cutover gaps filed as issues if found
+
+    '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-SCOPING
+  title: 'Harsh: scope AWS-side manifest consolidator (currently only GCP has Cloud
+    Run jobs)'
+  tier: 1
+  priority: 160
   repos:
   - deployment-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per codex/05-infrastructure/manifest-consolidator-ssot.md: AWS-side\nconsolidation is NOT in scope. Operator wants this scoped \u2014 either\na sub-plan filed + estimated, OR a BLOCKED-OPERATOR-DECISION\
-    \ ping\nwith explicit \"leave AWS without consolidator\" articulation.\n\nCompose: investigate AWS Lambda + EventBridge equivalents for the\n10 Cloud Run jobs running every 1 min. Cost estimate. Migration\n\
-    complexity estimate.\n"
-  done_definition: "- Either: new sub-plan filed in plans/active/ + estimated, OR\n- BLOCKED-OPERATOR-DECISION ping filed with the \"leave AWS without\n  consolidator\" articulation + tradeoff analysis\n"
-- id: HUMAN-HARSH-LAPTOP-MIGRATION
-  title: "Harsh: complete laptop migration \u2014 onboard to shared agent-orchestrator from orch.epiphanytechnologies.com"
-  tier: 1
-  priority: 180
+  brief: 'Per codex/05-infrastructure/manifest-consolidator-ssot.md: AWS-side
+
+    consolidation is NOT in scope. Operator wants this scoped — either
+
+    a sub-plan filed + estimated, OR a BLOCKED-OPERATOR-DECISION ping
+
+    with explicit "leave AWS without consolidator" articulation.
+
+
+    Compose: investigate AWS Lambda + EventBridge equivalents for the
+
+    10 Cloud Run jobs running every 1 min. Cost estimate. Migration
+
+    complexity estimate.
+
+    '
+  done_definition: "- Either: new sub-plan filed in plans/active/ + estimated, OR\n\
+    - BLOCKED-OPERATOR-DECISION ping filed with the \"leave AWS without\n  consolidator\"\
+    \ articulation + tradeoff analysis\n"
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-HARSH-LAPTOP-MIGRATION
+  title: 'Harsh: complete laptop migration — onboard to shared agent-orchestrator
+    from orch.epiphanytechnologies.com'
+  tier: 1
+  priority: 180
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -984,20 +1473,35 @@ tasks:
     - Plan item HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE flipped
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-HELIUS-SOLANA-PAID
-  title: "Adapter: Helius paid Solana RPC scaffolding (BLOCKED-CREDENTIALS \u2014 scaffold + unit tests ship now)"
+  title: 'Adapter: Helius paid Solana RPC scaffolding (BLOCKED-CREDENTIALS — scaffold
+    + unit tests ship now)'
   tier: 1
   priority: 200
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per CLAUDE.md HARD RULE \"External Data Is Always Available \u2014 Never\nSilently Defer Adapters\" + plans/active/human_work_backlog_2026_05_20.md\nadapter scaffolding track.\n\nBuild the adapter\
-    \ scaffold:\n  - UAC contract (schema + endpoints from Helius docs)\n  - Auth shape (API key in header)\n  - Retry/backoff/rate-limit semantics\n  - Error classifier via classify_venue_error() + ADAPTER_FETCH_FAILED\n\
-    \  - Manifest emission per writegate Phase 6.x\n  - Unit tests against mocked Helius API responses\n  - Integration tests marked @pytest.mark.requires_credentials\n\nStatus: BLOCKED-CREDENTIALS (Ikenna\
-    \ ping operator for Helius paid tier\nsignup).\n"
+  brief: "Per CLAUDE.md HARD RULE \"External Data Is Always Available — Never\nSilently\
+    \ Defer Adapters\" + plans/active/human_work_backlog_2026_05_20.md\nadapter scaffolding\
+    \ track.\n\nBuild the adapter scaffold:\n  - UAC contract (schema + endpoints\
+    \ from Helius docs)\n  - Auth shape (API key in header)\n  - Retry/backoff/rate-limit\
+    \ semantics\n  - Error classifier via classify_venue_error() + ADAPTER_FETCH_FAILED\n\
+    \  - Manifest emission per writegate Phase 6.x\n  - Unit tests against mocked\
+    \ Helius API responses\n  - Integration tests marked @pytest.mark.requires_credentials\n\
+    \nStatus: BLOCKED-CREDENTIALS (Ikenna ping operator for Helius paid tier\nsignup).\n"
   done_definition: '- Scaffold + UAC contract + unit tests shipped
 
     - Integration tests skipped with @pytest.mark.requires_credentials
@@ -1007,6 +1511,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed in pings/slot_1.md
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-GLASSNODE-ONCHAIN
   title: 'Adapter: Glassnode on-chain analytics scaffolding'
   tier: 1
@@ -1014,6 +1527,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1031,6 +1545,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-KAIKO-CEX-HISTORICAL
   title: 'Adapter: Kaiko CEX historical depth scaffolding'
   tier: 1
@@ -1038,6 +1561,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1053,6 +1577,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-POLYGON-IO-TRADFI-TICKS
   title: 'Adapter: Polygon.io TradFi ticks scaffolding'
   tier: 1
@@ -1060,6 +1593,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1075,6 +1609,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-DATABENTO-TRADFI
   title: 'Adapter: Databento TradFi alt scaffolding'
   tier: 1
@@ -1082,6 +1625,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1097,6 +1641,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-SPORTRADAR-FEED
   title: 'Adapter: Sportradar sports feed scaffolding'
   tier: 1
@@ -1104,6 +1657,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1119,6 +1673,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-FOOTYSTATS-FEED
   title: 'Adapter: Footystats sports feed scaffolding (cheaper alt)'
   tier: 1
@@ -1126,6 +1689,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1141,6 +1705,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-THE-ODDS-API
   title: 'Adapter: The-Odds-API sports/prediction odds scaffolding'
   tier: 1
@@ -1148,6 +1721,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1163,6 +1737,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-POLYMARKET-FEED
   title: 'Adapter: Polymarket prediction-market feed scaffolding'
   tier: 1
@@ -1170,6 +1753,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1187,6 +1771,15 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: ADAPTER-KALSHI-FEED
   title: 'Adapter: Kalshi prediction-market feed scaffolding'
   tier: 1
@@ -1194,6 +1787,7 @@ tasks:
   repos:
   - market-tick-data-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1211,16 +1805,24 @@ tasks:
     - CREDENTIAL APPROVAL REQUEST filed
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: null
+  affinity: none
+  target_slot_timeout_seconds: 600
 - id: HUMAN-HARSH-BATCH-ML-CEFI
-  title: 'Harsh: batch ML training for CeFi archetypes (perp funding + basis + cross-CEX arb)'
+  title: 'Harsh: batch ML training for CeFi archetypes (perp funding + basis + cross-CEX
+    arb)'
   tier: 50
   priority: 300
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - ml-service
   - features-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
@@ -1241,16 +1843,23 @@ tasks:
     - Sample backtest evidence
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-BATCH-ML-TRADFI
   title: 'Harsh: batch ML for TradFi (basis predictor + calendar spread)'
   tier: 50
   priority: 310
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - ml-service
   - features-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
@@ -1265,16 +1874,23 @@ tasks:
     - Artifacts + backtest evidence
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-BATCH-ML-SPORTS
   title: 'Harsh: batch ML for Sports (odds dispersion + in-game movement)'
   tier: 50
   priority: 320
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - ml-service
   - features-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
@@ -1287,16 +1903,24 @@ tasks:
     - Artifacts + backtest evidence
 
     '
-- id: HUMAN-HARSH-BATCH-ML-PREDICTION
-  title: 'Harsh: batch ML for Prediction (Polymarket-Kalshi spread + settlement-source discrepancy)'
-  tier: 50
-  priority: 330
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 2
   affinity: medium
   target_slot_timeout_seconds: 3600
+- id: HUMAN-HARSH-BATCH-ML-PREDICTION
+  title: 'Harsh: batch ML for Prediction (Polymarket-Kalshi spread + settlement-source
+    discrepancy)'
+  tier: 50
+  priority: 330
   repos:
   - ml-service
   - features-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions:
@@ -1311,16 +1935,23 @@ tasks:
     - Artifacts + backtest evidence
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-CEFI
   title: 'Harsh: wire batch strategy + execution for CeFi archetypes'
   tier: 50
   priority: 340
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - strategy-service
   - execution-service
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-HARSH-BATCH-ML-CEFI
@@ -1338,16 +1969,23 @@ tasks:
     - Sample paper-trade harness output
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-TRADFI
   title: 'Harsh: wire batch strategy + execution for TradFi'
   tier: 50
   priority: 350
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - strategy-service
   - execution-service
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-HARSH-BATCH-ML-TRADFI
@@ -1363,16 +2001,23 @@ tasks:
     - Sample paper-trade output
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-BATCH-STRATEGY-EXEC-SPORTS-PREDICTION
   title: 'Harsh: wire batch strategy + execution for Sports + Prediction (bundled)'
   tier: 50
   priority: 360
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - strategy-service
   - execution-service
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-HARSH-BATCH-ML-SPORTS
@@ -1391,25 +2036,37 @@ tasks:
     - Sample paper-trade output
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-HARSH-PAPER-TRADE-HARNESS-CROSS-ASSETGROUP
   title: 'Harsh: paper-trade harness runs for CeFi/TradFi/Sports/Prediction'
   tier: 50
   priority: 370
-  target_slot: 2
-  affinity: medium
-  target_slot_timeout_seconds: 3600
   repos:
   - strategy-service
   - execution-service
   - e2e-testing
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-HARSH-BATCH-STRATEGY-EXEC-CEFI
     - HUMAN-HARSH-BATCH-STRATEGY-EXEC-TRADFI
     - HUMAN-HARSH-BATCH-STRATEGY-EXEC-SPORTS-PREDICTION
     conditions: []
-  brief: "Per item 31. Paper-trade harness runs for CeFi/TradFi/Sports/Prediction\narchetypes. Same shape as DeFi paper_1d \u2192 live_early flow.\nEach archetype's harness output feeds Ikenna's paper-trade\
-    \ audit.\n"
+  brief: 'Per item 31. Paper-trade harness runs for CeFi/TradFi/Sports/Prediction
+
+    archetypes. Same shape as DeFi paper_1d → live_early flow.
+
+    Each archetype''s harness output feeds Ikenna''s paper-trade audit.
+
+    '
   done_definition: '- 4 paper-trade harness runs (1 per asset_group) completed
 
     - Output captured + sampled
@@ -1417,15 +2074,23 @@ tasks:
     - Ready for Ikenna paper-trade audit
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 2
+  affinity: medium
+  target_slot_timeout_seconds: 3600
 - id: HUMAN-IKENNA-ARCHETYPE-AUDIT
   title: 'Ikenna: D1-D14 archetype audit (in-progress operator session)'
   tier: 50
   priority: 400
-  target_slot: 1
-  affinity: high
   repos:
   - strategy-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1440,22 +2105,41 @@ tasks:
     Estimated: 8 cal-AI-days.
 
     '
-  done_definition: "- Audit doc produced\n- R-items dispatched to slots\n- \U0001F7E2 STRATEGY-LOGIC UNFREEZE ping in _agent_pings.md\n"
-- id: HUMAN-IKENNA-DATA-PIPELINE-COORDINATION
-  title: 'Ikenna: data_pipeline_master_coordination supervision + Phase 7b triage + Phase 14 design'
-  tier: 50
-  priority: 410
+  done_definition: '- Audit doc produced
+
+    - R-items dispatched to slots
+
+    - 🟢 STRATEGY-LOGIC UNFREEZE ping in _agent_pings.md
+
+    '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-DATA-PIPELINE-COORDINATION
+  title: 'Ikenna: data_pipeline_master_coordination supervision + Phase 7b triage
+    + Phase 14 design'
+  tier: 50
+  priority: 410
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per plans/active/data_pipeline_master_coordination_2026_05_20.md +\nhuman_work_backlog item 3.\n\nThree sub-tasks:\n  (a) Rolling phase supervision \u2014 operator-set per-phase checkpoint\n \
-    \     review. Both Ikenna+Harsh maintain phase-of-record in their\n      _agent_pings.md.\n  (b) Phase 7b DIVERGENT_EMPTY triage: per-cell label-flip-vs-\n      rebackfill judgment on the 765 cells\
-    \ from A3. Triggers AFTER\n      Phase 7a (Harsh) lands GREEN.\n  (c) Phase 14 topology design: per archetype dimension 14\n      (deployment topology + dynamic-config + accounts/clients).\n      Hands\
-    \ off to Harsh validation harness when design lands.\n"
+  brief: "Per plans/active/data_pipeline_master_coordination_2026_05_20.md +\nhuman_work_backlog\
+    \ item 3.\n\nThree sub-tasks:\n  (a) Rolling phase supervision — operator-set\
+    \ per-phase checkpoint\n      review. Both Ikenna+Harsh maintain phase-of-record\
+    \ in their\n      _agent_pings.md.\n  (b) Phase 7b DIVERGENT_EMPTY triage: per-cell\
+    \ label-flip-vs-\n      rebackfill judgment on the 765 cells from A3. Triggers\
+    \ AFTER\n      Phase 7a (Harsh) lands GREEN.\n  (c) Phase 14 topology design:\
+    \ per archetype dimension 14\n      (deployment topology + dynamic-config + accounts/clients).\n\
+    \      Hands off to Harsh validation harness when design lands.\n"
   done_definition: '- Phase 7b triage CSV produced with per-cell classification
 
     - Phase 14 topology design doc landed
@@ -1463,44 +2147,66 @@ tasks:
     - Each coordinator phase has a ping-ledger entry from slot 1
 
     '
-- id: HUMAN-IKENNA-CROSS-CLIENT-ISOLATION-AUDIT
-  title: "Ikenna: cross-client funds isolation HARD RULE \u2014 retroactive code audit"
-  tier: 50
-  priority: 420
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-CROSS-CLIENT-ISOLATION-AUDIT
+  title: 'Ikenna: cross-client funds isolation HARD RULE — retroactive code audit'
+  tier: 50
+  priority: 420
   repos:
   - strategy-service
   - execution-service
   - unified-api-contracts
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md\n+ CLAUDE.md \xA7 \"Client funds isolation\". HARD RULE codified 2026-05-20:\nfunds NEVER move between clients.\
-    \ Validation pass across:\n  - UAC schema constructors (transfer/withdraw/deposit/bridge events)\n  - strategy-service emit paths\n  - execution-service consume paths\nRequired tests: happy intra-client\
-    \ + UAC-validator-rejects-cross-client\n+ defence-in-depth coordinator-rejects + alert-on-attempt.\n"
-  done_definition: '- 3-layer enforcement verified (UAC + strategy emit + execution consume)
+  brief: "Per plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md\n\
+    + CLAUDE.md § \"Client funds isolation\". HARD RULE codified 2026-05-20:\nfunds\
+    \ NEVER move between clients. Validation pass across:\n  - UAC schema constructors\
+    \ (transfer/withdraw/deposit/bridge events)\n  - strategy-service emit paths\n\
+    \  - execution-service consume paths\nRequired tests: happy intra-client + UAC-validator-rejects-cross-client\n\
+    + defence-in-depth coordinator-rejects + alert-on-attempt.\n"
+  done_definition: '- 3-layer enforcement verified (UAC + strategy emit + execution
+    consume)
 
     - Test coverage added per HARD RULE requirements
 
     - Any code paths violating the rule fixed with CrossClientTransferForbiddenError
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 1
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: HUMAN-IKENNA-PROMOTE-WORKFLOW-REVIEW
   title: 'Ikenna: review promote workflow architecture before May-23 cutover'
   tier: 50
   priority: 430
-  target_slot: 1
-  affinity: high
   repos:
   - unified-trading-pm
   - strategy-service
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per codex/04-architecture/promote-workflow-architecture.md +\ncodex/09-strategy/operational/cli-promote-paths.md. Critical-path call:\npaper_1d \u2192 live_early tonight, live_full post-cutover.\n\
-    \nReview:\n  - CLI primary path (run-paper.sh \u2192 colocated_engine.py \u2192 run-live.sh)\n  - UI secondary path (Promote button \u2192 MinimalCandidateManifest)\n  - Firebase execution-full enforcement\n\
-    \  - DART ManualTradeGateDialog 3-trading-day window\n"
+  brief: "Per codex/04-architecture/promote-workflow-architecture.md +\ncodex/09-strategy/operational/cli-promote-paths.md.\
+    \ Critical-path call:\npaper_1d → live_early tonight, live_full post-cutover.\n\
+    \nReview:\n  - CLI primary path (run-paper.sh → colocated_engine.py → run-live.sh)\n\
+    \  - UI secondary path (Promote button → MinimalCandidateManifest)\n  - Firebase\
+    \ execution-full enforcement\n  - DART ManualTradeGateDialog 3-trading-day window\n"
   done_definition: '- Architecture review doc / ping with sign-off
 
     - Any gaps filed as P0 issues with named owner
@@ -1508,28 +2214,58 @@ tasks:
     - Ready-state confirmed for May-23 cutover
 
     '
-- id: HUMAN-IKENNA-CREDENTIALS-UNBLOCK-TRACK
-  title: "Ikenna: operator-facing credential asks (rolling) \u2014 Helius, Glassnode, Kaiko, Polygon, Databento, Sportradar, Footystats, Odds-API, Polymarket, Kalshi"
-  tier: 50
-  priority: 440
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-CREDENTIALS-UNBLOCK-TRACK
+  title: 'Ikenna: operator-facing credential asks (rolling) — Helius, Glassnode, Kaiko,
+    Polygon, Databento, Sportradar, Footystats, Odds-API, Polymarket, Kalshi'
+  tier: 50
+  priority: 440
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
-  brief: "Per CLAUDE.md \xA7 \"External Data Is Always Available\". For each adapter\nin the ADAPTER-* track that ships scaffold + filed CREDENTIAL APPROVAL\nREQUEST: drive operator-side signup / paid tier\
-    \ negotiation / API key\nprovisioning. Status taxonomy: BLOCKED-CREDENTIALS until acked.\n\nComposes with: human_work_backlog item 6.\n"
-  done_definition: "- Each filed CREDENTIAL APPROVAL REQUEST resolved (creds in vault OR\n  explicit BLOCKED-OPERATOR-DECISION articulation)\n- Adapter integration tests unblock as creds land\n"
-- id: HUMAN-IKENNA-CUSTODY-PROVIDER-DECISIONS
-  title: 'Ikenna: Copper + CEFFU custody onboarding (June-1) + Cayman/UK jurisdiction calls'
-  tier: 50
-  priority: 450
+  brief: 'Per CLAUDE.md § "External Data Is Always Available". For each adapter
+
+    in the ADAPTER-* track that ships scaffold + filed CREDENTIAL APPROVAL
+
+    REQUEST: drive operator-side signup / paid tier negotiation / API key
+
+    provisioning. Status taxonomy: BLOCKED-CREDENTIALS until acked.
+
+
+    Composes with: human_work_backlog item 6.
+
+    '
+  done_definition: "- Each filed CREDENTIAL APPROVAL REQUEST resolved (creds in vault\
+    \ OR\n  explicit BLOCKED-OPERATOR-DECISION articulation)\n- Adapter integration\
+    \ tests unblock as creds land\n"
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-CUSTODY-PROVIDER-DECISIONS
+  title: 'Ikenna: Copper + CEFFU custody onboarding (June-1) + Cayman/UK jurisdiction
+    calls'
+  tier: 50
+  priority: 450
   repos:
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1547,16 +2283,24 @@ tasks:
     - venue-bans-UK gating flipped where applicable
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 1
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT
   title: 'Ikenna: paper-trade DeFi audit (3-trading-day operator-gate window)'
   tier: 50
   priority: 460
-  target_slot: 1
-  affinity: high
   repos:
   - strategy-service
   - execution-service
   - e2e-testing
+  collision_group: null
   prereqs:
     completed_tasks: []
     conditions: []
@@ -1581,15 +2325,24 @@ tasks:
     - Promotion ack to live_early OR named-gap issues filed
 
     '
-- id: HUMAN-IKENNA-CEFI-ARCHETYPE-DESIGN
-  title: 'Ikenna: CeFi archetype mechanics design (perp-funding carry + spot-perp basis + cross-CEX arb)'
-  tier: 50
-  priority: 470
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-CEFI-ARCHETYPE-DESIGN
+  title: 'Ikenna: CeFi archetype mechanics design (perp-funding carry + spot-perp
+    basis + cross-CEX arb)'
+  tier: 50
+  priority: 470
   repos:
   - strategy-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-IKENNA-ARCHETYPE-AUDIT
@@ -1610,15 +2363,24 @@ tasks:
     - Venue restriction matrix populated
 
     '
-- id: HUMAN-IKENNA-TRADFI-ARCHETYPE-DESIGN
-  title: 'Ikenna: TradFi archetype mechanics design (ETF/futures basis + cash-and-carry + calendar spreads)'
-  tier: 50
-  priority: 480
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-TRADFI-ARCHETYPE-DESIGN
+  title: 'Ikenna: TradFi archetype mechanics design (ETF/futures basis + cash-and-carry
+    + calendar spreads)'
+  tier: 50
+  priority: 480
   repos:
   - strategy-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-IKENNA-ARCHETYPE-AUDIT
@@ -1637,15 +2399,24 @@ tasks:
     - Prime broker custody flow
 
     '
-- id: HUMAN-IKENNA-SPORTS-ARCHETYPE-DESIGN
-  title: 'Ikenna: Sports archetype edge model design (odds dispersion + in-game line movement + season-state gating)'
-  tier: 50
-  priority: 490
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-SPORTS-ARCHETYPE-DESIGN
+  title: 'Ikenna: Sports archetype edge model design (odds dispersion + in-game line
+    movement + season-state gating)'
+  tier: 50
+  priority: 490
   repos:
   - strategy-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-IKENNA-ARCHETYPE-AUDIT
@@ -1664,20 +2435,30 @@ tasks:
     - Off-season gate logic specified
 
     '
-- id: HUMAN-IKENNA-PREDICTION-ARCHETYPE-DESIGN
-  title: 'Ikenna: Prediction archetype design (Polymarket-vs-Kalshi spread + settlement-source disagreements)'
-  tier: 50
-  priority: 500
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
   target_slot: 1
   affinity: high
+  target_slot_timeout_seconds: 600
+- id: HUMAN-IKENNA-PREDICTION-ARCHETYPE-DESIGN
+  title: 'Ikenna: Prediction archetype design (Polymarket-vs-Kalshi spread + settlement-source
+    disagreements)'
+  tier: 50
+  priority: 500
   repos:
   - strategy-service
   - unified-trading-pm
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-IKENNA-ARCHETYPE-AUDIT
     conditions: []
-  brief: 'Per plans/epics/predictions_master_2026_05_07.md + human_work_backlog item 22.
+  brief: 'Per plans/epics/predictions_master_2026_05_07.md + human_work_backlog item
+    22.
 
     Contract expiry mechanics, settlement-source disagreements (which oracle
 
@@ -1691,63 +2472,47 @@ tasks:
     - Edge threshold logic
 
     '
+  plan_ref: ''
+  est_hours: 1.0
+  model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 1
+  affinity: high
+  target_slot_timeout_seconds: 600
 - id: HUMAN-IKENNA-PAPER-TRADE-AUDIT-CROSS-ASSETGROUP
   title: 'Ikenna: paper-trade audit for CeFi + TradFi + Sports + Prediction'
   tier: 50
   priority: 510
-  target_slot: 1
-  affinity: high
   repos:
   - strategy-service
   - e2e-testing
+  collision_group: null
   prereqs:
     completed_tasks:
     - HUMAN-HARSH-PAPER-TRADE-HARNESS-CROSS-ASSETGROUP
     conditions: []
-  brief: "Per human_work_backlog item 23. Once Harsh's paper-trade harness lands\nfor each asset_group, audit the paper trades the same way as DeFi\naudit (item HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT). 1 cal-AI-day\
-    \ per\nasset_group \xD7 4 = 4 cal-AI-days total.\n"
+  brief: 'Per human_work_backlog item 23. Once Harsh''s paper-trade harness lands
+
+    for each asset_group, audit the paper trades the same way as DeFi
+
+    audit (item HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT). 1 cal-AI-day per
+
+    asset_group × 4 = 4 cal-AI-days total.
+
+    '
   done_definition: '- 4 asset_groups: paper-trade audit notes per trade
 
     - Promotion ack OR named-gap issues per asset_group
 
     '
-- id: ML-SERVICE-WORKTREE-WIRE-QG
-  title: Wire slot 11 .tabs/11/ml-service to existing IggyIkenna/ml-service + finish Phase 11 QG sweep
-  tier: 1
-  priority: 7
-  repos:
-  - ml-service
-  - unified-trading-pm
-  target_slot: 11
-  affinity: high
-  prereqs:
-    completed_tasks: []
-    conditions: []
-  brief: "Operator-assigned 2026-05-21 (chat with main). Closes BLK-7f0a2e6d +\nml_repo_consolidation_2026_05_19.md Phase 11.\n\nCORRECTION to earlier slot-11 belief: github.com/IggyIkenna/ml-service\n\
-    EXISTS (verified by main 2026-05-21 \u2014 created 2026-05-19T14:09:29Z, 20MB\npopulated, 18 branches including live-defi-rollout + main + per-operator\ntab/* branches up to tab/ikennaigboaka/9). The\
-    \ repo was already there when\nyou /blocked'd \u2014 your local worktree just didn't have origin wired up,\nwhich made `git push` fail.\n\nSteps (no GH repo create needed):\n  1. cd /home/ubuntu/unified-trading-system-repos/.tabs/11\
-    \ \u2014 if no\n     ml-service/ here, run:\n       bash /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/dev/setup-tab-worktrees.sh \\\n            --reset-slot 11 --include ml-service\n\
-    \     If that script doesn't include ml-service yet, do it manually:\n       cd /home/ubuntu/unified-trading-system-repos\n       git clone --branch live-defi-rollout \\\n         git@github.com:IggyIkenna/ml-service.git\
-    \ ml-service\n       cd ml-service && git worktree add ../.tabs/11/ml-service \\\n         -b tab/ikennaigboaka/11\n  2. cd .tabs/11/ml-service && git remote -v   (verify origin =\n     IggyIkenna/ml-service)\
-    \ && git fetch --all\n  3. bash scripts/quality-gates.sh \u2014 fix violations per Strategy-LOGIC\n     freeze gate (surface-only fixes; do NOT edit ml_service/training\n     archetype logic if any\
-    \ frozen surfaces). Commit per shippable unit.\n  4. git push origin tab/ikennaigboaka/11:live-defi-rollout\n  5. Plan-flip ml_repo_consolidation_2026_05_19.md:\n     status: active-cleanup-phase-11\
-    \ \u2192 done. Verify all Phase 11 sub-items\n     (11a-11h) are checked.\n  6. /done with QG-green SHA + last_msg \"ml-service Phase 11 done; QG green\n     @<sha>; ml_repo_consolidation flipped to\
-    \ done\"\n\nAuthoring context for verification:\n- Main agent fetched github-automation-token from gcloud secret manager\n  to verify repo existence \u2014 confirms IggyIkenna PAT works for slot 11\n\
-    \  push as well if you have SSH key issues; PAT can be retrieved with:\n    export PATH=\"/home/ubuntu/google-cloud-sdk/bin:$PATH\"\n    gcloud secrets versions access latest --secret=\"github-automation-token\"\
-    \n- If git@github.com push fails, configure HTTPS origin:\n    git remote set-url origin https://x-access-token:<PAT>@github.com/IggyIkenna/ml-service.git\n"
-  done_definition: '- .tabs/11/ml-service exists as a git repo with origin = IggyIkenna/ml-service
-
-    - bash scripts/quality-gates.sh exits 0 on ml-service
-
-    - tab/ikennaigboaka/11 pushed to origin/live-defi-rollout
-
-    - ml_repo_consolidation_2026_05_19.md status flipped to done
-
-    - /done evidence includes the QG-green SHA + last_msg as above
-
-    '
-  plan_ref: ml_repo_consolidation_2026_05_19.md Phase 11 + BLK-7f0a2e6d resolution + operator request 2026-05-21 + main repo-verify 2026-05-21
-  parallel_safe: true
-  est_hours: 2
-  estimate_class: infra
+  plan_ref: ''
+  est_hours: 1.0
   model: sonnet
+  sub_agent_fanout: 1
+  parallel_safe: false
+  estimate_class: null
+  target_slot: 1
+  affinity: high
+  target_slot_timeout_seconds: 600
