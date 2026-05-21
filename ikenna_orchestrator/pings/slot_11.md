@@ -173,3 +173,26 @@ Awaiting operator direction on which phase to tackle first (recommend Phase 1 MT
 **Plan**: [`vm_launcher_startup_url_migration_2026_05_21.md`](../plans/active/vm_launcher_startup_url_migration_2026_05_21.md) Phase 1 P1 checkbox flipped.
 
 **Remaining Phase 1**: QG smoke test (P0) still pending. Phase 2 (instruments launchers) and Phase 3 (sports/prediction/migration) not yet started.
+
+---
+
+## [2026-05-21] slot-11 — Phase 2 P0 DONE + Phase 3 audit DONE
+
+**Phase 2 P0 (instruments launchers)**:
+- `launch-cefi-instruments-backfill.sh` + `launch-api-football-backfill-vm.sh` were ALREADY Pattern A — no conversion needed.
+- `launch-instruments-backfill-vm.sh` + `launch-defi-backfill-vm.sh`: newly discovered Pattern B launchers; converted to Pattern A. — deployment-service@e2a0fdb
+
+**Phase 3 audit DONE**: All 7 remaining launchers analysed; routing decisions filed in plan:
+| Launcher | Route | Notes |
+| --- | --- | --- |
+| sports-entity-sweep | existing `sports-manifest-rescan` handler | per-entity VM_MIGRATION_CMD, 17 VMs |
+| sports-full-sweep | new `sports-full-sweep` handler needed | fetches vm_instruments_reference.sh from CODE_BUCKET |
+| sports-instruments-reference | same new handler as full-sweep | 3 VMs |
+| prediction-features | new `prediction-features-backfill` handler | chunk loop |
+| prediction-pipeline | new `prediction-pipeline` handler | 3-stage multi-service |
+| cefi-migration | generalise `sports-manifest-rescan` → `script-runner` | VM_MIGRATION_CMD |
+| gcs-migration-bundle | most complex — PM scripts not in tarball | needs tarball extension or dedicated handler |
+
+**Plan**: `vm_launcher_startup_url_migration_2026_05_21.md` Phase 2 + Phase 3 audit flipped. — unified-trading-pm@8bf9fdfe
+
+**Remaining**: Phase 1 QG smoke (operator-run), Phase 3 conversions (7 launchers, 5 handlers to add).
