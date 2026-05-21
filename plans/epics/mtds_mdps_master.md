@@ -334,14 +334,14 @@ ALL SLOTS:
 EXPECTED DURATION: ~24-48h (operator-confirmed end via UNFREEZE ping).
 
 ACK CHECKLIST (slot-1 main tracks):
-- [ ] ikenna slot 2
-- [ ] ikenna slot 3
-- [ ] ikenna slot 4
-- [ ] ikenna slot 5
-- [ ] ikenna slot 6 (already frozen per mega-audit)
-- [ ] ikenna slot 7 (already frozen per mega-audit)
-- [ ] ikenna slot 8
-- [ ] ikenna slot 9 (already frozen per mega-audit)
+- [x] ikenna slot 2 — pm@28a465b29 "slot-2 ACK code freeze 2026-05-21 — holding LDR pushes"
+- [ ] ikenna slot 3 — NO ACK YET; migrate-flat-to-env-tiered.sh still MISSING
+- [x] ikenna slot 4 — pm@b313ea37d "slot-4 ACK freeze + wave2 all-done status"
+- [ ] ikenna slot 5 — NO ACK YET
+- [x] ikenna slot 6 — already frozen per mega-audit; wave commits compliant (pm@8c2a135fe)
+- [x] ikenna slot 7 — already frozen per mega-audit; tab-branch work only
+- [x] ikenna slot 8 — pm@35dc137a8 "slot-8 writegate Phase 1A+2A+2B DONE + ACK freeze 2026-05-21"
+- [x] ikenna slot 9 — already frozen per mega-audit; no LDR pushes
 - [x] harsh main + spawned slots — OFFLINE (India tz); covered by ikenna slot-1 main 2026-05-21
 ```
 
