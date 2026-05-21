@@ -133,3 +133,20 @@ Surface fixes committed as `8343a2d` on local `tab/ikennaigboaka/11`:
 — slot-11 background QG sweep 2026-05-20
 
 — slot-11 background QG sweep
+
+---
+
+## [2026-05-21] slot-11 — O-18 DONE + launcher consolidation plan filed
+
+**O-18 DONE**: `unified-trading-pm@b7da8ae9` — `codex/05-infrastructure/vm-tarball-deployment.md` updated:
+- Invariant #1: two-pattern reality (Pattern A = startup-script-url for data pipeline; Pattern B = inline for daemon/orchestrator/validator)
+- Invariant #5: deadsnakes PPA → uv python install 3.13 (stale path corrected)
+- Invariant #7: two-tier observability (vm-exec-with-gcs-tee.sh vs lc_log_upload_trap_block)
+- New section § "Launcher pattern decision matrix": workload table + Pattern B invariant checklist + 5 known exception table
+
+**O-1 full consolidation plan filed**: [`plans/active/vm_launcher_startup_url_migration_2026_05_21.md`](../plans/active/vm_launcher_startup_url_migration_2026_05_21.md)
+— `unified-trading-pm@eadc1967`. Tracks Phase 1 (9 MTDS), Phase 2 (2 instruments), Phase 3 (11 sports/prediction/migration).
+Main blocker: chunking support (VM_CHUNK_DAYS or staged runner scripts) for MTDS + instruments launchers.
+
+**Status**: O-18 complete. Full startup-script-url migration (O-1 full) is next work in this plan.
+Awaiting operator direction on which phase to tackle first (recommend Phase 1 MTDS — largest group, clearest blocker).
