@@ -87,9 +87,10 @@ parent_epic: instruments_master
   — DONE 2026-05-21: features-service@1c45abba. `classify_venue_error("DEFI"/"SPORTS"/"TRADFI", ...)` +
     `log_event("ADAPTER_FETCH_FAILED", ...)` added to onchain (3 except blocks), sports (2 call sites),
     commodity (data source fetch block). Sports handler also gained `log_event` import from UTL.
-- [ ] [AGENT] P1. Fix deep import:
+- [x] ✅ [AGENT] P1. Fix deep import:
       `from unified_api_contracts.canonical.crosscutting.honest_coverage import EmptyConfirmedReason` →
       `from unified_api_contracts import EmptyConfirmedReason` in all features-service files
+  — DONE 2026-05-21: `rg` scan returned 0 hits — already clean; no deep imports present in features-service.
 
 ### Phase 3 — strategy-service IS interaction hardening
 
@@ -129,12 +130,15 @@ parent_epic: instruments_master
 
 ## Success criteria
 
-- [ ] Phase 1: `rg '"BTC".*"ETH"' features_service/volatility/ --type py` returns 0 hits in handler (hardcode removed)
-- [ ] Phase 2: `rg 'classify_venue_error' features_service/ --type py` returns hits in onchain + sports + commodity
-      handlers
-- [ ] Phase 3: `rg 'DependencyError' strategy_service/ --type py` returns hits near IS catalogue reads
-- [ ] Phase 4: `rg 'f"gs://' execution_service/ --type py` returns 0 hits (all bucket names via resolver)
-- [ ] Phase 5: all 3 services QG green
+- [x] ✅ Phase 1: `rg '"BTC".*"ETH"' features_service/volatility/ --type py` returns 0 hits in handler (hardcode removed)
+  — VERIFIED 2026-05-21: hits only in config.py + data_loader.py (defaults), handler is clean.
+- [x] ✅ Phase 2: `rg 'classify_venue_error' features_service/ --type py` returns hits in onchain + sports + commodity
+      handlers — VERIFIED 2026-05-21: all 3 handlers confirmed.
+- [x] ✅ Phase 3: `rg 'DependencyError' strategy_service/ --type py` returns hits near IS catalogue reads
+  — VERIFIED 2026-05-21: hits in strategy_config_loader.py (the modified file).
+- [x] ✅ Phase 4: `rg 'f"gs://' execution_service/ --type py` returns 0 hits (all bucket names via resolver)
+  — VERIFIED 2026-05-21: 0 hits confirmed.
+- [x] ✅ Phase 5: all 3 services QG green — VERIFIED 2026-05-21 (features soft-fails pre-existing).
 
 ## Full-execution criterion
 
