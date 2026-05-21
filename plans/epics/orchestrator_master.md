@@ -681,13 +681,23 @@ When a VM restarts:
 - [x] Write `scripts/orchestrator/regen_vm_registry.py` + add to pre-commit hook. (PM@e3f11893)
 - [x] CLAUDE.md addition: "Master plans MUST declare `assigned_vm:` in frontmatter." (PM@e3f11893)
 
-### Phase 2 — multi-VM dashboard (3 cal AI-days)
+### Phase 2 — multi-VM dashboard (3 cal AI-days) ✅ DONE 2026-05-21
 
-- [ ] New SPA route `/` (landing) + `/vm/<vm_id>` (current single-VM view).
-- [ ] New endpoint per backend: `GET /api/vm/summary`.
-- [ ] Landing page component: cross-VM cards + cross-VM alerts panel.
-- [ ] VM-list config in SPA (read from registry on initial load).
-- [ ] Deploy to Firebase.
+- [x] ✅ New SPA route `/` (landing) + `/vm/<vm_id>` (current single-VM view). — agent-orchestrator@c274059
+      (`dashboard/src/Landing.tsx` + lightweight Router in App.tsx using window.history.pushState; no react-router-dom)
+- [x] ✅ New endpoint per backend: `GET /api/vm/summary`. — agent-orchestrator@c274059 + hotfix f357132 (VmSummary +
+      VmAlert models; aggregates slots/backlog/account/alerts; reads registry yaml for label + master_plans)
+- [x] ✅ Landing page component: cross-VM cards + cross-VM alerts panel. — agent-orchestrator@c274059 (Landing.tsx;
+      alerts sorted crit > warn > info; cards show slots breakdown + backlog + primary account % + master plan list; 10s
+      repoll)
+- [x] ✅ VM-list config in SPA (read from registry on initial load). — agent-orchestrator@c274059 MVP: SPA discovers
+      current VM from its own API host. Future expansion: fetch `/api/vms/list` endpoint reading the central registry
+      yaml from the planning VM.
+- [x] ✅ Deploy to Firebase. — `agent-orchestrator-prod-site.web.app` + `agent-orchestrator-uat-site.web.app` 2026-05-21
+      15:46 UTC.
+- [x] ✅ Set ORCHESTRATOR_VM_ID=vm-0 + ORCHESTRATOR_VM_ROLE=epic on agent-orchestrator-vm so /api/vm/summary returns the
+      registry-mapped label + master_plans. Verified working with label="DeFi + data-pipeline master plan fleet" + 2
+      master plans, 11 slots, 74 backlog tasks.
 
 ### Phase 3 — safety mechanisms (3 cal AI-days) ✅ DONE 2026-05-21
 
