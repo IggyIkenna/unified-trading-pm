@@ -65,3 +65,35 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
 **Status**: BLOCKED-CREDENTIALS until operator [ack]
 **Without it**: OddsApiAdapter scaffold + unit tests ship; integration tests dormant. Adapter fully functional once key provided.
 **Plan-of-record**: ADAPTER-THE-ODDS-API (backlog task); MTDS@065cb49
+
+## CREDENTIAL APPROVAL REQUEST — Polygon.io API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: Polygon.io (api.polygon.io) — Starter tier ($29/mo) or higher
+**What I need**: Polygon.io API key (Bearer token auth)
+  - Starter ($29/mo): equities/ETFs/indices, 5yr history, 100K calls/day
+  - Developer ($79/mo): unlimited history + crypto/forex
+  - Advanced ($199/mo): real-time WebSocket streaming
+**Account to use**: New account at polygon.io (credit card required for paid tier)
+**Cost**: $29/mo Starter covers all equities OHLCV use cases; free tier exists but rate-limited to 5 calls/min
+**What it unblocks**: Integration tests in `tests/integration/test_polygon_integration.py`; `TestFetchTickersLive` + `TestFetchAggregatesLive` classes currently skip with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: PolygonAdapter scaffold + unit tests ship; integration tests dormant. Adapter fully functional once key provided.
+**Plan-of-record**: ADAPTER-POLYGON-IO-TRADFI-TICKS (backlog task); MTDS@34edf56
+
+## CREDENTIAL APPROVAL REQUEST — FootyStats API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: FootyStats / football-data-api.com — Basic tier ($5/mo) or higher
+**What I need**: FootyStats API key (`key` query parameter)
+  - Basic ($5/mo): current season data, 100+ leagues
+  - Pro ($12/mo): historical data, 500+ leagues, xG, BTTS/over-under potentials
+  - Business: unlimited + all advanced metrics
+**Account to use**: New account at footystats.org (email signup)
+**Cost**: $5/mo Basic covers league listing + current season matches; Pro required for historical xG
+**What it unblocks**: Integration tests in `tests/integration/test_footystats_integration.py`; `TestGetLeaguesLive` + `TestGetMatchesLive` classes currently skip with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: FootystatsAdapter scaffold ships (get_leagues/get_matches/get_teams); integration tests dormant.
+**Plan-of-record**: ADAPTER-FOOTYSTATS-FEED (backlog task); MTDS@3294423
