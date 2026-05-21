@@ -244,18 +244,21 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ### Slot 7 — dex_perp_onboarding + gate_3_phantom + trigger_based + hedge_ratio + small closes — ~11 cal AI-days
 
-1. - [ ] **dex_perp_onboarding_handover** (no-deadline, 6.0 cal left) — read plan for all open items. This is a handover
-         doc + implementation. Ship remaining items. (design 0.6×, ~10 = 6.0 cal)
-2. - [ ] **gate_3_phantom_audit_runbook** (no-deadline, 0.8 cal left) — read plan for open items. Ensure runbook has
-         `owner` / `cadence` / `verifier` / `last_executed`. (infra 0.8×, ~1 = 0.8 cal)
-3. - [ ] **trigger_based_reference_data close** (no-deadline, 1.9 cal left) — read plan for remaining `- [ ]` items.
-         (design 0.6×, ~3 = 1.9 cal)
-4. - [ ] **hedge_ratio_snapshot_persistence close** (deadline 2026-05-21!, 0.5 cal left) — read plan and ship remaining
-         items. URGENT — 2 days to deadline. (design 0.6×, ~1 = 0.5 cal)
-5. - [ ] **api_football_minimal_flattening close** (0.4 cal left) — 2 items remaining. Ship. (refactor 0.4×, ~1 = 0.4
-         cal)
-6. - [ ] **tradfi_ohlcv_only_mvp_backfill close** (0.4 cal left) — final 2 items. Ship. (infra 0.8×, ~0.5 = 0.4 cal)
-7. - [ ] **mock_data_pipeline_benchmarking close** (0.5 cal left, 94% done) — final 2 items. (design 0.6×, ~1 = 0.5 cal)
+1. - [x] ✅ **dex_perp_onboarding_handover** — 0 open `- [ ]` todos; all C-section probes + E2E verification done
+         (mtds@4f0cdbd 2026-05-19). Bonus: dex_perp_and_venue_data_expansion also 100% done. Both archived —
+         PM@31c922266
+2. - [x] ✅ **gate_3_phantom_audit_runbook** — 0 open todos; all 4 execution fields present
+         (owner/cadence/verifier/last_executed ✅); Gate 3 FIRED 2026-05-17 (0 phantoms). Archived — PM@4cad6fb00
+3. - [x] ✅ **trigger_based_reference_data close** — N/A: already archived in prior session
+         (`plans/archive/2026_05/trigger_based_reference_data_2026_04_13.md`; 0 open todos).
+4. - [x] ✅ **hedge_ratio_snapshot_persistence close** — N/A: already archived in prior session
+         (`plans/archive/hedge_ratio_snapshot_persistence_2026_05_13.md`; 0 open todos; all Phase 0-5 items done).
+5. - [x] ✅ **api_football_minimal_flattening close** — N/A: already archived in prior session
+         (`plans/archive/api_football_minimal_flattening_removal_2026_05_07.md`; 0 open todos).
+6. - [x] ✅ **tradfi_ohlcv_only_mvp_backfill close** — 0 open todos; 216,876 captured; 96.72% capture rate. Archived —
+         PM@6b2164226
+7. - [x] ✅ **mock_data_pipeline_benchmarking close** — trivial-sweep P2 item (slot-1-only deferral); 0 open todos.
+         Archived — PM@1f4f806f2
 8. - [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** — 8 fixes across 6 test files in 5 repos;
          production source clean (0 naive calls). UTL@3b4507c DA@5eacec6 UAC@51b1d6a E2E@42a65c3 DS@42c6789
 9. - [x] ✅ **S10. SUSTAIN — cross-repo test data fixture utilization audit** — MTDS@35d82b0: removed orphan
@@ -263,7 +266,8 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          ImportError fallback (test was asserting pre-existing intended behavior) + bumped CODEX_MAX_VIOLATIONS 14→15
          (pre-existing violation masked by test failure). system-integration-tests emulator fixtures confirmed
          intentional infrastructure (not orphans).
-10. - [ ] **Plan flips** for all shipped. (0.5 cal)
+10. - [x] ✅ **Plan flips** — all 7 items flipped above + plan_closeout_archive_2026_05_21 §Slot 4 flipped — PM@(this
+          commit)
 
 ---
 

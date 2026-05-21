@@ -190,21 +190,26 @@ credential-confirm todos that already have evidence). Then execute remaining ite
 For EACH sub-plan below: (1) read the plan for remaining `- [ ]` items, (2) execute mechanical work only — no
 architecture decisions, (3) flip the sub-plan checkbox, (4) flip the work-split checkbox.
 
-- [ ] [CLOSE] P0. `dex_perp_onboarding_handover` — read plan; ship remaining items (6.0 cal estimate, design 0.6×).
-      Ensure handover doc complete. QG if code touched.
-- [ ] [CLOSE] P0. `gate_3_phantom_audit_runbook` — read plan; ensure `owner`/`cadence`/`verifier`/ `last_executed`
-      fields present (HARD RULE). Ship remaining items (0.8 cal).
-- [ ] [CLOSE] P1. `trigger_based_reference_data` — read plan for remaining `- [ ]` items; ship (1.9 cal).
-- [ ] [CLOSE] P0. `hedge_ratio_snapshot_persistence` — **WAS URGENT (deadline 2026-05-21)**. Read plan and ship all
-      remaining items NOW. (0.5 cal)
-- [ ] [CLOSE] P1. `api_football_minimal_flattening` — 2 items remaining. Ship. (0.4 cal)
-- [ ] [CLOSE] P1. `tradfi_ohlcv_only_mvp_backfill` — final 2 items. Ship. (0.4 cal)
-- [ ] [CLOSE] P1. `mock_data_pipeline_benchmarking` — final 2 items (plan at 94%). (0.5 cal)
-- [ ] [SWEEP] P1. After closing the 7 plans above, read their parent epics and any **additional plans referenced within
-      them** (linked via `related_plans:` or inline links). Apply trivial-todo sweep policy. If any newly scanned plan
-      reaches 100% → archive it inline.
-- [ ] [FLIP] P0. For each closed sub-plan: flip its own remaining `- [ ]` checkboxes. Then flip all 7 items in
-      `work_split_2026_05_19_harsh.md` §Slot 7. `docs(plans): flip slot-7 plan closes`. Push.
+- [x] ✅ [CLOSE] P0. `dex_perp_onboarding_handover` — 0 open todos; all C-section probes done (mtds@4f0cdbd 2026-05-19).
+      Archived PM@31c922266. Bonus: `dex_perp_and_venue_data_expansion` also archived (34 done/0 open).
+- [x] ✅ [CLOSE] P0. `gate_3_phantom_audit_runbook` — 0 open todos; all 4 execution fields present; Gate 3 FIRED
+      2026-05-17 (0 phantoms all 5 asset_groups). Archived PM@4cad6fb00.
+- [x] ✅ [CLOSE] P1. `trigger_based_reference_data` — **N/A — already archived** in prior session at
+      `plans/archive/2026_05/trigger_based_reference_data_2026_04_13.md` (0 open todos).
+- [x] ✅ [CLOSE] P0. `hedge_ratio_snapshot_persistence` — **N/A — already archived** in prior session at
+      `plans/archive/hedge_ratio_snapshot_persistence_2026_05_13.md` (all Phase 0-5 done including Phase 5 pre-decision
+      observability; PM@archive-2026-05-19).
+- [x] ✅ [CLOSE] P1. `api_football_minimal_flattening` — **N/A — already archived** in prior session at
+      `plans/archive/api_football_minimal_flattening_removal_2026_05_07.md` (0 open todos).
+- [x] ✅ [CLOSE] P1. `tradfi_ohlcv_only_mvp_backfill` — 0 open todos; 216,876 captured; 96.72% capture rate. Archived
+      PM@6b2164226.
+- [x] ✅ [CLOSE] P1. `mock_data_pipeline_benchmarking` — trivial-sweep P2 item (slot-1-only per CLAUDE.md precedence); 0
+      open todos. Archived PM@1f4f806f2.
+- [x] ✅ [SWEEP] P1. Scanned parent epics + related plans. Bonus archive:
+      `dex_perp_and_venue_data_expansion_2026_05_12.md` (34 done/0 open) archived PM@31c922266. manifest_master,
+      tradfi_master, defi_master, mtds_mdps_master epics all updated.
+- [x] ✅ [FLIP] P0. All 7 sub-plan `- [ ]` items flipped. §Slot 7 items 1-7 + 10 flipped in
+      `work_split_2026_05_19_harsh.md`. This closeout §Slot 4 flipped — PM@(this commit).
 
 ---
 
