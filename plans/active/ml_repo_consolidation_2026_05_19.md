@@ -560,6 +560,11 @@ phases:
                t1_batch_scheduler.tf, modules, tools/check_ml_dependencies_by_mode.py — all ml-training/inference refs removed.
             QG: ✅ ALL QUALITY GATES PASSED — deployment-service@aa34d91 + unified-trading-pm@a3048b85
             **Composes with Phase 11a strategy-side deployment-service cleanup — same slot 7, single QG run.**
+            **+ deployment-api Phase 11 ML stale-ref cleanup** (slot 7 continuation, 2026-05-21):
+            deployment-api@28633bc — 16 files: service registries, build triggers, tarball lists,
+            data_status mappings, drilldown bucket routing, upstream chains, workflow dep_repos.
+            Tests with SHARD_AXIS_MATRIX dependency carry TODO(Phase 11c) markers pending slot-5 UAC update.
+            QG: ✅ ALL QUALITY GATES PASSED — deployment-api@28633bc
 
   - id: phase-11c-uac-cleanup
     todos:
