@@ -200,9 +200,9 @@ already supports LEADER_HEDGE mode.
       `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` where useful). Update the "Both archetypes" headline to
       use the canonical name. **SHIPPED 2026-05-09** — global rename applied (13 occurrences) in the master plan bundled
       with this same PM batch commit.
-- [x] [PM-plan] P0. Edit [`defi_master.md`](../epics/defi_master.md): same rename. ✓ shipped 2026-05-08 (PM plan-flip alongside
-      the audit-driven batch). L152-153 "2 DeFi archetypes live" now uses `ARBITRAGE_PRICE_DISPERSION` with config
-      variant note + cross-ref to this plan.
+- [x] [PM-plan] P0. Edit [`defi_master.md`](../epics/defi_master.md): same rename. ✓ shipped 2026-05-08 (PM plan-flip
+      alongside the audit-driven batch). L152-153 "2 DeFi archetypes live" now uses `ARBITRAGE_PRICE_DISPERSION` with
+      config variant note + cross-ref to this plan.
 - [x] [UAC] P1. Verify `StrategyArchetype` enum in UAC: confirm `ARBITRAGE_PRICE_DISPERSION` exists and that
       `LEVERAGED_FUNDING_ARB` is **not** in the enum. If absent, no enum change needed; if mistakenly added, remove.
       **VERIFIED 2026-05-09 audit** — `ARBITRAGE_PRICE_DISPERSION = "ARBITRAGE_PRICE_DISPERSION"` at
@@ -425,9 +425,9 @@ the canonical `ARBITRAGE_PRICE_DISPERSION` name, and the `target_leverage` schem
       the **`ARBITRAGE_PRICE_DISPERSION`** funding-arb hedge but not for `carry_staked_basis` LST_AS_MARGIN. Reword the
       "Both archetypes hedge on a 6-venue perp universe" claim to be precise about which archetype uses which subset.
       (PM@pending — master plan YAML + body lines 221-222 updated)
-- [x] [PM-plan] P0. Edit [`defi_master.md`](../epics/defi_master.md): same precision pass — venue list is no longer monolithic,
-      archetypes have different venue subsets. (PM@pending — defi_master lines 1124-1125 updated + venue-matrix
-      sub-section added)
+- [x] [PM-plan] P0. Edit [`defi_master.md`](../epics/defi_master.md): same precision pass — venue list is no longer
+      monolithic, archetypes have different venue subsets. (PM@pending — defi_master lines 1124-1125 updated +
+      venue-matrix sub-section added)
 - [x] [PM-plan] P1. Both plans get a "2026-05-07 venue-matrix re-verification" sub-section pointing at this plan +
       Stream A's playbook (`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`). (PM@pending — sub-section
       added to defi_master)
