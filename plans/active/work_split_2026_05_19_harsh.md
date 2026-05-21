@@ -269,13 +269,17 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ### Slot 8 — bucket_name_ssot + expected_universe_v2 + manifest_cross_asset + sustain — ~10 cal AI-days
 
-1. - [ ] **bucket_name_ssot_canonicalisation residuals** (plan at 73%, 2.7 cal left) — read plan for remaining `- [ ]`
-         items (plan flip items from May-18 + any code items not yet on LDR). (refactor 0.4×, ~7 = 2.7 cal)
-2. - [ ] **expected_universe_v2 close** (plan at 73%, 1.6 cal left) — read plan for remaining items. (design 0.6×, ~3 =
-         1.6 cal)
-3. - [ ] **manifest_cross_asset_rescan close** (plan at 50%, 1.2 cal left) — read plan. (infra 0.8×, ~2 = 1.2 cal)
-4. - [ ] **available_at_lookahead_bias close** (plan at 66%, 0.5 cal left) — read plan for remaining items. (design
-         0.6×, ~1 = 0.5 cal)
+1. - [x] ✅ **bucket_name_ssot_canonicalisation residuals** — assessed: all 4 remaining `- [ ]` items BLOCKED (Phase 0d
+         → BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy get_bucket_name → BLOCKED-PHASE-2.6;
+         audit table → BLOCKED-PHASE-2.6). Max-closeable at 73%; stays active. PM@slot-5-2026-05-21.
+2. - [x] ✅ **expected_universe_v2 close** — already archived at
+         `plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md` prior to this session; all items `[x]`. N/A —
+         already closed.
+3. - [x] ✅ **manifest_cross_asset_rescan close** — all AI-executable items `[x]`; deferred items have named successors.
+         Archived to `plans/archive/2026_05/`. manifest_master.md updated. PM@slot-5-2026-05-21.
+4. - [x] ✅ **available_at_lookahead_bias close** — all 14 items `[x]`; deferred items tracked in successor plans. Added
+         `## Deferred work — migrated to:` section. Archived to `plans/archive/2026_05/`. batch_live_symmetry_master.md
+         updated. PM@slot-5-2026-05-21.
 5. - [x] ✅ **deploy_missing_auto_launch final item** — plan 100% complete + archived at PM@bda2306a (WORKSTEP-S7 closed
          item 14/14: Phase 4 closeout + 7-day soak ✅ 0 compromise events). `dm-` prefix registered in
          VM_PREFIX_TO_BUCKET (deployment-service@d3a96cf). Verified 2026-05-19.

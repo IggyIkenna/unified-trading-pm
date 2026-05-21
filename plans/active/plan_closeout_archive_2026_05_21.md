@@ -212,18 +212,23 @@ architecture decisions, (3) flip the sub-plan checkbox, (4) flip the work-split 
 
 **Plan-of-record**: `plans/active/work_split_2026_05_19_harsh.md` §Slot 8
 
-- [ ] [CLOSE] P0. `bucket_name_ssot_canonicalisation` — read plan for remaining `- [ ]` items (plan at 73%, 2.7 cal).
-      Ship mechanical refactor items (bucket name migration). QG after each repo.
-- [ ] [CLOSE] P1. `expected_universe_v2_design_2026_05_08` — read plan for remaining items (plan at 73%, 1.6 cal). Ship.
-- [ ] [CLOSE] P1. `manifest_cross_asset_rescan_design_2026_05_08` — read plan for remaining items (plan at 50%, 1.2
-      cal). Ship.
-- [ ] [CLOSE] P1. `available_at_lookahead_bias_completion_2026_05_08` — read plan for remaining items (plan at 66%, 0.5
-      cal). Track E features-sports wire-in is explicitly deferred per SSOT — do not attempt. Close what IS
-      agent-doable.
-- [ ] [SWEEP] P1. Same sweep authority as Slot 4 — scan related plans, apply trivial-todo policy, archive anything that
-      hits 100%.
-- [ ] [FLIP] P0. Flip all remaining `- [ ]` items in each sub-plan. Flip Slot 8 items in
-      `work_split_2026_05_19_harsh.md`. `docs(plans): flip slot-8 plan closes`. Push.
+- [x] [CLOSE] P0. `bucket_name_ssot_canonicalisation` — assessed: all 4 remaining `- [ ]` items BLOCKED (Phase 0d →
+      BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy get_bucket_name → BLOCKED-PHASE-2.6; audit
+      table → BLOCKED-PHASE-2.6). Zero agent-executable items per 2026-05-20 slot-6 audit. Max-closeable at 73% — stays
+      active pending Phase 2.6 write-pause.
+- [x] [CLOSE] P1. `expected_universe_v2_design_2026_05_08` — already archived at
+      `plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md`; all items `[x]`. N/A — already closed prior to
+      this session.
+- [x] [CLOSE] P1. `manifest_cross_asset_rescan_design_2026_05_08` — all AI-executable items `[x]`; deferred items in
+      named successors (rescan launcher → manifest_schema_final_gate; sports/prediction → sports_master). Archived to
+      `plans/archive/2026_05/`. manifest_master.md updated.
+- [x] [CLOSE] P1. `available_at_lookahead_bias_completion_2026_05_08` — all 14 items `[x]`; Track E deferred per SSOT.
+      Added `## Deferred work — migrated to:` section. Archived to `plans/archive/2026_05/`.
+      batch_live_symmetry_master.md updated.
+- [x] [SWEEP] P1. Scanned related_plans — deferred items in both archived plans have named successors already tracked in
+      active plans. No additional trivial sweep needed.
+- [x] [FLIP] P0. All sub-plan items assessed + archived where possible. Slot 8 items in work_split_2026_05_19_harsh.md
+      flipped.
 
 ---
 

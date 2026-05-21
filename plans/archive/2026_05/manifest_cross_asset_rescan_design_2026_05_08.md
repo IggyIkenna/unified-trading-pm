@@ -1,7 +1,7 @@
 ---
 title: "Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)"
 name: manifest-cross-asset-rescan-design-2026-05-08
-status: done
+status: archived
 priority: P1
 created: 2026-05-08
 last_updated: 2026-05-12

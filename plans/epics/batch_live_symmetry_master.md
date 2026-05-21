@@ -36,7 +36,11 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 1.5 cal AI-days (class: design) — all phases shipped; deferred items
+tracked in successor plans (defi_master Phase 2, tradfi_master, predictions_master,
+available_at_schema_lift_post_cutover Phase B)
 
 ## P2 — useful; opportunistic
 

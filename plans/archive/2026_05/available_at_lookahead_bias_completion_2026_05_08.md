@@ -2,7 +2,7 @@
 title: available_at + lookahead-bias master — SINGLE OWNER for all stamping work
 parent_epic: batch_live_symmetry_master
 priority: P0
-status: active
+status: archived
 estimate_class: design
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.5
@@ -119,6 +119,17 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md` ·
       successor: `live_pipeline_mtds_mdps_features_2026_05_08`.
 - [x] [SCRIPT] P1. `assert_available_at_present` exception for zero-row empty parquets — warning + return (no raise).
       (UTL@`e42a8027`)
+
+## Deferred work — migrated to:
+
+| Item                                                 | Successor plan                                                         |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| DeFi (non-onchain) adapter stamping                  | `defi_master` Phase 2                                                  |
+| TradFi Polygon adapter + Barchart historical preload | `tradfi_master`                                                        |
+| Predictions lifecycle-bounded clamp                  | `predictions_master` Phase 2                                           |
+| FEATURE_REQUIRED_INPUTS remaining ~31 of ~90         | Pending UAC data_type registration + consolidation (defi/sports track) |
+| QG STEPs 5.67/5.68 static check                      | `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B          |
+| Tab 12 calculator/writer-boundary enforcement        | `features_repo_consolidation_2026_05_08` Phase 5.c                     |
 
 ## Temporary states + canonical follow-up plans
 

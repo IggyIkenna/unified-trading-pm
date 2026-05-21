@@ -19,7 +19,7 @@ related_plans:
   - ../active/gate_3_phantom_audit_runbook_2026_05_13.md
   - ../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
   - ../active/honest_coverage_formula_consolidation_2026_05_19.md
-  - ../active/manifest_cross_asset_rescan_design_2026_05_08.md
+  - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
   - ../active/manifest_schema_final_gate_2026_05_09.md
 ---
 
@@ -119,9 +119,9 @@ pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pend
 
 ## P1 — important; post-current-gate
 
-### [`manifest_cross_asset_rescan_design_2026_05_08`](../active/manifest_cross_asset_rescan_design_2026_05_08.md)
+### [`manifest_cross_asset_rescan_design_2026_05_08`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md)
 
-**status**: done · **estimate**: 2.4 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 2.4 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 
