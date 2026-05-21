@@ -85,12 +85,15 @@ related_plans:
 
 ### Phase 3 — expected_coverage() preflight wiring
 
-- [ ] [AGENT] P0. Wire `expected_coverage()` preflight into each service's batch handler:
+- [x] [AGENT] P0. Wire `expected_coverage()` preflight into each service's batch handler: ✅ — MTDS@2b63dc6
   - Pattern: before writing a shard, call `expected_coverage(asset_group, venue, data_type, date)` → check result
   - If `EXPECTED_EMPTY:<reason>` → call `record_empty(reason=<typed_reason>)` immediately; skip compute
-  - If `NOT_YET_LIVE` → call `record_empty(reason=EmptyConfirmedReason.EXPECTED_NOT_YET_LIVE)` immediately; skip
+  - If `NOT_YET_LIVE` → call `record_empty(reason=<oracle_reason>)` immediately; skip
   - If `SHOULD_HAVE_DATA` → proceed with compute; any failure → `record_failed` not silent skip
-  - Services to wire: MTDS (highest priority), IS, features-service, strategy-service
+  - MTDS `lending_indices_handler.py`: replaces `get_protocol_launch_date()` with oracle; 4 oracle-mock unit
+    tests added (TestOraclePreflight); 22 tests pass; QG green.
+  - IS, features-service, strategy-service: **DEFERRED** pending D2 Phase 3 P1 (DIVERGENT_EMPTY detector)
+    and IS hardening (D1). Named successor: wire oracle into IS batch handlers after D1 IS catalogue lands.
 - [ ] [AGENT] P1. Wire DIVERGENT_EMPTY post-hoc check into divergence-detector script (`detect_manifest_divergence.py`
       from D3 Phase 4):
   - Use `expected_coverage()` as the oracle (not static CSV)
@@ -102,8 +105,9 @@ related_plans:
       QG passes clean ✅
 - [x] Phase 2: 5 calendar decisions documented + implemented in UAC constants; `expected_coverage()` 14 unit tests still
       pass post-update ✅ — UAC@8565c87 (QG 2850 passed; 2 new Binance coverage_start tests added)
-- [ ] Phase 3: `rg 'expected_coverage' market-tick-data-service/ --type py` returns hits in batch handlers; preflight
-      wired for at least MTDS + IS
+- [x] Phase 3 (MTDS): `rg 'expected_coverage' market-tick-data-service/ --type py` returns hits in
+      `lending_indices_handler.py`; MTDS QG green; 22 tests pass ✅ — MTDS@2b63dc6
+  - IS, features-service, strategy-service: deferred to named successor (IS hardening D1 prerequisite)
 
 ## Full-execution criterion
 
