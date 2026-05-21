@@ -127,21 +127,31 @@ echo "${CLAUDE_CODE_OAUTH_TOKEN:0:20}..."
 echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-unset}"
 ```
 
-## Alias trap (distinct subscription, not just email)
+## Distinct-quota check (NOT orgId alone — verify by quota, codified 2026-05-21 r2)
 
-Multiple emails can be aliases on the same Anthropic org (same `orgId`). Generating tokens for both aliases produces TWO
-tokens but they back the SAME Max subscription — same 5h/weekly quota, no failover benefit. Before adding a candidate
-token to the roster, verify the `orgId` differs from existing entries.
+The failover benefit of adding a token to the roster depends on whether it draws from a **separate 5h/weekly quota
+pool**. Two emails can be personal-Max **aliases** on one org (same `orgId`, ONE shared quota → no failover benefit), OR
+**separate seats on a Team/Enterprise org** (same `orgId`, but SEPARATE per-seat quotas → real failover benefit).
+`orgId` equality alone does NOT prove shared quota. **The authoritative test is the quota reading itself.**
 
 ```bash
-# Run after generating a candidate token
-source ~/.claude-accounts/<candidate>.env
-claude auth status | grep orgId
-# Compare against existing roster entries — if same orgId, SKIP (alias not distinct sub)
+# Authoritative: probe each candidate's quota via the env-file path and compare.
+# IDENTICAL weekly% across two tokens => same quota pool => SKIP the second.
+# DIFFERENT weekly% => distinct quota pools => keep both.
+for acct in <candidate-a> <candidate-b>; do
+  source ~/.claude-accounts/$acct.env
+  echo "$acct"; claude /usage   # compare the weekly + 5h bars
+done
 ```
 
-Verified 2026-05-21: `ikennaigboaka@gmail.com` + `ikenna@odum-research.com` resolve to the SAME orgId
-(`728fa3b5-83e3-458b-9ac0-b95a735c3c94`) — they're aliases, not distinct subs.
+> CLI 2.1.146 note: `claude auth status` returns only `{loggedIn, authMethod, apiProvider}` — it does NOT print `orgId`.
+> The old `claude auth status | grep orgId` recipe no longer works; use the quota probe above.
+
+**Empirical correction (2026-05-21 r2)**: `ikennaigboaka@gmail.com` (8% weekly) and `ikenna@odum-research.com` (90%
+weekly) were earlier recorded as same-orgId aliases, but their `/usage` weekly bars are **wildly different** — proving
+they draw from **separate quota pools** (consistent with separate seats on a Team org, not personal-Max aliases). They
+ARE usable as distinct failover accounts. The earlier "same orgId ⇒ shared quota ⇒ skip" conclusion was the wrong
+inference. Treat the quota probe — not orgId — as the deciding test.
 
 ## What NOT to do
 
