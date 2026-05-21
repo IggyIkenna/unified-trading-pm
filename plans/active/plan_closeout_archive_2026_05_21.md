@@ -236,19 +236,20 @@ architecture decisions, (3) flip the sub-plan checkbox, (4) flip the work-split 
 
 **Plan-of-record**: `plans/active/work_split_2026_05_19_harsh.md` §Slot 9
 
-- [ ] [CLOSE] P1. `compute_optimization_mock_data` — read plan for remaining items (plan at 60%, 1.9 cal). Ship
-      mechanical compute/mock items. No architecture decisions.
-- [ ] [CLOSE] P1. `codex_vs_citadel_infrastructure_audit` — read plan for final items (plan at 91%, 1.4 cal). Likely
-      documentation/codex updates.
-- [ ] [CLOSE] P1. `missing_question_docs_disposition` — read plan; file dispositions for 3 remaining items. (0.9 cal)
-- [ ] [CLOSE] P2. `pm_coordination_ledger` — read plan for remaining items (0.3 cal). Likely bookkeeping.
-- [ ] [CLOSE] P1. `scratch_codefreeze_phase4` — read plan for remaining items (0.8 cal).
-- [ ] [CLOSE] P1. `features_service_qg_cleanup_2026_05_11` — read plan. Phase 2 parity RUN is blocked by 7-day live-data
-      window — do NOT attempt. Close what IS agent-doable. (0.8 cal).
-- [ ] [SWEEP] P1. Same sweep authority as Slot 4 — scan related plans, apply trivial-todo policy, archive anything that
-      hits 100%.
-- [ ] [FLIP] P0. Flip remaining `- [ ]` in each sub-plan. Flip Slot 9 items in work-split.
-      `docs(plans): flip slot-9 plan closes`. Push.
+- [x] ✅ [CLOSE] P1. `compute_optimization_mock_data` — all phases 0-7 complete; ARCHIVED 2026-05-21 to archive/2026_05/
+      with proper banner + deferred section.
+- [x] ✅ [CLOSE] P1. `codex_vs_citadel_infrastructure_audit` — 100% complete; ARCHIVED 2026-05-21 to archive/2026_05/
+      with banner + POST_CUTOVER deferred items noted.
+- [x] ✅ [CLOSE] P1. `missing_question_docs_disposition` — 3/3 todos done; ARCHIVED 2026-05-21 to archive/2026_05/ with
+      banner.
+- [x] ✅ [CLOSE] P2. `pm_coordination_ledger` — one-time snapshot; ARCHIVED 2026-05-21 to archive/2026_05/ with banner.
+- [x] ✅ [CLOSE] P1. `scratch_codefreeze_phase4` — CLOSED 2026-05-19 (fan-out never needed); ARCHIVED 2026-05-21 to
+      archive/2026_05/ with banner + deferred item noted.
+- [x] ✅ [CLOSE] P1. `features_service_qg_cleanup_2026_05_11` — Phase 1 + Phase 3 done; Phase 2 BLOCKED-UPSTREAM (7-day
+      live-data window); stays active as named successor for parity run. Status → `active-phase2-blocked`.
+- [x] ✅ [SWEEP] P1. Related-plan scan: all 5 closeable plans verified; no >90% linked plans requiring additional sweep.
+- [x] ✅ [FLIP] P0. Work-split §Slot 9 items 1-6+13 flipped; archive banners added to all 5 archived plans; wrapper
+      §Slot 6 items flipped. — PM@this-commit.
 
 ---
 

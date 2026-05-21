@@ -1,6 +1,6 @@
 ---
 title: features-service QG-codex cleanup + full byte-for-byte parity run + org-naming transfer
-status: active
+status: active-phase2-blocked
 created: 2026-05-11
 migrated_from: features_repo_consolidation_2026_05_08.md
 locked_by: live-defi-rollout

@@ -2,7 +2,7 @@
 title: Codex vs Citadel-grade infrastructure audit — KEEP / LIFT / CONSOLIDATE / DELETE / ADD
 parent_epic: infrastructure_master
 priority: P1
-status: active
+status: archived
 estimate_class: research
 estimate_baseline_ai_days: 13.0
 estimate_calibrated_ai_days: 15.6
@@ -11,6 +11,14 @@ locked_since: 2026-05-10
 related_plans:
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete. 12-area audit of 574 codex docs finished 2026-05-12; all 242 findings
+> dispositioned; IMMEDIATE + PRE_CUTOVER items shipped; POST_CUTOVER items filed as named sub-plans.
+
+## Deferred work — migrated to:
+
+- POST_CUTOVER findings: each filed as an active sub-plan (search plans/active/ for successors). No open items remain in
+  this plan.
 
 # Codex vs Citadel-Grade Infrastructure Audit
 

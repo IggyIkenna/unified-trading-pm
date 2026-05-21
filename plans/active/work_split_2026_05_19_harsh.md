@@ -303,16 +303,18 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ### Slot 9 — compute_optimization + codex_vs_citadel + deployment_and_qg + misc closes + sustain — ~9 cal AI-days
 
-1. - [ ] **compute_optimization_mock_data close** (plan at 60%, 1.9 cal left) — read plan for remaining items. (design
-         0.6×, ~3 = 1.9 cal)
-2. - [ ] **codex_vs_citadel_infrastructure_audit close** (plan at 91%, 1.4 cal left) — final items. (research 1.2×, ~1 =
-         1.4 cal)
-3. - [ ] **missing_question_docs_disposition** (pre-cutover, 0.9 cal left) — read plan for 3 remaining items. File
-         dispositions. (design 0.6×, ~2 = 0.9 cal)
-4. - [ ] **pm_coordination_ledger close** (0.3 cal left) — read plan for open items. (design 0.6×, ~0.5 = 0.3 cal)
-5. - [ ] **scratch_codefreeze_phase4 residuals** (0.8 cal left) — read plan. (refactor 0.4×, ~2 = 0.8 cal)
-6. - [ ] **features_service_qg_cleanup close** (0.8 cal left) — read plan for remaining items. (refactor 0.4×, ~2 = 0.8
-         cal)
+1. - [x] ✅ **compute_optimization_mock_data close** — all phases 0-7 complete; ARCHIVED 2026-05-21 to archive/2026_05/
+         (slot-6 tab/6 2026-05-21)
+2. - [x] ✅ **codex_vs_citadel_infrastructure_audit close** — 100% complete; ARCHIVED 2026-05-21 to archive/2026_05/
+         (slot-6 tab/6 2026-05-21)
+3. - [x] ✅ **missing_question_docs_disposition** — 3/3 todos done; ARCHIVED 2026-05-21 to archive/2026_05/ (slot-6
+         tab/6 2026-05-21)
+4. - [x] ✅ **pm_coordination_ledger close** — one-time coordination snapshot; ARCHIVED 2026-05-21 to archive/2026_05/
+         (slot-6 tab/6 2026-05-21)
+5. - [x] ✅ **scratch_codefreeze_phase4 residuals** — CLOSED 2026-05-19 (fan-out never needed); ARCHIVED 2026-05-21 to
+         archive/2026_05/ (slot-6 tab/6 2026-05-21)
+6. - [x] ✅ **features_service_qg_cleanup close** — Phase 1 + Phase 3 done; Phase 2 BLOCKED-UPSTREAM (7-day live-data
+         window); stays active as named successor for parity run (slot-6 tab/6 2026-05-21)
 7. - [x] ✅ **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** — 26 files across 25 repos; added
          missing build/dist/\*_/**pycache**/.venv_/node_modules entries; normalized bare **pycache**/.venv to glob
          patterns. See SHAs in PM commit.
@@ -334,7 +336,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
           codex quality-gates.md (PM@f13a259f).
 12. - [x] ✅ **S20. SUSTAIN — cross-repo `setup.sh` consistency audit** (refactor 0.4×, ~1 = 0.4 cal) — PM@771f3d08;
           25/25 repos identical to SSOT template; 0 drift
-13. - [ ] **Plan flips** for all shipped. (0.5 cal)
+13. - [x] ✅ **Plan flips** for all shipped — this commit. (slot-6 tab/6 2026-05-21)
 
 ---
 

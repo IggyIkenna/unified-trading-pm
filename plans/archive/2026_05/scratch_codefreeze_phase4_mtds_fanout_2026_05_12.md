@@ -1,6 +1,6 @@
 ---
 title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
-status: CLOSED 2026-05-19 slot-5 — gating deps both landed; fan-out not needed; work done by Ikenna slot 3 directly
+status: archived
 created: 2026-05-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
@@ -16,6 +16,13 @@ estimate_calibration_note: |
 parent_epic: mtds_mdps_master
 priority: P2
 ---
+
+> **ARCHIVED 2026-05-21** — Closed 2026-05-19 (slot-5). Gating deps landed; fan-out never needed; Ikenna slot 3 did the
+> MTDS sweep directly. 0 open todos.
+
+## Deferred work — migrated to:
+
+- `DefiManifestRecorder` v8 migration: tracked at `manifest_schema_final_gate_2026_05_09.md` Phase 4.DEFAULT-REMOVAL.
 
 ## ✅ CLOSED 2026-05-19 slot-5
 

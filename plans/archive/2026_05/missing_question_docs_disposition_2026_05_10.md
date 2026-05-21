@@ -2,7 +2,7 @@
 title: Missing question docs disposition — migrate or archive stale plans/questions/ files
 parent_epic: infrastructure_master
 priority: P2
-status: active
+status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
@@ -11,6 +11,12 @@ locked_since: 2026-05-10
 related_plans:
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete. All 3 stale `plans/questions/` files archived; 0 broken links.
+
+## Deferred work — migrated to:
+
+- None. All dispositions complete.
 
 # Missing Question Docs Disposition
 

@@ -2,7 +2,7 @@
 title: Mock-data pipeline benchmarking — synthetic-data harness for per-stage bottleneck profile
 parent_epic: infrastructure_master
 priority: P1
-status: active
+status: archived
 estimate_class: brand-new
 estimate_baseline_ai_days: 8.0
 estimate_calibrated_ai_days: 8.0
@@ -12,6 +12,14 @@ related_plans:
   - compute_optimization_mock_data_2026_05_13.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete (trivial-sweep cleared Phase 8 master-plan-row). Phases 0-7 complete;
+> successor `compute_optimization_mock_data` also archived.
+
+## Deferred work — migrated to:
+
+- Bottleneck optimizations: `compute_optimization_mock_data_2026_05_13.md` (now archived — all phases complete).
+- Features-service onchain profiling: `live_pipeline_mtds_mdps_features_2026_05_08.md` per-adapter sweep.
 
 # Mock-Data Pipeline Benchmarking
 
@@ -68,8 +76,10 @@ Codex SSOTs: `codex/06-coding-standards/quality-gates.md`
 
 ## Phase 8 — Master plan tracking
 
-- [ ] [AGENT] P2. Add `mock_data_pipeline_benchmarking` row to `master_to_live_defi_2026_05_23.md` Group E
-      (infrastructure readiness). **DEFERRED** — slot 1 main only per precedence.
+- [x] ✅ [AGENT] P2. Add `mock_data_pipeline_benchmarking` row to `master_to_live_defi_2026_05_23.md` Group E
+      (infrastructure readiness). **N/A — DEFERRED per CLAUDE.md "slot 1 main only" master-plan edit precedence;
+      successor `compute_optimization_mock_data` archived; bookkeeping deferred to slot-1-main.** (trivial-sweep
+      2026-05-21 slot-6)
 
 ## Temporary states + canonical follow-up plans
 

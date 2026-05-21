@@ -2,7 +2,7 @@
 title: Compute-bound stage optimization via mock data — parallelize + big-machine the slow stages
 parent_epic: infrastructure_master
 priority: P1
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
@@ -12,6 +12,13 @@ related_plans:
   - mock_data_pipeline_benchmarking_2026_05_10.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — 100% complete. All phases 0-7 shipped (strategy/features/execution/ml/deployment
+> parallelization + QG smoke + codex STEP 5.81).
+
+## Deferred work — migrated to:
+
+- Phase 1 EXTEND (commodity + cross_instrument families): `config_grid_archetype_extend_2026_05_20.md` (operator-acked).
 
 # Compute-Bound Stage Optimization via Mock Data
 

@@ -4,7 +4,7 @@ created: 2026-05-13
 last_updated: 2026-05-15
 author: ikenna-main
 type: coordination-doc
-status: done
+status: archived
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
@@ -13,6 +13,13 @@ estimate_calibration_note: |
   reconciliation snapshot used for blocker triage. design class multiplier 0.6x. Per-cycle refresh
   cadence means this is recurring effort, not one-shot.
 ---
+
+> **ARCHIVED 2026-05-21** — One-time coordination snapshot for 2026-05-13 Day-2 slate. All time-sensitive items resolved
+> by 2026-05-19. No open todos.
+
+## Deferred work — migrated to:
+
+- None. All decisions resolved; issue docs routed to their owning plans by 2026-05-19.
 
 # PM Coordination Ledger — 2026-05-13 Reconciliation + Routing
 
@@ -43,7 +50,7 @@ estimate_calibration_note: |
 | **2**               | 2026-05-12       | defi_catalogue Phases 1-3                | ❓ UNKNOWN                         | Expected: Phase 3 lending-indices fix shipping; dependency unblock for Slot 5                                                                         |
 | **3**               | 2026-05-12       | code_freeze Phase 1 audit + apply-flips  | ✅ COMPLETE (Phase 1.E audit done) | Ready for Phase 2 dry-run + Gate 1 `--apply-flips` reconciliation (now unblocked)                                                                     |
 | **4**               | 2026-05-12       | api_keys_wallets scope-contracted        | ❓ UNKNOWN                         | Phase 3.D Treasury.rollup endpoint due Day 1 EOD; unblocks wallet_treasury Group F item                                                               |
-| **5**               | 2026-05-12       | defi_recursive_borrow Phase 1-2 design   | ⏸ GATED ON SLOT 2                 | Awaiting Slot 2 Phase 3 lending-indices fix handoff                                                                                                   |
+| **5**               | 2026-05-12       | defi_recursive_borrow Phase 1-2 design   | ⏸ GATED ON SLOT 2                  | Awaiting Slot 2 Phase 3 lending-indices fix handoff                                                                                                   |
 | **6**               | 2026-05-12       | defi_simulation_realism Phase 1-3 design | ❓ UNKNOWN                         | AMM family matrix should be published by Day 2 noon; feeds Slot 7 topology shocks                                                                     |
 | **7**               | 2026-05-12       | simulation_scenarios Phase 1-2           | ✅ COMPLETE                        | Design-shipped 2026-05-12; ready for Phase 3 scenario runner integration (Harsh-5 scope)                                                              |
 | **8**               | 2026-05-13 01:00 | cross_cutting #4 + manifest Phase 3      | ✅ SHIPPING D1+D4 HELPERS          | Cross_cutting D1 (`operation_type` field) + D4 (venue capability lookup) unblock Harsh BUILD #1/#4/#5; manifest Phase 3 consumer sweep ready to start |
