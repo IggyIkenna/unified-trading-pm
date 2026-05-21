@@ -114,10 +114,13 @@ priority: P1
 
 Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rsync + code path.
 
-1. - [ ] **Phase 1.B — AWS IAM matrix provisioning** — mirror GCP per-service SA matrix. Per plan §1.B script steps.
-         (infra 0.8×, ~6 = 4.8 cal)
-2. - [ ] **Phase 1.C — ECR setup + dual-cloud image push** — create ECR per service in ap-northeast-1. (infra 0.8×, ~3 =
-         2.4 cal)
+1. - [x] ✅ **Phase 1.B — AWS IAM matrix provisioning** — DONE by harsh slot 6 (scripts deployment-service@f9fd4c0
+         2026-05-19) + harsh slot 3 apply run (deployment-service@086e6b9+a6903af 2026-05-21; 30 IAM roles + 12 bucket
+         policies verified). (backfilled by ikenna slot-1 main 2026-05-21)
+2. - [x] ✅ **Phase 1.C — ECR setup + dual-cloud image push** — DONE: ECR repos created deployment-service@4550bc3
+         (2026-05-18); buildspec.aws.yaml propagated to all 7 service repos deployment-service@10dcea9 (2026-05-19);
+         CodeBuild webhooks wired 10/12 services (2026-05-21); instruments-service smoke SUCCEEDED. (backfilled by
+         ikenna slot-1 main 2026-05-21)
 3. - [x] ✅ **Phase 1.D — AWS S3 non-DeFi bucket parity** — extend bucket_config.yaml with AWS entries for sports +
          prediction + tradfi buckets. (infra 0.8×, ~3 = 2.4 cal) — deployment-service@bf35a0c: added tradfi
          `unified-trading-databento-batch-registry-{account_id}` + test to infrastructure_buckets.aws; sports/prediction
@@ -161,7 +164,9 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          `deployment-service@9cc26a3`: account-scoped `list-buckets` for existence, `aws s3 ls --recursive --summarize`
          for counting. Re-ran `--verify` post-fix: all 10 buckets `[VERIFIED]` (256,024 objects total — config-store had
          9 objects we'd missed pre-fix). (infra 0.8×, ~5 = 4.0 cal)
-9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
+9. - [x] ✅ **Plan flips** for all shipped items — items 1-8 confirmed done in aws_migration plan (verified by ikenna
+         slot-1 main 2026-05-21 backfill; underlying aws_migration todos all show [x] with SHAs). (backfilled
+         2026-05-21)
 
 ---
 
@@ -301,7 +306,8 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          violations remain workspace-wide. PM@9c5f1490.
 9. - [x] ✅ **S14. SUSTAIN — workspace-wide bare `except:` sweep** — AST scan: 0 bare `except:` violations. All existing
          handlers use `except Exception:` or specific exception types. Workspace already clean.
-10. - [ ] **Plan flips** for all shipped. (0.5 cal)
+10. - [x] ✅ **Plan flips** — S11-S14 items verified done in underlying plans; bucket_name_ssot open items are all
+          BLOCKED (per slot-8 2026-05-20 assessment). (backfilled by ikenna slot-1 main 2026-05-21)
 
 ---
 
@@ -408,17 +414,13 @@ must exist). P1 code work can start immediately.
          L686, notify_slot_stale in health.py L110, notify_slot_failed in health.py L140. blocked_id now passed to
          notify_slot_blocked at cd04fc2. (slot 4 2026-05-20)
 
-3. - [ ] **P0 — Wire `--update-secrets` on Cloud Run staging** (~0.3 cal) _(after Slot 10 P1 done)_
-   - Look up staging SA:
-     `gcloud run services describe agent-orchestrator-staging --region europe-west4 --project central-element-323112 --format='get(spec.template.spec.serviceAccountName)'`
-   - IAM bind SA to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET`
-   - `gcloud run services update agent-orchestrator-staging --update-secrets=AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest,AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET=AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET:latest --region europe-west4 --project central-element-323112`
+3. - [x] ✅ **P0 — Wire `--update-secrets` on Cloud Run staging** — DONE: IAM bound + secrets mounted on revision
+         `agent-orchestrator-staging-00011-mtg`. async→sync httpx bug fixed. Direct webhook HTTP 200 confirmed.
+         (agent-orchestrator@`07e42e2` 2026-05-21; backfilled by ikenna slot-1 main 2026-05-21)
 
-4. - [ ] **P3 — Staging smoke** (~0.5 cal) _(after P0 + deploy-staging CI deploys new code)_
-   - Trigger a test notification via staging URL → verify message appears in `#agent-orchestrator-alerts` within 10s
-   - Confirm Cloud Run logs show `hooks.slack.com 200`
-   - Post ack ping to `_agent_pings.md`:
-     `[DATE] harsh-slot-11 — Slack notifications live on staging; #agent-orchestrator-alerts received test message. P3 done.`
+4. - [x] ✅ **P3 — Staging smoke** — DONE: Block Kit notification reached `#agent-orchestrator-alerts`; Cloud Run
+         confirmed HTTP 200. Issue filed for revision 00012 exit 3 (unrelated transient; 00011-mtg unaffected).
+         (agent-orchestrator@`07e42e2` 2026-05-21; backfilled by ikenna slot-1 main 2026-05-21)
 
 5. - [x] ✅ **P4 — Codex update** — new `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created;
          overview Slack section replaced with 2-line pointer. (slot 4 2026-05-20)

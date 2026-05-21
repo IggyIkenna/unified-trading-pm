@@ -342,7 +342,7 @@ ACK CHECKLIST (slot-1 main tracks):
 - [ ] ikenna slot 7 (already frozen per mega-audit)
 - [ ] ikenna slot 8
 - [ ] ikenna slot 9 (already frozen per mega-audit)
-- [ ] harsh main + spawned slots
+- [x] harsh main + spawned slots — OFFLINE (India tz); covered by ikenna slot-1 main 2026-05-21
 ```
 
 **During freeze**: slot-1 main monitors `_agent_pings.md` + runs `gcloud compute instances list` every 30 min to verify

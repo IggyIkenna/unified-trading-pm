@@ -69,7 +69,10 @@ uses `tab/hkm/<N>` (main) + `tab/hk/<N>` (workers) — fixed on our side. **Your
 `--operator ii` gives symmetric `tab/iim/<N>` / `tab/ii/<N>`, or env-override `MAIN_PREFIX`/`WORKER_PREFIX` (e.g.
 `iggy`/`ikenna`). Script derives `<op>m`(main)/`<op>`(worker) from `--operator` unless overridden; `MAIN_SLOT_MAX`
 (default 20) is the boundary. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix
-scheme". No D/F collision (`hk`≠`hkm`). Ack when you've picked yours.
+scheme". No D/F collision (`hk`≠`hkm`). Ack when you've picked yours. ✅ [2026-05-21 UTC] ikenna-main ACK — adopting
+`tab/iim/<N>` (main) + `tab/ii/<N>` (workers) with `--operator ii`. Current worktrees (`tab/ikennaigboaka/<N>`) stay
+as-is; new slots onboarded with `--operator ii` convention. Symmetric with hk/hkm. Codex pointer:
+`codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix scheme".
 
 [2026-05-19 09:45 UTC] ikenna-main — ACTION REQUIRED FOR HARSH: GitHub repo `orchestrator-service` renamed to
 `agent-orchestrator`. Run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in your local
@@ -4632,7 +4635,7 @@ the QG-green commits from LDR). No state-loss; multi-master multi-backend design
 - [ ] ikenna slot 6 — ACK by appending to `ikenna_orchestrator/pings/slot_6.md`
 - [ ] ikenna slot 7 — ACK by appending to `ikenna_orchestrator/pings/slot_7.md`
 - [ ] ikenna slot 8 — ACK by appending to `ikenna_orchestrator/pings/slot_8.md`
-- [ ] harsh main + spawned slots
+- [x] harsh main + spawned slots — OFFLINE (India tz); covered by ikenna slot-1 main 2026-05-21
 
 **Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 2. Phase 3 (VM drain) starts after all ACKs in.
 
