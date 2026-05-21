@@ -1,5 +1,4 @@
----
-title: Codex vs Citadel-grade infrastructure audit — KEEP / LIFT / CONSOLIDATE / DELETE / ADD
+---title: Codex vs Citadel-grade infrastructure audit — KEEP / LIFT / CONSOLIDATE / DELETE / ADD
 type: plan
 status: active
 created: 2026-05-10
@@ -22,6 +21,7 @@ estimate_calibrated_ai_days: 15.6
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.25, ~4, ~1, ~3, + 4 more). Class inferred from filename (research, multiplier 1.2×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: defi_master
 ---
 
 ## Deferred work — migrated to:

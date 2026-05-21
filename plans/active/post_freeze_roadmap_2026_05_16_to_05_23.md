@@ -1,5 +1,4 @@
----
-title:
+---title:
   Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
 type: coordination-doc
 status: active
@@ -13,6 +12,7 @@ estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
+parent_epic: defi_master
 ---
 
 # Post-freeze roadmap — 2026-05-16 → 2026-06-04

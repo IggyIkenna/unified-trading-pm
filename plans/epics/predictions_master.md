@@ -19,12 +19,7 @@ folds_in:
   - sports_predictions_e2e_2026_05_05 # predictions ML half (sports half goes to sports_master)
   - market_tick_data_to_100pct_2026_05_05 # predictions slice
 related_plans:
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - audit/results/manifest_divergence_2026_05_20_summary.md
-  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
+  - ../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
 ---
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
@@ -749,6 +744,27 @@ features predict.
   over its window. Cluster gate at `record_captured` per CLAUDE.md "Cluster validation MANDATORY".
 - **Temporary state**: UAC `PREDICTION_GROUPS = {}` empty registry until taxonomy seeded — CLAUDE.md "Temporary state"
   rule applies; this plan IS the named successor.
+
+## Assigned active plans
+
+_1 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+_(no plans currently assigned at this priority)_
+
+## P1 — important; post-current-gate
+
+### [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md)
+**status**: open · **estimate**: 1.0 cal AI-days (class: refactor)
+
+## P2 — useful; opportunistic
+
+_(no plans currently assigned at this priority)_
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 

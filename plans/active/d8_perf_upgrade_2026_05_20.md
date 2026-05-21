@@ -1,5 +1,4 @@
----
-name: d8-perf-upgrade-2026-05-20
+---name: d8-perf-upgrade-2026-05-20
 title: D8 — Performance upgrade plan (hot-path identification from A1)
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -20,6 +19,7 @@ related_plans:
 note: >
   P2 priority — not blocking May-23 DeFi cutover. Gates D8 on D6 (strategy+execution) green since performance
   optimisations are meaningless before correctness is established.
+parent_epic: defi_master
 ---
 
 # D8 — Performance upgrade plan

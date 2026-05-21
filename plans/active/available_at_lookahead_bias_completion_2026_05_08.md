@@ -1,5 +1,4 @@
----
-plan_type: code+infra
+---plan_type: code+infra
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
@@ -108,6 +107,7 @@ estimate_calibrated_ai_days: 1.5
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: mtds_mdps_master
 ---
 
 > **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active

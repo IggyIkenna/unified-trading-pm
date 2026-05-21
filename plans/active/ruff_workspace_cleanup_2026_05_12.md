@@ -1,5 +1,4 @@
----
-title: Workspace ruff auto-fix sweep — repo-by-repo, per-shippable-unit (Sonnet-suitable)
+---title: Workspace ruff auto-fix sweep — repo-by-repo, per-shippable-unit (Sonnet-suitable)
 type: cleanup-plan
 status: active
 created: 2026-05-12
@@ -10,6 +9,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 effective_concurrent_slots: 1
 companion_to: codex/06-coding-standards/ruff-discipline.md
+parent_epic: defi_master
 ---
 
 # Workspace ruff auto-fix sweep

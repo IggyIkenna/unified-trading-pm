@@ -1,5 +1,4 @@
----
-name: d5-features-missing-data-downgrade-2026-05-20
+---name: d5-features-missing-data-downgrade-2026-05-20
 title: D5 — Features missing-data downgrade plan
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -21,6 +20,7 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06.md
 prerequisite_plans:
   - d4_mtds_adapters_preflight_2026_05_20.md # preflight must be in place before downgrade gates can fire
+parent_epic: manifest_master
 ---
 
 # D5 — Features missing-data downgrade plan

@@ -12,7 +12,9 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 asset_group: cross-cutting
-related_plans: []
+related_plans:[]
+
+
 ---
 
 # Execution Master
@@ -25,18 +27,7 @@ blocks listing all assigned active plans.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
-## P0 — must complete before next foundation gate
+## Assigned active plans
 
-_(operator fills this in with active plan references)_
+_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
 
-## P1 — important; post-current-gate
-
-_(operator fills this in)_
-
-## P2 — useful; opportunistic
-
-_(operator fills this in)_
-
-## P3 — backlog; revisit quarterly
-
-_(operator fills this in)_

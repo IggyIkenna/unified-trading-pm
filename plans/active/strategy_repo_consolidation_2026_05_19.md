@@ -1,5 +1,4 @@
----
-name: strategy-repo-consolidation-2026-05-19
+---name: strategy-repo-consolidation-2026-05-19
 overview:
   Subtree-merge `risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service` INTO the
   existing `strategy-service` repo as sub-packages (`strategy_service/risk/`, `strategy_service/position/`,
@@ -322,6 +321,7 @@ todos:
         pre-audit artifact and link from each banner.
         RESULT (2026-05-19 slot-8): 20 plans patched — AUDIT_2026_05_15_harsh_side_completion, alerting_service_live_rules, batch_live_symmetry, bucket_name_ssot_canonicalisation, codex_vs_citadel_infrastructure_audit, compute_optimization_mock_data, cross_cutting_may_23_deliverables, defi_archetypes_canonicalisation_and_venue_matrix, defi_master, defi_recursive_borrow_archetypes, deployment_and_qg_strategy_implementation, features_repo_consolidation, features_service_qg_cleanup, live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation, mock_data_pipeline_benchmarking, promote_workflow_may23_cli_path, ruff_workspace_cleanup, writegate_honest_coverage_endtoend.
     status: done
+parent_epic: strategy_master
 ---
 
 ## Architecture sketch — post-merge strategy-service

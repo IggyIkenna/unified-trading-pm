@@ -1,5 +1,4 @@
----
-plan_type: code+infra
+---plan_type: code+infra
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-19
@@ -113,7 +112,9 @@ todos:
         Update the "Per-asset-group schema-flip roadmap" section in
         `hard_schema_enforcement_2026_05_08.md` with the corrected per-field status:
         | Field | Current type | Model validator | Declaration flip needed? |
-        |---|---|---|---|
+        |
+parent_epic: defi_master
+---|---|---|---|
         | `base_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str; add Field(min_length=1) if desired |
         | `quote_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str |
         | `pool_address` | `str \| None` | ✅ Rule 2 (disjunctive) | No — disjunctive can't express in type alone |

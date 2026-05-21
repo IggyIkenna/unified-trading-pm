@@ -1,5 +1,4 @@
----
-name: d2-uac-continuity-2026-05-20
+---name: d2-uac-continuity-2026-05-20
 title: D2 — UAC continuity + known-gap calendars + expected_coverage integration
 created: 2026-05-20
 author: ikenna (slot-8)
@@ -19,6 +18,7 @@ related_plans:
   - honest_coverage_formula_consolidation_2026_05_19.md
   - d3_manifest_v8_finish_2026_05_20.md
   - writegate_honest_coverage_endtoend_2026_05_06.md
+parent_epic: sports_master
 ---
 
 # D2 — UAC continuity + known-gap calendars + expected_coverage integration

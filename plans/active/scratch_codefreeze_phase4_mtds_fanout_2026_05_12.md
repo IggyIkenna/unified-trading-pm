@@ -1,5 +1,4 @@
----
-title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
+---title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
 type: scratch
 status: CLOSED 2026-05-19 slot-5 — gating deps both landed; fan-out not needed; work done by Ikenna slot 3 directly
 created: 2026-05-12
@@ -18,6 +17,7 @@ estimate_calibration_note: |
   handlers — pipeline_mode= arg insertion at each handler call. refactor class multiplier 0.4x
   (mechanical sweep, well-defined target). Baseline 2 AI-days for the full sweep across MTDS;
   calibrated 0.8 AI-day.
+parent_epic: mtds_mdps_master
 ---
 
 ## ✅ CLOSED 2026-05-19 slot-5

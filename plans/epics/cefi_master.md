@@ -19,14 +19,8 @@ folds_in:
   - cefi_tradfi_tick_data_backfill_2026_04_10 # CeFi half (TradFi half goes to tradfi_master)
   - market_tick_data_to_100pct_2026_05_05 # CeFi slice (per asset_group split)
 related_plans:
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - shard_granularity_ssot_propagation_2026_05_06
-  - data_status_multi_axis_shard_propagation_2026_05_06
-  - audit/results/manifest_divergence_2026_05_20_summary.md
-  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
+  - ../active/venue_heartbeat_calibration_2026_05_post23.md
+
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
@@ -571,6 +565,27 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 - **Manifest concurrency**: backfill VMs use per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<unique>`).
 - **VM naming**: prefixes per CLAUDE.md "VM Naming Convention" (`cefi-{venue}-{flavor}-{ts}`); add new prefix to
   `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` before launch.
+
+## Assigned active plans
+
+_1 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+_(no plans currently assigned at this priority)_
+
+## P1 — important; post-current-gate
+
+_(no plans currently assigned at this priority)_
+
+## P2 — useful; opportunistic
+
+### [`venue_heartbeat_calibration_2026_05_post23`](../active/venue_heartbeat_calibration_2026_05_post23.md)
+**status**: active · **estimate**: 1.8 cal AI-days (class: research)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 

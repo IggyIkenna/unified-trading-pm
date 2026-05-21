@@ -1,5 +1,4 @@
----
-type: plan
+---type: plan
 role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
@@ -22,6 +21,7 @@ estimate_calibrated_ai_days: 24.0
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: sports_master
 ---
 
 > **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active

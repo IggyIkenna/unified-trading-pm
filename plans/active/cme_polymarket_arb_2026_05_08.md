@@ -1,5 +1,4 @@
----
-plan_type: code+infra
+---plan_type: code+infra
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
@@ -152,6 +151,7 @@ todos:
         playbook stub with TL;DR, 9-root mapping table, basis-calc reference, leg-balancing assumptions,
         kill-switch rules, anti-patterns. Full content lands as Phases 2-5 ship.
     status: done
+parent_epic: tradfi_master
 ---
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see

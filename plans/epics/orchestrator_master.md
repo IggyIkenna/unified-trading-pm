@@ -13,6 +13,13 @@ estimate_baseline_ai_days: 60
 estimate_calibrated_ai_days: 48
 assigned_vm: human-planning-vm # this plan IS about VM topology; lives on the planning VM
 related_plans:
+  - ../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md
+  - ../active/agent_orchestrator_dual_deployment_2026_05_19.md
+  - ../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
+  - ../active/agent_orchestrator_slack_notifications_2026_05_19.md
+  - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
+  - ../active/agent_reliability_mitigations_2026_05_20.md
+  - ../active/d0_orchestrator_migration_2026_05_20.md
   # Existing orchestrator plans this supersedes / extends
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - agent_orchestrator_dual_deployment_2026_05_19.md
@@ -728,3 +735,42 @@ calendar days end-to-end.
    Phase 1 implements this.
 
 **No open questions remaining.** Plan is ready for phase pickup.
+
+## Assigned active plans
+
+_7 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+_(no plans currently assigned at this priority)_
+
+## P1 — important; post-current-gate
+
+### [`d0_orchestrator_migration_2026_05_20`](../active/d0_orchestrator_migration_2026_05_20.md)
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor)
+**title**: D0 — agent-orchestrator migration plan
+
+## P2 — useful; opportunistic
+
+### [`agent_orchestrator_cloud_run_deployment_2026_05_19`](../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md)
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+
+### [`agent_orchestrator_dual_deployment_2026_05_19`](../active/agent_orchestrator_dual_deployment_2026_05_19.md)
+**status**: active · **estimate**: 0.6 cal AI-days (class: design)
+
+### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
+**status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
+
+### [`agent_orchestrator_slack_notifications_2026_05_19`](../active/agent_orchestrator_slack_notifications_2026_05_19.md)
+**status**: active · **estimate**: 2.0 cal AI-days (class: infra)
+
+### [`agent_orchestrator_workers_on_vms_2026_05_19`](../active/agent_orchestrator_workers_on_vms_2026_05_19.md)
+**status**: active · **estimate**: 6.4 cal AI-days (class: infra)
+
+### [`agent_reliability_mitigations_2026_05_20`](../active/agent_reliability_mitigations_2026_05_20.md)
+**status**: active · **estimate**: 1.2 cal AI-days (class: infra)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
+

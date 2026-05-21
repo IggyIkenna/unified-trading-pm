@@ -1,5 +1,4 @@
----
-title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
+---title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
 type: plan
 status: scheduled
 target_start: 2026-06-01
@@ -19,6 +18,7 @@ estimate_calibrated_ai_days: 15.2
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: defi_master
 ---
 
 ## Deferred work — migrated to:

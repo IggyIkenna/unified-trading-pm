@@ -1,5 +1,4 @@
----
-title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
+---title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
 type: orchestration-umbrella
 status: active
 created: 2026-05-10
@@ -18,6 +17,7 @@ estimate_calibrated_ai_days: 162.0
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: defi_master
 ---
 
 # Code-freeze → migrate → backfill sequencing master

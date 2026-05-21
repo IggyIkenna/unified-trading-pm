@@ -27,6 +27,11 @@ folds_in:
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 assigned_vm: vm-0
+related_plans:
+  - ../active/features_repo_consolidation_2026_05_08.md
+  - ../active/features_service_qg_cleanup_2026_05_11.md
+  - ../active/ml_repo_consolidation_2026_05_19.md
+  - ../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
 ---
 
 # ML + Features Master (umbrella)
@@ -814,3 +819,32 @@ respectively).
     hierarchical inference, calibrated signal consumption, cost-aware strategy). Net-new items are the May-23-or-later
     live trading prereqs. Reconciliation status (2026-04-25): YAML `todos:` block converted to canonical Cursor markdown
     checkboxes per `PLAN_FORMAT.md`. 6 todos flipped to `[x]` with cited commit evidence; 18 remain open.
+
+## Assigned active plans
+
+_4 active plans declare `parent_epic: features_and_ml_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md)
+**status**: active · **estimate**: 4.8 cal AI-days (class: refactor)
+
+### [`ml_repo_consolidation_2026_05_19`](../active/ml_repo_consolidation_2026_05_19.md)
+**status**: done · **estimate**: 6 cal AI-days (class: infra)
+
+## P1 — important; post-current-gate
+
+_(no plans currently assigned at this priority)_
+
+## P2 — useful; opportunistic
+
+### [`features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
+
+### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+**status**: active · **estimate**: 15.0 cal AI-days (class: brand-new)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
+

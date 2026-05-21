@@ -16,6 +16,16 @@ estimate_calibrated_ai_days: 36
 parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: manifest_evolution_SUPERSEDED_2026_05_21
 related_plans:
+  - ../active/available_at_lookahead_bias_completion_2026_05_08.md
+  - ../active/d4_mtds_adapters_preflight_2026_05_20.md
+  - ../active/dex_perp_and_venue_data_expansion_2026_05_12.md
+  - ../active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
+  - ../active/live_pipeline_mtds_mdps_features_2026_05_08.md
+  - ../active/mdps_streaming_and_backpressure_2026_05_07.md
+  - ../active/mtds_databento_path_streaming_2026_05_07.md
+  - ../active/mtds_per_instrument_download_api_2026_04_24.md
+  - ../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
+  - ../active/wave3x_track_d_implementation_2026_05_19.md
   # Phase -2 consolidation prereqs (both being appended in parallel by another agent 2026-05-20 round 5)
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
@@ -517,3 +527,50 @@ layer**, not a re-statement of the work.
       layers 1-3 are sequenced together for a major migration.
 - [ ] CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — add one-line pointer to this plan as the
       operator-handoff entry point.
+
+## Assigned active plans
+
+_10 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`d4_mtds_adapters_preflight_2026_05_20`](../active/d4_mtds_adapters_preflight_2026_05_20.md)
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+**title**: D4 — MTDS adapters preflight + batch-live parity
+
+### [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+**status**: active
+
+## P1 — important; post-current-gate
+
+### [`dex_perp_and_venue_data_expansion_2026_05_12`](../active/dex_perp_and_venue_data_expansion_2026_05_12.md)
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new)
+
+### [`mdps_streaming_and_backpressure_2026_05_07`](../active/mdps_streaming_and_backpressure_2026_05_07.md)
+**status**: active · **estimate**: 3.0 cal AI-days (class: design)
+
+### [`mtds_databento_path_streaming_2026_05_07`](../active/mtds_databento_path_streaming_2026_05_07.md)
+**status**: done · **estimate**: 1.2 cal AI-days (class: design)
+
+## P2 — useful; opportunistic
+
+### [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+**status**: active · **estimate**: 1.5 cal AI-days (class: design)
+**title**: available_at + lookahead-bias master — SINGLE OWNER for all stamping work
+
+### [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](../active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)
+**status**: active · **estimate**: 6 cal AI-days (class: design)
+
+### [`mtds_per_instrument_download_api_2026_04_24`](../active/mtds_per_instrument_download_api_2026_04_24.md)
+**status**: active · **estimate**: 4.8 cal AI-days (class: design)
+
+### [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../active/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
+
+### [`wave3x_track_d_implementation_2026_05_19`](../active/wave3x_track_d_implementation_2026_05_19.md)
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
+

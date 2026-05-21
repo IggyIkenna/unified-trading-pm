@@ -22,12 +22,11 @@ folds_in:
   - sports_predictions_e2e_2026_05_05 # sports half (predictions half goes to predictions_master)
   - market_tick_data_to_100pct_2026_05_05 # sports slice
 related_plans:
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - audit/results/manifest_divergence_2026_05_20_summary.md
-  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
+  - ../active/d2_uac_continuity_2026_05_20.md
+  - ../active/hard_schema_enforcement_2026_05_08.md
+  - ../active/sports_scrapers_post_cutover_2026_06_01.md
+  - ../active/wave3x_residual_ssots_2026_05_08.md
+  - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
@@ -1026,6 +1025,39 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 - [ ] [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities (teams/team_mapping/player_values).
       Depends on write-path item (must have data at `master/`/`snapshots/` to denominate against).
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
+
+## Assigned active plans
+
+_5 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`d2_uac_continuity_2026_05_20`](../active/d2_uac_continuity_2026_05_20.md)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
+**title**: D2 — UAC continuity + known-gap calendars + expected_coverage integration
+
+## P1 — important; post-current-gate
+
+_(no plans currently assigned at this priority)_
+
+## P2 — useful; opportunistic
+
+### [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)
+**status**: done · **estimate**: 4.8 cal AI-days (class: design)
+
+### [`sports_scrapers_post_cutover_2026_06_01`](../active/sports_scrapers_post_cutover_2026_06_01.md)
+**status**: active · **estimate**: 20 cal AI-days (class: brand-new)
+**title**: Sports book scrapers — post-cutover successor (14 UK/EU + 2 US adapters)
+
+### [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)
+**status**: active · **estimate**: 3.6 cal AI-days (class: design)
+
+### [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)
+**status**: drafted · **estimate**: 24.0 cal AI-days (class: design)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 

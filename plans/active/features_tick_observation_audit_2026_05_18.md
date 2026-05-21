@@ -1,5 +1,4 @@
----
-title: "features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain"
+---title: "features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain"
 created: 2026-05-18
 author: harsh-slot-6
 source:
@@ -17,6 +16,7 @@ estimate_calibration_note: |
   engine wiring which adds surface area. Baseline 2 AI-days.
 locked_by: live-defi-rollout
 locked_since: 2026-05-18
+parent_epic: defi_master
 ---
 
 # features-tick-observation-audit: per-tick feature snapshot + MTDS provenance

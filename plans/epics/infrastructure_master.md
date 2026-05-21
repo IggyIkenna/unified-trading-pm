@@ -20,8 +20,7 @@ folds_in:
   - deployment_service_build_infrastructure_repair_2026_04_22
   - venue_axis_asset_group_vocabulary_2026_04_25 # 2 absorbed SSOT-cleanup items: venue_start_dates deletion + dashboard SSOT verify
 related_plans:
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
+  - ../active/aws_migration_defi_first_2026_05_07.md
 ---
 
 ## Audit 2026-05-07
@@ -422,6 +421,27 @@ sub-plan; this section is a pointer.
   canonical writer collapse.
 - **Manifest migration NOT fallback** (CLAUDE.md): when manifest drifts from canonical shape, write a one-time migration
   script and **remove** the fallback reader.
+
+## Assigned active plans
+
+_1 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+_(no plans currently assigned at this priority)_
+
+## P1 — important; post-current-gate
+
+### [`aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)
+**status**: active · **estimate**: 32 cal AI-days (class: infra)
+
+## P2 — useful; opportunistic
+
+_(no plans currently assigned at this priority)_
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 

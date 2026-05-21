@@ -1,5 +1,4 @@
----
-name: gcs-migration-bundle-pipeline-mode-2026-05-08
+---name: gcs-migration-bundle-pipeline-mode-2026-05-08
 overview:
   Bundled overnight GCS migration that walks every parquet ONCE and applies the full set of pending hive-vocab +
   partition-column changes in a single pass, so the canonical manifest is rewritten once instead of N times. Three
@@ -658,6 +657,7 @@ estimate_calibrated_ai_days: 4.8
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+parent_epic: manifest_master
 ---
 
 ## Deferred work — migrated to:

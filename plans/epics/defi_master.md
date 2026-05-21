@@ -18,10 +18,21 @@ folds_in:
   - market_tick_data_to_100pct_2026_05_05 # DeFi slice
   - cefi_venue_universe_expansion_2026_05_01 # DEX-perp half (Extended / Pacifica / Lighter)
 related_plans:
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - shard_granularity_ssot_propagation_2026_05_06
-  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
+  - ../active/api_keys_wallets_accounts_readiness_2026_05_10.md
+  - ../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
+  - ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
+  - ../active/cross_cutting_may_23_deliverables_2026_05_08.md
+  - ../active/d8_perf_upgrade_2026_05_20.md
+  - ../active/defi_catalogue_chain_primitives_2026_05_10.md
+  - ../active/defi_protocol_outage_detector_2026_05_20.md
+  - ../active/features_tick_observation_audit_2026_05_18.md
+  - ../active/hard_schema_phase1_field_flip_migration_2026_05_19.md
+  - ../active/missing_question_docs_disposition_2026_05_10.md
+  - ../active/mock_data_pipeline_benchmarking_2026_05_10.md
+  - ../active/post_freeze_roadmap_2026_05_16_to_05_23.md
+  - ../active/ruff_workspace_cleanup_2026_05_12.md
+  - ../active/simulation_scenarios_post_cutover_2026_06_01.md
+  - ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md
 estimate_class: design
 estimate_baseline_ai_days: 23.5
 estimate_calibrated_ai_days: 14.1
@@ -1468,6 +1479,69 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 - **Live = batch**: same code path; matching engine for backtests. See
   `codex/04-architecture/batch-live-architecture.md` (single SSOT).
 - **`chain` is a first-class shard axis** for DeFi (per CLAUDE.md per-asset-group shard-key matrix).
+
+## Assigned active plans
+
+_15 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`defi_protocol_outage_detector_2026_05_20`](../active/defi_protocol_outage_detector_2026_05_20.md)
+**status**: active · **estimate**: 3 cal AI-days (class: brand-new)
+**title**: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
+
+## P1 — important; post-current-gate
+
+_(no plans currently assigned at this priority)_
+
+## P2 — useful; opportunistic
+
+### [`api_keys_wallets_accounts_readiness_2026_05_10`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+**status**: active · **estimate**: 64.5 cal AI-days (class: design)
+
+### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+**status**: active · **estimate**: 162.0 cal AI-days (class: infra)
+
+### [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md)
+**status**: active · **estimate**: 15.6 cal AI-days (class: research)
+
+### [`cross_cutting_may_23_deliverables_2026_05_08`](../active/cross_cutting_may_23_deliverables_2026_05_08.md)
+**status**: active · **estimate**: 30.9 cal AI-days (class: design)
+
+### [`d8_perf_upgrade_2026_05_20`](../active/d8_perf_upgrade_2026_05_20.md)
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
+**title**: D8 — Performance upgrade plan (hot-path identification from A1)
+
+### [`defi_catalogue_chain_primitives_2026_05_10`](../active/defi_catalogue_chain_primitives_2026_05_10.md)
+**status**: active · **estimate**: 205.5 cal AI-days (class: design)
+
+### [`features_tick_observation_audit_2026_05_18`](../active/features_tick_observation_audit_2026_05_18.md)
+**status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
+
+### [`hard_schema_phase1_field_flip_migration_2026_05_19`](../active/hard_schema_phase1_field_flip_migration_2026_05_19.md)
+**status**: active
+
+### [`missing_question_docs_disposition_2026_05_10`](../active/missing_question_docs_disposition_2026_05_10.md)
+**status**: active · **estimate**: 0.9 cal AI-days (class: design)
+
+### [`mock_data_pipeline_benchmarking_2026_05_10`](../active/mock_data_pipeline_benchmarking_2026_05_10.md)
+**status**: active · **estimate**: 7.0 cal AI-days (class: design)
+
+### [`post_freeze_roadmap_2026_05_16_to_05_23`](../active/post_freeze_roadmap_2026_05_16_to_05_23.md)
+**status**: active · **estimate**: 2.4 cal AI-days (class: design)
+
+### [`ruff_workspace_cleanup_2026_05_12`](../active/ruff_workspace_cleanup_2026_05_12.md)
+**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
+
+### [`simulation_scenarios_post_cutover_2026_06_01`](../active/simulation_scenarios_post_cutover_2026_06_01.md)
+**status**: scheduled · **estimate**: 15.2 cal AI-days (class: infra)
+
+### [`simulation_scenarios_topology_price_shocks_2026_05_09`](../active/simulation_scenarios_topology_price_shocks_2026_05_09.md)
+**status**: active · **estimate**: 20.1 cal AI-days (class: design)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 
