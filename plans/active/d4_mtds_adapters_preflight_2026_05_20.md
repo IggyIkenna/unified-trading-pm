@@ -116,16 +116,50 @@ prerequisite_plans:
 
 ### Phase 3 — Batch-live parity (A6: 13 BATCH_ONLY cells)
 
-- [ ] [AGENT] P0. For each BATCH_ONLY cell, implement live adapter OR document why live equivalent is blocked:
-  - For cells with WebSocket upstream (aster, deribit, hyperliquid): implement live WebSocket handler using existing
-    MTDS WebSocket infra pattern
-  - For cells with polling-only upstream (curve dex_pools/dex_swaps, jito, morpho): implement polling live handler (same
-    as batch but triggered by candle boundary crossing)
-  - For prediction (kalshi, polymarket trades): implement live WebSocket handler or file `BLOCKED-CREDENTIALS` request
-  - For each implemented live handler: match batch schema exactly (same columns, same data types, same manifest emission
-    contract)
+- [x] ✅ [AGENT] P0. Hyperliquid live connectors — (cefi, hyperliquid, book_snapshot_5) + (cefi, hyperliquid, derivative_ticker)
+  - DONE (2026-05-21): MTDS@5608230
+  - `hyperliquid_l2book_ws.py`: HyperliquidL2BookWSConnector — l2Book WS channel, nSigFigs=5, schema matches
+    `adapters/hyperliquid_s3.py::fetch_l2_book()` exactly (bid_px_00..bid_px_04, bid_sz_00..bid_sz_04,
+    ask_px_00..ask_px_04, ask_sz_00..ask_sz_04).
+  - `hyperliquid_ticker_ws.py`: HyperliquidTickerWSConnector — activeAssetCtx WS channel, schema matches
+    `adapters/hyperliquid_s3.py::_fetch_funding_via_rest()` exactly (funding_rate, predicted_funding_rate,
+    open_interest, mark_price, index_price, mid_price, day_volume, timestamp).
+  - `hyperliquid_ws.py` factory updated to dispatch by data_type:
+    book_snapshot_5 → L2BookWSConnector; derivative_ticker → TickerWSConnector; trades → existing WSFeedConnector.
+  - Unit tests: 17 cases (l2book parser + factory dispatch) + 13 cases (ticker parser + factory dispatch). QG ✅.
+- [x] ✅ [AGENT] P0. A6 audit false positives documented — these cells are GREEN (live connectors exist):
+  - `(cefi, aster, trades)`: `live/connectors/aster_ws.py` provides live trades. A6 missed it because the file does
+    not contain an explicit `data_type="trades"` string (data_type is a constructor param). No action needed.
+  - `(cefi, deribit, trades)`: `live/connectors/deribit_ws.py` provides live trades. Same A6 path-regex false-positive.
+  - `(cefi, hyperliquid, trades)`: `live/connectors/hyperliquid_ws.py` default path provides live trades. False positive.
+- [ ] [AGENT] [BLOCKED-OPERATOR-DECISION] P0. Remaining BATCH_ONLY cells — operator decision required before live adapter:
+  - `(cefi, hyperliquid, liquidations)`: Hyperliquid public WS has no `liquidations` channel; REST polling-only
+    (`/info` endpoint `clearinghouseState`). Operator must decide: (a) REST-polling live handler (periodic candle-boundary
+    poll), (b) accept BATCH_ONLY + flag gap, or (c) use `webData2` channel for user liquidation events (requires user
+    address — not suitable for market-wide). AWAITING OPERATOR DIRECTION.
+  - `(cefi, aster, liquidations)`: Aster is Binance-compatible. Binance has `forceOrder` WS stream for liquidations.
+    But Aster's specific WS URL/auth is not documented — the existing `aster_ws.py` uses `_ASTER_WS_URL`. Operator must
+    confirm whether Aster exposes a `forceOrder` stream and provide URL. AWAITING OPERATOR DIRECTION.
+  - `(defi, curve, dex_pools)` + `(defi, curve, dex_swaps)`: Curve uses Ethereum on-chain events; no WebSocket
+    stream equivalent. MTDS live infra is WS-only — no polling-live handler pattern exists yet. Operator must decide:
+    (a) implement REST/on-chain polling live handler (new infra pattern), (b) accept BATCH_ONLY for these cells.
+    AWAITING OPERATOR DIRECTION.
+  - `(defi, jito, lst_rates)`: Jito SDK is REST polling only (no WS stream). Same infra gap as curve.
+    AWAITING OPERATOR DIRECTION.
+  - `(defi, morpho, lending_indices)`: Morpho uses The Graph / REST; no WS stream. Same infra gap.
+    AWAITING OPERATOR DIRECTION.
+  - `(prediction, kalshi, trades)`: Existing `live/connectors/kalshi_ws.py` emits `ticker` data_type (price/spread/
+    volume). The batch `trades` adapter is in MDPS (`market_data_processing_service/app/adapters/prediction/
+    trades_adapter.py`). Operator must decide: (a) add trades data_type path to MTDS kalshi_ws.py, (b) build trades
+    live path in MDPS, or (c) accept BATCH_ONLY (kalshi public trades WS exists, no credentials required).
+    AWAITING OPERATOR DIRECTION.
+  - `(prediction, polymarket, trades)`: Same cross-service gap — batch is in MDPS, live connector in MTDS emits
+    different data_type. Operator must decide: (a) MTDS polymarket_ws.py trades path, (b) MDPS live path.
+    AWAITING OPERATOR DIRECTION.
 - [ ] [AGENT] P1. File `BLOCKED-CREDENTIALS` pings for any batch-live gap where live adapter needs credentials not yet
       provisioned
+  - NOTE: All remaining BATCH_ONLY gaps above are BLOCKED-OPERATOR-DECISION (architecture/direction needed), not
+    BLOCKED-CREDENTIALS. No new credential requests required for these cells.
 
 ### Phase 4 — Quality gates + verification
 
