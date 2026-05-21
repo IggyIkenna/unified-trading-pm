@@ -50,19 +50,19 @@ path is Phase 6 (daily cron on planning VM). These todos are superseded:
 
 ## Phase 4 — Additional checks
 
-- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — grep all `codex/...` path strings in active plans;
-      verify files exist; report broken refs. (Mechanical only — semantic drift requires agent work; see
-      `plan_hygiene_master` Phase 4.)
-- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify
-      `estimate_calibrated ≈ baseline × class_multiplier`; flag >20% drift.
-- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/active/` for filenames + body text
-      containing `SUPERSEDED`; those should be in `plans/archive/`.
-- [ ] [SCRIPT] P2. Wire Phase 4 scripts into `run_hygiene_sweep.sh` as additional soft checks.
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — grep all `codex/...` path strings in active plans;
+      verify files exist; report broken refs. (Soft check — 16 broken refs found on first run.) (PM@2026-05-21)
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify
+      `estimate_calibrated ≈ baseline × class_multiplier`; flag >20% drift. (PM@2026-05-21)
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/active/` for filenames + body
+      text containing `SUPERSEDED`; those should be in `plans/archive/`. (PM@2026-05-21)
+- [x] ✅ [SCRIPT] P2. Wire Phase 4 scripts into `run_hygiene_sweep.sh` as additional soft checks. (PM@2026-05-21)
 
 ## Phase 5 — Pre-push hook
 
-- [ ] [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
+- [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
       `check_frontmatter.sh` as `.git/hooks/pre-push` in `unified-trading-pm`. Prevents regressions at commit time.
+      (PM@2026-05-21)
 
 ## Phase 6 — Cron on planning VM (primary wiring path)
 

@@ -1,13 +1,15 @@
 ---
 title: "Hard Schema Phase 1 — Field-Flip Migration Plan"
-created: 2026-05-19
-last_updated: 2026-05-19
+parent_epic: manifest_master
+priority: P0
+status: active
+estimate_class: infra
+estimate_baseline_ai_days: 3.0
+estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-name: hard-schema-phase1-field-flip-migration-2026-05-19
-
-epic: epic-code-completion
-status: active
+created: 2026-05-19
+last_updated: 2026-05-19
 
 completion_gates:
   code: C3

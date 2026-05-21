@@ -1,14 +1,17 @@
 ---
 title: AWS manifest consolidator — scope + Terraform plan
-type: plan
+parent_epic: infrastructure_master
+priority: P1
 status: blocked
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+estimate_class: infra
+estimate_baseline_ai_days: 3.1
 created: 2026-05-21
-operator: harsh
 parent: aws_migration_defi_first_2026_05_07
 gates:
   - aws_migration_defi_first_2026_05_07:Phase-5-cross-cloud-rsync
   - aws_migration_defi_first_2026_05_07:Phase-6-ECS-Fargate
-estimate_class: infra
 estimate_calibrated_ai_days: 2.5
 blocked_by: |
   Phase 5 cross-cloud data rsync + Phase 6 ECS Fargate deployment must land first.

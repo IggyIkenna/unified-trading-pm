@@ -36,6 +36,10 @@ All scripts live in `unified-trading-pm/scripts/plan-hygiene/`.
 | `check_line_caps.sh` | Soft warn >500L, hard fail >1000L; umbrella exemption (locked + >100 todos) | 0 = no hard violations |
 | `check_todo_regression.sh` | Every plan's open todo count ≥ count on `origin/live-defi-rollout` | 0 = no regressions |
 | `check_archive_candidates.sh` | Plans with 0 open todos and >0 done — prints list for operator review | always 0 (informational) |
+| `check_codex_refs.sh` | All `codex/...` paths in plan bodies resolve to real files | always 0 (soft) |
+| `check_estimate_sanity.sh` | `estimate_calibrated ≈ baseline × class_multiplier` within ±20% | always 0 (soft) |
+| `check_superseded_in_active.sh` | No `*SUPERSEDED*` filenames or superseded `parent_epic` slugs in `active/` | always 0 (soft) |
+| `install_hooks.sh` | Installs `check_todo_regression.sh` + `check_frontmatter.sh` as `.git/hooks/pre-push` | — (run once) |
 | `fix_frontmatter.py` | Auto-fix: unjam `---key:` lines, remove deprecated fields, add missing required fields | — (run manually) |
 
 ### Required plan frontmatter fields
