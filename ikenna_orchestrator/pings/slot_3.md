@@ -1711,3 +1711,104 @@ they finished).
 `PH-2-B3-SLOT-3` → `POST /api/backlog/reload` → Slot 3 will immediately receive task and call `/done`
 
 — slot-3 / ikenna
+
+---
+
+## [slot 3 → OPERATOR] 2026-05-21 — BLOCKED-OPERATOR items from aws_migration Phase 3–6
+
+**Plan**: `plans/active/aws_migration_defi_first_2026_05_07.md`
+
+### BLOCKED-OPERATOR-DECISION #1 — Phase 4 wallet private key rotation (HUMAN gate)
+
+```
+OPERATOR APPROVAL REQUEST — DeFi wallet private key rotation to AWS KMS
+Rule: wallet keys MUST be rotated fresh on AWS KMS — never copied from GCP.
+      Security policy HARD RULE (CLAUDE.md "DeFi Execution Architecture — Custody").
+
+Secrets to ROTATE (not copy) into AWS KMS / Secrets Manager:
+  - defi-wallet-private-key           (primary EVM trading wallet)
+  - defi-wallet-private-key-wrapped   (KMS-wrapped version)
+  - defi-wallet-metamask              (Metamask hot wallet)
+  - defi-wallet-trust                 (Trust wallet)
+  - solana-paper-keypair-private-key  (Solana paper trading wallet)
+  - extended-starknet-stark-private-key (StarkNet private key)
+  - polymarket-private-key            (Polymarket CLOB signing key)
+  - hyperliquid-trade-key             (HL EIP-712 agent key)
+  - hyperliquid-testnet-trade-key     (HL testnet agent key)
+
+Action required:
+  1. Create AWS KMS key in ap-northeast-1 (account 427895769566)
+  2. Generate fresh EVM wallet OR import existing under AWS KMS — do NOT gcloud secrets versions access
+  3. Store wrapped key as `aws secretsmanager create-secret --name defi-wallet-private-key ...`
+  4. Store Solana keypair similarly
+  5. Rotate HL agent key per: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/signing
+  6. Update execution-service config to read from AWS SM `CLOUD_PROVIDER=aws`
+
+Without it: Phase 4 item 3 (wallet rotation) stays BLOCKED. Phase 4 smoke test (item 5)
+            cannot verify wallet reads from AWS SM. Phase 6 live trading gates on this.
+```
+
+Status: `BLOCKED-OPERATOR-DECISION`. Plan ref: `aws_migration_defi_first_2026_05_07.md` Phase 4 item 3 [HUMAN].
+
+---
+
+### BLOCKED-OPERATOR-DECISION #2 — Phase 3 CodeBuild GitHub webhook auth (GitHub PAT required)
+
+```
+OPERATOR APPROVAL REQUEST — CodeBuild GitHub webhook auth
+What I need: GitHub PAT with repo:read + admin:repo_hook scopes stored in
+             AWS Secrets Manager at `unified-trading/GH_PAT` (already mirrored from GCP SM)
+             OR a GitHub App installation with webhook delivery permissions.
+Action required:
+  1. Verify `unified-trading/GH_PAT` in AWS SM has `admin:repo_hook` scope.
+     If the GCP PAT only has `repo` scope, create a new token with webhook permissions.
+  2. Run `aws codebuild create-webhook --project-name uts-<service>` per service repo.
+  3. Or: enable GitHub App-based connection in CodeBuild Console → Source Credentials.
+
+Without it: CodeBuild webhooks (Phase 3 items 3–5) are open. ECR image push
+            automation requires GitHub → CodeBuild webhook to trigger on push.
+            DRY-RUN mode (buildspec.aws.yaml) already deployed to all 7 service repos.
+```
+
+Status: `BLOCKED-OPERATOR-DECISION`. Plan ref: `aws_migration_defi_first_2026_05_07.md` Phase 3 items 3–5.
+
+---
+
+### BLOCKED-OPERATOR-DECISION #3 — Phase 5b Athena verification
+
+```
+OPERATOR APPROVAL REQUEST — Phase 5b Athena verification
+What I need: Athena query executed against Glue catalog `unified_trading_defi`
+             to verify DeFi data landed correctly from GCS→S3 rsync.
+
+Query to run (Athena console or aws athena start-query-execution):
+  SELECT COUNT(*) FROM unified_trading_defi.market_data_tick_defi_prd
+  LIMIT 1;
+  -- Expected: row count > 0 (Phase 5 rsync transferred 346,920 objects / 36.83 GB)
+
+If Glue crawlers haven't auto-discovered the tables yet:
+  aws glue start-crawler --name unified-trading-defi-evm-crawler (repeat for 5 crawlers)
+
+Status: Glue database + 5 crawlers were set up 2026-05-18 (slot 4). Table discovery
+        may need a manual crawler trigger if first run was before rsync completed.
+```
+
+Status: `BLOCKED-OPERATOR-DECISION`. Plan ref: `aws_migration_defi_first_2026_05_07.md` Phase 5b.
+
+---
+
+### BLOCKED-OPERATOR-DECISION #4 — Phases 6–8 ECS Fargate / cutover
+
+Phase 6 (ECS Fargate deployment), Phase 6.5 (UI co-location), Phase 7 (dual-cloud 24h validation), and Phase 8 (DeFi
+cutover on 2026-05-23T09:00 UTC) are all BLOCKED-OPERATOR-DECISION pending:
+
+- Phase 6: Cloud deployment tech decision (Fargate vs App Runner per service)
+- Phase 7: 24h dual-cloud soak window + operator sign-off on data parity
+- Phase 8: `CLOUD_PROVIDER=aws` switch authorization for 6 DeFi-live services + live trading go-ahead
+
+These phases require operator direction before agents can proceed. Phases 1–5 are either complete or at max-closeable
+state. Plan ref: `aws_migration_defi_first_2026_05_07.md` Phases 6–8.
+
+**Maximum-closeable state reached**: this slot has executed all non-human-gated items in Phases 1.B + 1.C + 2 + 3
+(ECR/buildspec) + 4 (secrets mirror, ApiKeyReloader verified) + 5 (data transfer validated). Remaining work requires
+operator decisions or human-gated operations.

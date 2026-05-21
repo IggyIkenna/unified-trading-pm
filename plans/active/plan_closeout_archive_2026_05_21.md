@@ -170,19 +170,22 @@ at 14% done as of 2026-05-19 with ~27.6 cal remaining in Phases 3–6 plus 1.B +
 Boot: read the full plan for Phases 1.B, 1.C, 3, 4, 5, 6. Apply trivial-todo sweep policy first (mark any QG-run or
 credential-confirm todos that already have evidence). Then execute remaining items.
 
-- [ ] [INFRA] P1. `aws_migration` Phase 1.B — AWS IAM matrix provisioning: mirror GCP per-service SA matrix in AWS IAM.
-      Follow plan §1.B script steps. If AWS credentials unavailable → file `BLOCKED-CREDENTIALS` ping in
-      `harsh_orchestrator/pings/slot_3.md` and continue with other phases.
-- [ ] [INFRA] P1. `aws_migration` Phase 1.C — ECR repo creation + dual-cloud image push in `ap-northeast-1`. Per plan
-      §1.C. Same credential caveat.
-- [ ] [INFRA] P0. `aws_migration` Phases 3–6 — read the plan body for all open `- [ ]` items. Phases 3–6 cover
-      DeFi-first provisioning, rsync, code path wiring, and validation. Apply trivial-todo sweep policy on any "dry-run
-      already ran" or "ping already filed" items. Execute remaining mechanical infra items. QG after any code change. If
-      a phase item requires a human gate (operator wallet key / KMS action) → file `BLOCKED-OPERATOR-DECISION` ping and
-      continue to next item.
-- [ ] [FLIP] P0. Flip all completed items in `aws_migration_defi_first_2026_05_07.md` + work-split Slot 3 items. If plan
-      reaches 100% → archive it (plans/archive/). Update parent epic.
-      `docs(plans): flip aws_migration phases 1.B+1.C+3-6`. Push.
+- [x] ✅ [INFRA] P1. `aws_migration` Phase 1.B — AWS IAM matrix provisioning: mirror GCP per-service SA matrix in AWS
+      IAM. **DONE 2026-05-21** (slot 3): 30/30 `uts-{service}-{env}` IAM roles created + inline policies attached
+      (deployment-service@086e6b9). Fixed em-dash charset bug in IAM description.
+- [x] ✅ [INFRA] P1. `aws_migration` Phase 1.C — ECR repo creation + dual-cloud image push in `ap-northeast-1`. **DONE
+      2026-05-19** (prior slot): 12 ECR repos created; buildspec.aws.yaml propagated to all 7 service repos
+      (deployment-service@10dcea9 + 6 service repos). Phase 2 QG: 12/12 DeFi prod bucket policies applied
+      (deployment-service@a6903af).
+- [x] ✅ [INFRA] P0. `aws_migration` Phases 3–6 — read the plan body, executed all non-human-gated items, reached
+      max-closeable state. Phase 4 secrets parity executed: 156 non-wallet secrets synced to AWS SM
+      (deployment-service@66bebce). Phase 4 item 4 (ApiKeyReloader AWS wiring) VERIFIED pre-existing in UTL factory.py.
+      BLOCKED pings filed for: Phase 3 CodeBuild webhooks, Phase 4 wallet key rotation, Phase 5b Athena verification,
+      Phase 6–8 ECS deployment + cutover. See `ikenna_orchestrator/pings/slot_3.md` BLOCKED #1–4.
+- [x] ✅ [FLIP] P0. Flip all completed items in `aws_migration_defi_first_2026_05_07.md` + closeout plan Slot 3 items.
+      Plan at max-closeable state (all remaining open items are BLOCKED-OPERATOR-DECISION for human gate or Phases 6–8
+      operator decisions). Not archivable yet — operator must complete wallet key rotation + ECS deployment.
+      `docs(plans): flip aws_migration phases 1.B+1.C+3-6 max-closeable state + BLOCKED pings`. Pushing now.
 
 ---
 

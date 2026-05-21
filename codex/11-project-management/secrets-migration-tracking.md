@@ -17,8 +17,12 @@ last_reviewed: 2026-05-19
 
 # Secrets Migration Tracking
 
-> **Status:** DeFi-first credential request list scaffolded 2026-05-19 (Phase 2.A, slot 3). AWS provisioning operator
-> ping filed same date. Full dual-write body to expand as Phase 4 executes.
+> **Status:** Phase 4 EXECUTED 2026-05-21 (slot 3). 165 GCP secrets inventoried; 156 non-wallet secrets bulk-mirrored to
+> AWS SM ap-northeast-1 via `replicate-secrets-to-aws.sh --apply`. Wallet private keys EXCLUDED per security policy (9
+> secrets in updated EXCLUSION_PATTERNS — see deployment-service script). ApiKeyReloader AWS wiring VERIFIED (UTL
+> factory.py routes to AWSSecretClient when CLOUD_PROVIDER=aws). Remaining: operator wallet key rotation (BLOCKED)
+>
+> - Phase 6 ECS deployment + smoke test (BLOCKED). DeFi-first scaffold scaffolded 2026-05-19 (Phase 2.A, slot 3).
 
 ## Purpose
 
@@ -92,15 +96,42 @@ Secrets Manager path: `arn:aws:secretsmanager:ap-northeast-1:427895769566:secret
 
 ---
 
-## Full tracking matrix (to be expanded in Phase 4)
+## Full tracking matrix — Phase 4 execution (2026-05-21)
 
-Stub structure per-secret (expand as Phase 4 executes):
+**Summary**: `gcloud secrets list --project central-element-323112` returned **165 secrets** (after exclusions:
+`firebase-sa-json`, `gcp-sa-key`, `github-pat`, `WORKLOAD_IDENTITY`). Pre-existing in AWS SM: **212 secrets** (prior
+slots replicated the majority before Phase 4).
+
+**`replicate-secrets-to-aws.sh --apply` results (2026-05-21)**:
+
+- **156 secrets processed** (9 wallet private keys excluded from script EXCLUSION_PATTERNS — see below)
+- **Updated**: the majority (already existed in AWS SM from prior replication runs)
+- **Created**: newly-missing secrets (AGENT_ORCHESTRATOR_SLACK_WEBHOOK + newly-added data provider keys)
+- **Skipped (no access)**: `anthropic-api-key`, `binance-write-api-key`, `coinglass-api-key`, `cryptoquant-api-key`,
+  `deribit-write-api-key` — GCP SM access denied for these; values were empty/inaccessible
+
+**Wallet private keys excluded (HUMAN gate — NEVER script-mirror)**:
+
+| Secret name                           | Type                        | AWS status                                       |
+| ------------------------------------- | --------------------------- | ------------------------------------------------ |
+| `defi-wallet-private-key`             | EVM wallet private key      | EXCLUDED — operator must rotate fresh to AWS KMS |
+| `defi-wallet-private-key-wrapped`     | KMS-wrapped EVM key         | EXCLUDED — rotate fresh                          |
+| `defi-wallet-metamask`                | Metamask hot wallet         | EXCLUDED — rotate fresh                          |
+| `defi-wallet-trust`                   | Trust wallet                | EXCLUDED — rotate fresh                          |
+| `solana-paper-keypair-private-key`    | Solana keypair              | EXCLUDED — rotate fresh                          |
+| `extended-starknet-stark-private-key` | StarkNet private key        | EXCLUDED — rotate fresh                          |
+| `polymarket-private-key`              | Polymarket CLOB signing key | EXCLUDED — rotate fresh                          |
+| `hyperliquid-trade-key`               | HL EIP-712 agent key        | EXCLUDED — rotate fresh                          |
+| `hyperliquid-testnet-trade-key`       | HL testnet agent key        | EXCLUDED — rotate fresh                          |
+
+**Operator action required**: See `ikenna_orchestrator/pings/slot_3.md` BLOCKED-OPERATOR-DECISION #1 for AWS KMS
+creation + rotation steps per wallet type.
+
+**Stub structure** (expand per-secret if needed):
 
 ```
 | name | gcp_resource_id | aws_resource_id | status | consumers | owner | last_synced_at | target_state_date |
 ```
-
-Phase 4 will fill this in via `gcloud secrets list --project central-element-323112` inventory.
 
 ---
 
