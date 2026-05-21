@@ -97,3 +97,35 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
 **Status**: BLOCKED-CREDENTIALS until operator [ack]
 **Without it**: FootystatsAdapter scaffold ships (get_leagues/get_matches/get_teams); integration tests dormant.
 **Plan-of-record**: ADAPTER-FOOTYSTATS-FEED (backlog task); MTDS@3294423
+
+## CREDENTIAL APPROVAL REQUEST — Sportradar API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: Sportradar (developer.sportradar.com) — Trial (free, 30 days, 100 calls/day) or Basic ($499/mo)
+**What I need**: Sportradar API key (`api_key` query param)
+  - Free 30-day trial: soccer v4 (100 calls/day) — sufficient for smoke tests + schedule/results
+  - Basic ($499/mo): 5K calls/day, one sport
+  - Advanced ($1,199/mo): unlimited, all sports, real-time
+**Account to use**: New developer account at developer.sportradar.com (email signup, free trial)
+**Cost**: $0 for free trial (30 days); $499/mo Basic for production
+**What it unblocks**: Integration tests in `tests/integration/test_sportradar_integration.py`; `TestGetScheduleLive` + `TestGetResultsLive` + `TestGetOddsLive` classes currently skip with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: SportradarAdapter scaffold ships (get_schedule/get_results/get_odds, soccer v4 + NBA/tennis/NFL extensible); UAC schemas at UAC@ce48ba6; integration tests dormant.
+**Plan-of-record**: ADAPTER-SPORTRADAR-FEED (backlog task); MTDS@8444c64; UAC@ce48ba6
+
+## CREDENTIAL APPROVAL REQUEST — Kaiko API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: Kaiko (kaiko.com / docs.kaiko.com) — Free tier or Starter ($99/mo)
+**What I need**: Kaiko API key (`X-Api-Key` header)
+  - Free: 1K calls/month, 2yr history — sufficient for smoke tests
+  - Starter ($99/mo): 5yr history, tick-level trades, 100K calls/month
+  - Growth ($499/mo): full history, order book snapshots
+**Account to use**: New account at kaiko.com (email signup; enterprise sales contact at sales@kaiko.com)
+**Cost**: Free tier covers testing; $99/mo Starter for production historical ticks
+**What it unblocks**: Integration tests in `tests/integration/test_kaiko_integration.py`; `TestFetchInstrumentsLive` + `TestFetchOHLCVLive` + `TestFetchTradesLive` classes currently skip with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: KaikoAdapter scaffold ships (fetch_instruments/fetch_trades/fetch_ohlcv, paginated via next_url, all CEX); UAC schemas at UAC@ce48ba6; integration tests dormant.
+**Plan-of-record**: ADAPTER-KAIKO-CEX-HISTORICAL (backlog task); MTDS@86d6baa; UAC@ce48ba6
