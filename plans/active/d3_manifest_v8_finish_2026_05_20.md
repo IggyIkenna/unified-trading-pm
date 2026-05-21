@@ -120,9 +120,12 @@ that plan was written (2026-05-09):
   - Single-walk discipline: ONE pass per bucket (not per-service)
   - Uses `gcs_copy_object` / `gcs_delete_object` (NOT gsutil) per CLAUDE.md
   - basedpyright 0 errors, ruff clean, QG code checks pass
-- [ ] [OPERATOR] P0. Run migration script on prod GCS with ADC perms:
+- [x] ✅ [OPERATOR] P0. Run migration script on prod GCS with ADC perms:
       `python3 scripts/migrate_manifest_v8.py --dry-run --asset-group all`
-- [ ] [OPERATOR] P0. After dry-run passes: run live migration; verify `schema_version` distribution shows 100% v8
+  - Dry-run 2026-05-21: 43 buckets, 11 needing migration, 7,412,953 rows, 0 errors
+- [x] ✅ [OPERATOR] P0. After dry-run passes: run live migration; verify `schema_version` distribution shows 100% v8
+  - Live migration 2026-05-21: 11 buckets upgraded, 7,412,953 rows migrated, 0 errors
+  - Verified 100% v8: cefi 2,632,931 ✅ / defi 1,606,190 ✅ / tradfi 141,401 ✅ / sports 157,500 ✅ / prediction 16,812 ✅
 
 ### Phase 4 — Divergence-detector tooling
 
@@ -133,14 +136,18 @@ that plan was written (2026-05-09):
   - Outputs CSV + summary to `plans/audit/results/divergence_<date>.csv`
   - UTL@8ffd7083: `scripts/detect_manifest_divergence.py` — uses `resolve_bucket_name` + UTL `client.download_bytes` (not gcsfs); `--asset-group all|defi|...` CLI; UTL QG ✅ ALL QUALITY GATES PASSED
 - [x] ✅ [AGENT] P1. Wire divergence-detector as QG smoke — **DEFERRED** to D2 plan runtime harness per plan spec; marked DEFERRED here
-- [ ] [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in A3)
+- [x] ✅ [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in A3)
+  - Detector ran 2026-05-21 post-migration: DIVERGENT_EMPTY=765 (matches A3 exactly) — detector working correctly
+  - Cells are Drift S3 adapter-level bugs: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`
+  - CSV: `plans/audit/results/divergence_2026-05-21.csv` (1,792,168 rows total, 765 DIVERGENT_EMPTY, 214,344 MISSING_EXPECTED)
+  - These are pre-existing adapter bugs unresolved by schema migration; require MTDS handler backfill — tracked under D4 plan
 
 ## Success criteria
 
 - [x] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version) — confirmed by UAC/IS/MTDS/DS/ES QG ✅ runs across all Phase 1 items
 - [x] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade ✅ — features-service@2d5abdcd
-- [ ] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups
-- [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group (primary target)
+- [x] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups — verified 2026-05-21 post-migration (4,554,834 rows sampled from 5 market-data-tick buckets: cefi/defi/tradfi/sports/prediction all 100.0%)
+- [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group — detector ran 2026-05-21, found 765 (baseline = A3 count, consistent); 765 are real Drift S3 adapter bugs requiring MTDS backfill under D4
 
 ## Full-execution criterion
 
@@ -153,5 +160,6 @@ that plan was written (2026-05-09):
 - Rows with NULL backfilled v8 enhanced columns (service_emission_state=NULL) — acceptable until services start writing
   v8 rows natively (post-Phase 3 migration). Follow-up: services start writing real `service_emission_state` values as
   they process new shards.
+- DIVERGENT_EMPTY cells in defi (765 cells: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`) — Drift S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require MTDS handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
 - DIVERGENT_EMPTY cells in sports/prediction/cefi/tradfi — addressed per their D4/D5/D1 plans after this D3 migration
   lands.
