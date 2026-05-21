@@ -92,14 +92,15 @@ Deferred items to migrate:
 - Track E features-sports stamp-helper wire-in → already in `available_at_lookahead_bias_completion_2026_05_08.md` Phase
   B ✅
 
-- [ ] [DOCS] P0. Archive `wave3x_residual_ssots_2026_05_08.md` →
+- [x] [DOCS] P0. Archive `wave3x_residual_ssots_2026_05_08.md` →
       `plans/archive/wave3x_residual_ssots_2026_05_08.plan.md`. Add `## Deferred work — migrated to:` section listing
       Track D → `wave3x_track_d_implementation_2026_05_19.md` and Track E →
       `available_at_lookahead_bias_completion_2026_05_08.md` Phase B. Add `status: archived` to frontmatter. Remove from
-      `plans/active/`.
-- [ ] [DOCS] P0. Update `plans/epics/sports_master.md`: mark `wave3x_residual_ssots_2026_05_08` as
-      `✅ ARCHIVED 2026-05-21` in any active-plan reference table or todo list.
-- [ ] [FLIP] P0. Commit `docs(plans): archive wave3x_residual_ssots — 100% complete per slot-2 2026-05-20`. Push.
+      `plans/active/`. — PM@221435a9d
+- [x] [DOCS] P0. Update `plans/epics/sports_master.md`: mark `wave3x_residual_ssots_2026_05_08` as
+      `✅ ARCHIVED 2026-05-21` in any active-plan reference table or todo list. — PM@221435a9d
+- [x] [FLIP] P0. Commit `docs(plans): archive wave3x_residual_ssots — 100% complete per slot-2 2026-05-20`. Push. —
+      PM@221435a9d
 
 ### Plan 2: expected_unattempted_propagation_chain_2026_05_12
 
