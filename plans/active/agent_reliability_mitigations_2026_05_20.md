@@ -29,8 +29,8 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 - [x] ✅ [AGENT] P0. `POST /api/mirror-events` (no auth — webhook) + `GET /api/mirror-events` (authed) shipped in
       `server/server.py`. `mirror_events` table; `slot.mirror_blocked_at` set on non-ff decisions. agent-orch (shipped
       prior to 2026-05-21 session).
-- [ ] [AGENT] P0. `tab-mirror-to-ldr.yml` adds final step POSTing result to `/api/mirror-events` — fire-and-forget,
-      exits 0 either way. Rollout via `rollout-workflow-templates.sh`.
+- [x] ✅ [AGENT] P0. `tab-mirror-to-ldr.yml` adds final step POSTing result to `/api/mirror-events` — fire-and-forget,
+      exits 0 either way. Rolled out PM@b0af9ba3a.
 
 ## Phase 2 — Pre-spawn dirty-state gate
 
