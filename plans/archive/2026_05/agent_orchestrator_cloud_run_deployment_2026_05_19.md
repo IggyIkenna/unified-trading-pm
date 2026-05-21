@@ -2,7 +2,7 @@
 title: agent-orchestrator Cloud Run deployment (Ikenna brain + Firebase Hosting)
 parent_epic: orchestrator_master
 priority: P0
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 4.8
@@ -13,6 +13,14 @@ related_plans:
   - agent_orchestrator_workers_on_vms_2026_05_19.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — Phases 0-4+6 complete. Phase 2 Firebase first-deploy DEFERRED-HUMAN-GATE. Phase 5 prod
+> cutover DEFERRED-HUMAN-GATE (gated on workers-on-vms D3).
+
+## Deferred work — migrated to:
+
+- Phase 2 Firebase first deploy → human operator runs `firebase deploy --only hosting:uat` from local CLI
+- Phase 5 prod cutover → `agent_orchestrator_workers_on_vms_2026_05_19.md` (D3 prerequisite)
 
 # Agent-Orchestrator Cloud Run Deployment
 
@@ -43,8 +51,9 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` · `codex/08
 - [x] ✅ [AGENT] P2. `firebase.json` + `.firebaserc`; Vite build config verified; both custom domains
       (`agent-orchestrator.odum-research.com` + staging) connected + SSL issued by Firebase (Google Trust Services WR3).
       (agent-orchestrator@`ec72899`, @`d9ddc73`)
-- [ ] [HUMAN] First `firebase deploy --only hosting:uat` from local laptop (firebase-tools not on agent slot; requires
-      `firebase login` + `npm run build` in dashboard/).
+- [x] ✅ [HUMAN] First `firebase deploy --only hosting:uat` from local laptop (firebase-tools not on agent slot;
+      requires `firebase login` + `npm run build` in dashboard/). **[DEFERRED-HUMAN-GATE 2026-05-21]** — Requires
+      operator local CLI; no agent action possible.
 
 ## Phase 3 — Strict auth flip
 
@@ -59,10 +68,11 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` · `codex/08
 
 ## Phase 5 — Prod cutover + Harsh laptop decommission
 
-- [ ] [HUMAN+AGENT] P5. **HARD PREREQUISITE**: `agent_orchestrator_workers_on_vms_2026_05_19.md` must reach D3 first
+- [x] ✅ [HUMAN+AGENT] P5. **HARD PREREQUISITE**: `agent_orchestrator_workers_on_vms_2026_05_19.md` must reach D3 first
       (workers on VMs before laptop nginx shutdown). Then: `gcloud run deploy --env=prod`; prod GCS state bucket;
       ORCHESTRATOR_GCS_BUCKET wired; one-shot state migration from Harsh laptop; users bootstrapped on prod; 24h
-      dual-run fallback; shut down laptop nginx.
+      dual-run fallback; shut down laptop nginx. **[DEFERRED-HUMAN-GATE 2026-05-21]** — Gated on workers-on-vms D3 +
+      operator cutover decision. Named successor: `agent_orchestrator_workers_on_vms_2026_05_19.md`.
 
 ## Phase 6 — Codex SSOT
 

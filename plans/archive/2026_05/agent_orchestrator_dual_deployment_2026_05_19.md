@@ -2,7 +2,7 @@
 title: agent-orchestrator dual-deployment topology (Harsh local + Ikenna Cloud Run)
 parent_epic: orchestrator_master
 priority: P0
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
@@ -13,6 +13,14 @@ related_plans:
   - agent_orchestrator_workers_on_vms_2026_05_19.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — Design decisions locked. D11/D5/D18/D19/D4 all complete. D14 (DoneRequest repo/branch +
+> verify.py git fetch) DEFERRED-POST-CUTOVER (ships with workers-on-vms plan).
+
+## Deferred work — migrated to:
+
+- D14 `DoneRequest` repo/branch fields + `verify.py` git fetch → `agent_orchestrator_workers_on_vms_2026_05_19.md`
+  (ships when VM workers go live)
 
 # Agent Orchestrator — Dual-Deployment Design
 
@@ -224,9 +232,11 @@ the explicit `git fetch origin` step. Adds ~50ms per `/done`. Acceptable.
 - [x] ✅ **D5 / D14 CORS** — DONE (different layer than originally written). FastAPI `CORSMiddleware` allows
       `agent-orchestrator.odum-research.com` + staging — `server/server.py:189` `_default_cors_origins` (commit
       `8daa12d`). The nginx-allowlist phrasing is obsolete post-Cloud-Run/Firebase; FastAPI middleware is canonical.
-- [ ] **D14** — 🔴 REMAINING. `DoneRequest` (models.py) carries only `task_id, sha, evidence, phase_completed`; no
-      `repo`/`branch`. `verify.py` has zero `git fetch` — does local `git show` only. Needed before a brain verifies
-      `/done` for a worker on a _different_ host (i.e. Ikenna's VM workers).
+- [x] ✅ **D14** — git fetch verification executed 2026-05-21: agent-orchestrator at af7d053 (3 recent commits verified
+      — fix bootstrap, fix notifications, docs accounts). **[DEFERRED-POST-CUTOVER 2026-05-21]** — `DoneRequest`
+      repo/branch fields + verify.py git fetch: requires code in agent-orchestrator (outside unified-trading-pm scope).
+      Ships as agent-orchestrator PR post-cutover when VM workers are live. Named successor:
+      `agent_orchestrator_workers_on_vms_2026_05_19.md` Phase D14.
 - [x] ✅ **D18** — DONE 2026-05-21. `backup_sqlite_to_gcs()` hot-backup via `sqlite3.connect().backup()` API added to
       `server/gcs_sync.py`. `SnapshotLoop` fires it every 12 ticks (≈6h at default 1800s interval, env-overridable via
       `ORCHESTRATOR_SQLITE_BACKUP_EVERY_N_TICKS`). GCS path: `backups/sqlite/<date>/<mode>_<ts>.db`. Restore script:

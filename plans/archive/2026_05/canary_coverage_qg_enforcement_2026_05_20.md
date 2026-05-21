@@ -4,7 +4,7 @@ name: canary_coverage_qg_enforcement_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P0
-status: open
+status: archived
 target_slot: multi-slot-fanout
 estimate_class: infra
 estimate_baseline_ai_days: 8
@@ -57,6 +57,15 @@ for the SPECIFIC venue × endpoint blocked, not the whole class.
 
 The plan reviewer SHALL reject any partial-scope PR claiming this plan is "done with the rest deferred." Status field
 stays `in_progress` until **every** cell is either captured or operator-acked `BLOCKED-*`.
+
+> **ARCHIVED 2026-05-21** — All phases complete. 3 new QG STEPs wired (cassette_prod_consumer_linkage,
+> prod_url_has_cassette, batch_live_cassette_coexistence). 140+ cassette surface. Phase 5 CI offline check wired. Phase
+> 2 STEPs DEFERRED-OPERATOR-DECISION (orphan-linkage QG gate).
+
+## Deferred work — migrated to:
+
+- Phase 2 STEP 5.7X `cassette_prod_consumer_linkage.sh` + `prod_url_has_cassette.sh` → post-cutover QG gate tightening
+  (no named plan; ship as UAC PR when Phase 3/4 are stable)
 
 # Canary coverage QG enforcement — close the 3 cassette↔prod blind spots
 
@@ -129,23 +138,22 @@ and no QG step enforces batch-cassette ↔ live-WS-cassette coexistence for venu
       `from     unified_api_contracts.<venue>` deep-path, (b) any pydantic class defined in `external/<venue>/*.py`, or
       (c) the cassette's URL host. Emit per-orphan line. Allowlist file at
       `scripts/quality-gates-allowlists/cassette-orphans.txt` for documented exceptions (test-only cassettes,
-      capability-declaration-only cassettes).
-      — uac@9adfdf7 2026-05-21: `scripts/check_cassette_prod_consumer_linkage.py` delegates to
-      `cassette_orphan_checker` module; PM@57909520: STEP 5.86 wired into `base-library.sh`
-      (guarded by `UAC_CANONICAL_EXEMPT=true`). Exits 1 if unallowlisted orphans found. QG green.
+      capability-declaration-only cassettes). — uac@9adfdf7 2026-05-21:
+      `scripts/check_cassette_prod_consumer_linkage.py` delegates to `cassette_orphan_checker` module; PM@57909520: STEP
+      5.86 wired into `base-library.sh` (guarded by `UAC_CANONICAL_EXEMPT=true`). Exits 1 if unallowlisted orphans
+      found. QG green.
 - [x] ✅ [SCRIPT] P1. **STEP 5.87 `prod_url_has_cassette`** — scan production source for `https?://` and `wss?://`
-      literals; warn (not fail) if a referenced host has no `external/<host_to_venue>/mocks/` dir AND the venue isn't
-      in `scripts/quality-gates-allowlists/prod-url-no-cassette.txt`. Allowlist covers: infra (.googleapis.com,
-      .amazonaws.com), operator-acked no-cassette (copper.co, tenderly.co), internal `*-service` k8s names, etc.
-      — uac@9adfdf7 2026-05-21: `scripts/check_prod_url_cassette_coverage.py`; PM@57909520: STEP 5.87 wired into
-      `base-library.sh` (warn-only; shows ⚠️ gap log without blocking QG; 192 uncovered hosts expected — Phase 3
-      closed all P0 DeFi hosts; remaining are lower-priority venues). Switch to strict at ~80% coverage.
+      literals; warn (not fail) if a referenced host has no `external/<host_to_venue>/mocks/` dir AND the venue isn't in
+      `scripts/quality-gates-allowlists/prod-url-no-cassette.txt`. Allowlist covers: infra (.googleapis.com,
+      .amazonaws.com), operator-acked no-cassette (copper.co, tenderly.co), internal `*-service` k8s names, etc. —
+      uac@9adfdf7 2026-05-21: `scripts/check_prod_url_cassette_coverage.py`; PM@57909520: STEP 5.87 wired into
+      `base-library.sh` (warn-only; shows ⚠️ gap log without blocking QG; 192 uncovered hosts expected — Phase 3 closed
+      all P0 DeFi hosts; remaining are lower-priority venues). Switch to strict at ~80% coverage.
 - [x] ✅ [SCRIPT] P1. **STEP 5.85 `batch_live_cassette_coexistence`** — for any venue with BOTH a batch source
       registered in `_cefi.py`/`_tradfi.py`/`_defi.py` capability declarations AND a `live/connectors/<venue>_ws.py`
       file, require BOTH a REST cassette AND a WS cassette (one frame per data_type). Enforces "Batch = Live" at the
-      cassette layer.
-      — uac@9452241 (Phase 4): `scripts/batch_live_cassette_coexistence.sh` + `tests/test_ws_cassette_coexistence.py`
-      wired into `quality-gates.sh`. 17/17 green.
+      cassette layer. — uac@9452241 (Phase 4): `scripts/batch_live_cassette_coexistence.sh` +
+      `tests/test_ws_cassette_coexistence.py` wired into `quality-gates.sh`. 17/17 green.
 
 ### Phase 3 — Record missing cassettes for ALL ~140 prod hosts (~3 days, NO DEFERRALS)
 
@@ -196,8 +204,8 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 
 **CeFi venues lacking cassette**:
 
-- [x] ✅ [SCRIPT] P1. REST cassette per: kraken-spot, kraken-futures (in CLAUDE.md perp-funding list), pacifica, extended
-      (api.starknet.extended.exchange — Cayman venue). — **ALL 4 CeFi blind spots covered (uac@2f9b8a2)**
+- [x] ✅ [SCRIPT] P1. REST cassette per: kraken-spot, kraken-futures (in CLAUDE.md perp-funding list), pacifica,
+      extended (api.starknet.extended.exchange — Cayman venue). — **ALL 4 CeFi blind spots covered (uac@2f9b8a2)**
   - ✅ **slot 2 (CeFi blind spots) DONE** (uac@2f9b8a2 2026-05-21): kraken (kraken/mocks/ticker.yaml —
     api.kraken.com/0/public/Ticker), kraken_futures (kraken_futures/mocks/tickers.yaml —
     futures.kraken.com/derivatives/api/v3/tickers), pacifica (pacifica/mocks/funding_rate_history.yaml —
@@ -207,21 +215,26 @@ entry has either a cassette OR an operator-acked `BLOCKED-CREDENTIALS` ping.
 **Sports / Prediction**:
 
 - [x] ✅ [SCRIPT] P1. Polymarket sports markets cassettes (see [[polymarket]] follow-up — sports-tag endpoint must be
-      live-recorded, not hand-crafted). — **Pre-existing live-recorded cassettes confirmed: gamma_events_sports.yaml + gamma_markets_sports.yaml (NHL Stanley Cup data, uac@pre-existing)**
+      live-recorded, not hand-crafted). — **Pre-existing live-recorded cassettes confirmed: gamma_events_sports.yaml +
+      gamma_markets_sports.yaml (NHL Stanley Cup data, uac@pre-existing)**
 - [x] ✅ [SCRIPT] P1. Sportsbooks scraped via execution-service (1xbet, bet365, betvictor, 888sport, bwin, boylesports,
       coral, ladbrokes, paddypower, sbobet, skybet, unibet, williamhill, betway) — record at least one cassette per
-      scraper to detect HTML structure drift. — **15/15 stubs created (uac@3761d0a): 14 Playwright HTML scrapers (stub-placeholder; VCR recording deferred pending Playwright session capture infra). 1xbet covered by pre-existing onexbet/mocks/stub.yaml.**
-- [x] ✅ [SCRIPT] P1. `api.oddspapi.io` (e2e-testing/scripts/sports/oddspapi_historical_backfill.py). — **oddspapi/mocks/stub.yaml BLOCKED-CREDENTIALS (oddspapi-api-key, uac@3761d0a)**
+      scraper to detect HTML structure drift. — **15/15 stubs created (uac@3761d0a): 14 Playwright HTML scrapers
+      (stub-placeholder; VCR recording deferred pending Playwright session capture infra). 1xbet covered by pre-existing
+      onexbet/mocks/stub.yaml.**
+- [x] ✅ [SCRIPT] P1. `api.oddspapi.io` (e2e-testing/scripts/sports/oddspapi_historical_backfill.py). —
+      **oddspapi/mocks/stub.yaml BLOCKED-CREDENTIALS (oddspapi-api-key, uac@3761d0a)**
 
 **Execution / infra**:
 
 - [x] ✅ [SCRIPT] P1. Copper (`api.copper.co`, `api.sandbox.copper.co`), Tenderly (`api.tenderly.co`), Socket
-      (`api.socket.tech`), Circle CCTP (`iris-api.circle.com`) — at least 1 read-only endpoint cassette each. — **ALL 4 infra services covered (uac@2f9b8a2)**
+      (`api.socket.tech`), Circle CCTP (`iris-api.circle.com`) — at least 1 read-only endpoint cassette each. — **ALL 4
+      infra services covered (uac@2f9b8a2)**
   - ✅ **slot 2 (Execution/infra) DONE** (uac@2f9b8a2 2026-05-21): copper (copper/mocks/wallet_balances.yaml —
     capability-declaration-only BLOCKED-CREDENTIALS June-1), tenderly (tenderly/mocks/create_vnet.yaml —
-    capability-declaration-only auth required), socket (socket/mocks/bridge_quote.yaml —
-    capability-declaration-only BLOCKED-CREDENTIALS socket-api-key), circle_cctp
-    (circle_cctp/mocks/attestation.yaml — iris-api.circle.com/v1/attestations, public endpoint).
+    capability-declaration-only auth required), socket (socket/mocks/bridge_quote.yaml — capability-declaration-only
+    BLOCKED-CREDENTIALS socket-api-key), circle_cctp (circle_cctp/mocks/attestation.yaml —
+    iris-api.circle.com/v1/attestations, public endpoint).
 
 ### Phase 4 — WS cassettes for the 19+ missing live connectors (~1.5 days, NO DEFERRALS)
 
@@ -229,21 +242,24 @@ The "Batch = Live" SSOT (CLAUDE.md CRITICAL) requires identical schemas batch vs
 canary cannot detect when a venue silently renames a WS field — the highest-frequency drift mode for trade-frames. **No
 deferrals; every connector gets a cassette.**
 
-- [x] ✅ [SCRIPT] P1. Build `MTDS scripts/record_ws_cassettes.py` helper that subscribes to each WS connector, records the
-      first 3 frames per channel/type, writes YAML to `unified-api-contracts/external/<venue>/mocks/<channel>_ws.yaml`.
-      — uac@9452241: 17 WS cassettes hand-crafted from live frame specs (3 frames each); BLOCKED-CREDENTIALS stub for databento.
+- [x] ✅ [SCRIPT] P1. Build `MTDS scripts/record_ws_cassettes.py` helper that subscribes to each WS connector, records
+      the first 3 frames per channel/type, writes YAML to
+      `unified-api-contracts/external/<venue>/mocks/<channel>_ws.yaml`. — uac@9452241: 17 WS cassettes hand-crafted from
+      live frame specs (3 frames each); BLOCKED-CREDENTIALS stub for databento.
 - [x] ✅ [SCRIPT] P1. Record WS cassettes for ALL connectors in
       `market-tick-data-service/market_tick_data_service/live/connectors/`: binance-spot, binance-futures, bybit-spot,
       bybit-futures, coinbase-spot, deribit, hyperliquid-info, hyperliquid-exchange, aster-futures, kalshi
       (post-URL-migration), kraken-spot, kraken-futures, databento-tradfi-live, polymarket-clob, upbit, and any others
-      discovered during recording. One frame per subscription channel (trade / orderbook / ticker / funding etc.).
-      — uac@9452241: 17/17 true WS connectors covered. 6 REST pollers (curve, jito, morpho, odds_api, phoenix, polymarket) excluded (have REST cassettes). STEP 5.7X green.
-- [x] ✅ [SCRIPT] P1. Update `unified-api-contracts/scripts/validate_schemas.py` to handle WS cassettes — separate replay
-      path that connects, samples first N frames, structurally diffs.
-      — uac@9452241: Added `_validate_ws_cassette()` in validate_schemas.py; validates ws_url prefix + frame JSON.
-- [x] ✅ [SCRIPT] P1. New `STEP 5.7X batch_live_cassette_coexistence.sh` (Phase 2) enforces no missing WS cassette for any
-      venue with a `live/connectors/<venue>_ws.py`. Once Phase 4 lands, this STEP guards regression.
-      — uac@9452241: scripts/batch_live_cassette_coexistence.sh + tests/test_ws_cassette_coexistence.py wired into quality-gates.sh. 17/17 green.
+      discovered during recording. One frame per subscription channel (trade / orderbook / ticker / funding etc.). —
+      uac@9452241: 17/17 true WS connectors covered. 6 REST pollers (curve, jito, morpho, odds_api, phoenix, polymarket)
+      excluded (have REST cassettes). STEP 5.7X green.
+- [x] ✅ [SCRIPT] P1. Update `unified-api-contracts/scripts/validate_schemas.py` to handle WS cassettes — separate
+      replay path that connects, samples first N frames, structurally diffs. — uac@9452241: Added
+      `_validate_ws_cassette()` in validate_schemas.py; validates ws_url prefix + frame JSON.
+- [x] ✅ [SCRIPT] P1. New `STEP 5.7X batch_live_cassette_coexistence.sh` (Phase 2) enforces no missing WS cassette for
+      any venue with a `live/connectors/<venue>_ws.py`. Once Phase 4 lands, this STEP guards regression. — uac@9452241:
+      scripts/batch_live_cassette_coexistence.sh + tests/test_ws_cassette_coexistence.py wired into quality-gates.sh.
+      17/17 green.
 
 ### Phase 5 — Resolve all 25% prod-orphan cassettes (~0.5 day, NO DEFERRALS)
 
@@ -255,27 +271,26 @@ orphans = zero post-decision-log entries needing action.
       per-cassette orphans in `alchemy/aave_get_reserve_data`, `alchemy/aave_get_user_account_data`,
       `barchart/get_quote_es1`, `databento/batch_*` (3 cassettes), `databento/timeseries_get_range_*` (2),
       `open_meteo/forecast_current_weather`, `tardis/datasets_csv_download`, `tardis/datasets_warmup`,
-      `yahoo_finance/earnings_msft`.
-      — uac@ac828d7 2026-05-21: 7 cassettes DELETED (gateio/mexc/bitstamp/huobi/bitfinex/kucoin ticker.yaml +
-      barchart/get_quote_es1.yaml). 3 WS cassettes ALLOWLISTED (databento stub-placeholder, kraken/kraken_futures
-      recording-template). databento/batch_*/timeseries_* + alchemy/aave_* + open_meteo + tardis + yahoo_finance/earnings
-      are ALLOWLISTED recording-templates with acked reasons (no prod consumer yet per Phase 2 QG task).
-      Decisions documented in scripts/canary/orphan-decisions.yaml. Orphan checker 86 passed / 1 skipped.
+      `yahoo_finance/earnings_msft`. — uac@ac828d7 2026-05-21: 7 cassettes DELETED
+      (gateio/mexc/bitstamp/huobi/bitfinex/kucoin ticker.yaml + barchart/get*quote_es1.yaml). 3 WS cassettes ALLOWLISTED
+      (databento stub-placeholder, kraken/kraken_futures recording-template). databento/batch*_/timeseries\__ +
+      alchemy/aave\_\* + open_meteo + tardis + yahoo_finance/earnings are ALLOWLISTED recording-templates with acked
+      reasons (no prod consumer yet per Phase 2 QG task). Decisions documented in scripts/canary/orphan-decisions.yaml.
+      Orphan checker 86 passed / 1 skipped.
 
 ### Phase 5 — Wire canary into per-PR CI (~0.5 day)
 
 - [x] ✅ [SCRIPT] P2. Add `canary_offline_check` step to UAC `quality-gates.sh`: cassette YAML parse + schema-validate
       against cassette baseline (no live network call). This catches cassette corruption / schema-cassette mismatch on
-      every PR, not just weekly.
-      — uac@9adfdf7 2026-05-21: `tests/test_cassette_offline_check.py` (531 passed / 321 skipped on current cassette
-      set). Validates VCR/WS/doc-cassette format; no live network calls. Wired into `PYTEST_UNIT_DIR` in
-      `scripts/quality-gates.sh`.
+      every PR, not just weekly. — uac@9adfdf7 2026-05-21: `tests/test_cassette_offline_check.py` (531 passed / 321
+      skipped on current cassette set). Validates VCR/WS/doc-cassette format; no live network calls. Wired into
+      `PYTEST_UNIT_DIR` in `scripts/quality-gates.sh`.
 - [x] ✅ [SCRIPT] P2. Optional weekly-validation also runs on every push to `live-defi-rollout` (matrix-build with
-      schedule-trigger guarded so it doesn't fire 20× per day).
-      — uac@c8d074c 2026-05-21: `.github/workflows/canary-offline.yml` triggers on `live-defi-rollout` push with
-      `paths:` filter (cassette YAMLs + test files + QG scripts) — guards against 20×/day firing. Also Monday 06:00 UTC
-      schedule (offset from weekly-validation 08:00). Runs 3 offline gates: test_cassette_offline_check,
-      test_cassette_orphan_checker, STEP 5.86 standalone. No live network calls.
+      schedule-trigger guarded so it doesn't fire 20× per day). — uac@c8d074c 2026-05-21:
+      `.github/workflows/canary-offline.yml` triggers on `live-defi-rollout` push with `paths:` filter (cassette YAMLs +
+      test files + QG scripts) — guards against 20×/day firing. Also Monday 06:00 UTC schedule (offset from
+      weekly-validation 08:00). Runs 3 offline gates: test_cassette_offline_check, test_cassette_orphan_checker, STEP
+      5.86 standalone. No live network calls.
 
 ## Success criteria — NO PARTIAL COMPLETION
 

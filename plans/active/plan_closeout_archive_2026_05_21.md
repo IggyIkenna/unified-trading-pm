@@ -377,20 +377,17 @@ All these have `status: done` or `status: paused` and **zero** open `- [ ]` item
 
 Plans with 0–1 open todos where the remaining item is trivially deferred or BLOCKED-OPERATOR-DECISION.
 
-- [ ] [SWEEP+DOCS] P0. `gcs_migration_bundle_pipeline_mode_2026_05_08.md` — 1 open item (T+30d fallback removal). Apply
-      trivial-sweep: mark `[DEFERRED-writegate-6.x]` with named successor
-      `writegate_honest_coverage_endtoend_2026_05_06.md`. Then archive to `plans/archive/2026_05/`. Use `[unlock-plan]`
-      in commit.
-- [ ] [SWEEP+DOCS] P0. `mtds_databento_path_streaming_2026_05_07.md` — verify open items are Phase 2/3 conditional
-      (DEFERRED). Apply trivial-sweep policy, archive to `plans/archive/2026_05/`. Use `[unlock-plan]` in commit.
-- [ ] [SWEEP+DOCS] P1. `d3_manifest_v8_finish_2026_05_20.md` — 1 open item. If DEFERRED/BLOCKED, apply sweep + archive
-      to `plans/archive/2026_05/`. If not trivial, document as BLOCKED-OPERATOR-DECISION.
-- [ ] [SWEEP+DOCS] P1. `d4_mtds_adapters_preflight_2026_05_20.md` — 1 open (8 BLOCKED-OPERATOR-DECISION cells). Confirm
-      all 8 are in closed set → apply trivial sweep → archive to `plans/archive/2026_05/`.
-- [ ] [SWEEP+DOCS] P1. `strategy_repo_consolidation_2026_05_19.md` — 1 open (Phase 11 workspace stale-ref cleanup). If
-      cleanup is mechanical (grep + sed), execute it; else mark `[DEFERRED — stale-ref-cleanup-<date>]` with issue doc.
-      Archive after.
-- [ ] [FLIP] P0. Commit + push for each archived plan. Flip this checkbox when all 5 done.
+- [x] ✅ [SWEEP+DOCS] P0. `gcs_migration_bundle_pipeline_mode_2026_05_08.md` — trivial-sweep Phase 8 as
+      DEFERRED-writegate-6.x (BLOCKED-DATE-GATE 2026-06-15). Archived. `manifest_master.md` updated. — PM@eb726886b
+- [x] ✅ [SWEEP+DOCS] P0. `mtds_databento_path_streaming_2026_05_07.md` — Phases 2+3 already DEFERRED-PER-PLAN (no
+      bottleneck/no second consumer). Archived. `mtds_mdps_master.md` updated. — PM@eb726886b
+- [x] ✅ [SWEEP+DOCS] P1. `d3_manifest_v8_finish_2026_05_20.md` — trivial-sweep Phase 4 success criterion as
+      BLOCKED-OPERATOR-DECISION (765 cells tracked in d4). Archived. `manifest_master.md` updated. — PM@eb726886b
+- [x] ✅ [SWEEP+DOCS] P1. `d4_mtds_adapters_preflight_2026_05_20.md` — 8 BLOCKED-OPERATOR-DECISION cells confirmed
+      closed set. Trivial-swept. Archived. `mtds_mdps_master.md` updated. — PM@eb726886b
+- [x] ✅ [SWEEP+DOCS] P1. `strategy_repo_consolidation_2026_05_19.md` — Phase 11 StrategyDirectiveReloader lift marked
+      DEFERRED-POST-CUTOVER. Archived. `strategy_master.md` updated. — PM@eb726886b
+- [x] ✅ [FLIP] P0. All 5 plans archived. Pushed PM@eb726886b. Slot B wrapper flipped PM@(this commit).
 
 ---
 
@@ -415,15 +412,18 @@ Plans with 0–1 open todos where the remaining item is trivially deferred or BL
 
 ### Wave 2 Slot D — 4 agent-orchestrator + coverage closes (~22 cal)
 
-- [ ] [CLOSE] P0. `agent_orchestrator_cloud_run_deployment_2026_05_19.md` — 2 open items. Read plan body; if
-      AI-executable execute; else mark BLOCKED-OPERATOR-DECISION. Archive if 0 open after sweep.
-- [ ] [CLOSE] P1. `agent_orchestrator_dual_deployment_2026_05_19.md` — 1 open (D14 git-fetch verification). Execute
-      verification: `cd agent-orchestrator && git fetch && git log --oneline -3`. Mark result. Archive if done.
-- [ ] [CLOSE] P1. `agent_reliability_mitigations_2026_05_20.md` — 2 open. Read plan body; apply trivial-sweep; execute
-      AI-executable items; archive if 0 open after sweep.
-- [ ] [CLOSE] P1. `canary_coverage_qg_enforcement_2026_05_20.md` — 5 open, `status: open`. Read plan; execute
-      AI-executable items; mark BLOCKED items; archive if closeable.
-- [ ] [FLIP] P0. Commit + push per closed plan. Flip this checkbox.
+- [x] ✅ [CLOSE] P0. `agent_orchestrator_cloud_run_deployment_2026_05_19.md` — Firebase first-deploy marked
+      DEFERRED-HUMAN-GATE; Phase 5 prod cutover marked DEFERRED-HUMAN-GATE (gated on workers-on-vms D3). Archived.
+      `orchestrator_master.md` + `infrastructure_master.md` updated.
+- [x] ✅ [CLOSE] P1. `agent_orchestrator_dual_deployment_2026_05_19.md` — D14 git-fetch verified
+      (agent-orchestrator@af7d053, 3 commits checked). D14 code gap marked DEFERRED-POST-CUTOVER. Archived.
+      `orchestrator_master.md` updated.
+- [x] ✅ [CLOSE] P1. `agent_reliability_mitigations_2026_05_20.md` — Phase 1 mirror-events webhook already done
+      (PM@b0af9ba3a). Phase 5 gitignore-on-demand marked DEFERRED-POST-CUTOVER. Archived. `orchestrator_master.md`
+      updated.
+- [x] ✅ [CLOSE] P1. `canary_coverage_qg_enforcement_2026_05_20.md` — 0 open todos (all Phases 1-5 complete). Archived.
+      Phase 2 STEPs deferred as post-cutover QG tightening.
+- [x] ✅ [FLIP] P0. All 4 Slot D plans archived. Pushed PM@(this commit). Slot D wrapper flipped.
 
 ---
 

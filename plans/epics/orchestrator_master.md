@@ -154,17 +154,20 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`agent_orchestrator_cloud_run_deployment_2026_05_19`](../active/agent_orchestrator_cloud_run_deployment_2026_05_19.md)
+### [`agent_orchestrator_cloud_run_deployment_2026_05_19`](../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-4+6 done. Firebase first-deploy + Phase 5 prod cutover DEFERRED-HUMAN-GATE
+(gated on workers-on-vms D3). · **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`agent_orchestrator_dual_deployment_2026_05_19`](../active/agent_orchestrator_dual_deployment_2026_05_19.md)
+### [`agent_orchestrator_dual_deployment_2026_05_19`](../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md)
 
-**status**: active · **estimate**: 0.6 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-21 — Design locked. D11/D5/D18/D19/D4 done. D14 DEFERRED-POST-CUTOVER (ships with
+workers-on-vms). · **estimate**: 0.6 cal AI-days (class: design)
 
 ### [`agent_orchestrator_per_spawn_account_isolation_2026_05_20`](../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`); 4b-cleanup pending harsh setup-token
+**status**: ✅ ARCHIVED 2026-05-21 — SUPERSEDED by oauth token env-var approach (`CLAUDE_CODE_OAUTH_TOKEN`); 4b-cleanup
+pending harsh setup-token
 
 ### [`agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)
 
@@ -174,9 +177,10 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra)
 
-### [`agent_reliability_mitigations_2026_05_20`](../active/agent_reliability_mitigations_2026_05_20.md)
+### [`agent_reliability_mitigations_2026_05_20`](../archive/2026_05/agent_reliability_mitigations_2026_05_20.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-4 done (mirror-events, dirty-state gate, claim tag, in-flight files).
+Phase 5 gitignore-on-demand DEFERRED-POST-CUTOVER. · **estimate**: 1.2 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 

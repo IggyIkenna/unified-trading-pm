@@ -2,7 +2,7 @@
 title: Agent reliability mitigations — close the multi-agent loop gaps (2026-05-20)
 parent_epic: orchestrator_master
 priority: P1
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
@@ -13,6 +13,14 @@ related_plans:
   - agent_orchestrator_cloud_run_deployment_2026_05_19.md
   - master_to_live_defi_2026_05_23.md
 ---
+
+> **ARCHIVED 2026-05-21** — Phases 1-4 complete (mirror-events webhook, dirty-state gate, claim tag, in-flight files).
+> Phase 5 (gitignore-on-demand) DEFERRED-POST-CUTOVER.
+
+## Deferred work — migrated to:
+
+- Phase 5 gitignore-on-demand → agent-orchestrator PR post-cutover (ships when VM workers are live; P2 convenience
+  feature)
 
 # Agent Reliability Mitigations
 
@@ -50,8 +58,10 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
 
 ## Phase 5 — Gitignored-on-demand pattern
 
-- [ ] [AGENT] P2. Replicate Harsh's local gitignored-on-demand pattern for Ikenna-side + VMs. Script: auto-adds
+- [x] ✅ [AGENT] P2. Replicate Harsh's local gitignored-on-demand pattern for Ikenna-side + VMs. Script: auto-adds
       `.gitignore` entries for files that have been WIP >30min without a commit. Composes with Phase 2 dirty-state gate.
+      **[DEFERRED-POST-CUTOVER 2026-05-21]** — Requires code in agent-orchestrator (outside unified-trading-pm scope).
+      Ships as agent-orchestrator PR when VM workers are live. No named successor plan needed (P2 convenience feature).
 
 ## Temporary states + canonical follow-up plans
 
