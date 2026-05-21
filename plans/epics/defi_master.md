@@ -20,7 +20,7 @@ related_plans:
   - ../active/defi_catalogue_chain_primitives_2026_05_10.md
   - ../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md
   - ../active/features_tick_observation_audit_2026_05_18.md
-  - ../active/hard_schema_phase1_field_flip_migration_2026_05_19.md
+  - ../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md
   - ../active/missing_question_docs_disposition_2026_05_10.md
   - ../active/mock_data_pipeline_benchmarking_2026_05_10.md
   - ../active/post_freeze_roadmap_2026_05_16_to_05_23.md
@@ -1514,9 +1514,10 @@ identification from A1)
 
 **status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
 
-### [`hard_schema_phase1_field_flip_migration_2026_05_19`](../active/hard_schema_phase1_field_flip_migration_2026_05_19.md)
+### [`hard_schema_phase1_field_flip_migration_2026_05_19`](../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md)
 
-**status**: active
+**status**: ✅ ARCHIVED 2026-05-21 — Phases A-D+F shipped; Phase E (subclass design) DEFERRED-POST-CUTOVER in archived
+plan (DO NOT move without operator ack)
 
 ### [`missing_question_docs_disposition_2026_05_10`](../active/missing_question_docs_disposition_2026_05_10.md)
 

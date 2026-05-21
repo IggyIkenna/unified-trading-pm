@@ -2,7 +2,7 @@
 title: "Hard Schema Phase 1 — Field-Flip Migration Plan"
 parent_epic: manifest_master
 priority: P0
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
@@ -118,15 +118,15 @@ None needed | | `CanonicalInjury.fixture_id` | `str \| None` | N/A — legitimat
 have a fixture_id | status: todo
 
 - id: phase-e-subclass-design-deferred content: |
-  - [ ] **DEFERRED post-cutover** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED
-        post-cutover).** For fields where the declaration flip would add real type-safety value but can't be expressed
-        without subclasses (primarily `expiry` for FUTURE/OPTION): The subclass approach (e.g.
-        `FuturesInstrumentRecord(InstrumentRecord)` with `expiry: datetime` non-optional) requires: (a)
-        instruments-service adapters return typed subclasses (not base InstrumentRecord) (b) consumers narrow the type
-        at read boundaries (c) parquet read path infers the subtype from `instrument_type` column This is a significant
-        refactor. Defer until after May-23 cutover. Named successor: this plan itself
-        (`hard_schema_phase1_field_flip_migration_2026_05_19.md`). **DO NOT move this to a different post-cutover plan
-        without operator ack.** status: todo
+  - [x] **[DEFERRED-POST-CUTOVER — stays in this archived plan; activates post-May-23. DO NOT move without operator
+        ack.]** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
+        For fields where the declaration flip would add real type-safety value but can't be expressed without subclasses
+        (primarily `expiry` for FUTURE/OPTION): The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)`
+        with `expiry: datetime` non-optional) requires: (a) instruments-service adapters return typed subclasses (not
+        base InstrumentRecord) (b) consumers narrow the type at read boundaries (c) parquet read path infers the subtype
+        from `instrument_type` column This is a significant refactor. Defer until after May-23 cutover. Named successor:
+        this plan itself (`hard_schema_phase1_field_flip_migration_2026_05_19.md`). **DO NOT move this to a different
+        post-cutover plan without operator ack.** status: todo
 
 - id: phase-f-codex-update content: |
   - [x] ✅ [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.** — unified-trading-pm (this
@@ -304,6 +304,12 @@ Phase E: Subclass design (DEFERRED — post-cutover)
 Phases A + C are parallelisable (no dependency between them). Phases D + F are parallelisable and follow A/B/C.
 
 ---
+
+## Deferred work — migrated to:
+
+| Deferred item                                                                                                | Successor                                                 |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Phase E — subclass design for declaration-level expiry enforcement (FUTURE/OPTION/EVENT_CONTRACT subclasses) | This plan post-cutover (DO NOT move without operator ack) |
 
 ## Temporary states + their canonical follow-up plans
 
