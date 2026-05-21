@@ -149,10 +149,11 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     all 10 buckets BEFORE 7b triage begins. Est: 4 cal-AI-days.
     **SCRIPT + TESTS READY 2026-05-21 slot-11**: UTL@ec788bad — `unified_trading_library/migrations/upgrade_manifest_to_v8.py` ships complete migration logic + `__main__` CLI (`--asset-group`, `--apply`/dry-run) + 16 unit tests (all pass, basedpyright 0 errors). Invoke: `python -m unified_trading_library.migrations.upgrade_manifest_to_v8 --asset-group all --apply`. EXECUTION GATED on Phase 6 restart (VMs must be writing v8 steady-state BEFORE bulk migration to avoid race). Verification: re-run A4 audit after migration; 100% v8 + 0 NULL required before Phase 7b triage begins.
 
-12. **HUMAN-HARSH-PHASE-9-DEPLOYMENT-UI-DENOMINATOR-FIX** — Phase 9 of coordinator: deployment-UI numerator/denominator
-    formula consolidation. Composes with: `honest_coverage_formula_consolidation_2026_05_19.md` +
-    `data_status_drilldown_shard_atom_alignment_2026_05_07.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md`.
-    Verification: spot-check known bucket, math matches; UI shows the 4-state breakdown panel. Est: 4 cal-AI-days.
+12. ✅ **HUMAN-HARSH-PHASE-9-DEPLOYMENT-UI-DENOMINATOR-FIX** — deployment-ui@643a22e — `HonestCoverageStatusCounts` split
+    into 5-field canonical formula (expected_unattempted_known_empty + expected_unattempted_pending_fetch); coverage_pct
+    comment corrected; CoverageBar renders 5 segments; tooltip fixed; color thresholds green ≥99%/amber ≥95%/red <95%;
+    legend updated; test fixture updated; QG green (68 tests, 0 TS errors). Phase 5 of honest_coverage_formula_consolidation
+    complete. Phase 8 (master plan Group H re-pull) is separate item — see plan.
 
 13. **HUMAN-HARSH-PHASE-11-BACKFILL-TO-100PCT** — Phase 11 of coordinator: operational data backfill against the
     now-clean v8 + correctly-labelled manifest. DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k

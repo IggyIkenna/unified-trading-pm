@@ -165,10 +165,13 @@ Phase 0 (✅ DONE)
 
 ### Phase 5 — deployment-ui consumers
 
-- [ ] **P0. `DataStatusPanel.tsx`**: render `counts` + `coverage` directly from API response. Remove any client-side
-      aggregation. Display all 5 fields in the drilldown tooltip (not just captured/total).
-- [ ] **P1. Coverage % color thresholds**: define one threshold set workspace-wide (green ≥99%, amber 95-99%, red <95%
-      per master plan).
+- [x] **P0. ✅ `HonestCoverageCard.tsx` + `client.ts`**: deployment-ui@643a22e — split expected_unattempted into
+      expected_unattempted_known_empty + expected_unattempted_pending_fetch; coverage_pct comment corrected to canonical
+      formula; CoverageBar renders all 5 fields as separate segments; tooltip text corrected; test fixture updated;
+      QG green (68 tests, 0 TS errors, build pass). NOTE: `DataStatusPanel.tsx` is separate from `HonestCoverageCard` —
+      Phase 5 scope was HonestCoverageCard per item 12. DataStatusPanel migration is tracked in Phase 4 P1 if needed.
+- [x] **P1. ✅ Coverage % color thresholds**: green ≥99%, amber ≥95%, red <95% applied to `HonestCoverageCard.tsx`
+      deployment-ui@643a22e.
 
 ### Phase 6 — CI ratchet
 
