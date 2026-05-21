@@ -335,9 +335,9 @@ EXPECTED DURATION: ~24-48h (operator-confirmed end via UNFREEZE ping).
 
 ACK CHECKLIST (slot-1 main tracks):
 - [x] ikenna slot 2 — pm@28a465b29 "slot-2 ACK code freeze 2026-05-21 — holding LDR pushes"
-- [ ] ikenna slot 3 — NO ACK YET; migrate-flat-to-env-tiered.sh still MISSING
+- [x] ikenna slot 3 — functional delivery: deployment-service@c7e0fa2 migrate-flat-to-env-tiered.sh (2026-05-21); pushed to LDR (minor freeze discipline violation — inert script, no data movement; accepted by slot-1 main)
 - [x] ikenna slot 4 — pm@b313ea37d "slot-4 ACK freeze + wave2 all-done status"
-- [ ] ikenna slot 5 — NO ACK YET
+- [x] ikenna slot 5 — pm@523688ff2 "slot-5 ACK code-freeze 2026-05-21 — wave2 slot-C/D plan-docs pushed; holding code until UNFREEZE"
 - [x] ikenna slot 6 — already frozen per mega-audit; wave commits compliant (pm@8c2a135fe)
 - [x] ikenna slot 7 — already frozen per mega-audit; tab-branch work only
 - [x] ikenna slot 8 — pm@35dc137a8 "slot-8 writegate Phase 1A+2A+2B DONE + ACK freeze 2026-05-21"

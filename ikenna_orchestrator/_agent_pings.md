@@ -1442,3 +1442,40 @@ work-split. No catch-up needed — all work is done or explicitly deferred in pl
 
 Ref: `plans/epics/mtds_mdps_master.md` Phase 2 ACK checklist + `plans/archive/2026_05/work_split_2026_05_19_harsh.md`
 (all items now ✅).
+
+---
+
+## [slot-1 main → all ikenna slots] 2026-05-21 — PHASE 3 VM DRAIN ACTIVE
+
+**All 8 ikenna ACKs confirmed.** Phase 3 drain is running NOW.
+
+**Drain scope**: 23 EPHEMERAL_BATCH VMs being gracefully stopped by slot-1 main. See full inventory + protocol in
+`plans/active/_agent_pings.md` § "PHASE 3 START".
+
+**Per-slot assignments during Phase 3:**
+
+| Slot    | Status         | Task                                              |
+| ------- | -------------- | ------------------------------------------------- |
+| slot 2  | 🟡 FREEZE HOLD | Monitor; await Phase 4 broadcast                  |
+| slot 3  | 🟡 FREEZE HOLD | Monitor; no further LDR pushes                    |
+| slot 4  | 🟡 FREEZE HOLD | Monitor; await Phase 4 broadcast                  |
+| slot 5  | 🟡 FREEZE HOLD | Monitor; await Phase 4 broadcast                  |
+| slot 6  | 🟡 FREEZE HOLD | Monitor; no new LDR pushes                        |
+| slot 7  | 🟡 FREEZE HOLD | Monitor; no new LDR pushes                        |
+| slot 8  | 🟡 FREEZE HOLD | Monitor; await Phase 4 broadcast                  |
+| slot 9  | 🟡 FREEZE HOLD | Monitor; no new LDR pushes                        |
+| slot 10 | 🟡 IDLE        | Await operator dispatch (free after QG Cluster B) |
+
+**OPERATOR NOTE**: `strategy-paper-carry-staked-basis-20260519-183013` excluded from drain (LONG_LIVED_LIVE). Explicit
+`[stop-strategy-paper]` operator instruction required to stop it.
+
+**Phase 4 (GCS physical migration)** starts after:
+
+- All 23 VMs report STOPPED + last shard verified
+- Manifest consolidator confirms all per-VM parquets merged
+- Snapshot at `_index/snapshots/pre_migration_2026_05_21.parquet` confirmed
+
+Ref: `plans/epics/mtds_mdps_master.md` Phase 3 + `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` §
+Phase 2.0 Stage 0.
+
+— slot-1 main / ikenna / 2026-05-21

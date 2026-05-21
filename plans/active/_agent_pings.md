@@ -4640,3 +4640,94 @@ the QG-green commits from LDR). No state-loss; multi-master multi-backend design
 **Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 2. Phase 3 (VM drain) starts after all ACKs in.
 
 — ikenna-main / slot-1 / 2026-05-21
+
+---
+
+## 🟢 PHASE 3 START — VM DRAIN [slot-1-main → all slots] 2026-05-21
+
+**Trigger**: All 8 ikenna slots ACK confirmed. Phase 3 (VM drain) is NOW ACTIVE.
+
+**ACK summary**:
+
+- slot 2 ✅ pm@28a465b29
+- slot 3 ✅ deployment-service@c7e0fa2 (functional delivery; minor freeze-discipline violation — script to LDR; inert;
+  accepted)
+- slot 4 ✅ pm@b313ea37d
+- slot 5 ✅ pm@523688ff2
+- slot 6 ✅ implicit (pre-frozen per mega-audit)
+- slot 7 ✅ implicit (pre-frozen per mega-audit)
+- slot 8 ✅ pm@35dc137a8
+- slot 9 ✅ implicit (pre-frozen per mega-audit)
+- harsh ✅ covered by slot-1 main (OFFLINE)
+
+**DRAIN INVENTORY** — 23 EPHEMERAL_BATCH VMs to stop (graceful-stop → manifest consolidate → snapshot):
+
+CeFi backfill (13):
+
+- `cefi-binance-futures-2022-heavy-20260519-194220`
+- `cefi-binance-futures-2023-heavy-20260519-194220`
+- `cefi-binance-futures-2024-heavy-20260519-194220`
+- `cefi-binance-futures-2025-heavy-20260519-194220`
+- `cefi-binance-spot-2020-heavy-20260519-194220`
+- `cefi-binance-spot-2024-heavy-20260519-194220`
+- `cefi-binance-spot-2026-heavy-20260519-194220`
+- `cefi-bybit-2022-heavy-20260519-194220`
+- `cefi-bybit-2025-heavy-20260519-194220`
+- `cefi-coinbase-spot-2023-heavy-20260519-194220`
+- `cefi-coinbase-spot-2026-heavy-20260519-194220`
+- `cefi-deribit-2022-heavy-20260519-194220`
+- `cefi-deribit-2024-heavy-20260519-194220`
+
+CeFi cron + OKX (2):
+
+- `cefi-fwd-daily-cron-20260520-091332`
+- `cefi-okx-spot-2024-heavy-20260519-194220`
+
+MDPS (4):
+
+- `mdps-cefi-2020-20260519-194222`
+- `mdps-cefi-2024-20260519-194222`
+- `mdps-cefi-2026-20260519-194222`
+- `mdps-prediction-2026-20260519-194222`
+
+MTDS (2):
+
+- `mtds-backfill-odds-1`
+- `mtds-gas-fees-solana`
+
+Instruments + TradFi (2):
+
+- `instr-backfill-sports`
+- `tradfi-fwd-daily-cron-20260520-091306`
+
+**DO NOT STOP (separate lifecycle):**
+
+- `strategy-paper-carry-staked-basis-20260519-183013` → LONG_LIVED_LIVE — paper trade strategy; operator must explicitly
+  authorise stop
+- `vm-zombie-watchdog-20260515-110711` → keep running (monitoring)
+- `canonical-smoke-*` (3 VMs) → not in backfill registry; keep running
+- `instruments-smoke-*` (3 VMs) → heartbeat-only (watchdog=None); keep running
+- all `agent-orch-*` (11 VMs) → orchestrator fleet; keep running
+
+**DRAIN PROTOCOL** (slot-1 main executing per `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage
+0):
+
+1. Graceful-stop each EPHEMERAL_BATCH VM via `gcloud compute instances stop --zone=asia-northeast1-c`
+2. Wait for STOPPED events + verify last shard finalized per VM
+3. Run manifest consolidator Cloud Run jobs (10 jobs) one final time
+4. Snapshot canonical manifest → `_index/snapshots/pre_migration_2026_05_21.parquet`
+5. LDR locked from new backfill VM launches until UNFREEZE
+
+**ALL SLOTS** — during drain (Phase 3):
+
+- Status: **FREEZE MAINTAINED** — same rules as Phase 2
+- DO NOT launch any VMs
+- DO NOT push to LDR
+- Monitor your slot ping file for Phase 4 (GCS migration) broadcast
+
+**OPERATOR FLAG**: `strategy-paper-carry-staked-basis-20260519-183013` is LONG_LIVED_LIVE (paper trade). Drain excludes
+it by default. If operator wants it stopped during migration window, reply `[stop-strategy-paper]` in slot-1 ping.
+
+**Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 3.
+
+— ikenna-main / slot-1 / 2026-05-21
