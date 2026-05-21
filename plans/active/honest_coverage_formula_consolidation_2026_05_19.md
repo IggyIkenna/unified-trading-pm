@@ -141,7 +141,8 @@ Phase 0 (✅ DONE)
       `check_shard_freshness` all patched to honor EXPECTED\_\*/pending_fetch split. `expected_unattempted_known_empty`
       → skip; `expected_unattempted_pending_fetch` → stale/retry. 4 new UTL tests + 3 new IS tests pass. IS@ad18108
       UTL@1ba2c57. (2026-05-20 slot-2)
-- [ ] **P1. /api/data-status endpoint**: same migration for the HTTP endpoint.
+- [x] ✅ **P1. /api/data-status endpoint**: same migration for the HTTP endpoint. — IS@001cf7c; `GET /api/data-status`
+      uses `compute_coverage_for_bucket()`, returns `{"counts": counts._asdict(), "coverage": float}` shape.
 
 ### Phase 3 — MTDS migration (parallel with Phase 2)
 
@@ -160,8 +161,10 @@ Phase 0 (✅ DONE)
       numerator/denominator math. — deployment-api@9d556fd; UAC `__all__` fix: unified-api-contracts@7da0545
 - [x] ✅ **P0. `data_status_drilldown_service.py`**: same migration for shard-level drilldown. Allow
       `expected_unattempted` through status coercion gate. — deployment-api@9d556fd
-- [ ] **P1. API response shape**: every endpoint returns `{"counts": CaptureStatusCounts.as_dict(), "coverage": float}`
-      so the UI never has to re-derive.
+- [x] ✅ **P1. API response shape**: every endpoint returns
+      `{"counts": CaptureStatusCounts.as_dict(), "coverage": float}` so the UI never has to re-derive. —
+      deployment-api@fa94b7a; `_compute_honest_coverage_for_category()` returns `"counts": counts_dict` +
+      `"coverage": float(capture_rates["honest_coverage"])` at lines 1960-1961.
 
 ### Phase 5 — deployment-ui consumers
 
