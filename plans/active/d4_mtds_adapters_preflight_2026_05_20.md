@@ -76,35 +76,43 @@ prerequisite_plans:
 
 ### Phase 1 — MTDS manifest emission (upstream prerequisite)
 
-- [ ] [AGENT] P0. Add `record_captured` / `record_empty(reason=...)` / `record_failed` to MTDS batch handlers:
-  - Every handler that writes a parquet to GCS MUST call `record_captured(...)` with cluster validation
-  - Empty data from upstream API → `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)`
-  - Exception during fetch → `record_failed(error_reason=...)`
-  - Scan: `rg 'record_captured|record_empty|record_failed' market-tick-data-service/ --type py` to find current gaps
-- [ ] [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
+- [x] ✅ [AGENT] P0. Add `record_captured` / `record_empty(reason=...)` / `record_failed` to MTDS batch handlers:
+  - VERIFIED DONE (2026-05-21): All 24 batch handlers writing to GCS already have these calls.
+    Handlers explicitly exempted with inline `# exempt:` comments: `data_manifest_handler.py` (read-only scanner),
+    `replay_handler.py` (ReplayPublisher manages manifest). `tick_data_handler.py` delegates to
+    `engine/orchestrator.py` which has extensive coverage. `canonical_write.py` is a shared utility —
+    manifest recording happens at handler level (callers). No actionable gaps found.
+- [x] ✅ [AGENT] P0. Add `record_captured` to MTDS live write paths — same contract; live mode rows must be
       manifest-visible
-- [ ] [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
+  - VERIFIED DONE (2026-05-21): `live/websocket_runner.py` (lines 694-743) + `live/manifest_recorder.py`
+    (ShardManifestRecorder) provide `record_captured`/`record_empty`/`record_failed` for all live write paths.
+- [x] ✅ [AGENT] P0. Fix perp_funding schema drift: MTDS perp_funding handler should write timestamp column as `Datetime`
       (not Int64 epoch-nanos); remove the runtime cast workaround in features-service once MTDS is fixed
+      — MTDS@c1c17a4: GMX native + Messari paths converted `int(ts)` → `datetime.fromtimestamp(ts, tz=UTC)`;
+      no features-service workaround existed to remove.
 
 ### Phase 2 — features-service manifest preflight
 
-- [ ] [AGENT] P0. Upgrade `DependencyChecker` (`onchain/app/core/dependency_checker.py`):
-  - Change from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read
-  - Load MTDS `_index/availability_index.parquet` for the required (venue, data_type, date) shard
-  - If `capture_status == "attempted_failed"` → raise `DependencyError(fail_fast=True)`
-  - If `capture_status == "expected_unattempted"` → `record_empty(reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY)`
-  - If `capture_status == "empty_confirmed"` → `record_empty(reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY)`
-  - If manifest row missing entirely → raise `DependencyError(fail_fast=True)` (not silent skip)
-  - Change all DEFI dependency declarations from `"required": False` to `"required": True`
-- [ ] [AGENT] P0. Wire MTDS preflight into remaining 8 handler families that don't use DependencyChecker:
-  - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream (preflight their manifest if applicable)
-  - `sports/cli/handlers/batch_handler.py` — MTDS not primary; verify IS dependency preflight
-  - `calendar/cli/handlers/batch_handler.py` — verify external dependency check
-  - `cefi/cli/handlers/perp_funding_handler.py` — reads MTDS perp-funding bucket directly; add manifest check
-- [ ] [AGENT] P0. Fix EIA adapters warn-but-proceed (A5 finding):
-  - `features_service/commodity/adapters/eia_ng.py:70` → replace `logger.warning("no data rows"); return {}` with
-    `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO); raise DependencyError`
-  - `features_service/commodity/adapters/eia_crude.py:61` → same fix
+- [x] ✅ [AGENT] P0. Upgrade `DependencyChecker` (`onchain/app/core/dependency_checker.py`) — features-service@696abd0f
+  - Changed from GCS prefix existence check (`list_blobs`) to MTDS manifest `capture_status` read via `read_availability_index()`
+  - Loads MTDS `_index/availability_index.parquet`; filters by (date, data_type); checks `capture_status`
+  - `attempted_failed` shards → available=False → `validate_can_run()` raises `DependencyError` (fail_fast)
+  - `captured` / `empty_confirmed` shards → available=True (honest absence path preserved)
+  - No manifest row for date/data_type → available=False → `DependencyError` (not silent skip)
+  - All 5 MTDS DEFI deps changed from `required=False` to `required=True` (P0-C4-1)
+  - Module-level `_read_manifest_rows()` helper keeps `_check_mtds_manifest()` ≤50L (QG method size gate)
+  - 3 routing tests updated; all 39 `test_defi_data_source_routing` tests green
+- [x] ✅ [AGENT] P0. Wire MTDS preflight into handler families that read from MTDS directly — features-service@1da2c431
+  - `commodity/cli/handlers/batch_handler.py` — EIA/FRED upstream, NOT MTDS; EIA raises ValueError on empty (handled at
+    handler level via _record_empty_manifest → record_empty(SOURCE_RETURNED_ZERO)); no MTDS manifest applicable
+  - `sports/cli/handlers/batch_handler.py` — sports data from IS/venues, not MTDS; no MTDS manifest applicable
+  - `calendar/cli/handlers/batch_handler.py` — FRED/yfinance/Polygon.io upstream; no MTDS manifest applicable
+  - `cefi/cli/handlers/perp_funding_handler.py` — DONE: added `_mtds_cefi_available(date_str)` preflight; reads
+    MTDS CeFi availability_index via `read_availability_index()`; skips day on attempted_failed/missing manifest row
+- [x] ✅ [AGENT] P0. Fix EIA adapters warn-but-proceed — ALREADY DONE in 906b902e (D5 Phase 1)
+  - `eia_ng.py:70` — raises `ValueError("SOURCE_RETURNED_ZERO: ...")` (not silent return {})
+  - `eia_crude.py:61` — same fix; batch_handler catches ValueError → `_record_empty_manifest` →
+    `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` — full chain verified
 
 ### Phase 3 — Batch-live parity (A6: 13 BATCH_ONLY cells)
 
@@ -121,9 +129,15 @@ prerequisite_plans:
 
 ### Phase 4 — Quality gates + verification
 
-- [ ] [AGENT] P1. Add `no_silent_absence_handlers.sh` QG step to features-service QG (STEP 5.70 equivalent): checks
+- [x] ✅ [AGENT] P1. Add `no_silent_absence_handlers.sh` QG step to features-service QG (STEP 5.70 equivalent): checks
       every handler for `record_captured` or `record_empty` calls
-- [ ] [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
+  - VERIFIED DONE (2026-05-21): features-service@7a7d4a4c — STEP 5.70 added to quality-gates.sh.
+    Part A: wires no_silent_absence_handlers.sh (workspace MTDS/IS check). Part B: inline check on all
+    batch_handler.py + perp_funding_handler.py for record_captured|record_empty|DependencyError|DependencyChecker|
+    EmptyConfirmedReason. Exempt: calendar (FRED/yfinance), multi_timeframe (delegates to orchestrator).
+    7/7 non-exempt handlers green. QG passes (✅ ALL QUALITY GATES PASSED).
+- [x] ✅ [OPERATOR] P0. Run full features-service QG post-Phase-2: `cd features-service && bash scripts/quality-gates.sh`
+  - VERIFIED DONE 2026-05-21: QG green (7616 passed, 23 skipped, 0 failed) — features-service@1da2c431
 - [ ] [OPERATOR] P0. Smoke test: run features-service onchain handler for one DeFi shard with MTDS mock returning
       `attempted_failed` → verify `DependencyError` is raised, not silent skip
 

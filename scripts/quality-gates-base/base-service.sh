@@ -1970,6 +1970,8 @@ while IFS= read -r -d '' _df_579; do
             [[ "$_img_579" == "$_a_579" ]] && _is_alias_579=1 && break
         done
         [[ "$_is_alias_579" -eq 1 ]] && continue
+        # Skip build ARG interpolations (${...}) — consistent with deployment-service/scripts/audit/dockerfile-base-pin.sh
+        [[ "$_img_579" == *'${'* ]] && continue
         [[ "$_img_579" == *"@sha256:"* ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
     done < "$_df_579"
 done < <(find . \( -name "Dockerfile" -o -name "Dockerfile.*" \) \

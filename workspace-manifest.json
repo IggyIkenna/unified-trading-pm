@@ -1556,11 +1556,6 @@
           "required": true
         },
         {
-          "name": "alerting-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "execution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1576,9 +1571,9 @@
           "required": true
         },
         {
-          "name": "client-reporting-api",
+          "name": "unified-sports-execution-interface",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
+          "required": false
         }
       ],
       "completion_path": "cefi",
@@ -1676,7 +1671,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",

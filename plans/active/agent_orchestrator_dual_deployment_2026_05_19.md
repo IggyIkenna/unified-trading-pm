@@ -227,17 +227,80 @@ the explicit `git fetch origin` step. Adds ~50ms per `/done`. Acceptable.
 > Ikenna's side (Cloud Run migration to asia-northeast1, `SshRemoteTmuxHost`, workers-on-VMs successor) will be
 > reconciled against his plan as a follow-up — out of scope for this doc.
 
-- [ ] **D11 refactor**: extract `WorkerHost` protocol + `LocalTmuxHost` from `server/tmux_spawn.py`. Preserves current
-      behavior verbatim for Harsh; no functional change. Ikenna's `SshRemoteTmuxHost` lands later in his successor plan.
-- [ ] **D11 wiring**: add `ORCHESTRATOR_WORKER_HOST=local` to `scripts/orchastrator.service` + `.env.example` default;
-      `WorkerHost` instance created at FastAPI app startup from this env var.
-- [ ] **D5 / D14 CORS**: add `https://agent-orchestrator.odum-research.com` to nginx CORS allowlist on
-      `/etc/nginx/sites-enabled/orch.epiphanytechnologies.com`.
-- [ ] **D14**: extend `/done` request body with `repo` + `branch` fields; brain `git fetch origin <branch>` before
-      `git show <sha>`. Backwards-compatible (missing fields = current worktree-path fallback).
-- [ ] **D18**: cron + systemd timer rsyncing `data/` → `gs://harsh-orchestrator-backup/` (~tens of KB/hr).
-- [ ] **D19**: `/healthz` enriched with `last_heartbeat_seconds_ago`; SPA dropdown polls every 30s + shows "offline" /
-      "last seen Xmin ago" badge.
-- [ ] **D4 smoke test**: verify the 5 multi-backend dropdown concerns end-to-end on staging — base-URL switch,
-      JWT-per-backend localStorage isolation, scoped logout, SSE reconnect on backend change, CORS smoke from
-      `agent-orchestrator.odum-research.com` to both backends.
+> **Verified against code 2026-05-20** (main `e975f19`). Status flags below reflect actual code, not aspiration.
+
+- [ ] **D11 refactor** — 🔴 REMAINING. `server/tmux_spawn.py` is still plain module fns `spawn()` / `spawn_named()`;
+      no `WorkerHost`/`LocalTmuxHost`/`SshRemoteTmuxHost` class. Extract the protocol + `LocalTmuxHost` (preserve
+      behavior verbatim). **Blocks Ikenna's `SshRemoteTmuxHost` + the entire workers-on-VMs P3.**
+- [ ] **D11 wiring** — 🔴 REMAINING. No `ORCHESTRATOR_WORKER_HOST` env anywhere. Add to `scripts/orchestrator.service`
+      + `.env.example`; instantiate `WorkerHost` at FastAPI startup from it.
+- [x] ✅ **D5 / D14 CORS** — DONE (different layer than originally written). FastAPI `CORSMiddleware` allows
+      `agent-orchestrator.odum-research.com` + staging — `server/server.py:189` `_default_cors_origins` (commit
+      `8daa12d`). The nginx-allowlist phrasing is obsolete post-Cloud-Run/Firebase; FastAPI middleware is canonical.
+- [ ] **D14** — 🔴 REMAINING. `DoneRequest` (models.py) carries only `task_id, sha, evidence, phase_completed`; no
+      `repo`/`branch`. `verify.py` has zero `git fetch` — does local `git show` only. Needed before a brain verifies
+      `/done` for a worker on a *different* host (i.e. Ikenna's VM workers).
+- [ ] **D18** — 🔴 REMAINING. No cron/systemd/script rsyncing `data/` → GCS. (`gcs_sync.py` is state-mirror plumbing,
+      not the backup timer.)
+- [ ] **D19** — 🟡 PARTIAL. Backend `/api/healthz` returns `status/ts/mode/uptime_seconds` but NO
+      `last_heartbeat_seconds_ago`. Dashboard dropdown has an ok/stale `status-dot`, but the healthz probe runs
+      **once at load** (not the spec'd 30s repoll) and there's **no "last seen Xmin ago"** text. Remaining: backend
+      field + interval repoll + relative-time badge.
+- [ ] **D4 smoke** — 🟡 PARTIAL. ✅ base-URL switch (every `api.*` call takes `activeBackend.url`) + ✅ backends.json
+      dropdown wiring done. 🔴 JWT-per-backend: single global `orch.session` localStorage key — NOT scoped per
+      backend-host, so switching backend reuses the same JWT. 🔴 SSE reconnect: **moot** — dashboard is poll-based
+      (60s `/api/state`), there is no EventSource; reframe or drop this concern.
+
+---
+
+## Behavioral verification findings (2026-05-20, main `e975f19`)
+
+Beyond presence/absence: does the shipped code do what we *intended*? Read the code, not just the diff stat.
+
+### ✅ Done properly — aligns with or improves intent
+
+- **CORS (D5)** — `server/server.py:189` specific origin allowlist (localhost + odum-research prod/staging +
+  firebase `.web.app`), NOT wildcard. `allow_credentials=False` is **correct** for Bearer-token auth (credentials=true
+  is only needed for cookies; we use `Authorization: Bearer`). Env-overridable via `ORCHESTRATOR_CORS_ORIGINS`. Matches
+  intent exactly.
+- **`/done` idempotency + warnings (B1/M5)** — *better* than originally scoped: 409 on duplicate/orphan `/done`
+  (kills the double-commit race seen at cutover) + non-blocking dirty-worktree / plan-flip / scope warnings emitted as
+  activity events. Pure correctness gain.
+
+### ⚠️ NEW behaviors NOT in this design (shipped by main agent overnight — operator should be aware)
+
+- **WorkerLivenessKicker** (`server/worker_liveness.py`, 248 lines, daemon thread, 45s tick) — **the backend now
+  autonomously injects keystrokes into worker tmux sessions.** For each `working`/`dispatched` slot it captures the
+  pane and classifies:
+  - `frozen` (prompt has text, no spinner) → sends `" — proceed now"` **+ Enter (C-m)**
+  - `idle` (empty prompt, no spinner) → sends `"poll /heartbeat for your next task and continue"` **+ Enter**
+  - 90s debounce; skips `blocked/paused/stopped/idle/killed/stale`.
+
+  **Intent is good** (fixes the turn-death problem where workers go silent after a turn). **Risk:** spinner detection
+  is regex-based (`esc to interrupt`, `…`, `...`, `…ing`); a misclassified genuinely-thinking worker could get
+  `" — proceed now"` appended to a half-typed input buffer and submitted, or get the poll-instruction injected
+  mid-work. This is a meaningful autonomous behavior that wasn't in any of our plans.
+
+- **Pre-spawn dirty-slot gate** (commit `b8b03a3`) — spawning into a dirty worktree is now refused (optional
+  auto-stash). Reasonable, but a behavior change: spawns that previously succeeded on a dirty slot now block.
+  *(Not deep-read — flagging.)*
+
+### 🟡 PARTIAL items that DEVIATE from intent (not merely "less complete")
+
+- **D4 dropdown JWT** — we designed **per-backend** sessions; code uses **one global** `orch.session` key
+  (`dashboard/src/App.tsx:47`). **Behavior:** switching the dropdown sends backend-A's token to backend-B → B rejects
+  it (different JWT secret) → **operator is forced to re-login on every backend switch.** Not a security hole, but
+  the seamless multi-backend UX we intended is not met.
+- **D19 offline badge** — healthz probe runs **once at page load** (`useEffect` deps `[]`), not on an interval.
+  **Behavior:** the offline dot won't update live — a backend going down mid-session shows green until reload.
+
+### Not deep-reviewed (additive, flagged honestly)
+
+- `agent-claim` per-spawn ownership file (`2aeed1f`) + `in-flight-files` heartbeat WIP list (`71695e5`) — look
+  additive/safe; not fully traced.
+
+### Operator decisions pending
+
+1. **D4 → per-backend JWT** — fix to scope the session key per backend-host (removes forced re-login on switch)?
+2. **WorkerLivenessKicker** — review false-positive safety / confirm we want the server typing into sessions?
+3. **Slack P2 false-green** — Block Kit (`cd04fc2`) is on `live-defi-rollout`, NOT main; forward-merge or annotate?

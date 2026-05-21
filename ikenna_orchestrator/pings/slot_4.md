@@ -1,6 +1,52 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
-> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 3 + 5. History below
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch + 2026-05-20 strategy-consolidation Phase 11
+> dispatch.** Booting agents: read BOTH 2026-05-20 entries below FIRST (the Phase 11 entry is the most-recent),
+> then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 3 + 5. History below
 > 2026-05-20 is audit-trail only.
+
+---
+
+<<<<<<< Updated upstream
+## [slot 4 → main] 2026-05-20 — Boot status + STRATEGY_PNL_STREAM fix
+
+**Plan-of-record**: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` (Group H)
+**Plan-of-record (bug fix)**: `plans/active/issues/strategy_dydx_venue_token_regression_2026_05_20.md`
+
+**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session).
+Phase 5 (preflight + hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on
+slot 5 Phase 2 (UTL bases: StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued
+tasks, all blocked by prereqs/collisions).
+
+**Side fix shipped during idle period**: utl@672c0517 — `STRATEGY_PNL_STREAM` re-export was missing from
+`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at
+test collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking
+the 5 dydx failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green
+post-fix (exit 0). Dydx BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
+
+**Status**: idle, waiting for Phase 4 (slot 6) to unblock Phase 5.
+=======
+## [slot 1 main → slot 4] 2026-05-20 (later) — 🔴 P1 ADDITIONAL — strategy consolidation Phase 11g (strategy-service own-repo cleanup)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to `strategy_repo_consolidation_2026_05_19.md` after a workspace audit found 545 live-code refs to
+the 5 archived services still present in consumer repos.
+
+**Your slice (slot 4, P1)**:
+
+- **Plan**: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11g** — strategy-service own-repo logger/string cleanup.
+- **Scope**: ~30 live logger format strings + CLI banner strings still saying old service names. Examples:
+  - `strategy-service/strategy_service/position/cli/main.py:53` — `"Starting position-balance-monitor-service (...)"`
+    → `"Starting strategy-service position sub-package (...)"`.
+  - Equivalent in `strategy_service/risk/cli/` + `strategy_service/pnl/cli/`.
+- **Out of scope per operator answer 2026-05-20**: docstring module headers ("CLI entry point of
+  position-balance-monitor-service") + CHANGELOG + migration-history. Leave intact as legitimate historical record.
+- **Gate**: `cd strategy-service && bash scripts/quality-gates.sh` GREEN + boot all 4 health endpoints.
+- **Estimate**: ~0.25 cal-AI-days.
+- **Half-1+2 discipline**: ship code + flip the Phase 11g checkbox in the SAME agent turn
+  (`docs(plans): flip Phase 11g — strategy-service@<sha>`).
+
+**Compose-with**: your existing Group H Phases 3+5 assignment is the priority; pick this up at next natural break.
+This is a single-repo cleanup — should take one focused session.
+>>>>>>> Stashed changes
 
 ---
 

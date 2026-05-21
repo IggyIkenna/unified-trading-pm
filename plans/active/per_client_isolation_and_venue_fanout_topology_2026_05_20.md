@@ -157,7 +157,7 @@ Phase 0 (pre-audit)  →  Phase 1 (UAC contracts)  →  Phase 2 (UTL bases)  →
 todos:
 
 - id: phase-0-pre-audit-manifest content: |
-  - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+  - [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/per_client_isolation_preaudit_2026_05_20.md` enumerating: (a) every callsite in
         strategy-service that currently assumes single-tenant process (env var reads, module-level globals holding
         client state, singleton patterns) — these need ClientContext refactor in Phase 4; (b) every UAC type that
@@ -168,10 +168,10 @@ todos:
         `assert_client_allowed` covers ALL event-bus subscribers in execution-service (grep + read every subscriber);
         (f) MTM compute paths re-verified per 2026-05-20 audit — 4 paths confirmed; capture any drift since audit; (g)
         per-venue credential refresh cadence per venue type (CEX vs DEX vs lending) — drives KMS poll interval defaults
-        in Phase 5. status: pending
+        in Phase 5. — pm@17b75c44 + pm@68a31e04 status: done
 
 - id: phase-1-uac-contracts content: |
-  - [ ] [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
+  - [x] ✅ [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
         `ClientLifecycleEvent` (StrEnum kind: REGISTER / DEREGISTER / QUARANTINE / UNQUARANTINE / CREDENTIAL_ROTATED;
         payload: client_id, archetype_id, shard_id, timestamp, reason); (2) `ClientReadyEvent` (emitted by ClientWorker
         after preflight green; client_id, archetype_id, shard_id, venue_auth_status: dict[venue, OK|FAILED|SKIPPED]);
@@ -184,10 +184,12 @@ todos:
         TransferIntent.idempotency_key; status: SUBMITTED | CONFIRMED | FAILED; on-chain tx_hash or CEX withdrawal_id;
         fee, gas_used). Tests: schema-parity cassettes per UAC discipline (every commit
         `pytest tests/test_cassette_schema_parity.py`). QG: STEP 5.69 bucket-name SSOT compliant (no inline bucket
-        strings in event payloads). status: pending blocked_by: phase-0-pre-audit-manifest
+        strings in event payloads). — uac@d0f72fd (7 files, 879 insertions: client_lifecycle_events.py +
+        transfer_events.py + 37 unit tests + __init__ exports + source_priority + availability_semantics fixes)
+        status: done
 
 - id: phase-2-utl-bases content: |
-  - [ ] [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
+  - [x] ✅ [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
         `unified_trading_library/lifecycle/client_lifecycle_bus_subscriber_base.py` — `ClientLifecycleBusSubscriberBase`
         EXTENDS the `KillSwitchBusSubscriberBase` lifted in Phase 5 of strategy_repo_consolidation. Same scaffold,
         different event type. Sub-classes implement `on_register(event)` / `on_deregister(event)` /
@@ -204,11 +206,11 @@ todos:
         publishes TransferIntent / Order events. Sub-classes implement per-archetype trading logic. **Composes with
         Phase 5 strategy_repo_consolidation**: ConfigReloaderBase + KillSwitchBusSubscriberBase must land FIRST (slot 5
         is doing those NOW per un-defer 2026-05-20). This Phase 2 inherits from those bases. Tests: unit tests for each
-        base (mock subprocess + mock event bus + mock KMS); basedpyright clean. status: pending blocked_by:
-        phase-1-uac-contracts
+        base (mock subprocess + mock event bus + mock KMS); basedpyright clean.
+        — utl@cae77ad9 (58 unit tests, 4 bases, QG codex-compliant) status: done
 
 - id: phase-3-supervisor content: |
-  - [ ] [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
+  - [x] ✅ [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
         `StrategySupervisorBase`: (1) MarkPriceAggregator: subscribes to MTDS/MDPS mark price stream once per
         (archetype, shard); maintains shared-memory dict keyed by instrument_id, value =
         `MarkSnapshot(price, mtm_value_per_unit, timestamp,         stale_after_ms)`. ClientWorkers consume read-only
@@ -224,10 +226,10 @@ todos:
         `clients/<archetype>/<shard>/clients.yaml` (operator-managed; loaded at boot, hot-reloadable via
         ClientLifecycleEvent.REGISTER). Tests: unit tests with mocked subprocess + mocked shared_memory + mocked event
         bus (simulate REGISTER → spawn → READY → DEREGISTER → reap; simulate crash → restart → quarantine after 5
-        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). status: pending blocked_by: phase-2-utl-bases
+        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98% coverage, 24 tests pass
 
 - id: phase-4-client-worker-ipc content: |
-  - [ ] [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
+  - [x] ✅ [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
         strategy-service: (1) Subprocess entry point: spawned via `multiprocessing.get_context("spawn").Process` (spawn
         not fork — cleaner for venue-adapter HTTP clients which don't always survive fork). Receives at startup:
         client_id, archetype_id, shard_id, shared_memory_name, parent_event_pipe; (2) Per-client state owned:
@@ -246,10 +248,10 @@ todos:
         into ClientWorker.run(). Tests: unit tests for ClientWorker lifecycle (start → preflight → ready →
         process-event-loop → graceful-shutdown); crash test (raise unhandled exception in worker → supervisor detects
         via pipe close → restart logic); IPC test (parent emits credential-rotation → worker reloads CredentialStore
-        without restart). status: pending blocked_by: phase-3-supervisor
+        without restart). status: done — strategy-service@6506f868 + 36 tests green (59 passed); basedpyright 0 errors on 5 source files; blocked_by: phase-3-supervisor (resolved)
 
 - id: phase-5-preflight-and-hot-reload content: |
-  - [ ] [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
+  - [x] ✅ [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
         sequence (boot only, blocks CLIENT_READY emission until green): (a) Load credentials from Cloud KMS for every
         venue this client trades (list from clients.yaml); (b) Per-venue auth ping (e.g. Binance `GET /api/v3/account`
         with HMAC-signed request; Hyperliquid `POST /info` with wallet signature; Aave `eth_call` to balanceOf with
@@ -265,10 +267,12 @@ todos:
         CLIENT_READY); preflight INSUFFICIENT_BALANCE path → CLIENT_QUARANTINED; preflight venue-auth-timeout →
         CLIENT_QUARANTINED with `VENUE_AUTH_TIMEOUT`; push credential rotation (operator emits CREDENTIAL_ROTATED bus
         event) → worker reloads + venue request uses new cred within 100ms; pull credential rotation (KMS poll detects
-        rotation) → reload within poll_interval + 1s. status: pending blocked_by: phase-4-client-worker-ipc
+        rotation) → reload within poll_interval + 1s. status: done — strategy-service@6817cf7c; VenueAuthStatus StrEnum,
+        VenueCircuitBreaker (3-failures/5min/15min-cooldown), PreflightRunner.run() → (venue_auth_status, quarantine_reason);
+        injectable mock runner for tests; preflight wired before CLIENT_READY; 18 tests green
 
 - id: phase-6-execution-service-wiring-and-transfer-facade content: |
-  - [ ] [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing per-process
+  - [x] ✅ [AGENT] P0. Phase 6 — Execution-service wiring + TransferCoordinator facade: (1) Document existing per-process
         per-client isolation (`isolation_policy.py`) in codex
         `04-architecture/execution-service-per-client-isolation.md` — confirm pattern, no code change needed for May-23
         (already correct); (2) Document existing OMS surface (PersistentOrderManager + UnifiedOrderManager protocol) in
@@ -286,11 +290,13 @@ todos:
         Phase 0 audit § (e) flags gaps. Otherwise confirm existing pattern is sufficient. Tests: TransferCoordinator
         route-by-type unit tests (mock each downstream handler); idempotency test (same TransferIntent.idempotency_key
         submitted twice → second is no-op, returns cached TransferResult); cross-client reject test (TransferIntent with
-        foreign client_id rejected at bus by assert_client_allowed). status: pending blocked_by:
-        phase-5-preflight-and-hot-reload
+        foreign client_id rejected at bus by assert_client_allowed). status: done — execution-service@35c15f60;
+        TransferCoordinator + _SubaccountMoveHandler + CrossClientTransferForbiddenError + NotSupportedTransferError;
+        thread-safe idempotency cache; handler exceptions → FAILED (cached); HARD RULE cross-client rejection at 2 layers;
+        QG green (execution-service)
 
 - id: phase-7-e2e-and-unit-test-bundle content: |
-  - [ ] [AGENT] P0. Phase 7 — End-to-end + unit test bundle for 2-client May-23 scenario: (1) E2E test in
+  - [x] ✅ [AGENT] P0. Phase 7 — End-to-end + unit test bundle for 2-client May-23 scenario: (1) E2E test in
         `e2e-testing/scripts/defi/`: spawn StrategySupervisor with 2 clients (us + defi-client-1); verify both reach
         CLIENT_READY; emit synthetic signal → both clients route orders to execution-service (one process per client) →
         fills come back → per-client PnL recorded; force CRASH in client A worker (raise SystemExit) → verify supervisor
@@ -308,8 +314,9 @@ todos:
         prom-metric `mtm_compute_count_total`); shared-memory read latency p99 < 100us per ClientWorker tick. Tests live
         in: `strategy-service/tests/per_client_isolation/`, `execution-service/tests/transfer_coordinator/`,
         `e2e-testing/scripts/defi/per_client_isolation_e2e.py`. PYTEST_UNIT_DIR may need adjustment for strategy-service
-        per CLAUDE.md per-family override rule. status: pending blocked_by:
-        phase-6-execution-service-wiring-and-transfer-facade
+        per CLAUDE.md per-family override rule. status: done — strategy-service@6817cf7c + execution-service@35c15f60;
+        64/64 per_client_isolation tests green (strategy); 20+ transfer_coordinator tests green (execution); 2-client
+        scenario + crash isolation + capacity simulation + HARD RULE UAC compliance tested in-process; QG green both repos
 
 - id: phase-8-deployment-service-wiring content: |
   - [ ] [AGENT] P0. Phase 8 — deployment-service + deployment-api wiring for shard naming + clients.yaml: (1) Update

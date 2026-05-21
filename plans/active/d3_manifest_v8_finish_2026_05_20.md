@@ -95,13 +95,15 @@ that plan was written (2026-05-09):
 
 ### Phase 3 — Data migration (requires Phase 1 green)
 
-- [ ] [AGENT] P0. Implement manifest v8 migration script:
+- [x] ✅ [AGENT] P0. Implement manifest v8 migration script — utl@4cbe9612
+  - `unified_trading_library/migrations/upgrade_manifest_to_v8.py` + `scripts/migrate_manifest_v8.py`
   - Reads each `_index/availability_index.parquet` per bucket (CEFI/DEFI/TRADFI/SPORTS/PREDICTION)
   - For rows at v<8: adds `service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`
     columns (backfill NULL for pre-v8 rows)
-  - Rewrites parquet in-place with schema_version=8
+  - Rewrites parquet in-place with schema_version=8; idempotent (v8 rows skipped)
   - Single-walk discipline: ONE pass per bucket (not per-service)
   - Uses `gcs_copy_object` / `gcs_delete_object` (NOT gsutil) per CLAUDE.md
+  - basedpyright 0 errors, ruff clean, QG code checks pass
 - [ ] [OPERATOR] P0. Run migration script on prod GCS with ADC perms:
       `python3 scripts/migrate_manifest_v8.py --dry-run --asset-group all`
 - [ ] [OPERATOR] P0. After dry-run passes: run live migration; verify `schema_version` distribution shows 100% v8

@@ -136,3 +136,4 @@ logs/
 !github-integration/
 !github-integration/data/
 !github-integration/data/*.json
+.smoke-dirt.txt

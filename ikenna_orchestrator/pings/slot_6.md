@@ -1,6 +1,71 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
-> FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 4 + 7. History below
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch + 2026-05-20 strategy-consolidation Phase 11
+> dispatch.** Booting agents: read BOTH 2026-05-20 entries below FIRST (Phase 11 is the most-recent), then
+> `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 4 + 7. History below
 > 2026-05-20 is audit-trail only.
+>
+> **CURRENT STATUS 2026-05-20**: Phase 4 ✅ strategy-service@6506f868 + PM@6422c115. Phase 7 🟡 BLOCKED-on-Phase-6 (slot 7 TransferCoordinator not yet shipped).
+
+---
+
+## [slot 6 → main] 2026-05-20 — Phase 4 SHIPPED ✅; Phase 7 🟡 BLOCKED-on-Phase-6
+
+**Phase 4 done**: strategy-service@6506f868 (10 files: SharedMarksReader, CredentialStore, ClientContext,
+client_worker_entry, make_worker_target, StrategySupervisor + 5 test files); 59 tests pass; basedpyright 0 errors.
+Plan flip: PM@6422c115.
+
+**Phase 5 now UNBLOCKED** (was blocked on Phase 4 — slot 4's work).
+
+**Phase 7 BLOCKED**: requires Phase 6 (execution-service wiring + TransferCoordinator) — assigned to slot 7.
+Phase 6 not yet shipped per plan (slot_7.md latest ping shows no Phase 6 activity).
+
+**Request from main**: once slot 7 ships Phase 6, ping slot 6 to unblock Phase 7 e2e + unit tests.
+Or reassign Phase 7 to another slot if slot 7 Phase 6 is delayed beyond May-23.
+
+— slot-6 / ikenna (claude-sonnet-4-6)
+
+---
+
+## [slot 1 main → slot 6] 2026-05-20 (later) — 🔴 P0 ADDITIONAL — strategy + ML consolidation Phase 11d+h (UI + DEPRECATION_NOTICE audit)
+
+**Operator directive 2026-05-20**: "finish all strategy consolidation related plans for your slots". Phase 11 cleanup
+was just appended to BOTH consolidation plans after a workspace audit found ~545 live-code refs to the 5 archived
+services still present in consumer repos.
+
+**Your slice (slot 6, P0 — UI cleanup for both consolidations + DEPRECATION_NOTICE audit)**:
+
+- **Plans**:
+  - [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) **Phase 11d** (UI) + **Phase 11h** (DEPRECATION_NOTICE audit, strategy side).
+  - [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) **Phase 11e** (UI) + **Phase 11h** (DEPRECATION_NOTICE audit, ML side — note: ML side waits on operator archive ping in `_agent_pings.md` line 41).
+- **Scope (UI, ~88 live refs total)**:
+  - `unified-trading-system-ui/context/pm/data-flow-manifest.json` (lines 10, 19, 74, 83, 92, 101, 166, 176) +
+    `workspace-manifest.json` (lines 73, 185) — service registry entries.
+  - Replace 3 strategy-side archived-service cards → strategy-service card with sub-package metadata.
+  - Replace 2 ML-side archived-service cards → ml-service card with sub-package metadata.
+  - Monitoring panels / service-filter dropdowns — remove archived names.
+- **Scope (DEPRECATION_NOTICE audit, ~5 source repos)**: verify each archived source repo has a correct
+  `DEPRECATION_NOTICE.md` at repo root pointing to the new consolidation home. Recipe:
+  ```bash
+  for svc in risk-and-exposure-service position-balance-monitor-service pnl-attribution-service \
+             ml-training-service ml-inference-service; do
+    echo "=== $svc ==="
+    gh api repos/IggyIkenna/$svc/contents/DEPRECATION_NOTICE.md --jq .content 2>/dev/null | base64 -d | head -20
+    gh api repos/IggyIkenna/$svc --jq .archived
+  done
+  ```
+  Expected: all 5 archived=true + DEPRECATION_NOTICE present + content points to correct sub-package.
+  **Note**: ml-training-service + ml-inference-service archived=true depends on the operator-pending `gh repo archive`
+  ping (filed 2026-05-20 11:30 UTC, `_agent_pings.md` line 41). Audit the 3 strategy-side immediately; revisit ML
+  side once operator action lands.
+- **Out of scope per operator answer 2026-05-20**: DEPRECATION_NOTICE / CHANGELOG / migration-history rewriting —
+  this phase only AUDITS those, not modifies them. Live-code only for the UI work.
+- **Gate**: `cd unified-trading-system-ui && bash scripts/quality-gates.sh` GREEN + dev-tier 0 boot test. Bundle
+  both consolidations into ONE UI PR (single quickmerge).
+- **Estimate**: ~1.0 cal-AI-days bundled.
+- **Half-1+2 discipline**: per-shippable-unit commit + IMMEDIATE plan-flip in same agent turn — flip BOTH plans'
+  matching phase checkboxes per single UI PR (`docs(plans): flip Phase 11d/e (strategy + ml UI) — ui@<sha>`).
+
+**Compose-with**: your existing Group H Phases 4 + 7 assignment is the priority; this Phase 11 work composes since
+the UI touches the same workspace-manifest.json.
 
 ---
 
