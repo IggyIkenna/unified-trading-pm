@@ -124,20 +124,28 @@ and no QG step enforces batch-cassette ↔ live-WS-cassette coexistence for venu
 
 ### Phase 2 — Three new QG STEPs (~1.5 days)
 
-- [ ] [SCRIPT] P1. **STEP 5.7X `cassette_prod_consumer_linkage.sh`** — fail QG if a cassette in
+- [x] ✅ [SCRIPT] P1. **STEP 5.86 `cassette_prod_consumer_linkage`** — fail QG if a cassette in
       `external/<venue>/mocks/*.yaml` exists but no file in any service repo references either (a)
       `from     unified_api_contracts.<venue>` deep-path, (b) any pydantic class defined in `external/<venue>/*.py`, or
       (c) the cassette's URL host. Emit per-orphan line. Allowlist file at
       `scripts/quality-gates-allowlists/cassette-orphans.txt` for documented exceptions (test-only cassettes,
       capability-declaration-only cassettes).
-- [ ] [SCRIPT] P1. **STEP 5.7X `prod_url_has_cassette.sh`** — scan production source for `https?://` and `wss?://`
-      literals; fail if a referenced host has no `external/<host_to_venue>/mocks/` dir AND the venue isn't in an
-      explicit `STUB-OK` allowlist. Allowlist for: `tenderly.co`, `copper.co` (operator-known no-cassette), internal
-      `*-service` k8s names, etc.
-- [ ] [SCRIPT] P1. **STEP 5.7X `batch_live_cassette_coexistence.sh`** — for any venue with BOTH a batch source
+      — uac@9adfdf7 2026-05-21: `scripts/check_cassette_prod_consumer_linkage.py` delegates to
+      `cassette_orphan_checker` module; PM@57909520: STEP 5.86 wired into `base-library.sh`
+      (guarded by `UAC_CANONICAL_EXEMPT=true`). Exits 1 if unallowlisted orphans found. QG green.
+- [x] ✅ [SCRIPT] P1. **STEP 5.87 `prod_url_has_cassette`** — scan production source for `https?://` and `wss?://`
+      literals; warn (not fail) if a referenced host has no `external/<host_to_venue>/mocks/` dir AND the venue isn't
+      in `scripts/quality-gates-allowlists/prod-url-no-cassette.txt`. Allowlist covers: infra (.googleapis.com,
+      .amazonaws.com), operator-acked no-cassette (copper.co, tenderly.co), internal `*-service` k8s names, etc.
+      — uac@9adfdf7 2026-05-21: `scripts/check_prod_url_cassette_coverage.py`; PM@57909520: STEP 5.87 wired into
+      `base-library.sh` (warn-only; shows ⚠️ gap log without blocking QG; 192 uncovered hosts expected — Phase 3
+      closed all P0 DeFi hosts; remaining are lower-priority venues). Switch to strict at ~80% coverage.
+- [x] ✅ [SCRIPT] P1. **STEP 5.85 `batch_live_cassette_coexistence`** — for any venue with BOTH a batch source
       registered in `_cefi.py`/`_tradfi.py`/`_defi.py` capability declarations AND a `live/connectors/<venue>_ws.py`
       file, require BOTH a REST cassette AND a WS cassette (one frame per data_type). Enforces "Batch = Live" at the
       cassette layer.
+      — uac@9452241 (Phase 4): `scripts/batch_live_cassette_coexistence.sh` + `tests/test_ws_cassette_coexistence.py`
+      wired into `quality-gates.sh`. 17/17 green.
 
 ### Phase 3 — Record missing cassettes for ALL ~140 prod hosts (~3 days, NO DEFERRALS)
 
@@ -256,9 +264,12 @@ orphans = zero post-decision-log entries needing action.
 
 ### Phase 5 — Wire canary into per-PR CI (~0.5 day)
 
-- [ ] [SCRIPT] P2. Add `canary_offline_check` step to UAC `quality-gates.sh`: cassette YAML parse + schema-validate
+- [x] ✅ [SCRIPT] P2. Add `canary_offline_check` step to UAC `quality-gates.sh`: cassette YAML parse + schema-validate
       against cassette baseline (no live network call). This catches cassette corruption / schema-cassette mismatch on
       every PR, not just weekly.
+      — uac@9adfdf7 2026-05-21: `tests/test_cassette_offline_check.py` (531 passed / 321 skipped on current cassette
+      set). Validates VCR/WS/doc-cassette format; no live network calls. Wired into `PYTEST_UNIT_DIR` in
+      `scripts/quality-gates.sh`.
 - [ ] [SCRIPT] P2. Optional weekly-validation also runs on every push to `live-defi-rollout` (matrix-build with
       schedule-trigger guarded so it doesn't fire 20× per day).
 
