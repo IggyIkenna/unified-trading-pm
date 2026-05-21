@@ -1,18 +1,17 @@
+> **ARCHIVED 2026-05-21** — 100% complete. 70 VMs drained 2026-05-17; 216,876 captured + 7,365 empty_confirmed + 0
+> attempted_failed; 96.72% capture rate. ICE roots deferred to `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`.
+
 ---
-title: "TradFi MVP — OHLCV-only Databento backfill (drop L1-L3 to post-cutover)"
-parent_epic: tradfi_master
-priority: P1
-status: active
-estimate_class: infra
-estimate_baseline_ai_days: 4.0
-estimate_calibrated_ai_days: 3.2
-locked_by: live-defi-rollout
-locked_since: 2026-05-15
-related_plans:
-  - trading_agent_service_architecture_unlock_2026_05_22.md
-  - master_to_live_defi_2026_05_23.md
-  - tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
-  - cme_polymarket_arb_2026_05_08.md
+
+title: "TradFi MVP — OHLCV-only Databento backfill (drop L1-L3 to post-cutover)" parent_epic: tradfi_master priority: P1
+status: active estimate_class: infra estimate_baseline_ai_days: 4.0 estimate_calibrated_ai_days: 3.2 locked_by:
+live-defi-rollout locked_since: 2026-05-15 related_plans:
+
+- trading_agent_service_architecture_unlock_2026_05_22.md
+- master_to_live_defi_2026_05_23.md
+- tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
+- cme_polymarket_arb_2026_05_08.md
+
 ---
 
 # TradFi MVP — OHLCV-only Databento Backfill

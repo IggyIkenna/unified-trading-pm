@@ -14,7 +14,7 @@ locked_since: 2026-05-07
 related_plans:
   - ../active/cme_polymarket_arb_2026_05_08.md
   - ../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
-  - ../active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
+  - ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
@@ -143,16 +143,16 @@ respective umbrellas.
 
 ## Critical path
 
-| Workstream                                          | Status                                                                | Source                                                                                                |
-| --------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Market-hours + holiday SSOT integration             | 72% done                                                              | `instrument_schema_cohesion_and_market_hours`                                                         |
-| S&P 500 ML readiness backtest run                   | 87% done; backtest pending                                            | `sp500_ml_readiness_master`                                                                           |
-| **OHLCV-only TradFi MVP backfill (NEW 2026-05-15)** | **active — supersedes tick-data scope below**                         | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) |
-| ES + MES + VIX backfill to ≥99%                     | partial — now OHLCV-only per 2026-05-15 operator scope narrow         | `cefi_tradfi_tick_data_backfill` (TradFi half)                                                        |
-| MTDS TradFi shards to ≥99%                          | partial — OHLCV-only scope per 2026-05-15                             | `market_tick_data_to_100pct` (TradFi slice)                                                           |
-| ETF cleanup (NYSE / NASDAQ stale rows)              | post-MVP scope reduction                                              | `cefi_tradfi_tick_data_backfill`                                                                      |
-| L1-L3 tick data (trades / tbbo / mbp_10)            | **DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**           | successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` (TBD)                           |
-| TradFi venue trading calendar consumption           | per CLAUDE.md "TradFi futures: bundled, non-trading days pre-skipped" | shard-granularity SSOT                                                                                |
+| Workstream                                          | Status                                                                | Source                                                                                                         |
+| --------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Market-hours + holiday SSOT integration             | 72% done                                                              | `instrument_schema_cohesion_and_market_hours`                                                                  |
+| S&P 500 ML readiness backtest run                   | 87% done; backtest pending                                            | `sp500_ml_readiness_master`                                                                                    |
+| **OHLCV-only TradFi MVP backfill (NEW 2026-05-15)** | ✅ **ARCHIVED 2026-05-21** — 216,876 captured; 96.72% capture rate    | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) |
+| ES + MES + VIX backfill to ≥99%                     | partial — now OHLCV-only per 2026-05-15 operator scope narrow         | `cefi_tradfi_tick_data_backfill` (TradFi half)                                                                 |
+| MTDS TradFi shards to ≥99%                          | partial — OHLCV-only scope per 2026-05-15                             | `market_tick_data_to_100pct` (TradFi slice)                                                                    |
+| ETF cleanup (NYSE / NASDAQ stale rows)              | post-MVP scope reduction                                              | `cefi_tradfi_tick_data_backfill`                                                                               |
+| L1-L3 tick data (trades / tbbo / mbp_10)            | **DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**           | successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` (TBD)                                    |
+| TradFi venue trading calendar consumption           | per CLAUDE.md "TradFi futures: bundled, non-trading days pre-skipped" | shard-granularity SSOT                                                                                         |
 
 ## Consolidated todos (P0/P1 only)
 
@@ -634,10 +634,10 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
+### [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
 
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: TradFi MVP — OHLCV-only Databento backfill
-(drop L1-L3 to post-cutover)
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 3.2 cal AI-days (class: infra) **title**: TradFi MVP — OHLCV-only
+Databento backfill (drop L1-L3 to post-cutover)
 
 ## P2 — useful; opportunistic
 
