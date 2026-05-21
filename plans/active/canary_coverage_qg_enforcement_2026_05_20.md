@@ -270,8 +270,12 @@ orphans = zero post-decision-log entries needing action.
       — uac@9adfdf7 2026-05-21: `tests/test_cassette_offline_check.py` (531 passed / 321 skipped on current cassette
       set). Validates VCR/WS/doc-cassette format; no live network calls. Wired into `PYTEST_UNIT_DIR` in
       `scripts/quality-gates.sh`.
-- [ ] [SCRIPT] P2. Optional weekly-validation also runs on every push to `live-defi-rollout` (matrix-build with
+- [x] ✅ [SCRIPT] P2. Optional weekly-validation also runs on every push to `live-defi-rollout` (matrix-build with
       schedule-trigger guarded so it doesn't fire 20× per day).
+      — uac@c8d074c 2026-05-21: `.github/workflows/canary-offline.yml` triggers on `live-defi-rollout` push with
+      `paths:` filter (cassette YAMLs + test files + QG scripts) — guards against 20×/day firing. Also Monday 06:00 UTC
+      schedule (offset from weekly-validation 08:00). Runs 3 offline gates: test_cassette_offline_check,
+      test_cassette_orphan_checker, STEP 5.86 standalone. No live network calls.
 
 ## Success criteria — NO PARTIAL COMPLETION
 
