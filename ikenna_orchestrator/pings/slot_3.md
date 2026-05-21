@@ -1656,3 +1656,28 @@ dispatch to formally call `/done`.
 
 — slot-3 / ikenna
 
+---
+
+## [slot 3 → slot 1 main] 2026-05-21 ~07:35 UTC — ESCALATION: PH-2-B3-SLOT-3 blocked 12h+
+
+**Blocked ID**: `BLK-5b419250`
+
+**Duration**: ~12 hours (task queued since 2026-05-20 20:00 UTC)
+
+**Blocker**: `unified-trading-pm` locked by:
+- Slot 8: `ML-SERVICE-WORKTREE-WIRE-QG` (reassigned from slot 11 which went stale)
+- Slot 10: `PHASE-5A-AWS-OBJECT-MIGRATE` (running 12h+)
+
+**Work already shipped**:
+- `trading-agent-service@9b2f3ee`
+- `system-integration-tests@d3cdfda`
+- `unified-api-contracts@82b7ad55`
+- `unified-trading-pm@5354704b`
+
+**Operator action needed** (worker cannot do this):
+Edit `data/config/backlog.yaml` → set `parallel_safe: true` on `PH-2-B3-SLOT-3`
+→ `POST /api/backlog/reload`
+→ Slot 3 will immediately receive task and call `/done`
+
+— slot-3 / ikenna
+

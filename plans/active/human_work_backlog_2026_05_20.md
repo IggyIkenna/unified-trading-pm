@@ -107,10 +107,20 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
 
 ### Harsh (slot 2) — backfills / deployment-UI / GCP VMs / AWS copies / CI/CD / Phase 7a+14-exec
 
-8. **HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP** — Phase -1 of coordinator: per-repo `bash scripts/quality-gates.sh` exit 0
+8. ✅ **HUMAN-HARSH-WORKSPACE-QG-GREEN-SWEEP** — Phase -1 of coordinator: per-repo `bash scripts/quality-gates.sh` exit 0
    workspace-wide. Composes with: `Quality Gates Are A Merge Prerequisite` HARD RULE. Cluster split (per
    `work_split_2026_05_20_ikenna.md` Slots 9-11): A=UAC+UTL+IS / B=MTDS+features+MDPS / C=strategy+execution+ml. Est: 3
    cal-AI-days (1 per cluster).
+   **CLUSTER A COMPLETE 2026-05-21 slot-11**: UAC @ceeaddd ✅ · UTL @4cbe9612 ✅ · instruments-service @b476663 ✅ (all pass with 0 fixes needed)
+   **CLUSTER B COMPLETE 2026-05-21 slot-11**: MTDS @33e6762 ✅ · features-service @7a7d4a4c ✅ · MDPS @a00ce6b ✅ (all pass with 0 fixes needed)
+   **CLUSTER C COMPLETE 2026-05-21 slot-11**: strategy-service @b303a358 ✅ · execution-service @a848ef61 ✅ · ml-service @ea9c187 ✅ (all pass with 0 fixes needed)
+   **client-reporting-api FIXED 2026-05-21 slot-11**: @4eafab6 ✅ — ruff lint (RUF002/SIM105/B008), import patterns, test fixes (test_production_guard, test_get_invoice_by_id), pip-audit ignores, narrow except ArithmeticError
+   **deployment-ui VERIFIED 2026-05-21 slot-11**: @ef3406b ✅ (0 fixes needed, npm install required first)
+   **unified-trading-api FIXED 2026-05-21 slot-11**: @ac8a6b9 ✅ — noqa C901 on seed_all_domains, pip-audit ignores PYSEC-2024-277/PYSEC-2025-183
+   **unified-trading-system-ui FIXED 2026-05-21 slot-11**: @38f3e96e ✅ — TS errors (4 files), stale test assertions, briefings codex path, Suspense boundaries (questionnaire/reset-password/verify-email)
+   **e2e-testing FIXED 2026-05-21 slot-11**: @24daef0 ✅ — add ruff dep, noqa C901 (5 integration tests), pip-audit ignores PYSEC-2024-277/PYSEC-2025-183/PYSEC-2026-87, ruff autoformat
+   **system-integration-tests VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
+   **ibkr-gateway-infra VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
