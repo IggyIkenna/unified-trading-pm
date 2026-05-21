@@ -20,3 +20,18 @@ Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 9.
 - Plan flip: work_split_2026_05_20_ikenna.md slot-11 row updated @pm beeeb70f.
 - NOTE from remote: strategy-service@d0bf1a7c was already green but has a regression (UAC dydx removal → 5 test failures). ml-service archived (QG moot).
 Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
+
+## CREDENTIAL APPROVAL REQUEST — Polymarket CLOB L2 HMAC API Key
+
+[2026-05-21 slot-9 UTC]
+
+**Vendor**: Polymarket CLOB API (clob.polymarket.com) — free account, L2 HMAC signing
+**What I need**: L2 HMAC private key (Ethereum-style ECDSA key for CLOB authenticated endpoints)
+  - The public Gamma API + Data API + price history require NO credentials.
+  - L2 HMAC key unlocks: authenticated order book snapshots, portfolio positions, private fills.
+**Account to use**: Existing Polymarket account or new account at polymarket.com (free, KYC-lite for small positions)
+**Cost**: $0 for read-only API usage
+**What it unblocks**: Authenticated CLOB tests in `tests/integration/test_polymarket_integration.py`; `TestAuthenticatedClob` class currently skips with BLOCKED-CREDENTIALS message.
+**Status**: BLOCKED-CREDENTIALS until operator [ack]
+**Without it**: Public-endpoint unit + integration tests ship; adapter is fully functional for batch data collection (Gamma + Data API both work without auth); authenticated CLOB tests dormant.
+**Plan-of-record**: ADAPTER-POLYMARKET-FEED (backlog task)
