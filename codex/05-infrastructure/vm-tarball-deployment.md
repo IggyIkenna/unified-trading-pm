@@ -50,9 +50,22 @@ and Docker images for **long-lived production services** (strategy-service, exec
 
 Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys these:
 
-1. **One setup script**: every launcher passes
-   `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata. This is the **only**
-   script that knows how to bring up a VM.
+1. **Two valid startup patterns** (codified O-18, 2026-05-21):
+   - **Pattern A — canonical tarball (data pipeline VMs)**: launcher passes
+     `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata.
+     `setup-data-pipeline-vm.sh` installs Python 3.13 via `uv`, fetches code tarballs, and routes to the workload CLI
+     via `VM_TASK`. Used for: backfill, migration, forward-poll, smoke VMs. This is the default pattern for any VM that
+     writes manifest rows or runs a service CLI.
+   - **Pattern B — inline startup (daemon / orchestrator / validator VMs)**: launcher writes an inline `STARTUP_FILE`
+     heredoc and passes it via `--metadata-from-file=startup-script=`. Used ONLY for VMs that install cron jobs, run
+     long-lived FastAPI daemons, or perform heartbeat-only validation without manifest writes (e.g.
+     `launch-cefi-fwd-daily-cron-vm.sh`, `launch-planning-vm.sh`, `launch-aave-lending-rate-validation-vm.sh`). These
+     VMs do NOT fetch tarballs or use `VM_TASK` routing.
+
+   **Both patterns MUST guarantee** the shard-isolation + observability invariants (2, 7–9). Pattern A satisfies them
+   via `setup-data-pipeline-vm.sh`'s built-in machinery. Pattern B launchers wire them explicitly via
+   `lib/launcher_common.sh` helpers. Using Pattern B for a data pipeline VM without explicit justification in the
+   launcher header is off-pattern. See § "Launcher pattern decision matrix" below.
 2. **Metadata-driven workload**:
    `VM_TASK=<cefi-backfill|sports-forward-poll|canonical-migration|sports-manifest-rescan|...>` routes to a specific CLI
    assembly inside `setup-data-pipeline-vm.sh`. Other metadata keys (`VM_SERVICE`, `VM_OPERATION`, `VM_CATEGORY`,
@@ -68,15 +81,23 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    (instruments-service, MDPS, features-\*, etc.) are opt-in via `--asset-group` / `--include` / `--all` flags on
    `create-code-tarballs.sh`.
 5. **Python 3.13 mandated**: UAC requires `>=3.13`. Ubuntu 24.04 ships 3.12. The setup script installs 3.13 via
-   `deadsnakes` PPA + `python3.13-dev` + `build-essential` (C extensions: `ckzg`, `lru-dict` for web3).
+   `uv python install 3.13` (updated 2026-05-21 — the deadsnakes PPA path is stale and must not be used). `apt` still
+   installs `build-essential` + `python3.13-dev` before the `uv` step for C-extension builds (`ckzg`, `lru-dict` for
+   web3). Pattern B inline launchers that install Python independently must use the same `uv`-based path.
 6. **Venv at `/home/ikennaigboaka/venv`**: all `nohup` invocations use the full venv path. `nohup python` without the
    full path fails on Ubuntu 24.04.
-7. **Observability + lifecycle via wrapper**: Every launcher that routes the workload through `_launch_with_tee` →
-   [`vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh) gets the same guarantees:
-   streaming GCS log upload, Firestore-backed `/api/vm-deployments` registration via
-   [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), and optional self-delete
-   when `VM_SHUTDOWN_ON_COMPLETION=true` (see § Observability & Lifecycle). **Do not** assume SSH or manual instance
-   delete for routine runs.
+7. **Observability + lifecycle — two tiers** (matches the two startup patterns):
+   - **Pattern A (canonical)**: `setup-data-pipeline-vm.sh` routes every workload through `_launch_with_tee` →
+     [`vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh), providing: streaming
+     GCS log + EXIT_STATUS file, deployment-registry heartbeats via
+     [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), stall watchdog, and
+     self-delete on `VM_SHUTDOWN_ON_COMPLETION=true`. Full lifecycle visibility without SSH (see § Observability &
+     Lifecycle).
+   - **Pattern B (inline)**: launcher sources `lib/launcher_common.sh` and includes `lc_log_upload_trap_block` for
+     lightweight GCS log upload on EXIT. No heartbeat daemon, no deployment-registry rows. Pattern B VMs are either
+     `LONG_LIVED_LIVE` daemons (monitored by the zombie watchdog) or heartbeat-only validators with no manifest writes.
+
+   **Do not** assume SSH or manual instance delete for Pattern A runs.
 8. **Same region as GCS data**: `ZONE=asia-northeast1-c` (default) for all data-pipeline VMs. Cross-region transfer
    cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in
    `asia-northeast1-b` or `asia-northeast1-a` — same region, zero cross-region egress. NEVER fall back to a different
@@ -85,6 +106,41 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
 Violating any of these means you're doing something off-pattern — document why in the launcher script header.
+
+---
+
+## Launcher pattern decision matrix (O-18, 2026-05-21)
+
+Use this table to decide which startup pattern to use when writing a new `launch-*.sh` launcher:
+
+| Workload type                                                      | Pattern  | Rationale                                                                                      |
+| ------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
+| Backfill VM (service CLI, writes manifest rows)                    | A        | Needs tarball install + `VM_TASK` routing + full observability via `vm-exec-with-gcs-tee.sh`. |
+| Migration VM (runs a migration script, writes manifest rows)       | A        | Same as backfill; `VM_TASK=canonical-migration` or custom handler.                             |
+| Forward-poll VM (recurring ingestion, writes manifest rows)        | A        | Same as backfill.                                                                              |
+| Smoke / ad-hoc data VM (runs a service CLI, writes manifest rows)  | A        | Same as backfill.                                                                              |
+| Cron scheduler VM (installs crontab, fires launchers periodically) | B        | No manifest writes; startup wires cron job, not a service CLI. Long-lived daemon.             |
+| Orchestrator VM (runs FastAPI dashboard, LONG_LIVED_LIVE)          | B        | Clones agent-orchestrator, starts server — not a tarball workflow.                             |
+| Validation VM (heartbeat-only, no manifest writes)                 | B        | No tarballs needed; validates external data but doesn't write to instruments-store.            |
+| Zombie watchdog VM (reads manifests, no writes)                    | B        | Long-lived daemon; reads GCS/manifest but doesn't write.                                       |
+
+**Pattern B invariants (what every inline launcher MUST wire manually):**
+
+- `MANIFEST_PER_VM_SHARDS=true` in `--metadata` (omit ONLY if VM provably makes zero manifest writes — document this).
+- `VM_NAME=${VM_NAME}` in `--metadata` for per-VM log identity.
+- `VM_SHUTDOWN_ON_COMPLETION` set appropriately (`true` for one-shot, `false` for LONG_LIVED_LIVE daemons).
+- Source `lib/launcher_common.sh` and call `lc_log_upload_trap_block` for GCS log upload on EXIT.
+- Header comment MUST document: why Pattern B is used + which of the above invariants are intentionally absent + reason.
+
+**Pattern B known exceptions (intentionally missing invariants, documented at script header):**
+
+| Launcher                                     | Missing invariant          | Reason                                            |
+| -------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| `launch-aave-lending-rate-validation-vm.sh`  | `MANIFEST_PER_VM_SHARDS`   | Heartbeat-only; no manifest writes                |
+| `launch-amm-golden-fixture-validation-vm.sh` | `MANIFEST_PER_VM_SHARDS`   | Heartbeat-only; no manifest writes                |
+| `launch-cefi-fwd-daily-cron-vm.sh`           | `MANIFEST_PER_VM_SHARDS`   | Cron daemon; no direct manifest writes            |
+| `launch-tradfi-fwd-daily-cron-vm.sh`         | `MANIFEST_PER_VM_SHARDS`   | Cron daemon; no direct manifest writes            |
+| `launch-planning-vm.sh`                      | `MANIFEST_PER_VM_SHARDS`   | Orchestrator daemon; no manifest writes           |
 
 ---
 
