@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/deployment_ui_lifecycle_tabs_2026_05_08.md
+  - ../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md
 ---
 
 # Deployment And User Management Master
@@ -39,9 +39,10 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`deployment_ui_lifecycle_tabs_2026_05_08`](../active/deployment_ui_lifecycle_tabs_2026_05_08.md)
+### [`deployment_ui_lifecycle_tabs_2026_05_08`](../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
 
-**status**: active · **estimate**: 30 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-21 — Phases A-H shipped (Slots 6+7); H4/G2/G3 DEFERRED-OPERATOR-DECISION (DNS gate) ·
+**estimate**: 30 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 

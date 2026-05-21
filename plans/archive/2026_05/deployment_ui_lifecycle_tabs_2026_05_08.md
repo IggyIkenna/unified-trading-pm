@@ -7,7 +7,7 @@ locked_since: 2026-05-08
 name: deployment-ui-lifecycle-tabs-2026-05-08
 
 epic: epic-deployment
-status: active
+status: archived
 
 completion_gates:
   code: C5
@@ -490,6 +490,14 @@ priority: P2
 ---
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
+
+## Deferred work — migrated to:
+
+| Deferred item                                                  | Successor                                        |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| H4 — staging + prod Cloud Run + Firebase Hosting domain deploy | BLOCKED-OPERATOR-DECISION (DNS/Squarespace gate) |
+| G2 — staging D3 deploy + full integration soak                 | BLOCKED-OPERATOR-DECISION                        |
+| G3 — operator sign-off on 6-tab UX + env-tier hosting          | BLOCKED-OPERATOR-DECISION                        |
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
