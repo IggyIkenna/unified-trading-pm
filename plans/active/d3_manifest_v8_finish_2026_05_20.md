@@ -137,7 +137,7 @@ that plan was written (2026-05-09):
 
 ## Success criteria
 
-- [ ] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version)
+- [x] Phase 1: `basedpyright` + `ruff` clean across all modified files; QG STEP 5.84 passes (no_legacy_schema_version) — confirmed by UAC/IS/MTDS/DS/ES QG ✅ runs across all Phase 1 items
 - [x] Phase 2: `rg '"SOURCE_RETURNED_ZERO"' --type py` returns 0 hits; all enum imports from root facade ✅ — features-service@2d5abdcd
 - [ ] Phase 3: `schema_version` distribution in prod shows 100% v8 across all 5 asset_groups
 - [ ] Phase 4: divergence-detector returns 0 DIVERGENT_EMPTY for DEFI asset_group (primary target)
