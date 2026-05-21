@@ -136,6 +136,7 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
    `aws_migration_defi_first_2026_05_07.md` + Phase 1 cloud-providers.yaml AWS-side templates (already shipped
    2026-05-20 per coordinator Phase 1 GREEN). Est: 5 cal-AI-days.
+   **SCRIPT READY 2026-05-21 slot-11**: deployment-service@de78a42 — `scripts/aws/migrate-bucket-names-unified-to-canonical.sh` ships 61 rename pairs; dry-run verified (152,161 dex-pools + 68,703 dex-swaps + 30,114 evm-defi + 5,037 solana-defi objects to sync; all target buckets confirmed existing). EXECUTION GATED on coordinator Phase 2 (CODE FREEZE, operator action) → Phase 3 (drain) → Phase 4 (GCS migration GREEN). Pass `--phase4-green --apply` when gate clears.
 
 10. **HUMAN-HARSH-PHASE-6-DOCKER-VM-FLEET-REDEPLOY** — Phase 6 of coordinator: Docker image build + writer fleet VM
     restart so steady-state writers produce v8 rows. Composes with: `writegate_honest_coverage_endtoend_2026_05_06.md` §
