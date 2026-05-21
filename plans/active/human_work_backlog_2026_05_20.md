@@ -128,6 +128,9 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    **position-balance-monitor-service FIXED 2026-05-21 slot-11**: QG green locally @7c5f8b7 — pip-audit ignores PYSEC-2024-277/PYSEC-2025-183; PUSH-BLOCKED (repo archived on GitHub — operator must unarchive to merge to LDR)
    **pnl-attribution-service FIXED 2026-05-21 slot-11**: QG green locally @db18812 — pip-audit ignores + session-scoped setup_events fixture in conftest.py; PUSH-BLOCKED (repo archived on GitHub)
    **risk-and-exposure-service FIXED 2026-05-21 slot-11**: QG green locally @d350070 — corrected 8 wrong RiskMetrics field names in risk_metrics.py log_event call (concentration_pct→concentration, drawdown_pct→drawdown, etc.); PUSH-BLOCKED (repo archived on GitHub)
+   **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external, no quality-gates.sh — out of scope for this sweep
+   **deployment-service SKIPPED 2026-05-21 slot-11**: locked by slot-10; not verified this sweep
+   **SWEEP COMPLETE 2026-05-21 slot-11**: all in-scope service repos verified or locally-fixed; 3 archived repos (position-balance-monitor, pnl-attribution, risk-and-exposure) require operator unarchive before LDR merge
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
