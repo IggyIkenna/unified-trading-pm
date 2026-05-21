@@ -496,10 +496,17 @@ UX).
       risk-and-exposure-service.yaml, position-balance-monitor-service.yaml, deployment-api.yaml. Each captures: runtime
       (fargate/app_runner), ECR URI, CPU/memory, IAM role ARN, scaling, health_check, secrets references from
       unified-trading/ SM prefix.
-- [ ] [SCRIPT] P0. Wire DNS / endpoints. If the workspace has a route domain (per `unified-trading-system-ui` config),
-      replicate Cloud Run DNS as App Runner / ALB. Otherwise, internal-only is fine for May-23 (no public surface).
-- [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS (still
-      pre-cutover; runs in parallel to GCP prod).
+- [x] ✅ [SCRIPT] P0. Wire DNS / endpoints. **DONE 2026-05-21** (slot 3): May-23 scope = internal-only; no public
+      surface required. No DNS wiring needed for staging smoke (`/health` accessible via ECS service discovery or ALB
+      internal endpoint when services deploy). Post-cutover DNS wiring deferred to Phase 6.5 (UI co-location).
+- [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
+      PROGRESS 2026-05-21** (slot 3): - ECS cluster `uts-defi-prod` CREATED (ap-northeast-1, FARGATE + FARGATE_SPOT
+      capacity, containerInsights=enabled). - 7 CodeBuild image builds triggered in parallel (builds take ~15 min each):
+      alerting-service:7c0a3ec6, execution-service:51057f1f, features-service:bad0af28, strategy-service:988aeee8,
+      risk-and-exposure-service:4861c3fa, position-balance-monitor-service:a7ec3263, deployment-api:8ec6982c. -
+      **NEXT**: once all 7 builds show ECR image tags, create ECS task definitions from configs/aws/ manifests + deploy
+      4 Fargate services + 3 App Runner services + smoke `/health` for each. - Builds typically complete in 15-20 min;
+      operator or next slot can verify then deploy.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
