@@ -131,9 +131,10 @@ enum.
 - [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
 - [ ] Bug 2: Normalise AAVEV3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
       Assign to MTDS slot.
-- [ ] Bug 3: **Manifest-only fix** (no GCS migration). Write corrector shard re-exposing canonical UNISWAP_V3/V2/AAVE_V3
-      rows from local-10889 per-VM shard + superseding ghost UNISWAPV3/V2/AAVEV3 rows via empty_confirmed. Assign to
-      slot-1 main.
+- [x] Bug 3: ✅ Manifest-only fix shipped — IS@dbf7bf6 (2026-05-22). Corrector shard uploaded to
+      `_index/per_vm/ikenna-slot1-ghost-venue-corrector-defi-20260522.parquet`. Consolidator run manually. Canonical
+      rows now in manifest: UNISWAP_V3 (187k), UNISWAP_V2 (22k), AAVE_V3 (30k), UNISWAP_V4 (15k). Ghost venues
+      UNISWAPV3/V2/AAVEV3 flipped to empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE.
 - [ ] Bug 4: Post-cutover — add `data_source_type` taxonomy enum.
 
 ## Temporary states + their canonical follow-up plans
