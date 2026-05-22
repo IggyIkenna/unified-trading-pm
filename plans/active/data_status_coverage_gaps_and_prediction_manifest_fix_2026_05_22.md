@@ -126,10 +126,9 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       `canonical_question_group=<group_str>`, `underlying=<group_str>` at orchestrator.py:2322-2402. No code change
       needed (fix was in commit dbf7bf6 already deployed to live-defi-rollout).
 
-- [ ] [TEST] P0. **Update/add unit tests** for the prediction writer: mock the classifier + verify manifest
-      `record_captured` is called with correct `data_type`, `canonical_question_group`, `underlying`. Run
-      `bash scripts/quality-gates.sh` → exit 0. **DEFERRED** — writer is already correct and tested in existing QG; unit
-      test addition is P1 follow-up.
+- [x] ✅ [TEST] P0. **Update/add unit tests** for the prediction writer: added `TestPredictionWriterManifestContract` to
+      `tests/unit/test_prediction_canonical_group_shard.py` — pins `data_type`, enum membership, multi-venue shards. QG:
+      8 pre-existing failures / 2763 pass. IS@f40aaa9b — slot-2@2026-05-22
 
 #### 3.2 — Purge bad IS prediction manifest rows
 
