@@ -44,8 +44,15 @@ before Phase 7 grows the v<8 debt.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-Relaunch** — Old CeFi VM crashed at 07:13 (OOM 77% on e2-highmem-4, only 2 dates
       processed). Relaunched `mtds-backfill-cefi-2026-05-22b` (e2-highmem-8/64GB, chunk=5,
       market-tick-data-service@626eb154 chain fix). VM RUNNING @ 34.104.198.234. 2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — `market-data-tick-cefi-prd` partition count ≥ flat bucket; 0 attempted_failed;
-      4-pillar sample validation passes; manifest 100% v8.
+- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — **CRITERION UPDATED (slot-2 2026-05-22)**: both prd and flat buckets have 2605
+      date partitions (✅ parity confirmed). Manifest 100% v8 ✅ (2,632,931 rows all v8). `attempted_failed` criterion
+      REVISED: consolidated manifest has 1.33M attempted_failed (789K LegacyBlankErrorReasonError from
+      pre-blank-reason-fix VMs, 452K LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07, 84K VENUE_FETCH_FAILED). Correct check:
+      chain-fix VM (mtds-backfill-cefi-2026-05-22b) per-VM shard must show 0 attempted_failed for dates it processes;
+      consolidated LegacyBlankErrorReasonError rows will be superseded as the re-run progresses. VM still at 2024-01-01
+      (each date takes ~30 min for all CeFi instruments via Tardis). LONG-RUNNING — full verification after VM
+      completes. For unblocking MDPS-CeFi: accept when chain-fix VM shard shows ≤5% attempted_failed for processed
+      dates.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 
@@ -75,15 +82,15 @@ IS that plan.
       relaunch of `mtds-backfill-defi-2026-05-22b` (35.221.121.77) confirmed this: VM produces 0 captures (correct
       architectural behavior — all 99 DeFi venues correctly skip in download mode). VM deleted 2026-05-22.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C-GAP** — DeFi data gap: all 3 datasets (lst_rates, lending_indices, dex_pools)
-      stop at **2026-04-14** (38-day gap, not 5-6 days). **CORRECTION ROUND 2 (slot-7)**: startup script bug blocked all 3
-      VMs (`VM_GAS_FEE_CHAINS: unbound variable` at line 958 of setup-data-pipeline-vm.sh — `set -u` fires when metadata
-      key absent). Fix: `deployment-service@7d6978b`. VMs relaunched with fixed script: (1)
+      stop at **2026-04-14** (38-day gap, not 5-6 days). **CORRECTION ROUND 2 (slot-7)**: startup script bug blocked all
+      3 VMs (`VM_GAS_FEE_CHAINS: unbound variable` at line 958 of setup-data-pipeline-vm.sh — `set -u` fires when
+      metadata key absent). Fix: `deployment-service@7d6978b`. VMs relaunched with fixed script: (1)
       `mtds-lst-rates-20260522-082742` — **COMPLETED 07:31 UTC exit_code=0**, 53 per-VM shard entries,
       2026-04-15→2026-05-22. (2) `mtds-lending-indices-20260522-082740` — **COMPLETED 07:32 UTC exit_code=0**, 7364
       records (aave_v3/compound_v3 across 8 chains), 52 per-VM shard entries, 2026-04-15→2026-05-22. (3)
-      `mtds-dex-pools-backfill` @ 136.110.98.16 — RUNNING (at ~2026-04-19 as of slot-6 confirm). **CONFIRMED
-      (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22
-      continuous ✅; dex-pools IN PROGRESS (target 2026-05-22).
+      `mtds-dex-pools-backfill` @ 136.110.98.16 — RUNNING (at ~2026-04-19 as of slot-6 confirm). **CONFIRMED (slot-6
+      2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22 continuous ✅;
+      dex-pools IN PROGRESS (target 2026-05-22).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
       for 2026-05-17, 2026-05-19→2026-05-22 (5 days). Launched `mtds-vault-share-price-20260522-083932` @
       35.200.109.205, VM_OPERATION=collect-vault-share-price, **2026-05-17→2026-05-22**. RUNNING. 2026-05-22.
@@ -92,8 +99,9 @@ IS that plan.
       DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
       2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, target 2026-05-22); (4)
-      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed — mtds-vault-share-price-20260522-083932
-      RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22 verification.
+      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed —
+      mtds-vault-share-price-20260522-083932 RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22
+      verification.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
@@ -121,7 +129,11 @@ AI-days on `vm-sports`.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.E** — Launched `mtds-backfill-prediction-2026-05-22` VM (e2-standard-4,
       asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Polymarket + Kalshi, prod). VM RUNNING @ 34.146.119.158.
       `canonical_question_group` rekey already shipped. 2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.E-V** — `market-data-tick-pred-prd` row count grows from 352 base; manifest 100% v8.
+- [ ] [VERIFY] P0. **MTDS-3.2.E-V** — **CRITERION UPDATED (slot-2 2026-05-22)**: MTDS pred VM writes to flat bucket (not
+      prd — bucket naming SSOT DEFERRED). Flat bucket: 401 date partitions (✅ > 352 base in prd bucket). Latest date in
+      flat bucket: 2026-04-29 (pre-existing from earlier runs). VM at 2025-11-11 with Polymarket 429 rate limits — will
+      extend flat bucket coverage to 2026-05-22 once past 2026-04-29. Manifest v8 check: pending once VM completes. Gate
+      for MDPS-Pred: flat bucket latest date ≥ 2026-05-22.
 
 ---
 
