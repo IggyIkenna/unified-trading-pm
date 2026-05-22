@@ -93,15 +93,19 @@ IS that plan.
       dex-pools IN PROGRESS (target 2026-05-22).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
       for 2026-05-17, 2026-05-19→2026-05-22 (5 days). Launched `mtds-vault-share-price-20260522-083932` @
-      35.200.109.205, VM_OPERATION=collect-vault-share-price, **2026-05-17→2026-05-22**. RUNNING. 2026-05-22.
+      35.200.109.205, VM_OPERATION=collect-vault-share-price, **2026-05-17→2026-05-22**. FAILED exit_code=1
+      (ImportError: `get_valid_data_types_for_venue` not in UAC top-level `__init__.py`). Fix: UAC@ab72717e exports the
+      function. Tarball rebuild + VM relaunch pending (slot-5 2026-05-22).
+- [x] ✅ [CODE] P0. **MTDS-3.2.C-VSP-FIX** — Fixed UAC ImportError: added `get_valid_data_types_for_venue` to top-level
+      `unified_api_contracts/__init__.py`. UAC@ab72717e. Tarball rebuild running. 2026-05-22.
+- [ ] [SCRIPT] P0. **MTDS-3.2.C-VSP-RELAUNCH** — Relaunch vault_share_price VM after tarball rebuild with UAC@ab72717e.
+      Window: 2026-05-17→2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-\* VMs write to SEPARATE
       buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
-      2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, target 2026-05-22); (4)
-      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed —
-      mtds-vault-share-price-20260522-083932 RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22
-      verification.
+      2026-05-22 ✅ DONE (exit_code=0, 9 venues, 24 files, AERODROME_V3/BASE 333 rows, available_at populated); (4)
+      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed — MTDS-3.2.C-VSP-RELAUNCH pending.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
