@@ -114,9 +114,15 @@ Phase 6), the current pattern is **sufficient for May-23**; venue-level circuit 
 
 ---
 
-## Not in scope for May-23
+## Not in May-23 cutover scope
 
-- Venue-level circuit breaker (Phase E.1 — named successor in Group H plan)
+> **[DELTA 2026-05-22]** **Current state:** Two-leg concurrent execution and SmartOrderRouter (Uniswap V3 / Curve /
+> Balancer) are shipped and correct for the May-23 cutover. Venue-level circuit breaker is not implemented. **Planned
+> delta:** `plans/epics/execution_master.md` Phase E.1 owns venue-level circuit breaker post-cutover. **Target
+> architecture:** Per-venue circuit breaker extends `BlockedSpreadsTracker` with a venue-keyed blocked set; GCS
+> persistence pattern composes directly.
+
+- Venue-level circuit breaker (Phase E.1 — tracked in `plans/epics/execution_master.md`)
 - Cross-chain bridge routing through SOR (bridge has its own `BridgeHandler` in `v2/handlers.py`)
 - CeFi (CEX) order routing does NOT go through SOR — CEX orders use venue-specific adapters in
   `adapters/order_adapter.py`

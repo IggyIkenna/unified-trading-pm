@@ -78,8 +78,9 @@ Emitted when supervisor detects VM saturation (3 consecutive samples: memory ≥
 | `cpu_pct`            | float                      | psutil cpu_percent(interval=1)            |
 | `recommended_action` | `ShardCapacityAction` enum | Currently: `SPAWN_NEW_SHARD` only         |
 
-Consumer: deployment-api `/api/strategy/shard/spawn` endpoint (manual trigger for May-23; auto-consumption is Phase E.2
-post-cutover — `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` § Phase E.2).
+Consumer: deployment-api `/api/strategy/shard/spawn` endpoint (manual trigger for May-23; auto-consumption is
+post-cutover — `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` § Phase E.2, tracked in
+`plans/epics/client_isolation_and_governance_master.md`).
 
 ---
 
