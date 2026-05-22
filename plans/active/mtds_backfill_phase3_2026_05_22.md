@@ -146,7 +146,10 @@ AI-days on `vm-sports`.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.E** — Launched `mtds-backfill-prediction-2026-05-22` VM (e2-standard-4,
       asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Polymarket + Kalshi, prod). VM RUNNING @ 34.146.119.158.
       `canonical_question_group` rekey already shipped. 2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.E-V** — `market-data-tick-pred-prd` row count grows from 352 base; manifest 100% v8.
+- [x] ✅ [VERIFY] P0. **MTDS-3.2.E-V** — `market-data-tick-pred-prd` row count grows from 352 base; manifest 100% v8. —
+      slot-2@2026-05-22: 16,812 rows (352→16,812 ✓); 100% schema_version=8 ✓; 14,491 captured + 2,321 empty_confirmed;
+      date range 2018-01-01→2026-04-29 (gap 2026-04-30→2026-05-22 noted — slot-7 VM may not have extended to present).
+      Consolidator `uts-prod-manifest-consolidator-market-data-prediction-cron` triggered + ran successfully.
 
 ---
 
