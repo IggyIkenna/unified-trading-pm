@@ -91,6 +91,13 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
+- [ ] [CODE] P2. **MDPS-3.3.Pred-SchemaContract** `**DEFERRED**` — `SCHEMA_VALIDATION_FAILED` on
+      `POLYMARKET:PREDICTION_MARKET:*` trades bars: `open/high/low/close` NOT NULLABLE per contract but prediction
+      market trades have NaN OHLC (binary options price aggregation). Same pattern as MDPS-3.3.TradFi-SchemaContract.
+      Current VMs mark affected contracts as `attempted_failed`. Fix: make OHLC nullable for `prediction_market` trades
+      OR implement proper OHLC aggregation for prediction market price series. Successor: UAC schema update + MDPS fix.
+      Observed: slot-2 2026-05-22. Sample contract:
+      `0x71aa6ab89169bb131ea6c54da3e5fa248e4ad426192c5bc5e29ae967bc83cd1a`.
 
 ---
 
