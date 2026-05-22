@@ -61,10 +61,11 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 **Gate**: `sports_master` Phase 3 rename (data_available_at → available_at) shipped.
 
-- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Relaunched `instr-backfill-sports` @ 34.104.133.72. 2020-06-01→2026-03-28 window.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Relaunched `instr-backfill-sports` @ 34.84.128.69. 2020-06-01→2026-03-28 window.
       MANIFEST_PER_VM_SHARDS=true. instruments-service@55d718f (blank reason fix: typed reason= added to all 17
       sports record_empty() callsites). Previous run @ 7d9a737 failed on every date: LegacyBlankErrorReasonError at
-      FIXTURES honest-coverage path. QG exit 0. Tarball rebuilt 07:22:50 UTC. 2026-05-22.
+      FIXTURES honest-coverage path. QG exit 0. Tarball rebuilt 07:22:50 UTC. Slot-7 relaunched @ 34.104.133.72;
+      slot-2 deleted + relaunched @ 34.84.128.69 (IP change, same IS@55d718f). RUNNING. 2026-05-22.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
       rename confirmed absent (no `data_available_at` stragglers).
 
