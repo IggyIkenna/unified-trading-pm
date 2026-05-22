@@ -1,3 +1,5 @@
+[operator-ack: sports-phase2-done] 2026-05-22 05:30 UTC — Phase 2B GCS migration RUNNING (737,312 files, ~11/sec, mostly C_skip_already_canonical + D_skip_neither). Phase 3+4 code rename SHIPPED: instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350. Sports backfill VMs unblocked once migration verified complete (est. 18h from macOS; recommend same-region VM for faster completion). Plan flips: sports_master@20109fac1.
+
 ## [slot-1-main → slot-7] 2026-05-22 — Phase 11 terraform → sports Phase 3+4 (if operator acks) → features backfill → promote workflow
 
 **Plan refs**: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md` Phase 11b → (sports Phase 3+4 if operator acks Phase 2) → `features_backfill_phase3_2026_05_22.md` → `promote_workflow_may23_cli_path_2026_05_10.md`
