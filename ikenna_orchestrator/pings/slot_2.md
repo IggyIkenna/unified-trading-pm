@@ -1434,3 +1434,39 @@ now.
 Sports-gated items (MTDS-3.2.D / FEAT-3.4.Sports) remain blocked on `sports_master` Phase 3+4.
 
 — slot-1 main / ikenna / 2026-05-22
+
+---
+
+## [slot-2] 2026-05-22 — Session-end: writegate P1 flips + dispatch ACK + codex
+
+[2026-05-22 UTC] slot-2 session-end summary.
+
+**Delivered this session:**
+
+1. **writegate plan line 2919 `[UTL] P1` — flip**: `_classify_prediction` canonical-group lifecycle SSOT check is
+   pre-existing at UTL `legacy_reason_classifier.py:450-511` (per-market lifecycle via `market_created_at` /
+   `settlement_time` / `current_status`). `CANONICAL_GROUP_METADATA` has no date-range fields — IS `MARKET_LIFECYCLE`
+   IS the canonical-group lifecycle SSOT, consumed via per-row columns. PM@a0387b2f.
+
+2. **Dispatch ACK**: cme_polymarket Phases 2-5 (UAC@9c491bdd + MTDS@b59b63e + IS@7a3db05 + strategy-service@2c59f2ce) +
+   d8 all 4 phases (MTDS@83f2ac50) + config_grid BLOCKED-OPERATOR-DECISION. PM@a0387b2f.
+
+3. **writegate plan line 2922 `[DOCS] P1` — flip**: CLAUDE.md "17 EXPECTED_*" → 31-member closed set + codex pointer.
+   New codex section "Per-reason-group → consumer policy quick-reference" (10-row table, 31 reasons across 9 groups +
+   `attempted_failed`; key calendar-closed vs temporary-gap rolling-window distinction documented). PM@413c6901.
+
+4. **Status board fixes**: 2.E.1 "open: QG AST-walk step" removed (STEP 5.89 already wired); Wave 3.S updated ✅ partial;
+   Wave 3.X updated ✅ partial (residual SSOTs archived; Track D consumer integration tracked in
+   `wave3x_track_d_implementation_2026_05_19.md`). PM@6777e43c + PM@d8c32bba.
+
+5. **Codex delta note updated**: items 1/2 now ✅; only `DATA_QUALITY_SUSPECTED_GAP` pending. PM@d8c32bba.
+
+**Deferred / still open:**
+
+- `[SCRIPT] P1. Migration: re-classify 1.24M attempted_failed/LegacyBlankErrorReasonError rows` — reconciler code
+  exists (`reconcile_legacy_blank_to_typed_reason.py`, Wave 3.X Track C); needs VM dry-run now that new Wave 3.S
+  SSOTs are in UAC. Run: `reconcile_legacy_blank_to_typed_reason.py --asset-group sports --dry-run` first.
+- Predictions P0 items at `predictions_master.md` lines 472-535 — BLOCKED on design decisions or predecessor work.
+- Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`.
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
