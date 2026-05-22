@@ -578,6 +578,7 @@ One row per run. Detail (per-checkpoint result + synthetic injections + shas) li
 | 2026-05-22 | Phase 1 READ — §2.6 ALC + §2.7 CUS + §2.11 ONB | ALC/CUS/ONB READ subset (sub-agent + Opus review) | strategy-svc@b303a358 + execution-service + UAC | multi | 8 | 4 (F-23…F-26) | — | `runs/AUDIT-03_2026_05_22_phase1_alc_cus_onb.md` |
 | 2026-05-22 | Phase 1 READ — §2.3 EXE + §2.5 RSK (main, safety-critical) | EXE/RSK direct Opus read + §2.1 deferred CSB-05/15/17/20 closed PASS | exec-svc@a848ef61 + UAC@c3f7a45 + strategy-svc@b303a358 | multi | 19 (+4 CSB PASS) | 7 (F-27…F-33) | EXE-02→F-32 | `runs/AUDIT-03_2026_05_22_phase1_exe_rsk.md` |
 | 2026-05-22 | Phase 1 READ — §2.13 XAS | cross-archetype/asset-class regression safety (sub-agent + Opus review) | strategy-svc@b303a358 + UAC@c3f7a45 + exec-svc | multi | 7 | 4 (F-34…F-37) | XAS-04/05/12=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_xas.md` |
+| 2026-05-22 | Phase 1 static-readiness — §2.10 CUT | cutover-gate wiring (sub-agent + Opus review); RUN gates = artifact-presence | e2e-testing + deployment-api + deployment-svc tf | multi | 6 | 7 (F-38…F-44) | 4×P0 cron/infra | `runs/AUDIT-03_2026_05_22_phase1_cut.md` |
 
 ---
 
@@ -624,6 +625,13 @@ One row per drift found, across all runs (append-only). Detail in the run result
 | F-35 | 2026-05-22 | XAS-06 | CODEX-DRIFT | XAS-06 invariant references UAC types not all present: AtomicInstruction (only e2e-testing, not UAC source — cross-ref EXE-11), PnLFactor (absent — aligns F-17); DefiErrorCode is plain class (no StrEnum exhaustiveness). [count = F-27] | TBD | NEEDS-CONFIRM (P2) |
 | F-36 | 2026-05-22 | XAS-08 | CODEX-DRIFT | CLAUDE.md cross-client "3 layers" aspirational: CrossClientTransferForbiddenError in execution-svc (not UAC), 1 raise (coordinator:241), 0 UAC/strategy; TransferIntent has no model_validator. Generalizes F-23. Fix: add UAC validator OR reconcile doc | TBD | CONFIRMED (P1) |
 | F-37 | 2026-05-22 | XAS-11/13 | CODE-DRIFT | (a) category="defi" → record_captured() in hedge_ratio_writer.py:142 + decision_context_writer.py:155 (should be asset_group=) + batch_handler alias; (b) inline gs:// write-path f-strings (gcs_storage_service.py:185/251/293, grid_generator.py:100) + catalogue_bucket f-string bypass resolve_bucket_name | TBD | CONFIRMED (P1) |
+| F-38 | 2026-05-22 | CUT-01 | CODE-DRIFT | colocated_engine.py single category→feature-bucket mapping (carry→DEFI, APD→CEFI) can't express DeFi+CeFi hybrid → latent feature-starvation (APD Variant-A DEX prices; carry CeFi perp-funding). Likely OK for May-23 MVP — verify downstream merge. DOWNGRADED from sub-agent P0 | TBD | NEEDS-CONFIRM (P1) |
+| F-39 | 2026-05-22 | CUT-04 | GAP | **P0** cron:mtds-paper-smoke not provisioned (no terraform Cloud Scheduler) — backtest-fidelity gate has no running cron | TBD | CONFIRMED (P0) |
+| F-40 | 2026-05-22 | CUT-05 | GAP | **P0** cron:mtds-scenario-matrix not provisioned (zero terraform defs) — scenario-regression-matrix gate has no infra; composes RSK-05/F-33 | TBD | CONFIRMED (P0) |
+| F-41 | 2026-05-22 | CUT-09/12 | CODE-DRIFT | **P0** t1_batch_scheduler.tf defines batch-live-reconciliation + batch-vs-live-recon crons whose Cloud Run Job targets do NOT exist (self-documented tf NOTE) → crons fail silently at runtime | TBD | CONFIRMED (P0) |
+| F-42 | 2026-05-22 | CUT-10 | GAP | **P0** cron:alerting-paging not provisioned — kill-switch/breaker code + telegram secret exist but no scheduled alerting cron for live-trading P&L/position breaches | TBD | CONFIRMED (P0) |
+| F-43 | 2026-05-22 | CUT-02 | GAP | run-paper.sh wires only Tenderly EVM fork; no Solana devnet paper path (gate requires "Tenderly fork + Solana devnet") | TBD | CONFIRMED (P1) |
+| F-44 | 2026-05-22 | CUT-03 | GAP | ManualTradeGateDialog Playwright e2e tests the trade form, not the gate approve/deny/timeout→unhold flow (unit-test-only). Cross-refs RPT-04 (dialog IS wired now, F-02 refuted) | TBD | CONFIRMED (P1) |
 
 ---
 
