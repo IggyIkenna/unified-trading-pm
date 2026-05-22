@@ -7,5 +7,7 @@
 # Add a row when a repo's canonical integration branch is NOT live-defi-rollout
 # (e.g., infra repos that ship via `main` directly).
 #
-# Currently no overrides needed — agent-orchestrator was moved to LDR on
-# 2026-05-20 to unify with the rest of the workspace.
+# agent-orchestrator ships via `main` — every push to main rebuilds the
+# Firebase dashboard UI, so main is its canonical deploy + integration branch.
+# All its worktrees (main + tabs) track origin/main; cron FFs them from main.
+agent-orchestrator main
