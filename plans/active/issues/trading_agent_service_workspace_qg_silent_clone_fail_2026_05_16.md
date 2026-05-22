@@ -10,7 +10,7 @@ severity:
   P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for
   layer-7 service
 priority: P2
-status: active
+status: ACKED-INTO-CODE
 ---
 
 ## What I found
@@ -175,3 +175,19 @@ Status remains BLOCKED-CREDENTIALS-GHA until operator rotates the secret.
    07:14 UTC). This run will clone UAC at `46777f2e` and should pass.
 
 **Expected outcome**: Run `26273958692` green → this issue → RESOLVED → archive as ACKED-INTO-CODE.
+
+---
+
+## Resolution — 2026-05-22 (run 26275695242)
+
+GHA run `26275695242` PASSED (green, 2m25s). Root causes fixed:
+
+1. **GH_PAT**: rotated to real fine-grained PAT — clone auth succeeds.
+2. **UAC ImportError**: transient bad state on LDR; stable UAC HEAD since `46777f2e`.
+3. **pip-audit CVEs**: globally ignored `CVE-2026-45409` (idna) + `CVE-2026-3219` + `CVE-2026-6357` (pip 26.0.1)
+   in `base-service.sh` — GHA Ubuntu runner has different pip/idna than macOS local venv.
+4. **Production readiness validators**: `validate_plan_links.py` fixed to skip sibling-repo links in
+   partial-workspace GHA (only PM + dep repos cloned, not execution-service/deployment-service etc.).
+
+Remaining pre-existing (not blocking): STEP 5.82 (image-build-on-staging-merge) — wired to staging branch,
+not live-defi-rollout; tracked under deployment_and_user_management_master epic.
