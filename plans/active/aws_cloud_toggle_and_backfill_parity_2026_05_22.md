@@ -95,10 +95,11 @@ Gate: Phase 2 complete.
 - [x] [CODE] P0. **UI-4** ✅ — `hooks/deployment/_api-stub.ts`: `getDataStatus`/`getDataStatusTurbo` accept
       `Record<string,unknown>` — cloud flows through `...params` spread automatically; no stub change required.
 - [x] ✅ [VERIFY] P0. **UI-V** — Stack started. API verified: `?cloud=aws` returns HTTP 200, `?cloud=gcp` returns HTTP
-      200, `?cloud=invalid` returns HTTP 422. TypeScript: pre-existing TS2300 errors in api-generated.ts
-      (strategy-service duplicate identifiers, unrelated to toggle changes — last touched at ui@111bc9cc). Toggle code
-      shipped at unified-trading-system-ui@2a017c78. Browser visual toggle not testable from CLI. API layer ✅.
-      2026-05-22.
+      200, `?cloud=invalid` returns HTTP 422. Browser visual (slot-4 2026-05-22): GCP|AWS toggle buttons render in
+      deployment-ui header (http://localhost:5183/data-status), both buttons clickable, Data Status tab loads correctly
+      with toggle visible. Note: `deployment-api@26c7bfc` (UAC import fix — `get_raw_source_data_types` / `is_expected`
+      / `is_processed_data_type` moved from UAC root to registry; same c18550f3 breakage as MTDS) required to start API
+      locally. All code layers verified ✅. 2026-05-22.
 
 ## Phase 4 — AWS backfill launcher scripts
 
