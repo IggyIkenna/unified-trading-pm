@@ -2900,11 +2900,14 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, `EXPECTED_PRE_SEASON`, `EXPECTED_POST_SEASON`,
       `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — all already in honest_coverage.py (lines 120, 128, 135, 143, 147). —
       UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
-- [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer*windows,
-      footystats_season_bounds, understat_coverage) returning the appropriate typed
-      `EXPECTED*\*`reason. Same     discriminated`(capture_status, error_reason)` shape as today.
-- [ ] [UTL] P1. **Classifier extension** — `_classify_tradfi` consumes the half-day calendar + session hours SSOTs
-      returning `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` where applicable.
+- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_sports` pre-existing in `legacy_reason_classifier.py:208`:
+      understat→`EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`, transfermarkt→`EXPECTED_OUTSIDE_TRANSFER_WINDOW`,
+      footystats→`EXPECTED_PRE_SEASON`/`EXPECTED_POST_SEASON`, SFI→fixture-pin. All Wave 3.S SSOTs consumed. — UTL
+      pre-existing (audited 2026-05-22 by slot-2)
+- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_tradfi` pre-existing in `legacy_reason_classifier.py:161`:
+      holiday/weekend via `non_trading_day_reason`, half-day→`EXPECTED_PARTIAL_HALF_DAY`, session
+      hours→`EXPECTED_OUTSIDE_TRADING_HOURS`. All Wave 3.T SSOTs consumed. — UTL pre-existing (audited 2026-05-22 by
+      slot-2)
 - [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle SSOT
       returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
       prediction-shard dates.
