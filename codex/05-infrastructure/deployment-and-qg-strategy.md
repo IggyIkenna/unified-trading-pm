@@ -333,7 +333,11 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
   `unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh` + lifecycle enforcement block. STEP
   5.79-5.82 (dockerfile-base-pin, tarball-manifest-present, tarball-env-block, image-build-on-staging-merge) are
   `PENDING_RATCHET` — they run post-compliance-check and show ❌ cosmetically but do NOT block the
-  `✅ ALL QUALITY GATES PASSED` verdict. Phase 5 target date: 2026-05-17 (Day 5 of cutover window). Plan:
+  `✅ ALL QUALITY GATES PASSED` verdict.
+
+  > **[DELTA 2026-05-22]** Phase 5 target date was 2026-05-17 (5 days ago). Actual status of PENDING_RATCHET steps (5.79-5.82) has NOT been verified as of 2026-05-22 — verify per-repo QG output before assuming advisory-only. Tracked under `plans/epics/infrastructure_master.md`.
+
+  Plan:
   `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT:
   `codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.
 - **B-018 Phase 4.A QG snapshot cron** (2026-05-15): Daily QG-status snapshot (described at § "99%-repo identification"

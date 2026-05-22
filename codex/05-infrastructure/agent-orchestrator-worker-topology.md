@@ -116,15 +116,17 @@ Full slot-as-worker contract: `agents/worker.md` in the agent-orchestrator repo.
 | Event     | AWS S3 path                                                                    | GCP GCS path                                                  | Emitter           |
 | --------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------- |
 | `STARTED` | `s3://uts-orchestrator-events-{account}/orchestrator/{role}/{vm-name}/STARTED` | `gs://{project}-events/orchestrator/{role}/{vm-name}/STARTED` | `bootstrap_vm.sh` |
-| `STOPPED` | (future — SSH-spawn deferred work)                                             | (future)                                                      | TBD               |
-| `FAILED`  | (future — SSH-spawn deferred work)                                             | (future)                                                      | TBD               |
+| `STOPPED` | (post-cutover — SSH-spawn deferred work)                                       | (post-cutover)                                                | TBD               |
+| `FAILED`  | (post-cutover — SSH-spawn deferred work)                                       | (post-cutover)                                                | TBD               |
 
 ---
 
-## Deferred
+> **[DELTA 2026-05-22]** **Current state:** Only `STARTED` events are emitted at bootstrap. `STOPPED` and `FAILED` event emission requires the SSH-spawn per-backend-id feature. **Planned delta:** SSH-spawn work tracked under `plans/epics/orchestrator_master.md`. **Target architecture:** Full STARTED/STOPPED/FAILED event lifecycle per orchestrator VM.
+
+## Deferred (post-cutover)
 
 - **EIP allocation**: AWS VMs use dynamic public IPs; stable EIPs needed for DNS.
-- **DNS**: FQDNs `api-{vm}.agent-orchestrator.odum-research.com` → AWS EIPs. Not needed for May-23.
+- **DNS**: FQDNs `api-{vm}.agent-orchestrator.odum-research.com` → AWS EIPs. Post-cutover.
 - **SSH-spawn per backend_id**: slots map to backend_ids; orchestrator ssh-tunnels spawn. Ships post-cutover.
 - **`.tabs/` 8-slot worktree population**: epic VMs currently have 4 cross-cutting repos; full service-repo clone ships
   with ssh-spawn + tarball-deploy work.

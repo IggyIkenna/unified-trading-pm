@@ -122,8 +122,9 @@ When client delivers Copper creds June-1:
 
 ## § B — Cloud-KMS-encrypted private key (May-23 cutover path — NEW provisioning)
 
-**Status**: 🟡 IN-FLIGHT — operator must provision per-asset_group CMKs + envelope-encrypt the dev wallet PKs before
-2026-05-20. Implementation path: `execution-service/execution_service/custody/cloud_kms.py` (NEW per Plan Phase 3.C.1).
+> **[DELTA 2026-05-22]** **Current state:** GCP Cloud HSM CMKs are DONE — 10 HSM-backed CMKs provisioned in `asia-northeast1` 2026-05-12, smoke PASSED. AWS KMS CMK provisioning and wallet envelope-encryption are PENDING operator-action (pre-cutover). **Planned delta:** AWS KMS + wallet-PK encryption tracked as pre-cutover operator actions under `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C. **Target architecture:** All CMKs provisioned on both clouds; all trading wallet PKs envelope-encrypted at rest.
+
+**Status**: GCP CMKs ✅ DONE (2026-05-12, smoke PASSED). AWS KMS provisioning PENDING. Implementation path: `execution-service/execution_service/custody/cloud_kms.py` (NEW per Plan Phase 3.C.1).
 
 ### B.1 GCP Cloud HSM CMK provisioning (asia-northeast1)
 

@@ -116,8 +116,10 @@ wall-clock + CPU% + RSS + IO, then derives a per-archetype × per-stage `(min_cp
 recommendation justified by the profile. Stages whose `wall_clock × scale_factor` exceeds the Group F item 18
 "operationally-acceptable window" are filed as P0 follow-ups for `live_pipeline_mtds_mdps_features_2026_05_08`
 consumers. The recommendation matrix replaces the guessed defaults in `runtime-tiers-and-deployment.md` (data-pipeline
-VM machine type) + `performance-targets.md` (per-stage targets). **Status (2026-05-12): matrix not yet populated** — the
-real-VM runs are blocked on the Phase-4-tail (`--synthetic-input-uri` flags) per the plan's "Deferred work" table.
+VM machine type) + `performance-targets.md` (per-stage targets). **Status (2026-05-22): matrix not yet populated** — the
+real-VM runs remain blocked; this is post-cutover backlog tracked under `plans/epics/infrastructure_master.md`.
+
+> **[DELTA 2026-05-22]** **Current state:** VM-shape recommendation matrix remains unpopulated as of 2026-05-22. Real-VM benchmarking runs have not yet executed (Phase-4-tail blocked). **Planned delta:** Populate matrix post-cutover under `plans/epics/infrastructure_master.md`. **Target architecture:** Per-archetype × per-stage `(min_cpu, min_ram, min_disk, min_iops)` recommendations derived from `stage_profile.parquet` runs on real VMs.
 
 ## Execution-owner
 

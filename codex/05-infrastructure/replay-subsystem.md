@@ -45,7 +45,9 @@ don't know or care whether an event is replay or live — only the timestamps di
 the watermark KV — it does NOT emit the event. alerting-service must route `REPLAY_BACKSTOP_REACHED` to a `CRITICAL`
 alert + strategy-service manual-resume gate. This wiring is in Phase 7 scope but has not yet run in production. Until
 Phase 7 deploys, the event is emitted into the stream but no alerting consumer is hooked up. **Do NOT treat this as a
-silent production gap** — Phase 7 is on the pre-cutover critical path.
+silent production gap** — Phase 7 was on the pre-cutover critical path.
+
+> **[DELTA 2026-05-22]** **Current state:** `REPLAY_BACKSTOP_REACHED` event emission is shipped (UTL layer). Alerting-service consumer and per-venue `HistoricalWindowFetcher` implementations are PENDING (Phase 7 scope). Production replay VM deployment is PENDING. **Planned delta:** Phase 7 delivery tracked under `plans/epics/batch_live_symmetry_master.md`. **Target architecture:** Full alerting routing for `REPLAY_BACKSTOP_REACHED` + all per-venue fetchers + production replay VM fleet.
 
 ---
 

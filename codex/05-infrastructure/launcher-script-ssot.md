@@ -78,12 +78,14 @@ workspace-manifest pattern. Local launches assume `deployment-service` exists at
 `${WORKSPACE_ROOT}/deployment-service/scripts/vm/...`. CI / Cloud Run pods do NOT have sibling clones; they read from
 the tarball.
 
-### 4. Image (future, not yet shipped)
+### 4. Image (post-cutover — not yet shipped)
+
+> **[DELTA 2026-05-22]** **Current state:** Image-based launcher delivery is NOT shipped. VM tarball (`create-code-tarballs.sh` + `launch-*.sh`) is the live path for all launchers. **Planned delta:** Image-based launcher tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Deployment-api pulls + runs per-shard launch container from Artifact Registry / ECR rather than `gcloud compute instances create`.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in
 [`deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md); out of scope
-today.
+post-cutover.
 
 ## Adding a new launcher
 
