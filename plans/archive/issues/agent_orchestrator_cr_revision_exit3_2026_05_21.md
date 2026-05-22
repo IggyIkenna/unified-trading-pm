@@ -12,6 +12,12 @@ blocked_reason:
   exit(3) is transient or recurring"
 ---
 
+> **[ACKED-INTO-CODE]** Archived 2026-05-22. Root cause: `data/config/backlog.yaml` is gitignored (runtime artifact), so
+> it was absent from the container image. In `ORCHESTRATOR_MODE=live`, `load_backlog()` called `path.open()` on a
+> nonexistent file → `FileNotFoundError` → uvicorn lifespan startup failed → exit(3). Fix: `server/backlog.py` now
+> returns empty `Backlog()` when file is absent. Revision 00014 deployed successfully, `STATUS: True`. commit `d2e8354`
+> in agent-orchestrator.
+
 ## What I found
 
 Cloud Build job `62790111` built + pushed image `:uat` successfully. `gcloud run deploy` created revision
@@ -50,7 +56,10 @@ cleanly.
 ## Status update — 2026-05-22
 
 **BLOCKED-OPERATOR**: Cannot re-trigger Cloud Run deployment without GCP Console/CLI access. Operator must run:
+
 ```bash
 bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat --cloud
 ```
-Then check if the new revision starts cleanly (exit 0) or reproduces exit(3). If exit(3) recurs → file P0 bug in `plans/active/` with `parent_epic: orchestrator_master`. If resolved → archive this issue as ACKED-INTO-CODE.
+
+Then check if the new revision starts cleanly (exit 0) or reproduces exit(3). If exit(3) recurs → file P0 bug in
+`plans/active/` with `parent_epic: orchestrator_master`. If resolved → archive this issue as ACKED-INTO-CODE.
