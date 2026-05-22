@@ -1,7 +1,30 @@
+> **🟢 2026-05-22 ADDENDUM (Wave 3)** — after MDPS backfill verifies GREEN, run UAC QG broadening triage below.
+
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
 > §Slot 6 and the spawn prompt from operator. History below is audit-trail only.
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
+
+## [slot-1-main → slot-6] Wave 3 — UAC root-level QG broadening triage (0.5d)
+
+**Issue**: `plans/active/issues/uac_root_level_tests_preexisting_failures_2026_05_20.md`
+
+**Gate**: run only after MDPS backfill Wave 2 is done (this is post-backfill quality work).
+
+**Scope** (0.5d triage, 2-4d remediation):
+
+Run `PYTEST_UNIT_DIR="tests/" bash scripts/quality-gates.sh` in unified-api-contracts.
+Collect the 318 failures. Group into categories:
+
+1. **Sportsbook venues not yet scoped** (`test_venue_contract_coverage.py` failures for matchbook/manifold/etc.) — add `@pytest.mark.skip(reason="sportsbook scope: post-cutover")` to each test, or stub the schema module per plan.
+2. **DeFi key/parity gaps** (`test_venue_key_parity.py`) — compare VENUE_DATA_TYPE_CAPABILITIES vs expected_coverage. Fix entries that diverge. (This pairs well with the coverage gap work done 2026-05-22.)
+3. **Schema Any annotations** (`test_no_bare_any_in_normalised_models`) — add specific types.
+4. **Cassette parity** (coingecko, polymarket) — update cassette YAML.
+
+After each category fix: commit `fix(uac-tests): <category>`, QG green on that category, push.
+After all categories done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"tests/"`.
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-6 Wave3 DONE — UAC QG broadened at uac@<sha>` here when done.
 
 ## [slot-1-main → slot-6] 2026-05-22 — P1 Codex audit Phases 1+2 (P0 items first)
 
