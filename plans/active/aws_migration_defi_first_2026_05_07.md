@@ -218,9 +218,9 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       "Inline-string bucket-name audit (2026-05-08)" § 1.
 - [x] [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate AWS
       hardcodes. Same discipline. **DONE 2026-05-22** (slot 11): ~200 hits total; zero violations in May-23 critical
-      path. All hits are (a) multi-cloud-aware dispatch code, (b) test fixtures, (c) operator migration scripts, or
-      (d) env-var-driven AWS backends. 4 Wave-2 region hardcodes in `deployment-api/routes/monitor_scheduled.py`
-      (lines 327/422/460) + `monitor_live.py:54` — post-cutover scope. Findings in
+      path. All hits are (a) multi-cloud-aware dispatch code, (b) test fixtures, (c) operator migration scripts, or (d)
+      env-var-driven AWS backends. 4 Wave-2 region hardcodes in `deployment-api/routes/monitor_scheduled.py` (lines
+      327/422/460) + `monitor_live.py:54` — post-cutover scope. Findings in
       [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 6.
 - [x] [SCRIPT] P0. **`cloud-providers.yaml` parity check**: for every bucket key under `gcp.storage.*`, the same key
       MUST exist under `aws.storage.*`. Diff surfaces missing keys (e.g. `dex-pools`, `dex-swaps`, `evm-defi`,
@@ -514,8 +514,14 @@ UX).
       slot_3.md). (2) **BLOCKED-1 (GCP AR base image)**: risk-and-exposure-service + position-balance-monitor-service
       Dockerfiles use `unified-trading-services/unified-trading-services` base image which is "not found" in GCP AR;
       canonical is `unified-trading-library/unified-trading-library` per CLAUDE.md — awaiting operator confirmation.
-      **NEXT**: force-new-deployment on all ECS/App Runner services (with UTL fix), smoke `/health`; resolve BLOCKED-1
-      to complete risk+pbm ECR builds; operator to create execution-service SM secrets.
+      **2026-05-22 SESSION 2 FIXES** (slot 3): (a) App Runner IAM trust policy: added `build.apprunner.amazonaws.com` +
+      `tasks.apprunner.amazonaws.com` to trust for `uts-alerting-service-prod` + `uts-deployment-api-prod` IAM roles
+      (original only allowed ECS/EC2 → App Runner can't assume → CREATE_FAILED). Both services deleted + recreated. (b)
+      features-service ECS task def command fix: task def had empty command → Docker CMD `--help` → dispatcher exits
+      code 2 (requires `--feature-family`). New task def rev 2 adds
+      `--feature-family onchain --operation     compute --mode live --asset-group DEFI --feature-group ALL --start-date 2026-05-22 --end-date 2026-05-22`.
+      LiveHandler ignores CLI dates and uses `datetime.now()`. (c) Force-new-deployment strategy+features-service to
+      pick up UTL@a19888f5 (BLOCKED-2 fix image from CodeBuild rebuilt 08:56 UTC). SMOKE pending service startup.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
