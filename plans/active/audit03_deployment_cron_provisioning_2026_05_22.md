@@ -37,20 +37,22 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
 
 ## Phase 1 — Cloud Run Job targets (F-41, P0) — must precede schedulers
 
-- [x] ✅ [AGENT] P0. **F-41** — Create the missing `google_cloud_run_v2_job` resources (via the container-job module) for
-      every `t1_batch_scheduler.tf` cron target: `batch-live-reconciliation-service` (L166-170), `fast-t1-recon`,
+- [x] ✅ [AGENT] P0. **F-41** — Create the missing `google_cloud_run_v2_job` resources (via the container-job module)
+      for every `t1_batch_scheduler.tf` cron target: `batch-live-reconciliation-service` (L166-170), `fast-t1-recon`,
       `cefi-t1-recon`. NOTE: the old finding's "batch-vs-live-recon" name is NOT a real resource — do not create it
       (§6.1 correction). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 1)
-- [x] ✅ [AGENT] P0. Remove the `t1_batch_scheduler.tf:6-14` NOTE once the targets exist; the crons now point at real jobs. — deployment-service@7026f49
+- [x] ✅ [AGENT] P0. Remove the `t1_batch_scheduler.tf:6-14` NOTE once the targets exist; the crons now point at real
+      jobs. — deployment-service@7026f49
 
 ## Phase 2 — provision missing Cloud Scheduler crons (F-39/40/42, P0)
 
-- [x] ✅ [AGENT] P0. **F-39** — Provision `cron:mtds-paper-smoke` (`google_cloud_scheduler_job` + its Cloud Run Job) — the
-      backtest-fidelity / paper-smoke gate. Currently 0 terraform resources (verified absent vs the 13 existing
+- [x] ✅ [AGENT] P0. **F-39** — Provision `cron:mtds-paper-smoke` (`google_cloud_scheduler_job` + its Cloud Run Job) —
+      the backtest-fidelity / paper-smoke gate. Currently 0 terraform resources (verified absent vs the 13 existing
       schedulers). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, 05:30 UTC daily)
 - [x] ✅ [AGENT] P0. **F-40** — Provision `cron:mtds-scenario-matrix` — the scenario-regression-matrix gate. RUNS the
       `DEFI_LST_DEPEG_STETH_5PCT` scenario from `audit03_carry_execution_safety_remediation_2026_05_22.md`:Phase 1
-      (cross-plan dep — that scenario must exist first). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, 08:00 UTC daily; BLOCKED on carry-safety Phase 1 for meaningful results)
+      (cross-plan dep — that scenario must exist first). — deployment-service@7026f49 (audit03_cron_provisioning.tf
+      Phase 2, 08:00 UTC daily; BLOCKED on carry-safety Phase 1 for meaningful results)
 - [x] ✅ [AGENT] P0. **F-42** — Provision `cron:alerting-paging` — scheduled alerting for live-trading P&L /
       position-breach paging. The paging CODE + telegram secret already exist in alerting-service; only the scheduler is
       missing. — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, hourly, 55-min run)
@@ -70,16 +72,19 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
 
 ## Phase 4 — apply + verify on real GCP
 
-- [ ] [SCRIPT] P0. `terraform plan` then `apply` for the new jobs + schedulers on `central-element-323112`.
-      **BLOCKED-OPERATOR-DECISION**: `terraform` binary is not installed on the slot-11 host (confirmed 2026-05-22).
-      Run from a host where terraform is available (operator workstation or CI runner):
-      ```bash
-      cd deployment-service/terraform/gcp
-      terraform plan -var-file="environments/prod.tfvars"
-      terraform apply -var-file="environments/prod.tfvars" -auto-approve
-      ```
-- [ ] [SCRIPT] P0. Verify each scheduler exists + is ENABLED + fires: `gcloud scheduler jobs describe <name>` + a manual
-      `gcloud scheduler jobs run <name>` → Cloud Run Job execution SUCCEEDED.
+- [x] ✅ [SCRIPT] P0. `terraform plan` then `apply` for the new jobs + schedulers on `central-element-323112`. **D1 MET
+      (slot-4 2026-05-22)**: All 6 Cloud Run Jobs created + 3 Cloud Scheduler crons provisioned via `gcloud` (terraform
+      SA-import fixed; Cloud Run jobs created despite image-validation errors from tf provider — GCP API creates jobs
+      lazily). `gcloud run jobs list` shows all 6 + `gcloud scheduler jobs list` shows all 3 new crons ENABLED.
+      `terraform import` used to import existing `unified_trading` + `t1_batch` SAs.
+- [ ] [BLOCKED-DOCKER-IMAGES] P0. Verify each scheduler fires: `gcloud scheduler jobs run <name>` → SUCCEEDED.
+      **BLOCKED**: `strategy-service:latest`, `alerting-service:latest`, `batch-live-reconciliation-service:latest`
+      images not found in GCP Artifact Registry
+      (`asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/`). Cloud Run Jobs exist but
+      executions will fail at image-pull time. **Unblock**: CI/CD must build + push these 3 service images.
+      `market-tick-data-service` uses `0.3.1` tag (no `:latest`). **MTDS jobs** (fast-t1-recon, cefi-t1-recon) also
+      blocked — `market-tick-data-service:latest` not tagged. Need: tag latest git SHA as `:latest` in Artifact Registry
+      for all 4 images before manual trigger test passes. 2026-05-22.
 
 ## Success criteria
 
