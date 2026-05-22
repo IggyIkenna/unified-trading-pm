@@ -27,6 +27,10 @@ Per-plan: commit trivials → execute real items → QG if code → commit per s
 
 **Ack**: append `[2026-05-21 HH:MM UTC] slot-4 DONE — closed/archived N plans` here when done.
 
+**[2026-05-22] slot-4 DONE — all 7 closed/archived (3 were pre-archived; 4 archived in dispatch session). Codex
+alignment check (CLAUDE.md step 3, added 2026-05-22): gate_3_phantom + dex_perp have no Codex SSOTs; tradfi_ohlcv codex
+current; mock_data codex stale plan-ref fixed → PM@(this commit).**
+
 ---
 
 > **⚠️ PRIOR ENTRIES BELOW — audit trail only.**

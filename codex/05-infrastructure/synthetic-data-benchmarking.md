@@ -7,7 +7,7 @@ last_reviewed: 2026-05-17
 
 > **SSOT for the synthetic-data benchmark harness** — the generator contract, the per-stage profiler, the harness DAG,
 > the benchmark CLI / launcher, and the VM-shape recommendation matrix. Pre-cutover MVP per
-> `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` (Phase 7.A). Composes with
+> `plans/archive/2026_05/mock_data_pipeline_benchmarking_2026_05_10.md` (Phase 7.A — archived 2026-05-21). Composes with
 > [`runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) (VM-shape recommendations feed the data-pipeline
 > VM machine-type defaults) and
 > [`../06-coding-standards/performance-targets.md`](../06-coding-standards/performance-targets.md) (the per-stage
