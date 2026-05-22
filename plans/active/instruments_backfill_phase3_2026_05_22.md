@@ -61,9 +61,9 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 **Gate**: `sports_master` Phase 3 rename (data_available_at → available_at) shipped.
 
-- [ ] [SCRIPT] P0. **IS-3.1.Sports** — Launch instruments-service Sports live-activation VM per `instruments_master`
-      Phase F-Sports. Trigger-driven: daily fixture re-poll + season-roll + transfer-window + weather. Sources: af / fs
-      / sfi / us.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Launched `instr-backfill-sports` @ 34.146.140.6. 2020-06-01→2026-03-28 window.
+      MANIFEST_PER_VM_SHARDS=true. instruments-service@7d9a737 (both fixes). Deleted stale TERMINATED legacy VM first.
+      2026-05-22.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
       rename confirmed absent (no `data_available_at` stragglers).
 
