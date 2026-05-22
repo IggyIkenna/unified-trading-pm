@@ -155,3 +155,23 @@ Failures in local run (both pre-existing, not introduced by this service's code)
 `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`
 
 Status remains BLOCKED-CREDENTIALS-GHA until operator rotates the secret.
+
+---
+
+## GH_PAT rotation + retrigger — 2026-05-22
+
+**Actions taken**:
+
+1. `GH_PAT` secret on `IggyIkenna/trading-agent-service` rotated to real fine-grained PAT from
+   `.act-secrets` (`github_pat_11AJ7M73I...`) via `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service`.
+   Prior value was OAuth token (`gho_...`) set earlier in session — now replaced with correct fine-grained PAT.
+
+2. Post-PAT-fix investigation: a prior GHA run (26273454945, 07:01 UTC) failed with a NEW error:
+   `ImportError: cannot import name 'CanonicalPullRequest' from unified_api_contracts.canonical.domain.infrastructure`
+   in `cme_polymarket_link.py:18`. Root cause: that run cloned UAC at an intermediate bad state on
+   `live-defi-rollout`; current UAC HEAD (`46777f2e`) has correct `CanonicalQuestionGroup` import.
+
+3. Empty commit pushed to trading-agent-service (`3c596ba`) to trigger fresh run `26273958692` (in_progress as of
+   07:14 UTC). This run will clone UAC at `46777f2e` and should pass.
+
+**Expected outcome**: Run `26273958692` green → this issue → RESOLVED → archive as ACKED-INTO-CODE.
