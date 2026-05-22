@@ -97,27 +97,32 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [CODE] P0. **IS-3.1.pred-kwarg-fix** — Fixed `canonical_question_group` invalid kwarg in orchestrator.py:2376
       (Predictions path). instruments-service@7d9a737. Tarball rebuilt + uploaded to GCS @ IS@7d9a737.
 - [x] ✅ [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Full relaunch 6× CeFi VMs (both fixes IS@7d9a737). Full history:
-      `instr-backfill-cefi-1` @ 35.200.74.239 (2020-01-01→2022-06-30), `instr-backfill-cefi-2` @ 34.180.69.85
-      (2022-07-01→2024-12-31), `instr-backfill-cefi-3` @ 34.84.114.222 (2025-01-01→2026-02-28). Recent window:
-      `instr-backfill-cefi-1-20260522` @ 34.146.238.194, `instr-backfill-cefi-2-20260522` @ 34.180.105.8,
-      `instr-backfill-cefi-3-20260522` @ 35.221.121.77 (all 2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+      `instr-backfill-cefi-1` @ 35.200.74.239 (2020-01-01→2022-06-30) RUNNING, `instr-backfill-cefi-2` @ 34.180.69.85
+      (2022-07-01→2024-12-31) RUNNING, `instr-backfill-cefi-3` — **COMPLETED 07:25 UTC exit_code=0**
+      (2025-01-01→2026-02-28). Recent window: `instr-backfill-cefi-1-20260522` — **COMPLETED 06:56 UTC exit_code=0**,
+      `instr-backfill-cefi-2-20260522` — **COMPLETED 06:56 UTC exit_code=0**, `instr-backfill-cefi-3-20260522` —
+      **COMPLETED 06:57 UTC exit_code=0** (all 2026-03-01→2026-05-22). 2026-05-22.
 - [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Full relaunch 2× TradFi VMs (both fixes IS@7d9a737). Full history:
-      `instr-backfill-tradfi` @ 34.146.133.70 (2020-01-01→2026-02-28). Recent window: `instr-backfill-tradfi-20260522` @
-      34.153.210.28 (2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+      `instr-backfill-tradfi` @ 34.146.133.70 (2020-01-01→2026-02-28) RUNNING. Recent window:
+      `instr-backfill-tradfi-20260522` — **COMPLETED 06:58 UTC exit_code=0** (2026-03-01→2026-05-22). 2026-05-22.
 - [x] ✅ [SCRIPT] P0. **IS-3.1.DeFi-Relaunch** — Full relaunch 2× DeFi VMs (both fixes IS@7d9a737). Full history:
-      `instr-backfill-defi` @ 34.104.128.163 (2020-01-01→2026-02-28). Recent window: `instr-backfill-defi-20260522` @
-      35.200.75.132 (2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+      `instr-backfill-defi` @ 34.104.128.163 (2020-01-01→2026-02-28) RUNNING. Recent window:
+      `instr-backfill-defi-20260522` — **COMPLETED 07:09 UTC exit_code=0** (2026-03-01→2026-05-22). 2026-05-22.
 - [x] ✅ [SCRIPT] P0. **IS-3.1.Pred-Relaunch** — Full relaunch 2× Pred VMs (both fixes IS@7d9a737, incl.
-      canonical_question_group fix). Full history: `instr-backfill-pred` @ 34.146.237.52 (2020-01-01→2026-02-28). Recent
-      window: `instr-backfill-pred-20260522` @ 34.146.5.36 (2026-03-01→2026-05-22). Kalshi BLOCKED-CREDENTIALS. All
-      RUNNING. 2026-05-22.
+      canonical_question_group fix). Full history: `instr-backfill-pred` @ 34.146.237.52 (2020-01-01→2026-02-28)
+      RUNNING. Recent window: `instr-backfill-pred-20260522` — **COMPLETED 07:26 UTC exit_code=0**
+      (2026-03-01→2026-05-22). Kalshi BLOCKED-CREDENTIALS. 2026-05-22.
 
 ## Temporary states + their canonical follow-up plans
 
-- Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
-  directly.
-- All 12 IS VMs RUNNING 2026-05-22 with instruments-service@7d9a737 (both chain fix + pred-kwarg fix). T+10min verify
-  pending.
+- Sports IS VM `instr-backfill-sports` booted at 07:31 UTC 2026-05-22, setting up venv (new instance at 34.84.128.69).
+  Sports GCS migration (`data_available_at` → `available_at`) incomplete (6/30 sample still old column) — pending re-run
+  on sports VM once venv ready. Track in `sports_master` epic.
+- Full-history IS VMs still running: `instr-backfill-cefi-1` (2020→2022), `instr-backfill-cefi-2` (2022→2024),
+  `instr-backfill-defi` (2020→2026-02), `instr-backfill-tradfi` (2020→2026-02), `instr-backfill-pred` (2020→2026-02).
+  Recent-window VMs all completed exit_code=0 (see above).
+- `deployment-service@7d6978b` startup script fix (VM_GAS_FEE_CHAINS unbound variable) — all future VMs use fixed
+  script; MTDS-3.2.C-GAP gap-fill VMs relaunched with fix.
 
 ## IS prd bucket migration (flat→prd) — slot 5, 2026-05-22
 

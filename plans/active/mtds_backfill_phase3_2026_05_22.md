@@ -75,14 +75,15 @@ IS that plan.
       relaunch of `mtds-backfill-defi-2026-05-22b` (35.221.121.77) confirmed this: VM produces 0 captures (correct
       architectural behavior — all 99 DeFi venues correctly skip in download mode). VM deleted 2026-05-22.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C-GAP** — DeFi data gap: all 3 datasets (lst_rates, lending_indices, dex_pools)
-      stop at **2026-04-14** (38-day gap, not 5-6 days). **CORRECTION ROUND 2 (2026-05-22 slot-7)**: (1)
-      `mtds-lst-rates-20260522-081259` @ 34.84.35.94 RUNNING, `VM_OPERATION=collect-lst-rates`, 2026-04-15→2026-05-22.
-      (2) `mtds-lending-indices-20260522-060759` had wrong start date (2026-05-17). Deleted. Relaunched as
-      `mtds-lending-indices-20260522-082710` @ 35.200.55.185, `VM_OPERATION=collect-lending-indices`,
-      **2026-04-15→2026-05-22**. (3) `mtds-dex-pools-backfill` had wrong start date (2026-05-17). Deleted. Relaunched @
-      136.110.98.16, `VM_OPERATION=collect-dex-pools`, **2026-04-15→2026-05-22**. All 3 VMs RUNNING. T+10 pending.
-      **CONFIRMED COMPLETE (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices
-      2022-01-01→2026-05-22 continuous ✅; dex-pools IN PROGRESS (at ~2026-04-19, target 2026-05-22).
+      stop at **2026-04-14** (38-day gap, not 5-6 days). **CORRECTION ROUND 2 (slot-7)**: startup script bug blocked all 3
+      VMs (`VM_GAS_FEE_CHAINS: unbound variable` at line 958 of setup-data-pipeline-vm.sh — `set -u` fires when metadata
+      key absent). Fix: `deployment-service@7d6978b`. VMs relaunched with fixed script: (1)
+      `mtds-lst-rates-20260522-082742` — **COMPLETED 07:31 UTC exit_code=0**, 53 per-VM shard entries,
+      2026-04-15→2026-05-22. (2) `mtds-lending-indices-20260522-082740` — **COMPLETED 07:32 UTC exit_code=0**, 7364
+      records (aave_v3/compound_v3 across 8 chains), 52 per-VM shard entries, 2026-04-15→2026-05-22. (3)
+      `mtds-dex-pools-backfill` @ 136.110.98.16 — RUNNING (at ~2026-04-19 as of slot-6 confirm). **CONFIRMED
+      (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22
+      continuous ✅; dex-pools IN PROGRESS (target 2026-05-22).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
       for 2026-05-17, 2026-05-19→2026-05-22 (5 days). Launched `mtds-vault-share-price-20260522-083932` @
       35.200.109.205, VM_OPERATION=collect-vault-share-price, **2026-05-17→2026-05-22**. RUNNING. 2026-05-22.
@@ -90,10 +91,9 @@ IS that plan.
       buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
-      2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, currently ~2026-04-19, target
-      2026-05-22); (4) `market-data-tick-defi-central-element-323112` vault_share_price gap fixed —
-      mtds-vault-share-price-20260522-083932 RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22
-      verification.
+      2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, target 2026-05-22); (4)
+      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed — mtds-vault-share-price-20260522-083932
+      RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22 verification.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
