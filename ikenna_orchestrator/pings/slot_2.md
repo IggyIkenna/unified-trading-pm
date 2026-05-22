@@ -1,31 +1,41 @@
 ## [slot-1-main → slot-2] 2026-05-22 — CME Polymarket arb + config grid + d8 perf
 
-**Plan refs**: `cme_polymarket_arb_2026_05_08.md` + `config_grid_archetype_extend_2026_05_20.md` + `d8_perf_upgrade_2026_05_20.md`
+**Plan refs**: `cme_polymarket_arb_2026_05_08.md` + `config_grid_archetype_extend_2026_05_20.md` +
+`d8_perf_upgrade_2026_05_20.md`
 
-**Why**: Slot 2 free after Wave 3.S. CME Polymarket arb is 66% done with Phases 2-5 remaining — concrete implementation work. Config grid extension adds 4 archetype families to the backtest script. D8 perf is P2 but quick.
+**Why**: Slot 2 free after Wave 3.S. CME Polymarket arb is 66% done with Phases 2-5 remaining — concrete implementation
+work. Config grid extension adds 4 archetype families to the backtest script. D8 perf is P2 but quick.
 
 **Your scope**:
 
 **Task 1: `cme_polymarket_arb_2026_05_08.md` Phases 2-5** (read plan first for detail):
+
 - Phase 2: `linked_canonical_question_group` cross-link field on EVENT_CONTRACT InstrumentRecord in instruments-service
 - Phase 3: MTDS binary-outcome shard atom for EVENT_CONTRACT data_type (per plan § Phase 3)
 - Phase 4: instruments-service per-cluster expiry for daily binaries (daily ECBTC contract rolling)
-- Phase 5: strategy-service `ARBITRAGE_CROSS_DOMAIN_EVENT` archetype — cross-venue arb pairs using Polymarket vs CME spreads
+- Phase 5: strategy-service `ARBITRAGE_CROSS_DOMAIN_EVENT` archetype — cross-venue arb pairs using Polymarket vs CME
+  spreads
 - QG each repo. Push + flip per phase.
 
-**Task 2: `config_grid_archetype_extend_2026_05_20.md`** — extend `strategy-service/scripts/run_2yr_config_grid_backtest.py`:
-- Add `_DIMENSIONS_BY_ARCHETYPE` entries for: `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED`, `ARBITRAGE_CROSS_DOMAIN_EVENT`
+**Task 2: `config_grid_archetype_extend_2026_05_20.md`** — extend
+`strategy-service/scripts/run_2yr_config_grid_backtest.py`:
+
+- Add `_DIMENSIONS_BY_ARCHETYPE` entries for: `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`,
+  `MARKET_MAKING_EVENT_SETTLED`, `ARBITRAGE_CROSS_DOMAIN_EVENT`
 - Add `_dim_kwargs` + `_build_config_grid` branches per family
 - Dimension choices per plan body; use coarse/medium/fine GridDimension tuples
 - QG strategy-service; push + flip.
 
 **Task 3: `d8_perf_upgrade_2026_05_20.md`** — implement hot-path improvements per A1 audit findings:
-- Replace inline f-string bucket construction in the 759 `resolve_bucket_name` violations (top-offending files only — not a whole-corpus sweep)
+
+- Replace inline f-string bucket construction in the 759 `resolve_bucket_name` violations (top-offending files only —
+  not a whole-corpus sweep)
 - Read plan for specific file list from `codified_shape_compliance_2026_05_20.csv`; fix top 5-10 files
 
 **Trivial sweep first on each plan**: mark [x] anything with existing SHA evidence.
 
-**Ack**: append `[2026-05-22 HH:MM UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8 at <shas>` here when done.
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8 at <shas>` here when
+done.
 
 ---
 
@@ -43,6 +53,27 @@
 SHA: PM@662c5ebc4
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3.S / Docs)
+
+---
+
+## [slot-2] 2026-05-22 — Wave 1 DONE: d8 P3 + cme-arb Phases 2+5
+
+[2026-05-22 UTC] slot-2 DONE — d8 Phase 3 + CME×Polymarket Phases 2 & 5 shipped.
+
+**d8 Phase 3** — all 29 remaining MTDS adapters now use `classify_venue_error` + `ADAPTER_FETCH_FAILED` (DeFi LST + DeFi
+other + sports + prediction + tradfi). MTDS@83f2ac50. QG green (92s). Plan flipped: PM@3fe7dae5d.
+
+**cme-arb Phase 2 (PARTIAL)** — `cme_polymarket_link.py` in UAC crosscutting: ECES→SPX_UP_DOWN_DAILY +
+ECBTC→BTC_UP_DOWN_DAILY. 7 remaining roots blocked on predictions_master Phase 5. UAC@77facd65. QG green (273s). Plan
+flipped: PM@c49b40cde.
+
+**cme-arb Phase 5** — `ArbitrageCrossDomainEventEngine` in strategy-service: LEADER_HEDGE binary arb,
+TIER_STABLE_STRUCTURAL Kelly, GREENFIELD_ARCHETYPES, 3 target_universe seed rows. strategy-service@2c59f2ce. QG all
+gates green. Plan flipped: PM@419305f03.
+
+**config_grid_archetype_extend**: BLOCKED-OPERATOR-DECISION — dimension names in plan don't match actual engine params.
+
+Plan refs: `d8_perf_upgrade_2026_05_20.md` + `cme_polymarket_arb_2026_05_08.md`
 
 ---
 
