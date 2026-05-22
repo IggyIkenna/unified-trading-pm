@@ -50,9 +50,12 @@ before Phase 7 grows the v<8 debt.
 Replaces stale `defi_upstream_46day_full_backfill_2026_05_16.md` reference (that file was never created). This section
 IS that plan.
 
-- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C** — Launched `mtds-backfill-defi-2026-05-22` VM (e2-highmem-4,
-      asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Pyth/Chainlink/DEX/LST, prod). VM RUNNING @ 34.180.69.85.
-      2026-05-22.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C** — Relaunched `mtds-backfill-defi-2026-05-22b` VM (e2-highmem-4,
+      asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Pyth/Chainlink/DEX/LST, prod). VM RUNNING @ 35.221.121.77.
+      Fix: UAC@13a870ef — VENUES_BY_ASSET_GROUP["defi"] now uses ALL_DEFI_VENUES (97 venues) instead of MTDS_DEFI_VENUES
+      (51 venues); VENUE_TO_ASSET_GROUP now maps all IS-dependent DeFi venues to "defi" so
+      \_check_instruments_available() reads from instruments-store-defi-\* instead of defaulting to cefi bucket.
+      Previous VM (34.180.69.85) produced 0 captures across all 56 IS-dependent venues. 2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-prd` partition count ≥ flat; 4-pillar validation; manifest
       100% v8; DeFi archetype `carry_staked_basis` data cells GREEN.
 
