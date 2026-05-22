@@ -245,24 +245,16 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
    row count IF the downstream consumer needs the rows directly — but the manifest reason is still the gate and the
    parquet schema is honest about its short row count, no NaN-fill to "complete" the day.)
 
-> **[DELTA 2026-05-22 — pending writegate codex items]** **Current state:** Reason taxonomy above covers 30 reasons
-> shipped to date. Two pending `[DOCS] P0` items in `writegate_honest_coverage_endtoend_2026_05_06.md` that are NOT yet
-> reflected here:
+> **[DELTA 2026-05-22 — codex audit status]** **Current state:** 31-reason taxonomy table above + per-source sports
+> coverage rules (Wave 3.S, `§ Per-source sports coverage rules`) + 4-state consumer-class table
+> (`§ Per-service consumer-class — 4-state`) + per-reason-group consumer policy quick-reference
+> (`§ Per-reason-group → consumer policy`) all shipped 2026-05-22. One remaining pending item:
 >
-> 1. **Per-source-rules table + typed-reason-taxonomy expansion process** (Phase 3.D.5 Wave 3.S — writegate plan line
->    2656): sports per-source rules (`is_expected_for_source()`, `UNDERSTAT_COVERED_LEAGUES`, footystats season status,
->    transfer-window rules) need a dedicated per-asset-group routing table in this doc. Blocked on sports v2
->    enumerator + prediction v2 enumerator completion.
-> 2. **`expected_unattempted` cascade-propagation contract** (Phase 3.D.3 — writegate plan line 2554): when upstream
->    manifest row is `expected_unattempted`, every downstream consumer in the per-service consumer-class audit table
->    needs an explicit fourth column entry (current table only handles `empty_confirmed[EXPECTED_*]`,
->    `empty_confirmed[SOURCE_RETURNED_ZERO]`, and `attempted_failed`).
-> 3. **`DATA_QUALITY_SUSPECTED_GAP` reason** (writegate plan Phase MDPS liquidity baseline, line 4191):
->    `record_failed(reason=DATA_QUALITY_SUSPECTED_GAP)` when MDPS tick-rate < 20% of baseline. UAC `RecordFailedReason`
->    enum addition pending. **Planned delta:** `writegate_honest_coverage_endtoend_2026_05_06.md` will deliver all
->    three; this doc will be updated at completion per plan Codex SSOT update contract. **Target architecture:** Table
->    covers all 33+ reason codes; per-asset-group routing quick-reference extended for sports sub-reasons;
->    consumer-class table has 4-column coverage including `expected_unattempted`.
+> - **`DATA_QUALITY_SUSPECTED_GAP` reason** (writegate plan Phase MDPS liquidity baseline, line ~4191):
+>   `record_failed(reason=DATA_QUALITY_SUSPECTED_GAP)` when MDPS tick-rate < 20% of baseline. UAC `RecordFailedReason`
+>   enum addition pending. Add a row to the reason taxonomy table when UAC lands this reason.
+>
+> All other pending items from the 2026-05-22 morning delta note are now ✅ delivered.
 
 ---
 
