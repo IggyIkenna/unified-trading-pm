@@ -264,10 +264,40 @@ Standard delta box:
 
 ---
 
+## Phase 5 — Extended P2 Sweep (operator-directed 2026-05-22)
+
+_Operator: "do everything all of it now." Scope: all 277 remaining stale-marker docs across every codex section._
+
+- [x] [AGENTS] P2. `09-strategy/_archived_pre_v2/` (34 files) — SUPERSEDED banners added to all 34 docs — **DONE
+      2026-05-22** PM@8ab56fdd2 (Agent A)
+- [x] [AGENTS] P2. `09-strategy/architecture-v2/` + root (58 files) — delta boxes + post-May-23 cleanup — **DONE
+      2026-05-22**: majority of files fixed by other agents' bundled commits; 3 remaining strategy files (block-list,
+      category-instrument-coverage, operational/prediction-markets) addressed inline with representative-future-service
+      delta boxes (PM@37c575bde)
+- [x] [AGENTS] P2. `04-architecture/` (41 files) — delta boxes + dead SUPERSEDED link in strategy-ensemble-topology —
+      **DONE 2026-05-22** PM@ff86cd10d (Agent C)
+- [x] [AGENTS] P2. `02-data/` + `02-venues/` (32 files) — delta boxes + dead SUPERSEDED links in
+      manifest-migration-coordination, honest-absence, availability-manifest — **DONE 2026-05-22** PM@c42aa922c (Agent
+      D)
+- [x] [AGENTS] P2. `05-infrastructure/` (29 files) — delta boxes + custody/consolidator state — **DONE 2026-05-22**
+      PM@ef5960f51 (Agent E)
+- [x] [AGENTS] P2. `14-customer-journeys/` (28 files) — delta boxes — **DONE 2026-05-22** PM@c8edcd9dd (Agent F)
+- [x] [AGENTS] P2. `06-coding-standards/` + `08-workflows/` + `15-runbooks/` + `11-project-management/` (33 files) —
+      delta boxes — **DONE 2026-05-22** PM@c241a1c2b (Agent G)
+- [x] [AGENTS] P2. `10-audit/` + `07-security/` + `01-domain/` + `00-getting-started/` + `12-agent-workflow/` +
+      `16-strategy-playbooks/` (18 files) — delta boxes + historical snapshot notes — **DONE 2026-05-22** PM@1ca66243b
+      (Agent H)
+- [x] [INLINE] P2. Final 3 post-May-23 markers fixed: cloud-agnostic-build-lineage.md, stage-3e-refactor-plan.md,
+      availability-manifest-and-data-status.md — **DONE 2026-05-22** PM@37c575bde (bundled). `post-May-23` count = **0**
+      (verified by grep scan).
+
+---
+
 ## Full Execution Criterion
 
-1. Broken-ref count = 0 (script verified)
-2. Every active plan with "Codex SSOT" section classified DONE / PARTIAL+delta-box / DEFERRED+named-plan
-3. Every live L0-L2 epic has at least one owned codex SSOT pointer
-4. `plans/audit/results/codex_plan_diff_scan_2026_05_22.md` with before/after counts published
-5. `codex/11-project-management/codex-audit-playbook.md` stub written
+1. ✅ Broken-ref count = 0 (script verified)
+2. ✅ Every active plan with "Codex SSOT" section classified DONE / PARTIAL+delta-box / DEFERRED+named-plan
+3. ✅ Every live L0-L2 epic has at least one owned codex SSOT pointer
+4. ✅ `plans/audit/results/codex_plan_diff_scan_2026_05_22.md` with before/after counts published
+5. ✅ `codex/11-project-management/codex-audit-playbook.md` stub written
+6. ✅ All 277 stale-marker docs annotated (Phase 5 P2 sweep) — `post-May-23` count = 0 workspace-wide
