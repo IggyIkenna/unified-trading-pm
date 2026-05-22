@@ -8,6 +8,12 @@ priority: P2
 status: active
 ---
 
+> **[ACKED-INTO-PLAN]** Archived 2026-05-22. 11 F401 violations tracked as P3 todos in
+> `plans/active/strategy_execution_contract_remediation_2026_05_20.md` (execution-service),
+> `plans/active/instruments_backfill_phase3_2026_05_22.md` (instruments-service), and
+> `plans/active/mtds_backfill_phase3_2026_05_22.md` (market-tick-data-service). Low-priority lint debt.
+> deployment-service re-exports intentional — do not fix.
+
 ## What I found
 
 Ruff F401 scan across 12 active Python service repos (2026-05-18). All violations are `[*]` (auto-fixable by ruff).
