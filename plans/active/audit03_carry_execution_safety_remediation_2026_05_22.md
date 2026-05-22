@@ -75,8 +75,11 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
 
 - [x] ✅ [AGENT] P0. **F-11** — Add per-venue wrap + banned-combo guard at `_build_legs` (stETH→OKX,
       wstETH→Deribit/Bybit) — do NOT rely solely on config + the EXE-07 preprocessor. `_derive_structure` already blocks
-      stETH→OKX via `accepted_perp_collateral`; close the wstETH→Deribit/Bybit hole. — strategy-service@2741643f +
-      dfe9d231 (ALLOWED_CHAINS public alias + 16-test audit03 suite)
+      stETH→OKX via `accepted_perp_collateral`; close the wstETH→Deribit/Bybit hole. — strategy-service@dfe9d231
+      (initial needs_wrapping guard; caught wstETH→DERIBIT but MISSED wstETH→BYBIT because needs_wrapping returns False
+      for BYBIT — BYBIT accepts wstETH but its margin engine calibrates on rebasing stETH). Hole closed at
+      strategy-service@33b7168e: replaced needs_wrapping() with \_BANNED_LST_PERP_COMBOS frozenset explicitly including
+      (wstETH, BYBIT). Test corrected: wsteth_bybit_valid_no_raise → wsteth_bybit_banned_raises.
 - [x] ✅ [AGENT] P1. **F-10** — Add the `− fees` term to `net_carry` (staked_basis.py:254) per codex
       `carry-staked-basis.md:53` (`net_apy_bps = staking_apy_total + funding_apy − fees`). Removes the optimistic entry
       threshold. — strategy-service@2741643f + dfe9d231
@@ -90,8 +93,8 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
       / zero slots" claim (L128-131), which contradicts the 6 matrix pairs / 4 live carry slots. —
       strategy-service@2741643f + dfe9d231
 - [x] ✅ [SCRIPT] P0. strategy-service quality-gates Pass 1 GREEN + unit tests for the new guards + the corrected
-      `net_carry`. — exit 0, 4075 passed; 10 tests test_audit03_carry_engine_guards.py + 16 tests
-      test_carry_staked_basis_audit03.py (strategy-service@dfe9d231)
+      `net_carry`. — exit 0, 4077 passed; 17 tests test_audit03_carry_engine_guards.py (3 new BYBIT tests) + 16 tests
+      test_carry_staked_basis_audit03.py (needs_wrapping mock removed) (strategy-service@33b7168e)
 
 ## Phase 4 — scenario validation (F-33 closure) — gated on Phase 1-3
 
