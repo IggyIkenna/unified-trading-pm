@@ -3,6 +3,7 @@ name: audit03_drift_remediation_backlog
 title: "AUDIT-03 remediation — confirmed P1/P2 drift backlog (non-P0, non-decision)"
 type: active
 parent_epic: defi_master
+assigned_vm: vm-defi
 estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
@@ -97,6 +98,11 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
       `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting.
+- [ ] [AGENT] P3. **NICE-TO-HAVE (risk review)** — Add a dedicated LST-depeg `CircuitBreakerId` ladder mirroring the
+      `STABLECOIN_DEPEG_{WARNING,SMALL,MODERATE,CATASTROPHIC}` tiers. The shipped `DEFI_LST_DEPEG_STETH_5PCT` scenario
+      (carry plan F-33, uac@56594ab3) trips the generic `DRAWDOWN_DAILY_BPS` breaker; stablecoins got their own depeg
+      ladder, LSTs should too for tiered (warn/scale-down/cancel/kill) response. Provenance: AUDIT-03 F-33 inline
+      execution 2026-05-22.
 
 ## Success criteria
 

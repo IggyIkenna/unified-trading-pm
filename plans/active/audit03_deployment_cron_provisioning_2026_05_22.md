@@ -3,6 +3,7 @@ name: audit03_deployment_cron_provisioning
 title: "AUDIT-03 remediation — deployment cron + cutover-gate provisioning (May-23 P0)"
 type: active
 parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2.0
@@ -64,11 +65,12 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
       `_execute_instruction()` + `run_engine()` init block; added `"solana-devnet"` to argparse choices; updated
       `run-paper.sh` help text + summary banner with SOLANA_WALLET_PRIVATE_KEY warning. Signs but does NOT broadcast
       (`paper_trade=True`). — e2e-testing@aee5b38
-- [x] ✅ [AGENT] P1. **F-44** — Add a Playwright e2e for the `ManualTradeGateDialog` approve / deny / timeout→unhold flow
-      in `unified-trading-system-ui/tests/e2e/`. 4 tests: approve (card disappears + empty state), deny (same), timeout→
-      unhold (poll drains queue without user action), pre-trade preview fields (margin/pos-limit/worst-case-loss). Uses
-      page.route() mocking — no backend required. Pre-existing TS typecheck failures in CLIPreview.tsx + api-generated.ts
-      not introduced by this commit (foreign-owned). — unified-trading-system-ui@2febe52a
+- [x] ✅ [AGENT] P1. **F-44** — Add a Playwright e2e for the `ManualTradeGateDialog` approve / deny / timeout→unhold
+      flow in `unified-trading-system-ui/tests/e2e/`. 4 tests: approve (card disappears + empty state), deny (same),
+      timeout→ unhold (poll drains queue without user action), pre-trade preview fields
+      (margin/pos-limit/worst-case-loss). Uses page.route() mocking — no backend required. Pre-existing TS typecheck
+      failures in CLIPreview.tsx + api-generated.ts not introduced by this commit (foreign-owned). —
+      unified-trading-system-ui@2febe52a
 
 ## Phase 4 — apply + verify on real GCP
 

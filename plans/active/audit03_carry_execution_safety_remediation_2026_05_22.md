@@ -3,6 +3,7 @@ name: audit03_carry_execution_safety_remediation
 title: "AUDIT-03 remediation — carry_staked_basis execution & risk safety (May-23 P0)"
 type: active
 parent_epic: defi_master
+assigned_vm: vm-defi
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
