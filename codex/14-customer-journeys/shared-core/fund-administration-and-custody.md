@@ -64,7 +64,14 @@ Same mechanic, two asset-class tracks:
   investor AML/KYC.
 - This is the track the `fund-administration-service` repo integrates against in Phase 6+.
 
-**TradFi-denominated pooled funds** (future engagement — not yet live):
+**TradFi-denominated pooled funds** (post-cutover engagement — not yet live):
+
+> **[DELTA 2026-05-22]** **Current state:** TradFi-denominated pooled fund structures are not live. May-23 cutover ships
+> crypto-only pooled fund support (Copper custody + POD administration). TradFi pooled fund structure (SS&C / Citco /
+> Apex fund admin + TradFi prime-broker custody) is a future mandate shape — no engagement is currently scoped.
+> **Planned delta:** TradFi pooled fund onboarding is driven by the first TradFi IM mandate; fund admin and custodian
+> selection happens at that engagement. **Target:** post-cutover, tied to CME S&P co-invest mandate (Sept 2026) or
+> equivalent TradFi Pooled engagement.
 
 - Assets at a qualified TradFi custody bank (prime broker / regulated custodian — specific entity TBD per mandate).
 - Fund administrator is a traditional regulated fund-admin firm (SS&C / Citco / Apex / equivalent — TBD per mandate).
