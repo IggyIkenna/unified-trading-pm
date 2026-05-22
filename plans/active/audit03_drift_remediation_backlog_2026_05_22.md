@@ -41,9 +41,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [x] ✅ [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
       `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events. —
       strategy-service@1d55f235; FUNDING/FUNDING_8H/FUNDING_PAYMENT fills accumulate signed delta_amount per instrument
-      into funding_pnl_total; _compute_pnl_components reads accumulated total (honest 0 when no funding events); synthetic
-      surrogate removed; 3 new tests (zero-without-events, FUNDING accumulation, FUNDING_8H settlement_type) + 1 renamed;
-      11/11 tests pass.
+      into funding_pnl_total; \_compute_pnl_components reads accumulated total (honest 0 when no funding events);
+      synthetic surrogate removed; 3 new tests (zero-without-events, FUNDING accumulation, FUNDING_8H settlement_type) +
+      1 renamed; 11/11 tests pass.
 - [x] ✅ [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
       (`pnl_input_builder.py:142-151`); fail-fast or source the native-token price honestly when the gas parquet lacks
       `native_token_price_usd`. — strategy-service@962ca47d \_compute_gas_cost_usd now raises ValueError on missing
@@ -127,15 +127,17 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       section added to defi-execution-overview.md.
 - [x] ✅ [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
-      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting. —
-      N/A: `.extra/` directories were never tracked in git (features-service git log confirms no history under
-      `.extra/*`); directories are absent from the live workspace; nothing deploys them. §6.1 REFUTED stands — live
-      path in features-service/onchain reads capture_status correctly; no deletion needed.
-- [ ] [AGENT] P3. **NICE-TO-HAVE (risk review)** — Add a dedicated LST-depeg `CircuitBreakerId` ladder mirroring the
+      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting. — N/A:
+      `.extra/` directories were never tracked in git (features-service git log confirms no history under `.extra/*`);
+      directories are absent from the live workspace; nothing deploys them. §6.1 REFUTED stands — live path in
+      features-service/onchain reads capture_status correctly; no deletion needed.
+- [x] ✅ [AGENT] P3. **NICE-TO-HAVE (risk review)** — Add a dedicated LST-depeg `CircuitBreakerId` ladder mirroring the
       `STABLECOIN_DEPEG_{WARNING,SMALL,MODERATE,CATASTROPHIC}` tiers. The shipped `DEFI_LST_DEPEG_STETH_5PCT` scenario
       (carry plan F-33, uac@56594ab3) trips the generic `DRAWDOWN_DAILY_BPS` breaker; stablecoins got their own depeg
       ladder, LSTs should too for tiered (warn/scale-down/cancel/kill) response. Provenance: AUDIT-03 F-33 inline
-      execution 2026-05-22.
+      execution 2026-05-22. — uac@7ce69f3b (4 CircuitBreakerId members: WARNING/SMALL/MODERATE/CATASTROPHIC at
+      100/300/500/1500bps); strategy-service@ba290944 (check_lst_depeg() + DefiRiskExtra.lst_prices + 8 new tests + 8
+      stale patch fixes).
 
 ## Success criteria
 
