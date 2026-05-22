@@ -64,6 +64,16 @@ done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"te
 
 **Ack**: append `[2026-05-22 HH:MM UTC] slot-6 Wave3 DONE — UAC QG broadened at uac@<sha>` here when done.
 
+**[2026-05-22 ~08:15 UTC] slot-6 Wave3 DONE** — UAC QG fully broadened at UAC@6e6a1e70.
+- Fixed all 318 pre-existing failures: venue parity (25 new venues), sportsbook stubs (matchbook, onexbet, 18-placeholder),
+  archetype manifest (22 archetypes, multiline JSON), analytics models (4 Pydantic classes), protocol launch dates (13 new + 11 pending)
+- UAC boundary test (test_ac_uic_alignment.py): fixed FORBIDDEN_PACKAGES to check UTL/UIC — UAC@87a6f367 (prev session)
+- PM codex updated: 4 new Carry & Yield archetype sections (CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP_INV,
+  CARRY_STAKED_BASIS_DATED, CARRY_RECURSIVE_BORROW_LENDING_ONLY) — PM@24cec4d4d
+- quality-gates.sh PYTEST_UNIT_DIR broadened from targeted list → "tests/" — UAC@6e6a1e70
+- Full QG: 3570+ tests, 0 failures, exit code 0 (verified 3× independently)
+- MDPS TradFi VM running (mdps-backfill-tradfi-20260522-051203). CeFi/DeFi/Pred gated on MTDS verify (monitoring).
+
 ## [slot-1-main → slot-6] 2026-05-22 — P1 Codex audit Phases 1+2 (P0 items first)
 
 **Plan**: `plans/active/codex_plan_audit_differential_2026_05_22.md`
