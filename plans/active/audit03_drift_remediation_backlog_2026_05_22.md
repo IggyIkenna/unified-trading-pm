@@ -42,9 +42,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 2 — bucket / URL / vocab SSOT hardening
 
-- [ ] [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
+- [x] ✅ [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
       `perp_funding_handler.py`) behind the instruments-service SSOT (`get_rpc_url()` / IS-first). Graph + Tardis are
-      data-provider infra (exempt). QG STEP 5.70 should flag these.
+      data-provider infra (exempt). QG STEP 5.70 should flag these. — uac@f85f7d3 new cefi_perp_venue_endpoints.py + __init__.py exports; mtds@f6fd280 perp_funding_handler imports CEFI_PERP_VENUE_API_ENDPOINTS; pm@82c77304 QG script extended with CeFi perp URL patterns. Also fixed missing get_mvp_databento_symbols_for_venue export (was in tradfi_instrument_universe.py but not re-exported, broke test_databento_path_streaming).
 - [x] ✅ [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py` instead
       of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1 correction). — execution-service@769252a8; UAC QuoterV2 added at uac@1b2cfe8; UniswapConnector class constants now use get_uniswap_swap_router/quoter_v2/factory.
 - [ ] [AGENT] P1. **F-37b** (narrowed + relocated) — Genuine residual = the
