@@ -52,14 +52,21 @@ before Phase 7 grows the v<8 debt.
 - [x] ✅ **MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — 63 tradfi-bf VMs. CME + NASDAQ + NYSE. 214,586 rows. 98.4% capture
       rate. See freeze plan MTDS-3.2.B for full evidence. ICE pending operator decision (`tradfi-bf-ice-ohlcv-1m.sh`
       scaffolding shipped, `ICE_ROOTS=()`).
-- [ ] [VERIFY] P1. **MTDS-3.2.B-V** — TradFi MTDS prd bucket gaps discovered (slot 5 audit 2026-05-22):
-      `market-data-tick-tradfi-prd` max=2026-05-05 vs flat max=2026-05-18. 9 missing days (2026-05-06→2026-05-18 trading
-      days) being copied flat→prd (background copy). 4-day tail gap (2026-05-19→2026-05-22) needs top-up VMs:
-      `launch-tradfi-bf-cme-ohlcv-1m.sh --start-floor 2026-05-19 --no-force-window` +
-      `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` + `launch-tradfi-bf-nyse-ohlcv-1m.sh`. Singleton lock currently clear. NOTE:
-      P1 not P0 — TradFi MTDS not on critical path for May-23 DeFi archetypes.
-- [ ] [SCRIPT] P1. **MTDS-3.2.B-TopUp** — Launch CME/NASDAQ/NYSE top-up VMs for 2026-05-19→2026-05-22 after flat→prd
-      copy completes. Use `--no-force-window` to skip manifest-pre-checked dates.
+- [x] ✅ [SCRIPT] P1. **MTDS-3.2.B-V** — TradFi MTDS prd gap resolved (slot-5 2026-05-22): 9 missing days
+      (2026-05-06→2026-05-18) copied flat→prd directly (1980 objects, 52s). Per-VM shard
+      `tradfi-flat-prd-copy-20260522.parquet` written to prd `_index/per_vm/` (1989 rows: 1952 captured + 37 other).
+      Consolidator will update prd availability_index to max=2026-05-18. NOTE: 2026-05-18 is PARTIAL in flat (4 CME
+      combo files only — top-up VMs will re-cover). 4-day tail gap (2026-05-19→2026-05-22) will be covered by top-up VMs
+      below. PENDING FOLLOW-UP: after top-up VMs complete, copy new flat data + shards to prd again. 2026-05-22.
+- [x] ✅ [SCRIPT] P1. **MTDS-3.2.B-TopUp** — Launched 9 top-up VMs (2026-05-18→2026-05-22, all RUNNING 2026-05-22): CME:
+      `tradfi-bf-cme-ohlcv-1m-es` (35.200.121.156), `mes` (35.200.55.185), `nq` (34.146.32.46), `mnq` (34.84.128.69),
+      `cl` (35.200.109.205), `gc` (34.84.104.165), `es-opt` (35.200.74.239). NASDAQ:
+      `tradfi-bf-nasdaq-ohlcv-1m-2026-20260522-094602` (35.221.121.77). NYSE:
+      `tradfi-bf-nyse-ohlcv-1m-2026-20260522-094602` (34.153.210.28). Writes to FLAT bucket. After VMs complete: copy
+      new flat data files + per-VM shards → prd (same pattern as above). 2026-05-22.
+- [ ] [VERIFY] P1. **MTDS-3.2.B-TopUp-V** — After top-up VMs self-delete: copy new flat objects + shards to prd for
+      2026-05-18→2026-05-22. Verify prd availability_index max≥2026-05-22 for CME/NASDAQ/NYSE. NOTE: P1, not on May-23
+      critical path.
 
 ## Phase 3 — DeFi MTDS backfill (MTDS-3.2.C)
 
@@ -168,6 +175,16 @@ AI-days on `vm-sports`.
       and `ohlcv_24h` for same gap. **BLOCKER**: MDPS TradFi VM must be relaunched with new UAC tarball after fix to
       process skipped instruments. Affected data: CME CL/GC/NQ/ES futures_chain ohlcv; CME spread combos
       (CL/GOLD/SP500/NASDAQ100/WTI-BZ); ICE BRN spreads. All historical dates from 2020-01-01 → 2026-05-22 affected.
+
+## DeFi MTDS prd gap fix (P0 — found + fixed slot-5 2026-05-22)
+
+- [x] ✅ [SCRIPT] P0. **MTDS-DEFI-PRD-GAP** — `market-data-tick-defi-prd-central-element-323112` was missing
+      vault_share_price + eigenlayer_rewards for 2026-05-09→2026-05-22 (14 dates, 78 files). Root cause: consolidator
+      terraform updated to prd bucket AFTER vault-share-price VMs wrote shards to FLAT bucket. Fix (slot-5 2026-05-22):
+      (1) Copied 78 data files (vault_share_price×70 + eigenlayer_rewards×8) from flat→prd. (2) Copied 5 new
+      vault-share-price per-VM shards to prd `_index/per_vm/`: `20260519-194146`, `20260520-091848`, `20260522-091041`,
+      `20260522-091706`, `20260522-092758`. (3) Wrote combined shard `defi-flat-prd-copy-20260522.parquet` (28
+      captured + 10 empty_confirmed) to prd. Consolidator will update prd availability_index to max=2026-05-22.
 
 ## Temporary states + their canonical follow-up plans
 
