@@ -579,6 +579,7 @@ One row per run. Detail (per-checkpoint result + synthetic injections + shas) li
 | 2026-05-22 | Phase 1 READ — §2.3 EXE + §2.5 RSK (main, safety-critical) | EXE/RSK direct Opus read + §2.1 deferred CSB-05/15/17/20 closed PASS | exec-svc@a848ef61 + UAC@c3f7a45 + strategy-svc@b303a358 | multi | 19 (+4 CSB PASS) | 7 (F-27…F-33) | EXE-02→F-32 | `runs/AUDIT-03_2026_05_22_phase1_exe_rsk.md` |
 | 2026-05-22 | Phase 1 READ — §2.13 XAS | cross-archetype/asset-class regression safety (sub-agent + Opus review) | strategy-svc@b303a358 + UAC@c3f7a45 + exec-svc | multi | 7 | 4 (F-34…F-37) | XAS-04/05/12=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_xas.md` |
 | 2026-05-22 | Phase 1 static-readiness — §2.10 CUT | cutover-gate wiring (sub-agent + Opus review); RUN gates = artifact-presence | e2e-testing + deployment-api + deployment-svc tf | multi | 6 | 7 (F-38…F-44) | 4×P0 cron/infra | `runs/AUDIT-03_2026_05_22_phase1_cut.md` |
+| 2026-05-22 | Phase 1 READ — §2.12 RPT | reporting/audit surface (sub-agent + Opus review); re-verify F-01…F-05 | client-reporting-api + UIs + exec/strat/UTL | multi | 4 | 2 new (F-45/F-46); F-01/F-02 REFUTED | — | `runs/AUDIT-03_2026_05_22_phase1_rpt.md` |
 
 ---
 
@@ -588,11 +589,11 @@ One row per drift found, across all runs (append-only). Detail in the run result
 
 | Finding | Run date   | Checkpoint            | Class       | Summary                                                                                                                                          | Plan                     | Status |
 | ------- | ---------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ------ |
-| F-01    | 2026-05-21 | RPT-03                | CODE-DRIFT  | DART 3-way comparison mock-only; backend host TBD                                                                                                | TBD (pvl-p23b)           | OPEN   |
-| F-02    | 2026-05-21 | RPT-04                | CODE-DRIFT  | ManualTradeGateDialog design-only, not wired                                                                                                     | promote U5/U6            | OPEN   |
-| F-03    | 2026-05-21 | RPT-05                | CODE-DRIFT  | Strategy-audit GCS writer not wired (events JSONL only)                                                                                          | TBD                      | OPEN   |
-| F-04    | 2026-05-21 | RPT-06                | CODE-DRIFT  | Execution-audit path keyed by client_order_id not client_id                                                                                      | TBD                      | OPEN   |
-| F-05    | 2026-05-21 | RPT-08                | GAP         | Audit bucket lacks versioning + retention lock                                                                                                   | TBD                      | OPEN   |
+| F-01    | 2026-05-21 | RPT-03                | CODE-DRIFT  | DART 3-way comparison mock-only; backend host TBD — **REFUTED 2026-05-22 (RPT): now wired to real backend via `@/lib/api/dart-client` (dart-three-way-view.tsx)** | TBD (pvl-p23b)           | RESOLVED |
+| F-02    | 2026-05-21 | RPT-04                | CODE-DRIFT  | ManualTradeGateDialog design-only — **REFUTED 2026-05-22 (RPT): fully wired (poll listPendingInstructions + approve/reject → POST), risk preview rendered** | promote U5/U6            | RESOLVED |
+| F-03    | 2026-05-21 | RPT-05                | CODE-DRIFT  | Strategy-audit GCS writer not wired (events JSONL only) — re-confirmed 2026-05-22 (RPT): no persist_audit_log; acked PRE_CUTOVER (slot 8 PB-4)   | TBD                      | CONFIRMED (P1) |
+| F-04    | 2026-05-21 | RPT-06                | CODE-DRIFT  | Execution-audit path — **PARTIALLY REFUTED 2026-05-22 (RPT): now client_id-keyed (audit_log.py:67); 3 residual shape divergences (date sep/ext/segment)** | TBD                      | DOWNGRADED (P2) |
+| F-05    | 2026-05-21 | RPT-08                | GAP         | Audit bucket lacks versioning + retention lock — re-confirmed 2026-05-22 (RPT): never provisioned (PRE_CUTOVER, routed slot 4)                   | TBD                      | CONFIRMED (P1) |
 | F-06    | 2026-05-21 | ONB-07                | CODEX-DRIFT | Entity model: CLAUDE.md Odum/Cayman vs codex Elysium/POD/BVI                                                                                     | reconcile                | OPEN   |
 | F-07    | 2026-05-22 | Phase 2 / e2e-testing | GAP         | e2e-testing ("intern testing") scripts ~3-4 wks stale — need strategy-consolidation + deployment-topology update before a meaningful Phase-2 run | e2e-testing update (TBD) | OPEN   |
 | F-08 | 2026-05-22 | CSB-01/17 | CODE-DRIFT | staked_basis.py docstrings stale: deleted SPLIT_STAKE 3-leg path + "zero LST venues/slots" vs matrix (6 LST pairs) + codex (4 slots) | defi_master remediation TBD | OPEN |
@@ -632,6 +633,8 @@ One row per drift found, across all runs (append-only). Detail in the run result
 | F-42 | 2026-05-22 | CUT-10 | GAP | **P0** cron:alerting-paging not provisioned — kill-switch/breaker code + telegram secret exist but no scheduled alerting cron for live-trading P&L/position breaches | TBD | CONFIRMED (P0) |
 | F-43 | 2026-05-22 | CUT-02 | GAP | run-paper.sh wires only Tenderly EVM fork; no Solana devnet paper path (gate requires "Tenderly fork + Solana devnet") | TBD | CONFIRMED (P1) |
 | F-44 | 2026-05-22 | CUT-03 | GAP | ManualTradeGateDialog Playwright e2e tests the trade form, not the gate approve/deny/timeout→unhold flow (unit-test-only). Cross-refs RPT-04 (dialog IS wired now, F-02 refuted) | TBD | CONFIRMED (P1) |
+| F-45 | 2026-05-22 | RPT-07 | CODE-DRIFT | GcsEventSink path 3rd segment is instance_id (VM_NAME/host-pid) not correlation_id (event_sink.py:129-131) vs codex live-deployment-monitoring.md:38 → can't prefix-filter events by correlation_id. Likely codex stale post-2026-05-01 rev — confirm canonical side | TBD | CONFIRMED (P1) |
+| F-46 | 2026-05-22 | RPT-09 | CODE-DRIFT | FillAttributionContext.archetype_id is `str|None` (optional) vs codex required `str` (rows.py:62) → could emit None → unqueryable per-archetype attribution; no config_variant field. Composes PNL-13 | TBD | CONFIRMED (P1) |
 
 ---
 
