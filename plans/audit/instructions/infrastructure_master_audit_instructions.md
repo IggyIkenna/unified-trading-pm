@@ -20,7 +20,7 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any VM topology change (new VM prefix, VM removed)
 - After any new prefix added to `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`
 - When bucket name SSOT plan advances a phase
@@ -52,6 +52,14 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 - [ ] (g) **Orphan-ping audit cron active**: Cloud Scheduler job `uts-prod-orphan-ping-audit` is ENABLED in
       `central-element-323112` / `asia-northeast1`. Check:
       `gcloud scheduler jobs describe uts-prod-orphan-ping-audit --location=asia-northeast1`
+
+
+### E2E Cross-Cutting Verification
+
+- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest
+  row → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
+- (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
+  infrastructure, error classification, and isolation patterns without real cloud access.
 
 ## Success Criteria
 

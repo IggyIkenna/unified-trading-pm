@@ -17,7 +17,7 @@ post-cutover; ratchet baseline from 27 → 0 cloud-locked references).
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any deployment-stack change (new endpoint, middleware, auth change)
 - After any GCS shard detail code refactor
 - When deployment-stack restart script (`restart-deployment-stack.sh`) fails
@@ -44,6 +44,15 @@ post-cutover; ratchet baseline from 27 → 0 cloud-locked references).
 
 - [ ] (f) **Health endpoint returns data_freshness**: deployment-api `/health` endpoint includes `data_freshness` field
       in response. Test: `curl http://localhost:8004/health` after stack start
+
+
+### E2E Flow Verification
+
+- (e2e-promote) **Promote flow audit**: run a paper-to-live promote end-to-end (paper_1d → live_early) using a test
+  strategy. Confirm ManualTradeGateDialog fires. If promote can't run against prod, verify the code path with a
+  dry-run or staging environment.
+- (mock-upstream) **Staging-only audit**: deployment and promote workflows MUST be auditable on staging without
+  affecting prod. Document the staging invocation.
 
 ## Success Criteria
 

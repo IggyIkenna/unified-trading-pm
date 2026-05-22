@@ -21,7 +21,7 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`,
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any transfer/rebalancing/bridge/sub-account code change
 - After any UAC schema addition (check for `Any` type drift)
 - After per-client isolation architecture changes
@@ -59,6 +59,14 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`,
 - [ ] (h) **Alert on cross-client transfer attempt**: any attempted cross-client transfer fires an alert event (not just
       raises an error silently). Find: `rg "CrossClientEventError\|cross_client.*alert" --include="*.py"` — verify alert
       emitted
+
+
+### E2E Cross-Cutting Verification
+
+- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest
+  row → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
+- (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
+  infrastructure, error classification, and isolation patterns without real cloud access.
 
 ## Success Criteria
 

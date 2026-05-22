@@ -20,7 +20,7 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`,
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any orchestrator API change or Cloud Run revision
 - When Cloud Run revision shows exit(3) or non-zero exit code
 - After any slot-cron or plan-hygiene cron change
@@ -52,6 +52,14 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`,
 - [ ] (g) **Claude credentials rotation staleness resolved**: the in-memory OAuth staleness issue described in
       `claude_credentials_rotation_in_memory_staleness_2026_05_21.md` has an operator-acked implementation plan. Check:
       issue status — BLOCKED-OPERATOR with recommended option documented, or RESOLVED with commit SHA
+
+
+### E2E Orchestrator Verification
+
+- (e2e-dispatch) **Dispatch flow audit**: spawn a worker slot via `/api/slots/<N>/spawn`, dispatch a task, confirm
+  the slot picks it up and posts a result. Use local or staging backend.
+- (mock-upstream) **Offline audit**: orchestrator health checks, plan hygiene cron, and slot management MUST be
+  auditable without real VM fleet running.
 
 ## Success Criteria
 

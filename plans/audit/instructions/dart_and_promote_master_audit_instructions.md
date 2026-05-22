@@ -20,7 +20,7 @@ Codex SSOTs: `codex/04-architecture/promote-workflow-architecture.md`,
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - Before any promote workflow change
 - After May-23 cutover (scope expands to `live_full`)
 - When Firebase enforcement layer changes
@@ -49,6 +49,15 @@ Codex SSOTs: `codex/04-architecture/promote-workflow-architecture.md`,
 - [ ] (f) **Promote workflow codex alignment**: `codex/04-architecture/promote-workflow-architecture.md` matches current
       code. No code patterns present that contradict the codex doc. Read: both codex doc and implementation — spot-check
       3 key code paths
+
+
+### E2E Flow Verification
+
+- (e2e-promote) **Promote flow audit**: run a paper-to-live promote end-to-end (paper_1d → live_early) using a test
+  strategy. Confirm ManualTradeGateDialog fires. If promote can't run against prod, verify the code path with a
+  dry-run or staging environment.
+- (mock-upstream) **Staging-only audit**: deployment and promote workflows MUST be auditable on staging without
+  affecting prod. Document the staging invocation.
 
 ## Success Criteria
 

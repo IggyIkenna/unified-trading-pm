@@ -20,7 +20,7 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-archit
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any new venue handler ships
 - After any custody provider change or credential rotation
 - After any transfer/withdraw/deposit code change
@@ -59,11 +59,31 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-archit
 - [ ] (h) **Shard-level failure isolation**: no `raise` inside per-venue loops in execution-service handlers. Grep:
       `rg "^\s+raise " execution-service/ --include="*.py"` — review each hit
 
+
+### E2E Pipeline Verification (Batch → Paper → Live)
+
+- (e2e-batch) **Batch e2e audit**: run `bash scripts/quality-gates.sh` with mock upstream features data → strategy
+  produces signals → execution records manifest rows. Use `CLOUD_MOCK_MODE=true` and synthetic feature fixtures.
+  Goal: confirm the entire batch code path executes without real upstream data.
+- (e2e-paper) **Paper trading goal post**: paper trading for ≥1 DeFi archetype runs ≥7 days without silent failures.
+  Manifest shows strategy_output + execution_record rows. PnL stream emits StrategyPnlStreamEvent. Dashboard shows
+  paper positions. This is the gate before live.
+- (e2e-live) **Live trading goal post**: live execution for ≥1 DeFi archetype with real wallet transactions confirmed
+  on-chain. PnL calculator confirms realized + unrealized PnL matches expected from strategy signals.
+- (post-trade) **Post-trade audit**: after live runs ≥7 days, verify execution records match strategy signals (no
+  slippage model regression), PnL attribution is correct, and no cross-client fund movement occurred.
+- (mock-upstream) **Mock upstream pattern**: strategy and execution audits MUST be runnable with mock MTDS + features
+  data. Document the mock fixture location and how to substitute upstream parquets for independent downstream testing.
+
 ## Success Criteria
 
 - All 8 checklist items GREEN
 - Cross-client transfer impossible in all code paths (verified by tests)
 - execution-service QG exits 0
+
+- Batch e2e with mock upstream: full code path from features → strategy → execution runs without errors
+- Paper trading ≥7 days: strategy_output + execution_record rows in manifest, PnL events flowing
+- Live trading confirmed: ≥1 on-chain transaction verified for a real wallet
 
 ## Output Format
 

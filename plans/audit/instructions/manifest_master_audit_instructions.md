@@ -20,7 +20,7 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After every writegate phase change
 - When A3 manifest divergence scan shows RED (any `DIVERGENT_EMPTY` or `MISSING_EXPECTED`)
 - After any new `EmptyConfirmedReason` is added to UAC
@@ -58,6 +58,17 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       `gcloud run jobs list --region asia-northeast1` — verify consolidator jobs present Verify: legacy GCE VM launcher
       (`launch-manifest-consolidator-vm.sh`) does NOT exist. Grep:
       `rg "launch-manifest-consolidator-vm" --include="*.sh"` — should be 0 hits
+
+
+### Batch vs Live Parity
+
+- (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
+  `capture_status=captured` for a known date range using the batch invocation path (`--mode batch`). Run against
+  mock data if real upstream is unavailable (`CLOUD_MOCK_MODE=true`).
+- (live-adapter) **Live adapter parity**: for each batch adapter, confirm the live adapter exists, accepts the same
+  schema, and emits `available_at` at write-time (not read-time). Confirm no `DIVERGENT_EMPTY` rows for live mode.
+- (mock-upstream) **Mock upstream pattern**: audits for this data layer MUST be runnable without hitting real APIs.
+  Document fixture paths and `CLOUD_MOCK_MODE=true` invocations so downstream services can be audited independently.
 
 ## Success Criteria
 

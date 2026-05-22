@@ -20,7 +20,7 @@ Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any new adapter ships (must verify both modes present)
 - When A3 manifest divergence shows `DIVERGENT_EMPTY` (batch/live parity gap)
 - After any writegate phase change
@@ -48,6 +48,14 @@ Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
 - [ ] (f) **a6 script runs clean**: `a6_batch_live_adapter_parity.py` produces a report with no unclassified rows (every
       adapter is either "paired" or "BLOCKED-CREDENTIALS"). Run:
       `python3 plans/audit/results/a6_batch_live_adapter_parity.py` — zero unclassified rows
+
+
+### E2E Cross-Cutting Verification
+
+- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest
+  row → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
+- (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
+  infrastructure, error classification, and isolation patterns without real cloud access.
 
 ## Success Criteria
 

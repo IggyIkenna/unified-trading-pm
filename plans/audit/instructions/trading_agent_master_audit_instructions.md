@@ -18,7 +18,7 @@ Codex SSOTs: `codex/04-architecture/per-client-isolation-architecture.md`
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - Whenever workspace QG reports a silent clone fail for trading-agent-service
 - After any GH_PAT rotation
 - After per-client isolation architecture changes
@@ -45,11 +45,31 @@ Codex SSOTs: `codex/04-architecture/per-client-isolation-architecture.md`
 - [ ] (f) **Health router present — QG STEP 5.62**: `api/main.py` imports `make_health_router` from UTL and registers
       it. Grep: `rg "make_health_router" trading-agent-service/ --include="*.py"`
 
+
+### E2E Pipeline Verification (Batch → Paper → Live)
+
+- (e2e-batch) **Batch e2e audit**: run `bash scripts/quality-gates.sh` with mock upstream features data → strategy
+  produces signals → execution records manifest rows. Use `CLOUD_MOCK_MODE=true` and synthetic feature fixtures.
+  Goal: confirm the entire batch code path executes without real upstream data.
+- (e2e-paper) **Paper trading goal post**: paper trading for ≥1 DeFi archetype runs ≥7 days without silent failures.
+  Manifest shows strategy_output + execution_record rows. PnL stream emits StrategyPnlStreamEvent. Dashboard shows
+  paper positions. This is the gate before live.
+- (e2e-live) **Live trading goal post**: live execution for ≥1 DeFi archetype with real wallet transactions confirmed
+  on-chain. PnL calculator confirms realized + unrealized PnL matches expected from strategy signals.
+- (post-trade) **Post-trade audit**: after live runs ≥7 days, verify execution records match strategy signals (no
+  slippage model regression), PnL attribution is correct, and no cross-client fund movement occurred.
+- (mock-upstream) **Mock upstream pattern**: strategy and execution audits MUST be runnable with mock MTDS + features
+  data. Document the mock fixture location and how to substitute upstream parquets for independent downstream testing.
+
 ## Success Criteria
 
 - All 6 checklist items GREEN
 - workspace QG exits 0 for trading-agent-service (no silent clone fail)
 - Closed-loop allocator test passes
+
+- Batch e2e with mock upstream: full code path from features → strategy → execution runs without errors
+- Paper trading ≥7 days: strategy_output + execution_record rows in manifest, PnL events flowing
+- Live trading confirmed: ≥1 on-chain transaction verified for a real wallet
 
 ## Output Format
 

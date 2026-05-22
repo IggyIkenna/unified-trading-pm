@@ -16,7 +16,7 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After model retrain (verify training pipeline manifest compliance)
 - When strategy-service reports feature shape mismatch at inference time
 - After any UAC feature schema change
@@ -51,6 +51,17 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
 
 - [ ] (h) **ml-service repo consolidation complete**: if `ml_repo_consolidation` plan is complete, verify merged repo
       has no duplicate code paths or conflicting imports. Check: `ml_repo_consolidation_2026_05_19.md` completion status
+
+
+### Batch vs Live Parity
+
+- (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
+  `capture_status=captured` for a known date range using the batch invocation path (`--mode batch`). Run against
+  mock data if real upstream is unavailable (`CLOUD_MOCK_MODE=true`).
+- (live-adapter) **Live adapter parity**: for each batch adapter, confirm the live adapter exists, accepts the same
+  schema, and emits `available_at` at write-time (not read-time). Confirm no `DIVERGENT_EMPTY` rows for live mode.
+- (mock-upstream) **Mock upstream pattern**: audits for this data layer MUST be runnable without hitting real APIs.
+  Document fixture paths and `CLOUD_MOCK_MODE=true` invocations so downstream services can be audited independently.
 
 ## Success Criteria
 
