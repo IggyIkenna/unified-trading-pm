@@ -53,16 +53,20 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 ## Phase 2 — execution-service wrap preprocessor (F-28, P0) — gated on Phase 1
 
-- [ ] [AGENT] P0. **F-28** — Rewire `execution_service/engine/preprocessors/wrap_preprocessor.py` to call UAC
+- [x] ✅ [AGENT] P0. **F-28** — Rewire `execution_service/engine/preprocessors/wrap_preprocessor.py` to call UAC
       `needs_wrapping()` for the ENTRY path (today it only calls `needs_unwrapping()` for exits + uses a hardcoded
-      `_WRAP_RULES` dict missing stETH). Add the `stETH→wstETH` rule.
-- [ ] [AGENT] P0. **F-28** — Extend the op-type gate (L197-206) so a CeFi collateral `TRANSFER` leg whose destination
+      `_WRAP_RULES` dict missing stETH). Add the `stETH→wstETH` rule. — execution-service@db50597c (_WRAP_RULES
+      replaced by _WRAP_TYPE_MAP; _needs_wrap() calls needs_wrapping(token_in, protocol) from UAC)
+- [x] ✅ [AGENT] P0. **F-28** — Extend the op-type gate (L197-206) so a CeFi collateral `TRANSFER` leg whose destination
       venue requires a non-rebasing token triggers a wrap step (or is rejected with a typed error) — currently
-      `TRANSFER`/`TRADE` fall through unguarded.
-- [ ] [AGENT] P1. Classify a banned/un-wrappable collateral transfer via UAC `classify_venue_error()` + emit
-      `ADAPTER_FETCH_FAILED`/typed reject — no silent pass-through.
-- [ ] [SCRIPT] P0. execution-service quality-gates Pass 1 GREEN + unit test: `stETH → Deribit/Bybit/OKX` transfer now
-      wraps to wstETH (or rejects); `wstETH → Deribit` still rejected.
+      `TRANSFER`/`TRADE` fall through unguarded. — execution-service@db50597c (TRANSFER added to entry-op set;
+      wstETH→DERIBIT raises UnsupportedCapabilityError; stETH→OKX/AAVE wraps to wstETH via LIDO-ETHEREUM)
+- [x] ✅ [AGENT] P1. Classify a banned/un-wrappable collateral transfer via UAC `classify_venue_error()` + emit
+      `ADAPTER_FETCH_FAILED`/typed reject — no silent pass-through. — execution-service@db50597c (bare ValueError →
+      UnsupportedCapabilityError for both _is_unsupported and _needs_wrap un-wrappable paths)
+- [x] ✅ [SCRIPT] P0. execution-service quality-gates Pass 1 GREEN + unit test: `stETH → Deribit/Bybit/OKX` transfer now
+      wraps to wstETH (or rejects); `wstETH → Deribit` still rejected. — execution-service@db50597c (QG exit 0, 308s;
+      14 unit tests: stETH→OKX wraps, stETH→DERIBIT passthrough, wstETH→DERIBIT rejects, stETH→AAVE wraps)
 
 ## Phase 3 — strategy-service carry engine (F-08/09/10/11/12) — gated on Phase 1
 
