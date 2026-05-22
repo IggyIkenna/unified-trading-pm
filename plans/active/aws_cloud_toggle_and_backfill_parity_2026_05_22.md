@@ -58,28 +58,28 @@ correct name.
 
 Gate: none (pure Python refactor, no schema change).
 
-- [ ] [CODE] P0. **SVC-1** — `data_status_service.py` `_read_defi_merged_index`: add `cloud: str = "gcp"` param; replace
-      `cloud="gcp"` at lines 2916+2918 with `cloud=cloud`.
-- [ ] [CODE] P0. **SVC-2** — `_get_manifest_status_sync` (lines ~3816+3818): thread `cloud` param down from
-      `get_manifest_status`; replace hardcoded calls.
-- [ ] [CODE] P0. **SVC-3** — `_get_coverage_summary_sync` (lines ~5672+5674): thread `cloud` param down from
-      `get_coverage_summary`; replace hardcoded calls.
-- [ ] [CODE] P0. **SVC-4** — `get_manifest_status` public method: add `cloud: str = "gcp"` kwarg; pass to
-      `_get_manifest_status_sync`.
-- [ ] [VERIFY] P0. **SVC-V** — `bash scripts/quality-gates.sh` exit 0 in `deployment-api`.
+- [x] [CODE] P0. **SVC-1** ✅ — `data_status_service.py` `_read_defi_merged_index`: add `cloud: str = "gcp"` param;
+      replace `cloud="gcp"` at lines 2916+2918 with `cloud=cloud`. — deployment-api@85d416d
+- [x] [CODE] P0. **SVC-2** ✅ — `_get_manifest_status_sync` (lines ~3816+3818): thread `cloud` param down from
+      `get_manifest_status`; replace hardcoded calls. — deployment-api@85d416d
+- [x] [CODE] P0. **SVC-3** ✅ — `_get_coverage_summary_sync` (lines ~5672+5674): thread `cloud` param down from
+      `get_coverage_summary`; replace hardcoded calls. — deployment-api@85d416d
+- [x] [CODE] P0. **SVC-4** ✅ — `get_manifest_status` public method: add `cloud: str = "gcp"` kwarg; pass to
+      `_get_manifest_status_sync`. — deployment-api@85d416d
+- [x] [VERIFY] P0. **SVC-V** ✅ — `bash scripts/quality-gates.sh` exit 0 in `deployment-api`. — QG 222s green
 
 ## Phase 2 — Route layer (add `cloud` query param)
 
 Gate: Phase 1 complete.
 
-- [ ] [CODE] P0. **ROUTE-1** — `routes/data_status.py` `get_data_status` (line 252): add
-      `cloud: Literal["gcp", "aws"] = Query("gcp", description="Cloud provider")`. Pass to `run_data_status_cli` +
-      `get_manifest_status`.
-- [ ] [CODE] P0. **ROUTE-2** — `routes/data_status.py` `get_data_status_turbo` (line 764): same `cloud` param. Thread
-      into `_manifest_source` closure → `get_manifest_status(cloud=cloud)`.
-- [ ] [CODE] P0. **ROUTE-3** — `routes/data_status.py` `get_data_coverage_summary`: add `cloud` param; thread to
-      service.
-- [ ] [VERIFY] P0. **ROUTE-V** — `bash scripts/quality-gates.sh` exit 0.
+- [x] [CODE] P0. **ROUTE-1** ✅ — `routes/data_status.py` `get_data_status_manifest`: added
+      `cloud: Literal["gcp", "aws"] = Query("gcp", ...)`. Threaded to `get_manifest_status(cloud=cloud)`. —
+      deployment-api@af77f8f
+- [x] [CODE] P0. **ROUTE-2** ✅ — `routes/data_status.py` `get_data_status_turbo`: added `cloud` param, threaded into
+      `_manifest_source` closure → `get_manifest_status(cloud=cloud)`. — deployment-api@af77f8f
+- [x] [CODE] P0. **ROUTE-3** ✅ — `routes/data_status.py` `get_coverage_summary`: added `cloud` param; threaded to
+      service `get_coverage_summary(cloud=cloud)`. — deployment-api@af77f8f
+- [x] [VERIFY] P0. **ROUTE-V** ✅ — `bash scripts/quality-gates.sh` exit 0. — QG green after ROUTE changes
 
 ## Phase 3 — UI (context state + toggle button + API call param)
 
