@@ -1,16 +1,32 @@
-## [slot-1-main → slot-7] 2026-05-22 — Phase 11 terraform → features backfill → promote workflow
+## [slot-1-main → slot-7] 2026-05-22 — Phase 11 terraform → sports Phase 3+4 (if operator acks) → features backfill → promote workflow
 
-**Plan refs**: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md` Phase 11b → then `features_backfill_phase3_2026_05_22.md` → then `promote_workflow_may23_cli_path_2026_05_10.md`
+**Plan refs**: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md` Phase 11b → (sports Phase 3+4 if operator acks Phase 2) → `features_backfill_phase3_2026_05_22.md` → `promote_workflow_may23_cli_path_2026_05_10.md`
 
 **Phase 11a+11b terraform cleanup** (do first — was blocked by epic VM bootstrap last session):
 - `strategy_repo_consolidation_2026_05_19.md` Phase 11a: `terraform destroy` 5 archived stacks + shared TF cleanup + grafana dashboard update + test assertions for removed repos
 - `ml_repo_consolidation_2026_05_19.md` Phase 11b: same pattern for ML repos
 - Trivial sweep FIRST: mark [x] anything already executed per evidence in plan body
 
+**THEN (CONDITIONAL): `sports_master` Phase 3+4 — `data_available_at` → `available_at` atomic rename**
+
+> Gate: operator must first ack `sports_master` Phase 2 (GCE production column-rename migration run). Check this ping for
+> `[operator-ack: sports-phase2-done]` before proceeding. If no ack, SKIP this block and continue to features backfill.
+
+If operator has acked Phase 2:
+- **Phase 3**: Atomic 4-repo source rename — `rg -rn 'data_available_at' --type py --glob '!.venv*' --glob '!tests'`
+  across instruments-service / market-tick-data-service / features-sports / mdps; rename every non-test occurrence to
+  `available_at`; QG each repo; commit per repo. Workspace-wide rg must return ZERO non-test, non-archived hits before
+  moving to Phase 4.
+- **Phase 4**: `rg 'LookaheadBiasError\|data_available_at' --type py` returns zero; flip writegate Phase 2.C to strict
+  mode; flip plan checkboxes in `sports_master.md`. Commit + push.
+
+Unblocks: MTDS-3.2.D / MDPS-3.3.Sports / FEAT-3.4.Sports (all sports backfill VMs).
+
 **Then: `features_backfill_phase3_2026_05_22.md`** (gate: `mdps_backfill_phase3` per-AG verify GREEN — watch for slot 6 ack):
 - Phase 1 (CeFi): `--feature-family delta_one --asset-group cefi` + volatility + MTF VMs
 - Phase 2 (DeFi): onchain + delta_one feature families
 - Phase 3 (TradFi): delta_one + volatility (VIX surface) + MTF
+- Phase 4 (Sports): only if sports Phase 3+4 above DONE; else SKIP
 - T+10min verify each VM; manifest 100% v8; `available_at` populated
 
 **Then: `promote_workflow_may23_cli_path_2026_05_10.md`** remaining P0 items:
@@ -20,7 +36,7 @@
 - Smoke-test each testnet with read-only API call
 - Solana devnet wiring for LST archetypes (jitoSOL/mSOL/bSOL)
 
-**Ack**: append `[2026-05-22 HH:MM UTC] slot-7 DONE — Phase 11a/11b terraform + features backfill + promote workflow at <shas>` here when done.
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-7 DONE — Phase 11a/11b terraform + sports Phase3+4 (or SKIPPED) + features backfill + promote workflow at <shas>` here when done.
 
 ---
 
