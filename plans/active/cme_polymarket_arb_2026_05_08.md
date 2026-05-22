@@ -36,9 +36,10 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 
 ## Phase 2 — `linked_canonical_question_group` cross-link
 
-- [ ] [SCRIPT] P1. NEW UAC SSOT `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` — per-CME-root
-      canonical_question_group map. **BLOCKED**: predictions_master Phase 5 (6 new canonical_question_groups) must ship
-      first. Until then, only ECES/ECBTC have valid links.
+- [x] ✅ [SCRIPT] P1. NEW UAC SSOT `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` — per-CME-root
+      canonical_question_group map. **PARTIAL** — UAC@77facd65 (2026-05-22): ECES→SPX_UP_DOWN_DAILY +
+      ECBTC→BTC_UP_DOWN_DAILY wired; `linked_question_group(root)` returns None for the 7 remaining roots
+      (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ). Those 7 blocked on predictions_master Phase 5. QG all gates green (273s).
 
 ## Phase 3 — MTDS binary-outcome shard atom
 
