@@ -4965,3 +4965,30 @@ NEVER `git pull --rebase` (history doesn't share ancestry post-rewrite) or `git 
 Plan + parent issue archived in same commit. See `_agent_pings.md` for the broader PR-author notification.
 
 — slot-1 main / ikenna
+
+---
+
+## 2026-05-22 ~08:00 UTC — IS backfill overnight + two credential blocks
+
+Plan ref: `plans/active/instruments_backfill_phase3_2026_05_22.md`
+
+**Overnight IS backfill status:**
+
+- Recent-window IS VMs (2026-03-01→2026-05-22): ALL COMPLETED exit_code=0. Per-VM shards present.
+- Full-history IS VMs: 5× RUNNING (CeFi-1/2, DeFi, Pred, TradFi) — will run for many hours.
+- Sports IS VM: RUNNING @55d718f (blank-reason fix). Slow: Transfermarkt historical API makes ~55
+  sequential HTTP requests per trigger date (~15-30 min/date). VM is 2020-06-01 in chunk 1/71 at ~08:00 UTC.
+  Will take many hours (possibly 24h+) for the full 2020-2026 run.
+- MTDS backfill VMs (CeFi, Pred, 4× Sports): all RUNNING, making steady progress.
+
+**Operator action required — 2 BLOCKED-CREDENTIALS:**
+
+1. **Databento auth_account_locked** (plan item: IS-3.1.TradFi-Databento):
+   - ALL 6 TradFi datasets returning 403: IFEU.IMPACT, IFUS.IMPACT, GLBX.MDP3, XNAS.ITCH, DBEQ.BASIC
+   - Check billing status at app.databento.com or email support@databento.com
+   - Zero Databento-sourced TradFi instruments written until account reactivated
+
+2. **Kalshi credentials** (plan item: IS-3.1.Pred-Kalshi — already logged):
+   - Need account registration + API key at kalshi.com
+
+— slot-1 main / autonomous loop 08:00 UTC
