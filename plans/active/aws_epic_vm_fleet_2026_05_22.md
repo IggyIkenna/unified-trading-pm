@@ -56,26 +56,30 @@ All cloud-specific calls in `bootstrap_vm.sh` must branch on `$CLOUD_PROVIDER`. 
       agent-orch@6591afb.
 - [x] ✅ [AGENT] P1. Update PUBLIC_URL env var: GCP uses external IP from metadata; AWS uses public hostname from
       `169.254.169.254/latest/meta-data/public-hostname`. agent-orch@6591afb.
-- [ ] [AGENT] P1. Verify `su - ubuntu` pattern works on Ubuntu 24.04 on EC2 (AWS AMI uses same ubuntu user; uv HOME fix
-      should carry over unchanged). Verify during Phase 4 smoke test.
+- [x] ✅ [AGENT] P1. Verify `su - ubuntu` pattern works on Ubuntu 24.04 on EC2 (AWS AMI uses same ubuntu user; uv HOME
+      fix should carry over unchanged). Verified: vm-defi console log shows deps installed to /home/ubuntu correctly,
+      orchestrator service started, health=ok. agent-orch@ff0d5ff.
 
 ## Phase 2 — AWS resource prerequisites
 
 IAM role, S3 buckets, Secrets Manager secrets, and security group must exist before launching fleet.
 
-- [ ] [OPERATOR] P0. Create IAM instance profile `uts-orchestrator-epic` with permissions:
+- [x] ✅ [OPERATOR] P0. Create IAM instance profile `uts-orchestrator-epic` with permissions:
       `secretsmanager:GetSecretValue` (secrets: `GH_PAT`, `ORCHESTRATOR_ENV_LOCAL`), `s3:GetObject` (bucket:
       `uts-orchestrator-creds-{account}/config/*`), `s3:PutObject` (bucket:
-      `uts-orchestrator-events-{account}/orchestrator/*`). Script:
-      `deployment-service/scripts/aws/setup-orchestrator-iam.sh` (to be created — Phase 3).
-- [ ] [OPERATOR] P0. Create S3 buckets (ap-northeast-1, account `427895769566`): `uts-orchestrator-creds-427895769566`
-      (private, versioned) + `uts-orchestrator-events-427895769566` (private, 90-day lifecycle).
-- [ ] [OPERATOR] P0. Upload GH_PAT + ORCHESTRATOR_ENV_LOCAL to AWS Secrets Manager (`ap-northeast-1`, account
-      `427895769566`) — same values as GCP Secret Manager.
-- [ ] [OPERATOR] P0. Upload `accounts.json` + `backlog.yaml` to `s3://uts-orchestrator-creds-427895769566/config/`.
-- [ ] [OPERATOR] P0. Create/confirm security group `uts-orchestrator-epic-sg` in ap-northeast-1: inbound tcp:22
-      (operator IPs), tcp:8026 (operator IPs); outbound all.
-- [ ] [OPERATOR] P0. Identify subnet IDs in ap-northeast-1a/b/c for `AWS_SUBNET_ID`.
+      `uts-orchestrator-events-{account}/orchestrator/*`). Role `uts-orchestrator-epic-role`, policy
+      `uts-orchestrator-epic-policy`, profile `uts-orchestrator-epic` created in account 427895769566.
+- [x] ✅ [OPERATOR] P0. Create S3 buckets (ap-northeast-1, account `427895769566`):
+      `uts-orchestrator-creds-427895769566` (private, versioned) + `uts-orchestrator-events-427895769566` (private,
+      90-day lifecycle). Both created.
+- [x] ✅ [OPERATOR] P0. Upload GH_PAT + ORCHESTRATOR_ENV_LOCAL to AWS Secrets Manager (`ap-northeast-1`, account
+      `427895769566`) — same values as GCP Secret Manager. Both secrets present in ap-northeast-1.
+- [x] ✅ [OPERATOR] P0. Upload `accounts.json` + `backlog.yaml` to `s3://uts-orchestrator-creds-427895769566/config/`.
+      Both files uploaded from GCS; confirmed by vm-defi bootstrap log showing successful S3 fetches.
+- [x] ✅ [OPERATOR] P0. Create/confirm security group `uts-orchestrator-epic-sg` in ap-northeast-1: inbound tcp:22
+      (operator IPs), tcp:8026 (operator IPs); outbound all. sg-0080310387e84f613 in vpc-6ee70e08.
+- [x] ✅ [OPERATOR] P0. Identify subnet IDs in ap-northeast-1a/b/c for `AWS_SUBNET_ID`. subnet-852f84cd (1a),
+      subnet-fc09eca6 (1c), subnet-5c16a477 (1d). Using 1c (subnet-fc09eca6) for fleet.
 
 ## Phase 3 — launch-epic-vm-aws.sh
 
@@ -94,14 +98,14 @@ New launcher: AWS EC2 equivalent of `launch-epic-vm.sh`. Reads same `orchestrato
 
 Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, STARTED event in S3.
 
-- [ ] [AGENT] P0. Launch `vm-defi` on AWS: `bash launch-epic-vm-aws.sh --vm-id vm-defi`. Bootstrap should complete in
-      ≤10 min. Verify: 1.
-      `aws ec2 describe-instances --filters Name=tag:Name,Values=agent-orch-vm-defi-* --query ... --output text` =
-      `running` 2. `curl -sf http://<public-ip>:8026/health` = `{"status":"ok"}` 3.
-      `aws s3 ls s3://uts-orchestrator-events-427895769566/orchestrator/epic/agent-orch-vm-defi-.../STARTED`
-- [ ] [AGENT] P0. If smoke fails: check `/var/log/epic-vm-bootstrap.log` via AWS SSM Session Manager
-      (`aws ssm start-session --target <instance-id>`) or EC2 console serial output.
-- [ ] [AGENT] P1. Once smoke passes: update `bootstrap_vm.sh` default `CLOUD_PROVIDER` from `gcp` to `aws`.
+- [x] ✅ [AGENT] P0. Launch `vm-defi` on AWS: `bash launch-epic-vm-aws.sh --vm-id vm-defi`. PASSED. Instance
+      i-05805eb07fdf180b6 (agent-orch-vm-defi-20260522), public IP 43.207.178.164, state=running. Health:
+      `{"status":"ok","service":"agent-orchestrator","version":"0.6.0"}` at attempt 2 (~90s after launch). S3 STARTED:
+      `s3://uts-orchestrator-events-427895769566/orchestrator/epic/agent-orch-vm-defi-20260522/STARTED` (104 bytes,
+      2026-05-22 00:13:47 UTC).
+- [x] ✅ [AGENT] P0. Smoke passed — no failure path needed. Console log confirmed clean bootstrap: deps OK, creds OK,
+      service started, health=ok, STARTED emitted. deployment-service@6d1b94d (tag-spec fix) applied.
+- [x] ✅ [AGENT] P1. `bootstrap_vm.sh` default `CLOUD_PROVIDER` flipped from `gcp` to `aws`. agent-orch@ff0d5ff.
 
 ## Phase 5 — Full fleet launch on AWS + GCP decommission
 
