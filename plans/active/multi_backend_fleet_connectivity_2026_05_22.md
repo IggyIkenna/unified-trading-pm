@@ -146,8 +146,9 @@ the case now; noted as the fallback if that changes.)
       provision. — agent-orchestrator@3bde048 (backfilled 2026-05-22)
 - [x] ✅ [AGENT] P1. `scripts/bootstrap_vm.sh` — on boot, register the VM's **private IP** into the registry (Phase 5
       mechanism), so the proxy targets are private by default. — agent-orchestrator@4eca323 (backfilled 2026-05-22)
-- [ ] [AGENT] P1. Once private routing is verified, close worker `:8026` to the public (security-group → VPC-internal
-      only); workers keep public IPs only if still needed for non-orchestrator reasons.
+- [x] ✅ [AGENT] P1. Once private routing is verified, close worker `:8026` to the public (security-group → VPC-internal
+      only); workers keep public IPs only if still needed for non-orchestrator reasons. — sg-0080310387e84f613 ingress =
+      172.31.0.0/16; public 0.0.0.0/0 revoked (backfilled 2026-05-22)
 
 **Success:** `/api/fleet/summary` aggregates all VMs over `172.31.x.x` with no public-internet hop; a worker with its
 public `:8026` firewalled still appears.
@@ -166,8 +167,8 @@ public `:8026` firewalled still appears.
       body + auth to `<vm private_url>/api/{path}` (httpx, timeout, error-mapped). Covers spawn / kill / pause-resume /
       message / log-stream / state for any individual VM through the one central API. — agent-orchestrator@3bde048
       (backfilled 2026-05-22)
-- [ ] [AGENT] P1. Stream-friendly handling for log/SSE endpoints (don't buffer); per-VM error surfaced as the VM's
-      status, not a 500 on the whole call.
+- [x] ✅ [AGENT] P1. Stream-friendly handling for log/SSE endpoints (don't buffer); per-VM error surfaced as the VM's
+      status, not a 500 on the whole call. — agent-orchestrator@16bce1d (backfilled 2026-05-22)
 - [ ] [AGENT] P2. Authorize the central→VM hop with an internal credential (shared `ORCHESTRATOR_API_PASSWORD` from GCS,
       private-VPC only) — the operator JWT terminates at the central API.
 
@@ -193,8 +194,8 @@ breaking the rest.
       from GCS, hot-reloadable via the existing `CredsEnvPoller`. Keep `auth.py` algorithm pluggable so HS256→RS256 is a
       config swap later (asymmetric-ready seam). Workers behind the proxy don't validate operator JWTs. —
       agent-orchestrator@7010969 (backfilled 2026-05-22)
-- [ ] [AGENT] P2. Document the trust boundary: operator-JWT at the edge (central API); central→VM over private VPC with
-      an internal credential. Rotation runbook (owner/cadence/verifier/last_executed).
+- [x] ✅ [AGENT] P2. Document the trust boundary: operator-JWT at the edge (central API); central→VM over private VPC
+      with an internal credential. Rotation runbook (owner/cadence/verifier/last_executed). — agent-orchestrator@94b46f3
 
 ## Phase 5 — Registry: self-registration with private IP (P2)
 
@@ -202,8 +203,11 @@ breaking the rest.
       `{id, label, private_ip, account_id, asset_group}` after the local health check passes (no inbound to the VM
       needed). Central API persists the registry (file → GCS object for durability), `/api/backends` reads it. —
       agent-orchestrator@4eca323 (backfilled 2026-05-22)
-- [ ] [AGENT] P2. Staleness: a VM that stops registering / heartbeating drops out of `/api/fleet/summary` as stale
-      (heartbeat age) — the central API detects absence; a dead VM can't mask its own death.
+- [x] ✅ [AGENT] P2. Staleness: a VM that stops registering / heartbeating drops out of `/api/fleet/summary` as stale
+      (heartbeat age) — the central API detects absence; a dead VM can't mask its own death. Added
+      `POST /api/vms/{vm_id}/heartbeat` + `_vm_staleness()` helper; fleet summary enriched with `stale` +
+      `last_heartbeat_seconds_ago` per VM. Threshold 10 min (env `ORCHESTRATOR_VM_STALE_THRESHOLD_SECS`). —
+      agent-orchestrator@2eb0843
 
 ## Phase 6 — Codex SSOT + docs (P2)
 
