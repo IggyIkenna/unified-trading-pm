@@ -2923,34 +2923,39 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       updated (17→31 members, codex pointer added); codex new section "Per-reason-group → consumer policy
       quick-reference" (10-row table, 31 reasons across 9 groups + attempted_failed; key calendar-closed vs
       temporary-gap rolling-window distinction documented).
-- [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
+- [x] ✅ [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
       extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
       attempted*failed/LegacyBlankErrorReasonError, those rows that should actually be typed (e.g. rows during
       understat-not-covered-league fixtures, cefi-perp pre-listing dates per catalog) are recoverable on the next
       migration pass. New reconciler: `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds
       attempted_failed/ LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
       empty_confirmed/EXPECTED*\* if a typed-reason rule fires (otherwise leaves as attempted_failed for retry).
+      tradfi+defi+sports+prediction DONE 2026-05-22 (slot-2); cefi follow-up item below. UAC@6498446 + PM@this commit.
 
-      **SCAN DONE 2026-05-22 (slot-2) — apply pending VM runs:**
-      - Pre-req UAC fix: `non_trading_day_reason` was not exported from UAC top-level facade despite docstring saying
-        "top-level facade re-export". Added to `.registry` import block. UAC@6498446. QG exit 0.
+      **APPLIED 2026-05-22 (slot-2) for tradfi+defi+sports+prediction (cefi blocked — see follow-up item below):**
+      - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
       - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
-        EXPECTED_INSTRUMENT_NOT_LISTED}` — i.e. rows that got a WRONG default from the 2026-05-07 sweep.
-      - Scan results (scan-only, no GCS writes):
-        | asset_group | candidates | proposed upgrades | breakdown |
-        |-------------|-----------|-------------------|-----------|
-        | tradfi | 5,190 | 5,190 | **111 → EXPECTED_PARTIAL_HALF_DAY** (Wave 3.T SSOT firing); 5,079 → attempted_failed/LBEER |
-        | cefi | 85,202 | 85,202 | 85,202 → attempted_failed/LBEER (instruments catalog at `gs://instruments-store-cefi-*/reference_data/instruments/cefi/all.parquet` NOT FOUND → catalog cross-ref disabled; once IS CeFi backfill lands catalog, re-scan expected to route more rows to EXPECTED_INSTRUMENT_NOT_LISTED) |
-        | defi | 14 | 14 | 14 → attempted_failed/LBEER |
-        | sports | 1,829,839 | 0 | No upgrades — sports SSOT SRZ rows don't fire Wave 3.S rules via this path |
-        | prediction | 51 | 0 | No upgrades |
-      - **Apply gate**: run `--apply-flips MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-typed-{AG}-$(date +%s)`
-        per AG for tradfi + defi (cefi: re-scan after IS CeFi catalog backfill lands).
-      - CSV reports: `/home/ubuntu/.claude/jobs/20ca8c62/recon-legacy-typed-{AG}-20260522-*.csv`
+        EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
+      - Applied results:
+        | asset_group | candidates | applied | breakdown | shard |
+        |-------------|-----------|---------|-----------|-------|
+        | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
+        | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
+        | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
+        | prediction | 51 | 0 | No upgrades | — |
+        | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
+      - Consolidator merges tradfi+defi shards within ~5 min of apply.
 
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
 3.P (prediction) — distinct asset_group surfaces.
+
+- [ ] [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202 `empty_confirmed/SOURCE_RETURNED_ZERO`
+      cefi rows need lifecycle cross-ref to route correctly (EXPECTED_INSTRUMENT_NOT_LISTED vs attempted_failed).
+      Catalog NOT FOUND at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`
+      during 2026-05-22 scan. Gate: IS CeFi backfill (`instruments_backfill_phase3_2026_05_22.md`) Phase 1 CeFi
+      GREEN. Re-run: `python scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` (scan-only first, then
+      `--apply-flips` after CSV review).
 
 #### Phase 3.D.5 Wave 4 — Service-output emission policy + completeness semantics (operator msg 10, 2026-05-08)
 
