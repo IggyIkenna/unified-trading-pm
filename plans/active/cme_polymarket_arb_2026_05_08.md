@@ -41,9 +41,9 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 ## Phase 2 — `linked_canonical_question_group` cross-link
 
 - [x] ✅ [SCRIPT] P1. NEW UAC SSOT `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` — per-CME-root
-      canonical_question_group map. **PARTIAL** — UAC@77facd65 (2026-05-22): ECES→SPX_UP_DOWN_DAILY +
-      ECBTC→BTC_UP_DOWN_DAILY wired; `linked_question_group(root)` returns None for the 7 remaining roots
-      (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ). Those 7 blocked on predictions_master Phase 5. QG all gates green (273s).
+      canonical_question_group map. **FULL** — all 9 CME roots wired. UAC@77facd65 (ECES+ECBTC) + UAC@9c491bdd
+      (2026-05-22): +7 groups (NDX/RUT/DJIA/GOLD/CRUDE_OIL/NATGAS/EUR_UP_DOWN_DAILY) added to CanonicalQuestionGroup +
+      PREDICTION_GROUPS + cme_polymarket_link.py; 5 new unit tests 27/27 pass. QG exit 0.
 
 ## Phase 3 — MTDS binary-outcome shard atom
 
@@ -75,6 +75,6 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 
 ## Temporary states + canonical follow-up plans
 
-- Phase 2 blocked: `predictions_master` Phase 5 (6 new canonical_question_groups for non-BTC/SPX roots).
+- Phase 2 CLEARED: all 9 roots wired — UAC@9c491bdd (2026-05-22). `predictions_master` Phase 5 UAC portion done.
 - Phase 5 post-cutover: full `cme_polymarket_event_arb` archetype via standard paper-trade onboarding checklist.
 - Manifest re-classification of existing `instrument_type=OPTION` rows for 9 EC\* roots: deferred until Phase 3 ships.
