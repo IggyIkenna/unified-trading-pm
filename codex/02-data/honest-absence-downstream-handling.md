@@ -370,6 +370,39 @@ a value.
 
 ---
 
+## Per-reason-group → consumer policy quick-reference
+
+> Codified 2026-05-22 — fulfils writegate plan P1 `[DOCS]` item line 2922. Companion to the per-service consumer-class
+> table above. Groups the 31-member `EmptyConfirmedReason` closed set by semantic meaning; columns give the per-consumer
+> policy for each group. All rows assume `capture_status=empty_confirmed` unless noted.
+
+| Reason group | `EmptyConfirmedReason` members | Rolling-window denominator policy | ML training / inference | Live execution |
+| --- | --- | --- | --- | --- |
+| **Calendar / schedule — whole day** | `EXPECTED_HOLIDAY` · `EXPECTED_WEEKEND` | Window spans **trading days only** — weekend and holidays are outside the N-day window by construction. Denominator = n\_trading\_day\_samples. Do NOT count these as "missing days within window." | NaN-fill | Skip silently — no alert. Calendar says closed; expected behavior. |
+| **Intra-day / partial session** | `EXPECTED_OUTSIDE_TRADING_HOURS` · `EXPECTED_PARTIAL_HALF_DAY` | Drop out-of-session bars from the rolling window; denominator = n\_session\_bars actually within published hours. Partial day: count actual bar count, not expected full-session bar count. | NaN-fill | Skip the bar / time-slot — no alert. Session gate says closed. |
+| **Lifecycle — not yet listed** | `EXPECTED_INSTRUMENT_NOT_LISTED` · `EXPECTED_PRE_VENUE_LAUNCH` · `EXPECTED_PRE_GENESIS_CHAIN` · `EXPECTED_PRE_SOURCE_COVERAGE_START` · `EXPECTED_PRE_SEASON` · `EXPECTED_NO_FIXTURE` | Exclude from window span — data will never exist for these dates; include only dates ≥ instrument/venue/chain/season start. Denominator = n\_valid\_in\_window. | NaN-fill | Skip silently — no alert. Instrument or source did not exist on that date. |
+| **Lifecycle — permanently gone** | `EXPECTED_INSTRUMENT_DELISTED` · `EXPECTED_PAST_SOURCE_COVERAGE_END` · `EXPECTED_DEPRECATED_DATA_TYPE` · `EXPECTED_POST_SEASON` | Exclude from window span — data ceased at a known date. Do not extend window to compensate. | NaN-fill | Skip silently — no alert. Instrument or source retired after that date. |
+| **Temporary gap / pause** | `EXPECTED_PAUSED_LEAGUE` · `EXPECTED_REFDATA_CADENCE_CHANGE` · `EXPECTED_OUT_OF_COVERAGE_WINDOW` · `EXPECTED_PROTOCOL_PAUSED` · `EXPECTED_OUTSIDE_TRANSFER_WINDOW` | Date falls inside the calendar window span; denominator = n\_valid (exclude the paused day from the numerator and denominator). Gap is expected to resolve in the future. | NaN-fill | Skip silently — no alert. Pause is documented and expected. |
+| **Source-specific / no coverage** | `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` · `EXPECTED_KNOWN_SOURCE_GAP` · `SOURCE_RETURNED_ZERO` | Include date in window span; denominator = n\_valid. `SOURCE_RETURNED_ZERO` warrants an optional per-service soft monitoring counter for anomaly detection — not a page. | NaN-fill | Skip. Optional soft alert on `SOURCE_RETURNED_ZERO` (configurable per service; not default). |
+| **Sports event status** | `EXPECTED_FIXTURE_POSTPONED` · `EXPECTED_FIXTURE_CANCELLED` · `EXPECTED_OUTSIDE_PROCESSING_SCOPE` | Skip day in rolling window; denominator = n\_valid. | NaN-fill | Skip silently — no alert. Event-level absence (fixture not played). |
+| **Upstream cascade** | `EXPECTED_UPSTREAM_EMPTY` · `NO_INPUT_AVAILABLE` · `EXPECTED_NO_FUNDING_RATE_TICKS` · `EXPECTED_NO_PNL_STREAM` | Skip day; denominator = n\_valid. Do NOT attempt compute when upstream is absent. | NaN-fill OR emit `record_empty(reason=NO_INPUT_AVAILABLE)` for the calc's own output — per-calc choice; document in calc docstring. | Skip. Log at INFO level (upstream is known empty; not a pipeline failure). |
+| **Migration artifact** | `EXPECTED_LEGACY_MIGRATION_MISSING_EXPIRY` | Skip day; denominator = n\_valid. Resolves after migration backfill completes. | NaN-fill | Skip silently — no alert. Resolves post-migration. |
+| **`attempted_failed` (any reason)** | `ClusterCoverageError` · `SCHEMA_VALIDATION_FAILED` · `CLASSIFIED_VENUE_ERROR` · `UPSTREAM_SUBGRAPH_ZERO` · `UPSTREAM_LIVE_GAP` · others | **Exclude from window.** Do NOT forward-fill with prior day's value — data may exist but was corrupted in transit. | NaN-fill AND add `data_quality_flag=ATTEMPTED_FAILED` sibling column so the model can learn to discount these regions if it chooses. | **Block live trade** for affected assets + fire alert. Live mode does not trade through pipeline failures. Backtest mode treats as honest absence. |
+
+### Key distinction: calendar-closed vs temporary gap for rolling windows
+
+**Calendar-closed days (`EXPECTED_HOLIDAY`, `EXPECTED_WEEKEND`)** are OUTSIDE the N-day window by construction — a
+20-day trading SMA spans 20 trading days; weekend/holiday dates are never in the window to begin with.
+
+**Temporary gaps** (`SOURCE_RETURNED_ZERO`, `EXPECTED_PAUSED_LEAGUE`) fall INSIDE the calendar span but had no data.
+These reduce the effective denominator: a 20-day window with 2 paused-league days computes the mean of 18 valid samples
+while the lookback span stays 20 calendar days.
+
+Getting this wrong produces a biased estimator: treating a holiday as a missing-within-window day inflates the true
+window size; treating a paused-league day as calendar-closed narrows the lookback span incorrectly.
+
+---
+
 ## Reader-side fallback for legacy rows (codified 2026-05-07 — operator gap finding)
 
 Phase 2.E.1 ships UTL `record_empty(reason=...)` for NEW writes. Existing manifest rows have `error_reason=None` for

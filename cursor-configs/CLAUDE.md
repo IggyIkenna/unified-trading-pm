@@ -122,9 +122,10 @@ Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_
 categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
 `DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
 
-- 17 `EXPECTED_*` reasons + `SOURCE_RETURNED_ZERO` in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
-  `LegacyBlankErrorReasonError`. Enum:
-  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`.
+- 31-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE`) in UAC
+  `EMPTY_CONFIRMED_REASONS`. Blank reason → `LegacyBlankErrorReasonError`. Enum:
+  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy
+  table: `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
   `MissingClusterValidationError` if kwargs absent.
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
@@ -136,8 +137,8 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
   window. SSOT: `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
 
 SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`
-(§ "Reason taxonomy" — expanded taxonomy for `record_empty(reason=...)` callsites; § "Per-service consumer-class audit"
-— per-service skip/alert rules for `EXPECTED_*` + `attempted_failed` reasons).
+(§ "Reason taxonomy" — 31-reason table; § "Per-service consumer-class audit" — per-service skip/alert rules;
+§ "Per-reason-group → consumer policy" — per-reason ML/execution/rolling-window lookup).
 
 ### Shard-granularity SSOT (CRITICAL)
 

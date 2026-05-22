@@ -2922,9 +2922,12 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       `market_created_at`/`settlement_time`/`current_status` at UTL `legacy_reason_classifier.py:450-511`.
       `CANONICAL_GROUP_METADATA` has no date-range fields; IS MARKET_LIFECYCLE is the canonical-group lifecycle SSOT
       consumed via per-market row columns. UTL@a19888f5 (current HEAD).
-- [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
+- [x] ✅ [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
       Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
-      (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy).
+      (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy). — PM@this commit:
+      CLAUDE.md updated (17→31 members, codex pointer added); codex new section
+      "Per-reason-group → consumer policy quick-reference" (10-row table, 31 reasons across 9 groups + attempted_failed;
+      key calendar-closed vs temporary-gap rolling-window distinction documented).
 - [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
       extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
       attempted*failed/LegacyBlankErrorReasonError, those rows that should actually be typed (e.g. rows during
