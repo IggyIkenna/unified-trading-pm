@@ -4,12 +4,12 @@ scope: [strategist, engineer]
 
 # CME × Polymarket Cross-Venue Event-Contract Arb — Playbook
 
-> **Status (2026-05-22)**: Phases 1–5 shipped. Engine live in strategy-service. ECES + ECBTC roots fully wired (2 of 9).
-> Remaining 7 roots (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ) blocked on `predictions_master` Phase 5
-> (canonical-question-group backfill). Full onboarding (paper-trade soak + DART gate) post-cutover.
+> **Status (2026-05-22)**: Phases 1–5 shipped. Engine live in strategy-service. All 9 roots wired in
+> `cme_polymarket_link.py`. Instruments-service catalog backfill + MTDS CLOB tick history for 7 new groups pending (VM
+> launch not yet dispatched). Full onboarding (paper-trade soak + DART gate) post-cutover.
 >
-> **Shipped**: Phase 1 UAC@b95d146 · Phase 2 UAC@77facd65 (PARTIAL: ECES+ECBTC) · Phase 3 MTDS@b59b63e · Phase 4
-> instruments-service@7a3db05 · Phase 5 strategy-service@2c59f2ce.
+> **Shipped**: Phase 1 UAC@b95d146 · Phase 2 UAC@77facd65+UAC@9c491bdd (FULL: all 9 roots) · Phase 3 MTDS@b59b63e ·
+> Phase 4 instruments-service@7a3db05 · Phase 5 strategy-service@2c59f2ce.
 
 **Plan SSOT**:
 [`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
@@ -107,8 +107,8 @@ May-23 cutover.
 
 - **Don't skip the canonical-question-group cross-link**: directly hand-mapping CME root → Polymarket market_id at
   strategy level bypasses the UAC SSOT. Use `linked_question_group(cme_root)` from
-  `unified_api_contracts.canonical.crosscutting.cme_polymarket_link` (Phase 2 — UAC@77facd65; ECES+ECBTC wired; 7
-  remaining roots return `None` until `predictions_master` Phase 5 ships).
+  `unified_api_contracts.canonical.crosscutting.cme_polymarket_link` (Phase 2 — UAC@77facd65+UAC@9c491bdd; all 9 roots
+  wired as of 2026-05-22; IS catalog backfill + MTDS CLOB for 7 new groups pending VM dispatch).
 - **Don't treat ECBTC.OPT as a vanilla option**: per Phase 1, the Databento classifier emits
   `InstrumentType.EVENT_CONTRACT` (not OPTION) for EC\* roots on `instrument_class=BAG` (current Databento encoding) or
   legacy `instrument_class=O`. Downstream features that filter by `instrument_type` MUST treat EVENT_CONTRACT distinctly
