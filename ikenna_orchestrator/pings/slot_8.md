@@ -1894,3 +1894,42 @@ All 5 root causes for the repeated quietness baseline VM failures identified and
 Refs: `alerting_service_live_rules_2026_05_07.md` Phase 7 / `deployment-service@40fdc3d` / `alerting-service@59e020f`
 
 — slot-8 / ikenna / 2026-05-22
+
+---
+
+## [slot-8 ACK] 2026-05-22 — AUDIT-03 archival complete + Wave 2 dispatch re-verification
+
+**AUDIT-03 archival (prior session, committed PM@87729087c):**
+
+All 5 mandatory archival steps completed:
+
+1. Scanned for DEFERRED items — none. All 14 remediation items ✅ shipped.
+2. Added archival banner to `plans/archive/audit03_drift_remediation_backlog_2026_05_22.plan.md`.
+3. Codex alignment: §6 findings index updated with CLOSED statuses + commit SHAs for
+   F-03/04/05/16/17/18/19/21/23/24/26/29/30/31/35/36/37a/37b/46. §6.2 routing table backlog row marked ALL CLOSED ✅.
+4. Two unrouted findings (F-22 + F-25 had `Plan: TBD`) routed to
+   `plans/active/issues/audit03_ikenna_review_routing_2026_05_22.md` with full decision options for Ikenna.
+5. `locked_by: live-defi-rollout` removed + `[unlock-plan]` in archival commit.
+
+**Wave 2 dispatch re-verification (all 4 items):**
+
+- Phase 8 P0 doc → ✅ already done at `PM@06221f716` (slot-2, item 28 in master plan Group D)
+- writegate Phase 2.E.2 → ✅ already done at `mtds@06b6c0e1` (`EXPECTED_INSTRUMENT_NOT_LISTED` partial-bundle fix)
+- writegate Phase 2.E.3 → BLOCKED-OPERATOR (requires 37-VM production execution + deployment-ui manifest review; not
+  agent-automatable)
+- writegate Phase 6.3 features-volatility → ✅ already shipped 2026-05-13 at `features-service@d7514a08`
+  (`_check_emission_policy` + `_apply_emission_gate` + 4 unit tests)
+
+**Current slot-8 hold items:**
+
+- `alerting-quietness-20260522-083225` VM running → auto-shutdown 2026-05-24 08:32 UTC. After shutdown: read GCS events
+  bucket results; after operator FP-rate analysis → update `ALERT_THRESHOLDS` in UAC with tuned values.
+- `manifest_schema_final_gate` → gated on MTDS CeFi backfill VM completing (ETA 2–5 days from 2026-05-22).
+- PagerDuty `uts-prod-live-trading` policy → BLOCKED-CREDENTIALS (API key not in Secret Manager).
+- Phase 3 backfill VMs → still gated on `mtds_mdps_master` Phase 7 GREEN.
+
+Refs: `audit03_drift_remediation_backlog_2026_05_22.plan.md` (archived) / `audit03_ikenna_review_routing_2026_05_22.md`
+(active) / `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.3 / Phase 2.E.3 /
+`alerting_service_live_rules_2026_05_07.md` Phase 7
+
+— slot-8 / ikenna / 2026-05-22
