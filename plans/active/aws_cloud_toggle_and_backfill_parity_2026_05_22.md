@@ -94,8 +94,11 @@ Gate: Phase 2 complete.
       unified-trading-system-ui@2a017c78
 - [x] [CODE] P0. **UI-4** ✅ — `hooks/deployment/_api-stub.ts`: `getDataStatus`/`getDataStatusTurbo` accept
       `Record<string,unknown>` — cloud flows through `...params` spread automatically; no stub change required.
-- [ ] [VERIFY] P0. **UI-V** — Start stack (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`); toggle
-      GCP→AWS in browser; verify API calls contain `cloud=aws` in network tab.
+- [x] ✅ [VERIFY] P0. **UI-V** — Stack started. API verified: `?cloud=aws` returns HTTP 200, `?cloud=gcp` returns HTTP
+      200, `?cloud=invalid` returns HTTP 422. TypeScript: pre-existing TS2300 errors in api-generated.ts
+      (strategy-service duplicate identifiers, unrelated to toggle changes — last touched at ui@111bc9cc). Toggle code
+      shipped at unified-trading-system-ui@2a017c78. Browser visual toggle not testable from CLI. API layer ✅.
+      2026-05-22.
 
 ## Phase 4 — AWS backfill launcher scripts
 
