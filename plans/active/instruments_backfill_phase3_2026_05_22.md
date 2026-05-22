@@ -32,7 +32,7 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       instruments-service@fa93f45 (fix: PolygonOptionContract ImportError — UAC external/polygon deleted, local models).
       deployment-service@4884aac. Relaunched after tarball rebuild — old run silently failed (ImportError masked by
       shell loop). **NOTE**: VMs ran but wrote 0 records — MalformedRowKeyError (chain='' in row_key). Fix:
-      instruments-service@TBD (orchestrator.py:3104 — conditional chain in row_key). Relaunch pending QG green.
+      instruments-service@4c1389d. Relaunch pending tarball rebuild (see below).
 - [ ] [VERIFY] P0. **IS-3.1.CeFi-V** — Post-launch: `instruments-store-cefi-prd` gains new rows; `available_at`
       populated; 0 `attempted_failed` after first poll cycle.
 
@@ -48,7 +48,7 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi** — Launched instr-backfill-tradfi-20260522 @ 35.200.75.132. 2026-03-01→2026-05-22
       window. MANIFEST_PER_VM_SHARDS=true. instruments-service@fa93f45. deployment-service@4884aac. Relaunched after
       tarball rebuild — old run silently failed. **NOTE**: VM ran but wrote 0 records — same MalformedRowKeyError
-      (chain='' in row_key for CBOE/CME/FX/ICE/NASDAQ/NYSE). Fix same as CeFi. Relaunch pending QG green.
+      (chain='' in row_key for CBOE/CME/FX/ICE/NASDAQ/NYSE). Fix: instruments-service@4c1389d. Relaunch pending tarball rebuild.
 - [ ] [VERIFY] P0. **IS-3.1.TradFi-V** — `instruments-store-tradfi-prd` gains rows; VIX instrument present; honest-gap
       coverage for pre-Polygon dates.
 
@@ -85,10 +85,12 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 ## Pending relaunches after MalformedRowKeyError fix
 
-- [ ] [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — After QG green on instruments-service MalformedRowKeyError fix
-      (orchestrator.py conditional chain row_key), rebuild tarball + relaunch CeFi VMs:
-      `--asset-group CEFI --start 2026-03-01 --end 2026-05-22`. New SHA: instruments-service@TBD.
-- [ ] [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Same fix + relaunch TradFi VM:
+- [x] ✅ [CODE] P0. **IS-3.1.chain-fix** — Fixed `MalformedRowKeyError` in orchestrator.py:3104 —
+      conditional chain inclusion in row_key (omit when empty for CeFi/TradFi).
+      instruments-service@4c1389d. ruff+basedpyright clean. Tarball rebuild in progress.
+- [ ] [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Tarball rebuild in progress (instruments-service@4c1389d).
+      Relaunch 3× CeFi VMs: `--asset-group CEFI --start 2026-03-01 --end 2026-05-22`.
+- [ ] [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Relaunch TradFi VM:
       `--asset-group TRADFI --start 2026-03-01 --end 2026-05-22`.
 
 ## Temporary states + their canonical follow-up plans
