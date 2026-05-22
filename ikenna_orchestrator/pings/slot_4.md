@@ -96,19 +96,24 @@ need dev stack running.**
 
 **Items shipped (PM tab branch `tab/ikennaigboaka/4`)**:
 
-| Item                               | Status         | Evidence                                                                                                                                                                                                                                   |
-| ---------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2 — Phase 2.E.1 QG STEP 5.85       | ✅ DONE        | PM@3a220308f — `no_blank_record_empty_reason.py` AST checker + `base-service.sh` wire; writegate Phase 2.E.1 `[x]` (superseded by STEP 5.89 on remote)                                                                                     |
-| 6 — GAP-2.4.D design doc           | ✅ DONE        | PM@d894869bf — `plans/active/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` filed; audit: drilldown already clean, 2 flat methods remain (DataStatusService + DataQueryService), ml-\* drift RESOLVED; code_freeze GAP-2.4.D `[x]` |
-| 5 — StrategyDirectiveReloader stub | 🟡 FREEZE-HOLD | e2e-testing local `tab/ikennaigboaka/4` commit ready; push blocked until UNFREEZE (tab branch tracks LDR, can't push during freeze)                                                                                                        |
+| Item                               | Status  | Evidence                                                                                                                                                                                                                                   |
+| ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2 — Phase 2.E.1 QG STEP 5.85       | ✅ DONE | PM@3a220308f — `no_blank_record_empty_reason.py` AST checker + `base-service.sh` wire; writegate Phase 2.E.1 `[x]` (superseded by STEP 5.89 on remote)                                                                                     |
+| 6 — GAP-2.4.D design doc           | ✅ DONE | PM@d894869bf — `plans/active/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` filed; audit: drilldown already clean, 2 flat methods remain (DataStatusService + DataQueryService), ml-\* drift RESOLVED; code_freeze GAP-2.4.D `[x]` |
+| 5 — StrategyDirectiveReloader stub | ✅ DONE | Already on LDR — confirmed 2026-05-22 via `e2e-testing@5804719` (freeze lifted; was pre-pushed during freeze window)                                                                                                                       |
 
-**Blocked pending slot-2 UAC Protocol class**:
+**UAC catalog-read interface contract landed — items 1/3+4 UNBLOCKED**:
 
-| Item                                               | Status         |
-| -------------------------------------------------- | -------------- |
-| 1 — Sports per-fixture_id shard granularity (MTDS) | BLOCKED-SLOT-2 |
-| 3+4 — Phase 3.D.5 v2 catalog enumerators           | BLOCKED-SLOT-2 |
+| Item                                               | Status                   |
+| -------------------------------------------------- | ------------------------ |
+| 1 — Sports per-fixture_id shard granularity (MTDS) | 🟡 READY — awaiting work |
+| 3+4 — Phase 3.D.5 v2 catalog enumerators           | 🟡 READY — awaiting work |
 
-Awaiting UNFREEZE signal to push item 5 and slot-2 UAC branch to start items 1/3/4.
+Unblocked by: UAC@a422d0b8 (`InstrumentCatalogReader` Protocol + `list_instruments` + `register_catalog_reader` in
+`canonical/domain/instruments_catalog.py`). Code freeze lifted 2026-05-22. Phase 3 VM launches still gated on
+`mtds_mdps_master` Phase 7 GREEN (separate gate).
 
-— slot-4
+**[2026-05-22] slot-4 status update**: AWS toggle Phases 1-4 complete + SMOKE-1/2/3 BLOCKED-OPERATOR-DECISION. All repos
+synced to LDR. Items 1/3+4 unblocked.
+
+— slot-4 / 2026-05-22
