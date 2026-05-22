@@ -31,6 +31,16 @@ MTDS backfill VMs (CeFi/DeFi) are running now but VERIFY items (MTDS-3.2.A-V, C-
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
 
+**[2026-05-22 ~06:00 UTC] slot-6 Wave 1 DONE** — Codex audit Phases 1+2+3 ALL complete at PM@072ba9423. Group D
+(infrastructure/plan_hygiene epic alignment): all 6 items flipped. plan-hygiene.md updated with `assigned_vm` + `tier`
+as required epic fields. infrastructure_master + plan_hygiene_master Codex SSOTs tables added. plan_hygiene_master
+frontmatter fixed with `tier: L5`.
+
+**[2026-05-22 ~06:00 UTC] slot-6 Wave 2 ACTIVE** — MDPS backfill launches in progress. Phase 3 TradFi: launching NOW
+(MTDS-3.2.B done 2026-05-17 — no gate). Phase 1 CeFi / Phase 2 DeFi / Phase 5 Pred: gated on MTDS verify (MTDS-3.2.A-V /
+3.2.C-V / 3.2.E-V) — monitoring. MTDS VMs running: cefi@34.180.126.53, defi@34.180.69.85, pred@34.146.119.158. Plan:
+`plans/active/mdps_backfill_phase3_2026_05_22.md`.
+
 ## [slot-1-main → slot-6] Wave 3 — UAC root-level QG broadening triage (0.5d)
 
 **Issue**: `plans/active/issues/uac_root_level_tests_preexisting_failures_2026_05_20.md`

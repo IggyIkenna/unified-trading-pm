@@ -108,10 +108,12 @@ DONE.
 
 **Ping**: `ikenna_orchestrator/pings/slot_6.md`
 
-**Wave 1 (active)**: `codex_plan_audit_differential_2026_05_22.md` Phases 1+2 P0 items.
+**Wave 1 (✅ DONE PM@072ba9423)**: `codex_plan_audit_differential_2026_05_22.md` Phases 1+2+3 ALL complete. Group D
+items flipped; plan-hygiene.md + infrastructure_master + plan_hygiene_master updated.
 
-**Wave 2**: Phase 3 delta annotation bulk pass → `mdps_backfill_phase3_2026_05_22.md` (gated on MTDS CeFi+DeFi verify
-GREEN): Phase 1 CeFi + Phase 2 DeFi + Phase 3 TradFi reprocessors.
+**Wave 2 (ACTIVE)**: `mdps_backfill_phase3_2026_05_22.md` — MDPS backfill launches. Phase 3 TradFi: launching (no gate —
+MTDS-3.2.B done 2026-05-17). Phase 1 CeFi / Phase 2 DeFi / Phase 5 Pred: gated on MTDS-3.2.A-V / 3.2.C-V / 3.2.E-V GREEN
+(monitoring).
 
 ---
 
