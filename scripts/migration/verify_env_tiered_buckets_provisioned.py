@@ -4,9 +4,8 @@
 Phase 2.6 cutover prerequisite: every (kind × asset_group × env × cloud) tuple declared
 in `deployment-service/configs/cloud-providers.yaml` MUST have a corresponding bucket
 on the target cloud before Wave 1 rsync starts. This script enumerates the SSOT,
-resolves each bucket name template with the requested env, calls
-`gcloud storage buckets describe` / `aws s3api head-bucket` per tuple, and reports
-the diff.
+resolves each bucket name template with the requested env, calls the cloud APIs
+per tuple, and reports the diff.
 
 Exit-code semantics:
   0 — all checked buckets exist (Wave 1 prerequisite met for this env)
@@ -18,11 +17,14 @@ Usage::
     # Default: check prod tier on GCP
     python3 verify_env_tiered_buckets_provisioned.py
 
-    # Check staging on both clouds
-    python3 verify_env_tiered_buckets_provisioned.py --env stg --cloud all
+    # Check prod on both clouds
+    python3 verify_env_tiered_buckets_provisioned.py --env prd --cloud all
 
     # Print provision commands for the missing ones
     python3 verify_env_tiered_buckets_provisioned.py --env prd --print-provision-commands
+
+    # Provision missing buckets (GCP only; AWS not yet automated)
+    python3 verify_env_tiered_buckets_provisioned.py --env prd --provision-missing
 
 Wired by Wave 1 of `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md`.
 SSOT: `deployment-service/configs/cloud-providers.yaml`.
@@ -34,11 +36,13 @@ Reference: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` 
 from __future__ import annotations
 
 import argparse
+import csv
+import datetime
 import os
 import subprocess
 import sys
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import cast
 
@@ -63,6 +67,16 @@ class BucketSpec:
     asset_group: str | None
     env: str
     name: str
+
+
+@dataclass
+class BucketResult:
+    cloud: str
+    kind: str
+    asset_group: str
+    env: str
+    name: str
+    status: str  # PRESENT | MISSING
 
 
 def _substitute_template(template: str, env_short: str, project_id: str, aws_account_id: str) -> str:
@@ -104,7 +118,20 @@ def _enumerate_buckets(
     return out
 
 
-def _check_gcp_bucket(name: str) -> bool:
+def _check_gcp_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
+    """Bulk-check GCS buckets using the Python client (one list call, then lookup)."""
+    try:
+        from google.cloud import storage as gcs  # type: ignore[import-untyped]
+
+        client = gcs.Client(project=_DEFAULT_GCP_PROJECT_ID)
+        existing = {b.name for b in client.list_buckets()}
+        return {spec.name: spec.name in existing for spec in specs}
+    except Exception:
+        # Fall back to subprocess per-bucket if GCS client unavailable
+        return {spec.name: _check_gcp_bucket_subprocess(spec.name) for spec in specs}
+
+
+def _check_gcp_bucket_subprocess(name: str) -> bool:
     """Return True if the GCS bucket exists (via gcloud storage buckets describe)."""
     try:
         result = subprocess.run(
@@ -119,7 +146,21 @@ def _check_gcp_bucket(name: str) -> bool:
         return False
 
 
-def _check_aws_bucket(name: str) -> bool:
+def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
+    """Bulk-check S3 buckets using boto3 list_buckets."""
+    try:
+        import boto3  # type: ignore[import-untyped]
+
+        s3 = boto3.client("s3")
+        response = s3.list_buckets()
+        existing = {b["Name"] for b in response.get("Buckets", [])}
+        return {spec.name: spec.name in existing for spec in specs}
+    except Exception:
+        # Fall back to subprocess per-bucket
+        return {spec.name: _check_aws_bucket_subprocess(spec.name) for spec in specs}
+
+
+def _check_aws_bucket_subprocess(name: str) -> bool:
     """Return True if the S3 bucket exists (via aws s3api head-bucket)."""
     try:
         result = subprocess.run(
@@ -134,12 +175,16 @@ def _check_aws_bucket(name: str) -> bool:
         return False
 
 
-def _check_bucket(spec: BucketSpec) -> bool:
-    if spec.cloud == "gcp":
-        return _check_gcp_bucket(spec.name)
-    if spec.cloud == "aws":
-        return _check_aws_bucket(spec.name)
-    return False
+def _check_buckets(specs: list[BucketSpec]) -> dict[str, bool]:
+    """Bulk-check all specs by cloud."""
+    gcp_specs = [s for s in specs if s.cloud == "gcp"]
+    aws_specs = [s for s in specs if s.cloud == "aws"]
+    results: dict[str, bool] = {}
+    if gcp_specs:
+        results.update(_check_gcp_buckets_bulk(gcp_specs))
+    if aws_specs:
+        results.update(_check_aws_buckets_bulk(aws_specs))
+    return results
 
 
 def _provision_command(spec: BucketSpec) -> str:
@@ -148,13 +193,43 @@ def _provision_command(spec: BucketSpec) -> str:
             f"gcloud storage buckets create gs://{spec.name} --location=asia-northeast1 --uniform-bucket-level-access"
         )
     if spec.cloud == "aws":
-        # ap-northeast-1 (Tokyo) — operator-ratified 2026-05-11 per GAP-2.4.F; same region as GCS data
         region = "ap-northeast-1"
         return (
             f"aws s3api create-bucket --bucket {spec.name} --region {region} "
             f"--create-bucket-configuration LocationConstraint={region}"
         )
     return f"# unknown cloud {spec.cloud}"
+
+
+def _provision_gcp_bucket(name: str) -> bool:
+    """Create a GCS bucket; return True on success."""
+    try:
+        result = subprocess.run(
+            [
+                "gcloud",
+                "storage",
+                "buckets",
+                "create",
+                f"gs://{name}",
+                "--location=asia-northeast1",
+                "--uniform-bucket-level-access",
+                "--project=" + _DEFAULT_GCP_PROJECT_ID,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        if result.returncode == 0:
+            return True
+        # "already exists" is also success
+        if "already exists" in result.stderr.lower():
+            return True
+        print(f"  GCP create error: {result.stderr.strip()}", file=sys.stderr)
+        return False
+    except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
+        print(f"  GCP provision exception: {exc}", file=sys.stderr)
+        return False
 
 
 def _iter_clouds(cloud_arg: str) -> Iterable[str]:
@@ -199,11 +274,41 @@ def _parse_args() -> argparse.Namespace:
         help="Print gcloud/aws provision commands for missing buckets",
     )
     parser.add_argument(
+        "--provision-missing",
+        action="store_true",
+        help="Provision missing GCP buckets (calls gcloud storage buckets create). AWS: print commands only.",
+    )
+    parser.add_argument(
+        "--csv-out",
+        type=Path,
+        default=None,
+        help="Write results to this CSV path. Defaults to plans/audit/results/env_tiered_buckets_provisioned_<date>.csv",  # noqa: E501
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Enumerate + print bucket names without checking existence (offline mode)",
     )
     return parser.parse_args()
+
+
+def _write_csv(results: list[BucketResult], csv_path: Path) -> None:
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=[fi.name for fi in fields(BucketResult)])
+        writer.writeheader()
+        for r in results:
+            writer.writerow(
+                {
+                    "cloud": r.cloud,
+                    "kind": r.kind,
+                    "asset_group": r.asset_group or "",
+                    "env": r.env,
+                    "name": r.name,
+                    "status": r.status,
+                }
+            )
+    print(f"CSV written: {csv_path}")
 
 
 def main() -> int:
@@ -214,7 +319,14 @@ def main() -> int:
     project_id: str = cast(str, ns.project_id)
     aws_account_id: str = cast(str, ns.aws_account_id)
     print_commands: bool = cast(bool, ns.print_provision_commands)
+    provision_missing: bool = cast(bool, ns.provision_missing)
     dry_run: bool = cast(bool, ns.dry_run)
+    csv_out: Path | None = cast(Path | None, ns.csv_out)
+
+    if csv_out is None:
+        date_str = datetime.date.today().isoformat()
+        default_csv_dir = Path(__file__).resolve().parents[2] / "plans" / "audit" / "results"
+        csv_out = default_csv_dir / f"env_tiered_buckets_provisioned_{date_str}.csv"
 
     if not yaml_path.exists():
         print(f"ERROR: yaml not found: {yaml_path}", file=sys.stderr)
@@ -243,22 +355,70 @@ def main() -> int:
             print(f"  {spec.cloud}: {spec.name}  ({spec.kind} / {spec.asset_group or '<shared>'})")
         return 0
 
+    print("Checking bucket existence (bulk API)...")
+    existence = _check_buckets(all_specs)
+
     missing: list[BucketSpec] = []
+    results: list[BucketResult] = []
     for spec in all_specs:
-        exists = _check_bucket(spec)
+        exists = existence.get(spec.name, False)
+        status = "PRESENT" if exists else "MISSING"
+        results.append(
+            BucketResult(
+                cloud=spec.cloud,
+                kind=spec.kind,
+                asset_group=spec.asset_group or "",
+                env=spec.env,
+                name=spec.name,
+                status=status,
+            )
+        )
         if not exists:
             missing.append(spec)
 
-    print(f"Existing: {len(all_specs) - len(missing)} / {len(all_specs)}; missing: {len(missing)}.")
+    _write_csv(results, csv_out)
+
+    present_count = len(all_specs) - len(missing)
+    print(f"Existing: {present_count} / {len(all_specs)}; missing: {len(missing)}.")
 
     if missing:
         print("\nMISSING buckets:")
         for spec in missing:
             print(f"  {spec.cloud}: {spec.name}  ({spec.kind} / {spec.asset_group or '<shared>'})")
+
         if print_commands:
             print("\nProvision commands:")
             for spec in missing:
                 print(f"  {_provision_command(spec)}")
+
+        if provision_missing:
+            print("\nProvisioning missing GCP buckets...")
+            provisioned = 0
+            skipped_aws: list[BucketSpec] = []
+            for spec in missing:
+                if spec.cloud == "gcp":
+                    print(f"  Creating gs://{spec.name} ...", end=" ", flush=True)
+                    ok = _provision_gcp_bucket(spec.name)
+                    if ok:
+                        print("OK")
+                        provisioned += 1
+                    else:
+                        print("FAILED")
+                else:
+                    skipped_aws.append(spec)
+            print(f"  GCP: provisioned {provisioned} bucket(s).")
+            if skipped_aws:
+                print(f"  AWS: {len(skipped_aws)} bucket(s) not auto-provisioned — run manually:")
+                for spec in skipped_aws:
+                    print(f"    {_provision_command(spec)}")
+            # Re-check to update missing count
+            remaining = [s for s in missing if s.cloud != "gcp"]
+            if remaining:
+                print(f"\n❌ {len(remaining)} AWS bucket(s) still missing after GCP auto-provision.")
+                return 1
+            print("\n✅ All GCP buckets provisioned. AWS buckets still require manual creation.")
+            return 0
+
         print(
             f"\n❌ {len(missing)} bucket(s) missing — provision before Wave 1 rsync. "
             "See codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md."
