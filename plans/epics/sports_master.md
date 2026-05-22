@@ -320,8 +320,11 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [x] [AGENT] P1. UAC `unified_api_contracts.sports`: add `UpstreamReq` dataclass + `FEATURE_UPSTREAM_REQUIREMENTS`
       dict + `in_coverage(source, entity, league, date) -> bool` helper. [AUDIT 2026-05-07: DONE — UAC@3137271
       (UpstreamReq + FEATURE_UPSTREAM_REQUIREMENTS + in_coverage Phase 1)]
-- [ ] [AGENT] P1. Unit tests for `in_coverage` — coverage of each clip rule; pre-launch dates + paused leagues. [AUDIT
-      2026-05-07: FRESH — actionable; UAC@3137271 commit message says Phase 1 implies tests; verify test file exists]
+- [x] ✅ [AGENT] P1. Unit tests for `in_coverage` — coverage of each clip rule; pre-launch dates + paused leagues.
+      [AUDIT 2026-05-07: FRESH — actionable; UAC@3137271 commit message says Phase 1 implies tests; verify test file
+      exists] UAC@31372710 — 4 test classes (TestUpstreamReq, TestFeatureUpstreamRequirements, TestInCoverage,
+      TestInCoverageDt) covering pre-launch dates, league coverage clips, SFI DATA_TYPE_COVERAGE_START override, derived
+      source bypass. Verified 2026-05-22.
 - [ ] [AGENT] P2. features-sports-service: feature compute path calls `in_coverage` per upstream before
       fetching/joining. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P2. NaN handling — distinguish NaN-by-design (write parquet, manifest `captured`) from
