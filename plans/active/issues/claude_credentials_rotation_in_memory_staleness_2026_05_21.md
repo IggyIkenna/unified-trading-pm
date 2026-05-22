@@ -391,6 +391,29 @@ upload to GCS is the operator's manual step until automated. A small local helpe
 - [ ] VS Code chat that hits /login can be recovered by the close+reopen workaround in 100% of cases where
       `.credentials.json` was updated within the prior hour (or document the limitation).
 
+## 13. Status update — 2026-05-22 (orchestrator Phase 4a-4c shipped)
+
+**Orchestrator epic Phase 4a + 4b + 4c are DONE** (per `plans/epics/orchestrator_master.md`):
+
+- Phase 4a: Spawn path migrated to env-var auth (`oauth_token_env_file` + `tmux_spawn.py`) — agents now use
+  `CLAUDE_CODE_OAUTH_TOKEN` from env files instead of `.credentials.json` swaps. No more rotation races for sub-a /
+  sub-b / iggy2london accounts.
+- Phase 4b: r3 env-file routing live — `sub-a-ikenna`, `sub-b-iggy2london` on long-lived `setup-token` tokens. Legacy
+  `.credentials.json` path retained for `harsh-primary` only (pending Harsh running `claude setup-token`).
+- Phase 4c: `SetupTokenBadge` in dashboard — 1-year expiry warn/crit/expired levels; all 3 r3 accounts seeded to
+  2027-05-21.
+
+**Still open**:
+
+- Phase 4b-cleanup (PENDING): remove legacy swap/refresh code once `harsh-primary` migrates to setup-token. Blocked on
+  Harsh running `claude setup-token` for `harsh.kantariya00787@gmail.com`.
+- Phase 5: GCS distribution + account roster expansion (Harsh setup-token needed).
+
+**This issue doc** remains active until Phase 4b-cleanup lands (harsh-primary on setup-token). The acute rotation/401
+cascade described in §§1-7 is largely resolved for Ikenna accounts; `harsh-primary` is the last legacy path.
+
+**Tracking**: `plans/epics/orchestrator_master.md` Phase 4b-cleanup + Phase 5 are the authoritative tracking items.
+
 ## 12. Audit-trail breadcrumbs (so next agent can reproduce)
 
 - This doc was written by `agt-5566ea` (main agent on `ip-172-31-5-118`, registered 2026-05-21 13:16 UTC).
