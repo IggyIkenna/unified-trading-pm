@@ -71,6 +71,46 @@ DIVERGENT_EMPTY triage CSV produced.
 
 ---
 
+## [slot-5 → slot-1-main] 2026-05-22 ~04:22 UTC — Phase 6 GREEN + Phase 7 GREEN
+
+**Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 6 + Phase 7
+
+### Phase 6 — Docker rebuild verification ✅ GREEN
+
+Sampled all 9 active prd manifest buckets (5 MTDS + 4 IS):
+
+- MTDS CEFI/DEFI/TRADFI/SPORTS: 100% v8 ✅
+- MTDS PRED (`market-data-tick-pred-prd-*`): 16,812 rows 100% v8 ✅
+- IS CEFI/DEFI/TRADFI/SPORTS/PRED: 100% v8 ✅
+- MDPS prd buckets: no-manifest (expected — not yet backfilled; await Phase 11)
+
+**Conclusion**: steady-state writers confirmed at v8. No Docker rebuild needed.
+
+### Phase 7 — Manifest v8 backfill + label-flip ✅ GREEN
+
+1. **v8 schema migration**: DONE 2026-05-21 (d3_manifest_v8_finish_2026_05_20.md Phase 3). 7,412,953 rows migrated.
+2. **Blank reason flip**:
+   - CEFI: 3,146 blank ec rows → `attempted_failed / LegacyBlankErrorReasonError` (no catalog cross-ref available — safe
+     conservative default). Shard merged manually via `manifest_consolidator`.
+   - SPORTS MTDS: 326 blank ec rows → `empty_confirmed / SOURCE_RETURNED_ZERO`. Shard merged.
+   - Instruments-service import fix: `instruments-service@43f6051` (classify_blank_reason_row direct module path)
+   - Verified: `ec_blank_reasons=0` for both CEFI and SPORTS post-merge.
+3. **DIVERGENT_EMPTY triage**: DONE 2026-05-21 (d3_manifest_v8_finish_2026_05_20.md Phase 4). All 765 →
+   `phase_11_rebackfill`.
+
+**Side-finding captured in `mtds_backfill_phase3_2026_05_22.md`**: manifest consolidator terraform only covers flat
+buckets; prd buckets not in Cloud Run scheduler. Had to run consolidator manually. Needs terraform update before Phase
+11 backfill VMs write per-VM shards to prd buckets.
+
+**Phase 7 verification**: all 9 prd buckets 100% v8, 0 blank ec reasons.
+
+**🟢 Phase 6+7 GATE: CLEARED** — Phase 3 backfill VMs (instruments/mtds/mdps/features wrapper plans) may now launch,
+subject to Phase 5 AWS gate and sports rename gate per `mtds_mdps_master`.
+
+— slot-5 / ikenna / 2026-05-22
+
+---
+
 > **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---

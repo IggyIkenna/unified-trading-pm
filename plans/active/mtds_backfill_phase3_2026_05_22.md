@@ -90,7 +90,20 @@ AI-days on `vm-sports`.
 
 ## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
 
-- [ ] [AGENT] P3. Fix F401 unused imports in `market-tick-data-service/tests/unit/test_drift_solana_ws_connector.py` (`json`) and `market-tick-data-service/tests/unit/test_kraken_futures_ws_connector.py` (`json`). Run `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue: `plans/archive/issues/unused_import_audit_2026_05_18.md`.
+- [ ] [AGENT] P3. Fix F401 unused imports in `market-tick-data-service/tests/unit/test_drift_solana_ws_connector.py`
+      (`json`) and `market-tick-data-service/tests/unit/test_kraken_futures_ws_connector.py` (`json`). Run
+      `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue:
+      `plans/archive/issues/unused_import_audit_2026_05_18.md`.
+
+## Pre-launch blocker (P0 — gate before any Phase 11 VM writes per-VM shards to prd buckets)
+
+- [ ] **[SCRIPT] P0. Wire manifest consolidator terraform to prd bucket names.** Current
+      `manifest_consolidator_scheduler.tf` `manifest_consolidator_buckets` map uses flat bucket names
+      (`market-data-tick-cefi-central-element-323112` etc.). All active manifests now live in prd-tiered buckets
+      (`market-data-tick-cefi-prd-*`). Phase 11 VMs will write per-VM shards to prd buckets; the Cloud Run consolidator
+      will NOT pick them up until the bucket map is updated to prd names. **Required before Phase 11 backfill VMs
+      launch.** Found 2026-05-22 during Phase 7 blank-reason reconciliation (had to run consolidator manually). Fix:
+      update `manifest_consolidator_buckets` + `terraform apply`.
 
 ## Temporary states + their canonical follow-up plans
 
