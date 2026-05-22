@@ -56,9 +56,12 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 
 ## Phase 5 — strategy-service cross-venue arb archetype
 
-- [ ] [SCRIPT] P1. New archetype `cme_polymarket_event_arb` in strategy-service: reads CME event-contract bid/ask +
-      Polymarket market price; computes basis; sizes paired position when basis exceeds threshold. Execution-service
-      cross-venue routing: CME leg via Databento-broker connector + Polymarket leg via existing execution adapter.
+- [x] ✅ [SCRIPT] P1. New archetype `ARBITRAGE_CROSS_DOMAIN_EVENT` in strategy-service — strategy-service@2c59f2ce
+      (2026-05-22): `cme_polymarket.py` engine + factory.py registration + TIER*STABLE_STRUCTURAL Kelly +
+      GREENFIELD_ARCHETYPES + 3 target_universe seed rows (ECES×2 + ECBTC×1). Reads
+      `cme_event_bid*{root}`/`cme*event_ask*{root}`+`polymarket*yes_bid*{group}`/    `polymarket*yes_ask*{group}`
+      features; emits LEADER_HEDGE AtomicInstruction when net basis > threshold. CME leg venue="CME"; Polymarket leg
+      venue="POLYMARKET". QG all gates green.
 
 ## Codex updates
 
