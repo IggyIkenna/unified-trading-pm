@@ -52,14 +52,18 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 - [x] ✅ [AGENT slot 6] P0. **MDPS-3.3.TradFi** — Launched `mdps-backfill-tradfi-20260522-051203` VM (e2-standard-8,
       asia-northeast1-c, 2020-01-01→2026-05-22, prod). VM RUNNING @ 136.110.98.249. `MDPS_ASSET_GROUP=TRADFI`.
       `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-central-element-323112`. 2026-05-22.
-- [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes.
+- [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. NOTE: VM at 2020-01-14 after 3.5h
+      running (very slow — ~10 min/day × 2333 days = ~16 days ETA). VIX bars at 2020-01-01+ will eventually appear.
+      LONG-RUNNING — verify once VM reaches 2026-05-22.
 - [ ] [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — **DEFERRED** (non-fatal, VM continues): VM logs
       `No SchemaContract registered` for CME/ICE `instrument_type=combo`, `instrument_type=UNKNOWN`,
       `instrument_type=futures_chain`, `instrument_type=G   FMZ0020-BRN FMZ0020` (ICE spread) at recovery=alert. These
-      instrument types produce NaN bars for multi-leg/combo CME/ICE instruments. Fix: add contracts to
-      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` for affected (venue, instrument_type) pairs.
-      **SUCCESSOR**: `plans/active/issues/` → file issue doc for UAC CONTRACT_REGISTRY tradfi gap. VIX verification not
-      blocked (CBOE venue uses registered contract). 2026-05-22 discovery.
+      instrument types produce NaN bars for multi-leg/combo CME/ICE instruments. Also: `SCHEMA_VALIDATION_FAILED` for
+      `data_type=trades` bars — NaN open/high/low/close when no trades in interval; schema says NOT NULLABLE → rows
+      skipped. Affects CME/ICE futures trade bars; NOT VIX (VIX is ohlcv, not trades). Fix: (a) add contracts to
+      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` for (venue, instrument_type) pairs; (b) allow
+      nullable OHLC for `data_type=trades` in processed_candles schema. **SUCCESSOR**: file issue doc in
+      `plans/active/issues/`. VIX verification not blocked. 2026-05-22 slot-2 discovery.
 
 ## Phase 4 — Sports MDPS reprocessor
 
