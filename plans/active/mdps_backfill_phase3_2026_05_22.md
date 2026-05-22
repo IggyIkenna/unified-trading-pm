@@ -53,6 +53,13 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       asia-northeast1-c, 2020-01-01→2026-05-22, prod). VM RUNNING @ 136.110.98.249. `MDPS_ASSET_GROUP=TRADFI`.
       `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-central-element-323112`. 2026-05-22.
 - [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes.
+- [ ] [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — **DEFERRED** (non-fatal, VM continues): VM logs
+      `No SchemaContract registered` for CME/ICE `instrument_type=combo`, `instrument_type=UNKNOWN`,
+      `instrument_type=futures_chain`, `instrument_type=G   FMZ0020-BRN FMZ0020` (ICE spread) at recovery=alert. These
+      instrument types produce NaN bars for multi-leg/combo CME/ICE instruments. Fix: add contracts to
+      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` for affected (venue, instrument_type) pairs.
+      **SUCCESSOR**: `plans/active/issues/` → file issue doc for UAC CONTRACT_REGISTRY tradfi gap. VIX verification not
+      blocked (CBOE venue uses registered contract). 2026-05-22 discovery.
 
 ## Phase 4 — Sports MDPS reprocessor
 
