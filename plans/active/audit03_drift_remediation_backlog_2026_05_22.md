@@ -63,10 +63,13 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `# noqa: gs-uri`-exempt display URIs built from an already-resolved bucket (`resolve_bucket_name` wired by
       `strategy_execution_contract_remediation_2026_05_20.md` todo 4a ✅). **This item is folded into that plan
       (best-of-both) — see its AUDIT-03 follow-up todo. Tracked there, not here.**
-- [x] ✅ [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
-      (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule. —
-      strategy-service@90fe9c27 (2 lines; also fixed STEP-5.77 mode-seam in position/config.py + UAC export
-      uac@d771acc1)
+- [x] ✅ [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls <<<<<<<
+      Updated upstream (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary
+      rule. — strategy-service@90fe9c27 (2 lines; also fixed STEP-5.77 mode-seam in position/config.py + UAC export
+      uac@d771acc1) ======= (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group
+      vocabulary rule. — §6.1 re-verification: both files already use `asset_group="defi"` (pre-fixed); no code change
+      required.
+  > > > > > > > Stashed changes
 - [x] ✅ [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
       (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632a; infura removed from
       all 11 chains in chain_config.yaml; docstring + test assertions updated to remove infura references.
