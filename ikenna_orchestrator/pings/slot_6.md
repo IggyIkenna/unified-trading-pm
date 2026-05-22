@@ -31,6 +31,12 @@ MTDS backfill VMs (CeFi/DeFi) are running now but VERIFY items (MTDS-3.2.A-V, C-
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
 
+**[2026-05-22 ~09:30 UTC] slot-6 Phase 3 bulk pass DONE** — Codex Phase 3 delta annotation + stubs + structural fixes
+all complete at PM@072ba9423 (Wave 1). Phase 5 extended sweep (277 stale-marker docs across all codex sections) also
+DONE at PM@37c575bde. Codex plan 100% complete. MTDS VMs still RUNNING (CeFi: mtds-backfill-cefi-2026-05-22b, DeFi:
+mtds-dex-pools-backfill, Pred: mtds-backfill-prediction-2026-05-22). pip-audit fix: base-library.sh CVE-2026-45409
+ignore added at PM@e56bf09d7 (UAC QG was failing). DeFi expected_coverage Bug 1 SHA confirmed: UAC@3d43382b.
+
 **[2026-05-22 ~06:00 UTC] slot-6 Wave 1 DONE** — Codex audit Phases 1+2+3 ALL complete at PM@072ba9423. Group D
 (infrastructure/plan_hygiene epic alignment): all 6 items flipped. plan-hygiene.md updated with `assigned_vm` + `tier`
 as required epic fields. infrastructure_master + plan_hygiene_master Codex SSOTs tables added. plan_hygiene_master
@@ -65,8 +71,10 @@ done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"te
 **Ack**: append `[2026-05-22 HH:MM UTC] slot-6 Wave3 DONE — UAC QG broadened at uac@<sha>` here when done.
 
 **[2026-05-22 ~08:15 UTC] slot-6 Wave3 DONE** — UAC QG fully broadened at UAC@6e6a1e70.
-- Fixed all 318 pre-existing failures: venue parity (25 new venues), sportsbook stubs (matchbook, onexbet, 18-placeholder),
-  archetype manifest (22 archetypes, multiline JSON), analytics models (4 Pydantic classes), protocol launch dates (13 new + 11 pending)
+
+- Fixed all 318 pre-existing failures: venue parity (25 new venues), sportsbook stubs (matchbook, onexbet,
+  18-placeholder), archetype manifest (22 archetypes, multiline JSON), analytics models (4 Pydantic classes), protocol
+  launch dates (13 new + 11 pending)
 - UAC boundary test (test_ac_uic_alignment.py): fixed FORBIDDEN_PACKAGES to check UTL/UIC — UAC@87a6f367 (prev session)
 - PM codex updated: 4 new Carry & Yield archetype sections (CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP_INV,
   CARRY_STAKED_BASIS_DATED, CARRY_RECURSIVE_BORROW_LENDING_ONLY) — PM@24cec4d4d
