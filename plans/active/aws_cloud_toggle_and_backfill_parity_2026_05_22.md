@@ -85,16 +85,15 @@ Gate: Phase 1 complete.
 
 Gate: Phase 2 complete.
 
-- [ ] [CODE] P0. **UI-1** — `data-status-context.tsx`: add `cloudProvider: "gcp" | "aws"` +
-      `setCloudProvider: Dispatch<SetStateAction<"gcp" | "aws">>` to `DataStatusTabContextValue`.
-- [ ] [CODE] P0. **UI-2** — `data-status-provider.tsx`: add
-      `const [cloudProvider, setCloudProvider] = useState<"gcp" | "aws">("gcp")`; pass `cloud: cloudProvider` to both
-      `api.getDataStatus` and `api.getDataStatusTurbo` calls; add `cloudProvider` to `fetchData` dep array + context
-      value.
-- [ ] [CODE] P0. **UI-3** — `data-status-filters-header.tsx`: add GCP | AWS toggle button group (matching the batch/live
-      toggle style) that calls `setCloudProvider`.
-- [ ] [CODE] P0. **UI-4** — `hooks/deployment/_api-stub.ts`: add `cloud?: "gcp" | "aws"` to the `getDataStatus` +
-      `getDataStatusTurbo` params and thread it through to the URL query string.
+- [x] [CODE] P0. **UI-1** ✅ — `data-status-context.tsx`: added `cloudProvider: "gcp" | "aws"` +
+      `setCloudProvider: Dispatch<SetStateAction<"gcp" | "aws">>` to `DataStatusTabContextValue`. —
+      unified-trading-system-ui@2a017c78
+- [x] [CODE] P0. **UI-2** ✅ — `data-status-provider.tsx`: `useState<"gcp"|"aws">("gcp")`; `cloud: cloudProvider` passed
+      to both API calls; `cloudProvider`+`dataStatusMode` added to dep arrays. — unified-trading-system-ui@2a017c78
+- [x] [CODE] P0. **UI-3** ✅ — `data-status-filters-header.tsx`: GCP|AWS toggle button group added. —
+      unified-trading-system-ui@2a017c78
+- [x] [CODE] P0. **UI-4** ✅ — `hooks/deployment/_api-stub.ts`: `getDataStatus`/`getDataStatusTurbo` accept
+      `Record<string,unknown>` — cloud flows through `...params` spread automatically; no stub change required.
 - [ ] [VERIFY] P0. **UI-V** — Start stack (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`); toggle
       GCP→AWS in browser; verify API calls contain `cloud=aws` in network tab.
 
