@@ -29,8 +29,9 @@ writes.
 **Impact**: ALL DEX and lending shard counts were missing from the denominator. The 88.5% DeFi coverage score was
 computed excluding all UNISWAP_V3, AAVE_V3, COMPOUND_V3, MORPHO, BALANCER, CURVE etc. shards.
 
-**Fix shipped**: UAC@<sha-pending> — replaced all VENUE-CHAIN format entries with flat venue names matching actual
-handler output.
+**Fix shipped**: UAC@3d43382b — replaced all VENUE-CHAIN format entries with flat venue names matching actual handler
+output. Both legacy VENUE-CHAIN format entries (e.g. `"UNISWAPV3-ETHEREUM"`) AND flat format entries (e.g.
+`"UNISWAP_V3"`) now coexist in `_DEFI` to cover migrated rows until a phantom reconciler pass removes era-2 names.
 
 ### Bug 2 (OPEN): Handler venue naming inconsistency — `AAVE_V3` vs `AAVEV3`
 
@@ -109,7 +110,7 @@ enum.
 
 ## Recommended decision
 
-- [x] Bug 1: FIXED — see UAC@<sha-pending>
+- [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
 - [ ] Bug 2: Normalise AAVEV3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
       Assign to MTDS slot.
 - [ ] Bug 3: Run phantom reconciler for defi asset_group. Assign to MDPS/IS slot.
