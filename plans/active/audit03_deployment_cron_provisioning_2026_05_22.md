@@ -81,12 +81,12 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
       `terraform import` used to import existing `unified_trading` + `t1_batch` SAs.
 - [ ] [BLOCKED-DOCKER-IMAGES] P0. Verify each scheduler fires: `gcloud scheduler jobs run <name>` → SUCCEEDED.
       **BLOCKED**: `strategy-service:latest`, `alerting-service:latest`, `batch-live-reconciliation-service:latest`
-      images not found in GCP Artifact Registry
-      (`asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/`). Cloud Run Jobs exist but
-      executions will fail at image-pull time. **Unblock**: CI/CD must build + push these 3 service images.
-      `market-tick-data-service` uses `0.3.1` tag (no `:latest`). **MTDS jobs** (fast-t1-recon, cefi-t1-recon) also
-      blocked — `market-tick-data-service:latest` not tagged. Need: tag latest git SHA as `:latest` in Artifact Registry
-      for all 4 images before manual trigger test passes. 2026-05-22.
+      images not found in GCP Artifact Registry. Cloud Build ruff E902 (tests/ guard) fixed (PM@508b18b74 +
+      strategy-service@24fca89f + alerting-service@5c1ce04 + batch-live-recon@2aeb7f3 — clone PM from LDR). New blocker:
+      all 3 builds failing on UAC test compatibility (ModuleNotFoundError unified_api_contracts.internal; per user
+      direction not fixing UAC QG). MTDS `:latest` tagged → `346842a` 2026-05-22T12:33 (fast-t1-recon + cefi-t1-recon
+      unblocked from image side). Remaining: strategy/alerting/batch-live images blocked pending UAC compat fix.
+      2026-05-22.
 
 ## Success criteria
 

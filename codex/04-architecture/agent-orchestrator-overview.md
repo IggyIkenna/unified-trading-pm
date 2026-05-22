@@ -253,8 +253,10 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 - **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
   / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
   route through unchanged.
-- **Auth**: one JWT secret shared fleet-wide, read from GCS (`ORCHESTRATOR_JWT_SECRET_GCS`), hot-reloadable; one login →
-  one token valid on every (incl. proxied) call. `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later).
+- **Auth**: one JWT secret (`ORCHESTRATOR_JWT_SECRET` env var) shared fleet-wide; one login → one token valid on every
+  (incl. proxied) call. `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later). GCS-based hot-reload
+  (`ORCHESTRATOR_JWT_SECRET_GCS`) is code-complete but VMs' ADC lacks `storage.objectViewer` on the creds bucket — P3
+  deferred; SSOT until then is the `ORCHESTRATOR_JWT_SECRET` env var distributed to all VMs.
 - **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
   `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
 - **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
