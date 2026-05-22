@@ -1,12 +1,17 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-22
 ---
 
 # Sports Data Source — Coverage Matrix SSOT
 
 **Status:** canonical — consumed by deployment-api data-status aggregator, instruments-service adapter audits, and
 downstream coverage dashboards.
+
+**2026-05-22 diagnostic**: `KNOWN_COVERAGE_GAPS = {}` confirmed — sports gaps (FIXTURE_EVENTS/LINEUPS 38d, INJURIES 22d,
+ODDS 35d, MATCHES 10d as of 2026-05-22) were genuine unfetched data, NOT UAC coverage-window gaps. Recent-window fills
+launched: API_FOOTBALL 2026-04-14→2026-05-22, FOOTYSTATS 2026-04-17→2026-05-22. `instr-backfill-sports` VM
+(34.180.105.8) handling historical < 2026-04.
 
 **Scope:** for every SPORTS `data_type` in the availability manifest, defines (a) the responsible adapter/source, (b)
 which leagues are expected to produce this data_type, (c) the honest-coverage axis the aggregator must use, and (d)

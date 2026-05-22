@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-22
 ---
 
 # Prediction Market Schema Paths
@@ -15,10 +15,14 @@ last_reviewed: 2026-05-17
 
 SSOT for prediction market data flowing through the unified trading system.
 
-**Active migration**: predictions Plan A
-([`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md))
-migrates from per-base_asset shard atom (`data_type=BTC|ETH|SPX|FOOTBALL|OTHER`) to canonical_question_group bundled
-shard atom + per-market lifecycle. Both shapes documented below: legacy (pre-Plan A) + target (post-Plan A).
+**IS migration complete (2026-05-22)**: The archived Plan A IS half was resumed by
+[`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md`](../../plans/active/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md).
+All 3,940 legacy IS manifest rows (data_type=BTC/ETH/SOL/etc., blank underlying) were purged. All 4,931 legacy
+`day=<date>/venue=POLYMARKET/market=<asset>/` GCS parquets were deleted. IS now writes canonical
+`data_type=prediction_canonical_question_group` + `canonical_question_group` + `underlying`. The orchestrator fix
+(commit dbf7bf6) has been in place since May 2026; the 2026-05-22 session cleared the legacy data to match. Backfill
+2024-01-01→2026-05-22 is running (PID 95759) as of 2026-05-22 ~13:00 UTC. Both shapes documented below: legacy (pre-Plan
+A, deleted) + target (post-Plan A, current).
 
 **Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
 [04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
