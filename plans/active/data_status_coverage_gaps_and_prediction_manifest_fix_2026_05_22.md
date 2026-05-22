@@ -78,13 +78,20 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       --start-date 2026-05-05 --end-date 2026-05-22` — PID 583406 (slot-2 2026-05-22 13:25 UTC), completed in <60s.
       51 shard entries (17 dates × 3 venues) written to `ik_slot2_bitget_bitfinex_spot_recent.parquet`. Pending consolidation.
 
-- [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: re-query IS cefi manifest after consolidation. Expected:
-      BITFINEX-SPOT 2334/2334, BITGET-FUTURES ~556/561, BITGET-SPOT ~556/561; zero `capture_status=None`. **IN PROGRESS** —
-      targeted fill shard pending consolidation (Cloud Run consolidator, ~1 min cadence). Original PID 498870 batch
-      (`ik_slot2_cefi_bitget_recent`) ran 19 dates for the 12 standard venues (no BITGET — _CEFI_VENUES didn't include them
-      yet). Note: target counts 561/561 assume phantom dates re-fetched at pre-2026-05-05 dates; actual counts may be
-      ~556 if phantom dates were at 2026-04-29→2026-05-04 (not covered by this fill). If short, run second fill
-      2026-04-29→2026-05-04 with `--venues BITGET-SPOT BITGET-FUTURES`.
+- [x] ✅ [SCRIPT] P0. **2026-05-14 makeup fill** (GCS 429 rate-limit caused manifest write failure for that date):
+      `VM_NAME=ik_slot2_bitget_bitfinex_spot_0514 ...--start-date 2026-05-14 --end-date 2026-05-14`
+      — PID 620702, 3 shard entries captured (BITGET-SPOT + BITGET-FUTURES + BITFINEX-SPOT).
+
+- [x] ✅ [SCRIPT] P0. **Phantom gap fill — BITGET-FUTURES (6 dates) + BITGET-SPOT (5 dates)**: dates identified via
+      per-VM shard gap analysis: BITGET-FUTURES gaps: 2025-09-04, 2025-10-13, 2025-10-22, 2025-10-30, 2025-11-14,
+      2026-03-02; BITGET-SPOT gaps: 2025-11-16, 2025-12-17, 2025-12-30, 2026-01-16, 2026-03-25. Launched:
+      `VM_NAME=ik_slot2_bitget_phantom_gap ...--venues BITGET-SPOT BITGET-FUTURES --start-date 2025-09-04
+      --end-date 2026-03-25` — PID 626691 (slot-2 2026-05-22 13:38 UTC). **IN PROGRESS** — re-fetching 201 dates
+      (CeFi stale threshold triggers re-fetch; ~60 min ETA at 19s/date). ETA ~14:43 UTC.
+
+- [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: re-query IS cefi manifest after PID 626691 completes + consolidation.
+      Expected: BITFINEX-SPOT 2334/2334 ✅ (2316+18), BITGET-FUTURES 561/561 (537+17+1+6), BITGET-SPOT 561/561
+      (538+17+1+5); zero `capture_status=None`. **IN PROGRESS** — waiting on PID 626691 (~14:43 UTC).
 
 - [x] ✅ [SCRIPT] P0. **Purge BITGET phantom rows**: query IS cefi manifest for rows where
       `venue IN (BITGET-FUTURES, BITGET-SPOT) AND capture_status IS NULL`. Verify count ≤ 11 (6+5 known). Delete via
