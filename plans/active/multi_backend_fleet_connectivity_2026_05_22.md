@@ -90,20 +90,18 @@ paths", that machinery is removed in Phase 5, not extended. **Align with the oth
 
 ---
 
-## Phase 0 — Immediate unblock (P0, ships now, independent)
+## Phase 0 — Immediate unblock (P0) — ✅ DONE (other agent, 2026-05-22)
 
-The currently-reachable backend (`api.agent-orchestrator.odum-research.com`) renders as a blank "Fleet Overview" because
-`Landing.tsx:42` fetches `/api/backends` with **no token**, but the prod backend is strict (`ALLOW_ANONYMOUS=false`)
-→ 401. One-line consistency fix (mirror `refreshOne`, which already sends the token).
+The currently-reachable backend (`api.agent-orchestrator.odum-research.com`) rendered as a blank "Fleet Overview"
+because `Landing.tsx:42` fetched `/api/backends` with **no token**, but the prod backend is strict
+(`ALLOW_ANONYMOUS=false`) → 401. One-line consistency fix (mirror `refreshOne`, which already sends the token).
 
-- [ ] [AGENT] P0. `dashboard/src/Landing.tsx:42` — attach `Authorization: Bearer ${authToken}` to the `/api/backends`
-      fetch; add `authToken` to the effect dependency array (line 57). Remove the now-false "readable anonymously"
-      comment.
-- [ ] [AGENT] P0. Build (`npm run build`), deploy via the CI workflow (push to main → `deploy-dashboard.yml`), verify
-      the fleet card renders against the live backend.
+- [x] ✅ [AGENT] P0. `dashboard/src/Landing.tsx` — attach the bearer token to the `/api/backends` fetch. **Shipped by
+      the other agent, merged to main, and deployed to Firebase Hosting (2026-05-22).**
+- [x] ✅ [AGENT] P0. Build + deploy via CI; fleet card renders against the live backend. **Done — live.**
 
-**Success:** `https://agent-orchestrator.odum-research.com` shows the GCP backend's VM card (not a blank header);
-`/api/backends` returns 200 with the token in the Network tab.
+**Success:** ✅ `https://agent-orchestrator.odum-research.com` shows the GCP backend's VM card; `/api/backends` returns
+200 with the token.
 
 ---
 
