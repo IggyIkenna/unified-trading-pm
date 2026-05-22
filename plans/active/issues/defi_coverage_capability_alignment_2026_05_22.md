@@ -60,13 +60,33 @@ GCS manifest parquets contain rows from 3+ naming convention eras:
 Same pattern for AAVEV3/AAVE_V3, COMPOUNDV3/COMPOUND_V3, MORPHOVAULTS/MORPHO_VAULTS, etc.
 
 Ghost entries (UNISWAPV2, UNISWAPV3, COMPOUNDV3, AAVEV3 from era-2 handlers) show in the UI as venues with no data bar.
-They won't disappear until:
 
-1. A manifest phantom reconciler runs to delete/remap them, OR
-2. Manifest TTL expires the old rows (if TTL is configured)
+**UPDATED 2026-05-22 manifest audit findings**:
 
-**Required fix**: Run `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi` to
-identify and remove era-2 ghost rows.
+- `UNISWAPV3`: 187,769 rows ALL captured. Chain: ETHEREUM only. Data_types: **`dex_pool_state`/`dex_pool_swaps`** (old
+  names, ≠ canonical `dex_pools`/`dex_swaps`).
+- `UNISWAPV2`: 22,168 rows, all captured. ETHEREUM only.
+- `AAVEV3` (flat): 29,782 rows, all captured.
+- `MORPHOVAULTS`: 2,325 rows, 860 captured. `YEARNV3`: 2,324 rows, 791 captured.
+
+**GCS parquet location for UNISWAPV3 rows**:
+`raw_tick_data/by_date/.../pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=UNISWAPV3-ETHEREUM/...` (VENUE-CHAIN
+embedded, different from manifest's `venue=UNISWAPV3 chain=ETHEREUM` split format)
+
+**Why phantom reconciler won't work**: Reconciler probes `venue=UNISWAPV3/chain=ETHEREUM/` paths — MISS. Parquets live
+at `venue=UNISWAPV3-ETHEREUM/`. Running reconciler would flip to `attempted_failed` incorrectly.
+
+**Schema blocker**: Old `dex_pool_state`/`dex_pool_swaps` ≠ canonical `dex_pools`/`dex_swaps`. A venue rename without
+data_type remap breaks downstream consumers.
+
+**Required fix** (assign to MDPS slot):
+
+1. Schema check: sample UNISWAPV3-ETHEREUM parquet vs UNISWAP_V3 parquet — compare columns
+2. If schemas align: write `reconcile_defi_ghost_venue_rename.py` that:
+   - Remaps `venue=UNISWAPV3` rows to `venue=UNISWAPV3-ETHEREUM` (VENUE-CHAIN manifest row, matching actual path)
+   - Then in a follow-up: remaps VENUE-CHAIN rows to flat canonical + GCS path rename (pipeline_mode aware)
+   - Skips dates where canonical already has data
+3. If schemas diverge: add UNISWAPV3 deprecation gate in oracle, keep as separate legacy track
 
 ### Bug 4 (OPEN): LST venue name `ANKR` confusingly displayed
 
