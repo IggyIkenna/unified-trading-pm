@@ -207,11 +207,13 @@ breaking the rest.
 
 ## Phase 6 — Codex SSOT + docs (P2)
 
-- [ ] [AGENT] P2. `codex/04-architecture/agent-orchestrator-overview.md` — centralized API-router model (one HTTPS
+- [x] ✅ [AGENT] P2. `codex/04-architecture/agent-orchestrator-overview.md` — centralized API-router model (one HTTPS
       front, private-VPC proxy, single token). Supersede any per-VM-FQDN / per-backend-token text. Resolve the
-      `orchestrator_vm_registry.yaml` (per-VM FQDN) ↔ `worker.md` (outbound POST) drift Ikenna flagged.
-- [ ] [AGENT] P2. `agent-orchestrator/docs/OPERATIONS.md` — update fleet section (central proxy, private-VPC, single
-      login, no per-VM TLS).
+      `orchestrator_vm_registry.yaml` (per-VM FQDN) ↔ `worker.md` (outbound POST) drift Ikenna flagged. Fixed JWT SSOT
+      description (GCS hot-reload deferred P3; actual SSOT = `ORCHESTRATOR_JWT_SECRET` env var). — PM@ac0579abc
+- [x] ✅ [AGENT] P2. `agent-orchestrator/docs/OPERATIONS.md` — update fleet section (central proxy, private-VPC, single
+      login, no per-VM TLS). Fixed "one login" description to reflect env-var JWT (not GCS) + GCS P3 deferral note. —
+      agent-orchestrator@9c0c1ef
 
 ---
 
