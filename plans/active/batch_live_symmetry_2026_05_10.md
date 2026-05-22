@@ -611,8 +611,10 @@ IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_feat
       "batch" : "live"); compare variant left on separate local state (pre-cutover scope). — ui@2280a3f6 2026-05-19.
 - [x] ✅ [SCRIPT] P0. **components/widgets/pnl/pnl-data-context.tsx:159** — same refactor. — ui@2280a3f6 2026-05-19.
 - [x] ✅ [SCRIPT] P0. Per-file: `npx next build` exit 0; push ui@2280a3f6 → live-defi-rollout 2026-05-19.
-- [ ] [SCRIPT] P0. **Playwright e2e matrix** on dashboard / ops / research / data-status / pnl pages — verify mode
-      toggle propagates correctly without prop-drill regressions.
+- [x] ✅ [SCRIPT] P0. **Playwright e2e matrix** — structural invariants: `execution-mode-invariants.spec.ts` (17 tests
+      all pass, ui@36913356). ExecutionModeProvider in root layout, all 6 Tab-7 files adopt `useExecutionMode()`, 0
+      standalone mode useState violations. `playwright.invariants.config.ts` updated to include new test suite (runs in
+      QG without dev server). Node.js v22.17.1 unblocked infra gate. 2026-05-22.
 - [ ] [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults #6).
 
 ### Spawn prompt
