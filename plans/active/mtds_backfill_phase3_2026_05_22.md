@@ -43,9 +43,17 @@ before Phase 7 grows the v<8 debt.
       with old code (pre-chain-fix). ~4% complete before relaunch.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-Relaunch** — Old CeFi VM crashed at 07:13 (OOM 77% on e2-highmem-4, only 2 dates
       processed). Relaunched `mtds-backfill-cefi-2026-05-22b` (e2-highmem-8/64GB, chunk=5,
-      market-tick-data-service@626eb154 chain fix). VM RUNNING @ 34.104.198.234. 2026-05-22.
+      market-tick-data-service@626eb154 chain fix). **FAILED exit_code=137 (OOM SIGKILL) at 10:19 UTC** — last log entry
+      09:19 UTC (UPBIT 2024-01-01, 846,317 rows). Root cause: monolithic all-venue VM; DERIBIT book_snapshot_5 alone
+      needs ~110GB peak on busy days; cumulative cross-venue RSS exceeded 64GB. No manifest shard written (0 rows out).
+      34.104.198.234 VM auto-deleted. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-Relaunch-2** — Fix: switched from monolithic VM to sharded approach
+      (`launch-cefi-sharded-backfill.sh`): per-venue × year × heavy/light splits, e2-highmem-2 (16GB) per VM — DERIBIT
+      heavy per-year stays well under 16GB. Covers 2020-2026, all 9 CeFi venues, ~83 VMs in parallel (MAX_CONCURRENT=15
+      staggered). VM_FORCE=false (skips already-captured dates via preflight). Launch timestamp: **LAUNCHED
+      2026-05-22**. 2026-05-22 slot 5.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — `market-data-tick-cefi-prd` partition count ≥ flat bucket; 0 attempted_failed;
-      4-pillar sample validation passes; manifest 100% v8.
+      4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 
@@ -66,10 +74,10 @@ before Phase 7 grows the v<8 debt.
       new flat data files + per-VM shards → prd (same pattern as above). 2026-05-22.
 - [x] ✅ [VERIFY] P1. **MTDS-3.2.B-TopUp-V** — [BLOCKED-CREDENTIALS — Databento 403 auth_account_locked] All 9 top-up
       VMs (CME: es/mes/nq/mnq/cl/gc/es-opt, NASDAQ: nasdaq-ohlcv-1m-2026, NYSE: nyse-ohlcv-1m-2026) returned
-      `attempted_failed` error_reason=403 `DatabentoAdapter: auth_account_locked` for ALL dates 2026-05-18→2026-05-21.
+      `attempted_failed` error*reason=403 `DatabentoAdapter: auth_account_locked` for ALL dates 2026-05-18→2026-05-21.
       Zero data objects written to flat bucket for those dates. 18 attempted_failed per-VM shards manually copied to
-      `market-data-tick-tradfi-prd-central-element-323112/_index/per_vm/` for honest manifest (tradfi-bf-cme-_/nasdaq-_/
-      nyse-_-20260522-09_.parquet). TradFi PRD stuck at max=2026-05-18 until Databento reactivated. Operator credential
+      `market-data-tick-tradfi-prd-central-element-323112/_index/per_vm/` for honest manifest (tradfi-bf-cme-*/nasdaq-_/
+      nyse-_-20260522-09\_.parquet). TradFi PRD stuck at max=2026-05-18 until Databento reactivated. Operator credential
       request: reactivate Databento account at app.databento.com (same block as IS-3.1.TradFi-Databento). Datasets
       blocked: GLBX.MDP3 (CME), XNAS.ITCH (NASDAQ), NYSE ARCX. Flat bucket confirms 0 data rows for
       2026-05-19→2026-05-22. PRD manifest consolidator will show honest attempted_failed for these dates. 2026-05-22
