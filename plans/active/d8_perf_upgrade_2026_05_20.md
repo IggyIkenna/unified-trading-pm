@@ -45,12 +45,17 @@ performance-critical paths:
 
 ### Phase 1 — GCS object ops in migration scripts (CLAUDE.md SSOT)
 
-- [ ] [AGENT] P1. Audit all migration scripts for `subprocess.run(['gsutil'...])` or `subprocess.run(['gcloud'...])`
+- [x] ✅ [AGENT] P1. Audit all migration scripts for `subprocess.run(['gsutil'...])` or `subprocess.run(['gcloud'...])`
       per-object operations:
   - `rg 'subprocess.*gsutil\|subprocess.*gcloud' --type py plans/ scripts/ --glob '*.py'`
   - Replace each with `gcs_copy_object()` / `gcs_delete_object()` / `gcs_describe_object()` from UTL
   - Enables workers=32 parallel REST API calls (250× faster than serial gsutil)
-- [ ] [AGENT] P1. Target: all `*migration*.py` scripts in IS, MTDS, features-service, deployment-service
+  - mtds@64ccb562 (migrate_cefi_instrument_types.py: 2x gsutil rm → gcs_delete_object) + deployment-service@5a531d8
+    (cleanup_old_tarballs.py: 1x gsutil rm → gcs_delete_object). rg returns 0 per-object gsutil rm/cp/describe hits
+    across migration scripts.
+- [x] ✅ [AGENT] P1. Target: all `*migration*.py` scripts in IS, MTDS, features-service, deployment-service — 3
+      per-object gsutil calls replaced (2 MTDS + 1 deployment-service); IS + features-service had 0 hits; PM migration
+      only retains gsutil ls (list op, no UTL equivalent).
 
 ### Phase 2 — resolve_bucket_name caching
 
