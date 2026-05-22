@@ -32,13 +32,13 @@ Cross-refs:
 
 These counts are live-derived from `VenueMapping` and are the authoritative denominator for data-status coverage %:
 
-| Category       | Venues (expected) | Chain axis | Notes                                                                                                                                                                                             |
-| -------------- | ----------------: | :--------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CEFI**       |       11 distinct |     no     | ASTER, BINANCE-SPOT, BINANCE-FUTURES, BYBIT, COINBASE-SPOT, DERIBIT, HYPERLIQUID, OKX-SPOT, OKX-FUTURES, OKX-SWAP, UPBIT                                                                          |
-| **TRADFI**     |                 6 |     no     | CBOE, CME, FX, ICE, NASDAQ, NYSE                                                                                                                                                                  |
-| **DEFI**       |                11 | per-chain  | AAVEV3-ETHEREUM, BALANCER-ETHEREUM, CURVE-ETHEREUM, ETHENA-ETHEREUM, ETHERFI-ETHEREUM, FLUID-ETHEREUM, LIDO-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM, UNISWAPV4-ETHEREUM |
-| **SPORTS**     |    ~23 bookmakers |     no     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, BET365, UNIBET, MARATHONBET, … — enumerate via `get_expected_bookmakers()`                                             |
-| **PREDICTION** |                 2 |     no     | POLYMARKET, KALSHI                                                                                                                                                                                |
+| Category       |                      Venues (expected) | Chain axis | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------- | -------------------------------------: | :--------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CEFI**       |                            17 distinct |     no     | ASTER, BINANCE-SPOT, BINANCE-FUTURES, BITFINEX-SPOT, BITFINEX-FUTURES, BITGET-SPOT, BITGET-FUTURES, BYBIT, COINBASE-SPOT, DERIBIT, HYPERLIQUID, KRAKEN-SPOT (no data yet — backfill pending), KRAKEN-FUTURES (no data yet), OKX-SPOT, OKX-FUTURES, OKX-SWAP, UPBIT                                                                                                                                                                                                                        |
+| **TRADFI**     |                                      6 |     no     | CBOE, CME, FX, ICE, NASDAQ, NYSE                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **DEFI**       | 60 entries (flat + legacy VENUE-CHAIN) | per-chain  | Two naming eras coexist — see note below. Flat (current): UNISWAP_V3, AAVE_V3, COMPOUND_V3, MORPHO, FLUID, BALANCER, CURVE, LIDO, ETHERFI, ETHENA, ROCKETPOOL, STADER, ANKR, JITO etc. Legacy VENUE-CHAIN (411k rows migrated 2026-05-07): UNISWAPV3-ETHEREUM, AAVEV3-ETHEREUM, BALANCER-ETHEREUM, LIDO-ETHEREUM etc. Both sets registered in `expected_coverage._DEFI`. Ghost venues (UNISWAPV3 no-underscore era-2) tracked: `issues/defi_coverage_capability_alignment_2026_05_22.md`. |
+| **SPORTS**     |                         ~23 bookmakers |     no     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, BET365, UNIBET, MARATHONBET, … — enumerate via `get_expected_bookmakers()`                                                                                                                                                                                                                                                                                                                                     |
+| **PREDICTION** |                                      2 |     no     | POLYMARKET, KALSHI                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 **UAC gaps — resolved 2026-04-20 in Phase 6b:**
 
@@ -56,8 +56,16 @@ These counts are live-derived from `VenueMapping` and are the authoritative deno
   completion denominator (35k expected vs ~5.7k observable). Re-add when + if either adapter grows a book-snapshot
   collection path. `prediction_market_metadata` lives in the `instrument_availability` index (not `market_tick_data`)
   because the instruments parquet IS the metadata.
-- DEFI multi-chain expansion (`AAVEV3-ARBITRUM`, `AAVEV3-BASE`, etc.) is a separate follow-up when the adapters start
-  writing to those chains.
+- **DEFI venue naming — two eras coexist in manifest** (2026-05-22): Era 1/3 (current handlers): `protocol.upper()` +
+  chain as separate field → e.g. `venue="UNISWAP_V3" chain="ETHEREUM"`. Era 2 (post-migration 2026-05-07): 411k rows
+  with embedded chain → `venue="UNISWAPV3-ETHEREUM" chain=""`. Both registered in `expected_coverage._DEFI`. Ghost era-2
+  no-underscore rows (UNISWAPV3, AAVEV3 without chain suffix) require phantom reconciler; tracked in
+  `plans/active/issues/defi_coverage_capability_alignment_2026_05_22.md` Bug 3.
+- **DEFI handler naming inconsistency** (Bug 2 OPEN): `evm_defi_handler` writes `AAVE_V3` (underscore);
+  `flash_loan_events_handler` and `position_data_handler` hardcode `AAVEV3` (no underscore). Both in manifest as
+  separate venues. Fix: normalise all to `AAVE_V3`. Tracked in issue doc above.
+- DEFI multi-chain legacy entries (`AAVEV3-ARBITRUM`, `AAVEV3-BASE`, etc.) now in `expected_coverage._DEFI` (flat
+  variants for current handlers + VENUE-CHAIN variants for 411k migrated rows).
 
 ## 2. CEFI — per venue × data_type matrix
 

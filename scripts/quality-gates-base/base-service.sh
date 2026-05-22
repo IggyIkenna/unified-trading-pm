@@ -805,7 +805,21 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
     "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
         && log_success "pip-audit clean" \
-        || { log_fail "pip-audit vulnerabilities found"; V=$(( V + 1 )); }
+        || {
+            log_fail "pip-audit vulnerabilities found"
+            python3 -c "
+import json, sys
+try:
+    data = json.load(open('/tmp/pip-audit-output.json'))
+    deps = [d for d in data.get('dependencies', []) if d.get('vulns')]
+    for d in deps:
+        for v in d['vulns']:
+            print(f'  {d[\"name\"]} {d[\"version\"]}: {v[\"id\"]} — {v.get(\"description\",\"\")[:120]}')
+except Exception as e:
+    print(f'  (could not parse pip-audit output: {e})')
+" 2>/dev/null || :
+            V=$(( V + 1 ))
+        }
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
     SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
         /tmp/pip-audit-output.json 2>/dev/null || :
