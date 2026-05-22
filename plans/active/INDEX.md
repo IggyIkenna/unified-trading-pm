@@ -33,15 +33,16 @@ This is the canonical index of all active plans. Plans are organized by domain.
   ml_and_features_master Phase 2's feature-DATA consolidation (this is REPO consolidation). 10 phases, ~5d wall-clock
   with parallelism.
 
-- [gcs_migration_bundle_pipeline_mode_2026_05_08.md](gcs_migration_bundle_pipeline_mode_2026_05_08.md) — **Bundled
-  overnight GCS migration** that walks every parquet ONCE (millions across asset_groups) and applies the full set of
-  pending hive-vocab + partition-column changes in a single pass so the canonical manifest is rewritten once instead of
-  N times. Three migrations bundled: (1) NEW `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive
-  partition column; (2) finish the dual-vocab `category=` → `asset_group=` rekey CLAUDE.md previously preserved as
-  legacy-with-fallback; (3) sweep the 5 drift axes from the 2026-05-04 phantom-audit incident (path-prefix,
-  instrument_type casing, schema-4 empty instrument_type, chain-bundle equivalence) so the 354 residual phantoms clear.
-  Reader fallback ≤30 days post-migration then deleted. Coordinates with manifest_migration_SUPERSEDED_2026_05_21 Stage
-  1+2+3 (must complete first) + Stage 4 (folds in here). 9 phases including operator-gated VM fleet execution.
+- [gcs_migration_bundle_pipeline_mode_2026_05_08.md](../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+  — **Bundled (ARCHIVED)** overnight GCS migration\*\* that walks every parquet ONCE (millions across asset_groups) and
+  applies the full set of pending hive-vocab + partition-column changes in a single pass so the canonical manifest is
+  rewritten once instead of N times. Three migrations bundled: (1) NEW
+  `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive partition column; (2) finish the dual-vocab
+  `category=` → `asset_group=` rekey CLAUDE.md previously preserved as legacy-with-fallback; (3) sweep the 5 drift axes
+  from the 2026-05-04 phantom-audit incident (path-prefix, instrument_type casing, schema-4 empty instrument_type,
+  chain-bundle equivalence) so the 354 residual phantoms clear. Reader fallback ≤30 days post-migration then deleted.
+  Coordinates with manifest_migration_SUPERSEDED_2026_05_21 Stage 1+2+3 (must complete first) + Stage 4 (folds in here).
+  9 phases including operator-gated VM fleet execution.
 
 - [instrument_catalogue_availability_matrix_2026_04_29.md](instrument_catalogue_availability_matrix_2026_04_29.md) —
   Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
@@ -51,35 +52,37 @@ This is the canonical index of all active plans. Plans are organized by domain.
   data-status drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC
   (sports already SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
 
-- [deployment_ui_lifecycle_tabs_2026_05_08.md](deployment_ui_lifecycle_tabs_2026_05_08.md) — **Cross-cutting 6-tab
-  restructure** of deployment-UI organised around four orthogonal axes: lifecycle class (EPHEMERAL_BATCH /
-  EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE), cloud target (GCP / AWS), environment tier (DEV /
-  STAGING / PROD — resolved by domain, never an in-UI toggle), service / asset_group. Tabs: Deploy (fresh deployments
-  only) / Monitor (renamed from History; sub-tabs Backfill / Experiments / Live / Scheduled — runtime state of every
-  job, cluster, scheduler with re-deploy / stop / start / pause / drain / stream-logs / attach-events actions on each
-  row using the SAME row-template) / Data Status (scoped to data + pricing only — instruments / MTDS / MDPS /
-  features-\*; with Batch / Scheduled-Today / Live mode toggle) / Builds / Readiness / Config. Header carries
-  cloud-toggle (slow refresh) + env badge (read-only). Cross-Monitor-sub-tab navigation is INSTANT (prefetch context);
-  cloud-toggle pays network round-trip; env switch happens by changing domain. Auth always-available (UnifiedCloudConfig
-  loads both clouds at api-boot). NEW UAC SSOTs: `LifecycleClass` enum (4 members), `EnvironmentTier` enum +
-  domain-resolver, scheduler registry (env-scoped), live-cluster registry (env-scoped), experiment registry. NEW UTL
-  helper `experiment_tracker.py` (run_id / metric / step / artifact emission for ML / strategy / execution research
-  jobs). NEW codex docs: `deployment-ui-architecture.md` (UX SSOT) + `deployment-ui-environment-tiers.md`
-  (dev/staging/prod hosting, mirrors trading-system-UI pattern + firebase-split-topology). NEW deployment-api routes:
-  `/api/monitor/{backfill,experiments,live,scheduled}`, `/api/logs/stream/{target_ref}`. Most infrastructure already
-  exists (SSE event-stream, CloudProviderContext, deploy-missing, data-status drilldown, vm-launcher registry); plan is
-  mostly re-shape + wire-in with one greenfield slice (Experiments tracker) and one infra slice (env-tier hosting of
-  deployment-UI/API itself). Sibling-of `instruments_master`; Phase G of that plan delegates UI scope here.
+- [deployment_ui_lifecycle_tabs_2026_05_08.md](../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md) —
+  **Cross-cutting 6-tab (ARCHIVED)** restructure\*\* of deployment-UI organised around four orthogonal axes: lifecycle
+  class (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE), cloud target (GCP / AWS),
+  environment tier (DEV / STAGING / PROD — resolved by domain, never an in-UI toggle), service / asset_group. Tabs:
+  Deploy (fresh deployments only) / Monitor (renamed from History; sub-tabs Backfill / Experiments / Live / Scheduled —
+  runtime state of every job, cluster, scheduler with re-deploy / stop / start / pause / drain / stream-logs /
+  attach-events actions on each row using the SAME row-template) / Data Status (scoped to data + pricing only —
+  instruments / MTDS / MDPS / features-\*; with Batch / Scheduled-Today / Live mode toggle) / Builds / Readiness /
+  Config. Header carries cloud-toggle (slow refresh) + env badge (read-only). Cross-Monitor-sub-tab navigation is
+  INSTANT (prefetch context); cloud-toggle pays network round-trip; env switch happens by changing domain. Auth
+  always-available (UnifiedCloudConfig loads both clouds at api-boot). NEW UAC SSOTs: `LifecycleClass` enum (4 members),
+  `EnvironmentTier` enum + domain-resolver, scheduler registry (env-scoped), live-cluster registry (env-scoped),
+  experiment registry. NEW UTL helper `experiment_tracker.py` (run_id / metric / step / artifact emission for ML /
+  strategy / execution research jobs). NEW codex docs: `deployment-ui-architecture.md` (UX SSOT) +
+  `deployment-ui-environment-tiers.md` (dev/staging/prod hosting, mirrors trading-system-UI pattern +
+  firebase-split-topology). NEW deployment-api routes: `/api/monitor/{backfill,experiments,live,scheduled}`,
+  `/api/logs/stream/{target_ref}`. Most infrastructure already exists (SSE event-stream, CloudProviderContext,
+  deploy-missing, data-status drilldown, vm-launcher registry); plan is mostly re-shape + wire-in with one greenfield
+  slice (Experiments tracker) and one infra slice (env-tier hosting of deployment-UI/API itself). Sibling-of
+  `instruments_master`; Phase G of that plan delegates UI scope here.
 
-- [hard_schema_enforcement_2026_05_08.md](hard_schema_enforcement_2026_05_08.md) — **Workspace-wide hard schema
-  enforcement at the write boundary** (sub-plan of `infrastructure_master`). Today only predictions has hard-required
-  lifecycle enforcement; every other asset_group leaves required fields nullable (base_currency / quote_currency /
-  chain_id / contract_address / decimals / fixture_id / futures expiry) and the write path fails venue-shard-wide rather
-  than per-row, masking partial-data bugs. Sports adapters minimal-flatten (18-30 columns dropped). 5 phases: UAC schema
-  audit + nullable→required flips per asset_group; orchestrator per-row try/except refactor (record_failed
-  SCHEMA_VALIDATION_FAILED); 6 sports adapter full-column capture audit; UTL row_key shape validation; PM QG STEP 5.66
-  static assertion. Operator decision 2026-05-08: SEQUENCE after `tradfi_master` Q1+Q2 futures-expiry ships (avoids
-  mass-fail-during-transit). Migrated from archived issue `hard_schema_enforcement_at_write_boundary_2026_05_08.md`.
+- [hard_schema_enforcement_2026_05_08.md](../archive/2026_05/hard_schema_enforcement_2026_05_08.md) — **Workspace-wide
+  hard schema (ARCHIVED)** enforcement at the write boundary\*\* (sub-plan of `infrastructure_master`). Today only
+  predictions has hard-required lifecycle enforcement; every other asset_group leaves required fields nullable
+  (base_currency / quote_currency / chain_id / contract_address / decimals / fixture_id / futures expiry) and the write
+  path fails venue-shard-wide rather than per-row, masking partial-data bugs. Sports adapters minimal-flatten (18-30
+  columns dropped). 5 phases: UAC schema audit + nullable→required flips per asset_group; orchestrator per-row
+  try/except refactor (record_failed SCHEMA_VALIDATION_FAILED); 6 sports adapter full-column capture audit; UTL row_key
+  shape validation; PM QG STEP 5.66 static assertion. Operator decision 2026-05-08: SEQUENCE after `tradfi_master` Q1+Q2
+  futures-expiry ships (avoids mass-fail-during-transit). Migrated from archived issue
+  `hard_schema_enforcement_at_write_boundary_2026_05_08.md`.
 
 - [cme_polymarket_arb_2026_05_08.md](cme_polymarket_arb_2026_05_08.md) — **CME × Polymarket cross-venue event-arb**
   (post-May-23 critical path). 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E /

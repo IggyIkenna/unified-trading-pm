@@ -51,13 +51,16 @@ def main() -> int:
             if not link_path:
                 # Pure anchor like #section — already filtered above, defensive guard.
                 continue
-            # Resolution order: plans_dir-relative first, then archive,
-            # then workspace-root (for repo-prefixed paths like
-            # ``unified-trading-pm/codex/...`` or ``../../<repo>/``).
+            # Resolution order: plans_dir-relative first, then archive top-level +
+            # all archive subdirs (e.g. archive/2026_05/), then workspace-root.
             # For ``.md`` links also try ``.plan.md`` per workspace plan-
             # filename convention (active=``.md``, archive=``.plan.md``).
+            archive_dir = plans_dir.parent / "archive"
+            archive_bases = (
+                [archive_dir] + sorted(d for d in archive_dir.iterdir() if d.is_dir()) if archive_dir.is_dir() else []
+            )
             candidates: list[Path] = []
-            for base in (plans_dir, plans_dir.parent / "archive", ws_root):
+            for base in (plans_dir, *archive_bases, ws_root):
                 if not base.is_dir():
                     continue
                 primary = (base / link_path).resolve()

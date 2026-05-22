@@ -482,11 +482,10 @@ for years.
 one-walk migration so manifest only rewrites once.
 
 - [x] ✅ [SCRIPT] P0. **GAP-2.3.A** — Append Phase 2.X "OHLCV legacy filename rename" sub-section to
-      [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
-      Phase 2. Added as Phase 2.5 todo (`phase-2-5-ohlcv-legacy-filename-rename`) with full spec: inventory logic,
-      instrument_id extraction from parquet footer (NOT path heuristic), rename mechanics, manifest row_key update,
-      verification gates (ZERO `ticks.parquet` in MTDS buckets post-run), test additions. **Shipped PM@`1467b823`
-      2026-05-19 slot-3.**
+      `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` (archived → `plans/archive/2026_05/`) Phase 2.
+      Added as Phase 2.5 todo (`phase-2-5-ohlcv-legacy-filename-rename`) with full spec: inventory logic, instrument_id
+      extraction from parquet footer (NOT path heuristic), rename mechanics, manifest row_key update, verification gates
+      (ZERO `ticks.parquet` in MTDS buckets post-run), test additions. **Shipped PM@`1467b823` 2026-05-19 slot-3.**
 - [x] ✅ [SCRIPT] P1. **GAP-2.3.B** — Audit features-\* readers for `ticks.parquet` literal path references. **RESULT:
       No breaking changes.** 3 hardcoded `ticks.parquet` paths in features-service: (a) `sports/data/gcs_reader.py:283`
       — `venue=ODDS_API/data_type=odds/ticks.parquet` (sports odds, intentionally bundled), (b)

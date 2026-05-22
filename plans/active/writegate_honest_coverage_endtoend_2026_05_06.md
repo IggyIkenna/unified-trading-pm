@@ -966,9 +966,8 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   3.D.5 Wave 3 (instrument_catalog wired into MTDS/MDPS adapter construction). Until it ships, the conservative
   `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim from Step 3 stays in place for non-VIX-gap callers — this is
   the design intent per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
-- **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in
-  [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
-  after futures-expiry tradfi work.
+- **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in `hard_schema_enforcement_2026_05_08.md`
+  (archived → `plans/archive/2026_05/`) — Step 5 will land via that plan after futures-expiry tradfi work.
 - [ ] **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
       mismatches found during Step 6 audit (2026-05-22 slot 8): (1) `CandleOutput.trade_count` → schema column named
       `count`; (2) `CandleOutput.liquidation_count` + `liquidation_volume` → schema columns named
@@ -2203,12 +2202,13 @@ Adding a new venue / data_type / instrument anywhere in the workspace = adding i
 **Tasks.** Sequential per asset_group — start with the asset_group whose catalog is most mature (sports fixtures +
 tradfi Databento) and end with the asset_group whose catalog needs the most work (defi + prediction).
 
-- [ ] [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must expose a
+- [x] ✅ [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must expose a
       uniform `list_instruments(asset_group, start_date, end_date) -> Iterator[CatalogRow]` shape — same columns as the
       manifest's row_key (`venue`, `chain`, `data_type`, `instrument_type`, `instrument_id`, `league_id`, ...) plus the
       lifecycle columns (`available_from`, `available_to`, `expiry`, etc.). Define the contract in
       `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream consumers
-      (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape.
+      (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape. — UAC@a422d0b8
+      / QG ✅ (exit 0) / slot-2 tab branch 2026-05-22
 - [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is already in
       `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
       `unified_api_contracts.sports.candidate_parquet_paths` SSOT). For odds_api: cross-product

@@ -35,9 +35,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 >
 > **VmPrefixSpec dict-shape migration**: Phase 1 below adds 2 prefixes (`strategy-paper-` + `strategy-live-`) to
 > `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` dict. The dict's shape is being migrated
-> from `dict[str, str | None]` to `dict[str, VmPrefixSpec]` by
-> [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 (currently
-> deferred per its banner — `vm_zombie_watchdog.py` edits drafted but never committed; carryover to next session).
+> from `dict[str, str | None]` to `dict[str, VmPrefixSpec]` by `deployment_ui_lifecycle_tabs_2026_05_08.md` (archived →
+> `plans/archive/2026_05/`) Phase A.2 (currently deferred per its banner — `vm_zombie_watchdog.py` edits drafted but
+> never committed; carryover to next session).
 >
 > **Sequencing**: lifecycle Phase A.2 SHOULD land before this plan's Phase 1 to avoid re-shaping the same dict twice. If
 > lifecycle A.2 hasn't shipped at this plan's Phase 1 execution time, this plan's Phase 1 ships under the legacy
