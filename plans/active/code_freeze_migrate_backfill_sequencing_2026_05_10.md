@@ -573,9 +573,11 @@ one-walk migration so manifest only rewrites once.
       deployment-api + smoke the data-status UI post-repoint. ✅ Design doc shipped PM@tab/4 —
       `plans/active/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md`. Audit:
       `data_status_drilldown.build_bucket_name` already delegates to `resolve_bucket_name`; `upcoming_fixtures` +
-      `batch_config_utils` already clean. Remaining: `DataStatusService.build_bucket_name` +
-      `DataQueryService.build_bucket_name` flat methods (execution gated on Phase-0d cutover). ml-\* drift RESOLVED
-      (both `_SERVICE_TO_KIND` dicts already use `ml-models-store`).
+      `batch_config_utils` already clean. ✅ CODE HALF SHIPPED 2026-05-22: `DataStatusService.build_bucket_name` +
+      `DataQueryService.build_bucket_name` flat methods removed; all callsites repointed to
+      `drilldown.build_bucket_name()` / `resolve_bucket_name()`. Tab branch: deployment-api@28b7bd2 + uac@55a65886 +
+      utl@52940476. Execution half gated on Phase-0d cutover. ml-\* drift RESOLVED (both `_SERVICE_TO_KIND` dicts
+      already use `ml-models-store`).
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.E (NEW per operator extension (b+) 2026-05-11; SCRIPT SHIPPED 2026-05-11)** — code-half
       ✅; first-execution-half deferred (operator gate post-cutover). Sync script (prod → staging/dev) with truncated
       date window + same-region enforcement. **Shipped** `deployment-service@fc1cfa0` (prod → {staging,dev} bucket sync

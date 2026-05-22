@@ -106,7 +106,8 @@ internal API surface (useful if other tests mock these methods directly).
 
 ## Execution Plan
 
-- [ ] [SCRIPT] P0. **Code half** (ships pre-Phase-0d; gates on Phase-0d execution):
+- [x] ✅ [SCRIPT] P0. **Code half** (ships pre-Phase-0d; gates on Phase-0d execution): — deployment-api@28b7bd2 +
+      uac@55a65886 + utl@52940476
   - Delete `DataStatusService.build_bucket_name` at `data_status_service.py:2538`.
   - Delete `DataQueryService.build_bucket_name` at `data_query_service.py:41`.
   - Fix 4 callsites: `data_status_service.py:6038`, `data_query_service.py:175/231/743` — replace with
@@ -116,7 +117,7 @@ internal API surface (useful if other tests mock these methods directly).
   - `basedpyright deployment_api/` → 0 errors. `bash scripts/quality-gates.sh` → exit 0.
   - Push to deployment-api tab branch (NOT LDR until Phase-0d cutover window opens).
 
-- [ ] [TEST] P0. Update/add unit tests:
+- [x] ✅ [TEST] P0. Update/add unit tests: — 175 passed, 2 skipped
   - `tests/unit/test_data_status_service.py` — remove any tests that mock `DataStatusService.build_bucket_name`
     directly; replace with `resolve_bucket_name` mock at UTL boundary.
   - `tests/unit/test_data_query_service.py` — same.
