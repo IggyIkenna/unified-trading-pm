@@ -124,8 +124,11 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 - [ ] [SCRIPT] P0. **Verify sports recent window**: **IN PROGRESS** — api_football fill (PID 499821) complete at
       13:24 UTC; footystats fill (PID 499822) running (at 2026-05-05 as of 14:02 UTC, ETA ~16:19 UTC).
       **Finding**: api_football returned ALL `empty_confirmed` for 2026-04-14→2026-05-22 (5109 rows, all empty).
-      Correct IS behavior — no active fixtures in post-season window. max captured dates will NOT improve for
-      FIXTURE_EVENTS/LINEUPS/INJURIES from api_football fills. Revised target:
+      Root cause: `URDI[API_FOOTBALL]: fetched 0 instruments` for all dates → IS has no fixture-to-ID mapping →
+      all data types marked empty_confirmed. IS instruments parquet (step 1 of 2-pass pipeline) must exist before
+      FIXTURE_EVENTS/LINEUPS fetch (step 2) can run. instr-backfill-sports VM creates step-1 parquets but is at
+      2020-06-09 → step 2 for recent dates cannot run. Correct IS behavior. max captured dates will NOT improve for
+      FIXTURE_EVENTS/LINEUPS/INJURIES from api_football fills until VM reaches those dates. Revised target:
       - FIXTURE_EVENTS: stays at 2026-04-14 (last active fixture day — correct empty_confirmed beyond that) ✓ acceptable
       - FIXTURE_LINEUPS: stays at 2026-04-14 ✓ acceptable  
       - ODDS: footystats fill → target ≥ 2026-05-20 (waiting on PID 499822)
