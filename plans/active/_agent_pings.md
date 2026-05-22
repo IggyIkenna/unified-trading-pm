@@ -4746,3 +4746,22 @@ mtds_mdps_master), read `mtds_backfill_phase3_2026_05_22.md` for per-asset-group
 **Plan ref**: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 exit.
 
 — ikenna-main / slot-1 / 2026-05-21
+
+---
+
+## [harsh-main CROSS-SIDE] 2026-05-22 — 🟡 starting orchestrator multi-backend fleet-connectivity plan
+
+Harsh-side beginning `multi_backend_fleet_connectivity_2026_05_22.md` (parent: `orchestrator_master`). Redesigns the
+dashboard for full direct UI↔all-backends connectivity: per-VM TLS (Caddy subdomains), single login via shared-HS256
+secret from GCS (asymmetric-ready seam), GCS self-registering backend registry, and a 60s GCS health heartbeat.
+Compute=AWS, storage=GCS (no S3 yet).
+
+**Heads-up / align before we touch it**: Phases 1 & 5 **delete** the recent per-backend-token dashboard work
+(`tokensByBase`/`setAuthTokenFor` in `dashboard/src/api.ts`, commits `b6ebd58`/`dab57f0`/`b848193`) in favour of the
+single shared token — not extend it. Phase 0 (Landing.tsx 401 fix) already shipped + deployed your side, thanks. We'll
+consume the other orchestrator plans after this one. Please ack if the auth-model direction is OK before we start Phase
+1/5.
+
+**Plan ref**: `plans/active/multi_backend_fleet_connectivity_2026_05_22.md`.
+
+— harsh-main / 2026-05-22 11:33 UTC
