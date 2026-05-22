@@ -92,3 +92,34 @@ operator to archive.
 
 **No remaining agentable P0 items** in vm-cross-cutting scope without blockers (batch_live_symmetry_master has no
 assigned P0 plans; observability_master + client_isolation has only HUMAN/OPERATOR P0 items).
+
+---
+
+## 2026-05-22 — CREDENTIAL APPROVAL REQUEST — 1inch + 0x aggregator APIs
+
+**Plan ref**: `plans/epics/defi_master.md` — P2 aggregator_route item (MTDS AggregatorRouteHandler)
+
+**CREDENTIAL APPROVAL REQUEST — aggregator_route_handler**
+
+Vendor 1: **1inch Network** — Developer Portal (api.1inch.dev)
+- Tier: Free dev tier available; paid for production volume
+- What I need: API key for `/swap/v6.0/{chain_id}/quote` endpoint
+- Account to use: existing operator email or new account at https://portal.1inch.dev/
+
+Vendor 2: **0x Protocol** — Developer Dashboard (0x.org/developer-platform)
+- Tier: Free tier (starter) available; paid for higher rate limits
+- What I need: API key (header `0x-api-key`) for `/swap/permit2/quote` endpoint on ethereum/arbitrum/base/optimism/polygon
+- Account to use: existing operator email or new account at https://dashboard.0x.org/
+
+**Secret Manager keys needed** (us-central1 or asia-northeast1, project central-element-323112):
+- `oneinch-api-key`
+- `zerox-api-key`
+
+**Unblocks**:
+- `collect-aggregator-routes --asset-group defi` for EVM chains (ETHEREUM, ARBITRUM, BASE, OPTIMISM, POLYGON)
+- `AggregatorRouteMatcher` batch replay in strategy-service (requires historical route snapshots)
+- DeFi `arbitrage_price_dispersion` archetype full coverage (aggregator leg data)
+
+**Without it**: Jupiter (Solana, public API) works now; 1inch + 0x venues log `CREDENTIAL_NOT_AVAILABLE` + skip gracefully; ParaSwap (public) works. Integration tests for 1inch/0x marked `@pytest.mark.requires_credentials`.
+
+**Status**: `BLOCKED-CREDENTIALS` — adapter scaffold shipped (`mtds@52c4ac5`); credential ask pending operator [ack].

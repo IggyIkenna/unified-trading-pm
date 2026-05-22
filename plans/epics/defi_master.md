@@ -1555,6 +1555,10 @@ _(no plans currently assigned at this priority)_
       — `execution-service@24ad81b0` (replaced "19 chains" hardcode with reference to UAC WETH_ADDRESSES)
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools` `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
+  - ✅ UAC `DataType.AGGREGATOR_ROUTE` + `SchemaSpec` + `SchemaContract` + `DataTypeCapability` — `uac@3d44542`
+  - ✅ MTDS `AggregatorRouteHandler` (`collect-aggregator-routes`) — `mtds@52c4ac5` (Jupiter/1inch/0x/ParaSwap; IS-first pairs; shard-isolated)
+  - [ ] [BLOCKED-CREDENTIALS] 1inch + 0x API keys — ping filed in `harsh_orchestrator/pings/slot_11.md`
+  - [ ] [AGENT] instruments-service catalogue entry: adapter writing `instrument_availability/by_date/day={D}/venue=AGGREGATOR-{CHAIN}/instruments.parquet`
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20 Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
 
