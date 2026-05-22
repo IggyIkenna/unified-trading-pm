@@ -167,3 +167,18 @@ archival rule: scan for DEFERRED items; migrate with `MIGRATED FROM` annotation.
 - **Already superseded** (safe to leave): `per_agent_worktrees_2026_05_10.md` (Ikenna-machine items),
   `defi_basedpyright_features_service_2026_05_15.md` (DEFERRED-OTHER-SLOT items in flight).
 - **Action**: per-operator review of high-priority files + add `MIGRATED TO: <active-plan>` pointers.
+
+## Sweep progress — 2026-05-22
+
+Reviewed first 6 `plans/archive/2026_05/` files (tradfi_ohlcv_only_mvp_backfill, ml_repo_consolidation, agent_reliability_mitigations, gcs_migration_bundle_pipeline_mode, d1_is_hardening, ruff_workspace_cleanup):
+
+- `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`: DEFERRED items are code constants (`_DEFERRED_*`) + ICE roots (operator pick). ICE roots successor is `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`. NO new action needed.
+- `ml_repo_consolidation_2026_05_19.md`: DEFERRED-to-Phase-4/5/6 items (typed dicts, config merge, conftest merge, optional deps) — all intra-plan references to later phases within the same consolidation sequence. NEED FOLLOW-UP: verify if ml_repo_consolidation Phase 4-6 landed; if not, migrate to `features_and_ml_master` epic.
+- `agent_reliability_mitigations_2026_05_20.md`: Phase 5 gitignore DEFERRED-POST-CUTOVER (no immediate action), Phase items DEFERRED-POST-CUTOVER with code in agent-orchestrator scope. Successor: `orchestrator_master` epic. NO new action needed.
+- `gcs_migration_bundle_pipeline_mode_2026_05_08.md`: Phase 8 reader-fallback removal DEFERRED to 2026-06-15 with named successor `writegate_honest_coverage_endtoend_2026_05_06.md`. NO new action needed.
+- `d1_is_hardening_2026_05_20.md`: no DEFERRED items found.
+- `ruff_workspace_cleanup_2026_05_12.md`: no DEFERRED items found.
+
+**Remaining high-priority files not yet reviewed** (from original findings): `defi_simulation_realism_2026_05_10.md` (19 items), `risk_simulations_limits_alerting_2026_05_10.md` (6 items), `api_football_phase_3b_3c` (5 items), `solana_amm_coverage_expansion_2026_05_13.md`. These require ~1 cal-AI-day of additional sweep work.
+
+**Action needed**: ml_repo_consolidation Phase 4-6 status verification. Add todo to `features_and_ml_master` if phases not landed.
