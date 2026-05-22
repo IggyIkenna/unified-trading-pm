@@ -98,8 +98,9 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
 - [ ] [AGENT] P0. **F-33 closure** — Scenario-test that `DEFI_LST_DEPEG_STETH_5PCT` fires
       `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` within 30s (carry depeg kill-switch, CSB-12). Cross-plan dep: the
       `mtds-scenario-matrix` cron (F-40) that RUNS this lives in `audit03_deployment_cron_provisioning_2026_05_22.md`.
-- [ ] [SCRIPT] P0. Re-run AUDIT-03 §2.1 (CSB) + §2.3 (EXE) + §2.5 (RSK) READ checkpoints; flip the closed findings in
-      audit §6 + §6.2 routing table.
+- [x] ✅ [SCRIPT] P0. Re-run AUDIT-03 §2.1 (CSB) + §2.3 (EXE) + §2.5 (RSK) READ checkpoints; flip the closed findings in
+      audit §6 + §6.2 routing table. — uac+exec+strat@2026-05-22 (F-08/09/10/11/12 CLOSED strat@2741643f; F-28 CLOSED
+      exec@db50597c; F-33 CLOSED uac@56594ab3; F-26/F-29/F-31 CLOSED exec@769252a8f; §6.2 routing table updated)
 
 ## Success criteria
 
