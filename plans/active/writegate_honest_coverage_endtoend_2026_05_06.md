@@ -2640,13 +2640,12 @@ been empty_confirmed" finding adds:
 
 **Tasks for the per-asset-group catalog SSOT extension (Wave 3.S — sports / prediction):**
 
-- [ ] [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — codify `UNDERSTAT_COVERED_LEAGUES`,
-      `TRANSFER_WINDOWS`, `FOOTYSTATS_LEAGUE_SEASONS`, plus a uniform
-      `is_expected_for_source(source, league_id, day) -> tuple[bool, str|None]` helper that returns (is_expected,
-      reason_if_not). Mirrors the chain_env / venue_launch_dates / source_coverage_start pattern.
-- [ ] [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Or use `EXPECTED_INSTRUMENT_NOT_LISTED` semantically with these as
-      classifier-internal — operator preference.)
+- [x] ✅ [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — `is_expected_for_source()` wraps
+      UNDERSTAT_COVERED_LEAGUES + footystats_season_status_for_day + is_transfer_window_open + SOURCE_COVERAGE_START.
+      Returns (bool, EmptyConfirmedReason-str|None). QG ✅ (exit 0). — UAC@83c0e789 / slot-2 tab branch 2026-05-22
+- [x] ✅ [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — both already landed in honest_coverage.py (lines 128, 147). No new code
+      needed. — UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
 - [ ] [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
       `instruments-store-sports-{pid}/fixtures/…` per-day fixtures catalog; cross-product with
       `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
@@ -2890,18 +2889,17 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc. NEW
       `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`. Used by ohlcv_15m / book_snapshot adapters to
       gate intra-day shards.
-- [ ] [UAC] P1. **Understat covered leagues + seasons.** NEW SSOT
-      `unified_api_contracts.canonical.domain.sports.understat_coverage.UNDERSTAT_COVERED_LEAGUES:     dict[league_id → list[season_id]]`
-      with the 5 covered leagues (EPL / La Liga / Serie A / Bundesliga / Ligue 1) and their season ranges. Classifier
-      extension: pre-fixture-day check returns `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for understat shards outside this
-      set.
-- [ ] [UAC] P1. **Per-league season bounds for footystats.** Extend `FOOTYSTATS_SEASON_IDS` with season_start /
-      season_end tuples (already partly available — needs explicit bounds-check helper
-      `get_footystats_season_window(league, day) -> tuple[start, end] | None`). NEW `EXPECTED_PRE_SEASON` /
-      `EXPECTED_POST_SEASON` reasons; classifier branch.
-- [ ] [UAC] P1. Two new EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS` and
-      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and `EXPECTED_PRE_SEASON` and `EXPECTED_POST_SEASON` and
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (5 new typed reasons.)
+- [x] ✅ [UAC] P1. **Understat covered leagues.** `UNDERSTAT_COVERED_LEAGUES` already in `provider_league_ids.py`
+      (5-league frozenset). `is_expected_for_source("understat", ...)` in new `sports_per_source_rules.py` returns
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for non-covered leagues. — UAC@83c0e789 / slot-2 audit 2026-05-22
+- [x] ✅ [UAC] P1. **Per-league season bounds for footystats.** `footystats_season_status_for_day()` +
+      `get_footystats_season_bounds()` + `is_within_footystats_season()` already in `season_dates.py`.
+      `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` wired into `is_expected_for_source("footystats", ...)`. —
+      UAC@83c0e789 / slot-2 audit 2026-05-22
+- [x] ✅ [UAC] P1. Five EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS`,
+      `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, `EXPECTED_PRE_SEASON`, `EXPECTED_POST_SEASON`,
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — all already in honest_coverage.py (lines 120, 128, 135, 143, 147). —
+      UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
 - [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer*windows,
       footystats_season_bounds, understat_coverage) returning the appropriate typed
       `EXPECTED*\*`reason. Same     discriminated`(capture_status, error_reason)` shape as today.
