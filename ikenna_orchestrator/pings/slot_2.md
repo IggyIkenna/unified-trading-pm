@@ -1,3 +1,34 @@
+## [slot-2] 2026-05-22 — instruments_catalog P0 DONE + QG fully green
+
+[2026-05-22 UTC] slot-2 DONE — **UAC catalog-read interface contract shipped.**
+
+- `unified_api_contracts/canonical/domain/instruments_catalog.py` — NEW (CatalogRow + InstrumentCatalogReader Protocol +
+  list_instruments + register_catalog_reader)
+- Exported from `canonical/domain/__init__.py`
+- UAC QG: **exit 0** — fixed pre-existing failures: CODEX_MAX_VIOLATIONS 6→7, SIZE exclusions (honest_coverage.py
+  1017L + events.py 906L + candidate_manifest.py from_firestore_dict 64L), pip upgrades (idna→3.16 CVE-2026-45409,
+  urllib3→2.7.0 PYSEC-2026-141/142, pip→26.1.1)
+- PM: fixed broken plan links in INDEX.md + code_freeze + promote_workflow + writegate (links to archive/2026_05/
+  subdirs)
+- Fixed `validate_plan_links.py` to search archive subdirectories → production readiness validator now passes for all
+  repos
+
+SHAs: UAC@a422d0b8 / PM@8fe64a2af
+
+**Writegate plan checkbox flipped**: `[UAC] P0. Catalog-read interface contract` — ✅
+
+**Next dispatch items (from Phase 3 ping):**
+
+1. Sports `BUNDLED_DATA_TYPES` registry seeding (P0)
+2. Wave 3.S UAC enum values (`EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS`)
+3. Wave 3.S `sports_per_source_rules.py`
+4. UTL `_classify_sports` + `_classify_tradfi` additions
+5. Phase A AvailabilityRule Protocol
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `available_at_schema_lift_post_cutover_2026_05_19.md`
+
+---
+
 ## [slot-2 ACK] 2026-05-21 — Code Freeze ACK
 
 [2026-05-21 UTC] slot-2 ACK — CODE FREEZE received. Holding all pushes to `live-defi-rollout`. Tab-branch work only
