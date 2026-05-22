@@ -94,7 +94,8 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
       strategy-service@2741643f + dfe9d231
 - [x] ✅ [SCRIPT] P0. strategy-service quality-gates Pass 1 GREEN + unit tests for the new guards + the corrected
       `net_carry`. — exit 0, 4077 passed; 17 tests test_audit03_carry_engine_guards.py (3 new BYBIT tests) + 16 tests
-      test_carry_staked_basis_audit03.py (needs_wrapping mock removed) (strategy-service@33b7168e)
+      test_carry_staked_basis_audit03.py (needs_wrapping mock removed) (strategy-service@33b7168e). Additional 18
+      targeted F-09/F-10/F-11/F-12 tests + conftest log_event patch: strategy-service@805dd40d (4080 total, 81.27%)
 
 ## Phase 4 — scenario validation (F-33 closure) — gated on Phase 1-3
 
