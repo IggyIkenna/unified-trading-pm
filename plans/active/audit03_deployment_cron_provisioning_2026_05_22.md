@@ -57,9 +57,11 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
 
 ## Phase 3 — cutover-gate test paths (F-43/44, P1)
 
-- [ ] [AGENT] P1. **F-43** — Add a Solana devnet paper-execution path to `e2e-testing/scripts/defi/run-paper.sh` (today
-      Tenderly-EVM-only; Solana devnet appears only as a balance health-check in `preflight-cutover.sh`, not a paper
-      path). Gate requires "Tenderly fork + Solana devnet".
+- [x] ✅ [AGENT] P1. **F-43** — Add a Solana devnet paper-execution path to `e2e-testing/scripts/defi/run-paper.sh`.
+      Added `_get_solana_connector_for_venue()` + `_execute_on_solana_devnet()` to `colocated_engine.py`; wired into
+      `_execute_instruction()` + `run_engine()` init block; added `"solana-devnet"` to argparse choices; updated
+      `run-paper.sh` help text + summary banner with SOLANA_WALLET_PRIVATE_KEY warning. Signs but does NOT broadcast
+      (`paper_trade=True`). — e2e-testing@aee5b38
 - [ ] [AGENT] P1. **F-44** — Add a Playwright e2e for the `ManualTradeGateDialog` approve / deny / timeout→unhold flow
       in `unified-trading-system-ui/tests/e2e/` (current spec exercises only the trade FORM, not the gate state
       transitions).
