@@ -131,10 +131,12 @@ enum.
 - [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
 - [ ] Bug 2: Normalise AAVEV3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
       Assign to MTDS slot.
-- [x] Bug 3: ✅ Manifest-only fix shipped — IS@dbf7bf6 (2026-05-22). Corrector shard uploaded to
-      `_index/per_vm/ikenna-slot1-ghost-venue-corrector-defi-20260522.parquet`. Consolidator run manually. Canonical
-      rows now in manifest: UNISWAP_V3 (187k), UNISWAP_V2 (22k), AAVE_V3 (30k), UNISWAP_V4 (15k). Ghost venues
-      UNISWAPV3/V2/AAVEV3 flipped to empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE.
+- [x] Bug 3: ✅ FULLY SUPPRESSED — IS@dbf7bf6 + IS@5a709c4 (2026-05-22). MTDS (dbf7bf6): UNISWAPV3/V2/AAVEV3 →
+      empty_confirmed. Canonical rows UNISWAP_V3(187k)/UNISWAP_V2(22k)/AAVE_V3(30k) restored. IS DeFi (5a709c4): 31,709
+      rows suppressed — AAVEV3(9252), UNISWAPV3(7641), COMPOUNDV3(4087), PANCAKESWAPV3(3141), SUSHISWAPV3(2962),
+      UNISWAPV2(2146), CAMELOTV3(1036), VELODROMEV2(1007), UNISWAPV4(437). MTDS residual (5a709c4): 20,102 rows
+      suppressed — UNISWAPV4(15093), YEARNV3(2360), MORPHOVAULTS(2325), others(396). All shards merged by consolidator
+      within 1 min of upload.
 - [ ] Bug 4: Post-cutover — add `data_source_type` taxonomy enum.
 
 ## Temporary states + their canonical follow-up plans
