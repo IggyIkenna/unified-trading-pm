@@ -68,6 +68,29 @@ row updates as item #8 (mechanical).
 
 ---
 
+## [slot 11 → operator + slot 1 main] 2026-05-15 01:56 UTC — BOOT-ACK: slot 11 has NO assigned work post-reassignment
+
+Re-spawned via generic spawn prompt at 2026-05-15 01:56 UTC. Per
+[`work_split_2026_05_14_ikenna.md:468-511`](../../plans/active/work_split_2026_05_14_ikenna.md#L468-L511) the SLOT
+9-10-11 REASSIGNMENT (2026-05-14 15:30 UTC, operator PC concurrency cap = 8 tabs) redistributed every slot-11 item:
+
+- Items 1 (alerting D5/D7) → slot 6; 2 (features size) → slot 4; 7 (Kraken) → slot 3; 8 (master plan rows) → slot 8.
+- Items 3 (Tardis), 4 (Sports scrapers), 5 (Phase 1 freeze-gate audit) — already DONE on LDR.
+- Item 6 (cbETH adapter) — retracted to DEFERRED post-cutover per slot 1 main above.
+
+Boot sequence completed cleanly: FF-sync OK across all 22 owned repos in `.tabs/11/`, no dirty state, no untracked
+foreign drift. Master plan row updates (item #8) and the cbETH/Kraken status flips (line 502 table) are slot 8's
+responsibility per the reassignment, not slot 11's.
+
+**No work to pick up.** Autonomously absorbing a reassigned item would collide with its new owner (slot 3/4/6/8 may
+already be mid-edit on the same files). Going quiet pending operator direction.
+
+**Operator decision needed**: (a) close slot 11 (operator stops the tab); (b) re-spawn slot 11 with a fresh task
+(specify plan-of-record); (c) re-assign a specific reassigned item back to slot 11 (pick from the table at
+`work_split_2026_05_14_ikenna.md:502`).
+
+---
+
 ## [2026-05-20 slot-11 UTC] 🛑 BLOCKED — strategy-service QG: dydx archetype catalog vs venue-token SSOT (FREEZE-GATE)
 
 **QG result**: `strategy-service` — 5 failed / 4126 passed / 315 skipped. Coverage 83.10% ≥ 74% gate ✅. Lint/typecheck stages green; failures are pytest assertions on `tests/unit/engine/strategies/v2/test_target_universe.py`.
@@ -259,3 +282,17 @@ gcloud compute ssh agent-orch-vm-cross-cutting-20260521 \
 ```
 
 Plan ref: `plans/active/epic_vm_fleet_commissioning_2026_05_21.md` Phase 3 T+10min.
+
+---
+
+## [2026-05-22] slot-11 — aws_migration Phase 1.5.A DONE
+
+**Phase 1.5.A AWS hardcode grep** (`grep -rn "unified-trading-\|s3://\|427895769566"`) complete:
+
+- ~200 hits across workspace Python + shell files.
+- **Zero violations in May-23 critical path.** All hits: (a) multi-cloud-aware dispatch (handles gs:// + s3:// explicitly), (b) test fixtures, (c) operator migration scripts, (d) env-var-driven AWS backends with `${AWS_REGION:-...}` fallback.
+- **4 Wave-2 items** (post-cutover): `deployment-api/routes/monitor_scheduled.py:327/422/460` + `monitor_live.py:54` — bare `us-east-1` region strings in EventBridge command dispatch. Not in May-23 path.
+- Findings in `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` § 6.
+- Plan item flipped: `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A item 2 → `[x]`.
+
+**PM@074b2bfd** (LDR).

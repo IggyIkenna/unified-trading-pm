@@ -138,3 +138,30 @@ env-var defaults — none of the three agree on `(market_data, defi)` target buc
 band-aid (`MARKET_DATA_S3_BUCKET_DEFI` env explicit override), but Citadel-grade SSOT alignment requires the operator
 triage call captured in
 [`plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../../plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+
+### 6. AWS hardcode enumeration (2026-05-22)
+
+`grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` across all service repos
+(excluding `.git`, `.venv*`, `__pycache__`). ~200 hits total. Classification:
+
+| Category | Example sites | Count | Action |
+| --- | --- | --- | --- |
+| (a) Multi-cloud-aware dispatch (handles both `gs://` + `s3://` explicitly) | `deployment-api/routes/services.py`, `deployment-service/cloud_client.py`, `setup-buckets.py`, `sync-buckets-prod-to-env.sh` | ~80 | Compliant — no action. |
+| (b) Test fixtures using SSOT-correct shape | `deployment-api/tests/unit/test_data_status_hierarchical_aws_path.py`, `execution-service/tests/unit/custody/test_cloud_kms_provider.py`, `strategy-service/tests/unit/test_cloud_agnostic_paths.py` | ~60 | Compliant — no action. |
+| (c) Operator migration + audit scripts (`unified-trading-pm/scripts/migration/`, `plans/audit/`) | `verify_env_tiered_buckets_provisioned.py:56` (`_DEFAULT_AWS_ACCOUNT_ID = "427895769566"`), `a3v2_manifest_divergence_all_services.py:74` | ~20 | Compliant exception (scripts excluded from Tier-3 rule). |
+| (d) Env-var-driven AWS backends with `${AWS_REGION:-us-east-1}` fallback | `deployment-service/deployment_service/config_loader.py:524,582-583` (ECR URL construction uses `substitute_env_vars`) | ~10 | Compliant — env-var pattern correct. |
+| (e) **Wave 2**: bare `us-east-1` region hardcodes in deployment-api command strings | `deployment-api/deployment_api/routes/monitor_scheduled.py:327,422,460`; `monitor_live.py:54` (`_DEFAULT_ECS_REGION = "us-east-1"`) | 4 sites | Post-cutover — deployment-api scope. Fix: read from `AWS_REGION` env via config. |
+| (f) QG + quality-gate scripts (the enforcers, not violations) | `scripts/quality_gates/check_inline_bucket_uri.py`, `scripts/quality-gates-base/base-service.sh` STEP 5.12b | ~30 | Compliant — these ARE the detection layer. |
+
+**Overall finding: ZERO violations in the May-23 critical path.** All `s3://` and `427895769566` hits in
+production service code are either multi-cloud-aware dispatch (category a) or env-var-driven (category d).
+
+**Wave 2 items** (post-cutover, deployment-api scope):
+- `deployment-api/deployment_api/routes/monitor_scheduled.py:327` — `f"'cron(...)' --region us-east-1"` in EventBridge schedule command. Fix: `AWS_DEFAULT_REGION` env or deployment-api config field.
+- `deployment-api/deployment_api/routes/monitor_scheduled.py:422,460` — `aws events disable-rule --name {name} --region us-east-1` + enable-rule. Same fix.
+- `deployment-api/deployment_api/routes/monitor_live.py:54` — `_DEFAULT_ECS_REGION = "us-east-1"` module-level constant. Fix: read from `AWS_DEFAULT_REGION` env.
+- `deployment-api/deployment_api/deployment_api_config.py:562` — valid-regions list `["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"]` (config enum). Acceptable: it's a validation whitelist, not a routing decision.
+
+**`unified-trading-` prefix hits**: All from `unified-trading-pm` repo name in comments/docstrings, NOT inline bucket
+name strings. QG STEP 5.12b (`grep '"gs://\|"s3://'`) already enforces the bucket-literal ban in service code.
+Zero new anti-patterns found.
