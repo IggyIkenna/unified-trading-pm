@@ -1,9 +1,17 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-22
 ---
 
 # Availability Manifest & Data Status — SSOT
+
+> **[DELTA 2026-05-22]** **Current state:** Writers at v8 schema (code constant `MANIFEST_SCHEMA_VERSION = 8`); ~3.4M
+> existing rows still at v<8 — Phase 7 migration in progress (slot 5). 765 `DIVERGENT_EMPTY` cells and blank/NULL
+> `empty_confirmed.reason` labels present in production manifests. `asset_group` partition key added at v8 — CeFi rows
+> written before Phase 7 lack this column. **Planned delta:** `mtds_mdps_master` Phase 7 will migrate all v<8 rows +
+> flip bad/blank `empty_confirmed.reason` labels + triage 765 `DIVERGENT_EMPTY` cells. After Phase 7.D completion this
+> doc gets a `## Schema v8 migration — COMPLETE` banner. **Target architecture:** 100% v8 across all buckets, 0 NULL
+> reason, 0 DIVERGENT_EMPTY.
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
@@ -300,6 +308,18 @@ sweep across MTDS + instruments-service (tracked as deferred follow-up in Phase 
 backfills missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion cutoff. The runtime SSOT
 lives in `unified-trading-library/unified_trading_library/manifest_writer.py`.
 
+> **[DELTA 2026-05-22 — v8 data-side divergence (CRITICAL)]** **Current state (2026-05-20 mega-audit A4 finding):** Code
+> constant says `MANIFEST_SCHEMA_VERSION = 8`. **0% of 7.4M production manifest rows are actually at v8.** All prod rows
+> are v4-v7. 1.3M rows have NULL `schema_version`. The code constant does NOT reflect the data state. Do NOT trust the
+> constant to verify data state — always read actual `schema_version` column distribution from the bucket. **Reference
+> incident:** Operator 2026-05-20: "I'm tired of doing this same thing a million times. We're on version eight for a
+> reason. It's because you keep being sloppy and keep missing out stuff." The code-constant ≠ data-state class of bug.
+> **Planned delta:** `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 7 (7.A writer-path fix + 7.B forward-fix +
+> 7.C backfill + 7.D verification) will migrate all 7.4M+ rows to v8. At Phase 7.D completion, this section will gain a
+> migration completion banner. **Target architecture:** 100% of prod manifest rows at v8; NULL `schema_version` count =
+> 0; A4 re-run returns 100% v8 across all 10 buckets (5 MTDS + 5 IS). This codex doc gets a
+> `## Schema v8 migration — COMPLETE` banner at that point per plan line 4558.
+
 ```python
 MANIFEST_SCHEMA_VERSION = 8  # v8: pipeline_mode default removed (Phase 4.DEFAULT-REMOVAL, 2026-05-12)
 
@@ -384,6 +404,32 @@ class AvailabilityRecord:
     service_emission_state: str | None = None  # "PUBLISHED_OK" | "PUBLISHED_DEGRADED" | "STALE_DATA_HEARTBEAT_ONLY" | "BLOCKED" | None (pre-migration)
     last_emission_decision_at: str | None = None  # ISO-8601 UTC timestamp of last publish_with_policy decision
     expected_window_completeness_fraction: float | None = None  # 0.0-1.0 fraction of expected per-row window populated (renamed from _pct at UAC@76f950a 2026-05-11)
+```
+
+### v8 CeFi reshaping note (asset_group partition key)
+
+Schema v8 added `asset_group` as a partition key at the manifest row level. For CeFi, this means:
+
+- **New writes (post-v8):** Every `record_captured` / `record_empty` / `record_expected_unattempted` call passes
+  `asset_group=cefi` (or the appropriate domain) explicitly. The hive path on GCS includes `asset_group=cefi/` as a
+  partition prefix.
+- **Legacy rows (v<8, pre-migration):** Rows written before Phase 7 have `asset_group=None` or are missing the column
+  entirely. `read_availability_index()` backfills the column to `""` for these rows.
+- **Migration requirement:** Any agent checking manifest row schema MUST verify `schema_version=8` in production before
+  trusting `asset_group` presence. The code constant `MANIFEST_SCHEMA_VERSION = 8` does NOT reflect the data state —
+  always read the actual `schema_version` column distribution from the bucket (reference incident 2026-05-20: 0% of 7.4M
+  prod rows at v8 despite constant = 8).
+- **Phase 7 remediation:** `mtds_mdps_master` Phase 7 walks every existing row and adds the `asset_group` column value
+  derived from the bucket's registered `asset_group`. After Phase 7.D, `asset_group` is 100% populated for all rows.
+
+**Pre-flight check (mandatory for any script reading manifests):**
+
+```python
+# Verify schema_version before trusting asset_group
+df = pd.read_parquet("gs://.../availability_index.parquet")
+v8_pct = (df["schema_version"] == 8).mean()
+if v8_pct < 0.99:
+    logger.warning("%.1f%% of rows at v8; asset_group column may be absent in older rows", v8_pct * 100)
 ```
 
 ### Column Rules
@@ -780,6 +826,69 @@ for instruments/shards that legitimately should not be processed.
 | **MDPS**            | Read MTDS manifest via `DependencyChecker`; if MTDS shard absent or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
 | **features**        | At `_get_instruments()` call: compare full catalog vs runtime `subscription_list` scope gate        | `record_expected_unattempted(..., reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` | `EXPECTED_OUTSIDE_PROCESSING_SCOPE` |
 | **features/sports** | Sports classifier: check fixture existence for fixture-pinned sources (SFI, footystats, open_meteo) | `record_empty(reason=EXPECTED_NO_FIXTURE)` via legacy_reason_classifier      | `EXPECTED_NO_FIXTURE`               |
+
+#### `expected_unattempted` cascade contract (codified 2026-05-22)
+
+`expected_unattempted` is the **4th `capture_status` value** alongside `captured`, `empty_confirmed`, and
+`attempted_failed`. It means:
+
+> "This shard was expected to have data based on the schedule and instrument universe, but the job that would produce it
+> has not run yet."
+
+**What it is NOT:**
+
+- It is NOT a gap — the orchestrator has not yet attempted this shard.
+- It is NOT `attempted_failed` — no failure occurred; no attempt was made.
+- It is NOT `empty_confirmed` — we do not know the source will return empty.
+
+**Downstream consumers MUST NOT treat `expected_unattempted` as a gap or error.** Consumers reading the manifest for
+pre-flight checks MUST handle all 4 states:
+
+| `capture_status`       | Downstream pre-flight action                                                           |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `captured`             | Process normally — data is on disk                                                     |
+| `empty_confirmed`      | NaN-handle per consumer class (ML NaN-fill; execution skip; feature window-adjust)     |
+| `attempted_failed`     | Raise `DependencyError(fail_fast=True)` — real upstream bug; do NOT mask with `--skip` |
+| `expected_unattempted` | **Propagate as `expected_unattempted`** in your own manifest row — do NOT fail or skip |
+
+**Cascade propagation rule (HARD RULE):**
+
+When upstream (e.g. instruments-service or MTDS) has `expected_unattempted` for a shard, every downstream service (MDPS,
+features, strategy, execution) MUST also record `expected_unattempted` for that same shard — NOT `attempted_failed` and
+NOT silence. The reason code to use is `EXPECTED_UPSTREAM_EMPTY` (`EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY`).
+
+```python
+# Canonical cascade pattern (MDPS / features pre-flight gate)
+upstream_status = manifest.lookup(shard_key)
+if upstream_status == "expected_unattempted":
+    writer.record_expected_unattempted(
+        row_key=shard_row_key,
+        reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY,
+        pipeline_mode=pipeline_mode,
+    )
+    continue  # skip compute — propagate honest absence
+elif upstream_status == "attempted_failed":
+    raise DependencyError(fail_fast=True, upstream_shard=shard_key)
+# else: captured or empty_confirmed → proceed per consumer class rules
+```
+
+**Scheduling artifact:** When a new day's pipeline window opens, the orchestrator pre-populates `expected_unattempted`
+rows for every `(service, shard_key, day)` in the expected universe before any VMs run. As VMs complete each shard,
+their `record_captured` / `record_empty` / `record_failed` calls supersede the `expected_unattempted` row. The
+transition from `expected_unattempted` → `captured` is the atomic "done" signal per shard.
+
+**Coverage formula impact:** `expected_unattempted` rows count in the denominator (total expected universe) but NOT in
+the numerator (captured shards). Coverage % =
+`captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. Consumers computing coverage MUST
+use `compute_honest_coverage(CaptureStatusCounts(...))` from UAC — do NOT roll your own formula. SSOT:
+`honest_coverage_formula_consolidation_2026_05_19.md`.
+
+**Implementation refs:**
+
+- UTL `ManifestWriter.record_expected_unattempted()` — the write-side method
+- MDPS `canonical_writer.record_expected_unattempted_for_shard()` +
+  `CandleOrchestrationService._record_expected_unattempted_on_skip()` (mdps@3f70cf6)
+- Plan: `plans/active/expected_unattempted_propagation_chain_2026_05_12.md`
 
 #### Three new EmptyConfirmedReason values added (2026-05-12–13)
 
@@ -1258,6 +1367,18 @@ the SOURCE differs (some live sources are faster than canonical historical archi
 `available_at` with the live-pipeline-equivalent arrival time, NOT the historical archive's slower archive time. Banned:
 separate live-only data_types like `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH`; field sets that diverge between live +
 batch parquets.
+
+> **[DELTA 2026-05-22 — post-cutover boundary]** **Current state (pre-cutover / May-23):** `available_at` is opt-in via
+> explicit stamping helpers in `unified_trading_library.availability_stamping`. The `assert_available_at_present` check
+> is enforced at `record_captured()` call time (QG STEP L7 ratchet). Silent-wrong-rule bugs are possible if the wrong
+> stamping helper is used. **Planned delta:** `available_at_schema_lift_post_cutover_2026_05_19.md` (P1, gated
+> post-May-23 cutover) will introduce UAC `AvailabilityRule` Protocol — each row-class carries its own
+> `AvailabilityRule` implementation. Stamping becomes automatic via pydantic validator; silent-wrong-rule becomes
+> type-level unrepresentable. `unified_trading_library/availability_stamping.py` collapses from ~330 lines to ~50 lines
+> (per-source rule implementations only). **Target architecture:** `AvailabilityRule` Protocol as the canonical SSOT for
+> `available_at` stamping. CLAUDE.md `available_at` rules updated to point to UAC `AvailabilityRule`. QG STEP 5.67
+> (record_captured preceded by stamping) and STEP 5.68 (feature-compute assert_no_lookahead) ship as static enforcement
+> at completion. Gate: features_repo_consolidation Phase 5.c + Block B1 ADT lift (monorepo migration).
 
 ### 6. Three-category empty-output decision tree (post-2026-05-06)
 
