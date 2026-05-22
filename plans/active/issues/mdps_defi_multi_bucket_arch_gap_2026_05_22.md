@@ -39,15 +39,33 @@ Either:
 3. **There is a missing MTDS step** that copies/transforms data from separate buckets into the main DeFi bucket with the
    correct path structure.
 
-## Recommended decision
+## Resolution — CONFIRMED Option A (2026-05-22 slot-6)
 
-Operator / slot-1 main should clarify the intended pipeline for DeFi non-vault data types:
+**Option A is correct**: features-onchain reads directly from the specialized buckets — these are "bypass types".
 
-- Option A: Features-onchain reads directly from separate buckets → document this in codex as DeFi special-case (bypass
-  MDPS for lst_rates/dex_pool_state/lending_indices). MDPS DeFi scope = vault_share_price only.
-- Option B: Add multi-bucket support to MDPS config (PROTOCOL_DATA_SOURCE_BUCKET_DEFI becomes a list OR additional
-  per-datatype env vars). Requires MDPS code change.
-- Option C: Add a migration/copy step that consolidates all DeFi raw data into
-  `market-data-tick-defi-*/raw_tick_data/by_date/`.
+Code evidence from features-service (slot-6 investigation 2026-05-22):
 
-Current blocker: MDPS-3.3.DeFi-V can only verify vault_share_price bars until this is resolved.
+| Data type         | features-service entry point                     | Bucket domain     |
+| ----------------- | ------------------------------------------------ | ----------------- |
+| `lst_rates`       | `OnChainDataLoader.load_oracle_prices()`         | `lst-rates`       |
+| `lending_indices` | `OnChainDataLoader.load_rate_indices()`          | `lending-indices` |
+| `dex_pool_state`  | `_resolve_mtds_parquet_files("dex_pools", date)` | `dex-pools`       |
+
+`dependency_checker.py` explicitly states: _"MDPS processed_candles is NOT required for DeFi on-chain snapshot types.
+MDPS aggregates only 5 DeFi data_types: book_snapshot_5 / dex_swaps / fx_rates / market_state / liquidity. On-chain
+snapshot data_types (vault_share_price / lst_rates / oracle_prices / lending_indices / perp_funding / etc.) flow
+directly from MTDS raw_tick_data."_
+
+**Actions taken (slot-6 2026-05-22)**:
+
+- Deleted 3 unnecessary MDPS VMs that were processing bypass-type data: `mdps-backfill-defi-dex-pools-20260522-094538`,
+  `mdps-backfill-defi-lending-indices-20260522-094523`, `mdps-backfill-defi-lst-rates-20260522-094503`
+- `mdps-backfill-defi-20260522-095053` (main DeFi MDPS VM) kept running — it reads from `market-data-tick-defi-*` for
+  `dex_swaps` data (which IS an MDPS-processed type)
+- vault_share_price in main DeFi bucket is also a bypass type; MDPS will skip/write empty for it
+
+**Codex update needed**: document DeFi data flow in `codex/04-architecture/defi-execution-overview.md` or
+`codex/02-data/` — "DeFi bypass types" section. Assign to features-service codex update pass.
+
+**Status: RESOLVED — no operator decision needed.** Arch gap is expected design; 3 VMs deleted; main DeFi MDPS VM
+continues for dex_swaps coverage. Close this issue doc.

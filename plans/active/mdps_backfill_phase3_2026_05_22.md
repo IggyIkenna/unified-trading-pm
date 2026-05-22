@@ -42,20 +42,19 @@ Gate: MTDS-3.2.A CeFi verification GREEN.
 Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-05-22).
 
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — All 3 prior VMs failed with ImportError (`needs_candle_processing`). Fix:
-      UAC@7eb9859d + 9ae88aea (slot-5 + slot-4 duplicate fixes) exported `needs_candle_processing` from top-level
-      `__init__.py`. Canonical GCS tarball at `code/unified-api-contracts-code.tar.gz` updated to SHA=5f699edb
-      (UAC@08:50 UTC). **RUNNING**: (a) `mdps-backfill-defi-20260522-095053` @ 35.200.75.132 (2020-01-01→2026-05-22,
-      market-data-tick-defi-\*, vault_share_price only); (b) `mdps-backfill-defi-dex-pools-20260522-094538` reading from
-      `dex-pools-central-element-323112`; (c) `mdps-backfill-defi-lending-indices-20260522-094523` from
-      `lending-indices-central-element-323112`; (d) `mdps-backfill-defi-lst-rates-20260522-094503` from
-      `lst-rates-central-element-323112`. **FINDING**: MDPS DeFi only processes vault_share_price from main DeFi bucket.
-      LST rates/lending_indices/dex_pool_state in separate buckets — architecture gap filed in issue doc. 2026-05-22.
-- [x] ✅ [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — Issue doc filed at
-      `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` (slot-7 2026-05-22). Documents 3 options: (A)
-      features-onchain reads directly from separate buckets (bypass MDPS), (B) multi-bucket MDPS support, (C)
-      consolidation step. Awaiting operator/slot-1 direction. 2026-05-22 slot-6 cross-ref.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify slot-2 VM (vault_share_price): 10-sample NaN check; manifest 100% v8.
-      LONG-RUNNING (2020-01-01→2026-05-22, vault_share_price only from main DeFi bucket).
+      UAC@7eb9859d + 9ae88aea exported `needs_candle_processing` from top-level `__init__.py`. Canonical tarball updated
+      SHA=5f699edb (UAC@08:50 UTC). **RUNNING**: `mdps-backfill-defi-20260522-095053` @ 35.200.75.132
+      (2020-01-01→2026-05-22, market-data-tick-defi-\*, dex_swaps + bypass types). **ARCH RESOLVED (slot-6
+      2026-05-22)**: lst_rates / dex_pool_state / lending_indices are bypass types — features-onchain reads directly
+      from specialized buckets (dep_checker.py). MDPS DeFi scope = dex_swaps / book_snapshot_5 / fx_rates / market_state
+      / liquidity. 3 unnecessary VMs deleted (dex-pools/lending-indices/lst-rates 094xxx). vault_share_price also bypass
+      type; main MDPS VM continues for dex_swaps. 2026-05-22 slot-6.
+- [x] ✅ [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — **RESOLVED** (slot-6 2026-05-22). Issue doc updated with code evidence:
+      Option A confirmed. 3 unnecessary VMs deleted. Main DeFi MDPS VM (095053) kept for dex_swaps.
+      `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` closed.
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify main VM (095053): dex_swaps bars present for post-2020 DeFi dates;
+      manifest 100% v8. LONG-RUNNING (2020-01-01→2026-05-22; dex_swaps data starts ~2020-Q3). vault_share_price not
+      verified via MDPS (bypass type — verify in features-onchain plan instead).
 
 ## Phase 3 — TradFi MDPS reprocessor
 
