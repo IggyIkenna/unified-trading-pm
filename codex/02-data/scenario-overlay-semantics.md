@@ -31,6 +31,12 @@ handle the nullable `scenario_id` column — do not assume it is always populate
 (`ScenarioReportEmitter`) is a post-cutover Phase 2.C addition. The schema above is the SSOT for both the in-memory and
 parquet representations.
 
+> **[DELTA 2026-05-22]** **Current state:** Parquet sink (`ScenarioReportEmitter`) not yet active — `ScenarioReport` is
+> in-memory + JSONL only. **Planned delta:** `plans/active/simulation_scenarios_post_cutover_2026_06_01.md` Phase 2.C
+> wires the GCS parquet sink post-cutover. **Target architecture:** All scenario runs emit `report.parquet` +
+> `matrix.parquet` to the GCS path below; `synthetic=True` rows distinguishable in downstream jobs without inspecting
+> JSONL.
+
 **GCS path** (post-cutover Phase 2.C):
 
 ```
@@ -79,6 +85,12 @@ Two rules govern this:
    stays on for all non-overlay paths — accidental scenario-driven masking of real lookahead bugs is prevented.
 
 ## Manifest `scenario_id` column
+
+> **[DELTA 2026-05-22]** **Current state:** `MANIFEST` tap layer is DEFERRED — `scenario_id` columns do NOT appear in
+> the manifest. **Planned delta:** `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 3.G
+> wires `ManifestPhantom` mutations post-cutover. **Target architecture:** Manifest rows carry `scenario_id` so
+> deployment-UI and downstream consumers distinguish scenario-injected gaps from real gaps without inspecting the event
+> stream.
 
 When the `MANIFEST` tap layer is active (post-cutover Phase 3.G), `ManifestPhantom` mutations write manifest rows with a
 `scenario_id` column alongside the standard `capture_status`, `reason`, and `available_at` fields. This allows the

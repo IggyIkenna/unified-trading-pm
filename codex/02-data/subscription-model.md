@@ -283,7 +283,14 @@ Publishing principles:
 - **Batch: publish = write Parquet to GCS** (synchronous, on the primary thread). The service blocks until the write
   completes, then moves to the next date/shard.
 - **Live: publish = broadcast to consumers** (unicast for one-to-one, multicast for one-to-many) **+ async persistence**
-  to GCS/BigQuery on a separate thread. The primary event loop never blocks on persistence I/O. [PLANNED]
+  to GCS/BigQuery on a separate thread. The primary event loop never blocks on persistence I/O. [PLANNED — see
+  `plans/epics/batch_live_symmetry_master.md`]
+
+> **[DELTA 2026-05-22]** **Current state:** Live streaming publish path is not yet wired end-to-end — batch (GCS write)
+> is the active path for all services. `[PLANNED]` entries in the Messaging Topology table below reflect live transport
+> designs that have not shipped. **Planned delta:** `plans/epics/batch_live_symmetry_master.md` sequences live-streaming
+> wire-in per service family. **Target architecture:** Services publish via both GCS (batch persistence) + in-memory
+> broadcast (live consumers) on the same publish call.
 
 ---
 
@@ -493,7 +500,12 @@ class AsterAdapter:
 
 ---
 
-## Future: Live Streaming Subscriptions
+## Live Streaming Subscriptions
+
+> **[DELTA 2026-05-22]** **Current state:** Live streaming subscriptions are not yet active — all services use batch GCS
+> read/write. **Planned delta:** `plans/epics/batch_live_symmetry_master.md` sequences per-service live-streaming
+> wire-in. **Target architecture:** market-tick-data-service embeddable as a package; in-process callback path active
+> alongside GCS persistence.
 
 **[PLANNED]** For live trading mode, services will subscribe to real-time data streams instead of batch downloads.
 

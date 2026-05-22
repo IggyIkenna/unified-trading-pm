@@ -146,24 +146,24 @@ Child books (8 confirmed + 2 TBD):
 
 ## Prediction markets
 
-| Venue      | Type         | Operations                            | Status                                                           |
-| ---------- | ------------ | ------------------------------------- | ---------------------------------------------------------------- |
-| Polymarket | SINGLE_VENUE | TRADE (BET_CLOB_YES/NO), QUOTE, TICKS | Active. CLOB migration done (49K→863K markets). USDC on Polygon. |
-| Kalshi     | SINGLE_VENUE | TRADE, QUOTE                          | Future; not yet integrated                                       |
+| Venue      | Type         | Operations                            | Status                                                                                                                                                                                                                              |
+| ---------- | ------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Polymarket | SINGLE_VENUE | TRADE (BET_CLOB_YES/NO), QUOTE, TICKS | Active. CLOB migration done (49K→863K markets). USDC on Polygon.                                                                                                                                                                    |
+| Kalshi     | SINGLE_VENUE | TRADE, QUOTE                          | API migrated to `api.elections.kalshi.com` (2026-05-20, Phase 1 shipped). Status: `BLOCKED-CREDENTIALS` — integration verification pending credential provisioning (see `codex/02-data/prediction-schema-paths.md` § Kalshi delta). |
 
 ## Permanently removed
 
 Do NOT re-introduce:
 
-| Venue     | Why removed                                    |
-| --------- | ---------------------------------------------- |
-| LSE       | UK equities route via IBKR                     |
-| TSX       | Canadian equities route via IBKR               |
-| Elysium   | Removed per earlier architecture decisions     |
-| Arkham    | Removed; not a data source we use              |
-| Bloxroute | Removed from MEV provider list                 |
-| Pyth      | Not a price oracle source in our stack         |
-| Infura    | Not an RPC provider we use (via UCI templates) |
+| Venue     | Why removed                                                                                                                                                                                                                              |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LSE       | UK equities route via IBKR                                                                                                                                                                                                               |
+| TSX       | Canadian equities route via IBKR                                                                                                                                                                                                         |
+| Elysium   | Removed per earlier architecture decisions                                                                                                                                                                                               |
+| Arkham    | Removed; not a data source we use                                                                                                                                                                                                        |
+| Bloxroute | Removed from MEV provider list                                                                                                                                                                                                           |
+| Pyth      | **UNBANNED 2026-05-06 for Solana only** — Pyth is the canonical on-chain price feed for Solana DeFi adapters (per CLAUDE.md). Chainlink for EVM chains. This row is a historical note only; do NOT remove Pyth from Solana adapter code. |
+| Infura    | Not an RPC provider we use (via UCI templates)                                                                                                                                                                                           |
 
 ## Capability registry
 

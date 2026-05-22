@@ -10,8 +10,23 @@ related_plans:
   - is_mtds_contract_audit_2026_05_20.md
   - master_to_live_defi_2026_05_23.md
 priority: P2
-status: active
+status: RESOLVED 2026-05-22
+resolved_via: >
+  All phases A–D complete (A1-A6 diagnostics ✅, B1 template ✅, C0-C11 audits ✅, D0-D8 plans beefed ✅). Phase E
+  execution STARTED (D6 strategy+execution shipped). Close criterion met. Phase F items (F1-F7, env-bucket migration)
+  MIGRATED to plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § Phase F (2026-05-22). Remaining open
+  item (cross-cutting QG ratchet pattern g — expected_coverage preflight + DIVERGENT_EMPTY) deferred to
+  plans/active/d2_uac_continuity_2026_05_20.md per CLAUDE.md archival HARD RULE.
 ---
+
+> **ARCHIVED 2026-05-22** — all A-D phases complete; Phase E started; Phase F migrated.
+>
+> **Deferred work migrated to:**
+>
+> - Phase F (F1-F7, env-bucket migration + cutover):
+>   `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase F
+> - Cross-cutting QG ratchet pattern g (expected_coverage preflight + DIVERGENT_EMPTY):
+>   `plans/active/d2_uac_continuity_2026_05_20.md`
 
 ## What this tracks
 

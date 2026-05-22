@@ -350,9 +350,9 @@ firebase.admin and explicitly excludes prod firebase.admin.
 ### Mail (Resend)
 
 - prod: `hello@mail.odum-research.com` — DKIM + SPF verified.
-- uat: `hello@mail.uat.odum-research.com` ⚠️ subdomain not yet DNS-verified. Either set up the staging subdomain in
+- uat: `hello@mail.uat.odum-research.com` ⚠️ subdomain not yet DNS-verified (status as of 2026-05-22). Either set up the staging subdomain in
   Resend (4 DKIM + 1 SPF DNS records) or temporarily point the uat branch in `lib/email/resend.ts` `getMailDomain()` at
-  the prod-domain sender.
+  the prod-domain sender. Tracked under `plans/epics/deployment_and_user_management_master.md`.
 
 ### Full per-env reference
 

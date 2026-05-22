@@ -94,3 +94,7 @@ AI-days on `vm-sports`.
 - ICE TradFi: operator decision on `ICE_ROOTS` pending; `tradfi-bf-ice-ohlcv-1m.sh` scaffold ready.
 - Phase 7 gate: if Phase 7 (manifest v8 label-flip) not GREEN before VMs launch, every new row grows v<8 debt. Hard gate
   — do not skip.
+- **[P2 MIGRATED FROM defi_upstream_46day_full_backfill_2026_05_16.md]** `vm_instruments_backfill.sh` passes
+  `--venues <list>` to instruments-service CLI but the CLI doesn't accept `--venues`. Fix: either add `--venues` to
+  `instruments_service` argparse OR strip `VENUES_FLAG` propagation from the inner script. Surfaces on any targeted-DeFi
+  launch path. Fix before IS-3.2.C instruments VM launch.

@@ -84,8 +84,9 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    Operator-acked tonight to run in parallel with consolidation. **Status: in-progress (operator session).** Composes
    with: Phase -2 Bucket 4 of coordinator. Est: 8 cal-AI-days.
 
-2. **HUMAN-IKENNA-MEGA-AUDIT-PROGRESSION** — `issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. Master audit
-   tracker; needs ongoing curation as items close. Est: 1 cal-AI-day rolling.
+2. ✅ **HUMAN-IKENNA-MEGA-AUDIT-PROGRESSION** — ARCHIVED 2026-05-22. All A-D phases complete; Phase E started (D6
+   shipped); Phase F items migrated to `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase F. Archive:
+   `plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`.
 
 3. **HUMAN-IKENNA-DATA-PIPELINE-COORDINATION-SUPERVISION** — `data_pipeline_master_coordination_2026_05_20.md`. Phase
    sequencing decisions when blockers surface + Phase 7b DIVERGENT_EMPTY triage (per-cell label-flip-vs-rebackfill calls
@@ -99,12 +100,20 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
 5. **HUMAN-IKENNA-PROMOTE-WORKFLOW-REVIEW** — review the promote workflow architecture before May-23 cutover.
    Critical-path call: paper_1d → live_early tonight, live_full post-cutover. Est: 0.5 cal-AI-day.
 
-6. **HUMAN-IKENNA-CREDENTIALS-UNBLOCK-TRACK** — operator-facing credential asks: Helius (paid Solana RPC), Glassnode /
-   Kaiko / IntoTheBlock (on-chain analytics), Polygon.io / Databento (tradfi ticks), Sportradar / Footystats /
-   The-Odds-API (sports odds), Polymarket / Kalshi (prediction spreads). Per `External Data Is Always Available` rule:
-   each adapter scaffold ships pre-credential (co-owned per-adapter); credential ask is filed via `pings/slot_1.md` with
-   the CREDENTIAL APPROVAL REQUEST format. Status taxonomy: `BLOCKED-CREDENTIALS` until acked. Est: 0.2 cal-AI-day per
-   credential × ~10 = 2 cal-AI-days rolling.
+6. **HUMAN-IKENNA-CREDENTIALS-UNBLOCK-TRACK** — operator-facing credential asks (updated 2026-05-22):
+   - ✅ Helius (paid Solana RPC) — key confirmed in Secret Manager
+   - ✅ Databento (TradFi ticks) — key confirmed in Secret Manager
+   - ✅ The-Odds-API (sports/prediction) — key confirmed in Secret Manager
+   - ✅ Polymarket — live feed wired
+   - ✅ Footystats — wired
+   - ✅ Glassnode — DELETED from system (defunct provider cleanup 2026-05-20)
+   - ✅ Sharpapi — DELETED from system (defunct provider cleanup 2026-05-20)
+   - 🚫 Kaiko — REMOVE from system entirely (operator directive 2026-05-22, same as Glassnode; no adapter to build)
+   - 🚫 Polygon.io — REMOVE from system entirely (operator directive 2026-05-22; not using)
+   - 🟡 Kalshi — **ONLY remaining BLOCKED-CREDENTIALS**; prediction spread adapter scaffold ships; integration tests
+     `@pytest.mark.requires_credentials`; credential ask filed. File: `pings/slot_1.md`.
+   - IntoTheBlock / Sportradar — deferred; not in May-23 critical path Per `External Data Is Always Available` rule.
+     Est: 0.1 cal-AI-day (Kalshi only + Kaiko/Polygon.io removal task).
 
 7. **HUMAN-IKENNA-CUSTODY-PROVIDER-DECISIONS** — Copper + CEFFU June-1 onboarding decisions (May-23 ships on
    `CLOUD_KMS_ENCRYPTED`). Cayman vs UK jurisdiction calls per `project_trading_entities` memory + venue-bans-UK gating.
@@ -204,15 +213,16 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:
     `live_pipeline_mtds_mdps_features_2026_05_08.md` + `batch_live_symmetry_2026_05_10.md`. Est: 2 cal-AI-days.
 
-16. 🟡 **HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-COPY** — Sub-plan filed 2026-05-21 slot-11: [`aws_manifest_consolidator_scope_2026_05_21.md`](./aws_manifest_consolidator_scope_2026_05_21.md)
-    — 2.5 cal-AI-days; UTL consolidator is cloud-agnostic + AWS Batch/EventBridge Terraform modules already exist →
-    Terraform authoring only; GATED on Phase 5 cross-cloud rsync + Phase 6 ECS Fargate.
-    Decision: sub-plan (not BLOCKED-OPERATOR-DECISION) — AWS consolidator is required once Phase 6 VMs run.
+16. 🟡 **HUMAN-HARSH-AWS-MANIFEST-CONSOLIDATOR-COPY** — Sub-plan filed 2026-05-21 slot-11:
+    [`aws_manifest_consolidator_scope_2026_05_21.md`](./aws_manifest_consolidator_scope_2026_05_21.md) — 2.5
+    cal-AI-days; UTL consolidator is cloud-agnostic + AWS Batch/EventBridge Terraform modules already exist → Terraform
+    authoring only; GATED on Phase 5 cross-cloud rsync + Phase 6 ECS Fargate. Decision: sub-plan (not
+    BLOCKED-OPERATOR-DECISION) — AWS consolidator is required once Phase 6 VMs run.
 
-17. 🟡 **HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE** — VM-side prep COMPLETE 2026-05-21 slot-11: per-slot tokens for slots
-    13-20 issued (exp 2026-06-20) at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/`. Migration doc
-    updated: `--start-slot` → `--add-slot` loop, token `scp` recipe added. Steps 1-7 remain laptop-side (Harsh action).
-    Step 8 DNS cutover = joint (Harsh stops epiphany service, Ikenna removes Cloudflare CNAME).
+17. ~~🟡 **HUMAN-HARSH-LAPTOP-MIGRATION-COMPLETE**~~ — **SUPERSEDED 2026-05-22**: laptop migration is no longer needed
+    because all slot capacity now runs on centralised AWS VMs via the agent-orchestrator (`orchestrator_master` epic).
+    AWS VM slot tokens already issued (slots 13-20, exp 2026-06-20). Steps 1-7 (laptop-side) are moot; step 8 DNS
+    cutover not required (epiphany service decommissioned when AWS VMs took over). No action needed.
 
 ### Co-owned (claim by bandwidth) — adapter scaffolding for BLOCKED-CREDENTIALS
 
@@ -228,18 +238,19 @@ up ships:
 - Unit tests against mocked API responses
 - Integration tests marked `@pytest.mark.requires_credentials` (skipped until creds land)
 
-Items (initial): each = ~0.3-0.5 cal-AI-day.
+Items (updated 2026-05-22): each = ~0.3-0.5 cal-AI-day.
 
-- `ADAPTER-HELIUS-SOLANA-PAID` (DeFi RPC scale)
-- `ADAPTER-GLASSNODE-ONCHAIN` (DeFi analytics)
-- `ADAPTER-KAIKO-CEX-HISTORICAL` (CeFi historical depth)
-- `ADAPTER-POLYGON-IO-TRADFI-TICKS` (TradFi)
-- `ADAPTER-DATABENTO-TRADFI` (TradFi alt)
-- `ADAPTER-SPORTRADAR-FEED` (Sports)
-- `ADAPTER-FOOTYSTATS-FEED` (Sports alt)
-- `ADAPTER-THE-ODDS-API` (Sports/Prediction)
-- `ADAPTER-POLYMARKET-FEED` (Prediction)
-- `ADAPTER-KALSHI-FEED` (Prediction)
+- ✅ `ADAPTER-HELIUS-SOLANA-PAID` (DeFi RPC scale) — key in SM; scaffold + integration wired
+- 🗑️ ~~`ADAPTER-GLASSNODE-ONCHAIN`~~ — DELETED (defunct provider cleanup 2026-05-20); no adapter to build
+- 🚫 ~~`ADAPTER-KAIKO-CEX-HISTORICAL`~~ — REMOVE from system (operator directive 2026-05-22); no adapter to build
+- 🚫 ~~`ADAPTER-POLYGON-IO-TRADFI-TICKS`~~ — REMOVE from system (operator directive 2026-05-22; not using)
+- ✅ `ADAPTER-DATABENTO-TRADFI` (TradFi alt) — key in SM; scaffold ships; integration enabled
+- `ADAPTER-SPORTRADAR-FEED` (Sports) — BLOCKED-CREDENTIALS; scaffold ships; integration tests skipped
+- ✅ `ADAPTER-FOOTYSTATS-FEED` (Sports alt) — wired
+- ✅ `ADAPTER-THE-ODDS-API` (Sports/Prediction) — key in SM; scaffold ships
+- ✅ `ADAPTER-POLYMARKET-FEED` (Prediction) — live feed wired
+- 🟡 `ADAPTER-KALSHI-FEED` (Prediction) — **BLOCKED-CREDENTIALS** (only remaining); scaffold ships; integration tests
+  `@pytest.mark.requires_credentials`; credential ask in `pings/slot_1.md`
 
 ## Post-May-23 / parallel-prep tracks (concurrent with data-pipeline phases)
 

@@ -156,11 +156,16 @@ Lifecycle: `ServiceBootstrap` emits lifecycle events; model hot-reload via `Mode
 
 ## Open deltas (tracked in plan)
 
+> **[DELTA 2026-05-22]** **Current state:** Three deltas below remain open from the original implementation. Status
+> tracked in `plans/epics/features_and_ml_master.md`. **Planned delta:** Enum extension + strict-mode wire-up +
+> SchemaContract registration are sequenced in the epic. **Target architecture:** All items closed; ML training reads
+> only from strict-mode-validated feature parquets with registered SchemaContracts.
+
 - `ModelType` in UAC `internal/domain/ml/schemas.py` does not yet include `ISOLATION_FOREST`, `LAMBDARANK`, or
-  RL-specific model families — anomaly + ranking + RL cells in the run-list use lightgbm proxies until Agent 1 extends
-  the enum.
-- MDPS strict-mode writer wire-up is Agent 3's scope (plan § 5b.2); ml-training's read side assumes it once landed.
-- Features SchemaContract registration (plan § 5c.1) is Agent 3's scope; training adapter will validate once registered.
+  RL-specific model families — anomaly + ranking + RL cells in the run-list use lightgbm proxies until the enum is
+  extended (tracked: `plans/epics/features_and_ml_master.md`).
+- MDPS strict-mode writer wire-up is pending (plan § 5b.2); ml-training's read side assumes it once landed.
+- Features SchemaContract registration (plan § 5c.1) is pending; training adapter will validate once registered.
 
 ## Cross-references
 

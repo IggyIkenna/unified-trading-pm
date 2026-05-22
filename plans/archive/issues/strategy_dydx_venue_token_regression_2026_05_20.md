@@ -7,7 +7,10 @@ source:
   - strategy-service tests/unit/engine/strategies/v2/test_target_universe.py
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: RESOLVED 2026-05-22
+resolved_via:
+  Option A — dydx re-added to UAC venue_tokens.py (confirmed line 128). Strategy catalog entries retained. 5 test
+  failures cleared.
 ---
 
 ## What I found

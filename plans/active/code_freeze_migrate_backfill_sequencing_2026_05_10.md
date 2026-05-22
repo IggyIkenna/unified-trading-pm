@@ -1268,6 +1268,29 @@ deferred per anti-sequencing audit; out of scope for this plan.
 - **GAP-2.3 OHLCV legacy filename rename** — successor: addition to `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
   Phase 2.X per disposition.
 
+## Phase F — Env-bucket migration + env-split policy (MIGRATED FROM mega_audit_and_plan_beefup_progression_2026_05_20.md § Phase F)
+
+**MIGRATED FROM:** `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md` § Phase F (2026-05-22).
+**Gate**: Phase E execution chain (D0–D8) complete + IS + MTDS A3 divergence = 0 MISSING_EXPECTED across full backfill
+window. Per-service split policy (operator directive 2026-05-20): IS = single shared bucket (no env split); MTDS = empty
+dev / sample-mirror staging / canonical prod; features/strategy/execution/ML = follow MTDS pattern.
+
+- [ ] [VERIFY] P0. **F1. Gate check** — A3 manifest-divergence dump returns 0 `MISSING_EXPECTED` for IS + MTDS across
+      full backfill window (2020-01-01..today). Until this passes, F2-F7 are blocked.
+- [ ] [AGENT] P1. **F2. Env-aware bucket-name audit** — extend A1 inventory script with "env dimension wired" compliance
+      row per `resolve_bucket_name()` callsite. Output: per-service env-readiness matrix.
+- [ ] [AGENT] P1. **F3. Cloud-providers.yaml policy table** — add per-service split table as canonical config in
+      `deployment-service/configs/cloud-providers.yaml`; QG enforces consistency with code.
+- [ ] [AGENT] P1. **F4. IS exception path** — explicit code comment + QG step asserting IS handlers do NOT route via
+      `CLOUD_ENV` (always prod-canonical bucket).
+- [ ] [SCRIPT] P1. **F5. MTDS staging sample-mirror script** —
+      `deployment-service/scripts/sync-staging-sample-from-prod.sh`; date-window rsync of prod MTDS → staging bucket;
+      scheduled cron + manifest consolidation post-mirror.
+- [ ] [SCRIPT] P0. **F6. Cutover sequence** — code-freeze window per Phase 2.0 protocol (drain all VMs + snapshot
+      manifest + flip env-config + restart VMs reading new buckets). Per-asset-group cutover windows if needed.
+- [ ] [VERIFY] P0. **F7. Post-cutover verification** — every service reads + writes correct env bucket per policy table;
+      IS still hits canonical shared bucket.
+
 ## Composes with
 
 - CLAUDE.md "Plans Run To Actual Completion, Not Smoke-Test Green" HARD RULE — every phase gate requires operational

@@ -7,6 +7,8 @@ source:
   - "MDPS DeFi backfill VM (mdps-backfill-defi-20260516-205843 FAILED rc=1, self-deleted) surfaced upstream gap"
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
+status: SUPERSEDED 2026-05-22
+superseded_by: plans/active/mtds_backfill_phase3_2026_05_22.md § Phase 3 (DeFi MTDS backfill). P2 --venues CLI mismatch migrated there.
 severity:
   P1 — non-blocking for B-015 paper-trade (5-day window pre-authorized in parallel ping); blocking for live DeFi data
   correctness across full historical window
@@ -107,9 +109,7 @@ needed.
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN
-**Triaged by**: slot-8 triage sweep
-**Reason**: Operator approval pending for 46-day backfill execution
+**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: Operator approval pending for 46-day backfill execution
 
 ---
 
