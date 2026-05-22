@@ -65,12 +65,12 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-central-element-323112`. 2026-05-22.
 - [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. NOTE: VM at 2020-01-14 after 3.5h
       running (very slow — ~10 min/day × 2333 days = ~16 days ETA). VIX bars at 2020-01-01+ will eventually appear.
-      LONG-RUNNING — verify once VM reaches 2026-05-22. **PARTIAL EVIDENCE (slot-7 2026-05-22)**: VM at 2026-01-21 after
-      ~12h running (~184 days/hour, far faster than initial estimate). VIX 15m bars confirmed at 2025-01-06:
-      `gs://market-data-tick-tradfi-central-element-323112/processed_candles/by_date/day=2025-01-06/timeframe=15m/     data_type=ohlcv_15m/venue=CBOE/VIX.parquet`
-      — 96 bars, 53 non-NaN (16.77→16.04 VIX range), overnight off-hours NaN is expected (CBOE closed). CBOE venue
-      appears from ~2024+. Remaining: VM needs to reach 2026-05-22; manifest v8 check pending. ETA: ~40 min from
-      2026-01-21 @ 184 days/hour.
+      LONG-RUNNING — verify once VM reaches 2026-05-22. **CORRECTION (slot-7 2026-05-22 ~17:30 UTC)**: Prior "VM at
+      2026-01-21 @ 184 days/hour" was WRONG — that was reading OLD 20260519 VM output, not 051203 progress. Actual
+      state: VM started 04:14 UTC, is at 2020-02-18 after ~13h (rate ~3.7 days/hour; CME has thousands of files/day).
+      ETA to reach 2026-05-22: ~2280 remaining days ÷ 3.7 = ~620 hours ≈ 26 more days. VIX bars at 2025-01-06 exist in
+      GCS from prior 20260519 VM runs (not new 051203 output). 051203 VM RUNNING and producing candles for early 2020
+      dates — will verify manifest v8 + VIX presence only once VM actually reaches 2026-05-22.
 - [x] ✅ [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — Issue doc filed at
       `plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md` (slot-6 2026-05-22). Covers: CME/ICE
       combo/UNKNOWN/futures_chain NaN bars + trades data_type nullable OHLC fix. VIX unblocked. Current VM marks

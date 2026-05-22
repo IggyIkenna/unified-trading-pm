@@ -138,9 +138,12 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       OLD→PRD bucket (slot-7 2026-05-22). Manual consolidation ran via
       `uts-prod-manifest-consolidator-instruments-sports-ppmjx` (Cloud Run job) — completed ✅. PRD
       ODDS/PREDICTIONS/MATCHES max improved: 2026-05-04 → **2026-05-13** (partial improvement; target ≥2026-05-20 not
-      yet met due to footystats data lag). Gap fill `bxhttsge4` launched for 2026-05-13→2026-05-22 — IN PROGRESS. When
-      complete, copy resulting shard OLD→PRD + re-consolidate. Consolidator run evidence: `bwckg12s1.output`. Successor
-      for systemic fix: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (sports).
+      yet met due to footystats data lag). Gap fill `bxhttsge4` launched for 2026-05-13→2026-05-22 — replaced by
+      `bx7ln2kvz` (processed 2026-05-14→2026-05-22, 603 manifest entries). Shard `ik_sports_footystats_gap_0514.parquet`
+      copied OLD→PRD ✅. Consolidator `uts-prod-manifest-consolidator-instruments-sports-tffn5` ran ✅. PRD
+      MATCHES/ODDS/PREDICTIONS max_date = **2026-05-22** ✅ (target ≥2026-05-20 MET). All new rows schema_version=8.
+      Consolidator run evidence: `bwckg12s1.output`. Successor for systemic fix:
+      `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (sports). Completed: slot-7 2026-05-22.
 
 - [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
       `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
