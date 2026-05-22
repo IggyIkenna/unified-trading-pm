@@ -1,3 +1,25 @@
+## [slot-2] 2026-05-22 — Sports BUNDLED_DATA_TYPES seeding DONE
+
+[2026-05-22 UTC] slot-2 DONE — **UAC sports BUNDLED_DATA_TYPES seeded.**
+
+- Added `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` to `BUNDLED_DATA_TYPES` frozenset
+- Added all three → `DATA_TYPE_TO_CLUSTER_REGISTRY → "SPORTS_FIXTURE_CLUSTERS"` (bookmaker cluster extractor)
+- UAC QG: **exit 0**
+- Writegate plan checkbox flipped: `[SCRIPT] P0. Sports BUNDLED_DATA_TYPES registry seeding` — ✅
+
+SHA: UAC@340aac8e
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B)
+
+**Next dispatch items remaining:**
+
+1. Wave 3.S UAC enum values (`EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS`)
+2. Wave 3.S `sports_per_source_rules.py`
+3. UTL `_classify_sports` + `_classify_tradfi` additions
+4. Phase A AvailabilityRule Protocol (5 sub-items)
+
+---
+
 ## [slot-2] 2026-05-22 — instruments_catalog P0 DONE + QG fully green
 
 [2026-05-22 UTC] slot-2 DONE — **UAC catalog-read interface contract shipped.**

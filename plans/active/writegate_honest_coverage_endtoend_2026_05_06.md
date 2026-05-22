@@ -1533,15 +1533,10 @@ grep.
     reconciler script in Phase 3.A handles the migration: read old parquet, split per-fixture, write new parquets, mark
     old `attempted_failed[reason=ShardSchemaMigrated]` for re-attempt under new contract.
 
-- [ ] [SCRIPT] P0. **Sports `BUNDLED_DATA_TYPES` registry seeding** (couples to per-fixture sharding above). Per-fixture
-      data_types that aggregate multiple bookmakers/sub-rows in one shard's parquet → `BUNDLED_DATA_TYPES`-eligible.
-      Concrete entries: - `ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE` — cluster_extractor: `bookmaker`.
-      `SPORTS_FIXTURE_CLUSTERS = {tier_1: {pinnacle, bet365, ...}, tier_2: {...}}` per league-tier (UAC seeds tier-1 EU
-      football tier list; expand per follow-up). - `FIXTURE_STATS` / `FIXTURE_PLAYER_STATS` from a single source —
-      typically NOT bundled (one row per fixture or per (fixture, player)) unless multi-source merge is enabled
-      (deferred to multi-source merge plan). `sports_fixture_bundle` in `BUNDLED_DATA_TYPES` is a logical category; the
-      actual `data_type` strings registered are the per-data_type entries above (`ODDS_SNAPSHOT`, etc.). Update Phase 1B
-      `BUNDLED_DATA_TYPES` seed to include those concrete data_type names.
+- [x] ✅ [SCRIPT] P0. **Sports `BUNDLED_DATA_TYPES` registry seeding** — added `odds_snapshot`, `odds_movement`,
+      `arbitrage_opportunity` to `BUNDLED_DATA_TYPES` + `DATA_TYPE_TO_CLUSTER_REGISTRY → SPORTS_FIXTURE_CLUSTERS`.
+      ManifestWriter now enforces bookmaker cluster validation on `record_captured()` for all three data_types. —
+      UAC@340aac8e / QG ✅ (exit 0) / slot-2 tab branch 2026-05-22
 - [x] ✅ [SCRIPT] P0. GMX multi-chain — `perp_funding_handler.py:225` currently writes `chain=""`; emit per-chain Tier-2
       fan-out per HANDOVER follow-up note. — market-tick-data-service@d5773c3 (\_collect_gmx → dict[str, int], process()
       loops per chain)
