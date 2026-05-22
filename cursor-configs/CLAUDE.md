@@ -124,8 +124,8 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
 
 - 31-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE`) in UAC
   `EMPTY_CONFIRMED_REASONS`. Blank reason → `LegacyBlankErrorReasonError`. Enum:
-  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy
-  table: `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
+  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
+  `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
   `MissingClusterValidationError` if kwargs absent.
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
@@ -137,8 +137,8 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
   window. SSOT: `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
 
 SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`
-(§ "Reason taxonomy" — 31-reason table; § "Per-service consumer-class audit" — per-service skip/alert rules;
-§ "Per-reason-group → consumer policy" — per-reason ML/execution/rolling-window lookup).
+(§ "Reason taxonomy" — 31-reason table; § "Per-service consumer-class audit" — per-service skip/alert rules; §
+"Per-reason-group → consumer policy" — per-reason ML/execution/rolling-window lookup).
 
 ### Shard-granularity SSOT (CRITICAL)
 
@@ -312,9 +312,18 @@ fetch → `CLIENT_READY`; failure → `CLIENT_QUARANTINED`. GIL-free parallelism
   targets **staging**.
 - **Plan locking**: `locked_by: live-defi-rollout` + `locked_since: <date>` prevents archival without `[unlock-plan]` in
   commit. Agents may ASK to unlock; never unlock autonomously.
-- **Plan archival (HARD RULE)**: scan for DEFERRED items; verify operations ran in production; migrate deferred items to
-  active home with `**MIGRATED FROM:**`; banner archived plan with `## Deferred work — migrated to:`; update
-  CLAUDE.md/codex if workspace contract changed.
+- **Plan archival (HARD RULE)**: Five mandatory steps before moving to `plans/archive/`:
+  1. Scan for DEFERRED items; verify operations ran in production; migrate deferred items to active home with
+     `**MIGRATED FROM:**`.
+  2. Banner archived plan with `## Deferred work — migrated to:` listing each deferred item's destination plan.
+  3. **Codex alignment check (added 2026-05-22)**: for every codex doc listed in the plan's `Codex SSOTs:` section, read
+     the doc and verify it reflects what actually shipped. Update stale rows/sections in place. If a codex doc was
+     promised but never written, write the stub or full doc now. If a codex doc was invalidated, add `SUPERSEDED`
+     banner. Plans referencing codex docs that are stale relative to what shipped are **review-blocking until
+     corrected**.
+  4. Update CLAUDE.md/codex if the archival introduces a new workspace contract (new invariant, new canonical path, new
+     tooling pattern).
+  5. Remove `locked_by:` frontmatter or add `[unlock-plan]` in commit message if plan was locked.
 - **Workflow templates**: SSOT `unified-trading-pm/scripts/workflow-templates/`. Never edit per-repo copies — edit PM
   template + run `rollout-workflow-templates.sh`.
 - **Force-sync warning**: `admin-force-sync-all-to-main.sh` overwrites remote main — can revert semver-agent bumps. Run
