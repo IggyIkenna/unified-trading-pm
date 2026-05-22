@@ -90,8 +90,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 4 — reporting + audit-trail durability
 
-- [ ] [AGENT] P1. **F-03** — Wire a strategy-audit GCS writer (today strategy decisions go to local
-      `events/strategy_decisions.jsonl` only via `DomainEventLogger`; no GCS persist). Acked PRE_CUTOVER.
+- [x] ✅ [AGENT] P1. **F-03** — Wire a strategy-audit GCS writer (today strategy decisions go to local
+      `events/strategy_decisions.jsonl` only via `DomainEventLogger`; no GCS persist). Acked PRE_CUTOVER. —
+      strategy-service@922cc446; `log_strategy_decision()` now calls `_gcs_upload_strategy_decision()` — uploads to
+      `resolve_bucket_name(kind="audit-records")` at `audit/{client_name}/{YYYY/MM/DD}/{ts}-strategy_decisions.json`;
+      GCS failure → logger.warning (never raises); StorageClient lazy-init; 2 tests (upload path/bucket/content-type +
+      GCS failure non-raise).
 - [ ] [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
       retention-lock (currently resolved at runtime via `resolve_bucket_name(kind="audit-records")` but never
       provisioned).
