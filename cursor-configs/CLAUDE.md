@@ -122,8 +122,9 @@ Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_
 categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
 `DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
 
-- 31-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE`) in UAC
-  `EMPTY_CONFIRMED_REASONS`. Blank reason → `LegacyBlankErrorReasonError`. Enum:
+- 33-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
+  `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`) in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
+  `LegacyBlankErrorReasonError`. Enum:
   `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
   `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
