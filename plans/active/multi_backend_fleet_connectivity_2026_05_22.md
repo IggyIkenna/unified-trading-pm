@@ -60,16 +60,28 @@ All phases below are **code-complete + ruff/basedpyright/tsc green + dashboard b
 - [x] ✅ [AGENT] P2. Worker `:8026` locked to VPC-internal (`sg-0080310387e84f613` ingress = `172.31.0.0/16`; public
       `0.0.0.0/0` revoked). Public `:8026` → timeout; SSH(22) intact; central→worker private `:8026` → 200.
 
-**Still remaining:**
+**Now DONE (2026-05-22):**
 
-- [ ] [AGENT] P1. **UI Firebase deploy** — Phase 3 dashboard (single-token + per-VM proxy routing) is on LDR but the
-      live Firebase dashboard still serves the old per-backend-token UI. Merge LDR→main → `deploy-dashboard.yml`
-      redeploys. Until then the browser fleet-view works (Ikenna's `/api/fleet/summary`) but per-VM interaction needs
-      the new UI.
-- [ ] [AGENT] P2. SSE/log-stream streaming variant of the per-VM proxy (current relay is buffered).
-- [ ] [AGENT] P2. Wire `auth.reload_secret()` into the `CredsEnvPoller` cadence (function exists; not yet polled).
-- [ ] [AGENT] P3. Grant the VMs' GCP identity `storage.objectViewer` on the creds bucket → switch to
-      `ORCHESTRATOR_JWT_SECRET_GCS` (rotate-in-one-place); then RS256/ES256 issuer + public-key distribution.
+- [x] ✅ [AGENT] P1. **UI Firebase deploy** — merged LDR→main (`56d98e5`; `server.py` restored after a `-X theirs`
+      near-miss); `deploy-dashboard.yml` deployed the new single-token / per-VM-proxy dashboard. Live release 18:32.
+      Site → 200.
+- [x] ✅ [AGENT] P2. **Streaming per-VM proxy** — `16bce1d`: `/api/vms/{id}/{path}` now streams via httpx
+      `stream=True` + `StreamingResponse` (read timeout disabled for SSE/log-tails). Deployed to central VM, verified
+      (per-VM 200, non-`/api` path 200, fleet 11/12, unknown VM 404).
+
+**Blocked / deferred (needs operator or explicit go-ahead):**
+
+- [ ] [BLOCKED-OPERATOR] P3. **GCS-read for the JWT secret.** Central VM authenticates to GCP as an `authorized_user` (a
+      person's `gcloud` OAuth ADC), not a service account, and that identity lacks read on
+      `central-element-323112-orchestrator-creds`. Switching off the env-var needs a **project-owner** action: either
+      grant the ADC identity `storage.objectViewer` on the bucket, or provision a VM service account (SA creation also
+      needs owner — confirmed I lack it). Env-var distribution works fine in the meantime; GCS object is the SSOT.
+- [ ] [BLOCKED-COUPLED] P3. Wire `reload_secret()` to a poller — **no-op until GCS-read lands**: with the env-var source
+      `os.environ` is fixed at process start, so a poll re-reads the same value. Ships together with the GCS-read item.
+- [ ] [NEEDS-GO-AHEAD] P3. **RS256/ES256.** Not IAM-blocked, but a deliberate fleet-wide auth migration (generate
+      keypair, refactor sign/verify, re-key + redeploy all 11 VMs, lockout risk if a key is wrong). Plan sequences it
+      after GCS-read. The HS256 shared-secret works for this internal tool — recommend doing RS256 deliberately, not in
+      a batch. Awaiting explicit go-ahead.
 
 ## Why this replaces the earlier fan-out design
 
