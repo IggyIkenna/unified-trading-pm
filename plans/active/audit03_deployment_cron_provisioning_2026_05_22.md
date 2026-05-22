@@ -67,6 +67,13 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
 ## Phase 4 — apply + verify on real GCP
 
 - [ ] [SCRIPT] P0. `terraform plan` then `apply` for the new jobs + schedulers on `central-element-323112`.
+      **BLOCKED-OPERATOR-DECISION**: `terraform` binary is not installed on the slot-11 host (confirmed 2026-05-22).
+      Run from a host where terraform is available (operator workstation or CI runner):
+      ```bash
+      cd deployment-service/terraform/gcp
+      terraform plan -var-file="environments/prod.tfvars"
+      terraform apply -var-file="environments/prod.tfvars" -auto-approve
+      ```
 - [ ] [SCRIPT] P0. Verify each scheduler exists + is ENABLED + fires: `gcloud scheduler jobs describe <name>` + a manual
       `gcloud scheduler jobs run <name>` → Cloud Run Job execution SUCCEEDED.
 
