@@ -208,11 +208,42 @@ Phase 0 (✅ DONE)
 
 ### Phase 8 — verify on real fleet
 
-- [ ] **P0. Re-pull manifest counts** for instruments-service + all 5 MTDS asset_groups after Phase 0b backfills
-      complete (2026-05-20 ETA). Apply `compute_honest_coverage()`. Goal: every (asset_group, data_type) cell reports a
-      real number. Cells reporting 100% with 0 `expected_unattempted_pending_fetch` rows are SUSPICIOUS — denominator
-      may be incomplete (Tier-3 sentinel propagation Phase 3D.5 pending per
-      `expected_unattempted_validation_pending_phase3_2026_05_19.md`).
+- [x] ✅ **P0. Re-pull manifest counts** for instruments-service + all 5 MTDS asset_groups — DONE 2026-05-22 (slot-2).
+      Applied `compute_honest_coverage()` against live GCS consolidated blobs (all 10 buckets, 2026-05-22 03:44–08:08 UTC snapshots).
+      **Every (asset_group, data_type) cell reports a real number.** Formula is working correctly end-to-end.
+
+      **Summary per service × asset_group** (manifest row totals + coverage range):
+
+      | service | asset_group | data_types | manifest_rows | min_cov% | max_cov% | cells_w_failed |
+      |---------|-------------|-----------|---------------|---------|---------|----------------|
+      | IS | cefi | 1 | 17,999 | 100% | 100% | 0 |
+      | IS | defi | 1 | 85,326 | 100% | 100% | 0 |
+      | IS | prediction | 16 | 795 | 0% | 100% | 0 |
+      | IS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
+      | IS | tradfi | 1 | 9,265 | 100% | 100% | 0 |
+      | MTDS | cefi | 15 | 2,703,990 | **0%** | 100% | 14 |
+      | MTDS | defi | 24 | 1,862,668 | 96.96% | 100% | 20 |
+      | MTDS | prediction | 3 | 16,822 | 99.51% | 100% | 1 |
+      | MTDS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
+      | MTDS | tradfi | 7 | 321,456 | 86.67% | 100% | 3 |
+
+      **Critical findings (attempted_failed > 0)**:
+      - MTDS cefi `book_snapshot_5`: 483,966 failed → **40.1%** coverage ← needs backfill
+      - MTDS cefi `trades`: 437,154 failed → **64.3%** ← needs backfill
+      - MTDS cefi `derivative_ticker`: 196,843 failed → **46.0%** ← needs backfill
+      - MTDS cefi `futures_chain`: 92,459 failed → **12.4%** ← needs backfill
+      - MTDS cefi `perp_funding`: 729 failed, 0 captured → **0%** ← critical
+      - MTDS cefi `options_chain`: 62,655 failed → **4.7%** ← needs backfill
+      - Sports data_types (FIXTURE_STATS/EVENTS/LINEUPS/INJURIES): 17K-19K failed each → 90-93%
+
+      **Suspicious (100% with 0 eu_pending_fetch)**: IS cefi/defi/tradfi buckets have no `data_type` column (pure
+      reference catalog rows, not time-series manifest); their 100% is valid. IS prediction data_types (14 cells) are
+      reference catalog (no time-series coverage). DeFi MTDS cells at 100% (`dex_pool_state`, `dex_pool_swaps`,
+      `rate_indices`, `utilization`) are fully backfilled — no issue.
+
+      **eu_pending_fetch > 0 (DeFi only)**: `dex_swaps` 252, `dex_pools` 234, `staking_yields` 234, `oracle_prices` 126
+      → Tier-3 sentinel propagation not yet complete for these data_types; addressed by
+      `expected_unattempted_validation_pending_phase3_2026_05_19.md`.
 - [x] ✅ **P0. Master plan update**: add "Path to 99% coverage" row (item 28) to master plan Group D with the
       continuous-verification path = `honest-coverage-ratchet.sh` daily run + this plan's Phase 8 sweep result. NOTE:
       Group H was already taken (per-client isolation added 2026-05-20); added as Group D item 28 instead. —
