@@ -487,11 +487,21 @@ reviews + tunes thresholds.
       `alerting-quietness-20260520-111232` RUNNING (asia-northeast1-c, staging, 48h). Auto-shutdown ~2026-05-22 11:12
       UTC. Monitor:
       `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`.
+      **⚠️ POST-LAUNCH FAILURE 2026-05-22 — SECOND STALL (same root cause, deeper fix)**: VM
+      `alerting-quietness-20260520-111232` failed again at T+3601s (exit_code=124). Root cause confirmed: @5717987
+      heartbeat used `logger.info()` inside the outer while-loop, BUT Python stdout is fully-buffered on non-TTY pipe so
+      the bytes stayed in the process buffer and never reached vm-exec's pipe reader. **FIX SHIPPED
+      alerting-service@16e9dde (slot-8 2026-05-22)**: (1) dedicated `_heartbeat_task` as independent asyncio.create_task
+      so heartbeat fires even if outer loop yields infrequently; (2) explicit `sys.stdout.flush()` after each heartbeat
+      write to bypass buffer; (3) interval 1800s→600s (safely under 3600s threshold). Requires tarball rebuild + VM
+      re-launch before next quietness run.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
-      **BLOCKED-UPSTREAM (2026-05-18)**: gates on Phase 7 quietness baseline run. Cannot proceed until Phase 7
-      completes. Current UAC seed values are correct Phase 1 starting points per §"Threshold seeding rationale".
+      **BLOCKED-UPSTREAM (2026-05-22 updated)**: quietness VM failed twice (stall watchdog). Root cause fixed at
+      alerting-service@16e9dde. Requires: (1) tarball rebuild (`create-code-tarballs.sh`), (2) VM re-launch
+      (`launch-alerting-quietness-baseline.sh --env staging --force`), (3) 48h run, (4) operator FP-rate analysis
+      ([HUMAN] item above). Cannot proceed until those steps complete.
 - [ ] [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
       Telegram-severity false positives.
 
@@ -787,4 +797,3 @@ alerting-service edits LOCAL until UAC unblocks. Files written locally:
 **Total**: 9-12 days. Fits in the 16-day window with margin if no blockers materialise. Compression possible by
 parallelising Phases 3 + 4 + 5 + 6 + Phase 1+2 simultaneously — that brings the floor to 7-8 days assuming clean QG
 pass.
-
