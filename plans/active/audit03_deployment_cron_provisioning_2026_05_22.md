@@ -29,31 +29,31 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
 
 ## Pre-audit
 
-- [ ] [AGENT] P0. Read `deployment-service/terraform/gcp/defi_collection_scheduler.tf` — it is the CORRECT pattern
+- [x] ✅ [AGENT] P0. Read `deployment-service/terraform/gcp/defi_collection_scheduler.tf` — it is the CORRECT pattern
       (co-located `google_cloud_run_v2_job` via the container-job module + `google_cloud_scheduler_job`). All new crons
-      follow it.
-- [ ] [AGENT] P0. Read the self-documenting NOTE in `t1_batch_scheduler.tf:6-14` — it names the absent targets
-      (`fast-t1-recon`, `cefi-t1-recon`, `batch-live-reconciliation`).
+      follow it. — deployment-service@7026f49
+- [x] ✅ [AGENT] P0. Read the self-documenting NOTE in `t1_batch_scheduler.tf:6-14` — it names the absent targets
+      (`fast-t1-recon`, `cefi-t1-recon`, `batch-live-reconciliation`). — deployment-service@7026f49
 
 ## Phase 1 — Cloud Run Job targets (F-41, P0) — must precede schedulers
 
-- [ ] [AGENT] P0. **F-41** — Create the missing `google_cloud_run_v2_job` resources (via the container-job module) for
+- [x] ✅ [AGENT] P0. **F-41** — Create the missing `google_cloud_run_v2_job` resources (via the container-job module) for
       every `t1_batch_scheduler.tf` cron target: `batch-live-reconciliation-service` (L166-170), `fast-t1-recon`,
       `cefi-t1-recon`. NOTE: the old finding's "batch-vs-live-recon" name is NOT a real resource — do not create it
-      (§6.1 correction).
-- [ ] [AGENT] P0. Remove the `t1_batch_scheduler.tf:6-14` NOTE once the targets exist; the crons now point at real jobs.
+      (§6.1 correction). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 1)
+- [x] ✅ [AGENT] P0. Remove the `t1_batch_scheduler.tf:6-14` NOTE once the targets exist; the crons now point at real jobs. — deployment-service@7026f49
 
 ## Phase 2 — provision missing Cloud Scheduler crons (F-39/40/42, P0)
 
-- [ ] [AGENT] P0. **F-39** — Provision `cron:mtds-paper-smoke` (`google_cloud_scheduler_job` + its Cloud Run Job) — the
+- [x] ✅ [AGENT] P0. **F-39** — Provision `cron:mtds-paper-smoke` (`google_cloud_scheduler_job` + its Cloud Run Job) — the
       backtest-fidelity / paper-smoke gate. Currently 0 terraform resources (verified absent vs the 13 existing
-      schedulers).
-- [ ] [AGENT] P0. **F-40** — Provision `cron:mtds-scenario-matrix` — the scenario-regression-matrix gate. RUNS the
+      schedulers). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, 05:30 UTC daily)
+- [x] ✅ [AGENT] P0. **F-40** — Provision `cron:mtds-scenario-matrix` — the scenario-regression-matrix gate. RUNS the
       `DEFI_LST_DEPEG_STETH_5PCT` scenario from `audit03_carry_execution_safety_remediation_2026_05_22.md`:Phase 1
-      (cross-plan dep — that scenario must exist first).
-- [ ] [AGENT] P0. **F-42** — Provision `cron:alerting-paging` — scheduled alerting for live-trading P&L /
+      (cross-plan dep — that scenario must exist first). — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, 08:00 UTC daily; BLOCKED on carry-safety Phase 1 for meaningful results)
+- [x] ✅ [AGENT] P0. **F-42** — Provision `cron:alerting-paging` — scheduled alerting for live-trading P&L /
       position-breach paging. The paging CODE + telegram secret already exist in alerting-service; only the scheduler is
-      missing.
+      missing. — deployment-service@7026f49 (audit03_cron_provisioning.tf Phase 2, hourly, 55-min run)
 
 ## Phase 3 — cutover-gate test paths (F-43/44, P1)
 
