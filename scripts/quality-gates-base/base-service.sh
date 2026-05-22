@@ -155,7 +155,9 @@ PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 
 # Git-aware: only check staged files when committing
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep '\.py$' | tr '\n' ' ' || :)
-SOURCE_DIRS="${STAGED:-$SOURCE_DIR/ tests/}"
+# Guard: only include tests/ if the directory exists (Docker images exclude it via .dockerignore)
+_tests_lint_dir=""; [ -d "tests" ] && _tests_lint_dir="tests/"
+SOURCE_DIRS="${STAGED:-$SOURCE_DIR/ $_tests_lint_dir}"
 [ -n "$STAGED" ] && log_warn "Git-aware mode: $(echo "$STAGED" | wc -w | tr -d ' ') staged files"
 
 export CLOUD_MOCK_MODE="true"; export GCP_PROJECT_ID="test-project"
