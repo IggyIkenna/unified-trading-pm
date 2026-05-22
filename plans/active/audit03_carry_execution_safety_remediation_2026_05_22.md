@@ -99,7 +99,7 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
 
 ## Phase 4 — scenario validation (F-33 closure) — gated on Phase 1-3
 
-- [ ] [AGENT] P0. **F-33 closure** — Scenario-test that `DEFI_LST_DEPEG_STETH_5PCT` fires
+- [ ] [BLOCKED-DOCKER-IMAGES] P0. **F-33 closure** — Scenario-test that `DEFI_LST_DEPEG_STETH_5PCT` fires
       `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` within 30s (carry depeg kill-switch, CSB-12). Cross-plan dep: the
       `mtds-scenario-matrix` cron (F-40) that RUNS this lives in `audit03_deployment_cron_provisioning_2026_05_22.md`.
 - [x] ✅ [SCRIPT] P0. Re-run AUDIT-03 §2.1 (CSB) + §2.3 (EXE) + §2.5 (RSK) READ checkpoints; flip the closed findings in
