@@ -2410,10 +2410,11 @@ interface on the manifest.
       be unnecessary if rendered as a calendar (8 years × 365 = ~2920 days per instrument fits a single tall page). For
       instrument-types with thousands of expiring contracts (options chains), the per-cluster bundle drilldown already
       collapses; per-day for the bundle root is the relevant grain.
-- [ ] [DOCS] P0. Update
+- [x] [DOCS] P0. Update
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
-      `captured` supersede semantics.
+      `captured` supersede semantics. ✅ PM@77f0ef404 — added `expected_unattempted` cascade contract subsection with
+      4-state routing table, scheduling artifact semantics, supersede contract, and coverage formula impact.
 - [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
       `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` / `attempted_failed` /
       `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`, `SOURCE_COVERAGE_START`,
@@ -2551,8 +2552,10 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       unattempted is not.)
 - [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
       pre-flight gate — this is an audit pass.)
-- [ ] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
-      consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract.
+- [x] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
+      consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract. ✅
+      PM@77f0ef404 — added `## Per-service consumer-class — 4-state capture_status handling` table +
+      `expected_unattempted` cascade contract subsection in availability-manifest-and-data-status.md.
 
 **Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan to date.
 Cross-repo touch:

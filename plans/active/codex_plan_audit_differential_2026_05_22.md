@@ -158,7 +158,7 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 - [ ] [READ+FIX] P1. `promote_workflow_may23_cli_path_2026_05_10.md` → promote-workflow-architecture
 - [ ] [READ+FIX] P1. `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` → post-cutover UI pipeline docs
 - [ ] [READ+FIX] P1. `manifest_schema_final_gate_2026_05_09.md` → manifest v8 schema docs
-- [ ] [READ+FIX] P1. `strategy_archetype_logic_audit_2026_05_20.md` (issues/) → verify 5 CODEX-MISSING docs:
+- [ ] [READ+FIX] P1. `strategy_archetype_logic_audit_2026_05_20.md` (audit/results/) → verify 5 CODEX-MISSING docs:
       allocator-pipeline-contract, instrument-type-leverage-matrix, strategy-execution-runtime,
       treasury-trading-wallet-invariant, universe-enumeration-contract
 - [ ] [READ+FIX] P1. `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` → TradFi tick data codex docs
@@ -178,8 +178,15 @@ Standard delta box:
 > **Target architecture:** [final destination]
 ```
 
-- [ ] [EDIT] P0. Apply delta boxes to all P0 CODEX-STALE codex docs
-- [ ] [EDIT] P0. Fix SUPERSEDED banners pointing to SUPERSEDED epics (update forward link to current live epic)
+- [x] [EDIT] P0. Apply delta boxes to all P0 CODEX-STALE codex docs ✅ PM@77f0ef404 — delta boxes added to
+      `codex/02-data/availability-manifest-and-data-status.md` (top-level v8 migration state + v8 CeFi reshaping note)
+      and `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy + per-service consumer-class table).
+      Remaining P0 CODEX-STALE docs tracked under Phase 1+2 above (Group A-D epic checks, Sub-phase 2A LDR-locked
+      plans).
+- [x] [EDIT] P0. Fix SUPERSEDED banners pointing to SUPERSEDED epics (update forward link to current live epic) ✅
+      PM@77f0ef404 (partial) — trading-agent-service-directive-pipeline.md line 217 already points to
+      `plans/epics/trading_agent_master.md` (no change needed). Remaining SUPERSEDED banner fixes tracked under Phase 1
+      Group C items (strategy_master, dart_and_promote_master, etc.).
 - [ ] [WRITE] P1. Write stubs for CODEX-MISSING P0/P1 findings
 - [ ] [EDIT] P1. Apply delta boxes to all P1 CODEX-STALE / CODEX-AHEAD docs
 - [ ] [EDIT] P1. Update the 12 "post-May-23" codex markers (May-23 = today — mark as shipped or deferred with named
