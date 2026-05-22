@@ -41,9 +41,12 @@ Gate: MTDS-3.2.A CeFi verification GREEN.
 
 Gate: MTDS-3.2.C DeFi verification GREEN.
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.DeFi** — Relaunch MDPS DeFi reprocessor. DEX prices + oracle prices + LST APR bars.
-      `MDPS_ASSET_GROUP=defi`.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — 10-sample NaN check; manifest v8.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — Launched `mdps-backfill-defi-20260522-092353` VM (e2-standard-8,
+      asia-northeast1-c, 2020-01-01→2026-05-22, prod) @ 136.110.113.253. `MDPS_ASSET_GROUP=DEFI`.
+      `PROTOCOL_DATA_SOURCE_BUCKET_DEFI=market-data-tick-defi-central-element-323112`. Gate: MTDS-3.2.C-V GREEN ✅.
+      2026-05-22 slot-2.
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — 10-sample NaN check on DEX/LST/lending bars; manifest 100% v8; no
+      attempted_failed. LONG-RUNNING (~2329 dates × DeFi data_types).
 
 ## Phase 3 — TradFi MDPS reprocessor
 
