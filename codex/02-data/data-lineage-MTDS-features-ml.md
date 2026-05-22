@@ -84,6 +84,30 @@ SchemaContract key: `(category, instrument_type, source_data_type, ohlcv_{timefr
 `ohlcv_1m` is pass-through from Databento; higher timeframes aggregate from 1m. Every write adds a `timeframe` column +
 a manifest row with `timeframe` shard populated.
 
+### DeFi MDPS scope (bypass types — CRITICAL)
+
+MDPS processes only 5 DeFi data_types: **`dex_swaps` / `book_snapshot_5` / `fx_rates` / `market_state` / `liquidity`**.
+All other DeFi on-chain snapshot data_types are **bypass types** — they flow from specialized MTDS buckets directly to
+`features-onchain` WITHOUT going through MDPS. No processed_candles are produced for bypass types.
+
+| Data type           | Bucket                    | Consumer             | MDPS?     |
+| ------------------- | ------------------------- | -------------------- | --------- |
+| `dex_swaps`         | `market-data-tick-defi-*` | MDPS → features      | ✅ YES    |
+| `vault_share_price` | `market-data-tick-defi-*` | features-onchain raw | ❌ BYPASS |
+| `lst_rates`         | `lst-rates-*`             | features-onchain raw | ❌ BYPASS |
+| `lending_indices`   | `lending-indices-*`       | features-onchain raw | ❌ BYPASS |
+| `dex_pool_state`    | `dex-pools-*`             | features-onchain raw | ❌ BYPASS |
+| `oracle_prices`     | various                   | features-onchain raw | ❌ BYPASS |
+| `perp_funding`      | `market-data-tick-defi-*` | features-onchain raw | ❌ BYPASS |
+
+Code source: `features_service/onchain/app/core/dependency_checker.py` + `mtds_output_config.py` +
+`data_loader.py:load_rate_indices/load_oracle_prices`. Confirmed 2026-05-22 (slot-6 investigation).
+
+**Implication for backfill**: launching MDPS VMs for `lst-rates-*` / `dex-pools-*` / `lending-indices-*` buckets
+produces unused output. Only `market-data-tick-defi-*` needs an MDPS VM (for `dex_swaps` + other non-bypass types).
+
+SSOT: `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` (resolved, Option A confirmed).
+
 ## Layer 3 — features-\* services
 
 Bucket: `features-{feature_group}-{category}-central-element-323112`
