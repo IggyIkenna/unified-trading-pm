@@ -34,6 +34,30 @@ forwards to that VM over the private network → returns to the browser. Full pe
 status on any individual VM) is preserved; the only thing that moves is **where TLS terminates** — at the one central
 API, not on each VM.
 
+## Implementation status (2026-05-22) — code-complete, on `agent-orchestrator` LDR
+
+All phases below are **code-complete + ruff/basedpyright/tsc green + dashboard build green** on the `agent-orchestrator`
+`live-defi-rollout` branch:
+
+| Phase | What                                                                                                                  | Commit         |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 1     | private_url per VM in `backends.json`; `/api/fleet/summary` prefers private (`ORCHESTRATOR_USE_PRIVATE_URLS`)         | `3bde048`      |
+| 2     | `/api/vms/{id}/{path}` reverse-proxy (forwards `{path}` verbatim)                                                     | `3bde048`      |
+| 4     | JWT secret from GCS (`ORCHESTRATOR_JWT_SECRET_GCS`) + `reload_secret()` + env-driven `JWT_ALGORITHM`                  | `7010969`      |
+| 5     | `POST /api/vms/register` + `fleet_registry.json` merge + `bootstrap_vm.sh` step 10 self-register                      | `4eca323`      |
+| 3     | UI single token (`setAuthToken`, deleted `tokensByBase`); per-VM via `baseUrl=<central>/api/vms/<id>`; single session | `142ef5c`      |
+| 6     | `docs/OPERATIONS.md` + codex `agent-orchestrator-overview.md` (this repo)                                             | `140d858` + PM |
+
+**Remaining (deploy/ops, NOT code — operator/next):**
+
+- [ ] [HUMAN] P1. Set `ORCHESTRATOR_USE_PRIVATE_URLS=true` + `ORCHESTRATOR_JWT_SECRET_GCS=gs://…` on the central API VM
+      (env flip, not code). Upload the shared secret object to GCS.
+- [ ] [AGENT] P2. Close worker `:8026` to the public in the AWS security group (VPC-internal only) once private routing
+      is verified.
+- [ ] [AGENT] P2. SSE/log-stream streaming variant of the per-VM proxy (current relay is buffered).
+- [ ] [AGENT] P2. Wire `auth.reload_secret()` into the `CredsEnvPoller` cadence (function exists; not yet polled).
+- [ ] [AGENT] P3. RS256/ES256 issuer + public-key distribution (the HS256→asymmetric seam is in place).
+
 ## Why this replaces the earlier fan-out design
 
 The prior revision of this plan proposed browser→each-VM fan-out with per-VM TLS (Caddy subdomains + DNS delegation +

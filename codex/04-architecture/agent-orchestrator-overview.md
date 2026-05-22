@@ -241,6 +241,30 @@ Total worker capacity: 2 + 80 = **82 slots**. VM registry SSOT: `orchestrator_vm
 **Cloud provider**: GCP (current). AWS support planned — `CLOUD_PROVIDER=aws|gcp` toggle in launcher +
 `bootstrap_vm.sh`. AWS preferred long-term (existing credits). See `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
 
+## Connectivity model — centralized API router (2026-05-22)
+
+The dashboard talks to **one** backend: the central API (`api.agent-orchestrator.odum-research.com`), which **proxies to
+every worker VM server-side over the private VPC**. The browser never reaches a worker VM directly — so workers need
+**no public IP, no per-VM TLS, no DNS**; only the central API has a public HTTPS endpoint. Same shape as
+unified-trading-system (one API fronts the UI; services isolated behind it). The central API is a **router, not a wall**
+— full per-VM control is preserved via the proxy.
+
+- **Fleet view**: `GET /api/fleet/summary` fans out to each backend's `/api/vm/summary` server-side (httpx, parallel).
+- **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
+  / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
+  route through unchanged.
+- **Auth**: one JWT secret shared fleet-wide, read from GCS (`ORCHESTRATOR_JWT_SECRET_GCS`), hot-reloadable; one login →
+  one token valid on every (incl. proxied) call. `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later).
+- **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
+  `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
+- **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
+  (dynamic). VMs **self-register** on boot via outbound `POST /api/vms/register` (`bootstrap_vm.sh` step 10).
+
+**Registry/worker drift resolved**: the earlier `orchestrator_vm_registry.yaml` per-VM-FQDN model (browser→each-VM) is
+**superseded** by this centralized model — workers do NOT get per-VM FQDNs; the central API reaches them by private IP.
+`worker.md`'s outbound-POST mental model is the correct one. Plan:
+`plans/active/multi_backend_fleet_connectivity_2026_05_22.md`.
+
 Cross-side coordination:
 
 - `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
