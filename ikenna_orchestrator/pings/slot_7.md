@@ -1,3 +1,21 @@
+[2026-05-22 07:30 UTC] slot-7 — IS orchestrator.py 2 bugs fixed + committed:
+
+1. `fix: remove invalid canonical_question_group kwarg` — IS Predictions VMs were writing 0 records (TypeError).
+   instruments-service@7d9a737
+2. `fix: remove empty chain from CeFi/TradFi manifest row_key` — IS CeFi/TradFi VMs failed with MalformedRowKeyError.
+   instruments-service@4c1389d (already on LDR from prior slot session) IS tarball rebuild in progress — will relaunch
+   all 4 IS VMs (CeFi, TradFi, DeFi, Predictions) once tarball uploaded. Plan:
+   `instruments_backfill_phase3_2026_05_22.md` IS-3.1.CeFi-Relaunch + IS-3.1.TradFi-Relaunch + IS-3.1.DeFi-Relaunch +
+   IS-3.1.Pred-Relaunch.
+
+[2026-05-22 07:30 UTC] slot-7 — Phase 2.6 BLOCKED: 64 GCP prd env-tiered buckets missing, but pre-req "no backfill VMs
+running" not met (7 VMs active). Cannot provision buckets until all VMs stop. See
+`codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md`.
+
+[2026-05-22 07:30 UTC] slot-7 — MTDS DeFi gap-fill VMs running: lst-rates (mtds-lst-rates-20260522-060607),
+lending-indices (mtds-lending-indices-20260522-060759), dex-pools (mtds-dex-pools-backfill). All 3 active as of 07:30
+UTC. Plan: `mtds_backfill_phase3_2026_05_22.md` MTDS-3.2.C.
+
 [operator-ack: sports-phase2-done] 2026-05-22 05:30 UTC — Phase 2B GCS migration RUNNING at 200 workers (PID 95894,
 ~200/sec, ETA ~1h). Phase 3+4 code rename SHIPPED: instruments-service@fc7b306 + UTL@94e43e8c +
 features-service@9847b350. Zero `data_available_at` in production code confirmed. Sports backfill VMs UNBLOCKED NOW —
