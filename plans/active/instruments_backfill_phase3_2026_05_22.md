@@ -149,9 +149,13 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - **FINDING P2**: `instr-backfill-pred` (IS@7d9a737) was at 2025-06-02 (91 captured rows) when IS@2aabd7b added
   MARKET_LIFECYCLE writer. VM already processed 2025-03-14→2025-06-02 without MARKET_LIFECYCLE (~80 date gap).
   Successor: targeted market_lifecycle backfill after `instr-backfill-pred` completes. Track in `predictions_master`.
-- Full-history IS VMs still RUNNING: `instr-backfill-cefi-1` (2020→2022), `instr-backfill-cefi-2` (2022→2024),
-  `instr-backfill-defi` (2020→2026-02), `instr-backfill-tradfi` (2020→2026-02), `instr-backfill-pred` (2020→2026-02).
-  Recent-window VMs all completed exit_code=0 (see Post-relaunch verifications section above).
+- Full-history IS VMs: `instr-backfill-pred` **COMPLETED exit_code=0 ~11:11 UTC** (self-deleted 2026-05-22); shard: 398
+  rows captured, 2025-03-14→2026-02-28. Still RUNNING: `instr-backfill-defi` (at 2025-04-18, ~2.5h ETA),
+  `instr-backfill-tradfi` (at 2024-12-18, ~3.5h ETA). CeFi full-history VMs: instr-backfill-cefi-{1,2,3} completed in
+  prior session (2022-06-30, 2024-12-31, 2026-02-28 maxes). Recent-window VMs all completed exit_code=0.
+- **IS CeFi catalogue built 2026-05-22 ~10:56 UTC**: 210,340 records written to
+  `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` via local
+  CatalogueBuilder run. Also copied to flat reader path. Unblocked writegate cefi reconciler (85,202 rows).
 - `deployment-service@7d6978b` startup script fix (VM_GAS_FEE_CHAINS unbound variable) — all future VMs use fixed
   script; MTDS-3.2.C-GAP gap-fill VMs relaunched with fix.
 - Databento auth_account_locked: BLOCKED-CREDENTIALS for ALL TradFi datasets (see IS-3.1.TradFi-Databento above).
