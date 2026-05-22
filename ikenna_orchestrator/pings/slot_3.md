@@ -4,11 +4,24 @@
 > plan-flip@baeca6a90). 7 AWS backfill scripts + watchdog prefixes registered. Continuing: aws_cloud_toggle UI-V + Phase
 > 5 SMOKE, aws_migration phases 1.B+1.C+3-6.
 
-> **[2026-05-22 ~10:00 UTC] slot-3 PROGRESS** — Phase 6 ECS deploy IN PROGRESS. deploy-ecs-fargate.sh committed
-> (deployment-service@baad550). 5/7 services deployed: execution-service (BLOCKED-CREDENTIALS — 6 AWS SM secrets
-> missing; ping below), features-service+strategy-service (IAM fix applied, new deploy forced),
-> alerting-service+deployment-api (App Runner OPERATION_IN_PROGRESS). 2 ECR builds re-triggered with buildspec YAML fix
-> (risk-and-exposure-service, position-balance-monitor-service). BLOCKED-CREDENTIALS ping below.
+> **[2026-05-22 ~10:30 UTC] slot-3 PHASE 6 STATUS — 3 BLOCKED-OPERATOR-DECISION items require input:**
+>
+> **Infrastructure DONE**: ECS cluster `uts-defi-prod`, 5 task defs, 5 ECS services, 2 App Runner services, IAM policies
+> for all 7 roles (AmazonECSTaskExecutionRolePolicy+S3+SM). deploy-ecs-fargate.sh at deployment-service@baad550.
+>
+> **BLOCKED-1 (GCP AR base image)**: risk-and-exposure-service + position-balance-monitor-service Dockerfiles use
+> `unified-trading-services/unified-trading-services` as base image but GCP AR returns "Repository not found" for this
+> path. Other services (alerting, execution, features, strategy) used a different/cached version and succeeded.
+> CLAUDE.md canonical is `unified-trading-library/unified-trading-library`. Operator: is the correct base image path
+> `unified-trading-library/unified-trading-library`? If so, update Dockerfiles in risk+pbm repos.
+>
+> **BLOCKED-2 (UTL Firestore on AWS)**: ALL services fail at startup on ECS/App Runner:
+> `ImportError: cannot import name 'firestore' from 'google.cloud'` in `unified_trading_library/firestore_lifecycle.py`.
+> This import happens unconditionally at startup even when CLOUD_PROVIDER=aws. Needs UTL fix: conditionally import
+> google.cloud.firestore only when CLOUD_PROVIDER=gcp, OR install google-cloud-firestore in the Docker base image.
+> Without this fix, NO service can start on AWS ECS.
+>
+> **BLOCKED-3 (execution-service SM secrets)**: see CREDENTIAL APPROVAL REQUEST below.
 
 > **CREDENTIAL APPROVAL REQUEST — execution-service AWS Secrets Manager** Vendor: AWS Secrets Manager (already
 > provisioned, just needs secrets created) What I need: operator to create 6 secrets in ap-northeast-1 under prefix
