@@ -88,13 +88,6 @@ AI-days on `vm-sports`.
 
 ---
 
-## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
-
-- [ ] [AGENT] P3. Fix F401 unused imports in `market-tick-data-service/tests/unit/test_drift_solana_ws_connector.py`
-      (`json`) and `market-tick-data-service/tests/unit/test_kraken_futures_ws_connector.py` (`json`). Run
-      `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue:
-      `plans/archive/issues/unused_import_audit_2026_05_18.md`.
-
 ## Temporary states + their canonical follow-up plans
 
 - MTDS-3.2.D BLOCKED: `sports_master` Phase 3+4 rename must ship first. Track in `sports_master` epic.
