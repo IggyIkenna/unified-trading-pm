@@ -41,15 +41,18 @@ Gate: MTDS-3.2.A CeFi verification GREEN.
 
 Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-05-22).
 
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — Launched 5 DeFi MDPS VMs total (slots 2+7, deployment-service@f044f0a):
-      slot-2: `mdps-backfill-defi-20260522-092353` @ 136.110.113.253 — `market-data-tick-defi-*` (vault_share_price).
-      slot-7: `mdps-backfill-defi-20260522-091349` @ 35.200.75.132 — `market-data-tick-defi-*` (vault_share_price);
-      `mdps-backfill-defi-lst-rates-20260522-091409` @ 35.200.59.184 — `lst-rates-*` (LST APRs);
-      `mdps-backfill-defi-lending-indices-20260522-091430` @ 34.85.27.215 — `lending-indices-*`;
-      `mdps-backfill-defi-dex-pools-20260522-091430` @ 34.180.126.53 — `dex-pools-*`.
-      All 5 RUNNING, asia-northeast1-c, 2020-01-01→2026-05-22, prod. 2026-05-22.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — 10-sample NaN check on DEX/LST/lending bars; manifest 100% v8; no
-      attempted_failed. LONG-RUNNING (~2329 dates × DeFi data_types).
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — slot-2: `mdps-backfill-defi-20260522-092353` RUNNING (market-data-tick-defi-_,
+      vault_share_price). Slot-7 attempted 4 VMs with --source-bucket flag for lst-rates/lending-indices/dex-pools but
+      all 4 self-terminated immediately: separate DeFi buckets use flat
+      `day=_/`prefix (not`raw_tick_data/by_date/day=_/` that MDPS expects). **FINDING**: MDPS DeFi can only process
+      vault_share_price from market-data-tick-defi-_. LST rates/lending_indices/dex_pool_state in separate buckets flow
+      directly to features-onchain, NOT through MDPS. **DEFERRED** — verify this architectural claim in features-onchain
+      plan. 2026-05-22.
+- [ ] [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — **DEFERRED**: Determine whether features-onchain reads LST rates/DEX pool/
+      lending indices directly from separate buckets OR if MDPS needs multi-bucket support. File issue in
+      `plans/active/issues/`. SUCCESSOR: `mdps_defi_multi_bucket_2026_05_22.md` (to be created).
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify slot-2 VM (vault_share_price): 10-sample NaN check; manifest 100% v8.
+      LONG-RUNNING (2020-01-01→2026-05-22, vault_share_price only from main DeFi bucket).
 
 ## Phase 3 — TradFi MDPS reprocessor
 
