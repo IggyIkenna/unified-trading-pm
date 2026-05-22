@@ -82,10 +82,18 @@ IS that plan.
 `sports_master` epic directly — 4 rename commits + QG + smoke run + writegate Phase 2.C unblock. Estimated: ~1-2 cal
 AI-days on `vm-sports`.
 
-- [ ] [SCRIPT] P0. **MTDS-3.2.D.AF** — Launch mtds-sports-af-bf VM (American Football).
-- [ ] [SCRIPT] P0. **MTDS-3.2.D.FS** — Launch mtds-sports-fs-bf VM (Football/Soccer).
-- [ ] [SCRIPT] P0. **MTDS-3.2.D.SFI** — Launch mtds-sports-sfi-bf VM (SFI odds).
-- [ ] [SCRIPT] P0. **MTDS-3.2.D.US** — Launch mtds-sports-us-bf VM (US sports).
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.D.AF** — Launched `mtds-backfill-sports-af-20260522` @ 34.146.49.185
+      (asia-northeast1-c, e2-standard-4, 2020-06-01→2021-12-31, ODDS_API, MANIFEST_PER_VM_SHARDS=true). RUNNING.
+      2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.D.FS** — Launched `mtds-backfill-sports-fs-20260522` @ 35.200.66.186
+      (asia-northeast1-c, e2-standard-4, 2022-01-01→2023-06-30, ODDS_API, MANIFEST_PER_VM_SHARDS=true). RUNNING.
+      2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.D.SFI** — Launched `mtds-backfill-sports-sfi-20260522` @ 136.110.95.52
+      (asia-northeast1-c, e2-standard-4, 2023-07-01→2025-01-31, ODDS_API, MANIFEST_PER_VM_SHARDS=true). RUNNING.
+      2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.D.US** — Launched `mtds-backfill-sports-us-20260522` @ 34.146.141.53
+      (asia-northeast1-c, e2-standard-4, 2025-02-01→2026-05-22, ODDS_API, MANIFEST_PER_VM_SHARDS=true). RUNNING.
+      2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.D-V** — `market-data-tick-sports-prd` partition count 1836 maintained; no
       `data_available_at` stragglers; manifest 100% v8.
 
@@ -126,7 +134,8 @@ AI-days on `vm-sports`.
 
 ## Temporary states + their canonical follow-up plans
 
-- MTDS-3.2.D BLOCKED: `sports_master` Phase 3+4 rename must ship first. Track in `sports_master` epic.
+- MTDS-3.2.D UNBLOCKED 2026-05-22: `sports_master` Phase 3 rename shipped (instruments-service@fc7b306 + UTL@94e43e8c).
+  4 VMs launched and RUNNING.
 - ICE TradFi: operator decision on `ICE_ROOTS` pending; `tradfi-bf-ice-ohlcv-1m.sh` scaffold ready.
 - Phase 7 gate: if Phase 7 (manifest v8 label-flip) not GREEN before VMs launch, every new row grows v<8 debt. Hard gate
   — do not skip.
