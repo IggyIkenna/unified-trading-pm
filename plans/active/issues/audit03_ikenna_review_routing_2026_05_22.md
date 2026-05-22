@@ -35,6 +35,12 @@ they are 27 latent `KeyError`s waiting for a config that names them.
 allowlist + fix the "53"→55 docstring + a guard that returns a typed "archetype not in rollout" error. If no → file the
 missing engines as their own epic.
 
+**Existing partial coverage (dedup 2026-05-22)**: `plans/active/config_grid_archetype_extend_2026_05_20.md:59-70`
+already flags ONE of the 27 (`ARBITRAGE_CROSS_DOMAIN_EVENT`) as having no factory engine ("Grid sweep would crash at
+registration lookup") and asks for the same kind of decision (implement-engine-first vs defer). The systemic allowlist
+decision here SUPERSEDES that per-archetype note — when ruled, update both. Not a duplicate; this is the umbrella
+decision for all 27.
+
 ## 2. F-06 (ONB-07) — operating-entity governance **[DECISION]**
 
 **What I found**: CLAUDE.md names Odum / Cayman as the operating legal entities; codex references "Elysium" only as a
