@@ -27,6 +27,7 @@ related_plans:
   - ../active/ruff_workspace_cleanup_2026_05_12.md
   - ../active/simulation_scenarios_post_cutover_2026_06_01.md
   - ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md
+  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see

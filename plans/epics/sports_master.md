@@ -17,6 +17,7 @@ related_plans:
   - ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md
   - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
   - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
+  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
@@ -275,29 +276,44 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 #### Phase 2 — GCS migration (RUNNING 2026-05-22 — operator-authorized, agent-run)
 
-> **🟡 IN-FLIGHT — GCS migration running locally 2026-05-22 05:11 UTC. DO NOT resume sports VMs until completion verified.**
+> **🟡 IN-FLIGHT — GCS migration running locally 2026-05-22 05:11 UTC. DO NOT resume sports VMs until completion
+> verified.**
 
 - [x] [OPERATOR] P0. Sports VMs confirmed NOT running — no need to pause. Verified 2026-05-22.
-- [x] [AGENT] P0. Launch GCS migration from macOS (operator-authorized): `scripts/migrate_sports_available_at_column.py --workers 16`. Running in background. Listing 14k+ blobs — cross-region listing slow from macOS.
-- [ ] [AGENT] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names` includes `available_at` and not `data_available_at`. **IN PROGRESS — waiting for migration to complete.**
-- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships AND Phase 2 migration verified. Phase 3 is SHIPPED (2026-05-22). Waiting on Phase 2 migration completion.
+- [x] [AGENT] P0. Launch GCS migration from macOS (operator-authorized):
+      `scripts/migrate_sports_available_at_column.py --workers 16`. Running in background. Listing 14k+ blobs —
+      cross-region listing slow from macOS.
+- [ ] [AGENT] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names`
+      includes `available_at` and not `data_available_at`. **IN PROGRESS — waiting for migration to complete.**
+- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships AND Phase 2 migration
+      verified. Phase 3 is SHIPPED (2026-05-22). Waiting on Phase 2 migration completion.
 
 #### Phase 3 — Atomic 4-repo source rename (SHIPPED 2026-05-22)
 
-- [x] [SCRIPT] P0. UAC: no changes needed — UAC had no data_available_at references. [AUDIT 2026-05-07: DONE — UAC clean, verified 2026-05-22]
-- [x] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push). — unified-trading-library@94e43e8c (2026-05-22)
-- [x] [SCRIPT] P0. instruments-service: rename 10 orchestrator callsites + 2 scripts + tests (1 commit, push). — instruments-service@fc7b306 (2026-05-22)
-- [x] [SCRIPT] P0. features-sports-service: update comment reference `_available_at_helpers.py`. — features-service@9847b350 (2026-05-22)
-- [x] [QG] P0. Run `quality-gates.sh` on all repos; pre-existing failures (seed_writer.py, UAC Polygon import) not from our changes. Tests in test_instruments_write_gate + test_point_in_time: 56 PASSED. [2026-05-22]
-- [x] [QG] P0. Workspace-wide ripgrep for stragglers — `rg -n 'data_available_at' --type py --glob '!.venv*'` returns ZERO non-test non-migration results across instruments-service/UTL/UAC/features-service. [2026-05-22]
+- [x] [SCRIPT] P0. UAC: no changes needed — UAC had no data_available_at references. [AUDIT 2026-05-07: DONE — UAC
+      clean, verified 2026-05-22]
+- [x] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push). —
+      unified-trading-library@94e43e8c (2026-05-22)
+- [x] [SCRIPT] P0. instruments-service: rename 10 orchestrator callsites + 2 scripts + tests (1 commit, push). —
+      instruments-service@fc7b306 (2026-05-22)
+- [x] [SCRIPT] P0. features-sports-service: update comment reference `_available_at_helpers.py`. —
+      features-service@9847b350 (2026-05-22)
+- [x] [QG] P0. Run `quality-gates.sh` on all repos; pre-existing failures (seed_writer.py, UAC Polygon import) not from
+      our changes. Tests in test_instruments_write_gate + test_point_in_time: 56 PASSED. [2026-05-22]
+- [x] [QG] P0. Workspace-wide ripgrep for stragglers — `rg -n 'data_available_at' --type py --glob '!.venv*'` returns
+      ZERO non-test non-migration results across instruments-service/UTL/UAC/features-service. [2026-05-22]
 - [x] [SKIP] `tests/unit/test_availability_stamping.py` in UTL — was clean (not dirty); skipped per task instructions.
 
 #### Phase 4 — Writegate Phase 2.C unblock + verify (PENDING — migration must complete first)
 
-- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT 2026-05-07: BLOCKED-ON Phase 2B GCS migration completion]
-- [x] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. — sports rename Phase 3+4 shipped (2026-05-22) — instruments-service@fc7b306, UTL@94e43e8c
-- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 3] **DEFERRED** — pending migration complete
-- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4 + Phase 2B migration completion]
+- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT
+      2026-05-07: BLOCKED-ON Phase 2B GCS migration completion]
+- [x] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. — sports
+      rename Phase 3+4 shipped (2026-05-22) — instruments-service@fc7b306, UTL@94e43e8c
+- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07:
+      BLOCKED-ON sports_master:Phase 3] **DEFERRED** — pending migration complete
+- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4 + Phase 2B
+      migration completion]
 
 ### Sports honest-coverage architecture (`features_sports_honest_coverage`)
 

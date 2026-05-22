@@ -13,6 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
+  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see

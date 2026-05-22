@@ -16,6 +16,10 @@ related_plans:
 
 # CME x Polymarket Cross-Venue Event-Arb Plan
 
+> **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
+
 Cross-venue arbitrage between CME event-contracts (9 roots: ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ) and
 Polymarket binary outcomes. Both resolve YES/NO at a strike threshold — same economics, different venues, different
 schemas. Source RFC archived at `plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.

@@ -13,6 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../active/venue_heartbeat_calibration_2026_05_post23.md
+  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
