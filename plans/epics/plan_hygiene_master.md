@@ -100,6 +100,10 @@ removes the manual cost and catches regressions before they compound.
 - [ ] [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
       — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`).
 
+## Deferred work — migrated from archived plans
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/codex_refactor_2026_05_08.plan.md Phase B.4-bis** — Expand the highest-leverage codex stub docs (unexpanded forwarder stubs with deep-link anchors). Priority order by incoming-ref count: `testing.md` (4 incoming refs — anchors `#mocking-get_secret_client-in-unit-tests-canonical-pattern` + `#gcp-authentication-in-tests-standard`), `service-structure-standards.md` (3 refs), `sub-agent-workflow.md` (2 refs), then others. Each stub is a forwarder that points to a canonical home; the expansion makes the stub a substantive SSOT so deep-links resolve to real content. Acceptance criterion: no codex doc under 500 bytes that has incoming SSOT-pointer contracts from cursor-rules or CLAUDE.md.
+
 ## Temporary states + canonical follow-up plans
 
 - Phase 1 scripts are new files; no migration needed.

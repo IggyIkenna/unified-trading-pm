@@ -1549,6 +1549,18 @@ plan (DO NOT move without operator ack)
 
 _(no plans currently assigned at this priority)_
 
+## Deferred work — migrated from archived plans
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived). Low-impact cosmetic fix.
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools` `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20 Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase 2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy.
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across USDC/USDT/DAI/USDE/FRAX/GHO/CRVUSD/SUSDE). Current backtest covers 2021-01 to 2023-09 at daily granularity. Gaps: CATASTROPHIC TPR=0% (intraday trough not captured by daily snapshot); UST/PYUSD outside lake window. Operator decision needed: lower CATASTROPHIC threshold to 900bps OR extend data lake to intraday timestamps.
+
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md).

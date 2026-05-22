@@ -31,7 +31,8 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       34.146.140.6 / 34.84.35.94 / 34.104.198.234. 2026-03-01→2026-05-22 window. MANIFEST_PER_VM_SHARDS=true.
       instruments-service@fa93f45 (fix: PolygonOptionContract ImportError — UAC external/polygon deleted, local models).
       deployment-service@4884aac. Relaunched after tarball rebuild — old run silently failed (ImportError masked by
-      shell loop).
+      shell loop). **NOTE**: VMs ran but wrote 0 records — MalformedRowKeyError (chain='' in row_key). Fix:
+      instruments-service@TBD (orchestrator.py:3104 — conditional chain in row_key). Relaunch pending QG green.
 - [ ] [VERIFY] P0. **IS-3.1.CeFi-V** — Post-launch: `instruments-store-cefi-prd` gains new rows; `available_at`
       populated; 0 `attempted_failed` after first poll cycle.
 
@@ -46,7 +47,8 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 - [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi** — Launched instr-backfill-tradfi-20260522 @ 35.200.75.132. 2026-03-01→2026-05-22
       window. MANIFEST_PER_VM_SHARDS=true. instruments-service@fa93f45. deployment-service@4884aac. Relaunched after
-      tarball rebuild — old run silently failed.
+      tarball rebuild — old run silently failed. **NOTE**: VM ran but wrote 0 records — same MalformedRowKeyError
+      (chain='' in row_key for CBOE/CME/FX/ICE/NASDAQ/NYSE). Fix same as CeFi. Relaunch pending QG green.
 - [ ] [VERIFY] P0. **IS-3.1.TradFi-V** — `instruments-store-tradfi-prd` gains rows; VIX instrument present; honest-gap
       coverage for pre-Polygon dates.
 
@@ -66,7 +68,10 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       window. MANIFEST_PER_VM_SHARDS=true. Added PREDICTION to launcher + watchdog (deployment-service@4884aac).
       instruments-service@fa93f45. Relaunched after tarball rebuild — old run silently failed.
 - [ ] [VERIFY] P0. **IS-3.1.Pred-V** — `instruments-store-pred-prd` gains rows; question groups canonicalized; 0
-      attempted_failed.
+      attempted_failed. **NOTE**: Kalshi source blocked on credentials (see below).
+- [ ] [BLOCKED-CREDENTIALS] P0. **IS-3.1.Pred-Kalshi** — Kalshi markets API returns 400 Bad Request on historical
+      backfill requests. Operator confirmed BLOCKED-CREDENTIALS — need Kalshi account registration + API key.
+      `     CREDENTIAL APPROVAL REQUEST — Kalshi markets adapter     Vendor: Kalshi (prediction markets exchange) — free tier with API key     What I need: Account registration at kalshi.com + API key (Bearer token)     Account to use: existing operator email or new account     Unblocks: prediction asset_group Kalshi question group instruments + IS-3.1.Pred-V verify     Without it: Kalshi adapter dormant; Polymarket (no key required) still writes pred instruments     `
 
 ---
 
@@ -78,7 +83,17 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       (`pytest`). Run `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue:
       `plans/archive/issues/unused_import_audit_2026_05_18.md`.
 
+## Pending relaunches after MalformedRowKeyError fix
+
+- [ ] [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — After QG green on instruments-service MalformedRowKeyError fix
+      (orchestrator.py conditional chain row_key), rebuild tarball + relaunch CeFi VMs:
+      `--asset-group CEFI --start 2026-03-01 --end 2026-05-22`. New SHA: instruments-service@TBD.
+- [ ] [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Same fix + relaunch TradFi VM:
+      `--asset-group TRADFI --start 2026-03-01 --end 2026-05-22`.
+
 ## Temporary states + their canonical follow-up plans
 
 - Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
   directly.
+- CeFi + TradFi VMs ran but wrote 0 records due to MalformedRowKeyError — fix in progress (orchestrator.py:3104),
+  relaunch after QG green (above items).

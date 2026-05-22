@@ -138,3 +138,7 @@ AI-days (class: infra)
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Deferred work — migrated from archived plans
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md Phase 4** — Design and land a successor plan for full `ManifestWriter.add` deletion: that method was soft-deprecated in the wave-2 plan (Phase 3 swapped all call sites to `record_captured` / `record_empty`), but the method body was not deleted because the plan lacked a dedicated "deletion + 1-cycle deprecation" successor. Successor plan should: grep workspace for any remaining `.add(` call sites → confirm 0 remaining callers → delete `ManifestWriter.add` → update codex `availability-manifest-and-data-status.md` to mark the method removed.

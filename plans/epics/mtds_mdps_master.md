@@ -584,3 +584,9 @@ cal AI-days (class: design)
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Deferred work — migrated from archived plans
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/issues/audit_2026_05_08_substantial_unfixed_items.md** — Wire `ResourceProfiler.on_memory_warning` into MDPS `app/core/live_workers.py`. UTL `open_candle_writer` + `close_candle_writer` shipped (UTL@ac6e3244); MDPS Phase 1.2 callsite migration remains open. Also: `ConnectivityWatchdog` event-subscriber wire-in (subscribes to `CONNECTIVITY_GAP_DETECTED` to optionally pause MDPS feed during gaps). Gated on MDPS-coordinated tab without foreign WIP in tree.
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/solana_amm_coverage_expansion_2026_05_13.md + plans/archive/solana_perp_dex_adapters_2026_05_13.md** — Implement MTDS Solana venue coverage: (a) dex_swaps write path to GCS + manifest entries for METEORA-SOLANA/PHOENIX-SOLANA/JUPITER-SOLANA/LIFINITY-SOLANA (backfill script exists but APPLY mode raises warning until MTDS receives new venue coverage); (b) MTDS Solana perp DEX source wiring for all 4 venues: DRIFT (Drift S3 historical archive), MANGO V4, ZETA, FLASH REST APIs — emit `perp_funding` parquets. Referenced issue `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` was never created.
