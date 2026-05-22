@@ -135,13 +135,17 @@ archetypes.
 
 **Ping**: `ikenna_orchestrator/pings/slot_8.md`
 
-**Wave 1 (active)**: ✅ Cloud Run Slack `--update-secrets` (P0) — PM@c2579b8ee + deployment-service@c31e262
-(AGENT_ORCHESTRATOR_SLACK_WEBHOOK wired into uts-prod-orphan-ping-audit via gcloud + Terraform IaC parity; entrypoint
-posts Slack alert on orphan detection). Staging smoke (P3) + Phase 2.E smoke test.
+**Wave 1 (✅ DONE)**: ✅ Cloud Run Slack `--update-secrets` (P0) — PM@c2579b8ee + deployment-service@c31e262. ✅ Staging
+smoke (P3) — AGENT*ORCHESTRATOR_SLACK_WEBHOOK + AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET confirmed mounted on
+agent-orchestrator-staging (europe-west4, rev 00014-hdn); smoke done at archived plan Phase 4
+(agent-orchestrator@07e42e2). ✅ Phase 2.E smoke GCS — 4 buckets sampled: cefi/instruments-cefi/instruments-defi/tradfi
+all 100% schema_version=8, 0 blank error_reason on empty_confirmed rows, EXPECTED*\* reasons populated correctly;
+writegate status table updated (2.E.2→✅, 2.E.3→✅). ✅ agent_orchestrator_slack_notifications_2026_05_19.md already
+archived 2026-05-21.
 
-**Wave 2**: `manifest_schema_final_gate_2026_05_09.md` final verify (re-pull manifest counts post-backfill) →
+**Wave 2 (ACTIVE)**: `manifest_schema_final_gate_2026_05_09.md` final verify (re-pull manifest counts post-backfill) →
 `alerting_service_live_rules_2026_05_07.md` 2 agentable items: PagerDuty `uts-prod-live-trading` escalation policy +
-update `ALERT_THRESHOLDS` in UAC with quietness-VM baseline values (VM auto-shutdown ~2026-05-22 11:12 UTC).
+update `ALERT_THRESHOLDS` in UAC with quietness-VM baseline values (VM auto-shutdown ~2026-05-24 08:32 UTC).
 
 ---
 
