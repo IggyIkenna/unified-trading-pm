@@ -69,19 +69,23 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 > items verify completion and clean up phantom rows.
 
 - [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: poll `instruments-service/logs/local-recent-fill-*/summary.log`
-      until all 3 venues report `DONE rc=0`. Expected: BITFINEX-SPOT +18 captured, BITGET-FUTURES +18 captured (recent),
-      BITGET-SPOT +18 captured (recent). **IN PROGRESS** — tab-5 fill (PID 98415) running 2026-05-05→2026-05-22; at
-      2026-05-18 as of 13:27 UTC.
+      until all 3 venues report `DONE rc=0`. Expected: BITFINEX-SPOT 2334/2334, BITGET-FUTURES 561/561 (537+6phantom+18recent),
+      BITGET-SPOT 561/561 (538+5phantom+18recent). **IN PROGRESS** — tab-5 fill (PID 98415) died; re-launched as PID 498870
+      (slot-2 2026-05-22, `ik_slot2_cefi_bitget_recent`, 2026-05-04→2026-05-22). Consolidator will add 11 phantom dates
+      back as captured from per-VM shards (confirmed no null rows in any shard).
 
 - [x] ✅ [SCRIPT] P0. **Purge BITGET phantom rows**: query IS cefi manifest for rows where
       `venue IN (BITGET-FUTURES, BITGET-SPOT) AND capture_status IS NULL`. Verify count ≤ 11 (6+5 known). Delete via
       `scripts/purge_pre_launch_manifest_rows.py` or direct manifest shard edit. Re-run IS cefi batch for those specific
       dates. — instruments-service@0ba4d139, 11 phantom rows purged (30382→30371 rows), backup at
-      `_index/backups/availability_index_pre_bitget_phantom_purge_20260522_*.parquet`
+      `_index/backups/availability_index_pre_bitget_phantom_purge_20260522_*.parquet`. **Also purged from prd bucket**
+      (slot-2 2026-05-22): 11 rows removed from `instruments-store-cefi-prd-central-element-323112` (30759→30748 rows),
+      backup at `_index/backups/availability_index_pre_bitget_phantom_purge_prd_20260522_125403.parquet`. Per-VM shard
+      scan (519 shards) confirmed zero null rows remain in any shard — phantom re-introduction risk eliminated.
 
 - [ ] [SCRIPT] P0. **Verify**: re-query IS cefi manifest — BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT all 100% captured
-      with no `capture_status=None` rows. Screenshot / log evidence. **IN PROGRESS** — fill running; no null rows
-      remain. UI shows BITFINEX-SPOT 99.3%, BITGET-FUTURES 96%, BITGET-SPOT 96% (fill still running).
+      with no `capture_status=None` rows. **IN PROGRESS** — prd+flat both at 100% captured with 0 null rows as of
+      2026-05-22 13:00 UTC; fill PID 498870 running to reach target counts (2334/561/561).
 
 ### Phase 2 — IS Sports recent-window gap fill (P0)
 
@@ -91,15 +95,16 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 - [x] ✅ [SCRIPT] P0. **api_football recent fill** (FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, INJURIES,
       PLAYER_STATS): run local IS CLI directly (sports_chunked_backfill.sh had hardcoded /home/hk/ path):
       `VM_NAME=ik_sports_apifootball_recent MANIFEST_PER_VM_SHARDS=true .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider API_FOOTBALL --start-date 2026-04-14 --end-date 2026-05-22`
-      PID 66791 running as of 12:49 UTC. Tab-5 also running duplicate via PID 82506.
+      PID 66791 died during context compaction; re-launched as PID 499821 (slot-2 2026-05-22 12:58 UTC).
 
 - [x] ✅ [SCRIPT] P0. **footystats recent fill** (MATCHES, ODDS, STANDINGS, PREDICTIONS):
       `VM_NAME=ik_sports_footystats_recent MANIFEST_PER_VM_SHARDS=true .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider FOOTYSTATS --start-date 2026-04-17 --end-date 2026-05-22`
-      PID 66878 running as of 12:49 UTC.
+      PID 66878 died during context compaction; re-launched as PID 499822 (slot-2 2026-05-22 12:58 UTC).
 
 - [ ] [SCRIPT] P0. **Verify sports recent window**: re-query IS sports manifest — all 6 data types have
-      `max(captured_date) >= 2026-05-20`. Log counts before/after. **IN PROGRESS** — fills running. UI shows SPORTS
-      91.2% captured. FIXTURE_EVENTS 83%, FIXTURE_LINEUPS 83%, ODDS 92%, INJURIES 96%, PREDICTIONS(footystats) 92%.
+      `max(captured_date) >= 2026-05-20`. Log counts before/after. **IN PROGRESS** — fills re-launched (PIDs 499821/499822).
+      Pre-fill baseline: FIXTURE_EVENTS max 2026-04-14, FIXTURE_LINEUPS max 2026-04-14, ODDS max 2026-04-17, INJURIES
+      max 2026-04-30.
 
 - [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
       `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
@@ -147,13 +152,13 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 #### 3.4 — Re-run IS prediction backfill
 
-- [x] ✅ [SCRIPT] P0. **Re-fetch IS prediction** with fixed writer: PID 23258 running from 2024-01-01. Note: POLYMARKET
-      discovery start = 2025-03-14 (per `_VENUE_MAPPING.get_instrument_discovery_start("POLYMARKET")`); dates before
-      2025-03-14 only attempt KALSHI (BLOCKED-CREDENTIALS → 400). POLYMARKET fills start at ~13:48 UTC. Deleted 153
-      stale per-VM shards before re-launch to ensure clean state.
+- [x] ✅ [SCRIPT] P0. **Re-fetch IS prediction** with fixed writer: PID 23258 ran from 2024-01-01 but died during context
+      compaction; re-launched as PID 482452 from 2025-03-14 (POLYMARKET discovery start, slot-2 2026-05-22 12:52 UTC).
+      KALSHI BLOCKED-CREDENTIALS (400) as expected. POLYMARKET CLOB scan in progress (at page 600 = 601K markets as of
+      12:57 UTC). Per-VM shard tag: `ik_slot2_pred_rerun`.
 
 - [ ] [SCRIPT] P0. **Verify canonical manifest shape**: query IS prediction manifest post-fill. **IN PROGRESS** —
-      backfill at 2024-05-30 as of 13:22 UTC. POLYMARKET rows expected to appear from ~13:48 UTC. Will assert:
+      backfill PID 482452 running, POLYMARKET CLOB scan underway. Will assert:
       data_type=prediction_canonical_question_group, non-blank canonical_question_group + underlying, zero null rows.
 
 #### 3.5 — Data-status drilldown prediction display fix
