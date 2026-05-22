@@ -97,13 +97,16 @@ AI-days on `vm-sports`.
 
 ## Pre-launch blocker (P0 — gate before any Phase 11 VM writes per-VM shards to prd buckets)
 
-- [ ] **[SCRIPT] P0. Wire manifest consolidator terraform to prd bucket names.** Current
-      `manifest_consolidator_scheduler.tf` `manifest_consolidator_buckets` map uses flat bucket names
-      (`market-data-tick-cefi-central-element-323112` etc.). All active manifests now live in prd-tiered buckets
-      (`market-data-tick-cefi-prd-*`). Phase 11 VMs will write per-VM shards to prd buckets; the Cloud Run consolidator
-      will NOT pick them up until the bucket map is updated to prd names. **Required before Phase 11 backfill VMs
-      launch.** Found 2026-05-22 during Phase 7 blank-reason reconciliation (had to run consolidator manually). Fix:
-      update `manifest_consolidator_buckets` + `terraform apply`.
+- [x] ✅ **[SCRIPT] P0. Wire manifest consolidator terraform to prd bucket names.** — `deployment-service@4bb9a11`.
+      Updated `manifest_consolidator_buckets` in `manifest_consolidator_scheduler.tf` to env-tiered pattern
+      (`{name}-${var.environment}-${var.project_id}`); prediction corrected to `pred` shortform per
+      `cloud-providers.yaml`. **`terraform apply` required in deployment-service to activate.** Found 2026-05-22 during
+      Phase 7 blank-reason reconciliation.
+
+- [ ] **[INFRA] P0. `terraform apply` for manifest consolidator prd-bucket fix.** `deployment-service@4bb9a11` updated
+      the terraform code; `terraform apply` must be run in `deployment-service/terraform/gcp/` to redeploy the 10 Cloud
+      Run Jobs + 10 Scheduler crons pointing at prd-tiered buckets. Required before Phase 11 backfill VMs launch. Owner:
+      any slot with deployment-service infra access.
 
 ## Temporary states + their canonical follow-up plans
 
