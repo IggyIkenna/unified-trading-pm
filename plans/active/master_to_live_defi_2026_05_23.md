@@ -883,11 +883,12 @@ per-target upgrade path.
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
         from paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
+  - [x] ✅ [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
         / paper-shippable / backtest-only / stub) for every archetype in
         `strategy-service/strategy_service/portfolio_allocator/archetypes.py`. Codified in
         `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` (NEW). _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        paper_vs_live_workflow_maturity_2026_05_08)_ — doc fully populated by slot-5@2026-05-17 (57/57 archetypes);
+        summary corrected 53→57 + status stub→complete + last_verified 2026-05-22 (pm@this)
 
 - **Item 20 (Live testnet replicates prod)**:
   - [x] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`

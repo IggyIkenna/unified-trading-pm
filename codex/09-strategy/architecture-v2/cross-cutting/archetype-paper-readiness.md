@@ -6,9 +6,9 @@ overview:
   `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy
   archetype must clear before being eligible for `OperationalMode.PAPER`.
 type: codex-ssot
-status: stub
+status: complete
 created: 2026-05-09
-last_verified: 2026-05-12
+last_verified: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -16,9 +16,6 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 18
 ---
 
 # Archetype paper-mode readiness
-
-> **Stub doc.** Full content fills in as `master_to_live_defi_2026_05_23.md` Group F sub-items `pvl-p18a` / `pvl-p18b`
-> ship.
 
 > **Source file note (corrected 2026-05-12 per `codex_audit_strategy_2026_05_12.md` ST-4)**: the 4-state taxonomy is for
 > **strategy archetypes** per UAC `StrategyArchetype` (57 members) — the same set documented in
@@ -178,15 +175,15 @@ Source of truth for engine registration: `strategy_service/engine/strategies/v2/
 | `PORTFOLIO_FACTOR_ALLOCATION` | ☐ stub | Not in factory. Post-cutover.                 |
 | `PORTFOLIO_TACTICAL_OVERLAY`  | ☐ stub | Not in factory. Post-cutover.                 |
 
-### Summary counts (2026-05-17)
+### Summary counts (2026-05-22)
 
 | State              | Count  | Notes                                                           |
 | ------------------ | ------ | --------------------------------------------------------------- |
 | ✅ paper-runnable  | 0      | No archetype has completed ≥3-day paper run yet                 |
 | ◐ paper-shippable  | 2      | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending) |
 | ◯ backtest-only    | 24     | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired    |
-| ☐ stub/placeholder | 27     | Not in factory; Phase 9 expansion names or theoretical          |
-| **Total**          | **53** |                                                                 |
+| ☐ stub/placeholder | 31     | Not in factory; Phase 9 expansion names or theoretical          |
+| **Total**          | **57** | Updated 2026-05-22: 4 new stubs added since 2026-05-17 audit   |
 
 ## Solana-specific addendum
 
