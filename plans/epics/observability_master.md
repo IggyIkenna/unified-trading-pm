@@ -26,6 +26,17 @@ blocks listing all assigned active plans.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
+## Codex SSOTs
+
+| Doc                                                         | Owns                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `codex/05-infrastructure/live-deployment-monitoring.md`     | Per-archetype heartbeat thresholds; STARTED/progress/STOPPED/FAILED event cadence; cross-cloud event-stream parity |
+| `codex/03-observability/alerting.md`                        | AlertSeverity enum (CRITICAL/HIGH/WARN/INFO) → PagerDuty P-tier → routing channels                                 |
+| `codex/04-architecture/kill-switch-circuit-breaker.md`      | Kill-switch alerting; circuit-breaker trigger → auto-STOPPED event; alert escalation on arm                        |
+| `codex/15-runbooks/alerting/pagerduty-escalation-policy.md` | Ikenna 14:30–02:30 UK / Harsh 02:30–14:30 UK; PagerDuty escalation ladder                                          |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`     | Manifest consolidator freshness alerts; silence > 120s → CRITICAL                                                  |
+| `codex/02-data/data-pipeline-correctness-hard-rule.md`      | Layer freeze on RED data audit; slot-reassignment trigger                                                          |
+
 ## Assigned active plans
 
 _2 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0

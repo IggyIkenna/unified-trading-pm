@@ -9,8 +9,8 @@ name: audit-readme
 # Audit — SSOT for the audit lifecycle
 
 **This file is the SSOT** for how audits are structured, run, linked to epics, and archived. It is referenced by
-`codex/11-project-management/epic-execution-with-sub-agents.md` and `plans/epics/README.md`. When the audit
-workflow evolves, update this file first; codex docs and the epics README are pointers.
+`codex/11-project-management/epic-execution-with-sub-agents.md` and `plans/epics/README.md`. When the audit workflow
+evolves, update this file first; codex docs and the epics README are pointers.
 
 ---
 
@@ -35,11 +35,11 @@ plans/audit/
 
 **Three layers:**
 
-| Layer | Path | Lifecycle |
-|-------|------|-----------|
-| **Instructions** | `instructions/<epic_slug>_audit_instructions.md` | Everlasting. Updated when epic scope changes. Never archived. |
-| **Results** | `results/<slug>_YYYY_MM_DD.md` | One-shot snapshot. Archives when all findings are `- [x]` in parent plans. |
-| **Scripts + data** | `results/*.py`, `results/*.csv`, `results/*.parquet` | Permanent analytics artifacts. Never archived. |
+| Layer              | Path                                                 | Lifecycle                                                                  |
+| ------------------ | ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Instructions**   | `instructions/<epic_slug>_audit_instructions.md`     | Everlasting. Updated when epic scope changes. Never archived.              |
+| **Results**        | `results/<slug>_YYYY_MM_DD.md`                       | One-shot snapshot. Archives when all findings are `- [x]` in parent plans. |
+| **Scripts + data** | `results/*.py`, `results/*.csv`, `results/*.parquet` | Permanent analytics artifacts. Never archived.                             |
 
 ---
 
@@ -68,6 +68,7 @@ What code surfaces, repos, and data flows this epic owns.
 ## Triggers
 
 When to run this audit:
+
 - Monthly (minimum cadence)
 - [Specific trigger conditions — e.g., after venue addition, after QG RED, etc.]
 
@@ -75,14 +76,14 @@ When to run this audit:
 
 Concrete, grep-verifiable steps. Each item is actionable. Example:
 
-- [ ] (a) All adapters emit ADAPTER_FETCH_FAILED on error
-      grep: `rg "ADAPTER_FETCH_FAILED" <service_dir>/`
+- [ ] (a) All adapters emit ADAPTER_FETCH_FAILED on error grep: `rg "ADAPTER_FETCH_FAILED" <service_dir>/`
 - [ ] (b) No hardcoded venue URLs: `bash scripts/quality-gates/no_hardcoded_venue_urls.sh`
 - [ ] (c) ...
 
 ## Success Criteria
 
 What GREEN looks like. One sentence per criterion:
+
 - All checklist items pass
 - QG exits 0 for the epic's primary service
 - Manifest coverage for this epic's asset_group is zero MISSING_EXPECTED
@@ -90,15 +91,16 @@ What GREEN looks like. One sentence per criterion:
 ## Output Format
 
 What the audit result file must contain:
+
 - Checklist results (each item: GREEN / AMBER / RED + evidence)
 - Any new gap items (expressed as `- [ ] [TYPE] P#. ...` ready to paste into an active plan)
 - Recommended active plan title + parent_epic for each gap
 
 ## Linked Results
 
-| Date | Result file | Status |
-|------|-------------|--------|
-| (populated as audits run) | | |
+| Date                      | Result file | Status |
+| ------------------------- | ----------- | ------ |
+| (populated as audits run) |             |        |
 ```
 
 ---
@@ -107,10 +109,14 @@ What the audit result file must contain:
 
 Results land in `results/<slug>_YYYY_MM_DD.md`. Every result must include:
 
-1. **Frontmatter** — `type: audit-result`, `epic:`, `instructions_ref:`, `auditor:`, `date:`, `status: complete|in-progress`
-2. **Checklist results** — each instruction checklist item marked GREEN / AMBER / RED with evidence (grep output, script run, SHA)
-3. **Gap items** — expressed as `- [ ] [TYPE] P#. Description` ready to paste into an active plan; each gap includes `parent_epic:` and suggested priority
-4. **Active plans created** — table linking each gap to the active plan that absorbed it (filled in after plans are created)
+1. **Frontmatter** — `type: audit-result`, `epic:`, `instructions_ref:`, `auditor:`, `date:`,
+   `status: complete|in-progress`
+2. **Checklist results** — each instruction checklist item marked GREEN / AMBER / RED with evidence (grep output, script
+   run, SHA)
+3. **Gap items** — expressed as `- [ ] [TYPE] P#. Description` ready to paste into an active plan; each gap includes
+   `parent_epic:` and suggested priority
+4. **Active plans created** — table linking each gap to the active plan that absorbed it (filled in after plans are
+   created)
 5. **Archive condition** — explicit statement: "Archives when all gap items below are `- [x]` in their parent plans"
 
 ---
@@ -144,16 +150,20 @@ EPIC VM (assigned_vm from epic frontmatter)
 
 ## Archival rules
 
-**Instructions** (`instructions/*.md`): **Never archive.** These are templates. Update them when epic scope changes or new invariants are codified. They stay until the epic itself is cancelled.
+**Instructions** (`instructions/*.md`): **Never archive.** These are templates. Update them when epic scope changes or
+new invariants are codified. They stay until the epic itself is cancelled.
 
 **Results** (`results/<slug>_YYYY_MM_DD.md`): Archive when ALL of the following are true:
+
 1. Every gap item the result spawned is `- [x]` in its parent active plan
 2. The parent active plan itself is either `status: complete` or the items are provably in code (commit SHA exists)
 3. No remaining AMBER or RED items without an active plan absorbing them
 
-Archive action: `mv plans/audit/results/<slug>.md plans/audit/results/archive/` + update Linked Results table in the instruction file.
+Archive action: `mv plans/audit/results/<slug>.md plans/audit/results/archive/` + update Linked Results table in the
+instruction file.
 
-**Scripts and data files** (`results/*.py`, `results/*.csv`, `results/*.parquet`): Never archive — these are analytics infrastructure.
+**Scripts and data files** (`results/*.py`, `results/*.csv`, `results/*.parquet`): Never archive — these are analytics
+infrastructure.
 
 ---
 
@@ -176,9 +186,13 @@ The inventory regenerator (`regenerate_active_plan_inventory.py`) will be update
 
 Run at each planning-VM session start:
 
-1. **Check for archived results**: for each file in `results/`, verify if all spawned gap items are `- [x]`. If yes → archive.
-2. **Check for scope drift**: if an epic's scope changed since the last audit run (new QG steps, new vendors, new code surfaces), update the instruction file's checklist.
-3. **Check for new epics without instructions**: `diff <(ls plans/epics/*.md | xargs -I{} basename {} .md | sort) <(ls plans/audit/instructions/*.md | xargs -I{} basename {} _audit_instructions.md | sort)` — any epic missing a corresponding instruction file is a gap.
+1. **Check for archived results**: for each file in `results/`, verify if all spawned gap items are `- [x]`. If yes →
+   archive.
+2. **Check for scope drift**: if an epic's scope changed since the last audit run (new QG steps, new vendors, new code
+   surfaces), update the instruction file's checklist.
+3. **Check for new epics without instructions**:
+   `diff <(ls plans/epics/*.md | xargs -I{} basename {} .md | sort) <(ls plans/audit/instructions/*.md | xargs -I{} basename {} _audit_instructions.md | sort)`
+   — any epic missing a corresponding instruction file is a gap.
 
 ---
 
@@ -186,5 +200,6 @@ Run at each planning-VM session start:
 
 - `plans/epics/README.md` — full audit → active plan → epic flow diagram; `## Audit instructions per epic` section
 - `codex/11-project-management/epic-execution-with-sub-agents.md` — codex-level summary with audit lifecycle table
-- `codex/11-project-management/issue-doc-lifecycle.md` — how pre-audit diagnostics in issues/ should be handled (archive once acked into a plan)
+- `codex/11-project-management/issue-doc-lifecycle.md` — how pre-audit diagnostics in issues/ should be handled (archive
+  once acked into a plan)
 - `plans/PLAN_FORMAT.md` — plan format for active plans created from audit gap items

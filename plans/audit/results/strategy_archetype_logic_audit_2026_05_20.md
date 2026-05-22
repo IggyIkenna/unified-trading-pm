@@ -1433,14 +1433,15 @@ Codex doc paths this audit will touch:
 
 - `codex/09-strategy/architecture-v2/README.md` — add §0 Map link
 - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — verify completeness vs 53-archetype taxonomy
-- `codex/04-architecture/strategy-execution-runtime.md` (NEW) — decision loop SSOT per archetype
-- `codex/04-architecture/universe-enumeration-contract.md` (NEW) — features-service × instruments-service ×
-  strategy-catalog
-- `codex/04-architecture/allocator-pipeline-contract.md` (NEW) — trading-agent-service → strategy-service post-cutover
-  production logic
-- `codex/04-architecture/treasury-trading-wallet-invariant.md` (NEW) — audit-verifiable wallet/signing/exposure
-  invariant
-- `codex/04-architecture/instrument-type-leverage-matrix.md` (NEW) —
+- `codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md` (NEW) — decision loop SSOT per
+  archetype
+- `codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md` (NEW) — features-service ×
+  instruments-service × strategy-catalog
+- `codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md` (NEW) — trading-agent-service →
+  strategy-service post-cutover production logic
+- `codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md` (NEW) — audit-verifiable
+  wallet/signing/exposure invariant
+- `codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md` (NEW) —
   `archetype × asset_group × instrument_type → (venue, max_leverage, ...)` table
 - `codex/04-architecture/share-class-architecture.md` — un-stale (currently lists 3 share classes; v2 axes doc lists 8)
 - `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — resolve 12 unactioned proposals or downgrade to non-binding

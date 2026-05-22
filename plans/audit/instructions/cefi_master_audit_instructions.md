@@ -19,7 +19,7 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - After any venue API version bump (Binance API v4, OKX v5, etc.)
 - When perp funding data shows manifest gaps (`empty_confirmed` without valid reason for cefi rows)
 - When `instruments_master` adds or removes a venue from the universe
@@ -54,12 +54,30 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       `BLOCKED-CREDENTIALS` ping filed. No silent deferrals. Check: `human_led_audit_pool_2026_05_21.md` +
       `instruments-service` universe list
 
+### E2E Batch, Paper, and Live Verification
+
+- (e2e-batch) **Batch e2e**: For the MVP archetypes of this domain, run a dry-run batch audit using mock upstream
+  fixtures (`CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local`) — confirm signals are generated end-to-end from adapter output
+  through strategy. If real upstream unavailable, synthetic fixtures from `tests/e2e/fixtures/` suffice; the test MUST
+  exercise the downstream code regardless of upstream readiness.
+- (e2e-paper) **Paper trading audit** (once paper is running): confirm paper PnL events flow from strategy → execution →
+  PnL calculator for ≥1 MVP archetype in this domain. Check manifest for strategy_output rows with
+  `capture_status=captured` for the date range. If paper not yet running, verify the code path is wired (not
+  BLOCKED-CREDENTIALS level — code exists, paper not started).
+- (e2e-live) **Live trading audit** (once live is running): verify live execution produces execution_record rows in
+  manifest with no DIVERGENT_EMPTY. Alert thresholds fire within SLA. PnL reported correctly.
+- (mock-upstream) **Mock upstream pattern**: this domain's audit MUST be runnable WITHOUT live upstream data. Document
+  the exact `pytest` fixtures or `CLOUD_MOCK_MODE=true` invocation in `## Output Format` so any slot can run the
+  downstream-only audit independently.
+
 ## Success Criteria
 
 - All 8 checklist items GREEN
 - `a6_batch_live_adapter_parity.py` shows 100% parity for `asset_group=cefi` rows
 - Manifest divergence A3: zero `MISSING_EXPECTED` for cefi asset_group
 - QG exits 0 for MTDS + instruments-service
+- e2e batch audit produces signals for ≥1 MVP archetype using mock upstream data (CLOUD_MOCK_MODE=true green)
+- Paper trading goal post: ≥1 archetype runs ≥7 continuous paper days without silent failures
 
 ## Output Format
 

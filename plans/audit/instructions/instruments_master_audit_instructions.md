@@ -19,7 +19,7 @@ Codex SSOT: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Triggers
 
-- Monthly (minimum cadence)
+- Weekly (minimum cadence)
 - When a new venue is added to MTDS (IS must be updated first)
 - After any `InstrumentRecord` schema change in UAC
 - When `reconcile_phantom_manifest_rows_all.py` shows phantom rows for any asset_group

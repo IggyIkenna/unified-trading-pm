@@ -24,6 +24,15 @@ blocks listing all assigned active plans.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
+## Codex SSOTs
+
+| Doc                                                      | Owns                                                                                                        |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `codex/08-workflows/deployment-flow.md`                  | Operator promotion path (dev → staging → main + paper → live); full promotion lifecycle                     |
+| `codex/04-architecture/promote-workflow-architecture.md` | Strategy promote path; `MinimalCandidateManifest`; `POST /api/promote/{strategy_id}/{manifest_id}` contract |
+| `codex/04-architecture/batch-live-architecture.md`       | Mode-toggle invariant (batch vs live); same-codepath requirement                                            |
+| `codex/03-deployment/data-status-ui-surface.md`          | Data-status UI honest-coverage surface; deployment-ui freshness display                                     |
+
 ## Assigned active plans
 
 _1 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in

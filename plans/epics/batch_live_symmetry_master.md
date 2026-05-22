@@ -25,6 +25,20 @@ blocks listing all assigned active plans.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
+## Codex SSOTs
+
+| Doc                                                      | Owns                                                                                                              |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `codex/04-architecture/batch-live-architecture.md`       | Single-code-path invariant; 4 seam differences (data source, feature calc, ML inference, output); banned patterns |
+| `codex/04-architecture/cefi-batch-live.md`               | CeFi-specific batch=live seam; SHIPPED                                                                            |
+| `codex/06-coding-standards/mode-axis-discipline.md`      | `--mode batch\|live` CLI axis; `pipeline_mode=` hive key; `ManifestWriter` mode assertion                         |
+| `codex/02-data/availability-manifest-and-data-status.md` | Manifest row keys are mode-agnostic; same row key for batch + live equivalent captures                            |
+
+> **[DELTA 2026-05-22]** **Current state:** `cefi-batch-live.md` SHIPPED (Phase 2A). `tradfi-batch-live.md` +
+> `prediction-batch-live.md` are PLACEHOLDER stubs — bodies not yet written. `sports-batch-live.md` does not exist.
+> **Planned delta:** Phase 2B-2D of `plans/active/batch_live_symmetry_2026_05_10.md` fills the per-asset-group seam
+> docs. Do NOT treat stubs as shipped.
+
 ## Assigned active plans
 
 _2 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority

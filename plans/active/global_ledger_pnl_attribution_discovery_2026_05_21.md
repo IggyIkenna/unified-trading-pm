@@ -1,6 +1,6 @@
 ---
 title: Global Ledger + PnL Attribution — discovery, target-state spec, delta-to-current-system
-parent_epic: global-ledger-pnl-attribution-master
+parent_epic: global_ledger_pnl_attribution_master
 priority: P0
 status: active
 estimate_class: design
@@ -24,7 +24,7 @@ related_plans:
 > **Scope**: discover the delta between today's strategy-service position/pnl/risk engines + the archived attribution
 > MVP and a target-state **4-SSOT-ledger + 4-derived-ledger** architecture. Produce UAC schemas, ownership decisions,
 > writer/reader gap analyses, and a sequenced migration sub-plan stub. **No code lands in this plan** — implementation
-> sub-plans spawn from the discovery findings and inherit `parent_epic: global-ledger-pnl-attribution-master`.
+> sub-plans spawn from the discovery findings and inherit `parent_epic: global_ledger_pnl_attribution_master`.
 
 ## Readiness gates (per PLAN_FORMAT.md)
 
@@ -262,7 +262,7 @@ regulatory_report_id):
 ### Phase 9 — Migration sub-plan stub (P1)
 
 - [ ] [DOC] P1. Create `plans/active/global_ledger_pnl_attribution_migration_2026_06_XX.md`
-      (`parent_epic: global-ledger-pnl-attribution-master`) with: (a) UAC schemas landing (Phase 2 deliverable
+      (`parent_epic: global_ledger_pnl_attribution_master`) with: (a) UAC schemas landing (Phase 2 deliverable
       upstream). (b) Writer-side refactors in execution-service. (c) Reader-side refactors in strategy-service `v2/`
       modules + client-reporting-api. (d) PassiveLedger synthesiser implementation (live + backtest modes). (e) Backfill
       of historical events into the canonical ledgers (single-walk discipline per
