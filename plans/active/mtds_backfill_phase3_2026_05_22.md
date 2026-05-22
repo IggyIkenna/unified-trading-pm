@@ -34,13 +34,8 @@ before Phase 7 grows the v<8 debt.
 
 15 venues. Largest asset group. Parallelise across venues.
 
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.Binance** — Launch cefi-binance-bf VM. OHLCV + funding.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.Bybit** — Launch cefi-bybit-bf VM. OHLCV + funding.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.OKX** — Launch cefi-okx-bf VM. OHLCV + funding.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.Deribit** — Launch cefi-deribit-bf VM. Options pricing + IV surface.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.Hyperliquid** — Launch cefi-hyperliquid-bf VM. Perp funding + marks.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A.Others** — Launch remaining CeFi venues (Bitfinex / Bitget / Kraken / Aster + others per
-      `cefi_master` Phase 1A) as batched VMs.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.A** — Launched `mtds-backfill-cefi-2026-05-22` VM (e2-highmem-4,
+      asia-northeast1-c, 2024-01-01→2026-05-22, all venues, prod). VM RUNNING @ 34.180.126.53. 2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — `market-data-tick-cefi-prd` partition count ≥ flat bucket; 0 attempted_failed;
       4-pillar sample validation passes; manifest 100% v8.
 
@@ -55,14 +50,9 @@ before Phase 7 grows the v<8 debt.
 Replaces stale `defi_upstream_46day_full_backfill_2026_05_16.md` reference (that file was never created). This section
 IS that plan.
 
-- [ ] [SCRIPT] P0. **MTDS-3.2.C.Pyth** — Launch mtds-gas-fees-solana-bf VM (or new mtds-defi-pyth-bf). Pyth Solana
-      on-chain price feeds. Per CLAUDE.md "Pyth UNBANNED 2026-05-06 for Solana".
-- [ ] [SCRIPT] P0. **MTDS-3.2.C.Chainlink** — EVM oracle prices (ETH/AVAX/Polygon/Arbitrum/Optimism). Chainlink
-      per-chain price feeds. `mtds-backfill-odds-*` launcher pattern adapted for EVM RPCs.
-- [ ] [SCRIPT] P0. **MTDS-3.2.C.DEX** — DEX-perp forward-poll: Hyperliquid + Aster + Lighter + Pacifica + Extended
-      replay per `defi_master` Phase 9. DEX mark prices + funding from Uniswap V3 / Curve / Balancer.
-- [ ] [SCRIPT] P0. **MTDS-3.2.C.LST** — LST APR feeds: Lido stETH / RocketPool rETH / Coinbase cbETH / Solana JitoSOL /
-      mSOL. Aave/Compound base rates.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C** — Launched `mtds-backfill-defi-2026-05-22` VM (e2-highmem-4,
+      asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Pyth/Chainlink/DEX/LST, prod). VM RUNNING @ 34.180.69.85.
+      2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-prd` partition count ≥ flat; 4-pillar validation; manifest
       100% v8; DeFi archetype `carry_staked_basis` data cells GREEN.
 
@@ -81,9 +71,9 @@ AI-days on `vm-sports`.
 
 ## Phase 5 — Predictions MTDS backfill (MTDS-3.2.E)
 
-- [ ] [SCRIPT] P0. **MTDS-3.2.E.Polymarket** — Launch mtds-prediction-polymarket-bf VM. `canonical_question_group` rekey
-      already shipped.
-- [ ] [SCRIPT] P0. **MTDS-3.2.E.Kalshi** — Launch mtds-prediction-kalshi-bf VM.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.E** — Launched `mtds-backfill-prediction-2026-05-22` VM (e2-standard-4,
+      asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Polymarket + Kalshi, prod). VM RUNNING @ 34.146.119.158.
+      `canonical_question_group` rekey already shipped. 2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.E-V** — `market-data-tick-pred-prd` row count grows from 352 base; manifest 100% v8.
 
 ---
