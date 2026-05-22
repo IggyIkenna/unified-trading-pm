@@ -74,6 +74,11 @@ Human-gate items (wallet keys, KMS) → BLOCKED-OPERATOR-DECISION ping, skip and
 **Ack**: When done, append
 `[2026-05-21 HH:MM UTC] slot-3 DONE — aws_migration phases 1.B+1.C+3-6 complete/blocked at <sha>` here.
 
+**[2026-05-22 slot-3 ACK]** — BLOCKED-GCP-BACKFILL-COMPLETE (operator direction 2026-05-22). Phases 5+6 (cross-cloud
+rsync + ECS deployment) are blocked until GCP full data backfill is 100% operator-acked. Phases 1.B/1.C/3/4 (IAM, ECR,
+secrets, provisioning) can proceed when slot is next allocated. Plan + epic updated with gate banner. Not starting now —
+parked for post-GCP-backfill-complete allocation.
+
 ---
 
 ## [slot-1-main → slot-3] 2026-05-22 — P0 AWS backfill launcher scripts (Phase 4)
@@ -111,6 +116,11 @@ Do NOT include these in `VM_PREFIX_TO_BUCKET` in the GCP watchdog — AWS watchd
 Half-1+Half-2: commit per script + `docs(plans): flip aws_cloud_toggle Phase 4 <script>` immediately after.
 
 — slot-1 main / ikenna / 2026-05-22
+
+**[2026-05-22 slot-3 ACK]** — Phase 4 scripts already ✅ (`deployment-service@ea920bb`, shipped by another slot before
+this dispatch landed). Phase 5 smoke test is BLOCKED-GCP-BACKFILL-COMPLETE per operator direction 2026-05-22 — 1-day
+small-data smoke allowed once GCP backfill is 100% operator-acked; no full AWS backfill VMs until then. Plan gate banner
+updated. Parked.
 
 ---
 

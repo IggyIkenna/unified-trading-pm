@@ -436,6 +436,11 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 32 cal AI-days (class: infra)
 
+> **🔴 GATE — GCP-BACKFILL-COMPLETE (2026-05-22)**: Phase 5 (cross-cloud rsync) + Phase 6 (ECS deployment) + all AWS
+> backfill execution are **BLOCKED** until GCP full data backfill is 100% operator-acked. Phases 1.B/1.C/3/4 (IAM, ECR,
+> secrets, provisioning) may proceed. AWS backfill scripts ready for 1-day smoke test only (Phase 4 ✅ at
+> `deployment-service@ea920bb`). See `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` for smoke-test gate.
+
 ## P2 — useful; opportunistic
 
 _(no plans currently assigned at this priority)_

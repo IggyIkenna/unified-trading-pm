@@ -21,6 +21,12 @@ related_plans:
 > live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6 ECS Fargate deployment** are GATED on master plan
 > Gate 4 (GCP manifest+data-quality verification).
 >
+> **🔴 GATE TIGHTENED 2026-05-22** (operator direction): Phases 5+6 are **BLOCKED until GCP full data backfill is 100%**
+> — all asset_groups × all services × all date ranges, operator-acked complete. This supersedes the "Gate 4" shorthand;
+> subset-green is not enough. AWS backfill scripts are ready for 1-day smoke testing (see
+> `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 4 ✅ + Phase 5 gate); no full AWS backfill VMs launch until
+> GCP 100% ack. **Phases 1.B/1.C/3/4 (IAM, ECR, secrets, provisioning — no data movement) may still proceed.**
+>
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
@@ -190,8 +196,10 @@ Validate the existing wire-up actually works with `CLOUD_PROVIDER=aws`. If it do
 - [x] [SCRIPT] P0. Run `cd unified-trading-library && bash scripts/quality-gates.sh` to confirm no AWS-side import or
       runtime regressions. Repeat for `deployment-service`. **N/A — UTL QG green at UTL@780a9575 (35 new tests pass);
       deployment-service QG post-QG cleanup at deployment-service@36718ff.**
-- [ ] [SCRIPT] P0. Smoke-test `deployment-service/backends/aws.py` (and `aws_batch.py`, `aws_ec2.py`) — invoke each
-      backend's `health_check` (or equivalent). Confirm boto3 + IAM round-trip works.
+- [x] ✅ [SCRIPT] P0. Smoke-test `deployment-service/backends/aws.py` (and `aws_batch.py`, `aws_ec2.py`) — invoke each
+      backend's `health_check` (or equivalent). Confirm boto3 + IAM round-trip works. **DONE 2026-05-22 (slot 3)**:
+      STS.get_caller_identity ✓, Batch.describe_job_queues ✓, Batch.describe_compute_environments ✓,
+      EC2.describe_availability_zones ✓ (ap-northeast-1a/c/d). All GREEN — no IAM blocks.
 - [x] [SCRIPT] P0. Document any runtime gaps in a follow-up sub-plan if smoke fails (do NOT silently band-aid). **N/A —
       issue doc filed at `plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`; bucket-name SSOT triple-drift
       documented + operator triage captured.**
