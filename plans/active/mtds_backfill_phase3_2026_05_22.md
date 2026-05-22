@@ -103,10 +103,10 @@ AI-days on `vm-sports`.
       `cloud-providers.yaml`. **`terraform apply` required in deployment-service to activate.** Found 2026-05-22 during
       Phase 7 blank-reason reconciliation.
 
-- [ ] **[INFRA] P0. `terraform apply` for manifest consolidator prd-bucket fix.** `deployment-service@4bb9a11` updated
-      the terraform code; `terraform apply` must be run in `deployment-service/terraform/gcp/` to redeploy the 10 Cloud
-      Run Jobs + 10 Scheduler crons pointing at prd-tiered buckets. Required before Phase 11 backfill VMs launch. Owner:
-      any slot with deployment-service infra access.
+- [x] ✅ **[INFRA] P0. `terraform apply` for manifest consolidator prd-bucket fix.** — `deployment-service@480896f`.
+      Added `deployment_env_short` local (prod→prd) to `main.tf`; applied prd-tiered bucket args to all 10 Cloud Run
+      Jobs + 10 Scheduler crons. Verified: all jobs now pass `--bucket market-data-tick-{ag}-prd-*` /
+      `instruments-store-{ag}-prd-*`. Consolidator will pick up per-VM shards from Phase 11 VMs immediately.
 
 ## Temporary states + their canonical follow-up plans
 
