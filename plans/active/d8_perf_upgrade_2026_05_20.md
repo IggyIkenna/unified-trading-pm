@@ -73,14 +73,11 @@ performance-critical paths:
 
 ### Phase 3 — Retry overhead reduction via error classification
 
-- [ ] [AGENT] P2. Verify FAIL-class errors in 302 `classify_venue_error` violating files now stop retrying (after D7
-      ships):
-  - D7 already fixed the DeFi retry loop and 7 CCXT adapters
-  - Check remaining 295 violators (A1: 302 - 7 CCXT adapters fixed) in non-execution-service repos
-  - Focus on MTDS adapters (high-frequency data fetchers) — unclassified errors = full retry backoff even on 400s
-  - **PARTIAL 2026-05-22**: 5 files / 14 `except Exception` blocks fixed — ccxt_adapter (7), aster (3), hyperliquid (2),
-    aave_lending (1), lst_lido (1). mtds@2eb61e6e + mtds@2d71f4cd + mtds@89603496. 20 adapters still missing
-    classify_venue_error (DeFi LST + sports/prediction + tradfi/ibkr). Remaining work is P2 post-cutover.
+- [x] ✅ [AGENT] P2. Verify FAIL-class errors in 302 `classify_venue_error` violating files now stop retrying (after D7
+      ships) — MTDS@83f2ac50 (2026-05-22): all 29 remaining MTDS adapter files fixed across DeFi LST
+      (lst_binance_eth/lst_lido_eth/lst_rocketpool_eth/lst_cbeth/lst_jitosol/lst_msol) + other DeFi
+      (uniswap/curve/aave_v3/chainlink/pyth/coingecko/defillama) + sports (understat/footystats/api_football) +
+      prediction (polymarket/kalshi) + tradfi (ibkr/databento/barchart/tiingo/vix). QG all gates green (92s).
 
 ### Phase 4 — Throughput benchmarking
 
@@ -94,7 +91,8 @@ performance-critical paths:
 - [x] ✅ Phase 1: `rg 'subprocess.*gsutil' --type py` returns 0 hits in migration scripts — verified 2026-05-22
 - [x] ✅ Phase 2: `resolve_bucket_name` called ≤1× per service boot per bucket name (cached) — UTL already caches YAML
       load; all hot-path callers store result at init. No changes needed. 2026-05-22
-- [ ] Phase 3: `rg 'classify_venue_error' market-tick-data-service/ --type py` returns hits in all handler except blocks
+- [x] ✅ Phase 3: `rg 'classify_venue_error' market-tick-data-service/ --type py` returns hits in all handler except
+      blocks — MTDS@83f2ac50
 - [ ] Phase 4: benchmark report shows ≥20% throughput improvement for DeFi MTDS handler
 
 ## Full-execution criterion
