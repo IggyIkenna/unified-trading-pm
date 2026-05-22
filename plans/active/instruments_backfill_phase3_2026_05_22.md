@@ -61,9 +61,10 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 **Gate**: `sports_master` Phase 3 rename (data_available_at → available_at) shipped.
 
-- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Launched `instr-backfill-sports` @ 34.146.140.6. 2020-06-01→2026-03-28 window.
-      MANIFEST_PER_VM_SHARDS=true. instruments-service@7d9a737 (both fixes). Deleted stale TERMINATED legacy VM first.
-      2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Relaunched `instr-backfill-sports` @ 34.104.133.72. 2020-06-01→2026-03-28 window.
+      MANIFEST_PER_VM_SHARDS=true. instruments-service@55d718f (blank reason fix: typed reason= added to all 17
+      sports record_empty() callsites). Previous run @ 7d9a737 failed on every date: LegacyBlankErrorReasonError at
+      FIXTURES honest-coverage path. QG exit 0. Tarball rebuilt 07:22:50 UTC. 2026-05-22.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
       rename confirmed absent (no `data_available_at` stragglers).
 
@@ -118,5 +119,5 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 - Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
   directly.
-- All 12 IS VMs RUNNING 2026-05-22 with instruments-service@7d9a737 (both chain fix + pred-kwarg fix). T+10min verify
-  pending.
+- Sports IS VM relaunched with IS@55d718f (blank reason fix) 2026-05-22 07:22 UTC. T+10min verify pending.
+- CeFi-3 and pred-20260522 VMs completed their windows (STOPPING/STOPPED). CeFi-1, CeFi-2, DeFi, TradFi, Pred still RUNNING.

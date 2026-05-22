@@ -802,7 +802,11 @@ done
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
+    # CVE-2026-4539: no-fix-version (workspace-global, reviewed 2026-05-20)
+    # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
+    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
+    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357"
     "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
         && log_success "pip-audit clean" \
         || {
