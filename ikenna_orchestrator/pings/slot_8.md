@@ -1,8 +1,10 @@
 ## [slot-1-main → slot-8] 2026-05-22 — Slack P0 + Phase 2.E → manifest gate → alerting thresholds
 
-**Plan refs**: `agent_orchestrator_slack_notifications_2026_05_19.md` → `manifest_schema_final_gate_2026_05_09.md` → `alerting_service_live_rules_2026_05_07.md`
+**Plan refs**: `agent_orchestrator_slack_notifications_2026_05_19.md` → `manifest_schema_final_gate_2026_05_09.md` →
+`alerting_service_live_rules_2026_05_07.md`
 
 **Wave 1 (do first — if not yet done from 2026-05-21 dispatch)**:
+
 - Cloud Run `--update-secrets` for SLACK_WEBHOOK + SLACK_SIGNING_SECRET on staging
 - Staging smoke: trigger test notification → verify in `#agent-orchestrator-alerts`
 - Phase 2.E smoke test against GCS (unblocked)
@@ -16,10 +18,15 @@
 
 2. `alerting_service_live_rules_2026_05_07.md` — 2 agentable items only:
    - `[SCRIPT] P1`: PagerDuty escalation policy — define `uts-prod-live-trading` service in PD console (script/IaC)
-   - `[SCRIPT] P0`: Read quietness-VM baseline results from `gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/` (VM auto-shutdown ~2026-05-22 11:12 UTC); update `ALERT_THRESHOLDS` in UAC with tuned values + annotate each with quietness-baseline-date
+   - `[SCRIPT] P0`: Read quietness-VM baseline results from
+     `gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/` (VM
+     auto-shutdown ~2026-05-22 11:12 UTC); update `ALERT_THRESHOLDS` in UAC with tuned values + annotate each with
+     quietness-baseline-date
    - DO NOT touch any `[HUMAN]` items (threshold tuning sign-off, rehearsal, prod flip — those need operator)
 
-**Ack**: append `[2026-05-22 HH:MM UTC] slot-8 DONE — Slack wired + Phase 2.E + manifest gate + alerting thresholds at <shas>` here when done.
+**Ack**: append
+`[2026-05-22 HH:MM UTC] slot-8 DONE — Slack wired + Phase 2.E + manifest gate + alerting thresholds at <shas>` here when
+done.
 
 ---
 
@@ -1812,3 +1819,51 @@ GREEN. Per-asset-group wrapper plans filed — see ikenna-main broadcast in `ike
 2026-05-22.
 
 — slot-1 main / ikenna / 2026-05-22
+
+---
+
+## [slot-8 ACK] 2026-05-22 — Alerting quietness baseline VM 3rd relaunch — all root causes fixed + shipped
+
+**Session work summary (alerting-service Phase 7):**
+
+All 5 root causes for the repeated quietness baseline VM failures identified and fixed:
+
+1. **main.py live mode bypassed orchestrator heartbeat** — live mode called its own `_run_subscriber_until_shutdown` (no
+   flush). Fixed: removed dead function, routed via `run_subscriber_loop` from orchestrator which has `_heartbeat_task`
+   every 600s.
+   - `alerting-service@59e020f`
+
+2. **setup-data-pipeline-vm.sh: alerting_service missing from SERVICE_TARBALLS/TARBALL_DIRS** — service defaulted to
+   `market_tick_data_service` / `mtds-code` tarball. Fixed: added `["alerting_service"]="alerting-service-code"` +
+   `["alerting-service-code"]="alerting"` entries.
+
+3. **No dedicated alerting-quietness-baseline task branch** — fell into catch-all, ran wrong service with wrong flags.
+   Fixed: added explicit `elif [[ "$VM_TASK" == "alerting-quietness-baseline" ]]` branch.
+
+4. **Wrong CLI flags** — `--quietness-baseline`, `--duration-hours`, `--pagerduty-disabled` don't exist as CLI args;
+   they're Pydantic settings env vars. Fixed: handler sets `QUIETNESS_BASELINE_MODE`, `PAGERDUTY_DISABLED`,
+   `RUN_DURATION_HOURS` env vars, calls `python -m alerting_service --mode live` only.
+
+5. **Telegram secrets never fetched from Secret Manager** — metadata keys passed but never resolved to actual
+   credentials. Fixed: handler fetches via `gcloud secrets versions access latest` using metadata key names.
+
+6. **VM_GAS_FEE_CHAINS: unbound variable** (crash at startup line 958) — resolved via upstream merge conflict (kept
+   upstream comment text).
+   - `deployment-service@40fdc3d`
+
+**Shipped SHAs:**
+
+- `alerting-service@59e020f` — fix(main): route live mode through orchestrator.run_subscriber_loop (heartbeat fix)
+- `deployment-service@40fdc3d` — fix(vm): add alerting-quietness-baseline task handler + tarball wiring + SM secret
+  fetch
+- Fresh tarball: `gs://deployment-scripts-central-element-323112/code/alerting-service-code.tar.gz` (+ `/vm/` path)
+- Plan flip: `unified-trading-pm@bfadaf32d`
+
+**New VM:** `alerting-quietness-20260522-083225` — RUNNING in asia-northeast1-c Auto-shutdown at T+48h (~2026-05-24
+08:32 UTC)
+
+**Phase 3 backfill VMs**: holding per UNFREEZE — gated on `mtds_mdps_master` Phase 7 GREEN.
+
+Refs: `alerting_service_live_rules_2026_05_07.md` Phase 7 / `deployment-service@40fdc3d` / `alerting-service@59e020f`
+
+— slot-8 / ikenna / 2026-05-22
