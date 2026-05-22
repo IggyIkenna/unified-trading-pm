@@ -34,8 +34,16 @@ before Phase 7 grows the v<8 debt.
 
 15 venues. Largest asset group. Parallelise across venues.
 
+- [x] ✅ [CODE] P0. **MTDS-chain-fix** — `orchestrator.py` Tier-3/Tier-2/non-trading-day sentinels built row_key with
+      `chain=""` for all CeFi/TradFi venues — UTL rejects explicitly-empty chain fields with MalformedRowKeyError
+      (non-blocking but silently drops manifest rows for BITFINEX-FUTURES/SPOT and others). Fix: omit chain from row_key
+      when empty. Test updated. QG: 1982 passed. market-tick-data-service@626eb154. Tarball uploaded 2026-05-22.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.A** — Launched `mtds-backfill-cefi-2026-05-22` VM (e2-highmem-4,
-      asia-northeast1-c, 2024-01-01→2026-05-22, all venues, prod). VM RUNNING @ 34.180.126.53. 2026-05-22.
+      asia-northeast1-c, 2024-01-01→2026-05-22, all venues, prod). VM RUNNING @ 34.180.126.53. 2026-05-22. NOTE: ran
+      with old code (pre-chain-fix). ~4% complete before relaunch.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-Relaunch** — Old CeFi VM crashed at 07:13 (OOM 77% on e2-highmem-4, only 2 dates
+      processed). Relaunched `mtds-backfill-cefi-2026-05-22b` (e2-highmem-8/64GB, chunk=5,
+      market-tick-data-service@626eb154 chain fix). VM RUNNING @ 34.104.198.234. 2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — `market-data-tick-cefi-prd` partition count ≥ flat bucket; 0 attempted_failed;
       4-pillar sample validation passes; manifest 100% v8.
 
