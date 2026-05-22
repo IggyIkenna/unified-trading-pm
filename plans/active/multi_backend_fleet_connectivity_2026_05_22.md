@@ -48,15 +48,28 @@ All phases below are **code-complete + ruff/basedpyright/tsc green + dashboard b
 | 3     | UI single token (`setAuthToken`, deleted `tokensByBase`); per-VM via `baseUrl=<central>/api/vms/<id>`; single session | `142ef5c`      |
 | 6     | `docs/OPERATIONS.md` + codex `agent-orchestrator-overview.md` (this repo)                                             | `140d858` + PM |
 
-**Remaining (deploy/ops, NOT code — operator/next):**
+**Deploy/ops — DONE in production 2026-05-22:**
 
-- [ ] [HUMAN] P1. Set `ORCHESTRATOR_USE_PRIVATE_URLS=true` + `ORCHESTRATOR_JWT_SECRET_GCS=gs://…` on the central API VM
-      (env flip, not code). Upload the shared secret object to GCS.
-- [ ] [AGENT] P2. Close worker `:8026` to the public in the AWS security group (VPC-internal only) once private routing
-      is verified.
+- [x] ✅ [AGENT] P1. Central API VM (`agent-orchestrator-vm-1`, `13.113.200.22`/`172.31.5.118`) deployed to `140d858`,
+      `ORCHESTRATOR_USE_PRIVATE_URLS=true`, shared JWT secret set (env). Secret uploaded to
+      `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret` as SSOT. **NOTE:** VMs can't read that
+      GCS object (their ADC lacks bucket read), so the secret is distributed as the `ORCHESTRATOR_JWT_SECRET` env var on
+      all VMs, not via `ORCHESTRATOR_JWT_SECRET_GCS`. Wiring GCS-read needs a GCP IAM grant to the VMs' identity (P3).
+- [x] ✅ [AGENT] P1. Shared secret distributed to all 10 worker VMs (env) + restarted. Verified: `/api/fleet/summary` →
+      11/12 OK over private VPC, `/api/vms/<id>/api/state` → 200, no-token → 401.
+- [x] ✅ [AGENT] P2. Worker `:8026` locked to VPC-internal (`sg-0080310387e84f613` ingress = `172.31.0.0/16`; public
+      `0.0.0.0/0` revoked). Public `:8026` → timeout; SSH(22) intact; central→worker private `:8026` → 200.
+
+**Still remaining:**
+
+- [ ] [AGENT] P1. **UI Firebase deploy** — Phase 3 dashboard (single-token + per-VM proxy routing) is on LDR but the
+      live Firebase dashboard still serves the old per-backend-token UI. Merge LDR→main → `deploy-dashboard.yml`
+      redeploys. Until then the browser fleet-view works (Ikenna's `/api/fleet/summary`) but per-VM interaction needs
+      the new UI.
 - [ ] [AGENT] P2. SSE/log-stream streaming variant of the per-VM proxy (current relay is buffered).
 - [ ] [AGENT] P2. Wire `auth.reload_secret()` into the `CredsEnvPoller` cadence (function exists; not yet polled).
-- [ ] [AGENT] P3. RS256/ES256 issuer + public-key distribution (the HS256→asymmetric seam is in place).
+- [ ] [AGENT] P3. Grant the VMs' GCP identity `storage.objectViewer` on the creds bucket → switch to
+      `ORCHESTRATOR_JWT_SECRET_GCS` (rotate-in-one-place); then RS256/ES256 issuer + public-key distribution.
 
 ## Why this replaces the earlier fan-out design
 

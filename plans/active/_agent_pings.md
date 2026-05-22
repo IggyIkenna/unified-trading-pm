@@ -4765,3 +4765,26 @@ Phase. No code beyond your shipped pieces yet; plan-only this turn.
 **Plan ref**: `plans/active/multi_backend_fleet_connectivity_2026_05_22.md`.
 
 — harsh-main / 2026-05-22 11:48 UTC
+
+---
+
+## [harsh-main CROSS-SIDE] 2026-05-22 — ✅ centralized model SHIPPED + LIVE in prod
+
+All phases code-complete on `agent-orchestrator` LDR AND deployed to the live fleet:
+
+- **Central API** (`agent-orchestrator-vm-1`) on `140d858` w/ `/api/vms/<id>/*` proxy + private-VPC routing
+  (`ORCHESTRATOR_USE_PRIVATE_URLS=true`).
+- **One shared JWT secret** distributed to central + all 10 workers (env var; GCS object is SSOT but VMs lack GCS-read
+  perms so env is the live mechanism). One login → token valid fleet-wide.
+- **Verified**: `/api/fleet/summary` 11/12 OK over private IPs, `/api/vms/<id>/api/state` 200, no-token 401.
+- **`:8026` locked to VPC-internal** (`172.31.0.0/16`; public revoked) — workers no longer publicly reachable; SSH
+  intact.
+- Phase 3 deleted the per-backend-token UI (`tokensByBase` etc.) as flagged — heads-up it's now done on LDR.
+
+**One open item**: the new dashboard UI is on LDR but NOT yet on the live Firebase site (needs LDR→main merge →
+`deploy-dashboard.yml`). Doing that next. Until it lands, browser fleet-VIEW works but per-VM interaction needs the new
+UI.
+
+**Plan ref**: `plans/active/multi_backend_fleet_connectivity_2026_05_22.md` § Deploy/ops DONE.
+
+— harsh-main / 2026-05-22 12:05 UTC
