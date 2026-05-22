@@ -216,8 +216,12 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       2 sweep, 70 untriaged anti-patterns remain. Findings in
       [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) §
       "Inline-string bucket-name audit (2026-05-08)" § 1.
-- [ ] [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate AWS
-      hardcodes. Same discipline.
+- [x] [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate AWS
+      hardcodes. Same discipline. **DONE 2026-05-22** (slot 11): ~200 hits total; zero violations in May-23 critical
+      path. All hits are (a) multi-cloud-aware dispatch code, (b) test fixtures, (c) operator migration scripts, or
+      (d) env-var-driven AWS backends. 4 Wave-2 region hardcodes in `deployment-api/routes/monitor_scheduled.py`
+      (lines 327/422/460) + `monitor_live.py:54` — post-cutover scope. Findings in
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 6.
 - [x] [SCRIPT] P0. **`cloud-providers.yaml` parity check**: for every bucket key under `gcp.storage.*`, the same key
       MUST exist under `aws.storage.*`. Diff surfaces missing keys (e.g. `dex-pools`, `dex-swaps`, `evm-defi`,
       `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`, `positions-store-defi`, `risk-store-defi`, `events`,
