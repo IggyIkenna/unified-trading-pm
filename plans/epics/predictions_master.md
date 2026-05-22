@@ -627,9 +627,11 @@ before CME arb can link.
       `market_created_at`, NO new ticks after `settlement_time`. Per CLAUDE.md "Prediction market lifecycle timing" rule
       already declared. — MTDS@006beab5 `_load_market_lifecycle_for_date` helper + Polymarket + Kalshi updated to try
       MARKET_LIFECYCLE path first, fall back to instrument_availability/; 16 new unit tests (2026-05-22)
-- [ ] [SCRIPT] P0. **MTDS cluster validation per (canonical_question_group, day)**. HOURLY groups expect 24
+- [x] ✅ [SCRIPT] P0. **MTDS cluster validation per (canonical_question_group, day)**. HOURLY groups expect 24
       market_ids/day; DAILY = 1; recurring election groups = 1 over months/years. Add to UAC `BUNDLED_DATA_TYPES` for
-      Polymarket/Kalshi CLOB writes; cluster-validation kwargs at `record_captured` per writegate Phase 1A.
+      Polymarket/Kalshi CLOB writes; cluster-validation kwargs at `record_captured` per writegate Phase 1A. —
+      MTDS@e777dc40 `_load_expected_clusters_for_cqg()` helper reads IS MARKET_LIFECYCLE parquet per (cqg, day); falls
+      back to observed=expected when parquet absent; 9 unit tests (2026-05-22)
 - [ ] [SCRIPT] P0. **MDPS PredictionTradesAdapter 4-category A/B/C/D empty-output decision wiring** (per CLAUDE.md
       "Four-category empty-output decision" rule). Today MDPS PredictionTradesAdapter doesn't classify; add explicit
       branches: A = source returned 0 ticks → `record_empty(reason=SOURCE_RETURNED_ZERO)`; B = ticks returned but
