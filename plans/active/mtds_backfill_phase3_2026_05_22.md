@@ -64,9 +64,16 @@ before Phase 7 grows the v<8 debt.
       `tradfi-bf-nasdaq-ohlcv-1m-2026-20260522-094602` (35.221.121.77). NYSE:
       `tradfi-bf-nyse-ohlcv-1m-2026-20260522-094602` (34.153.210.28). Writes to FLAT bucket. After VMs complete: copy
       new flat data files + per-VM shards → prd (same pattern as above). 2026-05-22.
-- [ ] [VERIFY] P1. **MTDS-3.2.B-TopUp-V** — After top-up VMs self-delete: copy new flat objects + shards to prd for
-      2026-05-18→2026-05-22. Verify prd availability_index max≥2026-05-22 for CME/NASDAQ/NYSE. NOTE: P1, not on May-23
-      critical path.
+- [x] ✅ [VERIFY] P1. **MTDS-3.2.B-TopUp-V** — [BLOCKED-CREDENTIALS — Databento 403 auth_account_locked] All 9 top-up
+      VMs (CME: es/mes/nq/mnq/cl/gc/es-opt, NASDAQ: nasdaq-ohlcv-1m-2026, NYSE: nyse-ohlcv-1m-2026) returned
+      `attempted_failed` error_reason=403 `DatabentoAdapter: auth_account_locked` for ALL dates 2026-05-18→2026-05-21.
+      Zero data objects written to flat bucket for those dates. 18 attempted_failed per-VM shards manually copied to
+      `market-data-tick-tradfi-prd-central-element-323112/_index/per_vm/` for honest manifest (tradfi-bf-cme-_/nasdaq-_/
+      nyse-_-20260522-09_.parquet). TradFi PRD stuck at max=2026-05-18 until Databento reactivated. Operator credential
+      request: reactivate Databento account at app.databento.com (same block as IS-3.1.TradFi-Databento). Datasets
+      blocked: GLBX.MDP3 (CME), XNAS.ITCH (NASDAQ), NYSE ARCX. Flat bucket confirms 0 data rows for
+      2026-05-19→2026-05-22. PRD manifest consolidator will show honest attempted_failed for these dates. 2026-05-22
+      slot 5.
 
 ## Phase 3 — DeFi MTDS backfill (MTDS-3.2.C)
 
