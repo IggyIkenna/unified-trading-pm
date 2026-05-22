@@ -38,15 +38,21 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events.
 - [x] ✅ [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
       (`pnl_input_builder.py:142-151`); fail-fast or source the native-token price honestly when the gas parquet lacks
-      `native_token_price_usd`. — strategy-service@962ca47d _compute_gas_cost_usd now raises ValueError on missing price; test updated to supply native_token_price_usd="3200.00" explicitly.
+      `native_token_price_usd`. — strategy-service@962ca47d \_compute_gas_cost_usd now raises ValueError on missing
+      price; test updated to supply native_token_price_usd="3200.00" explicitly.
 
 ## Theme 2 — bucket / URL / vocab SSOT hardening
 
 - [x] ✅ [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
       `perp_funding_handler.py`) behind the instruments-service SSOT (`get_rpc_url()` / IS-first). Graph + Tardis are
-      data-provider infra (exempt). QG STEP 5.70 should flag these. — uac@f85f7d3 new cefi_perp_venue_endpoints.py + __init__.py exports; mtds@f6fd280 perp_funding_handler imports CEFI_PERP_VENUE_API_ENDPOINTS; pm@82c77304 QG script extended with CeFi perp URL patterns. Also fixed missing get_mvp_databento_symbols_for_venue export (was in tradfi_instrument_universe.py but not re-exported, broke test_databento_path_streaming).
-- [x] ✅ [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py` instead
-      of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1 correction). — execution-service@769252a8; UAC QuoterV2 added at uac@1b2cfe8; UniswapConnector class constants now use get_uniswap_swap_router/quoter_v2/factory.
+      data-provider infra (exempt). QG STEP 5.70 should flag these. — uac@f85f7d3 new cefi_perp_venue_endpoints.py +
+      **init**.py exports; mtds@f6fd280 perp_funding_handler imports CEFI_PERP_VENUE_API_ENDPOINTS; pm@82c77304 QG
+      script extended with CeFi perp URL patterns. Also fixed missing get_mvp_databento_symbols_for_venue export (was in
+      tradfi_instrument_universe.py but not re-exported, broke test_databento_path_streaming).
+- [x] ✅ [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py`
+      instead of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1
+      correction). — execution-service@769252a8; UAC QuoterV2 added at uac@1b2cfe8; UniswapConnector class constants now
+      use get_uniswap_swap_router/quoter_v2/factory.
 - [ ] [AGENT] P1. **F-37b** (narrowed + relocated) — Genuine residual = the
       `catalogue_bucket = f"strategy-store-{project_id}"` inline bucket-NAME construction in
       `hedge_ratio_writer.py:136` + `decision_context_writer.py:149` (both already import `resolve_bucket_name` and use
@@ -58,7 +64,8 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
       (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule.
 - [x] ✅ [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
-      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632 infura removed from ethereum/arbitrum/base/optimism/polygon/linea fallbacks; docstring + test assertions updated.
+      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632a; infura removed from
+      all 11 chains in chain_config.yaml; docstring + test assertions updated to remove infura references.
 
 ## Theme 3 — custody + DeFi credential safety (execution-service)
 
@@ -67,10 +74,14 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       the RSK-08 custody-disconnect breaker.
 - [x] ✅ [AGENT] P1. **F-29** — Clear `self._private_key` on `disconnect()` in the Hyperliquid connector
       (`hyperliquid.py:181` does NOT clear it today, unlike aave/uniswap) + stop re-injecting on `update_credentials()`;
-      align with codex Key-Lifetime. — execution-service@769252a8; disconnect() clears _private_key + _wallet_address under _cred_lock; update_credentials() guards against re-arming after disconnect.
+      align with codex Key-Lifetime. — execution-service@769252a8; disconnect() clears \_private_key + \_wallet_address
+      under \_cred_lock; update_credentials() guards against re-arming after disconnect. Regression tests:
+      execution-service@7799d884f (5 tests covering key clearance + re-injection guard).
 - [x] ✅ [AGENT] P2. **F-26** — `get_custody_provider()` (`factory.py:120-124`) should `raise ValueError` on an unknown
       provider instead of silently returning `MockCustodyProvider` (warning only) — prevents silent mock-signing in
-      prod. — execution-service@769252a8; unknown provider now raises ValueError with valid-provider list; MockCustodyProvider import retained for the explicit "mock" case.
+      prod. — execution-service@769252a8; unknown provider now raises ValueError with valid-provider list;
+      MockCustodyProvider import retained for the explicit "mock" case. Regression tests: execution-service@7799d884f (4
+      tests covering unknown-provider raise + mock/cased lookup).
 
 ## Theme 4 — reporting + audit-trail durability
 
@@ -90,8 +101,8 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       layers" wording to the actual mechanism (single `client_id` by construction + 1 coordinator raise at
       `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally. — Option B chosen:
       pm@bc9fbc3c; client-funds-isolation.md + CLAUDE.md updated — "3 layers each raises" corrected to structural
-      guarantee (single client_id field on TransferIntent) + 1 implemented runtime raise
-      (transfer_coordinator.py:241) + strategy-service Phase E.3 raise labeled PLANNED.
+      guarantee (single client_id field on TransferIntent) + 1 implemented runtime raise (transfer_coordinator.py:241) +
+      strategy-service Phase E.3 raise labeled PLANNED.
 - [x] ✅ [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
       `errors/defi.py:27`) for exhaustiveness guarantees. — uac@HEAD; all 55 error-classification tests pass,
       basedpyright 0 errors; backward-compatible (uppercase values preserved).
