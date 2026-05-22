@@ -192,6 +192,13 @@ it does not start or stop pipeline services.
 
 ## §5 J1 helper — phase-to-mode derivation (DEFERRED post-cutover)
 
+> **[DELTA 2026-05-22]** **Current state:** `runtime_mode_for_phase` function stub exists in UAC
+> (`unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116`) with locked signature but no
+> implementation (body is `...`). Call site in `StrategyCatalogueSurface.tsx:85` is not yet wired. **Planned delta:**
+> `plans/epics/batch_live_symmetry_master.md` — Block G defaults #2 wires the call site post-cutover. **Target:**
+> `runtime_mode_for_phase` returns the correct `(RuntimeMode, BatchExecutionMode, OperationalMode)` triplet;
+> `synthesiseMaturity()` calls it at runtime.
+
 The `J1` helper (`runtime_mode_for_phase`) derives the canonical `(RuntimeMode, BatchExecutionMode, OperationalMode)`
 triplet from a `StrategyMaturityPhase`. Design stub lives at
 `unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116`.
@@ -219,18 +226,22 @@ Call site: `StrategyCatalogueSurface.tsx:85` `synthesiseMaturity()` calls this h
 
 ## §6 QG enforcement
 
-| STEP | What it catches                                                                        | Status (2026-05-14)                    |
-| ---- | -------------------------------------------------------------------------------------- | -------------------------------------- |
-| L1   | Data*type enum contains `LIVE*`/`BATCH\_` prefixed members                             | DAY-1 ENABLE (0 violations)            |
-| L2   | Mode-conditional branches outside seams (~21 violations)                               | FIX-REQUIRED before enable             |
-| L3   | `RuntimeMode` declared outside UTL canonical (2 violations: UAC re-export + UI redecl) | FIX-REQUIRED before enable             |
-| L4   | `LIVE_*` event-prefix members (~12 violations)                                         | **DEFERRED post-cutover** (Block G1)   |
-| L5   | Unified DataType enum (no per-mode fork)                                               | DAY-1 ENABLE (0 violations)            |
-| L6   | `BatchExecutorFactory` not yet shipped                                                 | **DEFERRED** until Tab 2 factory ships |
-| L7   | `record_captured()` callsites missing `assert_available_at_present`                    | ongoing sweep                          |
+| STEP | What it catches                                                                        | Status (2026-05-22)                       |
+| ---- | -------------------------------------------------------------------------------------- | ----------------------------------------- |
+| L1   | Data*type enum contains `LIVE*`/`BATCH\_` prefixed members                             | ENABLED (0 violations)                    |
+| L2   | Mode-conditional branches outside seams (~21 violations)                               | ENABLED 2026-05-14 (0 violations)         |
+| L3   | `RuntimeMode` declared outside UTL canonical (2 violations: UAC re-export + UI redecl) | ENABLED (partial) 2026-05-14              |
+| L4   | `LIVE_*` event-prefix members (~12 violations)                                         | **DEFERRED post-cutover** (Block G1)      |
+| L5   | Unified DataType enum (no per-mode fork)                                               | ENABLED (0 violations)                    |
+| L6   | `BatchExecutorFactory` not yet shipped                                                 | **DEFERRED post-cutover** (Tab 2 factory) |
+| L7   | `record_captured()` callsites missing `assert_available_at_present`                    | ongoing sweep                             |
 
-Enforcement file: `scripts/quality-gates-base/base-service.sh`. STEPs L1/L5 enable on Day-1 (zero violations); L2/L3
-enable after fix-batch lands (Tab 3). L4/L6 post-cutover.
+Enforcement file: `scripts/quality-gates-base/base-service.sh`. STEPs L1/L2/L3/L5/L7 enabled; L4/L6 post-cutover.
+
+> **[DELTA 2026-05-22]** **Current state:** L1/L2/L3/L5 enabled (STEP 5.75/5.77/5.78 in `base-service.sh`, 0
+> violations). L4 (`LIVE_*` event-prefix rename, ~12 violations) and L6 (`BatchExecutorFactory` wiring) are post-cutover
+> (Block G1, tracked under `plans/epics/batch_live_symmetry_master.md`). **Target:** All 7 steps green; no mode-prefixed
+> event types; `BatchExecutorFactory` wired at CLI seam.
 
 ---
 

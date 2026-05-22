@@ -1,3 +1,29 @@
+## [slot-1-main → slot-7] 2026-05-22 — Phase 11 terraform → features backfill → promote workflow
+
+**Plan refs**: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md` Phase 11b → then `features_backfill_phase3_2026_05_22.md` → then `promote_workflow_may23_cli_path_2026_05_10.md`
+
+**Phase 11a+11b terraform cleanup** (do first — was blocked by epic VM bootstrap last session):
+- `strategy_repo_consolidation_2026_05_19.md` Phase 11a: `terraform destroy` 5 archived stacks + shared TF cleanup + grafana dashboard update + test assertions for removed repos
+- `ml_repo_consolidation_2026_05_19.md` Phase 11b: same pattern for ML repos
+- Trivial sweep FIRST: mark [x] anything already executed per evidence in plan body
+
+**Then: `features_backfill_phase3_2026_05_22.md`** (gate: `mdps_backfill_phase3` per-AG verify GREEN — watch for slot 6 ack):
+- Phase 1 (CeFi): `--feature-family delta_one --asset-group cefi` + volatility + MTF VMs
+- Phase 2 (DeFi): onchain + delta_one feature families
+- Phase 3 (TradFi): delta_one + volatility (VIX surface) + MTF
+- T+10min verify each VM; manifest 100% v8; `available_at` populated
+
+**Then: `promote_workflow_may23_cli_path_2026_05_10.md`** remaining P0 items:
+- Write `e2e-testing/scripts/defi/preflight-cutover.sh` (probe: strategy manifest ≥1 day; execution auth; balance ≥min; paper-1d slot available)
+- Update `run-paper.sh` + `run-live.sh` to call preflight-cutover.sh
+- Audit + implement testnet-mode constructors for missing venues: Bybit / Binance / OKX / Hyperliquid / Aster
+- Smoke-test each testnet with read-only API call
+- Solana devnet wiring for LST archetypes (jitoSOL/mSOL/bSOL)
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-7 DONE — Phase 11a/11b terraform + features backfill + promote workflow at <shas>` here when done.
+
+---
+
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
 > §Slot 7 and the spawn prompt from operator. History below is audit-trail only.
 

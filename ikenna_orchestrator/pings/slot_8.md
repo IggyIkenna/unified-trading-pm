@@ -1,3 +1,28 @@
+## [slot-1-main → slot-8] 2026-05-22 — Slack P0 + Phase 2.E → manifest gate → alerting thresholds
+
+**Plan refs**: `agent_orchestrator_slack_notifications_2026_05_19.md` → `manifest_schema_final_gate_2026_05_09.md` → `alerting_service_live_rules_2026_05_07.md`
+
+**Wave 1 (do first — if not yet done from 2026-05-21 dispatch)**:
+- Cloud Run `--update-secrets` for SLACK_WEBHOOK + SLACK_SIGNING_SECRET on staging
+- Staging smoke: trigger test notification → verify in `#agent-orchestrator-alerts`
+- Phase 2.E smoke test against GCS (unblocked)
+- Trivial sweep `agent_orchestrator_slack_notifications_2026_05_19.md`; archive if 100%
+
+**Wave 2 (after Wave 1 ack)**:
+
+1. `manifest_schema_final_gate_2026_05_09.md` — read plan, trivial-sweep, then execute the 1 remaining item:
+   - Re-pull manifest counts for instruments-service + all 5 MTDS AGs after Phase 7 + backfills complete
+   - Archive plan when done
+
+2. `alerting_service_live_rules_2026_05_07.md` — 2 agentable items only:
+   - `[SCRIPT] P1`: PagerDuty escalation policy — define `uts-prod-live-trading` service in PD console (script/IaC)
+   - `[SCRIPT] P0`: Read quietness-VM baseline results from `gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/` (VM auto-shutdown ~2026-05-22 11:12 UTC); update `ALERT_THRESHOLDS` in UAC with tuned values + annotate each with quietness-baseline-date
+   - DO NOT touch any `[HUMAN]` items (threshold tuning sign-off, rehearsal, prod flip — those need operator)
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-8 DONE — Slack wired + Phase 2.E + manifest gate + alerting thresholds at <shas>` here when done.
+
+---
+
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
 > §Slot 8 and the spawn prompt from operator. History below is audit-trail only.
 

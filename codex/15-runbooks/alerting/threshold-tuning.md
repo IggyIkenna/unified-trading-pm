@@ -107,7 +107,12 @@ that flows through to the override lookup.
 
 ## Backtest / replay tooling
 
-DEFERRED to Phase 7 — not yet implemented. Recommended shape:
+> **[DELTA 2026-05-22]** **Current state:** No automated backtest/replay tooling — Phase 7 of
+> `plans/active/alerting_service_live_rules_2026_05_07.md` not yet shipped. Threshold changes are manually validated via
+> ad-hoc historical queries. **Planned delta:** `alerting-service/scripts/replay_threshold.py` ships as part of Phase 7
+> (quietness baseline). **Target:** Every threshold change validated against 30-90 day replay before merge.
+
+Post-cutover (Phase 7) — not yet implemented. Recommended shape:
 
 ```python
 from unified_api_contracts import ALERT_THRESHOLDS

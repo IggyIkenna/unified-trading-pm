@@ -58,7 +58,14 @@ def classify_session(venue: str, dt: datetime) -> tuple[MarketSession, SessionPh
 
 **Half-day / holiday / ICE Brent calendars are DEFERRED** per operator direction (per-venue iteration; the enum SSOT
 ships first, schedules backfill behind it). The regular-week schedule is correct for the 5 registered venues; non-
-regular-week deviations require either an explicit calendar (TBD) OR caller-side adjustment.
+regular-week deviations require either an explicit calendar or caller-side adjustment.
+
+> **[DELTA 2026-05-22]** **Current state:** 5 venues (CME, NYSE, NASDAQ, ICE, CBOE) ship with regular-week schedule
+> only. `classify_session()` returns `(CLOSED, NONE)` for US market holidays, CME half-day sessions, and ICE Brent
+> window deviations — these are NOT distinguished from ordinary closed periods. **Planned delta:**
+> `plans/epics/features_and_ml_master.md` — per-venue calendar additions backfilling holidays + half-day sessions.
+> **Target:** `classify_session()` returns correct CLOSED / HALTED for US market holidays, CME half-day sessions, and
+> ICE Brent window.
 
 ## The pattern
 

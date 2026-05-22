@@ -285,13 +285,19 @@ Step 1: bump versions
 Step 2: update workspace-manifest.json
 Step 3: dispatch version-cascade to downstream repos
 Step 4: validate all repos aligned
-Step 5: generate workspace-requirements.txt → commit to PM  ← planned
+Step 5: generate workspace-requirements.txt → commit to PM  ← post-cutover
 ```
 
 Step 5 generates `unified-trading-pm/configs/workspace-requirements.txt` (union of all active repos' deps via
 `uv pip compile`; active count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`).
 Developers then run `sync-workspace-venv.sh` to pull the refreshed union. Conflicts in `uv pip compile` signal a version
 cascade violation and fail the alignment job.
+
+> **[DELTA 2026-05-22]** **Current state:** Steps 1-4 of `run-version-alignment.sh` are implemented and run. Step 5
+> (workspace-requirements.txt generation + PM commit) is not yet wired. **Planned delta:**
+> `plans/epics/infrastructure_master.md` — wire Step 5 in `run-version-alignment.sh`. **Target:** Every version
+> alignment run produces `configs/workspace-requirements.txt` committed to PM; `sync-workspace-venv.sh` pulls the
+> refreshed union.
 
 ---
 
@@ -2252,6 +2258,12 @@ mode-enum comparison, excluding the 4 seam files. ENABLED 2026-05-14 after Tab 3
 
 **Status**: ENABLED (partial) — STEP 5.78 wired 2026-05-14. UAC/UTL clean (UTL re-exports RuntimeMode from UAC
 canonical). UI deliberate-copy (`unified-internal-contracts/modes.py`) DEFERRED post-cutover — design call needed.
+
+> **[DELTA 2026-05-22]** **Current state:** UAC + UTL sides clean; UI type `ExecutionMode` redeclaration is a known
+> violation exempted by baseline (1 violation suppressed). **Planned delta:**
+> `plans/epics/batch_live_symmetry_master.md` Tab 3 — UI imports `RuntimeMode` from UAC schema bundle;
+> `rg 'class RuntimeMode'` returns exactly 1 hit. **Target:** `rg 'class RuntimeMode'` returns exactly 1 hit; 0 baseline
+> suppressions.
 
 **What it catches**: `RuntimeMode` declared outside the UTL canonical / UAC re-export path:
 

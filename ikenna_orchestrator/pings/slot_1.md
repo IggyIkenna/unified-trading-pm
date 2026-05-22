@@ -1,3 +1,30 @@
+## [slot-1-main] 2026-05-22 — P0 bucket fix + strategy/execution manifest emission
+
+**Plan refs**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` + `strategy_execution_contract_remediation_2026_05_20.md` + `honest_coverage_formula_consolidation_2026_05_19.md`
+
+**Task 1 (0.2d — IMMEDIATE)**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` — delete 2 flat `build_bucket_name` methods in deployment-api:
+- Delete `DataStatusService.build_bucket_name` (line ~2538 of `deployment_api/services/data_status_service.py`)
+- Delete `DataQueryService.build_bucket_name` (line ~41 of `deployment_api/services/data_query_service.py`)
+- Replace each callsite with `resolve_bucket_name(cloud="gcp", kind=..., asset_group=...)` per Option A in plan
+- Callsites: `data_status_service.py:6038` (`_get_bucket_name_for_service`); `data_query_service.py:175, 231, 743`
+- Run `bash scripts/quality-gates.sh` in deployment-api; push + flip plan checkbox
+- NOTE: Code execution gated on Phase 0d cutover but CODE ships now
+
+**Task 2 (3.0d)**: `strategy_execution_contract_remediation_2026_05_20.md` Phases 1-4:
+- Phase 1: strategy-service manifest emission (`StrategyManifestRecorder` shim + `record_captured/empty/failed` wired in `write_instructions()`)
+- Phase 2: execution-service manifest emission (`record_empty(SOURCE_RETURNED_ZERO)` on 404 + `record_captured` on non-empty)
+- Phase 3: preflight gate in execution-service (check strategy manifest before executing)
+- Phase 4c: migrate existing per-AG strategy parquets into unified bucket via `gsutil rsync`
+- QG each repo after its phase; push + flip per phase
+
+**Task 3 (after backfills run)**: `honest_coverage_formula_consolidation_2026_05_19.md` — re-pull manifest counts for IS + all 5 MTDS AGs after Phase 0b backfills complete. Archive plan when done.
+
+**Monitor**: watch for Phase 7 ack from slot 5 → notify slot 3 to start IS backfill. Watch MTDS CeFi verify ack → notify slot 6 to start MDPS. Coordinate the backfill chain.
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-1 DONE — gap_2_4_d + strategy_execution Phases 1-4 at deployment-api@<sha> strategy@<sha> execution@<sha>` here when Tasks 1+2 done.
+
+---
+
 > **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
 > `plans/active/work_split_2026_05_19_ikenna.md` § Slot 1 for your tasks today. This file is kept for audit trail only.
 

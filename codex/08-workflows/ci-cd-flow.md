@@ -285,5 +285,5 @@ references in old per-repo files (`unified-cloud-interface` / `unified-config-in
 | Cutover criterion       | All 21 repos have `workspace-qg.yml` (not `quality-gates.yml`); template rendered from PM SSOT                                |
 | Continuous verification | `gh workflow list --repo IggyIkenna/<repo> --json name` returns `workspace-qg`; per-repo `quality-gates.yml` no longer exists |
 | Cadence                 | Weekly drift-check (one repo per day across the week)                                                                         |
-| Owner                   | Slot 1 main pre-cutover; post-cutover cron VM (TBD)                                                                           |
+| Owner                   | Slot 1 main pre-cutover; post-cutover cron VM (see `plans/epics/infrastructure_master.md` for VM assignment)                  |
 | Last verified           | 2026-05-16 (Phase B rollout — see `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT") |
