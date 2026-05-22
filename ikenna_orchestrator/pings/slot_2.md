@@ -1,3 +1,21 @@
+## [slot-2] 2026-05-22 — predictions_master L618 DONE: IS MARKET_LIFECYCLE writer + tarball rebuilt
+
+[2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 3 L618 (MARKET_LIFECYCLE writer) shipped.**
+
+- `_build_market_lifecycle_df` + `_write_market_lifecycle` + `lifecycle_sink` in IS orchestrator — IS@2aabd7b
+- 9 unit tests in `test_prediction_canonical_group_shard.py::TestBuildMarketLifecycleDf` — all pass
+- QG exit 0 (2 pre-existing `test_reconcile_legacy_blank_to_typed_reason` failures = foreign UTL/UAC compat, not my
+  code)
+- basedpyright: 0 new errors in my functions (168 total, all pre-existing)
+- Tarball rebuilt: IS@2aabd7be7ec7 + UAC@c4853a72 uploaded to GCS deployment-scripts bucket
+- predictions_master L618 checkbox flipped — PM@f8d73ded8
+
+**Next**: cme_polymarket_arb Phases 3-5 + config_grid + d8
+
+Plan refs: `predictions_master.md` (Phase 3 L618)
+
+---
+
 ## [slot-2] 2026-05-22 — Wave 3 DONE: predictions Phase 5 UAC + cme-arb Phase 2 FULL
 
 [2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 5 (UAC portion) + cme-arb Phase 2 FULL.**
