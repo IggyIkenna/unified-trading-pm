@@ -93,19 +93,19 @@ IS that plan.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
       for 2026-05-17, 2026-05-19→2026-05-22 (5 days). VMs failed ×2 (ImportError: UAC c18550f3 removed
       `get_valid_data_types_for_venue` from top-level). TWO FIXES APPLIED: (1) UAC@ab72717e re-exports the function from
-      top-level **init**.py (slot-5); (2) MTDS@105b8d15 moves import to `unified_api_contracts.registry` (slot-4 — the
+      top-level __init__.py (slot-5); (2) MTDS@105b8d15 moves import to `unified_api_contracts.registry` (slot-4 — the
       canonical approach per UAC import rules). Relaunched `mtds-vault-share-price-20260522-091041` @ 34.153.210.28 with
-      mtds@105b8d15 tarball. VM RUNNING. 2026-05-22 slot-4.
+      mtds@105b8d15 tarball. COMPLETED + self-deleted. GCS confirmed: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3 data at
+      `raw_tick_data/by_date/day=2026-05-22/asset_group=defi/` ✅ (slot-7 GCS confirm). 2026-05-22.
 - [x] ✅ [CODE] P0. **MTDS-3.2.C-VSP-FIX** — Fixed UAC ImportError: added `get_valid_data_types_for_venue` to top-level
       `unified_api_contracts/__init__.py`. UAC@ab72717e. Also: MTDS@105b8d15 moves import to registry (dual fix).
       2026-05-22.
-- [x] ✅ [VERIFY] P0. **MTDS-3.2.C-V** — **GREEN (slot-2 2026-05-22)**: All 4 DeFi collect-\* criteria met. (1)
+- [x] ✅ [VERIFY] P0. **MTDS-3.2.C-V** — **GREEN (slot-2/slot-7 2026-05-22)**: All 4 DeFi collect-\* criteria met. (1)
       `lst-rates-central-element-323112` 2020-01-01→2026-05-22 continuous ✅ (COMPLETED 07:31 UTC exit_code=0); (2)
       `lending-indices-central-element-323112` 2022-01-01→2026-05-22 continuous ✅ (COMPLETED 07:32 UTC exit_code=0,
       7364 records/day); (3) `dex-pools-central-element-323112` latest date 2026-05-22 ✅ (mtds-dex-pools-backfill
-      COMPLETED 07:53 UTC exit_code=0, 4131 total records); (4) vault_share_price gap filled ✅
-      (mtds-vault-share-price-20260522-091041 COMPLETED + self-deleted, mtds@105b8d15, window 2026-05-17→2026-05-22).
-      **Gate for MDPS-3.3.DeFi OPEN.**
+      COMPLETED 07:53 UTC exit_code=0, 4131 total records); (4) vault_share_price gap filled ✅ (COMPLETED, GCS verified).
+      **Gate for MDPS-3.3.DeFi OPEN.** All 4 MDPS DeFi VMs launched (mdps_backfill_phase3_2026_05_22.md). 2026-05-22.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
