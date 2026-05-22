@@ -1551,7 +1551,8 @@ _(no plans currently assigned at this priority)_
 
 ## Deferred work — migrated from archived plans
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived). Low-impact cosmetic fix.
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived). Low-impact cosmetic fix.
+      — `execution-service@24ad81b0` (replaced "19 chains" hardcode with reference to UAC WETH_ADDRESSES)
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools` `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
 
