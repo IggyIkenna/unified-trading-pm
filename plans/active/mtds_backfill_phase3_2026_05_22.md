@@ -81,23 +81,22 @@ IS that plan.
       `mtds-lst-rates-20260522-082742` — **COMPLETED 07:31 UTC exit_code=0**, 53 per-VM shard entries,
       2026-04-15→2026-05-22. (2) `mtds-lending-indices-20260522-082740` — **COMPLETED 07:32 UTC exit_code=0**, 7364
       records (aave_v3/compound_v3 across 8 chains), 52 per-VM shard entries, 2026-04-15→2026-05-22. (3)
-      `mtds-dex-pools-backfill` @ 136.110.98.16 — **COMPLETED 07:53 UTC exit_code=0**, max date 2026-05-22. **CONFIRMED
-      (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22
-      continuous ✅; dex-pools 2026-05-22 COMPLETE ✅.
+      `mtds-dex-pools-backfill` — **COMPLETED 07:53 UTC exit_code=0** (self-deleted), 934 per-VM shard entries, 4131
+      total records for 2026-05-22. **CONFIRMED (slot-4 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅;
+      lending-indices 2022-01-01→2026-05-22 continuous ✅; dex-pools 2021-01-01→2026-05-22 (172 dates,
+      latest=2026-05-22) ✅.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
-      for 2026-05-17, 2026-05-19→2026-05-22 (5 days). **ROUND 1 FAILED**: `mtds-vault-share-price-20260522-083932`
-      crashed at startup — ImportError (`get_valid_data_types_for_venue` removed from UAC). **Fix (slot-6 2026-05-22)**:
-      MTDS orchestrator.py → `get_expected_data_types_for_venue` (market-tick-data-service@470951df); UAC adds
-      `validate_data_type_for_venue` export (unified-api-contracts@058be427). **ROUND 2 RUNNING**:
-      `mtds-vault-share-price-20260522-092758` — UAC sha=058be427 confirmed in serial log, MTDS OK, PID 6974 collecting
-      2026-05-17→2026-05-22. 2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-\* VMs write to SEPARATE
-      buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥ 2026-05-22 ✅
-      DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
-      DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
-      2026-05-22 ✅ DONE (COMPLETED 07:53 UTC exit_code=0); (4) `market-data-tick-defi-central-element-323112`
-      vault_share_price — mtds-vault-share-price-20260522-092758 RUNNING (Round 2, ImportError fixed) for
-      2026-05-17→2026-05-22; pending final date ≥ 2026-05-22 verification.
+      for 2026-05-17, 2026-05-19→2026-05-22 (5 days). VMs failed ×2 (ImportError: UAC c18550f3 removed
+      `get_valid_data_types_for_venue`). TWO FIXES: (1) UAC@ab72717e re-exports from top-level (slot-5); (2)
+      MTDS@105b8d15 moves import to registry (slot-4). Also: slot-6 applied UAC@058be427 + MTDS@470951df as redundant
+      parallel fix. Relaunched `mtds-vault-share-price-20260522-091041` — COMPLETED + self-deleted. GCS confirmed:
+      ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3 at `raw_tick_data/by_date/day=2026-05-22/asset_group=defi/` ✅.
+- [x] ✅ [CODE] P0. **MTDS-3.2.C-VSP-FIX** — UAC@ab72717e + MTDS@105b8d15 (canonical). Also slot-6 parallel:
+      market-tick-data-service@470951df + unified-api-contracts@058be427. 2026-05-22.
+- [x] ✅ [VERIFY] P0. **MTDS-3.2.C-V** — **GREEN (slot-2/slot-4/slot-7 2026-05-22)**: All 4 criteria met. (1) lst-rates
+      2020-01-01→2026-05-22 ✅; (2) lending-indices 2022-01-01→2026-05-22 ✅ (7364 records/day); (3) dex-pools latest
+      2026-05-22 ✅ (4131 records); (4) vault_share_price gap filled ✅ (GCS verified). **Gate for MDPS-3.3.DeFi OPEN.**
+      All 4 MDPS DeFi VMs launched (mdps_backfill_phase3_2026_05_22.md). 2026-05-22.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
@@ -154,6 +153,21 @@ AI-days on `vm-sports`.
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
 | DeFi gap fill 2026-05-17→2026-05-22 via collect-\* VMs (lst-rates, lending-indices, dex-pools)                                                                                                                                                  | **LAUNCHED 2026-05-22** — 3 VMs RUNNING | See MTDS-3.2.C-GAP above                                                           |
 | Bucket naming: MTDS writes to flat bucket (`market-data-tick-{ag}-{pid}`) instead of prd bucket (`market-data-tick-{ag}-prd-{pid}`). UTL `get_write_bucket_name` uses legacy `cloud_constants.py` BUCKET_PREFIXES, not `resolve_bucket_name()`. | **DEFERRED**                            | `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 migration |
+
+## MDPS TradFi SchemaContract gaps (P1 — found 2026-05-22 slot-6)
+
+- [ ] [INVESTIGATE+FIX] P1. **MDPS-TRADFI-SCHEMA-GAP** — `mdps-backfill-tradfi-20260522-051203` logs `recovery=alert`
+      errors for every CME `futures_chain` + `combo` ohlcv_1m file and all ICE futures spread files. Error:
+      `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_1m' venue='CME'`.
+      Root cause: MDPS resolves `instrument_type` from parquet row data, not the path; Databento writes
+      `instrument_type=UNKNOWN` inside `futures_chain` / `combo` / spread parquets (stype_out is UNKNOWN for continuous
+      and multi-leg instruments). The UAC `CONTRACT_REGISTRY` in `unified_api_contracts/internal/schemas/contracts.py`
+      has no entry for `("tradfi", "UNKNOWN", "ohlcv_1m")`, `("tradfi", "futures_chain", "ohlcv_1m")`, or
+      `("tradfi", "combo", "ohlcv_1m")`. Fix: add registry entries mapping these to `TRADFI_FUTURE_OHLCV_1M` (same
+      column schema: instrument_id, symbol, ts_event, open, high, low, close, volume_nullable). Also check `ohlcv_15m`
+      and `ohlcv_24h` for same gap. **BLOCKER**: MDPS TradFi VM must be relaunched with new UAC tarball after fix to
+      process skipped instruments. Affected data: CME CL/GC/NQ/ES futures_chain ohlcv; CME spread combos
+      (CL/GOLD/SP500/NASDAQ100/WTI-BZ); ICE BRN spreads. All historical dates from 2020-01-01 → 2026-05-22 affected.
 
 ## Temporary states + their canonical follow-up plans
 
