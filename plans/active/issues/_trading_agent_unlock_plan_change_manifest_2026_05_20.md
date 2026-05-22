@@ -342,3 +342,8 @@ Plans (deferred to follow-up sweep — NOT blocking the new architecture-unlock 
 
 Once all 4 boxes ticked → slot-1-main applies manifest entries in order: M1-M6 → PW1-PW2 → F1 → Q1-Q2 → E1-E2 → SR1 →
 SA1 → FC1 → per-archetype sweep. Estimated ~0.8 cal-AI-days of plan-edit work.
+
+## Status update — 2026-05-22
+
+**BLOCKED-OPERATOR**: requires operator to tick the 4 approval checklist items above before slot-1-main applies the 10
+plan edits. Do not apply the manifest changes until the operator acknowledges all 4 boxes.

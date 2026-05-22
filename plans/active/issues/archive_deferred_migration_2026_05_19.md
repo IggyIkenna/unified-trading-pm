@@ -5,6 +5,9 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+sweep_progress:
+  "In progress — 24 archived plans identified; sweep ongoing; archive this doc when all high-priority DEFERRED items
+  have named successor plans"
 ---
 
 ## What I found

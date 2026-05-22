@@ -65,12 +65,18 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Group A — L0 Asset-Group Epics
 
-- [ ] [READ+FIX] P0. `defi_master.md` ↔ `codex/04-architecture/defi-execution-overview.md` + archetypes/ — DeFi error
-      codes, CLOUD_KMS_ENCRYPTED custody, chain/connector patterns
-- [ ] [READ+FIX] P0. `cefi_master.md` ↔ `codex/04-architecture/batch-live-architecture.md` + CeFi venue patterns
-- [ ] [READ+FIX] P1. `tradfi_master.md` ↔ `codex/02-data/per-asset-group-bucket-layouts.md` + tick data docs
-- [ ] [READ+FIX] P1. `sports_master.md` ↔ `codex/01-domain/sports-instruments.md` + sports GCS paths
-- [ ] [READ+FIX] P1. `predictions_master.md` ↔ codex predictions coverage
+- [x] [READ+FIX] P0. `defi_master.md` ↔ `codex/04-architecture/defi-execution-overview.md` + archetypes/ — **DONE
+      2026-05-22**: custody state delta box (CLOUD_KMS_ENCRYPTED shipped, Copper/CEFFU June-1) added; 30 DeFi error
+      codes confirmed current.
+- [x] [READ+FIX] P0. `cefi_master.md` ↔ `codex/04-architecture/batch-live-architecture.md` + CeFi venue patterns —
+      **DONE 2026-05-22**: §11 table rows for tradfi-batch-live + prediction-batch-live updated to PLACEHOLDER SHIPPED.
+- [x] [READ+FIX] P1. `tradfi_master.md` ↔ `codex/02-data/per-asset-group-bucket-layouts.md` + tick data docs — **DONE
+      2026-05-22**: TradFi tick data restoration delta box added; Kalshi row in contracts-scope-and-layout.md.
+- [x] [READ+FIX] P1. `sports_master.md` ↔ `codex/01-domain/sports-instruments.md` + sports GCS paths — **DONE
+      2026-05-22**: DELTA box added (active venues = ODDS_API/PINNACLE/BETFAIR only; scrapers DEFERRED-INDEFINITELY
+      2026-05-12).
+- [x] [READ+FIX] P1. `predictions_master.md` ↔ codex predictions coverage — **DONE 2026-05-22**:
+      prediction-schema-paths.md + prediction-markets.md updated with Kalshi elections subdomain migration delta boxes.
 
 ### Group B — L1 Pipeline Epics
 
@@ -101,16 +107,23 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Group C — L2 Functional Epics
 
-- [ ] [READ+FIX] P0. `execution_master.md` ↔ `codex/04-architecture/` execution suite — UAC error codes, adapter
-      patterns, credential convention
-- [ ] [READ+FIX] P0. `strategy_master.md` ↔ `codex/09-strategy/architecture-v2/` — strategy registry, archetype coverage
-      matrix
-- [ ] [READ+FIX] P1. `global_ledger_pnl_attribution_master.md` ↔ codex global-ledger section (stub exists?)
-- [ ] [READ+FIX] P1. `trading_agent_master.md` ↔ `codex/04-architecture/trading-agent-service-directive-pipeline.md` —
-      PARTIALLY SUPERSEDED banner correct?
-- [ ] [READ+FIX] P1. `client_isolation_and_governance_master.md` ↔
-      `codex/04-architecture/per-client-isolation-architecture.md` + `client-funds-isolation.md`
-- [ ] [READ+FIX] P1. `dart_and_promote_master.md` ↔ `codex/04-architecture/promote-workflow-architecture.md`
+- [x] [READ+FIX] P0. `execution_master.md` ↔ `codex/04-architecture/` execution suite — **DONE 2026-05-22**:
+      execution_master.md added Codex SSOTs block (5 docs) + priority blocks; defi-execution-overview.md backtest replay
+      CODEX-STALE fixed.
+- [x] [READ+FIX] P0. `strategy_master.md` ↔ `codex/09-strategy/architecture-v2/` — **DONE 2026-05-22**:
+      strategy_master.md 53→57 archetypes (3 instances fixed); architecture-v2/README.md 5-Layer Identity Model updated.
+- [x] [READ+FIX] P1. `global_ledger_pnl_attribution_master.md` ↔ codex global-ledger section — **DONE 2026-05-22**:
+      `CODEX-STALE P0` — 14-line stub expanded to full architecture doc (4 SSOT ledgers, 4 derived ledgers, event
+      taxonomy, writer/reader service map, VM prefix table, delta box).
+- [x] [READ+FIX] P1. `trading_agent_master.md` ↔ `codex/04-architecture/trading-agent-service-directive-pipeline.md` —
+      **DONE 2026-05-22**: PARTIALLY SUPERSEDED banner confirmed correct; Phase 2A already fixed 3 SUPERSEDED forward
+      links.
+- [x] [READ+FIX] P1. `client_isolation_and_governance_master.md` ↔
+      `codex/04-architecture/per-client-isolation-architecture.md` + `client-funds-isolation.md` — **DONE 2026-05-22**:
+      per-client-isolation SSOT pointer added to epic; both codex docs confirmed clean.
+- [x] [READ+FIX] P1. `dart_and_promote_master.md` ↔ `codex/04-architecture/promote-workflow-architecture.md` — **DONE
+      2026-05-22**: ORPHAN-EPIC-REF in dart-manual-trade-spec.md line 23 fixed (cross_cutting_may_23 →
+      dart_and_promote_master); Phase 7 status updated to Shipped.
 
 ### Group D — L3-L5 Meta Epics
 
@@ -128,42 +141,42 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Sub-phase 2A — LDR-locked plans (P0)
 
-- [ ] [READ+FIX] P0. `writegate_honest_coverage_endtoend_2026_05_06.md` Codex SSOT → `codex/02-data/` writegate +
-      emission semantics
-- [ ] [READ+FIX] P0. `per_client_isolation_and_venue_fanout_topology_2026_05_20.md` → per-client-isolation +
-      client-funds-isolation + strategy-shard-vm-topology
-- [ ] [READ+FIX] P0. `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` → live-pipeline-architecture +
-      honest-absence + quality-gates
-- [ ] [READ+FIX] P0. `available_at_schema_lift_post_cutover_2026_05_19.md` → availability-manifest + quality-gates
-      (confirm post-cutover boundary marked correctly)
-- [ ] [READ+FIX] P0. `batch_live_symmetry_2026_05_10.md` → verify 2 promised NEW codex docs exist (cefi-batch-live +
-      mode-axis-discipline); write stubs if missing
-- [ ] [READ+FIX] P0. `trading_agent_service_architecture_unlock_2026_05_22.md` →
-      `codex/04-architecture/trading-agent-service-directive-pipeline.md` + config-reloader-pattern
+- [x] [READ+FIX] P0. `writegate_honest_coverage_endtoend_2026_05_06.md` Codex SSOT → **DONE 2026-05-22**: PARTIAL→fixed
+      — delta boxes added to honest-absence-downstream-handling.md (3 pending writegate items) +
+      availability-manifest-and-data-status.md (v8 data-side divergence CRITICAL box).
+- [x] [READ+FIX] P0. `per_client_isolation_and_venue_fanout_topology_2026_05_20.md` → **DONE 2026-05-22**: all 3 codex
+      docs (per-client-isolation, client-funds-isolation, strategy-shard-vm-topology) confirmed DONE — Phases 1-8
+      complete.
+- [x] [READ+FIX] P0. `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` → **DONE 2026-05-22**:
+      live-pipeline-architecture.md expanded with perp_funding_rates spec delta box; EXPECTED_NO_FUNDING_RATE_TICKS +
+      EXPECTED_NO_PNL_STREAM added to reason taxonomy; quality-gates.md cefi/ coverage confirmed.
+- [x] [READ+FIX] P0. `available_at_schema_lift_post_cutover_2026_05_19.md` → **DONE 2026-05-22**: PARTIAL — post-cutover
+      boundary delta box added to availability-manifest §5 available_at section; quality-gates STEP 5.67/5.68 correctly
+      noted as post-cutover.
+- [x] [READ+FIX] P0. `batch_live_symmetry_2026_05_10.md` → **DONE 2026-05-22**: both promised new codex docs CONFIRMED
+      EXIST — cefi-batch-live.md (152 lines) + mode-axis-discipline.md (245+ lines). No changes needed.
+- [x] [READ+FIX] P0. `trading_agent_service_architecture_unlock_2026_05_22.md` → **DONE 2026-05-22**: both codex docs
+      exist and reflect shipped state; 3 SUPERSEDED forward links in trading-agent-service-directive-pipeline.md fixed →
+      trading_agent_master.md.
 
 ### Sub-phase 2B — Remaining plans with Codex SSOT sections (P1)
 
-- [ ] [READ+FIX] P1. `strategy_execution_contract_remediation_2026_05_20.md` → strategy→execution contract docs
-- [ ] [READ+FIX] P1. `cme_polymarket_arb_2026_05_08.md` → `codex/02-data/per-asset-group-bucket-layouts.md` +
-      cme-polymarket-arb playbook
-- [ ] [READ+FIX] P1. `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` → contracts-scope-and-layout
-- [ ] [READ+FIX] P1. `global_ledger_pnl_attribution_discovery_2026_05_21.md` → check
-      `codex/04-architecture/global-ledger-architecture.md`; write stub if missing
-- [ ] [READ+FIX] P1. `aws_epic_vm_fleet_2026_05_22.md` → `codex/05-infrastructure/agent-orchestrator-worker-topology.md`
-- [ ] [READ+FIX] P1. `api_keys_wallets_accounts_readiness_2026_05_10.md` → 4 missing codex docs (credentials-matrix,
-      aws-iam-matrix, secret-manager-naming, rotation-runbook)
-- [ ] [READ+FIX] P1. `master_to_live_defi_2026_05_23.md` → the 5 codex gaps it listed
-- [ ] [READ+FIX] P1. `honest_coverage_formula_consolidation_2026_05_19.md` → codex SSOT targets
-- [ ] [READ+FIX] P1. `code_freeze_migrate_backfill_sequencing_2026_05_10.md` → codex SSOT targets
-- [ ] [READ+FIX] P1. `promote_workflow_may23_cli_path_2026_05_10.md` → promote-workflow-architecture
-- [ ] [READ+FIX] P1. `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` → post-cutover UI pipeline docs
-- [ ] [READ+FIX] P1. `manifest_schema_final_gate_2026_05_09.md` → manifest v8 schema docs
-- [ ] [READ+FIX] P1. `strategy_archetype_logic_audit_2026_05_20.md` (audit/results/) → verify 5 CODEX-MISSING docs:
-      allocator-pipeline-contract, instrument-type-leverage-matrix, strategy-execution-runtime,
-      treasury-trading-wallet-invariant, universe-enumeration-contract
-- [ ] [READ+FIX] P1. `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` → TradFi tick data codex docs
-- [ ] [READ+FIX] P1. `_trading_agent_unlock_plan_change_manifest_2026_05_20.md` → codex SSOT targets
-- [ ] [READ+FIX] P2. `mega_audit_and_plan_beefup_progression_2026_05_20.md` → codex SSOT targets
+- [x] [READ+FIX] P1. `strategy_execution_contract_remediation_2026_05_20.md` → **DONE 2026-05-22**: DONE — defi-execution-overview.md §"Strategy→Execution Manifest Handoff" confirmed shipped (PM@b1197eda1).
+- [x] [READ+FIX] P1. `cme_polymarket_arb_2026_05_08.md` → **DONE 2026-05-22**: DONE — cme-polymarket-arb.md playbook exists (100+ lines); per-asset-group-bucket-layouts.md has EVENT_CONTRACT row.
+- [x] [READ+FIX] P1. `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` → **DONE 2026-05-22**: NOT-DONE→fixed — contracts-scope-and-layout.md row 7 added (trading-api.kalshi.com → api.elections.kalshi.com migration).
+- [x] [READ+FIX] P1. `global_ledger_pnl_attribution_discovery_2026_05_21.md` → **DONE 2026-05-22**: DONE — global-ledger-architecture.md expanded from stub to full doc by Group C agent.
+- [x] [READ+FIX] P1. `aws_epic_vm_fleet_2026_05_22.md` → **DONE 2026-05-22**: DONE — agent-orchestrator-worker-topology.md exists with full AWS fleet table (10 VMs), bootstrap sequence, CLOUD_PROVIDER toggle.
+- [x] [READ+FIX] P1. `api_keys_wallets_accounts_readiness_2026_05_10.md` → **DONE 2026-05-22**: DONE — all 4 docs exist at codex/05-infrastructure/ (credentials-matrix, aws-iam-matrix, secret-manager-naming, rotation-runbook).
+- [x] [READ+FIX] P1. `master_to_live_defi_2026_05_23.md` → **DONE 2026-05-22**: DONE — all 5 Group F codex gaps confirmed filled (live-deployment-monitoring, research-service-and-dart-integration, cloud-agnostic-build-lineage, ml-experiment-lifecycle, live-strategy-config-hot-reload).
+- [x] [READ+FIX] P1. `honest_coverage_formula_consolidation_2026_05_19.md` → **DONE 2026-05-22**: DONE — service-output-emission-semantics.md confirmed full 274-line doc; manifest docs updated by Phase 2A.
+- [x] [READ+FIX] P1. `code_freeze_migrate_backfill_sequencing_2026_05_10.md` → **DONE 2026-05-22**: DONE — all referenced codex docs exist with confirmed shipped annotations.
+- [x] [READ+FIX] P1. `promote_workflow_may23_cli_path_2026_05_10.md` → **DONE 2026-05-22**: DONE — promote-workflow-architecture.md fully documents CLI path (run-paper.sh → colocated_engine.py → run-live.sh), dual-track diagram, all phases shipped.
+- [x] [READ+FIX] P1. `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` → **DONE 2026-05-22**: DONE — promote-workflow-architecture.md has "Post-Cutover Deferred Items" section with successor plan pointer.
+- [x] [READ+FIX] P1. `manifest_schema_final_gate_2026_05_09.md` → **DONE 2026-05-22**: DONE — service-emission-policy.md + availability-manifest-and-data-status.md both confirmed substantive.
+- [x] [READ+FIX] P1. `strategy_archetype_logic_audit_2026_05_20.md` (audit/results/) → **DONE 2026-05-22**: 5 CODEX-MISSING stubs written to codex/09-strategy/architecture-v2/cross-cutting/ (allocator-pipeline-contract, instrument-type-leverage-matrix, strategy-execution-runtime, treasury-trading-wallet-invariant, universe-enumeration-contract).
+- [x] [READ+FIX] P1. `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` → **DONE 2026-05-22**: NOT-DONE→fixed — per-asset-group-bucket-layouts.md TradFi tick data restoration delta box added.
+- [x] [READ+FIX] P1. `_trading_agent_unlock_plan_change_manifest_2026_05_20.md` → **DONE 2026-05-22**: DONE — trading-agent-service-directive-pipeline.md confirmed full; config-reloader-pattern.md confirmed.
+- [x] [READ+FIX] P2. `mega_audit_and_plan_beefup_progression_2026_05_20.md` → **DONE 2026-05-22**: DONE — service-contract-audit-template.md + data-pipeline-correctness-hard-rule.md confirmed substantive.
 
 ---
 
@@ -187,11 +200,10 @@ Standard delta box:
       PM@77f0ef404 (partial) — trading-agent-service-directive-pipeline.md line 217 already points to
       `plans/epics/trading_agent_master.md` (no change needed). Remaining SUPERSEDED banner fixes tracked under Phase 1
       Group C items (strategy_master, dart_and_promote_master, etc.).
-- [ ] [WRITE] P1. Write stubs for CODEX-MISSING P0/P1 findings
-- [ ] [EDIT] P1. Apply delta boxes to all P1 CODEX-STALE / CODEX-AHEAD docs
-- [ ] [EDIT] P1. Update the 12 "post-May-23" codex markers (May-23 = today — mark as shipped or deferred with named
-      plan)
-- [ ] [EDIT] P2. Fix BROKEN-REF findings
+- [x] [WRITE] P1. Write stubs for CODEX-MISSING P0/P1 findings — **DONE 2026-05-22** PM@08ebf39f5: 5 strategy stubs (allocator-pipeline-contract, instrument-type-leverage-matrix, strategy-execution-runtime, treasury-trading-wallet-invariant, universe-enumeration-contract) + codex-audit-playbook.md stub.
+- [x] [EDIT] P1. Apply delta boxes to all P1 CODEX-STALE / CODEX-AHEAD docs — **DONE 2026-05-22** PM@08ebf39f5: delta boxes applied across all Group A-C epic audits + Phase 2A-2B plan audits (see per-item detail above).
+- [x] [EDIT] P1. Update the 12 "post-May-23" codex markers (May-23 = today — mark as shipped or deferred with named plan) — **DONE 2026-05-22** PM@08ebf39f5: all 12 "post-May-23" → "post-cutover" fixed across dart-manual-trade-spec.md, strategy-ensemble-topology.md, launcher-script-ssot.md (×3), live-pipeline-architecture.md, cloud-agnostic-script-pattern.md, cloud-agnostic-build-lineage.md, aws-migration-cost-snapshot.md, defi-venue-protocol-catalogue.md, pagerduty-escalation-policy.md, wallet-tier-kill-switch.md, operational-modes-matrix.md, elysium-managed-sla.md.
+- [ ] [EDIT] P2. Fix BROKEN-REF findings — **PENDING Group D** (still running)
 
 ---
 
@@ -205,7 +217,7 @@ Standard delta box:
 
 ## This Plan's Own Codex Impact
 
-- [ ] [WRITE] `codex/11-project-management/codex-audit-playbook.md` — stub: recurring audit cadence
+- [x] [WRITE] `codex/11-project-management/codex-audit-playbook.md` — **DONE 2026-05-22** PM@08ebf39f5: stub written with taxonomy, phase sequence, parallelization map, SSOT placement decision tree, recurring cadence triggers.
 
 ---
 

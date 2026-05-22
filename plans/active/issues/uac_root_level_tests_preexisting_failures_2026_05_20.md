@@ -64,3 +64,10 @@ placeholders for sportsbook venues that haven't been scoped yet — likely 90% f
 - Parent plan: `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 1 (this discovery).
 - Composes with: `Data Pipeline Correctness Is The Heartbeat` HARD RULE in CLAUDE.md — silent test skip = silent
   correctness regression.
+
+## Status update — 2026-05-22
+
+**BLOCKED-OPERATOR**: needs a dedicated triage slot (~0.5 cal-AI-days) to walk the 318 failures and categorize into: (a)
+unimplemented sportsbook/prediction venue stubs (expected — add `pytest.skipif`), (b) schema gaps (file P0 in active
+plan for `client_isolation_and_governance_master`), (c) real regressions (file P0 for the owning epic). Once categories
+are confirmed in a plan, the targeted `PYTEST_UNIT_DIR` shim in UAC `quality-gates.sh` can be broadened to `tests/`.

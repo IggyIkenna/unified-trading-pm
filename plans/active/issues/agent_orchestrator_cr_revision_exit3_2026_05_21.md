@@ -5,6 +5,11 @@ author: slot-8
 source:
   - plans/active/agent_orchestrator_slack_notifications_2026_05_19.md
 locked_by: live-defi-rollout
+priority: P2
+status: BLOCKED-OPERATOR
+blocked_reason:
+  "Operator or slot-1 must re-trigger staging deploy (deploy-agent-orchestrator.sh --env=uat --cloud) to determine if
+  exit(3) is transient or recurring"
 ---
 
 ## What I found

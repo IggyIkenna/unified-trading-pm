@@ -13,9 +13,15 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 severity: P2 (post-cutover hygiene; not blocking May-23 since GCS is the May-23 cloud)
-status: filed (deferred; cloud-agnostic migration is a refactor sprint, not a sweep item)
+status: ACKED-OUT-OF-SCOPE
+archived: 2026-05-22
+successor_plan: plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md
 priority: P2
 ---
+
+> **[ACKED-OUT-OF-SCOPE]** Archived 2026-05-22. Phase B (cloud-agnostic migration of shard_detail.py) is post-cutover
+> and is tracked in `bucket_name_ssot_canonicalisation_2026_05_10.md` (active plan). Phase A (3 noqa annotations) was
+> already shipped at deployment-api@`4b9dbbf`. No remaining unacked work. Moved to `plans/archive/issues/`.
 
 ## What I found
 
@@ -100,6 +106,4 @@ rationale linking to this issue doc. QG baseline restored to 27. No regression.
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN
-**Triaged by**: slot-8 triage sweep
-**Reason**: Structural cloud-agnostic migration gap; P2 deferred
+**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: Structural cloud-agnostic migration gap; P2 deferred

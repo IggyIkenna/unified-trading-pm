@@ -49,3 +49,9 @@ Estimated effort: <30 minutes once the owner identifies the right (asset_group, 
 
 - Parent (discovery context): `plans/active/canary_coverage_qg_enforcement_2026_05_20.md` Phase 1.
 - Related: `tradfi_master.md` (commodity-features owner).
+
+## Status update — 2026-05-22
+
+**BLOCKED-OPERATOR-DECISION**: tradfi/EIA track owner must identify the correct `(asset_group, data_type)` pair and add
+the `SOURCE_PRIORITY` mapping in `source_priority.py`. If EIA is not needed for May-23 scope, revert `fb3751e8`.
+Estimated fix: <30 min once the owner has the pair. Assigned to `tradfi_master` epic.

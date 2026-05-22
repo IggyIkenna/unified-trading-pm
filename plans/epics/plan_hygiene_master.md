@@ -1,13 +1,11 @@
 ---
 name: plan_hygiene_master
 title: "Plan hygiene — continuous format + integrity + alignment enforcement"
+type: epic
 priority: P1
 status: active
-vm: planning-vm
+assigned_vm: planning-vm
 cadence: daily-cron + on-demand
-estimate_class: infra
-estimate_baseline_ai_days: 8.0
-estimate_calibrated_ai_days: 6.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

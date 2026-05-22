@@ -1,3 +1,12 @@
+---
+title: bucket_name_ssot residual drift — 2026-05-20 audit
+created: 2026-05-20
+priority: P2
+status: active
+locked_by: live-defi-rollout
+blocked_on: bucket_name_ssot_phase2.6
+---
+
 # bucket_name_ssot residual drift — 2026-05-20 audit (slot 1, task R-006)
 
 > **Source**: workspace-wide grep audit run 2026-05-20. Commands:
