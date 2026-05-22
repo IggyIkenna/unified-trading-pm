@@ -282,3 +282,17 @@ gcloud compute ssh agent-orch-vm-cross-cutting-20260521 \
 ```
 
 Plan ref: `plans/active/epic_vm_fleet_commissioning_2026_05_21.md` Phase 3 T+10min.
+
+---
+
+## [2026-05-22] slot-11 — aws_migration Phase 1.5.A DONE
+
+**Phase 1.5.A AWS hardcode grep** (`grep -rn "unified-trading-\|s3://\|427895769566"`) complete:
+
+- ~200 hits across workspace Python + shell files.
+- **Zero violations in May-23 critical path.** All hits: (a) multi-cloud-aware dispatch (handles gs:// + s3:// explicitly), (b) test fixtures, (c) operator migration scripts, (d) env-var-driven AWS backends with `${AWS_REGION:-...}` fallback.
+- **4 Wave-2 items** (post-cutover): `deployment-api/routes/monitor_scheduled.py:327/422/460` + `monitor_live.py:54` — bare `us-east-1` region strings in EventBridge command dispatch. Not in May-23 path.
+- Findings in `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` § 6.
+- Plan item flipped: `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A item 2 → `[x]`.
+
+**PM@074b2bfd** (LDR).
