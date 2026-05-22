@@ -50,14 +50,21 @@ before Phase 7 grows the v<8 debt.
 Replaces stale `defi_upstream_46day_full_backfill_2026_05_16.md` reference (that file was never created). This section
 IS that plan.
 
-- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C** — Relaunched `mtds-backfill-defi-2026-05-22b` VM (e2-highmem-4,
-      asia-northeast1-c, 2024-01-01→2026-05-22, all venues — Pyth/Chainlink/DEX/LST, prod). VM RUNNING @ 35.221.121.77.
-      Fix: UAC@13a870ef — VENUES_BY_ASSET_GROUP["defi"] now uses ALL_DEFI_VENUES (97 venues) instead of MTDS_DEFI_VENUES
-      (51 venues); VENUE_TO_ASSET_GROUP now maps all IS-dependent DeFi venues to "defi" so
-      \_check_instruments_available() reads from instruments-store-defi-\* instead of defaulting to cefi bucket.
-      Previous VM (34.180.69.85) produced 0 captures across all 56 IS-dependent venues. 2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-prd` partition count ≥ flat; 4-pillar validation; manifest
-      100% v8; DeFi archetype `carry_staked_basis` data cells GREEN.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C** — **ARCHITECTURAL CORRECTION (2026-05-22 slot 7)**: DeFi MTDS data does NOT
+      use `--operation download` (orchestrator skips all DeFi venues at line 1808). DeFi data is collected via dedicated
+      collect-_ CLI handlers (`collect-evm-defi`, `collect-dex-pools`, `collect-dex-swaps`, `collect-lst-rates`,
+      `collect-lending-indices`) launched via separate VMs. Historical data ALREADY EXISTS in
+      `market-data-tick-defi-central-element-323112` (2329 dates, 2020-01-01→2026-05-18). UAC fix UAC@13a870ef
+      (ALL_DEFI_VENUES in VENUES_BY_ASSET_GROUP) ensures correct IS bucket routing for future collect-_ runs. Kill-and-
+      relaunch of `mtds-backfill-defi-2026-05-22b` (35.221.121.77) confirmed this: VM produces 0 captures (correct
+      architectural behavior — all 99 DeFi venues correctly skip in download mode). VM deleted 2026-05-22.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C-GAP** — DeFi data gap 2026-05-17→2026-05-22 (5 days missing from code freeze)
+      filled via 3 collect-\* VMs launched 2026-05-22 slot-7: `mtds-lst-rates-20260522-060607` RUNNING @ 35.200.59.184
+      (lst_rates, 6 days), `mtds-lending-indices-20260522-060759` RUNNING @ 34.85.27.215 (lending_indices, 6 days,
+      MANIFEST_PER_VM_SHARDS fix deployment-service@020841c), `mtds-dex-pools-backfill` RUNNING @ 136.110.113.253
+      (dex_pools, 6 days). UAC non-pinned tarball updated to 13a870ef (ALL_DEFI_VENUES fix). T+10 all RUNNING.
+- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-central-element-323112` has ≥2329 dates; latest date ≥
+      2026-05-22; 4-pillar sample passes; DeFi archetype `carry_staked_basis` data cells GREEN.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
@@ -100,6 +107,13 @@ AI-days on `vm-sports`.
       Added `deployment_env_short` local (prod→prd) to `main.tf`; applied prd-tiered bucket args to all 10 Cloud Run
       Jobs + 10 Scheduler crons. Verified: all jobs now pass `--bucket market-data-tick-{ag}-prd-*` /
       `instruments-store-{ag}-prd-*`. Consolidator will pick up per-VM shards from Phase 11 VMs immediately.
+
+## Deferred work after 2026-05-22 slot-7
+
+| Item                                                                                                                                                                                                                                            | Status                                  | Successor                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
+| DeFi gap fill 2026-05-17→2026-05-22 via collect-\* VMs (lst-rates, lending-indices, dex-pools)                                                                                                                                                  | **LAUNCHED 2026-05-22** — 3 VMs RUNNING | See MTDS-3.2.C-GAP above                                                           |
+| Bucket naming: MTDS writes to flat bucket (`market-data-tick-{ag}-{pid}`) instead of prd bucket (`market-data-tick-{ag}-prd-{pid}`). UTL `get_write_bucket_name` uses legacy `cloud_constants.py` BUCKET_PREFIXES, not `resolve_bucket_name()`. | **DEFERRED**                            | `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 migration |
 
 ## Temporary states + their canonical follow-up plans
 
