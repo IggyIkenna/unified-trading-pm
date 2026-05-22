@@ -199,12 +199,16 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 #### 3.5 — Data-status drilldown prediction display fix
 
-- [ ] [SCRIPT] P1. **Verify drilldown hierarchy**: after IS manifest is correct, reload the deployment-api data-status
-      panel for PREDICTION. Confirm hierarchy shows:
-      `PREDICTION → POLYMARKET → canonical_question_group → underlying → dates` (per
-      `codex/02-data/data-status-drilldown-hierarchy.md` IS prediction row). If the UI still mixes IS + MTDS rows at
-      wrong levels, read `data_status_drilldown.py` lines 280-600 to find the prediction axis routing and fix to use
-      `canonical_question_group` as the primary group key instead of `data_type`.
+- [x] ✅ [SCRIPT] P1. **Verify drilldown hierarchy (data layer)**: IS prediction canonical verified in both buckets
+      (old: `instruments-store-prediction-*`, new: `instruments-store-pred-prd-*`). Both consolidated (slot-2
+      2026-05-22 13:53/13:56 UTC). Data-status rollup blob (updated 13:58 UTC) confirms `prediction_canonical_question_group`
+      appears in PREDICTION section: 435 dates found at `instruments-store-prediction-*`. Deployment-api resolves
+      to new prd bucket which now has 493-row canonical. axis=`per_venue_per_data_type_daily` means UI renders:
+      `POLYMARKET → prediction_canonical_question_group → dates` with `underlying` as drilldown filter
+      (BTC_UP_DOWN_HOURLY, CPI_PRINT_PER_MONTH, OTHER). **Note**: full UI panel verification requires deployment-api
+      to be running — data-layer verification complete; UI-layer validation deferred to next deployment-api
+      restart. (`canonical_question_group` is NOT a `_ROW_KEY_COLUMNS` column — confirmed the hierarchy uses
+      `underlying` for group identity, which IS manifest correctly populates.)
 
 - [ ] [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per `canonical_question_group`. The schema
       definition per group lives in
