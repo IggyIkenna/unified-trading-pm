@@ -82,6 +82,23 @@ done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"te
 - Full QG: 3570+ tests, 0 failures, exit code 0 (verified 3× independently)
 - MDPS TradFi VM running (mdps-backfill-tradfi-20260522-051203). CeFi/DeFi/Pred gated on MTDS verify (monitoring).
 
+**[2026-05-22 ~10:00 UTC] slot-6 MDPS wave 2 progress** — ref `mdps_backfill_phase3_2026_05_22.md`
+
+- **DeFi arch gap RESOLVED** (PM@48befb483): confirmed features-onchain reads `lst_rates`/`dex_pool_state`/
+  `lending_indices` directly from specialized buckets — bypass types, no MDPS. MDPS DeFi scope = `dex_swaps` +
+  `book_snapshot_5`/`fx_rates`/`market_state`/`liquidity` only. Code evidence: `dependency_checker.py` +
+  `data_loader.py`
+- **3 unnecessary VMs deleted**: `mdps-backfill-defi-dex-pools-20260522-094538`,
+  `mdps-backfill-defi-lending-indices-20260522-094523`, `mdps-backfill-defi-lst-rates-20260522-094503` (were producing
+  bars for bypass-type data that features-onchain never reads via MDPS)
+- **Main DeFi MDPS VM kept**: `mdps-backfill-defi-20260522-095053` continues for `dex_swaps` (at 2020-02-09, ~39h ETA)
+- **Issue docs filed**: `mdps_defi_multi_bucket_arch_gap_2026_05_22.md` (resolved) +
+  `mdps_tradfi_schema_contract_gaps_2026_05_22.md` (combo/UNKNOWN/futures_chain NaN bars, VIX unblocked)
+- **Codex updated**: `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 2 now documents DeFi bypass types table
+  (PM@d21ec4f2b)
+- **Gate status**: CeFi gate (MTDS-3.2.A-V) — VM at 2024-01-01, ~2-5 day ETA. Pred gate (MTDS-3.2.E-V) — VM at
+  2025-12-13, ~3 day ETA. CeFi MDPS + Pred MDPS cannot launch until respective gates clear.
+
 ## [slot-1-main → slot-6] 2026-05-22 — P1 Codex audit Phases 1+2 (P0 items first)
 
 **Plan**: `plans/active/codex_plan_audit_differential_2026_05_22.md`
@@ -170,16 +187,17 @@ yet shipped per plan. Once slot 7 ships Phase 6, ping slot 6 to unblock Phase 7 
 
 ## 2026-05-22 — [slot-4 → slot-6] Path B complete — Phase 8 unblocked
 
-**From**: slot-4 ikenna  
-**Plan ref**: `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md`
+**From**: slot-4 ikenna **Plan ref**: `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md`
 
 All Path B phases done:
+
 - Phase 3 (features-service `performance_features/` scaffold): ✅ uac@72395499, features-service@2a7af305
 - Phase 6 (trading-agent-service scaffold): ✅ trading-agent-service@119fa74
 - Phase 6.5 (backtest-replay infrastructure): ✅ uac@20567882, trading-agent-service@33a7ae9
 - Phase 7 (CI hygiene): ✅ workspace-qg CI run 26275695242 passed 2026-05-22T07:55:20Z
 - Phase 8 (Codex SSOT + plan manifest): ✅ PM@d7964d0d (already flipped)
 
-**Action**: Phase 8 is already done (PM@d7964d0d). No further action needed from slot-6 for this plan unless you want to do a final master-plan flip. All 8 phases GREEN.
+**Action**: Phase 8 is already done (PM@d7964d0d). No further action needed from slot-6 for this plan unless you want to
+do a final master-plan flip. All 8 phases GREEN.
 
 — slot-4
