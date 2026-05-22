@@ -218,17 +218,23 @@ reporter.report_order_submission(
 
 Phase 3 wires compliance reporting through the full observability stack:
 
-| Step                     | Owner                                | Mechanism                                          |
-| ------------------------ | ------------------------------------ | -------------------------------------------------- |
-| Event emission           | execution-service / strategy-service | `log_event()` via `unified_trading_library.events` |
-| PubSub propagation       | alerting-service                     | Subscribes to compliance event topic               |
-| Prometheus counter       | execution-service                    | `compliance_events_emitted_total{event_type=...}`  |
-| Audit log retention      | GCS (via DataSink)                   | 7-year retention bucket policy                     |
-| ARM integration (future) | compliance-reporting-service         | Dedicated service (not yet built)                  |
+| Step                           | Owner                                | Mechanism                                          |
+| ------------------------------ | ------------------------------------ | -------------------------------------------------- |
+| Event emission                 | execution-service / strategy-service | `log_event()` via `unified_trading_library.events` |
+| PubSub propagation             | alerting-service                     | Subscribes to compliance event topic               |
+| Prometheus counter             | execution-service                    | `compliance_events_emitted_total{event_type=...}`  |
+| Audit log retention            | GCS (via DataSink)                   | 7-year retention bucket policy                     |
+| ARM integration (post-cutover) | compliance-reporting-service         | Dedicated service (not yet built)                  |
 
 ---
 
-## Future Work
+## Post-Cutover Work
+
+> **[DELTA 2026-05-22]** **Current state:** The event emission infrastructure (`ComplianceReporter`,
+> `StrategyComplianceReporter`) is shipped in execution-service and strategy-service. The downstream ARM integration,
+> EMIR reporting, 7-year retention enforcement, and FCA SUP 17 submission path are NOT yet built. **Planned delta:**
+> These are post-cutover items with no active plan — they become schedulable once May-23 live DeFi is stable.
+> **Target:** File a wrapper plan in `plans/active/` before first live trade touches UK-regulated instruments.
 
 - **ARM integration**: Wire `TRADE_REPORTED_MIFID` and `TRANSACTION_REPORTED_FCA` events to an actual Approved Reporting
   Mechanism via a dedicated compliance-reporting-service.

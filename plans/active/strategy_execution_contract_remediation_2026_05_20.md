@@ -432,6 +432,13 @@ instructions
 
 ---
 
+## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
+
+- [ ] [AGENT] P3. Fix F401 unused imports in `execution-service/scripts/run_execution_alpha_measurement.py` (`os`,
+      `BenchmarkFillInput`) and `execution-service/scripts/run_execution_alpha_parallel.py` (`json`, `tempfile`). Run
+      `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue:
+      `plans/archive/issues/unused_import_audit_2026_05_18.md`.
+
 ## Temporary states + their canonical follow-up plans
 
 - **`validate_batch_completeness` warn path (A5)**: emitting `PROCESSING_INCOMPLETE` event is the canonical pattern per

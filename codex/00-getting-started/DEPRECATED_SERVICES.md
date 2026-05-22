@@ -51,6 +51,14 @@ The following services have been removed or consolidated as part of the post-tra
 
 ## Planned Deprecation — 2026-05-23 Consolidation (IN-FLIGHT)
 
+> **[DELTA 2026-05-22]** **Current state:** As of 2026-05-22 (one day before cutover), the consolidations below are
+> still IN-FLIGHT — no Phase 7 archive has landed. **Planned delta:** Phase 6 parity + Phase 7 archive are the
+> outstanding gate items per `plans/active/strategy_repo_consolidation_2026_05_19.md` and
+> `plans/active/ml_repo_consolidation_2026_05_19.md`. If Phase 6 parity slips past 2026-05-23, the entries below
+> auto-flip to `BLOCKED-CUTOVER` (source repos remain alive un-archived; archive deferred post-cutover per the
+> soft-freeze rule). **Target:** all 5 source repos archived; sub-packages canonical in `strategy-service/` and new
+> `ml-service/` respectively.
+
 The following 5 repos are being consolidated into 2 target repos pre-2026-05-23 cutover, mirroring the features-service
 precedent (2026-05-08).
 

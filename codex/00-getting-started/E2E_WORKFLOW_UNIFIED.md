@@ -16,6 +16,15 @@ scope: [engineer]
 - **Complete vision (Google pitch):**
   [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html)
 
+> **[DELTA 2026-05-22]** **Current state:** This document was last updated 2026-02-13 and describes the Feb 2026 "Level
+> 1" state (semi-automated, human-triggered). The automation level targets (Level 2 = Q2 2026, Level 3 = Q3 2026, Level
+> 4 = Q4 2026) are now current or past dates. **Planned delta:** The agent-orchestrator (`agent-orchestrator/`) is the
+> shipped answer to Level 2/3 orchestration — it is a live FastAPI + Vite dashboard running at
+> `https://agent-orchestrator.odum-research.com` with 8-slot × 2-operator fan-out (see
+> `codex/04-architecture/agent-orchestrator-overview.md`). The COD/service-spec workflow described here predates the
+> current epic-based worktree model. **Target:** This doc is legacy orientation material; for current workflow see
+> `codex/12-agent-workflow/README.md` and `CLAUDE.md § Daily Work-Split Process`.
+
 ## Current State (Feb 2026) - What We're Working On TODAY
 
 ### Focus: COD E2E + Service Specs

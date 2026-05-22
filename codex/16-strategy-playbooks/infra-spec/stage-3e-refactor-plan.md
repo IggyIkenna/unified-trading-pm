@@ -54,7 +54,13 @@ Each item below has:
 
 ---
 
-## 1. G1 — now (ships in the next 4–6 weeks)
+## 1. G1 — post-cutover (originally "4–6 weeks from 2026-04-19"; now post-May-23)
+
+> **[DELTA 2026-05-22]** **Current state:** The G1 items below were written 2026-04-19 with a "4–6 week" target (implied
+> ~2026-05-30). As of 2026-05-22 the May-23 DeFi live gate takes precedence; none of the G1 items have shipped yet.
+> **Planned delta:** G1 items are post-cutover scope. The derivation engine (Stage 3C) and phase-unification UI refactor
+> (1.1) are tracked under `plans/epics/deployment_and_user_management_master.md` (UI) and
+> `plans/epics/strategy_master.md` (backend). **Target:** G1 items schedulable once May-23 live DeFi is running ≥7 days.
 
 ### 1.1 Phase-unification refactor — no forked research/paper/live UIs
 

@@ -383,7 +383,13 @@ async def rebalance_inventory(target_delta, urgency):
 - **Perps:** Established markets, reliable liquidity
 - **Sports:** Existing infrastructure, quick win
 
-### Future: Spot Crypto, Futures
+### post-cutover: Spot Crypto, Futures
+
+> **[DELTA 2026-05-22]** **Current state:** Market making is not in the May-23 live DeFi scope. The May-23 archetypes
+> are `carry_staked_basis` and `arbitrage_price_dispersion` (see `codex/09-strategy/architecture-v2/archetypes/`).
+> Market making (options vol, perps funding, sports) is a post-cutover workstream tracked in
+> `plans/epics/strategy_master.md`. **Planned delta:** No active plan gates this; it becomes schedulable once May-23
+> live DeFi is running ≥7 days. **Target:** Market-making archetypes per `plans/epics/strategy_master.md`.
 
 - **Spot crypto:** Lower margin, higher volume (deferred to Phase 2)
 - **Futures:** TradFi futures (CME, ICE) when TradFi strategies prioritized
@@ -556,27 +562,33 @@ market_making:
 
 ## Implementation Phases
 
-### Phase 1: Basic Market Making (Q2 2026)
+> **[DELTA 2026-05-22]** **Current state:** None of the phases below have shipped as of 2026-05-22. Market making is
+> post-cutover scope. The implementation phase calendar (Q2/Q3/Q4 2026) was written in Feb 2026 before the May-23 DeFi
+> gate was codified; those quarter targets are now effectively post-cutover placeholders, not committed dates. **Planned
+> delta:** `plans/epics/strategy_master.md` will sequence the market-making phases once the May-23 live DeFi gate
+> clears. **Target:** Phase 1 (options market making) earliest Q3 2026.
+
+### Phase 1: Basic Market Making (post-cutover)
 
 - Options market making (BTC, ETH)
 - Time-based quote refresh
 - Single-venue quoting
 - Linear inventory skew
 
-### Phase 2: Advanced Pricing (Q3 2026)
+### Phase 2: Advanced Pricing (post-cutover)
 
 - Event-driven quote refresh (underlying moves)
 - Price-driven updates (strategy repricing)
 - Nonlinear inventory skew
 - Correlation-based Greeks netting
 
-### Phase 3: Multi-Venue & Rebalancing (Q3 2026)
+### Phase 3: Multi-Venue & Rebalancing (post-cutover)
 
 - Multi-venue quoting
 - Cross-venue position tracking
 - Aggressive rebalancing when limits exceeded
 
-### Phase 4: Perps & Sports (Q4 2026)
+### Phase 4: Perps & Sports (post-cutover)
 
 - Perps market making (funding rate strategies)
 - Sports betting market making (Betfair, Pinnacle)
