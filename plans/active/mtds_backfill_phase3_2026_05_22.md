@@ -90,10 +90,9 @@ AI-days on `vm-sports`.
 
 ## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
 
-- [ ] [AGENT] P3. Fix F401 unused imports in `market-tick-data-service/tests/unit/test_drift_solana_ws_connector.py`
-      (`json`) and `market-tick-data-service/tests/unit/test_kraken_futures_ws_connector.py` (`json`). Run
-      `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue:
-      `plans/archive/issues/unused_import_audit_2026_05_18.md`.
+- [x] ✅ [AGENT] P3. Fix F401 unused imports — `ruff check --select F401` shows "All checks passed!" on both files. No
+      `import json` present in test_drift_solana_ws_connector.py or test_kraken_futures_ws_connector.py. Already clean —
+      no fix needed. 2026-05-22.
 
 ## Pre-launch blocker (P0 — gate before any Phase 11 VM writes per-VM shards to prd buckets)
 
