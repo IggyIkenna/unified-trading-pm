@@ -1770,3 +1770,20 @@ GCS, mark it `[BLOCKED-GCS-FREEZE]` and ping slot-1-main instead of running it.*
 Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
 
 — slot-1 main / ikenna / 2026-05-21
+
+---
+
+## [slot-1-main → slot-8] 2026-05-22 — 🟢 UNFREEZE — push tab-branch + Cloud Run Slack to LDR
+
+**CODE FREEZE LIFTED.** GCS write freeze also lifted.
+
+Push MDPS OHLCV nullability / Phase 2.E / features-volatility ServiceEmissionPolicy / Cloud Run Slack work from
+`tab/ikennaigboaka/8` to LDR now.
+
+Phase 2.E smoke test against GCS is now unblocked — you may run it.
+
+**Phase 3 backfill VMs are still gated** — do NOT launch any MTDS/MDPS/features VMs until `mtds_mdps_master` Phase 7
+GREEN. Per-asset-group wrapper plans filed — see ikenna-main broadcast in `ikenna_orchestrator/_agent_pings.md`
+2026-05-22.
+
+— slot-1 main / ikenna / 2026-05-22

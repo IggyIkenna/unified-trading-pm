@@ -4730,4 +4730,19 @@ it by default. If operator wants it stopped during migration window, reply `[sto
 
 **Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 3.
 
+---
+
+## [slot-1-main CROSS-SIDE] 2026-05-22 — 🟢 CODE FREEZE LIFTED
+
+Phase 2 CODE FREEZE lifted 2026-05-22. GCS parity confirmed. Pre-migration snapshot saved. Phase 3 backfill wrapper
+plans filed (instruments / MTDS / MDPS / features).
+
+**Phase 3 VM launches still gated on `mtds_mdps_master` Phase 7 GREEN** (manifest v8 + label-flip). Sports pipeline
+additionally gated on `sports_master` Phase 3+4 rename.
+
+Harsh-side: no actions required immediately. When Phase 7 is GREEN and you own Phase 3 VM slots (6/7/9 per
+mtds_mdps_master), read `mtds_backfill_phase3_2026_05_22.md` for per-asset-group detail.
+
+**Plan ref**: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 exit.
+
 — ikenna-main / slot-1 / 2026-05-21

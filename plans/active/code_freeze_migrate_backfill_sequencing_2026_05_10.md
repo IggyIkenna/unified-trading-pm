@@ -1033,18 +1033,24 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 ### Phase 3.1 — Instruments-service catalogue forward-fill
 
-- [ ] [PLAN] P0. **`plans/epics/instruments_master.md`** — Instruments-service live activation across 5 asset_groups.
-      Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT, Sports trigger-driven (daily fixture
-      re-poll + season-roll + transfer-window + weather), Predictions 15-min market-discovery. Cloud Scheduler driver +
-      new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F (live activation) starts after Phase 2 freeze;
-      until then stays in Phase A-E (preflight DAG).
+**Per-asset-group wrapper plan**: `plans/active/instruments_backfill_phase3_2026_05_22.md`
+(`parent_epic: instruments_master`, `assigned_vm: vm-cefi`).
+
+- [ ] [PLAN] P0. **`instruments_backfill_phase3_2026_05_22.md`** — 5 per-ag phases (CeFi/DeFi/TradFi/ Sports/Pred).
+      Sports gate: `sports_master` Phase 3+4 rename must ship first. TradFi: 15-min Polygon/Yahoo. CeFi: 15-min CCXT.
+      Predictions: 15-min market-discovery. Cloud Scheduler driver. Phase 3 entry: `instruments_master` Phase A-E
+      preflight GREEN first.
 
 ### Phase 3.2 — MTDS multi-venue backfill VM relaunch
 
-- [ ] [SCRIPT] P0. **MTDS-3.2.A** — Relaunch CeFi backfill VMs (15 venues — Bybit / Binance / OKX / Bitfinex / Bitget /
-      Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master` Phase 1A). Per-VM shard isolation enforced
-      (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget VM
-      launches" HARD RULE.
+**Per-asset-group wrapper plan**: `plans/active/mtds_backfill_phase3_2026_05_22.md` (`parent_epic: mtds_mdps_master`,
+`assigned_vm: vm-ml`). Replaces stale `defi_upstream_46day_full_backfill_2026_05_16.md` reference (that file never
+existed — PM history confirms no deleted/renamed match). DeFi backfill detail now lives in `mtds_backfill_phase3`.
+**Phase 7 gate HARD**: do not launch any MTDS backfill VM until Phase 7 (manifest v8 + label-flip) GREEN — every new row
+must land at v8 + typed reason.
+
+- [ ] [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 1 — CeFi (MTDS-3.2.A): 15 venues
+      (Bybit/Binance/OKX/Bitfinex/Bitget/Kraken/Deribit/Hyperliquid/Aster). `MANIFEST_PER_VM_SHARDS=true`.
 - [x] ✅ **[SCRIPT] P0. MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — TradFi backfill VMs relaunched per
       `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 (OHLCV-only MVP scope per operator direction
       2026-05-15). **63 tradfi-bf VMs launched** spanning CME (futures 6 roots × 8 years + ES.OPT 11-cluster × 8
@@ -1053,28 +1059,31 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
       rate**. 4-pillar sample validation 18/18 green. Launchers at `deployment-service@faa7970` + `--bucket` validator
       override at `market-tick-data-service@f1621c0`. ICE held pending operator decision on roots
       (`tradfi-bf-ice-ohlcv-1m.sh` scaffolding shipped, `ICE_ROOTS=()`).
-- [ ] [SCRIPT] P0. **MTDS-3.2.C** — Relaunch DeFi backfill VMs (Pyth Solana + Chainlink EVM oracle prices + DEX-perp
-      forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master` Phase 9).
-- [ ] [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master` Phase 1;
-      OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
-- [ ] [SCRIPT] P0. **MTDS-3.2.E** — Relaunch Predictions backfill VMs (Polymarket + Kalshi per `predictions_master`
-      Phase 1; canonical_question_group rekey already in Phase 2.2).
+- [ ] [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 3 — DeFi (MTDS-3.2.C): Pyth Solana + Chainlink EVM +
+      DEX-perp (Hyperliquid/Aster/Lighter/Pacifica/Extended) + LST APR feeds. Gate: Phase 7 GREEN. _(Replaces
+      never-created `defi_upstream_46day_full_backfill_2026_05_16.md`.)_
+- [ ] [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 4 — Sports (MTDS-3.2.D): af/fs/sfi/us. **BLOCKED**:
+      `sports_master` Phase 3+4 (`data_available_at` → `available_at` rename) must ship first. Open items in
+      `sports_master` epic: UAC/UTL/IS/features-sports 4-repo rename commits + QG + smoke + writegate Phase 2.C unblock.
+      Assign to `vm-sports`.
+- [ ] [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 5 — Predictions (MTDS-3.2.E): Polymarket + Kalshi.
+      `canonical_question_group` rekey already in Phase 2.2.
 
 ### Phase 3.3 — MDPS bar reprocessor relaunch
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.A** — Relaunch MDPS reprocessors per asset_group, reading from migrated MTDS shards. Use
-      Phase 1.C live-pipeline in-process MDPS↔features handoff if features-repo-consolidation Phase 7 done; else fall
-      back to standalone MDPS VMs.
-- [ ] [SCRIPT] P0. **MDPS-3.3.B** — Verify zero 1440-NaN-bar regressions via post-launch sampling (10 random
-      instrument-days; assert OHLC populated OR catalog says instrument-not-listed; per CLAUDE.md "Honest absence vs
-      fake placeholders" rule).
+**Per-asset-group wrapper plan**: `plans/active/mdps_backfill_phase3_2026_05_22.md` (`parent_epic: mtds_mdps_master`,
+`assigned_vm: vm-ml`). Gate: each ag gated on MTDS ag-verification.
+
+- [ ] [PLAN] P0. **`mdps_backfill_phase3_2026_05_22.md`** — 5 per-ag phases + NaN-bar verification per phase. In-process
+      MDPS↔features handoff if `features_repo_consolidation` Phase 7 done.
 
 ### Phase 3.4 — Features-service compute relaunch
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.A** — Relaunch consolidated features-service compute (single repo per Phase 1.C
-      consolidation). All 5 asset_groups + cross-instrument calculators. LookaheadBiasError strict-mode green.
-- [ ] [SCRIPT] P0. **FEAT-3.4.B** — Verify per-feature-family output shapes match Phase 1.C schema declarations;
-      post-launch sampling 100 random feature rows per family.
+**Per-asset-group wrapper plan**: `plans/active/features_backfill_phase3_2026_05_22.md`
+(`parent_epic: features_and_ml_master`, `assigned_vm: vm-ml`). Gate: each ag gated on MDPS ag-verification.
+
+- [ ] [PLAN] P0. **`features_backfill_phase3_2026_05_22.md`** — 6 phases (CeFi/DeFi/TradFi/Sports/Pred + cross-cutting
+      calendar/xinstrument). LookaheadBiasError strict-mode. 100-row sample per family.
 
 ### Phase 3.5 — ML training + inference relaunch
 

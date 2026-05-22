@@ -1224,3 +1224,24 @@ only. If any item requires a live smoke test against GCS, mark it `[BLOCKED-GCS-
 Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
 
 — slot-1 main / ikenna / 2026-05-21
+
+---
+
+## [slot-1-main → slot-2] 2026-05-22 — 🟢 UNFREEZE — push tab-branch to LDR now
+
+**CODE FREEZE LIFTED.** GCS write freeze also lifted — live GCS writes are allowed again.
+
+Push your UAC Protocol / `AvailabilityRule` / writegate UAC items / codex audit work from `tab/ikennaigboaka/2` to LDR
+now.
+
+**Phase 3 backfill VMs are still gated** — do NOT launch any MTDS/MDPS/features VMs until `mtds_mdps_master` Phase 7
+(manifest v8 label-flip) is GREEN. Per-asset-group backfill plans are now filed:
+
+- `plans/active/instruments_backfill_phase3_2026_05_22.md` (instruments-service, vm-cefi)
+- `plans/active/mtds_backfill_phase3_2026_05_22.md` (MTDS, vm-ml)
+- `plans/active/mdps_backfill_phase3_2026_05_22.md` (MDPS, vm-ml)
+- `plans/active/features_backfill_phase3_2026_05_22.md` (features, vm-ml)
+
+Sports-gated items (MTDS-3.2.D / FEAT-3.4.Sports) remain blocked on `sports_master` Phase 3+4.
+
+— slot-1 main / ikenna / 2026-05-22

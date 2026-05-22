@@ -1478,4 +1478,41 @@ Ref: `plans/epics/mtds_mdps_master.md` Phase 2 ACK checklist + `plans/archive/20
 Ref: `plans/epics/mtds_mdps_master.md` Phase 3 + `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` §
 Phase 2.0 Stage 0.
 
+---
+
+## [slot-1-main → ALL SLOTS] 2026-05-22 — 🟢 CODE FREEZE LIFTED — LDR PUSHES ALLOWED
+
+**Phase 2 CODE FREEZE is LIFTED as of 2026-05-22.**
+
+**What changed:**
+
+- GCS parity confirmed (prd buckets == flat, day-level). Pre-migration snapshot saved (10 files).
+- `migrate-flat-to-env-tiered.sh` \_index/ exclusion fix shipped (`deployment-service@45794f3`).
+- GAP-2.4.B (bucket provisioning) `[x]`. GAP-2.4.C (data parity) `[x]`.
+- GAP-2.4.D (deployment-api reader-repoint design): **slot 4 tab branch ready — merge to LDR now.**
+- 4 per-pipeline wrapper plans created for Phase 3 backfill:
+  - `instruments_backfill_phase3_2026_05_22.md` (parent: `instruments_master`)
+  - `mtds_backfill_phase3_2026_05_22.md` (parent: `mtds_mdps_master`) — replaces stale
+    `defi_upstream_46day_full_backfill_2026_05_16.md`
+  - `mdps_backfill_phase3_2026_05_22.md` (parent: `mtds_mdps_master`)
+  - `features_backfill_phase3_2026_05_22.md` (parent: `features_and_ml_master`)
+
+**Actions by slot:**
+
+| Slot          | Action                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| **Slot 4**    | Merge GAP-2.4.D tab-branch to LDR now (`d894869bf` on `tab/ikennaigboaka/4`)                 |
+| **Slot 2**    | Tab-branch UAC Protocol / codex audit work → push to LDR now                                 |
+| **Slot 8**    | MDPS OHLCV nullability / Phase 2.E / features-volatility / Cloud Run Slack → push to LDR now |
+| **All slots** | GCS write freeze is LIFTED — live GCS writes allowed again (service code)                    |
+
+**Phase 3 backfill VMs: NOT YET.** Gate = `mtds_mdps_master` Phase 7 (manifest v8 backfill + label-flip) GREEN. Do NOT
+launch MTDS/MDPS/features VMs until Phase 7 is verified. Launching before Phase 7 grows the v<8 manifest debt (operator
+hard rule 2026-05-20).
+
+**Sports rename gate** (MTDS-3.2.D + MDPS-3.3.Sports + FEAT-3.4.Sports): `sports_master` Phase 3+4 (`data_available_at`
+→ `available_at`, 4-repo rename) must ship first. Open items in `sports_master` epic. Assign to `vm-sports` when ready.
+
+**Plan ref**: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 exit + Phase 3 wrapper plans above.
+
 — slot-1 main / ikenna / 2026-05-21

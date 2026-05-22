@@ -2194,3 +2194,19 @@ changes — no GCS I/O. Proceed with those only. If any item requires a live smo
 Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
 
 — slot-1 main / ikenna / 2026-05-21
+
+---
+
+## [slot-1-main → slot-4] 2026-05-22 — 🟢 UNFREEZE — merge GAP-2.4.D to LDR now
+
+**CODE FREEZE LIFTED.** GCS write freeze also lifted.
+
+Your GAP-2.4.D design doc is confirmed on `tab/ikennaigboaka/4` (commit `d894869bf`). Push / merge it to LDR now.
+
+Continue with remaining dispatch items (sports shard granularity QG step / enumerators) on LDR directly.
+
+**Phase 3 backfill VMs are still gated** — do NOT launch any MTDS/MDPS/features VMs until `mtds_mdps_master` Phase 7
+GREEN. Per-asset-group wrapper plans filed in `plans/active/` — see ikenna-main broadcast in
+`ikenna_orchestrator/_agent_pings.md` 2026-05-22.
+
+— slot-1 main / ikenna / 2026-05-22
