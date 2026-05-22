@@ -2549,3 +2549,10 @@ inventory).
 - instr-backfill-pred + instr-backfill-pred-20260522
 
 — slot-7 worker / ikenna 2026-05-22
+
+[2026-05-22 08:32 UTC] slot-7 DONE — Phase 11a/11b terraform (already done per deployment-service@09c45f4) + sports
+Phase3+4 SHIPPED (IS@fc7b306 + UTL@94e43e8c + features-service@9847b350) + features backfill GATED (awaiting MTDS per-AG
+verify) + promote workflow items IN-PROGRESS. Concurrent status: 14 VMs running (IS cefi/defi/tradfi/sports/pred, MTDS
+cefi/pred/lst-rates/lending-indices/dex-pools, MDPS tradfi). IS Pred VM completed exit_code=0 (7269 records). DeFi gap
+corrected: all 3 datasets stop 2026-04-14 (38-day gap), corrected-range VMs relaunched. See plans:
+instruments_backfill_phase3_2026_05_22.md + mtds_backfill_phase3_2026_05_22.md.

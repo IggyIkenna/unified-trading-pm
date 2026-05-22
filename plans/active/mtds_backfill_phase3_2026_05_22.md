@@ -66,13 +66,13 @@ IS that plan.
       (ALL_DEFI_VENUES in VENUES_BY_ASSET_GROUP) ensures correct IS bucket routing for future collect-_ runs. Kill-and-
       relaunch of `mtds-backfill-defi-2026-05-22b` (35.221.121.77) confirmed this: VM produces 0 captures (correct
       architectural behavior — all 99 DeFi venues correctly skip in download mode). VM deleted 2026-05-22.
-- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C-GAP** — DeFi data gap 2026-05-17→2026-05-22 (5 days missing from code freeze).
-      **CORRECTED 2026-05-22 slot-7**: Original `mtds-lst-rates-20260522-060607` had NO `VM_OPERATION` metadata
-      (defaulted to `download` → 0 records). Deleted + relaunched as `mtds-lst-rates-20260522-081259` @ 34.84.35.94
-      using `launch-mtds-lst-rates-backfill-vm.sh` (correct `VM_OPERATION=collect-lst-rates`). Date range extended to
-      **2026-04-15→2026-05-22** (38-day gap; last LST rate was 2026-04-14). `mtds-lending-indices-20260522-060759` has
-      correct `VM_OPERATION=collect-lending-indices` — RUNNING, bootstrapping. `mtds-dex-pools-backfill` has
-      `VM_OPERATION=collect-dex-pools` — RUNNING. T+10 verification pending.
+- [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.C-GAP** — DeFi data gap: all 3 datasets (lst_rates, lending_indices, dex_pools)
+      stop at **2026-04-14** (38-day gap, not 5-6 days). **CORRECTION ROUND 2 (2026-05-22 slot-7)**: (1)
+      `mtds-lst-rates-20260522-081259` @ 34.84.35.94 RUNNING, `VM_OPERATION=collect-lst-rates`, 2026-04-15→2026-05-22.
+      (2) `mtds-lending-indices-20260522-060759` had wrong start date (2026-05-17). Deleted. Relaunched as
+      `mtds-lending-indices-20260522-082710` @ 35.200.55.185, `VM_OPERATION=collect-lending-indices`,
+      **2026-04-15→2026-05-22**. (3) `mtds-dex-pools-backfill` had wrong start date (2026-05-17). Deleted. Relaunched @
+      136.110.98.16, `VM_OPERATION=collect-dex-pools`, **2026-04-15→2026-05-22**. All 3 VMs RUNNING. T+10 pending.
 - [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-central-element-323112` has ≥2329 dates; latest date ≥
       2026-05-22; 4-pillar sample passes; DeFi archetype `carry_staked_basis` data cells GREEN.
 
