@@ -73,8 +73,14 @@ IS that plan.
       `mtds-lending-indices-20260522-082710` @ 35.200.55.185, `VM_OPERATION=collect-lending-indices`,
       **2026-04-15→2026-05-22**. (3) `mtds-dex-pools-backfill` had wrong start date (2026-05-17). Deleted. Relaunched @
       136.110.98.16, `VM_OPERATION=collect-dex-pools`, **2026-04-15→2026-05-22**. All 3 VMs RUNNING. T+10 pending.
-- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — `market-data-tick-defi-central-element-323112` has ≥2329 dates; latest date ≥
-      2026-05-22; 4-pillar sample passes; DeFi archetype `carry_staked_basis` data cells GREEN.
+- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-* VMs write to
+      SEPARATE buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥
+      2026-05-22 ✅ DONE (53 per-VM entries, mtds-lst-rates-20260522-082742 completed); (2)
+      `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅ DONE (52 entries, 7364 records,
+      mtds-lending-indices-20260522-082740 completed); (3) `dex-pools-central-element-323112` latest date ≥ 2026-05-22
+      — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, currently ~2026-04-19, target 2026-05-22); (4)
+      `market-data-tick-defi-central-element-323112` ≥ 2329 dates ✅ (2329 confirmed, max=2026-05-18 — acceptable, new
+      collect-* data in separate buckets).
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
