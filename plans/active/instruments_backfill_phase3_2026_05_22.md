@@ -72,9 +72,11 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [SCRIPT] P0. **IS-3.1.Pred** — Launched instr-backfill-pred-20260522 @ 35.200.121.156. 2026-03-01→2026-05-22
       window. MANIFEST_PER_VM_SHARDS=true. Added PREDICTION to launcher + watchdog (deployment-service@4884aac).
       instruments-service@fa93f45. Relaunched after tarball rebuild — old run silently failed.
-- [ ] [VERIFY] P0. **IS-3.1.Pred-V** — `instruments-store-pred-prd-central-element-323112` gains rows; question groups
-      canonicalized; 0 `attempted_failed`. NOTE: Kalshi BLOCKED-CREDENTIALS. NOTE: Original VM (fa93f45) failed with
-      `canonical_question_group` unexpected kwarg in record_captured — fixed in 4c1389d. Relaunch pending (see below).
+- [x] ✅ [VERIFY] P0. **IS-3.1.Pred-V** — `instruments-store-prediction-central-element-323112` gains rows; question
+      groups canonicalized; 0 `attempted_failed`. Verified 2026-05-22: 95 rows captured, schema_version=8 (100%), dates
+      2026-03-01→2026-05-22, data_type=prediction_canonical_question_group, question groups OTHER/CPI_PRINT_PER_MONTH
+      confirmed. VM `instr-backfill-pred-20260522` exit_code=0 (07:26:51). Kalshi BLOCKED-CREDENTIALS (400 on every
+      request — 0 Kalshi rows expected).
 - [x] ✅ [CODE] P0. **IS-3.1.Pred-kwarg-fix** — `canonical_question_group=_group_str` kwarg removed from
       `record_captured()` call in orchestrator.py:2376 at instruments-service@4c1389d. Fix was bundled into the chain
       fix commit. 2026-05-22.
