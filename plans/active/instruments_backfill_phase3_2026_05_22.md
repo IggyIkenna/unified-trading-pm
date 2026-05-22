@@ -118,3 +118,19 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
   directly.
 - All 12 IS VMs RUNNING 2026-05-22 with instruments-service@7d9a737 (both chain fix + pred-kwarg fix). T+10min verify
   pending.
+
+## IS prd bucket migration (flat→prd) — slot 5, 2026-05-22
+
+IS VMs write to legacy flat buckets (bucket SSOT not yet canonicalised for IS). Manifest consolidator targets prd
+buckets. Manual copy performed this session:
+
+- IS CeFi prd: `instruments-store-cefi-prd-central-element-323112` — 2611 days, max=2026-05-22 ✅. Copied 18 days
+  (2026-05-05→2026-05-22) + per-VM shards for instr-backfill-cefi-{1,2,3}-20260522.parquet.
+- IS TradFi prd: `instruments-store-tradfi-prd-central-element-323112` — 2334 days, max=2026-05-22 ✅. Copied 18 days
+  (2026-05-05→2026-05-22) + per-VM shard for instr-backfill-tradfi-20260522.parquet.
+- IS DeFi prd: `instruments-store-defi-prd-central-element-323112` — copying in progress (9 days 2026-05-05→2026-05-22 +
+  per-VM shard). Will reach max=2026-05-22 on completion.
+- IS Pred prd: `instruments-store-pred-prd-central-element-323112` — 574 days, shard
+  instr-backfill-pred-20260522.parquet copied. Availability_index updated: 4035 rows, 890 captured ✅.
+
+Long-term fix: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (IS bucket resolver migration).
