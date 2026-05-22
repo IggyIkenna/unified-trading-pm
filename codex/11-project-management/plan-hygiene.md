@@ -48,7 +48,11 @@ All scripts live in `unified-trading-pm/scripts/plan-hygiene/`.
 
 ### Required epic frontmatter fields
 
-`name` · `title` · `priority` · `status`
+`name` · `title` · `priority` · `status` · `assigned_vm` · `tier`
+
+> **[DELTA 2026-05-22]** Added `assigned_vm` and `tier` to required epic fields to match CLAUDE.md ("required
+> `assigned_vm` + `tier` + `priority` frontmatter") — the codex previously listed only `name/title/priority/status`.
+> `check_frontmatter.sh` must enforce all 6 fields.
 
 ### Deprecated fields (plans)
 

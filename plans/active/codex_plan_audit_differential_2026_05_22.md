@@ -127,13 +127,30 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Group D — L3-L5 Meta Epics
 
-- [ ] [READ+FIX] P1. `infrastructure_master.md` ↔ `codex/05-infrastructure/` — VM tarball, bucket naming, zombie
-      watchdog, lifecycle classes
-- [ ] [READ+FIX] P1. `batch_live_symmetry_master.md` ↔ `codex/04-architecture/batch-live-architecture.md`
-- [ ] [READ+FIX] P1. `deployment_and_user_management_master.md` ↔ `codex/03-deployment/`
-- [ ] [READ+FIX] P2. `observability_master.md` ↔ `codex/03-observability/`
-- [ ] [READ+FIX] P2. `orchestrator_master.md` ↔ `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`
-- [ ] [READ+FIX] P2. `plan_hygiene_master.md` ↔ `codex/11-project-management/plan-hygiene.md`
+- [x] [READ+FIX] P1. `infrastructure_master.md` ↔ `codex/05-infrastructure/` — VM tarball, bucket naming, zombie
+      watchdog, lifecycle classes — **DONE 2026-05-22**: Added `## Codex SSOTs` table to epic (was missing; only had
+      `## Cross-references`). All 6 referenced docs verified: vm-tarball-deployment.md (lifecycle_class + T+10min +
+      Pattern A/B ✓), manifest-consolidator-ssot.md (Cloud Run runtime ✓), gcs-object-operations.md ✓,
+      launcher-script-ssot.md ✓, availability-manifest-and-data-status.md ✓, bucket_name_ssot plan ✓.
+- [x] [READ+FIX] P1. `batch_live_symmetry_master.md` ↔ `codex/04-architecture/batch-live-architecture.md` — **DONE
+      2026-05-22**: DELTA box + Codex SSOTs table already present from earlier audit pass. batch-live-architecture.md is
+      comprehensive (§1-§14) with DELTA boxes for 2026-05-22. Per-asset-group docs: cefi ✓ shipped; tradfi + prediction
+      stubs noted; sports inline §7 (no separate file). No changes needed.
+- [x] [READ+FIX] P1. `deployment_and_user_management_master.md` ↔ `codex/03-deployment/` — **DONE 2026-05-22**: Codex
+      SSOTs table present. All 4 referenced docs verified: deployment-flow.md ✓, promote-workflow-architecture.md ✓,
+      batch-live-architecture.md ✓, data-status-ui-surface.md ✓. No changes needed.
+- [x] [READ+FIX] P2. `observability_master.md` ↔ `codex/03-observability/` — **DONE 2026-05-22**: Codex SSOTs table
+      present. All 6 referenced docs verified: live-deployment-monitoring.md ✓, alerting.md ✓,
+      kill-switch-circuit-breaker.md ✓, pagerduty-escalation-policy.md ✓ (codex/15-runbooks/alerting/),
+      manifest-consolidator-ssot.md ✓, data-pipeline-correctness-hard-rule.md ✓. No changes needed.
+- [x] [READ+FIX] P2. `orchestrator_master.md` ↔ `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` — **DONE
+      2026-05-22**: Both frontmatter `codex_ssots:` and body Codex SSOTs table present. All 3 referenced docs verified:
+      orchestrator-multi-vm-topology.md ✓ (comprehensive: VM shapes, dashboard, persistence),
+      orchestrator-safety-mechanisms.md ✓, claude-cli-multi-account-headless-auth.md ✓. No changes needed.
+- [x] [READ+FIX] P2. `plan_hygiene_master.md` ↔ `codex/11-project-management/plan-hygiene.md` — **DONE 2026-05-22**:
+      Added `tier: L5` + `last_updated: 2026-05-22` to epic frontmatter. Added formal `## Codex SSOTs` table to epic
+      body. Fixed `plan-hygiene.md` codex doc: added `assigned_vm` + `tier` to "Required epic frontmatter fields" list
+      (was missing vs CLAUDE.md "required `assigned_vm` + `tier` + `priority` frontmatter").
 
 ---
 

@@ -2,12 +2,14 @@
 name: plan_hygiene_master
 title: "Plan hygiene — continuous format + integrity + alignment enforcement"
 type: epic
+tier: L5
 priority: P1
 status: active
 assigned_vm: planning-vm
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+last_updated: 2026-05-22
 ---
 
 # Plan Hygiene Master
@@ -20,8 +22,18 @@ from codex.
 frontmatter, broken codex refs, and orphaned plans. Automating the checks and making the runbook a standard daily step
 removes the manual cost and catches regressions before they compound.
 
-Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` ·
-`codex/11-project-management/issue-doc-lifecycle.md` · `plans/epics/README.md` · `plans/PLAN_FORMAT.md`
+## Codex SSOTs
+
+> **[DONE 2026-05-22]** Group D audit: all referenced docs verified; `assigned_vm` + `tier` added to required epic
+> frontmatter in `plan-hygiene.md` (was missing vs CLAUDE.md).
+
+| Doc                                                            | Owns                                                                                          |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `codex/11-project-management/plan-hygiene.md`                  | Scripts, runbook, cron — canonical SSOT for hygiene tooling; required frontmatter field lists |
+| `codex/11-project-management/active-plan-inventory-tracker.md` | Active plan inventory regenerator (`regenerate_active_plan_inventory.py`); orphan check       |
+| `codex/11-project-management/issue-doc-lifecycle.md`           | Issue doc state machine; archive trigger conditions                                           |
+| `plans/epics/README.md`                                        | Epic-flow SSOT — 19 epics × 5 tiers × 10-VM topology                                          |
+| `plans/PLAN_FORMAT.md`                                         | Plan format; Cursor checkboxes; required todo syntax                                          |
 
 ---
 

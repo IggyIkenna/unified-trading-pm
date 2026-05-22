@@ -437,6 +437,19 @@ _(no plans currently assigned at this priority)_
 
 _(no plans currently assigned at this priority)_
 
+## Codex SSOTs
+
+> **[DONE 2026-05-22]** Group D audit: all referenced docs verified to exist and reflect shipped state.
+
+| Doc                                                            | Owns                                                                                                                                                                                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `codex/05-infrastructure/vm-tarball-deployment.md`             | VM tarball deployment; `lifecycle_class` requirements (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE); Pattern A vs B startup; T+10min post-launch verification; singleton-lock pattern |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`        | Manifest consolidator runtime (Cloud Run + Cloud Scheduler, 10 jobs, `*/1 * * * *`) — GCE VM DELETED 2026-05-20; legacy launcher DELETED                                                                                 |
+| `codex/05-infrastructure/gcs-object-operations.md`             | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                    |
+| `codex/05-infrastructure/launcher-script-ssot.md`              | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                            |
+| `codex/02-data/availability-manifest-and-data-status.md`       | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                            |
+| `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69)                                                                                                                          |
+
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
