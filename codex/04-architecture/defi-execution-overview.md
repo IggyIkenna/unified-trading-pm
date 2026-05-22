@@ -148,9 +148,9 @@ integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md`
 ## Error Classification
 
 Every on-chain revert maps to a structured error code with an action. SSOT for the closed set: UAC
-`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (30 codes; refreshed 2026-05-15 per slot 6
-codex audit — count grew from 13 original Aave codes to 30 as HL perp + recursive-loop + oracle codes were added
-2026-05-12/13). Import: `from unified_api_contracts import DefiErrorCode, OracleStaleError, OracleDeviationError`.
+`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (StrEnum; 35 codes; refreshed 2026-05-22 —
+grew from 13 original Aave codes to 35 as HL perp + recursive-loop + oracle codes added 2026-05-12/13 + 5 CCTP codes
+added 2026-05-19). Import: `from unified_api_contracts import DefiErrorCode, OracleStaleError, OracleDeviationError`.
 
 ### Aave V3 / on-chain DeFi codes (13)
 
@@ -210,6 +210,18 @@ Raised as typed exceptions (`OracleStaleError`, `OracleDeviationError`). Added 2
 | ------------------------- | -------------------- | ------ | ------------------------------------------------ |
 | ORACLE_STALE              | OracleStaleError     | SKIP   | Chainlink/Pyth feed heartbeat exceeded threshold |
 | ORACLE_DEVIATION_EXCEEDED | OracleDeviationError | FAIL   | Multi-source prices diverge ≥ sigma threshold    |
+
+### CCTP bridge codes (5)
+
+Added 2026-05-19 per api_keys Phase 4.C.
+
+| Code                    | Action | When                                           |
+| ----------------------- | ------ | ---------------------------------------------- |
+| CCTP_BURN_FAILED        | FAIL   | depositForBurn reverted — check balance/allowance |
+| CCTP_ATTESTATION_TIMEOUT| RETRY  | Circle Iris attestation not ready              |
+| CCTP_RECEIVE_FAILED     | FAIL   | receiveMessage reverted — may be already consumed |
+| CCTP_UNSUPPORTED_CHAIN  | FAIL   | Chain not in CCTP contract registry            |
+| CCTP_NON_USDC_TOKEN     | FAIL   | CCTP only bridges USDC                         |
 
 ## Modes
 

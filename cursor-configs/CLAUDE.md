@@ -264,9 +264,9 @@ Pointer chain. Full specs in codex:
   validates `config/testnet_contracts.yaml` at load.
 - **Uniswap live swap**: `UniswapConnector.swap_exact_input()` via SwapRouter02
   `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`.
-- **DeFi error classification**: 30 codes in UAC
-  `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*\_ + 2
-  ORACLE\_\_; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in
+- **DeFi error classification**: 35 codes in UAC
+  `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (StrEnum; 13 Aave + 7 RECURSIVE*LOOP + 8
+  HL*\_ + 2 ORACLE\_\_ + 5 CCTP; updated 2026-05-22). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon

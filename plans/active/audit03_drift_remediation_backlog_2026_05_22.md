@@ -88,10 +88,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       satisfies the codex "raising layer" requirement + the required test) OR reconcile the CLAUDE.md/codex "3 raising
       layers" wording to the actual mechanism (single `client_id` by construction + 1 coordinator raise at
       `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally.
-- [ ] [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
-      `errors/defi.py:27`) for exhaustiveness guarantees.
-- [ ] [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
-      RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19).
+- [x] ✅ [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
+      `errors/defi.py:27`) for exhaustiveness guarantees. — uac@HEAD; all 55 error-classification tests pass,
+      basedpyright 0 errors; backward-compatible (uppercase values preserved).
+- [x] ✅ [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
+      RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19). — cursor-configs/CLAUDE.md + codex updated; CCTP
+      section added to defi-execution-overview.md.
 - [ ] [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
       `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting.
