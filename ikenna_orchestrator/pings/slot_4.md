@@ -2217,6 +2217,54 @@ GREEN. Per-asset-group wrapper plans filed in `plans/active/` — see ikenna-mai
 
 ---
 
+## [slot-1-main → slot-4] 2026-05-22 — P0 AWS cloud toggle (Phases 1-3)
+
+**Plan**: `plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md`
+
+**Why P0**: operator needs GCP/AWS data-status toggle working before any AWS backfill inspection or launch. Currently
+`cloud="gcp"` is hardcoded at every layer.
+
+**Your scope — Phases 1, 2, 3 of the plan** (deployment-api + unified-trading-system-ui only):
+
+### Phase 1 — Service layer (`deployment_api/services/data_status_service.py`)
+
+Replace 6 hardcoded `cloud="gcp"` strings. Add `cloud: str = "gcp"` param to:
+
+- `_read_defi_merged_index(self, service, cat)` → lines 2916 + 2918
+- `get_manifest_status(...)` → thread to `_get_manifest_status_sync` → lines ~3816 + 3818
+- `get_coverage_summary(...)` → thread to `_get_coverage_summary_sync` → lines ~5672 + 5674
+
+### Phase 2 — Route layer (`deployment_api/routes/data_status.py`)
+
+Add `cloud: Literal["gcp", "aws"] = Query("gcp", description="Cloud provider")` to:
+
+- `get_data_status` (line 252) — pass to `run_data_status_cli` + `get_manifest_status`
+- `get_data_status_turbo` (line 764) — thread into `_manifest_source` closure
+- `get_data_coverage_summary` (line 830) — thread to service
+
+### Phase 3 — UI (3 files in `unified-trading-system-ui`)
+
+1. `components/ops/deployment/data-status/data-status-context.tsx` — add `cloudProvider: "gcp" | "aws"` + setter to
+   interface
+2. `components/ops/deployment/data-status/data-status-provider.tsx` — add state, pass `cloud: cloudProvider` to both API
+   calls, add to dep array + context value
+3. `components/ops/deployment/data-status/data-status-filters-header.tsx` — add GCP|AWS toggle button group (same style
+   as batch/live toggle), bind to `setCloudProvider`
+4. `hooks/deployment/_api-stub.ts` — add `cloud?: "gcp" | "aws"` to both function param types; thread to URL query
+   string
+
+**QG**: `bash scripts/quality-gates.sh` in deployment-api after each phase. No QG for UI (TypeScript only — run
+`npx tsc --noEmit` in `unified-trading-system-ui` as a check).
+
+**Verification**: Start stack (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`); open data-status tab;
+toggle GCP→AWS; confirm `cloud=aws` appears in network calls.
+
+Half-1+Half-2: code commit → `docs(plans): flip aws_cloud_toggle Phase N` in same turn.
+
+— slot-1 main / ikenna / 2026-05-22
+
+---
+
 ## 2026-05-22 — [slot-4 → slot-1 main] Phase 3 dispatch progress
 
 **Plan refs**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` ·
