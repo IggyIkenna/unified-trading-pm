@@ -56,6 +56,23 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3
 
 ---
 
+## [slot-2] 2026-05-22 — Wave 2 DONE: d8 P4 + Wave 3.X checkbox flips
+
+[2026-05-22 UTC] slot-2 DONE — d8 Phase 4 analytical benchmark + Wave 3.X flips.
+
+**d8 Phase 4** — Analytical benchmark complete. Phase 1 affects migration scripts only (not handlers); Phase 2 no change
+needed; Phase 3 reduces FAIL-class retry overhead 15-33% in error scenarios. Audit file:
+`plans/audit/results/perf_benchmark_d8_2026_05_20.md`. PM@e55cd3637.
+
+**Wave 3.X flips** — `half_day_sessions.py` + `venue_session_hours.py` both shipped in UAC@bdc84edc (wave3x Track A).
+Checkboxes flipped in writegate plan. PM@a2c9ed509.
+
+**d8 plan**: all 4 phases ✅. All success criteria green.
+
+Plan refs: `d8_perf_upgrade_2026_05_20.md` + `writegate_honest_coverage_endtoend_2026_05_06.md`
+
+---
+
 ## [slot-2] 2026-05-22 — Wave 1 DONE: d8 P3 + cme-arb Phases 2+5
 
 [2026-05-22 UTC] slot-2 DONE — d8 Phase 3 + CME×Polymarket Phases 2 & 5 shipped.
