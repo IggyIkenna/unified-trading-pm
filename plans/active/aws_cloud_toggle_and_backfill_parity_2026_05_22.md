@@ -11,6 +11,7 @@ status: active
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
+smoke_gate: BLOCKED-OPERATOR-DECISION — AWS backfill VMs not yet launched; operator decides when to run
 ---
 
 # AWS cloud toggle + backfill script parity
@@ -122,14 +123,16 @@ Gate: Phase 1-2 complete (AWS buckets must be readable before running backfills)
 
 Gate: Phase 1-2 + AWS buckets populated (at least 1 day of data per asset_group).
 
-- [ ] [VERIFY] P0. **SMOKE-1** — For each asset_group × service in the matrix below, fetch 1 day via deployment-api
+- [ ] [VERIFY] P0. **SMOKE-1**
+      `[BLOCKED-OPERATOR-DECISION — AWS backfill VMs not yet launched; operator picks start     date + asset_group]` —
+      For each asset_group × service in the matrix below, fetch 1 day via deployment-api
       `?cloud=aws&service=<svc>&start_date=<date>&end_date=<date>&asset_group=<ag>` and verify non-zero `captured` rows
       (or `empty_confirmed` with valid reason). Matrix: MTDS × {cefi/defi/tradfi/sports/pred} + MDPS ×
       {cefi/defi/tradfi} + instruments-service × {cefi/defi/tradfi/sports/pred}.
-- [ ] [VERIFY] P0. **SMOKE-2** — Data-status tab UI: toggle to AWS, verify cells render (no 0/0 for covered
-      asset_groups).
-- [ ] [VERIFY] P0. **SMOKE-3** — Document smoke result in `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell
-      result table (GREEN/RED/EMPTY_CONFIRMED).
+- [ ] [VERIFY] P0. **SMOKE-2** `[BLOCKED-OPERATOR-DECISION — gated on SMOKE-1]` — Data-status tab UI: toggle to AWS,
+      verify cells render (no 0/0 for covered asset_groups).
+- [ ] [VERIFY] P0. **SMOKE-3** `[BLOCKED-OPERATOR-DECISION — gated on SMOKE-1]` — Document smoke result in
+      `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell result table (GREEN/RED/EMPTY_CONFIRMED).
 
 ---
 
