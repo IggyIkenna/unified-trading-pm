@@ -36,9 +36,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution.
 - [ ] [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
       `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events.
-- [ ] [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
+- [x] ✅ [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
       (`pnl_input_builder.py:142-151`); fail-fast or source the native-token price honestly when the gas parquet lacks
-      `native_token_price_usd`.
+      `native_token_price_usd`. — strategy-service@962ca47d _compute_gas_cost_usd now raises ValueError on missing price; test updated to supply native_token_price_usd="3200.00" explicitly.
 
 ## Theme 2 — bucket / URL / vocab SSOT hardening
 
@@ -57,8 +57,8 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       (best-of-both) — see its AUDIT-03 follow-up todo. Tracked there, not here.**
 - [ ] [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
       (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule.
-- [ ] [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
-      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`).
+- [x] ✅ [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
+      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632 infura removed from ethereum/arbitrum/base/optimism/polygon/linea fallbacks; docstring + test assertions updated.
 
 ## Theme 3 — custody + DeFi credential safety (execution-service)
 
