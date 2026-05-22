@@ -632,12 +632,13 @@ before CME arb can link.
       Polymarket/Kalshi CLOB writes; cluster-validation kwargs at `record_captured` per writegate Phase 1A. —
       MTDS@e777dc40 `_load_expected_clusters_for_cqg()` helper reads IS MARKET_LIFECYCLE parquet per (cqg, day); falls
       back to observed=expected when parquet absent; 9 unit tests (2026-05-22)
-- [ ] [SCRIPT] P0. **MDPS PredictionTradesAdapter 4-category A/B/C/D empty-output decision wiring** (per CLAUDE.md
+- [x] ✅ [SCRIPT] P0. **MDPS PredictionTradesAdapter 4-category A/B/C/D empty-output decision wiring** (per CLAUDE.md
       "Four-category empty-output decision" rule). Today MDPS PredictionTradesAdapter doesn't classify; add explicit
       branches: A = source returned 0 ticks → `record_empty(reason=SOURCE_RETURNED_ZERO)`; B = ticks returned but
       filtered out by interval_idx → `record_failed(UpstreamTimestampBiasError)`; C = malformed source fields →
       `record_failed(MalformedTickFieldError)`; D = catalog says alive but source returned 0 → write zero-activity bars
-      per category-D rule.
+      per category-D rule. MDPS@ea76662 (base_adapter + PredictionTradesAdapter + live_workers + 15 tests). 2026-05-22
+      slot-2.
 - [ ] [SCRIPT] P0. **features per-market LookaheadBiasError check**. Per CLAUDE.md prediction-lifecycle rule: feature
       compute at time T can only consume ticks where `tick.timestamp <= T` AND `tick.market_id`'s
       `market_created_at <= T`. Today features-cross-instrument doesn't enforce this per-market; flip to strict-mode
