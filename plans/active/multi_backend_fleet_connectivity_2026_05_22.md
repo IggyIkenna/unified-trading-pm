@@ -115,12 +115,12 @@ the case now; noted as the fallback if that changes.)
 
 ## Phase 1 — Repoint central proxy to private VPC IPs (P1)
 
-- [ ] [AGENT] P1. `data/config/backends.json` — add a `private_url` (`http://172.31.x.x:8026`) per VM; have
+- [x] ✅ [AGENT] P1. `data/config/backends.json` — add a `private_url` (`http://172.31.x.x:8026`) per VM; have
       `/api/fleet/summary` (and Phase-2 routes) prefer `private_url` when the central API is in-VPC, falling back to
       public `url` only for out-of-VPC callers (e.g. local dev). Source the private IP from the EC2 metadata at
-      provision.
-- [ ] [AGENT] P1. `scripts/bootstrap_vm.sh` — on boot, register the VM's **private IP** into the registry (Phase 5
-      mechanism), so the proxy targets are private by default.
+      provision. — agent-orchestrator@3bde048 (backfilled 2026-05-22)
+- [x] ✅ [AGENT] P1. `scripts/bootstrap_vm.sh` — on boot, register the VM's **private IP** into the registry (Phase 5
+      mechanism), so the proxy targets are private by default. — agent-orchestrator@4eca323 (backfilled 2026-05-22)
 - [ ] [AGENT] P1. Once private routing is verified, close worker `:8026` to the public (security-group → VPC-internal
       only); workers keep public IPs only if still needed for non-orchestrator reasons.
 
@@ -137,9 +137,10 @@ public `:8026` firewalled still appears.
 
 ## Phase 2 — Interactive per-VM proxy routes (P1) — the "talk to a specific VM" path
 
-- [ ] [AGENT] P1. `server/server.py` — generic reverse-proxy `(/api/vms/{vm_id}/{path:path})` that forwards method +
+- [x] ✅ [AGENT] P1. `server/server.py` — generic reverse-proxy `(/api/vms/{vm_id}/{path:path})` that forwards method +
       body + auth to `<vm private_url>/api/{path}` (httpx, timeout, error-mapped). Covers spawn / kill / pause-resume /
-      message / log-stream / state for any individual VM through the one central API.
+      message / log-stream / state for any individual VM through the one central API. — agent-orchestrator@3bde048
+      (backfilled 2026-05-22)
 - [ ] [AGENT] P1. Stream-friendly handling for log/SSE endpoints (don't buffer); per-VM error surfaced as the VM's
       status, not a 500 on the whole call.
 - [ ] [AGENT] P2. Authorize the central→VM hop with an internal credential (shared `ORCHESTRATOR_API_PASSWORD` from GCS,
@@ -163,17 +164,19 @@ breaking the rest.
 
 ## Phase 4 — Single-token auth consolidation (P2)
 
-- [ ] [AGENT] P2. Central API: one auth authority — shared secret/`ORCHESTRATOR_API_PASSWORD` (or HS256 JWT) read from
-      GCS, hot-reloadable via the existing `CredsEnvPoller`. Keep `auth.py` algorithm pluggable so HS256→RS256 is a
-      config swap later (asymmetric-ready seam). Workers behind the proxy don't validate operator JWTs.
+- [x] ✅ [AGENT] P2. Central API: one auth authority — shared secret/`ORCHESTRATOR_API_PASSWORD` (or HS256 JWT) read
+      from GCS, hot-reloadable via the existing `CredsEnvPoller`. Keep `auth.py` algorithm pluggable so HS256→RS256 is a
+      config swap later (asymmetric-ready seam). Workers behind the proxy don't validate operator JWTs. —
+      agent-orchestrator@7010969 (backfilled 2026-05-22)
 - [ ] [AGENT] P2. Document the trust boundary: operator-JWT at the edge (central API); central→VM over private VPC with
       an internal credential. Rotation runbook (owner/cadence/verifier/last_executed).
 
 ## Phase 5 — Registry: self-registration with private IP (P2)
 
-- [ ] [AGENT] P2. VM self-registration on boot: outbound `POST /api/vms/register` to the central API with
-      `{id, label,     private_ip, account_id, asset_group}` after the local health check passes (no inbound to the VM
-      needed). Central API persists the registry (file → GCS object for durability), `/api/backends` reads it.
+- [x] ✅ [AGENT] P2. VM self-registration on boot: outbound `POST /api/vms/register` to the central API with
+      `{id, label, private_ip, account_id, asset_group}` after the local health check passes (no inbound to the VM
+      needed). Central API persists the registry (file → GCS object for durability), `/api/backends` reads it. —
+      agent-orchestrator@4eca323 (backfilled 2026-05-22)
 - [ ] [AGENT] P2. Staleness: a VM that stops registering / heartbeating drops out of `/api/fleet/summary` as stale
       (heartbeat age) — the central API detects absence; a dead VM can't mask its own death.
 
