@@ -38,23 +38,26 @@ Codex SSOTs:
 
 All cloud-specific calls in `bootstrap_vm.sh` must branch on `$CLOUD_PROVIDER`. GCP remains the fallback.
 
-- [ ] [AGENT] P0. Add `--cloud-provider aws|gcp` arg to `bootstrap_vm.sh` (default `gcp` while GCP fleet is live; flips
-      to `aws` once AWS fleet verified). Env var `CLOUD_PROVIDER` also respected as override.
-- [ ] [AGENT] P0. Branch GH_PAT fetch: GCP → `gcloud secrets versions access latest --secret=GH_PAT`; AWS →
-      `aws secretsmanager get-secret-value --secret-id GH_PAT --query SecretString --output text`.
-- [ ] [AGENT] P0. Branch ORCHESTRATOR_ENV_LOCAL fetch: GCP →
+- [x] ✅ [AGENT] P0. Add `--cloud-provider aws|gcp` arg to `bootstrap_vm.sh` (default `gcp` while GCP fleet is live;
+      flips to `aws` once AWS fleet verified). Env var `CLOUD_PROVIDER` also respected as override. agent-orch@6591afb.
+- [x] ✅ [AGENT] P0. Branch GH_PAT fetch: GCP → `gcloud secrets versions access latest --secret=GH_PAT`; AWS →
+      `aws secretsmanager get-secret-value --secret-id GH_PAT --query SecretString --output text`. agent-orch@6591afb.
+- [x] ✅ [AGENT] P0. Branch ORCHESTRATOR_ENV_LOCAL fetch: GCP →
       `gcloud secrets versions access latest --secret=ORCHESTRATOR_ENV_LOCAL`; AWS →
       `aws secretsmanager get-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --query SecretString --output text`.
-- [ ] [AGENT] P0. Branch accounts.json + backlog.yaml fetch: GCP → `gcloud storage cp gs://.../config/...`; AWS →
+      agent-orch@6591afb.
+- [x] ✅ [AGENT] P0. Branch accounts.json + backlog.yaml fetch: GCP → `gcloud storage cp gs://.../config/...`; AWS →
       `aws s3 cp s3://uts-orchestrator-creds-{account}/config/... .` (bucket name TBD — see Phase 2).
-- [ ] [AGENT] P0. Branch STARTED event emit: GCP → `gcloud storage cp - gs://.../STARTED`; AWS →
-      `aws s3 cp - s3://uts-orchestrator-events-{account}/orchestrator/epic/{vm-name}/STARTED`.
-- [ ] [AGENT] P0. VM_NAME detection: GCP → `curl -H 'Metadata-Flavor: Google' metadata.google.internal/...`; AWS →
+      agent-orch@6591afb.
+- [x] ✅ [AGENT] P0. Branch STARTED event emit: GCP → `gcloud storage cp - gs://.../STARTED`; AWS →
+      `aws s3 cp - s3://uts-orchestrator-events-{account}/orchestrator/epic/{vm-name}/STARTED`. agent-orch@6591afb.
+- [x] ✅ [AGENT] P0. VM_NAME detection: GCP → `curl -H 'Metadata-Flavor: Google' metadata.google.internal/...`; AWS →
       IMDSv2 token + `curl -H "X-aws-ec2-metadata-token: $TOKEN" 169.254.169.254/latest/meta-data/tags/instance/Name`.
-- [ ] [AGENT] P1. Update PUBLIC_URL env var: GCP uses external IP from metadata; AWS uses public hostname from
-      `169.254.169.254/latest/meta-data/public-hostname`.
+      agent-orch@6591afb.
+- [x] ✅ [AGENT] P1. Update PUBLIC_URL env var: GCP uses external IP from metadata; AWS uses public hostname from
+      `169.254.169.254/latest/meta-data/public-hostname`. agent-orch@6591afb.
 - [ ] [AGENT] P1. Verify `su - ubuntu` pattern works on Ubuntu 24.04 on EC2 (AWS AMI uses same ubuntu user; uv HOME fix
-      should carry over unchanged).
+      should carry over unchanged). Verify during Phase 4 smoke test.
 
 ## Phase 2 — AWS resource prerequisites
 
@@ -78,17 +81,14 @@ IAM role, S3 buckets, Secrets Manager secrets, and security group must exist bef
 
 New launcher: AWS EC2 equivalent of `launch-epic-vm.sh`. Reads same `orchestrator_vm_registry.yaml`.
 
-- [ ] [AGENT] P0. Create `deployment-service/scripts/vm/launch-epic-vm-aws.sh`: - Same `--vm-id` / `--all` / `--dry-run`
-      / `--force` flags as the GCP launcher - Uses `lib/aws_ec2_launch_lib.sh` (`lc_aws_ec2_run`,
-      `lc_aws_singleton_check`, `lc_aws_resolve_ami`) - Instance type: `m7i.xlarge` (4 vCPU / 16GB — matches GCP
-      `e2-standard-4`; cheaper on AWS) - Region: `ap-northeast-1` (same timezone as GCP `asia-northeast1`; minimize
-      latency to GCS data) - Instance profile: `uts-orchestrator-epic` - User-data startup script: mirrors GCP startup
-      script but with `CLOUD_PROVIDER=aws` set + no gcloud deps - VM naming: `agent-orch-{vm-id}-{YYYYMMDD}` (same
-      convention as GCP) - Add `agent-orch-` prefixes to `vm_zombie_watchdog_aws.py` `VM_PREFIX_TO_BUCKET` after launch
-- [ ] [AGENT] P0. Create `deployment-service/scripts/aws/setup-orchestrator-iam.sh` — idempotent IAM setup (role +
-      policy + instance profile). Prerequisite before any fleet launch.
-- [ ] [AGENT] P1. Add `CLOUD_PROVIDER=aws` to `launch-epic-vm-aws.sh` metadata so startup script and bootstrap both pick
-      it up without extra args.
+- [x] ✅ [AGENT] P0. Create `deployment-service/scripts/vm/launch-epic-vm-aws.sh`: same flags as GCP launcher; uses
+      `lib/aws_ec2_launch_lib.sh`; m7i.xlarge in ap-northeast-1; instance profile `uts-orchestrator-epic`; user-data
+      fetches GH_PAT from Secrets Manager + runs `bootstrap_vm.sh --cloud-provider aws`; same VM naming convention.
+      Added 10 `agent-orch-` prefixes to `vm_zombie_watchdog_aws.py` VM_PREFIX_TO_BUCKET. deployment-service@9caa5e7.
+- [x] ✅ [AGENT] P0. Create `deployment-service/scripts/aws/setup-orchestrator-iam.sh` — idempotent IAM setup (role +
+      policy + instance profile). deployment-service@9caa5e7.
+- [x] ✅ [AGENT] P1. `CLOUD_PROVIDER=aws` set in user-data env AND passed as explicit `--cloud-provider aws` arg to
+      bootstrap_vm.sh — both paths covered. deployment-service@9caa5e7.
 
 ## Phase 4 — Single-VM smoke test
 
