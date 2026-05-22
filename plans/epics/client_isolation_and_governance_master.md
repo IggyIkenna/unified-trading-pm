@@ -8,7 +8,7 @@ priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-21
-last_updated: 2026-05-21
+last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
@@ -90,9 +90,27 @@ priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies
 
 ## P0 — must complete before next foundation gate
 
-### [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
+_(no plans currently assigned at this priority — per_client_isolation archived 2026-05-22)_
 
-**status**: active · **estimate**: 5 cal AI-days (class: brand-new)
+## Deferred from `per_client_isolation_and_venue_fanout_topology_2026_05_20` (archived 2026-05-22)
+
+- [ ] [AGENT] P1. **Phase E.2 — Auto-shard supervisor signal**: deployment-service consumes
+      `ShardCapacityEvent.SPAWN_NEW_SHARD` + auto-launches next shard VM. **MIGRATED FROM:**
+      `per_client_isolation_and_venue_fanout_topology_2026_05_20`. Target: 2026-05-28. Create active plan
+      `auto_shard_supervisor_signal_2026_05_28.md` when picking up.
+- [ ] [AGENT] P2. **Phase E.3 — Intra-client RebalanceCoordinator**: intra-client multi-portfolio + intra-client
+      multi-wallet ONLY; cross-client fund movement is NEVER in scope (HARD RULE). **MIGRATED FROM:**
+      `per_client_isolation_and_venue_fanout_topology_2026_05_20`. Target: 2026-06-01. Create active plan
+      `intra_client_rebalance_coordinator_2026_06_01.md` when picking up.
+- [ ] [NOTE] Sub-account transfers for non-Binance/OKX venues: `subaccount_transfers_phase_2_2026_06_01.md` (to be
+      created). Migrated from same source plan.
+
+## P1 — important; post-current-gate (was P0)
+
+### [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](../archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
+
+**status**: ✅ ARCHIVED 2026-05-22 — Phases 0-8 DONE; E.2+E.3 deferred to epic body · **estimate**: 5 cal AI-days
+(class: brand-new)
 
 ## P1 — important; post-current-gate
 

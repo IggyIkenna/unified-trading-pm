@@ -82,6 +82,12 @@ Codex SSOTs: `codex/04-architecture/per-client-isolation-architecture.md` -
       transfer-coordinator.md, client-lifecycle-event-bus.md, strategy-shard-vm-topology.md,
       promote-workflow-architecture.md updated. (PM@`32d1929d`, PM@`b1664fe8`)
 
+## Deferred work — migrated to: `plans/epics/client_isolation_and_governance_master.md` § Deferred
+
+See `client_isolation_and_governance_master.md` § "Deferred from per_client_isolation_and_venue_fanout_topology".
+
+## ⚠️ ARCHIVED 2026-05-22 — all Phases 0-8 shipped; deferred items migrated to epic body
+
 ## Post-cutover deferred
 
 - [ ] **POST-MAY-23** [AGENT] P1. Phase E.2 -- Auto-shard supervisor signal: deployment-service consumes
