@@ -96,13 +96,16 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
-- [ ] [CODE] P2. **MDPS-3.3.Pred-SchemaContract** `**DEFERRED**` — `SCHEMA_VALIDATION_FAILED` on
-      `POLYMARKET:PREDICTION_MARKET:*` trades bars: `open/high/low/close` NOT NULLABLE per contract but prediction
-      market trades have NaN OHLC (binary options price aggregation). Same pattern as MDPS-3.3.TradFi-SchemaContract.
-      Current VMs mark affected contracts as `attempted_failed`. Fix: make OHLC nullable for `prediction_market` trades
-      OR implement proper OHLC aggregation for prediction market price series. Successor: UAC schema update + MDPS fix.
-      Observed: slot-2 2026-05-22. Sample contract:
-      `0x71aa6ab89169bb131ea6c54da3e5fa248e4ad426192c5bc5e29ae967bc83cd1a`.
+- [x] ✅ [CODE] P2. **MDPS-3.3.Pred-SchemaContract** — `SCHEMA_VALIDATION_FAILED` on `POLYMARKET:PREDICTION_MARKET:*`
+      trades bars FIXED. UAC `_candle_contracts.py` adds `_OHLCV_CORE_TRADES` (nullable=True for open/high/low/close) +
+      `nullable_ohlcv=True` parameter to `_build()`. Applied to all trades-derived schemas:
+      CeFi/TradFi/DeFi/Sports/Prediction. UAC@5ff8a25a pushed to LDR 2026-05-22 slot-5. VM tarball rebuilt 18:04 UTC.
+      Old VMs (162604) stopped; new VMs relaunched with fixed tarball. Same pattern also resolves
+      MDPS-3.3.TradFi-SchemaContract (CME/ICE trades NaN bars). Sample contract:
+      `0x71aa6ab89169bb131ea6c54da3e5fa248e4ad426192c5bc5e29ae967bc83cd1a`. 2026-05-22 slot-5.
+- [ ] [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — Relaunch MDPS Prediction VMs with UAC@5ff8a25a tarball (nullable OHLC
+      fix). Use `launch-mdps-sharded-backfill.sh prediction`. 2025 VM: start 2025-03-14; 2026 VM: start 2026-01-01.
+      BLOCKED ON: old VMs (162604) must be TERMINATED first. 2026-05-22 slot-5.
 
 ---
 
