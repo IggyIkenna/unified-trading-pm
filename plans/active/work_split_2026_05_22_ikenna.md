@@ -135,7 +135,9 @@ archetypes.
 
 **Ping**: `ikenna_orchestrator/pings/slot_8.md`
 
-**Wave 1 (active)**: Cloud Run Slack `--update-secrets` (P0) + staging smoke (P3) + Phase 2.E smoke test.
+**Wave 1 (active)**: ✅ Cloud Run Slack `--update-secrets` (P0) — PM@c2579b8ee + deployment-service@c31e262
+(AGENT_ORCHESTRATOR_SLACK_WEBHOOK wired into uts-prod-orphan-ping-audit via gcloud + Terraform IaC parity; entrypoint
+posts Slack alert on orphan detection). Staging smoke (P3) + Phase 2.E smoke test.
 
 **Wave 2**: `manifest_schema_final_gate_2026_05_09.md` final verify (re-pull manifest counts post-backfill) →
 `alerting_service_live_rules_2026_05_07.md` 2 agentable items: PagerDuty `uts-prod-live-trading` escalation policy +
