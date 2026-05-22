@@ -38,8 +38,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution. —
       execution-service@49f42f770; archetype_id now str="" default (not None), config_variant: str="" added;
       build_defi_fill_context updated; test asserts "" not None.
-- [ ] [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
-      `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events.
+- [x] ✅ [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
+      `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events. —
+      strategy-service@1d55f235; FUNDING/FUNDING_8H/FUNDING_PAYMENT fills accumulate signed delta_amount per instrument
+      into funding_pnl_total; _compute_pnl_components reads accumulated total (honest 0 when no funding events); synthetic
+      surrogate removed; 3 new tests (zero-without-events, FUNDING accumulation, FUNDING_8H settlement_type) + 1 renamed;
+      11/11 tests pass.
 - [x] ✅ [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
       (`pnl_input_builder.py:142-151`); fail-fast or source the native-token price honestly when the gas parquet lacks
       `native_token_price_usd`. — strategy-service@962ca47d \_compute_gas_cost_usd now raises ValueError on missing
