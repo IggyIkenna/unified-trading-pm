@@ -1559,7 +1559,9 @@ grep.
 
 ### Phase 2.C — features-sports forward fixes
 
-> **Sports rename Phase 3+4 shipped 2026-05-22** — `data_available_at` → `available_at` atomic rename complete across instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350. Phase 2B GCS migration running. Sports backfill VMs unblocked once migration verified.
+> **Sports rename Phase 3+4 shipped 2026-05-22** — `data_available_at` → `available_at` atomic rename complete across
+> instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350. Phase 2B GCS migration running. Sports
+> backfill VMs unblocked once migration verified.
 
 **Audit 2026-05-06 update** (amendment E + audit #0.4 findings):
 
@@ -2887,15 +2889,14 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
 
 **Tasks added (incremental over existing Wave 3 / 3.S / 3.M):**
 
-- [ ] [UAC] P1. **Half-day sessions calendar.** NEW SSOT `unified_api_contracts/registry/half_day_sessions.py` —
-      `HALF_DAY_SESSIONS: dict[venue, list[(iso_date,     close_time_HHMM, reason)]]`. Populate per CME / NYSE / NASDAQ
-      documented half-days (Thanksgiving Friday, Christmas Eve, etc.). Wire `non_trading_day_reason` to also return
-      `EXPECTED_PARTIAL_HALF_DAY` when applicable.
-- [ ] [UAC] P1. **Intra-day session hours.** NEW SSOT `unified_api_contracts/registry/venue_session_hours.py` —
-      `VENUE_SESSION_HOURS: dict[venue, dict[weekday, list[(open_HHMM_TZ, close_HHMM_TZ)]]]`. Cover NYSE 9:30-16:00 ET,
-      CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc. NEW
-      `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`. Used by ohlcv_15m / book_snapshot adapters to
-      gate intra-day shards.
+- [x] ✅ [UAC] P1. **Half-day sessions calendar.** NEW SSOT `unified_api_contracts/registry/half_day_sessions.py` —
+      `HALF_DAY_SESSIONS: dict[venue, frozenset[date]]` with CME / NYSE / NASDAQ half-day calendar dates.
+      `EXPECTED_PARTIAL_HALF_DAY` reason fires when shard falls on a listed date. — UAC@bdc84edc (slot-2 audit
+      2026-05-22)
+- [x] ✅ [UAC] P1. **Intra-day session hours.** NEW SSOT `unified_api_contracts/registry/venue_session_hours.py` —
+      `VENUE_SESSION_HOURS: dict[(venue, weekday), (open_utc, close_utc)]` covering CME/NYSE/NASDAQ/CBOE/Eurex/FX per
+      weekday. `EXPECTED_OUTSIDE_TRADING_HOURS` reason fires on shards outside the published session window. —
+      UAC@bdc84edc (slot-2 audit 2026-05-22)
 - [x] ✅ [UAC] P1. **Understat covered leagues.** `UNDERSTAT_COVERED_LEAGUES` already in `provider_league_ids.py`
       (5-league frozenset). `is_expected_for_source("understat", ...)` in new `sports_per_source_rules.py` returns
       `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for non-covered leagues. — UAC@83c0e789 / slot-2 audit 2026-05-22
