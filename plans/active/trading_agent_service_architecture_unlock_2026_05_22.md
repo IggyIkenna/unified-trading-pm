@@ -68,10 +68,8 @@ Codex SSOTs: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
 
 ## Phase 7 -- CI hygiene
 
-- [ ] [AGENT] P0. trading-agent-service workspace-qg green on live-defi-rollout. **BLOCKED-OPERATOR**: GH_PAT expired on
-      `IggyIkenna/trading-agent-service`; operator must rotate:
-      `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`, then re-trigger
-      `workspace-qg.yml`.
+- [x] ✅ [AGENT] P0. trading-agent-service workspace-qg GREEN on live-defi-rollout. GH_PAT rotated by operator
+      (commit 3c596ba); CI run 26275695242 passed at 2026-05-22T07:55:20Z. All 8 phases DONE.
 
 ## Phase 8 -- Codex SSOT + plan manifest
 

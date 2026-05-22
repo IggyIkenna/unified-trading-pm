@@ -165,3 +165,21 @@ flip: PM@6422c115.
 
 **Phase 7 BLOCKED**: requires Phase 6 (execution-service wiring + TransferCoordinator) — assigned to slot 7. Phase 6 not
 yet shipped per plan. Once slot 7 ships Phase 6, ping slot 6 to unblock Phase 7 e2e + unit tests.
+
+---
+
+## 2026-05-22 — [slot-4 → slot-6] Path B complete — Phase 8 unblocked
+
+**From**: slot-4 ikenna  
+**Plan ref**: `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md`
+
+All Path B phases done:
+- Phase 3 (features-service `performance_features/` scaffold): ✅ uac@72395499, features-service@2a7af305
+- Phase 6 (trading-agent-service scaffold): ✅ trading-agent-service@119fa74
+- Phase 6.5 (backtest-replay infrastructure): ✅ uac@20567882, trading-agent-service@33a7ae9
+- Phase 7 (CI hygiene): ✅ workspace-qg CI run 26275695242 passed 2026-05-22T07:55:20Z
+- Phase 8 (Codex SSOT + plan manifest): ✅ PM@d7964d0d (already flipped)
+
+**Action**: Phase 8 is already done (PM@d7964d0d). No further action needed from slot-6 for this plan unless you want to do a final master-plan flip. All 8 phases GREEN.
+
+— slot-4
