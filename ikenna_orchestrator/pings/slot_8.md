@@ -28,6 +28,32 @@
 `[2026-05-22 HH:MM UTC] slot-8 DONE — Slack wired + Phase 2.E + manifest gate + alerting thresholds at <shas>` here when
 done.
 
+**[2026-05-22 08:35 UTC] slot-8 WAVE-1 ✅ ACK + WAVE-2 BLOCKED STATUS**
+
+**Wave 1 ✅ DONE** — PM@b5c2b9fb0:
+
+- Cloud Run staging `--update-secrets`: DONE prior session (archived plan Phase 3+4)
+- Staging smoke: DONE — agent-orchestrator-staging rev 00014-hdn Ready; both secrets mounted; per archived plan Phase 4
+  @agent-orchestrator@07e42e2
+- Phase 2.E GCS smoke: DONE — 7,410,830 rows sampled across 10 buckets, 100% schema_version=8, 0 blank error_reason
+- `agent_orchestrator_slack_notifications_2026_05_19.md`: already archived 2026-05-21 (no new work)
+
+**Wave 2 🔴 ALL BLOCKED**:
+
+1. `manifest_schema_final_gate` final verify: pre-backfill baseline captured (7,410,830 rows, 100% v8, 0 blank reasons).
+   Final post-backfill verify **GATED ON MTDS-3.2.A-V GREEN** (slot 5 Wave 2 MTDS CeFi backfill in progress — 1.3M
+   `attempted_failed` rows as of 08:00 UTC).
+2. PagerDuty `uts-prod-live-trading` policy: **BLOCKED-CREDENTIALS** — `pagerduty-api-key` SM secret exists but has 0
+   versions (never provisioned). Also DEFERRED per alerting plan Phase 4 Telegram-primary decision.
+3. `ALERT_THRESHOLDS` UAC update: **BLOCKED until 2026-05-24 08:32 UTC** — correct VM is
+   `alerting-quietness-20260522-083225` (dispatch ref to `20260520-111232` is the old failed VM). Also **[HUMAN] FP-rate
+   analysis** required before update.
+
+**Operator actions needed**:
+
+- Provision `pagerduty-api-key` SM secret version (PD console API key) when PD integration desired
+- Phase 8 FP-rate analysis after quietness VM completes 2026-05-24 08:32 UTC
+
 ---
 
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
