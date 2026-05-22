@@ -75,21 +75,23 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
 
 - [x] ✅ [AGENT] P0. **F-11** — Add per-venue wrap + banned-combo guard at `_build_legs` (stETH→OKX,
       wstETH→Deribit/Bybit) — do NOT rely solely on config + the EXE-07 preprocessor. `_derive_structure` already blocks
-      stETH→OKX via `accepted_perp_collateral`; close the wstETH→Deribit/Bybit hole. — strategy-service@2741643f
+      stETH→OKX via `accepted_perp_collateral`; close the wstETH→Deribit/Bybit hole. — strategy-service@2741643f +
+      dfe9d231 (ALLOWED_CHAINS public alias + 16-test audit03 suite)
 - [x] ✅ [AGENT] P1. **F-10** — Add the `− fees` term to `net_carry` (staked_basis.py:254) per codex
       `carry-staked-basis.md:53` (`net_apy_bps = staking_apy_total + funding_apy − fees`). Removes the optimistic entry
-      threshold. — strategy-service@2741643f
+      threshold. — strategy-service@2741643f + dfe9d231
 - [x] ✅ [AGENT] P1. **F-09** — Enforce `stake_fraction == 1.0` (LST-as-margin has no spare-USDC leg); delete the
       SPLIT_STAKE-era f-grid + `(1-f)·idle_yield` term. Reject `f<1` at preflight rather than mis-size. —
-      strategy-service@2741643f
+      strategy-service@2741643f + dfe9d231
 - [x] ✅ [AGENT] P1. **F-12** — Implement the `allowed_chains` gate (codex `[ethereum, solana, arbitrum]`); engine
       refuses to size on-chain positions outside the list. Currently absent from all of strategy-service. —
-      strategy-service@2741643f
+      strategy-service@2741643f + dfe9d231
 - [x] ✅ [AGENT] P2. **F-08** — Delete stale docstrings: the deleted SPLIT_STAKE 3-leg path (L15-19) + "zero LST venues
       / zero slots" claim (L128-131), which contradicts the 6 matrix pairs / 4 live carry slots. —
-      strategy-service@2741643f
+      strategy-service@2741643f + dfe9d231
 - [x] ✅ [SCRIPT] P0. strategy-service quality-gates Pass 1 GREEN + unit tests for the new guards + the corrected
-      `net_carry`. — exit 0, 4075 passed; 10 AUDIT-03 guard tests in test_audit03_carry_engine_guards.py
+      `net_carry`. — exit 0, 4075 passed; 10 tests test_audit03_carry_engine_guards.py + 16 tests
+      test_carry_staked_basis_audit03.py (strategy-service@dfe9d231)
 
 ## Phase 4 — scenario validation (F-33 closure) — gated on Phase 1-3
 
