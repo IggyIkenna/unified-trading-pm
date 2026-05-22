@@ -144,8 +144,9 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 ## Temporary states + their canonical follow-up plans
 
-- Sports IS VM `instr-backfill-sports` @ 34.180.105.8 RUNNING IS@2aabd7b (includes @55d718f sports fix). Previous VM
-  @55d718f confirmed no LegacyBlankErrorReasonError. Pending completion + IS-3.1.Sports-V verify.
+- Sports IS VM `instr-backfill-sports` @ 34.180.105.8 RUNNING IS@dbf7bf6 (latest, includes all fixes: @55d718f sports
+  reason fix + @2aabd7b MARKET_LIFECYCLE writer). Previous @2aabd7b VM self-deleted before 08:02 UTC; relaunched @08:02
+  UTC. Processing chunk 1/71 (2020-06-01→2020-06-30) as of 08:02 UTC. No errors. Pending IS-3.1.Sports-V verify.
 - **FINDING P2**: `instr-backfill-pred` (IS@7d9a737) was at 2025-06-02 (91 captured rows) when IS@2aabd7b added
   MARKET_LIFECYCLE writer. VM already processed 2025-03-14→2025-06-02 without MARKET_LIFECYCLE (~80 date gap).
   Successor: targeted market_lifecycle backfill after `instr-backfill-pred` completes. Track in `predictions_master`.
