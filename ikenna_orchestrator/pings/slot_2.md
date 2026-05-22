@@ -1470,3 +1470,43 @@ Sports-gated items (MTDS-3.2.D / FEAT-3.4.Sports) remain blocked on `sports_mast
 - Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`.
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
+
+---
+
+## [slot-2] 2026-05-22 — Session-end: reconciler scan+apply + UAC facade fix
+
+[2026-05-22 UTC] slot-2 session-end summary.
+
+**Delivered this session:**
+
+1. **UAC facade fix** (UAC@6498446): `non_trading_day_reason` was not exported from `unified_api_contracts.__init__`
+   despite the classifier docstring calling it a "top-level facade re-export". Added to `.registry` import block.
+   QG exit 0. Unblocked tradfi reconciler path.
+
+2. **`[SCRIPT] P1` reconciler scan — all 5 asset groups** (scan-only, no GCS writes):
+   - tradfi: 5,190 candidates → 5,190 upgrades (111 `EXPECTED_PARTIAL_HALF_DAY` at CME/NASDAQ/NYSE for US
+     Black Friday + July-3 half-days; 5,079 `attempted_failed/LBEER`)
+   - defi: 14 EIGENLAYER `eigenlayer_rewards` → `attempted_failed/LBEER`
+   - sports: 1,829,839 candidates → 0 upgrades
+   - prediction: 51 candidates → 0 upgrades
+   - cefi: 85,202 candidates → **BLOCKED** (IS CeFi instruments catalog not found at GCS; catalog cross-ref
+     needed to avoid mass-LBEER flip; gate: IS CeFi backfill Phase 1 GREEN)
+
+3. **`[SCRIPT] P1` reconciler apply — tradfi + defi**:
+   - tradfi: 5,190 rows applied; shard `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet`
+     (consolidator merges within ~5 min)
+   - defi: 14 rows applied; shard `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet`
+
+4. **Plan flip** `writegate_honest_coverage_endtoend_2026_05_06.md` `[SCRIPT] P1` → `[x] ✅` (tradfi+defi+
+   sports+prediction done; cefi follow-up `[ ]` item added, gated on IS CeFi backfill). PM@5fb7058f.
+
+**Deferred / still open:**
+
+- `[SCRIPT] P1 cefi follow-up` — `reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` re-scan after IS
+  CeFi backfill (`instruments_backfill_phase3_2026_05_22.md` Phase 1) populates
+  `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`.
+- Predictions P0 items at `predictions_master.md` lines 472-535 — BLOCKED on design decisions or predecessor work.
+- Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`,
+  all `[DEFERRED-POST-CUTOVER]` per operator decision (gate: post-2026-05-23).
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
