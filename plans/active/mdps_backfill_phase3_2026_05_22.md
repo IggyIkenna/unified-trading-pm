@@ -84,8 +84,10 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 
 Gate: MTDS-3.2.E Predictions verification GREEN.
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.Pred** — Relaunch MDPS Predictions reprocessor. Polymarket + Kalshi market bars.
-      `MDPS_ASSET_GROUP=pred`.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred** — Launched `mdps-backfill-prediction-20260522-161458` VM (e2-standard-8,
+      asia-northeast1-c, 2025-03-14→2026-05-22, prod). VM RUNNING @ 34.85.21.74. `MDPS_ASSET_GROUP=PREDICTION`.
+      `PROTOCOL_DATA_SOURCE_BUCKET_PREDICTION=market-data-tick-prediction-central-element-323112`. MDPS tarball
+      SHA=98e99728. 2026-05-22 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
 
 ---
