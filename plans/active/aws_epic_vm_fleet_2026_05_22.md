@@ -115,23 +115,27 @@ Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, S
       01:22:57 | vm-prediction 43.207.224.187 STARTED 01:23:11 | vm-ml 13.114.121.99 STARTED 01:23:17 | vm-trading-core
       54.238.66.156 STARTED 01:23:22 | vm-operator-ops 18.183.155.33 STARTED 01:23:32 | vm-cross-cutting 13.158.82.128
       STARTED 01:23:41 | vm-orchestrator 52.193.229.193 STARTED 01:23:44.
-- [ ] [AGENT] P1. Terminate GCP fleet once AWS fleet is stable for 24h:
-      `gcloud compute instances list --filter="name~agent-orch-" --zones=asia-northeast1-c` → terminate all. Keep
-      planning VM (34.146.53.106) running until DNS is wired to AWS.
-- [ ] [AGENT] P1. Update `orchestrator_vm_registry.yaml` with AWS instance IDs + public IPs.
-- [ ] [AGENT] P1. Update `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — fleet IPs + AWS section.
+- [x] ✅ [AGENT] P1. Terminate GCP fleet. Operator directed early decommission (no 24h wait) to avoid cost. All 9 epic
+      VMs deleted: agent-orch-vm-{cefi,cross-cutting,defi,ml,operator-ops,orchestrator,prediction,sports,
+      tradfi,trading-core}-20260521 in asia-northeast1-c. Planning VM 34.146.53.106 kept live.
+- [x] ✅ [AGENT] P1. Updated `orchestrator_vm_registry.yaml` with AWS instance IDs + public IPs. pm@e2efe990e.
+- [x] ✅ [AGENT] P1. Updated `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — AWS fleet table, cloud
+      toggle section, bootstrap steps, event bus with both S3 + GCS paths, re-launch commands. pm@8ca18cfba. Also
+      updated `data/config/backends.json` in agent-orchestrator with all 10 AWS VMs so Fleet tab shows them.
+      agent-orch@79e5d23.
 - [ ] [AGENT] P2. `setup-orchestrator-iam.sh --dry-run` on CI — prevents IAM drift on future launches.
 
 ## Deferred (post-cutover)
 
 - **GCP re-enable**: `CLOUD_PROVIDER=gcp bash launch-epic-vm.sh --all` should always work. Do not remove GCP path.
 - **DNS**: point `api-<vm>.agent-orchestrator.odum-research.com` to AWS EIPs or ALB.
-- **EIP allocation**: currently using dynamic public IPs; stable EIPs needed for DNS.
+- **EIP allocation**: currently using dynamic public IPs; stable EIPs needed for DNS. backends.json needs manual update
+  on re-launch until EIPs are allocated.
 - **AWS Secrets Manager rotation**: automate quarterly rotation via Secrets Manager rotation lambda.
 - **Cost monitoring**: add `aws ce get-cost-and-usage` weekly report for orchestrator fleet.
 
 ## Temporary states + canonical follow-up plans
 
-- GCP fleet remains live until AWS smoke passes + 24h stability window.
-- AWS IAM (Phase 2) is OPERATOR action — agent cannot create IAM roles without operator credentials.
-- `CLOUD_PROVIDER` default is `gcp` until Phase 4 smoke passes; then flips to `aws`.
+- GCP planning VM (34.146.53.106) remains live until DNS cutover to AWS. Successor: DNS + EIP allocation (deferred).
+- AWS IAM (Phase 2) complete — profile `uts-orchestrator-epic` in account 427895769566.
+- `CLOUD_PROVIDER` default is `aws` (flipped at agent-orch@ff0d5ff after Phase 4 smoke).
