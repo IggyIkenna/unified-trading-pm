@@ -76,18 +76,19 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 
 Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.Sports** — Relaunch MDPS Sports reprocessor. Odds / match stats bars.
-      `MDPS_ASSET_GROUP=sports`.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports** — 7 VMs launched: `mdps-sports-{2020..2026}-20260522-161432`.
+      `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
+      Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output.
 
 ## Phase 5 — Predictions MDPS reprocessor
 
 Gate: MTDS-3.2.E Predictions verification GREEN.
 
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred** — Launched `mdps-backfill-prediction-20260522-161458` VM (e2-standard-8,
-      asia-northeast1-c, 2025-03-14→2026-05-22, prod). VM RUNNING @ 34.85.21.74. `MDPS_ASSET_GROUP=PREDICTION`.
-      `PROTOCOL_DATA_SOURCE_BUCKET_PREDICTION=market-data-tick-prediction-central-element-323112`. MDPS tarball
-      SHA=98e99728. 2026-05-22 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred** — slot-7: `mdps-backfill-prediction-20260522-161458` (single VM 2025-2026,
+      STOPPED fast — sparse data). slot-2: sharded `mdps-prediction-{2025,2026}-20260522-161651` (2 VMs, RUNNING).
+      `MDPS_ASSET_GROUP=PREDICTION`. Source: `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V
+      GREEN ✅. 2026-05-22 slot-7 + slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
 
 ---
