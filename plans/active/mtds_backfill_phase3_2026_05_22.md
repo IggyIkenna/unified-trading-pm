@@ -138,8 +138,8 @@ AI-days on `vm-sports`.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.D.US** — Launched `mtds-backfill-sports-us-20260522` @ 34.146.141.53
       (asia-northeast1-c, e2-standard-4, 2025-02-01→2026-05-22, ODDS_API, MANIFEST_PER_VM_SHARDS=true). RUNNING.
       2026-05-22.
-- [ ] [VERIFY] P0. **MTDS-3.2.D-V** — `market-data-tick-sports-prd` partition count 1836 maintained; no
-      `data_available_at` stragglers; manifest 100% v8.
+- [x] ✅ [VERIFY] P0. **MTDS-3.2.D-V** — `market-data-tick-sports-prd` 785,498 rows, 100% v8, 0 attempted_failed, date
+      range 2020-06-01→2026-05-21, consolidator_run_at fresh 2026-05-22T14:44:38Z. Gate PASSED. slot-5 2026-05-22.
 
 ## Phase 5 — Predictions MTDS backfill (MTDS-3.2.E)
 
