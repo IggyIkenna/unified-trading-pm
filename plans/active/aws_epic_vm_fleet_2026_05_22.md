@@ -109,8 +109,12 @@ Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, S
 
 ## Phase 5 — Full fleet launch on AWS + GCP decommission
 
-- [ ] [AGENT] P0. `bash launch-epic-vm-aws.sh --all` — all 10 epic VMs on AWS. T+10min: all 10 health=ok + all 10 S3
-      STARTED events confirmed.
+- [x] ✅ [AGENT] P0. `bash launch-epic-vm-aws.sh --all` — all 10 epic VMs on AWS. T+10min: all 10 health=ok + all 10 S3
+      STARTED events confirmed. deployment-service@03ec7a2. vm-defi 43.207.178.164 STARTED 01:13:47 | vm-cefi
+      43.207.36.161 STARTED 01:22:50 | vm-tradfi 18.181.221.162 STARTED 01:22:56 | vm-sports 13.115.221.87 STARTED
+      01:22:57 | vm-prediction 43.207.224.187 STARTED 01:23:11 | vm-ml 13.114.121.99 STARTED 01:23:17 | vm-trading-core
+      54.238.66.156 STARTED 01:23:22 | vm-operator-ops 18.183.155.33 STARTED 01:23:32 | vm-cross-cutting 13.158.82.128
+      STARTED 01:23:41 | vm-orchestrator 52.193.229.193 STARTED 01:23:44.
 - [ ] [AGENT] P1. Terminate GCP fleet once AWS fleet is stable for 24h:
       `gcloud compute instances list --filter="name~agent-orch-" --zones=asia-northeast1-c` → terminate all. Keep
       planning VM (34.146.53.106) running until DNS is wired to AWS.
