@@ -175,12 +175,27 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       KALSHI BLOCKED-CREDENTIALS (400) as expected. POLYMARKET CLOB scan in progress (at page 600 = 601K markets as of
       12:57 UTC). Per-VM shard tag: `ik_slot2_pred_rerun`.
 
-- [x] ✅ [SCRIPT] P0. **Verify canonical manifest shape**: IS prediction per-VM shard `ik_slot2_pred_rerun.parquet`
+- [x] ✅ [SCRIPT] P0. **Verify canonical manifest shape + consolidation**: IS prediction per-VM shard `ik_slot2_pred_rerun.parquet`
       verified (slot-2 2026-05-22 13:26 UTC). 493 rows: `data_type=prediction_canonical_question_group`, `underlying` holds
       canonical group identity (BTC_UP_DOWN_HOURLY / CPI_PRINT_PER_MONTH / OTHER — note: `canonical_question_group` is NOT
       a `_ROW_KEY_COLUMNS` field in UTL manifest_writer.py; the group identity is correctly stored in `underlying`),
       `capture_status=captured` for all 493, zero null rows. Date range: 2025-03-14→2026-05-22. Venue: POLYMARKET.
-      Pending consolidation into canonical index (Cloud Run consolidator running).
+      **Consolidation note**: Cloud Run consolidator targets `instruments-store-pred-prd-*` (new naming) but IS writes to
+      `instruments-store-prediction-*` (old naming) — bucket naming migration gap causes canonical to be stale (0 rows).
+      Fixed by running manual consolidation (slot-2 2026-05-22 13:53 UTC): merged 2 per-VM shards (493 + 211 rows) →
+      493 rows written to `_index/availability_index.parquet`. Canonical verified: 493 rows, all captured ✅.
+      Discovery: [[prediction-bucket-naming-mismatch]] — Cloud Run consolidator never auto-merges the old bucket.
+      Filed below as P1 deferred todo.
+
+#### 3.4b — Prediction bucket naming mismatch (P1 deferred)
+
+- [ ] [SCRIPT] P1. **Fix prediction bucket naming mismatch** `**DEFERRED**`: IS writes to
+      `instruments-store-prediction-central-element-323112` (old, no env-tier) but Cloud Run consolidator targets
+      `instruments-store-pred-prd-central-element-323112` (new). The canonical in the OLD bucket is never auto-merged.
+      Fix: update IS `DEPLOYMENT_ENV` env var or `resolve_bucket_name()` to point to the prd bucket, then migrate
+      data + re-run consolidation. This is a pre-existing bucket-naming-migration issue — not in scope of current plan.
+      **Provenance**: surfaced slot-2 2026-05-22 13:50 UTC while investigating 0-row canonical.
+      Named successor: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (env-tier rollout to Group A buckets).
 
 #### 3.5 — Data-status drilldown prediction display fix
 
@@ -229,3 +244,4 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 | IS prediction manifest fully purged (Phase 3.2) but re-fill not yet run (Phase 3.4) | UI shows PREDICTION 0% — expected transient; complete same session |
 | Legacy GCS parquets deleted (Phase 3.3) but new parquets not yet written            | Same — complete Phase 3.4 in same session before marking complete  |
 | Sports VM still running historical (3063 gap)                                       | Phase 2 P1 monitor item; no blocking dependency on Phase 3         |
+| Prediction canonical manually consolidated (old bucket, not auto-merged by Cloud Run) | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e — env-tier rollout to old IS prediction bucket |
