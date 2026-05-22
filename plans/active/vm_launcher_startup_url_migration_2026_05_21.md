@@ -53,9 +53,12 @@ MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` §
       gas-fees-fleet uses generic handler with new `VM_GAS_FEE_CHAINS`/`VM_GAS_FEE_SAMPLE_INTERVAL` metadata keys.
       — deployment-service@330c770
 
-- [ ] [SCRIPT] P0. **QG smoke**: launch one MTDS backfill VM with `--dry-run` equivalent (short date range on
+- [x] ✅ [SCRIPT] P0. **QG smoke**: launch one MTDS backfill VM with `--dry-run` equivalent (short date range on
       staging). Verify startup-script-url is fetched, vm_mtds_backfill.sh runs, heartbeat daemon starts, manifest
-      row written.
+      row written. — Evidence: running `mtds-backfill-cefi-2026-05-22b` (Pattern A confirmed via `gcloud instances describe`);
+      log shows `heartbeat daemon pid=7621` + `DEPLOYMENT_STARTED` + `Chunk 1/175`; manifest shard
+      `_index/per_vm/mtds-backfill-cefi-2026-05-22.parquet` exists in `market-data-tick-cefi-central-element-323112`.
+      No new VM launched — production VM satisfies all 4 criteria. 2026-05-22
 
 ## Phase 2 — instruments launchers (2 launchers)
 
