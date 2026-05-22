@@ -2923,8 +2923,8 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       updated (17→31 members, codex pointer added); codex new section "Per-reason-group → consumer policy
       quick-reference" (10-row table, 31 reasons across 9 groups + attempted_failed; key calendar-closed vs
       temporary-gap rolling-window distinction documented).
-- [x] ✅ [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
-      extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
+- [x] ✅ [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using
+      the extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
       attempted*failed/LegacyBlankErrorReasonError, those rows that should actually be typed (e.g. rows during
       understat-not-covered-league fixtures, cefi-perp pre-listing dates per catalog) are recoverable on the next
       migration pass. New reconciler: `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds
@@ -2950,11 +2950,12 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
 3.P (prediction) — distinct asset_group surfaces.
 
-- [ ] [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202 `empty_confirmed/SOURCE_RETURNED_ZERO`
-      cefi rows need lifecycle cross-ref to route correctly (EXPECTED_INSTRUMENT_NOT_LISTED vs attempted_failed).
-      Catalog NOT FOUND at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`
-      during 2026-05-22 scan. Gate: IS CeFi backfill (`instruments_backfill_phase3_2026_05_22.md`) Phase 1 CeFi
-      GREEN. Re-run: `python scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` (scan-only first, then
+- [ ] [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202
+      `empty_confirmed/SOURCE_RETURNED_ZERO` cefi rows need lifecycle cross-ref to route correctly
+      (EXPECTED_INSTRUMENT_NOT_LISTED vs attempted_failed). Catalog NOT FOUND at
+      `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` during 2026-05-22
+      scan. Gate: IS CeFi backfill (`instruments_backfill_phase3_2026_05_22.md`) Phase 1 CeFi GREEN. Re-run:
+      `python scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` (scan-only first, then
       `--apply-flips` after CSV review).
 
 #### Phase 3.D.5 Wave 4 — Service-output emission policy + completeness semantics (operator msg 10, 2026-05-08)

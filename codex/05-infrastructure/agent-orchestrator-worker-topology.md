@@ -121,7 +121,10 @@ Full slot-as-worker contract: `agents/worker.md` in the agent-orchestrator repo.
 
 ---
 
-> **[DELTA 2026-05-22]** **Current state:** Only `STARTED` events are emitted at bootstrap. `STOPPED` and `FAILED` event emission requires the SSH-spawn per-backend-id feature. **Planned delta:** SSH-spawn work tracked under `plans/epics/orchestrator_master.md`. **Target architecture:** Full STARTED/STOPPED/FAILED event lifecycle per orchestrator VM.
+> **[DELTA 2026-05-22]** **Current state:** Only `STARTED` events are emitted at bootstrap. `STOPPED` and `FAILED` event
+> emission requires the SSH-spawn per-backend-id feature. **Planned delta:** SSH-spawn work tracked under
+> `plans/epics/orchestrator_master.md`. **Target architecture:** Full STARTED/STOPPED/FAILED event lifecycle per
+> orchestrator VM.
 
 ## Deferred (post-cutover)
 

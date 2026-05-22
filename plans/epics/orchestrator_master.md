@@ -150,7 +150,8 @@ _(no plans currently assigned at this priority)_
 
 ### [`d0_orchestrator_migration_2026_05_20`](../archive/2026_05/d0_orchestrator_migration_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Port 8026 aligned, CORS confirmed, LEDGER.md deprecated, CLAUDE.md prod URL added. All phases done.
+**status**: ✅ ARCHIVED 2026-05-21 — Port 8026 aligned, CORS confirmed, LEDGER.md deprecated, CLAUDE.md prod URL added.
+All phases done.
 
 ## P2 — useful; opportunistic
 

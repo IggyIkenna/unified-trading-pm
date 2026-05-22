@@ -209,8 +209,9 @@ Phase 0 (✅ DONE)
 ### Phase 8 — verify on real fleet
 
 - [x] ✅ **P0. Re-pull manifest counts** for instruments-service + all 5 MTDS asset_groups — DONE 2026-05-22 (slot-2).
-      Applied `compute_honest_coverage()` against live GCS consolidated blobs (all 10 buckets, 2026-05-22 03:44–08:08 UTC snapshots).
-      **Every (asset_group, data_type) cell reports a real number.** Formula is working correctly end-to-end.
+      Applied `compute_honest_coverage()` against live GCS consolidated blobs (all 10 buckets, 2026-05-22 03:44–08:08
+      UTC snapshots). **Every (asset_group, data_type) cell reports a real number.** Formula is working correctly
+      end-to-end.
 
       **Summary per service × asset_group** (manifest row totals + coverage range):
 
@@ -244,6 +245,7 @@ Phase 0 (✅ DONE)
       **eu_pending_fetch > 0 (DeFi only)**: `dex_swaps` 252, `dex_pools` 234, `staking_yields` 234, `oracle_prices` 126
       → Tier-3 sentinel propagation not yet complete for these data_types; addressed by
       `expected_unattempted_validation_pending_phase3_2026_05_19.md`.
+
 - [x] ✅ **P0. Master plan update**: add "Path to 99% coverage" row (item 28) to master plan Group D with the
       continuous-verification path = `honest-coverage-ratchet.sh` daily run + this plan's Phase 8 sweep result. NOTE:
       Group H was already taken (per-client isolation added 2026-05-20); added as Group D item 28 instead. —

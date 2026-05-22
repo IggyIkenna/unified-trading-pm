@@ -159,9 +159,9 @@ Phases 0 + 1 can run in parallel (Phase 0 is read-only harvest; Phase 1 is schem
 - [x] ✅ **P0. Harvest from data_source_continuity.py** — map (source, data_type) → start_date. Cross-reference + flag
       mismatches with venue_launch_dates.py. **N/A — Phase 2 migration harvested this data at uac@8a8915c; 70/70 venues
       populated.**
-- [x] ✅ **[ABANDONED — parent Phase 0 harvest complete via Phase 2 migration]** **P1. Per-venue web research for gaps** —
-      for each venue with no coverage_start in either file, probe the venue's REST API for the earliest available data.
-      Cap at 30 venues; rest go to a follow-up. Named successor: `uac_venue_metadata_gap_fill_2026_06_xx.md`.
+- [x] ✅ **[ABANDONED — parent Phase 0 harvest complete via Phase 2 migration]** **P1. Per-venue web research for gaps**
+      — for each venue with no coverage_start in either file, probe the venue's REST API for the earliest available
+      data. Cap at 30 venues; rest go to a follow-up. Named successor: `uac_venue_metadata_gap_fill_2026_06_xx.md`.
 
 ### Phase 1 — SourceCapability schema extension (PARALLEL with Phase 0)
 

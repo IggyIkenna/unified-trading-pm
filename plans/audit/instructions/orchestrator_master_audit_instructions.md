@@ -53,11 +53,10 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`,
       `claude_credentials_rotation_in_memory_staleness_2026_05_21.md` has an operator-acked implementation plan. Check:
       issue status — BLOCKED-OPERATOR with recommended option documented, or RESOLVED with commit SHA
 
-
 ### E2E Orchestrator Verification
 
-- (e2e-dispatch) **Dispatch flow audit**: spawn a worker slot via `/api/slots/<N>/spawn`, dispatch a task, confirm
-  the slot picks it up and posts a result. Use local or staging backend.
+- (e2e-dispatch) **Dispatch flow audit**: spawn a worker slot via `/api/slots/<N>/spawn`, dispatch a task, confirm the
+  slot picks it up and posts a result. Use local or staging backend.
 - (mock-upstream) **Offline audit**: orchestrator health checks, plan hygiene cron, and slot management MUST be
   auditable without real VM fleet running.
 

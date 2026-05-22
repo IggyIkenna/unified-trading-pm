@@ -80,7 +80,10 @@ the tarball.
 
 ### 4. Image (post-cutover — not yet shipped)
 
-> **[DELTA 2026-05-22]** **Current state:** Image-based launcher delivery is NOT shipped. VM tarball (`create-code-tarballs.sh` + `launch-*.sh`) is the live path for all launchers. **Planned delta:** Image-based launcher tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Deployment-api pulls + runs per-shard launch container from Artifact Registry / ECR rather than `gcloud compute instances create`.
+> **[DELTA 2026-05-22]** **Current state:** Image-based launcher delivery is NOT shipped. VM tarball
+> (`create-code-tarballs.sh` + `launch-*.sh`) is the live path for all launchers. **Planned delta:** Image-based
+> launcher tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Deployment-api pulls + runs
+> per-shard launch container from Artifact Registry / ECR rather than `gcloud compute instances create`.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in

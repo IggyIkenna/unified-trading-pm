@@ -27,11 +27,11 @@ priority: P2
 
 ## Why this plan exists
 
-The [`cross_cutting_may_23_SUPERSEDED_2026_05_21`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md) epic
-lists 5 non-negotiable deliverables for the May-23 cutover. Today's daily splits cover **#5 Infrastructure** (across
-Ikenna T2/T4/T5 + Harsh T3) but DO NOT cover deliverables **#1 Strategy catalogue, #2 Strategy IDs, #3 Clients +
-Accounts, #4 UI replication / DART manual-trade lane**. With 15 days to cutover and "non-negotiable + hard requirement"
-framing, those 4 deliverables need a dedicated tab on each side starting today.
+The [`cross_cutting_may_23_SUPERSEDED_2026_05_21`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md) epic lists 5
+non-negotiable deliverables for the May-23 cutover. Today's daily splits cover **#5 Infrastructure** (across Ikenna
+T2/T4/T5 + Harsh T3) but DO NOT cover deliverables **#1 Strategy catalogue, #2 Strategy IDs, #3 Clients + Accounts, #4
+UI replication / DART manual-trade lane**. With 15 days to cutover and "non-negotiable + hard requirement" framing,
+those 4 deliverables need a dedicated tab on each side starting today.
 
 This plan is the **shared plan-of-record** for the 4 gap deliverables. Ikenna T6 owns design (UAC SSOTs + scope
 decisions); Harsh T6 owns implementation (consumer wiring + DART UI). Hard cross-side ordering: Ikenna ships UAC SSOTs

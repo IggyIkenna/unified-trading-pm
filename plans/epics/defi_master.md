@@ -1557,7 +1557,8 @@ _(no plans currently assigned at this priority)_
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20 Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase 2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy.
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase 2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy.
+      — `uac@1920d56` (BinaryEventTrigger + 3 RiskRuleIds + 3 global_rules entries; 105 risk-rule tests pass)
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across USDC/USDT/DAI/USDE/FRAX/GHO/CRVUSD/SUSDE). Current backtest covers 2021-01 to 2023-09 at daily granularity. Gaps: CATASTROPHIC TPR=0% (intraday trough not captured by daily snapshot); UST/PYUSD outside lake window. Operator decision needed: lower CATASTROPHIC threshold to 900bps OR extend data lake to intraday timestamps.
 

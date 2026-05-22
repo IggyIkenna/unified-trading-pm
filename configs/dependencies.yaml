@@ -268,7 +268,9 @@ services:
   # ml-training-service + ml-inference-service removed 2026-05-21:
   # consolidated into ml-service (ml_repo_consolidation_2026_05_19.md)
   ml-service:
-    description: Train ML models and generate predictions (consolidated from ml-training-service + ml-inference-service, 2026-05-20)
+    description:
+      Train ML models and generate predictions (consolidated from ml-training-service + ml-inference-service,
+      2026-05-20)
     upstream:
       - service: features-delta-one-service
         required: true

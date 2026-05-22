@@ -68,9 +68,9 @@ in local dev; unit tests patch `_WEBHOOK_URL` directly.
 
 ## Secret inventory (all in `central-element-323112`)
 
-| Secret                                    | Mounted on Cloud Run | Used for                                  |
-| ----------------------------------------- | -------------------- | ----------------------------------------- |
-| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | YES (P3)             | Incoming webhook — POST notifications     |
+| Secret                                    | Mounted on Cloud Run | Used for                                        |
+| ----------------------------------------- | -------------------- | ----------------------------------------------- |
+| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | YES (P3)             | Incoming webhook — POST notifications           |
 | `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` | not yet (V2)         | Post-cutover slash-command request verification |
 | `AGENT_ORCHESTRATOR_SLACK_APP_ID`         | no                   | Reference only (app ID `A0B4N3802N9`)           |
 | `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`      | no                   | OAuth post-cutover use                          |
@@ -78,7 +78,11 @@ in local dev; unit tests patch `_WEBHOOK_URL` directly.
 
 ---
 
-> **[DELTA 2026-05-22]** **Current state:** V1 shipped at `agent-orchestrator@cd04fc2` — outbound webhook notifications for STARTED/STOPPED/FAILED + Block Kit formatting + dashboard link injection. Signing secret, OAuth client credentials, and slash-command verification are NOT mounted (V2 scope). **Planned delta:** V2 bidirectional interactivity tracked under `plans/epics/orchestrator_master.md`. **Target architecture:** Full slash-command request verification + interactive block payloads + per-operator DMs.
+> **[DELTA 2026-05-22]** **Current state:** V1 shipped at `agent-orchestrator@cd04fc2` — outbound webhook notifications
+> for STARTED/STOPPED/FAILED + Block Kit formatting + dashboard link injection. Signing secret, OAuth client
+> credentials, and slash-command verification are NOT mounted (V2 scope). **Planned delta:** V2 bidirectional
+> interactivity tracked under `plans/epics/orchestrator_master.md`. **Target architecture:** Full slash-command request
+> verification + interactive block payloads + per-operator DMs.
 
 ## V2 out-of-scope
 

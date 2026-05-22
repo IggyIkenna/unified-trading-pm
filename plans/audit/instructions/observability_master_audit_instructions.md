@@ -43,11 +43,10 @@ alerting-service, monitoring hooks, telemetry pipeline, 3am-auto-recovery script
       `grep -rL "owner\|cadence\|verifier\|last_executed" plans/active/*.md | grep -i "runbook"` — should be 0 hits (or
       use the plan-hygiene script if it covers this)
 
-
 ### E2E Cross-Cutting Verification
 
-- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest
-  row → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
+- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
+  → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
 - (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
   infrastructure, error classification, and isolation patterns without real cloud access.
 

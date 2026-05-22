@@ -31,10 +31,10 @@ Runbook owner: ikenna · Cadence: at-1.0.0-graduation · Verifier: ikenna · Las
       conventional-commit history (// prefixes already in use). (trivial-sweep 2026-05-21)
 - [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Per-service release notes (separate from
       workspace-level changelog). (trivial-sweep 2026-05-21)
-- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [AGENT] P3. Operator-facing summary (one-paragraph per
-      version) + agent-facing diff (full commit list). (trivial-sweep 2026-05-21)
-- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Wire into semver-agent's bump workflow so
-      version bumps auto-add a section. (trivial-sweep 2026-05-21)
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [AGENT] P3. Operator-facing summary (one-paragraph
+      per version) + agent-facing diff (full commit list). (trivial-sweep 2026-05-21)
+- [x] ✅ **[DEFERRED-HUMAN-GATE — activates on 1.0.0 graduation]** [SCRIPT] P3. Wire into semver-agent's bump workflow
+      so version bumps auto-add a section. (trivial-sweep 2026-05-21)
 
 ## Trigger condition
 

@@ -21,8 +21,8 @@ scope: [strategist, engineer]
 **Composes with**:
 
 - [`category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md) § "Family 4:
-  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" + slot-label
-  cluster `cme-polymarket-*-up-down-daily-*`.
+  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" +
+  slot-label cluster `cme-polymarket-*-up-down-daily-*`.
 - [`per-category-bucket-layouts.md`](../../02-data/per-category-bucket-layouts.md) § "Multi-axis correction" → "TradFi
   EVENT_CONTRACT" shard atom bullet.
 

@@ -44,7 +44,7 @@ import argparse
 import re
 import sys
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 WORKSPACE = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1")
@@ -158,15 +158,17 @@ def load_plan_refs() -> dict[str, list[PlanRef]]:
             status = "active"
         estimate_class = fm.get("estimate_class", "")
         estimate_days = fm.get("estimate_calibrated_ai_days", "") or fm.get("estimate_baseline_ai_days", "")
-        by_epic[epic].append(PlanRef(
-            path=path,
-            slug=slug,
-            title=title,
-            priority=priority,
-            status=status,
-            estimate_class=estimate_class,
-            estimate_calibrated_ai_days=estimate_days,
-        ))
+        by_epic[epic].append(
+            PlanRef(
+                path=path,
+                slug=slug,
+                title=title,
+                priority=priority,
+                status=status,
+                estimate_class=estimate_class,
+                estimate_calibrated_ai_days=estimate_days,
+            )
+        )
     return by_epic
 
 
@@ -330,7 +332,7 @@ def main() -> int:
     by_epic = load_plan_refs()
 
     total_plans = sum(len(plans) for plans in by_epic.values())
-    print(f"=== Active plans scanned, grouped by parent_epic ===\n")
+    print("=== Active plans scanned, grouped by parent_epic ===\n")
     print(f"Total plans with parent_epic: {total_plans}\n")
 
     for epic_slug in ACTIVE_EPICS:
@@ -342,7 +344,7 @@ def main() -> int:
         print(f"  {epic_slug:50s} {len(plans):3d} plans  {p_summary}")
     print()
 
-    print(f"=== Updating epic frontmatter (related_plans) + body (## Assigned active plans section) ===\n")
+    print("=== Updating epic frontmatter (related_plans) + body (## Assigned active plans section) ===\n")
     for epic_slug in ACTIVE_EPICS:
         epic_path = EPICS / f"{epic_slug}.md"
         if not epic_path.exists():

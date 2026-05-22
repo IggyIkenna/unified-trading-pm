@@ -162,17 +162,17 @@ Status remains BLOCKED-CREDENTIALS-GHA until operator rotates the secret.
 
 **Actions taken**:
 
-1. `GH_PAT` secret on `IggyIkenna/trading-agent-service` rotated to real fine-grained PAT from
-   `.act-secrets` (`github_pat_11AJ7M73I...`) via `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service`.
-   Prior value was OAuth token (`gho_...`) set earlier in session — now replaced with correct fine-grained PAT.
+1. `GH_PAT` secret on `IggyIkenna/trading-agent-service` rotated to real fine-grained PAT from `.act-secrets`
+   (`github_pat_11AJ7M73I...`) via `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service`. Prior value was OAuth
+   token (`gho_...`) set earlier in session — now replaced with correct fine-grained PAT.
 
 2. Post-PAT-fix investigation: a prior GHA run (26273454945, 07:01 UTC) failed with a NEW error:
    `ImportError: cannot import name 'CanonicalPullRequest' from unified_api_contracts.canonical.domain.infrastructure`
-   in `cme_polymarket_link.py:18`. Root cause: that run cloned UAC at an intermediate bad state on
-   `live-defi-rollout`; current UAC HEAD (`46777f2e`) has correct `CanonicalQuestionGroup` import.
+   in `cme_polymarket_link.py:18`. Root cause: that run cloned UAC at an intermediate bad state on `live-defi-rollout`;
+   current UAC HEAD (`46777f2e`) has correct `CanonicalQuestionGroup` import.
 
-3. Empty commit pushed to trading-agent-service (`3c596ba`) to trigger fresh run `26273958692` (in_progress as of
-   07:14 UTC). This run will clone UAC at `46777f2e` and should pass.
+3. Empty commit pushed to trading-agent-service (`3c596ba`) to trigger fresh run `26273958692` (in_progress as of 07:14
+   UTC). This run will clone UAC at `46777f2e` and should pass.
 
 **Expected outcome**: Run `26273958692` green → this issue → RESOLVED → archive as ACKED-INTO-CODE.
 
@@ -184,10 +184,10 @@ GHA run `26275695242` PASSED (green, 2m25s). Root causes fixed:
 
 1. **GH_PAT**: rotated to real fine-grained PAT — clone auth succeeds.
 2. **UAC ImportError**: transient bad state on LDR; stable UAC HEAD since `46777f2e`.
-3. **pip-audit CVEs**: globally ignored `CVE-2026-45409` (idna) + `CVE-2026-3219` + `CVE-2026-6357` (pip 26.0.1)
-   in `base-service.sh` — GHA Ubuntu runner has different pip/idna than macOS local venv.
-4. **Production readiness validators**: `validate_plan_links.py` fixed to skip sibling-repo links in
-   partial-workspace GHA (only PM + dep repos cloned, not execution-service/deployment-service etc.).
+3. **pip-audit CVEs**: globally ignored `CVE-2026-45409` (idna) + `CVE-2026-3219` + `CVE-2026-6357` (pip 26.0.1) in
+   `base-service.sh` — GHA Ubuntu runner has different pip/idna than macOS local venv.
+4. **Production readiness validators**: `validate_plan_links.py` fixed to skip sibling-repo links in partial-workspace
+   GHA (only PM + dep repos cloned, not execution-service/deployment-service etc.).
 
-Remaining pre-existing (not blocking): STEP 5.82 (image-build-on-staging-merge) — wired to staging branch,
-not live-defi-rollout; tracked under deployment_and_user_management_master epic.
+Remaining pre-existing (not blocking): STEP 5.82 (image-build-on-staging-merge) — wired to staging branch, not
+live-defi-rollout; tracked under deployment_and_user_management_master epic.

@@ -471,9 +471,9 @@ t=client deposits more:
 | Family                            | Typical category               | Custody model                                 | Transfer flows we own                                                                 |
 | --------------------------------- | ------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------- |
 | ML Directional (continuous)       | CEFI / TRADFI                  | Client SMA (CeFi) or IBKR tunnel (TradFi)     | Internal venue wallet moves only                                                      |
-| ML Directional (event-settled)    | SPORTS / PREDICTION            | Firm pooled (Unity) or firm Polymarket wallet | Treasury ↔ Unity; rarely moves                                                        |
+| ML Directional (event-settled)    | SPORTS / PREDICTION            | Firm pooled (Unity) or firm Polymarket wallet | Treasury ↔ Unity; rarely moves                                                       |
 | Rules Directional (continuous)    | CEFI / TRADFI                  | Client SMA / IBKR tunnel                      | Internal venue moves                                                                  |
-| Rules Directional (event-settled) | SPORTS                         | Firm pooled (Unity)                           | Treasury ↔ Unity                                                                      |
+| Rules Directional (event-settled) | SPORTS                         | Firm pooled (Unity)                           | Treasury ↔ Unity                                                                     |
 | Carry & Yield (all)               | DEFI / CEFI                    | DeFi client wallet / CeFi SMA                 | Bridges + on-chain tx (DeFi); internal wallet moves (CeFi); no cross-client transfers |
 | Arbitrage / Structural            | All                            | Varies                                        | ATOMIC multi-leg for fungible arb; multi-wallet per leg for cross-venue               |
 | Market Making                     | All                            | Varies                                        | Quote lifecycle on single venue typically                                             |

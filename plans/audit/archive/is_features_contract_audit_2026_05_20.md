@@ -215,20 +215,20 @@ is resolved correctly). A1 CSV confirms 7 violations in `volatility/core/data_lo
 | `cefi/cli/handlers/perp_funding_handler.py`      | ❌ No IS read; reads MTDS `perp-funding` bucket directly                                                             | full file                   |
 | `commodity/cli/handlers/batch_handler.py`        | N/A — IS has no commodity adapters; commodity family must self-enumerate from EIA/BH/CFTC                            | —                           |
 | `calendar/cli/handlers/batch_handler.py`         | N/A — IS has no calendar adapters; calendar family self-enumerates from Polygon/FRED                                 | —                           |
-| `multi_timeframe/cli/handlers/batch_handler.py`  | ⚠ Depends on upstream delta_one features; no direct IS call; acceptable if delta_one IS-consumption is correct       | —                           |
-| `cross_instrument/cli/handlers/batch_handler.py` | ⚠ Processes paired instruments from MTDS catalog; no direct IS call; universe derived from paired instrument list    | —                           |
+| `multi_timeframe/cli/handlers/batch_handler.py`  | ⚠ Depends on upstream delta_one features; no direct IS call; acceptable if delta_one IS-consumption is correct      | —                           |
+| `cross_instrument/cli/handlers/batch_handler.py` | ⚠ Processes paired instruments from MTDS catalog; no direct IS call; universe derived from paired instrument list   | —                           |
 
 ### Dim 3 — Manifest emission discipline per handler
 
-| Family / Handler                                 | Status                                                                                                                                                                 | Evidence                 |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `sports/cli/handlers/batch_handler.py`           | ✅ Emits `record_captured`, `record_empty(reason=...)`, `record_failed` per shard                                                                                      | lines 394-427, 488-515   |
-| `volatility/cli/handlers/batch_handler.py`       | ✅ Emits `record_captured` + `record_expected_unattempted` via `_record_out_of_scope_instruments`                                                                      | lines 281-322            |
+| Family / Handler                                 | Status                                                                                                                                                                  | Evidence                 |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `sports/cli/handlers/batch_handler.py`           | ✅ Emits `record_captured`, `record_empty(reason=...)`, `record_failed` per shard                                                                                       | lines 394-427, 488-515   |
+| `volatility/cli/handlers/batch_handler.py`       | ✅ Emits `record_captured` + `record_expected_unattempted` via `_record_out_of_scope_instruments`                                                                       | lines 281-322            |
 | `cefi/cli/handlers/perp_funding_handler.py`      | ⚠ `record_empty(reason=EXPECTED_NO_FUNDING_RATE_TICKS)` documented in docstring; actual emission call commented out at line 81 (`# manifest_writer.record_empty(...)`) | line 81                  |
-| `onchain/cli/handlers/batch_handler.py`          | ❌ **Silent absence** — 6 except blocks catch exceptions with EnhancedError wrapping + `logger.warning` but NO `record_*` call in any path                             | lines 97-161             |
-| `commodity/cli/handlers/batch_handler.py`        | ❌ **Silent absence** — commodity family has no manifest write calls; commodity batch runs, emits signal, but no manifest record                                       | grep: 0 record\_\* calls |
+| `onchain/cli/handlers/batch_handler.py`          | ❌ **Silent absence** — 6 except blocks catch exceptions with EnhancedError wrapping + `logger.warning` but NO `record_*` call in any path                              | lines 97-161             |
+| `commodity/cli/handlers/batch_handler.py`        | ❌ **Silent absence** — commodity family has no manifest write calls; commodity batch runs, emits signal, but no manifest record                                        | grep: 0 record\_\* calls |
 | `calendar/engine/calendar_orchestrator.py`       | ⚠ `record_empty(reason="SOURCE_RETURNED_ZERO")` emitted on empty day, but uses string literal not enum                                                                 | lines 314-323            |
-| `multi_timeframe/cli/handlers/batch_handler.py`  | ❌ **Silent absence** — no manifest record\_\* calls found                                                                                                             | grep: 0 hits             |
+| `multi_timeframe/cli/handlers/batch_handler.py`  | ❌ **Silent absence** — no manifest record\_\* calls found                                                                                                              | grep: 0 hits             |
 | `cross_instrument/cli/handlers/batch_handler.py` | ⚠ `paired_spec_resolver.py` has record calls; top-level batch handler unclear — A1 CSV shows 4 violations                                                              | A1 CSV                   |
 
 ### Dim 4 — Manifest schema version per bucket

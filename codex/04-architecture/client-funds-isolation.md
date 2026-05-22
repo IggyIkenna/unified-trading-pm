@@ -13,8 +13,8 @@ wording that overstated the implemented raise count):
 
 1. **UAC structural guarantee**: `TransferIntent` carries a single `client_id: str` field (not separate
    `source_account.client_id` / `dest_account.client_id`). By schema design there is only ONE client identity on an
-   intent, so cross-client mixing is architecturally prevented at schema construction — no runtime validator is needed or
-   present. Any code that tries to move funds between client A and client B must craft TWO intents, each with its own
+   intent, so cross-client mixing is architecturally prevented at schema construction — no runtime validator is needed
+   or present. Any code that tries to move funds between client A and client B must craft TWO intents, each with its own
    `client_id`; the routing layer catches that at the execution gate (layer 2).
 2. **Execution-service runtime gate (ONLY implemented raise)**: `TransferCoordinator.execute()`
    (`transfer_coordinator.py:241`) rejects any TransferIntent whose `client_id` differs from the process-bound
@@ -101,12 +101,12 @@ or read-only config visibility**, "cross-client" is a valid descriptor.
 
 ## Code-level invariants
 
-| Layer             | Class / function                                        | Invariant                                                                                                                                          | Raises                                                  |
-| ----------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| UAC schema        | `TransferIntent` (single `client_id: str` field)        | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents           | N/A — structural, not a runtime validator               |
-| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — PLANNED) | At emit time: will carry identical `client_id` per emitted TransferIntent — **not yet shipped as of 2026-05-22**                                   | `CrossClientTransferForbiddenError` (emit-time — PLANNED) |
+| Layer             | Class / function                                                | Invariant                                                                                                                                                  | Raises                                                               |
+| ----------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| UAC schema        | `TransferIntent` (single `client_id: str` field)                | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents                   | N/A — structural, not a runtime validator                            |
+| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — PLANNED)         | At emit time: will carry identical `client_id` per emitted TransferIntent — **not yet shipped as of 2026-05-22**                                           | `CrossClientTransferForbiddenError` (emit-time — PLANNED)            |
 | execution-service | `TransferCoordinator.execute()` (`transfer_coordinator.py:241`) | At consume time: rejects any TransferIntent whose `client_id` ≠ process-bound CLIENT_ID; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT` | `CrossClientTransferForbiddenError` (the only current runtime raise) |
-| execution-service | `isolation_policy.assert_client_allowed()` (existing)   | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                          | `CrossClientEventError` (already in place)              |
+| execution-service | `isolation_policy.assert_client_allowed()` (existing)           | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                                  | `CrossClientEventError` (already in place)                           |
 
 ## Required tests
 

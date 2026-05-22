@@ -49,11 +49,10 @@ Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
       adapter is either "paired" or "BLOCKED-CREDENTIALS"). Run:
       `python3 plans/audit/results/a6_batch_live_adapter_parity.py` — zero unclassified rows
 
-
 ### E2E Cross-Cutting Verification
 
-- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest
-  row → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
+- (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
+  → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
 - (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
   infrastructure, error classification, and isolation patterns without real cloud access.
 

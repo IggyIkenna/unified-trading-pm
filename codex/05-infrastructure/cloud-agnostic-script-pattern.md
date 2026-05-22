@@ -18,7 +18,12 @@ last_reviewed: 2026-05-17
 
 # Cloud-Agnostic Script Pattern
 
-> **[DELTA 2026-05-22]** **Current state:** Phase 2 prep landed (`cloud-providers.yaml` extended + `setup-defi-buckets.sh` shipped). `lib/cloud-helpers.sh` is still empty; the Python UCI factory and QG lint rule are advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by QG STEP 5.69. **Planned delta:** Remaining phases tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Every workspace script uses `lib/cloud-helpers.sh` + UCI factory; QG lint rule is a hard error for non-compliant scripts.
+> **[DELTA 2026-05-22]** **Current state:** Phase 2 prep landed (`cloud-providers.yaml` extended +
+> `setup-defi-buckets.sh` shipped). `lib/cloud-helpers.sh` is still empty; the Python UCI factory and QG lint rule are
+> advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by QG STEP 5.69.
+> **Planned delta:** Remaining phases tracked under `plans/epics/infrastructure_master.md`. **Target architecture:**
+> Every workspace script uses `lib/cloud-helpers.sh` + UCI factory; QG lint rule is a hard error for non-compliant
+> scripts.
 
 > **Status:** ACTIVE — Phase 2 prep landed 2026-05-07 (cloud-providers.yaml extended for 10 missing DeFi keys;
 > `deployment-service/scripts/aws/setup-defi-buckets.sh` shipped as the first AWS-side provisioning script). Subsequent

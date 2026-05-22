@@ -123,8 +123,8 @@ have a fixture_id | status: todo
 
 - id: phase-e-subclass-design-deferred content: |
   - [x] ✅ **DEFERRED-POST-CUTOVER — stays in this archived plan; activates post-May-23. DO NOT move without operator
-        ack.** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
-        For fields where the declaration flip would add real type-safety value but can't be expressed without subclasses
+        ack.** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).** For
+        fields where the declaration flip would add real type-safety value but can't be expressed without subclasses
         (primarily `expiry` for FUTURE/OPTION): The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)`
         with `expiry: datetime` non-optional) requires: (a) instruments-service adapters return typed subclasses (not
         base InstrumentRecord) (b) consumers narrow the type at read boundaries (c) parquet read path infers the subtype

@@ -97,16 +97,16 @@ remediation execution defaults to Sonnet 4.6.
 
 ### #1. Strategy archetype audit (53 archetypes, cross-codebase)
 
-| Field             | Value                                                                                                                                                                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Track             | AUDIT-EXISTING                                                                                                                                                                                                                                                           |
-| Owner-side        | Ikenna (in-flight via parallel Opus-1M agent)                                                                                                                                                                                                                            |
-| Mockability       | n/a — audit reads code + plans + codex                                                                                                                                                                                                                                   |
-| Deps              | Post strategy-service consolidation (Phase 11) clean                                                                                                                                                                                                                     |
-| Wrapper plan      | TBD post-audit                                                                                                                                                                                                                                                           |
+| Field             | Value                                                                                                                                                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Track             | AUDIT-EXISTING                                                                                                                                                                                                                                                                               |
+| Owner-side        | Ikenna (in-flight via parallel Opus-1M agent)                                                                                                                                                                                                                                                |
+| Mockability       | n/a — audit reads code + plans + codex                                                                                                                                                                                                                                                       |
+| Deps              | Post strategy-service consolidation (Phase 11) clean                                                                                                                                                                                                                                         |
+| Wrapper plan      | TBD post-audit                                                                                                                                                                                                                                                                               |
 | Wraps existing    | [`strategy_archetype_logic_audit_2026_05_20.md`](../../audit/results/strategy_archetype_logic_audit_2026_05_20.md), `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`, `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`, `defi_recursive_borrow_archetypes_2026_05_10.md` |
-| Operator approval | n/a — already acked 2026-05-20                                                                                                                                                                                                                                           |
-| Status            | `IN-FLIGHT`                                                                                                                                                                                                                                                              |
+| Operator approval | n/a — already acked 2026-05-20                                                                                                                                                                                                                                                               |
+| Status            | `IN-FLIGHT`                                                                                                                                                                                                                                                                                  |
 
 Owns: per-archetype logic audit + master strategy plan deliverable. Not in scope for re-pickup — included for inventory
 completeness.
@@ -124,8 +124,8 @@ completeness.
 | Operator approval | n/a — already acked 2026-05-20                                                           |
 | Status            | `IN-FLIGHT` (Phase A GREEN; B/C/D pending)                                               |
 
-Owns: data-pipeline correctness (manifest divergence / v8 backfill / expected_coverage / IS↔MTDS contract). Included for
-inventory completeness; not for re-pickup.
+Owns: data-pipeline correctness (manifest divergence / v8 backfill / expected_coverage / IS↔MTDS contract). Included
+for inventory completeness; not for re-pickup.
 
 ### #3. DeFi May-23 archetypes — batch backtest e2e (mock-data feed)
 
@@ -392,6 +392,6 @@ follow-up issue docs (next-round pool).
 
 ## Status update — 2026-05-22
 
-Updated stale link: `strategy_archetype_logic_audit_2026_05_20.md` moved to `plans/audit/results/` — link fixed in Row #1 Wraps existing column.
-Rows #1–#2 remain IN-FLIGHT. Rows #3–#14 remain SEEDED (no slots assigned yet).
-This file stays active while the audit pool is running.
+Updated stale link: `strategy_archetype_logic_audit_2026_05_20.md` moved to `plans/audit/results/` — link fixed in Row
+#1 Wraps existing column. Rows #1–#2 remain IN-FLIGHT. Rows #3–#14 remain SEEDED (no slots assigned yet). This file
+stays active while the audit pool is running.

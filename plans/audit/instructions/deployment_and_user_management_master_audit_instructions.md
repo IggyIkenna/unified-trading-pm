@@ -45,12 +45,11 @@ post-cutover; ratchet baseline from 27 → 0 cloud-locked references).
 - [ ] (f) **Health endpoint returns data_freshness**: deployment-api `/health` endpoint includes `data_freshness` field
       in response. Test: `curl http://localhost:8004/health` after stack start
 
-
 ### E2E Flow Verification
 
 - (e2e-promote) **Promote flow audit**: run a paper-to-live promote end-to-end (paper_1d → live_early) using a test
-  strategy. Confirm ManualTradeGateDialog fires. If promote can't run against prod, verify the code path with a
-  dry-run or staging environment.
+  strategy. Confirm ManualTradeGateDialog fires. If promote can't run against prod, verify the code path with a dry-run
+  or staging environment.
 - (mock-upstream) **Staging-only audit**: deployment and promote workflows MUST be auditable on staging without
   affecting prod. Document the staging invocation.
 

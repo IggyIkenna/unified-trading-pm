@@ -309,4 +309,6 @@ If you change this file, audit the above for staleness. If you change any of the
 
 ## Cross-reference verification — 2026-05-22
 
-Verified all section links and references. No broken links found. No "Audit instructions per epic" section exists in this file — audit instructions are embedded in each epic file directly. No links to archived issue docs found (all issue doc links in this file are pattern descriptions, not specific file paths). No changes required to fix broken links.
+Verified all section links and references. No broken links found. No "Audit instructions per epic" section exists in
+this file — audit instructions are embedded in each epic file directly. No links to archived issue docs found (all issue
+doc links in this file are pattern descriptions, not specific file paths). No changes required to fix broken links.

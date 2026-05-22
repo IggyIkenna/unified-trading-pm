@@ -135,14 +135,15 @@ reconcilers + `mtds-s4-10` rescan complete.
       canonical shard granularity per table (static tables like leagues/teams/venues should be per-season not daily;
       C.1 + C.11 audit findings). [AUDIT 2026-05-22 slot-11: BLOCKED-UPSTREAM — gated on (1) sports rename Stage 1
       (operator-gated, not done), (2) UAC `SchemaContract.cadence` field (not in contracts.py:92 yet), (3) new
-      `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` reason codes in UAC `honest_coverage.py`. Stage 4
-      of `manifest_master` epic (vm-defi). No slot-11 action until prerequisites clear.]
+      `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` reason codes in UAC `honest_coverage.py`.
+      Stage 4 of `manifest_master` epic (vm-defi). No slot-11 action until prerequisites clear.]
 - [x] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
       Coordinated with writegate Phase 2.C. [AUDIT 2026-05-22 slot-11: STALE/RESOLVED — `_ensure_timestamp` is NOT in
-      active code in features-service (the consolidated repo). It appears ONLY in comments: `data/writer.py:120` (comment:
-      "Phase 2.C writegate: _ensure_timestamp shim removed") + `exporters/odds_features_exporter.py:332` (comment).
-      The shim was removed as part of Phase 2.C writegate when features-sports-service was consolidated into features-service.
-      The old path `features-sports-service/...` no longer exists. **CLOSED-AS-RESOLVED 2026-05-22** — shim already gone.]
+      active code in features-service (the consolidated repo). It appears ONLY in comments: `data/writer.py:120`
+      (comment: "Phase 2.C writegate: _ensure_timestamp shim removed") + `exporters/odds_features_exporter.py:332`
+      (comment). The shim was removed as part of Phase 2.C writegate when features-sports-service was consolidated into
+      features-service. The old path `features-sports-service/...` no longer exists. **CLOSED-AS-RESOLVED 2026-05-22** —
+      shim already gone.]
 - [ ] [AGENT] P0. All affected downstream consumers updated in this plan (no "fix later"). [AUDIT 2026-05-07: BLOCKED-ON
       infrastructure_master:raw-tables-migration]
 - [ ] [VERIFY] P0. Manifest reads + writes use same shard key for every (service, data_type). [AUDIT 2026-05-07: FRESH —
@@ -150,9 +151,10 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [VERIFY] P0. Data-status surfaces match writer granularity (audit report only — UI fix tracked separately). [AUDIT
       2026-05-07: BLOCKED-ON infrastructure_master:Audit-findings-B.2-drilldown-depth-audit; UI fix lives in
       `data_status_drilldown_shard_atom_alignment_2026_05_07.md`]
-- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests. [AUDIT 2026-05-22 slot-11: PARTIAL — `_ensure_timestamp`
-      fallback already gone (Phase 2.C writegate + consolidation); deployment-api@`64d2be9` dropped DEFI legacy-venue
-      fallback; remaining open scope is raw-tables canonical-shape design (BLOCKED-UPSTREAM per item above)]
+- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests. [AUDIT 2026-05-22 slot-11: PARTIAL —
+      `_ensure_timestamp` fallback already gone (Phase 2.C writegate + consolidation); deployment-api@`64d2be9` dropped
+      DEFI legacy-venue fallback; remaining open scope is raw-tables canonical-shape design (BLOCKED-UPSTREAM per item
+      above)]
 - [ ] [VERIFY] P0. Tests cover write-gates: row=0 → fail loud, high NaN → fail loud, schema mismatch → fail loud. [AUDIT
       2026-05-07: FRESH — verification gate; `record_empty(reason=...)` + `record_failed` shipped via UTL@`958634f9`;
       per-test-fixture verification across services pending]

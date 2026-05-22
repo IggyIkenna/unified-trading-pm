@@ -52,7 +52,8 @@ spread). Volume scaling capped by DEX depth — for $50K-$500K positions tractab
 
 ### 2. `ARBITRAGE_PRICE_DISPERSION` — cross-venue spread trades
 
-New row "DeFi (DEX-native L2/L1)": Lighter ↔ Pacifica ↔ Extended ↔ Hyperliquid ↔ Aster. Signal = price + funding-rate.
+New row "DeFi (DEX-native L2/L1)": Lighter ↔ Pacifica ↔ Extended ↔ Hyperliquid ↔ Aster. Signal = price +
+funding-rate.
 
 **Why money is here:** the highest-edge cell in the entire table is the **DEX-DEX funding-rate dispersion**. CeFi-CeFi
 funding spreads run a few bps; DEX-DEX can run 30-50% APR. Concrete trade: short PACIFICA SOL perp (receiving funding at
@@ -152,20 +153,20 @@ The two genuine gaps are: (i) a Starknet RPC template in UAC, and (ii) the MTDS 
 
 #### C.1 — Audit: current state of EXTENDED-STARKNET across the stack
 
-| Layer                        | Status    | Reference                                                                                                               |
-| ---------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **UAC venue registration**   | ✓ EXISTS  | `market_data_categories.py:185`, `venue_mapping.py:88` (in `all_cefi_onchain_clob_venues`)                              |
-| **UAC provider mapping**     | ✓ EXISTS  | `venue_mapping.py:181` — `"EXTENDED-STARKNET": "extended_api"`                                                          |
-| **UAC start_date**           | ✓ EXISTS  | `venue_mapping.py:227` — `"EXTENDED-STARKNET": "2024-10-01"`                                                            |
-| **UAC instrument_types**     | ✓ EXISTS  | `venue_instrument_config.py:43` — `"EXTENDED-STARKNET": ["PERPETUAL"]`                                                  |
-| **UAC valid data_types**     | ✓ EXISTS  | inherits cefi DATA_TYPES_BY_ASSET_GROUP (incl. `ohlcv_1m` per UAC `e890022`)                                            |
-| **UAC Starknet RPC**         | ✗ MISSING | `_defi_chain_data.py` has zkSync + Solana mainnet/testnet only — no Starknet entry                                      |
-| **MTDS live adapter**        | ✓ EXISTS  | `umi_tick_provider.py:1007 _fetch_extended_rest` (live REST, ~30-day rolling, no historical)                            |
-| **MTDS historical adapter**  | ✗ MISSING | no `_fetch_extended_history` / `_fetch_extended_candles`                                                                |
+| Layer                        | Status     | Reference                                                                                                               |
+| ---------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **UAC venue registration**   | ✓ EXISTS   | `market_data_categories.py:185`, `venue_mapping.py:88` (in `all_cefi_onchain_clob_venues`)                              |
+| **UAC provider mapping**     | ✓ EXISTS   | `venue_mapping.py:181` — `"EXTENDED-STARKNET": "extended_api"`                                                          |
+| **UAC start_date**           | ✓ EXISTS   | `venue_mapping.py:227` — `"EXTENDED-STARKNET": "2024-10-01"`                                                            |
+| **UAC instrument_types**     | ✓ EXISTS   | `venue_instrument_config.py:43` — `"EXTENDED-STARKNET": ["PERPETUAL"]`                                                  |
+| **UAC valid data_types**     | ✓ EXISTS   | inherits cefi DATA_TYPES_BY_ASSET_GROUP (incl. `ohlcv_1m` per UAC `e890022`)                                            |
+| **UAC Starknet RPC**         | ✗ MISSING  | `_defi_chain_data.py` has zkSync + Solana mainnet/testnet only — no Starknet entry                                      |
+| **MTDS live adapter**        | ✓ EXISTS   | `umi_tick_provider.py:1007 _fetch_extended_rest` (live REST, ~30-day rolling, no historical)                            |
+| **MTDS historical adapter**  | ✗ MISSING  | no `_fetch_extended_history` / `_fetch_extended_candles`                                                                |
 | **MTDS routing**             | ⚠ PARTIAL | `umi_tick_provider.py:180` routes ALL data_types to live REST; no `(EXTENDED, ohlcv_1m) → historical` branch            |
-| **Manifest writes**          | ✓ READY   | once historical adapter returns canonical-schema rows, `PartitionedTickWriter` records captured shards automatically    |
-| **deployment-api rollup**    | ✓ READY   | new `(EXTENDED-STARKNET, ohlcv_1m)` rows surface via the multi-axis SHARD_AXIS_MATRIX (cefi → instrument_id) breakdowns |
-| **deployment-ui drill-down** | ✓ READY   | BreakdownsAccordion renders new venue+data_type combos from /coverage-summary breakdowns; no UI code change needed      |
+| **Manifest writes**          | ✓ READY    | once historical adapter returns canonical-schema rows, `PartitionedTickWriter` records captured shards automatically    |
+| **deployment-api rollup**    | ✓ READY    | new `(EXTENDED-STARKNET, ohlcv_1m)` rows surface via the multi-axis SHARD_AXIS_MATRIX (cefi → instrument_id) breakdowns |
+| **deployment-ui drill-down** | ✓ READY    | BreakdownsAccordion renders new venue+data_type combos from /coverage-summary breakdowns; no UI code change needed      |
 
 **Conclusion**: every system layer is ready except UAC Starknet RPC plumbing + the MTDS historical adapter + routing.
 Last-mile work, scoped tightly.

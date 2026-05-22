@@ -34,25 +34,31 @@ Ack this ping by appending `[2026-05-19 12:15 UTC] slot 11 — STARTED <first it
 
 ---
 
-[2026-05-22 UTC] slot 11 — WORK COMPLETE: `audit03_deployment_cron_provisioning_2026_05_22.md` Pre-audit + Phase 1 + Phase 2 DONE.
+[2026-05-22 UTC] slot 11 — WORK COMPLETE: `audit03_deployment_cron_provisioning_2026_05_22.md` Pre-audit + Phase 1 +
+Phase 2 DONE.
 
 **Shipped** (deployment-service@7026f49):
-- Phase 1 (F-41): 3 missing Cloud Run Job targets provisioned (`mtds_fast_t1_recon_job`, `mtds_cefi_t1_recon_job`, `batch_live_recon_job`) via new `terraform/gcp/audit03_cron_provisioning.tf`
+
+- Phase 1 (F-41): 3 missing Cloud Run Job targets provisioned (`mtds_fast_t1_recon_job`, `mtds_cefi_t1_recon_job`,
+  `batch_live_recon_job`) via new `terraform/gcp/audit03_cron_provisioning.tf`
 - Phase 1: `t1_batch_scheduler.tf` stale NOTE (L6-14) removed — crons now point at real jobs
 - Phase 2 (F-39): `mtds-paper-smoke` Cloud Run Job + 05:30 UTC daily scheduler provisioned
-- Phase 2 (F-40): `mtds-scenario-matrix` Cloud Run Job + 08:00 UTC daily scheduler provisioned (inert until `DEFI_LST_DEPEG_STETH_5PCT` scenario ships in carry-safety plan Phase 1)
+- Phase 2 (F-40): `mtds-scenario-matrix` Cloud Run Job + 08:00 UTC daily scheduler provisioned (inert until
+  `DEFI_LST_DEPEG_STETH_5PCT` scenario ships in carry-safety plan Phase 1)
 - Phase 2 (F-42): `alerting-paging` Cloud Run Job + hourly scheduler provisioned (55-min runtime per run)
 
 **Plan flips** (PM@ef5f82d4): Pre-audit ✅ + Phase 1 ✅ + Phase 2 ✅
 
 **BLOCKED — Phase 4** (terraform apply): `terraform` binary not installed on slot-11 host. Operator must run:
+
 ```bash
 cd deployment-service/terraform/gcp
 terraform plan -var-file="environments/prod.tfvars"
 terraform apply -var-file="environments/prod.tfvars" -auto-approve
 ```
-Then verify: `gcloud scheduler jobs describe` + `gcloud scheduler jobs run` for each of 4 schedulers.
-Documented in `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4.
+
+Then verify: `gcloud scheduler jobs describe` + `gcloud scheduler jobs run` for each of 4 schedulers. Documented in
+`audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4.
 
 ---
 
@@ -63,7 +69,8 @@ Documented in `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4.
 - **F-43** (e2e-testing@aee5b38): Solana devnet paper-execution path added to `colocated_engine.py` + `run-paper.sh`.
   - `_get_solana_connector_for_venue()`: routes Drift/Orca/Jupiter
   - `_execute_on_solana_devnet()`: paper_trade=True (signed, not broadcast)
-  - Wired into `_execute_instruction()` + `run_engine()` init; argparse choices updated; run-paper.sh banner + SOLANA_WALLET_PRIVATE_KEY warning added
+  - Wired into `_execute_instruction()` + `run_engine()` init; argparse choices updated; run-paper.sh banner +
+    SOLANA_WALLET_PRIVATE_KEY warning added
   - Plan flipped: PM@5882bece
 
 - **F-44** (unified-trading-system-ui@2febe52a): `tests/e2e/manual-trade-gate-dialog.spec.ts` — 4 Playwright tests:
@@ -76,9 +83,12 @@ Documented in `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4.
   - Plan flipped: PM@72413748
 
 **Status — `audit03_deployment_cron_provisioning_2026_05_22.md`**:
+
 - Pre-audit ✅, Phase 1 (F-41) ✅, Phase 2 (F-39/40/42) ✅, Phase 3 (F-43/44) ✅
 - Phase 4 BLOCKED-OPERATOR-DECISION (terraform not installed on slot-11 host) — see previous ping entry
 
-**vm_launcher_startup_url_migration plan**: all items complete, locked_by: live-defi-rollout. Needs `[unlock-plan]` from operator to archive.
+**vm_launcher_startup_url_migration plan**: all items complete, locked_by: live-defi-rollout. Needs `[unlock-plan]` from
+operator to archive.
 
-**No remaining agentable P0 items** in vm-cross-cutting scope without blockers (batch_live_symmetry_master has no assigned P0 plans; observability_master + client_isolation has only HUMAN/OPERATOR P0 items).
+**No remaining agentable P0 items** in vm-cross-cutting scope without blockers (batch_live_symmetry_master has no
+assigned P0 plans; observability_master + client_isolation has only HUMAN/OPERATOR P0 items).

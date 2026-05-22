@@ -10,8 +10,8 @@ last_reviewed: 2026-05-21
 > foreign-files rule for that specific case).
 >
 > Codified 2026-05-21 from the `orchestrator_v07_multi_vm_topology` plan (promoted to
-> [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md)). Implementation phases live
-> in active plans under `parent_epic: orchestrator_master`.
+> [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md)). Implementation phases live in
+> active plans under `parent_epic: orchestrator_master`.
 >
 > Composes with: [`orchestrator-multi-vm-topology.md`](orchestrator-multi-vm-topology.md) (where these mechanisms run);
 > [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md) (auth model the failover
@@ -76,21 +76,22 @@ def pick_failover_account(vm_id, current_account, exclude=None):
 
 ## C) Telegram alerts (workspace-wide alert framework)
 
-| Event                            | When                                                                  | Severity |
-| -------------------------------- | --------------------------------------------------------------------- | -------- |
-| `notify_agent_stuck_respawned`   | Auto-respawn fired per § A                                            | warn     |
-| `notify_agent_stuck_escalation`  | Respawn failed; operator needs to intervene                           | crit     |
-| `notify_account_failover`        | Active account swapped per § B                                        | info     |
-| `notify_all_accounts_exhausted`  | Failover ran out of healthy accounts                                  | crit     |
-| `notify_setup_token_required`    | 1-year long-lived token dead; operator must regenerate (replaces      | crit     |
-|                                  | `notify_oauth_refresh_failed` under r3 auth — see auth SSOT)          |          |
-| `notify_setup_token_expiring`    | Token within 30-day (warn) or 7-day (crit) window of expiry           | warn/crit |
-| `notify_git_staleness_red`       | Slot git_status red >15 min AND no auto-pull within 5 min             | warn     |
-| `notify_vm_unreachable`          | Dashboard's `/api/vm/summary` 5xx'd for >5 min                        | warn     |
+| Event                           | When                                                             | Severity  |
+| ------------------------------- | ---------------------------------------------------------------- | --------- |
+| `notify_agent_stuck_respawned`  | Auto-respawn fired per § A                                       | warn      |
+| `notify_agent_stuck_escalation` | Respawn failed; operator needs to intervene                      | crit      |
+| `notify_account_failover`       | Active account swapped per § B                                   | info      |
+| `notify_all_accounts_exhausted` | Failover ran out of healthy accounts                             | crit      |
+| `notify_setup_token_required`   | 1-year long-lived token dead; operator must regenerate (replaces | crit      |
+|                                 | `notify_oauth_refresh_failed` under r3 auth — see auth SSOT)     |           |
+| `notify_setup_token_expiring`   | Token within 30-day (warn) or 7-day (crit) window of expiry      | warn/crit |
+| `notify_git_staleness_red`      | Slot git_status red >15 min AND no auto-pull within 5 min        | warn      |
+| `notify_vm_unreachable`         | Dashboard's `/api/vm/summary` 5xx'd for >5 min                   | warn      |
 
 All channels: same group chat (`-5288420200`) for now. Per-VM channels deferred.
 
-**Deprecated under r3 auth** (see [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)):
+**Deprecated under r3 auth** (see
+[`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)):
 
 - ❌ `notify_oauth_token_expiring` (was firing at 1h-out for 8h tokens — replaced by `notify_setup_token_expiring` at
   30-day-out)

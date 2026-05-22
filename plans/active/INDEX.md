@@ -16,12 +16,13 @@ This is the canonical index of all active plans. Plans are organized by domain.
   asset_groups ahead of the 2026-05-23 DeFi cutover. Topology: MTDS standalone cluster (websocket-pool concerns
   isolated), MDPS+features-asset-scoped colocated per asset_group, features-cross-cutting standalone flavor of same
   image. Cascade: MTDS → MDPS → features-service via Redis Streams (CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED →
-  FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a `GROUP BY pipeline_mode`
-  over the same manifest. Live gap semantics extend the 4-category empty-output tree with stale-not-missing wiring via
-  ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap windows with smooth handoff to
-  live at the next aligned boundary. Health-API extension + alerting-service tier-up + circuit breakers wired to
-  strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a new dedicated stream). 15
-  phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 + gcs_migration_bundle Phase 9.
+  FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a
+  `GROUP BY pipeline_mode` over the same manifest. Live gap semantics extend the 4-category empty-output tree with
+  stale-not-missing wiring via ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap
+  windows with smooth handoff to live at the next aligned boundary. Health-API extension + alerting-service tier-up +
+  circuit breakers wired to strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a
+  new dedicated stream). 15 phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 +
+  gcs_migration_bundle Phase 9.
 
 - [features_repo_consolidation_2026_05_08.md](features_repo_consolidation_2026_05_08.md) — **Pre-requisite for
   live-pipeline.** Merge 8 separate `features-*-service` repos (calendar / commodity / cross-instrument / delta-one /

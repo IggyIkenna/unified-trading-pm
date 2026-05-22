@@ -305,6 +305,6 @@ Beyond presence/absence: does the shipped code do what we _intended_? Read the c
 
 ## Deferred work — migrated to:
 
-| Item | Status | Successor |
-| ---- | ------ | --------- |
+| Item                                                            | Status                                                          | Successor                                         |
+| --------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
 | D14 — `DoneRequest` repo/branch + brain-side `git fetch` verify | DEFERRED-POST-CUTOVER (activates when Ikenna VM workers deploy) | `agent_orchestrator_workers_on_vms_2026_05_19.md` |

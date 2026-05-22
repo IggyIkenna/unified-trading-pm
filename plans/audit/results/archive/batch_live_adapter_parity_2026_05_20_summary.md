@@ -2,7 +2,8 @@
 
 _Generated: 2026-05-20T11:28:40.848987+00:00_
 
-_Updated: 2026-05-21 — slot-11 Phase 12 remediation: all 4 defi BATCH_ONLY cells resolved via curve_defi_ws.py + jito_defi_ws.py + morpho_defi_ws.py (live-defi-rollout branch)._
+_Updated: 2026-05-21 — slot-11 Phase 12 remediation: all 4 defi BATCH_ONLY cells resolved via curve_defi_ws.py +
+jito_defi_ws.py + morpho_defi_ws.py (live-defi-rollout branch)._
 
 Adapter files scanned: 573 across 3 repos. In-scope (asset_group, venue_token, data_type) tuples checked: 160.
 
@@ -20,21 +21,21 @@ Adapter files scanned: 573 across 3 repos. In-scope (asset_group, venue_token, d
 
 Total BATCH_ONLY cells: **13** (review-blocking — every batch adapter MUST have a live equivalent)
 
-| asset_group | venue       | data_type         | batch file count | sample                                                                                                             |
-| ----------- | ----------- | ----------------- | ---------------: | ------------------------------------------------------------------------------------------------------------------ |
-| cefi        | aster       | liquidations      |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
-| cefi        | aster       | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
-| cefi        | deribit     | trades            |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_ws_mixin.py`                  |
-| cefi        | hyperliquid | book_snapshot_5   |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
-| cefi        | hyperliquid | derivative_ticker |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
-| cefi        | hyperliquid | liquidations      |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
-| cefi        | hyperliquid | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
-| ~~defi~~    | ~~curve~~   | ~~dex_pools~~     |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
-| ~~defi~~    | ~~curve~~   | ~~dex_swaps~~     |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
-| ~~defi~~    | ~~jito~~    | ~~lst_rates~~     |                2 | ✅ RESOLVED 2026-05-21 — `jito_defi_ws.py` (live-defi-rollout branch)                                              |
-| ~~defi~~    | ~~morpho~~  | ~~lending_indices~~ |              1 | ✅ RESOLVED 2026-05-21 — `morpho_defi_ws.py` (live-defi-rollout branch)                                            |
-| prediction  | kalshi      | trades            |                2 | `market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py`          |
-| prediction  | polymarket  | trades            |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py`         |
+| asset_group | venue       | data_type           | batch file count | sample                                                                                                             |
+| ----------- | ----------- | ------------------- | ---------------: | ------------------------------------------------------------------------------------------------------------------ |
+| cefi        | aster       | liquidations        |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
+| cefi        | aster       | trades              |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py`       |
+| cefi        | deribit     | trades              |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_ws_mixin.py`                  |
+| cefi        | hyperliquid | book_snapshot_5     |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
+| cefi        | hyperliquid | derivative_ticker   |                1 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
+| cefi        | hyperliquid | liquidations        |                1 | `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`                                     |
+| cefi        | hyperliquid | trades              |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` |
+| ~~defi~~    | ~~curve~~   | ~~dex_pools~~       |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
+| ~~defi~~    | ~~curve~~   | ~~dex_swaps~~       |                1 | ✅ RESOLVED 2026-05-21 — `curve_defi_ws.py` (live-defi-rollout branch)                                             |
+| ~~defi~~    | ~~jito~~    | ~~lst_rates~~       |                2 | ✅ RESOLVED 2026-05-21 — `jito_defi_ws.py` (live-defi-rollout branch)                                              |
+| ~~defi~~    | ~~morpho~~  | ~~lending_indices~~ |                1 | ✅ RESOLVED 2026-05-21 — `morpho_defi_ws.py` (live-defi-rollout branch)                                            |
+| prediction  | kalshi      | trades              |                2 | `market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py`          |
+| prediction  | polymarket  | trades              |                2 | `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py`         |
 
 ## MISSING_BOTH cells (no adapter detected — silent gap)
 

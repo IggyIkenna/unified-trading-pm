@@ -74,15 +74,20 @@ def main() -> int:
                 # that are either present-but-file-missing OR absent (partial
                 # workspace, e.g. GHA only clones PM + dep repos). PM-internal
                 # paths (plans/, codex/, scripts/, etc.) are checked strictly.
-                _PM_INTERNAL = frozenset({
-                    "plans", "codex", "scripts", "cursor-configs",
-                    "cursor-rules", ".cursor", ".github", "tests",
-                })
+                _PM_INTERNAL = frozenset(
+                    {
+                        "plans",
+                        "codex",
+                        "scripts",
+                        "cursor-configs",
+                        "cursor-rules",
+                        ".cursor",
+                        ".github",
+                        "tests",
+                    }
+                )
                 first_segment = link_path.lstrip("./").split("/", 1)[0]
-                if first_segment and (
-                    (ws_root / first_segment).is_dir()
-                    or first_segment not in _PM_INTERNAL
-                ):
+                if first_segment and ((ws_root / first_segment).is_dir() or first_segment not in _PM_INTERNAL):
                     continue
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

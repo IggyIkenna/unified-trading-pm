@@ -174,9 +174,9 @@ live-cluster / experiment) by the resolved tier. Bucket suffixes per env follow
 
 The UI is asymmetric on purpose:
 
-- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel
-  like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in the
-  deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
+- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST
+  feel like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in
+  the deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
 
   ```
   /api/monitor/backfill?cloud=<gcp|aws>
@@ -188,10 +188,10 @@ The UI is asymmetric on purpose:
   Cache TTL 60s default. The operator clicks between sub-tabs without paying network latency. A unit test asserts no
   network call fires on sub-tab switch when the cache is warm; performance budget <50ms perceptible delay.
 
-- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a loading
-  spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the toggle.
-  Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region, different
-  SDK, different auth context), not a quick navigation.
+- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a
+  loading spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the
+  toggle. Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region,
+  different SDK, different auth context), not a quick navigation.
 
 The asymmetry is correct because the cost shapes are different: sub-tabs share a backend session (one round-trip fetches
 the full lifecycle-class cube for one cloud); cloud-toggle re-targets the SDK clients deployment-api dispatches on,

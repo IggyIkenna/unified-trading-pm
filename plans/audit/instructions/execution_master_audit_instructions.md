@@ -59,15 +59,14 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-archit
 - [ ] (h) **Shard-level failure isolation**: no `raise` inside per-venue loops in execution-service handlers. Grep:
       `rg "^\s+raise " execution-service/ --include="*.py"` — review each hit
 
-
 ### E2E Pipeline Verification (Batch → Paper → Live)
 
 - (e2e-batch) **Batch e2e audit**: run `bash scripts/quality-gates.sh` with mock upstream features data → strategy
-  produces signals → execution records manifest rows. Use `CLOUD_MOCK_MODE=true` and synthetic feature fixtures.
-  Goal: confirm the entire batch code path executes without real upstream data.
+  produces signals → execution records manifest rows. Use `CLOUD_MOCK_MODE=true` and synthetic feature fixtures. Goal:
+  confirm the entire batch code path executes without real upstream data.
 - (e2e-paper) **Paper trading goal post**: paper trading for ≥1 DeFi archetype runs ≥7 days without silent failures.
-  Manifest shows strategy_output + execution_record rows. PnL stream emits StrategyPnlStreamEvent. Dashboard shows
-  paper positions. This is the gate before live.
+  Manifest shows strategy_output + execution_record rows. PnL stream emits StrategyPnlStreamEvent. Dashboard shows paper
+  positions. This is the gate before live.
 - (e2e-live) **Live trading goal post**: live execution for ≥1 DeFi archetype with real wallet transactions confirmed
   on-chain. PnL calculator confirms realized + unrealized PnL matches expected from strategy signals.
 - (post-trade) **Post-trade audit**: after live runs ≥7 days, verify execution records match strategy signals (no

@@ -29,9 +29,10 @@ Codex SSOTs: `codex/14-customer-journeys/sports/` (per-book credential rotation 
 
 ## Phase 1 — Account provisioning (operator-side)
 
-- [x] ✅ **[BLOCKED-OPERATOR-DECISION — account provisioning gate; this plan re-activates when operator acks]** [HUMAN] P0.
-      Operator opens accounts at 14 UK/EU books + 2 US books; deposits £50-100/book minimum; provisions GeoComply/XPoint
-      subscription + API credentials; vaults in Secret Manager under `sports-scrapers-{book}-{credential_type}`. (trivial-sweep 2026-05-21)
+- [x] ✅ **[BLOCKED-OPERATOR-DECISION — account provisioning gate; this plan re-activates when operator acks]** [HUMAN]
+      P0. Operator opens accounts at 14 UK/EU books + 2 US books; deposits £50-100/book minimum; provisions
+      GeoComply/XPoint subscription + API credentials; vaults in Secret Manager under
+      `sports-scrapers-{book}-{credential_type}`. (trivial-sweep 2026-05-21)
 
 ## Phase 2 — Per-book scraper hardening (~8 cal AI-days)
 

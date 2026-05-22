@@ -142,7 +142,8 @@ AI-days.** Frontmatter not updated yet — owner agent flips on next substantive
 
 ---
 
-> **R9 RESOLVED 2026-05-12**: May-23 ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to `COPPER_MPC`/`FIREBLOCKS_MPC`. SSOT: `codex/04-architecture/custody-providers.md`.
+> **R9 RESOLVED 2026-05-12**: May-23 ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to
+> `COPPER_MPC`/`FIREBLOCKS_MPC`. SSOT: `codex/04-architecture/custody-providers.md`.
 
 ---
 
@@ -487,8 +488,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`: `SigningSurface`
         StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen dataclass (per_tx / per_hour /
         per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen dataclass with `validate()` enforcing 6
-        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE reject
-        withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
+        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE
+        reject withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
         `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
         `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,     WalletProvisioningConfig, WalletProvisioningError)`.
         **Cross-tab handshake artefact** consumed by slot 5 (defi_recursive_borrow archetype config — chain × protocol
@@ -503,9 +504,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 - [x] ✅ [AGENT] P1. **4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero).** Audit found intent-engine
       declares bridge steps but no adapters. Implement at least CCTP (Circle's cross-chain USDC) for May-23 — allows
-      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred unless
-      carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector full
-      implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
+      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred
+      unless carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector
+      full implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
       addresses in testnet_contracts.yaml, 25 unit tests green; Solana receive deferred — EVM-side only)
 
 - [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
@@ -865,13 +866,21 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 
 ## Temporary states + their canonical follow-up plans
 
-- **CEFFU adapter** if KYB doesn't complete by May-23: successor plan = `plans/active/ceffu_post_kyb_integration_<date>.md`.
-- **Native venue adapters** if 6-venue scope can't ship by May-23: successor plan = `plans/active/native_venue_adapter_<venue>_<date>.md`.
-- **Bridge protocol adapters beyond CCTP** (Wormhole / LayerZero): successor plan = `plans/active/bridge_adapters_wormhole_layerzero_<date>.md`.
+- **CEFFU adapter** if KYB doesn't complete by May-23: successor plan =
+  `plans/active/ceffu_post_kyb_integration_<date>.md`.
+- **Native venue adapters** if 6-venue scope can't ship by May-23: successor plan =
+  `plans/active/native_venue_adapter_<venue>_<date>.md`.
+- **Bridge protocol adapters beyond CCTP** (Wormhole / LayerZero): successor plan =
+  `plans/active/bridge_adapters_wormhole_layerzero_<date>.md`.
 
 ## DONE-2026-05-15 — slot 4 cycle close summary
 
-> Full cycle scope CLOSED on Day 1 (2026-05-12). Cloud-KMS signing pipeline verified end-to-end on staging. Key shipments: `CloudKmsCustodyProvider` (execution-service@`d45d24b4`), wallet schemas (UAC@`d721b6a`), credential-probe.sh (deployment-service@`15f5a1b`), 10 HSM CMKs provisioned. See sub-residuals table below for open items.
+> Full cycle scope CLOSED on Day 1 (2026-05-12). Cloud-KMS signing pipeline verified end-to-end on staging. Key
+> shipments: `CloudKmsCustodyProvider` (execution-service@`d45d24b4`), wallet schemas (UAC@`d721b6a`),
+> credential-probe.sh (deployment-service@`15f5a1b`), 10 HSM CMKs provisioned. See sub-residuals table below for open
+> items.
 
-
-**May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP (execution-service@`d45d24b4`); verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams — do NOT gate May-23. Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).
+**May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP (execution-service@`d45d24b4`);
+verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams — do NOT gate May-23.
+Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to
+June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).

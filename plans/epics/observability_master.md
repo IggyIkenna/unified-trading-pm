@@ -56,7 +56,8 @@ _(no plans currently assigned at this priority)_
 
 ### [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
 
-**status**: in archive (status: active in frontmatter — needs archival sweep; link corrected 2026-05-22) · **estimate**: 2.4 cal AI-days (class: design)
+**status**: in archive (status: active in frontmatter — needs archival sweep; link corrected 2026-05-22) · **estimate**:
+2.4 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 

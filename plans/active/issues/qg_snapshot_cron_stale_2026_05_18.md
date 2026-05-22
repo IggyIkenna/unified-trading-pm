@@ -76,12 +76,13 @@ Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/qg-snap
 **Both remaining items completed** (deployment-service@62c90f5):
 
 - [x] [AGENT] P1. Implemented `--dry-run-scheduler-body` flag in `launch-qg-snapshot-vm.sh` — outputs GCE
-      instances.insert REST JSON body with static VM name `qg-snapshot-daily` (VM self-deletes after completion).
-      Also added `qg-snapshot` task handler to `setup-data-pipeline-vm.sh` (was falling through to catch-all).
-- [x] [AGENT] P1. Created Cloud Scheduler job `qg-snapshot-daily` at `0 6 * * *` UTC, location `asia-northeast1`,
-      SA `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`. First scheduled run: 2026-05-23T06:00:00Z.
+      instances.insert REST JSON body with static VM name `qg-snapshot-daily` (VM self-deletes after completion). Also
+      added `qg-snapshot` task handler to `setup-data-pipeline-vm.sh` (was falling through to catch-all).
+- [x] [AGENT] P1. Created Cloud Scheduler job `qg-snapshot-daily` at `0 6 * * *` UTC, location `asia-northeast1`, SA
+      `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`. First scheduled run: 2026-05-23T06:00:00Z.
 
 **Verify after 2026-05-23 06:30 UTC**:
+
 ```bash
 gsutil ls gs://central-element-323112-deployment-events/quality_gates_snapshot/
 gcloud scheduler jobs describe qg-snapshot-daily --location=asia-northeast1 --project=central-element-323112

@@ -886,7 +886,7 @@ value + descriptor + engine class + codex doc).
 | `ARCHETYPE_CONCENTRATION_MULTIPLIER`                           | Unknown archetype → silently gets 1.0 | **NOT ENFORCED**                                          |
 | `ARCHETYPE_RULES` coverage                                     | New archetype with no risk rules      | **NOT ENFORCED** — no test requires ≥1 rule per archetype |
 | `_BUILDERS_BY_ARCHETYPE` `KeyError`                            | Archetype with no catalog builder     | Runtime — universe load                                   |
-| `AllocatorArchetype` ↔ archetype binding                       | New archetype with no rank allocator  | **NOT ENFORCED** — falls back to generic                  |
+| `AllocatorArchetype` ↔ archetype binding                      | New archetype with no rank allocator  | **NOT ENFORCED** — falls back to generic                  |
 | Codex doc existence                                            | Missing codex doc                     | **NOT ENFORCED**                                          |
 
 ### 0.17 Config architecture — hot-reload vs restart + hardcoded value inventory (operator: "any hardcoded values outside config")

@@ -270,7 +270,7 @@ measurement) is agent-runnable with ADC admin perms.
 - [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) § A5 + A6 —
   bucket aliases + Done-def #3 cutover-deferral context.
 - [`work_split_2026_05_12_ikenna.md`](../archive/2026_05/work_split_2026_05_12_ikenna.md) +
-  [`work_split_2026_05_12_harsh.md`](../archive/2026_05/work_split_2026_05_12_harsh.md) — Cycle 1 (current); the predecessor this roadmap
-  continues from.
+  [`work_split_2026_05_12_harsh.md`](../archive/2026_05/work_split_2026_05_12_harsh.md) — Cycle 1 (current); the
+  predecessor this roadmap continues from.
 - CLAUDE.md § "Daily Work-Split Process" + § "Per-Tab Worktrees" + § "Plans Run To Actual Completion" — workflow rules
   this roadmap operates under.

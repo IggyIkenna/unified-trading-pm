@@ -1,8 +1,11 @@
 ## [slot-1-main] 2026-05-22 — P0 bucket fix + strategy/execution manifest emission
 
-**Plan refs**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` + `strategy_execution_contract_remediation_2026_05_20.md` + `honest_coverage_formula_consolidation_2026_05_19.md`
+**Plan refs**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` +
+`strategy_execution_contract_remediation_2026_05_20.md` + `honest_coverage_formula_consolidation_2026_05_19.md`
 
-**Task 1 (0.2d — IMMEDIATE)**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` — delete 2 flat `build_bucket_name` methods in deployment-api:
+**Task 1 (0.2d — IMMEDIATE)**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` — delete 2 flat
+`build_bucket_name` methods in deployment-api:
+
 - Delete `DataStatusService.build_bucket_name` (line ~2538 of `deployment_api/services/data_status_service.py`)
 - Delete `DataQueryService.build_bucket_name` (line ~41 of `deployment_api/services/data_query_service.py`)
 - Replace each callsite with `resolve_bucket_name(cloud="gcp", kind=..., asset_group=...)` per Option A in plan
@@ -11,17 +14,24 @@
 - NOTE: Code execution gated on Phase 0d cutover but CODE ships now
 
 **Task 2 (3.0d)**: `strategy_execution_contract_remediation_2026_05_20.md` Phases 1-4:
-- Phase 1: strategy-service manifest emission (`StrategyManifestRecorder` shim + `record_captured/empty/failed` wired in `write_instructions()`)
-- Phase 2: execution-service manifest emission (`record_empty(SOURCE_RETURNED_ZERO)` on 404 + `record_captured` on non-empty)
+
+- Phase 1: strategy-service manifest emission (`StrategyManifestRecorder` shim + `record_captured/empty/failed` wired in
+  `write_instructions()`)
+- Phase 2: execution-service manifest emission (`record_empty(SOURCE_RETURNED_ZERO)` on 404 + `record_captured` on
+  non-empty)
 - Phase 3: preflight gate in execution-service (check strategy manifest before executing)
 - Phase 4c: migrate existing per-AG strategy parquets into unified bucket via `gsutil rsync`
 - QG each repo after its phase; push + flip per phase
 
-**Task 3 (after backfills run)**: `honest_coverage_formula_consolidation_2026_05_19.md` — re-pull manifest counts for IS + all 5 MTDS AGs after Phase 0b backfills complete. Archive plan when done.
+**Task 3 (after backfills run)**: `honest_coverage_formula_consolidation_2026_05_19.md` — re-pull manifest counts for
+IS + all 5 MTDS AGs after Phase 0b backfills complete. Archive plan when done.
 
-**Monitor**: watch for Phase 7 ack from slot 5 → notify slot 3 to start IS backfill. Watch MTDS CeFi verify ack → notify slot 6 to start MDPS. Coordinate the backfill chain.
+**Monitor**: watch for Phase 7 ack from slot 5 → notify slot 3 to start IS backfill. Watch MTDS CeFi verify ack → notify
+slot 6 to start MDPS. Coordinate the backfill chain.
 
-**Ack**: append `[2026-05-22 HH:MM UTC] slot-1 DONE — gap_2_4_d + strategy_execution Phases 1-4 at deployment-api@<sha> strategy@<sha> execution@<sha>` here when Tasks 1+2 done.
+**Ack**: append
+`[2026-05-22 HH:MM UTC] slot-1 DONE — gap_2_4_d + strategy_execution Phases 1-4 at deployment-api@<sha> strategy@<sha> execution@<sha>`
+here when Tasks 1+2 done.
 
 ---
 
@@ -270,8 +280,8 @@ Both new plans were orphaned (had `parent_plan: master_to_live_defi_2026_05_23.m
 - **Primary epic**: `manifest_evolution_SUPERSEDED_2026_05_21` — explicitly the "schema + writer code + GCS data layout
   co-evolve" umbrella. Both new plans add rows to its `folds_in:` list AND the body "Folded sub-plans" table with gate
   mappings (G1 / G4 / G6 / G7).
-- **Secondary epic**: `instruments_master` — referenced in plan frontmatter `epic_secondary` for the
-  IS-adapter completion side.
+- **Secondary epic**: `instruments_master` — referenced in plan frontmatter `epic_secondary` for the IS-adapter
+  completion side.
 
 The eleven-child count now: 9 pre-existing + honest_coverage + is_mtds_contract = 11. Epic body updated accordingly.
 
@@ -1393,8 +1403,8 @@ Operator is AFK — do not ping for further authorization on items already in yo
 
 **Plan filed**:
 [`plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`](../../plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
-**Folded into**: [`plans/epics/tradfi_master.md`](../../plans/epics/tradfi_master.md) —
-frontmatter `folds_in` + critical-path table updated.
+**Folded into**: [`plans/epics/tradfi_master.md`](../../plans/epics/tradfi_master.md) — frontmatter `folds_in` +
+critical-path table updated.
 
 ### Scope summary
 
@@ -1430,9 +1440,9 @@ reassignment ask" section:
   - **Item**: TradFi OHLCV-only MVP backfill
   - **Continuous-verification**: data-status rollup ≥99% OHLCV coverage 2019-2026 across CME/ICE/NASDAQ/NYSE
   - **Last verified**: TBD post Phase 7
-- Master plan's existing TradFi line items mentioning `trades` / `tbbo` (per `tradfi_master.md` Phase ES_OPT
-  2020-2022 fill + IBIT NASDAQ trades cold backfill) need a
-  `**DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**` annotation.
+- Master plan's existing TradFi line items mentioning `trades` / `tbbo` (per `tradfi_master.md` Phase ES_OPT 2020-2022
+  fill + IBIT NASDAQ trades cold backfill) need a `**DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**`
+  annotation.
 
 ### Cost rationale (for operator visibility in dispatch)
 
@@ -4976,9 +4986,9 @@ Plan ref: `plans/active/instruments_backfill_phase3_2026_05_22.md`
 
 - Recent-window IS VMs (2026-03-01→2026-05-22): ALL COMPLETED exit_code=0. Per-VM shards present.
 - Full-history IS VMs: 5× RUNNING (CeFi-1/2, DeFi, Pred, TradFi) — will run for many hours.
-- Sports IS VM: RUNNING @55d718f (blank-reason fix). Slow: Transfermarkt historical API makes ~55
-  sequential HTTP requests per trigger date (~15-30 min/date). VM is 2020-06-01 in chunk 1/71 at ~08:00 UTC.
-  Will take many hours (possibly 24h+) for the full 2020-2026 run.
+- Sports IS VM: RUNNING @55d718f (blank-reason fix). Slow: Transfermarkt historical API makes ~55 sequential HTTP
+  requests per trigger date (~15-30 min/date). VM is 2020-06-01 in chunk 1/71 at ~08:00 UTC. Will take many hours
+  (possibly 24h+) for the full 2020-2026 run.
 - MTDS backfill VMs (CeFi, Pred, 4× Sports): all RUNNING, making steady progress.
 
 **Operator action required — 2 BLOCKED-CREDENTIALS:**

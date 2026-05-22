@@ -75,14 +75,17 @@ work. Config grid extension adds 4 archetype families to the backtest script. D8
 done.
 
 [2026-05-22 UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8:
+
 - cme-arb Phase 2: UAC@9c491bdd (all 9 roots wired)
 - cme-arb Phase 3: MTDS@b59b63e + UAC@2751910 (EVENT_CONTRACT bundle writer)
 - cme-arb Phase 4: instruments-service@7a3db05 + UTL@3c004c1 (per-cluster expiry + Databento adapter)
 - cme-arb Phase 5: strategy-service@2c59f2ce (ARBITRAGE_CROSS_DOMAIN_EVENT archetype)
 - d8: MTDS@83f2ac50 + PM@e55cd3637 (all 4 phases green)
-- config_grid: BLOCKED-OPERATOR-DECISION — dimension names in plan don't match actual engine params (see slot-2 ping 2026-05-22 Wave 1)
+- config_grid: BLOCKED-OPERATOR-DECISION — dimension names in plan don't match actual engine params (see slot-2 ping
+  2026-05-22 Wave 1)
 
-Plan refs: `cme_polymarket_arb_2026_05_08.md` + `d8_perf_upgrade_2026_05_20.md` + `config_grid_archetype_extend_2026_05_20.md`
+Plan refs: `cme_polymarket_arb_2026_05_08.md` + `d8_perf_upgrade_2026_05_20.md` +
+`config_grid_archetype_extend_2026_05_20.md`
 
 ---
 
@@ -1445,27 +1448,27 @@ Sports-gated items (MTDS-3.2.D / FEAT-3.4.Sports) remain blocked on `sports_mast
 
 1. **writegate plan line 2919 `[UTL] P1` — flip**: `_classify_prediction` canonical-group lifecycle SSOT check is
    pre-existing at UTL `legacy_reason_classifier.py:450-511` (per-market lifecycle via `market_created_at` /
-   `settlement_time` / `current_status`). `CANONICAL_GROUP_METADATA` has no date-range fields — IS `MARKET_LIFECYCLE`
-   IS the canonical-group lifecycle SSOT, consumed via per-row columns. PM@a0387b2f.
+   `settlement_time` / `current_status`). `CANONICAL_GROUP_METADATA` has no date-range fields — IS `MARKET_LIFECYCLE` IS
+   the canonical-group lifecycle SSOT, consumed via per-row columns. PM@a0387b2f.
 
 2. **Dispatch ACK**: cme_polymarket Phases 2-5 (UAC@9c491bdd + MTDS@b59b63e + IS@7a3db05 + strategy-service@2c59f2ce) +
    d8 all 4 phases (MTDS@83f2ac50) + config_grid BLOCKED-OPERATOR-DECISION. PM@a0387b2f.
 
-3. **writegate plan line 2922 `[DOCS] P1` — flip**: CLAUDE.md "17 EXPECTED_*" → 31-member closed set + codex pointer.
+3. **writegate plan line 2922 `[DOCS] P1` — flip**: CLAUDE.md "17 EXPECTED\_\*" → 31-member closed set + codex pointer.
    New codex section "Per-reason-group → consumer policy quick-reference" (10-row table, 31 reasons across 9 groups +
    `attempted_failed`; key calendar-closed vs temporary-gap rolling-window distinction documented). PM@413c6901.
 
-4. **Status board fixes**: 2.E.1 "open: QG AST-walk step" removed (STEP 5.89 already wired); Wave 3.S updated ✅ partial;
-   Wave 3.X updated ✅ partial (residual SSOTs archived; Track D consumer integration tracked in
+4. **Status board fixes**: 2.E.1 "open: QG AST-walk step" removed (STEP 5.89 already wired); Wave 3.S updated ✅
+   partial; Wave 3.X updated ✅ partial (residual SSOTs archived; Track D consumer integration tracked in
    `wave3x_track_d_implementation_2026_05_19.md`). PM@6777e43c + PM@d8c32bba.
 
 5. **Codex delta note updated**: items 1/2 now ✅; only `DATA_QUALITY_SUSPECTED_GAP` pending. PM@d8c32bba.
 
 **Deferred / still open:**
 
-- `[SCRIPT] P1. Migration: re-classify 1.24M attempted_failed/LegacyBlankErrorReasonError rows` — reconciler code
-  exists (`reconcile_legacy_blank_to_typed_reason.py`, Wave 3.X Track C); needs VM dry-run now that new Wave 3.S
-  SSOTs are in UAC. Run: `reconcile_legacy_blank_to_typed_reason.py --asset-group sports --dry-run` first.
+- `[SCRIPT] P1. Migration: re-classify 1.24M attempted_failed/LegacyBlankErrorReasonError rows` — reconciler code exists
+  (`reconcile_legacy_blank_to_typed_reason.py`, Wave 3.X Track C); needs VM dry-run now that new Wave 3.S SSOTs are in
+  UAC. Run: `reconcile_legacy_blank_to_typed_reason.py --asset-group sports --dry-run` first.
 - Predictions P0 items at `predictions_master.md` lines 472-535 — BLOCKED on design decisions or predecessor work.
 - Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`.
 
@@ -1480,21 +1483,21 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
 **Delivered this session:**
 
 1. **UAC facade fix** (UAC@6498446): `non_trading_day_reason` was not exported from `unified_api_contracts.__init__`
-   despite the classifier docstring calling it a "top-level facade re-export". Added to `.registry` import block.
-   QG exit 0. Unblocked tradfi reconciler path.
+   despite the classifier docstring calling it a "top-level facade re-export". Added to `.registry` import block. QG
+   exit 0. Unblocked tradfi reconciler path.
 
 2. **`[SCRIPT] P1` reconciler scan — all 5 asset groups** (scan-only, no GCS writes):
-   - tradfi: 5,190 candidates → 5,190 upgrades (111 `EXPECTED_PARTIAL_HALF_DAY` at CME/NASDAQ/NYSE for US
-     Black Friday + July-3 half-days; 5,079 `attempted_failed/LBEER`)
+   - tradfi: 5,190 candidates → 5,190 upgrades (111 `EXPECTED_PARTIAL_HALF_DAY` at CME/NASDAQ/NYSE for US Black Friday +
+     July-3 half-days; 5,079 `attempted_failed/LBEER`)
    - defi: 14 EIGENLAYER `eigenlayer_rewards` → `attempted_failed/LBEER`
    - sports: 1,829,839 candidates → 0 upgrades
    - prediction: 51 candidates → 0 upgrades
-   - cefi: 85,202 candidates → **BLOCKED** (IS CeFi instruments catalog not found at GCS; catalog cross-ref
-     needed to avoid mass-LBEER flip; gate: IS CeFi backfill Phase 1 GREEN)
+   - cefi: 85,202 candidates → **BLOCKED** (IS CeFi instruments catalog not found at GCS; catalog cross-ref needed to
+     avoid mass-LBEER flip; gate: IS CeFi backfill Phase 1 GREEN)
 
 3. **`[SCRIPT] P1` reconciler apply — tradfi + defi**:
-   - tradfi: 5,190 rows applied; shard `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet`
-     (consolidator merges within ~5 min)
+   - tradfi: 5,190 rows applied; shard `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` (consolidator merges
+     within ~5 min)
    - defi: 14 rows applied; shard `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet`
 
 4. **Plan flip** `writegate_honest_coverage_endtoend_2026_05_06.md` `[SCRIPT] P1` → `[x] ✅` (tradfi+defi+
@@ -1502,12 +1505,12 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
 
 **Deferred / still open:**
 
-- `[SCRIPT] P1 cefi follow-up` — `reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` re-scan after IS
-  CeFi backfill (`instruments_backfill_phase3_2026_05_22.md` Phase 1) populates
+- `[SCRIPT] P1 cefi follow-up` — `reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` re-scan after IS CeFi
+  backfill (`instruments_backfill_phase3_2026_05_22.md` Phase 1) populates
   `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`.
 - Predictions P0 items at `predictions_master.md` lines 472-535 — BLOCKED on design decisions or predecessor work.
-- Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`,
-  all `[DEFERRED-POST-CUTOVER]` per operator decision (gate: post-2026-05-23).
+- Wave 3.X Track D (zero_activity_bars) — 5 open P0 items in `wave3x_track_d_implementation_2026_05_19.md`, all
+  `[DEFERRED-POST-CUTOVER]` per operator decision (gate: post-2026-05-23).
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
 
@@ -1519,28 +1522,27 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
 
 **Delivered:**
 
-1. **Phase 8 P0 — Re-pull manifest counts across 10 GCS buckets** (IS × 5 AGs + MTDS × 5 AGs). Blobs dated
-   2026-05-22 03:44–08:08 UTC (consolidator snapshots). Formula `compute_honest_coverage()` applied to every
-   (asset_group, data_type) cell. Plan flipped `[x] ✅`. PM@9d864c5a.
+1. **Phase 8 P0 — Re-pull manifest counts across 10 GCS buckets** (IS × 5 AGs + MTDS × 5 AGs). Blobs dated 2026-05-22
+   03:44–08:08 UTC (consolidator snapshots). Formula `compute_honest_coverage()` applied to every (asset_group,
+   data_type) cell. Plan flipped `[x] ✅`. PM@9d864c5a.
 
 2. **Coverage results highlight**:
    - IS buckets: cefi/defi/tradfi = 100% (pure reference catalog rows, no time-series). Sports 14 data_types < 100%
      (attempted_failed from historical fixture data). Prediction = 100% (reference only).
    - MTDS defi: 96.96%–100% across 24 data_types. DeFi eu_pending_fetch residuals (252 max) = Tier-3 sentinel
      propagation still pending.
-   - MTDS cefi: **0%–64%** (book_snapshot_5/trades/perp_funding) — EXPECTED, `mtds-backfill-cefi-2026-05-22b` VM
-     still running with chain-fix code. Gate: `MTDS-3.2.A-V` verification item in
-     `mtds_backfill_phase3_2026_05_22.md`.
+   - MTDS cefi: **0%–64%** (book_snapshot_5/trades/perp_funding) — EXPECTED, `mtds-backfill-cefi-2026-05-22b` VM still
+     running with chain-fix code. Gate: `MTDS-3.2.A-V` verification item in `mtds_backfill_phase3_2026_05_22.md`.
    - Formula working correctly end-to-end; no inflation artifacts; all cells report real numbers.
 
-3. **`honest_coverage_formula_consolidation_2026_05_19.md` now FULLY COMPLETE** — 0 open items across all 8
-   phases. Status still `in-flight` (locked); archival requires `[unlock-plan]` per locked_by rule.
+3. **`honest_coverage_formula_consolidation_2026_05_19.md` now FULLY COMPLETE** — 0 open items across all 8 phases.
+   Status still `in-flight` (locked); archival requires `[unlock-plan]` per locked_by rule.
 
 **Deferred / still open (carried from prior entry):**
 
-- `[SCRIPT] P1 cefi follow-up` — gated on IS CeFi catalog `all.parquet` (still not published as of 2026-05-22
-  09:35 UTC). Gate: `instruments_backfill_phase3_2026_05_22.md` Phase 1 full-history VMs complete.
-- `MTDS-3.2.A-V` (CeFi verify) + `MTDS-3.2.D-V` (Sports verify) + `MTDS-3.2.E-V` (Prediction verify) — all
-  waiting on respective VMs to complete and write per_vm shards to PRD buckets.
+- `[SCRIPT] P1 cefi follow-up` — gated on IS CeFi catalog `all.parquet` (still not published as of 2026-05-22 09:35
+  UTC). Gate: `instruments_backfill_phase3_2026_05_22.md` Phase 1 full-history VMs complete.
+- `MTDS-3.2.A-V` (CeFi verify) + `MTDS-3.2.D-V` (Sports verify) + `MTDS-3.2.E-V` (Prediction verify) — all waiting on
+  respective VMs to complete and write per_vm shards to PRD buckets.
 
 Plan refs: `honest_coverage_formula_consolidation_2026_05_19.md`, `mtds_backfill_phase3_2026_05_22.md`

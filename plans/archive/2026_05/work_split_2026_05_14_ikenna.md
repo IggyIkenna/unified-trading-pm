@@ -819,8 +819,8 @@ If the item is already shipped by Harsh → flip absorbed item to `[x] (harsh-sh
 
 ## Cross-side handshakes (Ikenna ↔ Harsh)
 
-- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that depends
-  on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
+- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that
+  depends on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
 - **Ikenna slot 6+7 wallet_treasury Phase 1+3** (pulled forward to pre-May-15) is independent of Harsh today; ack-only.
 - **batch_live_symmetry** entirely Harsh slots 5+8; Ikenna does NOT touch. If Harsh files an Ikenna-touching UAC
   ratchet, slot 8 owner picks up via \_agent_pings.md.

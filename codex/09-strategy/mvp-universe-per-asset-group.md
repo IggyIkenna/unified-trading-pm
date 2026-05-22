@@ -271,7 +271,7 @@ For Tier A archetypes (May-23 backtest scope), per `compute_optimization_mock_da
 | -------------------------------- | -----------------------------------------: | -------------------------: | -----------------------------: |
 | ml-continuous (CeFi + ES)        |                        30 CeFi + 1 ES = 31 |                        ~15 |              ~340K worker-runs |
 | ml-settled (Sports)              |                 ~5000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
-| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |            ~1.3M worker-runs ⚠ |
+| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |           ~1.3M worker-runs ⚠ |
 | arbitrage-sports-book            |      Top-5 EU × ~1000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
 | arbitrage-event-markets          |           ~20 simultaneous Poly+CME events |                        ~10 |              ~150K worker-runs |
 | defi-carry-family (5 archetypes) |                  12 LST × 4 AMM × 730 days | ~15 per archetype × 5 = 75 |              ~440K worker-runs |

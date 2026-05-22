@@ -18,9 +18,9 @@ blocked_by: |
   Without Phase 6 VMs writing manifest shards to S3, there is nothing to consolidate.
 ---
 
-> **GATE**: Execute ONLY after Phase 5 (cross-cloud rsync) + Phase 6 (ECS Fargate writing v8 manifest shards to S3)
-> are green in `aws_migration_defi_first_2026_05_07.md`. Pre-authoring the Terraform now is safe; `tofu apply`
-> must wait for the gate.
+> **GATE**: Execute ONLY after Phase 5 (cross-cloud rsync) + Phase 6 (ECS Fargate writing v8 manifest shards to S3) are
+> green in `aws_migration_defi_first_2026_05_07.md`. Pre-authoring the Terraform now is safe; `tofu apply` must wait for
+> the gate.
 
 # AWS Manifest Consolidator — Scope + Plan
 
@@ -35,9 +35,9 @@ Three things are already done:
 1. **UTL consolidator is cloud-agnostic.** `unified_trading_library.manifest_consolidator` calls
    `cloud_interface.get_storage_client()` which routes to S3 when `CLOUD_PROVIDER=aws`. No Python changes needed.
 
-2. **Terraform modules already exist.** `deployment-service/terraform/modules/container-job/aws/` (AWS Batch +
-   Fargate) and `deployment-service/terraform/modules/scheduler/aws/` (EventBridge Scheduler) are the direct AWS
-   counterparts of the GCP modules used by the existing GCP consolidator.
+2. **Terraform modules already exist.** `deployment-service/terraform/modules/container-job/aws/` (AWS Batch + Fargate)
+   and `deployment-service/terraform/modules/scheduler/aws/` (EventBridge Scheduler) are the direct AWS counterparts of
+   the GCP modules used by the existing GCP consolidator.
 
 3. **Bucket list is known.** Same 10 buckets as GCP (substituting account ID for project ID), plus the 16 coverage-gap
    buckets identified in the GCP codex once they're wired server-side (features, strategy-store, execution-store,
@@ -67,6 +67,7 @@ locals {
 ```
 
 Wire each entry to:
+
 - `module "manifest_consolidator_job"` using `source = "../modules/container-job/aws"` (AWS Batch + Fargate)
 - `module "manifest_consolidator_cron"` using `source = "../modules/scheduler/aws"` (EventBridge `*/1 * * * *`)
 - Container image: the same `market-tick-data-service` ECR image (UTL is a dep)
@@ -112,13 +113,13 @@ execution-store, ml-artifacts) that match the GCP coverage gap in the consolidat
 
 ## Estimate
 
-| Phase | Work | Cal-AI-days |
-|-------|------|-------------|
-| A — Terraform authoring | Write `manifest_consolidator_scheduler.tf`, wire container-job/aws + scheduler/aws modules, set `CLOUD_PROVIDER=aws` | 0.8 |
-| B — IAM policy | Write + attach Fargate task role policy | 0.3 |
-| C — Apply + verify | `tofu apply` + smoke-test 10 buckets + mtime check | 0.7 |
-| D — Coverage gap (16 more buckets) | Extend locals + apply + verify | 0.7 |
-| **Total** | | **2.5** |
+| Phase                              | Work                                                                                                                 | Cal-AI-days |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------- |
+| A — Terraform authoring            | Write `manifest_consolidator_scheduler.tf`, wire container-job/aws + scheduler/aws modules, set `CLOUD_PROVIDER=aws` | 0.8         |
+| B — IAM policy                     | Write + attach Fargate task role policy                                                                              | 0.3         |
+| C — Apply + verify                 | `tofu apply` + smoke-test 10 buckets + mtime check                                                                   | 0.7         |
+| D — Coverage gap (16 more buckets) | Extend locals + apply + verify                                                                                       | 0.7         |
+| **Total**                          |                                                                                                                      | **2.5**     |
 
 ## Decision: file sub-plan (not BLOCKED-OPERATOR-DECISION)
 
@@ -136,6 +137,7 @@ the same slot that executes Phase 5 rsync.
 
 - [`codex/05-infrastructure/manifest-consolidator-ssot.md`](../../codex/05-infrastructure/manifest-consolidator-ssot.md)
   — canonical spec; AWS port must satisfy the same operational invariants.
-- [`aws_migration_defi_first_2026_05_07.md`](./aws_migration_defi_first_2026_05_07.md) — parent; Phase 5 + 6 are the gate.
+- [`aws_migration_defi_first_2026_05_07.md`](./aws_migration_defi_first_2026_05_07.md) — parent; Phase 5 + 6 are the
+  gate.
 - `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` — the output artefact (create in Phase A).
 - `deployment-service/terraform/modules/container-job/aws/` + `scheduler/aws/` — existing modules to wire.

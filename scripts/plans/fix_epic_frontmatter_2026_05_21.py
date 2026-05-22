@@ -17,35 +17,40 @@ Usage:
     python3 scripts/plans/fix_epic_frontmatter_2026_05_21.py --dry-run
     python3 scripts/plans/fix_epic_frontmatter_2026_05_21.py --apply
 """
+
 from __future__ import annotations
-import argparse, re, sys
+
+import argparse
+import re
+import sys
 from pathlib import Path
 
 EPICS = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/epics")
 
 # Canonical registry: slug → (tier, assigned_vm, asset_group, default_priority)
 REGISTRY = {
-    "defi_master":                            ("L0", "vm-defi",          "defi",           "P0"),
-    "cefi_master":                            ("L0", "vm-cefi",          "cefi",           "P0"),
-    "tradfi_master":                          ("L0", "vm-tradfi",        "tradfi",         "P1"),
-    "sports_master":                          ("L0", "vm-sports",        "sports",         "P1"),
-    "predictions_master":                     ("L0", "vm-prediction",    "prediction",     "P1"),
-    "instruments_master":                     ("L1", "vm-cefi",          "cross-cutting",  "P0"),
-    "mtds_mdps_master":                       ("L1", "vm-ml",            "cross-cutting",  "P0"),
-    "features_and_ml_master":                 ("L1", "vm-ml",            "cross-cutting",  "P1"),
-    "manifest_master":                        ("L1", "vm-defi",          "cross-cutting",  "P0"),
-    "strategy_master":                        ("L2", "vm-trading-core",  "cross-cutting",  "P0"),
-    "execution_master":                       ("L2", "vm-trading-core",  "cross-cutting",  "P0"),
-    "trading_agent_master":                   ("L2", "vm-trading-core",  "cross-cutting",  "P0"),
-    "global_ledger_pnl_attribution_master":   ("L2", "vm-trading-core",  "cross-cutting",  "P0"),
-    "dart_and_promote_master":                ("L3", "vm-operator-ops",  "cross-cutting",  "P0"),
-    "deployment_and_user_management_master":  ("L3", "vm-operator-ops",  "cross-cutting",  "P1"),
-    "infrastructure_master":                  ("L4", "vm-cross-cutting", "infrastructure", "P0"),
-    "observability_master":                   ("L4", "vm-cross-cutting", "cross-cutting",  "P1"),
-    "batch_live_symmetry_master":             ("L4", "vm-cross-cutting", "cross-cutting",  "P1"),
-    "client_isolation_and_governance_master": ("L4", "vm-cross-cutting", "cross-cutting",  "P0"),
-    "orchestrator_master":                    ("L5", "vm-orchestrator",  "meta",           "P0"),
+    "defi_master": ("L0", "vm-defi", "defi", "P0"),
+    "cefi_master": ("L0", "vm-cefi", "cefi", "P0"),
+    "tradfi_master": ("L0", "vm-tradfi", "tradfi", "P1"),
+    "sports_master": ("L0", "vm-sports", "sports", "P1"),
+    "predictions_master": ("L0", "vm-prediction", "prediction", "P1"),
+    "instruments_master": ("L1", "vm-cefi", "cross-cutting", "P0"),
+    "mtds_mdps_master": ("L1", "vm-ml", "cross-cutting", "P0"),
+    "features_and_ml_master": ("L1", "vm-ml", "cross-cutting", "P1"),
+    "manifest_master": ("L1", "vm-defi", "cross-cutting", "P0"),
+    "strategy_master": ("L2", "vm-trading-core", "cross-cutting", "P0"),
+    "execution_master": ("L2", "vm-trading-core", "cross-cutting", "P0"),
+    "trading_agent_master": ("L2", "vm-trading-core", "cross-cutting", "P0"),
+    "global_ledger_pnl_attribution_master": ("L2", "vm-trading-core", "cross-cutting", "P0"),
+    "dart_and_promote_master": ("L3", "vm-operator-ops", "cross-cutting", "P0"),
+    "deployment_and_user_management_master": ("L3", "vm-operator-ops", "cross-cutting", "P1"),
+    "infrastructure_master": ("L4", "vm-cross-cutting", "infrastructure", "P0"),
+    "observability_master": ("L4", "vm-cross-cutting", "cross-cutting", "P1"),
+    "batch_live_symmetry_master": ("L4", "vm-cross-cutting", "cross-cutting", "P1"),
+    "client_isolation_and_governance_master": ("L4", "vm-cross-cutting", "cross-cutting", "P0"),
+    "orchestrator_master": ("L5", "vm-orchestrator", "meta", "P0"),
 }
+
 
 def split_frontmatter(text: str) -> tuple[str, str]:
     """Return (frontmatter_text, body_text). Robust to glued '---name:' opener."""
@@ -62,8 +67,9 @@ def split_frontmatter(text: str) -> tuple[str, str]:
     if not m:
         return "", text
     fm = rest[: m.start()]
-    body = rest[m.end():]
+    body = rest[m.end() :]
     return fm, body
+
 
 def parse_fm(fm: str) -> dict[str, str]:
     out = {}
@@ -72,6 +78,7 @@ def parse_fm(fm: str) -> dict[str, str]:
         if mm and mm.group(2).strip():
             out[mm.group(1)] = mm.group(2).strip().strip("\"'")
     return out
+
 
 def extract_related_plans(fm: str) -> list[str]:
     """Extract related_plans list items (lines like '  - ../active/x.md')."""
@@ -89,13 +96,14 @@ def extract_related_plans(fm: str) -> list[str]:
                 break  # next key
     return out
 
+
 def build_canonical(slug: str, old: dict, related: list[str]) -> str:
     tier, vm, ag, default_pri = REGISTRY[slug]
     priority = old.get("priority", default_pri)
-    if priority not in {"P0","P1","P2","P3"}:
+    if priority not in {"P0", "P1", "P2", "P3"}:
         priority = default_pri
     status = old.get("status", "active")
-    if status not in {"active","paused","cancelled"}:
+    if status not in {"active", "paused", "cancelled"}:
         status = "active"
     owner = old.get("owner", "ikenna")
     if owner == "claude-code":
@@ -131,13 +139,15 @@ def build_canonical(slug: str, old: dict, related: list[str]) -> str:
     lines.append("---")
     return "\n".join(lines) + "\n"
 
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--apply", action="store_true")
     args = ap.parse_args()
     if not (args.dry_run ^ args.apply):
-        print("ERROR: pass exactly one of --dry-run / --apply", file=sys.stderr); return 1
+        print("ERROR: pass exactly one of --dry-run / --apply", file=sys.stderr)
+        return 1
     apply = args.apply
 
     fixed = 0
@@ -165,9 +175,12 @@ def main() -> int:
         if apply:
             f.write_text(new_text, encoding="utf-8")
         fixed += 1
-        print(f"  {'FIXED' if apply else 'WOULD fix'} {f.name:<48} tier={REGISTRY[slug][0]} vm={REGISTRY[slug][1]} ag={REGISTRY[slug][2]} related={len(related)}")
+        print(
+            f"  {'FIXED' if apply else 'WOULD fix'} {f.name:<48} tier={REGISTRY[slug][0]} vm={REGISTRY[slug][1]} ag={REGISTRY[slug][2]} related={len(related)}"
+        )
     print(f"\n{'Fixed' if apply else 'Would fix'}: {fixed} epics")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -73,14 +73,14 @@ Transfer window dates: **already in UAC** (`transfer_windows.py`). Season start 
 
 ### A2. Entity Classification
 
-| Entity                                                                                   | Provider(s)                 | Type    | Trigger                                                   |
-| ---------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------- |
-| Leagues                                                                                  | UAC SSOT (hardcoded)        | Static  | Never refresh — fixed universe choice                     |
-| Teams per league                                                                         | API Football, Transfermarkt | Trigger | Season start + promotion/relegation                       |
-| Player values (squad market values)                                                      | Transfermarkt               | Trigger | Window open + window close                                |
+| Entity                                                                                      | Provider(s)                 | Type    | Trigger                                                   |
+| ------------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------- |
+| Leagues                                                                                     | UAC SSOT (hardcoded)        | Static  | Never refresh — fixed universe choice                     |
+| Teams per league                                                                            | API Football, Transfermarkt | Trigger | Season start + promotion/relegation                       |
+| Player values (squad market values)                                                         | Transfermarkt               | Trigger | Window open + window close                                |
 | Team canonical mappings (API Football ID ↔ canonical ↔ Transfermarkt ID ↔ FootyStats ID) | All providers               | Trigger | Same as teams (new teams need mapping)                    |
-| SFI leagues                                                                              | SoccerFootball.info         | Trigger | Season start only (slow-moving)                           |
-| SFI standings                                                                            | SoccerFootball.info         | Weekly  | After each match round (not trigger-based, but NOT daily) |
+| SFI leagues                                                                                 | SoccerFootball.info         | Trigger | Season start only (slow-moving)                           |
+| SFI standings                                                                               | SoccerFootball.info         | Weekly  | After each match round (not trigger-based, but NOT daily) |
 
 ### A3. GCS Target Shape
 

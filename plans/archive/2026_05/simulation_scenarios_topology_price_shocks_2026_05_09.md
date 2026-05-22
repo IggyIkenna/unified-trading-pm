@@ -128,8 +128,8 @@ This is **not**:
 - A DR / chaos drill harness (that's `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`; this plan
   **provides** the synthetic injection primitives that DR drills will reuse).
 - A separate "backtest engine" — every scenario runs through the unified pipeline (MTDS → MDPS → features-\* →
-  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded overlay
-  layer.
+  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded
+  overlay layer.
 
 It **is**: a 14-day sprint that ships UAC scenario contracts, UTL injection primitives, per-layer wire-ins, an
 asset-group-scoped scenario library, a per-archetype regression matrix run on real VMs, and the pre-cutover gate

@@ -22,8 +22,8 @@ priority: P1
 
 > ## ARCHIVED 2026-05-21
 >
-> All 72/72 checkboxes complete across Wave 1 + Wave 2 Slots A-D. 30+ plans archived across 8 agent slots. Wrapper
-> plan done criteria fully met. Archiving under orchestrator_master.
+> All 72/72 checkboxes complete across Wave 1 + Wave 2 Slots A-D. 30+ plans archived across 8 agent slots. Wrapper plan
+> done criteria fully met. Archiving under orchestrator_master.
 
 # Plan closeout + archive sweep — 2026-05-21
 

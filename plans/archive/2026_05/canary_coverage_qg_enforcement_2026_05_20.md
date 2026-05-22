@@ -273,7 +273,7 @@ orphans = zero post-decision-log entries needing action.
       `open_meteo/forecast_current_weather`, `tardis/datasets_csv_download`, `tardis/datasets_warmup`,
       `yahoo_finance/earnings_msft`. — uac@ac828d7 2026-05-21: 7 cassettes DELETED
       (gateio/mexc/bitstamp/huobi/bitfinex/kucoin ticker.yaml + barchart/get*quote_es1.yaml). 3 WS cassettes ALLOWLISTED
-      (databento stub-placeholder, kraken/kraken_futures recording-template). databento/batch*_/timeseries\__ +
+      (databento stub-placeholder, kraken/kraken_futures recording-template). databento/batch*\_/timeseries\_\_ +
       alchemy/aave\_\* + open_meteo + tardis + yahoo_finance/earnings are ALLOWLISTED recording-templates with acked
       reasons (no prod consumer yet per Phase 2 QG task). Decisions documented in scripts/canary/orphan-decisions.yaml.
       Orphan checker 86 passed / 1 skipped.

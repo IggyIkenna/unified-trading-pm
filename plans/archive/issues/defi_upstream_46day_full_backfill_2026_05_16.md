@@ -322,4 +322,9 @@ follow-up**: either add `--venues` to the instruments-service CLI or strip it fr
 
 ## Status update — 2026-05-22
 
-**BLOCKED-VERIFICATION**: 12 VMs launched 2026-05-20T01:22Z for 46-day backfill window (2026-04-01 to 2026-05-16). Cannot verify completion without GCP Console access. Completion criterion: manifest A3 divergence scan (`plans/audit/results/manifest_divergence_2026_05_20.parquet`) shows zero MISSING_EXPECTED rows for the defi asset_group in the specified date window. Operator must run `python3 instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` to confirm. If clean → archive this issue as ACKED-INTO-CODE.
+**BLOCKED-VERIFICATION**: 12 VMs launched 2026-05-20T01:22Z for 46-day backfill window (2026-04-01 to 2026-05-16).
+Cannot verify completion without GCP Console access. Completion criterion: manifest A3 divergence scan
+(`plans/audit/results/manifest_divergence_2026_05_20.parquet`) shows zero MISSING_EXPECTED rows for the defi asset_group
+in the specified date window. Operator must run
+`python3 instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` to confirm. If
+clean → archive this issue as ACKED-INTO-CODE.

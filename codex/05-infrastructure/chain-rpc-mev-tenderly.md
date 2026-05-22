@@ -77,7 +77,10 @@ section is the **per-chain endpoint registry**.
 | `FLASHBOTS_BUNDLE_RELAY` | `relay.flashbots.net` (`eth_sendBundle`)              | Ethereum                                         | required (paid auth signer)                                | ✗ STUBBED. Not needed for May-23 cutover (Aave flash loans are single-tx atomic; cross-chain carry legs can't bundle). Out of scope per operator 2026-05-10. Post-cutover if needed.                                            |
 | `JITO_BUNDLE` (Phase 5A) | `jito_block_engine_rpc`                               | Solana                                           | required (paid Jito subscription OR free with rate limits) | ◐ enum + `_DEFAULT_POLICIES[JITO_BUNDLE]` policy shipped 2026-05-12 (UAC@`5241fad0` + execution-service@`38710bef`); `JitoBundleProvider` class implementation pending Harsh-side per `defi_catalogue` Phase 5A remaining scope |
 
-> **[DELTA 2026-05-22]** **Current state:** `JitoBundleProvider` class implementation is PENDING (Phase 5A Harsh-side work). Enum + default policy shipped. `MANIFOLD` is partially wired. **Planned delta:** `JitoBundleProvider` full implementation tracked under `plans/epics/defi_master.md` § MEV. **Target architecture:** All `MevSubmissionMode` variants fully implemented with provider classes in `execution_service/defi_execution/mev/`.
+> **[DELTA 2026-05-22]** **Current state:** `JitoBundleProvider` class implementation is PENDING (Phase 5A Harsh-side
+> work). Enum + default policy shipped. `MANIFOLD` is partially wired. **Planned delta:** `JitoBundleProvider` full
+> implementation tracked under `plans/epics/defi_master.md` § MEV. **Target architecture:** All `MevSubmissionMode`
+> variants fully implemented with provider classes in `execution_service/defi_execution/mev/`.
 
 Per-chain MEV story:
 
@@ -148,12 +151,12 @@ caps `maxPriorityFeePerGas` at 3 gwei for non-urgent transactions per
 Per [`defi-data-type-taxonomy.md`](../02-data/defi-data-type-taxonomy.md) — `oracle_prices` data_type captured by
 `oracle_prices_handler.py` for every chain in scope.
 
-| Chain                                           | Oracle source                                                                   | Captured                                                                | Coverage start                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| Ethereum + Arbitrum + Base + Optimism + Polygon | Chainlink (eth_call `latestRoundData`)                                          | ✅                                                                      | per-feed launch dates per UAC `_defi_oracle_coverage.py` |
-| Solana                                          | Pyth Hermes (REST API at `hermes.pyth.network/v2/updates/price/{publish_time}`) | ✅ batch via Hermes pull                                                | 2023-10-01 per UAC `_defi_oracle_coverage.py:36`         |
+| Chain                                           | Oracle source                                                                   | Captured                                                                             | Coverage start                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Ethereum + Arbitrum + Base + Optimism + Polygon | Chainlink (eth_call `latestRoundData`)                                          | ✅                                                                                   | per-feed launch dates per UAC `_defi_oracle_coverage.py` |
+| Solana                                          | Pyth Hermes (REST API at `hermes.pyth.network/v2/updates/price/{publish_time}`) | ✅ batch via Hermes pull                                                             | 2023-10-01 per UAC `_defi_oracle_coverage.py:36`         |
 | Solana (live)                                   | PythNet RPC subscription                                                        | ◐ batch wired via Hermes; live PythNet RPC not yet wired — post-cutover P1 follow-up | n/a                                                      |
-| Cross-chain Pyth on EVM via Wormhole            | not in scope; Solana-only Pyth boundary                                         | ✗                                                                       | n/a                                                      |
+| Cross-chain Pyth on EVM via Wormhole            | not in scope; Solana-only Pyth boundary                                         | ✗                                                                                    | n/a                                                      |
 
 **Protocol-internal oracles** (Uniswap V3 TWAP / Curve EMA / Aave price oracle): Aave's internal oracle IS Chainlink
 with fallback; existing Chainlink capture covers it. Uniswap TWAP + Curve EMA NOT explicitly captured. Gap (P2 per

@@ -68,8 +68,8 @@ Codex SSOTs: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
 
 ## Phase 7 -- CI hygiene
 
-- [x] ✅ [AGENT] P0. trading-agent-service workspace-qg GREEN on live-defi-rollout. GH_PAT rotated by operator
-      (commit 3c596ba); CI run 26275695242 passed at 2026-05-22T07:55:20Z. All 8 phases DONE.
+- [x] ✅ [AGENT] P0. trading-agent-service workspace-qg GREEN on live-defi-rollout. GH_PAT rotated by operator (commit
+      3c596ba); CI run 26275695242 passed at 2026-05-22T07:55:20Z. All 8 phases DONE.
 
 ## Phase 8 -- Codex SSOT + plan manifest
 
