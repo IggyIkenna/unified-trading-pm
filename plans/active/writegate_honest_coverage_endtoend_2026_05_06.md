@@ -2931,6 +2931,23 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       attempted_failed/ LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
       empty_confirmed/EXPECTED*\* if a typed-reason rule fires (otherwise leaves as attempted_failed for retry).
 
+      **SCAN DONE 2026-05-22 (slot-2) — apply pending VM runs:**
+      - Pre-req UAC fix: `non_trading_day_reason` was not exported from UAC top-level facade despite docstring saying
+        "top-level facade re-export". Added to `.registry` import block. UAC@6498446. QG exit 0.
+      - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
+        EXPECTED_INSTRUMENT_NOT_LISTED}` — i.e. rows that got a WRONG default from the 2026-05-07 sweep.
+      - Scan results (scan-only, no GCS writes):
+        | asset_group | candidates | proposed upgrades | breakdown |
+        |-------------|-----------|-------------------|-----------|
+        | tradfi | 5,190 | 5,190 | **111 → EXPECTED_PARTIAL_HALF_DAY** (Wave 3.T SSOT firing); 5,079 → attempted_failed/LBEER |
+        | cefi | 85,202 | 85,202 | 85,202 → attempted_failed/LBEER (instruments catalog at `gs://instruments-store-cefi-*/reference_data/instruments/cefi/all.parquet` NOT FOUND → catalog cross-ref disabled; once IS CeFi backfill lands catalog, re-scan expected to route more rows to EXPECTED_INSTRUMENT_NOT_LISTED) |
+        | defi | 14 | 14 | 14 → attempted_failed/LBEER |
+        | sports | 1,829,839 | 0 | No upgrades — sports SSOT SRZ rows don't fire Wave 3.S rules via this path |
+        | prediction | 51 | 0 | No upgrades |
+      - **Apply gate**: run `--apply-flips MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-typed-{AG}-$(date +%s)`
+        per AG for tradfi + defi (cefi: re-scan after IS CeFi catalog backfill lands).
+      - CSV reports: `/home/ubuntu/.claude/jobs/20ca8c62/recon-legacy-typed-{AG}-20260522-*.csv`
+
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
 3.P (prediction) — distinct asset_group surfaces.
