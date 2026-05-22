@@ -15,11 +15,10 @@
 > CLAUDE.md canonical is `unified-trading-library/unified-trading-library`. Operator: is the correct base image path
 > `unified-trading-library/unified-trading-library`? If so, update Dockerfiles in risk+pbm repos.
 >
-> **BLOCKED-2 (UTL Firestore on AWS)**: ALL services fail at startup on ECS/App Runner:
-> `ImportError: cannot import name 'firestore' from 'google.cloud'` in `unified_trading_library/firestore_lifecycle.py`.
-> This import happens unconditionally at startup even when CLOUD_PROVIDER=aws. Needs UTL fix: conditionally import
-> google.cloud.firestore only when CLOUD_PROVIDER=gcp, OR install google-cloud-firestore in the Docker base image.
-> Without this fix, NO service can start on AWS ECS.
+> **BLOCKED-2 (UTL Firestore on AWS)**: ✅ FIXED — UTL@522137c9. `build_firestore_lifecycle_reloader` now checks
+> `CLOUD_PROVIDER` via `UnifiedCloudConfig().is_gcp` and returns a no-op `LifecycleReloader` (empty fetch_fn) when not
+> on GCP, preventing the `google.cloud.firestore` import entirely. 13 tests green. Force-new-deployment on all ECS
+> services needed to pick up the fix.
 >
 > **BLOCKED-3 (execution-service SM secrets)**: see CREDENTIAL APPROVAL REQUEST below.
 

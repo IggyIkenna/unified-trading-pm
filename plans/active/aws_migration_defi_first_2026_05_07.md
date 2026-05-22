@@ -501,14 +501,17 @@ UX).
       internal endpoint when services deploy). Post-cutover DNS wiring deferred to Phase 6.5 (UI co-location).
 - [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
       PROGRESS 2026-05-22** (slot 3): ECS task defs + services CREATED for 5/7 services. App Runner services also
-      created. deployment-service@f46c9e0 (`deploy-ecs-fargate.sh`). IAM roles had no policies — fixed by attaching
-      `AmazonECSTaskExecutionRolePolicy` + S3/SM policies to all 7 service roles (2026-05-22). Two blockers: (1)
-      **execution-service BLOCKED-CREDENTIALS**: `unified-trading/exec-odum-binance-cefi` and 5 other secrets not in AWS
-      SM — operator must create these secrets before execution-service can start. (2) **risk-and-exposure-service +
-      position-balance-monitor-service**: ECR builds in progress (fixed buildspec.aws.yaml YAML parse error: multi-line
-      command wrap ambiguity — rebuilt with single-line commands). **NEXT**: wait for features-service +
-      strategy-service tasks to reach RUNNING (IAM fix applied, new deploy forced); smoke `/health`; wait for 2 ECR
-      builds to complete then deploy those 2 remaining services; operator to create execution-service secrets.
+      created. deployment-service@baad550 (`deploy-ecs-fargate.sh`). IAM roles had no policies — fixed by attaching
+      `AmazonECSTaskExecutionRolePolicy` + S3/SM policies to all 7 service roles (2026-05-22). BLOCKED-2 (UTL Firestore
+      unconditional import blocking all services on AWS) **FIXED** — UTL@522137c9 (`firestore_lifecycle.py`
+      `build_firestore_lifecycle_reloader` now returns no-op reloader when `CLOUD_PROVIDER != gcp`). Two remaining
+      blockers: (1) **execution-service BLOCKED-CREDENTIALS**: `unified-trading/exec-odum-binance-cefi` and 5 other
+      secrets not in AWS SM — operator must create these secrets before execution-service can start (ping filed
+      slot_3.md). (2) **BLOCKED-1 (GCP AR base image)**: risk-and-exposure-service + position-balance-monitor-service
+      Dockerfiles use `unified-trading-services/unified-trading-services` base image which is "not found" in GCP AR;
+      canonical is `unified-trading-library/unified-trading-library` per CLAUDE.md — awaiting operator confirmation.
+      **NEXT**: force-new-deployment on all ECS/App Runner services (with UTL fix), smoke `/health`; resolve BLOCKED-1
+      to complete risk+pbm ECR builds; operator to create execution-service SM secrets.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
