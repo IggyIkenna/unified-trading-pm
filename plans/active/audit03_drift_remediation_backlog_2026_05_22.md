@@ -137,7 +137,8 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       ladder, LSTs should too for tiered (warn/scale-down/cancel/kill) response. Provenance: AUDIT-03 F-33 inline
       execution 2026-05-22. — uac@7ce69f3b (4 CircuitBreakerId members: WARNING/SMALL/MODERATE/CATASTROPHIC at
       100/300/500/1500bps); strategy-service@ba290944 (check_lst_depeg() + DefiRiskExtra.lst_prices + 8 new tests + 8
-      stale patch fixes).
+      stale patch fixes); uac@eced6ef4 (carry_staked_basis.py BreakerConfig/RecoveryRule ladder aligned to D.2
+      thresholds; defi.py LST_DEPEG_MODERATE replaces CATASTROPHIC for 500bps scenario).
 
 ## Success criteria
 
