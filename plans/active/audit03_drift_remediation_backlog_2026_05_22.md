@@ -85,10 +85,13 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 5 — cross-client enforcement + low-sev residuals
 
-- [ ] [AGENT] P1. **F-36 / F-23** — Either add a UAC `model_validator` to `TransferIntent` (belt-and-suspenders,
+- [x] ✅ [AGENT] P1. **F-36 / F-23** — Either add a UAC `model_validator` to `TransferIntent` (belt-and-suspenders,
       satisfies the codex "raising layer" requirement + the required test) OR reconcile the CLAUDE.md/codex "3 raising
       layers" wording to the actual mechanism (single `client_id` by construction + 1 coordinator raise at
-      `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally.
+      `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally. — Option B chosen:
+      pm@bc9fbc3c; client-funds-isolation.md + CLAUDE.md updated — "3 layers each raises" corrected to structural
+      guarantee (single client_id field on TransferIntent) + 1 implemented runtime raise
+      (transfer_coordinator.py:241) + strategy-service Phase E.3 raise labeled PLANNED.
 - [x] ✅ [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
       `errors/defi.py:27`) for exhaustiveness guarantees. — uac@HEAD; all 55 error-classification tests pass,
       basedpyright 0 errors; backward-compatible (uppercase values preserved).
