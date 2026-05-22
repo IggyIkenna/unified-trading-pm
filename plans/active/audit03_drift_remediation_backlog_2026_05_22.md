@@ -25,11 +25,11 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 1 — P&L attribution: honest emission + canonical schema (strategy-service pnl/engine + UAC)
 
-- [x] ✅ [AGENT] P1. **F-17** — Emit canonical `PnLAttributionRow` (with `factor: PnLFactor` + `layer: PnLLayer`) instead
-      of the free-form `PnLBreakdown` (`account_id` string). The canonical types EXIST in UAC `internal/risk.py`
+- [x] ✅ [AGENT] P1. **F-17** — Emit canonical `PnLAttributionRow` (with `factor: PnLFactor` + `layer: PnLLayer`)
+      instead of the free-form `PnLBreakdown` (`account_id` string). The canonical types EXIST in UAC `internal/risk.py`
       (PnLFactor = 16-member StrEnum) — this is emit-path adoption, not type creation. Affects ALL archetypes' P&L
-      row-level attribution. — strategy-service@dca2a801 (_REWARD_LAYER_TO_FACTOR typed dict; both attribution functions
-      return list[PnLAttributionRow]; drain updated; 6 tests updated to assert factor/layer/amount)
+      row-level attribution. — strategy-service@dca2a801 (\_REWARD_LAYER_TO_FACTOR typed dict; both attribution
+      functions return list[PnLAttributionRow]; drain updated; 6 tests updated to assert factor/layer/amount)
 - [x] ✅ [AGENT] P1. **F-16** — Emit pre-TGE points rows honestly as
       `CARRY_ISSUER_SEASONAL value_eth=0 points_pending=true` instead of silently `continue`-ing them
       (`reward_attribution.py:159`). — strategy-service@86d49cd0; zero-value PnLBreakdown tagged
@@ -57,14 +57,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       instead of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1
       correction). — execution-service@769252a8; UAC QuoterV2 added at uac@1b2cfe8; UniswapConnector class constants now
       use get_uniswap_swap_router/quoter_v2/factory.
-- [ ] [AGENT] P1. **F-37b** (narrowed + relocated) — Genuine residual = the
+- [x] ✅ [AGENT] P1. **F-37b** (narrowed + relocated) — Genuine residual = the
       `catalogue_bucket = f"strategy-store-{project_id}"` inline bucket-NAME construction in
       `hedge_ratio_writer.py:136` + `decision_context_writer.py:149` (both already import `resolve_bucket_name` and use
-      it on L92 for the data bucket — only the catalogue bucket is hand-built). **The
-      `gcs_storage_service.py:185/251/293` + `grid_generator.py:100` `gs://` strings are NOT violations** — they are
-      `# noqa: gs-uri`-exempt display URIs built from an already-resolved bucket (`resolve_bucket_name` wired by
-      `strategy_execution_contract_remediation_2026_05_20.md` todo 4a ✅). **This item is folded into that plan
-      (best-of-both) — see its AUDIT-03 follow-up todo. Tracked there, not here.**
+      it on L92 for the data bucket — only the catalogue bucket is hand-built). — strategy-service@5b2e9924;
+      `_record_manifest(cloud=)` param added to both writers; `resolve_bucket_name(cloud=cloud, kind="strategy-store")`
+      replaces inline f-string; `UnifiedCloudConfig` import removed from both files.
 - [x] ✅ [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
       (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule. —
       strategy-service@90fe9c27 (2 lines; also fixed STEP-5.77 mode-seam in position/config.py + UAC export
