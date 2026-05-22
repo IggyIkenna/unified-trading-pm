@@ -8,19 +8,22 @@
 sub-account move, rebalancing) operates within the scope of a single `client_id`. Source account and destination account
 MUST share the same `client_id`.
 
-Enforced at three layers (defence in depth):
+Enforced via structural guarantee + runtime gate (2026-05-22 F-36/F-23 reconciliation — corrects earlier "3 layers"
+wording that overstated the implemented raise count):
 
-1. **UAC schema layer**: `TransferIntent.source_account.client_id` and `TransferIntent.dest_account.client_id` are
-   carried explicitly on every intent. UAC validator rejects construction where they differ.
-2. **Strategy-service emission layer**: `IntraClientRebalanceCoordinator` (Phase E.3 of
-   `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`) refuses to emit any TransferIntent where
-   source/dest client_ids differ. Raises `CrossClientTransferForbiddenError` at emit time.
-3. **Execution-service consumer layer**: `TransferCoordinator` (Phase 6 of same plan) rejects any TransferIntent where
-   source/dest client_ids differ. Raises `CrossClientTransferForbiddenError` at consume time. This is the final gate
-   before any RPC call hits a venue or chain.
+1. **UAC structural guarantee**: `TransferIntent` carries a single `client_id: str` field (not separate
+   `source_account.client_id` / `dest_account.client_id`). By schema design there is only ONE client identity on an
+   intent, so cross-client mixing is architecturally prevented at schema construction — no runtime validator is needed or
+   present. Any code that tries to move funds between client A and client B must craft TWO intents, each with its own
+   `client_id`; the routing layer catches that at the execution gate (layer 2).
+2. **Execution-service runtime gate (ONLY implemented raise)**: `TransferCoordinator.execute()`
+   (`transfer_coordinator.py:241`) rejects any TransferIntent whose `client_id` differs from the process-bound
+   `CLIENT_ID` environment variable. Raises `CrossClientTransferForbiddenError` at consume time — the hard gate before
+   any RPC call hits a venue or chain.
 
-Each layer alone is sufficient to block the violation; all three together make accidental cross-client moves impossible
-via the canonical code paths.
+**Planned (not yet shipped as of 2026-05-22)**: strategy-service `IntraClientRebalanceCoordinator` (Phase E.3 of
+`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`) will add an additional emit-time raise.
+Until Phase E.3 ships, layer 2 (execution-service) is the only runtime raise on the canonical code paths.
 
 ## Why this is a HARD rule, not a preference
 
@@ -100,9 +103,9 @@ or read-only config visibility**, "cross-client" is a valid descriptor.
 
 | Layer             | Class / function                                        | Invariant                                                                                                                                          | Raises                                                  |
 | ----------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| UAC schema        | `TransferIntent` (Phase 1 of per-client-isolation plan) | Validator on construction: `source_account.client_id == dest_account.client_id`                                                                    | `CrossClientTransferForbiddenError` (construction-time) |
-| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3)           | At emit time: every TransferIntent emitted by this coordinator carries identical `client_id` on source + dest                                      | `CrossClientTransferForbiddenError` (emit-time)         |
-| execution-service | `TransferCoordinator` (Phase 6)                         | At consume time: rejects any TransferIntent where source/dest client_ids differ; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT` | `CrossClientTransferForbiddenError` (consume-time)      |
+| UAC schema        | `TransferIntent` (single `client_id: str` field)        | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents           | N/A — structural, not a runtime validator               |
+| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — PLANNED) | At emit time: will carry identical `client_id` per emitted TransferIntent — **not yet shipped as of 2026-05-22**                                   | `CrossClientTransferForbiddenError` (emit-time — PLANNED) |
+| execution-service | `TransferCoordinator.execute()` (`transfer_coordinator.py:241`) | At consume time: rejects any TransferIntent whose `client_id` ≠ process-bound CLIENT_ID; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT` | `CrossClientTransferForbiddenError` (the only current runtime raise) |
 | execution-service | `isolation_policy.assert_client_allowed()` (existing)   | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                          | `CrossClientEventError` (already in place)              |
 
 ## Required tests

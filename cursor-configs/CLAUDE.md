@@ -280,15 +280,19 @@ Pointer chain. Full specs in codex:
 ### Client funds isolation (HARD RULE codified 2026-05-20)
 
 **Funds NEVER move between different clients.** Every transfer / withdraw / deposit / bridge / sub-account move /
-rebalancing operation MUST satisfy `source_account.client_id == dest_account.client_id`. Enforced at 3 layers (UAC
-schema construction, strategy-service emit, execution-service consume); each raises `CrossClientTransferForbiddenError`.
+rebalancing operation is scoped to a single `client_id` on the `TransferIntent`. Enforcement mechanism (2026-05-22
+F-36/F-23 reconciliation — corrects prior "3 layers each raises" wording): (1) UAC structural guarantee — `TransferIntent`
+carries a single `client_id: str` field (no separate source/dest fields), making same-client intent the schema default;
+(2) execution-service `TransferCoordinator.execute()` (`transfer_coordinator.py:241`) raises `CrossClientTransferForbiddenError`
+at consume time — the ONLY currently-implemented runtime raise; (3) strategy-service `IntraClientRebalanceCoordinator`
+emit-time raise is PLANNED (Phase E.3) but not yet shipped. Full table: `codex/04-architecture/client-funds-isolation.md`.
 Custody + legal boundary — each client is a separately-managed account under its own custody / legal entity (Odum UK vs
 Cayman vs others). Plan proposals framing "cross-client rebalancing" as in-scope are **review-blocking** — rewrite as
 "intra-client multi-portfolio" or "intra-client multi-wallet" with explicit client_id invariant. **Valid usages of
 "cross-client"** are isolation-enforcement contexts ONLY (`isolation_policy.assert_client_allowed()`,
 `CrossClientEventError` event-bus rejection, supervisor-level read-only config visibility) — never fund movement. SSOT:
 `codex/04-architecture/client-funds-isolation.md`. Required tests in every transfer-related plan: happy intra-client
-path + UAC-validator-rejects-cross-client + defence-in-depth coordinator-rejects-cross-client + alert-on-attempt.
+path + structural single-client_id validation + defence-in-depth coordinator-rejects-cross-client + alert-on-attempt.
 
 ### Per-client isolation architecture (strategy-service + execution-service)
 
