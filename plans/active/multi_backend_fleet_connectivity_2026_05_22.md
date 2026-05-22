@@ -169,8 +169,11 @@ public `:8026` firewalled still appears.
       (backfilled 2026-05-22)
 - [x] ✅ [AGENT] P1. Stream-friendly handling for log/SSE endpoints (don't buffer); per-VM error surfaced as the VM's
       status, not a 500 on the whole call. — agent-orchestrator@16bce1d (backfilled 2026-05-22)
-- [ ] [AGENT] P2. Authorize the central→VM hop with an internal credential (shared `ORCHESTRATOR_API_PASSWORD` from GCS,
-      private-VPC only) — the operator JWT terminates at the central API.
+- [x] ✅ [AGENT] P2. Authorize the central→VM hop with an internal credential (shared `ORCHESTRATOR_API_PASSWORD` from
+      GCS, private-VPC only) — the operator JWT terminates at the central API. Implemented as
+      `get_internal_service_token()` in `auth.py`: mints a 5-min 'worker' role JWT from the shared secret (cached, no
+      per-request overhead). `proxy_to_vm` + fleet summary both use the internal token; operator JWT never reaches
+      workers. — agent-orchestrator@5e8c7a4
 
 **Success:** every dashboard action against a specific VM works through `/api/vms/<id>/...` with identical capability to
 the old direct-to-VM path.
