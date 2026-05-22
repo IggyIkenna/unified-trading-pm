@@ -89,9 +89,10 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       --end-date 2026-03-25` — PID 626691 (slot-2 2026-05-22 13:38 UTC). **IN PROGRESS** — re-fetching 201 dates
       (CeFi stale threshold triggers re-fetch; ~60 min ETA at 19s/date). ETA ~14:43 UTC.
 
-- [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: re-query IS cefi manifest after PID 626691 completes + consolidation.
-      Expected: BITFINEX-SPOT 2334/2334 ✅ (2316+18), BITGET-FUTURES 561/561 (537+17+1+6), BITGET-SPOT 561/561
-      (538+17+1+5); zero `capture_status=None`. **IN PROGRESS** — waiting on PID 626691 (~14:43 UTC).
+- [x] ✅ [SCRIPT] P0. **Verify CeFi backfill complete**: re-queried IS cefi manifest after PID 626691 completed
+      (14:01:55 UTC 2026-05-22). Results: BITFINEX-SPOT 2334/2334 ✅, BITGET-FUTURES 561/561 ✅,
+      BITGET-SPOT 561/561 ✅; zero `capture_status=None` across all 28,228 unique date-venue rows.
+      Ranges: BITFINEX-SPOT/FUTURES 2020-01-01→2026-05-22, BITGET-SPOT/FUTURES 2024-11-08→2026-05-22.
 
 - [x] ✅ [SCRIPT] P0. **Purge BITGET phantom rows**: query IS cefi manifest for rows where
       `venue IN (BITGET-FUTURES, BITGET-SPOT) AND capture_status IS NULL`. Verify count ≤ 11 (6+5 known). Delete via
@@ -102,9 +103,9 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       backup at `_index/backups/availability_index_pre_bitget_phantom_purge_prd_20260522_125403.parquet`. Per-VM shard
       scan (519 shards) confirmed zero null rows remain in any shard — phantom re-introduction risk eliminated.
 
-- [ ] [SCRIPT] P0. **Verify**: re-query IS cefi manifest — BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT all 100% captured
-      with no `capture_status=None` rows. **IN PROGRESS** — prd+flat both at 100% captured with 0 null rows as of
-      2026-05-22 13:00 UTC; fill PID 498870 running to reach target counts (2334/561/561).
+- [x] ✅ [SCRIPT] P0. **Verify**: IS cefi manifest — BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT all 100% captured
+      with 0 `capture_status=None` rows. Confirmed 2026-05-22 14:04 UTC (post PID 626691 completion):
+      2334/2334/561/561 targets met across all per-VM shards (28,228 unique date-venue rows).
 
 ### Phase 2 — IS Sports recent-window gap fill (P0)
 
