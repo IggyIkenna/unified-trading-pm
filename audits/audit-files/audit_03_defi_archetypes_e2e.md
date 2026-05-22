@@ -576,6 +576,7 @@ One row per run. Detail (per-checkpoint result + synthetic injections + shas) li
 | 2026-05-22 | Phase 1 READ — §2.4 PNL | PNL-* READ subset (sub-agent + Opus review) | strategy-svc@b303a358 | b303a358 | 4 | 4 (F-16…F-19) | — | `runs/AUDIT-03_2026_05_22_phase1_pnl.md` |
 | 2026-05-22 | Phase 1 READ — §2.8 PIPE + §2.9 DATA | PIPE/DATA READ subset (sub-agent + Opus review) | mtds + features-onchain/delta-one | multi | 7 | 3 (F-20…F-22) | DATA coverage=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_pipe_data.md` |
 | 2026-05-22 | Phase 1 READ — §2.6 ALC + §2.7 CUS + §2.11 ONB | ALC/CUS/ONB READ subset (sub-agent + Opus review) | strategy-svc@b303a358 + execution-service + UAC | multi | 8 | 4 (F-23…F-26) | — | `runs/AUDIT-03_2026_05_22_phase1_alc_cus_onb.md` |
+| 2026-05-22 | Phase 1 READ — §2.3 EXE + §2.5 RSK (main, safety-critical) | EXE/RSK direct Opus read + §2.1 deferred CSB-05/15/17/20 closed PASS | exec-svc@a848ef61 + UAC@c3f7a45 + strategy-svc@b303a358 | multi | 19 (+4 CSB PASS) | 7 (F-27…F-33) | EXE-02→F-32 | `runs/AUDIT-03_2026_05_22_phase1_exe_rsk.md` |
 
 ---
 
@@ -609,8 +610,15 @@ One row per drift found, across all runs (append-only). Detail in the run result
 | F-22 | 2026-05-22 | (incidental) | CODE-BUG | perp_funding_handler._make_session() has no headers param but called with headers= at L1124 (Tardis auth path, not Lighter) → TypeError; trivial fix = add headers param | TBD | CONFIRMED (P1) |
 | F-23 | 2026-05-22 | ALC-05 | CODEX-DRIFT | DOWNGRADED P0→P2: cross-client transfer unexpressable by construction (TransferIntent single client_id) + per-process binding + exec-coordinator raise (transfer_coordinator.py:241). Invariant HOLDS; codex "3 raising layers + UAC validator" wording should reconcile to actual mechanism (or add UAC validator for required-test) | TBD | CONFIRMED (P2) |
 | F-24 | 2026-05-22 | CUS-03 | GAP | health_check()→CustodyHealth absent from CustodyProvider protocol + all impls | TBD | OPEN |
-| F-25 | 2026-05-22 | ONB-01 | CODE-DRIFT | strategy-svc ClientConfig=ClientStrategyOverride missing share_class/categories_enabled/max_drawdown_pct; check reporting/client_config.py | TBD | NEEDS-CONFIRM |
+| F-25 | 2026-05-22 | ONB-01 | CODE-DRIFT | CONFIRMED: codex unified `internal.client_config.ClientConfig` (client_id/org_id/share_class/categories_enabled/max_total_notional_usd/max_drawdown_pct + defi/cefi/sports sub-configs) does NOT exist. `internal/reporting/client_config.py` is a billing/fee TypedDict (no risk dims); `internal/domain/strategy_service/client_config.py` is ClientStrategyOverride; risk dims fragmented in `internal/risk.py`. Codex path + `categories_enabled` vocab also stale (→asset_group) | TBD | CONFIRMED (P1) |
 | F-26 | 2026-05-22 | CUS-02 | CODE-DRIFT | get_custody_provider() silently returns MockCustodyProvider on unknown provider (warning only) → silent mock signing in prod | TBD | OPEN |
+| F-27 | 2026-05-22 | EXE-01 | CODEX-DRIFT | DefiErrorCode = 35 codes (CCTP +5 added 2026-05-19) not "30" (codex/CLAUDE.md last 2026-05-15); routes via ErrorAction enum (FAIL/RETRY/SKIP/RECONNECT = 4) not a literal code-name prefix | TBD | CONFIRMED (P2) |
+| F-28 | 2026-05-22 | EXE-07 | CODE-DRIFT | **P0** wrap_preprocessor.py lacks stETH→wstETH + any CeFi perp venue; only fires on DeFi op-types → CeFi collateral-transfer leg bypasses it; rebasing stETH→OKX not prevented (composes/elevates F-11) | TBD | CONFIRMED (P0) |
+| F-29 | 2026-05-22 | EXE-08 | CODE-DRIFT | DeFi wallet PK stored as self._private_key instance attr beyond connect() (aave/uniswap/base/eigenlayer/hyperliquid); contra codex Key-Lifetime L187; cleared at disconnect (mitigant) | TBD | CONFIRMED (P1) |
+| F-30 | 2026-05-22 | EXE-14 | CODE-DRIFT | Infura (removed provider) wired as resolvable RPC fallback (config/chain_config.yaml + providers/rpc_fallback.py) | TBD | CONFIRMED (P2) |
+| F-31 | 2026-05-22 | EXE-18 | CODE-DRIFT | SwapRouter02 + QuoterV2 hardcoded in protocols/uniswap.py:848 + venues/uniswap.py despite UAC registry/dex_router_addresses.py | TBD | CONFIRMED (P1) |
+| F-32 | 2026-05-22 | EXE-02 | GAP | $10k-notional → FLASHBOTS_PROTECT MEV mode-SELECTION not located (MevRouter maps mode→policy + validates chain; BLOXROUTE excluded ✓; nothing selects mode by trade size on ETH mainnet) | TBD | NEEDS-CONFIRM (P1) |
+| F-33 | 2026-05-22 | RSK-05 | CODE-DRIFT/GAP | **P0** DEFI_LST_DEPEG_STETH_5PCT scenario NOT implemented (UAC registry/scenarios/defi.py has stablecoin-depeg + oracle-deviation, no LST-depeg); carry depeg kill-switch (CSB-12) unverifiable by scenario; composes CUT-05 | TBD | CONFIRMED (P0) |
 
 ---
 
