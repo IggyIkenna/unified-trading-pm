@@ -646,7 +646,10 @@ before CME arb can link.
       CRUDE_OIL_UP_DOWN_DAILY, GOLD_UP_DOWN_DAILY, DOGE_UP_DOWN_DAILY, SOL_UP_DOWN_DAILY, ECRTY/ECYM/ECGC/
       ECCL/ECNG/EC6E (CME-linked), and ~24 others. Per-group: define in UAC `PREDICTION_GROUPS`; backfill
       instruments-service catalog + MTDS CLOB tick history; cluster-validation expected counts populated. **GATES
-      `cme_polymarket_arb_2026_05_08` Phase 2 cross-link**.
+      `cme_polymarket_arb_2026_05_08` Phase 2 cross-link**. **UAC DONE (2026-05-22 slot-2)**: 7 CME-linked groups
+      defined in `CanonicalQuestionGroup` + `PREDICTION_GROUPS` + `cme_polymarket_link.py` fully wired (UAC@9c491bdd).
+      cme-arb Phase 2 FULL. Remaining: IS catalog backfill + MTDS CLOB tick history for the 7 new groups (requires VM
+      launch — not yet dispatched).
 
 ## `available_at` adapter stamping (coordinated)
 

@@ -1,3 +1,22 @@
+## [slot-2] 2026-05-22 — Wave 3 DONE: predictions Phase 5 UAC + cme-arb Phase 2 FULL
+
+[2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 5 (UAC portion) + cme-arb Phase 2 FULL.**
+
+**UAC Phase 5 (7 CME-linked groups)** — UAC@9c491bdd (2026-05-22): +7 `CanonicalQuestionGroup` members
+(NDX/RUT/DJIA/GOLD/CRUDE_OIL/NATGAS/EUR_UP_DOWN_DAILY) + `CANONICAL_GROUP_METADATA` + `PREDICTION_GROUPS` (min_rows=500
+floor) + `cme_polymarket_link.py` fully wired (all 9 roots). 5 new unit tests, 27/27 pass, QG exit 0.
+
+**cme-arb Phase 2 FULL** — plan checkbox updated from PARTIAL→FULL. PM@f317314ee.
+
+**predictions_master epic updated** — UAC portion noted; remaining: IS catalog backfill + MTDS CLOB tick history for 7
+new groups (VM launch needed, not yet dispatched).
+
+**config_grid_archetype_extend**: still BLOCKED-OPERATOR-DECISION — dimension name mismatch (3/4 archetypes).
+
+Plan refs: `cme_polymarket_arb_2026_05_08.md` + `predictions_master.md`
+
+---
+
 ## [slot-1-main → slot-2] 2026-05-22 — CME Polymarket arb + config grid + d8 perf
 
 **Plan refs**: `cme_polymarket_arb_2026_05_08.md` + `config_grid_archetype_extend_2026_05_20.md` +
