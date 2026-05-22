@@ -108,8 +108,9 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    - ✅ Footystats — wired
    - ✅ Glassnode — DELETED from system (defunct provider cleanup 2026-05-20)
    - ✅ Sharpapi — DELETED from system (defunct provider cleanup 2026-05-20)
-   - 🚫 Kaiko — REMOVE from system entirely (operator directive 2026-05-22, same as Glassnode; no adapter to build)
-   - 🚫 Polygon.io — REMOVE from system entirely (operator directive 2026-05-22; not using)
+   - ✅ Kaiko — DELETED from system (uac@4afbea7c + mtds@daeb3d5f, 2026-05-22)
+   - ✅ Polygon.io — DELETED from system (uac@4afbea7c + mtds@daeb3d5f, 2026-05-22; Polygon L2 blockchain refs
+     preserved)
    - 🟡 Kalshi — **ONLY remaining BLOCKED-CREDENTIALS**; prediction spread adapter scaffold ships; integration tests
      `@pytest.mark.requires_credentials`; credential ask filed. File: `pings/slot_1.md`.
    - IntoTheBlock / Sportradar — deferred; not in May-23 critical path Per `External Data Is Always Available` rule.
@@ -242,8 +243,8 @@ Items (updated 2026-05-22): each = ~0.3-0.5 cal-AI-day.
 
 - ✅ `ADAPTER-HELIUS-SOLANA-PAID` (DeFi RPC scale) — key in SM; scaffold + integration wired
 - 🗑️ ~~`ADAPTER-GLASSNODE-ONCHAIN`~~ — DELETED (defunct provider cleanup 2026-05-20); no adapter to build
-- 🚫 ~~`ADAPTER-KAIKO-CEX-HISTORICAL`~~ — REMOVE from system (operator directive 2026-05-22); no adapter to build
-- 🚫 ~~`ADAPTER-POLYGON-IO-TRADFI-TICKS`~~ — REMOVE from system (operator directive 2026-05-22; not using)
+- 🗑️ ~~`ADAPTER-KAIKO-CEX-HISTORICAL`~~ — DELETED from system (uac@4afbea7c + mtds@daeb3d5f, 2026-05-22)
+- 🗑️ ~~`ADAPTER-POLYGON-IO-TRADFI-TICKS`~~ — DELETED from system (uac@4afbea7c + mtds@daeb3d5f, 2026-05-22)
 - ✅ `ADAPTER-DATABENTO-TRADFI` (TradFi alt) — key in SM; scaffold ships; integration enabled
 - `ADAPTER-SPORTRADAR-FEED` (Sports) — BLOCKED-CREDENTIALS; scaffold ships; integration tests skipped
 - ✅ `ADAPTER-FOOTYSTATS-FEED` (Sports alt) — wired

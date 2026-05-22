@@ -268,7 +268,8 @@ Pointer chain. Full specs in codex:
   ORACLE\_\_; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
-- **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura.
+- **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon
+  L2 blockchain intact).
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
 - **DeFi + CeFi hybrid (CRITICAL)**: DeFi = long/stake/lend leg (on-chain); hedge/short leg runs on CeFi perp venues.
   SSOT: `codex/09-strategy/architecture-v2/archetypes/`.
@@ -921,7 +922,8 @@ Layout: `canonical/domain/` · `canonical/crosscutting/` · `external/{source}/`
 `registry/` · root facades.
 
 **Deleted dirs** (do NOT reference): `canonical/normalize/` · `external/sports/` · `external/cloud_sdks/` ·
-`external/onchain/` · `external/macro/` · `schemas/` · `shared/`.
+`external/onchain/` · `external/macro/` · `schemas/` · `shared/` · `external/kaiko/` · `external/polygon/` (TradFi data
+provider; Polygon L2 chain in `canonical/crosscutting/defi.py` intact).
 
 Import: `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`. Deep paths are
 UAC-internal. SSOT: `codex/02-data/contracts-scope-and-layout.md`.
