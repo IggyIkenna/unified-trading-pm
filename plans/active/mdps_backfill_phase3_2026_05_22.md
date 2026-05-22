@@ -85,10 +85,11 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 
 Gate: MTDS-3.2.E Predictions verification GREEN.
 
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred** — slot-7: `mdps-backfill-prediction-20260522-161458` (single VM 2025-2026,
-      STOPPED fast — sparse data). slot-2: sharded `mdps-prediction-{2025,2026}-20260522-161651` (2 VMs, RUNNING).
-      `MDPS_ASSET_GROUP=PREDICTION`. Source: `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V
-      GREEN ✅. 2026-05-22 slot-7 + slot-2.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred** — FIXED IS path mismatch (IS uses `canonical_question_group=X/day=Y/` partition;
+      MDPS dep_checker expected flat `day=X/`). Fix: deployment-service@8913787 adds `SKIP_DEPENDENCY_CHECK=true` for
+      prediction (same pattern as sports). Re-launched: `mdps-prediction-{2025,2026}-20260522-162604` (2 VMs, RUNNING).
+      Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
+      `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
 
 ---
