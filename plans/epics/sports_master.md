@@ -217,8 +217,9 @@ operator acks account provisioning.**
 
 - **honest-coverage architecture**: 16/49 = 33% done. Phase 1 UAC `UpstreamReq` + `in_coverage` started; Phase 2
   feature-compute `in_coverage` calls + NaN-state migration not yet shipped.
-- **`data_available_at` rename**: Phase 1 (migration script) shipped; Phase 2 (operator GCE migration), Phase 3 (atomic
-  4-repo source rename), Phase 4 (verify) pending.
+- **`data_available_at` rename**: Phase 1 shipped; Phase 2B GCS migration RUNNING (PID 95894, 200 workers, ~200/sec, ETA
+  ~1h, 2026-05-22 05:36 UTC start); Phase 3 (4-repo source rename) SHIPPED 2026-05-22 — instruments-service@fc7b306 +
+  UTL@94e43e8c + features-service@9847b350; Phase 4 verify pending (gated on migration completion).
 - **Fixture truthset recovery**: 9/12 = 75% done. Phase 3 chain-runner needs operator trigger; Phase 4 drift audit
   - Phase 5 UI verification pending.
 - **Phantom recon + failure triage**: 5/16 = 31% done. SFI_STANDINGS 100% failed (42/42); open-meteo silent for 2 days;
