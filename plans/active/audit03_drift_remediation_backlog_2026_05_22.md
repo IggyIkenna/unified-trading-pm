@@ -69,9 +69,10 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 3 — custody + DeFi credential safety (execution-service)
 
-- [ ] [AGENT] P1. **F-24** — Add `health_check() -> CustodyHealth` to the `CustodyProvider` protocol
+- [x] ✅ [AGENT] P1. **F-24** — Add `health_check() -> CustodyHealth` to the `CustodyProvider` protocol
       (`custody/base.py`) + all 4 impls (cloud_kms/mock/copper/ceffu); codex requires ping-60s / balance-5min. Composes
-      the RSK-08 custody-disconnect breaker.
+      the RSK-08 custody-disconnect breaker. — execution-service@7069f8252; CustodyHealth dataclass + protocol method +
+      mock/cloud_kms/copper/ceffu impls; Ceffu returns unhealthy until POD June-1 API spec.
 - [x] ✅ [AGENT] P1. **F-29** — Clear `self._private_key` on `disconnect()` in the Hyperliquid connector
       (`hyperliquid.py:181` does NOT clear it today, unlike aave/uniswap) + stop re-injecting on `update_credentials()`;
       align with codex Key-Lifetime. — execution-service@769252a8; disconnect() clears \_private_key + \_wallet_address
