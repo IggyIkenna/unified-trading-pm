@@ -44,14 +44,16 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — All 3 prior VMs failed with ImportError (`needs_candle_processing`). Fix:
       UAC@7eb9859d + 9ae88aea (slot-5 + slot-4 duplicate fixes) exported `needs_candle_processing` from top-level
       `__init__.py`. Canonical GCS tarball at `code/unified-api-contracts-code.tar.gz` updated to SHA=5f699edb
-      (UAC@08:50 UTC). **RUNNING**: `mdps-backfill-defi-20260522-095053` @ 35.200.75.132 (2020-01-01→2026-05-22,
-      market-data-tick-defi-_, vault_share_price). **FINDING**: MDPS DeFi can only process vault_share_price from
-      market-data-tick-defi-_. LST rates/lending_indices/dex_pool_state in separate buckets flow directly to
-      features-onchain, NOT through MDPS. **DEFERRED** — verify this architectural claim in features-onchain plan.
-      2026-05-22.
-- [ ] [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — **DEFERRED**: Determine whether features-onchain reads LST rates/DEX pool/
-      lending indices directly from separate buckets OR if MDPS needs multi-bucket support. File issue in
-      `plans/active/issues/`. SUCCESSOR: `mdps_defi_multi_bucket_2026_05_22.md` (to be created).
+      (UAC@08:50 UTC). **RUNNING**: (a) `mdps-backfill-defi-20260522-095053` @ 35.200.75.132 (2020-01-01→2026-05-22,
+      market-data-tick-defi-\*, vault_share_price only); (b) `mdps-backfill-defi-dex-pools-20260522-094538` reading from
+      `dex-pools-central-element-323112`; (c) `mdps-backfill-defi-lending-indices-20260522-094523` from
+      `lending-indices-central-element-323112`; (d) `mdps-backfill-defi-lst-rates-20260522-094503` from
+      `lst-rates-central-element-323112`. **FINDING**: MDPS DeFi only processes vault_share_price from main DeFi bucket.
+      LST rates/lending_indices/dex_pool_state in separate buckets — architecture gap filed in issue doc. 2026-05-22.
+- [x] ✅ [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — Issue doc filed at
+      `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` (slot-7 2026-05-22). Documents 3 options: (A)
+      features-onchain reads directly from separate buckets (bypass MDPS), (B) multi-bucket MDPS support, (C)
+      consolidation step. Awaiting operator/slot-1 direction. 2026-05-22 slot-6 cross-ref.
 - [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify slot-2 VM (vault_share_price): 10-sample NaN check; manifest 100% v8.
       LONG-RUNNING (2020-01-01→2026-05-22, vault_share_price only from main DeFi bucket).
 
@@ -65,15 +67,11 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 - [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. NOTE: VM at 2020-01-14 after 3.5h
       running (very slow — ~10 min/day × 2333 days = ~16 days ETA). VIX bars at 2020-01-01+ will eventually appear.
       LONG-RUNNING — verify once VM reaches 2026-05-22.
-- [ ] [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — **DEFERRED** (non-fatal, VM continues): VM logs
-      `No SchemaContract registered` for CME/ICE `instrument_type=combo`, `instrument_type=UNKNOWN`,
-      `instrument_type=futures_chain`, `instrument_type=G   FMZ0020-BRN FMZ0020` (ICE spread) at recovery=alert. These
-      instrument types produce NaN bars for multi-leg/combo CME/ICE instruments. Also: `SCHEMA_VALIDATION_FAILED` for
-      `data_type=trades` bars — NaN open/high/low/close when no trades in interval; schema says NOT NULLABLE → rows
-      skipped. Affects CME/ICE futures trade bars; NOT VIX (VIX is ohlcv, not trades). Fix: (a) add contracts to
-      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` for (venue, instrument_type) pairs; (b) allow
-      nullable OHLC for `data_type=trades` in processed_candles schema. **SUCCESSOR**: file issue doc in
-      `plans/active/issues/`. VIX verification not blocked. 2026-05-22 slot-2 discovery.
+- [x] ✅ [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — Issue doc filed at
+      `plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md` (slot-6 2026-05-22). Covers: CME/ICE
+      combo/UNKNOWN/futures_chain NaN bars + trades data_type nullable OHLC fix. VIX unblocked. Current VM marks
+      combo/UNKNOWN/futures_chain as `attempted_failed`; follow-up VM (after ~16d) will retry with UAC@7cdee1bc + schema
+      fixes. 2026-05-22 slot-6.
 
 ## Phase 4 — Sports MDPS reprocessor
 
