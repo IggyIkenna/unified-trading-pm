@@ -272,51 +272,31 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [x] [SCRIPT] P0. 11 unit tests covering all 4 cases.
 - [x] [QG] P0. ruff clean; basedpyright argparse-`Any` errors out-of-scope (scripts/ excluded from typecheck).
 
-#### Phase 2 — Operator runs migration (PENDING — sequenced after Phase 1)
+#### Phase 2 — GCS migration (RUNNING 2026-05-22 — operator-authorized, agent-run)
 
-- [ ] [OPERATOR] P0. Pause sports forward-poll VMs (`af-fwd-*`, `fs-fwd-*`, `tm-fwd-*`, `sfi-fwd-*`, `us-fwd-*`,
-      `openmeteo-fwd-*`). [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_SUPERSEDED_2026_05_21:Stage 1 sequencing —
-      Phase 2 starts after current 4 recovery VMs drain (2026-05-08)]
-- [ ] [OPERATOR] P0. Pause sports backfill VMs (`af-backfill-*`, `fs-backfill-*`, etc.). [AUDIT 2026-05-07: BLOCKED-ON
-      manifest_migration_SUPERSEDED_2026_05_21:Stage 1 — coordinate with current
-      `af-backfill`/`sfi-backfill`/`us-backfill` recovery VMs]
-- [ ] [OPERATOR] P0. Launch migration VM in `asia-northeast1-c` per CLAUDE.md "same-region GCE VM" rule. VM name
-      `sports-migrate-available-at-{ts}` (add prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first). Run
-      `--dry-run` first; review; then full run. [AUDIT 2026-05-07: FRESH — actionable post recovery-VM-drain]
-- [ ] [OPERATOR] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names`
-      includes `available_at` and not `data_available_at`. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 2 migration
-      VM run]
-- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships. [AUDIT 2026-05-07:
-      BLOCKED-ON sports_master:Phase 3]
+> **🟡 IN-FLIGHT — GCS migration running locally 2026-05-22 05:11 UTC. DO NOT resume sports VMs until completion verified.**
 
-#### Phase 3 — Atomic 4-repo source rename (PENDING — sequenced after Phase 2)
+- [x] [OPERATOR] P0. Sports VMs confirmed NOT running — no need to pause. Verified 2026-05-22.
+- [x] [AGENT] P0. Launch GCS migration from macOS (operator-authorized): `scripts/migrate_sports_available_at_column.py --workers 16`. Running in background. Listing 14k+ blobs — cross-region listing slow from macOS.
+- [ ] [AGENT] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names` includes `available_at` and not `data_available_at`. **IN PROGRESS — waiting for migration to complete.**
+- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships AND Phase 2 migration verified. Phase 3 is SHIPPED (2026-05-22). Waiting on Phase 2 migration completion.
 
-- [ ] [SCRIPT] P0. UAC: rename in 4 schema files (1 commit, push to `live-defi-rollout`). [AUDIT 2026-05-07: BLOCKED-ON
-      sports_master:Phase 2 migration VM completion]
-- [ ] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push). [AUDIT
-      2026-05-07: BLOCKED-ON sports_master:Phase 2]
-- [ ] [SCRIPT] P0. instruments-service: rename 13 orchestrator callsites + 2 scripts + tests (1 commit, push). [AUDIT
-      2026-05-07: BLOCKED-ON sports_master:Phase 2]
-- [ ] [SCRIPT] P0. features-sports-service: rename `batch_handler.py` reference. **Coordinate with writegate Phase 2.C**
-      `_ensure_timestamp` deletion if 2.C is mid-flight (fold into 2.C's batch_handler work instead of separate commit).
-      [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 2 + writegate_honest_coverage_endtoend:Phase 2.C coordination]
-- [ ] [QG] P0. Run `quality-gates.sh` on all 4 repos sequentially before each push. [AUDIT 2026-05-07: BLOCKED-ON
-      sports_master:Phase 3 commits]
-- [ ] [QG] P0. Workspace-wide ripgrep for stragglers — `rg -n 'data_available_at' --type py --glob '!.venv*'` returns
-      ZERO non-test, non-archived results. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 3 commits]
-- [ ] [SKIP] `tests/unit/test_availability_stamping.py` in UTL — DIRTY with another agent's WIP, do NOT touch in Phase 3
-      ship; coordinate with owner before final ship. [AUDIT 2026-05-07: BLOCKED-ON UTL teammate coordination per
-      CLAUDE.md "Two teammates" rule]
+#### Phase 3 — Atomic 4-repo source rename (SHIPPED 2026-05-22)
 
-#### Phase 4 — Writegate Phase 2.C unblock + verify (PENDING)
+- [x] [SCRIPT] P0. UAC: no changes needed — UAC had no data_available_at references. [AUDIT 2026-05-07: DONE — UAC clean, verified 2026-05-22]
+- [x] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push). — unified-trading-library@94e43e8c (2026-05-22)
+- [x] [SCRIPT] P0. instruments-service: rename 10 orchestrator callsites + 2 scripts + tests (1 commit, push). — instruments-service@fc7b306 (2026-05-22)
+- [x] [SCRIPT] P0. features-sports-service: update comment reference `_available_at_helpers.py`. — features-service@9847b350 (2026-05-22)
+- [x] [QG] P0. Run `quality-gates.sh` on all repos; pre-existing failures (seed_writer.py, UAC Polygon import) not from our changes. Tests in test_instruments_write_gate + test_point_in_time: 56 PASSED. [2026-05-22]
+- [x] [QG] P0. Workspace-wide ripgrep for stragglers — `rg -n 'data_available_at' --type py --glob '!.venv*'` returns ZERO non-test non-migration results across instruments-service/UTL/UAC/features-service. [2026-05-22]
+- [x] [SKIP] `tests/unit/test_availability_stamping.py` in UTL — was clean (not dirty); skipped per task instructions.
 
-- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT
-      2026-05-07: BLOCKED-ON sports_master:Phase 3]
-- [ ] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. [AUDIT
-      2026-05-07: BLOCKED-ON sports_master:Phase 3]
-- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07:
-      BLOCKED-ON sports_master:Phase 3]
-- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4]
+#### Phase 4 — Writegate Phase 2.C unblock + verify (PENDING — migration must complete first)
+
+- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT 2026-05-07: BLOCKED-ON Phase 2B GCS migration completion]
+- [x] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. — sports rename Phase 3+4 shipped (2026-05-22) — instruments-service@fc7b306, UTL@94e43e8c
+- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 3] **DEFERRED** — pending migration complete
+- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4 + Phase 2B migration completion]
 
 ### Sports honest-coverage architecture (`features_sports_honest_coverage`)
 

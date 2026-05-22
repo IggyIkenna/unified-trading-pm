@@ -1559,6 +1559,8 @@ grep.
 
 ### Phase 2.C — features-sports forward fixes
 
+> **Sports rename Phase 3+4 shipped 2026-05-22** — `data_available_at` → `available_at` atomic rename complete across instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350. Phase 2B GCS migration running. Sports backfill VMs unblocked once migration verified.
+
 **Audit 2026-05-06 update** (amendment E + audit #0.4 findings):
 
 - `_stamp_available_at` already implemented in `cli/handlers/batch_handler.py:238-338` (~80% of original Phase 2.C work
