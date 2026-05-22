@@ -104,7 +104,7 @@ remediation execution defaults to Sonnet 4.6.
 | Mockability       | n/a — audit reads code + plans + codex                                                                                                                                                                                                                                   |
 | Deps              | Post strategy-service consolidation (Phase 11) clean                                                                                                                                                                                                                     |
 | Wrapper plan      | TBD post-audit                                                                                                                                                                                                                                                           |
-| Wraps existing    | [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md), `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`, `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`, `defi_recursive_borrow_archetypes_2026_05_10.md` |
+| Wraps existing    | [`strategy_archetype_logic_audit_2026_05_20.md`](../../audit/results/strategy_archetype_logic_audit_2026_05_20.md), `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`, `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`, `defi_recursive_borrow_archetypes_2026_05_10.md` |
 | Operator approval | n/a — already acked 2026-05-20                                                                                                                                                                                                                                           |
 | Status            | `IN-FLIGHT`                                                                                                                                                                                                                                                              |
 
@@ -389,3 +389,9 @@ follow-up issue docs (next-round pool).
 - Disaster-recovery audit (region failover; venue outage; custody-provider failover).
 - Compliance audit (per-jurisdiction venue restrictions; KYC/AML touchpoints; audit-log surface).
 - Audit-trail audit (every operator action + every agent action logged + queryable).
+
+## Status update — 2026-05-22
+
+Updated stale link: `strategy_archetype_logic_audit_2026_05_20.md` moved to `plans/audit/results/` — link fixed in Row #1 Wraps existing column.
+Rows #1–#2 remain IN-FLIGHT. Rows #3–#14 remain SEEDED (no slots assigned yet).
+This file stays active while the audit pool is running.
