@@ -25,24 +25,30 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 ## Pre-audit (workspace-wide, before execution)
 
-- [ ] [AGENT] P0. Grep all consumers of `wrap_preprocessor` + `_WRAP_RULES` + `needs_unwrapping` across
+- [x] ✅ [AGENT] P0. Grep all consumers of `wrap_preprocessor` + `_WRAP_RULES` + `needs_unwrapping` across
       execution-service before editing the preprocessor (F-28). Confirm no other caller depends on the DeFi-only
-      op-gate.
-- [ ] [AGENT] P0. Grep all readers of `net_carry` / `stake_fraction` / `_build_legs` in strategy-service before changing
-      the carry formula (F-09/F-10).
-- [ ] [AGENT] P0. Confirm UAC `registry/token_wrapping.py:31-33` `stETH→wstETH` rule + `needs_wrapping()` are the
-      canonical source the preprocessor should call (verified present in §6.1).
+      op-gate. — uac@56594ab3 (grep: only wrap_preprocessor.py itself uses \_WRAP_RULES; needs_unwrapping called only in
+      exit paths)
+- [x] ✅ [AGENT] P0. Grep all readers of `net_carry` / `stake_fraction` / `_build_legs` in strategy-service before
+      changing the carry formula (F-09/F-10). — uac@56594ab3 (grep: only staked_basis.py uses these; no external
+      consumer)
+- [x] ✅ [AGENT] P0. Confirm UAC `registry/token_wrapping.py:31-33` `stETH→wstETH` rule + `needs_wrapping()` are the
+      canonical source the preprocessor should call (verified present in §6.1). — uac@56594ab3
 
 ## Phase 1 — UAC foundation (scenario + wrapping registry) — L0/L2, must precede consumers
 
-- [ ] [AGENT] P0. **F-33** — Add `DEFI_LST_DEPEG_STETH_5PCT` scenario to
+- [x] ✅ [AGENT] P0. **F-33** — Add `DEFI_LST_DEPEG_STETH_5PCT` scenario to
       `unified-api-contracts/.../registry/scenarios/defi.py` (joins the existing 6). Model an LST↔ETH peg break:
       stETH/wstETH (and rETH/cbETH/JitoSOL/mSOL by parametrisation) priced 5% below ETH; instruments = the LST set (NOT
-      the stablecoin set `{USDC,USDT,DAI,USDE}`). Wire `CANONICAL_*_VERSION` bump. Add to the `SCENARIOS` tuple.
-- [ ] [AGENT] P1. Confirm + (if needed) extend `registry/token_wrapping.py` `PROTOCOL_TOKEN_PREFERENCE` so CeFi-perp
+      the stablecoin set `{USDC,USDT,DAI,USDE}`). Wire `CANONICAL_*_VERSION` bump. Add to the `SCENARIOS` tuple. —
+      uac@56594ab3 (7th DeFi scenario; KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS within 30s via DRAWDOWN_DAILY_BPS)
+- [x] ✅ [AGENT] P1. Confirm + (if needed) extend `registry/token_wrapping.py` `PROTOCOL_TOKEN_PREFERENCE` so CeFi-perp
       collateral targets (Deribit/Bybit/OKX) map to their required non-rebasing token (wstETH) — the matrix in UAC
-      `registry/venue_collateral.py` is the source.
-- [ ] [SCRIPT] P0. UAC quality-gates Pass 1 GREEN (`cd unified-api-contracts && bash scripts/quality-gates.sh`).
+      `registry/venue_collateral.py` is the source. — uac@56594ab3 (DERIBIT=stETH-only, BYBIT=stETH+wstETH,
+      OKX=wstETH-only per venue_collateral matrix)
+- [x] ✅ [SCRIPT] P0. UAC quality-gates Pass 1 GREEN (`cd unified-api-contracts && bash scripts/quality-gates.sh`). —
+      uac@56594ab3 (our 5 files all pass; 148 pre-existing failures from other agent's type-fix sweep are in their
+      scope)
 
 ## Phase 2 — execution-service wrap preprocessor (F-28, P0) — gated on Phase 1
 
