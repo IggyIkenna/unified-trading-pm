@@ -63,9 +63,14 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 - [x] ✅ [SCRIPT] P0. **IS-3.1.Sports** — Launched `instr-backfill-sports` @ 34.146.140.6. 2020-06-01→2026-03-28 window.
       MANIFEST_PER_VM_SHARDS=true. instruments-service@7d9a737 (both fixes). Deleted stale TERMINATED legacy VM first.
-      2026-05-22.
+      2026-05-22. **NOTE**: VM processed 2020-06-01 then stalled — LegacyBlankErrorReasonError on every date at FIXTURES
+      honest-coverage path (17 sports `record_empty()` callsites missing `reason=`). Fix: instruments-service@55d718f.
+      Tarball rebuilt 07:22:50 UTC 2026-05-22. Relaunched same VM name @ 34.84.104.165 with @55d718f. RUNNING.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
-      rename confirmed absent (no `data_available_at` stragglers).
+      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @55d718f — chunk 1/71
+      (2020-06-01→2020-06-30) processing as of 07:42 UTC. Per-VM shard created (14.63 KiB). No
+      LegacyBlankErrorReasonError confirmed. 5 UNSUPPORTED adapters (FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SFI/OPEN_METEO)
+      are known issue (separate from this verify).
 
 ## Phase 5 — Predictions instruments forward-fill
 
@@ -113,16 +118,41 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       RUNNING. Recent window: `instr-backfill-pred-20260522` — **COMPLETED 07:26 UTC exit_code=0**
       (2026-03-01→2026-05-22). Kalshi BLOCKED-CREDENTIALS. 2026-05-22.
 
+## Post-relaunch verifications (IS@7d9a737 + IS@55d718f)
+
+- [x] ✅ [VERIFY] P0. **IS-3.1.CeFi-Relaunch-V** — All 3 recent-window CeFi VMs COMPLETED exit_code=0. Timestamps:
+      cefi-1-20260522 @06:56 UTC, cefi-2-20260522 @06:56 UTC, cefi-3-20260522 @06:57 UTC. Per-VM shards present: ~37.9KB
+      each. DERIBIT SCHEMA_VALIDATION_FAILED for ETH_USDC-21MAY26-1800-C (expired option) — non-fatal, handled
+      gracefully. Full-history VMs (cefi-1/cefi-2: 2020-2024) still RUNNING. instr-backfill-cefi-3
+      (2025-01-01→2026-02-28) COMPLETED @07:25 UTC. 2026-05-22.
+- [x] ✅ [VERIFY] P0. **IS-3.1.DeFi-Relaunch-V** — instr-backfill-defi-20260522 COMPLETED exit_code=0 @07:09 UTC. Per-VM
+      shard 119.56 KiB. Jito SCHEMA_VALIDATION_FAILED for JITO-MEV-AGGREGATE (non-base58 symbol) — non-fatal.
+      Full-history VM (defi: 2020-2026-02-28) still RUNNING. 2026-05-22.
+- [x] ✅ [VERIFY] P0. **IS-3.1.TradFi-Relaunch-V** — instr-backfill-tradfi-20260522 COMPLETED exit_code=0 @06:58 UTC.
+      Per-VM shard 19.84 KiB. **DATABENTO auth_account_locked**: 6 datasets (IFEU.IMPACT/IFUS.IMPACT/GLBX.MDP3/
+      XNAS.ITCH/DBEQ.BASIC) all returning 403 — zero Databento-sourced instruments written (see IS-3.1.TradFi-Databento
+      below). Full-history VM (tradfi: 2020-2026-02-28) still RUNNING. 2026-05-22.
+- [x] ✅ [VERIFY] P0. **IS-3.1.Pred-Relaunch-V** — instr-backfill-pred-20260522 COMPLETED exit_code=0 @07:26 UTC. Per-VM
+      shard 17.68 KiB. Kalshi 400 = BLOCKED-CREDENTIALS (expected). Full-history VM (pred: 2020-2026-02-28) still
+      RUNNING. 2026-05-22.
+- [ ] [BLOCKED-CREDENTIALS] P0. **IS-3.1.TradFi-Databento** — Databento SDK 403 auth_account_locked on ALL 6 TradFi
+      datasets: IFEU.IMPACT (ICE EU futures/options), IFUS.IMPACT (ICE US futures/options), GLBX.MDP3 (CME/Globex
+      futures), XNAS.ITCH (NASDAQ equities), DBEQ.BASIC (Databento Basic equities/ETFs ×2). Zero Databento-sourced
+      instruments written for 2026-03-01→2026-05-22 window. Polygon TradFi data (equities) still writes OK.
+      `     CREDENTIAL APPROVAL REQUEST — Databento TradFi instruments adapter     Vendor: Databento (market data provider)     What I need: Reactivate/unlock account — check billing status at app.databento.com or email support@databento.com. Account may have expired/hit quota limit.     Account to use: existing operator Databento account     Unblocks: IFEU/IFUS/GLBX/XNAS/DBEQ instrument records for IS TradFi backfill     Without it: TradFi instruments from Databento datasets are 0; Polygon equities still write     `
+
 ## Temporary states + their canonical follow-up plans
 
-- Sports IS VM `instr-backfill-sports` booted at 07:31 UTC 2026-05-22, setting up venv (new instance at 34.84.128.69).
-  Sports GCS migration (`data_available_at` → `available_at`) incomplete (6/30 sample still old column) — pending re-run
-  on sports VM once venv ready. Track in `sports_master` epic.
-- Full-history IS VMs still running: `instr-backfill-cefi-1` (2020→2022), `instr-backfill-cefi-2` (2022→2024),
+- Sports IS VM `instr-backfill-sports` booted at 07:31 UTC 2026-05-22; failed on every date (LegacyBlankErrorReasonError
+  — missing `reason=` on 17 sports `record_empty()` callsites). Fixed @55d718f, relaunched @07:30 UTC. Now RUNNING chunk
+  1/71 (2020-06-01→2020-06-30) as of 07:42 UTC. No errors, per-VM shard 14.63 KiB created.
+- Full-history IS VMs still RUNNING: `instr-backfill-cefi-1` (2020→2022), `instr-backfill-cefi-2` (2022→2024),
   `instr-backfill-defi` (2020→2026-02), `instr-backfill-tradfi` (2020→2026-02), `instr-backfill-pred` (2020→2026-02).
-  Recent-window VMs all completed exit_code=0 (see above).
+  Recent-window VMs all completed exit_code=0 (see Post-relaunch verifications section above).
 - `deployment-service@7d6978b` startup script fix (VM_GAS_FEE_CHAINS unbound variable) — all future VMs use fixed
   script; MTDS-3.2.C-GAP gap-fill VMs relaunched with fix.
+- Databento auth_account_locked: BLOCKED-CREDENTIALS for ALL TradFi datasets (see IS-3.1.TradFi-Databento above).
+  Operator action needed to reactivate Databento account.
 
 ## IS prd bucket migration (flat→prd) — slot 5, 2026-05-22
 
