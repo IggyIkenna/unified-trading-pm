@@ -36,16 +36,16 @@ label-flip) must be GREEN before any backfill VMs launch. Slot 5 owns Phase 7; a
 
 ## Slot stack — local laptop (slots 1-8)
 
-| Slot | Wave 1 (active)                                                                  | Wave 2 (after Wave 1 ack)                                                               | Queued days |
-| ---- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------- |
-| 1    | `gap_2_4_d` bucket fix + `strategy_execution_contract_remediation` (Phases 1-4)  | Monitor backfill chain; `honest_coverage` final item; alerting ALERT_THRESHOLDS         | ~4d         |
-| 2    | `cme_polymarket_arb` Phases 2-5 (34% remaining)                                  | `config_grid_archetype_extend` (4 new families) + `d8_perf_upgrade`                     | ~8d         |
-| 3    | `aws_migration_defi_first` Phases 1.B+1.C+3-6 + AWS launcher scripts (7 scripts) | `instruments_backfill_phase3` (5 AGs, Phase 7 gate)                                     | ~7d         |
-| 4    | `aws_cloud_toggle_and_backfill_parity` Phases 1-3 (UI toggle)                    | `batch_live_symmetry` Phase 3 VM fleet + Phase 4 consumer sweep + reconciliation engine | ~16d        |
-| 5    | ✅ 4 plan closes + Phase 6 Docker verify + Phase 7 v8 DONE (PM@ec208173d)        | `mtds_backfill_phase3` Phases 1+3+5 — gated on Phase 5 AWS + sports rename              | ~12d        |
-| 6    | Codex audit Phases 1+2 P0 items                                                  | Codex audit Phase 3 bulk pass → `mdps_backfill_phase3`                                  | ~10d        |
-| 7    | Phase 11a+11b terraform cleanup (strategy + ml repos)                            | `features_backfill_phase3` (gated on MDPS) → `promote_workflow_may23_cli_path`          | ~9d         |
-| 8    | Cloud Run Slack P0 + Phase 2.E smoke test                                        | `manifest_schema_final_gate` final verify → `alerting` PagerDuty policy                 | ~5d         |
+| Slot | Wave 1 (active)                                                                  | Wave 2 (after Wave 1 ack)                                                       | Queued days |
+| ---- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------- |
+| 1    | `gap_2_4_d` bucket fix + `strategy_execution_contract_remediation` (Phases 1-4)  | Monitor backfill chain; `honest_coverage` final item; alerting ALERT_THRESHOLDS | ~4d         |
+| 2    | `cme_polymarket_arb` Phases 2-5 (34% remaining)                                  | `config_grid_archetype_extend` (4 new families) + `d8_perf_upgrade`             | ~8d         |
+| 3    | `aws_migration_defi_first` Phases 1.B+1.C+3-6 + AWS launcher scripts (7 scripts) | `instruments_backfill_phase3` (5 AGs, Phase 7 gate)                             | ~7d         |
+| 4    | `aws_cloud_toggle_and_backfill_parity` Phases 1-3 (UI toggle)                    | `batch_live_symmetry` → **vm-cross-cutting** (dispatched 2026-05-22)            | ~16d        |
+| 5    | ✅ 4 plan closes + Phase 6 Docker verify + Phase 7 v8 DONE (PM@ec208173d)        | `mtds_backfill_phase3` Phases 1+3+5 — gated on Phase 5 AWS + sports rename      | ~12d        |
+| 6    | Codex audit Phases 1+2 P0 items                                                  | Codex audit Phase 3 bulk pass → `mdps_backfill_phase3`                          | ~10d        |
+| 7    | Phase 11a+11b terraform cleanup (strategy + ml repos)                            | `features_backfill_phase3` (gated on MDPS) → `promote_workflow_may23_cli_path`  | ~9d         |
+| 8    | Cloud Run Slack P0 + Phase 2.E smoke test                                        | `manifest_schema_final_gate` final verify → `alerting` PagerDuty policy         | ~5d         |
 
 ---
 
@@ -77,15 +77,15 @@ slot 5). Phases 1/2/3/5; Phase 4 (Sports) BLOCKED-UPSTREAM on sports rename.
 
 ---
 
-## Slot 4 — AWS cloud toggle Phases 1-3 → batch_live_symmetry (Wave 2)
+## Slot 4 — AWS cloud toggle Phases 1-3 (Wave 1 only; Wave 2 → vm-cross-cutting)
 
 **Ping**: `ikenna_orchestrator/pings/slot_4.md`
 
 **Wave 1 (active)**: `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phases 1-3 (service + route + UI toggle).
 
-**Wave 2 (after toggle ack)**: `batch_live_symmetry_2026_05_10.md` remaining 11 items — 3 BLOCK banners + Phase 3 VM
-fleet migration (consolidator VM n1-standard-8) + Phase 4 consumer sweep + Phase 9 QG sweep + batch-live reconciliation
-engine greenfield (`engine/orchestrator.py` + `cli/handlers/reconcile_handler.py`).
+**Wave 2 (dispatched 2026-05-22 → vm-cross-cutting)**: `batch_live_symmetry_2026_05_10.md` remaining 11 items — 3 BLOCK
+banners + Phase 3 VM fleet migration (consolidator VM n1-standard-8) + Phase 4 consumer sweep + Phase 9 QG sweep +
+batch-live reconciliation engine greenfield. See `## VM Dispatches` below for vm-cross-cutting boot details.
 
 ---
 
@@ -159,3 +159,57 @@ update `ALERT_THRESHOLDS` in UAC with quietness-VM baseline values (VM auto-shut
 | MTDS CeFi verify          | Slot 5 | MTDS-3.2.A-V passes                             | MDPS CeFi reprocessor (Slot 6)                         |
 | MDPS CeFi verify          | Slot 6 | MDPS-3.3.CeFi-V passes                          | Features CeFi compute (Slot 7)                         |
 | Sports rename             | Epics  | sports_master Phase 3+4                         | MTDS-3.2.D / MDPS-3.3.Sports / FEAT-3.4.Sports         |
+
+---
+
+## VM Dispatches (2026-05-22)
+
+### vm-prediction — `predictions_master` epic
+
+**Spawned**: slot 1 (main-orchestrator), 2026-05-22. **Epic**: `plans/epics/predictions_master.md` (tier L0, priority
+P1, `assigned_vm: vm-prediction`) **Primary active plan**:
+`plans/active/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md` — Phases 1-4 largely complete (IS
+CeFi ✅, IS Sports ✅, IS Prediction manifest fix ✅, Codex alignment ✅).
+
+**Remaining work for vm-prediction**:
+
+1. `predictions_master` P0 MTDS migration items (orchestrator.py:1990-1995 data_type replacement; lifecycle gating;
+   manifest reflip; old parquet deletion; backfill canonical groups).
+2. `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` Phases 3-4 (BLOCKED-CREDENTIALS — Kalshi API key,
+   awaiting operator ack).
+3. Phase 3.4b: Prediction bucket naming mismatch (P1 DEFERRED to `bucket_name_ssot_canonicalisation_2026_05_10.md`).
+4. Phase 3.5: Schema column in drilldown UI verify.
+
+**VM instruction**: main-orchestrator spawns review agent (slot 2) + workers (slots 3-5); reads epic SSOT before coding;
+runs `bash scripts/quality-gates.sh` before every push; follows Commit+Push+Flip HARD RULE.
+
+---
+
+### vm-cross-cutting — `infrastructure_master` + `batch_live_symmetry_master` epics
+
+**Spawned**: slot 1 (main-orchestrator), 2026-05-22. **Epics**: `plans/epics/infrastructure_master.md` (tier L4, P0) +
+`plans/epics/batch_live_symmetry_master.md` **Active plans**: `plans/active/batch_live_symmetry_2026_05_10.md` +
+`plans/active/deployment_api_qg_remediation*`
+
+**Deployment-api QG failures (6, must fix first — blocking CI)**:
+
+1. STEP 5.61 / 5.63: `ServiceBootstrap` missing from `deployment_api/main.py` + wrap `main()` in
+   `with run_lifecycle(service_name=...) as run:` at both `deployment_api/main.py` AND
+   `deployment_api/scripts/data_status_rollup_worker.py`
+2. STEP 5.77: `mode == "batch"/"live"` comparisons outside CLI seam — annotate with `# noqa: L2-mode-seam` at
+   `routes/strategy_shard.py:96`, `routes/strategy_shard.py:98`, `routes/data_batch_processing.py:474`
+3. STEP 5.79: Dockerfile base pin — `Dockerfile` + `Dockerfile.dashboard` both use `:tag`; pin to `@sha256:digest`
+4. STEP 5.82: Staging branch workflow does not trigger Cloud Build — wire image-build trigger per Phase 5
+5. STEP 5.90: `deployment_api/routes/service_status.py` missing canonical coverage helper import
+   (`compute_coverage_for_bucket` from UTL or `compute_honest_coverage` from UAC)
+
+**batch_live_symmetry remaining work**:
+
+- Phase 3: VM fleet migration (consolidator VM n1-standard-8)
+- Phase 4: Consumer sweep
+- Phase 9: QG sweep
+- Reconciliation engine greenfield (`engine/orchestrator.py` + `cli/handlers/reconcile_handler.py`)
+
+**VM instruction**: fix deployment-api QG failures first (unblocks CI), then batch_live_symmetry phases;
+main-orchestrator spawns review agent (slot 2) + workers (slots 3-5); reads epic SSOT before coding; Commit+Push+Flip
+HARD RULE.
