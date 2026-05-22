@@ -71,3 +71,26 @@ placeholders for sportsbook venues that haven't been scoped yet — likely 90% f
 unimplemented sportsbook/prediction venue stubs (expected — add `pytest.skipif`), (b) schema gaps (file P0 in active
 plan for `client_isolation_and_governance_master`), (c) real regressions (file P0 for the owning epic). Once categories
 are confirmed in a plan, the targeted `PYTEST_UNIT_DIR` shim in UAC `quality-gates.sh` can be broadened to `tests/`.
+
+## Triage analysis — 2026-05-22
+
+Based on the failure list in `## What I found`, preliminary categorization:
+
+**Category A — Unimplemented sportsbook/prediction venue stubs (~90% of failures)**:
+Tests in `tests/test_venue_contract_coverage.py` for venues (matchbook, manifold, onexbet, novig, betopenly, prophetx, skybet, coral, paddypower, betfred, betvictor, boylesports, bwin, ladbrokes, williamhill, betway, unibet, bet888sport, bet365, sbo, smarkets) — these venues are not yet implemented. Fix: add `pytest.skipif(reason="scope not yet implemented — <venue> integration pending")` to each parameterized case.
+
+**Category B — Schema module gaps (~5% of failures)**:
+- `tests/test_venue_key_parity.py` DeFi capability/protocol/MTDS-venue parity failures
+- `tests/internal/unit/test_schema_contracts.py::test_every_contract_requires_instrument_id_non_nullable_string`
+- `tests/test_contract_alignment.py::TestNoAnyAnnotations` for `unified_api_contracts.canonical.execution`
+These indicate missing schema fields or type violations. File P0/P1 in active plan for `client_isolation_and_governance_master`.
+
+**Category C — VCR cassette parity (~2% of failures)**:
+- `tests/vcr/test_coingecko_vcr.py` (2 failures) + `tests/vcr/test_polymarket_vcr.py` (2 failures)
+Cassette parity failures — cassettes need regeneration. File as P2 in predictions/defi epic plans.
+
+**Category D — Strategy instruction type default (~3% of failures)**:
+- `tests/internal/unit/test_strategy_instruction_types.py::TestStrategyInstructionTypedFields::test_defaults`
+Schema default value mismatch. File P1 in strategy_master plan.
+
+**Immediate action for QG broadening**: A dedicated slot needs ~0.5 cal-AI-days to add `pytest.skipif` markers for Category A. Once done, UAC QG can be broadened to `PYTEST_UNIT_DIR="tests/"`.
