@@ -110,8 +110,8 @@ armed past auto-cooldown; operator manual-unkill required.
 - DR plan § Phase 1.A: `disaster_recovery_circuit_breakers_2026_05_10.md` (BreakerConfig / BreakerRecoveryRule SSOT).
 - Risk plan § Phase 1.F: `risk_simulations_limits_alerting_2026_05_10.md` (kill-switch recovery wiring +
   `GLOBAL_DATA_STALENESS_HALT` rule pattern).
-- DeFi master plan: `defi_master_2026_05_07.md` (Pyth-unbanned-for-Solana note + CHAIN_RPC_TEMPLATES SSOT location +
-  Solana outage history).
+- DeFi master plan: `defi_master.md` (Pyth-unbanned-for-Solana note + CHAIN_RPC_TEMPLATES SSOT location + Solana outage
+  history).
 - CLAUDE.md SSOT pointer: "DeFi pipeline flow: instruments-service → MTDS → features-onchain → strategy → execution".
 - Historical incidents: Solana 2022-09-30 (~4h consensus stall) + 2024-02-06 (~5h BPF loader regression) —
   operator-known dates; both pre-date our pipeline so we have no captured manifest rows from those windows but the

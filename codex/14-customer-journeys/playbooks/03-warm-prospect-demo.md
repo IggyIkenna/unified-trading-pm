@@ -54,8 +54,8 @@ Email link → odum-research.co.uk
     ↓ For pb3c:
     → /services/data (Data Catalogue)
     → /services/strategy-catalogue (Strategy Catalogue)
-    → /services/research/ml (ML Model Catalogue — or future unified surface)
-    → /services/execution/overview (Execution Algo Catalogue — or future unified surface)
+    → /services/research/ml (ML Model Catalogue — route exists; unified surface post-cutover)
+    → /services/execution/overview (Execution Algo Catalogue — route exists; unified surface post-cutover)
     → /services/trading/terminal (live trading view)
     → /services/observe/health (observation)
 ```
@@ -104,6 +104,12 @@ See [../authentication/firebase-staging.md](../authentication/firebase-staging.m
 - **Drops** → admin deactivates demo user; staging data archived (not deleted)
 
 ## Orphan concerns
+
+> **[DELTA 2026-05-22]** **Current state:** `prospect-reg` and `prospect-dart` personas do not yet exist in
+> `lib/auth/personas.ts`. Entitlement-based slicing hides non-entitled services rather than showing them as
+> LOCKED-WITH-MESSAGE. The pooled-or-SMA picker routing is not yet implemented. **Planned delta:** Persona stubs +
+> LOCKED-WITH-MESSAGE UI tracked in `codex/14-customer-journeys/roadmap/next-waves.md`. **Target:** post-cutover UI
+> unification phase.
 
 - No `prospect-reg` or `prospect-dart` persona exists yet in
   [lib/auth/personas.ts](unified-trading-system-ui/lib/auth/personas.ts) — tracked in

@@ -8,6 +8,11 @@ locked_since: 2026-05-08
 
 # Main Agent Ledger (Ikenna side)
 
+> ⚠️ **OFFLINE FALLBACK ONLY** — primary work-split surface is the agent-orchestrator dashboard at
+> `https://agent-orchestrator.odum-research.com`. This file is a last-resort reference when the VM backend is
+> unreachable. Do NOT treat it as authoritative during normal operations. Updated: D0 Phase 3 — 2026-05-21 per
+> `plans/active/d0_orchestrator_migration_2026_05_20.md`.
+
 > **The communication bus** between Ikenna's main orchestrator agent (Tab 1) and the spawned tab agents (Tab 2+).
 > Daily-evolving live state — tab registry, today's status, recent done, open questions across plans. Workflow rules +
 > spawn-prompt template live in [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md) and
@@ -25,6 +30,7 @@ you're being asked to be the main orchestrator:
 2. Read [`../cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md) § "Daily Work-Split Process" — full spec for Model
    A (fixed thematic tabs) + Model B (1-main + dynamic spawned tabs).
 3. Run boot checklist:
+   - From `unified-trading-pm/`: `bash scripts/plan-hygiene/run_hygiene_sweep.sh` — confirm 0 hard failures before any work.
    - From `unified-trading-pm/`: `git status`, `git rev-list --left-right --count HEAD...origin/live-defi-rollout`,
      `git log --oneline -5 origin/live-defi-rollout` — see local-ahead state + recent origin activity.
    - `cat ikenna_orchestrator/_agent_pings.md` — see active intra-side pings.

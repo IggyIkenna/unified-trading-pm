@@ -384,13 +384,13 @@ etc.) no longer live in interfaces. They live in UAC `unified_api_contracts/cano
 
 **Current correct locations:**
 
-| Schema                                              | Authoritative Location                             | Import from                      |
-| --------------------------------------------------- | -------------------------------------------------- | -------------------------------- |
-| CanonicalTrade, CanonicalOrderBook, CanonicalTicker | UAC `unified_api_contracts/canonical/domain.py`    | `unified_api_contracts`          |
-| CanonicalOrder, CanonicalFill                       | UAC `unified_api_contracts/canonical/execution.py` | `unified_api_contracts`          |
-| CanonicalOHLCV, CanonicalBookUpdate                 | UAC internal `internal/market_data/`               | `unified_api_contracts.internal` |
-| CeFiPosition, DeFiLendingPosition                   | UAC internal `internal/positions/`                 | `unified_api_contracts.internal` |
-| CanonicalOdds, CanonicalFixture                     | UAC `unified_api_contracts/canonical/domain/sports/` | `unified_api_contracts`        |
+| Schema                                              | Authoritative Location                               | Import from                      |
+| --------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
+| CanonicalTrade, CanonicalOrderBook, CanonicalTicker | UAC `unified_api_contracts/canonical/domain.py`      | `unified_api_contracts`          |
+| CanonicalOrder, CanonicalFill                       | UAC `unified_api_contracts/canonical/execution.py`   | `unified_api_contracts`          |
+| CanonicalOHLCV, CanonicalBookUpdate                 | UAC internal `internal/market_data/`                 | `unified_api_contracts.internal` |
+| CeFiPosition, DeFiLendingPosition                   | UAC internal `internal/positions/`                   | `unified_api_contracts.internal` |
+| CanonicalOdds, CanonicalFixture                     | UAC `unified_api_contracts/canonical/domain/sports/` | `unified_api_contracts`          |
 
 Interfaces (UMI, UTEI, USEI) import canonical types FROM UAC — they do not define them locally. Interface-local types
 used only within the interface (internal helpers, venue-specific intermediaries) are CORRECT-LOCAL and may stay.

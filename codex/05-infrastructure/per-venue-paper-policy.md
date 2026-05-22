@@ -136,8 +136,7 @@ Sports TOB matcher composes.
 ### Prediction
 
 Matching-engine simulation only — Polymarket / Kalshi don't expose testnets we can use. The matching engine respects
-per-market lifecycle bounds (`market_created_at` / `resolution_time` / `settlement_time` per
-`predictions_master_2026_05_07.md`).
+per-market lifecycle bounds (`market_created_at` / `resolution_time` / `settlement_time` per `predictions_master.md`).
 
 ### TradFi
 

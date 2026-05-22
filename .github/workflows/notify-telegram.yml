@@ -31,7 +31,6 @@ on:
         required: false
         type: string
         default: ""
-    inputs:
       env_name:
         description: "Deployment environment: dev, staging, prod. Defaults to prod if not set."
         required: false

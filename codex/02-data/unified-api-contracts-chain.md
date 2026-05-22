@@ -12,8 +12,8 @@ last_reviewed: 2026-05-17
 - **unified-api-contracts version** = mappings + schemas + endpoints; bumping version versions the entire contract
   surface.
 - **SCHEMA_VERSIONS.md** tracks schema–version alignment, SDK pins, and endpoint→schema mappings.
-- **Interfaces** (UMI, UTEI, instruments-service) that depend on unified-api-contracts must run `check_sdk_version_alignment` in
-  quality gates.
+- **Interfaces** (UMI, UTEI, instruments-service) that depend on unified-api-contracts must run
+  `check_sdk_version_alignment` in quality gates.
 - **Chain:** config → SDK → raw schema validation → UAC normalizer → canonical schema → adapter returns canonical only.
 - **Normalization is mandatory** — adapters must not return raw venue responses to services.
 

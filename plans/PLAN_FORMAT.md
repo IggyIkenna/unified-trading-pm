@@ -72,13 +72,58 @@ of todos are done — every repo must reach the required level.
 
 ## YAML Frontmatter Schema
 
+### Active plan / wrapper plan (in `plans/active/`)
+
+```yaml
+---
+title: <human-readable title>
+parent_epic: <epic-slug> # REQUIRED — absence = ORPHAN = review-blocking
+priority: P0 | P1 | P2 | P3 # rolls up to epic's priority block
+status: active | blocked | paused | complete | cancelled
+estimate_class: refactor | design | infra | brand-new | research
+estimate_baseline_ai_days: <N> # raw estimate
+estimate_calibrated_ai_days: <N> # baseline × class multiplier (see codex/08-workflows/estimation-calibration.md)
+locked_by: live-defi-rollout
+locked_since: YYYY-MM-DD
+related_plans:
+  - ...
+---
+```
+
+### Epic (in `plans/epics/`)
+
+```yaml
+---
+name: <slug> # kebab-case, matches filename, NO date suffix
+type: epic
+tier: L0 | L1 | L2 | L3 | L4 | L5 # which layer this epic sits in
+status: active | paused | cancelled # NEVER "complete" — epics are everlasting
+priority: P0 | P1 | P2 | P3
+assigned_vm: vm-<id> # REQUIRED — registry-resolved VM that owns this epic
+parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutover ships)
+owner: ikenna | harsh | claude-code
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
+locked_by: live-defi-rollout
+locked_since: YYYY-MM-DD
+asset_group: cefi | defi | tradfi | sports | prediction | cross-cutting | infrastructure | meta
+related_plans:
+  - plans/active/<sub-plan>.md # list grows as audits spawn new active plans
+---
+```
+
+**Forbidden on epics**: `deadline:`, `estimate_class:`, `estimate_baseline_ai_days:`, `estimate_calibrated_ai_days:`.
+Epics are everlasting; estimation lives on the active plans they reference.
+
+### Legacy schema (active plans pre-2026-05-21 epic-foundation update)
+
 ```yaml
 ---
 name: plan-slug # kebab-case slug, matches filename
 overview: One-line description
 type: code | deployment | business | infra | mixed
 
-# Which epic this plan belongs to (for INDEX tracking)
+# Which epic this plan belongs to (LEGACY field; new plans use parent_epic: above)
 epic: epic-code-completion | epic-deployment | epic-business | epic-infra | none
 
 # Optional: paused/blocked by external dependency
@@ -247,45 +292,63 @@ else: agent has ADC admin on GCP `central-element-323112` + AWS `427895769566` a
 
 ---
 
-## Filename convention (codified 2026-05-08)
+## Filename convention (codified 2026-05-08; updated 2026-05-21 epic-foundation model)
 
-| Directory                 | Extension       | Why                                                                                          |
-| ------------------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| `plans/active/`           | `<slug>.md`     | Native markdown preview in Cursor / VS Code / GitHub web UI                                  |
-| `plans/epics/` (`*.md`)   | `<slug>.md`     | Same as active                                                                               |
-| `plans/epics/` (`*.epic.md`) | `<slug>.epic.md` | Distinguishes May-23 deadline epics from granular masters in the same dir; previewed natively |
-| `plans/archive/`          | `<slug>.plan.md` | Frozen historical state — DO NOT rename, breaks archaeology in commit messages + external refs |
-| `plans/ai/`               | `<slug>.plan.md` | Same as archive — staging dir; promotion to `active/` renames to `.md`                       |
+| Directory                | Extension                       | Why                                                                                            |
+| ------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `plans/epics/`           | `<slug>.md` (NO date suffix)    | Epics are everlasting — no deadline-coupled naming                                              |
+| `plans/active/`          | `<slug>_YYYY_MM_DD.md`          | Active plans + wrapper plans are dated work units                                              |
+| `plans/active/issues/`   | `<slug>_YYYY_MM_DD.md`          | Issue docs / audit pool — surfaces UNACKED scope                                                |
+| `plans/audit/results/`   | `<slug>_YYYY_MM_DD.md`          | Timestamped output of an audit-pool row                                                         |
+| `plans/archive/`         | `<slug>.plan.md`                | Frozen historical state — DO NOT rename (breaks archaeology in commit messages + external refs) |
+| `plans/ai/`              | `<slug>.plan.md`                | Staging dir; promotion to `active/` renames to `<slug>_YYYY_MM_DD.md`                          |
 
-**Rule.** New plans land in `plans/active/<slug>.md` (or `plans/epics/<slug>.md` for granular masters / `<slug>.epic.md` for May-23 epics). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`. The 2026-05-08 sweep (commits `aa72177d` rename + `cca954ff` cross-ref rewrite) is the codifying boundary.
+**Rule.** Epics use plain `.md` with NO date suffix (everlasting). Active plans + wrapper plans use
+`<slug>_YYYY_MM_DD.md` (dated). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`.
+
+**Deprecated**: `.epic.md` double-extension form was the 2026-05-08 May-23 deadline-specific naming; superseded by
+everlasting epic model 2026-05-21. Existing `.epic.md` files rename to plain `.md` during the consolidation sweep. The
+2026-05-08 sweep (commits `aa72177d` rename + `cca954ff` cross-ref rewrite) was the original codifying boundary; the
+2026-05-21 epic-foundation update is the current boundary.
 
 ---
 
-## 3-Layer Plan Model (codified 2026-05-08)
+## Epic-foundation model (codified 2026-05-21; supersedes 2026-05-08 3-layer model)
 
 ```
-master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master)
+master_to_live_defi_2026_05_23.md   ← cutover master (dated, one-shot; archives after May-23)
         │
-        ├── plans/epics/*.epic.md   ← May-23 deadline epics (domain-target wrappers)
+        ├── plans/epics/<slug>.md            ← EPICS — everlasting planning orchestrators (19 epics × 5 tiers)
+        │       │                              Each has assigned_vm + priority blocks of active plans
         │       │
         │       └─ each references ↓
         │
-        └── plans/epics/*.md        ← granular masters (asset_group umbrellas)
-                │
-                └─ each references ↓
+        ├── plans/active/<slug>_YYYY_MM_DD.md ← ACTIVE PLANS — dated work units; carry parent_epic:
+        │       │                              Spawned when audits surface gaps
+        │       │
+        │       └─ each references ↓ (codex/, code, scripts/)
         │
-        └── plans/active/*.md       ← granular sub-plans (one workstream each)
+        ├── plans/active/issues/<slug>_YYYY_MM_DD.md  ← AUDIT POOL — UNACKED scope; Ikenna/Harsh pick rows
+        │       │
+        │       └─ row picked → audit conducted → ↓
+        │
+        └── plans/audit/results/<slug>_YYYY_MM_DD.md  ← AUDIT DOCS — timestamped review output
                 │
-                └─ each references ↓
-                       (codex/, code, scripts/)
+                └─ findings → upgrade existing active plans OR spawn new ones → epic absorbs them
 ```
 
-- **Epics** orchestrate domain targets for May 23; they consume granular masters + sub-plans.
-- **Masters** are asset_group umbrellas (cefi / tradfi / sports / predictions / ml_and_features / etc.); they consume sub-plans.
-- **Sub-plans** are single-workstream tactical plans; they own todos.
-- None of the layers duplicates content — each adds orchestration above the layer below.
+- **Epics** are everlasting planning orchestrators — one per persistent code surface; no date suffix; no `estimate_*`
+  fields; required `assigned_vm` + `tier` + `priority` frontmatter; body has P0/P1/P2/P3 priority blocks of all assigned
+  active plans.
+- **Active plans** (and wrapper remediation plans) are dated work units — each carries `parent_epic:` frontmatter +
+  `estimate_class` + `estimate_baseline_ai_days` + `estimate_calibrated_ai_days`.
+- **Audits** are timestamped reviews — produced on the planning VM (Ikenna + Harsh, Opus 4.7 1M); identify gaps that
+  spawn new active plans; recurring cadence.
+- **No orphan active plans** — every active plan declares `parent_epic:`. Orphans are review-blocking.
+- **Cutover master** is NOT an epic — it's a dated one-shot tracking May-23 readiness across all 19 epics.
 
-See `plans/epics/README.md` for the canonical epic list and consumed-plans tables.
+Full epic-flow SSOT: [`plans/epics/README.md`](epics/README.md). VM topology spec:
+[`active/orchestrator_master.md`](active/orchestrator_master.md).
 
 ---
 
@@ -387,7 +450,7 @@ Required section in every daily work-split plan:
 | Slot | Theme                       | Plan-of-record                                                |
 | ---- | --------------------------- | ------------------------------------------------------------- |
 | 1    | main orchestrator + on-call | (this LEDGER)                                                 |
-| 2    | cefi-master                 | plans/active/cefi_master_2026_05_07.md                        |
+| 2    | cefi-master                 | plans/active/cefi_master.md                                   |
 | 3    | writegate Wave 4 slice (b)  | plans/active/writegate_honest_coverage_endtoend_2026_05_06.md |
 | 4    | (idle)                      | —                                                             |
 ```

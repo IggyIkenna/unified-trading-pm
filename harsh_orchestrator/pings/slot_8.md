@@ -1,11 +1,16 @@
-[2026-05-20 slot-8] → operator — 🔴 BLOCKED-OPERATOR: bucket_name_ssot_canonicalisation 4 open items all gated on Phase 2.6 (flat→env-tiered data migration + write-pause):
+[2026-05-20 slot-8] → operator — 🔴 BLOCKED-OPERATOR: bucket_name_ssot_canonicalisation 4 open items all gated on Phase
+2.6 (flat→env-tiered data migration + write-pause):
+
 1. Phase 0d flat-bucket data migration — needs operator write-pause + coordinated migration run
 2. dependency_checker.py migrate — blocked on UTL BaseDependencyChecker migration landing first
 3. get_bucket_name delegate flip — step 2.6.4, operator-triggered write-pause
-4. grep audit zero-drift verification — runs after 1+2+3 complete
-No agent action possible until Phase 2.6 window. All 4 items annotated BLOCKED in plan body. Pinging to surface for scheduling.
+4. grep audit zero-drift verification — runs after 1+2+3 complete No agent action possible until Phase 2.6 window. All 4
+   items annotated BLOCKED in plan body. Pinging to surface for scheduling.
 
-[2026-05-19 15:00 UTC] slot-1-main → slot 8 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 8 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -390,7 +395,9 @@ committed — needs separate commit. Main to decide if warranted.
 
 CYCLE-CLOSE complete. No new dispatches taken.
 
-[2026-05-19 UTC] slot 8 — ✅ **DONE MECH87-UTL-TRYEXCEPT-IMPORTERROR** — utl@4dc3792: 0 `except ImportError` in UTL source (5 files: instruments_catalog_reader, manifest_writer, startup_validation, standardized_service, write_gate). 3774 passed, 2 pre-existing failures unchanged.
+[2026-05-19 UTC] slot 8 — ✅ **DONE MECH87-UTL-TRYEXCEPT-IMPORTERROR** — utl@4dc3792: 0 `except ImportError` in UTL
+source (5 files: instruments_catalog_reader, manifest_writer, startup_validation, standardized_service, write_gate).
+3774 passed, 2 pre-existing failures unchanged.
 
 [2026-05-18 17:00 UTC] [main → slot 8] — 🏁 **END-OF-SHIFT AUDIT** (operator confirmed idle).
 
@@ -410,17 +417,38 @@ CYCLE-CLOSE complete. No new dispatches taken.
 [2026-05-19 12:15 UTC] main → slot 8 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/8/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/8/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 8` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 8**:
-bucket_name_ssot residuals (2.7) + expected_universe_v2 + manifest_cross_asset_rescan + available_at + deploy_missing + sustain S11-S14 (~10 cal)
+**Today's assignment — Slot 8**: bucket_name_ssot residuals (2.7) + expected_universe_v2 + manifest_cross_asset_rescan +
+available_at + deploy_missing + sustain S11-S14 (~10 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 8 — STARTED <first item>` below.
+
+[2026-05-21 UTC] slot-8 (ikenna) → operator — ✅ DONE agent-orchestrator Slack notifications P0 + P3
+
+**P0 (Cloud Run secret wiring)**: IAM `secretAccessor` bound on `agent-orchestrator-staging` SA for
+`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET`. Both mounted as env vars on revision
+`agent-orchestrator-staging-00011-mtg`. Fixed async/sync bug: `asyncio.run()` in sync FastAPI endpoint silently
+suppressed all Slack calls. Converted `slack.py` to sync httpx; all tests pass; basedpyright clean. Code:
+`agent-orchestrator@07e42e2`.
+
+**P3 (E2E staging smoke)**: JWT minted from staging SM secret. POST `/api/slots/1/blocked` → 200, 350-460ms latency
+(confirms outbound Slack HTTP). Direct webhook `curl` → HTTP 200. Block Kit notification reached
+`#agent-orchestrator-alerts` ✅.
+
+**Plan archived**: `agent_orchestrator_slack_notifications_2026_05_19.md` → `plans/archive/` (all 4 phases ✅).
+
+**Open issue filed**: `plans/active/issues/agent_orchestrator_cr_revision_exit3_2026_05_21.md` — revision `00012-l88`
+exited with code 3 after Cloud Build. Active revision `00011-mtg` unaffected. Recommend re-triggering deploy to confirm
+transient. Plan ref: `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` (now archived).

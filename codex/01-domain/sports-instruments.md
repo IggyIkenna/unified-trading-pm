@@ -1,11 +1,30 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-05-22
 ---
 
 # Sports Instruments: Format, Matching, Normalization
 
 **Asset Class:** SPORTS (FOOTBALL) **Purpose:** Define canonical instrument format for sports betting **Reference:**
 [sportsbetting-services/docs/INSTRUMENT_KEY.md](../../sports-betting-services/docs/INSTRUMENT_KEY.md)
+
+> **[DELTA 2026-05-22]** **Current state:** Active sports venues are **ODDS_API** (multi-bookmaker aggregator),
+> **PINNACLE** (sharp benchmark), and **BETFAIR** (exchange / lay liquidity). All UK/EU scraper bookmakers (Bet365,
+> 888sport, Betfred, etc.) and US sportsbooks (DraftKings, FanDuel) were **DEFERRED-INDEFINITELY 2026-05-12** per
+> operator decision (verbatim: "remove bet365 from the universe and docs and update plans we wont have bet365 anytime
+> soon. same for other scrapers if implemented"). The `sports_master` epic reflects this; this doc's venue examples
+> pre-date that decision. **Planned delta:** `sports_master` active plan drives backfill for ODDS_API + PINNACLE +
+> BETFAIR only. **Target architecture:** Three-venue sports universe; instrument IDs still use the canonical
+> `SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION` format defined below (unchanged), but only ODDS_API /
+> PINNACLE / BETFAIR are in-scope venues for pre-cutover work. Scrapers remain out-of-scope indefinitely until a new
+> operator decision.
+>
+> **Storage note (2026-05-22):** The BigQuery tables (`instruments.sports_instruments`, `instruments.fixture_mapping`,
+> etc.) shown in the "Storage & Schema" section below are **design-intent artefacts** from the pre-GCS architecture. The
+> current production storage is **GCS parquet** at paths governed by `codex/02-data/sports-gcs-path-ssot.md` and the UAC
+> `unified_api_contracts.sports.candidate_parquet_paths()` resolver. The BigQuery schema section is retained for
+> reference only; do not create new BigQuery tables for sports instruments without an explicit operator decision and new
+> plan.
 
 ---
 
@@ -385,41 +404,48 @@ CREATE TABLE instruments.league_mapping (
 
 ## Implementation Checklist
 
+> **[DELTA 2026-05-22]** The checklist below is the **original design-intent** checklist from the pre-GCS architecture
+> era. The canonical normalization logic is now implemented in UAC at `unified_api_contracts/canonical/domain/sports/`
+> (team normalization, league canonical names, season format) and instruments-service (adapter layer). The BigQuery
+> mapping tables listed in Phase 2 were NOT created; mapping is done at write-time in the instruments-service adapter
+> against the UAC registries (`LEAGUE_REGISTRY`, `TeamMapping` equivalents in `league_data.py` + `team_mappings.py`).
+> These checkboxes are **stale**; actual status tracked in `plans/epics/sports_master.md`. Active venues in scope:
+> ODDS_API / PINNACLE / BETFAIR only (scrapers DEFERRED-INDEFINITELY 2026-05-12).
+
 **Phase 1: Canonical Format**
 
-- [ ] Define instrument key format
-- [ ] Define team/league canonical names
-- [ ] Define season format (YYYY-YYYY)
-- [ ] Define handicap encoding rules
+- [x] Define instrument key format (canonical — shipped in UAC)
+- [x] Define team/league canonical names (shipped — UAC `league_data.py` + `team_mappings.py`)
+- [x] Define season format (YYYY-YYYY) (canonical — in use)
+- [x] Define handicap encoding rules (canonical — in use)
 
-**Phase 2: Mapping Tables**
+**Phase 2: Mapping Tables** (NOTE: implemented as in-code registries in UAC, NOT BigQuery tables)
 
-- [ ] Create FixtureMapping table
-- [ ] Create TeamMapping table
-- [ ] Create LeagueMapping table
-- [ ] Populate with seed data (Tier 1 leagues)
+- [x] Fixture mapping (api_football fixture ID as canonical — `LEAGUE_REGISTRY` + instruments-service adapter)
+- [x] Team mapping (shipped — UAC `api_football/team_mappings.py`)
+- [x] League mapping (shipped — UAC `canonical/domain/sports/league_data.py`)
+- [ ] Populate with seed data for all Tier 1 leagues — tracked in `sports_master`
 
-**Phase 3: Parsers**
+**Phase 3: Parsers** (NOTE: active venues only — scrapers DEFERRED-INDEFINITELY 2026-05-12)
 
-- [ ] Implement Betfair parser (parse market ID → instrument key)
-- [ ] Implement Pinnacle parser
-- [ ] Implement Polymarket parser
-- [ ] Implement Odds API parser
+- [x] BETFAIR parser (instruments-service adapter wired)
+- [x] PINNACLE parser (instruments-service adapter wired)
+- [x] ODDS_API parser (instruments-service adapter wired)
+- [ ] Polymarket sports fixture parser — tracked in `predictions_master`
 
 **Phase 4: Matching Logic**
 
-- [ ] Implement fixture matching (venue ID → API-Football ID)
-- [ ] Implement team normalization (venue name → canonical name)
-- [ ] Implement league normalization
-- [ ] Handle fuzzy matching (for new fixtures)
+- [x] Fixture matching (api-football as canonical ID)
+- [x] Team normalization (UAC registries)
+- [x] League normalization (UAC `LEAGUE_REGISTRY`)
+- [x] Fuzzy matching for new fixtures (instruments-service fuzzy fallback)
 
 **Phase 5: Validation**
 
-- [ ] Unit tests: parse instrument keys
-- [ ] Unit tests: match fixtures
-- [ ] Unit tests: normalize teams/leagues
-- [ ] Integration test: E2E fixture ingestion
-- [ ] Validate on 1 season of historical data
+- [x] Unit tests: parse instrument keys (instruments-service test suite)
+- [x] Unit tests: normalize teams/leagues (UAC tests)
+- [ ] Integration test: E2E fixture ingestion — tracked in `sports_master`
+- [ ] Validate on full historical backfill — tracked in `sports_master`
 
 ---
 

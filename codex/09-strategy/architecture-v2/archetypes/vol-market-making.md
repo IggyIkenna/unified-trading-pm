@@ -14,20 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_MARKET_MAKING`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous quote lifecycle —
-> orders rest on the options order book; fills accumulate as inventory; inventory delta-hedged continuously.
-> **Code module (target):**
-> `strategy-service/engine/strategies/v2/vol_trading/vol_market_making_engine.py`
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous quote lifecycle — orders rest
+> on the options order book; fills accumulate as inventory; inventory delta-hedged continuously. **Code module
+> (target):** `strategy-service/engine/strategies/v2/vol_trading/vol_market_making_engine.py`
 
 ## What it does
 
-Posts two-sided vol quotes (bid and ask) on the options order book at target spread widths, earning the
-bid-ask spread as primary P&L. The engine maintains a real-time theoretical fair-value surface (using SVI or
-SSVI), computes bid and ask IV quotes at a target half-spread around fair-value, and continuously manages the
-resulting inventory of options fills. Delta exposure from accumulating inventory is hedged via the underlying
-perp or future. Greek risk accumulates across the book: vega and gamma concentrations at active strikes require
-active monitoring and selective quote withdrawal when inventory limits are breached. Primary venues are Deribit
-(BTC/ETH options — deepest liquidity, REST + WebSocket) and OKX options.
+Posts two-sided vol quotes (bid and ask) on the options order book at target spread widths, earning the bid-ask spread
+as primary P&L. The engine maintains a real-time theoretical fair-value surface (using SVI or SSVI), computes bid and
+ask IV quotes at a target half-spread around fair-value, and continuously manages the resulting inventory of options
+fills. Delta exposure from accumulating inventory is hedged via the underlying perp or future. Greek risk accumulates
+across the book: vega and gamma concentrations at active strikes require active monitoring and selective quote
+withdrawal when inventory limits are breached. Primary venues are Deribit (BTC/ETH options — deepest liquidity, REST +
+WebSocket) and OKX options.
 
 ## Token / position flow
 
@@ -67,18 +66,17 @@ active monitoring and selective quote withdrawal when inventory limits are breac
 
 - Session start: venue is reachable, surface fitting converges, bid-ask on options market < max_raw_spread_vp
 - Quote only strikes within [min_moneyness, max_moneyness] range around ATM
-- Suppress quoting if underlying moves > underlying_move_pause_pct in past quote_pause_lookback_sec
-  (fast-market pause — avoid adverse selection during price discovery)
+- Suppress quoting if underlying moves > underlying_move_pause_pct in past quote_pause_lookback_sec (fast-market pause —
+  avoid adverse selection during price discovery)
 - Minimum fill rate check: if historical fill rate on a strike < min_fill_rate, remove from active_strikes
 
 ## Risk management
 
 - Delta hedge continuously: |portfolio_delta| > delta_hedge_band triggers perp hedge within hedge_ttl_ms
 - Vega cap: total short/long vega exposure bounded by max_vega_usd; quotes withdrawn on breach
-- Gamma cap: large gamma at short-dated strikes; withdraw quotes from DTE < min_dte_quote to avoid
-  expiry-day gamma risk
-- Adverse selection guard: cancel quotes on a strike after fill_cancel_count rapid same-direction fills
-  (signal that an informed trader is picking off stale quotes)
+- Gamma cap: large gamma at short-dated strikes; withdraw quotes from DTE < min_dte_quote to avoid expiry-day gamma risk
+- Adverse selection guard: cancel quotes on a strike after fill_cancel_count rapid same-direction fills (signal that an
+  informed trader is picking off stale quotes)
 - Circuit breaker: if cumulative session P&L < session_pnl_floor_usd, cancel all quotes and halt
 
 ## Config parameters
@@ -104,12 +102,12 @@ active monitoring and selective quote withdrawal when inventory limits are breac
 
 ## When to use / market regime
 
-- **Best regime**: moderate IV with stable underlying and decent options volume; spreads are wide enough
-  to earn meaningful edge but liquidity is sufficient to rebalance delta hedges without excessive slippage
-- **Avoid**: extreme fast markets (large crypto moves > 5% / hour) — adverse selection and delta hedging
-  slippage erode P&L rapidly; also avoid during major options expirations where the term structure distorts
-- **Latency requirement**: premium SLA tier — quote refresh and delta hedge must execute within 50ms;
-  deploy on co-located or low-latency cloud nodes near Deribit matching engine
+- **Best regime**: moderate IV with stable underlying and decent options volume; spreads are wide enough to earn
+  meaningful edge but liquidity is sufficient to rebalance delta hedges without excessive slippage
+- **Avoid**: extreme fast markets (large crypto moves > 5% / hour) — adverse selection and delta hedging slippage erode
+  P&L rapidly; also avoid during major options expirations where the term structure distorts
+- **Latency requirement**: premium SLA tier — quote refresh and delta hedge must execute within 50ms; deploy on
+  co-located or low-latency cloud nodes near Deribit matching engine
 - **Asset fit**: BTC and ETH on Deribit (deepest crypto options book); OKX as secondary venue
 
 ## Example instances
@@ -122,10 +120,14 @@ VOL_MARKET_MAKING@okx-options-btc-options-14dte-usdt-prod
 
 ## Not in this archetype
 
-- Passive short-vol carry (sell straddle/strangle and hold to expiry; no two-sided quoting) → [`VOL_CARRY`](vol-carry.md)
-- Spot or perp order-book quoting (no vol surface, no options Greeks management) → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md)
-- 0DTE intraday gamma scalping (directional delta rehedge on expiry day, not resting limit orders) → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
-- Vol view trade (directional position sized by IV/RV divergence, not inventory spread capture) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- Passive short-vol carry (sell straddle/strangle and hold to expiry; no two-sided quoting) →
+  [`VOL_CARRY`](vol-carry.md)
+- Spot or perp order-book quoting (no vol surface, no options Greeks management) →
+  [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md)
+- 0DTE intraday gamma scalping (directional delta rehedge on expiry day, not resting limit orders) →
+  [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
+- Vol view trade (directional position sized by IV/RV divergence, not inventory spread capture) →
+  [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
 
 ## See also
 

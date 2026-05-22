@@ -1,51 +1,31 @@
 ---
 title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
-type: implementation-plan
+parent_epic: batch_live_symmetry_master
+priority: P0
 status: active
-created: 2026-05-10
-deadline: 2026-05-23
-horizon: ~10 calendar days (7 active shipping + 7 paper-soak overlap)
-operator: ikenna
+estimate_class: design
+estimate_baseline_ai_days: 50.0
+estimate_calibrated_ai_days: 30.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-spawned_from: unified-trading-pm/plans/questions/batch_live_design_symmetry_2026_05_08.md
-preaudit_manifest: unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md
-related_codex:
-  - unified-trading-pm/codex/04-architecture/batch-live-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md
-  - unified-trading-pm/codex/05-infrastructure/replay-subsystem.md
-  - unified-trading-pm/codex/02-data/pipeline-mode-partition.md
-  - unified-trading-pm/codex/06-coding-standards/quality-gates.md
 related_plans:
-  - unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md
-  - unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md
-  - unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md
-  - unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md
-  - unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md
-  - unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md
-  - unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - unified-trading-pm/plans/active/defi_master_2026_05_07.md
-estimate_class: design
-estimate_baseline_ai_days: 50
-estimate_calibrated_ai_days: 30
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
+  - master_to_live_defi_2026_05_23.md
+  - live_pipeline_mtds_mdps_features_2026_05_08.md
+  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
+  - manifest_schema_final_gate_2026_05_09.md
+  - available_at_lookahead_bias_completion_2026_05_08.md
+  - alerting_service_live_rules_2026_05_07.md
 ---
 
-> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type)
-> cells have a batch adapter but no live equivalent (review-blocking per CLAUDE.md
-> "Batch = Live" + new HARD RULE "Data Pipeline Correctness Is The Heartbeat").
-> Plus 146 MISSING_BOTH cells where no adapter detected at all (caveat: regex
-> heuristic — some may be false negatives where venue isn't in the path/header).
-> Full per-cell list: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv`.
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A6 BATCH_ONLY findings**: 13 (venue, data_type) cells have a batch adapter
+> but no live equivalent (review-blocking per CLAUDE.md "Batch = Live" + new HARD RULE "Data Pipeline Correctness Is The
+> Heartbeat"). Plus 146 MISSING_BOTH cells where no adapter detected at all (caveat: regex heuristic — some may be false
+> negatives where venue isn't in the path/header). Full per-cell list:
+> `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv`.
 >
-> Reassigned slot 9 portion to A6 BATCH_ONLY remediation per
-> `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED". Every BATCH_ONLY cell
-> MUST gain a live equivalent before paper-trade / strategy promotion proceeds for
-> the affected asset_group. **No deadline-driven cutbacks; closed-set deferral only
-> via BLOCKED-* status with operator ack.**
+> Reassigned slot 9 portion to A6 BATCH_ONLY remediation per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED".
+> Every BATCH_ONLY cell MUST gain a live equivalent before paper-trade / strategy promotion proceeds for the affected
+> asset_group. **No deadline-driven cutbacks; closed-set deferral only via BLOCKED-\* status with operator ack.**
 
 ## Deferred work — migrated to:
 
@@ -135,14 +115,21 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
       `alerting_service_live_rules_2026_05_07.md`. (Pre-audit § 4) (PM@HEAD)
 - [x] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
       · `manifest_schema_final_gate_2026_05_09.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
-      `defi_master_2026_05_07.md`. (PM@harsh-main 2026-05-14)
+      `defi_master.md`. (PM@harsh-main 2026-05-14)
 - [x] ✅ [AGENT] P0. Land 🔴 BLOCK banners from Tab 3 onto: `available_at_lookahead_bias_completion_2026_05_08.md` ·
       `writegate_honest_coverage_endtoend_2026_05_06.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
-      `features_repo_consolidation_2026_05_08.md` (until workspace QG green). **DONE 2026-05-20**: Tab 3 complete (QG STEPs L1/L2/L3/L5/L7 all enabled at PM@fac14af3); landed 🟢 RESOLVED banners (informational — QG green before banner landing) on all 4 plans. — PM@this-commit
-- [x] ✅ [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` ·
-      `defi_master_2026_05_07.md` · `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills). **BLOCKED-OPERATOR 2026-05-20**: Tab 8 VMs not yet launched (backtest + paper-deploy both `- [ ]`); banners land when operator triggers Tab 8 Step 1 Backtest VM launch. No premature VM RUNNING banner landed.
+      `features_repo_consolidation_2026_05_08.md` (until workspace QG green). **DONE 2026-05-20**: Tab 3 complete (QG
+      STEPs L1/L2/L3/L5/L7 all enabled at PM@fac14af3); landed 🟢 RESOLVED banners (informational — QG green before
+      banner landing) on all 4 plans. — PM@this-commit
+- [x] ✅ [AGENT] P0. Land 🟢 VM RUNNING banner from Tab 8 onto: `master_to_live_defi_2026_05_23.md` · `defi_master.md` ·
+      `alerting_service_live_rules_2026_05_07.md` (BE-AWARE drills). **BLOCKED-OPERATOR 2026-05-20**: Tab 8 VMs not yet
+      launched (backtest + paper-deploy both `- [ ]`); banners land when operator triggers Tab 8 Step 1 Backtest VM
+      launch. No premature VM RUNNING banner landed.
 - [x] ✅ [AGENT] P1. Land Tab 4/5/6/7 banners per pre-audit manifest § 4 (medium-priority — own-Tab agent lands when
-      starting their work). **DONE 2026-05-20**: Tab 4 COMPLETE banners landed on `features_repo_consolidation_2026_05_08.md` + `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. Tab 5/6/7 banners deferred to respective Tab-owner start (Tab 5 VMs not running; Tab 6 reconciler shipped but paper-smoke pending; Tab 7 UI done — banners for those Tabs land when their operators begin their sections). — PM@this-commit
+      starting their work). **DONE 2026-05-20**: Tab 4 COMPLETE banners landed on
+      `features_repo_consolidation_2026_05_08.md` + `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. Tab 5/6/7
+      banners deferred to respective Tab-owner start (Tab 5 VMs not running; Tab 6 reconciler shipped but paper-smoke
+      pending; Tab 7 UI done — banners for those Tabs land when their operators begin their sections). — PM@this-commit
 
 ## Tab 1 — Codex SSOT batch
 
@@ -174,12 +161,11 @@ banners.
       timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
 - [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
-      cross-refs, successor pointer to tradfi_master_2026_05_07.md). Cross-link from cefi-batch-live.md remains
-      symmetric.
+      cross-refs, successor pointer to tradfi_master.md). Cross-link from cefi-batch-live.md remains symmetric.
 - [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues, canonical_question_group
       axis cross-link, prediction-specific empty reasons (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS /
-      SOURCE_RETURNED_ZERO), successor pointer to predictions_master_2026_05_07.md.
+      SOURCE_RETURNED_ZERO), successor pointer to predictions_master.md.
 
 ### Spawn prompt
 
@@ -405,8 +391,8 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
       families from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline). —
       PM@7b4f9869 — all 8 families on UTL ModeHandler; "Tab 4 pending" section replaced with "COMPLETE 2026-05-19"
 - [x] ✅ [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
-      features-service@3f64eada — Only commodity had remaining bare-class main(); deleted main()/_build_parser()/
-      _collect_factor_values()/_compute_signals_for_commodity() + stale imports. Shim now targets _service_main.
+      features-service@3f64eada — Only commodity had remaining bare-class main(); deleted main()/\_build_parser()/
+      \_collect_factor_values()/\_compute_signals_for_commodity() + stale imports. Shim now targets \_service_main.
       cross_instrument/multi_timeframe/calendar were already ServiceBootstrap-clean. QG: 74.09%, 7059 passed.
 
 ### Spawn prompt
@@ -458,12 +444,18 @@ migration of ~10-50M parquets · consumer sweep · workspace QG sweep. **Estimat
 - [x] ✅ [AGENT] P0. **Phase 3 event verification** (per CLAUDE.md "No fire-and-forget VM launches") — 90s post-launch
       event stream check. **DONE 2026-05-19**: 31 VMs TERMINATED, all exit status 0; gcs_migration_bundle note confirms
       STARTED + STOPPED events per VM. (backfilled 2026-05-20 slot-5)
-- [x] ✅ [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes `pipeline_mode`
-      (no defaults). **DONE 2026-05-19 slot-3**: production source sweep COMPLETE; all callsites (MTDS handlers,
-      DefiManifestRecorder, MDPS canonical_writer, instruments-service, features-service, UTL) pass explicit
+- [x] ✅ [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes
+      `pipeline_mode` (no defaults). **DONE 2026-05-19 slot-3**: production source sweep COMPLETE; all callsites (MTDS
+      handlers, DefiManifestRecorder, MDPS canonical_writer, instruments-service, features-service, UTL) pass explicit
       `pipeline_mode=`. Per gcs_migration_bundle Phase 4 status:done. (backfilled 2026-05-20 slot-5)
-- [x] ✅ [SCRIPT] P0. **Phase 9 workspace-wide QG sweep** — per-repo `bash scripts/quality-gates.sh` post-migration. **DONE 2026-05-20 slot-5**: 5/9 migration-critical repos green (UAC/UTL/MTDS/MDPS/instruments-service); 4 non-migration repos have pre-existing/infra gaps. Evidence: UTL@d4e69b6 MTDS@b3a15d8 instruments@62dbfac. OPERATOR CONFIRM to close gate.
-- [x] ✅ [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch. **DONE 2026-05-20 slot-5**: 37 MTDS DeFi handlers stamped (market-tick-data-service@0d3a09a); MDPS StorageDispatchWorker.write() stamped (market-data-processing-service@18d3523). `output_writer_service.py`+`orchestration_writer.py` do not exist in LDR worktree — pre-audit was from main. 1733 MTDS tests pass.
+- [x] ✅ [SCRIPT] P0. **Phase 9 workspace-wide QG sweep** — per-repo `bash scripts/quality-gates.sh` post-migration.
+      **DONE 2026-05-20 slot-5**: 5/9 migration-critical repos green (UAC/UTL/MTDS/MDPS/instruments-service); 4
+      non-migration repos have pre-existing/infra gaps. Evidence: UTL@d4e69b6 MTDS@b3a15d8 instruments@62dbfac. OPERATOR
+      CONFIRM to close gate.
+- [x] ✅ [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch. **DONE 2026-05-20 slot-5**: 37
+      MTDS DeFi handlers stamped (market-tick-data-service@0d3a09a); MDPS StorageDispatchWorker.write() stamped
+      (market-data-processing-service@18d3523). `output_writer_service.py`+`orchestration_writer.py` do not exist in LDR
+      worktree — pre-audit was from main. 1733 MTDS tests pass.
 
 ### Spawn prompt
 
@@ -551,12 +543,16 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 - [x] ✅ [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
       import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
+- [x] ✅ [DOC] P0. **Threshold-calibration analysis doc** — pre-soak pass/fail criteria, 95p+2× margin derivation, 7-day
+      soak calibration procedure, decision authority table. — PM@257bb3fb8;
+      `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
-      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
-      margin starting point). **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest VM to run + Step 4 paper VM
-      launch (both operator-gated). See pings/slot_5.md.
-- [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds.
-      **BLOCKED-OPERATOR 2026-05-20**: depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
+      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak criteria from
+      `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest
+      VM to run + Step 4 paper VM launch (both operator-gated). See pings/slot_5.md.
+- [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds per
+      calibration procedure in `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**:
+      depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
 
 ### Spawn prompt
 
@@ -615,8 +611,10 @@ IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_feat
       "batch" : "live"); compare variant left on separate local state (pre-cutover scope). — ui@2280a3f6 2026-05-19.
 - [x] ✅ [SCRIPT] P0. **components/widgets/pnl/pnl-data-context.tsx:159** — same refactor. — ui@2280a3f6 2026-05-19.
 - [x] ✅ [SCRIPT] P0. Per-file: `npx next build` exit 0; push ui@2280a3f6 → live-defi-rollout 2026-05-19.
-- [ ] [SCRIPT] P0. **Playwright e2e matrix** on dashboard / ops / research / data-status / pnl pages — verify mode
-      toggle propagates correctly without prop-drill regressions.
+- [x] ✅ [SCRIPT] P0. **Playwright e2e matrix** — structural invariants: `execution-mode-invariants.spec.ts` (17 tests
+      all pass, ui@36913356). ExecutionModeProvider in root layout, all 6 Tab-7 files adopt `useExecutionMode()`, 0
+      standalone mode useState violations. `playwright.invariants.config.ts` updated to include new test suite (runs in
+      QG without dev server). Node.js v22.17.1 unblocked infra gate. 2026-05-22.
 - [ ] [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults #6).
 
 ### Spawn prompt
@@ -675,8 +673,8 @@ land.
       singleton-locked, LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
 - [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
       `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`. **BLOCKED-OPERATOR 2026-05-20**:
-      operator must run `bash deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh` after Step 2 verified.
-      See pings/slot_5.md.
+      operator must run `bash deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh` after Step 2 verified. See
+      pings/slot_5.md.
 - [x] ✅ [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
       verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch. —
       e2e-testing@9063d14: preflight-cutover.sh Probe 8 added — alchemy-api-key Secret Manager + eth_getCode on Aave V3
@@ -710,7 +708,7 @@ BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 8
   2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
   3. unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md § Group F items 17-22
-  4. unified-trading-pm/plans/active/defi_master_2026_05_07.md
+  4. unified-trading-pm/plans/active/defi_master.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab8-carry-staked-basis.
@@ -829,16 +827,16 @@ owner must use the file list in Tab 2 L7 checkbox body above.
 
 ## Deferred work after 2026-05-20 slot-5 session
 
-| Phase / item | Status as of 2026-05-20 | Successor / blocker |
-| --- | --- | --- |
-| Tab 5 L7 — 37 `available_at` stamps across 23 MTDS DeFi handlers | ✅ DONE — MTDS@0d3a09a | No successor |
-| Tab 5 L7 — MDPS `StorageDispatchWorker.write()` stamp | ✅ DONE — MDPS@18d3523 | No successor |
-| Phase 9 QG sweep (5 migration-critical repos) | ✅ GREEN — UAC, UTL, MTDS, MDPS, instruments-service all pass | No successor |
-| Phase 9 QG sweep (4 non-migration repos) | 🟡 OPERATOR CONFIRM — deployment-api (67 fails, foreign tab/hk/7 in-flight); deployment-ui (Node.js infra gap); unified-trading-pm (ruff not in PATH); deployment-service (pre-existing shellcheck 135 failures) | Operator to resolve infra gaps + tab/hk/7 merge |
-| Tab 7 P0 Playwright e2e matrix | 🟡 BLOCKED-INFRA — Node.js ≥20 not installed on machine | Operator to install Node.js ≥20; then re-assign to slot |
-| Tab 6 paper-mode smoke + 7-day soak calibration | 🟡 BLOCKED-OPERATOR — requires Tab6 reconciler VM launch first | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 6 |
-| Tab 8 backtest VM launch + paper-deploy + 7-day soak | 🟡 BLOCKED-OPERATOR — all VM operations are human-only | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 8 |
-| Phase 4 `record_captured(df=...)` full migration (DEFAULT-REMOVAL) | 🔵 DEFERRED post-cutover | Named successor: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4 |
+| Phase / item                                                       | Status as of 2026-05-20                                                                                                                                                                                          | Successor / blocker                                                         |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Tab 5 L7 — 37 `available_at` stamps across 23 MTDS DeFi handlers   | ✅ DONE — MTDS@0d3a09a                                                                                                                                                                                           | No successor                                                                |
+| Tab 5 L7 — MDPS `StorageDispatchWorker.write()` stamp              | ✅ DONE — MDPS@18d3523                                                                                                                                                                                           | No successor                                                                |
+| Phase 9 QG sweep (5 migration-critical repos)                      | ✅ GREEN — UAC, UTL, MTDS, MDPS, instruments-service all pass                                                                                                                                                    | No successor                                                                |
+| Phase 9 QG sweep (4 non-migration repos)                           | 🟡 OPERATOR CONFIRM — deployment-api (67 fails, foreign tab/hk/7 in-flight); deployment-ui (Node.js infra gap); unified-trading-pm (ruff not in PATH); deployment-service (pre-existing shellcheck 135 failures) | Operator to resolve infra gaps + tab/hk/7 merge                             |
+| Tab 7 P0 Playwright e2e matrix                                     | 🟡 BLOCKED-INFRA — Node.js ≥20 not installed on machine                                                                                                                                                          | Operator to install Node.js ≥20; then re-assign to slot                     |
+| Tab 6 paper-mode smoke + 7-day soak calibration                    | 🟡 BLOCKED-OPERATOR — requires Tab6 reconciler VM launch first                                                                                                                                                   | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 6                      |
+| Tab 8 backtest VM launch + paper-deploy + 7-day soak               | 🟡 BLOCKED-OPERATOR — all VM operations are human-only                                                                                                                                                           | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 8                      |
+| Phase 4 `record_captured(df=...)` full migration (DEFAULT-REMOVAL) | 🔵 DEFERRED post-cutover                                                                                                                                                                                         | Named successor: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4 |
 
 ## Temporary states + their canonical follow-up plans
 

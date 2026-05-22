@@ -116,15 +116,16 @@ Harsh's laptop already has `${WORKSPACE_PATH}/unified-trading-system-repos/`. Br
 WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
 cd "${WORKSPACE_PATH}"
 
-# Per-repo branch convention:
-#   - agent-orchestrator → branch `main` (no LDR for this repo per 2026-05-20 decision)
-#   - everything else    → branch `live-defi-rollout`
+# Per-repo branch convention (2026-05-20 reversal — everything on LDR):
+#   - ALL repos including agent-orchestrator → branch `live-defi-rollout`
+#   - main is the production-promotion branch only; LDR is the integration branch
+#     (see codex/08-workflows/deployment-flow.md for the LDR → staging → main path)
 
-# Update agent-orchestrator first (gets the dashboard SPA + reporter contract)
+# Update agent-orchestrator (now on LDR like everything else)
 cd "${WORKSPACE_PATH}/agent-orchestrator"
-git fetch origin main
-git checkout main
-git pull --ff-only origin main
+git fetch origin live-defi-rollout
+git checkout live-defi-rollout
+git pull --ff-only origin live-defi-rollout
 
 # Update unified-trading-pm next (workspace SSOT)
 cd "${WORKSPACE_PATH}/unified-trading-pm"
@@ -149,12 +150,8 @@ contain a per-repo worktree on branch `tab/harsh/<N>`.
 
 ```bash
 cd "${WORKSPACE_PATH}"
-bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8 --start-slot 13 --operator harsh
-```
-
-Note: `--start-slot` may not yet exist; if not, run `--add-slot <N>` in a loop:
-
-```bash
+# --start-slot is NOT supported by setup-tab-worktrees.sh (verified 2026-05-21).
+# Use --add-slot in a loop:
 for N in 13 14 15 16 17 18 19 20; do
     bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot $N --operator harsh
 done
@@ -188,9 +185,23 @@ curl -sS https://api.agent-orchestrator.odum-research.com/api/mode \
     -H "Authorization: Bearer $TOKEN"
 ```
 
-For per-slot worker tokens (used by the worker's `/boot` + `/heartbeat`), Ikenna issues those server-side (using the
-orchestrator JWT secret) and drops them at `${WORKSPACE_PATH}/.tabs/<N>/.orch_token`. Ping Ikenna to issue tokens for
-slots 13-20 after Step 3 lands.
+Per-slot worker tokens (used by the worker's `/boot` + `/heartbeat`) have been pre-issued by slot 11 on the VM
+(2026-05-21, exp 2026-06-20) and staged at `/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on
+the shared VM. Copy them to your laptop after Step 3:
+
+```bash
+WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
+VM="ubuntu@<vm-ip>"   # ask Ikenna for the IP or use the SSH alias
+
+for N in 13 14 15 16 17 18 19 20; do
+    mkdir -p "${WORKSPACE_PATH}/.tabs/${N}"
+    scp "${VM}:/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/slot-${N}.orch_token" \
+        "${WORKSPACE_PATH}/.tabs/${N}/.orch_token"
+    chmod 600 "${WORKSPACE_PATH}/.tabs/${N}/.orch_token"
+done
+```
+
+If tokens have expired (30-day TTL): ping Ikenna to re-issue (runs the same `issue_token('harsh', ...)` script on the VM).
 
 ---
 
@@ -320,8 +331,9 @@ logs for traffic patterns).
 
 ## Operating norms (read once, then it's just work)
 
-- **Branch per repo**: `agent-orchestrator` is on `main`; all other repos use `live-defi-rollout`. See
-  `cron-branch-overrides.txt` for the runtime SSOT used by the FF-pull cron.
+- **Branch per repo**: every workspace repo (including agent-orchestrator as of 2026-05-20 reversal) integrates on
+  `live-defi-rollout`. Main is reserved for production promotion only (LDR → staging → main per
+  `codex/08-workflows/deployment-flow.md`). `cron-branch-overrides.txt` is empty — no per-repo deviations.
 - **Commit + push + flip plan checkbox in same agent turn**: the workspace has a HARD RULE on this (see CLAUDE.md §
   "Commit + Push + Flip Plan Checkboxes As You Ship Each Item"). Backfill-flipping later is reviewer- rejected.
 - **Quality gates are a merge prerequisite**: `bash scripts/quality-gates.sh` exit 0 before any push. No exceptions
@@ -381,6 +393,7 @@ ssh agent-orchestrator-vm "TOKEN=\$(cat /home/ubuntu/unified-trading-system-repo
 | Date       | Change                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------- |
 | 2026-05-20 | Initial doc — covers shared-backend migration, slot range 13-20, FF-pull + git-status-report crons |
+| 2026-05-21 | Step 3: drop `--start-slot` (not implemented — use `--add-slot` loop). Step 4: per-slot tokens pre-issued on VM at `.tabs/harsh-slot-tokens/`, exp 2026-06-20; added `scp` copy recipe. |
 
 Future updates land here as the shared setup evolves (e.g. new cron, new agent.md spec, new dashboard panel that
 requires opt-in).

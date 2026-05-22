@@ -58,9 +58,8 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - **Working plan**: `plans/active/master_to_live_defi_2026_05_23.md`
 - **Codex SSOT**: `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`
 - **Principle**: doc → plan → code. Drift between any pair is review-blocking. Readiness: 7 groups / 23 items (A-G).
-- **Parallel workstreams ACTIVE**: TradFi (`epics/tradfi_master_2026_05_07.md`), Sports
-  (`epics/sports_master_2026_05_07.md`), Predictions (`epics/predictions_master_2026_05_07.md`) — separate codepaths,
-  not blocked by DeFi gate. Allocate agent slots to these tracks.
+- **Parallel workstreams ACTIVE**: TradFi (`epics/tradfi_master.md`), Sports (`epics/sports_master.md`), Predictions
+  (`epics/predictions_master.md`) — separate codepaths, not blocked by DeFi gate. Allocate agent slots to these tracks.
 
 ---
 
@@ -144,8 +143,7 @@ SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/
 
 Shard atom MUST be identical across writer atomicity, manifest row key, data-status display, downstream pre-flight gate,
 deployment-UI drilldown. Drift = silent correctness bug. 4-pillar validation: row count > 0 OR `record_empty`; NaN ratio
-< threshold; schema matches contract; cluster coverage ≥ expected. SSOT:
-`plans/epics/infrastructure_master_2026_05_07.md`.
+< threshold; schema matches contract; cluster coverage ≥ expected. SSOT: `plans/epics/infrastructure_master.md`.
 
 ### Live = batch (CRITICAL)
 
@@ -270,7 +268,8 @@ Pointer chain. Full specs in codex:
   ORACLE\_\_; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
-- **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura.
+- **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura, Kaiko, Polygon.io (TradFi data; Polygon
+  L2 blockchain intact).
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
 - **DeFi + CeFi hybrid (CRITICAL)**: DeFi = long/stake/lend leg (on-chain); hedge/short leg runs on CeFi perp venues.
   SSOT: `codex/09-strategy/architecture-v2/archetypes/`.
@@ -289,6 +288,17 @@ Cayman vs others). Plan proposals framing "cross-client rebalancing" as in-scope
 `CrossClientEventError` event-bus rejection, supervisor-level read-only config visibility) — never fund movement. SSOT:
 `codex/04-architecture/client-funds-isolation.md`. Required tests in every transfer-related plan: happy intra-client
 path + UAC-validator-rejects-cross-client + defence-in-depth coordinator-rejects-cross-client + alert-on-attempt.
+
+### Per-client isolation architecture (strategy-service + execution-service)
+
+One subprocess per client (`multiprocessing.Process` under `StrategySupervisor`). Hard crash isolation
+(segfault/OOM/uncaught in one ClientWorker does not affect others). `MarkPriceAggregator` lives in supervisor (single
+MTM compute per tick, broadcast via shared memory). Hybrid hot-reload: push events for
+`REGISTER`/`DEREGISTER`/`CREDENTIAL_ROTATED` + pull KMS rotation. Per-client preflight: KMS → venue auth ping → balance
+fetch → `CLIENT_READY`; failure → `CLIENT_QUARANTINED`. GIL-free parallelism via subprocess boundary. SSOT:
+`codex/04-architecture/per-client-isolation-architecture.md`. Composes with:
+`codex/04-architecture/client-funds-isolation.md` (HARD RULE) + `codex/04-architecture/client-lifecycle-event-bus.md` +
+`codex/05-infrastructure/strategy-shard-vm-topology.md`.
 
 ---
 
@@ -354,9 +364,19 @@ SSOT: `imports/uac-import-surface-enforcement.mdc`. Full decision tree: `SUB_AGE
 
 Every todo: `- [x] [SCRIPT] P0. Description...`. SSOT: `plans/PLAN_FORMAT.md`.
 
-3-layer model: cutover master → epics (`plans/epics/*.epic.md`) → granular sub-plans (`plans/active/*.md`). Extensions:
-`plans/active/` = `<slug>.md`; `plans/archive/` = keep existing (DO NOT rename); `plans/ai/` = `<slug>.plan.md`. SSOTs:
-`plans/epics/README.md` + `plans/PLAN_FORMAT.md`.
+Epic-foundation model (codified 2026-05-21): **epics in `plans/epics/<slug>.md` are everlasting** — no date suffix, no
+`estimate_*` fields, required `assigned_vm` + `tier` + `priority` frontmatter + P0/P1/P2/P3 priority blocks. Active
+plans + wrapper plans in `plans/active/<slug>_YYYY_MM_DD.md` MUST carry `parent_epic:` + `estimate_class` /
+`estimate_baseline_ai_days` / `estimate_calibrated_ai_days`. **Orphan active plans (no `parent_epic:`) are
+review-blocking.** Audit docs land in `plans/audit/results/<slug>_YYYY_MM_DD.md`. Archive:
+`plans/archive/<slug>.plan.md` (DO NOT rename). Full epic-flow SSOT: `plans/epics/README.md` (19 epics × 5 tiers × 10-VM
+topology + audit→plan→epic flow + lifecycle).
+
+**`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
+`assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. Run
+`python3 scripts/orchestrator/regen_vm_registry.py --check` to validate; `--check` must exit 0 before push. Missing or
+unknown `assigned_vm` is review-blocking. SSOT: `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` §
+Phase 1.
 
 ---
 
@@ -374,8 +394,65 @@ todo first. Reviewers reject summaries with grep-miss deferrals.
 
 Run: `python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`. Cadence: morning + EOD + before
 planning decisions (slot 1 main, both sides). Writes between `<!-- AUTO-INVENTORY-START -->` /
-`<!-- AUTO-INVENTORY-END -->` in `master_to_live_defi_2026_05_23.md`. Full SSOT:
-`codex/11-project-management/active-plan-inventory-tracker.md`.
+`<!-- AUTO-INVENTORY-END -->` in `master_to_live_defi_2026_05_23.md`. **Orphan check**: any active plan without
+`parent_epic:` in frontmatter shows as **ORPHAN** in the dashboard. Orphan count > 0 is review-blocking at PR time —
+assign the right epic OR file the plan in `plans/active/issues/` if scope unclear. Do NOT mass-sweep (collision risk per
+Findings Triage). Full SSOT: `codex/11-project-management/active-plan-inventory-tracker.md`. Epic registry:
+`plans/epics/README.md`.
+
+---
+
+## Local slot host = VM slot host — symmetric worker model (HARD RULE codified 2026-05-20)
+
+> Operator 2026-05-20: "aren't we still pinging locally to the same server the UI and API sees so that locally we can
+> act like we are just another slot in the pipeline — that's what Harsh is doing or supposed to do, no? Should be fixed,
+> documented, tested, in CLAUDE.md."
+
+**Every host that owns slot worktrees follows the same contract**, regardless of whether it's the VM, the operator's
+laptop, or Harsh's laptop:
+
+| Behavior                                  | VM  | Operator laptop | Harsh laptop       |
+| ----------------------------------------- | --- | --------------- | ------------------ |
+| `slot-cron-ff-pull.sh` every 5 min        | ✓   | ✓               | ✓ (post-migration) |
+| `slot-git-status-report.sh` every 5 min   | ✓   | ✓               | ✓ (post-migration) |
+| Per-slot worktree on `tab/<operator>/<N>` | ✓   | ✓               | ✓                  |
+| Commit + Push + Flip same-turn HARD RULE  | ✓   | ✓               | ✓                  |
+| Spawn workers via `/api/slots/<N>/spawn`  | ✓   | optional        | optional           |
+| Interactive Claude Code chat as a slot    | ✓   | ✓               | ✓                  |
+
+**Operator's interactive session counts as a slot.** When the operator works in `.tabs/<N>/<repo>/` from a Cursor /
+Claude Code window, they ARE slot N for the purposes of:
+
+- The slot's branch convention (`tab/<operator>/<N>`)
+- The Commit + Push + Flip plan checkbox HARD RULE (no 9-hour-old uncommitted WIP; ship per shippable unit)
+- The git-status reporter (their dirty state shows on the dashboard alongside spawned workers)
+- The FF-pull cron (their worktree gets FF-pulled the same as a worker's)
+
+**The orchestrator does NOT differentiate** between "interactive operator session" and "spawned tmux worker" for these
+purposes. Both are slots. Both show on the Fleet tab. Both follow the same rules. The only operational difference is
+whether the slot is `paused` (interactive — operator controls it) or `working` (orchestrator dispatches tasks to it).
+
+**Verification (mandatory on every host setup)**: `bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh` —
+returns exit 0 if both crons are installed + last run within 10 min + last report posted to backend OK.
+
+**Why this matters**: a local 9-hour-old dirty WIP on the operator's own slot is the same anti-pattern as a worker
+sitting on uncommitted code for 9 hours. Both violate Commit+Push+Flip. Both block downstream FF-pulls. Both create the
+"stale code" problem the whole worktree model exists to prevent. The orchestrator can't tell the difference, which is
+the point: same model, same rules, same accountability.
+
+SSOTs:
+
+- `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` — Harsh's host onboarding recipe
+- `agent-orchestrator/agents/worker.md` — the slot-as-worker contract (applies to interactive sessions too)
+- `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` — FF-pull cron (works on macOS + Linux)
+- `unified-trading-pm/scripts/dev/slot-git-status-report.sh` — drift reporter (cross-platform)
+- `unified-trading-pm/scripts/verify-slot-host-symmetry.sh` — verification (test new hosts)
+
+## Plan Hygiene — Frontmatter, Line Caps, Archive Candidates
+
+Run: `bash unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh`. Auto-fix:
+`python3 unified-trading-pm/scripts/plan-hygiene/fix_frontmatter.py`. Daily cron on planning VM at `0 5 * * *` UTC pings
+orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hygiene.md`.
 
 ---
 
@@ -496,14 +573,15 @@ files. When uncertain, ASK rather than CONCLUDE. For >50KB plans, read past exec
 
 ## Findings Triage Discipline (HARD RULE)
 
-| Where it sits               | Action                                                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| In your code / file you own | Fix in same commit                                                                                                       |
-| Adjacent to your plan       | Document + fix in YOUR plan                                                                                              |
-| Outside plan, small + clear | Fix if ≤30 min                                                                                                           |
-| Outside plan, ambiguous     | Diagnose first — read both sides (caller + callee). Fix the side that's wrong. If genuinely can't tell → file issue doc. |
-| Outside every plan          | `plans/active/issues/<name>_<YYYY_MM_DD>.md`                                                                             |
-| **Big finding**             | NOTIFY OPERATOR + file issue doc                                                                                         |
+| Where it sits                  | Action                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| In your code / file you own    | Fix in same commit                                                                                                       |
+| Adjacent to your plan          | Document + fix in YOUR plan                                                                                              |
+| Outside plan, small + clear    | Fix if ≤30 min                                                                                                           |
+| Outside plan, ambiguous        | Diagnose first — read both sides (caller + callee). Fix the side that's wrong. If genuinely can't tell → file issue doc. |
+| Audit finding with clear scope | Wrapper plan in `plans/active/<slug>_remediation_<date>.md` with `parent_epic:` + `assigned_vm:` → dispatch to epic VM   |
+| Outside every plan             | `plans/active/issues/<name>_<YYYY_MM_DD>.md`                                                                             |
+| **Big finding**                | NOTIFY OPERATOR + file issue doc                                                                                         |
 
 **"Pre-existing" is NOT a triage criterion** — fix now if you can. **Diagnose before fix** — is the code wrong or the
 test wrong? Read both sides.
@@ -647,12 +725,11 @@ keep being sloppy and keep missing out stuff."
 
 **Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
-**Operator-handoff entry point for migration coordination**:
-`plans/active/data_pipeline_master_coordination_2026_05_20.md` — sequences (Phase -2) strategy/ml/features repo
-consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline migration as previously
-sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry + strategy/execution deployment-topology
-cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do not reorder). Per-phase plan-of-record +
-owner slot + verification criterion in the coordinator plan.
+**Operator-handoff entry point for migration coordination**: `plans/epics/mtds_mdps_master.md` — sequences (Phase -2)
+strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline
+migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
+strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do
+not reorder). Per-phase plan-of-record + owner slot + verification criterion in the coordinator plan.
 
 **Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**: no code change merges to
 `live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the touched repo + any
@@ -707,10 +784,11 @@ pattern:
 | `brand-new` | 1.0×       |
 | `research`  | 1.2×       |
 
-Frontmatter (every plan after 2026-05-11): `estimate_class` / `estimate_baseline_ai_days` /
-`estimate_calibrated_ai_days`. Legacy plans: retrofit on next substantive touch — do NOT mass-sweep. Retrospective
-ledger: `codex/08-workflows/estimation-retrospective-ledger.md`. Full SSOT:
-`codex/08-workflows/estimation-calibration.md`.
+Frontmatter (every active plan + wrapper plan after 2026-05-11): `estimate_class` / `estimate_baseline_ai_days` /
+`estimate_calibrated_ai_days`. **Epics in `plans/epics/` are EXEMPT** — they are everlasting and do not carry estimate
+fields (estimation lives on the active plans they reference). Audit wrapper plans count as active plans → MUST carry all
+three estimate fields. Legacy plans: retrofit on next substantive touch — do NOT mass-sweep. Retrospective ledger:
+`codex/08-workflows/estimation-retrospective-ledger.md`. Full SSOT: `codex/08-workflows/estimation-calibration.md`.
 
 ---
 
@@ -778,7 +856,11 @@ SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/per_agent_
 trading-judgment, governance, large migrations. **Harsh**: implement-from-spec, run-script-and-verify, single-repo
 edits, test execution.
 
-**Models**: A = fixed 5-tab clustering. B = 1-main + dynamic spawned tabs.
+**Models**: A = fixed 5-tab clustering. B = 1-main + dynamic spawned tabs. \*\*C = Planning VM (Ikenna + Harsh
+interactive, Opus 4.7 1M) → audit pool → wrapper plans with `parent_epic:` + `assigned_vm:` → Epic VMs (Sonnet 4.6 main
+
+- review + workers per epic).\*\* Epic flow SSOT: `plans/epics/README.md`. VM topology spec:
+  `plans/active/orchestrator_master.md`.
 
 **Universal mechanics**:
 
@@ -840,7 +922,8 @@ Layout: `canonical/domain/` · `canonical/crosscutting/` · `external/{source}/`
 `registry/` · root facades.
 
 **Deleted dirs** (do NOT reference): `canonical/normalize/` · `external/sports/` · `external/cloud_sdks/` ·
-`external/onchain/` · `external/macro/` · `schemas/` · `shared/`.
+`external/onchain/` · `external/macro/` · `schemas/` · `shared/` · `external/kaiko/` · `external/polygon/` (TradFi data
+provider; Polygon L2 chain in `canonical/crosscutting/defi.py` intact).
 
 Import: `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`. Deep paths are
 UAC-internal. SSOT: `codex/02-data/contracts-scope-and-layout.md`.

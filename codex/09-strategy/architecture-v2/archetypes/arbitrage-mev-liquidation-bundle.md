@@ -13,8 +13,9 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`
 
-> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** ATOMIC bundle — all-or-nothing within a single transaction.
-> **Code module:** `strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py`.
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement
+> model:** ATOMIC bundle — all-or-nothing within a single transaction. **Code module:**
+> `strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py`.
 
 ## What it does
 
@@ -101,7 +102,8 @@ ARBITRAGE_MEV_LIQUIDATION_BUNDLE@euler-v2-ethereum-prod
 ## Not in this archetype
 
 - Capital-funded liquidation (no flash loan) → [`LIQUIDATION_CAPTURE`](liquidation-capture.md)
-- Backrunning a confirmed directional swap (not a liquidation event) → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
+- Backrunning a confirmed directional swap (not a liquidation event) →
+  [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
 - JIT LP positioned around an imminent swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
 - Cross-venue price arb without liquidation event → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 

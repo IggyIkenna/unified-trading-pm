@@ -78,12 +78,14 @@ workspace-manifest pattern. Local launches assume `deployment-service` exists at
 `${WORKSPACE_ROOT}/deployment-service/scripts/vm/...`. CI / Cloud Run pods do NOT have sibling clones; they read from
 the tarball.
 
-### 4. Image (future, not yet shipped)
+### 4. Image (post-cutover — not yet shipped)
+
+> **[DELTA 2026-05-22]** **Current state:** Image-based launcher delivery is NOT shipped. VM tarball (`create-code-tarballs.sh` + `launch-*.sh`) is the live path for all launchers. **Planned delta:** Image-based launcher tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Deployment-api pulls + runs per-shard launch container from Artifact Registry / ECR rather than `gcloud compute instances create`.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in
 [`deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md); out of scope
-today.
+post-cutover.
 
 ## Adding a new launcher
 
@@ -244,8 +246,8 @@ prefix entries landed.
 | `e2e-testing/scripts/defi/launch_lst_rates_vm.sh`                 | DEFERRED — duplicate of canonical `launch-mtds-lst-rates-backfill-vm.sh`.                                                                              |
 | `e2e-testing/scripts/defi/launch_lending_indices_vm.sh`           | DEFERRED — duplicate of canonical `launch-mtds-lending-indices-backfill-vm.sh`; **Tab 9 (`lending-indices-relaunch-tab`) in flight** — collision risk. |
 | `e2e-testing/scripts/defi/launch_perp_funding_vm.sh`              | DEFERRED — duplicate; canonical `mtds-perp-funding-` prefix already in watchdog.                                                                       |
-| `e2e-testing/scripts/defi/launch_solana_gas_vm.sh`                | DEFERRED — defer post-May-23 cutover.                                                                                                                  |
-| `e2e-testing/scripts/defi/launch_liquidations_vm.sh`              | DEFERRED — defer post-May-23 cutover.                                                                                                                  |
+| `e2e-testing/scripts/defi/launch_solana_gas_vm.sh`                | DEFERRED — defer post-cutover.                                                                                                                         |
+| `e2e-testing/scripts/defi/launch_liquidations_vm.sh`              | DEFERRED — defer post-cutover.                                                                                                                         |
 | `e2e-testing/scripts/prediction/launch_prediction_backfill_vm.sh` | DEFERRED — **Tab 10 (`predictions-phase1-ingestion-tab`) in flight** on prediction surface; collision risk.                                            |
 | `e2e-testing/scripts/prediction/launch_prediction_features_vm.sh` | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                      |
 | `e2e-testing/scripts/prediction/launch_prediction_pipeline_vm.sh` | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                      |
@@ -258,7 +260,7 @@ prefix entries landed.
 | `e2e-testing/scripts/sports/launch_instruments_reference_vm.sh`   | DEFERRED — superseded by v3 form (#5 above).                                                                                                           |
 | `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`      | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                                |
 | `e2e-testing/scripts/sports/launch_mdps_reprocess_vm.sh`          | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                                |
-| `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`       | DEFERRED — odds API specific; defer post-May-23 cutover.                                                                                               |
+| `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`       | DEFERRED — odds API specific; defer post-cutover.                                                                                                      |
 
 **Intra-repo move not in the e2e-testing list** (separate item): `deployment-service/scripts/deploy-dashboard-gce-vm.sh`
 → `deployment-service/scripts/vm/launch-dashboard-vm.sh`. DEFERRED — already inside deployment-service repo so callsite
@@ -381,7 +383,7 @@ Added in Phase 2 of
 total per full production launch).
 
 **Status**: launcher shipped; Phase 4 (VM launches) blocked on G4 v8 schema landing + operator backfill approval (≥1
-week GCS write). Phase 4 sequenced under `manifest_evolution_master_2026_05_08` gate G3.
+week GCS write). Phase 4 sequenced under `manifest_evolution_SUPERSEDED_2026_05_21` gate G3.
 
 ---
 
@@ -528,22 +530,21 @@ heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + tem
 
 ## Cloud Run launchers
 
-Cloud Run deploy scripts are NOT VM launchers (they run `gcloud run deploy`, not
-`gcloud compute instances create`) and do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog
-registration. They live under `deployment-service/scripts/cloud-run/` and follow the shape of
-`deploy-ui.sh`:
+Cloud Run deploy scripts are NOT VM launchers (they run `gcloud run deploy`, not `gcloud compute instances create`) and
+do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog registration. They live under
+`deployment-service/scripts/cloud-run/` and follow the shape of `deploy-ui.sh`:
 
 - `--env` flag required (rejects missing; supports `--env=prod|uat`)
 - Triggers `docker buildx build` (local) or `gcloud builds submit` (Cloud Build) + `gcloud run deploy`
 - Optional `firebase deploy --only hosting` at P2 (agent-orchestrator) or always (odum-portal)
-- Note: `agent-orchestrator` has NO frontend in its Docker image (Vite dashboard served by Firebase
-  Hosting at P2). `config/docker-build.env.{production,uat}` in the agent-orchestrator repo document
-  runtime env vars only; `--set-env-vars` is used directly at deploy time rather than a build-arg file.
+- Note: `agent-orchestrator` has NO frontend in its Docker image (Vite dashboard served by Firebase Hosting at P2).
+  `config/docker-build.env.{production,uat}` in the agent-orchestrator repo document runtime env vars only;
+  `--set-env-vars` is used directly at deploy time rather than a build-arg file.
 
-| Script                          | Target service             | Region       | Status  |
-| ------------------------------- | -------------------------- | ------------ | ------- |
-| `deploy-ui.sh`                  | unified-trading-system-ui  | europe-west4 | shipped |
-| `deploy-agent-orchestrator.sh`  | agent-orchestrator         | europe-west4 | shipped |
+| Script                         | Target service            | Region       | Status  |
+| ------------------------------ | ------------------------- | ------------ | ------- |
+| `deploy-ui.sh`                 | unified-trading-system-ui | europe-west4 | shipped |
+| `deploy-agent-orchestrator.sh` | agent-orchestrator        | europe-west4 | shipped |
 
 `deploy-agent-orchestrator.sh` shipped at Phase 1 of
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`. Architecture SSOT:

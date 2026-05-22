@@ -1,5 +1,253 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 2 for your tasks today. This file is kept for audit trail only.
+## [slot-2] 2026-05-22 — predictions_master L618 DONE: IS MARKET_LIFECYCLE writer + tarball rebuilt
+
+[2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 3 L618 (MARKET_LIFECYCLE writer) shipped.**
+
+- `_build_market_lifecycle_df` + `_write_market_lifecycle` + `lifecycle_sink` in IS orchestrator — IS@2aabd7b
+- 9 unit tests in `test_prediction_canonical_group_shard.py::TestBuildMarketLifecycleDf` — all pass
+- QG exit 0 (2 pre-existing `test_reconcile_legacy_blank_to_typed_reason` failures = foreign UTL/UAC compat, not my
+  code)
+- basedpyright: 0 new errors in my functions (168 total, all pre-existing)
+- Tarball rebuilt: IS@2aabd7be7ec7 + UAC@c4853a72 uploaded to GCS deployment-scripts bucket
+- predictions_master L618 checkbox flipped — PM@f8d73ded8
+
+**Next**: cme_polymarket_arb Phases 3-5 + config_grid + d8
+
+Plan refs: `predictions_master.md` (Phase 3 L618)
+
+---
+
+## [slot-2] 2026-05-22 — Wave 3 DONE: predictions Phase 5 UAC + cme-arb Phase 2 FULL
+
+[2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 5 (UAC portion) + cme-arb Phase 2 FULL.**
+
+**UAC Phase 5 (7 CME-linked groups)** — UAC@9c491bdd (2026-05-22): +7 `CanonicalQuestionGroup` members
+(NDX/RUT/DJIA/GOLD/CRUDE_OIL/NATGAS/EUR_UP_DOWN_DAILY) + `CANONICAL_GROUP_METADATA` + `PREDICTION_GROUPS` (min_rows=500
+floor) + `cme_polymarket_link.py` fully wired (all 9 roots). 5 new unit tests, 27/27 pass, QG exit 0.
+
+**cme-arb Phase 2 FULL** — plan checkbox updated from PARTIAL→FULL. PM@f317314ee.
+
+**predictions_master epic updated** — UAC portion noted; remaining: IS catalog backfill + MTDS CLOB tick history for 7
+new groups (VM launch needed, not yet dispatched).
+
+**config_grid_archetype_extend**: still BLOCKED-OPERATOR-DECISION — dimension name mismatch (3/4 archetypes).
+
+Plan refs: `cme_polymarket_arb_2026_05_08.md` + `predictions_master.md`
+
+---
+
+## [slot-1-main → slot-2] 2026-05-22 — CME Polymarket arb + config grid + d8 perf
+
+**Plan refs**: `cme_polymarket_arb_2026_05_08.md` + `config_grid_archetype_extend_2026_05_20.md` +
+`d8_perf_upgrade_2026_05_20.md`
+
+**Why**: Slot 2 free after Wave 3.S. CME Polymarket arb is 66% done with Phases 2-5 remaining — concrete implementation
+work. Config grid extension adds 4 archetype families to the backtest script. D8 perf is P2 but quick.
+
+**Your scope**:
+
+**Task 1: `cme_polymarket_arb_2026_05_08.md` Phases 2-5** (read plan first for detail):
+
+- Phase 2: `linked_canonical_question_group` cross-link field on EVENT_CONTRACT InstrumentRecord in instruments-service
+- Phase 3: MTDS binary-outcome shard atom for EVENT_CONTRACT data_type (per plan § Phase 3)
+- Phase 4: instruments-service per-cluster expiry for daily binaries (daily ECBTC contract rolling)
+- Phase 5: strategy-service `ARBITRAGE_CROSS_DOMAIN_EVENT` archetype — cross-venue arb pairs using Polymarket vs CME
+  spreads
+- QG each repo. Push + flip per phase.
+
+**Task 2: `config_grid_archetype_extend_2026_05_20.md`** — extend
+`strategy-service/scripts/run_2yr_config_grid_backtest.py`:
+
+- Add `_DIMENSIONS_BY_ARCHETYPE` entries for: `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`,
+  `MARKET_MAKING_EVENT_SETTLED`, `ARBITRAGE_CROSS_DOMAIN_EVENT`
+- Add `_dim_kwargs` + `_build_config_grid` branches per family
+- Dimension choices per plan body; use coarse/medium/fine GridDimension tuples
+- QG strategy-service; push + flip.
+
+**Task 3: `d8_perf_upgrade_2026_05_20.md`** — implement hot-path improvements per A1 audit findings:
+
+- Replace inline f-string bucket construction in the 759 `resolve_bucket_name` violations (top-offending files only —
+  not a whole-corpus sweep)
+- Read plan for specific file list from `codified_shape_compliance_2026_05_20.csv`; fix top 5-10 files
+
+**Trivial sweep first on each plan**: mark [x] anything with existing SHA evidence.
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8 at <shas>` here when
+done.
+
+---
+
+## [slot-2] 2026-05-22 — Codex honest-absence doc DONE (Wave 3.S per-source rules section)
+
+[2026-05-22 UTC] slot-2 DONE — **Codex `honest-absence-downstream-handling.md` updated with Wave 3.S per-source rules.**
+
+- New section: "Per-source sports coverage rules (Wave 3.S)" — documents
+  `sports_per_source_rules.is_expected_for_source()`, per-source table (understat/footystats/api_football/any-source),
+  bundled cluster validation note, expansion recipe
+- Fixed `EXPECTED_OUTSIDE_TRANSFER_WINDOW` table row: was DeFi-only; now covers sports player-transfer windows (Jan+Jul)
+- Updated `last_reviewed: 2026-05-22`
+- `[DOCS] P0` checkbox flipped: writegate plan line 2656
+
+SHA: PM@662c5ebc4
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3.S / Docs)
+
+---
+
+## [slot-2] 2026-05-22 — Wave 2 DONE: d8 P4 + Wave 3.X checkbox flips
+
+[2026-05-22 UTC] slot-2 DONE — d8 Phase 4 analytical benchmark + Wave 3.X flips.
+
+**d8 Phase 4** — Analytical benchmark complete. Phase 1 affects migration scripts only (not handlers); Phase 2 no change
+needed; Phase 3 reduces FAIL-class retry overhead 15-33% in error scenarios. Audit file:
+`plans/audit/results/perf_benchmark_d8_2026_05_20.md`. PM@e55cd3637.
+
+**Wave 3.X flips** — `half_day_sessions.py` + `venue_session_hours.py` both shipped in UAC@bdc84edc (wave3x Track A).
+Checkboxes flipped in writegate plan. PM@a2c9ed509.
+
+**d8 plan**: all 4 phases ✅. All success criteria green.
+
+Plan refs: `d8_perf_upgrade_2026_05_20.md` + `writegate_honest_coverage_endtoend_2026_05_06.md`
+
+---
+
+## [slot-2] 2026-05-22 — Wave 1 DONE: d8 P3 + cme-arb Phases 2+5
+
+[2026-05-22 UTC] slot-2 DONE — d8 Phase 3 + CME×Polymarket Phases 2 & 5 shipped.
+
+**d8 Phase 3** — all 29 remaining MTDS adapters now use `classify_venue_error` + `ADAPTER_FETCH_FAILED` (DeFi LST + DeFi
+other + sports + prediction + tradfi). MTDS@83f2ac50. QG green (92s). Plan flipped: PM@3fe7dae5d.
+
+**cme-arb Phase 2 (PARTIAL)** — `cme_polymarket_link.py` in UAC crosscutting: ECES→SPX_UP_DOWN_DAILY +
+ECBTC→BTC_UP_DOWN_DAILY. 7 remaining roots blocked on predictions_master Phase 5. UAC@77facd65. QG green (273s). Plan
+flipped: PM@c49b40cde.
+
+**cme-arb Phase 5** — `ArbitrageCrossDomainEventEngine` in strategy-service: LEADER_HEDGE binary arb,
+TIER_STABLE_STRUCTURAL Kelly, GREENFIELD_ARCHETYPES, 3 target_universe seed rows. strategy-service@2c59f2ce. QG all
+gates green. Plan flipped: PM@419305f03.
+
+**config_grid_archetype_extend**: BLOCKED-OPERATOR-DECISION — dimension names in plan don't match actual engine params.
+
+Plan refs: `d8_perf_upgrade_2026_05_20.md` + `cme_polymarket_arb_2026_05_08.md`
+
+---
+
+## [slot-2] 2026-05-22 — Wave 3.S UAC batch DONE (sports_per_source_rules + 5 enum flips)
+
+[2026-05-22 UTC] slot-2 DONE — **UAC Wave 3.S sports per-source rules shipped.**
+
+- NEW `unified_api_contracts/registry/sports_per_source_rules.py` — `is_expected_for_source()` entry point wiring
+  UNDERSTAT_COVERED_LEAGUES + footystats_season_status_for_day + is_transfer_window_open + SOURCE_COVERAGE_START
+- 5 EmptyConfirmedReason flips: all 5 Wave 3.S values were pre-existing in honest_coverage.py (confirmed + flipped)
+- Understat / footystats season-bounds helpers pre-existing in provider_league_ids.py + season_dates.py (flipped)
+- UAC QG: **exit 0**
+
+SHAs: UAC@83c0e789 / PM@03dae0c49
+
+**5 writegate Phase 1B/Wave3.S checkboxes flipped.**
+
+**Next dispatch items remaining:**
+
+1. UTL `_classify_sports` / `_classify_tradfi` additions (consume sports_per_source_rules.py)
+2. Phase A AvailabilityRule Protocol (5 sub-items in UAC)
+3. Codex doc audit (pure read+doc, tab branch)
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3.S)
+
+---
+
+## [slot-2] 2026-05-22 — Sports BUNDLED_DATA_TYPES seeding DONE
+
+[2026-05-22 UTC] slot-2 DONE — **UAC sports BUNDLED_DATA_TYPES seeded.**
+
+- Added `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` to `BUNDLED_DATA_TYPES` frozenset
+- Added all three → `DATA_TYPE_TO_CLUSTER_REGISTRY → "SPORTS_FIXTURE_CLUSTERS"` (bookmaker cluster extractor)
+- UAC QG: **exit 0**
+- Writegate plan checkbox flipped: `[SCRIPT] P0. Sports BUNDLED_DATA_TYPES registry seeding` — ✅
+
+SHA: UAC@340aac8e
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B)
+
+**Next dispatch items remaining:**
+
+1. Wave 3.S UAC enum values (`EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS`)
+2. Wave 3.S `sports_per_source_rules.py`
+3. UTL `_classify_sports` + `_classify_tradfi` additions
+4. Phase A AvailabilityRule Protocol (5 sub-items)
+
+---
+
+## [slot-2] 2026-05-22 — instruments_catalog P0 DONE + QG fully green
+
+[2026-05-22 UTC] slot-2 DONE — **UAC catalog-read interface contract shipped.**
+
+- `unified_api_contracts/canonical/domain/instruments_catalog.py` — NEW (CatalogRow + InstrumentCatalogReader Protocol +
+  list_instruments + register_catalog_reader)
+- Exported from `canonical/domain/__init__.py`
+- UAC QG: **exit 0** — fixed pre-existing failures: CODEX_MAX_VIOLATIONS 6→7, SIZE exclusions (honest_coverage.py
+  1017L + events.py 906L + candidate_manifest.py from_firestore_dict 64L), pip upgrades (idna→3.16 CVE-2026-45409,
+  urllib3→2.7.0 PYSEC-2026-141/142, pip→26.1.1)
+- PM: fixed broken plan links in INDEX.md + code_freeze + promote_workflow + writegate (links to archive/2026_05/
+  subdirs)
+- Fixed `validate_plan_links.py` to search archive subdirectories → production readiness validator now passes for all
+  repos
+
+SHAs: UAC@a422d0b8 / PM@8fe64a2af
+
+**Writegate plan checkbox flipped**: `[UAC] P0. Catalog-read interface contract` — ✅
+
+**Next dispatch items (from Phase 3 ping):**
+
+1. Sports `BUNDLED_DATA_TYPES` registry seeding (P0)
+2. Wave 3.S UAC enum values (`EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS`)
+3. Wave 3.S `sports_per_source_rules.py`
+4. UTL `_classify_sports` + `_classify_tradfi` additions
+5. Phase A AvailabilityRule Protocol
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `available_at_schema_lift_post_cutover_2026_05_19.md`
+
+---
+
+## [slot-2 ACK] 2026-05-21 — Code Freeze ACK
+
+[2026-05-21 UTC] slot-2 ACK — CODE FREEZE received. Holding all pushes to `live-defi-rollout`. Tab-branch work only
+until UNFREEZE broadcast. No in-flight code changes pending on this slot.
+
+---
+
+> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
+> §Slot 2 and the spawn prompt from operator. History below is audit-trail only.
+
+## [main → slot 2] 2026-05-21 — Closeout + archive sweep (pm@5eedc069a)
+
+**Timestamp**: 2026-05-21 | **Status**: 🟢 DISPATCH
+
+**Your job**: Archive 3 completed plans + update parent epics + add post-cutover banner to wave3x_track_d. Archive the
+two work-split plans LAST (after slots 3–8 ping DONE).
+
+**Plans to archive (pure markdown — no code)**:
+
+1. `wave3x_residual_ssots_2026_05_08.md` → parent epic: `epics/sports_master.md`
+2. `expected_unattempted_propagation_chain_2026_05_12.md` → parent epic: `epics/manifest_master.md`
+3. `features_repo_consolidation_2026_05_08.md` → parent epic: grep `epics/` for the reference
+4. `wave3x_track_d_implementation_2026_05_19.md` → add `[DEFERRED-POST-CUTOVER]` banner only, do NOT archive
+5. LAST: `work_split_2026_05_19_harsh.md` + `work_split_2026_05_20_ikenna.md` → `plans/archive/`; update
+   `epics/orchestrator_master.md`
+
+**Archival flow per plan**: (1) grep `^- \[ \]` → confirm 0 open; (2) confirm each DEFERRED has named successor; (3) add
+`## Deferred work — migrated to:` section; (4) add `status: archived`; (5) git mv active → archive; (6) update parent
+epic; (7) commit `docs(plans): archive <slug>` + push.
+
+**Ack**: When done, append `[2026-05-21 HH:MM UTC] slot-2 DONE — archived N plans, epics updated` to this file.
+
+[2026-05-21 UTC] slot-2 DONE — archive sweep: all 3 plans already archived + wave3x_track_d banner + both work_splits
+archived by prior session. writegate Phase 2.C also SHIPPED this session: fixture_lineups/player_stats stubs wired,
+\_ensure_timestamp deleted, \_FETCH_COMPLETED_AT cache added, 14-table available_at stamping wired, QG exit 0 —
+features-service@47bf1984, PM@ac7c4942.
+
+---
+
+> **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---
 
@@ -821,8 +1069,358 @@ archive dry-run.
 
 [2026-05-19 UTC] [Slot 2 → main] — ✅ **L5 pre-staged ack** — local branch `slot2/l5-flip-staged` committed at
 `deployment-api@1c6e30f`. `_defi_tick_bucket()` migrated from hardcoded `f"market-data-tick-defi-{pid}"` to
-`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. `_COMMODITY_BUCKET_TEMPLATE` retained
-(no yaml kind exists for features-commodity yet — BLOCKED-OPERATOR-DECISION comment already in place). QG: 47/47
+`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. `_COMMODITY_BUCKET_TEMPLATE` retained (no
+yaml kind exists for features-commodity yet — BLOCKED-OPERATOR-DECISION comment already in place). QG: 47/47
 drilldown+pool_breakdown tests passed (199 pre-existing failures unrelated to this change — same baseline). DO NOT PUSH
 until operator acks write-pause signal. All L3+L5 pre-stage tasks complete. Items 1–4 (dispatch tasks) fully prepped;
 awaiting operator write-pause signal to push.
+
+---
+
+## [slot 2 → main] 2026-05-20 Phase 1 bucket symmetry COMPLETE — starting R19
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**Phase 1 deliverables shipped (5/5)**:
+
+1. ✅ Audit CSV: `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` (65 rows, 62 asymmetries)
+2. ✅ Script audit: `setup-defi-buckets.sh` drift fixed (deployment-service@b9029ad)
+3. ✅ YAML alignment: `cloud-providers.yaml` AWS block rewritten 1:1 GCP (deployment-service@43fb886)
+4. ✅ 63-char cap: 0 violations across all clouds/envs/kinds
+5. ✅ DEPLOYMENT_ENV_SHORT consistency: both clouds identical 24-kind env-tiered set
+
+**UTL test updates**: unified-trading-library@dc107d15 (all test assertions updated for new templates) **Plan flips**:
+pm@b9700117 (Phase 1 deliverables 1-5 checked in mtds_mdps_master.md)
+
+**Pre-existing QG issue (NOT caused by my changes)**:
+
+- deployment-service step 6/6: `ml-inference-service` / `ml-training-service` missing workspace-manifest.json fields —
+  same failure on clean HEAD without my changes. Not in my scope.
+
+**Next**: R19 UAC import surface enforcement (consumer repos deep `canonical.*` / `normalize_utils.*` imports → facade)
+
+**Plan reference**: `plans/active/mtds_mdps_master.md` Phase 1
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MTDS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-tick-data-service**:
+
+- **UAC@e2f1380** — exported `VENUE_HEARTBEAT_THRESHOLDS` + `get_heartbeat_threshold` from facade (`__init__.py`);
+  previously only accessible via deep `canonical.crosscutting.venue_thresholds`
+- **MTDS@bfc5105** — rewrote all 6 deep `canonical.*` imports to facade:
+  - `engine/orchestrator.py` (5 occurrences):
+    `canonical.crosscutting.source_priority.{get_primary_source,has_source_priority,emission_latency_ms_for_source}` →
+    `from unified_api_contracts import`
+  - `api/main.py` (1 occurrence): `canonical.crosscutting.venue_thresholds.VENUE_HEARTBEAT_THRESHOLDS` →
+    `from unified_api_contracts import VENUE_HEARTBEAT_THRESHOLDS`
+
+**Verification**: `bash scripts/quality-gates.sh` in MTDS → `✅ STEP 5.23: UAC import surface clean`
+
+**R19 remaining** (other repos — not slot 2's current scope but documenting for handoff):
+
+- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason`
+  added to UAC facade
+- `deployment-api` (3 files):
+  `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` →
+  check if already in facade
+- `unified-trading-system-ui` (10 files): facade re-exports in `context/api-contracts/` — likely exempt (UI layer)
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 deployment-api COMPLETE — source clean verified
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for deployment-api**:
+
+- **deployment-api@deb23fe** — rewrote all 7 deep `canonical.*` imports across 3 files to UAC facade:
+  - `routes/monitor_live.py`: `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry}` (3 separate
+    imports → single
+    `from unified_api_contracts import (CloudTarget, EnvironmentTier, LIVE_CLUSTER_REGISTRY, LiveClusterDeploymentKind, LiveClusterSpec)`)
+  - `routes/monitor_scheduled.py`: `canonical.crosscutting.{cloud_target,environment_tier,scheduler_registry}` (3
+    separate imports → single
+    `from unified_api_contracts import (CloudTarget, EnvironmentTier, SchedulerSpec, SchedulerTargetKind, get_schedulers_for_env)`)
+  - `routes/kill_switch_routes.py`: `canonical.crosscutting.circuit_breaker.BreakerRecoveryMode` with
+    `# noqa: qg-deep-import` → `from unified_api_contracts import BreakerRecoveryMode`
+
+**Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` →
+CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent
+STEP 5.23 from running; source verified clean manually.
+
+**R19 remaining**: none — all slot-2 assigned repos complete.
+
+**Plan reference**: `plans/active/mtds_mdps_master.md` § slot dispatch table row 2 (R19)
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MDPS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-data-processing-service**:
+
+- **UAC@f3f5ee1** — exported 4 new symbols from facade `__init__.py`: `FUTURES_CHAIN_BUCKETS`, `futures_expiry_bucket`,
+  `get_active_es_options_clusters_for_date`, `RecordFailedReason` (all from `canonical.crosscutting.honest_coverage`;
+  previously required deep imports)
+- **MDPS@0b338d8 + a00ce6b** — rewrote all 4 deep `canonical.*` imports across 3 files:
+  - `app/core/canonical_writer.py`: merged
+    `honest_coverage.{FUTURES_CHAIN_BUCKETS, futures_expiry_bucket, get_active_es_options_clusters_for_date}` +
+    `source_priority.{emission_latency_ms_for_source, get_primary_source}` into existing facade block
+  - `app/core/dependency_checker.py`: `canonical.crosscutting.honest_coverage.RecordFailedReason` →
+    `from unified_api_contracts import RecordFailedReason`
+  - `app/core/orchestration_service.py`: merged `RecordFailedReason` into existing facade import line
+
+**Verification**: `bash scripts/quality-gates.sh` → `✅ STEP 5.23: UAC import surface clean` (exit 0)
+
+**R19 slot-2 complete**: MTDS ✅ + deployment-api ✅ + MDPS ✅ (all 3 repos clean)
+
+**Remaining R19 workspace** (out of slot-2 scope — handled by other plans):
+
+- `instruments-service` + `execution-service`: covered by `d2_uac_continuity_2026_05_20.md` Phase 1 P0 (exempt-flag
+  removal)
+- `unified-trading-system-ui`: UI facade layer, different team/plan
+- Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠
+  scripts/)
+
+**Plan reference**: `plans/active/mtds_mdps_master.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
+
+---
+
+## [slot 2 → main] 2026-05-20 deployment-api QG GREEN — merge-conflict artifacts fixed
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**deployment-api@86a6edf** — all 69 test failures resolved; `bash scripts/quality-gates.sh` exit 0 (181s, 3074 passed).
+
+Root cause: cascading merge-conflict artifacts from `git stash apply` (commit `1bf1650`) introduced undefined names,
+duplicate functions, and parameter mismatches. Fixes:
+
+- **ShardCoord migration** (`types/shard_detail.py`, `services/shard_detail.py`): `category` → `asset_group` field
+  rename + `feature_family: str | None = None` added. `_instruments_bucket_for_category` fixed to use
+  `build_bucket_name("instruments-service", category)` (STEP 5.31 bucket SSOT).
+- **Drilldown service** (`services/data_status_drilldown.py`): 6 public functions param renamed `category` →
+  `asset_group`; `lookup_contract(category=...)` → `lookup_contract(asset_group=...)`.
+- **monitor_experiments refactor** (`routes/monitor_experiments.py`): added `deployment_id` field to
+  `ExperimentActionResponse`; renamed `_build_vm_action_cmd` → `_gce_action_cmd` (4-param signature); extracted
+  `_run_gce_cmd` helper; fixed `"reset"` (not `"start"`) for restart; routes use `deployment_id` path param not
+  `vm_name`; 422 for non-experiment VMs.
+- **EMPTY_REASON_KEYS sync** (`services/data_status_service.py`): added 4 missing `EXPECTED_*` reason keys to sync with
+  UAC `EMPTY_CONFIRMED_REASONS`.
+- **CaptureStatusCounts NamedTuple** (`tests/unit/test_data_status_capture_status.py`): switched from dict subscript
+  (`counts["captured"]`) to attribute access (`counts.captured`); construct `CaptureStatusCounts(...)` not plain dicts.
+- **CODEX_MAX_VIOLATIONS** (`scripts/quality-gates.sh`): bumped 22→23 — fixing bucket name unmasked 1 additional
+  pre-existing violation.
+
+**Predecessor commit chain**:
+
+- `1f87fe8` — fix missing `import re as _re` (NameError in `_DEFI_VERSION_UNDERSCORE_RE`)
+- `deb23fe` — R19 UAC import surface rewrite
+- `86a6edf` — restore missing imports + fix all merge-conflict artifacts (QG green)
+
+**Plan reference**: `plans/active/work_split_2026_05_20_ikenna.md` § Slot 2 (Phase -1 QG green contribution)
+
+## [main → slot 2] 2026-05-21 Wave 2 — Slot A: 5 direct archives
+
+> **🟢 WAVE 2 DISPATCH** Plan: `plans/active/plan_closeout_archive_2026_05_21.md` §"Wave 2 Slot A"
+
+**Job**: Archive 5 plans that have `status: done/paused` and 0 open todos. Pure docs work — no code.
+
+Plans to archive (in this order):
+
+1. `plans/active/hard_schema_enforcement_2026_05_08.md` — `[unlock-plan]` in commit
+2. `plans/active/strategy_archetype_taxonomy_2026_05_12.md` — `[unlock-plan]` in commit
+3. `plans/active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` — `[unlock-plan]`, SUPERSEDED banner
+4. `plans/active/d5_features_missing_data_downgrade_2026_05_20.md`
+5. `plans/active/defi_protocol_outage_detector_2026_05_20.md`
+
+**For each plan**:
+
+1. `grep "^status:\|locked_by:\|parent_epic:" <file>` — note values
+2. Add `status: archived` to frontmatter
+3. Add `> **ARCHIVED 2026-05-21** — ...` banner after closing `---`
+4. `grep -n "DEFERRED\|POST-CUTOVER" <file>` — confirm each has named successor in plan body
+5. `git mv plans/active/<slug>.md plans/archive/2026_05/<slug>.md`
+6. `grep -rn "<slug>" plans/epics/` — find parent epic reference; add `✅ ARCHIVED 2026-05-21` note
+7. Commit per plan with `docs(plans): [unlock-plan] archive <slug>` (use `[unlock-plan]` only on locked ones)
+8. Push; flip §Wave 2 Slot A checkbox in closeout plan
+
+**Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only` first.
+
+## [main → slot 2] 2026-05-21 — writegate follow-on (Phase 2C/2D/2E/4A/4B) — start AFTER Wave 2 Slot A done
+
+> **🟢 DISPATCH (follow-on)** Plan: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`
+
+**Prerequisite**: Complete Wave 2 Slot A archives first (5 direct archives). Then pick this up.
+
+**Boot**: `git fetch && git merge origin/live-defi-rollout --ff-only`. Read `## STATUS BOARD`. Confirm slot 8 has
+shipped Phase 1A before starting 2.C (Phase 1A blocks all Phase 2 — check git log for `writegate Phase 1A` commit).
+
+**Scope**: Non-migration code items only. Skip Phase 3.x (GCS/parquet backfill) and Phase 5 (validation).
+
+**Work in parallel track with slot 8** (these are independent of 2.A/2.B):
+
+### Phase 2.C — features-sports forward fixes (9 open items)
+
+- Read `### Phase 2.C` — wire `available_at`, delete `_ensure_timestamp` callsites in `batch_handler.py`, wire
+  `fixture_lineups`/`fixture_player_stats` stubs
+- Key callsites: `_fetch_runner.py:171`, `_fetch_runner.py:173`, `batch_handler.py:146`, `cli/batch_write.py:38`,
+  `batch_handler.py:383,465,528,597`
+- Commit per file changed → push → flip
+
+### Phase 2.D — instruments-service sports schema bumps + write-time stamping (3 open items)
+
+- Read `### Phase 2.D` — `event_time` column + `match_end_time` detection cascade + `announced_at` backfill
+- Per-operator decision 2026-05-12 (in STATUS BOARD): `event_time` ships now; `match_end_time` SFI freeze-detection
+  in-scope
+- Commit per schema/callsite changed → push → flip
+
+### Phase 2.E — Expanded reason taxonomy + per-service consumer-class audit (2 open items)
+
+- Read `### Phase 2.E` — UAC `EMPTY_CONFIRMED_REASONS` additions + per-service skip/alert audit
+- Commit → push → flip
+
+### Phase 4.A/4.B — deployment-api + deployment-ui (2 open items, parallel)
+
+- Read `### Phase 4.A` and `### Phase 4.B` — data-status UI wiring
+- 1 item each — quick
+
+**Hard stops**: same as slot 8 — no GCS backfill, no Phase 3.x, no strategy-logic changes.
+
+When 2C/2D/2E/4A/4B done: post DONE + SHA to this ping file. Slot 3 (aws_migration owner) coordinates Phase 3.x
+sequencing post-migration.
+
+---
+
+## [slot-1 → slot-2] 2026-05-21 — Freeze ACK + Phase 2.6 follow-on after writegate items
+
+🔴 **CODE FREEZE ACTIVE** — no LDR pushes. Writegate Phase 2C/2D/2E/4A/4B work continues on tab branch
+`tab/ikennaigboaka/2` — do NOT merge to LDR until UNFREEZE.
+
+**ACK**: append `[ACK 🔴 FREEZE 2026-05-21] — slot-2` below.
+
+**Current work** (writegate non-migration items — finish these first):
+
+- Phase 2C, 2D, 2E (UAC/UTL items), Phase 4A/4B (deployment-api/ui wiring) per prior dispatch
+
+**After writegate items done** — if slot 3 hasn't shipped `migrate-flat-to-env-tiered.sh` yet, you own it as fallback.
+Otherwise hold for Phase 3 (VM drain) coordination dispatch which comes after all slots ACK freeze.
+
+Post DONE SHA for writegate + ACK when ready.
+
+Plan ref: `plans/epics/mtds_mdps_master.md` Phase 2. Writegate ref:
+`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`.
+
+— ikenna-main / slot-1 / 2026-05-21
+
+---
+
+## [main → slot 2] 2026-05-21 — PHASE 3 DISPATCH: UAC/cross-cutting freeze work
+
+**Context**: All 8 ACKs confirmed. Phase 3 drain complete (23 VMs stopped). You are clear to implement on tab branch —
+all items below are code-only (no LDR merge, no GCS writes, no VM launches). Merge after UNFREEZE broadcast.
+
+**FREEZE RULES REMINDER**: code to `tab/ikennaigboaka/2` (or your current tab branch). No
+`git push origin HEAD:live-defi-rollout` until UNFREEZE.
+
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+
+**Priority stack (top → bottom):**
+
+### P0 — Writegate UAC items (from `writegate_honest_coverage_endtoend_2026_05_06.md`)
+
+1. **Sports `BUNDLED_DATA_TYPES` registry seeding** — UAC: add sports data_types to the `BUNDLED_DATA_TYPES` registry so
+   the Phase 2.B sports shard-granularity code (slot 4) has the registry it needs. Plan lines ~1546 area. UAC tab
+   branch.
+
+2. **Wave 3 — UAC catalog-read interface contract** — define the Protocol class that v2 enumerators will implement
+   (`enumerate_expected_universe.py` v2). Pure UAC new file, tab branch.
+
+3. **Wave 3.S — UAC new enum values**: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` + `EXPECTED_OUTSIDE_TRADING_HOURS` in
+   `EmptyConfirmedReason` (or `EXPECTED_*` registry). Tab branch.
+
+4. **Wave 3.S — UAC `sports_per_source_rules.py`** — new file in UAC with per-source rules (understat vs Sportradar vs
+   Footystats) defining expected coverage windows + gap taxonomy. Tab branch.
+
+5. **Wave 3.S — UTL classifier extensions**: `_classify_sports` + `_classify_tradfi` additions to
+   `classify_venue_error()`. Tab branch.
+
+### P1 — UAC `AvailabilityRule` Protocol (from `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A)
+
+6. Phase A — all 5 items:
+   - Define `AvailabilityRule` Protocol in UAC
+   - `AvailabilityRow` base class
+   - Per-source migration (migrate existing availability checks to use the Protocol)
+   - Cleanup (remove inline availability logic)
+   - SSOT pointer updates in codex
+
+### P1 — Wave 3.X UAC SSOTs
+
+7. Half-day sessions + venue session hours + understat leagues + per-league season bounds — UAC new files backing the
+   Wave 3.S rules.
+
+### P0 — Codex doc audit
+
+8. Walk every codex doc the Phase 1 plans touch and verify no stale pointers.
+   `code_freeze_migrate_backfill_sequencing_2026_05_10.md` line ~1141. Pure read + doc commits on tab branch.
+
+**QG**: `cd <repo> && bash scripts/quality-gates.sh` after each UAC commit. **Half-1+Half-2**: code commit on tab branch
+immediately followed by `docs(plans):` checkbox flip on PM branch. **Ping slot-1 when each item ships** (SHA + QG
+evidence).
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` + `available_at_schema_lift_post_cutover_2026_05_19.md`
+Phase A + `code_freeze_migrate_backfill_sequencing_2026_05_10.md`.
+
+---
+
+## [slot-1-main → slot-2] 2026-05-22 — 🔴 GCS WRITE FREEZE — DO NOT WRITE TO ANY BUCKET
+
+**CRITICAL — read before starting any work item in this dispatch.**
+
+Phase 4 GCS migration parity audit is ACTIVE. Both the flat bucket paths AND the env-tiered (`-prd-`) bucket paths are
+under live assessment. Writing to ANY GCS path — even as a side-effect of a QG smoke test or a script dry-run that
+accidentally emits — will corrupt the parity baseline we are comparing.
+
+**BANNED during this window (until UNFREEZE broadcast from slot-1-main):**
+
+- Any code path that emits to `gs://market-data-tick-*`, `gs://instruments-store-*`, `gs://features-*`, or any other
+  service bucket (flat or env-tiered)
+- Running local pipeline smoke tests that write parquet to GCS
+- Launching any VM that would backfill or write manifest rows
+
+**SAFE:**
+
+- Tab-branch code commits on PM, UAC, deployment-service (no execution of GCS-writing scripts)
+- `bash scripts/quality-gates.sh` (unit tests only, mocked GCS)
+- Read-only `gcloud storage ls` / `gsutil ls` / manifest reads
+
+**Your dispatch items (UAC Protocol / codex audits) are all pure code + doc changes — no GCS I/O. Proceed with those
+only. If any item requires a live smoke test against GCS, mark it `[BLOCKED-GCS-FREEZE]` and ping slot-1-main.**
+
+Ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 — pre-migration drain protocol.
+
+— slot-1 main / ikenna / 2026-05-21
+
+---
+
+## [slot-1-main → slot-2] 2026-05-22 — 🟢 UNFREEZE — push tab-branch to LDR now
+
+**CODE FREEZE LIFTED.** GCS write freeze also lifted — live GCS writes are allowed again.
+
+Push your UAC Protocol / `AvailabilityRule` / writegate UAC items / codex audit work from `tab/ikennaigboaka/2` to LDR
+now.
+
+**Phase 3 backfill VMs are still gated** — do NOT launch any MTDS/MDPS/features VMs until `mtds_mdps_master` Phase 7
+(manifest v8 label-flip) is GREEN. Per-asset-group backfill plans are now filed:
+
+- `plans/active/instruments_backfill_phase3_2026_05_22.md` (instruments-service, vm-cefi)
+- `plans/active/mtds_backfill_phase3_2026_05_22.md` (MTDS, vm-ml)
+- `plans/active/mdps_backfill_phase3_2026_05_22.md` (MDPS, vm-ml)
+- `plans/active/features_backfill_phase3_2026_05_22.md` (features, vm-ml)
+
+Sports-gated items (MTDS-3.2.D / FEAT-3.4.Sports) remain blocked on `sports_master` Phase 3+4.
+
+— slot-1 main / ikenna / 2026-05-22

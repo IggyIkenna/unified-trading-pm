@@ -4,7 +4,7 @@ created: 2026-05-15
 author: ikenna
 sources:
   - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)
-  - plans/epics/strategy_and_dart_master_2026_05_07.md Phase 1.9
+  - plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9)
 last_reviewed: 2026-05-17
 ---
 
@@ -92,23 +92,28 @@ separate batch-only process topology.
 
 Every strategy ensemble VM is launched via a dedicated script in `deployment-service/scripts/vm/`.
 
-| Asset group  | Launcher script                                          | VM name prefix         |
-| ------------ | -------------------------------------------------------- | ---------------------- |
-| `defi`       | `launch-defi-strategy-vm.sh` (Phase 1.9 — to be created) | `defi-strategy-`       |
-| `cefi`       | `launch-cefi-strategy-vm.sh` (Phase 1.9 — to be created) | `cefi-strategy-`       |
-| `tradfi`     | (existing backfill launchers — extend)                   | `tradfi-*`             |
-| `sports`     | (existing sports backfill launchers — extend)            | `sports-strategy-`     |
-| `prediction` | (future)                                                 | `prediction-strategy-` |
+| Asset group  | Launcher script                               | VM name prefix         |
+| ------------ | --------------------------------------------- | ---------------------- |
+| `defi`       | `launch-defi-strategy-vm.sh`                  | `defi-strategy-`       |
+| `cefi`       | `launch-cefi-strategy-vm.sh`                  | `cefi-strategy-`       |
+| `tradfi`     | (existing backfill launchers — extend)        | `tradfi-*`             |
+| `sports`     | (existing sports backfill launchers — extend) | `sports-strategy-`     |
+| `prediction` | (post-cutover — see below)                    | `prediction-strategy-` |
 
 All VM name prefixes MUST be registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` before launch. This is enforced
 by `TestVmPrefixRegistration::test_all_launch_prefixes_covered_by_watchdog`.
+
+> **[DELTA 2026-05-22]** **Current state:** DeFi and CeFi strategy VM launchers (`launch-defi-strategy-vm.sh`,
+> `launch-cefi-strategy-vm.sh`) were shipped as part of the May-23 cutover path. TradFi and Sports launchers extend
+> existing backfill launchers. Prediction VM launcher is post-cutover. **Planned delta:**
+> `plans/epics/strategy_master.md` tracks prediction launcher creation. **Target architecture:** All 5 asset-group
+> strategy VM launchers exist, registered in `VM_PREFIX_TO_BUCKET`, and enforced by `TestVmPrefixRegistration`.
 
 ---
 
 ## Colocation bootstrap
 
-The colocation bootstrap script (`deployment-service/scripts/vm/colocate-strategy-vm.sh`, Phase 1.9) runs on VM startup
-and:
+The colocation bootstrap script (`deployment-service/scripts/vm/colocate-strategy-vm.sh`) runs on VM startup and:
 
 1. Starts local Redis with `redis-server --daemonize yes --port 6379 --bind 127.0.0.1`
 2. Sets service-discovery env vars to localhost defaults
@@ -130,9 +135,12 @@ and:
 
 ---
 
-## Open items (post-May-23)
+## Open items (post-cutover)
 
-- Allocator service + dual-projection (Phase 1.9 post-cutover residuals)
+> **[DELTA 2026-05-22]** May-23 cutover landed 2026-05-23. Items below are deferred to the active post-cutover roadmap
+> tracked in [`strategy_master.md`](../../../../plans/epics/strategy_master.md).
+
+- Allocator service + dual-projection (Phase 1.9 residuals — see `strategy_master.md`)
 - IM-DESK + IM-CLIENT routing through the action-handler engine
 - Per-archetype Redis Stream isolation (currently shared within an asset-group VM)
 - Separate risk VM for asset groups with >5 concurrent archetypes

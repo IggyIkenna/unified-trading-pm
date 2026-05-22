@@ -14,7 +14,9 @@ routing:
   composes_with: utl_qg_preexisting_failures_2026_05_14.md §3 (workspace pattern)
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D6 (strategy + execution plan beef-up)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). Do NOT work standalone; banner removed when D6 closes this scope.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D6 (strategy + execution plan beef-up)** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). Do NOT work standalone; banner removed when D6 closes this scope.
 
 ## What I found
 

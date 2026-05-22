@@ -1,4 +1,7 @@
-[2026-05-19 15:00 UTC] slot-1-main → slot 7 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 7 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -693,58 +696,82 @@ S1-S15 items remain as previously flipped. Operator directed EOD stop.
 
 [2026-05-19 19:30 UTC] slot-7 → operator — OPERATOR APPROVAL REQUESTS for mock_data_pipeline_benchmarking_2026_05_10.md:
 
-3. **Phase 3.D subprocess harness run**: Reader wire-in shipped (MTDS@82639e0). Remaining: subprocess-mode run via `python -m unified_trading_library.synthetic --archetype carry_staked_basis --mode subprocess` + schema-drift assertion. Plan says "requires VM, needs operator sign-off." Options: (a) approve local subprocess run against real GCS (ADC creds available); (b) launch dedicated VM; (c) defer to `live_pipeline_mtds_mdps_features_2026_05_08` post-cutover. 3.C-followup (CEFI_BOOK_SNAPSHOT_5_SPEC) blocked on this.
+3. **Phase 3.D subprocess harness run**: Reader wire-in shipped (MTDS@82639e0). Remaining: subprocess-mode run via
+   `python -m unified_trading_library.synthetic --archetype carry_staked_basis --mode subprocess` + schema-drift
+   assertion. Plan says "requires VM, needs operator sign-off." Options: (a) approve local subprocess run against real
+   GCS (ADC creds available); (b) launch dedicated VM; (c) defer to `live_pipeline_mtds_mdps_features_2026_05_08`
+   post-cutover. 3.C-followup (CEFI_BOOK_SNAPSHOT_5_SPEC) blocked on this.
 
 [2026-05-19 19:15 UTC] slot-7 → operator — OPERATOR APPROVAL REQUESTS for tradfi_ohlcv_only_mvp_backfill_2026_05_15.md:
 
-1. **Phase 8 cost sign-off**: Backfill completed 2026-05-17 ~14:00 UTC. 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed across CME/NASDAQ/NYSE. Estimated ~$50-200 PAYG. DATABENTO_PAYG_SPEND events in GCS: early VMs (pre-10:05 UTC) pre-date emission code ship — actual figure needs Databento billing portal query (https://app.databento.com/billing). Please review and sign off on actual spend.
+1. **Phase 8 cost sign-off**: Backfill completed 2026-05-17 ~14:00 UTC. 216,876 captured + 7,365 empty_confirmed + 0
+   attempted_failed across CME/NASDAQ/NYSE. Estimated ~$50-200 PAYG. DATABENTO_PAYG_SPEND events in GCS: early VMs
+   (pre-10:05 UTC) pre-date emission code ship — actual figure needs Databento billing portal query
+   (https://app.databento.com/billing). Please review and sign off on actual spend.
 
-2. **ICE roots pick**: `launch-tradfi-bf-ice-ohlcv-1m.sh` has empty `ICE_ROOTS=()`. Slot-5 proposed defaults: `("BRN" "G")` for IFEU (Brent + Gasoil) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS (6 ICE softs). Each adds ~8 year-shard VMs, estimated <$10 PAYG for full 2019-2026 window. Please pick: (a) all 8, (b) BRN+G only (most liquid), (c) none for MVP, (d) custom subset.
+2. **ICE roots pick**: `launch-tradfi-bf-ice-ohlcv-1m.sh` has empty `ICE_ROOTS=()`. Slot-5 proposed defaults:
+   `("BRN" "G")` for IFEU (Brent + Gasoil) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS (6 ICE softs). Each adds ~8
+   year-shard VMs, estimated <$10 PAYG for full 2019-2026 window. Please pick: (a) all 8, (b) BRN+G only (most liquid),
+   (c) none for MVP, (d) custom subset.
 
 [2026-05-20 slot-8 resolution] Both items above handled in plan body:
-- Phase 8 cost sign-off: ✅ CLOSED in plan body — orchestrator task dispatch 2026-05-20 treated as implicit approval; operator to follow up on billing portal if spend exceeded ~$200 estimate.
-- ICE roots pick: ✅ DEFERRED in plan body — launcher scaffolding ships with empty `ICE_ROOTS=()`; operator to populate and re-run drain at next window. Slot-7 ping acknowledged; items are now BLOCKED-OPERATOR in plan. No further agent action needed on these two.
+
+- Phase 8 cost sign-off: ✅ CLOSED in plan body — orchestrator task dispatch 2026-05-20 treated as implicit approval;
+  operator to follow up on billing portal if spend exceeded ~$200 estimate.
+- ICE roots pick: ✅ DEFERRED in plan body — launcher scaffolding ships with empty `ICE_ROOTS=()`; operator to populate
+  and re-run drain at next window. Slot-7 ping acknowledged; items are now BLOCKED-OPERATOR in plan. No further agent
+  action needed on these two.
 
 [2026-05-19 12:15 UTC] main → slot 7 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/7/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/7/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 7` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 7**:
-dex_perp_onboarding_handover (6 cal) + gate_3_phantom + trigger_based_reference + hedge_ratio (URGENT deadline 2026-05-21) + small closes + sustain S9-S10 (~11 cal)
+**Today's assignment — Slot 7**: dex_perp_onboarding_handover (6 cal) + gate_3_phantom + trigger_based_reference +
+hedge_ratio (URGENT deadline 2026-05-21) + small closes + sustain S9-S10 (~11 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 7 — STARTED <first item>` below.
 
-[2026-05-20 07:15 UTC] slot-7 — AUDIT: migrated items 3.C-followup + 3.D still awaiting operator [ack] from 2026-05-19 19:30 UTC ping above. Items tagged BLOCKED-OPERATOR-DECISION in live_pipeline_mtds_mdps_features_2026_05_08.md. Slot-7 session complete: Phase 14 item 2 (replay-subsystem.md codex) SHIPPED (PM@a22aee69). No further agent-doable items in scope — remaining open items are operational (Phase 15 cluster bootstrap) or out-of-scope repos (Phase 9 alerting, Phase 13 deployment-service).
+[2026-05-20 07:15 UTC] slot-7 — AUDIT: migrated items 3.C-followup + 3.D still awaiting operator [ack] from 2026-05-19
+19:30 UTC ping above. Items tagged BLOCKED-OPERATOR-DECISION in live_pipeline_mtds_mdps_features_2026_05_08.md. Slot-7
+session complete: Phase 14 item 2 (replay-subsystem.md codex) SHIPPED (PM@a22aee69). No further agent-doable items in
+scope — remaining open items are operational (Phase 15 cluster bootstrap) or out-of-scope repos (Phase 9 alerting, Phase
+13 deployment-service).
 
 [2026-05-20 08:30 UTC] slot-7 → operator — OPERATOR APPROVAL REQUEST — Phase 1.B IAM roles
 
-BLOCKED-AWS-PERMISSIONS: `harsh-worker` (arn:aws:iam::427895769566:user/harsh-worker) does not have `iam:CreateRole` permission.
+BLOCKED-AWS-PERMISSIONS: `harsh-worker` (arn:aws:iam::427895769566:user/harsh-worker) does not have `iam:CreateRole`
+permission.
 
-Dry-run output: 30 roles would be created (10 services × 3 tiers: prod/staging/dev).
-Script: `deployment-service/scripts/aws/setup-iam-roles.sh --apply`
-Config SSOT: `deployment-service/configs/aws_iam_roles.yaml` (created at deployment-service@c6bd7c1)
-Role naming: `uts-{service}-{tier}` (e.g. `uts-features-service-prod`)
+Dry-run output: 30 roles would be created (10 services × 3 tiers: prod/staging/dev). Script:
+`deployment-service/scripts/aws/setup-iam-roles.sh --apply` Config SSOT: `deployment-service/configs/aws_iam_roles.yaml`
+(created at deployment-service@c6bd7c1) Role naming: `uts-{service}-{tier}` (e.g. `uts-features-service-prod`)
 
-Options: (a) grant `iam:CreateRole` to harsh-worker → agent runs script; (b) operator runs `bash scripts/aws/setup-iam-roles.sh --apply` with admin credentials; (c) DEFERRED-POST-CUTOVER (P0 but not blocking May-23 critical path per 2026-05-12 scope contraction)
+Options: (a) grant `iam:CreateRole` to harsh-worker → agent runs script; (b) operator runs
+`bash scripts/aws/setup-iam-roles.sh --apply` with admin credentials; (c) DEFERRED-POST-CUTOVER (P0 but not blocking
+May-23 critical path per 2026-05-12 scope contraction)
 
-Note: 1.E (Secrets Manager replication) is running now — 163 secrets being replicated to AWS SM (harsh-worker HAS secretsmanager:CreateSecret permission).
+Note: 1.E (Secrets Manager replication) is running now — 163 secrets being replicated to AWS SM (harsh-worker HAS
+secretsmanager:CreateSecret permission).
 
 [2026-05-20 08:45 UTC] slot-7 → operator — OPERATOR DECISION REQUEST — Phase 1.G AWS EC2 launcher twins
 
-1.G: ~40+ gcloud VM launcher scripts need AWS EC2 equivalents (`launch-*-vm-aws.sh`). aws CLI IS now available. 
+1.G: ~40+ gcloud VM launcher scripts need AWS EC2 equivalents (`launch-*-vm-aws.sh`). aws CLI IS now available.
 
-Options:
-(a) **DEFER post-cutover** — P1, not on May-23 critical path; defer to `aws_migration_defi_first` plan post-cutover
-(b) **Proceed now** — ~40 scripts to write; agent can do it but 6+ hours; fits within this task's 6h estimate
+Options: (a) **DEFER post-cutover** — P1, not on May-23 critical path; defer to `aws_migration_defi_first` plan
+post-cutover (b) **Proceed now** — ~40 scripts to write; agent can do it but 6+ hours; fits within this task's 6h
+estimate
 
 Note: 1.B (IAM roles) must be resolved first for any AWS EC2 launch to work (harsh-worker lacks iam:CreateRole).
 
@@ -752,22 +779,25 @@ Note: 1.B (IAM roles) must be resolved first for any AWS EC2 launch to work (har
 
 ## [2026-05-20] CREDENTIAL APPROVAL REQUEST — Copper sandbox (slot 7)
 
-**Context**: `defi_master_2026_05_07.md` line 738 Copper sandbox integration test.
-`CopperCustodyProvider` is fully implemented at `execution-service/execution_service/custody/copper.py`.
-25 unit tests pass. Integration test scaffold is in place and auto-skips when creds absent.
+**Context**: `defi_master.md` line 738 Copper sandbox integration test. `CopperCustodyProvider` is fully
+implemented at `execution-service/execution_service/custody/copper.py`. 25 unit tests pass. Integration test scaffold is
+in place and auto-skips when creds absent.
 
-**Vendor**: Copper.co sandbox — `https://api.sandbox.copper.co/platform`
-**What I need**: Three secrets in GCP Secret Manager (`central-element-323112`):
-  - `copper-sandbox-api-key`
-  - `copper-sandbox-api-secret`
-  - `copper-org-id` (or sandbox-specific `copper-sandbox-org-id`)
+**Vendor**: Copper.co sandbox — `https://api.sandbox.copper.co/platform` **What I need**: Three secrets in GCP Secret
+Manager (`central-element-323112`):
 
-**Account to use**: Existing operator Copper.co account; request sandbox access from Copper dashboard if not already active.
+- `copper-sandbox-api-key`
+- `copper-sandbox-api-secret`
+- `copper-org-id` (or sandbox-specific `copper-sandbox-org-id`)
+
+**Account to use**: Existing operator Copper.co account; request sandbox access from Copper dashboard if not already
+active.
 
 **Unblocks**:
-  - `defi × COPPER_MPC` June-1 per-wallet signing-surface flip (custody-providers.md § 2.3)
-  - Master plan Group F Item 19: "Copper + CEFFU treasury wired"
-  - `tests/integration/test_copper_custody_provider.py` TestCopperSandboxIntegration (currently skips)
+
+- `defi × COPPER_MPC` June-1 per-wallet signing-surface flip (custody-providers.md § 2.3)
+- Master plan Group F Item 19: "Copper + CEFFU treasury wired"
+- `tests/integration/test_copper_custody_provider.py` TestCopperSandboxIntegration (currently skips)
 
 **Without it**: Integration tests remain skipped; all 25 unit tests pass; adapter is production-ready.
 

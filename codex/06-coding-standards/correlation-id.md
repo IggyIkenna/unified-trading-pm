@@ -149,4 +149,4 @@ log_event(
 - `03-observability/lifecycle-events.md` — lifecycle events carry `correlation_id` in details
 - `07-security/compliance.md` — compliance events should include `correlation_id` for audit linkage
 - `07-security/audit-logging.md` — audit log schema includes `correlation_id`
-- Phase 3 plan: `obs-correlation-id-propagation` (end-to-end correlation_id)
+- End-to-end correlation_id propagation: `plans/epics/observability_master.md` (post-cutover scope)

@@ -112,15 +112,15 @@ depth table" — `feature_family` is the top-level shard axis above `feature_gro
 Seven cross-family helpers identified by Phase 0 audit as duplicated boilerplate, lifted into UTL so families inherit
 the canonical implementation:
 
-| Helper                     | Purpose                                                                        | Status (2026-05-08)                                                                                                                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LookaheadBiasError`       | Strict-mode raise when `input.available_at > target_ts - horizon`              | Lifted; 6-of-8 family adoption pending in `ml_and_features_master` Phase 2A/2B                                                                                                                    |
-| `WatermarkAlignmentFanin`  | Multi-source watermark alignment for live fan-in                               | Greenfield in UTL                                                                                                                                                                                 |
-| `BaseFeatureCalculator`    | Per-family abstract calculator base (lifecycle + write-gate + lookahead guard) | Lifted from per-family duplicates; **mandatory-validation `__init_subclass__` flip landed 2026-05-16 (UTL@ccc9b7bf, 48 calcs migrated)** — see § "Canonical BaseFeatureCalculator contract" below |
-| `BroadcastSink`            | Live-mode publish helper (Redis Streams + GCS dual-write)                      | Lifted                                                                                                                                                                                            |
-| `LiveDataSource`           | Live-mode input adapter (subscribe + watermark)                                | Lifted                                                                                                                                                                                            |
-| `BuilderEntry`             | Family registry entry shape (CLI dispatch + Health-API contract surface)       | Lifted                                                                                                                                                                                            |
-| `FeatureBatchHandler` base | Batch-mode handler base (CLI → calculator → manifest write-gate)               | Lifted                                                                                                                                                                                            |
+| Helper                     | Purpose                                                                        | Status (2026-05-08)                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LookaheadBiasError`       | Strict-mode raise when `input.available_at > target_ts - horizon`              | Lifted to UTL. Per-service wire-in approach superseded by repo consolidation: the helper goes ONCE into UTL `feature_service_base/` at the consolidated layer (per `features_and_ml_master` Q1 resolution — operator picked deferral until repo consolidation ships). Per-service adoption in features-\* DEFERRED pending writegate Phase 2.D adapter-side stamping + sports vocabulary alignment (Phase 1A.3). |
+| `WatermarkAlignmentFanin`  | Multi-source watermark alignment for live fan-in                               | Greenfield in UTL                                                                                                                                                                                                                                                                                                                                                                                                |
+| `BaseFeatureCalculator`    | Per-family abstract calculator base (lifecycle + write-gate + lookahead guard) | Lifted from per-family duplicates; **mandatory-validation `__init_subclass__` flip landed 2026-05-16 (UTL@ccc9b7bf, 48 calcs migrated)** — see § "Canonical BaseFeatureCalculator contract" below                                                                                                                                                                                                                |
+| `BroadcastSink`            | Live-mode publish helper (Redis Streams + GCS dual-write)                      | Lifted                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `LiveDataSource`           | Live-mode input adapter (subscribe + watermark)                                | Lifted                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `BuilderEntry`             | Family registry entry shape (CLI dispatch + Health-API contract surface)       | Lifted                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `FeatureBatchHandler` base | Batch-mode handler base (CLI → calculator → manifest write-gate)               | Lifted                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Some lifts ship in the same logical unit as Phase 5; others ride alongside Phase 6 / Phase 7 (per-family inline removal
 in same commit as the UTL lift, per the workspace "no double SSOT" rule). Phase 5 todo list owns the authoritative
@@ -271,6 +271,23 @@ Tab 4 (`batch_live_symmetry_2026_05_10.md`) shipped at features-service@954fe85c
 are now on UTL ModeHandler — the adoption table above (§ Canonical ModeHandler ABC) reflects the final state. No further
 bare-class families remain. Bare-class compat-path hard-delete scheduled post-prod-deploy (Tab 4 item 7).
 
+### Live streaming MVP — Phase 3 current state (2026-05-22)
+
+> **[DELTA 2026-05-22]** **Current state:** Live streaming activation for the `carry_staked_basis` MVP archetype is
+> in-flight under `plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` (status: active, P2
+> under `features_and_ml_master`). The paper VM `strategy-paper-carry-staked-basis-*` ticks but emits zero instructions
+> (`fills=0 PnL=$0.00`) because the preflight gate checks for funded feature groups that are not yet producing live
+> data. Key blockers: (1) `AssetScopedFeaturesRunner` + `CandleComputedEvent` consumer per family not yet wired for DeFi
+> onchain/Solana families; (2) `MatchingEngineExecutionProvider` AMM wrapper needed for Solana legs (`BookType.AMM`
+> raises `NotImplementedError`). Sports / Predictions / TradFi feature streaming are out of DeFi cutover gate scope.
+> **Planned delta:** `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` delivers: funding-rate APY
+> adapters (Binance/Bybit/OKX/Drift/Raydium/Orca), LST native-rates compute runner, live pipeline wiring, and AMM
+> execution provider. Gate: paper VM emits ≥1 instruction per tick for ≥7 consecutive days. **Target architecture:**
+> features-service deploys per-family as `AssetScopedFeaturesRunner` colocated with MDPS; live feature stream wires
+> through `BroadcastSink` (Redis Streams + GCS dual-write). `carry_staked_basis` consumes live DeFi onchain + Solana DEX
+> features within the same pipeline. All other asset-groups stream batch; live streaming activates per-archetype
+> post-cutover.
+
 ## Migration history
 
 Eight predecessor repos archived (commit history preserved via `git subtree add` per family):
@@ -287,8 +304,9 @@ Eight predecessor repos archived (commit history preserved via `git subtree add`
 | `features-service (multi-timeframe family)`  | `features_service/multi_timeframe/`  |
 
 Plan:
-[`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
-(see DONE-2026-05-08 table for per-family subtree-merge SHAs + Phase 7 archival status).
+[`../../plans/archive/features_repo_consolidation_2026_05_08.plan.md`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)
+(ARCHIVED 2026-05-21 — Phases 0-10 shipped; see DONE-2026-05-08 table for per-family subtree-merge SHAs + Phase 7
+archival status).
 
 ## Anti-patterns
 
@@ -319,8 +337,10 @@ Plan:
 - Live pipeline architecture:
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
-- Plan-of-record:
-  [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+- Consolidation plan-of-record (ARCHIVED 2026-05-21):
+  [`../../plans/archive/features_repo_consolidation_2026_05_08.plan.md`](../../plans/archive/features_repo_consolidation_2026_05_08.plan.md)
+- Live streaming MVP plan (active, P2 under `features_and_ml_master`):
+  [`../../plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md`](../../plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 - QG cleanup plan (Phase 1 complete, 0 test failures as of 2026-05-18):
   [`../../plans/active/features_service_qg_cleanup_2026_05_11.md`](../../plans/active/features_service_qg_cleanup_2026_05_11.md)
 

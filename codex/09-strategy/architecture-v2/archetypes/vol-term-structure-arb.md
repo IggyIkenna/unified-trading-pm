@@ -24,9 +24,8 @@ Exploits mispricings along the volatility term structure by simultaneously buyin
 selling vol at an overpriced tenor on the same underlying. The calendar spread is implemented via options at two expiry
 dates, isolating the term structure bet from outright directional vol exposure. The signal compares the current term
 structure slope (near IV / far IV ratio) against its rolling historical norm: a flat or inverted structure (front cheap
-relative to back) signals a buy-front / sell-back entry expecting re-steepening; a steep structure signals
-sell-front / buy-back expecting flattening. Profit is earned when the term structure shape normalises toward its
-historical average.
+relative to back) signals a buy-front / sell-back entry expecting re-steepening; a steep structure signals sell-front /
+buy-back expecting flattening. Profit is earned when the term structure shape normalises toward its historical average.
 
 ## Token / position flow
 
@@ -111,10 +110,13 @@ VOL_TERM_STRUCTURE_ARB@cboe-spx-calendar-monthly-usd-prod
 
 ## Not in this archetype
 
-- Continuous parametric slope signal (Heston/SVI fit, daily refit) → [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
+- Continuous parametric slope signal (Heston/SVI fit, daily refit) →
+  [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
 - Outright single-tenor short-vol premium harvest → [`VOL_CARRY`](vol-carry.md)
-- Cross-asset vol spread (two correlated underlyings, same tenor) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
-- Long-dated convexity via LEAPS (single far tenor, no calendar spread) → [`VOL_LEAPS_CONVEXITY`](vol-leaps-convexity.md)
+- Cross-asset vol spread (two correlated underlyings, same tenor) →
+  [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- Long-dated convexity via LEAPS (single far tenor, no calendar spread) →
+  [`VOL_LEAPS_CONVEXITY`](vol-leaps-convexity.md)
 
 ## See also
 

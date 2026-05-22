@@ -1,6 +1,6 @@
 ---
 title: Cloud-Agnostic Build Lineage
-status: planned
+status: stub-post-cutover
 created: 2026-05-07
 authoritative_for:
   How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and
@@ -17,8 +17,9 @@ last_reviewed: 2026-05-17
 
 # Cloud-Agnostic Build Lineage
 
-> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
-> the work shipped by the referencing plan progresses.
+> **[DELTA 2026-05-22]** **Current state:** Dual-cloud artifact parity is NOT YET implemented. VM tarball deployment is the live path (see `codex/05-infrastructure/vm-tarball-deployment.md`). No cross-cloud image mirror or SHA-pinned artifact registry exists yet. **Planned delta:** Dual-cloud build lineage tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Single git SHA produces parity-verified Docker images in both GCP Artifact Registry and AWS ECR + code tarballs on both S3 and GCS.
+
+> **Status:** STUB (post-cutover) — created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as the work progresses post-cutover.
 
 ## Purpose
 
@@ -61,5 +62,6 @@ running in production must trace back to a known git SHA + builder run on both c
 
 - Does GHA push directly to AWS ECR, or do we relay via Cloud Build → cross-cloud copy? (cost vs latency tradeoff)
 - Where does the lineage JSONL live — GCS bucket, S3, or both with consolidator? (recommend: write to both, reconcile)
-- Do we sign images (cosign / notation) on both clouds for supply-chain provenance? (post-May-23 work?)
+- Do we sign images (cosign / notation) on both clouds for supply-chain provenance? (post-cutover work? see
+  `infrastructure_master.md`)
 - How do we test parity in CI vs only at promote-time? (per-PR vs per-merge)

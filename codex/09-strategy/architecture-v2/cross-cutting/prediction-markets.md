@@ -1,6 +1,16 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-22
 ---
+
+> **[DELTA 2026-05-22 — KALSHI API URL MIGRATION]** **Current state:** Kalshi migrated its API to
+> `api.elections.kalshi.com`. The old host `trading-api.kalshi.com` (and any examples using `api.kalshi.com`) returns
+> HTTP 401. All 17 code sites across 5 repos were updated in Phase 1 of
+> `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` (UAC@`5729197`, IS@`79ad855`, MTDS@`28b84ce`,
+> EXS@`8a3cbe48`, UI@`664c3992`). Cassettes re-recorded. **Any inline code examples in this doc that reference
+> `api.kalshi.com` or `trading-api.kalshi.com` are stale — use `api.elections.kalshi.com` instead.** Phase 3 (credential
+> unblock + integration verification) is `BLOCKED-CREDENTIALS` pending
+> `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
 
 # Prediction Markets — Cross-Cutting Concern
 
@@ -286,7 +296,7 @@ while True:
     params = {"status": "open", "limit": 100}
     if cursor: params["cursor"] = cursor
     resp = requests.get(
-        "https://api.kalshi.com/trade-api/v2/markets",
+        "https://api.elections.kalshi.com/trade-api/v2/markets",  # Updated 2026-05-22: migrated from trading-api.kalshi.com per kalshi_api_migration_to_elections_subdomain_2026_05_20.md
         params=params, headers=kalshi_auth_headers()
     )
     data = resp.json()

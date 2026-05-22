@@ -18,17 +18,17 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 
 ### Ownership
 
-| Concern                                  | Owner                                          | Location                                                               |
-| ---------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------- |
-| External schemas                         | UAC                                            | `external/binance/`, `external/bybit/`, `external/deribit/`, etc.      |
-| Normalize (instrument)                   | UAC                                            | `external/{venue}/normalize.py`                                        |
-| Error codes                              | UAC                                            | `canonical/crosscutting/errors/cefi.py`, `onchain_perps.py`            |
-| Venue registry                           | UAC                                            | `registry/venue_constants.py`, `VenueMapping`                          |
+| Concern                                  | Owner                                                                      | Location                                                               |
+| ---------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| External schemas                         | UAC                                                                        | `external/binance/`, `external/bybit/`, `external/deribit/`, etc.      |
+| Normalize (instrument)                   | UAC                                                                        | `external/{venue}/normalize.py`                                        |
+| Error codes                              | UAC                                                                        | `canonical/crosscutting/errors/cefi.py`, `onchain_perps.py`            |
+| Venue registry                           | UAC                                                                        | `registry/venue_constants.py`, `VenueMapping`                          |
 | Instrument discovery                     | instruments-service (ref data — formerly unified-reference-data-interface) | `adapters/tardis.py`, `adapters/binance.py`, `adapters/aster.py`, etc. |
-| Market data (ticks)                      | UMI                                            | `adapters/cefi/` (Tardis WebSocket, CCXT REST)                         |
-| Instrument orchestration                 | instruments-service                            | `--CEFI` flag, `_process_cefi_exchanges()`                             |
-| Market data orchestration                | market-tick-data-service                       | CeFi download handlers                                                 |
-| Config (which venues, batch/live source) | UCI                                            | `InstrumentProcessingConfig` in cloud storage                          |
+| Market data (ticks)                      | UMI                                                                        | `adapters/cefi/` (Tardis WebSocket, CCXT REST)                         |
+| Instrument orchestration                 | instruments-service                                                        | `--CEFI` flag, `_process_cefi_exchanges()`                             |
+| Market data orchestration                | market-tick-data-service                                                   | CeFi download handlers                                                 |
+| Config (which venues, batch/live source) | UCI                                                                        | `InstrumentProcessingConfig` in cloud storage                          |
 
 ### Current state: CLEAN
 
@@ -61,7 +61,8 @@ Databento (CME, ICE, NASDAQ, NYSE, CBOE), IBKR, Yahoo Finance, ECB, OFR, Barchar
 
 ### Current state: CLEAN
 
-- instruments-service TradFi path uses reference data adapters (formerly unified-reference-data-interface Databento adapter)
+- instruments-service TradFi path uses reference data adapters (formerly unified-reference-data-interface Databento
+  adapter)
 - 5 venues producing 959,203 instruments
 - All error codes classified (100%)
 - Symbology moved from instruments-service to UAC registry
@@ -108,23 +109,23 @@ etc.
 
 ### Ownership
 
-| Concern                        | Owner                            | Location                                                                                                                                                                                             |
-| ------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| External schemas               | UAC                              | `external/betfair/schemas.py`, `external/api_football/schemas.py`, `external/odds_api/schemas.py`, `external/polymarket/schemas.py`, `external/opticodds/schemas.py`, `external/pinnacle/schemas.py` |
-| Normalize (fixture)            | UAC                              | `external/api_football/normalize.py`, `external/odds_api/normalize.py`                                                                                                                               |
-| Normalize (odds/market)        | UAC                              | `external/betfair/normalize.py`, `external/polymarket/normalize.py`                                                                                                                                  |
-| Canonical schemas              | UAC                              | `canonical/domain/sports/fixture.py`, `odds.py`, `betting.py`, `bookmaker.py`, `league_registry.py`                                                                                                  |
-| Error codes                    | UAC                              | `canonical/crosscutting/errors/sports.py`                                                                                                                                                            |
-| Venue registry                 | UAC                              | `registry/_sports_venue_constants.py`, `registry/endpoints.py`                                                                                                                                       |
-| Team/league mappings           | UAC                              | `canonical/domain/sports/league_data*.py`, `team_mapping_data_*.py`                                                                                                                                  |
-| Competition phases             | USRI                             | `competition_phase.py` (stub — needs buildout)                                                                                                                                                       |
-| Fixture connectivity           | USRI                             | **NOT YET BUILT** — should call API Football, use UAC normalize                                                                                                                                      |
-| Market instrument connectivity | instruments-service (ref data)   | `adapters/betfair.py`, `adapters/polymarket.py` (shells exist, error classification wired)                                                                                                           |
-| Internal storage contracts     | UIC                              | `sports.py` (fixture storage schema)                                                                                                                                                                 |
-| Domain data client             | UDC/UTL                          | `sports/fixtures_client.py` (GCS read/write)                                                                                                                                                         |
-| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser instead of the in-service reference-data adapters** (USRI/unified-reference-data-interface retired 2026 — merged into instruments-service `sports/` sub-package)         |
-| Feature computation            | features-service (sports family) | Features from fixture/odds data                                                                                                                                                                      |
-| Config                         | UCI                              | Which leagues, which venues, polling intervals                                                                                                                                                       |
+| Concern                        | Owner                            | Location                                                                                                                                                                                                                 |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| External schemas               | UAC                              | `external/betfair/schemas.py`, `external/api_football/schemas.py`, `external/odds_api/schemas.py`, `external/polymarket/schemas.py`, `external/opticodds/schemas.py`, `external/pinnacle/schemas.py`                     |
+| Normalize (fixture)            | UAC                              | `external/api_football/normalize.py`, `external/odds_api/normalize.py`                                                                                                                                                   |
+| Normalize (odds/market)        | UAC                              | `external/betfair/normalize.py`, `external/polymarket/normalize.py`                                                                                                                                                      |
+| Canonical schemas              | UAC                              | `canonical/domain/sports/fixture.py`, `odds.py`, `betting.py`, `bookmaker.py`, `league_registry.py`                                                                                                                      |
+| Error codes                    | UAC                              | `canonical/crosscutting/errors/sports.py`                                                                                                                                                                                |
+| Venue registry                 | UAC                              | `registry/_sports_venue_constants.py`, `registry/endpoints.py`                                                                                                                                                           |
+| Team/league mappings           | UAC                              | `canonical/domain/sports/league_data*.py`, `team_mapping_data_*.py`                                                                                                                                                      |
+| Competition phases             | USRI                             | `competition_phase.py` (stub — needs buildout)                                                                                                                                                                           |
+| Fixture connectivity           | USRI                             | **NOT YET BUILT** — should call API Football, use UAC normalize                                                                                                                                                          |
+| Market instrument connectivity | instruments-service (ref data)   | `adapters/betfair.py`, `adapters/polymarket.py` (shells exist, error classification wired)                                                                                                                               |
+| Internal storage contracts     | UIC                              | `sports.py` (fixture storage schema)                                                                                                                                                                                     |
+| Domain data client             | UDC/UTL                          | `sports/fixtures_client.py` (GCS read/write)                                                                                                                                                                             |
+| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser instead of the in-service reference-data adapters** (USRI/unified-reference-data-interface retired 2026 — merged into instruments-service `sports/` sub-package) |
+| Feature computation            | features-service (sports family) | Features from fixture/odds data                                                                                                                                                                                          |
+| Config                         | UCI                              | Which leagues, which venues, polling intervals                                                                                                                                                                           |
 
 ### Current state: NEEDS WORK
 
@@ -142,8 +143,8 @@ etc.
   instead
 - `instruments-service/sports/` stub (formerly USRI; **Retired 2026** — merged into instruments-service) is a 192-line
   stub — needs API Football connectivity + UAC normalize wiring
-- instruments-service `--SPORTS` doesn't call the in-service reference-data adapters (formerly USRI/unified-reference-data-interface; **Retired
-  2026**) — uses local code
+- instruments-service `--SPORTS` doesn't call the in-service reference-data adapters (formerly
+  USRI/unified-reference-data-interface; **Retired 2026**) — uses local code
 - `new-sports-batting-services` has independent `Fixture`, `Team`, `League` models — migration target, not SSOT
 
 **Migration path** (from `new-sports-batting-services`):

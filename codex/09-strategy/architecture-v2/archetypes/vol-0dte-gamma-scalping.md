@@ -14,20 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_0DTE_GAMMA_SCALPING`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Same-day expiry — 0DTE
-> straddles bought and delta-hedged intraday; all positions close at or before daily expiry. **Code module
-> (target):** `strategy-service/engine/strategies/v2/vol_trading/vol_0dte_gamma_scalping_engine.py`
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Same-day expiry — 0DTE straddles bought
+> and delta-hedged intraday; all positions close at or before daily expiry. **Code module (target):**
+> `strategy-service/engine/strategies/v2/vol_trading/vol_0dte_gamma_scalping_engine.py`
 
 ## What it does
 
-Buys 0DTE (zero days to expiry) straddles at the start of the trading session when their implied vol is cheap
-relative to the expected intraday price range, then captures realized gamma by delta-hedging frequently as the
-underlying moves throughout the day. The edge is that 0DTE straddles, despite their low absolute premium, can
-have high realized gamma relative to their theta cost when intraday realized vol exceeds the IV priced in.
-Large gamma at 0DTE means the delta of each option changes rapidly with spot price moves, allowing frequent
-profitable hedge trades. The strategy requires fast delta-hedge execution and is sensitive to intraday vol
-versus the overnight theta that set the straddle price. Works primarily on BTC and ETH on Deribit, which
-offers daily option expirations with sufficient liquidity.
+Buys 0DTE (zero days to expiry) straddles at the start of the trading session when their implied vol is cheap relative
+to the expected intraday price range, then captures realized gamma by delta-hedging frequently as the underlying moves
+throughout the day. The edge is that 0DTE straddles, despite their low absolute premium, can have high realized gamma
+relative to their theta cost when intraday realized vol exceeds the IV priced in. Large gamma at 0DTE means the delta of
+each option changes rapidly with spot price moves, allowing frequent profitable hedge trades. The strategy requires fast
+delta-hedge execution and is sensitive to intraday vol versus the overnight theta that set the straddle price. Works
+primarily on BTC and ETH on Deribit, which offers daily option expirations with sufficient liquidity.
 
 ## Token / position flow
 
@@ -74,8 +73,8 @@ offers daily option expirations with sufficient liquidity.
 
 ## Entry conditions + signal
 
-- `expected_intraday_rv > entry_rv_to_iv_ratio × straddle_0dte_iv` (e.g. ratio = 1.15 — expect 15%
-  more intraday vol than the straddle prices in)
+- `expected_intraday_rv > entry_rv_to_iv_ratio × straddle_0dte_iv` (e.g. ratio = 1.15 — expect 15% more intraday vol
+  than the straddle prices in)
 - Straddle ask <= max_straddle_cost_pct × spot (e.g. 0.005 = 0.5% of spot price cap)
 - Session opens within trading_session_start_utc ± entry_window_min
 - Sufficient underlying liquidity for high-frequency delta hedging (perp bid-ask < max_perp_spread_bps)
@@ -85,12 +84,12 @@ offers daily option expirations with sufficient liquidity.
 
 - Max loss = initial straddle premium paid (long vol, bounded loss)
 - Theta stop: exit early if session looks unproductive (theta eroding faster than scalp income)
-- Scalp fee discipline: each scalp must exceed 2× taker fee in expected gamma P&L; use wider scalp
-  threshold if fees are high
+- Scalp fee discipline: each scalp must exceed 2× taker fee in expected gamma P&L; use wider scalp threshold if fees are
+  high
 - Vol collapse exit: if intraday vol collapses, the scalp opportunity is gone — cut losses early
 - Expiry discipline: HARD close before expiry to avoid binary expiry P&L and pin risk
-- Perp hedge slippage: large delta swings near strong support/resistance can cause hedge slippage;
-  use limit orders when market is not fast-moving
+- Perp hedge slippage: large delta swings near strong support/resistance can cause hedge slippage; use limit orders when
+  market is not fast-moving
 
 ## Config parameters
 
@@ -113,12 +112,12 @@ offers daily option expirations with sufficient liquidity.
 
 ## When to use / market regime
 
-- **Best regime**: high realized-vol days with frequent intraday price swings; particularly good during
-  macro print days, token unlock events, or after overnight large moves that suggest continuation
-- **Avoid**: post-event quiet days where overnight vol was high but intraday is expected to calm;
-  also avoid Sundays/holidays with thin perp liquidity that makes delta hedging expensive
-- **Latency requirement**: premium SLA tier — scalp hedge trades must execute within 100ms of trigger;
-  deploy on low-latency infrastructure near Deribit matching engine
+- **Best regime**: high realized-vol days with frequent intraday price swings; particularly good during macro print
+  days, token unlock events, or after overnight large moves that suggest continuation
+- **Avoid**: post-event quiet days where overnight vol was high but intraday is expected to calm; also avoid
+  Sundays/holidays with thin perp liquidity that makes delta hedging expensive
+- **Latency requirement**: premium SLA tier — scalp hedge trades must execute within 100ms of trigger; deploy on
+  low-latency infrastructure near Deribit matching engine
 - **Asset fit**: BTC and ETH exclusively (Deribit 0DTE daily expirations; ETH also has fine liquidity)
 - **Complements**: `VOL_CARRY` (0DTE scalping as active gamma collection; carry as passive theta harvest)
 

@@ -4,6 +4,12 @@ scope: [engineer, admin]
 
 # Foundational Repos Audit — 2026-03-07
 
+> **Historical snapshot (2026-03-07).** All grades, QG statuses, and suppression counts reflect the state of the
+> workspace on 2026-03-07. Significant refactoring has occurred since then (features-service consolidation, QG step
+> hardening through STEP 5.70, manifest v8 migration, bucket SSOT canonicalisation, etc.). The "0 of 18 repos have a
+> passing quality gate" headline was the Mar-07 state; re-run `bash scripts/quality-gates.sh` per-repo for current QG
+> status. Use `codex/10-audit/repos/{repo-name}.yaml` for the current CR/DR/BR readiness state.
+
 **SSOT:** This document. Registered in `unified-trading-pm/codex/00-SSOT-INDEX.md`. **Scope:** 18 pre-service repos
 (T0–T3 + system-integration-tests) + 10-section workspace-level audit. **Method:** 18 parallel per-repo agents + 10
 parallel workspace-category agents. **Note on coverage:** 5 per-repo agents hit rate limits mid-run; findings recovered

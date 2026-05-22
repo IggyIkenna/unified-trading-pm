@@ -111,8 +111,8 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
   shards (asset_group, source, data_type, league_id, fixture_id_or_day).
 - CLAUDE.md § "Sports GCS path SSOT" — the workspace rule that mandates resolver usage; this codex doc is its durable
   home.
-- [`plans/epics/sports_master_2026_05_07.md`](../../plans/epics/sports_master_2026_05_07.md) — sports asset_group
-  umbrella; cites this SSOT as the path-layout authority.
+- [`plans/epics/sports_master.md`](../../plans/epics/sports_master.md) — sports asset_group umbrella; cites this SSOT as
+  the path-layout authority.
 
 ## Reviewer checklist
 

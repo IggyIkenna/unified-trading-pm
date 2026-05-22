@@ -1,0 +1,142 @@
+---
+title: DeFi expected_coverage VENUE-CHAIN phantom entries + handler naming inconsistency
+created: 2026-05-22
+author: slot-1-main
+source:
+  - data-status UI audit 2026-05-22
+  - expected_coverage.py code review
+locked_by: live-defi-rollout
+parent_epic: epics/infrastructure_master.md
+assigned_vm: planning-vm
+---
+
+## What I found
+
+### Bug 1 (FIXED 2026-05-22): All DEX/lending entries in `_DEFI` were phantom
+
+`expected_coverage.py` `_DEFI` used `VENUE-CHAIN` format keys (`"UNISWAPV3-ETHEREUM"`, `"AAVEV3-ETHEREUM"`, etc.) but
+`is_expected()` does a plain `ag_scope.get(venue, [])` lookup using the raw `venue` field from the manifest.
+
+Current handlers write `venue=protocol.upper()` with chain as a SEPARATE manifest field:
+
+- `dex_pools_handler` / `dex_swaps_handler`: `"uniswap_v3".upper()` = `"UNISWAP_V3"` + `chain="ETHEREUM"`
+- `evm_defi_handler`: `"aave_v3".upper()` = `"AAVE_V3"` + `chain="ETHEREUM"`
+
+So `is_expected("defi", "UNISWAP_V3", "dex_pools")` → `_DEFI.get("UNISWAP_V3", [])` → `[]` → not expected. The
+`"UNISWAPV3-ETHEREUM"` key in `_DEFI` only matches if `venue="UNISWAPV3-ETHEREUM"` in the manifest, which no handler
+writes.
+
+**Impact**: ALL DEX and lending shard counts were missing from the denominator. The 88.5% DeFi coverage score was
+computed excluding all UNISWAP_V3, AAVE_V3, COMPOUND_V3, MORPHO, BALANCER, CURVE etc. shards.
+
+**Fix shipped**: UAC@3d43382b — replaced all VENUE-CHAIN format entries with flat venue names matching actual handler
+output. Both legacy VENUE-CHAIN format entries (e.g. `"UNISWAPV3-ETHEREUM"`) AND flat format entries (e.g.
+`"UNISWAP_V3"`) now coexist in `_DEFI` to cover migrated rows until a phantom reconciler pass removes era-2 names.
+
+### Bug 2 (OPEN): Handler venue naming inconsistency — `AAVE_V3` vs `AAVEV3`
+
+Different handlers write different venue names for Aave V3:
+
+- `evm_defi_handler.py` (lending_indices, position_data EVM path): `"aave_v3".upper()` = `"AAVE_V3"` (underscore)
+- `flash_loan_events_handler.py`: hardcoded `venue="AAVEV3"` (no underscore)
+- `position_data_handler.py`: hardcoded `venue="AAVEV3"` (no underscore)
+- `liquidations_handler.py`: uses `protocol.upper()` where protocol may be `"aavev3"` → `"AAVEV3"`
+
+This creates two distinct venue rows in the manifest for the same protocol. Both `AAVE_V3` and `AAVEV3` appear as
+separate venues in the data-status UI.
+
+**Workaround in place**: Both `"AAVE_V3"` and `"AAVEV3"` added to `expected_coverage._DEFI`.
+
+**Required fix**: Normalise all Aave handlers to `venue="AAVE_V3"` (underscore, matching evm_defi_handler convention).
+File: `flash_loan_events_handler.py`, `position_data_handler.py`, `liquidations_handler.py`.
+
+### Bug 3 (OPEN): Ghost venue entries in manifest from old naming eras
+
+GCS manifest parquets contain rows from 3+ naming convention eras:
+
+- Era 1 (oldest): `venue="UNISWAP_V3"` (underscore, pre-capabilities)
+- Era 2: `venue="UNISWAPV3"` (no underscore, capabilities-era)
+- Era 3 (current): `venue="UNISWAP_V3"` (underscore, back to era 1 via `protocol.upper()`)
+
+Same pattern for AAVEV3/AAVE_V3, COMPOUNDV3/COMPOUND_V3, MORPHOVAULTS/MORPHO_VAULTS, etc.
+
+Ghost entries (UNISWAPV2, UNISWAPV3, COMPOUNDV3, AAVEV3 from era-2 handlers) show in the UI as venues with no data bar.
+
+**UPDATED 2026-05-22 schema audit findings (schema check complete)**:
+
+Consolidated manifest ghost rows vs canonical per-VM shard rows (audited 2026-05-22):
+
+| Venue          | Consolidated manifest                        | Per-VM shard (local-10889) | GCS canonical parquets                            |
+| -------------- | -------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| `UNISWAPV3`    | 187,769 rows captured, 2024-05-06→2026-01-23 | —                          | at `venue=UNISWAPV3-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V3`   | **0 rows**                                   | 187,769 rows captured      | ✅ EXIST at canonical split path, full date range |
+| `UNISWAPV2`    | 22,168 rows captured, 2024-05-03→2026-01-24  | —                          | at `venue=UNISWAPV2-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V2`   | **0 rows**                                   | 20,254 rows captured       | ✅ EXIST at canonical split path, full date range |
+| `AAVEV3`       | 29,782 rows captured, 2024-05-02→2026-01-23  | —                          | at `venue=AAVEV3-ETHEREUM/` (VENUE-CHAIN)         |
+| `AAVE_V3`      | **0 rows**                                   | 27,482 rows captured       | ✅ EXIST at canonical split path, full date range |
+| `MORPHOVAULTS` | 2,325 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
+| `YEARNV3`      | 2,324 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
+
+**Root cause — NOT a GCS migration problem**: Canonical GCS parquets already exist at canonical split paths for ALL
+ghost date ranges. The fix is manifest-only. The consolidator's **incremental merge skips `local-10889-bd08.parquet`**
+(written 2026-05-03) because it predates the current consolidated index (updated 2026-05-22 03:44 UTC). Canonical per-VM
+shard rows sit unreachable.
+
+**Schema comparison (UNISWAPV3-ETHEREUM parquet vs UNISWAP_V3 canonical parquet)**:
+
+- Old (30 cols): in-file `data_type='swaps'/'liquidity'`, missing `instrument_id`, `chain`, `instrument_type`
+- Canonical (33 cols): in-file `data_type='dex_pool_state'`, has all three extra columns
+- **For AAVE_V3**: manifest data_types match between ghost and canonical rows: `oracle_prices`, `rate_indices`,
+  `risk_params`, `utilization` — GCS confirms these data_types exist at canonical `AAVE_V3/` path
+
+**Why phantom reconciler still won't work**: Ghost consolidated manifest rows say `venue=UNISWAPV3 chain=ETHEREUM` →
+reconciler probes `venue=UNISWAPV3/chain=ETHEREUM/` path → MISS (parquets at `UNISWAPV3-ETHEREUM/`). Would incorrectly
+flip to `attempted_failed`.
+
+**Required fix — manifest-only (no GCS migration needed)**:
+
+1. Re-upload `_index/per_vm/local-10889-bd08.parquet` as a new dated corrector shard (e.g.
+   `ikenna-slot1-canonical-defi-20260522.parquet`) so consolidator incremental merge picks it up. Adds UNISWAP_V3
+   (187k), UNISWAP_V2 (20k), AAVE_V3 (27k), UNISWAP_V4 (6.5k) rows to consolidated manifest.
+2. In the same corrector shard: write superseding rows for ghost venues (UNISWAPV3, UNISWAPV2, AAVEV3) with newer
+   `attempted_at` timestamp and `capture_status='empty_confirmed'` + valid `EmptyConfirmedReason`. Consolidator
+   last-write-wins on `(date, venue, data_type, ...)` key — ghost rows get overridden.
+3. Verify `EmptyConfirmedReason` enum has a suitable reason for venue-renamed rows (check UAC
+   `canonical.crosscutting.honest_coverage.EmptyConfirmedReason`). If not, add one.
+4. Run manifest consolidator to pick up the new shard.
+5. Old parquets at VENUE-CHAIN paths (`UNISWAPV3-ETHEREUM/`) can remain — canonical split-path parquets already have the
+   same data with correct 33-column schema.
+
+### Bug 4 (OPEN): LST venue name `ANKR` confusingly displayed
+
+ANKR in the DeFi data-status is the **Ankr Staking Protocol** (ankrETH LST), NOT an RPC provider. The LST handler maps
+`ankrETH → "ankr" → "ANKR"` and writes `data_type="lst_rates"`. It appears alphabetically between AAVE_V3 and BALANCER
+under the ETHEREUM chain, making it look like a sub-item of AAVE_V3.
+
+No functional bug — coverage is correct (99.9%). The confusion is a UI grouping issue: LST protocol venues (ANKR,
+ROCKETPOOL, STADER etc.) are intermixed with DeFi protocol venues (AAVE_V3, UNISWAP_V3) in the same list. A
+`data_source_type` taxonomy would separate them.
+
+Tracked as follow-on: `defi_coverage_capability_alignment_2026_05_22.md` (this doc) — extend with `data_source_type`
+enum.
+
+## Why it matters
+
+- Missing shard counts from denominator → overall DeFi coverage % misleadingly high (excludes all DEX/lending volume)
+- Operator cannot trust the 88.5% figure until Bug 2+3 are resolved
+- New agents reading expected_coverage will get wrong denominator unless Bugs 2+3 are fixed
+
+## Recommended decision
+
+- [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
+- [ ] Bug 2: Normalise AAVEV3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
+      Assign to MTDS slot.
+- [x] Bug 3: ✅ Manifest-only fix shipped — IS@dbf7bf6 (2026-05-22). Corrector shard uploaded to
+      `_index/per_vm/ikenna-slot1-ghost-venue-corrector-defi-20260522.parquet`. Consolidator run manually. Canonical
+      rows now in manifest: UNISWAP_V3 (187k), UNISWAP_V2 (22k), AAVE_V3 (30k), UNISWAP_V4 (15k). Ghost venues
+      UNISWAPV3/V2/AAVEV3 flipped to empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE.
+- [ ] Bug 4: Post-cutover — add `data_source_type` taxonomy enum.
+
+## Temporary states + their canonical follow-up plans
+
+- `"AAVEV3"` in expected_coverage: stays until Bug 2 handler fix ships + phantom reconciler runs for Bug 3.

@@ -1,0 +1,144 @@
+---
+name: manifest_master
+title: "Manifest Master (L1)"
+type: epic
+tier: L1
+status: active
+priority: P0
+assigned_vm: vm-defi
+parent: master_to_live_defi_2026_05_23
+created: 2026-05-21
+last_updated: 2026-05-21
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+related_plans:
+  - ../active/bucket_name_ssot_canonicalisation_2026_05_10.md
+  - ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md
+  - ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md
+  - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
+  - ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md
+  - ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md
+  - ../active/honest_coverage_formula_consolidation_2026_05_19.md
+  - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
+  - ../active/manifest_schema_final_gate_2026_05_09.md
+---
+
+# Manifest Master (L1)
+
+**Owns**: manifest schema (v8 current; evolution discipline) + honest absence taxonomy + backfill execution (Stages
+0-4) + GCS data layout + IS↔MTDS contract enforcement. The 3-axis batch invariant: every manifest schema change + every
+writer code change + every on-disk GCS data layout change MUST land together at one of this epic's gates.
+
+**Assigned VM**: `vm-defi` (co-located with `defi_master` — manifest backfill is the primary DeFi pain).
+
+## Scope inherited from `manifest_evolution_SUPERSEDED_2026_05_21` + `manifest_migration_SUPERSEDED_2026_05_21` (consolidated 2026-05-21)
+
+Two pre-2026-05-21 masters were consolidated into this single everlasting epic:
+
+### From `manifest_evolution_SUPERSEDED` (schema + writer code + GCS data layout co-evolve)
+
+3-axis batch invariant:
+
+1. **Schema axis** — UAC `honest_coverage` declarations + manifest parquet column shape + closed-set enums
+   (`EMPTY_CONFIRMED_REASONS`, `BUNDLED_DATA_TYPES`, `ServiceEmissionPolicy`).
+2. **Writer code axis** — UTL `ManifestWriter` (`record_captured` / `record_empty` / `record_failed` /
+   `record_expected_unattempted`), per-adapter callsites, `assert_available_at_present`, cluster validation kwargs, QG
+   STEP 5.64 + 5.66.
+3. **GCS data layout axis** — on-disk parquet partitions (`pipeline_mode=` hive key, `asset_group=` canonical key),
+   per-VM shard partitions, manifest consolidator output.
+
+Drift between any two axes = silent correctness bug. Banned: isolated execution on one axis.
+
+### From `manifest_migration_SUPERSEDED` (Stage 0-4 backfill execution)
+
+- **Stage 0** — Pre-migration VM drain + state freeze (BOTH GCP + AWS VM fleets). Manifest consolidator final run +
+  snapshot to `_index/snapshots/pre_migration_<date>.parquet`. Operator-enforced lock.
+- **Stages 1-4** — `data_available_at` sports atomic 4-repo source rename; MDPS placeholder method deletion
+  (`_create_empty_output`, `_create_full_day_empty_output`, `_create_closed_market_candle`); MTDS reconcilers (1440-NaN,
+  partial bundles); expected-absence backfill; raw-tables migration; cross-asset rescan with `--apply-flips`.
+- **Stage 0 pre-migration drain** composes with `code_freeze_migrate_backfill_sequencing` (Phase 1 freeze gate).
+
+Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolution_SUPERSEDED_2026_05_21.md) +
+[`manifest_migration_SUPERSEDED_2026_05_21.md`](manifest_migration_SUPERSEDED_2026_05_21.md).
+
+## Codex SSOTs
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md)
+- [`codex/02-data/manifest-migration-coordination.md`](../../codex/02-data/manifest-migration-coordination.md)
+- [`codex/02-data/service-output-emission-semantics.md`](../../codex/02-data/service-output-emission-semantics.md)
+
+## Composition with other epics
+
+- **Upstream gates**: `instruments_master` (IS→MTDS contract; archive-metadata fields on `InstrumentRecord`),
+  `mtds_mdps_master` (writer code axis — MTDS handlers consume IS catalogue)
+- **Downstream consumers**: All L0 asset-group epics (defi/cefi/tradfi/sports/predictions read manifest for data
+  completeness gates); `features_and_ml_master` (features `available_at` lookahead-bias guard reads manifest)
+- **Co-located VM**: `defi_master` (manifest backfill priority work)
+- **Cross-cutting**: `batch_live_symmetry_master` (manifest is the data-completeness SSOT batch=live gates against);
+  `observability_master` (manifest divergence alerts)
+
+## Assigned active plans
+
+_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## Assigned active plans
+
+_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`d3_manifest_v8_finish_2026_05_20`](../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-3 done (100% v8 dist confirmed); Phase 4 BLOCKED-OPERATOR-DECISION (765
+DIVERGENT_EMPTY → D4 resolution) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D3 — Manifest v8 finish +
+reason-enum wiring + divergence-detector
+
+### [`d5_features_missing_data_downgrade_2026_05_20`](../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-1 done; P1 ml-service item DEFERRED → `ml_service_hardening_2026_06_01.md`
+
+### [`expected_unattempted_propagation_chain_2026_05_12`](../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 — runtime propagation code complete (Phases 0-5 shipped); production validation
+pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`
+
+### [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-7 done; Phase 8 DEFERRED-writegate-6.x (2026-06-15 date-gate) ·
+**estimate**: 4.8 cal AI-days (class: infra)
+
+### [`honest_coverage_formula_consolidation_2026_05_19`](../active/honest_coverage_formula_consolidation_2026_05_19.md)
+
+**status**: in-flight · **estimate**: 2.4 cal AI-days (class: refactor)
+
+### [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)
+
+**status**: active · **estimate**: 2.1 cal AI-days (class: design)
+
+## P1 — important; post-current-gate
+
+### [`manifest_cross_asset_rescan_design_2026_05_08`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 2.4 cal AI-days (class: infra)
+
+## P2 — useful; opportunistic
+
+### [`bucket_name_ssot_canonicalisation_2026_05_10`](../active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+
+**status**: active · **estimate**: 10.0 cal AI-days (class: refactor)
+
+### [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)
+
+**status**: ✅ ARCHIVED 2026-05-21 — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups · **estimate**: 0.8 cal
+AI-days (class: infra)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
+
+## Deferred work — migrated from archived plans
+
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md Phase 4** — Design and land a successor plan for full `ManifestWriter.add` deletion: that method was soft-deprecated in the wave-2 plan (Phase 3 swapped all call sites to `record_captured` / `record_empty`), but the method body was not deleted because the plan lacked a dedicated "deletion + 1-cycle deprecation" successor. Successor plan should: grep workspace for any remaining `.add(` call sites → confirm 0 remaining callers → delete `ManifestWriter.add` → update codex `availability-manifest-and-data-status.md` to mark the method removed.

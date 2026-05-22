@@ -14,18 +14,18 @@ topology_requirements:
 
 # Archetype: `VOL_ARB_RV_IV`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous — positions rolled at
-> expiry; delta-hedged throughout hold. **Code module (target):**
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Continuous — positions rolled at expiry;
+> delta-hedged throughout hold. **Code module (target):**
 > `strategy-service/engine/strategies/v2/vol_trading/vol_arb_rv_iv_engine.py`
 
 ## What it does
 
-Trades the divergence between realized volatility (RV) and implied volatility (IV) on a directional basis: buy
-vol when IV is significantly below RV (vol depressed, market under-pricing realized risk), and sell vol when IV
-is significantly above RV (vol premium, market over-pricing risk). Unlike `VOL_CARRY` which harvests the steady
-IV-over-RV structural premium, this archetype times entries around periods when that relationship breaks down or
-inverts. The edge is mean-reversion in the IV-RV spread, not structural carry. Delta-hedge the options book
-continuously to isolate the vol view from directional noise.
+Trades the divergence between realized volatility (RV) and implied volatility (IV) on a directional basis: buy vol when
+IV is significantly below RV (vol depressed, market under-pricing realized risk), and sell vol when IV is significantly
+above RV (vol premium, market over-pricing risk). Unlike `VOL_CARRY` which harvests the steady IV-over-RV structural
+premium, this archetype times entries around periods when that relationship breaks down or inverts. The edge is
+mean-reversion in the IV-RV spread, not structural carry. Delta-hedge the options book continuously to isolate the vol
+view from directional noise.
 
 ## Token / position flow
 
@@ -96,8 +96,8 @@ continuously to isolate the vol view from directional noise.
 
 ## When to use / market regime
 
-- **Best regime**: post-vol-spike recovery (IV remains elevated, RV has collapsed → short vol); or pre-event
-  calm (RV rising, IV lagging → long vol before binary event)
+- **Best regime**: post-vol-spike recovery (IV remains elevated, RV has collapsed → short vol); or pre-event calm (RV
+  rising, IV lagging → long vol before binary event)
 - **Avoid**: trending markets with fast-moving RV where spread oscillates without mean-reverting
 - **Asset fit**: BTC, ETH (deepest options liquidity on Deribit); SPX weeklies for TradFi expression
 - **Complements**: `VOL_CARRY` (carry harvests structural premium; this archetype times the breakdowns)
@@ -112,11 +112,15 @@ VOL_ARB_RV_IV@cboe-spx-straddle-weekly-usd-prod
 
 ## Not in this archetype
 
-- Structural short-vol carry harvesting the steady IV-over-RV premium without timing entries → [`VOL_CARRY`](vol-carry.md)
-- Calendar or butterfly spread trading on term structure and smile shape rather than IV-RV level → [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
+- Structural short-vol carry harvesting the steady IV-over-RV premium without timing entries →
+  [`VOL_CARRY`](vol-carry.md)
+- Calendar or butterfly spread trading on term structure and smile shape rather than IV-RV level →
+  [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
 - ATM straddle held for a specific binary catalyst (event-driven vol) → [`VOL_STRADDLE`](vol-straddle.md)
-- ML-forecast-driven vol sizing where the signal is a model prediction, not a rule-based spread threshold → [`VOL_ML_LEAN`](vol-ml-lean.md)
-- Hard no-arb violations (put-call parity, butterfly convexity) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- ML-forecast-driven vol sizing where the signal is a model prediction, not a rule-based spread threshold →
+  [`VOL_ML_LEAN`](vol-ml-lean.md)
+- Hard no-arb violations (put-call parity, butterfly convexity) →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

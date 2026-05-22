@@ -15,20 +15,20 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_CROSS_DOMAIN_EVENT`
 
-> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) **Settlement model:** Event-settled —
-> all positions settle on the same real-world event outcome; expiries must align across domains. **Code module
-> (target):** `strategy-service/engine/strategies/v2/arbitrage_structural/cross_domain_event_engine.py`
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) **Settlement model:** Event-settled — all
+> positions settle on the same real-world event outcome; expiries must align across domains. **Code module (target):**
+> `strategy-service/engine/strategies/v2/arbitrage_structural/cross_domain_event_engine.py`
 
 ## What it does
 
 Cross-domain event arbitrage exploits pricing gaps when the same real-world event is listed across two or more venue
-domains — sports books, prediction CLOBs, and exchange-traded binary options — where the implied probability
-of the same outcome differs enough to create a riskless spread after fees. The core examples are: "Team A wins" priced
+domains — sports books, prediction CLOBs, and exchange-traded binary options — where the implied probability of the same
+outcome differs enough to create a riskless spread after fees. The core examples are: "Team A wins" priced
 simultaneously at a sharp sports book (Pinnacle), a prediction CLOB (Polymarket), and a CME binary option; or a Fed
 rate-decision outcome priced across Kalshi, Polymarket, and CME event contracts. When implied probabilities across
-venues/domains produce a combined position with guaranteed positive payoff regardless of outcome, the strategy
-executes simultaneously across all legs. Share class is always USD* (the dominant fiat currency matching the binary
-outcome payoff) to avoid cross-currency basis risk.
+venues/domains produce a combined position with guaranteed positive payoff regardless of outcome, the strategy executes
+simultaneously across all legs. Share class is always USD\* (the dominant fiat currency matching the binary outcome
+payoff) to avoid cross-currency basis risk.
 
 **Contrast with `ARBITRAGE_PRICE_DISPERSION`**: price dispersion arb trades the same event, same domain (e.g. two
 prediction CLOBs), multiple venues. Cross-domain arb trades the same event, DIFFERENT domain types (sports book +
@@ -79,11 +79,15 @@ prediction CLOB + CME binary).
 
 ## Risk management
 
-- Partial fill abort: if ANY leg fails within fill_timeout_seconds, cancel all remaining legs and unwind filled legs via market order — never carry partial arb
-- Expiry mismatch risk: if expiry misalignment > max_expiry_mismatch_hours, reject the arb (one leg could settle before the event; creates directional risk)
-- Venue settlement risk: sports book may void bet (e.g. event cancelled); prediction CLOB may have disputed resolution — position held in escrow; hedge via third leg
+- Partial fill abort: if ANY leg fails within fill_timeout_seconds, cancel all remaining legs and unwind filled legs via
+  market order — never carry partial arb
+- Expiry mismatch risk: if expiry misalignment > max_expiry_mismatch_hours, reject the arb (one leg could settle before
+  the event; creates directional risk)
+- Venue settlement risk: sports book may void bet (e.g. event cancelled); prediction CLOB may have disputed resolution —
+  position held in escrow; hedge via third leg
 - Concentration limit: max_total_exposure_usd across all cross-domain arb positions
-- Domain-specific restrictions: some jurisdictions prohibit certain domain combinations (sports book + financial exchange); compliance filter applied per operator region
+- Domain-specific restrictions: some jurisdictions prohibit certain domain combinations (sports book + financial
+  exchange); compliance filter applied per operator region
 
 ## Config parameters
 
@@ -98,7 +102,7 @@ prediction CLOB + CME binary).
 - `min_liquidity_usd_per_leg`: minimum CLOB/exchange liquidity at target price per leg (default 100)
 - `settlement_confidence_required`: require explicit settlement rule documentation before entry (default true)
 - `compliance_region_filter`: list of allowed domain-combination pairs per jurisdiction
-- `share_class`: USD* (always fiat-denominated to match binary payoff)
+- `share_class`: USD\* (always fiat-denominated to match binary payoff)
 - `execution_policy_ref`: arb-cross-domain-v1
 
 ## When to use / market regime

@@ -51,13 +51,16 @@ def main() -> int:
             if not link_path:
                 # Pure anchor like #section — already filtered above, defensive guard.
                 continue
-            # Resolution order: plans_dir-relative first, then archive,
-            # then workspace-root (for repo-prefixed paths like
-            # ``unified-trading-pm/codex/...`` or ``../../<repo>/``).
+            # Resolution order: plans_dir-relative first, then archive top-level +
+            # all archive subdirs (e.g. archive/2026_05/), then workspace-root.
             # For ``.md`` links also try ``.plan.md`` per workspace plan-
             # filename convention (active=``.md``, archive=``.plan.md``).
+            archive_dir = plans_dir.parent / "archive"
+            archive_bases = (
+                [archive_dir] + sorted(d for d in archive_dir.iterdir() if d.is_dir()) if archive_dir.is_dir() else []
+            )
             candidates: list[Path] = []
-            for base in (plans_dir, plans_dir.parent / "archive", ws_root):
+            for base in (plans_dir, *archive_bases, ws_root):
                 if not base.is_dir():
                     continue
                 primary = (base / link_path).resolve()
@@ -67,13 +70,19 @@ def main() -> int:
                     candidates.append((base / plan_md_path).resolve())
             target = next((c for c in candidates if c.exists()), candidates[0])
             if not target.exists():
-                # Workspace-repo-prefix tolerance: if the FIRST path segment
-                # of the link resolves to an existing directory under ws_root,
-                # treat the link as valid (the inner path may not yet exist
-                # but the repo-prefix is well-formed). Lets plans reference
-                # not-yet-created files inside known sibling repos.
+                # Workspace-repo-prefix tolerance: skip links to sibling repos
+                # that are either present-but-file-missing OR absent (partial
+                # workspace, e.g. GHA only clones PM + dep repos). PM-internal
+                # paths (plans/, codex/, scripts/, etc.) are checked strictly.
+                _PM_INTERNAL = frozenset({
+                    "plans", "codex", "scripts", "cursor-configs",
+                    "cursor-rules", ".cursor", ".github", "tests",
+                })
                 first_segment = link_path.lstrip("./").split("/", 1)[0]
-                if first_segment and (ws_root / first_segment).is_dir():
+                if first_segment and (
+                    (ws_root / first_segment).is_dir()
+                    or first_segment not in _PM_INTERNAL
+                ):
                     continue
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

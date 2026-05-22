@@ -183,13 +183,17 @@ when:
 
 ## Frontmatter convention
 
-Every active plan written **after 2026-05-11** adds three new frontmatter fields:
+Every active plan + wrapper plan written **after 2026-05-11** adds three new frontmatter fields:
 
 ```yaml
 estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <pre-calibration estimate as integer or range, e.g. 6 or "6-8">
 estimate_calibrated_ai_days: <baseline × multiplier, e.g. 2.4 or "2.4-3.2">
 ```
+
+**Epic exemption (codified 2026-05-21)**: epics in `plans/epics/` are everlasting and do NOT carry these three fields.
+Estimation lives on the active plans they reference (which are organised into the epic's priority blocks). Full epic
+frontmatter rules: [`../../plans/epics/README.md`](../../plans/epics/README.md).
 
 For **multi-class plans** (e.g. a master plan with design + infra + refactor phases), use the dominant class for the
 plan-level field and override per-phase inline:

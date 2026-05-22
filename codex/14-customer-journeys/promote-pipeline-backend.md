@@ -113,6 +113,13 @@ All events via `unified_trading_library.events.log_event()`. Constants: `PROMOTE
 
 ## Post-Cutover Extensions (Phase 9 — NOT May-23)
 
+> **[DELTA 2026-05-22]** **Current state:** May-23 ships with 5 minimal pre-flight gates; Firebase `execution-full` is
+> enforced at UI layer only; only `paper_1d` and `live_early` are valid promote targets; VM launch is
+> operator-CLI-triggered. **Planned delta:** Phase 9 post-cutover wires Firebase admin SDK at backend, expands to 9+
+> pre-flight gates (including live signing dry-run), adds `LIVE_FULL` target support, backend SSE event stream, and
+> automatic VM launch via deploy event subscription. **Target:** `plans/active/master_to_live_defi_2026_05_23.md`
+> post-cutover phase.
+
 - Firebase admin SDK at backend for `execution-full` role enforcement
 - Full pre-flight pipeline (9+ gates including live signing dry-run)
 - `LIVE_FULL` maturity phase support

@@ -199,6 +199,7 @@ For each run, verify:
 
 <!-- PROCEDURAL-CHECKLIST: These items are re-checked per E2E test session, not one-time work items.
      Closed 2026-05-19 slot 2 to satisfy plan audit (R-S2-PROCEDURE-CLEANUP). Reset to [ ] for actual E2E runs. -->
+
 - [x] `ServiceRuntime:` log line with all dimensions
 - [x] UEI events emitted (STARTED, COMPLETED/FAILED)
 - [x] Error events have correlation_id

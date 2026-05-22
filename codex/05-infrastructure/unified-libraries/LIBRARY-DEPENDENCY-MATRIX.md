@@ -152,23 +152,23 @@ All 17 active/scaffolded services × all 16 libraries. `●` = direct dependency
 future/scaffolded service.
 
 | Service                                  | UTS | UCI | UEI | UCLI | AC  | UIC | ref-if | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
-| ---------------------------------------- | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
-| **instruments-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **market-tick-data-service**             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **market-data-processing-service**       |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **features-service (calendar family)**   |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ○  |
-| **features-service (delta-one family)**  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| **features-service (volatility family)** |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| **features-service (onchain family)**    |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ●   |  ○   |  ○  |  ●  |  ○  |  ●  |
-| **features-service (sports family)** ⟪f⟫ |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ●   |  ○  |  ●  |  ○  |  ●  |
-| **ml-training-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| **ml-inference-service**                 |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| **strategy-service**                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
-| **execution-service**                    |  ●  |  ●  |  ●  |  ○   |  ●  |  ○  |  ○   |  ●  |  ●  |  ●  |  ●   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **pnl-attribution-service**              |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **position-balance-monitor-service**     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ●  |  ●  |
-| **risk-and-exposure-service**            |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
-| **alerting-service**                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ○  |
+| ---------------------------------------- | :-: | :-: | :-: | :--: | :-: | :-: | :----: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
+| **instruments-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ●    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **market-tick-data-service**             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **market-data-processing-service**       |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **features-service (calendar family)**   |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ○  |
+| **features-service (delta-one family)**  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| **features-service (volatility family)** |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| **features-service (onchain family)**    |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ●   |  ○   |  ○  |  ●  |  ○  |  ●  |
+| **features-service (sports family)** ⟪f⟫ |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ●   |  ○  |  ●  |  ○  |  ●  |
+| **ml-training-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| **ml-inference-service**                 |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| **strategy-service**                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ●  |  ○  |  ○  |  ●  |
+| **execution-service**                    |  ●  |  ●  |  ●  |  ○   |  ●  |  ○  |   ○    |  ●  |  ●  |  ●  |  ●   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **pnl-attribution-service**              |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **position-balance-monitor-service**     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ●  |  ●  |
+| **risk-and-exposure-service**            |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
+| **alerting-service**                     |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |   ○    |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ○  |
 
 **Column key:** UTS=unified-trading-services, UCI=unified-config-interface, UEI=unified-trading-library,
 UCLI=unified-cloud-interface, AC=unified-api-contracts (incl. AC_INT=unified_api_contracts.internal subpackage),
@@ -199,7 +199,7 @@ position-balance-monitor-service), UDC=unified-domain-client
 | ~~UTEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
 | ~~UDEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
 | ~~USEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
-| ~~unified-reference-data-interface~~ (ELIMINATED)                                                        |       —        | Merged into instruments-service                                                        |
+| ~~unified-reference-data-interface~~ (ELIMINATED)                            |       —        | Merged into instruments-service                                                        |
 | ~~UPI~~ (ELIMINATED)                                                         |       —        | Merged into position-balance-monitor-service                                           |
 | **UCLI** (unified-cloud-interface)                                           |    0 direct    | All get via UTS transitively                                                           |
 | **AC_INT** (unified_api_contracts.internal)                                  |    0 direct    | Via UTS transitively (part of unified-api-contracts)                                   |

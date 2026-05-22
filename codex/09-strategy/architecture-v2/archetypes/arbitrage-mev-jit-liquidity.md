@@ -13,7 +13,8 @@ topology_requirements:
 
 # Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`
 
-> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement model:** ATOMIC mint / burn within a 2-block window. **Code module:**
+> **Family:** [Arbitrage / Structural](../families/arbitrage-structural.md) (`ARBITRAGE_STRUCTURAL`). **Settlement
+> model:** ATOMIC mint / burn within a 2-block window. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py`.
 
 ## What it does
@@ -59,7 +60,8 @@ ARBITRAGE_MEV_JIT_LIQUIDITY@pancakeswap-v3-bnb-usdt-bsc-prod
 - Persistent concentrated LP earning fees over time → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 - Backrunning a confirmed swap already on-chain → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
 - Front-running / sandwiching a pending victim tx → [`ARBITRAGE_MEV_SANDWICH`](arbitrage-mev-sandwich.md)
-- Flash-loan liquidation of under-collateralised positions → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
+- Flash-loan liquidation of under-collateralised positions →
+  [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
 
 ## Plan
 

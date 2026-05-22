@@ -10,7 +10,10 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟢 RESOLUTION VERIFIED 2026-05-20** — superseded by full-suite fix at `features-service@0e73bc90` ("fix all failing tests in features-service — 0 failures from 74") which explicitly covers volatility (`asyncio.get_event_loop()` → `asyncio.run()`) plus orchestration/live_seams API drift. 73% reduction at original `features-service@070985c0` + `2425ecf8` was the partial; the long tail closed at `0e73bc90`. Archiving.
+> **🟢 RESOLUTION VERIFIED 2026-05-20** — superseded by full-suite fix at `features-service@0e73bc90` ("fix all failing
+> tests in features-service — 0 failures from 74") which explicitly covers volatility (`asyncio.get_event_loop()` →
+> `asyncio.run()`) plus orchestration/live_seams API drift. 73% reduction at original `features-service@070985c0` +
+> `2425ecf8` was the partial; the long tail closed at `0e73bc90`. Archiving.
 
 ## What I found
 

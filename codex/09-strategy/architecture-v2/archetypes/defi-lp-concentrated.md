@@ -15,8 +15,7 @@ topology_requirements:
 # Archetype: `DEFI_LP_CONCENTRATED`
 
 > **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING` — provides liquidity vs taking it).
-> **Settlement model:** ATOMIC mint/burn via Uniswap V3
-> NonfungiblePositionManager. **Code module (SHIPPED):**
+> **Settlement model:** ATOMIC mint/burn via Uniswap V3 NonfungiblePositionManager. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/concentrated.py`.
 
 ## What it does
@@ -118,7 +117,8 @@ DEFI_LP_CONCENTRATED@pancakeswap-v3-bnb-usdt-bsc-prod
 
 - Full-range / passive pool LP (Curve stableswap, Balancer weighted) → [`DEFI_LP_POOL`](defi-lp-pool.md)
 - ERC-4626 yield-vault deposit → [`DEFI_LP_VAULT`](defi-lp-vault.md)
-- Single-block JIT concentrated LP minted around a pending swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- Single-block JIT concentrated LP minted around a pending swap →
+  [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
 - CEX / CLOB order-book quoting → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md) + granular variants
 
 ## Plan

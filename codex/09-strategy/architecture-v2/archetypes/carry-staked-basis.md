@@ -3,7 +3,8 @@ scope: [engineer, admin]
 archetype: CARRY_STAKED_BASIS
 family: CARRY_AND_YIELD
 status: code-shipped
-venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, HYPERLIQUID, UNISWAP_V3, JUPITER]
+venue_universe:
+  [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, HYPERLIQUID, UNISWAP_V3, JUPITER]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -115,21 +116,21 @@ Today's matrix (2026-05-20 — re-verified against `accepted_perp_collateral()` 
 2026-05-07 SSOT plan:
 [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
 
-| perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (2026-05-20 actual) |
-| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| DRIFT                                                                                                            | JitoSOL (10% haircut), mSOL (10% haircut)                                                                  | 2 rows                                    |
-| DERIBIT                                                                                                          | stETH (7.5% haircut, X:PM/X:SM, offsets ETH-perp directly — effective 2026-01-13)                          | 1 row                                     |
-| BYBIT (UTA)                                                                                                      | stETH + wstETH (UTA cross-collateral per venue_collateral.py; METH + USDe are UTA-eligible but not in LST matrix) | 1 row (LIDO/stETH only)             |
-| OKX (multi-currency / portfolio margin)                                                                          | wstETH — **confirmed in UAC venue_collateral.py since 2026-05-08 (Stream A flip)**; no catalog slot generated yet (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`) | 0 rows (slot pending)    |
-| HYPERLIQUID (L1)                                                                                                 | none (USDC-only) — explicit `accepted=False` rows                                                          | 0 rows                                    |
-| BINANCE (Multi-Assets Mode)                                                                                      | none — `BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT` only; cross-collateral feature retired                      | 0 rows                                    |
-| ASTER                                                                                                            | none — USDT/USDF/asBNB only                                                                                | 0 rows                                    |
-| GMX                                                                                                              | none — per-market collateral set excludes LSTs                                                             | 0 rows                                    |
-| BINANCE-FUTURES / BYBIT-FUTURES / OKX-FUTURES / KRAKEN-FUTURES / BITFINEX-FUTURES / BITGET-FUTURES (Tardis-CeFi) | none — linear-USDT or coin-margined only; LST acceptance lives at the spot-UTA layer not the futures layer | 0 rows                                    |
+| perp_venue                                                                                                       | LST acceptance                                                                                                                                                 | catalog rows produced (2026-05-20 actual) |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| DRIFT                                                                                                            | JitoSOL (10% haircut), mSOL (10% haircut)                                                                                                                      | 2 rows                                    |
+| DERIBIT                                                                                                          | stETH (7.5% haircut, X:PM/X:SM, offsets ETH-perp directly — effective 2026-01-13)                                                                              | 1 row                                     |
+| BYBIT (UTA)                                                                                                      | stETH + wstETH (UTA cross-collateral per venue_collateral.py; METH + USDe are UTA-eligible but not in LST matrix)                                              | 1 row (LIDO/stETH only)                   |
+| OKX (multi-currency / portfolio margin)                                                                          | wstETH — **confirmed in UAC venue_collateral.py since 2026-05-08 (Stream A flip)**; no catalog slot generated yet (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`) | 0 rows (slot pending)                     |
+| HYPERLIQUID (L1)                                                                                                 | none (USDC-only) — explicit `accepted=False` rows                                                                                                              | 0 rows                                    |
+| BINANCE (Multi-Assets Mode)                                                                                      | none — `BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT` only; cross-collateral feature retired                                                                          | 0 rows                                    |
+| ASTER                                                                                                            | none — USDT/USDF/asBNB only                                                                                                                                    | 0 rows                                    |
+| GMX                                                                                                              | none — per-market collateral set excludes LSTs                                                                                                                 | 0 rows                                    |
+| BINANCE-FUTURES / BYBIT-FUTURES / OKX-FUTURES / KRAKEN-FUTURES / BITFINEX-FUTURES / BITGET-FUTURES (Tardis-CeFi) | none — linear-USDT or coin-margined only; LST acceptance lives at the spot-UTA layer not the futures layer                                                     | 0 rows                                    |
 
-**Effective slot count (2026-05-20 verified) = 4**: DRIFT/JitoSOL + DRIFT/mSOL + Deribit/stETH + Bybit/stETH.
-(Prior "~7" estimate included Bybit/METH, Bybit/USDe, OKX/wstETH — those are not yet in the catalog.) This
-**supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
+**Effective slot count (2026-05-20 verified) = 4**: DRIFT/JitoSOL + DRIFT/mSOL + Deribit/stETH + Bybit/stETH. (Prior
+"~7" estimate included Bybit/METH, Bybit/USDe, OKX/wstETH — those are not yet in the catalog.) This **supersedes the
+prior 2026-05-05 claim** that DRIFT was the only venue.
 
 **Per-venue wrap-step discipline (added 2026-05-12 per [`pnl-attribution.md`](../cross-cutting/pnl-attribution.md) HARD
 RULE #5 "Staking yield: wrapped (price-delta) vs rebasing (balance-delta)")**: the on-chain `STAKE` leg shape depends on
@@ -189,11 +190,12 @@ Note: the stable token differs per venue — USDC for DRIFT/DERIBIT, USDT for BY
 `_resolve_start_token(perp_venue, lst_asset)` in catalog.py.
 
 **Pre-2026-05-07:** 2 slots (DRIFT/JitoSOL + DRIFT/mSOL). **Post-Stream A (2026-05-20):** 4 slots live (+ Deribit/stETH
-+ Bybit/stETH). Expected expansion to ~7 once OKX/wstETH + Bybit/METH haircut-verified per Stream A live probe. `f` is
-fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no spare USDC
-bucket. Built by `_build_carry_staked_basis` in
-[`strategy-service/.../target_universe/catalog.py`](../../../../strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py)
-from the matrix at module import — slot expansion is automatic once the matrix entries flip to `accepted=True`.
+
+- Bybit/stETH). Expected expansion to ~7 once OKX/wstETH + Bybit/METH haircut-verified per Stream A live probe. `f` is
+  fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no spare USDC
+  bucket. Built by `_build_carry_staked_basis` in
+  [`strategy-service/.../target_universe/catalog.py`](../../../../strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py)
+  from the matrix at module import — slot expansion is automatic once the matrix entries flip to `accepted=True`.
 
 ## Config schema
 
@@ -206,13 +208,14 @@ capital_budget_amount: 1000000
 # All 6 required params are validated at engine construction (__init__): ValueError is raised
 # at boot if any are absent — earlier than tick-time preflight. Missing params cause immediate
 # startup failure (not a silent default).
-staking_protocol: JITO  # live 2026-05-20: JITO / MARINADE (Solana) + LIDO (ETH, DERIBIT + BYBIT slots)
-native_asset: SOL      # SOL for Solana slots; ETH for DERIBIT/BYBIT slots
-lst_asset: JitoSOL     # JitoSOL / mSOL (Solana) · stETH (DERIBIT/BYBIT)
-perp_venue: DRIFT      # must appear in VENUE_COLLATERAL_MATRIX with the LST accepted=True
-                       # live venues: DRIFT (JitoSOL/mSOL) · DERIBIT (stETH) · BYBIT (stETH)
-perp_instrument: SOL-PERP  # SOL-PERP for Solana slots · ETH-PERP for ETH slots
-spot_venue: JUPITER    # USDC->native swap venue (JUPITER for Solana · UNISWAP_V3 for ETH)
+staking_protocol: JITO # live 2026-05-20: JITO / MARINADE (Solana) + LIDO (ETH, DERIBIT + BYBIT slots)
+native_asset: SOL # SOL for Solana slots; ETH for DERIBIT/BYBIT slots
+lst_asset: JitoSOL # JitoSOL / mSOL (Solana) · stETH (DERIBIT/BYBIT)
+perp_venue:
+  DRIFT # must appear in VENUE_COLLATERAL_MATRIX with the LST accepted=True
+  # live venues: DRIFT (JitoSOL/mSOL) · DERIBIT (stETH) · BYBIT (stETH)
+perp_instrument: SOL-PERP # SOL-PERP for Solana slots · ETH-PERP for ETH slots
+spot_venue: JUPITER # USDC->native swap venue (JUPITER for Solana · UNISWAP_V3 for ETH)
 start_token: USDC # entry token; must be in `accepted_perp_collateral(perp_venue)` (sanity check)
 stake_fraction: "1.0" # always 1.0 post-2026-05-05 — LST is the perp margin
 
@@ -388,8 +391,7 @@ No engine, catalog, or strategy code change needed.
 
 ## See also
 
-- **Active umbrella plan**:
-  [`plans/active/defi_master_2026_05_07.md`](../../../../plans/active/defi_master_2026_05_07.md) — Fork 1 owns live
+- **Active umbrella plan**: [`plans/active/defi_master.md`](../../../../plans/active/defi_master.md) — Fork 1 owns live
   carry_staked_basis deployment
 - **Venue-matrix / canonicalisation plan**:
   [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)

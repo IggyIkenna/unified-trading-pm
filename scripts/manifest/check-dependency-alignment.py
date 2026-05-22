@@ -210,10 +210,11 @@ def main() -> int:
             print(f"\nFound {len(disk_absent)} manifest repo(s) absent from disk:\n")
             for d in disk_absent:
                 print(f"  [{d['repo']}] status={d['status']!r} expected={d['expected_path']}")
+            ok_statuses = "archived,deprecated,deleted,future"
+            ok_prefixes = "consolidated-into-*,merged-into-*,pending-archive-into-*"
             print(
-                "\nFix: either re-clone the repo, set "
-                "'archived: true' / status in {archived,deprecated,deleted,future,consolidated-into-*,merged-into-*,pending-archive-into-*}, "
-                "or move the entry to removedEntries.",
+                f"\nFix: either re-clone the repo, set 'archived: true' / status in "
+                f"{{{ok_statuses},{ok_prefixes}}}, or move the entry to removedEntries.",
             )
         return 1
     return 0 if aligned else 1

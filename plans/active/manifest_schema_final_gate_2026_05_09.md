@@ -1,25 +1,10 @@
 ---
+title: "Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)"
 name: manifest-schema-final-gate-2026-05-09
-overview: |
-  One-shot maximalist plan that lands the BEST manifest (v8 with all designed columns) on real GCS infra by
-  2026-05-23 — no partial state, no deferred items, every plan checkbox flipped `[x]` before cutover. Bundled
-  Phase 3 parquet walk does FIVE migrations in ONE pass to fit the 14-day window: (1) `pipeline_mode=` hive
-  partition, (2) `category=` → `asset_group=` rekey, (3) 5 drift axes from 2026-05-04 phantom audit, (4) v8
-  NULL-column backfill (`service_emission_state` + `last_emission_decision_at` +
-  `expected_window_completeness_fraction`), (5) cross-asset rescan class-A auto-fixes. Closed-set
-  `ServiceEmissionStateEnum` ratified inline (4 values: `PUBLISHED_OK` / `PUBLISHED_DEGRADED` /
-  `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`) — slice b spec landed as part of this plan. Workspace-wide Phase 4
-  consumer sweep across 8 repos is critical-path. Two-stage MTDS bounce-sweep: drain May 12, full launch May 16.
-  E3 7-item launcher checklist ratified verbatim by operator 2026-05-09. Hard-stop: no schema additions between
-  2026-05-09 and 2026-05-23 — every new column proposal defers to post-cutover.
-type: infra
 epic: epic-infra
 status: active
-asset_group: cross-cutting
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
-spawned_from: plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 created: 2026-05-09
@@ -83,13 +68,14 @@ depends_on:
 related_plans:
   - plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/manifest_migration_master_2026_05_07.md
+  - plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md
 estimate_class: design
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.1
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: manifest_master
 ---
 
 # Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
@@ -575,22 +561,22 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       available if Phase 7.C-7.F bundled walk causes manifest drift.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.C — Launch migration VM fleet per gcs_migration plan Phase 3 spec — per-bucket
       parallelism (4-8 VMs per bucket); same-region `asia-northeast1-c`; HTTP pool `2*workers`;
-      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
-      **DONE 2026-05-19** — gcs_migration Phase 3 VM fleet launched + completed ~16:01 UTC. 31 VMs TERMINATED.
-      Evidence: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 DONE banner + sign-off checkboxes.
-- [x] ✅ [HUMAN+AGENT] P0. Phase 7.D — Watch event stream — `MIGRATION_VM_STARTED` + per-parquet progress + `STOPPED`. Per
-      CLAUDE.md "no fire-and-forget VM launches" — verify each VM emits STARTED within 60s
+      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`. **DONE 2026-05-19** —
+      gcs_migration Phase 3 VM fleet launched + completed ~16:01 UTC. 31 VMs TERMINATED. Evidence:
+      `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 DONE banner + sign-off checkboxes.
+- [x] ✅ [HUMAN+AGENT] P0. Phase 7.D — Watch event stream — `MIGRATION_VM_STARTED` + per-parquet progress + `STOPPED`.
+      Per CLAUDE.md "no fire-and-forget VM launches" — verify each VM emits STARTED within 60s
   - per-hour progress. **DONE 2026-05-19** — all 31 VMs tracked + TERMINATED with event confirmation.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.E — Manifest consolidator runs continuously during walk; per-VM shards merge via
       last-writer-wins. **DONE 2026-05-19** — per-VM shards merged; manifest consolidated post-walk.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.F — Per-asset-group QA gate: re-run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom
       count MUST be 0 (was 354 residual pre-bundle). **DONE 2026-05-19** — Phase 3.6 re-audit (Axis-10 fix applied
-      instruments-service@8accb30): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) /
-      cefi ✅ 0 (1,290,707 real). False-positive phantoms from Axis-10 `prefix_tpls` bug eliminated.
-- [x] ✅ [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes, one
-      per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green.
-      **DONE 2026-05-19** — all 5 asset_group sign-offs confirmed per gcs_migration plan Phase 3 operator acks.
+      instruments-service@8accb30): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) / cefi ✅ 0
+      (1,290,707 real). False-positive phantoms from Axis-10 `prefix_tpls` bug eliminated.
+- [x] ✅ [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes,
+      one per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green. **DONE 2026-05-19** —
+      all 5 asset_group sign-offs confirmed per gcs_migration plan Phase 3 operator acks.
   - [x] ✅ cefi signed off — date: 2026-05-19 — gcs_migration Phase 3 (1,290,707 real rows, 0 phantoms)
   - [x] ✅ defi signed off — date: 2026-05-19 — gcs_migration Phase 3 (311,602 real rows, 0 phantoms)
   - [x] ✅ tradfi signed off — date: 2026-05-19 — gcs_migration Phase 3 (0 phantoms, all paths confirmed)
@@ -599,9 +585,10 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
 - **Post-sign-off trigger (2026-05-19 slot-8, operator-acked)**: after all 5 asset_groups signed off, launch
-  `expected_universe_v2` Phase 4 VM fleet (`bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh
-  --asset-group {cefi|defi|tradfi|sports|prediction}`). See `expected_universe_v2_design_2026_05_08.md` Phase 4
-  (deferred to this gate per BLK-89befd81 operator answer 2026-05-19).
+  `expected_universe_v2` Phase 4 VM fleet
+  (`bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh --asset-group {cefi|defi|tradfi|sports|prediction}`).
+  See `expected_universe_v2_design_2026_05_08.md` Phase 4 (deferred to this gate per BLK-89befd81 operator answer
+  2026-05-19).
 
 ### Phase 8 — Cross-asset rescan triage review (May 15)
 
@@ -765,373 +752,6 @@ Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Code
 | Manifest concurrency principle not actually wired in MTDS adapters | Medium      | High (full quota burn on bounce-sweep) | Phase 9.A item #3 explicitly verifies; Phase 6.A pre-drain confirms behavior                                                                                      |
 | Operator unavailable for Phase 7.G sign-off                        | Low         | High (blocks phase progression)        | Pre-arrange daily 30-min sign-off windows May 13-15; deputize ops if operator OOO                                                                                 |
 | 30-day reader fallback window incurs technical debt past cutover   | Low         | Low                                    | Calendar reminder for 2026-06-23 fallback removal; QG event count check                                                                                           |
-
-## Open items still needing operator input
-
-### A3 → CLOSED 2026-05-09 (FREEZE-CLEAN)
-
-A3 grep sweep complete; results folded into "UAC enums frozen for the window" section above. No additional enums need
-freeze-window protection. 5-enum closed set is comprehensive.
-
-### D1 → Databento + Tardis quota burn estimate (operator-fillable; needs Phase 0.A inputs)
-
-The double bounce-sweep (Phase 6 drain May 12 + Phase 9 full launch May 16) re-fetches data ONLY for shards where the
-manifest concurrency principle (per-shard freshness check at fetch time, TTL=60s) returns "not-captured". Wired
-correctly, the only re-fetch cost is shards captured AFTER the drain and BEFORE the launch — i.e. ~4 days of incremental
-coverage that should be near-zero since VMs were drained May 12.
-
-**Estimation methodology** (operator fills in cells from Phase 0.A pre-audit + Databento/Tardis billing):
-
-| Source                                                                | Per-fetch cost (USD)             | Shard scope (cefi+tradfi)                | Days re-fetched (drain→launch window) | Estimated burn (USD)                         |
-| --------------------------------------------------------------------- | -------------------------------- | ---------------------------------------- | ------------------------------------- | -------------------------------------------- |
-| Databento — TradFi futures + ETFs + options                           | _<operator: $/req from billing>_ | _<operator: shard count from Phase 0.A>_ | 4 (May 12-16)                         | _<calc>_                                     |
-| Databento — CeFi historical (Coinbase/Bitfinex/etc.)                  | _<operator>_                     | _<operator>_                             | 4                                     | _<calc>_                                     |
-| Tardis — CeFi perp + spot (Bybit/Binance/OKX/etc.)                    | _<operator: $/symbol-day>_       | _<operator: symbol count × 4 days>_      | 4                                     | _<calc>_                                     |
-| **Sub-total — incremental re-fetch under correct concurrency wiring** |                                  |                                          |                                       | **_<sum>_**                                  |
-| **Worst-case — concurrency NOT wired, full date-range re-fetch**      | _<operator>_                     | _<operator: full backfill window>_       | _N/A — full range_                    | **_<sum × N where N = full-window-days/4>_** |
-
-**Decision the estimate enables:**
-
-- If sub-total < $X (operator's threshold), proceed with Phase 6 drain May 12 as planned.
-- If worst-case >> sub-total + concurrency NOT verified, gate Phase 6 drain on Phase D2/D3 verification (manifest
-  concurrency principle audit) — see Phase 6.A pre-flight + add an explicit `_TTL_SECONDS=60` +
-  `_refresh_captured_cache` + per-VM shard isolation grep verification to Phase 6.A before drain.
-
-**Owner**: operator runs billing query + fills the table; Tab 2 main agent verifies concurrency wiring (D2/D3) per the
-next subsection.
-
-### Daily check-in ownership — DECIDED 2026-05-10
-
-Per CLAUDE.md "Daily Work-Split Process" Model B (1-main + dynamic spawned tabs), Ikenna's main orchestrator agent (the
-side's Tab 1, no implementation; only direction-setting + ledger-curation + ping triage) owns the daily check-in for
-this plan.
-
-**Cadence + scope:**
-
-- **09:00 UTC daily reset** (per CLAUDE.md "Daily reset" recipe): main orchestrator runs the standard `git fetch` +
-  `git log --oneline -25 origin/live-defi-rollout` + ping ledger triage, THEN appends a manifest-schema-final-gate
-  progress sweep to its summary report.
-- **Per-phase boundary check-in** (when a phase flips a checkbox, not on calendar cadence): main orchestrator dispatches
-  the cross-plan banner sweep + codex audit per Post-Plan-Phase Codex Audit HARD RULE; spawned implementer tab does the
-  actual ship.
-- **Operator escalation gates** (mandatory escalation, not autonomous): Phase 0 sign-off, Phase 7.G per-asset-group
-  sign-off, Phase 8.B class-C triage decisions, Phase 13.A live cutover. Per the Plans-Run-To-Actual-Completion HARD
-  RULE only the explicit hard-stops escalate; implementation defers to spawned tabs.
-
-**What main orchestrator reports to operator daily:**
-
-1. Phase status table (which phases shipped, which are in-flight, which are blocked).
-2. Cross-plan handshakes that fired (e.g. features-consolidation Phase 2 GitHub repo creation = operator dependency).
-3. CI/QG state on the underlying repos for shipped phases.
-4. Open ping-ledger entries blocked >30 min on the main orchestrator's response.
-5. Risk-register tripwires (e.g. features-consolidation Phase 11.B blocker if consolidation slips past May 16).
-
-This is the standard Model B dispatcher pattern; codifying here so the responsibility is unambiguous across multi-tab
-parallel sessions on this plan.
-
-## DONE-2026-05-12 — slot 6 Phase 2 + Phase 3 ship-out
-
-Slot 6 (Ikenna `tab/ikennaigboaka/6`) shipped both **Phase 2 (UTL v8 ManifestWriter)** + **Phase 3 (cross-asset rescan
-launcher + script + watchdog + deployment-api registry)** end-to-end across 4 repos. Phase 1 (UAC v8 schema-bump +
-`next_state()` resolver + EXPECTED_KNOWN_SOURCE_GAP) had been shipped by slot 8 earlier the same day (UAC@`7be6bd5`);
-slot 6 absorbed via rebase + moved forward.
-
-| Phase | Repo                    | Commit       | Highlights                                                                                                                                                                     |
-| ----- | ----------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2.A   | unified-trading-library | [`0adea1c6`] | `AvailabilityRecord` + 3 new fields + 5 `record_*` methods extended + 12 unit tests.                                                                                           |
-| 2.B   | unified-trading-library | [`001e8892`] | `EmissionDecision` extended + `publish_with_policy()` stamps v8 state via Phase 1.B `next_state()` + 6 new tests.                                                              |
-| 2.C   | unified-trading-library | [`5f2aacd6`] | `read_availability_index()._backfill()` adds v8 cols as NULL when missing + emits `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event.                                                |
-| 2.D   | unified-trading-library | [`bae1ecb9`] | `manifest_migrations/v7_to_v8.py` — per-VM shard isolation guard + `MissingVMShardIsolationError` + `V7ToV8MigrationResult` + 12 unit tests.                                   |
-| 3.A/B | deployment-service      | [`19fad8c`]  | `launch-cross-asset-rescan-vm.sh` — singleton-lock, `WORKERS=64`, `HTTP_POOL_SIZE=128`, asia-northeast1-c, `--apply` toggle. Watchdog dict registered (`cross-asset-rescan-`). |
-| 3.C   | deployment-api          | [`c8a1cd4`]  | `_SERVICE_LAUNCHER_SCRIPTS["cross-asset-rescan"]` slug for Deploy-Missing UI.                                                                                                  |
-| 3.D   | instruments-service     | [`a264f21`]  | `scripts/cross_asset_rescan.py` — 333-line orchestrator on top of existing reconciler + `cross_asset_all` dispatch + triage JSONL + lifecycle events.                          |
-
-**Operator follow-up:**
-
-- Phase 3.B watchdog relaunch (standard
-  `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` +
-  `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh` to pick up the new prefix) before the first
-  cross-asset-rescan VM launch.
-- Tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --all`) so the rescan VM at boot reads
-  the new instruments-service `cross_asset_rescan.py` + the new launcher.
-- Phase 8 (cross-asset rescan triage review May 15) consumes the `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` output
-  once the first rescan VM run completes.
-
-**Scoreboard — Phase 4-13 status post slot-6 ship:** unchanged; Phase 4 (workspace-wide consumer sweep) still
-DEFERRED-AFTER Phase 2 (now unblocked since 2.A's `None` defaults preserve back-compat for the gradual callsite sweep);
-Phase 5 (bundled migration script) and Phase 7 (gcs Phase 3 bundled walk) remain operator-gated per the plan body.
-
-### features-consolidation parallel tab — DRAFTED (paste-ready spawn prompt below)
-
-Per the risk register, features-consolidation is the highest-impact medium-prob risk: its plan deadline is 2026-05-13,
-and Phase 11.B of THIS plan is blocked until consolidation merges by May 16. Plan status 2026-05-10:
-
-- Phase 0 + 1A + 1B + 5 + 8A + 8B + 9 → ✅ shipped.
-- Phase 2 (create features-service repo) → ⏸️ `blocked` (HUMAN-gated GitHub repo creation).
-- Phase 3 (8× git subtree merges with history) → ⏸️ `blocked` (depends on Phase 2).
-- Phase 4 (fix internal imports + CLI + config — 11 external Python lines + 51 string refs per pre-audit) → 🔵 `todo`.
-- Phase 6 (regression parity test) → 🔵 `todo`.
-- Phase 7 (archive 8 source repos) → 🔵 `todo`.
-- Phase 10 (workspace QG sweep) → 🟡 `helper-shipped`.
-
-Critical path = unblock Phase 2 (operator action) → ship Phase 3 → Phase 4 → Phase 6 → Phase 7. Tight: 6 calendar days
-to merge by May 16.
-
-**Tab N — features-consolidation completion (DRAFT for incorporation into today's `work_split_2026_05_10_ikenna.md`).**
-Identity: `features-consolidation-tab`. Plan-of-record:
-[`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md). Read-first list:
-features_repo_consolidation_2026_05_08.md + its preaudit issue doc + this plan
-(manifest_schema_final_gate_2026_05_09.md) for the Phase 11.B blocker context. Repos owned (collision boundary): the 8
-source `features-*-service` repos + the new `features-service` repo + UAC + UTL + deployment-{api,ui,service} +
-e2e-testing. Estimated AI-budget: ~3-4 AI-days (mostly Phase 3 subtree merges + Phase 4 11-line import sweep, both
-highly parallelizable). Sub-agent fan-out: 8 parallel sub-agents for Phase 3 (one per source repo), 1 main for Phase 4 +
-6 + 7. Collision risk: HIGH with any agent touching the soon-to-be-archived 8 features-\* repos; banner those repos with
-`🟡 IN-FLIGHT REFACTOR — features-consolidation merging into features-service; archive imminent` per CLAUDE.md
-"Cross-Plan Coordination Banners" rule.
-
-**Done-definition:**
-
-- features-service repo created on GitHub + workspace cloned + Phase 2 checkbox flipped `[x]`.
-- 8× git subtree merge complete with full history preserved + Phase 3 checkbox `[x]`.
-- 11 external Python imports rewritten + 51 string refs case-by-case fixed + workspace-wide grep for
-  `features_<family>_service` returns zero hits in non-archived repos + Phase 4 checkbox `[x]`.
-- Regression parity test green: same MTDS-input → same features-output before vs after consolidation, hash-equal output
-  parquets per family + Phase 6 checkbox `[x]`.
-- 8 source repos archived + GitHub UI shows `archived` label + Phase 7 checkbox `[x]`.
-- features_repo_consolidation_2026_05_08 plan flips status `active` → `complete` + spawns banner-removal in all plans
-  bannered Phase 0 of this plan.
-- **Hard deadline: 2026-05-16 EOD UTC** (Phase 11.B of manifest_schema_final_gate gating).
-
-**Spawn prompt (paste-ready, per CLAUDE.md "Spawn prompt template (Model B)"):**
-
-```text
-You are the features-consolidation tab — a sub-agent spawned by Ikenna's main orchestrator agent (Tab 1,
-a separate Claude Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
-
-BEFORE doing anything else, read in order:
-  1. unified-trading-pm/plans/active/work_split_2026_05_10_ikenna.md § "Bootstrap — read first if you're a
-     spawned tab" (if exists; otherwise see CLAUDE.md "Daily Work-Split Process").
-  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards + "Daily Work-Split Process"
-     section.
-  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
-  4. unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md — your plan-of-record.
-  5. unified-trading-pm/plans/archive/issues/features_repo_consolidation_preaudit_2026_05_08.md — the 1286-
-     line audit artifact with the 11 external import lines + 51 string refs + 6 lift candidates.
-  6. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md § "Phase 11" — the May-16
-     hard-deadline blocker that depends on you finishing.
-
-Your agent-tag for ping-ledger entries: features-consolidation-tab.
-Your tab number: TBD (operator assigns when adding to today's work-split).
-
-ORCHESTRATION RULES (per CLAUDE.md "Daily Work-Split Process"):
-  1. Shared working tree — no `git pull` needed between tabs; pre-commit check
-     (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
-     Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
-  2. Plan-doc Q&A flow — write blockers into features_repo_consolidation_2026_05_08.md's
-     `## Open questions` (status 🟡 BLOCKED), append ping in _agent_pings.md, continue with what you CAN do.
-  3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero incoming → push,
-     any incoming → flag + escalate.
-  4. Plan-flip in same logical unit as code — checkbox flip + `<repo>@<sha>` evidence stamped in body.
-  5. Foot-gun #4 (prek auto-revert race) — bundle Edit→add→commit→push into ONE Bash call when working
-     on plan files in PM repo.
-
-YOUR TASK:
-
-Critical-path: ship the features-consolidation completion by 2026-05-16 EOD UTC. This is a HARD blocker
-for manifest_schema_final_gate Phase 11.B (May 23 cutover gating). Phases 2, 3, 4, 6, 7 remaining; 0 + 1A +
-1B + 5 + 8A + 8B + 9 + 10 already shipped.
-
-Sequence:
-
-1. **Phase 2 — features-service repo creation (HUMAN-GATED).** Operator creates the GitHub repo
-   `IggyIkenna/features-service` + workspace clones it as a sibling. Wait for operator confirmation in
-   ping ledger; until then, focus on Phase 4 prep work that doesn't need the repo (audit the 11 external
-   imports + 51 string refs against current sibling state to confirm pre-audit is still accurate).
-
-2. **Phase 3 — 8× git subtree merge with history preserved (PARALLEL FAN-OUT).** Once Phase 2 unblocks,
-   spawn 8 parallel sub-agents (one per source repo), each running:
-     `cd features-service && git subtree merge --squash=false ../features-<family>-service main`
-   Conflict resolution: each sub-agent owns its source-repo's sub-package directory (`features_service/<family>/`);
-   no cross-family conflicts expected since each family lands in a distinct sub-package. Collision boundary:
-   any sub-agent that touches another family's directory — STOP, ping main, surface the conflict.
-
-3. **Phase 4 — fix imports + CLI + config (SEQUENTIAL after Phase 3).** Per pre-audit:
-   - 11 external Python import lines (lift to `features_service.<family>.*` namespace).
-   - 51 string references (test params + openapi catalogues + .gitignore) — case-by-case manual fixup.
-   - Lift 6 cross-family helpers to UTL per Phase 5 already shipped — verify the lift is consumed
-     correctly.
-   - Workspace-wide grep verification: `grep -rln "features_<family>_service" --include="*.py" --include="*.yaml"
-     --include="*.json" --include="*.md"` returns zero hits in non-archived repos.
-
-4. **Phase 6 — regression parity test (SEQUENTIAL after Phase 4).** Pick a representative MTDS-input
-   parquet per family; compute the family's features pre-consolidation (against the soon-archived source
-   repo) + post-consolidation (against features-service) + hash-compare output parquets. Hash-equal =
-   parity green. Any divergence = regression; investigate before proceeding.
-
-5. **Phase 7 — archive the 8 source repos (HUMAN+AGENT).** Once Phase 6 green, operator archives the 8
-   `features-*-service` repos via GitHub UI + workspace removes the sibling clones + workspace-manifest
-   updated. Update `unified-trading-pm/plans/PLAN_FORMAT.md` + relevant codex docs to remove pointers to
-   the archived repos.
-
-6. **Banner sweep + plan flip.** Once Phase 7 done, status of features_repo_consolidation_2026_05_08 flips
-   `active` → `complete`. Banner-removal sweep across plans bannered Phase 0 of manifest_schema_final_gate
-   (the 10 plans listed there). Status flip on this tab in today's work-split.
-
-REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final: append a
-"DONE-2026-05-<DD>" block at the bottom of features_repo_consolidation_2026_05_08.md body listing every
-code + plan-flip commit sha across the 8 source repos + features-service + UAC + UTL + deployment-\* +
-e2e-testing. EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit
-clause"): every deferral in your final summary MUST already be a `- [ ]` plan todo or a `**DEFERRED**`
-annotation in plans/active/. Run grep checks per the EOD-audit recipe. Then go quiet — don't pick up new
-work autonomously. If consolidation slips past May 16 EOD UTC, escalate to operator IMMEDIATELY (chat
-ping + main-orchestrator alert) — Phase 11.B of manifest_schema_final_gate is blocked + the May 23 cutover
-schedule compresses by 1 day per slip-day.
-```
-
-The tab is ready to drop into today's `work_split_2026_05_10_ikenna.md` once operator decides the working model (Model A
-6-tab vs Model B dynamic spawned). Recommend Model B for today since the consolidation has HUMAN-gated Phase 2
-unblocking + 8 parallel Phase 3 sub-agents — dynamic spawning fits the shape better than fixed thematic tabs.
-
-## DONE-2026-05-12 — slot 2 `ikenna-v8-manifestwriter-tab` — Phase 2 P2 + Phase 4 partial + Phase 5.A+B
-
-Tab: `ikenna-v8-manifestwriter-tab` (slot 2 worktree at `.tabs/2/`). Session scope: re-task from writegate slice (c)
-Phase 6.2 close-out (prior session) → manifest_schema_final_gate Phase 2 (UTL v8 ManifestWriter) per operator re-task
-brief. Pre-audit discovery: RE-TASK BRIEF #2 primary scope (Step 0 Q2 Bug 1 + Step 1-4 Phase 2.A/B/C/D) ALL already
-shipped (slot 6 finished today). Surfaced finding to operator → operator directed "do all these: Phase 2 P2 + Phase 4 +
-Phase 5.A/B".
-
-### Commits
-
-| Commit                        | Repo                           | Summary                                                                                                                |
-| ----------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `PM@59d761a4`                 | unified-trading-pm             | Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision (option b) + codex softened + Phase 4.DEFAULT-REMOVAL extended           |
-| `MDPS@a3c7198`                | market-data-processing-service | Phase 4.MDPS — 22 callsites + `resolve_pipeline_mode_from_source` helper                                               |
-| `instruments-service@e530906` | instruments-service            | Phase 4.INSTRUMENTS — ~50 callsites + per-source map + v8-aware reconciler                                             |
-| `PM@237d00b7`                 | unified-trading-pm             | Phase 4.MTDS — 🟡 finding doc (5 Q's pending operator triage)                                                          |
-| `PM@a5e5aa4d`                 | unified-trading-pm             | Finding doc: VIX 15m Yahoo/Barchart `PipelineMode` enum gap                                                            |
-| `PM@6ede1e01`                 | unified-trading-pm             | Finding doc: footystats `PipelineMode` enum gap                                                                        |
-| `PM@42348eba`                 | unified-trading-pm             | Phase 4 partial plan-flip — MDPS [x] + INSTRUMENTS [x] + small-repos N/A + MTDS blocked + GREP-VERIFY AST-walk upgrade |
-| `deployment-api@2f833a7`      | deployment-api                 | Phase 4.DEPLOYMENT-API — 4 v8 fields in `ShardGcsMetadata` + 6 tests                                                   |
-| `deployment-ui@ab06bfe`       | deployment-ui                  | Phase 4.UI — `ServiceEmissionStateBadge` + 9 vitest                                                                    |
-| `PM@d9a4fa9b`                 | unified-trading-pm             | Phase 5.A — gcs_migration_bundle v8 backfill + cross-asset-rescan class-A                                              |
-| `PM@06076383`                 | unified-trading-pm             | Phase 5.B — 14 new tests (37 total)                                                                                    |
-| `UTL@d76203a2`                | unified-trading-library        | UTL `manifest_migrations` facade re-exports (enables Phase 5.A imports per Citadel § 7)                                |
-| `PM@<this-flip>`              | unified-trading-pm             | Plan-flip + DONE block                                                                                                 |
-
-### What shipped (operationally)
-
-- **Phase 2 P2** — closed-set design call (option b): codex prose softened to match `manifest_writer.py:131` constant
-  value `MANIFEST_SCHEMA_VERSION = 7` (transitional); bump-to-8 + remove all 4 transitional `None` defaults consolidated
-  into Phase 4.DEFAULT-REMOVAL.
-- **Phase 4.MDPS** — pipeline_mode propagated through `write_candle_parquet` / `candle_write_mixin` / `live_workers` /
-  `batch_workers` / `orchestration_writer` / `live_aggregator` / `io/writer`. Helper `resolve_pipeline_mode_from_source`
-  parses `pipeline_mode=<value>` hive partition segment from GCS blob path; legacy pre-v8 paths fall back to
-  `BATCH_DATABENTO`. 22 callsites in 16 files (8 source + 2 scripts + 6 tests).
-- **Phase 4.INSTRUMENTS** — per-source pipeline_mode mapping table decided (api_football → BATCH_API_FOOTBALL,
-  transfermarkt → BATCH_TRANSFERMARKT, etc.); reconciler v8-aware (pandas read-tolerant + write-preserving — no
-  behaviour change needed). ~50 callsites in 9 files.
-- **Phase 4.DEPLOYMENT-API + UI** — `ShardGcsMetadata` response surfaces 4 v8 fields; `ServiceEmissionStateBadge`
-  4-state colour-coded badge wired into `ShardDetailModal`. 15 new tests (6 Python + 9 TS); 466/466 UI suite passes.
-- **Phase 5.A** — single-walk migration script extended with 2 new drift axes (`V8_NULL_COLUMNS_MISSING` +
-  `CROSS_ASSET_RESCAN_CLASS_A`); 4 new metrics counters; 3 new CLI flags; UTL facade enables clean import.
-- **Phase 5.B** — 14 new tests covering v8 backfill + rescan auto-fix + per-VM isolation defence-in-depth.
-
-### Findings filed (3 — pending operator triage)
-
-| Finding doc                                                                                                                                    | Scope                                                                                                                                                                                                    | Severity |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](../archive/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                   | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
-| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry                                                          | P1       |
-| [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md)                                   | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows                                                                       | P1       |
-
-**Operator triage decision needed** (consolidated): extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` to add 6 missing
-values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` /
-`BATCH_CHAINLINK`), OR ratify the workaround pattern (stamp closest SOURCE_PRIORITY top-entry value when no exact
-match). Plus: migrate `DefiManifestRecorder.record_captured` from legacy `ManifestWriter.add()` path to v8
-`record_captured()` path (no-double-SSOT per workspace contract).
-
-### Deferred work after 2026-05-12 ikenna-v8-manifestwriter-tab session
-
-| Phase / item                                  | Status as of 2026-05-12                                       | Successor / blocker                                                                                                                            |
-| --------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision | `done` (PM@`59d761a4`)                                        | —                                                                                                                                              |
-| Phase 4.MDPS                                  | `done` (MDPS@`a3c7198`)                                       | —                                                                                                                                              |
-| Phase 4.INSTRUMENTS                           | `done` (instruments-service@`e530906`)                        | —                                                                                                                                              |
-| Phase 4.DEPLOYMENT-API + UI                   | `done` (deployment-api@`2f833a7` + deployment-ui@`ab06bfe`)   | —                                                                                                                                              |
-| Phase 4.E2E + Phase 4.PM-SCRIPTS              | `done` (N/A — no real callsites; verified via grep-then-read) | —                                                                                                                                              |
-| Phase 4.MTDS                                  | `blocked`                                                     | Operator triage of 3 findings (6 PipelineMode enum gaps + DefiManifestRecorder add()-path)                                                     |
-| Phase 4.FEATURES                              | `deferred-after-may-16`                                       | features-consolidation merge gate per plan body                                                                                                |
-| Phase 4.GREP-VERIFY                           | `todo` (`- [ ]`)                                              | NEW QG STEP `check_pipeline_mode_explicit_at_record_calls.py` AST-walk; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape    |
-| Phase 4.DEFAULT-REMOVAL                       | `blocked-after-mtds`                                          | Blocked on Phase 4.MTDS unblock; once 4.MTDS + 4.FEATURES land, removes 4 None defaults + bumps MANIFEST_SCHEMA_VERSION 7→8 + reconciles codex |
-| Phase 5.A                                     | `done` (PM@`d9a4fa9b`)                                        | —                                                                                                                                              |
-| Phase 5.B                                     | `done` (PM@`06076383`)                                        | —                                                                                                                                              |
-
-Cross-plan items NOT addressed this session (still open in their own plans-of-record):
-
-- **Per-service slice (c) Phase 6.3-6.9** — writegate plan body: features-volatility / cross-instrument / ml-training /
-  ml-inference / strategy / execution / position-balance / risk / instruments-service rollouts.
-- **Phase 6-8 (manifest_schema_final_gate)** — HUMAN+AGENT operational steps (drain stale VMs / tarball refresh / gcs
-  Phase 3 walk / class-C triage). Out of agent scope; operator-runnable per plan body.
-
-### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
-
-Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**`/`**BLOCKED**` annotation in
-`plans/active/`:
-
-- "Phase 4.MTDS blocked" — annotated in plan body Phase 4.MTDS section +
-  `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
-- "Phase 4.FEATURES gated on May-16" — explicit annotation in plan body Phase 4.FEATURES.
-- "Phase 4.GREP-VERIFY AST-walk upgrade" — explicit `- [ ]` in plan body with implementation site
-  (`unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`) named.
-- "Phase 4.DEFAULT-REMOVAL blocked on MTDS" — annotated in plan body + extended scope (4 None defaults + bump
-  MANIFEST_SCHEMA_VERSION + reconcile codex) per Phase 2 P2 resolution.
-- "Per-service slice (c) Phase 6.3-6.9" — open in `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.3-6.9.
-
-No deferral lives only in chat or in the commit message. Three findings filed for operator triage.
-
-### Foreign findings flagged (NOT my code, NOT blocking)
-
-- Per-tree prettier auto-reflow (foot-gun #4) — ~130 codex docs + plans show line-wrapping diffs vs HEAD after sub-agent
-  rebases. Files have IDENTICAL semantic content; only whitespace differs. Stashed under
-  `slot-2: foreign-prettier-reflows-foot-gun-4` to keep the slot 2 working tree clean for plan-flip commits. Foreign
-  agents will reconcile in their own commits per CLAUDE.md "Two teammates × multiple parallel agents" rule.
-
----
-
-## DONE-2026-05-12 — slot 8 Phase 4.GREP-VERIFY closure + Phase 4.FEATURES pre-audit
-
-Slot 8 (`tab/ikennaigboaka/8`, agent-tag `ikenna-manifest-phase3-tab`) shipped two consumer-sweep items today inside the
-manifest_schema_final_gate Phase 4 cluster:
-
-| Phase               | Repo               | Commit       | Highlights                                                                                                                                                                                                                                                                                            |
-| ------------------- | ------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 4.GREP-VERIFY | unified-trading-pm | [`4159b7ae`] | NEW AST-walk QG check `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (266 LOC) + 11-test unit suite + 706-LOC bootstrap baseline. Detects every `record_*(...)` call missing explicit `pipeline_mode=` kwarg. Workspace invocation: `OK — 114 baselined; 0 new occurrences`. |
-| Phase 4.FEATURES P0 | unified-trading-pm | [`c1414ed7`] | Pre-audit enumerated 6 features-service callsites concentrated in 2 files (calendar orchestrator + sports batch handler). Pipeline-mode mapping per existing UAC SOURCE_PRIORITY documented inline. Mechanical sweep ~30min once features-consolidation merge lifts the gate (target 2026-05-16).     |
-
-**Phase 4 cluster scoreboard post-slot-8 ship:**
-
-| Sub-phase               | Status as of 2026-05-12                                                                            | Owner / Successor / Blocker                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Phase 4.MDPS            | ✅ shipped slot 2 (`mdps@a3c7198`)                                                                 | Done                                                                                                                         |
-| Phase 4.INSTRUMENTS     | ✅ shipped slot 2 (`instruments-service@e530906`)                                                  | Done                                                                                                                         |
-| Phase 4.DEPLOYMENT-API  | ✅ shipped slot 2 (`deployment-api@2f833a7` + `deployment-ui@ab06bfe`)                             | Done                                                                                                                         |
-| Phase 4.E2E             | ✅ N/A (slot 2 audit; zero actual record\_\* calls)                                                | Done                                                                                                                         |
-| Phase 4.PM-SCRIPTS      | ✅ N/A (slot 2 audit; zero actual record\_\* calls)                                                | Done                                                                                                                         |
-| Phase 4.GREP-VERIFY     | ✅ checker shipped slot 8 (PM@`4159b7ae`) + P1 QG-wiring shipped slot 6 (PM@`93459749`, STEP 5.70) | Done — ratchet live in every service repo's QG; see DONE blocks below                                                        |
-| Phase 4.FEATURES        | ⚪ pre-audit shipped slot 8 today; sweep deferred-after-may-16                                     | Successor: features-consolidation merge gate; 6 callsites enumerated above                                                   |
-| Phase 4.MTDS            | 🟡 pre-audit shipped slot 2 (26 files / 102 callsites); sweep BLOCKED on operator triage of Q1-Q5  | Successor: slot 3 (code_freeze Phase 1.E audit) per `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` |
-| Phase 4.DEFAULT-REMOVAL | ⚪ blocked transitively on Phase 4.MTDS                                                            | Successor: same as Phase 4.MTDS                                                                                              |
-
-**Phase 4.GREP-VERIFY ratchet** is now LIVE **and wired into every service repo's QG** — `Phase 4.GREP-VERIFY P1`
-shipped 2026-05-12 slot 6 (Harsh) @pm@`93459749`: `scripts/quality-gates-base/base-service.sh` **STEP 5.70** invokes
-`check_pipeline_mode_explicit_at_record_calls.py` scoped to the calling repo (every service repo `source`s
-`base-service.sh`, so the per-PR ratchet is workspace-wide on next push). Any new `record_*(...)` call missing explicit
-`pipeline_mode=` kwarg + not in `pipeline_mode_explicit_baseline.yaml` + no `# QG-allow: pipeline-mode-not-applicable`
-inline marker → `log_fail` + non-zero exit, blocking the PR. Baseline entries get DELETED (not re-statused) as Phase
-4.MTDS sweep + Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. Codex doc
-`codex/06-coding-standards/quality-gates.md` documents STEP 5.70 in full. P2 (library-repo enforcement / PM-repo
-invocation) noted as optional follow-up in the Phase 4.GREP-VERIFY checkbox above — not a gap (library callsites are
-cleared by Phase 4.DEFAULT-REMOVAL + caught by workspace-wide sweep; PM has zero real `record_*` calls).
 
 ## Decision log
 

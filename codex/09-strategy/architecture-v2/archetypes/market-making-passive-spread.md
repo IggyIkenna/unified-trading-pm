@@ -15,17 +15,17 @@ topology_requirements:
 
 # Archetype: `MARKET_MAKING_PASSIVE_SPREAD`
 
-> **Family:** [Market Making](../families/market-making.md) **Settlement model:** Continuous — quotes posted and
-> managed in real time; positions closed on each matched fill pair. **Code module (target):**
+> **Family:** [Market Making](../families/market-making.md) **Settlement model:** Continuous — quotes posted and managed
+> in real time; positions closed on each matched fill pair. **Code module (target):**
 > `strategy-service/engine/strategies/v2/market_making/passive_spread_engine.py`
 
 ## What it does
 
 The simplest market making archetype: post limit orders at both the bid and the ask simultaneously, earn the bid-ask
-spread on matched fills, and repost immediately after each fill. Minimal inventory management — the strategy
-targets near-zero inventory by reposting on the opposite side after each fill, flipping the book to realise the
-spread. Best suited for high-liquidity, tight-spread instruments where adverse selection is low and fill rates are
-high enough to sustain a positive expected value per round trip.
+spread on matched fills, and repost immediately after each fill. Minimal inventory management — the strategy targets
+near-zero inventory by reposting on the opposite side after each fill, flipping the book to realise the spread. Best
+suited for high-liquidity, tight-spread instruments where adverse selection is low and fill rates are high enough to
+sustain a positive expected value per round trip.
 
 ## Token / position flow
 
@@ -108,7 +108,8 @@ MARKET_MAKING_PASSIVE_SPREAD@hyperliquid-sol-usdt-perp-mm-prod
 
 ## Not in this archetype
 
-- Inventory-skewed quoting with Avellaneda-Stoikov reservation price → [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
+- Inventory-skewed quoting with Avellaneda-Stoikov reservation price →
+  [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
 - ML-guided directional lean on top of spread capture → [`MARKET_MAKING_ML_LEAN`](market-making-ml-lean.md)
 - Queue-position and VPIN-aware posting → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
 - Sports/event-settled back-lay quoting → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)

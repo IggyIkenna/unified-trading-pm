@@ -120,8 +120,10 @@ VOL_RATIO_SPREAD@cboe-spx-put-1x2-weekly-usd-prod
 
 - Symmetric short straddle / strangle at a single strike pair (no naked short wing) → [`VOL_CARRY`](vol-carry.md)
 - Full 1/K² strike strip replicating variance swap payoff → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
-- Cross-asset vol spread (two correlated underlyings, same tenor) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
-- OTM skew richness exploited via hard mispricing arbitrage → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
+- Cross-asset vol spread (two correlated underlyings, same tenor) →
+  [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- OTM skew richness exploited via hard mispricing arbitrage →
+  [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

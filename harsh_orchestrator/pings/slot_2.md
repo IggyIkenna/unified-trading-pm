@@ -1,36 +1,70 @@
-[2026-05-20 UTC] slot-2 health-check #2 — 📊 pvl-p18a: `strategy-paper-carry-staked-basis-20260519-183013` RUNNING (asia-northeast1-c). Original 20260518 VM TERMINATED (superseded). No action needed.
+[2026-05-20 UTC] slot-2 health-check #2 — 📊 pvl-p18a: `strategy-paper-carry-staked-basis-20260519-183013` RUNNING
+(asia-northeast1-c). Original 20260518 VM TERMINATED (superseded). No action needed.
 
-[2026-05-20 UTC] slot-2 → operator — 📋 manifest_schema_final_gate Phase 7.C-7.G BACKFILLED:
-GCS migration Phase 3 completed 2026-05-19 per gcs_migration plan. Flipped Phase 7.C/7.D/7.E/7.F/7.G (+ 5 sub-checkboxes) in manifest_schema_final_gate_2026_05_09.md.
-**Phase 8.A/8.B still open [HUMAN]**: operator needs to review class-C triage rows at `gs://central-element-323112-rescan-triage/{run_id}/triage.jsonl` + sign off in `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan triage decisions".
-**Phase 9.B still open**: MTDS VM fleet launch. Currently `mtds-backfill-odds-1` RUNNING (sports). Per-asset-group launch needed for cefi/defi/tradfi/prediction. → **Unblock Phase 9.B**: approve MTDS VM fleet launch per asset_group; Phase 9.A E3 checklist VERIFIED 2026-05-17.
+[2026-05-20 UTC] slot-2 → operator — 📋 manifest_schema_final_gate Phase 7.C-7.G BACKFILLED: GCS migration Phase 3
+completed 2026-05-19 per gcs_migration plan. Flipped Phase 7.C/7.D/7.E/7.F/7.G (+ 5 sub-checkboxes) in
+manifest_schema_final_gate_2026_05_09.md. **Phase 8.A/8.B still open [HUMAN]**: operator needs to review class-C triage
+rows at `gs://central-element-323112-rescan-triage/{run_id}/triage.jsonl` + sign off in
+`manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan triage decisions". **Phase 9.B still open**: MTDS VM fleet
+launch. Currently `mtds-backfill-odds-1` RUNNING (sports). Per-asset-group launch needed for
+cefi/defi/tradfi/prediction. → **Unblock Phase 9.B**: approve MTDS VM fleet launch per asset_group; Phase 9.A E3
+checklist VERIFIED 2026-05-17.
 
-[2026-05-20 UTC] slot-2 → operator — 📊 pvl-p18a health check: original VM `strategy-paper-carry-staked-basis-20260518-115404` is TERMINATED (zone=asia-northeast1-c). Most recent paper VM `strategy-paper-carry-staked-basis-20260519-183013` is RUNNING in asia-northeast1-c. No action needed.
+[2026-05-20 UTC] slot-2 → operator — 📊 pvl-p18a health check: original VM
+`strategy-paper-carry-staked-basis-20260518-115404` is TERMINATED (zone=asia-northeast1-c). Most recent paper VM
+`strategy-paper-carry-staked-basis-20260519-183013` is RUNNING in asia-northeast1-c. No action needed.
 
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` poolGetSnapshots (P1): Balancer V3 uses
 `poolGetSnapshots` (per-pool API) not `poolSnapshots` (per-day). Requires (a) Balancer V3 subgraph IDs for each chain
 added to UAC `registry/capability_declarations/_defi.py`, (b) new query loop pattern. Current Balancer subgraph IDs in
 UAC are V2 only. → **Unblock**: provide Balancer V3 subgraph IDs (from thegraph.com/explorer) for ETHEREUM + ARBITRUM
-+ BASE at minimum. Post-cutover unless you have the IDs available.
+
+- BASE at minimum. Post-cutover unless you have the IDs available.
 
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` per-chain MTDS coverage + Extended backfill:
-- **Vault-share-price VM**: `bash deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` → awaiting operator launch approval. Estimated ~3-4h run.
-- **Extended-STARKNET backfill VM**: no launcher exists yet; need operator to specify: (a) date range, (b) approve VM creation. REST adapter `_fetch_extended_candles` + `_fetch_extended_rest` are shipped (mtds@4f0cdbd). Without these VMs, per-chain MTDS stays at ~60-85% for non-ETH/SOL chains.
-→ **Unblock**: approve vault-share-price VM launch + specify Extended backfill date range.
 
-[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `live_pipeline_mtds_mdps_features` 3.C+3.D (migrated from mock_data_pipeline_benchmarking): (3.C) `CEFI_BOOK_SNAPSHOT_5_SPEC` blocked on 3.D ack; (3.D) subprocess-mode harness run + schema-parity assertion needs VM + operator sign-off. Original pings in `slot_7.md`. → **Unblock**: confirm schema audit path (a/b/c choice in slot_7.md ping) and approve VM run.
+- **Vault-share-price VM**:
+  `bash deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` → awaiting
+  operator launch approval. Estimated ~3-4h run.
+- **Extended-STARKNET backfill VM**: no launcher exists yet; need operator to specify: (a) date range, (b) approve VM
+  creation. REST adapter `_fetch_extended_candles` + `_fetch_extended_rest` are shipped (mtds@4f0cdbd). Without these
+  VMs, per-chain MTDS stays at ~60-85% for non-ETH/SOL chains. → **Unblock**: approve vault-share-price VM launch +
+  specify Extended backfill date range.
 
-[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `mdps_streaming_and_backpressure` Phase 4: Phases 1+2 shipped 2026-05-18 (MDPS@15c1889 + MDPS@6c560f4). Phase 4 (E2E VM validation + revert band-aid deployment-service@02ee6d6) is now unblocked code-wise. → **Unblock**: launch MDPS CeFi BTCUSDT 30-day backfill VM on standard memory tier, confirm STOPPED + manifest captured rows, then operator approves band-aid revert. Phase 3 (row-group iterator) is DEFERRED-POST-CUTOVER; no action needed for May-23.
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `live_pipeline_mtds_mdps_features` 3.C+3.D (migrated from
+mock_data_pipeline_benchmarking): (3.C) `CEFI_BOOK_SNAPSHOT_5_SPEC` blocked on 3.D ack; (3.D) subprocess-mode harness
+run + schema-parity assertion needs VM + operator sign-off. Original pings in `slot_7.md`. → **Unblock**: confirm schema
+audit path (a/b/c choice in slot_7.md ping) and approve VM run.
 
-[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR × 6 items in `defi_catalogue_chain_primitives_2026_05_10.md` (all flipped [BLOCKED-OPERATOR] 2026-05-20):
-- **6C** Solana LST Pyth backfill: launcher `launch-mtds-pyth-lst-backfill-vm.sh` says "DO NOT LAUNCH without operator [ack]". Rocket Pool / Solblaze feed IDs still needed. → **Unblock**: ack in this file + provide rETH/bSOL Pyth feed IDs.
-- **6D** Lighter/Pacifica/Extended OHLCV backfill: no launcher script exists; backfill window + VM cost decision needed. → **Unblock**: specify date range + approve VM launch (estimate: 1-3 VMs, <$50/each).
-- **6E** Vaults/restaking/DEX historical (26 protocols): 26 per-protocol VMs need operator priority triage. Vault share-price launcher + EigenLayer launcher exist. → **Unblock**: confirm priority order (vault-share-price first? or operator-chosen list).
-- **8A** Paper-trade multi-archetype run: carry_staked_basis paper VM running since 2026-05-18. leveraged_funding_arb + Tenderly fork 24h run need operator-orchestrated launch. → **Unblock**: operator trigger `bash run-paper.sh --archetype leveraged_funding_arb`.
-- **8B** Reconciliation rule: depends on `alerting_service_live_rules` plan completion. → **Unblock**: confirm alerting_service_live_rules status.
-- **8C** 7-day live-trade proof: HARD-STOP — wallet keys human-only. → **Unblock**: operator wallet provisioning + explicit testnet launch (Group F item 17 gate; May-23 critical path).
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `mdps_streaming_and_backpressure` Phase 4: Phases 1+2 shipped
+2026-05-18 (MDPS@15c1889 + MDPS@6c560f4). Phase 4 (E2E VM validation + revert band-aid deployment-service@02ee6d6) is
+now unblocked code-wise. → **Unblock**: launch MDPS CeFi BTCUSDT 30-day backfill VM on standard memory tier, confirm
+STOPPED + manifest captured rows, then operator approves band-aid revert. Phase 3 (row-group iterator) is
+DEFERRED-POST-CUTOVER; no action needed for May-23.
 
-[2026-05-19 15:00 UTC] slot-1-main → slot 2 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR × 6 items in `defi_catalogue_chain_primitives_2026_05_10.md`
+(all flipped [BLOCKED-OPERATOR] 2026-05-20):
+
+- **6C** Solana LST Pyth backfill: launcher `launch-mtds-pyth-lst-backfill-vm.sh` says "DO NOT LAUNCH without operator
+  [ack]". Rocket Pool / Solblaze feed IDs still needed. → **Unblock**: ack in this file + provide rETH/bSOL Pyth feed
+  IDs.
+- **6D** Lighter/Pacifica/Extended OHLCV backfill: no launcher script exists; backfill window + VM cost decision needed.
+  → **Unblock**: specify date range + approve VM launch (estimate: 1-3 VMs, <$50/each).
+- **6E** Vaults/restaking/DEX historical (26 protocols): 26 per-protocol VMs need operator priority triage. Vault
+  share-price launcher + EigenLayer launcher exist. → **Unblock**: confirm priority order (vault-share-price first? or
+  operator-chosen list).
+- **8A** Paper-trade multi-archetype run: carry_staked_basis paper VM running since 2026-05-18. leveraged_funding_arb +
+  Tenderly fork 24h run need operator-orchestrated launch. → **Unblock**: operator trigger
+  `bash run-paper.sh --archetype leveraged_funding_arb`.
+- **8B** Reconciliation rule: depends on `alerting_service_live_rules` plan completion. → **Unblock**: confirm
+  alerting_service_live_rules status.
+- **8C** 7-day live-trade proof: HARD-STOP — wallet keys human-only. → **Unblock**: operator wallet provisioning +
+  explicit testnet launch (Group F item 17 gate; May-23 critical path).
+
+[2026-05-19 15:00 UTC] slot-1-main → slot 2 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -907,18 +941,21 @@ session). No remaining items in slot-2 queue. Standing by for reallocation.
 [2026-05-19 12:15 UTC] main → slot 2 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/2/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/2/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 2` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 2**:
-pvl-p18a monitor + alerting_live_rules close (2.8 cal) + wave3x_residuals + manifest_schema_final_gate + sustain S3-S6
+**Today's assignment — Slot 2**: pvl-p18a monitor + alerting_live_rules close (2.8 cal) + wave3x_residuals +
+manifest_schema_final_gate + sustain S3-S6
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 2 — STARTED <first item>` below.
 
@@ -927,10 +964,10 @@ Ack this ping by appending `[2026-05-19 12:15 UTC] slot 2 — STARTED <first ite
 Task: check `strategy-paper-carry-staked-basis-20260518-115404` zone `asia-northeast1-a`.
 
 Findings:
+
 - VM `20260518-115404` NOT FOUND in `asia-northeast1-a` — actual zone is `asia-northeast1-c`, status = **TERMINATED**
 - VM `20260519-125252` in `asia-northeast1-c` = **TERMINATED** (launched today, short-lived)
 - VM `20260519-130923` in `asia-northeast1-c` = **RUNNING** (started 2026-05-19T05:09:37-07:00 = 12:09 UTC)
 
-Question sent to main: does the RUNNING new VM (20260519-130923) supersede the old one? Should health-check target be updated?
-Recommendation: A (new VM supersedes, update target, mark RUNNING).
-Awaiting operator direction.
+Question sent to main: does the RUNNING new VM (20260519-130923) supersede the old one? Should health-check target be
+updated? Recommendation: A (new VM supersedes, update target, mark RUNNING). Awaiting operator direction.

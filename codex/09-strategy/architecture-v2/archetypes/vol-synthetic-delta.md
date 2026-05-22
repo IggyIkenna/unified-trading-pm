@@ -14,20 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_SYNTHETIC_DELTA`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — synthetic
-> position settles at expiry; rolled to next expiry to maintain continuous directional exposure. **Code module
-> (target):** `strategy-service/engine/strategies/v2/vol_trading/vol_synthetic_delta_engine.py`
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Expiry-driven — synthetic position settles
+> at expiry; rolled to next expiry to maintain continuous directional exposure. **Code module (target):**
+> `strategy-service/engine/strategies/v2/vol_trading/vol_synthetic_delta_engine.py`
 
 ## What it does
 
-Replicates directional delta-1 exposure using options rather than spot or perp instruments, gaining the
-specific advantages of defined risk and no funding costs. A synthetic long (long call + short put at the same
-strike and expiry) is economically equivalent to a forward purchase of the underlying but carries no perp
-funding rate and defines maximum loss at the put strike minus the net premium. A synthetic short (short call +
-long put) replicates a forward short sale without perp borrow fees and with defined loss at the call strike.
-This archetype is used when perp funding rates make direct delta-1 exposure uneconomic, or when defined-risk
-exposure is operationally preferred. The engine monitors the synthetic for early assignment risk and manages
-rolling to maintain continuous exposure.
+Replicates directional delta-1 exposure using options rather than spot or perp instruments, gaining the specific
+advantages of defined risk and no funding costs. A synthetic long (long call + short put at the same strike and expiry)
+is economically equivalent to a forward purchase of the underlying but carries no perp funding rate and defines maximum
+loss at the put strike minus the net premium. A synthetic short (short call + long put) replicates a forward short sale
+without perp borrow fees and with defined loss at the call strike. This archetype is used when perp funding rates make
+direct delta-1 exposure uneconomic, or when defined-risk exposure is operationally preferred. The engine monitors the
+synthetic for early assignment risk and manages rolling to maintain continuous exposure.
 
 ## Token / position flow
 
@@ -74,8 +73,8 @@ rolling to maintain continuous exposure.
 ## Entry conditions + signal
 
 - Directional signal exists (supplied externally or via operator config)
-- `perp_funding_rate_annualised > synthetic_cost_annualised + min_cost_advantage_bps` OR
-  defined-risk mode is active (operator preference, regulatory, or risk mandate)
+- `perp_funding_rate_annualised > synthetic_cost_annualised + min_cost_advantage_bps` OR defined-risk mode is active
+  (operator preference, regulatory, or risk mandate)
 - ATM or near-ATM bid-ask per leg <= max_leg_spread_bps × spot
 - DTE within [min_dte_entry, max_dte_entry] (e.g. 14-30 DTE at entry)
 - No early-assignment risk flags on synthetic's short leg
@@ -85,10 +84,10 @@ rolling to maintain continuous exposure.
 - Synthetic long: max loss bounded at put_strike − net_premium_paid; no unlimited downside
 - Synthetic short: max loss bounded at call_strike + net_premium_received; no unlimited upside loss
 - ATOMIC fill discipline: never carry a naked leg — if one leg fails to fill, abort and cancel other
-- Roll cost tracking: synthetic rolling costs must remain cheaper than perp funding over the hold period;
-  re-evaluate vs perp at each roll
-- Assignment risk: on American-style options (OKX, CBOE), short leg deep ITM > 3 DTE from expiry triggers
-  early-close evaluation
+- Roll cost tracking: synthetic rolling costs must remain cheaper than perp funding over the hold period; re-evaluate vs
+  perp at each roll
+- Assignment risk: on American-style options (OKX, CBOE), short leg deep ITM > 3 DTE from expiry triggers early-close
+  evaluation
 - Net vega near zero at construction but drifts as underlying moves; rebalance if vega > vega_drift_limit_usd
 
 ## Config parameters
@@ -109,13 +108,13 @@ rolling to maintain continuous exposure.
 
 ## When to use / market regime
 
-- **Best regime**: high perp funding environments (crypto bull runs) where long synthetic costs less than
-  rolling the perp; or when operational risk policy mandates defined-max-loss positions
-- **Avoid**: low-funding environments where perp is cheaper and simpler; also avoid on illiquid
-  option chains where leg spreads erode the cost advantage
+- **Best regime**: high perp funding environments (crypto bull runs) where long synthetic costs less than rolling the
+  perp; or when operational risk policy mandates defined-max-loss positions
+- **Avoid**: low-funding environments where perp is cheaper and simpler; also avoid on illiquid option chains where leg
+  spreads erode the cost advantage
 - **Asset fit**: BTC, ETH (Deribit; deep ATM liquidity); SPX/SPY for TradFi directional with defined risk
-- **Complements**: `CARRY_BASIS_PERP` (use synthetic long instead of perp when funding is high);
-  any strategy that would otherwise use a perp for delta-1 exposure
+- **Complements**: `CARRY_BASIS_PERP` (use synthetic long instead of perp when funding is high); any strategy that would
+  otherwise use a perp for delta-1 exposure
 
 ## Example instances
 
@@ -127,10 +126,13 @@ VOL_SYNTHETIC_DELTA@deribit-btc-synthetic-short-14dte-usdt-prod
 
 ## Not in this archetype
 
-- Delta-1 long via spot or perp (no defined-risk structure, no expiry management) → [`CARRY_BASIS_PERP`](carry-basis-perp.md)
+- Delta-1 long via spot or perp (no defined-risk structure, no expiry management) →
+  [`CARRY_BASIS_PERP`](carry-basis-perp.md)
 - Long straddle (ATM call + put at same strike to express a vol view, not delta-1) → [`VOL_STRADDLE`](vol-straddle.md)
-- Directional options expression where the alpha is an ML or signal view on underlying price, not cost-of-carry vs perp → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
-- Covered call overlay against an existing long (income generation, not directional replication) → [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
+- Directional options expression where the alpha is an ML or signal view on underlying price, not cost-of-carry vs perp
+  → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- Covered call overlay against an existing long (income generation, not directional replication) →
+  [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
 
 ## See also
 

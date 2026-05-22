@@ -2,14 +2,14 @@
 scope: [strategist, engineer]
 ---
 
-# CME × Polymarket Cross-Venue Event-Contract Arb — Playbook (STUB)
+# CME × Polymarket Cross-Venue Event-Contract Arb — Playbook
 
-> **Status (2026-05-08)**: STUB. Phase 1 of `cme_polymarket_arb_2026_05_08` plan shipped (UAC
-> `InstrumentType.EVENT_CONTRACT` + Databento `BAG` classifier on EC\* roots — UAC@b95d146). Phases 2–5 are blocked on
-> `predictions_master_2026_05_07` Phase 5 (canonical-question-group backfill for 6 underlyings) and
-> `tradfi_master_2026_05_07` Q1+Q2 (`CanonicalFuturesContract` per-cluster expiry). Full content lands as those phases
-> ship; this stub captures the intent and signposts forward per the codex stub-vs-full-content rule (see CLAUDE.md §
-> "Post-Plan-Phase Codex Audit HARD RULE").
+> **Status (2026-05-22)**: Phases 1–5 shipped. Engine live in strategy-service. All 9 roots wired in
+> `cme_polymarket_link.py`. Instruments-service catalog backfill + MTDS CLOB tick history for 7 new groups pending (VM
+> launch not yet dispatched). Full onboarding (paper-trade soak + DART gate) post-cutover.
+>
+> **Shipped**: Phase 1 UAC@b95d146 · Phase 2 UAC@77facd65+UAC@9c491bdd (FULL: all 9 roots) · Phase 3 MTDS@b59b63e ·
+> Phase 4 instruments-service@7a3db05 · Phase 5 strategy-service@2c59f2ce.
 
 **Plan SSOT**:
 [`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
@@ -21,8 +21,8 @@ scope: [strategist, engineer]
 **Composes with**:
 
 - [`category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md) § "Family 4:
-  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" +
-  slot-label cluster `cme-polymarket-*-up-down-daily-*`.
+  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" + slot-label
+  cluster `cme-polymarket-*-up-down-daily-*`.
 - [`per-category-bucket-layouts.md`](../../02-data/per-category-bucket-layouts.md) § "Multi-axis correction" → "TradFi
   EVENT_CONTRACT" shard atom bullet.
 
@@ -34,7 +34,10 @@ implied probability on the same underlying (BTC, SPX, etc.) for the same resolut
 hedge equivalent) the expensive venue's YES. Both legs cleared / settled on the underlying close per exchange-published
 spec — no oracle-dispute risk on the CME leg.
 
-**Strategy archetype name** (post-Phase 5): `cme_polymarket_event_arb`.
+**Strategy archetype name**: `ARBITRAGE_CROSS_DOMAIN_EVENT` (UAC `StrategyArchetype` enum; engine class
+`ArbitrageCrossDomainEventEngine` in `strategy_service/engine/strategies/v2/arbitrage_structural/cme_polymarket.py`).
+Registered in `ARCHETYPE_ENGINE_REGISTRY` + `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` (half-Kelly,
+`TIER_STABLE_STRUCTURAL`). 3 seed rows in `TARGET_UNIVERSE` catalog (2 ECES + 1 ECBTC).
 
 **Underlyings (9 CME roots)** — covered by the
 `unified_api_contracts.registry.tradfi_instrument_universe._CME_EVENT_CONTRACTS` SSOT:
@@ -51,7 +54,7 @@ spec — no oracle-dispute risk on the CME leg.
 | ECNG     | Natural gas | `NATGAS_UP_DOWN_DAILY` _(needs backfill)_      | predictions_master Phase 5 → blocks Phase 2 |
 | EC6E     | Euro FX     | `EUR_UP_DOWN_DAILY` _(needs backfill)_         | predictions_master Phase 5 → blocks Phase 2 |
 
-## Basis-calc reference (full content TBD Phase 5)
+## Basis-calc reference
 
 For a paired `(CME root, resolution_date, strike_threshold)` with YES/NO contracts on each side:
 
@@ -79,7 +82,7 @@ calibrate per archetype config). Below threshold the leg-pair is not entered (tr
   exchange-determined (no oracle dispute risk); Polymarket is UMA-bond-arbitrated. The strategy treats them as a paired
   hedge ONLY when settlement-rule equivalence is asserted in `linked_canonical_question_group` metadata.
 
-## Kill-switch rules (full content TBD Phase 5)
+## Kill-switch rules
 
 - **Per-leg fill failure**: if the CME leg fills but the Polymarket leg does not within `max_pair_complete_seconds`
   (default 60s), unwind the CME leg at market and emit `PAIR_COMPLETION_FAILED`. Do NOT carry single-leg directional
@@ -103,9 +106,9 @@ May-23 cutover.
 ## Anti-patterns (do NOT do this)
 
 - **Don't skip the canonical-question-group cross-link**: directly hand-mapping CME root → Polymarket market_id at
-  strategy level bypasses the UAC SSOT. The mapping lives in
-  `unified_api_contracts/canonical/crosscutting/cme_polymarket_link.py` (Phase 2 — does not yet exist; will land with
-  predictions_master Phase 5 back-pressure cleared).
+  strategy level bypasses the UAC SSOT. Use `linked_question_group(cme_root)` from
+  `unified_api_contracts.canonical.crosscutting.cme_polymarket_link` (Phase 2 — UAC@77facd65+UAC@9c491bdd; all 9 roots
+  wired as of 2026-05-22; IS catalog backfill + MTDS CLOB for 7 new groups pending VM dispatch).
 - **Don't treat ECBTC.OPT as a vanilla option**: per Phase 1, the Databento classifier emits
   `InstrumentType.EVENT_CONTRACT` (not OPTION) for EC\* roots on `instrument_class=BAG` (current Databento encoding) or
   legacy `instrument_class=O`. Downstream features that filter by `instrument_type` MUST treat EVENT_CONTRACT distinctly

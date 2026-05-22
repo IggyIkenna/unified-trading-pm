@@ -67,15 +67,20 @@ parquets are backfilled with their defaults; **no migration needed for reads**.
 | Source returned 200 + zero rows | `record_empty(row_key=…, attempted_at=…)`                                   | legitimate gap (paused league, post-genesis)         |
 | Adapter raised                  | `record_failed(row_key=…, error=classify_venue_error(exc), attempted_at=…)` | error_reason classified; auto-retried by next VM run |
 
-### Manifest schema (v7 — current)
+### Manifest schema (v8 — current in code; data migration in progress)
 
-`MANIFEST_SCHEMA_VERSION = 7` in
+> **[DELTA 2026-05-22]** **Current state:** `MANIFEST_SCHEMA_VERSION = 8` in `manifest_writer.py` (code constant shipped
+> 2026-05-08), but data-side migration is in progress — production manifest parquets contain a mix of v4–v7 rows with 0%
+> at v8 as of 2026-05-20 mega-audit. **Planned delta:** `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`
+> Phase 2.2 single-walk bundled migration rewrites all manifest rows to v8. **Target architecture:** 100% of production
+> rows at v8 with all four new v8 columns populated.
+
+`MANIFEST_SCHEMA_VERSION = 8` in
 [`manifest_writer.py`](../../../unified-trading-library/unified_trading_library/manifest_writer.py). Evolution: v4 → v5
 (honest-coverage Phase A, 2026-04-19) → v6 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` +
-ML/strategy/execution `job_id`, UTL@`ed658e9b`). The v8 design (`pipeline_mode` + `service_emission_state` +
+ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8 (`pipeline_mode` + `service_emission_state` +
 `last_emission_decision_at` + `expected_window_completeness_fraction` (renamed from `_pct` per UAC@`76f950a`
-2026-05-11)) is in
-[`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
+2026-05-11); code constant shipped, data migration via `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`).
 See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is a
 brief recap.
 
@@ -214,7 +219,7 @@ Adapters: `market_interface/adapters/{binance,bybit,okx,deribit,coinbase}.py`,
 `derivative_ticker` perp-only. ¹ `trades` for LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET is **live-only, no
 historical tape** — upstream adapters lack an archival endpoint; strategies needing per-trade history must use
 `ohlcv_1m` bars or forward-poll history built post-launch (LIGHTER ≥2026-04-17, PACIFICA ≥2025-06-01, EXTENDED
-BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master_2026_05_07.md` item 2.P3.
+BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master.md` item 2.P3.
 
 ### DEFI (data_types by category)
 

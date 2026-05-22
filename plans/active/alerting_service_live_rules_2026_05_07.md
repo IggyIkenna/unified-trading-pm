@@ -1,8 +1,6 @@
 ---
-type: plan
-asset_group: cross-cutting
+title: "Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging"
 priority: P0
-deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -14,19 +12,20 @@ gates:
   - master_to_live_defi_2026_05_23:Group-F
   - master_to_live_defi_2026_05_23:Group-G
 status: active
-date: 2026-05-07
-owner: Ikenna (plan), Harsh (alerting-service code)
 estimate_class: design
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2
 estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
+parent_epic: observability_master
 ---
 
-> **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20
-> (asia-northeast1-c, staging, 48h). Tarball rebuilt at alerting-service@503ba57 (includes heartbeat fix @5717987).
-> Auto-shutdown at T+48h (~2026-05-22 11:12 UTC). **Banner owner**: Slot 7 (launched 2026-05-20). Monitor:
-> `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`
+> **🟢 VM RUNNING — alerting-quietness-20260522-083225** — Phase 7 quietness baseline VM RUNNING 2026-05-22
+> (asia-northeast1-c, staging, 48h). Fix set: alerting-service@59e020f (live→orchestrator.run_subscriber_loop so
+> heartbeat fires) + deployment-service@40fdc3d (setup-data-pipeline-vm.sh alerting-quietness-baseline task handler:
+> env-var Pydantic settings, SM secret fetch, correct tarball wiring). Auto-shutdown at T+48h (~2026-05-24 08:32 UTC).
+> **Banner owner**: Slot 8 (launched 2026-05-22). Monitor:
+> `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260522-083225/run.log`
 
 > **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds `HealthFactorMonitor` +
 > `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
@@ -46,11 +45,11 @@ estimate_calibration_note: |
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 9 EXTENDS this
-> plan's surface with live-pipeline tier rules (cluster_pct_skipped_60s, degraded_ratio_60s, staleness_seconds
-> thresholds), a new `streaming.alerting.circuit_breaker` Redis Stream wired to strategy-service, and 3 circuit-breaker
-> actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan owns the AlertCode
-> taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+> Phase 9 EXTENDS this plan's surface with live-pipeline tier rules (cluster_pct_skipped_60s, degraded_ratio_60s,
+> staleness_seconds thresholds), a new `streaming.alerting.circuit_breaker` Redis Stream wired to strategy-service, and
+> 3 circuit-breaker actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan
+> owns the AlertCode taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
 
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the
 > [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) UI track Phase U3
@@ -118,8 +117,8 @@ Affected files / consumers when shipping:
   `_default_routing_rules` with UAC SSOT consumption
 - [alerting-service/alerting_service/circuit_breaker.py](alerting-service/alerting_service/circuit_breaker.py) — wire
   UAC threshold lookups
-- [risk-and-exposure-service/](risk-and-exposure-service/) — emit alerts using UAC closed taxonomy
-- [position-balance-monitor-service/](position-balance-monitor-service/) — same
+- `risk-and-exposure-service/` — emit alerts using UAC closed taxonomy
+- `position-balance-monitor-service/` — same
 - [execution-service/](execution-service/) — circuit-breaker subscriber + KILL_SWITCH emitter
 - [features-service/features_service/onchain/](features-service/features_service/onchain/) — emit
   `DEFI_HEALTH_FACTOR_CRITICAL`, `DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers
@@ -490,11 +489,28 @@ reviews + tunes thresholds.
       `alerting-quietness-20260520-111232` RUNNING (asia-northeast1-c, staging, 48h). Auto-shutdown ~2026-05-22 11:12
       UTC. Monitor:
       `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`.
+      **⚠️ POST-LAUNCH FAILURE 2026-05-22 — SECOND STALL (same root cause, deeper fix)**: VM
+      `alerting-quietness-20260520-111232` failed again at T+3601s (exit_code=124). Root cause confirmed: @5717987
+      heartbeat used `logger.info()` inside the outer while-loop, BUT Python stdout is fully-buffered on non-TTY pipe so
+      the bytes stayed in the process buffer and never reached vm-exec's pipe reader. **FIX SHIPPED
+      alerting-service@16e9dde (slot-8 2026-05-22)**: (1) dedicated `_heartbeat_task` as independent asyncio.create_task
+      so heartbeat fires even if outer loop yields infrequently; (2) explicit `sys.stdout.flush()` after each heartbeat
+      write to bypass buffer; (3) interval 1800s→600s (safely under 3600s threshold). **THIRD FIX (slot-8 2026-05-22)**:
+      `alerting-service@59e020f` — main.py live mode was calling its own `_run_subscriber_until_shutdown` which had NO
+      heartbeat; the orchestrator fix was never reached. Routed live mode through `orchestrator.run_subscriber_loop`.
+      `deployment-service@40fdc3d` — setup-data-pipeline-vm.sh had no `alerting-quietness-baseline` task handler (fell
+      into generic catch-all with wrong CLI flags; `alerting_service` not in SERVICE_TARBALLS/TARBALL_DIRS; Telegram
+      creds not fetched from SM). Added dedicated branch: exports QUIETNESS_BASELINE_MODE + PAGERDUTY_DISABLED +
+      RUN_DURATION_HOURS as env vars; fetches TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID from SM metadata keys; runs
+      `python -m alerting_service --mode live`. **RELAUNCHED**: VM `alerting-quietness-20260522-083225` RUNNING.
+      Auto-shutdown ~2026-05-24 08:32 UTC.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
-      **BLOCKED-UPSTREAM (2026-05-18)**: gates on Phase 7 quietness baseline run. Cannot proceed until Phase 7
-      completes. Current UAC seed values are correct Phase 1 starting points per §"Threshold seeding rationale".
+      **BLOCKED-UPSTREAM (2026-05-22 updated)**: quietness VM failed twice (stall watchdog). Root cause fixed at
+      alerting-service@16e9dde. Requires: (1) tarball rebuild (`create-code-tarballs.sh`), (2) VM re-launch
+      (`launch-alerting-quietness-baseline.sh --env staging --force`), (3) 48h run, (4) operator FP-rate analysis
+      ([HUMAN] item above). Cannot proceed until those steps complete.
 - [ ] [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
       Telegram-severity false positives.
 
@@ -613,8 +629,8 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
       commit message per CLAUDE.md "alerting-service is Harsh's repo"; follows existing `_find_kill_switch_rule`
       precedent.
 - [x] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
-      live-instruments-failure-rules section (already extended in `instruments_live_master_2026_05_08` Phase A.4 — land
-      both updates same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
+      live-instruments-failure-rules section (already extended in `instruments_master` Phase A.4 — land both updates
+      same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
       [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) covers all 4
       AlertCodes + the 30s coalesce semantics + cross-refs to UAC + alerting-service + tests.
 
@@ -665,9 +681,9 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
 - `master_to_live_defi_2026_05_23:work-stream-E` — alerting / kill-switch verification.
 - `master_to_live_defi_2026_05_23:Group F` — live trading prereqs include alerting.
 - `master_to_live_defi_2026_05_23:Group G` — DART operator UX includes Active Alerts panel.
-- `defi_master_2026_05_07:carry_staked_basis live wiring` — needs `DEFI_HEALTH_FACTOR_CRITICAL` + `DEFI_WEETH_DEPEG` +
+- `defi_master:carry_staked_basis live wiring` — needs `DEFI_HEALTH_FACTOR_CRITICAL` + `DEFI_WEETH_DEPEG` +
   `DEFI_FEATURE_STALE` rules live.
-- `defi_master_2026_05_07:ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) — needs `DEFI_FUNDING_RATE_FLIP`.
+- `defi_master:ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) — needs `DEFI_FUNDING_RATE_FLIP`.
 - `dart_ux_cockpit_refactor_2026_04_29:Layer-2-badges` — Active Alerts widget shares badges + maturity flags.
 
 ## Coordination notes
@@ -790,245 +806,3 @@ alerting-service edits LOCAL until UAC unblocks. Files written locally:
 **Total**: 9-12 days. Fits in the 16-day window with margin if no blockers materialise. Compression possible by
 parallelising Phases 3 + 4 + 5 + 6 + Phase 1+2 simultaneously — that brings the floor to 7-8 days assuming clean QG
 pass.
-
-## Audit 2026-05-07
-
-- **Audit run**: 2026-05-07 (created at audit synthesis time)
-- **Verified**: 0 of N (new plan, all items pending Phase 1 kickoff)
-- **In-flight (running VMs)**: none
-- **Blocked by**: nothing
-- **Blocks**: master_to_live_defi:work-stream-E, master_to_live_defi:Group-F, master_to_live_defi:Group-G,
-  defi_master:carry_staked_basis-live, defi_master:ARBITRAGE_PRICE_DISPERSION-funding-rate-dispersion,
-  dart_ux_cockpit:Layer-2-badges
-- **Last meaningful commit**: this plan ships as the keystone unblock.
-- **Recommendation**: kickoff immediately after Harsh review of Phase 1 taxonomy.
-
-## DONE-2026-05-08 — Tab 5 (Agent 5) cycle shipments
-
-**Cycle ownership**: `work_split_2026_05_08_ikenna.md` Tab 5 — Alerting + master refresh + governance. Orchestrator
-spawned 6 parallel sub-agents (A-F) + dispatched a 7th (G) post-decision; 5 completed clean, 1 returned a case-5
-operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial).
-
-### Shipped artefacts (per-sub-agent + self-ship)
-
-- **Phase 1 — UAC alerting taxonomy** (already complete pre-cycle at UAC@`d00326d`).
-- **Phase 2 — Producer migration to UAC** (already complete pre-cycle at alerting-service@`b025e83`).
-- **Phase 3 producer-side (Option A envelope extension + 3 service consumer migrations)**:
-  - UAC@`2636815` (Sub-G Wave 1) — `code: AlertCode | None = None` field on AlertEvent + AlertMessage + DefiAlert
-    envelopes; lazy-import resolution.
-  - execution-service@`624c36a8` (Sub-G Wave 2) — yield_recon + funding_recon AlertEvents stamped with AlertCode.
-  - position-balance-monitor-service@`d206ab3` (Sub-G Wave 2) — reconciliation_engine + fee_reconciliation_engine
-    AlertEvents stamped with AlertCode.
-  - risk-and-exposure-service@`915f0de` (Sub-G Wave 2) — RiskMonitor.\_send_alert AlertMessage stamped with AlertCode.
-  - features-service (onchain family): **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B
-    finding).
-- **Phase 5 — DART integration**:
-  - unified-trading-system-ui@`e9559565` (Sub-D) — AlertDetailModal + SeverityBreakdownWidget + notification-bell
-    poll-interval + critical-only badge filter + Playwright `live-operator` ack-flow spec. 19/19 vitest green.
-  - PM@`6a34d794` (bundled plan-flip via foot-gun #3 muddled attribution).
-- **Phase 6 — 15 per-AlertCode runbooks**:
-  - PM@`45b854d5` + `6fad278e` + `db99a3ef` + `b40d405a` + `ac40983b` (Sub-C) — `_template.md` + 15 per-code runbooks
-    (~200-400 lines each) + README.md index.
-  - UAC@`8e68a2b` (Sub-C) — `runbook_doc` field re-pointed to canonical slugs + 4 unit tests asserting Phase 6 slugs
-    present.
-- **CeFi ML alerting taxonomy**:
-  - UAC@`6c4784f` (Sub-E) — 6 ML alert codes (ML_SIGNAL_STALENESS / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION /
-    ML_INFERENCE_LATENCY_BREACH / ML_MODEL_VERSION_MISMATCH / KILL_SWITCH_ML_MODEL_FAILURE) + 5 ML thresholds (PSI +
-    MILLISECONDS units added) + 6 ML rules + 7 new tests (38 total passing).
-  - PM@`ab595616` (Sub-E plan-flip; bundled foreign attribution per foot-gun #1).
-- **Phase 2 KillSwitchBus publisher hook (Item 1)**:
-  - UAC@`3793310` (self-ship) — `kill_switch_scope: KillSwitchScope | None` field on AlertRule + validator (REQUIRED for
-    KILL*SWITCH*_; MUST be None for others); KillSwitchScope moved to canonical/crosscutting/alerting/codes.py SSOT
-    (re-export from internal/domain/deployment*service/isolation.py for backward compat); LIVE_ALERT_RULES KILL_SWITCH*_
-    wildcard split into 3 atomic per-code rules (LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL,
-    VENUE_DISCONNECT=VENUE) + ML_MODEL_FAILURE=ARCHETYPE; tests.
-  - UAC@`2541a47` (self-ship) — KillSwitchScope on top-level facade **init**.py + **all** for clean import-pattern.
-  - alerting-service@`8eda37c` (self-ship) — `_find_kill_switch_rule` + `_resolve_scope_key` +
-    `_publish_kill_switch_event` helpers + post-channel-dispatch wire in `route_event`. Defensive isolation: bus publish
-    failures log + emit ADAPTER_FETCH_FAILED but never raise. 5 integration tests
-    (`tests/integration/test_kill_switch_publisher_hook.py`).
-- **Deploy_missing Phase 0 facilitation**:
-  - PM@`351e0a2e` (Sub-F) — `## Operator decision summary` section in `deploy_missing_auto_launch_2026_05_07.md`:
-    Decision 1 IAM scope (Option B custom role, zone-scoped); Decision 2 audit-log shape (BigQuery primary + Cloud
-    Logging mirror + GCS cold tier; 90d/5y); Decision 3 rate-limits (30/hr/200/day per-operator + 100/hr project + 6h
-    per-shard idempotency). Phase 0 audit todos annotated awaiting operator sign-off; ping ledger entry filed.
-
-### Findings raised
-
-- **Case-5 (resolved)**: alerting Phase 3 envelope schema gap — issue doc at
-  `plans/archive/issues/alerting_phase3_envelope_schema_gap_2026_05_08.plan.md` § "RESOLVED 2026-05-08"; Option A
-  operator decision triggered the resolution chain landed under "Phase 3 producer-side" above.
-- **Case-3 (foreign QG, RESOLVED upstream)**: UAC `test_no_eth_perp_venue_accepts_eth_lst_today` shipped at
-  `unified-api-contracts/tests/unit/test_defi_registries.py:361`. Pre-existing QG-failure finding (Stream A territory,
-  Tab 1 owner) was resolved upstream when the test landed; no separate issue doc needed. Per CLAUDE.md "QG failure
-  attribution" agents continued past at the time.
-- **Case-3 (foreign QG)**: PM `validate_plan_links.py` AttributeError — issue doc at
-  `plans/archive/issues/pm_validate_plan_links_attribute_error_2026_05_08.plan.md`. Workspace-wide validator
-  infrastructure bug; PM-scripts-maintainer owner.
-
-### Foot-guns observed
-
-- **Foot-gun #3 cascade** hit multiple sub-agents during PM commits (auto-revert hook racing edits): Sub-B's issue doc
-  was wiped from disk by parallel-agent reset cycle (recreated as RESOLVED above); Sub-A's UAC `kill_switch_scope` field
-  was reverted 4 times before landing (operator-rescue commit PM@`1cb53663` cleaned up the cascade). Sub-E noted same —
-  codex `alert-code-taxonomy.md` ML-category section reverted 5+ times by `git checkout HEAD --` from parallel agent.
-  Codex update for ML category **DEFERRED** to next session when activity quiets.
-- **Foot-gun #1 muddled attribution**: 3 of my 8 commits got bundled into parallel-agent's auto-commit cycles (content
-  correct on origin; author attribution wrong). Per workspace precedent, ship-and-document, no rework.
-- **Sub-G usage cap**: hit Wave 2 of 4-wave plan; Wave 3 (Phase 3 emission sites for ORDER_REJECTION_SPIKE +
-  POSITION_DRIFT detectors) + Wave 4 (plan flips + issue doc finalisation) cap-cut. Self-ship picked up Wave 4 plan
-  flips + Sub-A's UAC field; Wave 3 emission sites still pending — flagged DEFERRED in Phase 3 above.
-
-### Item 4 — Master Group F+G refresh
-
-Pending in this session — runs after this commit lands. Group F item 22 alerting wiring flips ◐ → partial-complete with
-citation: alerting-service rules consume `LIVE_ALERT_RULES` SSOT (Phase 2 b025e83); Phase 3 envelope migration shipped
-end-to-end (Option A); Phase 2 KillSwitchBus publisher hook shipped (8eda37c); features-onchain emission sites + Phase
-4-9 pending per cutover ladder.
-
-### Item 5 — Deploy_missing Phase 0
-
-PM@`351e0a2e` shipped operator decision summary; awaits operator sign-off (no agent can lock these decisions —
-operator-only gate per CLAUDE.md "Plans Run To Actual Completion HARD RULE" hard-stop list).
-
-### Item 6 — CeFi ML alerting + DART manual-override
-
-UAC additions shipped (UAC@`6c4784f`). DART manual-override UI + producer wiring (ml-inference-service emission sites
-for the new codes) **DEFERRED** to strategy_and_dart_master Phase 2.2 + features-onchain Fork 1 wiring per Sub-E
-finding.
-
-### Cycle metrics
-
-- 7 sub-agents dispatched (A-G); 5 completed clean, 1 BLOCKED+resolved (B), 1 partial-cap-cut (G).
-- ~12 commits across 4 repos (UAC × 3, alerting-service × 1, execution-service × 1, position-balance-monitor × 1,
-  risk-and-exposure × 1, unified-trading-system-ui × 1, PM × 4+).
-- 3 issue docs filed (1 RESOLVED in same cycle, 2 outstanding for cross-side / future-cycle).
-- Phase 5 + Phase 6 + Phase 1 + Phase 2 hook + Phase 3 envelope migration all GREEN; Phase 3 emission-site sweep + Phase
-  4 (paging targets) + Phase 7 (quietness baseline) + Phase 8 (rehearsal) + Phase 9 (go-live) carry over.
-
-## DONE-2026-05-10 — Tab L (alerting-phase4-telegram-tab) shipments
-
-**Cycle ownership**: Phase 4 + Phase 7 staging — operator-direct spawn of Tab L by Ikenna's main orchestrator. Mission:
-ship Telegram-as-primary paging end-to-end against the existing operator-set-up alert chat.
-
-### Shipped artefacts
-
-- **Phase 4 — Telegram SM creds (both clouds, version 1)**:
-  - GCP project `central-element-323112` (`gcloud secrets create alerting-telegram-bot-token` +
-    `alerting-telegram-chat-id`, automatic replication, version 1 seeded each).
-  - AWS account `427895769566` region `ap-northeast-1` (`aws secretsmanager create-secret` for both names, version 1
-    seeded each).
-  - Verified via `list_secret_versions` on both clouds: 1 version per secret per cloud.
-- **Phase 4 — smoke alert sent end-to-end** (Tab L 2026-05-10 18:57:19 UTC):
-  - Used existing `alerting_service.notifiers.telegram.send_telegram()` via UnifiedCloudConfig env-var bindings.
-  - Returned `ok=True` (HTTP 200 from api.telegram.org); event log `TELEGRAM_MESSAGE_SENT severity=INFO`.
-  - Awaiting operator visual ack in chat; smoke message text cited timestamp + Tab L identity.
-- **Phase 7 — quietness baseline launcher pre-staged** (`deployment-service@8f87972`):
-  - `deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` — singleton-locked 48h GCE launcher, e2-
-    standard-2, asia-northeast1-c, PagerDuty disabled, Telegram channel override `uts-staging-noise`. Pre-flight checks
-    GCP SM has the Telegram secret. Auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`.
-  - `vm_zombie_watchdog.py` — registered `alerting-quietness-` prefix (heartbeat-only; alerting emits to events stream +
-    AlertStorageStore, not per-VM manifest shards).
-  - **NOT FIRED** — gated on Phase 4 SM hot-reload (Harsh's pickup) + operator green-light.
-
-### Findings raised
-
-- **Case-5 (operator-action) BIG**: Tab L's first smoke httpx INFO log leaked the bot token in the URL path. Severity =
-  MODERATE (token only fires alerts to one chat, not a trade-execution credential). Operator action required: rotate via
-  @BotFather + re-push to GCP/AWS SM. Captured as P0 [HUMAN] todo in Phase 4 body. Tab L tightened the smoke retry to
-  silence httpx INFO logging — the durable fix is per-call logger suppression in `send_telegram()` itself.
-
-### Foot-guns observed
-
-- **httpx INFO logging in token-bearing URL** (codified as case above) — not pre-existing in CLAUDE.md; potential add
-  for "credential handling" section if operator wants. Workaround: silence `logging.getLogger("httpx")` to WARNING
-  before any Telegram POST.
-
-### Items deferred (per "Capture Discoveries" rule end-of-cycle audit)
-
-All deferrals listed in chat summary mirror items already captured in plan body's "Deferred work after 2026-05-10 Tab L
-session" scoreboard above. No grep-misses.
-
-### Cycle metrics
-
-- 1 spawned tab (Tab L), no fan-out.
-- 2 commits: `deployment-service@8f87972` (launcher + watchdog) + this PM plan-flip commit.
-- 0 issue docs filed (all findings captured as plan annotations + body items per Findings Triage Discipline case 1+2).
-
-## DONE-2026-05-11 — Slot 7 (ikenna-phase-1d-tab) Sub-A cycle shipments
-
-**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7 master
-spawned 3 sub-agents in parallel; Sub-A targeted alerting Phase 2.X + ML codex section.
-
-### Shipped artefacts (Sub-A scope)
-
-- **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename**:
-  - `unified-api-contracts@0b61aec` — Pydantic field + 44 `LIVE_ALERT_RULES` constructor calls + 2 validators
-    (`_pattern_non_empty` → `_event_pattern_non_empty`; `_validate_pattern_matches_codes` →
-    `_validate_event_pattern_matches_codes`) + `tests/internal/unit/test_alerting_taxonomy.py` updated. 44/44 alerting
-    taxonomy tests pass. Drive-by fix to `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code` adding
-    `kill_switch_scope=KillSwitchScope.VENUE` (Findings Triage Case 1).
-  - `alerting-service@3b94456` — `router.py` `_find_kill_switch_rule` consumer one-liner. `to_routing_dict()` dict key
-    was already `event_pattern` (legacy byte-equivalence) so `config.py` factory was untouched.
-- **Phase 1.B carryover — codex ML category section** (DEFERRED-PER-FOOTGUN-3 from 2026-05-08; picked up cleanly under
-  per-slot worktree model):
-  - `unified-trading-pm@41c8a519` — `codex/15-runbooks/alerting/alert-code-taxonomy.md` new ML category subsection (6 ML
-    codes + severity routing + threshold sources + archetype-scope mapping); KillSwitchScope mapping table extended to 4
-    rows (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE, ML_MODEL_FAILURE=ARCHETYPE).
-    Phase 2.X + Phase 1.B-ML-codex plan checkboxes flipped `[x]`. IN-FLIGHT REFACTOR banner at top of plan removed.
-
-### Findings raised
-
-None. Foot-gun #3 (parallel-agent auto-revert wiping codex edits) was **unrepresentable** under per-slot worktree model
-codified 2026-05-10 — codex ML category section landed cleanly on first attempt where 5+ previous attempts had failed.
-
-### Cycle metrics
-
-- 30 minutes (vs ~4 hour budget). Per-slot worktree isolation eliminated the foot-gun #3 retry tax.
-- 3 commits across 3 repos (UAC + alerting-service + PM).
-- 0 issue docs filed.
-
-## DONE-2026-05-11 — Slot 7 master coordinator (LIVE_ALERT_RULES seed for Sub-B's 6 AlertCodes)
-
-After Sub-A's `event_pattern` rename + Sub-B's 6 new `AlertCode` members landed, the master coordinator (slot 7 main)
-seeded the corresponding `LIVE_ALERT_RULES` entries — the master's scope partition per the 3-agent fan-out:
-
-- `unified-api-contracts@c96447b` — `feat(uac): LIVE*ALERT_RULES — 6 new entries (4 RISK_RULE*_ + 2
-  KILL*SWITCH*_\_RECOVERED)
-  - E501
-    cleanup`. 6 new `AlertRule`entries using the new`event_pattern`field (4 risk-rule consequences per the § 7 seam diagram severity routing; 2 kill-switch recovery events per Q8 ratification). Fixes the E501 leftover at`alerting/rules.py:126`from Sub-A's rename. Test`test_kill_switch_rules_trigger_kill_switch_flag`updated to exempt RECOVERY codes from the`triggers_kill_switch=True`
-    invariant — they report past state changes, not arm new ones. 160/160 tests pass workspace-wide across alerting +
-    risk_rule + strategy_family + circuit_breaker + kill_switch.
-
-## DONE-2026-05-11 — Slot 7 Round 2 Sub-I (alerting P1 tick-staleness)
-
-Sub-I shipped the P1 tick-staleness + connectivity-gap migrated-issue from § "Tick-staleness + connectivity-gap event
-taxonomy". 4 new AlertCodes (closed-set grew 52 → 56):
-
-- `TICK_STALENESS` (HIGH, PagerDuty + Telegram) — MDPS downstream-detected staleness
-- `CONNECTIVITY_GAP_DETECTED` (HIGH, PagerDuty + Telegram) — MTDS upstream-detected gap
-- `CONNECTIVITY_RECOVERED` (INFO, Telegram) — recovery
-- `CONNECTIVITY_GAP_BACKFILLED` (INFO, Telegram) — recovery + replay closed
-
-**Commits**:
-
-- `unified-api-contracts@29d4fe4` — `thresholds.py` (NEW `tick_staleness_seconds` 300s + `ThresholdUnit.SECONDS`).
-  Sub-I's intended commit; ALSO incidentally bundled Sub-E's 5 risk-registry files under this commit message via
-  foot-gun #1 within-slot index race.
-- `unified-api-contracts@92ad35c` — `codes.py` + `rules.py` (4 new AlertCode members + 4 LIVE_ALERT_RULES entries) +
-  `test_alerting_taxonomy.py` (+7 tests, 43 → 50 alerting tests pass).
-- `alerting-service@e7a9e7c` — `notifiers/router.py` `_check_coalesce_window()` (30s coalesce-window keyed on
-  `(venue, instrument)` for TICK_STALENESS + CONNECTIVITY_GAP_DETECTED) + `tests/unit/test_router_coalesce.py` (NEW, 22
-  tests, all green). **Pair-review tag** in commit body (alerting-service is Harsh's repo per CLAUDE.md "Two teammates"
-  rule); convention follows `_find_kill_switch_rule` precedent (`alerting-service@8eda37c`).
-- `unified-trading-pm@62d09dc8` — codex `04-architecture/alerting-batch-live.md` "Live Instruments Failure Rules"
-  section extended with 4 new codes + 3 plan checkboxes flipped (Phase 2.X migrated-issue todos: AlertCode taxonomy
-  extension + alert de-dup logic + codex update).
-
-**Findings**:
-
-- **Case-5 BIG — Foot-gun #1 cascade** documented in DONE-2026-05-11 of risk plan. Sub-E's pre-staged registry files
-  bundled under Sub-I's `UAC@29d4fe4` commit message via within-slot index race. No data loss; attribution muddled.
-
-**Cycle metrics**: ~75 min (under budget). 4 commits across 3 repos. 0 issue docs filed (findings captured in risk plan
-§ Audit findings 0.D + risk plan DONE-2026-05-11).

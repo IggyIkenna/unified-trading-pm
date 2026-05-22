@@ -116,13 +116,13 @@ and is per-repo scoped.
 
 Pick the knob that matches the bottleneck observed:
 
-| Symptom                                                 | Relax this                                | How                                                                                                      |
-| ------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| QG dies with exit 137 + "killed" message                | per-call `QG_MEM_CAP`                     | `QG_MEM_CAP=20G bash scripts/quality-gates.sh` (or set in repo's `quality-gates.sh` if recurring)        |
-| Disable cap entirely (CI, big-mem host)                 | `QG_MEM_CAP=0`                            | `QG_MEM_CAP=0 bash scripts/quality-gates.sh`                                                             |
-| QG is wall-clock-bottlenecked on slow tests             | `PYTEST_WORKERS` in repo                  | add `PYTEST_WORKERS=4` BEFORE `source .../base-service.sh` line in the repo's `scripts/quality-gates.sh` |
-| IDE basedpyright not finding cross-repo type errors     | switch back to workspace mode             | edit workspace `.vscode/settings.json` → `"basedpyright.analysis.diagnosticMode": "workspace"`           |
-| Need parallel QG storms (eg dependency-alignment sweep) | stagger via `flock` (not yet implemented) | add `flock /tmp/qg.lock bash scripts/quality-gates.sh` wrapper in caller                                 |
+| Symptom                                                 | Relax this                                          | How                                                                                                      |
+| ------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| QG dies with exit 137 + "killed" message                | per-call `QG_MEM_CAP`                               | `QG_MEM_CAP=20G bash scripts/quality-gates.sh` (or set in repo's `quality-gates.sh` if recurring)        |
+| Disable cap entirely (CI, big-mem host)                 | `QG_MEM_CAP=0`                                      | `QG_MEM_CAP=0 bash scripts/quality-gates.sh`                                                             |
+| QG is wall-clock-bottlenecked on slow tests             | `PYTEST_WORKERS` in repo                            | add `PYTEST_WORKERS=4` BEFORE `source .../base-service.sh` line in the repo's `scripts/quality-gates.sh` |
+| IDE basedpyright not finding cross-repo type errors     | switch back to workspace mode                       | edit workspace `.vscode/settings.json` → `"basedpyright.analysis.diagnosticMode": "workspace"`           |
+| Need parallel QG storms (eg dependency-alignment sweep) | stagger via `flock` (post-cutover -- not yet wired) | add `flock /tmp/qg.lock bash scripts/quality-gates.sh` wrapper in caller                                 |
 
 Order of relaxation when adding capacity (more RAM, fewer simultaneous slots):
 

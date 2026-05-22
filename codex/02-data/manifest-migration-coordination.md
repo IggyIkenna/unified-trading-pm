@@ -8,7 +8,7 @@ authoritative_for:
   rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so
   concurrent agents don't clobber the migration.
 referenced_by:
-  - plans/epics/manifest_migration_master_2026_05_07.md
+  - plans/epics/manifest_master.md
   - plans/active/manifest_schema_final_gate_2026_05_09.md
 related:
   - codex/02-data/availability-manifest-and-data-status.md
@@ -19,12 +19,18 @@ last_reviewed: 2026-05-17
 
 # Manifest Migration Coordination
 
-> **Status (refreshed 2026-05-12 per codex audit D-12):** ACTIVE. Body expanded from outline-only stub. Owns the
-> sequencing contract for the v7 → v8 cutover (`MANIFEST_SCHEMA_VERSION` constant bump + `None`-default removal +
-> reader-fallback retirement). Current runtime SSOT: `MANIFEST_SCHEMA_VERSION = 7` in
-> `unified-trading-library/unified_trading_library/manifest_writer.py:131` (transitional; column shape is already v8 —
-> see [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) § "Schema v8 (current;
-> ratified 2026-05-09)" Temporary-state block).
+> **Status (updated 2026-05-22 per codex differential audit Group B):** ACTIVE. The v7→v8 code-path cutover is
+> **COMPLETE** — `MANIFEST_SCHEMA_VERSION = 8` in `unified-trading-library/unified_trading_library/manifest_writer.py`
+> as of `UTL@547ff3c` (Phase 4.DEFAULT-REMOVAL, 2026-05-12). The `pipeline_mode` default is removed (explicit-or-fail)
+> from all 6 public `record_*` methods. **However**: as of the mega-audit Phase A (2026-05-20), 0% of 7.4M production
+> manifest rows were at `schema_version=8` — the writer fleet was stale (Docker images deployed to VMs built before the
+> v8 constant bump). The full data-side migration (Docker rebuild + v8 row backfill + label-flip) is sequenced in
+> `plans/epics/mtds_mdps_master.md` Phases 6–7 as part of the data-pipeline master coordination. This doc's migration
+> phases below describe the protocol used for the schema code bump; for the production data catch-up, read
+> `plans/epics/mtds_mdps_master.md` § Phase 7.
+>
+> **Reader fallback**: `read_availability_index()` backfills missing v7/v8 columns to defaults until the ~2026-06-15
+> reader-fallback deletion cutoff (tracked in `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 7).
 
 ## Purpose
 
@@ -129,8 +135,9 @@ Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 
 
 ## Cross-references
 
-- **Plan(s) implementing this:**
-  [`manifest_migration_master`](../../plans/epics/manifest_migration_master_2026_05_07.md).
+- **Plan(s) implementing this:** [`manifest_master`](../../plans/epics/manifest_master.md) (L1 epic, active —
+  consolidated from `manifest_migration_SUPERSEDED_2026_05_21` + `manifest_evolution_SUPERSEDED_2026_05_21` on
+  2026-05-21).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
 - **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM,

@@ -50,9 +50,34 @@ and Docker images for **long-lived production services** (strategy-service, exec
 
 Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys these:
 
-1. **One setup script**: every launcher passes
-   `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata. This is the **only**
-   script that knows how to bring up a VM.
+0. **`lifecycle_class` MANDATORY (Phase A.2)**: every non-`None` entry in `VM_PREFIX_TO_BUCKET` in
+   `vm_zombie_watchdog.py` MUST be a `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.<MEMBER>)`. The four valid
+   `LifecycleClass` members are:
+   - `EPHEMERAL_BATCH` — short-lived data pipeline VM (backfill, migration, smoke); self-deletes on completion
+   - `EPHEMERAL_EXPERIMENT` — experiment VM with run_id in name: `{prefix}{run_id}-{ts}` (e.g.
+     `exp-ml-{uuidv7}-{yyyymmdd}`); reserved prefixes: `exp-ml-`, `exp-strategy-`, `exp-execution-`
+   - `SCHEDULED_RECURRING` — VM launched by a cron (forward-poll, scheduled backfill sweeps)
+   - `LONG_LIVED_LIVE` — daemon VM with no expected self-termination (orchestrator, zombie-watchdog, cron-scheduler)
+
+   Missing or bare-string entries are caught by `validate_vm_prefix_mapping.py` and are review-blocking.
+
+1. **Two valid startup patterns** (codified O-18, 2026-05-21):
+   - **Pattern A — canonical tarball (data pipeline VMs)**: launcher passes
+     `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata.
+     `setup-data-pipeline-vm.sh` installs Python 3.13 via `uv`, fetches code tarballs, and routes to the workload CLI
+     via `VM_TASK`. Used for: backfill, migration, forward-poll, smoke VMs. This is the default pattern for any VM that
+     writes manifest rows or runs a service CLI.
+   - **Pattern B — inline startup (daemon / orchestrator / validator VMs)**: launcher writes an inline `STARTUP_FILE`
+     heredoc and passes it via `--metadata-from-file=startup-script=`. Used ONLY for VMs that install cron jobs, run
+     long-lived FastAPI daemons, or perform heartbeat-only validation without manifest writes (e.g.
+     `launch-cefi-fwd-daily-cron-vm.sh`, `launch-planning-vm.sh`, `launch-aave-lending-rate-validation-vm.sh`). These
+     VMs do NOT fetch tarballs or use `VM_TASK` routing.
+
+   **Both patterns MUST guarantee** the shard-isolation + observability invariants (2, 7–9). Pattern A satisfies them
+   via `setup-data-pipeline-vm.sh`'s built-in machinery. Pattern B launchers wire them explicitly via
+   `lib/launcher_common.sh` helpers. Using Pattern B for a data pipeline VM without explicit justification in the
+   launcher header is off-pattern. See § "Launcher pattern decision matrix" below.
+
 2. **Metadata-driven workload**:
    `VM_TASK=<cefi-backfill|sports-forward-poll|canonical-migration|sports-manifest-rescan|...>` routes to a specific CLI
    assembly inside `setup-data-pipeline-vm.sh`. Other metadata keys (`VM_SERVICE`, `VM_OPERATION`, `VM_CATEGORY`,
@@ -68,15 +93,24 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    (instruments-service, MDPS, features-\*, etc.) are opt-in via `--asset-group` / `--include` / `--all` flags on
    `create-code-tarballs.sh`.
 5. **Python 3.13 mandated**: UAC requires `>=3.13`. Ubuntu 24.04 ships 3.12. The setup script installs 3.13 via
-   `deadsnakes` PPA + `python3.13-dev` + `build-essential` (C extensions: `ckzg`, `lru-dict` for web3).
+   `uv python install 3.13` (updated 2026-05-21 — the deadsnakes PPA path is stale and must not be used). `apt` still
+   installs `build-essential` + `python3.13-dev` before the `uv` step for C-extension builds (`ckzg`, `lru-dict` for
+   web3). Pattern B inline launchers that install Python independently must use the same `uv`-based path.
 6. **Venv at `/home/ikennaigboaka/venv`**: all `nohup` invocations use the full venv path. `nohup python` without the
    full path fails on Ubuntu 24.04.
-7. **Observability + lifecycle via wrapper**: Every launcher that routes the workload through `_launch_with_tee` →
-   [`vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh) gets the same guarantees:
-   streaming GCS log upload, Firestore-backed `/api/vm-deployments` registration via
-   [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), and optional self-delete
-   when `VM_SHUTDOWN_ON_COMPLETION=true` (see § Observability & Lifecycle). **Do not** assume SSH or manual instance
-   delete for routine runs.
+7. **Observability + lifecycle — two tiers** (matches the two startup patterns):
+   - **Pattern A (canonical)**: `setup-data-pipeline-vm.sh` routes every workload through `_launch_with_tee` →
+     [`vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh), providing: streaming
+     GCS log + EXIT_STATUS file, deployment-registry heartbeats via
+     [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), stall watchdog, and
+     self-delete on `VM_SHUTDOWN_ON_COMPLETION=true`. Full lifecycle visibility without SSH (see § Observability &
+     Lifecycle).
+   - **Pattern B (inline)**: launcher sources `lib/launcher_common.sh` and includes `lc_log_upload_trap_block` for
+     lightweight GCS log upload on EXIT. No heartbeat daemon, no deployment-registry rows. Pattern B VMs are either
+     `LONG_LIVED_LIVE` daemons (monitored by the zombie watchdog) or heartbeat-only validators with no manifest writes.
+
+   **Do not** assume SSH or manual instance delete for Pattern A runs.
+
 8. **Same region as GCS data**: `ZONE=asia-northeast1-c` (default) for all data-pipeline VMs. Cross-region transfer
    cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in
    `asia-northeast1-b` or `asia-northeast1-a` — same region, zero cross-region egress. NEVER fall back to a different
@@ -85,6 +119,47 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
 Violating any of these means you're doing something off-pattern — document why in the launcher script header.
+
+---
+
+## Launcher pattern decision matrix (O-18, 2026-05-21)
+
+Use this table to decide which startup pattern to use when writing a new `launch-*.sh` launcher:
+
+| Workload type                                                      | Pattern | Rationale                                                                                     |
+| ------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------- |
+| Backfill VM (service CLI, writes manifest rows)                    | A       | Needs tarball install + `VM_TASK` routing + full observability via `vm-exec-with-gcs-tee.sh`. |
+| Migration VM (runs a migration script, writes manifest rows)       | A       | Same as backfill; `VM_TASK=canonical-migration` or custom handler.                            |
+| Forward-poll VM (recurring ingestion, writes manifest rows)        | A       | Same as backfill.                                                                             |
+| Smoke / ad-hoc data VM (runs a service CLI, writes manifest rows)  | A       | Same as backfill.                                                                             |
+| Cron scheduler VM (installs crontab, fires launchers periodically) | B       | No manifest writes; startup wires cron job, not a service CLI. Long-lived daemon.             |
+| Orchestrator VM (runs FastAPI dashboard, LONG_LIVED_LIVE)          | B       | Clones agent-orchestrator, starts server — not a tarball workflow.                            |
+| Validation VM (heartbeat-only, no manifest writes)                 | B       | No tarballs needed; validates external data but doesn't write to instruments-store.           |
+| Zombie watchdog VM (reads manifests, no writes)                    | B       | Long-lived daemon; reads GCS/manifest but doesn't write.                                      |
+
+**Pattern B invariants (what every inline launcher MUST wire manually):**
+
+- `MANIFEST_PER_VM_SHARDS=true` in `--metadata` (omit ONLY if VM provably makes zero manifest writes — document this).
+- `VM_NAME=${VM_NAME}` in `--metadata` for per-VM log identity.
+- `VM_SHUTDOWN_ON_COMPLETION` set appropriately (`true` for one-shot, `false` for LONG_LIVED_LIVE daemons).
+- Source `lib/launcher_common.sh` and call `lc_log_upload_trap_block` for GCS log upload on EXIT.
+- Header comment MUST document: why Pattern B is used + which of the above invariants are intentionally absent + reason.
+
+**Pattern B known exceptions (intentionally missing invariants, documented at script header):**
+
+| Launcher                                         | Missing invariant        | Reason                                                                       |
+| ------------------------------------------------ | ------------------------ | ---------------------------------------------------------------------------- |
+| `launch-aave-lending-rate-validation-vm.sh`      | `MANIFEST_PER_VM_SHARDS` | Heartbeat-only; no manifest writes                                           |
+| `launch-amm-golden-fixture-validation-vm.sh`     | `MANIFEST_PER_VM_SHARDS` | Heartbeat-only; no manifest writes                                           |
+| `launch-cefi-fwd-daily-cron-vm.sh`               | `MANIFEST_PER_VM_SHARDS` | Cron daemon; no direct manifest writes                                       |
+| `launch-tradfi-fwd-daily-cron-vm.sh`             | `MANIFEST_PER_VM_SHARDS` | Cron daemon; no direct manifest writes                                       |
+| `launch-planning-vm.sh`                          | `MANIFEST_PER_VM_SHARDS` | Orchestrator daemon; no manifest writes                                      |
+| `launch-epic-vm.sh`                              | startup-script-url       | Agent-orchestrator epic VM; boots long-lived orchestrator service            |
+| `launch-vm-zombie-watchdog.sh`                   | startup-script-url       | Always-on daemon; polls GCS heartbeats every 5 min                           |
+| `launch-prediction-features-vm.sh`               | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |
+| `launch-features-sports-parallel-backfill-vm.sh` | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |
+| `launch-prediction-pipeline-vm.sh`               | startup-script-url       | 3-service sequential pipeline; multi-stage handler exceeds complexity budget |
+| `launch-gcs-migration-bundle-vm.sh`              | startup-script-url       | Per-run GCS script staging; PM migration script not in any service tarball   |
 
 ---
 
@@ -167,8 +242,9 @@ The singleton-lock pattern grew from 3 anchor launchers (2026-04-20) to **~36 la
   `launch-aster-forward-poll.sh` + per-source-provider variants.
 - **Backfill workers** with shared API quotas: features-service backfills (`launch-features-*`), instruments-service
   backfills (`launch-cefi-instruments-backfill.sh`, `launch-api-football-backfill-vm.sh`).
-- **Single-resource daemons**: `launch-manifest-consolidator-vm.sh` (one daemon per zone is sufficient — multiple race
-  on the consolidator's sentinel-lock and waste API calls).
+- **Single-resource daemons**: ~~`launch-manifest-consolidator-vm.sh`~~ DELETED 2026-05-20 — consolidator now runs on
+  Cloud Run + Cloud Scheduler (10 jobs, `*/1 * * * *`). Do NOT re-launch the GCE VM. See
+  [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md).
 - **Reconciliation / audit one-shots**: `launch-cross-asset-rescan-vm.sh`, `launch-blank-reason-recon-vm.sh`,
   `launch-defi-phantom-recon-vm.sh`, `launch-fixtures-truthset-audit-vm.sh` — singleton prevents double-counting of
   manifest flips.
@@ -481,72 +557,38 @@ tail
 
 ---
 
-## Manifest consolidator daemon (2026-04-29)
+## Manifest consolidator — SUPERSEDED (GCE VM deleted 2026-05-20)
 
-**Launcher:**
-[`deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh`](../../../deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh)
+> **[DELTA 2026-05-22]** **Current state:** Manifest consolidator runs on **Cloud Run + Cloud Scheduler** (10 jobs,
+> `*/1 * * * *` UTC). Legacy GCE VM (`manifest-consolidator-20260511-190513`) was deleted 2026-05-20. Launcher script
+> `launch-manifest-consolidator-vm.sh` was also deleted. **Planned delta:** slot 5 to extend to all 16 service buckets
+> (R-NEW-1) and consolidate 10 → 5 jobs per operator direction. **Target architecture:** 5 Cloud Run jobs, one per
+> asset_group, each consolidating all service buckets for that asset_group. Terraform:
+> `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`.
+>
+> **FULL SSOT: [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md)** — do NOT re-derive from this section.
 
-A long-lived `e2-small` daemon (~$12/mo) that polls the UTL manifest consolidator on every asset_group bucket every 60s.
-Purpose: keep `_index/availability_index.parquet` fresh in each `instruments-store-*` bucket so the UTL reader's 120s
-freshness fallback doesn't truncate readers (deployment-api data-status, FSS reader, downstream services) to a
-per-VM-shards-only view.
-
-**Architecture (manifest-429 phase 6/7):**
+The **original architecture** (documented for historical context):
 
 - VMs writing to the manifest write to `_index/per_vm/<vm_name>.parquet` shards (avoids canonical write contention).
 - A consolidator periodically reads canonical + all per_vm shards, dedups on the row-key tuple, writes back to
   canonical.
-- The UTL reader has a 120s freshness threshold — if canonical is stale, falls back to per_vm shards only. So if the
-  consolidator stops running, readers see a partial view.
+- The UTL reader has a 120s freshness threshold — if canonical is stale, falls back to per_vm shards only.
 
-**Why VM not Cloud Run Job:** Plans 12 + 13 blockers on deployment-service image build + UTL base image. VM uses the
-tarball infra (UAC + UTL + deployment-service already on GCS) and runs the consolidator's CLI in a bash poll loop.
+This architecture is **unchanged** — only the runtime changed from GCE VM to Cloud Run.
 
-**In-VM command shape** (assembled by `setup-data-pipeline-vm.sh` from `VM_TASK=manifest-consolidator-poll`):
+**Do NOT:**
 
-```bash
-while true; do
-  for bucket in $BUCKETS; do
-    python -m unified_trading_library.manifest_consolidator --bucket $bucket --once
-  done
-  sleep $POLL_INTERVAL
-done
-```
+- Re-launch `launch-manifest-consolidator-vm.sh` (deleted; script no longer exists)
+- Run `gcloud compute instances create manifest-consolidator-*` (would re-introduce the deprecated pattern)
+- Reference `VM_TASK=manifest-consolidator-poll` (no longer a valid VM task)
 
-Default buckets: `instruments-store-{sports,cefi,defi,tradfi,prediction}-PROJECT_ID`. Default poll: 60s.
-
-> **Watchdog-dict asymmetry (2026-05-12)**: the consolidator polls all 5 asset_group buckets including
-> `instruments-store-prediction-PROJECT_ID`, but `VM_PREFIX_TO_BUCKET` in
-> `deployment-service/scripts/vm/vm_zombie_watchdog.py` only registers 4 of 5 `instr-backfill-*` prefixes (`cefi-` /
-> `defi` / `tradfi` / `sports`); `instr-backfill-prediction` is missing. Either (a) add `instr-backfill-prediction-`:
-> `instruments-store-prediction-{pid}` to the dict + relaunch watchdog, or (b) confirm that no prediction-bucket
-> instruments backfill launcher is shipped today and drop the prediction path from the consolidator's default bucket
-> list. Slot 11 (launcher-consolidation owner) to disambiguate.
-
-**Singleton lock:** the launcher refuses to start if any `manifest-consolidator-*` VM is RUNNING in the zone (multiple
-would race on the consolidator's sentinel-lock and waste API calls). One daemon per zone is sufficient.
-
-**Metadata encoding gotcha:** the launcher encodes the buckets list with `:` separator (not `,`) because gcloud's
-`--metadata=KEY=VAL,KEY2=VAL2` parser splits top-level pairs on commas. The setup script converts `:` back to spaces for
-the bash loop.
-
-**UTL bug fix prerequisite (2026-04-29):** the consolidator had a `BlobMetadata` filter bug in `_read_per_vm_shards`
-(filtered with `isinstance(p, str)` against `list_blobs` results which are `BlobMetadata` objects) → silently reported
-`shards_scanned: 0`. Fixed in `unified-trading-library/unified_trading_library/manifest_consolidator.py` — extract
-`.name` attribute from BlobMetadata before path filter. The daemon needs the post-fix UTL tarball to actually do work.
-
-**Operations:**
-
-```bash
-bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh                    # all 5 asset_group buckets, 60s poll
-bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh --interval 30      # 30s poll
-bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh --buckets BUCKET1,BUCKET2  # custom subset
-gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/manifest-consolidator-<TS>/run.log  # tail logs
-gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast1-c --quiet  # stop
-```
+**Instead:** consult [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md) for the canonical Cloud Run
+verification recipe + coverage gap status + operational invariants.
 
 **SSOT cross-refs:**
 
+- [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md) — canonical runtime SSOT
 - [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) "Manifest
   consolidator + per_vm shard merge mechanics"
 - UTL CLI: `python -m unified_trading_library.manifest_consolidator --bucket <X> --once`

@@ -1,16 +1,8 @@
 ---
 name: phase5-features-streaming-carry-staked-basis-mvp
-overview:
-  Ship the minimum-viable Phase 5 (features-service streaming) subset that unblocks carry_staked_basis
-  paper-evidence run for May-23 cutover. Concretely: produce live + 30-day-backfilled values for the 4
-  feature keys carry_staked_basis._preflight reads (staking_apy_bps, funding_rate_apy_bps, lst_native_rate,
-  health_factor). Defer non-MVP feature groups, multi-archetype dispatch, and post-cutover scope to
-  follow-up plans. Paper VM must flip from fills=0 to fills>0 by 2026-05-22 23:59 UTC.
-type: plan
+title: "Phase 5 features streaming — carry staked basis MVP (2026-05-19)"
 status: active
 created: 2026-05-19
-deadline: 2026-05-23
-horizon: 4 days
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 related_plans:
@@ -18,10 +10,6 @@ related_plans:
   - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/features_repo_consolidation_2026_05_08.md
-related_codex:
-  - codex/04-architecture/live-pipeline-architecture.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/service-output-emission-semantics.md
 estimate_class: brand-new
 estimate_baseline_ai_days: 15.0
 estimate_calibrated_ai_days: 15.0
@@ -31,6 +19,8 @@ estimate_calibration_note: |
   +3 cal-AI-days for Phase G MatchingEngineExecutionProvider (matcher exists; wrapper + L2 depth
   source + funding-PnL loop + factory wiring + tests). Operator pace 2026-05-12 → 2026-05-19
   averaged ~180 cal-AI-days/day, so 15 cal-AI-days fits a ≤4-day calendar window with 3+ slots.
+parent_epic: features_and_ml_master
+priority: P2
 ---
 
 ## Why this plan exists
@@ -335,16 +325,18 @@ Per operator directive 2026-05-20 "trading-agent-service architecture unlocked":
 surface for performance-derived features to exist even if it only computes passthrough today. Adds the
 `features_service/performance_features/` package; trading-agent-service reads from this surface post-cutover.
 
-- [ ] [AGENT] P1. Create `features_service/performance_features/__init__.py` + `passthrough_compute.py` that subscribes
-      to `StrategyPnlStreamEvent` and emits FeaturesComputedEvent with feature_group=`performance_features` containing
-      the raw PnL fields (no derivation today). Output parquet at canonical manifest v5 path.
-- [ ] [AGENT] P1. Add `performance_features` to features-service CLI dispatcher:
-      `python -m features_service --operation compute --feature-group performance_features --asset-group <ag>` works
-      (no-op passthrough today).
-- [ ] [AGENT] P1. Manifest write: emit `record_empty(reason=EXPECTED_NO_PNL_STREAM)` when no upstream PnL events
-      received for the day (off-by-default state).
-- [ ] [TEST] P1. Unit test: subscribe-and-emit passthrough preserves all fields end-to-end; honest-absence path emits
-      expected reason.
+- [x] ✅ [AGENT] P1. Create `features_service/performance_features/__init__.py` + `passthrough_compute.py` that
+      subscribes to `StrategyPnlStreamEvent` and emits FeaturesComputedEvent with feature_group=`performance_features`
+      containing the raw PnL fields (no derivation today). Output parquet at canonical manifest v5 path. —
+      features-service@7b72c3f8
+- [x] ✅ [AGENT] P1. Add `performance_features` to features-service CLI dispatcher:
+      `python -m features_service --feature-family performance_features --start-date ... --end-date ...` works
+      (honest-absence passthrough today). — features-service@7b72c3f8
+- [x] ✅ [AGENT] P1. Manifest write: emit `record_empty(reason=EXPECTED_NO_PNL_STREAM)` when no upstream PnL events
+      received for the day (off-by-default state). — features-service@7b72c3f8
+- [x] ✅ [TEST] P1. Unit test: subscribe-and-emit passthrough preserves all fields end-to-end; honest-absence path emits
+      expected reason. (5 tests in `tests/performance_features/unit/test_passthrough_compute.py`) —
+      features-service@7b72c3f8
 
 **Done gate**: features-service QG green; manifest shows `performance_features` row with `empty_confirmed` reason
 `EXPECTED_NO_PNL_STREAM` for May-23 lead pair; consumer surface exists, no derivation.

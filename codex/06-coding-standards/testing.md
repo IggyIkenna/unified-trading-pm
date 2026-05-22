@@ -23,8 +23,13 @@ behavioural axis).
 Workspace evidence: `.claude/rules/python-backend.md` + `.claude/rules/universal.md` § "Expand existing test files". The
 codex SSOT is this doc (2026-05-12 codification).
 
-**Proposed QG ratchet** (PRE*CUTOVER backlog per TS-10 audit): `rg 'test*.\*\_(extended|additional|new)\.py'` → fail in
+**Proposed QG ratchet** (post-cutover backlog per TS-10 audit): `rg 'test*.\*\_(extended|additional|new)\.py'` → fail in
 QG. Today reviewer-discipline-only; ratchet wiring 🟡 NEEDS-OPERATOR-GATE (auto-fail vs warning).
+
+> **[DELTA 2026-05-22]** **Current state:** Reviewer-discipline only — no automated QG ratchet for `test_*_extended.py`
+> / `test_*_additional.py` / `test_*_new.py` filenames. **Planned delta:** `plans/epics/infrastructure_master.md` — STEP
+> 5.x ratchet to auto-fail QG on these filename patterns. **Target:** Any new `test_*_extended.py` fails QG immediately;
+> zero such files in the workspace.
 
 ## Singleton conftest fixtures
 
@@ -112,9 +117,9 @@ Per CLAUDE.md "Git discipline" + `.claude/rules/python-backend.md` § "Two-pass 
 - **Pass 2**: `bash scripts/quickmerge.sh "msg" --agent` (lint/format/typecheck/codex — **no tests; Pass 1 already ran
   them**).
 
-A common misread: "I ran `quickmerge --agent` and it passed, so tests passed too" — **wrong**. Pass 2 deliberately skips
-tests; Pass 1 is the test gate. SSOT pointer added 2026-05-12 per TS-19 audit (POST_CUTOVER backlog) is here as well —
-agents should not interpret a green Pass 2 as test coverage.
+A common misread: "I ran `quickmerge --agent` and it passed, so tests passed too" -- **wrong**. Pass 2 deliberately
+skips tests; Pass 1 is the test gate. SSOT pointer added 2026-05-12 per TS-19 audit (post-cutover backlog -- this doc is
+the landing) -- agents should not interpret a green Pass 2 as test coverage.
 
 ## Cross-references
 

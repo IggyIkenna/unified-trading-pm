@@ -94,6 +94,12 @@ The demo walks each catalogue in sequence:
    └── event-audit
 ```
 
+> **[DELTA 2026-05-22]** **Current state:** ML Model Catalogue and Execution Algo Catalogue surface under
+> `/services/research/ml` and `/services/execution/overview` respectively — separate routes, not a unified catalogue
+> surface. TCA on the Execution Algo Catalogue is currently broken (triage-listed). **Planned delta:** Consolidation
+> into a unified catalogue surface tracked in `codex/14-customer-journeys/roadmap/next-waves.md`. **Target:**
+> post-cutover UI unification phase.
+
 ## What the prospect experiences
 
 The demo emphasises:

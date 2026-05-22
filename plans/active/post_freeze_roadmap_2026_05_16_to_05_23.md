@@ -1,18 +1,16 @@
 ---
 title:
   Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
-type: coordination-doc
 status: active
 created: 2026-05-12
-deadline: 2026-06-04
-horizon: 20 calendar days, 5 cycles
-companion_to: plans/active/work_split_2026_05_12_ikenna.md + plans/active/work_split_2026_05_12_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
+parent_epic: defi_master
+priority: P2
 ---
 
 # Post-freeze roadmap — 2026-05-16 → 2026-06-04
@@ -271,8 +269,8 @@ measurement) is agent-runnable with ADC admin perms.
   3 + Cycle 4 SSOT.
 - [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) § A5 + A6 —
   bucket aliases + Done-def #3 cutover-deferral context.
-- [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) +
-  [`work_split_2026_05_12_harsh.md`](work_split_2026_05_12_harsh.md) — Cycle 1 (current); the predecessor this roadmap
+- [`work_split_2026_05_12_ikenna.md`](../archive/2026_05/work_split_2026_05_12_ikenna.md) +
+  [`work_split_2026_05_12_harsh.md`](../archive/2026_05/work_split_2026_05_12_harsh.md) — Cycle 1 (current); the predecessor this roadmap
   continues from.
 - CLAUDE.md § "Daily Work-Split Process" + § "Per-Tab Worktrees" + § "Plans Run To Actual Completion" — workflow rules
   this roadmap operates under.

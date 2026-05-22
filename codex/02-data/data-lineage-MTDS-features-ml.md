@@ -88,16 +88,16 @@ a manifest row with `timeframe` shard populated.
 
 Bucket: `features-{feature_group}-{category}-central-element-323112`
 
-| Service                   | feature_groups (examples)                      | Upstream dependency             | Applicable categories |
-| ------------------------- | ---------------------------------------------- | ------------------------------- | --------------------- |
-| features-delta-one        | `price_return`, `momentum`, `microstructure`   | MTDS ticks + MDPS candles       | CeFi, TradFi          |
-| features-volatility       | `realized_vol`, `garch`, `iv_surface`          | MDPS candles + CeFi options     | CeFi, TradFi          |
-| features-onchain          | `pool_state`, `lending_state`, `oracle_price`  | MTDS DeFi ticks                 | DeFi only             |
-| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv` | MTDS sports + instruments-service ref          | Sports only           |
-| features-calendar         | `session_flags`, `macro_events`, `holiday`     | calendar tables                 | CeFi, TradFi          |
-| features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)          | CeFi, TradFi, DeFi    |
-| features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments | CeFi, TradFi          |
-| features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures        | TradFi only           |
+| Service                   | feature_groups (examples)                      | Upstream dependency                   | Applicable categories |
+| ------------------------- | ---------------------------------------------- | ------------------------------------- | --------------------- |
+| features-delta-one        | `price_return`, `momentum`, `microstructure`   | MTDS ticks + MDPS candles             | CeFi, TradFi          |
+| features-volatility       | `realized_vol`, `garch`, `iv_surface`          | MDPS candles + CeFi options           | CeFi, TradFi          |
+| features-onchain          | `pool_state`, `lending_state`, `oracle_price`  | MTDS DeFi ticks                       | DeFi only             |
+| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv` | MTDS sports + instruments-service ref | Sports only           |
+| features-calendar         | `session_flags`, `macro_events`, `holiday`     | calendar tables                       | CeFi, TradFi          |
+| features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)                | CeFi, TradFi, DeFi    |
+| features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments       | CeFi, TradFi          |
+| features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures              | TradFi only           |
 
 Writer: identical pattern — `StreamingParquetWriter(strict=True)` + `ManifestWriter.write_with_zero_fill`, with
 `feature_group` populated as a shard column.
@@ -156,11 +156,16 @@ Lifecycle: `ServiceBootstrap` emits lifecycle events; model hot-reload via `Mode
 
 ## Open deltas (tracked in plan)
 
+> **[DELTA 2026-05-22]** **Current state:** Three deltas below remain open from the original implementation. Status
+> tracked in `plans/epics/features_and_ml_master.md`. **Planned delta:** Enum extension + strict-mode wire-up +
+> SchemaContract registration are sequenced in the epic. **Target architecture:** All items closed; ML training reads
+> only from strict-mode-validated feature parquets with registered SchemaContracts.
+
 - `ModelType` in UAC `internal/domain/ml/schemas.py` does not yet include `ISOLATION_FOREST`, `LAMBDARANK`, or
-  RL-specific model families — anomaly + ranking + RL cells in the run-list use lightgbm proxies until Agent 1 extends
-  the enum.
-- MDPS strict-mode writer wire-up is Agent 3's scope (plan § 5b.2); ml-training's read side assumes it once landed.
-- Features SchemaContract registration (plan § 5c.1) is Agent 3's scope; training adapter will validate once registered.
+  RL-specific model families — anomaly + ranking + RL cells in the run-list use lightgbm proxies until the enum is
+  extended (tracked: `plans/epics/features_and_ml_master.md`).
+- MDPS strict-mode writer wire-up is pending (plan § 5b.2); ml-training's read side assumes it once landed.
+- Features SchemaContract registration (plan § 5c.1) is pending; training adapter will validate once registered.
 
 ## Cross-references
 

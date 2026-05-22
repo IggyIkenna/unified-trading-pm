@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # {STRATEGY_NAME}
 
 > **Asset class:** {DeFi | CeFi | TradFi | Sports | Cross-Asset} **Strategy type:** {Basis | Yield | Momentum | Mean

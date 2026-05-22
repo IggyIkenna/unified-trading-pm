@@ -8,7 +8,10 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D cross-cutting QG ratchet plan** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). The `|| true` bug + 16 silent batch-live-reconciliation errors are the canonical QG-ratchet item; fix + regression test fold into D-QG-ratchet. Do NOT work standalone.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase D cross-cutting QG ratchet plan** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). The `|| true` bug + 16 silent batch-live-reconciliation errors are the canonical QG-ratchet item;
+> fix + regression test fold into D-QG-ratchet. Do NOT work standalone.
 
 ## What I found
 

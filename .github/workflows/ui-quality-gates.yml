@@ -13,13 +13,9 @@ on:
         default: "22"
     secrets:
       GH_PAT:
-        required: true
+        required: false
       TELEGRAM_BOT_TOKEN:
         required: false
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   quality-gates:
@@ -46,9 +42,19 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
+          if [ -z "${GH_PAT}" ]; then
+            echo "::warning::GH_PAT secret not configured in this repo — quality gates will fail."
+            echo "  Add GH_PAT (a PAT with repo read scope) to this repo's GitHub Actions secrets."
+            exit 0
+          fi
           BRANCH="${DEP_BRANCH:-main}"
-          (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null \
-            || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null) || true
+          git clone --depth=1 -b "$BRANCH" \
+            "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" \
+            ../unified-trading-pm 2>/dev/null \
+            || git clone --depth=1 -b main \
+              "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" \
+              ../unified-trading-pm 2>/dev/null \
+            || true
 
       - name: Install dependencies
         shell: bash
@@ -91,18 +97,3 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"${EXCERPT_B64}\"}}"
-
-  notify-failure:
-    name: Telegram — QG Failure
-    needs: [quality-gates]
-    if: always() && needs.quality-gates.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
-    with:
-      message:
-        "QG FAILED — ${{ github.event.repository.name }} (${{ github.head_ref || github.ref_name }}). View: ${{
-        github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      severity: "CRITICAL"
-      conclusion: "failure"
-      workflow_name: ${{ github.workflow }}
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets: inherit

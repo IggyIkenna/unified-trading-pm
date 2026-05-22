@@ -78,8 +78,8 @@ Resolves paths relative to the script's location; no `cd` required. Stdout repor
 ## How to read the dashboard
 
 - **Owner = `master`**: plan is referenced by `master_to_live_defi_2026_05_23.md` body.
-- **Owner = `<epic-name>`** (e.g. `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `predictions_master_2026_05_07`):
-  plan is referenced by that specific epic master.
+- **Owner = `<epic-name>`** (e.g. `cefi_master`, `defi_master`, `predictions_master`): plan is referenced by that
+  specific epic master.
 - **Owner = `README`**: plan is referenced only by `plans/epics/README.md` (the epics-listing index). The plan itself is
   likely a master plan that should be wrapped by the May-23 umbrella but is currently self-floating.
 - **Owner = `**orphan**`** (bold-marked): plan is not referenced by master OR any epic. Action: fold into the

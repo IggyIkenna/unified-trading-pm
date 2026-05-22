@@ -24,6 +24,13 @@ scope: [engineer, admin]
 > target-experience deck; Stage 3E writes the refactor plan. This file is the shared "here's where we are today"
 > baseline all four depend on.
 
+> **[DELTA 2026-05-22]** **Current state:** This is a point-in-time audit snapshot taken 2026-04-20. The gap assessments
+> (UAC registry gaps #1-#11 "Not shipped", entitlement gaps, demo-provisioning gaps) reflect state at that date and have
+> NOT been re-verified. **Known changes since audit:** UAC gap #12 (`StrategyAvailabilityRegistry`) was already shipped
+> at audit time. No evidence that #1-#11 have since shipped. All G1 items from Stage 3E remain pre-cutover scope (see
+> `stage-3e-refactor-plan.md` delta box). **Do not use this file as a current-state snapshot without re-running the grep
+> commands in §2.3 and §3.**
+
 ---
 
 ## 0. Executive one-screen summary

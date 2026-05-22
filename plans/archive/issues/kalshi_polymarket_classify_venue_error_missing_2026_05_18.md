@@ -11,9 +11,9 @@ locked_by: live-defi-rollout
 
 > **🟢 RE-RESOLVED 2026-05-20** — original fix at execution-service@a2b5eef46 (2026-05-18) was regressed by 774602ea8
 > (chore(lint): add # noqa justification comments across execution-service); restored at execution-service@195cf6829.
-> kalshi.py: classify_venue_error=7, ADAPTER_FETCH_FAILED=13 (matches a2b5eef46 baseline).
-> polymarket_clob.py: classify_venue_error=5, ADAPTER_FETCH_FAILED=9 (4 catch sites, all SP-12(a) pattern restored).
-> QG green (7514 passed; 2 pre-existing failures unrelated). Full blast-radius audit:
+> kalshi.py: classify_venue_error=7, ADAPTER_FETCH_FAILED=13 (matches a2b5eef46 baseline). polymarket_clob.py:
+> classify_venue_error=5, ADAPTER_FETCH_FAILED=9 (4 catch sites, all SP-12(a) pattern restored). QG green (7514 passed;
+> 2 pre-existing failures unrelated). Full blast-radius audit:
 > `plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
 
 ## What I found

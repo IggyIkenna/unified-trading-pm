@@ -1,7 +1,6 @@
 ---
 title: strategy→execution contract remediation — manifest emission + bucket SSOT + preflight gate
 created: 2026-05-20
-author: slot-8
 source:
   - plans/audit/strategy_execution_contract_audit_2026_05_20.md
   - plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md (Phase D6)
@@ -11,6 +10,8 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
 status: in-progress
+parent_epic: strategy_master
+priority: P2
 ---
 
 # strategy→execution contract remediation — 2026-05-20
@@ -375,27 +376,30 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 
 ### Phase 4 — bucket SSOT (P1.1 + P1.2)
 
-> **🟢 UNBLOCKED 2026-05-20 round 5 — operator decision**: **Unified bucket**.
-> Add flat `strategy-store` yaml entry; write + read paths both use
-> `strategy-store-${GCP_PROJECT_ID}`. Cross-asset strategies (portfolio
-> allocator spanning CEFI+DEFI+TRADFI) read/write the same bucket. Migration:
-> copy existing per-AG strategy data into the flat bucket, then delete per-AG
-> entries from `cloud-providers.yaml`. Sequenced under master coordinator
-> `data_pipeline_master_coordination_2026_05_20.md` Phase 1 (bucket-name
-> symmetry — extends to this strategy-store consolidation).
+> **🟢 UNBLOCKED 2026-05-20 round 5 — operator decision**: **Unified bucket**. Add flat `strategy-store` yaml entry;
+> write + read paths both use `strategy-store-${GCP_PROJECT_ID}`. Cross-asset strategies (portfolio allocator spanning
+> CEFI+DEFI+TRADFI) read/write the same bucket. Migration: copy existing per-AG strategy data into the flat bucket, then
+> delete per-AG entries from `cloud-providers.yaml`. Sequenced under master coordinator `mtds_mdps_master.md` Phase 1
+> (bucket-name symmetry — extends to this strategy-store consolidation).
 
-- [ ] **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` →
-      `resolve_bucket_name("strategy-store")` (unified, no asset_group arg). Remove
-      per-AG dict from `cloud-providers.yaml`; add flat entry `strategy-store: "strategy-store-${GCP_PROJECT_ID}"`.
-      Update all call sites.
-- [ ] **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template +
-      `check_strategy_instructions()` + `build_instructions_location()` all use the unified bucket. Pre-existing
-      write=unified vs read=per-AG mismatch resolved at the yaml level.
+- [x] ✅ **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` → `resolve_bucket_name("strategy-store")` (unified,
+      no asset_group arg). Remove per-AG dict from `cloud-providers.yaml`; add flat entry
+      `strategy-store: "strategy-store-${GCP_PROJECT_ID}"`. Update all call sites. — deployment-service@aa51965 +
+      strategy-service@72beb56c
+- [x] ✅ **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template + `check_strategy_instructions()` +
+      `build_instructions_location()` all use the unified bucket. Pre-existing write=unified vs read=per-AG mismatch
+      resolved at the yaml level. — deployment-service@aa51965 + execution-service@0948346e
+- [ ] **[CODE] P1.** 4d. (AUDIT-03 F-37b residual — folded here 2026-05-22) The carry manifest writers still hand-build
+      the catalogue bucket name: `catalogue_bucket = f"strategy-store-{cfg.project_id}"` at
+      `hedge_ratio_writer.py:136` + `decision_context_writer.py:149`, bypassing the
+      `resolve_bucket_name(kind="strategy-store")` that the SAME files already use on L92 for the data bucket. Replace
+      both with `resolve_bucket_name(...)`. NOTE: the `gs://{bucket}/...` display strings in `gcs_storage_service.py` +
+      `grid_generator.py` are `# noqa: gs-uri`-exempt (bucket already resolved by 4a) — NOT in scope.
 - [ ] **[MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified bucket via `gsutil rsync`;
       verify zero data loss + flip `cloud-providers.yaml` atomically. Bundle into master coordinator Phase 1 bucket
       symmetry window.
-- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — un-deferred now that 4a/4b are
-      unblocked.
+- [x] ✅ **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — workspace-wide rg confirms zero inline
+      strategy-store f-strings post 4a/4b.
 
 ### Phase 5 — error classification (P1.3)
 
@@ -433,6 +437,12 @@ strategy — routes through `validate_config_can_run()`
 instructions
 
 ---
+
+## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
+
+- [x] ✅ [AGENT] P3. Fix F401 unused imports — `ruff check --select F401` shows "All checks passed!" on both
+      `execution-service/scripts/run_execution_alpha_measurement.py` and `run_execution_alpha_parallel.py`. Already
+      clean — no fix needed. 2026-05-22.
 
 ## Temporary states + their canonical follow-up plans
 

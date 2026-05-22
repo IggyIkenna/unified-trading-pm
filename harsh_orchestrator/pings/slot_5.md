@@ -1,4 +1,7 @@
-[2026-05-19 15:00 UTC] slot-1-main → slot 5 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 5 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -392,86 +395,99 @@ changes). Operator left as-is to avoid edit-collision with your active shipping.
 [2026-05-19 12:15 UTC] main → slot 5 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/5/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/5/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 5` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 5**:
-features_repo_consolidation + gcs_migration_bundle + AUDIT_pre_may8 + expected_unattempted_propagation closes (~12 cal)
+**Today's assignment — Slot 5**: features_repo_consolidation + gcs_migration_bundle + AUDIT_pre_may8 +
+expected_unattempted_propagation closes (~12 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 5 — STARTED <first item>` below.
 
 ---
 
-[2026-05-20] slot 5 → operator — promote_workflow BLOCKED items (S5-PROMOTE-MAY23-CLI, Phase 9 AGENT done at pm@9838d59a)
+[2026-05-20] slot 5 → operator — promote_workflow BLOCKED items (S5-PROMOTE-MAY23-CLI, Phase 9 AGENT done at
+pm@9838d59a)
 
 26 SCRIPT items annotated with closed-set status tags in `plans/active/promote_workflow_may23_cli_path_2026_05_10.md`.
 
 **BLOCKED-CREDENTIALS** (8 items — Group 1, credentials/provisioning required):
 
-| Item | What's needed |
-|------|--------------|
-| Phase 2 preflight-cutover.sh operator run | All 8 probes green (Alchemy API key, Copper sandbox, perp testnet keys) |
-| Phase 4.A Copper sub-account provisioning | Copper sub-account creation + HMAC testnet credentials |
-| Phase 4.A First live-signing dry-run | Copper testnet HMAC sign working |
-| Phase 4.B Smoke-test 5 perp venue testnets | Read-only API calls to Bybit/Binance/OKX/Hyperliquid/Aster testnets |
-| Phase 4.C Smoke-test Solana paper | Solana devnet RPC + colocated_engine --execution-provider solana_devnet |
-| Phase 4.D Tenderly fork dry-run | TENDERLY_API_KEY in env (already in run-paper.sh --warn path) |
-| Phase 5.B Telegram bot token provision | Telegram bot + chat_id for alerting channel |
-| Phase 5.B PagerDuty key | PagerDuty integration key (or skip if Telegram-only) |
+| Item                                       | What's needed                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| Phase 2 preflight-cutover.sh operator run  | All 8 probes green (Alchemy API key, Copper sandbox, perp testnet keys) |
+| Phase 4.A Copper sub-account provisioning  | Copper sub-account creation + HMAC testnet credentials                  |
+| Phase 4.A First live-signing dry-run       | Copper testnet HMAC sign working                                        |
+| Phase 4.B Smoke-test 5 perp venue testnets | Read-only API calls to Bybit/Binance/OKX/Hyperliquid/Aster testnets     |
+| Phase 4.C Smoke-test Solana paper          | Solana devnet RPC + colocated_engine --execution-provider solana_devnet |
+| Phase 4.D Tenderly fork dry-run            | TENDERLY_API_KEY in env (already in run-paper.sh --warn path)           |
+| Phase 5.B Telegram bot token provision     | Telegram bot + chat_id for alerting channel                             |
+| Phase 5.B PagerDuty key                    | PagerDuty integration key (or skip if Telegram-only)                    |
 
 **BLOCKED-OPERATOR-DECISION** (14 items — Groups 2+4, compute/long-running/sequentially blocked):
 
-| Item | Sequentially blocked on |
-|------|------------------------|
+| Item                                      | Sequentially blocked on                                          |
+| ----------------------------------------- | ---------------------------------------------------------------- |
 | Phase 3: 2yr backtest (~6h per archetype) | Nothing — can start immediately (operator workstation or GCE VM) |
-| Phase 5.A: first recon dry-run | Phase 3 backtest output + paper run output |
-| Phase 5.C: 48h alerting staging dry-run | Phase 5.B Telegram/PagerDuty credentials |
-| Phase 5.D: live rehearsal 24h | Phase 5.A + Phase 5.C |
-| Phase 6: Launch paper VMs (×2 archetypes) | Phase 3 + Phase 4 + Phase 5 |
-| Phase 6: Monitor ≥3 days | Phase 6 paper VMs running |
-| Phase 8: CLI + UI dry-runs (×3 items) | Phase 6 ≥3d evidence + UI Track complete |
-| Phase 10: Live cutover (×4 items) | Phase 8 dry-run passed (human-only — wallet keys) |
+| Phase 5.A: first recon dry-run            | Phase 3 backtest output + paper run output                       |
+| Phase 5.C: 48h alerting staging dry-run   | Phase 5.B Telegram/PagerDuty credentials                         |
+| Phase 5.D: live rehearsal 24h             | Phase 5.A + Phase 5.C                                            |
+| Phase 6: Launch paper VMs (×2 archetypes) | Phase 3 + Phase 4 + Phase 5                                      |
+| Phase 6: Monitor ≥3 days                  | Phase 6 paper VMs running                                        |
+| Phase 8: CLI + UI dry-runs (×3 items)     | Phase 6 ≥3d evidence + UI Track complete                         |
+| Phase 10: Live cutover (×4 items)         | Phase 8 dry-run passed (human-only — wallet keys)                |
 
-**SKIP** (4 items — Group 3, per main 2026-05-20):
-Phase U2 smoke test + Phase U4/U5/U6 Playwright e2e — need running local dev stack; belong to UI/e2e session.
+**SKIP** (4 items — Group 3, per main 2026-05-20): Phase U2 smoke test + Phase U4/U5/U6 Playwright e2e — need running
+local dev stack; belong to UI/e2e session.
 
 **Immediate operator actions to unblock**:
+
 1. `export TENDERLY_API_KEY=<key>` → Phase 4.D unblocks (run-paper.sh already handles missing key gracefully)
-2. Start 2yr backtest (Phase 3): `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3` (background ~6h)
+2. Start 2yr backtest (Phase 3):
+   `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3`
+   (background ~6h)
 3. Provision Copper testnet sub-account (Phase 4.A) — then Phase 4.A–4.C–5.C–5.D–6 unblock in sequence
 4. Set Telegram bot token in Secret Manager (Phase 5.B) — then Phase 5.C/5.D unblock
 
 ---
 
-[2026-05-20 UTC] slot-5 → operator — **BLOCKED-OPERATOR: batch_live_symmetry Tab6 + Tab8 VMs** (plan: `batch_live_symmetry_2026_05_10.md`)
+[2026-05-20 UTC] slot-5 → operator — **BLOCKED-OPERATOR: batch_live_symmetry Tab6 + Tab8 VMs** (plan:
+`batch_live_symmetry_2026_05_10.md`)
 
-Completed this session: backfilled Tab5 Phase3/4 checkboxes (gcs_migration_bundle 2026-05-19 evidence) + tagged all operator-blocked items. Agent-doable items remaining: Tab4 P1 (commodity bare-class deletion), Tab5 Phase9 QG sweep, Tab5 L7 MTDS defi handler fixes, Tab7 Playwright e2e matrix.
+Completed this session: backfilled Tab5 Phase3/4 checkboxes (gcs_migration_bundle 2026-05-19 evidence) + tagged all
+operator-blocked items. Agent-doable items remaining: Tab4 P1 (commodity bare-class deletion), Tab5 Phase9 QG sweep,
+Tab5 L7 MTDS defi handler fixes, Tab7 Playwright e2e matrix.
 
 **BLOCKED items needing operator VM launches (Tab8 first, then Tab6 unlocks):**
 
-| Plan item | Blocker | What operator must do |
-|-----------|---------|----------------------|
-| Tab8 Step 1 — 2yr backtest VM | Needs operator trigger | `bash deployment-service/scripts/vm/run-batch.sh --archetype carry_staked_basis --mode batch` (prefix `defi-backtest-`) |
-| Tab8 Step 2 — select top-3 candidates | Blocked on Step 1 output | Operator reviews backtest PnL/Sharpe; tags top-3 `STRATEGY_ID` in config |
-| Tab8 Step 4 — paper VM launch | Blocked on Step 1+2 | `bash deployment-service/scripts/vm/run-paper.sh --strategy-id <selected> --mode paper` (prefix `defi-paper-`) |
-| Tab8 Step 6 — 7-day soak readiness check | Blocked on Step 4 | After paper VM running ≥7d: confirm VM alive + events flowing + P&L accumulating |
-| Tab6 P0 — paper-mode smoke calibration | Blocked on Tab8 Step 4 paper VM | Run reconciler against shipped backtest + paper VM output; calibrate thresholds |
-| Tab6 P1 — 7-day soak calibration | Blocked on Tab8 paper VM running | Daily reconciler run during Tab8 soak; tighten thresholds |
+| Plan item                                | Blocker                          | What operator must do                                                                                                   |
+| ---------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Tab8 Step 1 — 2yr backtest VM            | Needs operator trigger           | `bash deployment-service/scripts/vm/run-batch.sh --archetype carry_staked_basis --mode batch` (prefix `defi-backtest-`) |
+| Tab8 Step 2 — select top-3 candidates    | Blocked on Step 1 output         | Operator reviews backtest PnL/Sharpe; tags top-3 `STRATEGY_ID` in config                                                |
+| Tab8 Step 4 — paper VM launch            | Blocked on Step 1+2              | `bash deployment-service/scripts/vm/run-paper.sh --strategy-id <selected> --mode paper` (prefix `defi-paper-`)          |
+| Tab8 Step 6 — 7-day soak readiness check | Blocked on Step 4                | After paper VM running ≥7d: confirm VM alive + events flowing + P&L accumulating                                        |
+| Tab6 P0 — paper-mode smoke calibration   | Blocked on Tab8 Step 4 paper VM  | Run reconciler against shipped backtest + paper VM output; calibrate thresholds                                         |
+| Tab6 P1 — 7-day soak calibration         | Blocked on Tab8 paper VM running | Daily reconciler run during Tab8 soak; tighten thresholds                                                               |
 
 **No wallet keys / kill-switch operations involved — these are VM launch + paper-mode only.**
 
 ---
 
-[2026-05-20 UTC] slot-5 → operator — 🔄 **STARTED new task: is_mtds_contract_audit Phase 3+4 (MTDS handler hardcode removal + solana-defi v4→v8 patch).**
+[2026-05-20 UTC] slot-5 → operator — 🔄 **STARTED new task: is_mtds_contract_audit Phase 3+4 (MTDS handler hardcode
+removal + solana-defi v4→v8 patch).**
 
-work_split_2026_05_19_harsh.md Slot 5 items all ✅ (4 plans at max closeable state, PM@9d8f30e2). Now taking Phase 3 P0 items from `is_mtds_contract_audit_2026_05_20.md`:
+work_split_2026_05_19_harsh.md Slot 5 items all ✅ (4 plans at max closeable state, PM@9d8f30e2). Now taking Phase 3 P0
+items from `is_mtds_contract_audit_2026_05_20.md`:
+
 - `perp_funding_handler.py` line 145: Drift market hardcode removal
 - `lst_rates_handler.py` lines 135-160: Solana LST URL hardcodes
 - `native_staking_handler.py` line 85: hardcoded endpoint
@@ -479,4 +495,5 @@ work_split_2026_05_19_harsh.md Slot 5 items all ✅ (4 plans at max closeable st
 - `solana_lst_archival.py` lines 75-95: Marinade/Jito hardcodes
 - Phase 4 P0: `data_manifest_handler.py:242` schema_version 4→8
 
-Deferring `solana_defi_handler.py` Drift S3 full rewrite — it's a large cross-cutting refactor that may require architectural discussion.
+Deferring `solana_defi_handler.py` Drift S3 full rewrite — it's a large cross-cutting refactor that may require
+architectural discussion.

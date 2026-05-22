@@ -29,23 +29,25 @@ don't know or care whether an event is replay or live — only the timestamps di
 
 ### MTDS layer (shipped MTDS@9358c54, 2026-05-14)
 
-| Component                                                       | Status     | Location                                                                   |
-| --------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
-| `InstrumentWindowData` — per-instrument window dataclass        | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
-| `HistoricalWindowFetcher` Protocol — venue-agnostic source API  | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
-| `ReplayRunner` — boundary iteration + publish loop              | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
-| `ReplayHandler` — `--mode replay` CLI handler                   | ✅ SHIPPED | `market_tick_data_service/cli/handlers/replay_handler.py`                  |
-| `HISTORICAL_WINDOW_FETCHER_FACTORIES` registry                  | ✅ SHIPPED | `market_tick_data_service/cli/handlers/replay_handler.py` (empty at Ph 7) |
-| Per-venue `HistoricalWindowFetcher` implementations             | ⏳ PENDING | Phase 3.5 rollout (defi → cefi → tradfi → sports → prediction)            |
-| Phase 7 deployment — launch replay VMs in production            | ⏳ PENDING | `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 7      |
-| `REPLAY_BACKSTOP_REACHED` alerting hook                         | ⏳ PENDING | alerting-service `alerting_service_live_rules_2026_05_07.md` Phase 7 scope |
+| Component                                                      | Status     | Location                                                                   |
+| -------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `InstrumentWindowData` — per-instrument window dataclass       | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
+| `HistoricalWindowFetcher` Protocol — venue-agnostic source API | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
+| `ReplayRunner` — boundary iteration + publish loop             | ✅ SHIPPED | `market_tick_data_service/replay/runner.py`                                |
+| `ReplayHandler` — `--mode replay` CLI handler                  | ✅ SHIPPED | `market_tick_data_service/cli/handlers/replay_handler.py`                  |
+| `HISTORICAL_WINDOW_FETCHER_FACTORIES` registry                 | ✅ SHIPPED | `market_tick_data_service/cli/handlers/replay_handler.py` (empty at Ph 7)  |
+| Per-venue `HistoricalWindowFetcher` implementations            | ⏳ PENDING | Phase 3.5 rollout (defi → cefi → tradfi → sports → prediction)             |
+| Phase 7 deployment — launch replay VMs in production           | ⏳ PENDING | `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 7      |
+| `REPLAY_BACKSTOP_REACHED` alerting hook                        | ⏳ PENDING | alerting-service `alerting_service_live_rules_2026_05_07.md` Phase 7 scope |
 
 **`REPLAY_BACKSTOP_REACHED` wiring**: the event is emitted by `ReplayRunner.run()` (via `log_event`) when
 `coverage_limit` is set and `end > coverage_limit`. `ReplayPublisher.finalize()` is called immediately after to stamp
 the watermark KV — it does NOT emit the event. alerting-service must route `REPLAY_BACKSTOP_REACHED` to a `CRITICAL`
 alert + strategy-service manual-resume gate. This wiring is in Phase 7 scope but has not yet run in production. Until
 Phase 7 deploys, the event is emitted into the stream but no alerting consumer is hooked up. **Do NOT treat this as a
-silent production gap** — Phase 7 is on the pre-cutover critical path.
+silent production gap** — Phase 7 was on the pre-cutover critical path.
+
+> **[DELTA 2026-05-22]** **Current state:** `REPLAY_BACKSTOP_REACHED` event emission is shipped (UTL layer). Alerting-service consumer and per-venue `HistoricalWindowFetcher` implementations are PENDING (Phase 7 scope). Production replay VM deployment is PENDING. **Planned delta:** Phase 7 delivery tracked under `plans/epics/batch_live_symmetry_master.md`. **Target architecture:** Full alerting routing for `REPLAY_BACKSTOP_REACHED` + all per-venue fetchers + production replay VM fleet.
 
 ---
 
@@ -58,19 +60,19 @@ boundary-iteration loop; the UTL `ReplayPublisher` owns watermark coordination a
 
 Constructor parameters:
 
-| Parameter        | Type                      | Notes                                                           |
-| ---------------- | ------------------------- | --------------------------------------------------------------- |
-| `asset_group`    | `str`                     | Canonical asset-group key (`defi`/`cefi`/`tradfi`/…)           |
-| `venue`          | `str`                     | Canonical venue name                                            |
-| `data_type`      | `str`                     | UAC data-type key                                               |
-| `start` / `end`  | `datetime` (TZ-aware)     | Replay window; must be UTC-aware (enforced at construction)     |
-| `timeframe`      | `str`                     | Boundary step string (`"1m"`, `"5m"`, …); parsed via `parse_timeframe` |
-| `shard_key`      | `str`                     | Passed through to `ReplayPublisher`; also watermark KV key      |
-| `fetcher`        | `HistoricalWindowFetcher` | Venue-specific historical source; injected by `ReplayHandler`   |
-| `replay_publisher` | `ReplayPublisher`       | UTL publisher with watermark KV wired in                        |
-| `vm_name`        | `str`                     | Stamped on emitted lifecycle events for traceability            |
-| `correlation_id` | `str`                     | UUID4 per replay run; threads through every published event     |
-| `coverage_limit` | `datetime \| None`        | If set and `end > coverage_limit`, backstop halts the loop      |
+| Parameter          | Type                      | Notes                                                                  |
+| ------------------ | ------------------------- | ---------------------------------------------------------------------- |
+| `asset_group`      | `str`                     | Canonical asset-group key (`defi`/`cefi`/`tradfi`/…)                   |
+| `venue`            | `str`                     | Canonical venue name                                                   |
+| `data_type`        | `str`                     | UAC data-type key                                                      |
+| `start` / `end`    | `datetime` (TZ-aware)     | Replay window; must be UTC-aware (enforced at construction)            |
+| `timeframe`        | `str`                     | Boundary step string (`"1m"`, `"5m"`, …); parsed via `parse_timeframe` |
+| `shard_key`        | `str`                     | Passed through to `ReplayPublisher`; also watermark KV key             |
+| `fetcher`          | `HistoricalWindowFetcher` | Venue-specific historical source; injected by `ReplayHandler`          |
+| `replay_publisher` | `ReplayPublisher`         | UTL publisher with watermark KV wired in                               |
+| `vm_name`          | `str`                     | Stamped on emitted lifecycle events for traceability                   |
+| `correlation_id`   | `str`                     | UUID4 per replay run; threads through every published event            |
+| `coverage_limit`   | `datetime \| None`        | If set and `end > coverage_limit`, backstop halts the loop             |
 
 `run()` is synchronous; `ReplayHandler` invokes it via `asyncio.to_thread` to avoid blocking the event loop.
 
@@ -109,10 +111,11 @@ the writegate Cat A/D split. The protocol is `runtime_checkable` so the runner c
 
 ### Per-venue factory registry
 
-`HISTORICAL_WINDOW_FETCHER_FACTORIES` in `replay_handler.py` is a `dict[str, Callable[[str, str, str], HistoricalWindowFetcher]]`
-keyed by canonical venue name. It is **empty at Phase 7** (the registry scaffolding shipped but no implementations yet).
-Per-venue implementations ship with Phase 3.5 in the same rollout order as `WS_FEED_CONNECTOR_FACTORIES`: DeFi → CeFi
-spot/perp → CeFi options/futures → TradFi → Sports → Prediction.
+`HISTORICAL_WINDOW_FETCHER_FACTORIES` in `replay_handler.py` is a
+`dict[str, Callable[[str, str, str], HistoricalWindowFetcher]]` keyed by canonical venue name. It is **empty at Phase
+7** (the registry scaffolding shipped but no implementations yet). Per-venue implementations ship with Phase 3.5 in the
+same rollout order as `WS_FEED_CONNECTOR_FACTORIES`: DeFi → CeFi spot/perp → CeFi options/futures → TradFi → Sports →
+Prediction.
 
 If a venue is requested that is not registered, `_resolve_fetcher()` raises `NotImplementedError` with the rollout-stage
 hint rather than silently skipping — consistent with the honest-absence workspace rule.
@@ -121,15 +124,15 @@ hint rather than silently skipping — consistent with the honest-absence worksp
 
 `ReplayHandler` extends UTL `BaseModeHandler` and is invoked via `--mode replay`. Accepted args:
 
-| Flag                     | Default                              | Notes                                           |
-| ------------------------ | ------------------------------------ | ----------------------------------------------- |
-| `--shard-spec ag:v:dt`   | required                             | Same format as `--operation websocket-streaming` |
-| `--start <ISO>`          | required                             | UTC-aware ISO-8601 replay window start           |
-| `--end <ISO>`            | required                             | UTC-aware ISO-8601 replay window end             |
-| `--shard-key <key>`      | `ag.venue.data_type`                 | Watermark KV key; caller can override            |
-| `--base-timeframe <tf>`  | `1m`                                 | Aligned boundary step                            |
-| `--coverage-limit <ISO>` | unset (no backstop)                  | Emits `REPLAY_BACKSTOP_REACHED` if `end` exceeds |
-| `--correlation-id <uuid>`| `uuid.uuid4()` (auto-generated)      | Threads through all emitted events               |
+| Flag                      | Default                         | Notes                                            |
+| ------------------------- | ------------------------------- | ------------------------------------------------ |
+| `--shard-spec ag:v:dt`    | required                        | Same format as `--operation websocket-streaming` |
+| `--start <ISO>`           | required                        | UTC-aware ISO-8601 replay window start           |
+| `--end <ISO>`             | required                        | UTC-aware ISO-8601 replay window end             |
+| `--shard-key <key>`       | `ag.venue.data_type`            | Watermark KV key; caller can override            |
+| `--base-timeframe <tf>`   | `1m`                            | Aligned boundary step                            |
+| `--coverage-limit <ISO>`  | unset (no backstop)             | Emits `REPLAY_BACKSTOP_REACHED` if `end` exceeds |
+| `--correlation-id <uuid>` | `uuid.uuid4()` (auto-generated) | Threads through all emitted events               |
 
 `validate_config()` enforces that `streaming_redis_url` is set — replay cannot run without a Redis Stream endpoint.
 
@@ -138,11 +141,11 @@ hint rather than silently skipping — consistent with the honest-absence worksp
 ⏳ **PENDING production run** — benchmarks will be added after Phase 7 deploys. Tracked in
 `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 14 item 2. Placeholder targets (to be validated):
 
-| Scenario                     | Estimated wall-clock       | Bottleneck                     |
-| ---------------------------- | -------------------------- | ------------------------------ |
-| 1h gap, DeFi, single shard   | TBD (pending production)   | `fetch_window` (REST throttle) |
-| 6h gap, CeFi spot, 10 shards | TBD (pending production)   | Redis XADD throughput          |
-| 24h backstop (coverage limit)| TBD (pending production)   | Historical-source rate limit   |
+| Scenario                      | Estimated wall-clock     | Bottleneck                     |
+| ----------------------------- | ------------------------ | ------------------------------ |
+| 1h gap, DeFi, single shard    | TBD (pending production) | `fetch_window` (REST throttle) |
+| 6h gap, CeFi spot, 10 shards  | TBD (pending production) | Redis XADD throughput          |
+| 24h backstop (coverage limit) | TBD (pending production) | Historical-source rate limit   |
 
 ---
 

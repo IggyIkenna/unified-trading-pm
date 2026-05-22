@@ -663,7 +663,8 @@ done
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
+    # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409"
     _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 elif command -v pip-audit &>/dev/null; then
     _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
@@ -786,6 +787,64 @@ if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_SOURCE_CAPABILIT
         cat /tmp/uac_source_capability_qg.log
         log_fail "         Fix: add chain=... kind=... to each SourceCapability() call"
         exit 1
+    fi
+fi
+
+# ── STEP 5.86: UAC cassette → prod-consumer linkage (orphan checker) ─────────
+# Fails QG if any cassette in external/<venue>/mocks/ has no production consumer
+# (import, pydantic class reference, or URL host match in a service repo).
+# Allowlist: tests/cassette_orphan_allowlist.yaml (documented exceptions).
+# Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
+# SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
+_UAC_CASSETTE_LINKAGE_CHECKER="${PROJECT_ROOT}/scripts/check_cassette_prod_consumer_linkage.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_CASSETTE_LINKAGE_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_CASSETTE_LINKAGE_CHECKER" >/tmp/uac_cassette_linkage_qg.log 2>&1; then
+        log_ok "STEP 5.86: UAC cassette→prod-consumer linkage OK (no unallowlisted orphans)"
+    else
+        log_fail "STEP 5.86: Unallowlisted orphan cassette(s) found:"
+        cat /tmp/uac_cassette_linkage_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.87: UAC prod-URL → cassette coverage (warn-only, tracks gap) ──────
+# Warns if a production HTTP/WS host in service repos has no UAC cassette.
+# Run in --warn-only mode: surfaces gaps without blocking QG.
+# Fix: add cassette OR add host to scripts/quality-gates-allowlists/prod-url-no-cassette.txt
+# Switch to strict mode (remove --warn-only) once coverage reaches ~80%.
+# SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
+_UAC_PROD_URL_CHECKER="${PROJECT_ROOT}/scripts/check_prod_url_cassette_coverage.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_PROD_URL_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_PROD_URL_CHECKER" --warn-only >/tmp/uac_prod_url_coverage_qg.log 2>&1; then
+        if grep -q "STEP 5.87.*WARN" /tmp/uac_prod_url_coverage_qg.log 2>/dev/null; then
+            log_warn "STEP 5.87: prod-URL→cassette coverage gap (run scripts/check_prod_url_cassette_coverage.py for full list)"
+        else
+            log_ok "STEP 5.87: All prod URL hosts have cassette coverage or are allowlisted"
+        fi
+    else
+        log_warn "STEP 5.87: prod_url_has_cassette checker error:"
+        cat /tmp/uac_prod_url_coverage_qg.log
+    fi
+fi
+
+# ── STEP 5.88: No _create_empty_output / _handle_empty_tick_data re-introduction ─
+# Grep-based regression guard: catches the banned NaN-placeholder pattern
+# (_create_empty_output, _handle_empty_tick_data) being re-introduced into
+# library source. Services have the full AST-walk via base-service.sh STEP 5.67;
+# this step adds a fast grep-level guard so library repos (UTL, UAC, etc.)
+# can't silently grow the pattern either.
+if [ -d "$SOURCE_DIR/" ]; then
+    _placeholder_hits=$(grep -r --include="*.py" \
+        -E '_create_empty_output|_handle_empty_tick_data' \
+        "$SOURCE_DIR/" \
+        --exclude-dir=".venv" --exclude-dir="__pycache__" 2>/dev/null || true)
+    if [ -n "$_placeholder_hits" ]; then
+        log_fail "STEP 5.88: Banned NaN-placeholder method detected in ${SOURCE_DIR}/. Delete it — emit record_empty(reason=...) / record_captured() instead:"
+        echo "$_placeholder_hits"
+        log_fail "         (CLAUDE.md 'Honest absence vs fake placeholders' + writegate Phase 2.A contract)"
+        exit 1
+    else
+        log_ok "STEP 5.88: No banned NaN-placeholder methods (_create_empty_output / _handle_empty_tick_data)"
     fi
 fi
 

@@ -10,6 +10,10 @@ all repos and defines the audit methodology.
 
 **Last updated:** 2026-02-27 (workspace-wide scan)
 
+> **Historical snapshot (2026-02-27).** Suppression counts and hotspot repo lists reflect the Feb-27 state. The overall
+> count (309 suppressions; 67 ARCHITECTURAL_VIOLATION) will have changed as QG enforcement tightened (STEP 5.x hardening
+> through 2026-05). Per-repo `QUALITY_GATE_BYPASS_AUDIT.md` files are the current authoritative record.
+
 ---
 
 ## Methodology

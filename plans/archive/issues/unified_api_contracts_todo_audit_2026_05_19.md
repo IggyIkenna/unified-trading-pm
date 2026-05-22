@@ -8,7 +8,11 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase A2 (expected_coverage function + coverage_starts) + Phase C9 (UAC consumer audit)** per [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1 triage 2026-05-20). Issue 1 (VX front-month CBOE) lands in C9 + TradFi OHLCV plan; Issue 2 (5 `# TODO verify` coverage_starts) is literally what A2 expected_coverage() consumes. Do NOT work standalone.
+> **🟡 SUBSUMED BY MEGA AUDIT** — findings absorbed by **Phase A2 (expected_coverage function + coverage_starts) + Phase
+> C9 (UAC consumer audit)** per
+> [mega_audit_and_plan_beefup_progression_2026_05_20.md](mega_audit_and_plan_beefup_progression_2026_05_20.md) (slot-1
+> triage 2026-05-20). Issue 1 (VX front-month CBOE) lands in C9 + TradFi OHLCV plan; Issue 2 (5 `# TODO verify`
+> coverage_starts) is literally what A2 expected_coverage() consumes. Do NOT work standalone.
 
 ## What I found
 

@@ -16,7 +16,8 @@ scope: [engineer, admin]
   `UnifiedCloudServicesConfig`, not string literals in source code.
 - **Secret naming convention**: `{service}-{purpose}` or `{client}-{venue}-{credential-type}` for consistent discovery
   and access control.
-- **Secret rotation**: [PLANNED]. Currently manual. Target: automated rotation with zero-downtime credential swap.
+- **Secret rotation**: [PLANNED — post-cutover]. Currently manual. Target: automated rotation with zero-downtime
+  credential swap.
 - **Provider manifest**: `unified-api-contracts/unified_api_contracts/config/provider_api_versions.yaml` is SSOT for API
   keys, testnet availability, and data_type per provider. When adding a provider or key, update the manifest first. See
   `.cursor/rules/config/provider-manifest-ssot.mdc` and Plan 6 (UAC Residual Refactors).
@@ -451,7 +452,7 @@ A service cannot access secrets it has not been explicitly granted access to.
 
 ---
 
-## Secret Rotation [PLANNED]
+## Secret Rotation [PLANNED — post-cutover]
 
 ### Target Architecture
 
@@ -515,12 +516,12 @@ Rotation Trigger (scheduled or manual)
 
 ### Enforcement
 
-| Mechanism                                    | What It Catches                        | Status        |
-| -------------------------------------------- | -------------------------------------- | ------------- |
-| Code review (PR)                             | Manual inspection for hardcoded values | [IMPLEMENTED] |
-| Quality gates (ruff)                         | Certain anti-patterns via ruff rules   | [IMPLEMENTED] |
-| `.cursorrules`                               | AI agents prevented from hardcoding    | [IMPLEMENTED] |
-| Automated secret scanning (e.g., truffleHog) | Leaked credentials in git history      | [PLANNED]     |
+| Mechanism                                    | What It Catches                        | Status                   |
+| -------------------------------------------- | -------------------------------------- | ------------------------ |
+| Code review (PR)                             | Manual inspection for hardcoded values | [IMPLEMENTED]            |
+| Quality gates (ruff)                         | Certain anti-patterns via ruff rules   | [IMPLEMENTED]            |
+| `.cursorrules`                               | AI agents prevented from hardcoding    | [IMPLEMENTED]            |
+| Automated secret scanning (e.g., truffleHog) | Leaked credentials in git history      | [PLANNED — post-cutover] |
 
 ---
 
@@ -556,15 +557,15 @@ COPY src/ /app/src/
 
 ## Implementation Status
 
-| Component                                              | Status        |
-| ------------------------------------------------------ | ------------- |
-| `get_secret_client()` — fail-loud, no env var fallback | [IMPLEMENTED] |
-| `.env.example` in all services                         | [IMPLEMENTED] |
-| Per-service IAM bindings for secrets                   | [IMPLEMENTED] |
-| Secret naming convention enforced                      | [IMPLEMENTED] |
-| No hardcoded values (enforced by .cursorrules)         | [IMPLEMENTED] |
-| Multi-stage Docker builds                              | [IMPLEMENTED] |
-| Secret rotation automation                             | [PLANNED]     |
-| Automated secret scanning (git history)                | [PLANNED]     |
-| Secret access audit logging                            | [PLANNED]     |
-| Rotation notification workflow                         | [PLANNED]     |
+| Component                                              | Status                   |
+| ------------------------------------------------------ | ------------------------ |
+| `get_secret_client()` — fail-loud, no env var fallback | [IMPLEMENTED]            |
+| `.env.example` in all services                         | [IMPLEMENTED]            |
+| Per-service IAM bindings for secrets                   | [IMPLEMENTED]            |
+| Secret naming convention enforced                      | [IMPLEMENTED]            |
+| No hardcoded values (enforced by .cursorrules)         | [IMPLEMENTED]            |
+| Multi-stage Docker builds                              | [IMPLEMENTED]            |
+| Secret rotation automation                             | [PLANNED — post-cutover] |
+| Automated secret scanning (git history)                | [PLANNED — post-cutover] |
+| Secret access audit logging                            | [PLANNED — post-cutover] |
+| Rotation notification workflow                         | [PLANNED — post-cutover] |

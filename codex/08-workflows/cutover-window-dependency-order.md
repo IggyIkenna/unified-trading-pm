@@ -177,8 +177,8 @@ Allocate slots heavily to parallel-track work — there's no data-pipeline depen
 
 **Not yet encoded** (action items spawned by this doc):
 
-- Per-asset_group ML kickoff dates (2026-05-19) — need to be added to `ml_and_features_master_2026_05_07.md`
-- DeFi strategy + execution backtest start dates (2026-05-19) — need to be added to `defi_master_2026_05_07.md`
+- Per-asset_group ML kickoff dates (2026-05-19) — need to be added to `features_and_ml_master.md`
+- DeFi strategy + execution backtest start dates (2026-05-19) — need to be added to `defi_master.md`
 - Live wallet funding + CeFi credentials gate (2026-05-20) — need explicit dates in
   `wallet_treasury_client_flow_2026_05_10.md`
 - DART UI + deployment UI ready (2026-05-20) — need explicit dates in `dart_manual_trade_ux_refactor_2026_05_13` +
@@ -199,10 +199,8 @@ their plan bodies.
   [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
 - **Code-freeze cutover sequencing**:
   [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-- **DeFi archetype owner**: [`plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md)
-  Fork 1
-- **ML training**:
-  [`plans/epics/ml_and_features_master_2026_05_07.md`](../../plans/epics/ml_and_features_master_2026_05_07.md)
+- **DeFi archetype owner**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1
+- **ML training**: [`plans/epics/features_and_ml_master.md`](../../plans/epics/features_and_ml_master.md)
 - **Master umbrella**:
   [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 

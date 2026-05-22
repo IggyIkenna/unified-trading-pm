@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # Solana Concentrated Liquidity LP (Raydium / Orca)
 
 > **Asset class:** DeFi **Strategy type:** Market Making via Concentrated LP (fee collection, active range management)

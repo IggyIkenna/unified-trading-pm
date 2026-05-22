@@ -30,16 +30,16 @@ Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-ope
 
 ## Tech stack
 
-| Layer      | Technology                                                                           |
-| ---------- | ------------------------------------------------------------------------------------ |
-| Backend    | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)          |
-| Frontend   | React + TypeScript + Vite (dashboard served by Firebase Hosting post-P2)             |
-| Auth       | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)             |
-| Workers    | tmux-spawn on operator's laptop (pre-P5); dedicated GCE VMs post workers-on-VMs plan |
-| State      | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)         |
-| GCS backup | `gs://agent-orchestrator-state-prod/` — set via `ORCHESTRATOR_GCS_BUCKET` env        |
-| Deps       | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                        |
-| QG         | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                       |
+| Layer      | Technology                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend    | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                       |
+| Frontend   | React + TypeScript + Vite (dashboard served by Firebase Hosting post-P2)                                                                          |
+| Auth       | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                                          |
+| Workers    | 10 epic GCE VMs (asia-northeast1-c), 8 slots each = 80 worker slots; 1 planning VM (34.146.53.106, 2 slots). See `orchestrator_vm_registry.yaml`. |
+| State      | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)                                                                      |
+| GCS backup | `gs://agent-orchestrator-state-prod/` — set via `ORCHESTRATOR_GCS_BUCKET` env                                                                     |
+| Deps       | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                     |
+| QG         | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                    |
 
 ---
 
@@ -156,11 +156,16 @@ integration — operator tooling exemption per the deployment plan.
 
 ## Slack notifications
 
-Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook.
-Shipped at `agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
+Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook. Shipped at
+`agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
 
-**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
-table, payload shape, retry logic, secret inventory, V2 out-of-scope).
+**Wired on Cloud Run staging 2026-05-21** (`@07e42e2`): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` +
+`AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` mounted on `agent-orchestrator-staging`. async→sync httpx conversion applied
+(asyncio.run in sync FastAPI endpoint suppressed all calls; smoke test confirmed on revision `00011-mtg` with 350-460ms
+latency).
+
+**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event table, payload shape, retry logic,
+secret inventory, V2 out-of-scope).
 
 ---
 
@@ -201,29 +206,42 @@ operator coordination surface.
 
 Five mitigations added to close gaps in the multi-agent loop. All live on the Ikenna VM backend.
 
-| # | Mitigation | Mechanism | Failure mode it closes |
-| --- | --- | --- | --- |
-| 1 | Mirror-failure → orchestrator alert | `tab-mirror-to-ldr.yml` POSTs every outcome to `/api/mirror-events` | Push to tab branch silently fails to cascade to LDR; downstream agents read stale plan state |
-| 2 | Pre-spawn dirty-state gate | `spawn_slot()` runs `worktree_clean_check.py` first; HTTP 409 + per-repo manifest on dirty | New agent silently inherits another agent's WIP |
-| 3 | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON written on spawn, refreshed by heartbeat | Context-reset agent can't tell own predecessor's WIP from foreign WIP |
-| 4 | Heartbeat in-flight files | `HeartbeatRequest.in_flight_files` persisted to `SlotRow.in_flight_files_json` | Successor agent into a dead slot has no record of WIP file list |
-| 5 | On-demand artifact pattern | Worktrees code-only; venvs / node_modules built on first need | ~160G of duplicated venvs across 12 slots; SSD bloat |
+| #   | Mitigation                          | Mechanism                                                                                  | Failure mode it closes                                                                       |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| 1   | Mirror-failure → orchestrator alert | `tab-mirror-to-ldr.yml` POSTs every outcome to `/api/mirror-events`                        | Push to tab branch silently fails to cascade to LDR; downstream agents read stale plan state |
+| 2   | Pre-spawn dirty-state gate          | `spawn_slot()` runs `worktree_clean_check.py` first; HTTP 409 + per-repo manifest on dirty | New agent silently inherits another agent's WIP                                              |
+| 3   | Per-agent `.agent-claim` file       | `.tabs/<N>/.agent-claim` JSON written on spawn, refreshed by heartbeat                     | Context-reset agent can't tell own predecessor's WIP from foreign WIP                        |
+| 4   | Heartbeat in-flight files           | `HeartbeatRequest.in_flight_files` persisted to `SlotRow.in_flight_files_json`             | Successor agent into a dead slot has no record of WIP file list                              |
+| 5   | On-demand artifact pattern          | Worktrees code-only; venvs / node_modules built on first need                              | ~160G of duplicated venvs across 12 slots; SSD bloat                                         |
 
-Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer"
-in the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
+Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
+the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
-## Two-operator topology
+## Fleet topology (as of 2026-05-22)
 
-The system is **multi-master**. Each operator runs a fully autonomous backend:
+**1 planning VM + 10 epic GCE VMs**, all on GCP `asia-northeast1-c`, all running orchestrator v0.6.0+.
 
-| Operator | Backend host | Public URL | State |
-| --- | --- | --- | --- |
-| Ikenna | EC2 `m8i.4xlarge`, EIP `13.113.200.22`, `ap-northeast-1` | `https://api.agent-orchestrator.odum-research.com` | Independent `state.db`, users, slots, claim files |
-| Harsh | Personal laptop | `https://orch.epiphanytechnologies.com` | Independent `state.db`, users, slots, claim files |
+| VM id            | IP             | Role     | Slots | Epics / workstreams        |
+| ---------------- | -------------- | -------- | ----- | -------------------------- |
+| planning-vm      | 34.146.53.106  | planning | 2     | Cross-cutting + governance |
+| vm-cefi          | 35.200.75.132  | epic     | 8     | CeFi adapters              |
+| vm-cross-cutting | 34.104.133.72  | epic     | 8     | Cross-cutting infra        |
+| vm-defi          | 35.200.55.185  | epic     | 8     | DeFi adapters              |
+| vm-ml            | 35.200.66.186  | epic     | 8     | ML / features              |
+| vm-operator-ops  | 34.85.27.215   | epic     | 8     | Operator ops               |
+| vm-orchestrator  | 35.194.106.13  | epic     | 8     | Orchestrator self          |
+| vm-prediction    | 136.110.98.16  | epic     | 8     | Predictions                |
+| vm-sports        | 34.146.32.46   | epic     | 8     | Sports                     |
+| vm-tradfi        | 35.200.59.184  | epic     | 8     | TradFi                     |
+| vm-trading-core  | 35.200.121.156 | epic     | 8     | Trading core               |
 
-The Firebase-hosted SPA at `https://agent-orchestrator.odum-research.com` is the SHARED entrypoint; the
-backend dropdown lets either operator pick which API the SPA hits. Login is per-backend (each `users.json` is
-distinct). There is no shared runtime state between backends — cross-side coordination happens through:
+Total worker capacity: 2 + 80 = **82 slots**. VM registry SSOT: `orchestrator_vm_registry.yaml`. Fleet commissioned
+2026-05-21; T+10min health verification PASSED 2026-05-22 (all `/health` = ok + GCS STARTED events).
+
+**Cloud provider**: GCP (current). AWS support planned — `CLOUD_PROVIDER=aws|gcp` toggle in launcher +
+`bootstrap_vm.sh`. AWS preferred long-term (existing credits). See `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
+
+Cross-side coordination:
 
 - `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
 - Daily work-split files `plans/active/work_split_<date>_<operator>.md`
@@ -236,14 +254,19 @@ re-targeted from Cloud Run to dedicated EC2 VM 2026-05-19; see `docs/ikenna-vm-s
 
 Active successor plans:
 
-- `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5
-  shipped; auto `uv sync` hook deferred)
+- `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5 shipped;
+  auto `uv sync` hook deferred)
 - `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` — Slack push notifications (P1 + P2 shipped)
-- `plans/active/agent_orchestrator_workers_on_vms_2026_05_XX.md` — worker execution on VMs (planning)
-- `plans/active/agent_orchestrator_multi_account_failover_2026_05_XX.md` — multi-account failover (planning)
+- `plans/active/aws_epic_vm_fleet_2026_05_22.md` — AWS EC2 fleet (CLOUD_PROVIDER toggle; GCP working, AWS in progress)
+- `plans/epics/orchestrator_master.md` — multi-VM topology epic (SSH-spawn, DNS, preflight deferred items)
+
+Archived plans:
+
+- `plans/archive/epic_vm_fleet_commissioning_2026_05_21.plan.md` — GCP fleet commissioning (DONE 2026-05-22)
+- `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md` — old asymmetric model (superseded)
 
 Resolved/closed issues:
 
-- `plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md` (RESOLVED 2026-05-20 — spawn endpoint
-  tmux daemon silent-fail + workspace-trust prompt unhandled; fix shipped at `agent-orchestrator@e975f19` +
+- `plans/archive/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md` (RESOLVED 2026-05-20 — spawn endpoint tmux
+  daemon silent-fail + workspace-trust prompt unhandled; fix shipped at `agent-orchestrator@e975f19` +
   `scripts/install-orchestrator-service.sh` at `agent-orchestrator@dc535b2` to prevent recurrence)

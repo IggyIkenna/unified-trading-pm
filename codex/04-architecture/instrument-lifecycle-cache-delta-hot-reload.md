@@ -30,9 +30,8 @@ applies uniformly. Reference: Sweep 3 of
 
 > **STATUS** — Workspace pattern doc codified during the live-pipeline activation 2026-05-08. Work plan in
 > [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
-> Phase 10. Coordinated with
-> [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.md). If this doc disagrees
-> with the active plans, the plans win.
+> Phase 10. Coordinated with [`instruments_master`](../../plans/epics/instruments_master.md). If this doc disagrees with
+> the active plans, the plans win.
 
 ## TL;DR
 
@@ -202,7 +201,7 @@ WS connection.
 
 instruments-service publish-side and downstream consume-side are coordinated:
 
-- `instruments_live_master_2026_05_08` owns the publish-side (verifies/adds the event publication if missing).
+- `instruments_master` owns the publish-side (verifies/adds the event publication if missing).
 - `live_pipeline_mtds_mdps_features_2026_05_08` Phase 10 owns the consume-side (UTL helper + per-service wiring).
 
 Banner each plan with the other to keep the work coordinated.
@@ -221,8 +220,7 @@ Banner each plan with the other to keep the work coordinated.
 - Plan:
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 10.
-- Plan: [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.md) — publish-side
-  owner.
+- Plan: [`instruments_master`](../../plans/epics/instruments_master.md) — publish-side owner.
 - Pattern reference: `unified-trading-library/unified_trading_library/api_key_reloader.py` — same shape for API keys.
 - Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —
   uses this pattern for live MTDS/MDPS/features instrument lifecycle propagation.

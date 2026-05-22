@@ -31,10 +31,16 @@ shard atom + per-market lifecycle. Both shapes documented below: legacy (pre-Pla
 
 ## Venues
 
-| Venue      | API Auth      | Data Sources                                                    |
-| ---------- | ------------- | --------------------------------------------------------------- |
-| POLYMARKET | None (public) | Gamma API (metadata), CLOB API (books/trades), Data API (fills) |
-| KALSHI     | API key       | REST API (markets, trades, books)                               |
+> **[DELTA 2026-05-22 — KALSHI API MIGRATION]** Kalshi migrated from `trading-api.kalshi.com` to
+> `api.elections.kalshi.com`. Phase 1 of `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` shipped all 17 URL
+> update sites across 5 repos (UAC@`5729197`, IS@`79ad855`, MTDS@`28b84ce`, EXS@`8a3cbe48`, UI@`664c3992`). Phase 3
+> (integration verification) is `BLOCKED-CREDENTIALS` pending `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+> Status: `BLOCKED-CREDENTIALS`.
+
+| Venue      | API Auth      | API Base URL (canonical)          | Data Sources                                                              |
+| ---------- | ------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| POLYMARKET | None (public) | `gamma-api.polymarket.com` (meta) | Gamma API (metadata), CLOB API (books/trades), Data API (fills)           |
+| KALSHI     | API key       | `api.elections.kalshi.com`        | REST API (markets, trades, books) — BLOCKED-CREDENTIALS (see delta above) |
 
 ## Sub-Categories
 

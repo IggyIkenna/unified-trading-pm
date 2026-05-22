@@ -809,22 +809,21 @@ from `archetype_capability_manifest.json`, flattening the canonical archetype su
 labels (originally sized for 18 archetypes / 96 entries on 2026-04-20; expanded by Phase 9 to 53, then to 55 by the
 `CARRY_RECURSIVE_STAKED` split, then to **57** by the 2026-05-18 taxonomy decision — see UAC `StrategyArchetype` enum
 SSOT; the manifest declares cells for a 22-archetype live subset today, the remainder await their cell declarations).
-Public API signatures preserved so consumers
-need no call-site changes. Key v1→v2 field drift: `strategy_id` changed from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to
-slot-label grammar; `execution_mode`, `strategy_type`, `default_timeframe` all removed (now archetype-derived).
+Public API signatures preserved so consumers need no call-site changes. Key v1→v2 field drift: `strategy_id` changed
+from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to slot-label grammar; `execution_mode`, `strategy_type`,
+`default_timeframe` all removed (now archetype-derived).
 
 **4. category-instrument-coverage.md** —
 [category-instrument-coverage.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
 SSOT matrix: for every one of the 57 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55 by
 the `CARRY_RECURSIVE_STAKED` split; then to 57 by the 2026-05-18 taxonomy decision — 35+ new archetypes await their cell
-declarations), every
-`(category, instrument_type)` cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal
-variant, gap reason, and fully-spelled slot-label examples. Category is always derived from the execution venue — the
-same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity event-settled markets; only venue params differ. As
-of 2026-04-20 snapshot: only `STAT_ARB_PAIRS_FIXED × CEFI × spot|perp` cells are `PUBLIC`; all others default to
-`INVESTMENT_MANAGEMENT_RESERVED`. Key IM-reserved cells currently live: ML Directional Continuous × CeFi (Jun 2026), ML
-Directional Continuous × TradFi dated futures (Sept 2026), Vol Trading Options × TradFi (Oct 2026 India options), ML
-Directional Event-Settled × Sports (Jun 2026, capacity-bound).
+declarations), every `(category, instrument_type)` cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with
+representative venues, signal variant, gap reason, and fully-spelled slot-label examples. Category is always derived
+from the execution venue — the same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity event-settled markets;
+only venue params differ. As of 2026-04-20 snapshot: only `STAT_ARB_PAIRS_FIXED × CEFI × spot|perp` cells are `PUBLIC`;
+all others default to `INVESTMENT_MANAGEMENT_RESERVED`. Key IM-reserved cells currently live: ML Directional Continuous
+× CeFi (Jun 2026), ML Directional Continuous × TradFi dated futures (Sept 2026), Vol Trading Options × TradFi (Oct 2026
+India options), ML Directional Event-Settled × Sports (Jun 2026, capacity-bound).
 
 **5. uac-registry-gaps.md** —
 [uac-registry-gaps.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/uac-registry-gaps.md)

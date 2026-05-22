@@ -1,8 +1,8 @@
 # Trading-Agent Service — Directive Pipeline Architecture
 
 > **Created**: 2026-05-20 — Phase 8 of `trading_agent_service_architecture_unlock_2026_05_22.md` **Status**:
-> Architecture shipped (Phases 1-6.5 done); production logic post-cutover. **Tier**: Tier-1 architecture-only (data
-> flow wired by May-23; production allocator logic post-cutover).
+> Architecture shipped (Phases 1-6.5 done); production logic post-cutover. **Tier**: Tier-1 architecture-only (data flow
+> wired by May-23; production allocator logic post-cutover).
 
 ---
 
@@ -13,8 +13,10 @@ trading-agent-service is a layer-7 subscriber-emitter in the unified trading sys
 `performance_features` subdomain). It emits `ArchetypeAllocationDirective` consumed by strategy-service
 `StrategyDirectiveReloader`. The service is **off-by-default** for the May-23 cutover — data flow is wired end-to-end
 but no directive is emitted unless explicitly enabled. Production allocator logic (ML/LLM integration, automatic
-re-weighting, multi-archetype engines) ships post-cutover via epic `strategy_and_dart_master_2026_05_07.md` §1.7 Phase
-10.7 + § Allocator service.
+re-weighting, multi-archetype engines) ships post-cutover via epic `plans/epics/trading_agent_master.md` (canonical
+post-cutover SSOT; the old forward pointer to `strategy_and_dart_master_SUPERSEDED_2026_05_21.md` §1.7 Phase 10.7 was
+updated 2026-05-22 to point at `trading_agent_master.md` — `strategy_and_dart_master_SUPERSEDED_2026_05_21.md` is
+superseded as of 2026-05-21).
 
 ### Closed-loop diagram
 
@@ -183,8 +185,8 @@ validation confirms signal quality. No code change required.
 
 ## Post-Cutover Scope
 
-The following items are explicitly out of May-23 scope and tracked in
-`plans/epics/strategy_and_dart_master_2026_05_07.md` §1.7 Phase 10.7 + § Allocator service:
+The following items are explicitly out of May-23 scope and tracked in `plans/epics/trading_agent_master.md` (canonical
+post-cutover SSOT, supersedes `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`):
 
 - Production allocator logic (PnL-weighted, Sharpe-weighted, Risk-Parity, Kelly, Min-CVaR engines)
 - LLM/ML integration (slow features, narrative context, regime detection)
@@ -205,15 +207,16 @@ The following items are explicitly out of May-23 scope and tracked in
 | 5     | strategy-service      | `StrategyDirectiveReloader` ships; PnL emission wired                  | ✅ strategy@afd17fe9     |
 | 6     | trading-agent-service | `AllocationDirectiveLoop` scaffold + ServiceBootstrap + Health API     | ✅ trading-agent@119fa74 |
 | 6.5   | trading-agent-service | Backtest-replay infrastructure (inference cache + directive log)       | ✅ trading-agent@33a7ae9 |
-| 7     | trading-agent-service | CI green on `live-defi-rollout` (GH_PAT rotation needed)              | ⏳ BLOCKED-CREDENTIALS   |
+| 7     | trading-agent-service | CI green on `live-defi-rollout` (GH_PAT rotation needed)               | ⏳ BLOCKED-CREDENTIALS   |
 | 8     | PM                    | Codex + plan updates (this file)                                       | ✅ this commit           |
 
 ---
 
 ## Successor Plans
 
-- **Production allocator logic**: `plans/epics/strategy_and_dart_master_2026_05_07.md` § 1.7 Phase 10.7 —
-  Allocator-as-shared-service split.
+- **Production allocator logic**: `plans/epics/trading_agent_master.md` — Allocator-as-shared-service split +
+  post-cutover allocation engines. (`strategy_and_dart_master_SUPERSEDED_2026_05_21.md` was the prior pointer;
+  superseded 2026-05-21.)
 - **UTL lift**: `strategy_repo_consolidation_2026_05_19.md` — `StrategyDirectiveReloader` → `make_directive_reloader()`
   post-cutover.
 - **Multi-archetype PnL emission**: per-archetype plans (cefi/defi/sports/predictions/tradfi masters) — each adds

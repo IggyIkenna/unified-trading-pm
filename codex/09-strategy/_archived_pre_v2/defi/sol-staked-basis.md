@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # SOL Staked Basis Trade (Marinade mSOL + Drift)
 
 > **Asset class:** DeFi **Strategy type:** Basis + LST Yield (delta-neutral with staking enhancement) **Strategy ID

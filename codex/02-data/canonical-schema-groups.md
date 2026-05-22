@@ -79,12 +79,12 @@ absence is part of the contract.
 
 ## 5. Reference Data
 
-| Schema                     | Purpose                                                         |
-| -------------------------- | --------------------------------------------------------------- |
+| Schema                     | Purpose                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
 | `InstrumentRecord`         | Single SSOT; replaces retired unified-reference-data-interface + instruments-service custom schemas |
-| `ExpiryCalendar`           | Venue expiry dates                                              |
-| `UniverseSnapshot`         | As-of instruments + `venue_availability` dict                   |
-| `IndexCompositionSnapshot` | Perp index basket constituents                                  |
+| `ExpiryCalendar`           | Venue expiry dates                                                                                  |
+| `UniverseSnapshot`         | As-of instruments + `venue_availability` dict                                                       |
+| `IndexCompositionSnapshot` | Perp index basket constituents                                                                      |
 
 ---
 

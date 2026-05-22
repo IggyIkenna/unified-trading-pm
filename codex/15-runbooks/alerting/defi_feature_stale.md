@@ -39,8 +39,8 @@ source is up + restarts the feature compute if needed.
 
 - **Severity:** `WARN`.
 - **Paging channels:** `TELEGRAM`.
-- **Triggers kill-switch:** **FALSE** (DEFERRED — when sustained > 30 min, should escalate to a
-  `KILL_SWITCH_DEFI_FEATURE_BLACKOUT` code; not yet in UAC).
+- **Triggers kill-switch:** **FALSE** (DEFERRED post-cutover — when sustained > 30 min, should escalate to a
+  `KILL_SWITCH_DEFI_FEATURE_BLACKOUT` code; not yet in UAC; tracked under `plans/epics/observability_master.md`).
 - **PagerDuty service:** N/A.
 
 ## Diagnosis (first 5 minutes)
@@ -155,7 +155,15 @@ features-service (onchain family) health-check tightening.
 
 ## Cross-references
 
-- **Cascade target (proposed):** future `KILL_SWITCH_DEFI_FEATURE_BLACKOUT` code (not yet in UAC).
+- **Cascade target (post-cutover):** `KILL_SWITCH_DEFI_FEATURE_BLACKOUT` alert code (not yet in UAC;
+  `plans/epics/observability_master.md`).
+
+> **[DELTA 2026-05-22]** **Current state:** No auto-escalation from `DEFI_FEATURE_STALE` to kill-switch. Sustained
+> 30-min feature blackout sends Telegram WARN only; no PagerDuty P1; no kill-switch arm. **Planned delta:**
+> `plans/epics/observability_master.md` — add `KILL_SWITCH_DEFI_FEATURE_BLACKOUT` to UAC `AlertCode` + wire auto-trigger
+> at 30-min sustained staleness. **Target:** Sustained 30-min feature blackout auto-arms kill switch with Telegram +
+> PagerDuty P1.
+
 - **Co-firing:** [`circuit_breaker_open.md`](./circuit_breaker_open.md).
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Threshold tuning:** [`threshold-tuning.md`](./threshold-tuning.md).

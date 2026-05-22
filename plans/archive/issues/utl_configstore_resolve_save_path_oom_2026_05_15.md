@@ -337,8 +337,8 @@ drift is rare).
 
 ### P1 — needs owner assignment
 
-- [x] ✅ **deployment-api conftest audit** (Section 2.2) — slot 4 2026-05-19: grepped deployment_api/ source for
-      `while x.method():` patterns (blob_exists/exists/has_/contains/next/peek/fetch/poll/read/wait_for_). ZERO hits.
+- [x] ✅ **deployment-api conftest audit** (Section 2.2) — slot 4 2026-05-19: grepped deployment*api/ source for
+      `while x.method():` patterns (blob_exists/exists/has*/contains/next/peek/fetch/poll/read/wait*for*). ZERO hits.
       deployment-api source has no OOM-class while-loop patterns. deployment-api conftest MagicMocks are safe.
 - [x] ✅ **UTL test layout consolidation** (Section 3 B4) — TRACKED-ELSEWHERE: slot 6's `utl_qg_preexisting_failures`
       queue. No action needed here.
@@ -361,8 +361,7 @@ drift is rare).
 - [ ] **DEFERRED-POST-CUTOVER** **B3 ConfigAuditLog locking** — add file-based lock OR document-and-enforce
       single-writer assumption. ~1 hour. Not May-23 critical path.
 - [x] ✅ **B8 SUB_AGENT_MANDATORY_RULES update** — ALREADY DONE: `--no-fix` documented at lines 22-44 of
-      `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` with ship-mode vs diagnostic-mode table + 2026-05-15 incident
-      note.
+      `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` with ship-mode vs diagnostic-mode table + 2026-05-15 incident note.
 
 ### P3 — nice-to-have, post-cutover
 
@@ -370,13 +369,13 @@ drift is rare).
 - [ ] **DEFERRED-POST-CUTOVER** **B9 QG memory optimization** — explicit GC between phases, `PYRIGHT_CONCURRENCY=2`.
 - [ ] **DEFERRED-POST-CUTOVER** **strategy-service `domain_event_logger:361` byte-by-byte tail** — replace with
       fixed-size buffer read from end.
-- [ ] **DEFERRED-POST-CUTOVER** **B4 LINT step gap** — add `ruff format --check` to LINT step in `base-service.sh`.
-      5 min, but post-cutover to avoid mid-flight QG churn.
+- [ ] **DEFERRED-POST-CUTOVER** **B4 LINT step gap** — add `ruff format --check` to LINT step in `base-service.sh`. 5
+      min, but post-cutover to avoid mid-flight QG churn.
 
 ### Workspace mitigation (operator action, no code change)
 
-- [ ] **OPERATOR-ACTION** **Add `mempy` alias to `~/.bashrc`** to wrap any direct `python` / `pytest` invocation in a
-      15 GB cgroup cap. No code change — operator runs these 3 bash lines on their workstation.
+- [ ] **OPERATOR-ACTION** **Add `mempy` alias to `~/.bashrc`** to wrap any direct `python` / `pytest` invocation in a 15
+      GB cgroup cap. No code change — operator runs these 3 bash lines on their workstation.
 
 - [ ] **OPERATOR-ACTION** **Set negative `oom_score_adj` for VSCode + Konsole** so kernel kills runaway scripts first,
       never the IDE. Operator runs the loop on their workstation.

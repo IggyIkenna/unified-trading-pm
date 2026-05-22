@@ -1,4 +1,7 @@
-[2026-05-19 15:00 UTC] slot-1-main → slot 4 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 4 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -460,18 +463,21 @@ passed. features-service@35fa1725. Moving to Wave 79.
 [2026-05-19 12:15 UTC] main → slot 4 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/4/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/4/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 4` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 4**:
-hard_schema_enforcement (4.8 cal) + strategy_archetype_taxonomy (4.8 cal) + deployment_and_qg close
+**Today's assignment — Slot 4**: hard_schema_enforcement (4.8 cal) + strategy_archetype_taxonomy (4.8 cal) +
+deployment_and_qg close
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 4 — STARTED <first item>` below.
 
@@ -481,9 +487,11 @@ Ack this ping by appending `[2026-05-19 12:15 UTC] slot 4 — STARTED <first ite
 
 **Task**: S4-PHASE5-CARRY-STAKED-BASIS — Phase-E Cloud Run deploy required
 
-Phase-C + tarball are shipped. The remaining gate is the Cloud Run deploy (OPERATOR-SIDE ONLY — needs production GCP creds + image build).
+Phase-C + tarball are shipped. The remaining gate is the Cloud Run deploy (OPERATOR-SIDE ONLY — needs production GCP
+creds + image build).
 
 **One-paste deploy command**:
+
 ```bash
 # Prereq 1: build + push image
 gcloud builds submit /home/hk/unified-trading-system-repos/features-service \
@@ -505,9 +513,11 @@ SERVICE_URL=$(gcloud run services describe features-service \
 curl -s "${SERVICE_URL}/health" | python3 -m json.tool
 ```
 
-**24h soak criterion**: `/health → healthy:true` for 24 consecutive hours; feature parquets in bucket every tick; no FAILED events in alerting-service.
+**24h soak criterion**: `/health → healthy:true` for 24 consecutive hours; feature parquets in bucket every tick; no
+FAILED events in alerting-service.
 
-**After soak**: relaunch paper VM `strategy-paper-carry-staked-basis-$(date +%Y%m%d)-$(date +%H%M%S)` — tarballs already in `gs://deployment-scripts-central-element-323112/code/` at features-service@c9729dce.
+**After soak**: relaunch paper VM `strategy-paper-carry-staked-basis-$(date +%Y%m%d)-$(date +%H%M%S)` — tarballs already
+in `gs://deployment-scripts-central-element-323112/code/` at features-service@c9729dce.
 
 Slot 4 moving to S4-DEFI-CATALOGUE-PRIMITIVES now.
 
@@ -517,18 +527,21 @@ Slot 4 moving to S4-DEFI-CATALOGUE-PRIMITIVES now.
 
 **Finding**: All 6 remaining open items are BLOCKED-OPERATOR-DECISION or HARD-STOP. None are agent-doable.
 
-| Item | Status | Specific blocker |
-|------|--------|-----------------|
-| 6C Solana LST historical | `BLOCKED-OPERATOR-DECISION` | launcher `launch-mtds-pyth-lst-backfill-vm.sh` exists but header says "DO NOT LAUNCH without operator [ack]"; Pyth feed IDs for Rocket Pool/Solblaze need operator pick |
-| 6D Lighter/Pacifica/Extended OHLCV backfill | `BLOCKED-OPERATOR-DECISION` | No launcher script exists; backfill window + VM cost need operator go-ahead before creating + running |
-| 6E Vaults + restaking + DEX historical (26 protocols) | `BLOCKED-OPERATOR-DECISION` | 26-protocol priority triage needed before per-protocol VM launches ($$$); not blocking May-23 per 6F clean audit |
-| 8A Paper-trade run | `BLOCKED-OPERATOR-DECISION` | Multi-archetype run (carry_staked_basis + leveraged_funding_arb) needs operator launch trigger; single-archetype paper VM already running since 2026-05-18 |
-| 8B Reconciliation rule wired | `BLOCKED-CROSS-PLAN` | `BATCH_VS_LIVE_RECON_DRIFTED` AlertRule already in UAC. Blocked on `alerting_service_live_rules_2026_05_07.md` (11 open items, majority [HUMAN]) |
-| 8C 7-day continuous live-trade proof | `HARD-STOP` | Wallet keys — human-only per CLAUDE.md. Real wallet on testnet requires operator-provisioned key + explicit launch |
+| Item                                                  | Status                      | Specific blocker                                                                                                                                                        |
+| ----------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6C Solana LST historical                              | `BLOCKED-OPERATOR-DECISION` | launcher `launch-mtds-pyth-lst-backfill-vm.sh` exists but header says "DO NOT LAUNCH without operator [ack]"; Pyth feed IDs for Rocket Pool/Solblaze need operator pick |
+| 6D Lighter/Pacifica/Extended OHLCV backfill           | `BLOCKED-OPERATOR-DECISION` | No launcher script exists; backfill window + VM cost need operator go-ahead before creating + running                                                                   |
+| 6E Vaults + restaking + DEX historical (26 protocols) | `BLOCKED-OPERATOR-DECISION` | 26-protocol priority triage needed before per-protocol VM launches ($$$); not blocking May-23 per 6F clean audit                                                        |
+| 8A Paper-trade run                                    | `BLOCKED-OPERATOR-DECISION` | Multi-archetype run (carry_staked_basis + leveraged_funding_arb) needs operator launch trigger; single-archetype paper VM already running since 2026-05-18              |
+| 8B Reconciliation rule wired                          | `BLOCKED-CROSS-PLAN`        | `BATCH_VS_LIVE_RECON_DRIFTED` AlertRule already in UAC. Blocked on `alerting_service_live_rules_2026_05_07.md` (11 open items, majority [HUMAN])                        |
+| 8C 7-day continuous live-trade proof                  | `HARD-STOP`                 | Wallet keys — human-only per CLAUDE.md. Real wallet on testnet requires operator-provisioned key + explicit launch                                                      |
 
 **Operator action needed** (in priority order):
-1. **6C**: Ack in `ikenna_orchestrator/pings/slot_2.md` + provide Pyth feed IDs for rETH (Rocket Pool) and bSOL (Solblaze) → agent can then launch `launch-mtds-pyth-lst-backfill-vm.sh`
-2. **8A**: Decide if multi-archetype paper run (leveraged_funding_arb alongside carry_staked_basis) should start now or after May-23
+
+1. **6C**: Ack in `ikenna_orchestrator/pings/slot_2.md` + provide Pyth feed IDs for rETH (Rocket Pool) and bSOL
+   (Solblaze) → agent can then launch `launch-mtds-pyth-lst-backfill-vm.sh`
+2. **8A**: Decide if multi-archetype paper run (leveraged_funding_arb alongside carry_staked_basis) should start now or
+   after May-23
 3. **8C**: Provision testnet wallet key + trigger live run when ready
 4. **6D + 6E**: Provide backfill priority order + cost approval (not May-23-blocking)
 5. **8B**: `alerting_service_live_rules` needs completion first (11 open items)
@@ -539,18 +552,17 @@ This task cannot reach 100% without the above operator decisions. Raising /block
 
 [2026-05-20 12:05 UTC] slot 4 — Two specific DEFI-CATALOGUE operator asks (per main ack BLK-0732bdf5)
 
-**Ask 1 — 6C Pyth LST backfill ack + feed IDs**:
-Launcher `launch-mtds-pyth-lst-backfill-vm.sh` already exists and covers jitoSOL/mSOL/bSOL/INF.
-Need from operator:
+**Ask 1 — 6C Pyth LST backfill ack + feed IDs**: Launcher `launch-mtds-pyth-lst-backfill-vm.sh` already exists and
+covers jitoSOL/mSOL/bSOL/INF. Need from operator:
+
 - [ack] in `ikenna_orchestrator/pings/slot_2.md` to unblock launcher (header explicitly requires it)
 - Pyth feed IDs for **Rocket Pool (rETH)** on Ethereum: `0x<feed_id>` (mainnet beta.api.pyth.network)
-- Pyth feed IDs for **Solblaze (bSOL)** on Solana: `0x<feed_id>`
-Once ack + IDs land, agent can extend the launcher and fire the VM.
+- Pyth feed IDs for **Solblaze (bSOL)** on Solana: `0x<feed_id>` Once ack + IDs land, agent can extend the launcher and
+  fire the VM.
 
-**Ask 2 — 8A multi-archetype paper-run timing**:
-Single-archetype carry_staked_basis paper VM running since 2026-05-18.
-Question: should `leveraged_funding_arb` archetype also be launched before May-23 cutover?
-If yes → agent launches alongside existing VM. If no → 8A stays BLOCKED-POST-CUTOVER.
+**Ask 2 — 8A multi-archetype paper-run timing**: Single-archetype carry_staked_basis paper VM running since 2026-05-18.
+Question: should `leveraged_funding_arb` archetype also be launched before May-23 cutover? If yes → agent launches
+alongside existing VM. If no → 8A stays BLOCKED-POST-CUTOVER.
 
 Status: pings documented. Slot 4 moving to S4-DEX-PERP-EXPANSION.
 
@@ -558,19 +570,25 @@ Status: pings documented. Slot 4 moving to S4-DEX-PERP-EXPANSION.
 
 [2026-05-20 UTC] slot 4 → operator — **BLOCKED-OPERATOR-DECISION: config_grid_archetype_extend_2026_05_20.md**
 
-Plan `config_grid_archetype_extend_2026_05_20.md` dispatched as "2 agent-doable items" but audit reveals all 3 items are blocked. Root cause: the plan's proposed `_DIMENSIONS_BY_ARCHETYPE` names DON'T match actual engine params.
+Plan `config_grid_archetype_extend_2026_05_20.md` dispatched as "2 agent-doable items" but audit reveals all 3 items are
+blocked. Root cause: the plan's proposed `_DIMENSIONS_BY_ARCHETYPE` names DON'T match actual engine params.
 
-**Mismatch table**:
-| Family | Plan's proposed dims | Engine's actual params |
-|---|---|---|
-| `ML_DIRECTIONAL_CONTINUOUS` | `regime_window_days`, `confidence_threshold`, `position_size_pct`, `max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` |
-| `ML_DIRECTIONAL_EVENT_SETTLED` | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`, `slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` |
-| `MARKET_MAKING_EVENT_SETTLED` | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`, `max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` |
-| `ARBITRAGE_CROSS_DOMAIN_EVENT` | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`, `slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for this archetype |
+**Mismatch table**: | Family | Plan's proposed dims | Engine's actual params | |---|---|---| |
+`ML_DIRECTIONAL_CONTINUOUS` | `regime_window_days`, `confidence_threshold`, `position_size_pct`,
+`max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` | |
+`ML_DIRECTIONAL_EVENT_SETTLED` | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`,
+`slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` | |
+`MARKET_MAKING_EVENT_SETTLED` | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`,
+`max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` | |
+`ARBITRAGE_CROSS_DOMAIN_EVENT` | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`,
+`slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for this archetype |
 
 **Operator decisions needed**:
-1. Pick approach: **(a)** update plan dimension names to match actual engine params (implement-now), OR **(b)** add the proposed params to each engine first, then grid dimensions
-2. Decide on `ARBITRAGE_CROSS_DOMAIN_EVENT`: **(i)** implement engine first (blocks all 4-family completion), OR **(ii)** extend grid for 3 of 4 families (defer 4th to successor plan)
+
+1. Pick approach: **(a)** update plan dimension names to match actual engine params (implement-now), OR **(b)** add the
+   proposed params to each engine first, then grid dimensions
+2. Decide on `ARBITRAGE_CROSS_DOMAIN_EVENT`: **(i)** implement engine first (blocks all 4-family completion), OR
+   **(ii)** extend grid for 3 of 4 families (defer 4th to successor plan)
 
 All items tagged BLOCKED-OPERATOR-DECISION in plan. No agent action possible until operator picks approach.
 
@@ -580,9 +598,11 @@ All items tagged BLOCKED-OPERATOR-DECISION in plan. No agent action possible unt
 
 **Context**: Slack notifications P3 (Cloud Run secret wiring) for agent-orchestrator.
 
-**Needs**: `secretmanager.secrets.setIamPolicy` permission on `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret in `central-element-323112`.
+**Needs**: `secretmanager.secrets.setIamPolicy` permission on `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret in
+`central-element-323112`.
 
 **Command to run as ikenna (has secretmanager.admin)**:
+
 ```bash
 gcloud secrets add-iam-policy-binding AGENT_ORCHESTRATOR_SLACK_WEBHOOK \
   --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" \
@@ -595,7 +615,9 @@ gcloud run services update agent-orchestrator-staging \
   --project central-element-323112
 ```
 
-**Then update deploy-agent-orchestrator.sh** to add `AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest` to the `RUNTIME_SECRETS` variable (so future deploys keep it).
+**Then update deploy-agent-orchestrator.sh** to add
+`AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest` to the `RUNTIME_SECRETS` variable (so future
+deploys keep it).
 
 **Unblocks**: P3 (staging smoke) + P4 (codex). P2 code is shipped at agent-orchestrator@cd04fc2.
 

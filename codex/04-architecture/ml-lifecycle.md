@@ -34,11 +34,17 @@ validation failure the old model stays active and an alert is emitted.
 
 **Decision (2026-05-15)**: The ML cluster ships May-23 as a single monolithic service instance (one ml-inference-service
 process, all asset_groups served by the same process). Per-asset-group sharding (separate inference processes per
-cefi/defi/tradfi/sports/prediction) is explicitly deferred to post-cutover Phase 2. Rationale: latency SLA (p99 ≤ 200ms)
-is achievable with a single process at May-23 traffic volumes; sharding adds operational complexity that risks the
-May-23 date.
+cefi/defi/tradfi/sports/prediction) is explicitly deferred to post-cutover. Rationale: latency SLA (p99 ≤ 200ms) is
+achievable with a single process at May-23 traffic volumes; sharding adds operational complexity that risks the May-23
+date.
 
 This decision is locked until the post-cutover sharding plan is written and approved.
+
+> **[DELTA 2026-05-22]** **Current state:** Monolithic ml-inference-service instance ships for the May-23 cutover (all
+> asset_groups in one process). Per-asset-group sharding is not implemented. **Planned delta:** Post-cutover sharding
+> plan to be written and approved; tracked in `plans/epics/features_and_ml_master.md`. **Target architecture:** Separate
+> ml-inference-service processes per asset_group (cefi/defi/tradfi/sports/prediction) with per-asset-group model
+> registries and hot-reload isolation.
 
 ## 5. Batch Inference Cadence — per-bar Replay
 

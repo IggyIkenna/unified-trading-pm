@@ -14,20 +14,19 @@ topology_requirements:
 
 # Archetype: `VOL_STRADDLE`
 
-> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Event-driven or expiry —
-> straddles held through a catalyst or to expiry; long straddles gamma-scalped intraday. **Code module
-> (target):** `strategy-service/engine/strategies/v2/vol_trading/vol_straddle_engine.py`
+> **Family:** [Vol Trading](../families/vol-trading.md) **Settlement model:** Event-driven or expiry — straddles held
+> through a catalyst or to expiry; long straddles gamma-scalped intraday. **Code module (target):**
+> `strategy-service/engine/strategies/v2/vol_trading/vol_straddle_engine.py`
 
 ## What it does
 
-Buys or sells the ATM straddle (equal quantities of ATM call and ATM put at the same strike and expiry) to
-express a pure volatility view without directional bias. Long straddle is entered before binary catalysts —
-protocol upgrades, governance votes, major macro prints, ETF approval decisions — when realized vol is expected
-to exceed current implied vol; the position profits from large moves in either direction. Short straddle is
-entered during IV-elevated quiet periods when the market is over-pricing uncertainty and a calm outcome is
-expected. At entry, delta is approximately zero. Long straddle holders gamma-scalp by delta-hedging intraday
-moves, collecting realized gamma against the theta bleed; the strategy wins if cumulative gamma scalp income
-exceeds theta cost.
+Buys or sells the ATM straddle (equal quantities of ATM call and ATM put at the same strike and expiry) to express a
+pure volatility view without directional bias. Long straddle is entered before binary catalysts — protocol upgrades,
+governance votes, major macro prints, ETF approval decisions — when realized vol is expected to exceed current implied
+vol; the position profits from large moves in either direction. Short straddle is entered during IV-elevated quiet
+periods when the market is over-pricing uncertainty and a calm outcome is expected. At entry, delta is approximately
+zero. Long straddle holders gamma-scalp by delta-hedging intraday moves, collecting realized gamma against the theta
+bleed; the strategy wins if cumulative gamma scalp income exceeds theta cost.
 
 ## Token / position flow
 
@@ -69,20 +68,21 @@ exceeds theta cost.
 
 ## Entry conditions + signal
 
-- **Long straddle**: event within entry_days_before_event DTE; `analyst_expected_move > market_implied_move
-  × event_move_premium_threshold`; or `IV_z_score < iv_zscore_long_entry` (vol depressed vs history)
-- **Short straddle**: `IV_z_score_60d > iv_zscore_short_entry`; RV_5d < IV × rv_suppression_threshold;
-  no binary event within tenor; underlying in range-bound regime check
+- **Long straddle**: event within entry_days_before_event DTE;
+  `analyst_expected_move > market_implied_move × event_move_premium_threshold`; or `IV_z_score < iv_zscore_long_entry`
+  (vol depressed vs history)
+- **Short straddle**: `IV_z_score_60d > iv_zscore_short_entry`; RV_5d < IV × rv_suppression_threshold; no binary event
+  within tenor; underlying in range-bound regime check
 - Both: ATM bid-ask per leg <= max_leg_spread_vp; sufficient liquidity at target strike
 
 ## Risk management
 
 - Long straddle: max loss = full premium paid; loss is bounded, profit unlimited
-- Short straddle: max loss theoretically unlimited (underlying gaps past stop before hedge executes);
-  stop loss mandatory; iron condor variant with long wings caps loss
+- Short straddle: max loss theoretically unlimited (underlying gaps past stop before hedge executes); stop loss
+  mandatory; iron condor variant with long wings caps loss
 - Gamma scalp discipline: scalp thresholds must be wide enough to cover round-trip taker fees
-- Post-event IV crush on long straddle: exit quickly post-event — IV collapse erodes straddle value rapidly
-  even if the move was large
+- Post-event IV crush on long straddle: exit quickly post-event — IV collapse erodes straddle value rapidly even if the
+  move was large
 - Never hold short straddle through a binary event without explicit event-risk approval in config
 
 ## Config parameters
@@ -107,10 +107,10 @@ exceeds theta cost.
 
 ## When to use / market regime
 
-- **Long straddle**: ahead of high-uncertainty binary events where the market is known to under-price tail
-  moves; also when the vol surface is systematically compressed (IV historically low)
-- **Short straddle**: post-event calm, earnings-like windows after a catalyst resolves with a small move;
-  VIX/crypto IV at multi-month highs without a near-term catalyst to justify the premium
+- **Long straddle**: ahead of high-uncertainty binary events where the market is known to under-price tail moves; also
+  when the vol surface is systematically compressed (IV historically low)
+- **Short straddle**: post-event calm, earnings-like windows after a catalyst resolves with a small move; VIX/crypto IV
+  at multi-month highs without a near-term catalyst to justify the premium
 - **Avoid (long)**: expensive IV environments with no specific catalyst — theta bleed will dominate
 - **Avoid (short)**: any period with known scheduled binary events within the tenor
 - **Asset fit**: BTC, ETH (Deribit 0DTE + weekly expirations); SPX/SPY weeklies for TradFi event plays
@@ -125,10 +125,12 @@ VOL_STRADDLE@cboe-spx-straddle-weekly-usd-prod
 
 ## Not in this archetype
 
-- Structural short-vol carry (systematically sell straddle every cycle to harvest theta, no event catalyst) → [`VOL_CARRY`](vol-carry.md)
+- Structural short-vol carry (systematically sell straddle every cycle to harvest theta, no event catalyst) →
+  [`VOL_CARRY`](vol-carry.md)
 - IV vs RV divergence with mean-reversion timing signal (not event-driven) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
 - 0DTE intraday gamma scalping on expiry-day ATM options → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
-- Calendar or butterfly spread trading shape risk rather than vol level → [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
+- Calendar or butterfly spread trading shape risk rather than vol level →
+  [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
 - ML-model-directed straddle sizing where signal is a forecast, not an event calendar → [`VOL_ML_LEAN`](vol-ml-lean.md)
 
 ## See also

@@ -1,20 +1,8 @@
 ---
+title: "Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)"
 name: promote-workflow-may23-dual-track
-overview:
-  Dual-track promote workflow for the May-23 live-DeFi cutover. PRIMARY = operator-CLI path (run-paper.sh + run-live.sh
-  + colocated_engine.py) hardened for safety-net certainty. SECONDARY = minimal-but-real UI promote pipeline (Promote
-  button → backend → minimal CandidateManifest → DART manual-trade gate UI) shipping in parallel so operator can drive
-  cutover via UI with CLI as fallback. Both archetypes (carry_staked_basis lead +
-  ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion hedge) running ≥7 continuous days on real custody + real venues +
-  real wallet. Heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration
-  deferred to post-cutover plan.
-type: plan
 status: active
 created: 2026-05-10
-deadline: 2026-05-23
-horizon: 13 days
-spawned_from: plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
-companion_to: plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 related_plans:
@@ -22,20 +10,16 @@ related_plans:
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
   - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/defi_master_2026_05_07.md
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
-related_codex:
-  - codex/09-strategy/operational/cli-promote-paths.md
-  - codex/04-architecture/promote-workflow-architecture.md
-  - codex/05-infrastructure/strategy-vm-launcher-shape.md
-  - codex/04-architecture/custody-providers.md
-  - codex/05-infrastructure/launcher-script-ssot.md
+  - plans/active/defi_master.md
+  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 estimate_class: design
 estimate_baseline_ai_days: 7.0
 estimate_calibrated_ai_days: 4.2
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+parent_epic: dart_and_promote_master
+priority: P1
 ---
 
 ## Deferred work — migrated to:
@@ -51,9 +35,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 >
 > **VmPrefixSpec dict-shape migration**: Phase 1 below adds 2 prefixes (`strategy-paper-` + `strategy-live-`) to
 > `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` dict. The dict's shape is being migrated
-> from `dict[str, str | None]` to `dict[str, VmPrefixSpec]` by
-> [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 (currently
-> deferred per its banner — `vm_zombie_watchdog.py` edits drafted but never committed; carryover to next session).
+> from `dict[str, str | None]` to `dict[str, VmPrefixSpec]` by `deployment_ui_lifecycle_tabs_2026_05_08.md` (archived →
+> `plans/archive/2026_05/`) Phase A.2 (currently deferred per its banner — `vm_zombie_watchdog.py` edits drafted but
+> never committed; carryover to next session).
 >
 > **Sequencing**: lifecycle Phase A.2 SHOULD land before this plan's Phase 1 to avoid re-shaping the same dict twice. If
 > lifecycle A.2 hasn't shipped at this plan's Phase 1 execution time, this plan's Phase 1 ships under the legacy
@@ -74,9 +58,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > (CLI is the operational floor; UI is the upgrade ramp). Both paths enforce identical gates (custody connected / venue
 > keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) so either
 > selection is safe. **G23 (DART manual-trade gate)** scope split with
-> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross*cutting
-> owns \_design + DART surface*; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate enforcement_. After
-> cutover, UI evolution continues via
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](../archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)
+> #4: cross*cutting owns \_design + DART surface*; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate
+> enforcement_. After cutover, UI evolution continues via
 > [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 > Phase 9 (full pre-flight pipeline) which EXTENDS this plan's Phase U3 to the canonical UI path; CLI track persists as
 > long-term operational floor for ops/runbooks.
@@ -277,11 +261,10 @@ paper/live deployment exists.
       IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered;
       launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
 
-- [x] [CODE] P1. ✅ `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no
+- [x] ✅ [CODE] P1. `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no
       directive present); reloader reads from same config-hot-reload bus as existing `config_reloaders.py`. See
       trading_agent_service_architecture_unlock plan Phase 5. Off-by-default for May-23: no upstream emitter wired
-      except no-op stub. `start_directive_reloader(poll_interval_seconds=60)` after STARTED event +
-      `stop_directive_reloader()` on both success and exception paths. e2e-testing@5804719.
+      except no-op stub. — e2e-testing@1b6f753
 
 **Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
 
@@ -330,11 +313,10 @@ paper/live deployment exists.
       `TREASURY_LOW/HIGH` + `TREASURY_REBALANCE_NEEDED` + `TRANSFER_INITIATED` pipeline reacts automatically, emits
       `OPERATOR_CAPITAL_OVERRIDE_APPLIED` event. DeFi + `--continuous` + non-mock cloud only. (e2e-testing@89ea188 —
       colocated_engine.py + run-paper.sh)
-- [x] [CODE] P1. ✅ `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no
+- [x] ✅ [CODE] P1. `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no
       directive present); reloader reads from same config-hot-reload bus as existing `config_reloaders.py`. See
       trading_agent_service_architecture_unlock plan Phase 5. Off-by-default for May-23: no upstream emitter wired
-      except no-op stub. `start_directive_reloader(poll_interval_seconds=60)` after STARTED event +
-      `stop_directive_reloader()` on both success and exception paths. e2e-testing@5804719.
+      except no-op stub. — e2e-testing@1b6f753
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 

@@ -23,9 +23,9 @@ topology_requirements:
 Buys long-dated options (180d+, referred to as LEAPS in traditional markets) when long-term implied volatility is cheap
 relative to near-term realised volatility expectations. Long-dated options have high vega relative to theta, meaning
 large realised volatility events pay off asymmetrically — a single large move can recoup months of theta decay. The
-strategy holds through vol cycles, collecting asymmetric upside from vol regime changes while accepting slow theta
-bleed in quiet periods. Exit is triggered when long-dated IV spikes (the vol the strategy was long becomes expensive —
-take profit) or when time-to-expiry falls below the short-tenor threshold.
+strategy holds through vol cycles, collecting asymmetric upside from vol regime changes while accepting slow theta bleed
+in quiet periods. Exit is triggered when long-dated IV spikes (the vol the strategy was long becomes expensive — take
+profit) or when time-to-expiry falls below the short-tenor threshold.
 
 ## Token / position flow
 
@@ -98,12 +98,12 @@ take profit) or when time-to-expiry falls below the short-tenor threshold.
 
 ## When to use / market regime
 
-- **Use when**: long-dated IV is historically cheap; near-term vol events expected over the next 1-6 months;
-  theta budget allows slow bleed through a quiet period
+- **Use when**: long-dated IV is historically cheap; near-term vol events expected over the next 1-6 months; theta
+  budget allows slow bleed through a quiet period
 - **Best regime**: post-crash recovery with low far-dated IV; pre-election / pre-halving periods where long-term event
   risk is not yet priced; equity market complacency with VIX < 15 (apply to SPX LEAPS)
-- **Avoid**: very expensive long-dated vol (above historical 80th percentile); illiquid far-expiry option chains;
-  when near-term vol is already elevated (theta carry cost too high relative to expected payoff)
+- **Avoid**: very expensive long-dated vol (above historical 80th percentile); illiquid far-expiry option chains; when
+  near-term vol is already elevated (theta carry cost too high relative to expected payoff)
 - **Best instruments**: BTC/ETH quarterly expiries on Deribit; SPX LEAPS on CBOE via IBKR
 
 ## Example instances
@@ -117,7 +117,8 @@ VOL_LEAPS_CONVEXITY@cboe-spx-leaps-call-365dte-usd-prod
 ## Not in this archetype
 
 - Short-vol premium harvest (opposite long-vol view) → [`VOL_CARRY`](vol-carry.md)
-- Calendar spread between near and far tenors with slope signal → [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
+- Calendar spread between near and far tenors with slope signal →
+  [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
 - Variance swap replication via full strike strip → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
 - 0DTE intraday gamma scalping (same-day expiry) → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
 

@@ -66,6 +66,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
+
 logger = logging.getLogger("gcs_migration_bundle")
 
 # ---------------------------------------------------------------------------
@@ -86,7 +87,7 @@ from unified_api_contracts.canonical.crosscutting.pipeline_mode import (  # type
     PipelineMode,
     pipeline_mode_for_source,
 )
-from unified_trading_library.cloud_interface import (  # type: ignore[import-not-found]
+from unified_trading_library import (  # type: ignore[import-not-found]
     gcs_copy_object,
     gcs_delete_object,
     gcs_describe_object,

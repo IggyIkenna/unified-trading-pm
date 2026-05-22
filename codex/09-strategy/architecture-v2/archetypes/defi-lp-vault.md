@@ -13,8 +13,8 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_VAULT`
 
-> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** ERC-4626 deposit / redeem. **Code module (SHIPPED):**
-> `strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py`.
+> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** ERC-4626 deposit /
+> redeem. **Code module (SHIPPED):** `strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py`.
 
 ## What it does
 
@@ -74,9 +74,11 @@ DEFI_LP_VAULT@aave-vault-usdc-arbitrum-prod
 
 ## Not in this archetype
 
-- Direct concentrated / full-range pool LP (no ERC-4626 wrapper) → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md) / [`DEFI_LP_POOL`](defi-lp-pool.md)
+- Direct concentrated / full-range pool LP (no ERC-4626 wrapper) → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md) /
+  [`DEFI_LP_POOL`](defi-lp-pool.md)
 - Lending-supply APY rotation across protocols → [`YIELD_ROTATION_LENDING`](yield-rotation-lending.md) (Carry & Yield)
-- Staking-derivative (LST) yield without a vault wrapper → [`YIELD_STAKING_SIMPLE`](yield-staking-simple.md) (Carry & Yield)
+- Staking-derivative (LST) yield without a vault wrapper → [`YIELD_STAKING_SIMPLE`](yield-staking-simple.md) (Carry &
+  Yield)
 
 ## Plan
 

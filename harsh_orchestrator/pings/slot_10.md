@@ -1,4 +1,7 @@
-[2026-05-19 15:00 UTC] slot-1-main → slot 10 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 10 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -40,18 +43,23 @@ EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2. Adopted FF-push cadence pe
 [2026-05-19 12:15 UTC] main → slot 10 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/10/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/10/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
-3. Read `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md + work_split_2026_05_19_harsh.md § Slot 10` — this is your slot's work for today
+3. Read `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md + work_split_2026_05_19_harsh.md § Slot 10`
+   — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 10**:
-agent_orchestrator_cloud_run_deployment: P0 (compliance scaffold) + P1 (Cloud Run staging) + P2 agent steps + P3 auth flip + P4 CI/CD + P6 codex. HUMAN gates at P2 DNS and P3 user-bootstrap — post ping and wait. Repo renamed to agent-orchestrator/ already. (~5 cal)
+**Today's assignment — Slot 10**: agent_orchestrator_cloud_run_deployment: P0 (compliance scaffold) + P1 (Cloud Run
+staging) + P2 agent steps + P3 auth flip + P4 CI/CD + P6 codex. HUMAN gates at P2 DNS and P3 user-bootstrap — post ping
+and wait. Repo renamed to agent-orchestrator/ already. (~5 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 10 — STARTED <first item>` below.
 
@@ -59,27 +67,35 @@ Ack this ping by appending `[2026-05-19 12:15 UTC] slot 10 — STARTED <first it
 
 [2026-05-19 13:00 UTC] ikenna-main → slot 10 — 🟢 P2 HUMAN GATE CLEARED
 
-DNS records live in Squarespace. Firebase Console shows "Minting certificate" on both domains — SSL issuing now, done in minutes. Sites already exist:
+DNS records live in Squarespace. Firebase Console shows "Minting certificate" on both domains — SSL issuing now, done in
+minutes. Sites already exist:
+
 - `agent-orchestrator-uat-site` → `agent-orchestrator.staging.odum-research.com`
 - `agent-orchestrator-prod-site` → `agent-orchestrator.odum-research.com`
 
-**You can start P2 agent steps NOW** (firebase.json + .firebaserc + vite.config) — don't need to wait for SSL to finish writing the files.
+**You can start P2 agent steps NOW** (firebase.json + .firebaserc + vite.config) — don't need to wait for SSL to finish
+writing the files.
 
 Use these exact site IDs in .firebaserc:
+
 - uat target: `agent-orchestrator-uat-site`
 - prod target: `agent-orchestrator-prod-site`
 - Firebase project: `central-element-323112`
 
-Once SSL shows "Connected" in Firebase Console (~5-10 min), P2 is fully done. Then proceed to P3 agent steps (auth flip). Post ack when P2 agent files are committed.
+Once SSL shows "Connected" in Firebase Console (~5-10 min), P2 is fully done. Then proceed to P3 agent steps (auth
+flip). Post ack when P2 agent files are committed.
 
 ---
 
 [2026-05-19 13:15 UTC] ikenna-main → slot 10 — ✅ P2 FULLY DONE — SSL live on both domains
 
 Both domains Connected + SSL issued (Google Trust Services WR3):
+
 - https://agent-orchestrator.staging.odum-research.com ✅
 - https://agent-orchestrator.odum-research.com ✅
 
 **P2 is complete. Proceed to P3 agent steps (strict auth flip).**
 
-One clarification needed on users.json delivery for Cloud Run: manage_users.py writes to local data/config/users.json. For Cloud Run you need to either upload that file to the GCS state bucket before service reads it, OR wire a bootstrap endpoint. Decide + document in your P3 ping when done.
+One clarification needed on users.json delivery for Cloud Run: manage_users.py writes to local data/config/users.json.
+For Cloud Run you need to either upload that file to the GCS state bucket before service reads it, OR wire a bootstrap
+endpoint. Decide + document in your P3 ping when done.

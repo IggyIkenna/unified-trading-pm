@@ -1185,6 +1185,7 @@ realized P&L delta + max-drawdown delta + tail-event survival rate.
 > **✅ Phase 6 — Features-onchain audit trail scaffold shipped 2026-05-19** (slot-5):
 >
 > Full audit chain target:
+>
 > ```
 > correlation_id → StrategyDecisionContextRecord (strategy-service, Phase 5 ✅)
 >               → FeatureObservationRecord (features-onchain-service, Phase 6 scaffold ✅)

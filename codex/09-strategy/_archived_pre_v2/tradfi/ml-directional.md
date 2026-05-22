@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # TradFi ML Directional
 
 > **Asset class:** TradFi **Strategy type:** ML Directional **Strategy ID pattern:**

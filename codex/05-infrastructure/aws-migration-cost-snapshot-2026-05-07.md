@@ -111,7 +111,7 @@ side-services) and `us-central1` / `us-multi-region` (firebase/odum-portal).
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Topics                   | 62                                                                                                                                                    |
 | Pattern                  | service lifecycle events, fill-events per venue, position-updates, risk-breach-alerts, deployment-status, market-ticks, ml-predictions, signal events |
-| Estimated message volume | live-trading not yet at scale; backfill-driven heartbeat events dominate; likely <10M messages/month current, will ramp post-May-23                   |
+| Estimated message volume | live-trading not yet at scale; backfill-driven heartbeat events dominate; likely <10M messages/month current, will ramp post-cutover (June 2026+)     |
 
 ---
 

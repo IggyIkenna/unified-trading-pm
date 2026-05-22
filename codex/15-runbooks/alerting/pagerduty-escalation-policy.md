@@ -60,7 +60,7 @@ cron.
 
 **Cross-cycle changes**: if either operator goes off-rotation (vacation / sickness / cycle handoff), the other covers
 24h until the calendar update lands. No secondary/tertiary named operators today; if cutover scope expands to 3+
-operators post-May-23, this section gets a named-tier table.
+operators post-cutover (see `observability_master.md`), this section gets a named-tier table.
 
 ## Quiet-hours policy
 

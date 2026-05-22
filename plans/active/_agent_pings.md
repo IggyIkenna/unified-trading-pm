@@ -25,9 +25,9 @@ Format (one line per active ping):
   [YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
 
 Examples (cross-side hard-gate signalling):
-  [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract shipped UAC+UTL; Harsh Tab 1 MTDS migration unblocked; see predictions_master_2026_05_07.md
+  [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract shipped UAC+UTL; Harsh Tab 1 MTDS migration unblocked; see predictions_master.md
   [2026-05-08 09:14 UTC] harsh-main — UAC AlertCode taxonomy SSOT shipped under canonical/alerting/; Ikenna Tab 6 alerting-phase2 unblocked; see alerting_service_live_rules_2026_05_07.md
-  [2026-05-08 11:00 UTC] ikenna-main — 🟢 VM RUNNING: 4 mtds-tradfi VMs launched (ETA 2026-05-09 06:00 UTC); see tradfi_master_2026_05_07.md
+  [2026-05-08 11:00 UTC] ikenna-main — 🟢 VM RUNNING: 4 mtds-tradfi VMs launched (ETA 2026-05-09 06:00 UTC); see tradfi_master.md
 
 This file is EPHEMERAL — entries are removed when handled. Full Q&A history lives
 in the referenced plan doc's `## Open questions` section (status badges 🟡 BLOCKED
@@ -38,18 +38,23 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-20 (later) UTC] ikenna-main → both sides — **🔴 STRATEGY-CONSOLIDATION CLEANUP DISPATCHED — Phase 11
-appended to BOTH `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.** Operator
-directive: "finish all strategy consolidation related plans for your slots." Workspace audit found **~545 live-code
-refs** to the 5 archived services still in consumer repos. Scope: live code + DEPRECATION_NOTICE audit only (per
-operator answer 2026-05-20); skip docstrings/CHANGELOG/migration-history. Per-slot pings filed in
-`ikenna_orchestrator/pings/slot_{3,4,5,6,7,8}.md` (2026-05-20 latest entries). Per-slot fan-out: slot 3 = tail
-consumers (alerting/sys-int/e2e/trading-agent, ~0.5d); slot 4 = strategy-service own-repo logger strings (~0.25d);
-slot 5 = UAC + UTL (~1.0d, BOTH consolidations bundled); slot 6 = UI + DEPRECATION_NOTICE audit (~1.0d, BOTH);
-slot 7 = deployment-service incl. 10× terraform destroy (~1.25d, BOTH); slot 8 = execution-service + ml-service
-own-repo + ML-tail (~0.75d). **Total ~4.75 cal-AI-days fan-out.** Plan-flip discipline: BOTH plans' matching Phase
-11 checkboxes per single repo PR (`docs(plans): flip Phase 11x (strategy + ml) — <repo>@<sha>`).
-**This ping STILL OPEN until ALL 8 sub-phases (11a-11h) flip across both plans + per-repo QG green.**
+[2026-05-21 UTC] ikenna-slot-11 → harsh — **✅ ITEMS 15/16/17 VM-SIDE COMPLETE** — (15) MTDS QG sweep green: bandit B310
+fixed (MTDS@9f047c4), plan doc links fixed (unified-trading-pm@14140943); only STEP 5.82 remains (operator: wire Cloud
+Build staging trigger). (16) AWS consolidator sub-plan filed:
+[`aws_manifest_consolidator_scope_2026_05_21.md`](aws_manifest_consolidator_scope_2026_05_21.md) — 2.5 cal-AI-days,
+GATED on Phase 5+6. (17) Per-slot tokens pre-issued slots 13-20 (exp 2026-06-20) at
+`/home/ubuntu/unified-trading-system-repos/.tabs/harsh-slot-tokens/` on VM; migration doc updated (`--start-slot` →
+`--add-slot` loop + `scp` recipe). **Harsh actions remaining:** Step 3-8 of laptop migration (worktree bootstrap → JWT
+login → crons → Claude sessions → epiphany decommission).
+
+[2026-05-20 (later) UTC] ikenna-main → both sides — **🔴 STRATEGY-CONSOLIDATION CLEANUP DISPATCHED — Phase 11 appended
+to BOTH `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.** Operator directive:
+"finish all strategy consolidation related plans for your slots." Workspace audit found **~545 live-code refs** to the 5
+archived services still in consumer repos. Scope: live code + DEPRECATION*NOTICE audit only (per operator answer
+2026-05-20); skip docstrings/CHANGELOG/migration-history. Per-slot pings filed in
+`ikenna_orchestrator/pings/slot*{3,4,5,6,7,8}.md` (2026-05-20 latest entries). Per-slot fan-out: slot 3 = tail consumers (alerting/sys-int/e2e/trading-agent, ~0.5d); slot 4 = strategy-service own-repo logger strings (~0.25d); slot 5 = UAC + UTL (~1.0d, BOTH consolidations bundled); slot 6 = UI + DEPRECATION_NOTICE audit (~1.0d, BOTH); slot 7 = deployment-service incl. 10× terraform destroy (~1.25d, BOTH); slot 8 = execution-service + ml-service own-repo + ML-tail (~0.75d). **Total ~4.75 cal-AI-days fan-out.** Plan-flip discipline: BOTH plans' matching Phase 11 checkboxes per single repo PR (`docs(plans):
+flip Phase 11x (strategy + ml) — <repo>@<sha>`). **This ping STILL OPEN until ALL 8 sub-phases (11a-11h) flip across
+both plans + per-repo QG green.**
 
 [2026-05-20 11:30 UTC] ikenna-slot-8 — **OPERATOR ACTION REQUEST — archive ml-training-service + ml-inference-service**.
 Phase 6 all 3 parity gates GREEN (boot@5fce11a, QG@16865a3, functional@a6dd980). DEPRECATION_NOTICE.md committed to both
@@ -58,7 +63,16 @@ repos. Steps 1/2/4/5/6 of Phase 7 done. Step 3 requires operator:
 verify `gh api repos/IggyIkenna/ml-training-service --jq .archived` = true. See
 `plans/active/ml_repo_consolidation_2026_05_19.md` Phase 7.
 
-[2026-05-20 11:58 UTC] harsh-main — 🔧 SLOT-BRANCH NAMING SCHEME adopted on Harsh's side + codified in `setup-tab-worktrees.sh`: **slots 1–20 = MAIN agents, 21+ = WORKERS**; branch prefix now encodes operator+role. Harsh uses `tab/hkm/<N>` (main) + `tab/hk/<N>` (workers) — fixed on our side. **Your call on your own prefixes**: `--operator ii` gives symmetric `tab/iim/<N>` / `tab/ii/<N>`, or env-override `MAIN_PREFIX`/`WORKER_PREFIX` (e.g. `iggy`/`ikenna`). Script derives `<op>m`(main)/`<op>`(worker) from `--operator` unless overridden; `MAIN_SLOT_MAX` (default 20) is the boundary. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix scheme". No D/F collision (`hk`≠`hkm`). Ack when you've picked yours.
+[2026-05-20 11:58 UTC] harsh-main — 🔧 SLOT-BRANCH NAMING SCHEME adopted on Harsh's side + codified in
+`setup-tab-worktrees.sh`: **slots 1–20 = MAIN agents, 21+ = WORKERS**; branch prefix now encodes operator+role. Harsh
+uses `tab/hkm/<N>` (main) + `tab/hk/<N>` (workers) — fixed on our side. **Your call on your own prefixes**:
+`--operator ii` gives symmetric `tab/iim/<N>` / `tab/ii/<N>`, or env-override `MAIN_PREFIX`/`WORKER_PREFIX` (e.g.
+`iggy`/`ikenna`). Script derives `<op>m`(main)/`<op>`(worker) from `--operator` unless overridden; `MAIN_SLOT_MAX`
+(default 20) is the boundary. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix
+scheme". No D/F collision (`hk`≠`hkm`). Ack when you've picked yours. ✅ [2026-05-21 UTC] ikenna-main ACK — adopting
+`tab/iim/<N>` (main) + `tab/ii/<N>` (workers) with `--operator ii`. Current worktrees (`tab/ikennaigboaka/<N>`) stay
+as-is; new slots onboarded with `--operator ii` convention. Symmetric with hk/hkm. Codex pointer:
+`codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix scheme".
 
 [2026-05-19 09:45 UTC] ikenna-main — ACTION REQUIRED FOR HARSH: GitHub repo `orchestrator-service` renamed to
 `agent-orchestrator`. Run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in your local
@@ -71,10 +85,10 @@ errors + prettier + tsc). Remote already correct (IggyIkenna/agent-orchestrator)
 [2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction cross-asset-rescan apply-flips
 unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential pass-ordering enforcement
 (deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker on
-[`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
-backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per CLAUDE.md ≥1
-week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator [ack]s:
-`bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
+[`manifest_cross_asset_rescan_design_2026_05_08.md`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md).
+Only operator backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per
+CLAUDE.md ≥1 week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator
+[ack]s: `bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
 
 - same for `--apply prediction`. See also slot 3 work-split item 4 + code_freeze Phase 2.5.
 
@@ -427,7 +441,7 @@ scenario primitives + Phase 3 integration spec LANDED — Harsh slot 5 cleared t
 Day-3 AM**. UAC@`33630a6` (`canonical/crosscutting/scenario_overlay.py` +
 `registry/scenarios/{cefi,defi,cross_asset}.py` 10 ScenarioOverlay instances + 53 tests). UTL@`3797fed5`
 (`scenario/{applier,checker,runner}.py` + 51 tests). **Cross-side handshake material — read these 3 artefacts**: (a)
-[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md)
+[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md)
 plan body lines 60-65 (compressed-scope); (b)
 [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) — full
 3-step matching-engine adversarial mode recipe + 3 consumer shapes (position-balance / risk / alerting) with code
@@ -482,7 +496,7 @@ DAY-2 P0 INJECTED scope coming up.
 [2026-05-12 19:35 UTC] ikenna-scenarios-topology-tab (slot 7) → harsh-main / harsh-slot-5 (risk + alerting + DR impl) —
 ✅ **`simulation_scenarios_topology_price_shocks` Day-1 DESIGN-SHIPPED (PM@`bea269b1`)**. 10 scenarios authored covering
 both cutover archetypes (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION`) — see
-[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md) §
+[`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md) §
 "Day-1 scenario designs" + per-scenario fragments at `plans/active/scratch_scenarios_day1/{01..11}.md` (~995 lines).
 **Topology (6)** via 6-sub-agent fan-out: `cefi_venue_circuit_breaker_trip` / `defi_chain_rpc_outage_solana` /
 `defi_liquidity_drain_lending_pool` / `defi_oracle_deviation_30sigma` / `defi_gas_surge_50x` /
@@ -583,7 +597,7 @@ events). Rescan-design plan promoted DRAFT → active. **Q7(c) events env-tier R
 pnl/positions/risk shape-alignment still operator-pending.
 
 [2026-05-12 ~boot UTC] ikenna-main → harsh-main — 📋 **2026-05-12 HARSH-SIDE CONTINUATION PROMPTS shipped** at
-[`plans/active/continuation_prompts_2026_05_12_harsh.md`](continuation_prompts_2026_05_12_harsh.md). Mirror of
+[`plans/active/continuation_prompts_2026_05_12_harsh.md`](../archive/2026_05/continuation_prompts_2026_05_12_harsh.md). Mirror of
 Ikenna-side file — 7 paste-ready CONTINUE prompts (slots 2-8) keyed to new thematic assignments per
 `work_split_2026_05_12_harsh.md`. Format: status-line-first preamble (post 1-line STATUS-2026-05-11 ack in per-slot ping
 doc before pivoting) → READ list → SCOPE (~14-16 calibrated AI-days) → critical-path handshakes + cross-side handshakes
@@ -1241,7 +1255,7 @@ clarifications 2026-05-13 post earlier ping).
    - **Both** — same archetype family, exit-rule distinguishes:
      - `CARRY_BASIS_DATED` (held to expiry capturing basis convergence)
      - `ARBITRAGE_PRICE_DISPERSION` config variant `dated-cross-venue` (closed early when convergence sufficient)
-   - **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** — DeFi master owns
+   - **Owner plan**: [`plans/active/defi_master.md`](defi_master.md) **Fork 1** — DeFi master owns
      the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
    - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
      Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -1251,7 +1265,7 @@ clarifications 2026-05-13 post earlier ping).
    - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype,
      `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
 
-- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** —
+- **Owner plan**: [`plans/active/defi_master.md`](defi_master.md) **Fork 1** —
   DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
   - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
     Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -1451,8 +1465,8 @@ strategies + concurrent loops):
 **Action items SPAWNED by this timeline** (orchestrator should ping epic owners to add per-checkpoint dates to plan
 bodies):
 
-1. `ml_and_features_master_2026_05_07.md` — add per-asset_group ML kickoff date (2026-05-19)
-2. `defi_master_2026_05_07.md` — add DeFi strategy + execution backtest start date (2026-05-19)
+1. `features_and_ml_master.md` — add per-asset_group ML kickoff date (2026-05-19)
+2. `defi_master.md` — add DeFi strategy + execution backtest start date (2026-05-19)
 3. `wallet_treasury_client_flow_2026_05_10.md` — add live wallet funding + CeFi credentials gate (2026-05-20)
 4. `dart_manual_trade_ux_refactor_2026_05_13.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — add ready-for-cutover
    date (2026-05-20)
@@ -4387,15 +4401,13 @@ compliance.
 
 ## [ikenna-main → harsh-main + ALL slots both sides] 2026-05-20 UTC — 🚨 DATA-PIPELINE MASTER COORDINATION POSTED — awaiting operator code-freeze trigger
 
-**Plan**: [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) — the single
-operator-handoff entry point sequencing all data-pipeline work under one
-critical path: AWS↔GCP bucket symmetry → code freeze → drain → GCS migration
-→ AWS migration → Docker rebuild → manifest v8 backfill + label-flip →
-denominator/numerator UI fix → QG enforcement.
+**Plan**: [`plans/active/mtds_mdps_master.md`](mtds_mdps_master.md) — the single operator-handoff entry point sequencing
+all data-pipeline work under one critical path: AWS↔GCP bucket symmetry → code freeze → drain → GCS migration → AWS
+migration → Docker rebuild → manifest v8 backfill + label-flip → denominator/numerator UI fix → QG enforcement.
 
-**Why now**: mega-audit Phase A (rounds 1-4) surfaced interlocking findings
-that share one critical-path. Existing plans cover individual slices but
-nothing sequences them. Operator directive 2026-05-20 round 5:
+**Why now**: mega-audit Phase A (rounds 1-4) surfaced interlocking findings that share one critical-path. Existing plans
+cover individual slices but nothing sequences them. Operator directive 2026-05-20 round 5:
+
 - EVERYTHING in writing within PM active plans
 - Full proper migration of single→split bucket convention
 - Code freeze during the cutover (ALL slots both sides)
@@ -4404,8 +4416,7 @@ nothing sequences them. Operator directive 2026-05-20 round 5:
 - Denominator/numerator math fix in deployment-UI for honest coverage %
 - Detector-derived PROTOCOL_PAUSE_WINDOWS (NOT operator-typed) — R-NEW-6 in mega-audit
 
-**ACK protocol** (each slot replies in their per-side ping file with a one-line ACK
-referencing this plan):
+**ACK protocol** (each slot replies in their per-side ping file with a one-line ACK referencing this plan):
 
 - ikenna slot 2: [ ] — code_freeze §2.6 owner; will own Phase 1 + 3 + 4 + 10
 - ikenna slot 3: [ ] — code_freeze §2.0-2.5 owner; will own Phase 1 + 3 + 4
@@ -4415,21 +4426,20 @@ referencing this plan):
 - ikenna slot 7: [ ] — already 🔴 FROZEN; resumes sports backlog post-unfreeze
 - ikenna slot 8: [ ] — defi_catalogue owner; candidate R-NEW-6 detector
 - ikenna slot 9: [ ] — already 🔴 FROZEN; resumes prediction/tradfi/cefi backlog post-unfreeze
-- harsh main + spawned: [ ] — Harsh-side slots should pause non-essential commits during the freeze window when operator triggers Phase 2
+- harsh main + spawned: [ ] — Harsh-side slots should pause non-essential commits during the freeze window when operator
+  triggers Phase 2
 
-**Operator triggers freeze**: when ready, append `🔴 CODE FREEZE` ping to this file
-referencing Phase 2 of the coordinator plan. Slot-1 main monitors ACKs + tracks
-drain progress + fires UNFREEZE ping when Phase 7 lands GREEN.
+**Operator triggers freeze**: when ready, append `🔴 CODE FREEZE` ping to this file referencing Phase 2 of the
+coordinator plan. Slot-1 main monitors ACKs + tracks drain progress + fires UNFREEZE ping when Phase 7 lands GREEN.
 
-**During freeze**: vm_zombie_watchdog + 10 Cloud Run consolidator jobs KEEP
-RUNNING (essential during drain). Brief pause only during Phase 4 GCS cutover.
+**During freeze**: vm_zombie_watchdog + 10 Cloud Run consolidator jobs KEEP RUNNING (essential during drain). Brief
+pause only during Phase 4 GCS cutover.
 
-**Estimate**: ~36 cal AI-days total; ~24-48h hard freeze window (Phases 2-8);
-~7-10 calendar days end-to-end including unfrozen Phases 9-10.
+**Estimate**: ~36 cal AI-days total; ~24-48h hard freeze window (Phases 2-8); ~7-10 calendar days end-to-end including
+unfrozen Phases 9-10.
 
-**Cross-side hard-gate**: this is a workspace-wide freeze. Harsh-side MUST
-participate; this is not an ikenna-only migration. Cross-ping persists until
-operator fires the explicit Phase 2 freeze.
+**Cross-side hard-gate**: this is a workspace-wide freeze. Harsh-side MUST participate; this is not an ikenna-only
+migration. Cross-ping persists until operator fires the explicit Phase 2 freeze.
 
 — ikenna-main / slot-1
 
@@ -4437,38 +4447,56 @@ operator fires the explicit Phase 2 freeze.
 
 ## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🔧 MASTER COORDINATOR PLAN UPDATED (round 5 re-sequencing)
 
-**Plan**: [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) updated with operator directive 2026-05-20 round 5:
+**Plan**: [`plans/active/mtds_mdps_master.md`](mtds_mdps_master.md) updated with operator directive 2026-05-20 round 5:
 
 ### Two new prerequisite phases ADDED before Phase 0
 
-**Phase -2: Strategy/ML/Features consolidation FINISH** — owned by **separate agent already drafting cross-slot ping (~20min ETA)** per operator. References:
-- [`plans/active/strategy_repo_consolidation_2026_05_19.md`](strategy_repo_consolidation_2026_05_19.md) (30/31 done; 1 P2 post-cutover open)
-- [`plans/active/ml_repo_consolidation_2026_05_19.md`](ml_repo_consolidation_2026_05_19.md) (appended in parallel)
-- [`plans/active/strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md) — operator decision on lines 378/384/388
+**Phase -2: Strategy/ML/Features consolidation FINISH** — owned by **separate agent already drafting cross-slot ping
+(~20min ETA)** per operator. References:
+
+- [`plans/active/strategy_repo_consolidation_2026_05_19.md`](strategy_repo_consolidation_2026_05_19.md) (30/31 done; 1
+  P2 post-cutover open)
+- [`plans/active/ml_repo_consolidation_2026_05_19.md`](../archive/2026_05/ml_repo_consolidation_2026_05_19.md) (appended
+  in parallel)
+- [`plans/active/strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md)
+  — operator decision on lines 378/384/388
 
 **Outstanding 4-bucket breakdown** (per operator 2026-05-20 round 5):
+
 1. **Operator-blocked**: `gh repo archive ml-training-service + ml-inference-service` (this file:41)
 2. **Operator-blocked**: bucket-strategy decision unified-vs-per-asset_group
-3. **Agent stale-ref cleanup**: 545 file refs to 5 archived services across 12 consumer repos (~50-150 real items: terraform destroy + grafana panels + deployment-ui service registry + UAC deprecated schema slugs + logger strings). Agent-doable + parallelizable.
+3. **Agent stale-ref cleanup**: 545 file refs to 5 archived services across 12 consumer repos (~50-150 real items:
+   terraform destroy + grafana panels + deployment-ui service registry + UAC deprecated schema slugs + logger strings).
+   Agent-doable + parallelizable.
 4. **Post-cutover deferred**: ml Phase 6 parity + strategy_archetype_logic_audit (waits on mega-audit A/C).
 
-**Phase -1: Workspace-wide QG green** — owned by **Harsh-side slots** (lint + QG focus). Every active repo: `bash scripts/quality-gates.sh` exit 0. Gates ALL ikenna-side migration work. Harsh-side absorbs improvements as ikenna pushes migration — coordinate via remote rebases.
+**Phase -1: Workspace-wide QG green** — owned by **Harsh-side slots** (lint + QG focus). Every active repo:
+`bash scripts/quality-gates.sh` exit 0. Gates ALL ikenna-side migration work. Harsh-side absorbs improvements as ikenna
+pushes migration — coordinate via remote rebases.
 
 ### Two new CLAUDE.md HARD RULES codified
 
-- **Quality Gates Are A Merge Prerequisite** — no PR merges without `quality-gates.sh` exit 0 for touched repo + cross-repo consumers. Plan-reviewer rejects PRs without QG-green evidence line.
-- **Every Active Ping Must Reference A Plan Item** — orphan pings (no plan ref) are review-blocking. Slot-1 main + harsh main audit weekly via `grep -L "plans/active\|plans/epics\|plans/audit\|plans/active/issues" <ping-file>` returns orphans.
+- **Quality Gates Are A Merge Prerequisite** — no PR merges without `quality-gates.sh` exit 0 for touched repo +
+  cross-repo consumers. Plan-reviewer rejects PRs without QG-green evidence line.
+- **Every Active Ping Must Reference A Plan Item** — orphan pings (no plan ref) are review-blocking. Slot-1 main + harsh
+  main audit weekly via `grep -L "plans/active\|plans/epics\|plans/audit\|plans/active/issues" <ping-file>` returns
+  orphans.
 
 ### Four new post-data phases ADDED (11-14)
 
-- **Phase 11**: Backfill to 100% per asset_group (DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k MISSING_EXPECTED → 0). Slots 6/7/9 unfrozen.
-- **Phase 12**: Live-data adapter completion master plan (covers A6 batch-live parity: 13 BATCH_ONLY cells + 146 MISSING_BOTH triaged). Slot 4 + slot 5.
+- **Phase 11**: Backfill to 100% per asset_group (DeFi 184k + Sports 25k + CeFi 16k + TradFi 7k + Prediction 3k
+  MISSING_EXPECTED → 0). Slots 6/7/9 unfrozen.
+- **Phase 12**: Live-data adapter completion master plan (covers A6 batch-live parity: 13 BATCH_ONLY cells + 146
+  MISSING_BOTH triaged). Slot 4 + slot 5.
 - **Phase 13**: Batch-live symmetry verification — live can start anytime without pricing gaps. Slot 3 + slot 9.
-- **Phase 14**: Strategy + execution deployment topology cleanup → ready-state for paper-trade → live promotion. Slot 5 + slot 8.
+- **Phase 14**: Strategy + execution deployment topology cleanup → ready-state for paper-trade → live promotion. Slot
+  5 + slot 8.
 
 ### Harsh-side responsibility clarified
 
-Per operator round 5: **Harsh agents focus on lint + QG**. Understand that to merge to remote they'll need to absorb improvements from remote as ikenna agents push migration work. The QG-green prerequisite IS the Harsh-side deliverable that unblocks every ikenna-side migration commit.
+Per operator round 5: **Harsh agents focus on lint + QG**. Understand that to merge to remote they'll need to absorb
+improvements from remote as ikenna agents push migration work. The QG-green prerequisite IS the Harsh-side deliverable
+that unblocks every ikenna-side migration commit.
 
 — ikenna-main / slot-1
 
@@ -4477,26 +4505,27 @@ Per operator round 5: **Harsh agents focus on lint + QG**. Understand that to me
 ## [ikenna-main → ALL slots] 2026-05-20 UTC — ✅ Buckets 1 + 2 unblocked (ml-archive DONE; strategy-store unified)
 
 **Bucket 1 (ml repo archive — was operator-blocked)**: **DONE 2026-05-20**.
-`gh repo archive IggyIkenna/ml-training-service` + `gh repo archive
-IggyIkenna/ml-inference-service` both executed; `isArchived: true` confirmed.
-Operator directive 2026-05-20 round 5: "archiving a repo doesn't need to be
-operator blocked just do it." No further action needed on this bucket.
+`gh repo archive IggyIkenna/ml-training-service` + `gh repo archive IggyIkenna/ml-inference-service` both executed;
+`isArchived: true` confirmed. Operator directive 2026-05-20 round 5: "archiving a repo doesn't need to be operator
+blocked just do it." No further action needed on this bucket.
 
-**Bucket 2 (strategy-store bucket-strategy decision)**: **DONE 2026-05-20** —
-operator chose **unified bucket** for `strategy-store`. Plan
-[`strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md)
-Phase 4a/4b unblocked + updated. Migration steps:
+**Bucket 2 (strategy-store bucket-strategy decision)**: **DONE 2026-05-20** — operator chose **unified bucket** for
+`strategy-store`. Plan
+[`strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md) Phase
+4a/4b unblocked + updated. Migration steps:
 
 1. Add flat `strategy-store: "strategy-store-${GCP_PROJECT_ID}"` to `cloud-providers.yaml`; remove per-AG dict entries.
 2. strategy-service `_get_shared_bucket()` → `resolve_bucket_name("strategy-store")` (no asset_group arg).
-3. execution-service `UPSTREAM_DEPS` template + `check_strategy_instructions()` + `build_instructions_location()` all use the unified bucket.
+3. execution-service `UPSTREAM_DEPS` template + `check_strategy_instructions()` + `build_instructions_location()` all
+   use the unified bucket.
 4. `gsutil rsync` per-AG strategy data into the unified bucket; verify zero data loss; flip yaml atomically.
 5. Phase 4 QG (no `gs://` f-strings, STEP 5.69) un-deferred.
 
-**Bundled into**: master coordinator [`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) Phase 1 (bucket-name symmetry).
+**Bundled into**: master coordinator [`mtds_mdps_master.md`](mtds_mdps_master.md) Phase 1 (bucket-name symmetry).
 
 **Bucket 4 (strategy_archetype_logic_audit)**: 🟢 **ACKED to run TONIGHT in parallel** with Phase 11 consolidation tail.
-Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orchestrated session per `codex/06-coding-standards/model-tier-selection.md`.
+Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orchestrated session per
+`codex/06-coding-standards/model-tier-selection.md`.
 
 — ikenna-main / slot-1
 
@@ -4504,9 +4533,12 @@ Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orch
 
 ## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🟡 STRATEGY-SERVICE LOGIC FREEZE — surface cleanup CONTINUES, logic edits WAIT for operator Opus-1M audit
 
-**Plan**: [`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) § "round 6 — strategy-service LOGIC freeze gate" + [`issues/strategy_archetype_logic_audit_2026_05_20.md`](issues/strategy_archetype_logic_audit_2026_05_20.md) (extended with dimensions 9-14).
+**Plan**: [`mtds_mdps_master.md`](mtds_mdps_master.md) § "round 6 — strategy-service LOGIC freeze gate" +
+[`issues/strategy_archetype_logic_audit_2026_05_20.md`](issues/strategy_archetype_logic_audit_2026_05_20.md) (extended
+with dimensions 9-14).
 
-**Operator running Opus-1M `strategy_archetype_logic_audit_2026_05_20` tonight** — surfacing design-vs-implementation flaws in:
+**Operator running Opus-1M `strategy_archetype_logic_audit_2026_05_20` tonight** — surfacing design-vs-implementation
+flaws in:
 
 - D9: Venue restrictions (per-client allow-list, jurisdiction tags, position limits, trading-hours overlay)
 - D10: Collateral management (haircut/LTV, cross-vs-isolated, substitution, health-factor monitoring)
@@ -4518,7 +4550,8 @@ Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orch
 **WHAT PROCEEDS (no freeze)**:
 
 - ✅ Phase -2 Bucket 3 stale-ref cleanup (slots 3-8 per `ikenna_orchestrator/pings/slot_{3..8}.md`) — surface cleanup
-- ✅ Phase -2 consolidation Phase 11 sub-phases 11a-11h (both `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`)
+- ✅ Phase -2 consolidation Phase 11 sub-phases 11a-11h (both `strategy_repo_consolidation_2026_05_19.md` +
+  `ml_repo_consolidation_2026_05_19.md`)
 - ✅ Phase -1 workspace-wide QG green (Harsh-side)
 - ✅ Phases 0-10 of data-pipeline migration once Phase -2/-1 land GREEN
 
@@ -4526,11 +4559,14 @@ Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orch
 
 - 🟡 `strategy-service/strategy_service/engine/strategies/v2/` archetype logic
 - 🟡 `strategy-service/strategy_service/engine/allocator/` allocation + rebalancing
-- 🟡 Collateral / liquidation / cross-venue-transfer / venue-restriction / deployment-topology-dynamic-config code (per audit D9-D14 scope)
+- 🟡 Collateral / liquidation / cross-venue-transfer / venue-restriction / deployment-topology-dynamic-config code (per
+  audit D9-D14 scope)
 
-**Agents touching these surfaces NOW**: stop + cite the gate. Resume signal: `🟢 STRATEGY-LOGIC UNFREEZE` ping referencing the audit's R-items.
+**Agents touching these surfaces NOW**: stop + cite the gate. Resume signal: `🟢 STRATEGY-LOGIC UNFREEZE` ping
+referencing the audit's R-items.
 
-Operator note: "agents waiting for me to do this before hacking up strategy service again?" — **YES on logic; NO on consolidation surface cleanup or QG work**.
+Operator note: "agents waiting for me to do this before hacking up strategy service again?" — **YES on logic; NO on
+consolidation surface cleanup or QG work**.
 
 — ikenna-main / slot-1
 
@@ -4538,28 +4574,175 @@ Operator note: "agents waiting for me to do this before hacking up strategy serv
 
 ## [ikenna-main → harsh-main + ALL slots] 2026-05-20 UTC — 🌙 Harsh offline (India tz) → Ikenna slots 9-11 BACKGROUND own Phase -1 QG sweep
 
-**Plan**: [`plans/active/work_split_2026_05_20_ikenna.md`](work_split_2026_05_20_ikenna.md) — new daily work-split supersedes `work_split_2026_05_19_ikenna.md`.
+**Plan**: [`plans/active/work_split_2026_05_20_ikenna.md`](work_split_2026_05_20_ikenna.md) — new daily work-split
+supersedes `work_split_2026_05_19_ikenna.md`.
 
-**Phase -1 (workspace-wide QG green) ownership shift**: per CLAUDE.md HARD RULE "Quality Gates Are A Merge Prerequisite", QG green is Phase -1 of master coordinator. Harsh-side normally owns; Harsh offline tonight (India timezone) → re-assigned to **Ikenna slots 9, 10, 11 background**:
+**Phase -1 (workspace-wide QG green) ownership shift**: per CLAUDE.md HARD RULE "Quality Gates Are A Merge
+Prerequisite", QG green is Phase -1 of master coordinator. Harsh-side normally owns; Harsh offline tonight (India
+timezone) → re-assigned to **Ikenna slots 9, 10, 11 background**:
 
 - **Slot 9** Cluster A: unified-api-contracts + unified-trading-library + instruments-service
 - **Slot 10** Cluster B: market-tick-data-service + features-service + market-data-processing-service
 - **Slot 11** Cluster C: strategy-service + execution-service + ml-service (LOGIC-FREEZE active — surface-only fixes)
 
 **Per-slot spawn prompts** in the work-split § "Slot 9-11 dispatch". Each prompt cites:
+
 - CLAUDE.md HARD RULE pointer
 - Repo-by-repo `quality-gates.sh` recipe
 - Strategy-LOGIC freeze gate reminder for slot 11
 - DONE-criterion (9 repos GREEN)
 
 **Host choice** (operator picks tonight):
+
 - **Option A — local laptop** (slots 9-11 worktrees already exist at `.tabs/{9,10,11}/`)
-- **Option B — Ikenna AWS VM** (true background; operator SSHes + runs `setup-tab-worktrees.sh --add-slot 9/10/11` on the VM; codex `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`) — RECOMMENDED for tonight to verify VM-worker pattern while Harsh is offline
+- **Option B — Ikenna AWS VM** (true background; operator SSHes + runs `setup-tab-worktrees.sh --add-slot 9/10/11` on
+  the VM; codex `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`) — RECOMMENDED for tonight to
+  verify VM-worker pattern while Harsh is offline
 
-**Comms**: HTTP `/heartbeat` + `/progress` + `/done` + `/blocked` to dashboard (no git for status). Code via standard LDR push. Per-slot intra-side pings in `ikenna_orchestrator/pings/slot_{9,10,11}.md`.
+**Comms**: HTTP `/heartbeat` + `/progress` + `/done` + `/blocked` to dashboard (no git for status). Code via standard
+LDR push. Per-slot intra-side pings in `ikenna_orchestrator/pings/slot_{9,10,11}.md`.
 
-**Hand-off when Harsh wakes**: Harsh-side slots resume QG ownership; slots 9-11 hand off via git rebase (Harsh absorbs the QG-green commits from LDR). No state-loss; multi-master multi-backend design per codex § "Two-operator topology".
+**Hand-off when Harsh wakes**: Harsh-side slots resume QG ownership; slots 9-11 hand off via git rebase (Harsh absorbs
+the QG-green commits from LDR). No state-loss; multi-master multi-backend design per codex § "Two-operator topology".
 
 **Phase -1 GREEN criterion**: 9 repos green (3 per cluster × 3 slots) → master coordinator unlocks Phase 0 + Phase 1.
 
 — ikenna-main / slot-1
+
+---
+
+## 🔴 CODE FREEZE 2026-05-21 — data-pipeline migration window [slot-1-main]
+
+**Phase 1 GREEN** as of `pm@a38640531`. Phase 2 freeze now active per `plans/epics/mtds_mdps_master.md` § Phase 2.
+
+**ALL SLOTS — ikenna + harsh:**
+
+- **DO NOT push to `live-defi-rollout`** during this window.
+- **DO NOT launch new backfill VMs** (MTDS / MDPS / features / instruments).
+- In-flight code on tab branches → **hold; do not merge to LDR** until UNFREEZE ping.
+- Tab-branch implementation work + read-only ops (status checks, audit re-runs, plan updates): **allowed**.
+- Manifest consolidator Cloud Run jobs (10): **keep running** — needed to ingest drain.
+- `vm_zombie_watchdog.py`: **keep running**.
+
+**EXPECTED DURATION**: ~24-48h. UNFREEZE broadcast via this ping after Phase 7 GREEN (manifest v8 backfill complete).
+
+**ACK CHECKLIST** (slot-1 main tracks in `plans/epics/mtds_mdps_master.md` § Phase 2):
+
+- [ ] ikenna slot 2 — ACK by appending to `ikenna_orchestrator/pings/slot_2.md`
+- [ ] ikenna slot 3 — ACK by appending to `ikenna_orchestrator/pings/slot_3.md`
+- [ ] ikenna slot 4 — ACK by appending to `ikenna_orchestrator/pings/slot_4.md`
+- [ ] ikenna slot 5 — ACK by appending to `ikenna_orchestrator/pings/slot_5.md`
+- [ ] ikenna slot 6 — ACK by appending to `ikenna_orchestrator/pings/slot_6.md`
+- [ ] ikenna slot 7 — ACK by appending to `ikenna_orchestrator/pings/slot_7.md`
+- [ ] ikenna slot 8 — ACK by appending to `ikenna_orchestrator/pings/slot_8.md`
+- [x] harsh main + spawned slots — OFFLINE (India tz); covered by ikenna slot-1 main 2026-05-21
+
+**Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 2. Phase 3 (VM drain) starts after all ACKs in.
+
+— ikenna-main / slot-1 / 2026-05-21
+
+---
+
+## 🟢 PHASE 3 START — VM DRAIN [slot-1-main → all slots] 2026-05-21
+
+**Trigger**: All 8 ikenna slots ACK confirmed. Phase 3 (VM drain) is NOW ACTIVE.
+
+**ACK summary**:
+
+- slot 2 ✅ pm@28a465b29
+- slot 3 ✅ deployment-service@c7e0fa2 (functional delivery; minor freeze-discipline violation — script to LDR; inert;
+  accepted)
+- slot 4 ✅ pm@b313ea37d
+- slot 5 ✅ pm@523688ff2
+- slot 6 ✅ implicit (pre-frozen per mega-audit)
+- slot 7 ✅ implicit (pre-frozen per mega-audit)
+- slot 8 ✅ pm@35dc137a8
+- slot 9 ✅ implicit (pre-frozen per mega-audit)
+- harsh ✅ covered by slot-1 main (OFFLINE)
+
+**DRAIN INVENTORY** — 23 EPHEMERAL_BATCH VMs to stop (graceful-stop → manifest consolidate → snapshot):
+
+CeFi backfill (13):
+
+- `cefi-binance-futures-2022-heavy-20260519-194220`
+- `cefi-binance-futures-2023-heavy-20260519-194220`
+- `cefi-binance-futures-2024-heavy-20260519-194220`
+- `cefi-binance-futures-2025-heavy-20260519-194220`
+- `cefi-binance-spot-2020-heavy-20260519-194220`
+- `cefi-binance-spot-2024-heavy-20260519-194220`
+- `cefi-binance-spot-2026-heavy-20260519-194220`
+- `cefi-bybit-2022-heavy-20260519-194220`
+- `cefi-bybit-2025-heavy-20260519-194220`
+- `cefi-coinbase-spot-2023-heavy-20260519-194220`
+- `cefi-coinbase-spot-2026-heavy-20260519-194220`
+- `cefi-deribit-2022-heavy-20260519-194220`
+- `cefi-deribit-2024-heavy-20260519-194220`
+
+CeFi cron + OKX (2):
+
+- `cefi-fwd-daily-cron-20260520-091332`
+- `cefi-okx-spot-2024-heavy-20260519-194220`
+
+MDPS (4):
+
+- `mdps-cefi-2020-20260519-194222`
+- `mdps-cefi-2024-20260519-194222`
+- `mdps-cefi-2026-20260519-194222`
+- `mdps-prediction-2026-20260519-194222`
+
+MTDS (2):
+
+- `mtds-backfill-odds-1`
+- `mtds-gas-fees-solana`
+
+Instruments + TradFi (2):
+
+- `instr-backfill-sports`
+- `tradfi-fwd-daily-cron-20260520-091306`
+
+**DO NOT STOP (separate lifecycle):**
+
+- `strategy-paper-carry-staked-basis-20260519-183013` → LONG_LIVED_LIVE — paper trade strategy; operator must explicitly
+  authorise stop
+- `vm-zombie-watchdog-20260515-110711` → keep running (monitoring)
+- `canonical-smoke-*` (3 VMs) → not in backfill registry; keep running
+- `instruments-smoke-*` (3 VMs) → heartbeat-only (watchdog=None); keep running
+- all `agent-orch-*` (11 VMs) → orchestrator fleet; keep running
+
+**DRAIN PROTOCOL** (slot-1 main executing per `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage
+0):
+
+1. Graceful-stop each EPHEMERAL_BATCH VM via `gcloud compute instances stop --zone=asia-northeast1-c`
+2. Wait for STOPPED events + verify last shard finalized per VM
+3. Run manifest consolidator Cloud Run jobs (10 jobs) one final time
+4. Snapshot canonical manifest → `_index/snapshots/pre_migration_2026_05_21.parquet`
+5. LDR locked from new backfill VM launches until UNFREEZE
+
+**ALL SLOTS** — during drain (Phase 3):
+
+- Status: **FREEZE MAINTAINED** — same rules as Phase 2
+- DO NOT launch any VMs
+- DO NOT push to LDR
+- Monitor your slot ping file for Phase 4 (GCS migration) broadcast
+
+**OPERATOR FLAG**: `strategy-paper-carry-staked-basis-20260519-183013` is LONG_LIVED_LIVE (paper trade). Drain excludes
+it by default. If operator wants it stopped during migration window, reply `[stop-strategy-paper]` in slot-1 ping.
+
+**Plan ref**: `plans/epics/mtds_mdps_master.md` Phase 3.
+
+---
+
+## [slot-1-main CROSS-SIDE] 2026-05-22 — 🟢 CODE FREEZE LIFTED
+
+Phase 2 CODE FREEZE lifted 2026-05-22. GCS parity confirmed. Pre-migration snapshot saved. Phase 3 backfill wrapper
+plans filed (instruments / MTDS / MDPS / features).
+
+**Phase 3 VM launches still gated on `mtds_mdps_master` Phase 7 GREEN** (manifest v8 + label-flip). Sports pipeline
+additionally gated on `sports_master` Phase 3+4 rename.
+
+Harsh-side: no actions required immediately. When Phase 7 is GREEN and you own Phase 3 VM slots (6/7/9 per
+mtds_mdps_master), read `mtds_backfill_phase3_2026_05_22.md` for per-asset-group detail.
+
+**Plan ref**: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 exit.
+
+— ikenna-main / slot-1 / 2026-05-21

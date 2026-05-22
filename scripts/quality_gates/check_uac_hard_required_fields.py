@@ -153,9 +153,7 @@ def _check_uac_regression(workspace_root: Path) -> list[str]:
         return failures
 
     defined_functions: set[str] = {
-        node.name
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
     for fn_name in UAC_REQUIRED_FUNCTIONS:
         if fn_name not in defined_functions:
@@ -278,9 +276,7 @@ def _check_bundled_shard_keys(source_dirs: list[Path]) -> list[Violation]:
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="STEP 5.83 — UAC hard-required field validation regression guard"
-    )
+    p = argparse.ArgumentParser(description="STEP 5.83 — UAC hard-required field validation regression guard")
     p.add_argument(
         "--workspace-root",
         type=Path,

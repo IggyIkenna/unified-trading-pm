@@ -1,4 +1,7 @@
-[2026-05-19 15:00 UTC] slot-1-main → slot 3 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+[2026-05-19 15:00 UTC] slot-1-main → slot 3 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot
+branch + FF to LDR. See
+[`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md).
+Ack here once your tab is clean.
 
 ---
 
@@ -514,7 +517,7 @@ awaiting operator direction for next wave or reassignment.
 2. Read `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — find unchecked `- [ ]` items in
    codex/09-strategy or strategy-service surface.
 3. Avoid UAC enum changes (Ikenna primary). Pick 3-4 mechanical codex items, ship per item with dual-flip. **Fallback if
-   blocked**: `defi_master_2026_05_07.md` codex residuals (74 items, 30% done). **Acknowledge "STARTED
+   blocked**: `defi_master.md` codex residuals (74 items, 30% done). **Acknowledge "STARTED
    defi_archetypes_canonicalisation" within 10 min.**
 
 [2026-05-18 21:05 UTC] slot-3 — STARTED defi_archetypes_canonicalisation. Rebased PM to LDR HEAD. Open items: Stream A
@@ -568,49 +571,49 @@ scenario_id). PM@7a735152. Flipped 8.B/8.C in simulation_scenarios plan.
 
 [2026-05-19 14:30 UTC] slot-3 → operator — CREDENTIAL APPROVAL REQUEST — aws-secrets-defi-subkeys (Phase 2.A)
 
-CREDENTIAL APPROVAL REQUEST — aws-secrets-defi-subkeys
-Vendor: AWS Secrets Manager (ap-northeast-1, account 427895769566)
-What I need: Manual provisioning of 6× perp-venue execution API sub-keys + on-chain RPC keys + alerting keys:
+CREDENTIAL APPROVAL REQUEST — aws-secrets-defi-subkeys Vendor: AWS Secrets Manager (ap-northeast-1,
+account 427895769566) What I need: Manual provisioning of 6× perp-venue execution API sub-keys + on-chain RPC keys +
+alerting keys:
 
-  Group A — HUMAN-REQUIRED (per-venue sub-accounts, operator must generate):
-    - exec-odum-binance-cefi  → Binance API Management → dedicated sub-account → Spot+Futures trading permissions
-    - exec-odum-deribit-cefi  → Deribit Account → API Keys → trade+read (OAuth2 client_id + client_secret)
-    - exec-odum-okx-cefi      → OKX → API → Unified Account permissions (api_key + secret_key + passphrase)
-    - exec-odum-bybit-cefi    → Bybit → API → Unified Trading Account permissions (api_key + api_secret)
-    - exec-odum-hyperliquid-defi → Hyperliquid agent wallet (EIP-712; generate FRESH dedicated wallet, NOT primary)
-    - exec-odum-aster-cefi    → Aster perp venue API key (NOT in credentials-registry.yaml — confirm account exists)
+Group A — HUMAN-REQUIRED (per-venue sub-accounts, operator must generate): - exec-odum-binance-cefi → Binance API
+Management → dedicated sub-account → Spot+Futures trading permissions - exec-odum-deribit-cefi → Deribit Account → API
+Keys → trade+read (OAuth2 client_id + client_secret) - exec-odum-okx-cefi → OKX → API → Unified Account permissions
+(api_key + secret_key + passphrase) - exec-odum-bybit-cefi → Bybit → API → Unified Trading Account permissions
+(api_key + api_secret) - exec-odum-hyperliquid-defi → Hyperliquid agent wallet (EIP-712; generate FRESH dedicated
+wallet, NOT primary) - exec-odum-aster-cefi → Aster perp venue API key (NOT in credentials-registry.yaml — confirm
+account exists)
 
-  Group B — SCRIPTABLE (can mirror from GCP → AWS with admin_od + ADC auth):
-    - alchemy-api-key         → EVM RPC for Arbitrum/Base/Polygon (Chainlink + Aave calls)
-    - thegraph-api-key        → DeFi subgraph queries
+Group B — SCRIPTABLE (can mirror from GCP → AWS with admin_od + ADC auth): - alchemy-api-key → EVM RPC for
+Arbitrum/Base/Polygon (Chainlink + Aave calls) - thegraph-api-key → DeFi subgraph queries
 
-  Group C — ALERTING (check existing GCP secrets or provision fresh):
-    - telegram-bot-token      → Telegram BotFather; see alerting_service_live_rules_2026_05_07 Phase 4
-    - pagerduty-api-key       → PagerDuty integration key
+Group C — ALERTING (check existing GCP secrets or provision fresh): - telegram-bot-token → Telegram BotFather; see
+alerting_service_live_rules_2026_05_07 Phase 4 - pagerduty-api-key → PagerDuty integration key
 
-  Group D — WALLET / CUSTODY (HUMAN-ONLY — NEVER script from GCP):
-    - AWS KMS trading wallet key in ap-northeast-1 (fresh generation, not copy from GCP). CLOUD_KMS_ENCRYPTED
-      ships May-23. Copper + CEFFU are June-1 scope.
+Group D — WALLET / CUSTODY (HUMAN-ONLY — NEVER script from GCP): - AWS KMS trading wallet key in ap-northeast-1 (fresh
+generation, not copy from GCP). CLOUD_KMS_ENCRYPTED ships May-23. Copper + CEFFU are June-1 scope.
 
-Account to use: AWS 427895769566 (admin_od); store via `aws secretsmanager create-secret --name <name> --secret-string '<json>' --region ap-northeast-1`
-Unblocks: aws_migration Phase 4 (AWS Secrets Manager parity) → Phase 6 ECS Fargate DeFi deployment (May-23 gate)
-Without it: CLOUD_PROVIDER=aws services can't read execution credentials → fail at startup
-Full scaffold: codex/11-project-management/secrets-migration-tracking.md § "DeFi-first credential request list"
+Account to use: AWS 427895769566 (admin_od); store via
+`aws secretsmanager create-secret --name <name> --secret-string '<json>' --region ap-northeast-1` Unblocks:
+aws_migration Phase 4 (AWS Secrets Manager parity) → Phase 6 ECS Fargate DeFi deployment (May-23 gate) Without it:
+CLOUD_PROVIDER=aws services can't read execution credentials → fail at startup Full scaffold:
+codex/11-project-management/secrets-migration-tracking.md § "DeFi-first credential request list"
 
 [2026-05-19 12:15 UTC] main → slot 3 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
-1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/3/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+
+1. Pull LDR in ALL your repos:
+   `cd ${WORKSPACE_ROOT}/.tabs/3/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
 2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
 3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 3` — this is your slot's work for today
 
 **Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+
 - `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
 - Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
 - Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
 - If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
 
-**Today's assignment — Slot 3**:
-aws_migration_defi_first Phases 1.B-1.D + 2.A + 4.A + GAP-2.4.A/B/C (~28 cal)
+**Today's assignment — Slot 3**: aws_migration_defi_first Phases 1.B-1.D + 2.A + 4.A + GAP-2.4.A/B/C (~28 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 3 — STARTED <first item>` below.

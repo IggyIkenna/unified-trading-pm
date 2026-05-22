@@ -173,6 +173,14 @@ To prevent batch and live modes from drifting apart in business logic:
 4. **No mode-specific business logic**: `if mode == "live": ... else: ...` branches inside business logic are forbidden.
    Mode differences belong only at the 4 seams above.
 
+> **[DELTA 2026-05-22]** **Current state:** Manifest `schema_version` constant is v8 code-side, but **0% of production
+> rows are at v8** (all prod rows are v4-v7). Data-side migration is Phases 6-7 of `plans/epics/mtds_mdps_master.md`.
+> **Planned delta:** Phases 6-7 will walk the GCS corpus and write v8 rows; the writegate Phase 2.2 single-walk
+> discipline (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`) means no second walk is permitted.
+> **Target architecture:** 100% of canonical manifest rows at schema_version=8 post-Phase 7.
+>
+> Do NOT trust the code constant as a proxy for data state. Read actual `schema_version` column distributions.
+
 ### Live=batch 4-state capture parity
 
 Per CLAUDE.md "Manifest + honest absence" + "Live = batch" rules: live and batch modes BOTH emit the same 4-state
@@ -237,7 +245,7 @@ Current batch/live symmetry state across all pipeline services. Updated as part 
 | features-service (commodity family)  | FCS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Wired in `cli/main.py` (p1-todo-05)                                                                                                                                                                               |
 | features-service (volatility family) | FVS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
 | features-service (onchain family)    | FOS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
-| features-service (sports family)     | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is future work (p1-todo-10)                                                                                                                                                                          |
+| features-service (sports family)     | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is post-cutover — `plans/epics/features_and_ml_master.md` (p1-todo-10)                                                                                                                               |
 | market-tick-data-service             | MTDS | `DownloadBatchHandler`  | n/a (download-only)    | batch             | unit: batch handler | Download service — no live streaming mode                                                                                                                                                                         |
 | market-data-processing-service       | MDPS | `process_candles`       | `LiveModeHandler`      | batch / live      | parser tests        | Lazy-imported; wired via `_mode_dispatch`                                                                                                                                                                         |
 | instruments-service                  | INS  | `InstrumentsBatchMode`  | n/a (catalogue-only)   | batch             | parser tests        | `--run-mode` renamed to `--mode` (p1-todo-09); see §9 instruments-live exception                                                                                                                                  |
@@ -296,10 +304,10 @@ What is identical:
 What is different — exactly one operator-visible thing:
 
 - **Data-Status mode-toggle position** — `Batch` / `Scheduled-Today` / `Live` (per
-  [`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) Phase B.5).
-  Mode=Batch answers "is the historical backfill complete?"; mode=Live answers "is the live pipeline writing fresh
-  data?". **Same SHAPE, different TIME-SLICE** — the toggle invalidates the `/api/data-status` query key and refetches;
-  no widget tree branch, no new bucket convention, no parallel component.
+  [`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
+  Phase B.5). Mode=Batch answers "is the historical backfill complete?"; mode=Live answers "is the live pipeline writing
+  fresh data?". **Same SHAPE, different TIME-SLICE** — the toggle invalidates the `/api/data-status` query key and
+  refetches; no widget tree branch, no new bucket convention, no parallel component.
 
 Concrete consequences for implementers:
 
@@ -317,8 +325,8 @@ Concrete consequences for implementers:
   "live mode is a different system."
 
 Plan provenance:
-[`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.4
-added this section.
+[`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
+Phase A.4 added this section.
 
 ---
 
@@ -376,7 +384,7 @@ layer adds (or loses) relative to the idealised fill. Computed as:
 
 > **AMM matching-engine fidelity gate (codex audit EX-17 2026-05-12)**: the simulated-fill side of `execution_alpha`
 > must stay within tolerance of on-chain `Swap` events for the May-23 cutover archetypes. Owner-plan:
-> [`plans/active/defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md)
+> [`plans/archive/defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md)
 > Phases 2 + 8C. Continuous-verification path: golden-set harness at
 > [`amm-slippage-simulation.md`](./amm-slippage-simulation.md) § "Golden test set harness" runs in execution-service
 > `scripts/quality-gates.sh` against the per-pool snapshot fixtures; tolerance gate fails the matching-engine vs
@@ -529,13 +537,19 @@ clock-skew falls back to conservative latest-watermark (never emit beyond the sl
 Each asset group has its own narrative doc covering the group-specific matcher, shard atom, empty rules, and any domain
 quirks. All docs anchor on the invariants in §1-§4 above.
 
-| Asset group  | Doc                                                                                               | Status (2026-05-14)                                        |
-| ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `cefi`       | [`cefi-batch-live.md`](cefi-batch-live.md)                                                        | ✅ SHIPPED (Tab 1)                                         |
-| `defi`       | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending |
-| `tradfi`     | `tradfi-batch-live.md`                                                                            | **POST-CUTOVER** (Tab 1 P2)                                |
-| `sports`     | §7 above covers sports-specific notes                                                             | Inline (sufficient for May-23)                             |
-| `prediction` | `prediction-batch-live.md`                                                                        | **POST-CUTOVER** (Tab 1 P2)                                |
+| Asset group  | Doc                                                                                               | Status (2026-05-22)                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `cefi`       | [`cefi-batch-live.md`](cefi-batch-live.md)                                                        | ✅ SHIPPED (Tab 1)                                                                      |
+| `defi`       | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending                              |
+| `tradfi`     | [`tradfi-batch-live.md`](tradfi-batch-live.md)                                                    | Stub shipped (2026-05-16); full narrative post-cutover — `plans/epics/tradfi_master.md` |
+| `sports`     | §7 above covers sports-specific notes                                                             | Inline (sufficient for May-23)                                                          |
+| `prediction` | [`prediction-batch-live.md`](prediction-batch-live.md)                                            | Stub shipped; full narrative post-cutover — `plans/epics/predictions_master.md`         |
+
+> **[DELTA 2026-05-22]** **Current state:** TradFi and Prediction per-asset-group batch/live narrative docs exist as
+> stubs only. The cross-cutting invariants in §1-§4 apply to both; the per-domain matcher behaviour, shard atomicity,
+> and empty rules are not yet documented. **Planned delta:** `plans/epics/tradfi_master.md` and
+> `plans/epics/predictions_master.md` own full narrative completion post-cutover. **Target architecture:** Each
+> asset-group has a complete per-domain narrative doc on par with `cefi-batch-live.md`.
 
 ---
 
@@ -604,8 +618,9 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
 
 ## §14 References + cross-refs
 
-- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md`
-  (post-cutover) · `prediction-batch-live.md` (post-cutover)
+- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md` (full
+  narrative post-cutover, `plans/epics/tradfi_master.md`) · `prediction-batch-live.md` (full narrative post-cutover,
+  `plans/epics/predictions_master.md`)
 - **Mode-axis discipline**:
   [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian
   product + anti-patterns)

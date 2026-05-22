@@ -1,31 +1,21 @@
 > **ARCHIVED 2026-05-19** — 100% complete (all items); preserved for archaeology.
 
 ---
-title: HedgeRatioSnapshot persistence — emit-to-data_type for pnl-attribution consumption
-type: plan
-status: archived
-created: 2026-05-13
-deadline: 2026-05-21
-horizon: ~2-3 day mini-plan
-locked_by: live-defi-rollout
-locked_since: 2026-05-13
-priority: P1
-parent_plan: defi_simulation_realism_2026_05_10.md
-spawned_from: |
-  defi_simulation_realism_2026_05_10.md Phase 6B-WIRE-IN DEFERRED:
-  "P1 — emit HedgeRatioSnapshot rows to a dedicated downstream data_type
-   (today's attestations bundle is the audit trail; persistence via a new
-   hedge_ratio_snapshots writeback can land after Phase 6C identifies which
-   downstream service consumes the audit log)."
-related_plans:
-  - defi_simulation_realism_2026_05_10.md (Phase 6 hedge-ratio)
-  - client_reporting_pnl_attribution_mvp_2026_05_10.md (consumer)
-estimate_class: design
-estimate_baseline_ai_days: 3
-estimate_calibrated_ai_days: 1.8
-estimate_calibration_note: |
-  Design class — UAC data_type registration + writer wire-in + consumer schema mapping
-  + parquet path SSOT + manifest entry. ~3 baseline × 0.6 multiplier = 1.8 cal-AI-days.
+
+title: HedgeRatioSnapshot persistence — emit-to-data_type for pnl-attribution consumption type: plan status: archived
+created: 2026-05-13 deadline: 2026-05-21 horizon: ~2-3 day mini-plan locked_by: live-defi-rollout locked_since:
+2026-05-13 priority: P1 parent_plan: defi_simulation_realism_2026_05_10.md spawned_from: |
+defi_simulation_realism_2026_05_10.md Phase 6B-WIRE-IN DEFERRED: "P1 — emit HedgeRatioSnapshot rows to a dedicated
+downstream data_type (today's attestations bundle is the audit trail; persistence via a new hedge_ratio_snapshots
+writeback can land after Phase 6C identifies which downstream service consumes the audit log)." related_plans:
+
+- defi_simulation_realism_2026_05_10.md (Phase 6 hedge-ratio)
+- client_reporting_pnl_attribution_mvp_2026_05_10.md (consumer) estimate_class: design estimate_baseline_ai_days: 3
+  estimate_calibrated_ai_days: 1.8 estimate_calibration_note: | Design class — UAC data_type registration + writer
+  wire-in + consumer schema mapping
+
+* parquet path SSOT + manifest entry. ~3 baseline × 0.6 multiplier = 1.8 cal-AI-days.
+
 ---
 
 ## Deferred work — migrated to:
@@ -157,7 +147,8 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
       pnl-attribution-service@ee96d3c commit refs.
 - [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with this
       sub-plan's commit reference. ✅ DEFERRED note updated to RESOLVED 2026-05-17 with all 3 commit refs.
-- [x] ✅ [SCRIPT] P0. Archive this sub-plan. **[unlock-plan]** Phase 5 fully shipped; all items complete. unified-trading-pm@archive-2026-05-19.
+- [x] ✅ [SCRIPT] P0. Archive this sub-plan. **[unlock-plan]** Phase 5 fully shipped; all items complete.
+      unified-trading-pm@archive-2026-05-19.
 
 ### Phase 5 — Pre-decision INPUTS observability (scope addition 2026-05-18 by harsh-main)
 

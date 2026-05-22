@@ -5,6 +5,20 @@ last_reviewed: 2026-05-17
 
 # Instruments-live architecture (entry-point)
 
+> **[DELTA 2026-05-22]** **Current state:** Foundation phases complete: Phase A.7 (`--trigger` CLI flag,
+> instruments-service@5d511e6), Phase A.9 (UAC `instruments_preflight_dag.py` preflight DAG SSOT, UAC@8f89ec4+a07711d),
+> Phase A.10 (UTL `run_preflight` helper, UTL@db0f4364), Phase A.8 (live-mode `available_at` confirmation,
+> UTL@1f115bc6), and Phase B.1 (sports fixtures daily-repoll trigger handler, instruments-service@c53ec64). The routing
+> table below describes the full target architecture. Asset-group phases B.2-B.6 (sports fixture end_time cascade,
+> lineups, weather, etc.), C (tradfi), D (cefi CCXT 15-min), E (prediction market-discovery) are still pending under
+> `plans/epics/instruments_master.md`. For the DeFi cutover (2026-05-23), only Phase D (cefi perp hedge-leg CCXT live
+> adapter) is on the critical path; sports/tradfi/prediction live instrument triggers are post-cutover. **Planned
+> delta:** `plans/epics/instruments_master.md` owns the remaining phases. Phase F (Cloud Scheduler activation) + Phase G
+> (deployment-UI Scheduled Jobs tab) + Phase H (alerting circuit breakers) + Phase I (T+1 audit) follow asset-group
+> phase completion. **Target architecture:** Every asset-group × entity-type in the routing table below runs on Cloud
+> Scheduler, fires preflight via `run_preflight`, emits typed lifecycle events, and has a T+1 audit job verifying
+> live=batch consistency.
+
 ## What live-mode is for instruments
 
 Live-mode for instruments-service refreshes **reference data** — catalog rows (root, instrument_id, expiry, league_id,

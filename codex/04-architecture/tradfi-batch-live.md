@@ -54,9 +54,9 @@ calculators. Mode-conditional logic is constrained to the CLI seam per
 - [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) — partition-key contract.
 - [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) — 4-axis cartesian
   rules + anti-pattern list.
-- `unified-trading-pm/plans/active/tradfi_master_2026_05_07.md` — cutover-week TradFi delivery plan.
+- `unified-trading-pm/plans/active/tradfi_master.md` — cutover-week TradFi delivery plan.
 
 ## §6 Successor
 
 Post-cutover follow-up: replace this placeholder with the full per-instrument-type narrative once IBKR live + Polygon.io
-backfill ship. Tracked in `tradfi_master_2026_05_07.md` "post-cutover follow-ups" section.
+backfill ship. Tracked in `tradfi_master.md` "post-cutover follow-ups" section.

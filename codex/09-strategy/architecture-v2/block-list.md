@@ -244,6 +244,8 @@ synthetic-price guardrails) is specced but not yet implemented. Until it ships, 
 fixed-contract slot labels only (`-fixed-{contract}-`), and ops manually rotate to the next expiry. Workable for a
 handful of strategies; does not scale.
 
+> **[DELTA 2026-05-22]** **Current state:** Not yet implemented; dated-future strategies run fixed-contract slot labels only with manual expiry rotation. **Planned delta:** `plans/epics/strategy_master.md` Phase 11. **Target architecture:** Automated roll via representative-future-service + FUTURES_ROLL instruction.
+
 **Remediation:** Phase 11 of the active architecture-v2 finalization plan:
 
 - `RepresentativeFutureRegistry` in UAC

@@ -8,7 +8,7 @@ source:
   - plans/active/work_split_2026_05_08_ikenna.md Tab 1 (Stream A)
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md Stream A
 related_plans:
-  - plans/active/defi_master_2026_05_07.md (Fork 1 carry_staked_basis)
+  - plans/active/defi_master.md (Fork 1 carry_staked_basis)
   - plans/active/master_to_live_defi_2026_05_23.md Group F
 ---
 
@@ -72,8 +72,8 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
 ## Follow-up items
 
 1. **Live-API probe** — operator-credentialed venue API probe to confirm exact 2026-05-07 haircut ratios + adjust the
-   placeholders above accordingly. Filed under `plans/active/defi_master_2026_05_07.md` Stream A as "venue_collateral.py
-   haircut precision."
+   placeholders above accordingly. Filed under `plans/active/defi_master.md` Stream A as "venue_collateral.py haircut
+   precision."
 2. **carry-staked-basis.md codex doc** — when codex `09-strategy/architecture-v2/archetypes/carry-staked-basis.md` is
    written (currently absent), it should reference this doc + the `accepted_perp_collateral()` helper as the filter
    SSOT. Tracked in master-plan Group F.

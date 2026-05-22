@@ -38,11 +38,6 @@ before Phase 7 grows the v<8 debt.
       `chain=""` for all CeFi/TradFi venues — UTL rejects explicitly-empty chain fields with MalformedRowKeyError
       (non-blocking but silently drops manifest rows for BITFINEX-FUTURES/SPOT and others). Fix: omit chain from row_key
       when empty. Test updated. QG: 1982 passed. market-tick-data-service@626eb154. Tarball uploaded 2026-05-22.
-- [x] ✅ [CODE] P0. **MTDS-QG-fix** — UAC c18550f3 removed `get_valid_data_types_for_venue` +
-      `validate_data_type_for_venue` from root facade (today); moved both to `unified_api_contracts.registry` import in
-      orchestrator.py. Also fixed 3 pre-existing test failures: HYPERLIQUID/ASTER → defi reclassification; onchain CeFi
-      perp dual-classification exclusion in routing tests; `expected_coverage` oracle mock in lending_indices test. QG:
-      all tests pass, exit 0. market-tick-data-service@105b8d15. 2026-05-22.
 - [x] ✅ [AGENT slot 7] P0. **MTDS-3.2.A** — Launched `mtds-backfill-cefi-2026-05-22` VM (e2-highmem-4,
       asia-northeast1-c, 2024-01-01→2026-05-22, all venues, prod). VM RUNNING @ 34.180.126.53. 2026-05-22. NOTE: ran
       with old code (pre-chain-fix). ~4% complete before relaunch.
@@ -86,21 +81,23 @@ IS that plan.
       `mtds-lst-rates-20260522-082742` — **COMPLETED 07:31 UTC exit_code=0**, 53 per-VM shard entries,
       2026-04-15→2026-05-22. (2) `mtds-lending-indices-20260522-082740` — **COMPLETED 07:32 UTC exit_code=0**, 7364
       records (aave_v3/compound_v3 across 8 chains), 52 per-VM shard entries, 2026-04-15→2026-05-22. (3)
-      `mtds-dex-pools-backfill` @ 136.110.98.16 — RUNNING (at ~2026-04-19 as of slot-6 confirm). **CONFIRMED (slot-6
-      2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22 continuous ✅;
-      dex-pools IN PROGRESS (target 2026-05-22).
+      `mtds-dex-pools-backfill` @ 136.110.98.16 — **COMPLETED 07:53 UTC exit_code=0**, max date 2026-05-22. **CONFIRMED
+      (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices 2022-01-01→2026-05-22
+      continuous ✅; dex-pools 2026-05-22 COMPLETE ✅.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
-      for 2026-05-17, 2026-05-19→2026-05-22 (5 days). Previous VM `mtds-vault-share-price-20260522-083932` FAILED
-      (exit_code=1). Relaunched `mtds-vault-share-price-20260522-090541` @ 35.221.121.77 with fresh tarball
-      (mtds@626eb154 + uac@a5079dbd rebuilt 2026-05-22T08:01Z). VM RUNNING. 2026-05-22 slot-4.
+      for 2026-05-17, 2026-05-19→2026-05-22 (5 days). **ROUND 1 FAILED**: `mtds-vault-share-price-20260522-083932`
+      crashed at startup — ImportError (`get_valid_data_types_for_venue` removed from UAC). **Fix (slot-6 2026-05-22)**:
+      MTDS orchestrator.py → `get_expected_data_types_for_venue` (market-tick-data-service@470951df); UAC adds
+      `validate_data_type_for_venue` export (unified-api-contracts@058be427). **ROUND 2 RUNNING**:
+      `mtds-vault-share-price-20260522-092758` — UAC sha=058be427 confirmed in serial log, MTDS OK, PID 6974 collecting
+      2026-05-17→2026-05-22. 2026-05-22.
 - [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-\* VMs write to SEPARATE
       buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
       DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
-      2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, target 2026-05-22); (4)
-      `market-data-tick-defi-central-element-323112` vault_share_price gap fixed —
-      mtds-vault-share-price-20260522-090541 RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22
-      verification.
+      2026-05-22 ✅ DONE (COMPLETED 07:53 UTC exit_code=0); (4) `market-data-tick-defi-central-element-323112`
+      vault_share_price — mtds-vault-share-price-20260522-092758 RUNNING (Round 2, ImportError fixed) for
+      2026-05-17→2026-05-22; pending final date ≥ 2026-05-22 verification.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 

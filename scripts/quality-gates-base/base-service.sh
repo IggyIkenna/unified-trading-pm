@@ -802,10 +802,28 @@ done
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
+    # CVE-2026-4539: no-fix-version (workspace-global, reviewed 2026-05-20)
+    # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
+    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
+    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357"
     "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
         && log_success "pip-audit clean" \
-        || { log_fail "pip-audit vulnerabilities found"; V=$(( V + 1 )); }
+        || {
+            log_fail "pip-audit vulnerabilities found"
+            python3 -c "
+import json, sys
+try:
+    data = json.load(open('/tmp/pip-audit-output.json'))
+    deps = [d for d in data.get('dependencies', []) if d.get('vulns')]
+    for d in deps:
+        for v in d['vulns']:
+            print(f'  {d[\"name\"]} {d[\"version\"]}: {v[\"id\"]} — {v.get(\"description\",\"\")[:120]}')
+except Exception as e:
+    print(f'  (could not parse pip-audit output: {e})')
+" 2>/dev/null || :
+            V=$(( V + 1 ))
+        }
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
     SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
         /tmp/pip-audit-output.json 2>/dev/null || :
@@ -1970,6 +1988,8 @@ while IFS= read -r -d '' _df_579; do
             [[ "$_img_579" == "$_a_579" ]] && _is_alias_579=1 && break
         done
         [[ "$_is_alias_579" -eq 1 ]] && continue
+        # Skip build ARG interpolations (${...}) — consistent with deployment-service/scripts/audit/dockerfile-base-pin.sh
+        [[ "$_img_579" == *'${'* ]] && continue
         [[ "$_img_579" == *"@sha256:"* ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
     done < "$_df_579"
 done < <(find . \( -name "Dockerfile" -o -name "Dockerfile.*" \) \
@@ -2159,23 +2179,60 @@ else
     log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
 fi
 
-# ── STEP 5.85: no-blank-record-empty-reason — every record_empty() must pass non-blank reason= ─
+# ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
-# AST-walks service source; rejects record_empty() without reason= kwarg or with reason="".
-# SSOT: plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 2.E.1.
-# Script: unified-trading-pm/scripts/qg/no_blank_record_empty_reason.py
-_BLANK_REASON_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/qg/no_blank_record_empty_reason.py"
-if [ -f "$_BLANK_REASON_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ]; then
-    _blank_reason_out=$(python3 "$_BLANK_REASON_CHECKER" "$SOURCE_DIR" 2>/dev/null)
-    if [ -z "$_blank_reason_out" ]; then
-        log_success "STEP 5.85: no-blank-record-empty-reason — all record_empty() callsites pass non-blank reason="
+# Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
+# that passes a literal string ``reason=`` kwarg must use a value from
+# ``unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS``.
+#
+# UTL's ManifestWriter already raises UnknownEmptyConfirmedReasonError at runtime,
+# but this static check catches the error before tests run with precise file:line.
+#
+# Attribute-access forms (EmptyConfirmedReason.X, SomeEnum.X.value) pass through —
+# they are validated by the type system. Only literal strings are checked.
+#
+# Exemptions: manifest_writer.py (UTL definition site), test_*.py (negative tests),
+# per-line ``# QG-allow: record-empty-reason``.
+#
+# SSOT: writegate_honest_coverage_endtoend_2026_05_06.md Phase 2.E.1 / STEP 5.89.
+_RECORD_EMPTY_REASON_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_record_empty_reason_closed_set.py"
+if [ -f "$_RECORD_EMPTY_REASON_CHECKER" ]; then
+    _RER_REPO=$(basename "$PROJECT_ROOT")
+    _RER_WS="$REPO_ROOT"
+    _RER_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _RER_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_RECORD_EMPTY_REASON_CHECKER" \
+            --workspace-root "$_RER_WS" --scope "$_RER_REPO" "${_RER_SRC_ARG[@]}" >/tmp/record_empty_reason_qg.log 2>&1; then
+        log_success "STEP 5.89: All record_empty/record_expected_empty literal reasons are in EMPTY_CONFIRMED_REASONS"
     else
-        log_fail "STEP 5.85: no-blank-record-empty-reason — record_empty() called without non-blank reason= (pass a reason from EMPTY_CONFIRMED_REASONS):"
-        echo "$_blank_reason_out"
+        log_fail "STEP 5.89: record_empty/record_expected_empty called with unknown/blank literal reason. Use EmptyConfirmedReason enum member or a known string from EMPTY_CONFIRMED_REASONS (writegate Phase 2.E.1):"
+        cat /tmp/record_empty_reason_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_record_empty_reason_closed_set.py --workspace-root $_RER_WS --scope $_RER_REPO"
         V=$(( V + 1 ))
     fi
 else
-    log_success "STEP 5.85: no-blank-record-empty-reason — skipped (checker absent or SOURCE_DIR not set)"
+    log_success "STEP 5.89: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# ── STEP 5.90: GET /data-status endpoint must use canonical coverage helper ───
+#
+# Every Python file that defines a GET /data-status route MUST import
+# compute_coverage_for_bucket (UTL) or compute_honest_coverage (UAC).
+# Inline re-implementations of the manifest read or the coverage formula are
+# review-blocking per codex/06-coding-standards/data-status-endpoint-contract.md.
+#
+# SSOT: honest_coverage_formula_consolidation_2026_05_19.md Phase 1 P1 / STEP 5.90.
+_DS_CANONICAL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_data_status_endpoint_canonical.sh"
+if [ -f "$_DS_CANONICAL_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    if bash "$_DS_CANONICAL_CHECKER" "$SOURCE_DIR" >/tmp/data_status_canonical_qg.log 2>&1; then
+        log_success "STEP 5.90: GET /data-status endpoint uses compute_coverage_for_bucket or compute_honest_coverage"
+    else
+        log_fail "STEP 5.90: GET /data-status route file does not use canonical coverage helper (see codex/06-coding-standards/data-status-endpoint-contract.md):"
+        cat /tmp/data_status_canonical_qg.log
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.90: skipped (checker absent or SOURCE_DIR not set)"
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────

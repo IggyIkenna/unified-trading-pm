@@ -13,7 +13,11 @@ source:
 locked_by: live-defi-rollout
 ---
 
-> **🟢 RESOLUTION VERIFIED 2026-05-20** — all 5 plan-flip checkboxes are ✅. Validation work + master-plan row + Marinade BLOCKED-OPERATOR-DECISION all shipped. Marinade follow-up has named successor `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md` (verified exists). P2 `coinbase_wrapped_assets.py` UTL client is FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE) — on-chain canonical source already wired; cross-source drift check is post-cutover scope. Archiving.
+> **🟢 RESOLUTION VERIFIED 2026-05-20** — all 5 plan-flip checkboxes are ✅. Validation work + master-plan row +
+> Marinade BLOCKED-OPERATOR-DECISION all shipped. Marinade follow-up has named successor
+> `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md` (verified exists). P2
+> `coinbase_wrapped_assets.py` UTL client is FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE) — on-chain canonical source
+> already wired; cross-source drift check is post-cutover scope. Archiving.
 
 ## What I found
 
@@ -171,9 +175,10 @@ sub-agent picks up this thread).
       per-commit run since it requires Secret Manager + live network — operator runs via
       `python3 scripts/smoke_test_cbeth_history.py` from the workspace `.venv-workspace`. Follow-up: add a weekly /
       per-PR-touching-`lst_rates_handler` smoke trigger if cross-source drift becomes a recurring concern.
-- [x] **FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE)** [SCRIPT] P2. Add `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no
-      auth), emit `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER
-      (NICE-TO-HAVE)**: requires new UTL `external_apis/` subpackage (architectural decision) + new event type
+- [x] **FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE)** [SCRIPT] P2. Add
+      `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no auth), emit
+      `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER (NICE-TO-HAVE)**:
+      requires new UTL `external_apis/` subpackage (architectural decision) + new event type
       `MANIFEST_CROSS_SOURCE_DRIFT`. On-chain canonical source already wired; this is a secondary smoke for drift
       detection only. Successor: file a separate plan once UTL `external_apis/` subpackage shape is decided (currently 1
       candidate consumer; needs ≥2 to justify a new subpackage). **FORMALLY CLOSED 2026-05-19 slot-5** — on-chain

@@ -1,26 +1,16 @@
 ---
 title: "TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover"
-slug: tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01
-type: plan
-status: active
-created: 2026-05-17
-deadline: 2026-06-15
-owner: ikenna
-parent_epic: tradfi_master_2026_05_07
-asset_group: tradfi
+parent_epic: tradfi_master
 priority: P2
+status: active
+estimate_class: infra
+estimate_baseline_ai_days: 2.0
+estimate_calibrated_ai_days: 1.6
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
-estimate_class: infra
-estimate_baseline_ai_days: 2
-estimate_calibrated_ai_days: 1.6
 related_plans:
-  - master_to_live_defi_2026_05_23
-  - tradfi_master_2026_05_07
-  - tradfi_ohlcv_only_mvp_backfill_2026_05_15
-codex_ssots:
-  - codex/02-data/mtds-data-source-coverage-matrix.md
-  - codex/02-data/availability-manifest-and-data-status.md
+  - tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
+  - master_to_live_defi_2026_05_23.md
 ---
 
 # TradFi L1-L3 tick data restoration — post-cutover
@@ -34,7 +24,7 @@ decision (May-23 OHLCV-only scope) and the post-cutover restoration boundary. No
 ## Predecessor
 
 This plan is the named successor to
-[`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) per the
+[`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) per the
 `## Temporary states + their canonical follow-up plans` section there. The predecessor collapsed TradFi MVP
 data-acquisition to OHLCV-only (L0) and held the prior tick-window scope in two `_DEFERRED_*` constants for forward
 restore.
@@ -129,10 +119,10 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ## Cross-plan impact
 
-- [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) — predecessor. Banner
-  this plan in its `## Temporary states` section + flag it for archival once Phase 7 lands.
-- [`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md) — re-enable the trades/tbbo rows in the epic's
-  Phase X residual that the predecessor parked.
+- [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) —
+  predecessor. Banner this plan in its `## Temporary states` section + flag it for archival once Phase 7 lands.
+- [`tradfi_master.md`](../epics/tradfi_master.md) — re-enable the trades/tbbo rows in the epic's Phase X residual that
+  the predecessor parked.
 
 ## Full-Execution Criterion
 
@@ -151,3 +141,11 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 ## Temporary states + their canonical follow-up plans
 
 - None — this plan is itself the follow-up to a temporary state in the predecessor.
+
+## P1 backlog (absorbed from issue docs)
+
+- [ ] [AGENT] P1. Add SOURCE_PRIORITY entry for BATCH_EIA:
+      `SOURCE_PRIORITY[(asset_group, data_type)] = ["batch_eia", ...]` in
+      `unified_api_contracts/canonical/crosscutting/source_priority.py`. Tradfi/EIA track owner must identify the
+      correct (asset_group, data_type) pair. Issue:
+      `plans/archive/issues/uac_batch_eia_missing_source_priority_2026_05_20.md`.

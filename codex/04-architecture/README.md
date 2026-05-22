@@ -157,7 +157,15 @@ Service B reads from that path. There are no inter-service RPCs, no message queu
 management, and BigQuery/Athena compatibility. The coupling is through data contracts (schema + path), not API
 contracts.
 
-### 2. Live: Embedded Package (Feature Calculation) + PubSub (Data Transport) [PLANNED]
+### 2. Live: Embedded Package (Feature Calculation) + PubSub (Data Transport) [IMPLEMENTED]
+
+> **[DELTA 2026-05-22]** **Current state:** The inner-loop live cascade (MTDS → MDPS → features-service) uses **Redis
+> Stream** (`CANDLE_BOUNDARY_CROSSED` / `CANDLE_COMPUTED` / `FEATURES_COMPUTED`) per
+> `../05-infrastructure/live-pipeline-architecture.md`. PubSub remains the cross-service async fan-out (instruments
+> refresh, strategy → execution, alerting). The `[PLANNED]` label above was stale; the architecture is shipped.
+> **Planned delta:** Per-family live handler activation gates are tracked in `plans/epics/features_and_ml_master.md`.
+> **Target architecture:** All 8 feature families deployed in live mode; Redis Stream inner-loop + PubSub cross-service
+> fan-out fully operational.
 
 Live mode has two distinct communication layers that must not be conflated:
 

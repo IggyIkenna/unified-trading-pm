@@ -179,7 +179,7 @@ This unblocks the verifier (which presumes every adapter produces canonical `Mat
 
 ## Cross-references
 
-- **Plan**: `plans/epics/sports_master_2026_05_07.md` § "C.6 + C.10 match_end_time cascade"
+- **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
 - **Match-end cascade**: [`match-end-time-cascade.md`](match-end-time-cascade.md)
 - **MatchStatus SSOT**: `unified_api_contracts/canonical/domain/sports/match_status.py`
 - **Batch=live SSOT**: `codex/04-architecture/batch-live-architecture.md`

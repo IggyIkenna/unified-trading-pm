@@ -4,7 +4,7 @@ doc_kind: gaps_register
 status: active
 ssot_for: prediction_market_codification_gaps
 execution:
-  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master_2026_05_07.md`)
+  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`)
   cadence:
     per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps
     register; weekly sweep during the May-23 cutover window to close gaps as they land
@@ -78,7 +78,13 @@ Required: move both into `VENUE_REGISTRY`, land capability declarations, wire re
 
 ## G6 — Kalshi testnet
 
-`demo-api.kalshi.com` exists and does not require real money.
+> **[DELTA 2026-05-22]** Kalshi API has migrated from `trading-api.kalshi.com` to `api.elections.kalshi.com` (Phase 1 of
+> `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` shipped). The testnet/demo base URL below may also have
+> changed — verify against `api.elections.kalshi.com` docs before registering. Phase 3 (credential provisioning +
+> integration verification) is BLOCKED-CREDENTIALS pending `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+
+`demo-api.kalshi.com` exists and does not require real money (verify current testnet hostname against
+`api.elections.kalshi.com` docs — may now be `demo.elections.kalshi.com`).
 
 Required: register as the testnet equivalent in the testnet registry alongside Polymarket's Amoy testnet.
 

@@ -220,6 +220,11 @@
           "name": "deployment-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "strategy-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "cefi",
@@ -309,7 +314,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -819,7 +824,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -926,12 +931,31 @@
     },
     "ml-inference-service": {
       "type": "service",
+      "tier": 3,
       "status": "consolidated-into-ml-service",
       "archived_into": "ml-service",
       "archive_date": "2026-05-20",
       "consolidation_plan": "ml_repo_consolidation_2026_05_19",
       "github_url": "https://github.com/IggyIkenna/ml-inference-service",
-      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-inference-service"
+      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-inference-service",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "NO_QG",
+      "coverage_pct": 0,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": ["all"],
+      "tags": ["ml", "archived", "supporting"]
     },
     "ml-service": {
       "type": "service",
@@ -950,6 +974,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-trading-deployment",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
         }
       ],
       "ci_status": "LOCAL_PASS",
@@ -978,12 +1007,31 @@
     },
     "ml-training-service": {
       "type": "service",
+      "tier": 3,
       "status": "consolidated-into-ml-service",
       "archived_into": "ml-service",
       "archive_date": "2026-05-20",
       "consolidation_plan": "ml_repo_consolidation_2026_05_19",
       "github_url": "https://github.com/IggyIkenna/ml-training-service",
-      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-training-service"
+      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-training-service",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "NO_QG",
+      "coverage_pct": 0,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": ["all"],
+      "tags": ["ml", "archived", "supporting"]
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1142,6 +1190,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
+        },
+        {
+          "name": "market-tick-data-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "LOCAL_PASS",
@@ -1198,11 +1251,6 @@
           "required": true
         },
         {
-          "name": "alerting-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "execution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1218,13 +1266,13 @@
           "required": true
         },
         {
-          "name": "client-reporting-api",
+          "name": "unified-sports-execution-interface",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
+          "required": false
         }
       ],
       "completion_path": "cefi",
-      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
+      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 \u2014 coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1327,7 +1375,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1350,7 +1398,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1487,7 +1535,7 @@
         }
       ],
       "completion_path": "infrastructure",
-      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 \u2014 absorbed into strategy-service dep.",
       "ci_status": "FAILING",
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -1506,6 +1554,7 @@
     },
     "agent-orchestrator": {
       "type": "tool",
+      "tier": 0,
       "arch_tier": "external",
       "doc_standard": "service-canonical",
       "github_url": "https://github.com/IggyIkenna/agent-orchestrator",
@@ -1519,7 +1568,8 @@
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "none",
-      "skipped_gates": []
+      "skipped_gates": [],
+      "tags": ["infrastructure", "monitoring", "supporting"]
     }
   },
   "topologicalOrder": {

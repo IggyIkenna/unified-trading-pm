@@ -1,8 +1,8 @@
 ---
 title: Cloud-Agnostic Script Pattern
-status: in-progress
+status: active
 created: 2026-05-07
-last_updated: 2026-05-07
+last_updated: 2026-05-22
 authoritative_for:
   The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag
   default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory
@@ -18,7 +18,9 @@ last_reviewed: 2026-05-17
 
 # Cloud-Agnostic Script Pattern
 
-> **Status:** IN-PROGRESS — Phase 2 prep landed 2026-05-07 (cloud-providers.yaml extended for 10 missing DeFi keys;
+> **[DELTA 2026-05-22]** **Current state:** Phase 2 prep landed (`cloud-providers.yaml` extended + `setup-defi-buckets.sh` shipped). `lib/cloud-helpers.sh` is still empty; the Python UCI factory and QG lint rule are advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by QG STEP 5.69. **Planned delta:** Remaining phases tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Every workspace script uses `lib/cloud-helpers.sh` + UCI factory; QG lint rule is a hard error for non-compliant scripts.
+
+> **Status:** ACTIVE — Phase 2 prep landed 2026-05-07 (cloud-providers.yaml extended for 10 missing DeFi keys;
 > `deployment-service/scripts/aws/setup-defi-buckets.sh` shipped as the first AWS-side provisioning script). Subsequent
 > phases populate `lib/cloud-helpers.sh` + the Python factory + the QG lint rule.
 
@@ -252,8 +254,8 @@ Phase 5-6):
    transfer + Phase 6 ECS Fargate deploy gate the cutover.
 2. **`cefi-instruments`** — second. DeFi archetypes hedge across 6 CeFi perp venues; CeFi instruments reference data is
    on the May-23 critical path even though CeFi tick data stays GCP-resident.
-3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-May-23). Opportunistic credit-utilisation.
-   No deadline pressure.
+3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-cutover; see `infrastructure_master.md`).
+   Opportunistic credit-utilisation. No deadline pressure.
 
 Per-asset_group migration checklist (apply for each asset_group):
 

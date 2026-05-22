@@ -102,13 +102,21 @@ because the partition key/value pairs are encoded in the directory names.
 
 ## Schema Evolution Strategy
 
+> **[DELTA 2026-05-22]** **Current state:** The workspace completed the migration to GCS-native Parquet (hive-style) as
+> the primary storage format. BigQuery dual-write has been removed; all production data now lands in GCS Parquet via
+> `resolve_bucket_name(...)`. The BigQuery migration phases below are legacy documentation from the original design
+> (2026-Q1/Q2). **Planned delta:** `plans/epics/mtds_mdps_master.md` tracks ongoing GCS path canonicalisation and
+> single-walk bundle migration (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`). **Target
+> architecture:** All services read/write GCS Parquet via canonical hive paths — BigQuery is external-table access only
+> for ad-hoc analytics.
+
 ### Migration Approach: Short-Term Dual Support
 
 **Key insight:** Not long-term backwards compatibility—just during migration
 
 #### Phase 1: Add Hive Schema Writers (Dual Write)
 
-**Timeline:** Q2 2026
+**Timeline:** Q2 2026 (COMPLETED — GCS is now primary write path)
 
 **Approach:**
 

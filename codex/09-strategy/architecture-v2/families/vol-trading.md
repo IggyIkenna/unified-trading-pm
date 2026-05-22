@@ -63,27 +63,27 @@ position construction, roll/expiry handling, sizing semantics, latency profile, 
 engine's config branches. `VOL_TRADING_OPTIONS` is retained as the legacy back-compat value for old Firestore/GCS
 records; new strategies use the granular variants.
 
-| Archetype                                                                       | Vol expression / edge                                                              | Settlement / hold                |
-| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------- |
-| [`VOL_TRADING_OPTIONS`](../archetypes/vol-trading-options.md) _(legacy)_        | Catch-all single-venue vol trading (IV/RV, skew, term, surface) pre-Phase-9 split  | Continuous                       |
-| [`VOL_ARB_RV_IV`](../archetypes/vol-arb-rv-iv.md)                               | Times IV−RV spread breakdowns (mean-reversion in the gap); long or short vol       | Continuous, rolled at expiry     |
-| [`VOL_SPREAD_STRUCTURES`](../archetypes/vol-spread-structures.md)               | Calendar + butterfly spreads on term-structure shape and smile; vega-neutral entry | Expiry-driven per leg            |
-| [`VOL_CARRY`](../archetypes/vol-carry.md)                                       | Harvests structural IV-over-RV premium by selling short-tenor options (theta)      | Continuous, roll at expiry       |
-| [`VOL_OVERLAY_COVERED_CALLS`](../archetypes/vol-overlay-covered-calls.md)       | Writes OTM calls against an existing delta-1 long for premium income               | Expiry-driven, rewrite/roll      |
-| [`VOL_OVERLAY_PROTECTIVE_PUT`](../archetypes/vol-overlay-protective-put.md)     | Buys OTM puts (or collar) as tail-risk insurance on a delta-1 long                 | Expiry-driven, rolled            |
-| [`VOL_STRADDLE`](../archetypes/vol-straddle.md)                                 | Long/short ATM straddle for a pure vol view around catalysts or IV extremes        | Event-driven or expiry           |
-| [`VOL_SYNTHETIC_DELTA`](../archetypes/vol-synthetic-delta.md)                   | Replicates delta-1 via long call + short put (avoids perp funding; defined risk)   | Expiry-driven, rolled            |
-| [`VOL_MARKET_MAKING`](../archetypes/vol-market-making.md)                       | Two-sided options quoting with vol edge primary; SVI fair-value, hedged inventory  | Continuous quote lifecycle       |
-| [`VOL_ML_LEAN`](../archetypes/vol-ml-lean.md)                                   | ML-forecast RV vs IV tilts vol position size and direction                         | Continuous, rolled at expiry     |
-| [`VOL_0DTE_GAMMA_SCALPING`](../archetypes/vol-0dte-gamma-scalping.md)           | Buys 0DTE straddles; captures realised gamma via frequent intraday delta-hedge     | Same-day expiry                  |
-| [`VOL_0DTE_PIN_RISK`](../archetypes/vol-0dte-pin-risk.md)                       | Manages extreme near-expiry gamma/pin risk at high-OI strikes (carry/flatten/roll) | Same-/next-day expiry            |
-| [`VOL_TERM_STRUCTURE_ARB`](../archetypes/vol-term-structure-arb.md)             | Dual-expiry calendar on term-structure slope z-score mean-reversion                | Dual-expiry calendar             |
-| [`VOL_TERM_STRUCTURE_SLOPE`](../archetypes/vol-term-structure-slope.md)         | Trades the fitted term-structure slope parameter (front vs back); continuous roll  | Continuous, rolling expiry       |
-| [`VOL_DISPERSION`](../archetypes/vol-dispersion.md)                             | Short index vol / long component vol; harvests implied-vs-realised correlation     | Continuous, multi-expiry         |
-| [`VOL_VARIANCE_SWAP`](../archetypes/vol-variance-swap.md)                       | Replicates a variance swap via a 1/K² option strip + daily delta hedge             | Expiry-driven                    |
-| [`VOL_LEAPS_CONVEXITY`](../archetypes/vol-leaps-convexity.md)                   | Long long-dated (180d+) options for cheap convexity; asymmetric vol-spike payoff   | Expiry-driven, quarterly roll    |
-| [`VOL_CROSS_ASSET_SPREAD`](../archetypes/vol-cross-asset-spread.md)             | Trades the vol spread between correlated assets (e.g. BTC/ETH IV) at matched tenors | Continuous, matched expiries     |
-| [`VOL_RATIO_SPREAD`](../archetypes/vol-ratio-spread.md)                         | Ratio spread (e.g. 1×2) harvesting rich OTM skew premium; net-credit entry         | Expiry-driven                    |
+| Archetype                                                                   | Vol expression / edge                                                               | Settlement / hold             |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
+| [`VOL_TRADING_OPTIONS`](../archetypes/vol-trading-options.md) _(legacy)_    | Catch-all single-venue vol trading (IV/RV, skew, term, surface) pre-Phase-9 split   | Continuous                    |
+| [`VOL_ARB_RV_IV`](../archetypes/vol-arb-rv-iv.md)                           | Times IV−RV spread breakdowns (mean-reversion in the gap); long or short vol        | Continuous, rolled at expiry  |
+| [`VOL_SPREAD_STRUCTURES`](../archetypes/vol-spread-structures.md)           | Calendar + butterfly spreads on term-structure shape and smile; vega-neutral entry  | Expiry-driven per leg         |
+| [`VOL_CARRY`](../archetypes/vol-carry.md)                                   | Harvests structural IV-over-RV premium by selling short-tenor options (theta)       | Continuous, roll at expiry    |
+| [`VOL_OVERLAY_COVERED_CALLS`](../archetypes/vol-overlay-covered-calls.md)   | Writes OTM calls against an existing delta-1 long for premium income                | Expiry-driven, rewrite/roll   |
+| [`VOL_OVERLAY_PROTECTIVE_PUT`](../archetypes/vol-overlay-protective-put.md) | Buys OTM puts (or collar) as tail-risk insurance on a delta-1 long                  | Expiry-driven, rolled         |
+| [`VOL_STRADDLE`](../archetypes/vol-straddle.md)                             | Long/short ATM straddle for a pure vol view around catalysts or IV extremes         | Event-driven or expiry        |
+| [`VOL_SYNTHETIC_DELTA`](../archetypes/vol-synthetic-delta.md)               | Replicates delta-1 via long call + short put (avoids perp funding; defined risk)    | Expiry-driven, rolled         |
+| [`VOL_MARKET_MAKING`](../archetypes/vol-market-making.md)                   | Two-sided options quoting with vol edge primary; SVI fair-value, hedged inventory   | Continuous quote lifecycle    |
+| [`VOL_ML_LEAN`](../archetypes/vol-ml-lean.md)                               | ML-forecast RV vs IV tilts vol position size and direction                          | Continuous, rolled at expiry  |
+| [`VOL_0DTE_GAMMA_SCALPING`](../archetypes/vol-0dte-gamma-scalping.md)       | Buys 0DTE straddles; captures realised gamma via frequent intraday delta-hedge      | Same-day expiry               |
+| [`VOL_0DTE_PIN_RISK`](../archetypes/vol-0dte-pin-risk.md)                   | Manages extreme near-expiry gamma/pin risk at high-OI strikes (carry/flatten/roll)  | Same-/next-day expiry         |
+| [`VOL_TERM_STRUCTURE_ARB`](../archetypes/vol-term-structure-arb.md)         | Dual-expiry calendar on term-structure slope z-score mean-reversion                 | Dual-expiry calendar          |
+| [`VOL_TERM_STRUCTURE_SLOPE`](../archetypes/vol-term-structure-slope.md)     | Trades the fitted term-structure slope parameter (front vs back); continuous roll   | Continuous, rolling expiry    |
+| [`VOL_DISPERSION`](../archetypes/vol-dispersion.md)                         | Short index vol / long component vol; harvests implied-vs-realised correlation      | Continuous, multi-expiry      |
+| [`VOL_VARIANCE_SWAP`](../archetypes/vol-variance-swap.md)                   | Replicates a variance swap via a 1/K² option strip + daily delta hedge              | Expiry-driven                 |
+| [`VOL_LEAPS_CONVEXITY`](../archetypes/vol-leaps-convexity.md)               | Long long-dated (180d+) options for cheap convexity; asymmetric vol-spike payoff    | Expiry-driven, quarterly roll |
+| [`VOL_CROSS_ASSET_SPREAD`](../archetypes/vol-cross-asset-spread.md)         | Trades the vol spread between correlated assets (e.g. BTC/ETH IV) at matched tenors | Continuous, matched expiries  |
+| [`VOL_RATIO_SPREAD`](../archetypes/vol-ratio-spread.md)                     | Ratio spread (e.g. 1×2) harvesting rich OTM skew premium; net-credit entry          | Expiry-driven                 |
 
 The shared primitives below (surface fitter, RV computer, greeks + delta-hedge engine, vol-trade constructors,
 expiry/time-decay manager) are common to all 19 — each archetype is a distinct composition of them plus its own
@@ -241,13 +241,17 @@ def react_to_equity_change(self, new_equity_usd: Decimal) -> list[StrategyInstru
 - Archetypes (19): [vol-trading-options](../archetypes/vol-trading-options.md) _(legacy)_,
   [vol-arb-rv-iv](../archetypes/vol-arb-rv-iv.md), [vol-spread-structures](../archetypes/vol-spread-structures.md),
   [vol-carry](../archetypes/vol-carry.md), [vol-overlay-covered-calls](../archetypes/vol-overlay-covered-calls.md),
-  [vol-overlay-protective-put](../archetypes/vol-overlay-protective-put.md), [vol-straddle](../archetypes/vol-straddle.md),
-  [vol-synthetic-delta](../archetypes/vol-synthetic-delta.md), [vol-market-making](../archetypes/vol-market-making.md),
-  [vol-ml-lean](../archetypes/vol-ml-lean.md), [vol-0dte-gamma-scalping](../archetypes/vol-0dte-gamma-scalping.md),
-  [vol-0dte-pin-risk](../archetypes/vol-0dte-pin-risk.md), [vol-term-structure-arb](../archetypes/vol-term-structure-arb.md),
-  [vol-term-structure-slope](../archetypes/vol-term-structure-slope.md), [vol-dispersion](../archetypes/vol-dispersion.md),
-  [vol-variance-swap](../archetypes/vol-variance-swap.md), [vol-leaps-convexity](../archetypes/vol-leaps-convexity.md),
-  [vol-cross-asset-spread](../archetypes/vol-cross-asset-spread.md), [vol-ratio-spread](../archetypes/vol-ratio-spread.md)
+  [vol-overlay-protective-put](../archetypes/vol-overlay-protective-put.md),
+  [vol-straddle](../archetypes/vol-straddle.md), [vol-synthetic-delta](../archetypes/vol-synthetic-delta.md),
+  [vol-market-making](../archetypes/vol-market-making.md), [vol-ml-lean](../archetypes/vol-ml-lean.md),
+  [vol-0dte-gamma-scalping](../archetypes/vol-0dte-gamma-scalping.md),
+  [vol-0dte-pin-risk](../archetypes/vol-0dte-pin-risk.md),
+  [vol-term-structure-arb](../archetypes/vol-term-structure-arb.md),
+  [vol-term-structure-slope](../archetypes/vol-term-structure-slope.md),
+  [vol-dispersion](../archetypes/vol-dispersion.md), [vol-variance-swap](../archetypes/vol-variance-swap.md),
+  [vol-leaps-convexity](../archetypes/vol-leaps-convexity.md),
+  [vol-cross-asset-spread](../archetypes/vol-cross-asset-spread.md),
+  [vol-ratio-spread](../archetypes/vol-ratio-spread.md)
 - Options MM distinction: [market-making.md](market-making.md) (spread capture as primary alpha)
 - Cross-asset vol pair: [stat-arb-pairs.md](stat-arb-pairs.md) (if alpha is ratio mean-reversion)
 - Greeks / risk: [../cross-cutting/risk-gates.md](../cross-cutting/risk-gates.md)

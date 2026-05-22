@@ -19,6 +19,13 @@ allocated to archetypes.
 state-progression webhooks. These items are post-cutover and tracked in
 `wallet_treasury_post_cutover_custody_signing_2026_06_01.md`.
 
+> **[DELTA 2026-05-22]** **Current state:** MVP ships with manual single-client DRAFT→LIVE walkthrough; no production
+> KYC provider wired; SUSPENDED is terminal (no automated re-activation). **Planned delta:** Post-cutover items tracked
+> in `wallet_treasury_post_cutover_custody_signing_2026_06_01.md`: production Onfido/Jumio KYC wiring, multi-client
+> concurrent onboarding, automated state-progression webhooks, SUSPENDED recovery path. **Target architecture:**
+> `ClientOnboardingStateMachine` accepts KYC provider webhooks, auto-advances on approval, and supports
+> operator-initiated SUSPENDED → re-onboarding flow.
+
 ---
 
 ## State Diagram

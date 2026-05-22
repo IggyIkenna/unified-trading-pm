@@ -7,6 +7,8 @@ estimate_class: research
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.8
 migrated_from: mdps_streaming_and_backpressure_2026_05_07.md § item 547
+parent_epic: cefi_master
+priority: P2
 ---
 
 # Per-Venue VENUE_HEARTBEAT_INTERVAL Empirical Calibration

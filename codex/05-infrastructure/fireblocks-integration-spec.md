@@ -15,6 +15,8 @@ This document is the **paste-ready engineering spec** for the `FireblocksCustody
 the Copper adapter: mirror its factory shape, swap signing protocol + REST endpoints, add HD derivation + per-tx
 co-signer policy. No new service-side primitives needed.
 
+> **[DELTA 2026-05-22]** **Current state:** `CLOUD_KMS_ENCRYPTED` is SHIPPED and verified for May-23 live. Copper + CEFFU target June-1. Fireblocks is further out (client credential delivery gates implementation). This doc is a paste-ready engineering spec; no `FireblocksCustodyProvider` code is shipped yet. **Planned delta:** `FireblocksCustodyProvider` adapter tracked under `plans/epics/defi_master.md` § custody. **Target architecture:** Per-wallet config-only flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` post-June-1 credential delivery.
+
 ---
 
 ## § 1 — Architecture (mirrors Copper § 2.3)

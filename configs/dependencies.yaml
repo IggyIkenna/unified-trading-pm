@@ -265,12 +265,14 @@ services:
           - feature_group
           - date
     external_dependencies: []
-  ml-training-service:
-    description: Train ML models for predictions (3-stage pipeline)
+  # ml-training-service + ml-inference-service removed 2026-05-21:
+  # consolidated into ml-service (ml_repo_consolidation_2026_05_19.md)
+  ml-service:
+    description: Train ML models and generate predictions (consolidated from ml-training-service + ml-inference-service, 2026-05-20)
     upstream:
       - service: features-delta-one-service
         required: true
-        description: Training features
+        description: Features for training and inference
         check:
           bucket_template: features-delta-one-{category_lower}-{project_id}
           path_template: by_date/day={date}/
@@ -282,55 +284,28 @@ services:
           path_template: by_date/day={date}/
       - service: features-onchain-service
         required: false
-        description: Optional on-chain features (shared bucket, no category)
+        description: Optional on-chain features
         check:
           bucket_template: features-onchain-{category_lower}-{project_id}
           path_template: by_date/day={date}/
-      - service: market-tick-data-service
-        required: false
-        description: Optional - deployment flexibility for tick-level features
-        check:
-          bucket_template: market-data-tick-{category_lower}-{project_id}
-          path_template: raw_tick_data/by_date/day={date}/
       - service: features-calendar-service
         required: false
-        description: Optional - deployment flexibility for calendar features
+        description: Optional calendar features
         check:
           bucket_template: features-calendar-{project_id}
           path_template: calendar/category=temporal/by_date/day={date}/
+      - service: market-tick-data-service
+        required: false
+        description: Optional tick-level features
+        check:
+          bucket_template: market-data-tick-{category_lower}-{project_id}
+          path_template: raw_tick_data/by_date/day={date}/
       - service: market-data-processing-service
         required: false
-        description: Optional - deployment flexibility for candle-based features
+        description: Optional candle-based features
         check:
           bucket_template: market-data-tick-{category_lower}-{project_id}
           path_template: processed_candles/by_date/day={date}/
-    stage_dependencies:
-      pre-selection:
-        requires_stages: []
-        outputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-      hyperparameter-grid:
-        requires_stages:
-          - pre-selection
-        inputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-        outputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_template: stage2-hyperparams/model-{model_id}/training-period-{period}/best_hyperparams.json
-      final-training:
-        requires_stages:
-          - hyperparameter-grid
-          - pre-selection
-        inputs:
-          bucket_template: ml-training-artifacts-{project_id}
-          path_templates:
-            - stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json
-            - stage2-hyperparams/model-{model_id}/training-period-{period}/best_hyperparams.json
-        outputs:
-          bucket_template: ml-models-store-{project_id}
-          path_template: models/{model_id}/training-period-{period}/model.joblib
     outputs:
       - name: trained_models
         bucket_template: ml-models-store-{project_id}
@@ -339,44 +314,6 @@ services:
           - instrument
           - timeframe
           - target_type
-      - name: model_registry
-        bucket_template: ml-models-store-{project_id}
-        path_template: model_registry/metadata/{model_id}/{version}/metadata.json
-    external_dependencies: []
-  ml-inference-service:
-    description: Generate ML predictions
-    upstream:
-      - service: ml-training-service
-        required: true
-        description: Needs trained models
-        check:
-          bucket_template: ml-models-store-{project_id}
-          path_template: model_registry/
-      - service: features-delta-one-service
-        required: true
-        description: Real-time features for inference
-        check:
-          bucket_template: features-delta-one-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-      - service: features-calendar-service
-        required: false
-        description: Optional - deployment flexibility for calendar features
-        check:
-          bucket_template: features-calendar-{project_id}
-          path_template: calendar/category=temporal/by_date/day={date}/
-      - service: features-volatility-service
-        required: false
-        description: Optional - deployment flexibility for volatility features
-        check:
-          bucket_template: features-volatility-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-      - service: features-onchain-service
-        required: false
-        description: Optional - deployment flexibility for on-chain features
-        check:
-          bucket_template: features-onchain-{category_lower}-{project_id}
-          path_template: by_date/day={date}/
-    outputs:
       - name: predictions
         bucket_template: ml-predictions-store-{project_id}
         path_template: predictions/{mode}/{date}/
@@ -406,7 +343,7 @@ services:
   strategy-service:
     description: Test trading signals and strategy logic
     upstream:
-      - service: ml-inference-service
+      - service: ml-service
         required: false
         description: ML predictions for ML-driven strategies
         check:
@@ -454,18 +391,6 @@ services:
         check:
           bucket_template: features-calendar-{project_id}
           path_template: calendar/category=temporal/by_date/day={date}/
-      - service: risk-and-exposure-service
-        required: false
-        description: Optional - deployment flexibility for pre-trade risk checks (talks to strategy)
-        check:
-          bucket_template: risk-store-{project_id}-{category_lower}
-          path_template: risk/{venue}/{date}/
-      - service: position-balance-monitor-service
-        required: false
-        description: Optional - deployment flexibility for position queries
-        check:
-          bucket_template: positions-store-{project_id}-{category_lower}
-          path_template: positions/{venue}/{date}/
     outputs:
       - name: strategy_instructions
         bucket_template: strategy-store-{category_lower}-{project_id}
@@ -526,118 +451,8 @@ services:
           - date
           - instruction_type
     external_dependencies: []
-  position-balance-monitor-service:
-    upstream:
-      - execution-service
-      - instruments-service
-    description: Monitor and reconcile positions from execution fills
-    inputs:
-      - name: execution_fills
-        bucket_template: execution-store-{project_id}
-        path_template: results/date={date}/strategy_id=*/instruction_type=*/run_id=*/positions.parquet
-        required: true
-        description: Position data from execution-service (execution writes positions, not just fills)
-      - name: execution_positions
-        bucket_template: execution-store-{project_id}
-        path_template: results/date={date}/strategy_id={strategy_id}/instruction_type={instruction_type}/run_id={run_id}/positions.parquet
-        required: true
-        description: Position snapshots from execution-service backtest engine
-      - name: instruments
-        bucket_template: instruments-store-{category_lower}-{project_id}
-        path_template: instrument_availability/by_date/day={date}/instruments.parquet
-        required: true
-        description: Instrument definitions for position normalization
-    outputs:
-      - name: reconciled_positions
-        bucket_template: positions-store-{project_id}
-        path_template: by_date/day={date}/account={account_key}/snapshot_type={snapshot_type}/positions.parquet
-        required_dimensions:
-          - date
-          - account_key
-          - snapshot_type
-        description: Hive-partitioned positions by date and account (venue_client_accounttype)
-      - name: reconciliation_snapshots
-        bucket_template: positions-store-{project_id}
-        path_template: reconciliation/by_date/day={date}/account={account_key}/snapshots.parquet
-        required_dimensions:
-          - date
-          - account_key
-        description: Reconciliation results comparing internal vs exchange positions
-    external_dependencies: []
-  risk-and-exposure-service:
-    upstream:
-      - service: position-balance-monitor-service
-        required: true
-        description: Reconciled positions for risk calculation
-        check:
-          bucket_template: positions-store-{project_id}-{category_lower}
-          path_template: positions/{venue}/{date}/
-      - service: market-data-processing-service
-        required: true
-        description: Market prices for mark-to-market risk
-        check:
-          bucket_template: market-data-tick-{category_lower}-{project_id}
-          path_template: processed_candles/by_date/day={date}/
-      - service: pnl-attribution-service
-        required: false
-        description: Optional - deployment flexibility for P&L-based risk attribution
-        check:
-          bucket_template: pnl-store-{project_id}-{category_lower}
-          path_template: pnl/{venue}/{date}/
-    description:
-      Calculate risk metrics and exposure limits from positions and market data. Does NOT execute orders - talks to
-      strategy-service for risk management.
-    inputs:
-      - name: reconciled_positions
-        bucket_template: positions-store-{project_id}-{category_lower}
-        path_template: positions/{venue}/{date}/positions_*.parquet
-        required: true
-        description: Reconciled positions from position-balance-monitor-service
-      - name: processed_candles
-        bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: by_date/day={date}/data_type=tbbo/instrument_type=*/venue={venue}/*.parquet
-        required: true
-        description: Market prices for mark-to-market risk calculations
-    outputs:
-      - name: risk_metrics
-        bucket_template: risk-store-{project_id}-{category_lower}
-        path_template: risk/{venue}/{date}/risk_metrics_*.parquet
-        required_dimensions:
-          - category
-          - venue
-          - date
-    external_dependencies: []
-  pnl-attribution-service:
-    upstream:
-      - position-balance-monitor-service
-      - market-data-processing-service
-      - instruments-service
-    description: Calculate P&L attribution from positions and market prices
-    inputs:
-      - name: positions
-        bucket_template: positions-store-{project_id}-{category_lower}
-        path_template: positions/{venue}/{date}/positions_*.parquet
-        required: true
-        description: Position data for P&L calculation
-      - name: mark_prices
-        bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: by_date/day={date}/data_type=tbbo/instrument_type=*/venue={venue}/*.parquet
-        required: true
-        description: Mark prices for mark-to-market P&L
-      - name: instruments
-        bucket_template: instruments-store-{project_id}
-        path_template: instruments/{category}/{venue}/{date}/instruments_*.parquet
-        required: true
-        description: Instrument metadata for P&L calculations
-    outputs:
-      - name: pnl_attribution
-        bucket_template: pnl-store-{project_id}-{category_lower}
-        path_template: pnl/{client_id}/{date}/pnl_attribution_*.parquet
-        required_dimensions:
-          - category
-          - client_id
-          - date
-    external_dependencies: []
+  # position-balance-monitor-service, pnl-attribution-service, risk-and-exposure-service
+  # removed 2026-05-21: consolidated into strategy-service (strategy_repo_consolidation_2026_05_19.md)
   features-sports-service:
     description: >-
       Pre-match ML features for sports (team form, H2H, referee, venue, weather, market odds). Post-commercialization
@@ -710,7 +525,7 @@ services:
       - service: strategy-service
         required: true
         description: Needs strategy outputs to compare batch vs live
-      - service: ml-inference-service
+      - service: ml-service
         required: false
         description: Optional — ML predictions for quality comparison
     outputs:
@@ -782,13 +597,12 @@ execution_order:
   - features-cross-instrument-service
   - features-multi-timeframe-service
   - features-commodity-service
-  - ml-training-service
-  - ml-inference-service
+  # ml-training-service + ml-inference-service removed 2026-05-21: consolidated into ml-service (ml_repo_consolidation_2026_05_19.md)
+  - ml-service
   - strategy-service
   - execution-service
-  - position-balance-monitor-service
-  - pnl-attribution-service
-  - risk-and-exposure-service
+  # position-balance-monitor-service, pnl-attribution-service, risk-and-exposure-service
+  # removed 2026-05-21: consolidated into strategy-service (strategy_repo_consolidation_2026_05_19.md)
   - batch-live-reconciliation-service
 category_domain_mapping:
   CEFI: cefi

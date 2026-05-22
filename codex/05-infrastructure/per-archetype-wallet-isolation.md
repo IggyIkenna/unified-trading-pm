@@ -102,7 +102,9 @@ For May-23 cutover, recommended caps per `WalletKind`:
 
 **Out-of-scope for May-23 cutover.** Captured as Phase 4.A sub-residual.
 
-Future shape: a meta-strategy emits `REBALANCE` instructions that move capital between archetype wallets via
+> **[DELTA 2026-05-22]** **Current state:** For May-23, manual rebalancing only via deployment-UI operator action. Copper + CEFFU target June-1; Fireblocks further out. Automated meta-strategy rebalancing is post-cutover. **Planned delta:** Meta-strategy design tracked under `plans/epics/defi_master.md`. **Target architecture:** Meta-strategy emits `REBALANCE` instructions → custodian-internal transfer (Copper / Fireblocks vault-to-vault) — no on-chain hop, no gas.
+
+Post-cutover target: a meta-strategy emits `REBALANCE` instructions that move capital between archetype wallets via
 custodian-internal transfer (Copper / Fireblocks vault-to-vault) — no on-chain hop, no gas. The meta-strategy reconciles
 `archetype_id_from → archetype_id_to` allocation against the fund's strategy AUM targets.
 

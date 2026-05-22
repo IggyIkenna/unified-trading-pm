@@ -21,12 +21,12 @@ topology_requirements:
 
 ## What it does
 
-ML-guided market making extends the inventory-skew framework by adding a short-term directional prediction layer.
-A gradient boosting model trained on order book features, trade flow imbalance, and recent momentum predicts the
-1-5 minute price direction with a calibrated probability. This prediction is used to tilt the bid/ask quotes: if
-the model predicts upward movement, the ask is narrowed (more competitive sell) and the bid is widened (less
-competitive buy) — monetising the informational edge without taking outright directional positions. The ML lean
-is combined with inventory skew so that both signal sources contribute to quote placement.
+ML-guided market making extends the inventory-skew framework by adding a short-term directional prediction layer. A
+gradient boosting model trained on order book features, trade flow imbalance, and recent momentum predicts the 1-5
+minute price direction with a calibrated probability. This prediction is used to tilt the bid/ask quotes: if the model
+predicts upward movement, the ask is narrowed (more competitive sell) and the bid is widened (less competitive buy) —
+monetising the informational edge without taking outright directional positions. The ML lean is combined with inventory
+skew so that both signal sources contribute to quote placement.
 
 ## Token / position flow
 
@@ -72,11 +72,11 @@ is combined with inventory skew so that both signal sources contribute to quote 
 
 ## Risk management
 
-- ML model degradation kill switch: if live brier score > max_live_brier_score over last 1h, disable ML lean
-  and fall back to pure inventory-skew quoting
+- ML model degradation kill switch: if live brier score > max_live_brier_score over last 1h, disable ML lean and fall
+  back to pure inventory-skew quoting
 - Feature NaN guard: any NaN in model input → skip ML lean this cycle; log alert
-- Max lean magnitude: ml_lean_factor × max_direction_signal capped at max_lean_pct of base spread
-  (prevents ML from moving quote to adverse side of book)
+- Max lean magnitude: ml_lean_factor × max_direction_signal capped at max_lean_pct of base spread (prevents ML from
+  moving quote to adverse side of book)
 - Inventory hard cap: same as inventory-skew archetype (market-order exit if breached)
 - Daily P&L stop: daily_stop_loss_usd
 
@@ -106,8 +106,8 @@ is combined with inventory skew so that both signal sources contribute to quote 
 
 ## When to use / market regime
 
-- **Use when**: ML model shows demonstrated predictive edge on the target instrument; order book features are stable
-  and informative; instrument has sufficient trade flow to feed the model with quality signal
+- **Use when**: ML model shows demonstrated predictive edge on the target instrument; order book features are stable and
+  informative; instrument has sufficient trade flow to feed the model with quality signal
 - **Best regime**: high-activity markets with consistent order flow patterns; microstructure predictable enough for
   short-horizon models (major CEX spot markets, liquid perp markets)
 - **Avoid**: very thin order books where features are noisy; new instruments with insufficient training data;
@@ -126,7 +126,8 @@ MARKET_MAKING_ML_LEAN@hyperliquid-sol-usdt-perp-mm-prod
 
 - Symmetric spread with no ML or skew → [`MARKET_MAKING_PASSIVE_SPREAD`](market-making-passive-spread.md)
 - Inventory-only skew without ML prediction layer → [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
-- Queue-position and VPIN-aware posting decision → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
+- Queue-position and VPIN-aware posting decision →
+  [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
 - Outright directional position from a strong ML signal → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
 - DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 

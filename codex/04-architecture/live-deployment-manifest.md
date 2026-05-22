@@ -9,8 +9,8 @@ owner: deployment-platform
 # Live Deployment Manifest — SSOT
 
 > Created: 2026-05-15 Scope: May-23 promote workflow (Phase U1). Post-cutover Phase 2 enrichments documented in **§
-> Future extension**. Plan: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` § Phase U1 Post-cutover plan:
-> `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`
+> Post-cutover Phase 2 extension** below. Plan: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` § Phase U1.
+> Post-cutover plan: `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`
 
 ## What is a candidate manifest?
 
@@ -92,7 +92,13 @@ The collection is auto-created by Firestore on first write. No migration script 
 
 ---
 
-## Future extension — post-cutover Phase 2
+## Post-cutover Phase 2 extension
+
+> **[DELTA 2026-05-22]** **Current state:** The following fields exist on `MinimalCandidateManifest` but are always
+> `None` at the May-23 cutover. The schema is intentionally minimal — post-cutover enrichment adds fields without a
+> schema break. **Planned delta:** `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` owns Phase 2
+> enrichment. **Target architecture:** Promoted manifests carry pinned SHAs, model refs, features manifest version, and
+> chain RPC pins for full reproducibility.
 
 The following fields are present on `MinimalCandidateManifest` but always `None` at May-23 cutover. Post-cutover Phase 2
 populates them without a UAC schema break:

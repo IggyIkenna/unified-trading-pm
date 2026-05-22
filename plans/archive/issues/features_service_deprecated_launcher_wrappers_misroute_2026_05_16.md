@@ -13,7 +13,10 @@ locked_since: 2026-05-16
 severity: P2 — caused 1 wasted VM launch; doesn't block May-23 if consolidated launcher used directly
 ---
 
-> **🟢 RESOLUTION VERIFIED 2026-05-20** — onchain wrapper redirect shipped `deployment-service@d65da47` (verified via git log; pairs with consolidation commit `deployment-service@2942815`). Resolution body explicitly notes the remaining 7 family wrappers "have no immediate misroute" because per-family modules are standalone — the only family that broke (onchain) was the only one with the consolidation dependency, and it is fixed. Archiving.
+> **🟢 RESOLUTION VERIFIED 2026-05-20** — onchain wrapper redirect shipped `deployment-service@d65da47` (verified via
+> git log; pairs with consolidation commit `deployment-service@2942815`). Resolution body explicitly notes the remaining
+> 7 family wrappers "have no immediate misroute" because per-family modules are standalone — the only family that broke
+> (onchain) was the only one with the consolidation dependency, and it is fixed. Archiving.
 
 ## What I found
 

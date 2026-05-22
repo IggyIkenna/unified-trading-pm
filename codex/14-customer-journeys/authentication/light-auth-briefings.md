@@ -95,6 +95,11 @@ The validator today treats any valid code as unlocking _every_ Deep Dive page (s
 is to scope the session to the pillar that the code belongs to. Tracked as a Stage 3 follow-up. The env-var structure
 above is already shaped for this.
 
+> **[DELTA 2026-05-22]** **Current state:** Any valid code (global or per-path) unlocks all Deep Dive pages at the
+> session level — no per-pillar scoping. **Planned delta:** Stage 3 follow-up scopes each session to the pillar whose
+> code was used; per-path codes already declared (env-var structure ready). **Target:** Stage 3 refactor phase
+> (`codex/14-customer-journeys/roadmap/next-waves.md`).
+
 ## Dev-default fallback
 
 For local UI development the plan-locked pattern is: leave every env var empty in `.env.local`. The gate reports

@@ -13,7 +13,8 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_POOL`
 
-> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** atomic deposit / withdraw through pool contract. **Code module:**
+> **Family:** [Market Making](../families/market-making.md) (`MARKET_MAKING`). **Settlement model:** atomic deposit /
+> withdraw through pool contract. **Code module:**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/pool.py`.
 
 ## What it does
@@ -89,7 +90,8 @@ DEFI_LP_POOL@balancer-v2-wsteth-eth-arbitrum-prod
 
 - Concentrated-range (Uniswap V3-style) LP → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 - ERC-4626 yield-vault deposit → [`DEFI_LP_VAULT`](defi-lp-vault.md)
-- Lending-supply APY rotation (Aave/Compound supply side) → [`YIELD_ROTATION_LENDING`](yield-rotation-lending.md) (Carry & Yield)
+- Lending-supply APY rotation (Aave/Compound supply side) → [`YIELD_ROTATION_LENDING`](yield-rotation-lending.md) (Carry
+  & Yield)
 - Stablecoin price-dispersion arb across pools → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
