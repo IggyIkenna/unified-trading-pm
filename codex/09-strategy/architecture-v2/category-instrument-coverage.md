@@ -1367,6 +1367,9 @@ Specific missing pieces:
 - execution-service combo auto-creation when venue doesn't list the calendar-spread ticker
 - `max_roll_slippage_bps` guardrail + `FUTURES_ROLL_FAILED` circuit breaker
 
+> **[DELTA 2026-05-22]** **Current state:** Representative-future roll pipeline not yet implemented; dated-future strategies run fixed-contract slot labels only with manual expiry rotation. **Planned delta:** `plans/epics/strategy_master.md` Phase 11 — RepresentativeFutureRegistry (UAC), representative-future-service scaffold, REPRESENTATIVE_FUTURE_CHANGED event, FUTURES_ROLL instruction, execution-service combo auto-creation. **Target architecture:** Fully automated roll with synthetic-price guardrails + FUTURES_ROLL_FAILED circuit breaker.
+
+
 Until this ships, dated-future strategies can run on **fixed-contract** slot labels only (`-fixed-{contract}-`), and ops
 manually rotate to the next expiry. Workable for a handful of strategies; does not scale.
 

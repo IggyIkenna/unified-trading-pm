@@ -1372,7 +1372,7 @@ batch parquets.
 > explicit stamping helpers in `unified_trading_library.availability_stamping`. The `assert_available_at_present` check
 > is enforced at `record_captured()` call time (QG STEP L7 ratchet). Silent-wrong-rule bugs are possible if the wrong
 > stamping helper is used. **Planned delta:** `available_at_schema_lift_post_cutover_2026_05_19.md` (P1, gated
-> post-May-23 cutover) will introduce UAC `AvailabilityRule` Protocol — each row-class carries its own
+> post-cutover) will introduce UAC `AvailabilityRule` Protocol — each row-class carries its own
 > `AvailabilityRule` implementation. Stamping becomes automatic via pydantic validator; silent-wrong-rule becomes
 > type-level unrepresentable. `unified_trading_library/availability_stamping.py` collapses from ~330 lines to ~50 lines
 > (per-source rule implementations only). **Target architecture:** `AvailabilityRule` Protocol as the canonical SSOT for

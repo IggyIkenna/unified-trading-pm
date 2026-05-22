@@ -54,7 +54,7 @@ Each item below has:
 
 ---
 
-## 1. G1 — post-cutover (originally "4–6 weeks from 2026-04-19"; now post-May-23)
+## 1. G1 — post-cutover (originally "4–6 weeks from 2026-04-19")
 
 > **[DELTA 2026-05-22]** **Current state:** The G1 items below were written 2026-04-19 with a "4–6 week" target (implied
 > ~2026-05-30). As of 2026-05-22 the May-23 DeFi live gate takes precedence; none of the G1 items have shipped yet.

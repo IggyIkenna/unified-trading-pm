@@ -19,7 +19,7 @@ last_reviewed: 2026-05-17
 
 > **[DELTA 2026-05-22]** **Current state:** Dual-cloud artifact parity is NOT YET implemented. VM tarball deployment is the live path (see `codex/05-infrastructure/vm-tarball-deployment.md`). No cross-cloud image mirror or SHA-pinned artifact registry exists yet. **Planned delta:** Dual-cloud build lineage tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Single git SHA produces parity-verified Docker images in both GCP Artifact Registry and AWS ECR + code tarballs on both S3 and GCS.
 
-> **Status:** STUB (post-cutover) — created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as the work progresses post-May-23 cutover.
+> **Status:** STUB (post-cutover) — created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as the work progresses post-cutover.
 
 ## Purpose
 
