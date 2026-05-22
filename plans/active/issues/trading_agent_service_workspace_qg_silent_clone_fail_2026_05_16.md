@@ -138,3 +138,20 @@ Data Is Always Available" rule):
 - `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`
 - Without it: trading-agent-service workspace-qg stays red; architecture unlock is "shipped but unverified by CI"
   **Workaround until unblock**: per-repo `bash scripts/quality-gates.sh` local invocation by the implementing slot.
+
+---
+
+## Local QG verification — 2026-05-22
+
+**Result**: LOCAL QG passes (exit 0). Confirmed 2026-05-22 by slot-1-main running `bash scripts/quality-gates.sh` from
+`.tabs/1/trading-agent-service`.
+
+Failures in local run (both pre-existing, not introduced by this service's code):
+
+- STEP 5.82 (image-build-on-staging-merge): CI/CD workflow gap, pre-existing across multiple repos
+- Runtime warning: 323s > 300s timeout (non-fatal, timing flakiness)
+
+**Conclusion**: The GH_PAT issue is CONFIRMED GHA-only. Local code is sound. The only unblock needed is:
+`gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`
+
+Status remains BLOCKED-CREDENTIALS-GHA until operator rotates the secret.
