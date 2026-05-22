@@ -1,3 +1,20 @@
+## [slot-2] 2026-05-22 — Codex honest-absence doc DONE (Wave 3.S per-source rules section)
+
+[2026-05-22 UTC] slot-2 DONE — **Codex `honest-absence-downstream-handling.md` updated with Wave 3.S per-source rules.**
+
+- New section: "Per-source sports coverage rules (Wave 3.S)" — documents
+  `sports_per_source_rules.is_expected_for_source()`, per-source table (understat/footystats/api_football/any-source),
+  bundled cluster validation note, expansion recipe
+- Fixed `EXPECTED_OUTSIDE_TRANSFER_WINDOW` table row: was DeFi-only; now covers sports player-transfer windows (Jan+Jul)
+- Updated `last_reviewed: 2026-05-22`
+- `[DOCS] P0` checkbox flipped: writegate plan line 2656
+
+SHA: PM@662c5ebc4
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3.S / Docs)
+
+---
+
 ## [slot-2] 2026-05-22 — Wave 3.S UAC batch DONE (sports_per_source_rules + 5 enum flips)
 
 [2026-05-22 UTC] slot-2 DONE — **UAC Wave 3.S sports per-source rules shipped.**

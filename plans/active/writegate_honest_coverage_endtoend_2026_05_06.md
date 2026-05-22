@@ -2653,8 +2653,10 @@ been empty_confirmed" finding adds:
 - [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
       UAC `PREDICTION_GROUPS` per `predictions_master.md`). Yields `expected_unattempted` for active markets,
       `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
-- [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
-      typed-reason-taxonomy expansion process.
+- [x] ✅ [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
+      typed-reason-taxonomy expansion process. — PM@662c5ebc4 (Wave 3.S per-source section: understat/footystats/
+      api_football table + is_expected_for_source() usage + bundled cluster validation note + expansion recipe;
+      EXPECTED_OUTSIDE_TRANSFER_WINDOW description corrected to cover sports player-transfer windows)
 
 **Wave 3.M — Zero-activity-bars-during-market-hours (operator msg 6 + msg 8 — broadened scope).**
 
