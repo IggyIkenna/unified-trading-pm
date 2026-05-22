@@ -101,16 +101,18 @@ Gate: Phase 2 complete.
 
 Gate: Phase 1-2 complete (AWS buckets must be readable before running backfills).
 
-- [ ] [SCRIPT] P0. **AWS-BF-1** — `launch-mtds-backfill-vm-aws.sh` — AWS EC2 equivalent of `launch-mtds-backfill-vm.sh`.
-      Use `lib/aws_ec2_launch_lib.sh` pattern from `launch-epic-vm-aws.sh`.
-- [ ] [SCRIPT] P0. **AWS-BF-2** — `launch-mdps-backfill-vm-aws.sh` — AWS equivalent.
-- [ ] [SCRIPT] P0. **AWS-BF-3** — `launch-defi-backfill-vm-aws.sh` — AWS equivalent.
-- [ ] [SCRIPT] P0. **AWS-BF-4** — `launch-features-backfill-vm-aws.sh` — AWS equivalent.
-- [ ] [SCRIPT] P0. **AWS-BF-5** — `launch-features-onchain-backfill-vm-aws.sh` — AWS equivalent.
-- [ ] [SCRIPT] P0. **AWS-BF-6** — `launch-instruments-backfill-vm-aws.sh` — AWS equivalent.
-- [ ] [SCRIPT] P0. **AWS-BF-7** — `launch-cefi-sharded-backfill-aws.sh` — AWS equivalent.
-- [ ] [VERIFY] P0. **AWS-BF-V** — `bash scripts/quality-gates.sh` exit 0 for deployment-service (QG 5.69 + shell
-      scripts).
+- [x] [SCRIPT] P0. **AWS-BF-1** ✅ — `launch-mtds-backfill-vm-aws.sh` — AWS EC2 equivalent of
+      `launch-mtds-backfill-vm.sh`. deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-2** ✅ — `launch-mdps-backfill-vm-aws.sh` — AWS equivalent. deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-3** ✅ — `launch-defi-backfill-vm-aws.sh` — AWS equivalent. deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-4** ✅ — `launch-features-backfill-vm-aws.sh` — AWS equivalent. deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-5** ✅ — `launch-features-onchain-backfill-vm-aws.sh` — AWS equivalent.
+      deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-6** ✅ — `launch-instruments-backfill-vm-aws.sh` — AWS equivalent.
+      deployment-service@ea920bb
+- [x] [SCRIPT] P0. **AWS-BF-7** ✅ — `launch-cefi-sharded-backfill-aws.sh` — AWS equivalent. deployment-service@ea920bb
+- [x] [VERIFY] P0. **AWS-BF-V** ✅ — `bash scripts/quality-gates.sh` exit 0 confirmed (bflb6fxt2 exit 0, bd1doqv1h
+      watchdog test exit 0). deployment-service@ea920bb
 
 ## Phase 5 — AWS smoke test (1 day × all combinatorics)
 
