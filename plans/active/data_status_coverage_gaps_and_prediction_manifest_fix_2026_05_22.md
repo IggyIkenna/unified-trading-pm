@@ -68,11 +68,23 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 > Backfill `BITFINEX-SPOT BITGET-FUTURES BITGET-SPOT` for 2025-09-01→2026-05-22 launched in-session (PID 17803). These
 > items verify completion and clean up phantom rows.
 
-- [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: poll `instruments-service/logs/local-recent-fill-*/summary.log`
-      until all 3 venues report `DONE rc=0`. Expected: BITFINEX-SPOT 2334/2334, BITGET-FUTURES 561/561 (537+6phantom+18recent),
-      BITGET-SPOT 561/561 (538+5phantom+18recent). **IN PROGRESS** — tab-5 fill (PID 98415) died; re-launched as PID 498870
-      (slot-2 2026-05-22, `ik_slot2_cefi_bitget_recent`, 2026-05-04→2026-05-22). Consolidator will add 11 phantom dates
-      back as captured from per-VM shards (confirmed no null rows in any shard).
+- [x] ✅ [SCRIPT] P0. **Add BITGET-FUTURES, BITGET-SPOT, BITFINEX-SPOT to `_CEFI_VENUES`** + enable `add_venues_arg=True`
+      in IS ServiceBootstrap so `--venues` CLI arg works for targeted fills. Root cause: these 3 Tardis venues had factory
+      entries but were missing from the orchestrator's active venue list. — instruments-service@5568f64.
+
+- [x] ✅ [SCRIPT] P0. **Targeted fill for BITGET-FUTURES, BITGET-SPOT, BITFINEX-SPOT 2026-05-05→2026-05-22**:
+      `VM_NAME=ik_slot2_bitget_bitfinex_spot_recent MANIFEST_PER_VM_SHARDS=true .venv/bin/instruments-service
+      --operation instruments --mode batch --asset-group CEFI --venues BITGET-SPOT BITGET-FUTURES BITFINEX-SPOT
+      --start-date 2026-05-05 --end-date 2026-05-22` — PID 583406 (slot-2 2026-05-22 13:25 UTC), completed in <60s.
+      51 shard entries (17 dates × 3 venues) written to `ik_slot2_bitget_bitfinex_spot_recent.parquet`. Pending consolidation.
+
+- [ ] [SCRIPT] P0. **Verify CeFi backfill complete**: re-query IS cefi manifest after consolidation. Expected:
+      BITFINEX-SPOT 2334/2334, BITGET-FUTURES ~556/561, BITGET-SPOT ~556/561; zero `capture_status=None`. **IN PROGRESS** —
+      targeted fill shard pending consolidation (Cloud Run consolidator, ~1 min cadence). Original PID 498870 batch
+      (`ik_slot2_cefi_bitget_recent`) ran 19 dates for the 12 standard venues (no BITGET — _CEFI_VENUES didn't include them
+      yet). Note: target counts 561/561 assume phantom dates re-fetched at pre-2026-05-05 dates; actual counts may be
+      ~556 if phantom dates were at 2026-04-29→2026-05-04 (not covered by this fill). If short, run second fill
+      2026-04-29→2026-05-04 with `--venues BITGET-SPOT BITGET-FUTURES`.
 
 - [x] ✅ [SCRIPT] P0. **Purge BITGET phantom rows**: query IS cefi manifest for rows where
       `venue IN (BITGET-FUTURES, BITGET-SPOT) AND capture_status IS NULL`. Verify count ≤ 11 (6+5 known). Delete via
@@ -156,9 +168,12 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       KALSHI BLOCKED-CREDENTIALS (400) as expected. POLYMARKET CLOB scan in progress (at page 600 = 601K markets as of
       12:57 UTC). Per-VM shard tag: `ik_slot2_pred_rerun`.
 
-- [ ] [SCRIPT] P0. **Verify canonical manifest shape**: query IS prediction manifest post-fill. **IN PROGRESS** —
-      backfill PID 482452 running, POLYMARKET CLOB scan underway. Will assert:
-      data_type=prediction_canonical_question_group, non-blank canonical_question_group + underlying, zero null rows.
+- [x] ✅ [SCRIPT] P0. **Verify canonical manifest shape**: IS prediction per-VM shard `ik_slot2_pred_rerun.parquet`
+      verified (slot-2 2026-05-22 13:26 UTC). 493 rows: `data_type=prediction_canonical_question_group`, `underlying` holds
+      canonical group identity (BTC_UP_DOWN_HOURLY / CPI_PRINT_PER_MONTH / OTHER — note: `canonical_question_group` is NOT
+      a `_ROW_KEY_COLUMNS` field in UTL manifest_writer.py; the group identity is correctly stored in `underlying`),
+      `capture_status=captured` for all 493, zero null rows. Date range: 2025-03-14→2026-05-22. Venue: POLYMARKET.
+      Pending consolidation into canonical index (Cloud Run consolidator running).
 
 #### 3.5 — Data-status drilldown prediction display fix
 
