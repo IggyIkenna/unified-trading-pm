@@ -1510,3 +1510,37 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
   all `[DEFERRED-POST-CUTOVER]` per operator decision (gate: post-2026-05-23).
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
+
+---
+
+## [slot-2] 2026-05-22 — Phase 8 coverage fleet sweep complete
+
+[2026-05-22 UTC] slot-2 continuation — `honest_coverage_formula_consolidation_2026_05_19.md` Phase 8 done.
+
+**Delivered:**
+
+1. **Phase 8 P0 — Re-pull manifest counts across 10 GCS buckets** (IS × 5 AGs + MTDS × 5 AGs). Blobs dated
+   2026-05-22 03:44–08:08 UTC (consolidator snapshots). Formula `compute_honest_coverage()` applied to every
+   (asset_group, data_type) cell. Plan flipped `[x] ✅`. PM@9d864c5a.
+
+2. **Coverage results highlight**:
+   - IS buckets: cefi/defi/tradfi = 100% (pure reference catalog rows, no time-series). Sports 14 data_types < 100%
+     (attempted_failed from historical fixture data). Prediction = 100% (reference only).
+   - MTDS defi: 96.96%–100% across 24 data_types. DeFi eu_pending_fetch residuals (252 max) = Tier-3 sentinel
+     propagation still pending.
+   - MTDS cefi: **0%–64%** (book_snapshot_5/trades/perp_funding) — EXPECTED, `mtds-backfill-cefi-2026-05-22b` VM
+     still running with chain-fix code. Gate: `MTDS-3.2.A-V` verification item in
+     `mtds_backfill_phase3_2026_05_22.md`.
+   - Formula working correctly end-to-end; no inflation artifacts; all cells report real numbers.
+
+3. **`honest_coverage_formula_consolidation_2026_05_19.md` now FULLY COMPLETE** — 0 open items across all 8
+   phases. Status still `in-flight` (locked); archival requires `[unlock-plan]` per locked_by rule.
+
+**Deferred / still open (carried from prior entry):**
+
+- `[SCRIPT] P1 cefi follow-up` — gated on IS CeFi catalog `all.parquet` (still not published as of 2026-05-22
+  09:35 UTC). Gate: `instruments_backfill_phase3_2026_05_22.md` Phase 1 full-history VMs complete.
+- `MTDS-3.2.A-V` (CeFi verify) + `MTDS-3.2.D-V` (Sports verify) + `MTDS-3.2.E-V` (Prediction verify) — all
+  waiting on respective VMs to complete and write per_vm shards to PRD buckets.
+
+Plan refs: `honest_coverage_formula_consolidation_2026_05_19.md`, `mtds_backfill_phase3_2026_05_22.md`
