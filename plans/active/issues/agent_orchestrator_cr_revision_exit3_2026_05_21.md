@@ -46,3 +46,11 @@ Current staging is fine (00011-mtg handles all traffic).
 Operator or slot 1 to re-trigger staging deploy:
 `bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat --cloud` and observe if 00013 starts
 cleanly.
+
+## Status update — 2026-05-22
+
+**BLOCKED-OPERATOR**: Cannot re-trigger Cloud Run deployment without GCP Console/CLI access. Operator must run:
+```bash
+bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat --cloud
+```
+Then check if the new revision starts cleanly (exit 0) or reproduces exit(3). If exit(3) recurs → file P0 bug in `plans/active/` with `parent_epic: orchestrator_master`. If resolved → archive this issue as ACKED-INTO-CODE.
