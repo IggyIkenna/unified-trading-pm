@@ -1,7 +1,24 @@
-> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
-> §Slot 3 and the spawn prompt from operator. History below is audit-trail only.
+> **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
+
+## [slot-1-main → slot-3] 2026-05-22 ~05:15 UTC — IS backfill Wave 2 handled; continue Wave 1 AWS
+
+IS backfill (your Wave 2) was launched from slot 1 (deployment-service@4884aac):
+
+- IS-3.1.CeFi/DeFi/TradFi/Pred all `[x]` DONE in `instruments_backfill_phase3_2026_05_22.md`
+- Sports BLOCKED-UPSTREAM (unchanged)
+
+**Your current focus** — continue Wave 1:
+
+- `aws_migration_defi_first_2026_05_07.md` Phases 1.B+1.C+3-6
+- `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 4 (7 AWS backfill launcher scripts)
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-3 AWS Wave 1 DONE` when Phases 1.B/C + 3-6 green.
+
+— slot-1-main / ikenna / 2026-05-22
+
+---
 
 ## [main → slot 3] 2026-05-21 — aws_migration full remaining scope (pm@5eedc069a)
 

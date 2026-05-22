@@ -1,3 +1,29 @@
+> **🟢 2026-05-22 WAVE 2 DISPATCH** — codex audit Wave 1 DONE (ff137da7d). Start Wave 2 now.
+
+## [slot-1-main → slot-6] 2026-05-22 ~05:15 UTC — Wave 2: Phase 3 codex bulk pass → MDPS backfill
+
+**Plan ref**: `plans/active/codex_plan_audit_differential_2026_05_22.md` Phase 3 +
+`plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+**Wave 1 DONE**: Group D codex audit shipped at `ff137da7d`.
+
+**Wave 2 sequence**:
+
+1. **NOW** — Start `codex_plan_audit_differential_2026_05_22.md` Phase 3 delta annotation bulk pass (not gated)
+2. **WAIT for gate** — MTDS CeFi+DeFi verify GREEN (slot 5 posts ping here when done)
+3. **After gate** — `mdps_backfill_phase3_2026_05_22.md`: Phase 1 CeFi reprocessor + Phase 2 DeFi reprocessor + Phase 3
+   TradFi reprocessor
+
+MTDS backfill VMs (CeFi/DeFi) are running now but VERIFY items (MTDS-3.2.A-V, C-V) are not yet cleared.
+
+**After MDPS backfill verifies GREEN** → run UAC QG broadening triage per the dispatch below.
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-6 Phase 3 bulk pass DONE at PM@<sha>` when codex Phase 3 done.
+
+— slot-1-main / ikenna / 2026-05-22
+
+---
+
 > **🟢 2026-05-22 ADDENDUM (Wave 3)** — after MDPS backfill verifies GREEN, run UAC QG broadening triage below.
 
 > **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
@@ -13,16 +39,18 @@
 
 **Scope** (0.5d triage, 2-4d remediation):
 
-Run `PYTEST_UNIT_DIR="tests/" bash scripts/quality-gates.sh` in unified-api-contracts.
-Collect the 318 failures. Group into categories:
+Run `PYTEST_UNIT_DIR="tests/" bash scripts/quality-gates.sh` in unified-api-contracts. Collect the 318 failures. Group
+into categories:
 
-1. **Sportsbook venues not yet scoped** (`test_venue_contract_coverage.py` failures for matchbook/manifold/etc.) — add `@pytest.mark.skip(reason="sportsbook scope: post-cutover")` to each test, or stub the schema module per plan.
-2. **DeFi key/parity gaps** (`test_venue_key_parity.py`) — compare VENUE_DATA_TYPE_CAPABILITIES vs expected_coverage. Fix entries that diverge. (This pairs well with the coverage gap work done 2026-05-22.)
+1. **Sportsbook venues not yet scoped** (`test_venue_contract_coverage.py` failures for matchbook/manifold/etc.) — add
+   `@pytest.mark.skip(reason="sportsbook scope: post-cutover")` to each test, or stub the schema module per plan.
+2. **DeFi key/parity gaps** (`test_venue_key_parity.py`) — compare VENUE_DATA_TYPE_CAPABILITIES vs expected_coverage.
+   Fix entries that diverge. (This pairs well with the coverage gap work done 2026-05-22.)
 3. **Schema Any annotations** (`test_no_bare_any_in_normalised_models`) — add specific types.
 4. **Cassette parity** (coingecko, polymarket) — update cassette YAML.
 
-After each category fix: commit `fix(uac-tests): <category>`, QG green on that category, push.
-After all categories done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"tests/"`.
+After each category fix: commit `fix(uac-tests): <category>`, QG green on that category, push. After all categories
+done: change UAC `quality-gates.sh` `PYTEST_UNIT_DIR` from targeted list to `"tests/"`.
 
 **Ack**: append `[2026-05-22 HH:MM UTC] slot-6 Wave3 DONE — UAC QG broadened at uac@<sha>` here when done.
 

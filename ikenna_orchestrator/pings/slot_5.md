@@ -1,7 +1,31 @@
-> **🟢 2026-05-21 DISPATCH — supersedes all prior entries.** Read `plans/active/plan_closeout_archive_2026_05_21.md`
-> §Slot 5 and the spawn prompt from operator. History below is audit-trail only.
+> **🟢 2026-05-22 DISPATCH — supersedes all prior entries.**
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
+
+## [slot-1-main → slot-5] 2026-05-22 ~05:10 UTC — MTDS VMs running; focus on VERIFY
+
+**Plan ref**: `plans/active/mtds_backfill_phase3_2026_05_22.md`
+
+MTDS CeFi/DeFi/Pred backfill VMs already running (e9295f9bc). All RUNNING in asia-northeast1-c. IS backfill VMs also
+running (handled from slot 1 — deployment-service@4884aac):
+
+- CeFi: cefi-1/2/3-20260522
+- DeFi: defi-20260522
+- TradFi: tradfi-20260522
+- Pred: pred-20260522
+
+**Your Wave 2 VERIFY tasks** (open in `mtds_backfill_phase3_2026_05_22.md`):
+
+- `MTDS-3.2.A-V` — `market-data-tick-cefi-prd-*` partition count growing + 0 attempted_failed
+- `MTDS-3.2.C-V` — `market-data-tick-defi-prd-*` partition count growing + 4-pillar validation
+- `MTDS-3.2.E-V` — `market-data-tick-pred-prd-*` row count > 352 base + manifest 100% v8
+
+Check every ~30min. When partitions appear, flip verify checkboxes and ping slot 6
+(`ikenna_orchestrator/pings/slot_6.md`) that MTDS CeFi+DeFi verify is GREEN — that unblocks MDPS backfill.
+
+**Ack**: append `[2026-05-22 HH:MM UTC] slot-5 MTDS-3.2.A/C/E VERIFY done at PM@<sha>` when all 3 VERIFY pass.
+
+— slot-1-main / ikenna / 2026-05-22
 
 ## [main → slot 5] 2026-05-21 — 4 plan closes + trivial sweeps (pm@5eedc069a)
 
