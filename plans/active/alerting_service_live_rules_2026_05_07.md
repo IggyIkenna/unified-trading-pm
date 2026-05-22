@@ -20,10 +20,12 @@ estimate_calibration_note: |
 parent_epic: observability_master
 ---
 
-> **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20
-> (asia-northeast1-c, staging, 48h). Tarball rebuilt at alerting-service@503ba57 (includes heartbeat fix @5717987).
-> Auto-shutdown at T+48h (~2026-05-22 11:12 UTC). **Banner owner**: Slot 7 (launched 2026-05-20). Monitor:
-> `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`
+> **🟢 VM RUNNING — alerting-quietness-20260522-083225** — Phase 7 quietness baseline VM RUNNING 2026-05-22
+> (asia-northeast1-c, staging, 48h). Fix set: alerting-service@59e020f (live→orchestrator.run_subscriber_loop so
+> heartbeat fires) + deployment-service@40fdc3d (setup-data-pipeline-vm.sh alerting-quietness-baseline task handler:
+> env-var Pydantic settings, SM secret fetch, correct tarball wiring). Auto-shutdown at T+48h (~2026-05-24 08:32 UTC).
+> **Banner owner**: Slot 8 (launched 2026-05-22). Monitor:
+> `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260522-083225/run.log`
 
 > **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds `HealthFactorMonitor` +
 > `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
@@ -493,8 +495,15 @@ reviews + tunes thresholds.
       the bytes stayed in the process buffer and never reached vm-exec's pipe reader. **FIX SHIPPED
       alerting-service@16e9dde (slot-8 2026-05-22)**: (1) dedicated `_heartbeat_task` as independent asyncio.create_task
       so heartbeat fires even if outer loop yields infrequently; (2) explicit `sys.stdout.flush()` after each heartbeat
-      write to bypass buffer; (3) interval 1800s→600s (safely under 3600s threshold). Requires tarball rebuild + VM
-      re-launch before next quietness run.
+      write to bypass buffer; (3) interval 1800s→600s (safely under 3600s threshold). **THIRD FIX (slot-8 2026-05-22)**:
+      `alerting-service@59e020f` — main.py live mode was calling its own `_run_subscriber_until_shutdown` which had NO
+      heartbeat; the orchestrator fix was never reached. Routed live mode through `orchestrator.run_subscriber_loop`.
+      `deployment-service@40fdc3d` — setup-data-pipeline-vm.sh had no `alerting-quietness-baseline` task handler (fell
+      into generic catch-all with wrong CLI flags; `alerting_service` not in SERVICE_TARBALLS/TARBALL_DIRS; Telegram
+      creds not fetched from SM). Added dedicated branch: exports QUIETNESS_BASELINE_MODE + PAGERDUTY_DISABLED +
+      RUN_DURATION_HOURS as env vars; fetches TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID from SM metadata keys; runs
+      `python -m alerting_service --mode live`. **RELAUNCHED**: VM `alerting-quietness-20260522-083225` RUNNING.
+      Auto-shutdown ~2026-05-24 08:32 UTC.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
