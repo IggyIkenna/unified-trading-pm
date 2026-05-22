@@ -122,9 +122,10 @@ internal API surface (useful if other tests mock these methods directly).
     directly; replace with `resolve_bucket_name` mock at UTL boundary.
   - `tests/unit/test_data_query_service.py` — same.
 
-- [ ] [DOC] P1. **Flip GAP-2.4.D checkbox** in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` once code half is
+- [x] ✅ [DOC] P1. **Flip GAP-2.4.D checkbox** in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` once code half is
       pushed. Execution half (Phase 0d cutover + data-status UI smoke test post-repoint) remains `[ ]` until the
-      migration window.
+      migration window. — code_freeze plan line 560 shows `[x] ✅` with code half evidence (deployment-api@28b7bd2 +
+      uac@55a65886 + utl@52940476); verified 2026-05-22.
 
 ---
 
