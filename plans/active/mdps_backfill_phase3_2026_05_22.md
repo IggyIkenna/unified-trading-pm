@@ -41,13 +41,14 @@ Gate: MTDS-3.2.A CeFi verification GREEN.
 
 Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-05-22).
 
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — slot-2: `mdps-backfill-defi-20260522-092353` RUNNING (market-data-tick-defi-_,
-      vault_share_price). Slot-7 attempted 4 VMs with --source-bucket flag for lst-rates/lending-indices/dex-pools but
-      all 4 self-terminated immediately: separate DeFi buckets use flat
-      `day=_/`prefix (not`raw_tick_data/by_date/day=_/` that MDPS expects). **FINDING**: MDPS DeFi can only process
-      vault_share_price from market-data-tick-defi-_. LST rates/lending_indices/dex_pool_state in separate buckets flow
-      directly to features-onchain, NOT through MDPS. **DEFERRED** — verify this architectural claim in features-onchain
-      plan. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi** — All 3 prior VMs failed with ImportError (`needs_candle_processing`). Fix:
+      UAC@7eb9859d + 9ae88aea (slot-5 + slot-4 duplicate fixes) exported `needs_candle_processing` from top-level
+      `__init__.py`. Canonical GCS tarball at `code/unified-api-contracts-code.tar.gz` updated to SHA=5f699edb
+      (UAC@08:50 UTC). **RUNNING**: `mdps-backfill-defi-20260522-095053` @ 35.200.75.132 (2020-01-01→2026-05-22,
+      market-data-tick-defi-_, vault_share_price). **FINDING**: MDPS DeFi can only process vault_share_price from
+      market-data-tick-defi-_. LST rates/lending_indices/dex_pool_state in separate buckets flow directly to
+      features-onchain, NOT through MDPS. **DEFERRED** — verify this architectural claim in features-onchain plan.
+      2026-05-22.
 - [ ] [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — **DEFERRED**: Determine whether features-onchain reads LST rates/DEX pool/
       lending indices directly from separate buckets OR if MDPS needs multi-bucket support. File issue in
       `plans/active/issues/`. SUCCESSOR: `mdps_defi_multi_bucket_2026_05_22.md` (to be created).
