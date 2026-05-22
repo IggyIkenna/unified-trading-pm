@@ -385,8 +385,9 @@ concurrent CAS write produces drift between writer-version-N and writer-version-
      canonical path + manifest row landed in `_index/per_vm/<vm-name>.parquet`).
   5. Run manifest consolidator one final time so all per-VM shards merge into canonical
      `_index/availability_index.parquet` before schema migration touches it.
-  6. Snapshot canonical manifest to `_index/snapshots/pre_migration_2026_05_15.parquet` (read-only audit trail;
-     recoverable in case Phase 2.1 atomic rename fails).
+  6. ✅ **DONE 2026-05-22** Snapshot canonical manifest to `_index/snapshots/pre_migration_2026_05_22.parquet`
+     (read-only audit trail; recoverable in case Phase 2.1 atomic rename fails). 10 files copied via UTL
+     `gcs_copy_object` (market-data-tick × 5 ag + instruments-store × 5 ag, all prd buckets). PM@this-commit.
   7. Lock `live-defi-rollout` branch from launching new backfill VMs until Phase 2 completes (operator-enforced; no
      technical gate).
 - [x] [AGENT] P0. **GAP-2.0.B** — Confirm Stage 0 covers BOTH GCP + AWS VM fleets. ✅ **CONFIRMED 2026-05-19 slot 2**:
