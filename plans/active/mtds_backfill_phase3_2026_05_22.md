@@ -163,18 +163,15 @@ AI-days on `vm-sports`.
 
 ## MDPS TradFi SchemaContract gaps (P1 — found 2026-05-22 slot-6)
 
-- [ ] [INVESTIGATE+FIX] P1. **MDPS-TRADFI-SCHEMA-GAP** — `mdps-backfill-tradfi-20260522-051203` logs `recovery=alert`
-      errors for every CME `futures_chain` + `combo` ohlcv_1m file and all ICE futures spread files. Error:
-      `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_1m' venue='CME'`.
-      Root cause: MDPS resolves `instrument_type` from parquet row data, not the path; Databento writes
-      `instrument_type=UNKNOWN` inside `futures_chain` / `combo` / spread parquets (stype_out is UNKNOWN for continuous
-      and multi-leg instruments). The UAC `CONTRACT_REGISTRY` in `unified_api_contracts/internal/schemas/contracts.py`
-      has no entry for `("tradfi", "UNKNOWN", "ohlcv_1m")`, `("tradfi", "futures_chain", "ohlcv_1m")`, or
-      `("tradfi", "combo", "ohlcv_1m")`. Fix: add registry entries mapping these to `TRADFI_FUTURE_OHLCV_1M` (same
-      column schema: instrument_id, symbol, ts_event, open, high, low, close, volume_nullable). Also check `ohlcv_15m`
-      and `ohlcv_24h` for same gap. **BLOCKER**: MDPS TradFi VM must be relaunched with new UAC tarball after fix to
-      process skipped instruments. Affected data: CME CL/GC/NQ/ES futures_chain ohlcv; CME spread combos
-      (CL/GOLD/SP500/NASDAQ100/WTI-BZ); ICE BRN spreads. All historical dates from 2020-01-01 → 2026-05-22 affected.
+- [x] ✅ [CODE] P1. **MDPS-TRADFI-SCHEMA-GAP** — UAC@7cdee1bc (2026-05-22 09:29 UTC) added registry entries:
+      `("tradfi", "futures_chain", "ohlcv_1m")`, `("tradfi", "combo", "ohlcv_1m")`, `("tradfi", "UNKNOWN", "ohlcv_1m")`,
+      `("tradfi", "index", "ohlcv_1m")` → `TRADFI_FUTURE_OHLCV_1M`. New tarball built 09:52 UTC (slot-6 2026-05-22).
+      Strategy: **let current VM (`mdps-backfill-tradfi-20260522-051203`) run to completion** — it marks regular
+      `future` instruments as `captured` and futures_chain/combo/UNKNOWN as `attempted_failed` (shard-level isolation,
+      recovery=alert). **After current VM completes (~16 days ETA), launch follow-up VM** with fixed tarball to retry
+      `attempted_failed` entries for futures_chain/combo/UNKNOWN. Root cause (Databento stype_out=UNKNOWN for
+      continuous/multi-leg) now handled by UAC registry. Affected data (CME CL/GC/NQ/ES, ICE BRN spreads) will be
+      captured on follow-up run. 2026-05-22.
 
 ## DeFi MTDS prd gap fix (P0 — found + fixed slot-5 2026-05-22)
 
