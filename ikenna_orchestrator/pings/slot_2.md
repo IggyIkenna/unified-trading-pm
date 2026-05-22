@@ -74,6 +74,16 @@ work. Config grid extension adds 4 archetype families to the backtest script. D8
 **Ack**: append `[2026-05-22 HH:MM UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8 at <shas>` here when
 done.
 
+[2026-05-22 UTC] slot-2 DONE — cme_polymarket Phases 2-5 + config_grid + d8:
+- cme-arb Phase 2: UAC@9c491bdd (all 9 roots wired)
+- cme-arb Phase 3: MTDS@b59b63e + UAC@2751910 (EVENT_CONTRACT bundle writer)
+- cme-arb Phase 4: instruments-service@7a3db05 + UTL@3c004c1 (per-cluster expiry + Databento adapter)
+- cme-arb Phase 5: strategy-service@2c59f2ce (ARBITRAGE_CROSS_DOMAIN_EVENT archetype)
+- d8: MTDS@83f2ac50 + PM@e55cd3637 (all 4 phases green)
+- config_grid: BLOCKED-OPERATOR-DECISION — dimension names in plan don't match actual engine params (see slot-2 ping 2026-05-22 Wave 1)
+
+Plan refs: `cme_polymarket_arb_2026_05_08.md` + `d8_perf_upgrade_2026_05_20.md` + `config_grid_archetype_extend_2026_05_20.md`
+
 ---
 
 ## [slot-2] 2026-05-22 — Codex honest-absence doc DONE (Wave 3.S per-source rules section)
