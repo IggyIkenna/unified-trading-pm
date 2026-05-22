@@ -77,7 +77,7 @@ Closes the historical SSOT-drift footgun. Required flags in the SSOT that MUST s
 - `ReadWritePaths=/home/<op>/.aws` + `.config` + `.claude` + `.cache` — spawned tmux+claude workers need these to
   refresh OAuth tokens / read AWS creds / update gcloud ADC / cache
 
-Full root-cause + fix audit: `plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md`.
+Full root-cause + fix audit: `plans/archive/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md`.
 
 ### TLS + DNS
 

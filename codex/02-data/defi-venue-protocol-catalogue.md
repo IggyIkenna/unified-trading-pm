@@ -284,5 +284,5 @@ May-23 unless explicitly added.
   scope) + manifest backfill. Do all in one logical unit per Citadel-Grade § 3 No Technical Debt.
 - **Status change** (✗ → ◐ → ✅) requires updating this row + the corresponding plan checkbox per
   [`Commit + Push + Flip Plan Checkboxes`](../../cursor-configs/CLAUDE.md#commit--push--flip-plan-checkboxes-as-you-ship-each-item-hard-rule).
-- **Removing a protocol** (decision: post-May-23 deferral or genuinely out of scope) = same logical unit removes this
+- **Removing a protocol** (decision: post-cutover deferral or genuinely out of scope) = same logical unit removes this
   row + UAC entry + downstream consumers per Citadel-Grade § 6.

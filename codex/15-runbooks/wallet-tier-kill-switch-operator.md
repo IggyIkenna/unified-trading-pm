@@ -9,7 +9,7 @@ execution:
   owner: on-call operator (Ikenna / Harsh by rotation)
   cadence: on-demand (incident response) + quarterly DR drill
   verifier: slot-1 orchestrator reviews audit log within 24h of any arm event
-  last_executed: never (first arm expected post May-23 cutover)
+  last_executed: never (first arm expected post-cutover 2026-05)
 ---
 
 # Wallet-Tier Kill-Switch — Operator Runbook

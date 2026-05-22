@@ -48,6 +48,14 @@ execution-service fetches credentials from SM (single SSOT — codex audit EX-23
     `execution-service/.../cli/handlers/live_execution_handler.py` + extended by `interface-credential-convention.md`
     § "Custody" (`private_key_secret_ref` / `kms_key_uri` for the cloud_kms cutover path per EX-10/EX-23 reconciliation).
     Examples below are illustrative — refer to the live_execution_handler.py source for the actual fetch list.
+
+    CUSTODY STATE (2026-05-22):
+    May-23 cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK; CloudKmsCustodyProvider SHIPPED at
+    execution-service@d45d24b4; 10 HSM CMKs provisioned 2026-05-12 in asia-northeast1, 90-day auto-rotation).
+    June-1+: per-wallet `signing_surface` field on WalletProvisioningConfig flips to `COPPER_MPC` / `CEFFU`
+    (POD-provided credentials). `FIREBLOCKS_MPC` is in the UAC enum but is OUT OF SCOPE for May-23 + June-1.
+    Full provider spec: `codex/04-architecture/custody-providers.md`.
+
     wallet_private_key  → defi-wallet-private-key  (or `kms_key_uri` for cloud_kms_encrypted cutover default)
     alchemy_api_key     → alchemy-api-key
     ↓
@@ -372,7 +380,9 @@ $0.02, Base/Optimism $0.01). Pass via `estimate_l1_data_cost_usd(chain)`.
 ### Backtest replay status
 
 Phase 9 item 3 (backtest replay with real cost gates) is `BLOCKED-DATA` until the ≥1-year lending-indices window
-backfill lands (target 2026-05-19 → 2026-05-23).
+backfill lands. Original target window: 2026-05-19 → 2026-05-23 (May-23 cutover). Status as of 2026-05-22: backfill
+still in-progress per `code_freeze_migrate_backfill_sequencing_2026_05_10.md` — lending-indices data_types in MTDS
+depend on `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3. Update this status when backfill completes.
 
 ## Key Files
 

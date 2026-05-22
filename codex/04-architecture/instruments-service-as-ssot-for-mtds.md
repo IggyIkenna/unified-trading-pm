@@ -111,9 +111,26 @@ absence is by-design, not a fetch error. See `honest-absence-downstream-handling
 - **MTDS handler**: `market_tick_data_service/cli/handlers/solana_defi_handler.py` — `_backfill_drift_s3_date()` derives
   S3 URL from IS catalogue, checks `_DRIFT_S3_ARCHIVE_END`
 
+## Current state + pipeline migration context
+
+> **[DELTA 2026-05-22]** **Current state:** IS→MTDS contract is codified and QG-enforced (STEP 5.70). The contract
+> itself (InstrumentRecord as SSOT, no hardcoded URLs/universe, manifest emission per shard) is stable. However, the
+> writer fleet is mid-migration from pre-v8 Docker images to v8 binaries; 0% of 7.4M prod manifest rows were at
+> `schema_version=8` as of 2026-05-20 despite the constant bump. The MTDS handler population is currently backed by IS
+> catalogue reads, but bucket naming is asymmetric between GCP and AWS (GCP canonical; AWS has stale `unified-trading-`
+> prefix + missing env-tier infix). **Planned delta:** `plans/epics/mtds_mdps_master.md` is the operator-handoff entry
+> point for the full migration sequencing: (Phase -2) strategy/ml/features consolidation → (Phase -1) workspace-wide QG
+> green → (Phases 0-10) data-pipeline migration including bucket-name symmetry cutover, VM fleet drain, GCS migration,
+> Docker rebuild, manifest v8 backfill + label-flip → (Phases 11-14) backfill-to-100%, live-data adapter completion,
+> batch-live symmetry verification, strategy+execution deployment topology cleanup. **Target architecture:** Every MTDS
+> handler derives all venue URLs + universe from IS catalogue at runtime (this contract doc). All manifest rows at
+> schema_version=8 with typed EmptyConfirmedReason. Bucket names symmetric GCP↔AWS (differ only by project-id suffix).
+> IS catalogue is the gate for MTDS handler registration.
+
 ## Related docs
 
 - `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — full `error_reason` matrix including
   `EXPECTED_PAST_SOURCE_COVERAGE_END`
 - `codex/02-data/availability-manifest-and-data-status.md` — manifest schema + `capture_status` state machine
-- `plans/active/is_mtds_contract_audit_2026_05_20.md` — Phase 1-8 remediation plan
+- `plans/active/is_mtds_contract_audit_2026_05_20.md` — Phase 1-8 remediation plan (original contract codification)
+- `plans/epics/mtds_mdps_master.md` — operator-handoff entry point; Phase -2 to Phase 14 pipeline migration sequencing

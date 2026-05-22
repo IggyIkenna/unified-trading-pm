@@ -45,19 +45,19 @@ Both tracks converge at ──────────────────�
 
 ## Phase Map
 
-| Phase    | Description                                                             | Status      |
-| -------- | ----------------------------------------------------------------------- | ----------- |
-| Phase 1  | VM launcher scripts + `colocated_engine.py` wiring                      | ✅ Shipped  |
-| Phase 2  | CLI track (`run-paper.sh` / `run-live.sh` / `preflight-cutover.sh`)     | ✅ Shipped  |
-| Phase 3  | Phase 3 backtest + candidate selection                                  | ✅ Shipped  |
-| Phase 4  | Custody (CLOUD_KMS_ENCRYPTED), Copper MPC scaffold, alerting            | ✅ Shipped  |
-| Phase U1 | `MinimalCandidateManifest` (Firestore) + `CandidateManifestStore` (UTL) | ✅ Shipped  |
-| Phase U2 | `GET /strategy/{id}/runs?mode=batch\|paper\|live` (deployment-api)      | ✅ Shipped  |
-| Phase U3 | `POST /promote/{strategy_id}/{manifest_id}` (deployment-api)            | ✅ Shipped  |
-| Phase U4 | UI promote workflow wired to real backend                               | ✅ Shipped  |
-| Phase U5 | DART 3-way visualization (DartThreeWayView)                             | ✅ Shipped  |
-| Phase U6 | ManualTradeGateDialog + execution-service manual-pending queue          | ✅ Shipped  |
-| Phase 7  | Codex SSOTs (this doc + cli-promote-paths.md + others)                  | ✅ Shipping |
+| Phase    | Description                                                             | Status     |
+| -------- | ----------------------------------------------------------------------- | ---------- |
+| Phase 1  | VM launcher scripts + `colocated_engine.py` wiring                      | ✅ Shipped |
+| Phase 2  | CLI track (`run-paper.sh` / `run-live.sh` / `preflight-cutover.sh`)     | ✅ Shipped |
+| Phase 3  | Phase 3 backtest + candidate selection                                  | ✅ Shipped |
+| Phase 4  | Custody (CLOUD_KMS_ENCRYPTED), Copper MPC scaffold, alerting            | ✅ Shipped |
+| Phase U1 | `MinimalCandidateManifest` (Firestore) + `CandidateManifestStore` (UTL) | ✅ Shipped |
+| Phase U2 | `GET /strategy/{id}/runs?mode=batch\|paper\|live` (deployment-api)      | ✅ Shipped |
+| Phase U3 | `POST /promote/{strategy_id}/{manifest_id}` (deployment-api)            | ✅ Shipped |
+| Phase U4 | UI promote workflow wired to real backend                               | ✅ Shipped |
+| Phase U5 | DART 3-way visualization (DartThreeWayView)                             | ✅ Shipped |
+| Phase U6 | ManualTradeGateDialog + execution-service manual-pending queue          | ✅ Shipped |
+| Phase 7  | Codex SSOTs (this doc + cli-promote-paths.md + others)                  | ✅ Shipped |
 
 ---
 

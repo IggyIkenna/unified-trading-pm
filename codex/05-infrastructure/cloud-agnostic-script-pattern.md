@@ -252,8 +252,8 @@ Phase 5-6):
    transfer + Phase 6 ECS Fargate deploy gate the cutover.
 2. **`cefi-instruments`** — second. DeFi archetypes hedge across 6 CeFi perp venues; CeFi instruments reference data is
    on the May-23 critical path even though CeFi tick data stays GCP-resident.
-3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-May-23). Opportunistic credit-utilisation.
-   No deadline pressure.
+3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-cutover; see `infrastructure_master.md`).
+   Opportunistic credit-utilisation. No deadline pressure.
 
 Per-asset_group migration checklist (apply for each asset_group):
 

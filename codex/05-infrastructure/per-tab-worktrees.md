@@ -7,7 +7,7 @@ last_reviewed: 2026-05-17
 owner: workspace-platform
 owner: ikenna
 related_plans:
-  - plans/active/per_agent_worktrees_2026_05_10.md
+  - plans/archive/per_agent_worktrees_2026_05_10.md
 related_codex:
   - codex/05-infrastructure/plan-aware-merge-resolution.md
   - ../../cursor-configs/CLAUDE.md

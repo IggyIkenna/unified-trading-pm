@@ -2547,6 +2547,19 @@ them. Verify by counting: if `find tests/unit/ -name 'test_*.py' | wc -l` return
 `RUN_INTEGRATION=false` guards them (base-service.sh skips integration folder by name when `RUN_INTEGRATION=false`;
 spot-check that the integration-test exclusion logic still holds).
 
+> **[DELTA 2026-05-22 — features-service cefi/ subdir QG coverage]** **Current state:** features-service
+> `quality-gates.sh` runs with `PYTEST_UNIT_DIR="tests/"` collecting all per-family tests recursively (reference:
+> `features-service/scripts/quality-gates.sh:28`). This includes the `cefi/` subdomain added by
+> `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md` Phase A:
+> `features_service/cefi/calculators/perp_funding_rates.py` +
+> `features_service/cefi/live/perp_funding_compute_runner.py` + `tests/cefi/unit/test_perp_funding_rates.py` (6-case
+> unit tests) + `tests/cefi/unit/test_live_runner.py`. **Confirmed:** features-service@e43f8370 QG passes with all cefi/
+> unit tests included (7085 tests pass at features-service@a4fadcf2). The `cefi/` subdomain is NOT a peripheral dir — it
+> is wired into the main `quality-gates.sh` via `PYTEST_UNIT_DIR="tests/"`. No additional QG wiring needed. **Note:**
+> `@pytest.mark.requires_credentials` integration tests in `tests/cefi/integration/` are skipped by default (no real
+> venue credentials in CI). These tests are skipped, not excluded — they will run when credentials land per
+> `BLOCKED-CREDENTIALS` workflow.
+
 ---
 
 ## Anti-Patterns

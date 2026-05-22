@@ -184,6 +184,17 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
 - Any bucket template change (rarely — requires coordinated migration)
 - Any service added that reads/writes asset_group-partitioned data (new row in the matrix)
 
+## TradFi tick data restoration (post-cutover)
+
+> **[DELTA 2026-05-22]** **Current state:** TradFi MTDS captures OHLCV-1m (L0) for CME / ICE / NASDAQ / NYSE via
+> Databento. L1 (`trades`) and L2 (`tbbo`) data types were collected in two reference windows (May 2023 + Jul 2024) but
+> held behind `_DEFERRED_TRADFI_TICK_WINDOW_*` constants in the MTDS handler when the TradFi MVP was collapsed to
+> OHLCV-only. **Planned delta:** `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` restores the 2-window tick scope
+> after May-23 cutover. **Target architecture:** TradFi shard atom
+> `(asset_group=tradfi, venue, instrument_type, data_type={trades|tbbo}, day)` — same as CEFI path in the matrix above;
+> no extra hive level. Coverage windows: May 2023 + Jul 2024 reference months + rolling live feed via Databento PAYG.
+> `mbp_10` (L3) added in a later phase when Databento MBP-10 costs are evaluated.
+
 ## Cross-references
 
 - Sports adapter dependency order (api-football T0 + T1 enrichment): `codex/02-data/sports-adapter-dependency-order.md`

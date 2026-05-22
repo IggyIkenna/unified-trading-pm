@@ -61,5 +61,6 @@ running in production must trace back to a known git SHA + builder run on both c
 
 - Does GHA push directly to AWS ECR, or do we relay via Cloud Build → cross-cloud copy? (cost vs latency tradeoff)
 - Where does the lineage JSONL live — GCS bucket, S3, or both with consolidator? (recommend: write to both, reconcile)
-- Do we sign images (cosign / notation) on both clouds for supply-chain provenance? (post-May-23 work?)
+- Do we sign images (cosign / notation) on both clouds for supply-chain provenance? (post-cutover work? see
+  `infrastructure_master.md`)
 - How do we test parity in CI vs only at promote-time? (per-PR vs per-merge)

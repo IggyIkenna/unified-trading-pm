@@ -244,8 +244,8 @@ prefix entries landed.
 | `e2e-testing/scripts/defi/launch_lst_rates_vm.sh`                 | DEFERRED — duplicate of canonical `launch-mtds-lst-rates-backfill-vm.sh`.                                                                              |
 | `e2e-testing/scripts/defi/launch_lending_indices_vm.sh`           | DEFERRED — duplicate of canonical `launch-mtds-lending-indices-backfill-vm.sh`; **Tab 9 (`lending-indices-relaunch-tab`) in flight** — collision risk. |
 | `e2e-testing/scripts/defi/launch_perp_funding_vm.sh`              | DEFERRED — duplicate; canonical `mtds-perp-funding-` prefix already in watchdog.                                                                       |
-| `e2e-testing/scripts/defi/launch_solana_gas_vm.sh`                | DEFERRED — defer post-May-23 cutover.                                                                                                                  |
-| `e2e-testing/scripts/defi/launch_liquidations_vm.sh`              | DEFERRED — defer post-May-23 cutover.                                                                                                                  |
+| `e2e-testing/scripts/defi/launch_solana_gas_vm.sh`                | DEFERRED — defer post-cutover.                                                                                                                         |
+| `e2e-testing/scripts/defi/launch_liquidations_vm.sh`              | DEFERRED — defer post-cutover.                                                                                                                         |
 | `e2e-testing/scripts/prediction/launch_prediction_backfill_vm.sh` | DEFERRED — **Tab 10 (`predictions-phase1-ingestion-tab`) in flight** on prediction surface; collision risk.                                            |
 | `e2e-testing/scripts/prediction/launch_prediction_features_vm.sh` | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                      |
 | `e2e-testing/scripts/prediction/launch_prediction_pipeline_vm.sh` | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                      |
@@ -258,7 +258,7 @@ prefix entries landed.
 | `e2e-testing/scripts/sports/launch_instruments_reference_vm.sh`   | DEFERRED — superseded by v3 form (#5 above).                                                                                                           |
 | `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`      | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                                |
 | `e2e-testing/scripts/sports/launch_mdps_reprocess_vm.sh`          | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                                |
-| `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`       | DEFERRED — odds API specific; defer post-May-23 cutover.                                                                                               |
+| `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`       | DEFERRED — odds API specific; defer post-cutover.                                                                                                      |
 
 **Intra-repo move not in the e2e-testing list** (separate item): `deployment-service/scripts/deploy-dashboard-gce-vm.sh`
 → `deployment-service/scripts/vm/launch-dashboard-vm.sh`. DEFERRED — already inside deployment-service repo so callsite

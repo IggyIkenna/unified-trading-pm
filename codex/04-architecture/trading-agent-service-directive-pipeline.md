@@ -13,8 +13,10 @@ trading-agent-service is a layer-7 subscriber-emitter in the unified trading sys
 `performance_features` subdomain). It emits `ArchetypeAllocationDirective` consumed by strategy-service
 `StrategyDirectiveReloader`. The service is **off-by-default** for the May-23 cutover — data flow is wired end-to-end
 but no directive is emitted unless explicitly enabled. Production allocator logic (ML/LLM integration, automatic
-re-weighting, multi-archetype engines) ships post-cutover via epic `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`
-§1.7 Phase 10.7 + § Allocator service.
+re-weighting, multi-archetype engines) ships post-cutover via epic `plans/epics/trading_agent_master.md` (canonical
+post-cutover SSOT; the old forward pointer to `strategy_and_dart_master_SUPERSEDED_2026_05_21.md` §1.7 Phase 10.7 was
+updated 2026-05-22 to point at `trading_agent_master.md` — `strategy_and_dart_master_SUPERSEDED_2026_05_21.md` is
+superseded as of 2026-05-21).
 
 ### Closed-loop diagram
 
@@ -183,8 +185,8 @@ validation confirms signal quality. No code change required.
 
 ## Post-Cutover Scope
 
-The following items are explicitly out of May-23 scope and tracked in
-`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` §1.7 Phase 10.7 + § Allocator service:
+The following items are explicitly out of May-23 scope and tracked in `plans/epics/trading_agent_master.md` (canonical
+post-cutover SSOT, supersedes `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`):
 
 - Production allocator logic (PnL-weighted, Sharpe-weighted, Risk-Parity, Kelly, Min-CVaR engines)
 - LLM/ML integration (slow features, narrative context, regime detection)
@@ -212,8 +214,9 @@ The following items are explicitly out of May-23 scope and tracked in
 
 ## Successor Plans
 
-- **Production allocator logic**: `plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` § 1.7 Phase 10.7 —
-  Allocator-as-shared-service split.
+- **Production allocator logic**: `plans/epics/trading_agent_master.md` — Allocator-as-shared-service split +
+  post-cutover allocation engines. (`strategy_and_dart_master_SUPERSEDED_2026_05_21.md` was the prior pointer;
+  superseded 2026-05-21.)
 - **UTL lift**: `strategy_repo_consolidation_2026_05_19.md` — `StrategyDirectiveReloader` → `make_directive_reloader()`
   post-cutover.
 - **Multi-archetype PnL emission**: per-archetype plans (cefi/defi/sports/predictions/tradfi masters) — each adds

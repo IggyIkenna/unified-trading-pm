@@ -4,7 +4,7 @@ created: 2026-05-15
 author: ikenna
 sources:
   - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)
-  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9
+  - plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9)
 last_reviewed: 2026-05-17
 ---
 
@@ -130,9 +130,12 @@ and:
 
 ---
 
-## Open items (post-May-23)
+## Open items (post-cutover)
 
-- Allocator service + dual-projection (Phase 1.9 post-cutover residuals)
+> **[DELTA 2026-05-22]** May-23 cutover landed 2026-05-23. Items below are deferred to the active post-cutover roadmap
+> tracked in [`strategy_master.md`](../../../../plans/epics/strategy_master.md).
+
+- Allocator service + dual-projection (Phase 1.9 residuals — see `strategy_master.md`)
 - IM-DESK + IM-CLIENT routing through the action-handler engine
 - Per-archetype Redis Stream isolation (currently shared within an asset-group VM)
 - Separate risk VM for asset groups with >5 concurrent archetypes

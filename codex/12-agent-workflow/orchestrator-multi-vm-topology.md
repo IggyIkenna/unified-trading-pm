@@ -8,13 +8,14 @@ last_reviewed: 2026-05-21
 > **Permanent SSOT** for the agent-orchestrator multi-VM design — VM shapes, plan→VM assignment, registry, per-VM
 > backend, dashboard aggregation, persistence + provisioning. Codified 2026-05-21 from the
 > `orchestrator_v07_multi_vm_topology` plan that was promoted into `plans/epics/orchestrator_master.md`. The epic body
-> now points here for design detail; implementation phases live in active plans under `parent_epic: orchestrator_master`.
+> now points here for design detail; implementation phases live in active plans under
+> `parent_epic: orchestrator_master`.
 >
-> Composes with:
-> [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md) (auth model — long-lived
-> setup-token), [`orchestrator-safety-mechanisms.md`](orchestrator-safety-mechanisms.md) (stuck-agent + failover + git
-> staleness + dirty-commit), [`../../plans/epics/README.md`](../../plans/epics/README.md) (epic-flow SSOT — 19 epics × 5
-> tiers × 10-VM mapping), [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml) (registry SSOT).
+> Composes with: [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md) (auth model —
+> long-lived setup-token), [`orchestrator-safety-mechanisms.md`](orchestrator-safety-mechanisms.md) (stuck-agent +
+> failover + git staleness + dirty-commit), [`../../plans/epics/README.md`](../../plans/epics/README.md) (epic-flow SSOT
+> — 19 epics × 5 tiers × 10-VM mapping), [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml)
+> (registry SSOT).
 
 ## Operator vision (verbatim 2026-05-21)
 
@@ -23,8 +24,8 @@ last_reviewed: 2026-05-21
 > orchestrator agent, 1 slot review agent, x worker agents max within rate limits + CPU bound. In the dashboard we want
 > a landing page overview of all the master plans/epics that each VM owns, and then when we click through we see the
 > same view we already have. Separately we want a planning VM where ikenna and harsh can see each others chats.
-> Auto-refresh works on each VM after one-time /login. 4 accounts per VM, primary round-robin across VMs so 8 VMs each
-> 2 share an account. Things should be backed up to GCS/S3 such that on VM restarts we get the info we need."
+> Auto-refresh works on each VM after one-time /login. 4 accounts per VM, primary round-robin across VMs so 8 VMs each 2
+> share an account. Things should be backed up to GCS/S3 such that on VM restarts we get the info we need."
 
 ## Target topology
 
@@ -77,7 +78,7 @@ Every epic in `plans/epics/<slug>.md` declares:
 ---
 name: <slug>
 type: epic
-assigned_vm: vm-<id>   # planning-vm = humans only; vm-defi / vm-cefi / vm-ml / ... = epic VMs
+assigned_vm: vm-<id> # planning-vm = humans only; vm-defi / vm-cefi / vm-ml / ... = epic VMs
 ---
 ```
 
@@ -105,8 +106,10 @@ matches a Host directive in `~/.ssh/config` for direct VSCode SSH (operator-pref
 
 Each VM runs its own orchestrator backend (FastAPI + uvicorn + systemd, same shape as today). New:
 
-- **FQDN per VM**: `api-<vm-id>.agent-orchestrator.odum-research.com` (e.g. `api-defi.*`, `api-cefi.*`, `api-planning.*`).
-  DNS A record per VM, or wildcard `*.agent-orchestrator.odum-research.com`.
+- **Local dev port**: `8026` (standard across all dev machines — `http://localhost:8026`). CLAUDE.md § "System-First
+  Architecture" references this as the authoritative port for local interactive sessions.
+- **FQDN per VM**: `api-<vm-id>.agent-orchestrator.odum-research.com` (e.g. `api-defi.*`, `api-cefi.*`,
+  `api-planning.*`). DNS A record per VM, or wildcard `*.agent-orchestrator.odum-research.com`.
 - **Public URL env var**: `ORCHESTRATOR_PUBLIC_URL` = this VM's fqdn so Telegram alerts + spawn-event links point at the
   right backend.
 - **VM identity**: `ORCHESTRATOR_VM_ID` env var (e.g. `vm-defi`); included in every agent event so dashboard aggregation
@@ -215,7 +218,8 @@ Contents:
 
 Retention: 7 days; one snapshot per day kept for 30 days.
 
-**Restore script**: `scripts/orchestrator/restore_from_snapshot.sh <vm_id> <ts>` — used on VM recreation or DR scenarios.
+**Restore script**: `scripts/orchestrator/restore_from_snapshot.sh <vm_id> <ts>` — used on VM recreation or DR
+scenarios.
 
 ### VM provisioning (immutable image)
 
@@ -283,19 +287,19 @@ No VM restart. No operator manual intervention beyond the plan edit.
 
 10 VMs serving 19 epics. Full mapping in [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml).
 
-| VM                | Owns epics                                                                                                                       | Primary account              |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `planning-vm`     | (none — interactive)                                                                                                             | ikennaigboaka@gmail.com      |
-| `vm-defi`         | `defi_master` + `manifest_master`                                                                                                 | ikenna@odum-research.com     |
-| `vm-cefi`         | `cefi_master` + `instruments_master`                                                                                              | iggy2london@gmail.com        |
-| `vm-tradfi`       | `tradfi_master`                                                                                                                  | harshkantariyawork@gmail.com |
-| `vm-sports`       | `sports_master`                                                                                                                  | ikenna@odum-research.com     |
-| `vm-prediction`   | `predictions_master`                                                                                                             | iggy2london@gmail.com        |
-| `vm-ml`           | `mtds_mdps_master` + `features_and_ml_master`                                                                                    | ikennaigboaka@gmail.com      |
-| `vm-trading-core` | `strategy_master` + `execution_master` + `trading_agent_master`                                                                  | ikenna@odum-research.com     |
-| `vm-operator-ops` | `dart_and_promote_master` + `deployment_and_user_management_master`                                                              | harshkantariyawork@gmail.com |
-| `vm-cross-cutting`| `infrastructure_master` + `observability_master` + `batch_live_symmetry_master` + `client_isolation_and_governance_master`       | iggy2london@gmail.com        |
-| `vm-orchestrator` | `orchestrator_master`                                                                                                            | ikennaigboaka@gmail.com      |
+| VM                 | Owns epics                                                                                                                 | Primary account              |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `planning-vm`      | (none — interactive)                                                                                                       | ikennaigboaka@gmail.com      |
+| `vm-defi`          | `defi_master` + `manifest_master`                                                                                          | ikenna@odum-research.com     |
+| `vm-cefi`          | `cefi_master` + `instruments_master`                                                                                       | iggy2london@gmail.com        |
+| `vm-tradfi`        | `tradfi_master`                                                                                                            | harshkantariyawork@gmail.com |
+| `vm-sports`        | `sports_master`                                                                                                            | ikenna@odum-research.com     |
+| `vm-prediction`    | `predictions_master`                                                                                                       | iggy2london@gmail.com        |
+| `vm-ml`            | `mtds_mdps_master` + `features_and_ml_master`                                                                              | ikennaigboaka@gmail.com      |
+| `vm-trading-core`  | `strategy_master` + `execution_master` + `trading_agent_master`                                                            | ikenna@odum-research.com     |
+| `vm-operator-ops`  | `dart_and_promote_master` + `deployment_and_user_management_master`                                                        | harshkantariyawork@gmail.com |
+| `vm-cross-cutting` | `infrastructure_master` + `observability_master` + `batch_live_symmetry_master` + `client_isolation_and_governance_master` | iggy2london@gmail.com        |
+| `vm-orchestrator`  | `orchestrator_master`                                                                                                      | ikennaigboaka@gmail.com      |
 
 Account round-robin: each of 4 accounts is primary on 2-3 VMs (failover-only on the others). Runtime failover selection
 is `lowest-weekly-pct-first` across the VM's 3 non-primary accounts (see
