@@ -100,9 +100,11 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `resolve_bucket_name(kind="audit-records")` at `audit/{client_name}/{YYYY/MM/DD}/{ts}-strategy_decisions.json`;
       GCS failure → logger.warning (never raises); StorageClient lazy-init; 2 tests (upload path/bucket/content-type +
       GCS failure non-raise).
-- [ ] [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
+- [x] ✅ [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
       retention-lock (currently resolved at runtime via `resolve_bucket_name(kind="audit-records")` but never
-      provisioned).
+      provisioned). — deployment-service@8b07a46; google_storage_bucket.audit_records + IAM member added to
+      terraform/gcp/main.tf; name=trading-audit-records-{env}-{project_id}; versioning=enabled;
+      retention_period=220752000s is_locked=true (7yr compliance lock); objectAdmin IAM for unified-trading SA.
 - [x] ✅ [AGENT] P2. **F-04** — Align the execution-audit path layout (`audit_log.py:67`, flat
       `audit/{client_id}/{date}/{event_type}/`) with codex's events-stream layout — minor (date/ext already match; only
       the segment layout differs). — execution-service@4fcd873ec; new path:
