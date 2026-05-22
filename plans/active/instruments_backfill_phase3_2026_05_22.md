@@ -90,22 +90,31 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       test_canonicalize_defi_manifest_data_types_2026_05_16.py and test_reconcile_lending_indices_phantom.py. Already
       clean. 2026-05-22.
 
-## Pending relaunches after MalformedRowKeyError fix
+## Pending relaunches after both bug fixes
 
 - [x] ✅ [CODE] P0. **IS-3.1.chain-fix** — Fixed `MalformedRowKeyError` in orchestrator.py:3104 — conditional chain
-      inclusion in row_key (omit when empty for CeFi/TradFi). instruments-service@4c1389d. ruff+basedpyright clean.
-      Tarball rebuild in progress.
-- [x] ✅ [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Relaunched 3× CeFi VMs with `--force` (instruments-service@4c1389d
-      chain fix). `instr-backfill-cefi-1-20260522` @ 34.84.128.69, `instr-backfill-cefi-2-20260522` @ 34.180.72.34,
-      `instr-backfill-cefi-3-20260522` @ 34.84.104.165. All RUNNING. 2026-03-01→2026-05-22. 2026-05-22.
-- [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Relaunched TradFi VM with `--force` (instruments-service@4c1389d
-      chain fix). `instr-backfill-tradfi-20260522` @ 35.200.109.205. RUNNING. 2026-03-01→2026-05-22. 2026-05-22.
-- [x] ✅ [SCRIPT] P0. **IS-3.1.Pred-Relaunch** — Relaunched Pred VM with `--force` (instruments-service@4c1389d; fixes
-      both chain kwarg + canonical_question_group kwarg). `instr-backfill-pred-20260522` @ 34.146.5.36. RUNNING.
-      2026-03-01→2026-05-22. Kalshi still BLOCKED-CREDENTIALS; Polymarket will capture. 2026-05-22.
+      inclusion in row_key (omit when empty for CeFi/TradFi). instruments-service@4c1389d.
+- [x] ✅ [CODE] P0. **IS-3.1.pred-kwarg-fix** — Fixed `canonical_question_group` invalid kwarg in orchestrator.py:2376
+      (Predictions path). instruments-service@7d9a737. Tarball rebuilt + uploaded to GCS @ IS@7d9a737.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Full relaunch 6× CeFi VMs (both fixes IS@7d9a737). Full history:
+      `instr-backfill-cefi-1` @ 35.200.74.239 (2020-01-01→2022-06-30), `instr-backfill-cefi-2` @ 34.180.69.85
+      (2022-07-01→2024-12-31), `instr-backfill-cefi-3` @ 34.84.114.222 (2025-01-01→2026-02-28). Recent window:
+      `instr-backfill-cefi-1-20260522` @ 34.146.238.194, `instr-backfill-cefi-2-20260522` @ 34.180.105.8,
+      `instr-backfill-cefi-3-20260522` @ 35.221.121.77 (all 2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Full relaunch 2× TradFi VMs (both fixes IS@7d9a737). Full history:
+      `instr-backfill-tradfi` @ 34.146.133.70 (2020-01-01→2026-02-28). Recent window: `instr-backfill-tradfi-20260522` @
+      34.153.210.28 (2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.DeFi-Relaunch** — Full relaunch 2× DeFi VMs (both fixes IS@7d9a737). Full history:
+      `instr-backfill-defi` @ 34.104.128.163 (2020-01-01→2026-02-28). Recent window: `instr-backfill-defi-20260522` @
+      35.200.75.132 (2026-03-01→2026-05-22). All RUNNING. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Pred-Relaunch** — Full relaunch 2× Pred VMs (both fixes IS@7d9a737, incl.
+      canonical_question_group fix). Full history: `instr-backfill-pred` @ 34.146.237.52 (2020-01-01→2026-02-28). Recent
+      window: `instr-backfill-pred-20260522` @ 34.146.5.36 (2026-03-01→2026-05-22). Kalshi BLOCKED-CREDENTIALS. All
+      RUNNING. 2026-05-22.
 
 ## Temporary states + their canonical follow-up plans
 
 - Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
   directly.
-- CeFi + TradFi VMs relaunch DONE 2026-05-22 with instruments-service@4c1389d (chain fix). T+10min verify pending.
+- All 12 IS VMs RUNNING 2026-05-22 with instruments-service@7d9a737 (both chain fix + pred-kwarg fix). T+10min verify
+  pending.
