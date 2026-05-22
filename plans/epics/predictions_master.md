@@ -622,10 +622,11 @@ before CME arb can link.
       Schema: `{market_id, canonical_question_group, market_created_at, resolution_time, settlement_time, status}`.
       Reader-side helper `unified_trading_library.predictions.lifecycle_for_market(market_id) -> MarketLifecycle`. —
       IS@2aabd7b `_build_market_lifecycle_df` + `_write_market_lifecycle` + lifecycle_sink + 9 unit tests (2026-05-22)
-- [ ] [SCRIPT] P0. **MTDS umi_tick_provider lifecycle-bounded clip**. Today MTDS captures CLOB ticks for every
+- [x] ✅ [SCRIPT] P0. **MTDS umi_tick_provider lifecycle-bounded clip**. Today MTDS captures CLOB ticks for every
       registered market_id without bound; flip to read MARKET_LIFECYCLE first, then clip per-market: NO ticks before
       `market_created_at`, NO new ticks after `settlement_time`. Per CLAUDE.md "Prediction market lifecycle timing" rule
-      already declared.
+      already declared. — MTDS@006beab5 `_load_market_lifecycle_for_date` helper + Polymarket + Kalshi updated to try
+      MARKET_LIFECYCLE path first, fall back to instrument_availability/; 16 new unit tests (2026-05-22)
 - [ ] [SCRIPT] P0. **MTDS cluster validation per (canonical_question_group, day)**. HOURLY groups expect 24
       market_ids/day; DAILY = 1; recurring election groups = 1 over months/years. Add to UAC `BUNDLED_DATA_TYPES` for
       Polymarket/Kalshi CLOB writes; cluster-validation kwargs at `record_captured` per writegate Phase 1A.
