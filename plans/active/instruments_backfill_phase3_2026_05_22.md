@@ -150,9 +150,10 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
   MARKET_LIFECYCLE writer. VM already processed 2025-03-14→2025-06-02 without MARKET_LIFECYCLE (~80 date gap).
   Successor: targeted market_lifecycle backfill after `instr-backfill-pred` completes. Track in `predictions_master`.
 - Full-history IS VMs: `instr-backfill-pred` **COMPLETED exit_code=0 ~11:11 UTC** (self-deleted 2026-05-22); shard: 398
-  rows captured, 2025-03-14→2026-02-28. Still RUNNING: `instr-backfill-defi` (at 2025-04-18, ~2.5h ETA),
-  `instr-backfill-tradfi` (at 2024-12-18, ~3.5h ETA). CeFi full-history VMs: instr-backfill-cefi-{1,2,3} completed in
-  prior session (2022-06-30, 2024-12-31, 2026-02-28 maxes). Recent-window VMs all completed exit_code=0.
+  rows captured, 2025-03-14→2026-02-28. Still RUNNING: `instr-backfill-defi` (at 2025-10-29 @ ~12:10 UTC, ~4 months
+  remain to 2026-02-28 ~est 4-6h), `instr-backfill-tradfi` (at 2025-07-03 @ ~12:01 UTC, ~8 months remain to 2026-02-28,
+  ~est 6-10h). CeFi full-history VMs: instr-backfill-cefi-{1,2,3} completed in prior session (2022-06-30, 2024-12-31,
+  2026-02-28 maxes). Recent-window VMs all completed exit_code=0. 2026-05-22 slot 5 update.
 - **IS CeFi catalogue built 2026-05-22 ~10:56 UTC**: 210,340 records written to
   `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` via local
   CatalogueBuilder run. Also copied to flat reader path. Unblocked writegate cefi reconciler (85,202 rows).
