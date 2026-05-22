@@ -601,13 +601,13 @@ One row per drift found, across all runs (append-only). Detail in the run result
 | F-14 | 2026-05-22 | APD-09 | CODE-DRIFT | max_underlying_move_pct (codex 3.0) not enforced in APD engine; only vol_cap_clamp threshold+zscore (likely same gap in carry → XAS) | TBD | OPEN |
 | F-15 | 2026-05-22 | APD-12 | CODEX-DRIFT | codex react_to_equity_change references phantom max_capital_per_opp fields; engine auto-scales via target_equity*stake_fraction (functionally OK) | TBD | OPEN |
 | F-16 | 2026-05-22 | PNL-05 | GAP | pre-TGE points rows silently skipped instead of emitting CARRY_ISSUER_SEASONAL value_eth=0 points_pending=true (silent-absence) | TBD | OPEN |
-| F-17 | 2026-05-22 | PNL-06 | CODE-DRIFT | pnl/engine emits PnLBreakdown (no factor/layer enums) not canonical PnLAttributionRow — affects all archetypes' P&L | TBD | NEEDS-CONFIRM |
+| F-17 | 2026-05-22 | PNL-06 | CODE-DRIFT | pnl/engine emits PnLBreakdown (no factor/layer enums) not canonical PnLAttributionRow — affects all archetypes' P&L | TBD | CONFIRMED (P1) |
 | F-18 | 2026-05-22 | PNL-08 | CODE-DRIFT | hardcoded $3200 ETH-price fallback in pnl_input_builder _defaults (chains 1/10/8453/42161) | TBD | OPEN |
 | F-19 | 2026-05-22 | PNL-11/12 | CODE-DRIFT | funding-PnL synthetic 1bps surrogate (abs(net_qty)*last_price*0.0001) not actual funding events | TBD | OPEN |
 | F-20 | 2026-05-22 | PIPE-05 | CODE-DRIFT | features-onchain dep-checker uses GCS blob-presence not manifest capture_status → silent compute on upstream attempted_failed | TBD | OPEN |
 | F-21 | 2026-05-22 | PIPE-09 | CODE-DRIFT | hardcoded venue API URLs (HL/Aster/Pacifica) in perp_funding_handler — IS-SSOT violation | TBD | OPEN |
-| F-22 | 2026-05-22 | (incidental) | CODE-BUG | perp_funding_handler._make_session() has no headers param but called with headers= (Lighter path) → TypeError | TBD | NEEDS-CONFIRM |
-| F-23 | 2026-05-22 | ALC-05 | CODE-DRIFT | CrossClientTransferForbiddenError at 1 of 3 layers (exec only); UAC docstring-only + strategy-emit absent — isolation defence-in-depth incomplete | TBD | NEEDS-CONFIRM |
+| F-22 | 2026-05-22 | (incidental) | CODE-BUG | perp_funding_handler._make_session() has no headers param but called with headers= at L1124 (Tardis auth path, not Lighter) → TypeError; trivial fix = add headers param | TBD | CONFIRMED (P1) |
+| F-23 | 2026-05-22 | ALC-05 | CODEX-DRIFT | DOWNGRADED P0→P2: cross-client transfer unexpressable by construction (TransferIntent single client_id) + per-process binding + exec-coordinator raise (transfer_coordinator.py:241). Invariant HOLDS; codex "3 raising layers + UAC validator" wording should reconcile to actual mechanism (or add UAC validator for required-test) | TBD | CONFIRMED (P2) |
 | F-24 | 2026-05-22 | CUS-03 | GAP | health_check()→CustodyHealth absent from CustodyProvider protocol + all impls | TBD | OPEN |
 | F-25 | 2026-05-22 | ONB-01 | CODE-DRIFT | strategy-svc ClientConfig=ClientStrategyOverride missing share_class/categories_enabled/max_drawdown_pct; check reporting/client_config.py | TBD | NEEDS-CONFIRM |
 | F-26 | 2026-05-22 | CUS-02 | CODE-DRIFT | get_custody_provider() silently returns MockCustodyProvider on unknown provider (warning only) → silent mock signing in prod | TBD | OPEN |
