@@ -577,6 +577,7 @@ One row per run. Detail (per-checkpoint result + synthetic injections + shas) li
 | 2026-05-22 | Phase 1 READ — §2.8 PIPE + §2.9 DATA | PIPE/DATA READ subset (sub-agent + Opus review) | mtds + features-onchain/delta-one | multi | 7 | 3 (F-20…F-22) | DATA coverage=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_pipe_data.md` |
 | 2026-05-22 | Phase 1 READ — §2.6 ALC + §2.7 CUS + §2.11 ONB | ALC/CUS/ONB READ subset (sub-agent + Opus review) | strategy-svc@b303a358 + execution-service + UAC | multi | 8 | 4 (F-23…F-26) | — | `runs/AUDIT-03_2026_05_22_phase1_alc_cus_onb.md` |
 | 2026-05-22 | Phase 1 READ — §2.3 EXE + §2.5 RSK (main, safety-critical) | EXE/RSK direct Opus read + §2.1 deferred CSB-05/15/17/20 closed PASS | exec-svc@a848ef61 + UAC@c3f7a45 + strategy-svc@b303a358 | multi | 19 (+4 CSB PASS) | 7 (F-27…F-33) | EXE-02→F-32 | `runs/AUDIT-03_2026_05_22_phase1_exe_rsk.md` |
+| 2026-05-22 | Phase 1 READ — §2.13 XAS | cross-archetype/asset-class regression safety (sub-agent + Opus review) | strategy-svc@b303a358 + UAC@c3f7a45 + exec-svc | multi | 7 | 4 (F-34…F-37) | XAS-04/05/12=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_xas.md` |
 
 ---
 
@@ -619,6 +620,10 @@ One row per drift found, across all runs (append-only). Detail in the run result
 | F-31 | 2026-05-22 | EXE-18 | CODE-DRIFT | SwapRouter02 + QuoterV2 hardcoded in protocols/uniswap.py:848 + venues/uniswap.py despite UAC registry/dex_router_addresses.py | TBD | CONFIRMED (P1) |
 | F-32 | 2026-05-22 | EXE-02 | GAP | $10k-notional → FLASHBOTS_PROTECT MEV mode-SELECTION not located (MevRouter maps mode→policy + validates chain; BLOXROUTE excluded ✓; nothing selects mode by trade size on ETH mainnet) | TBD | NEEDS-CONFIRM (P1) |
 | F-33 | 2026-05-22 | RSK-05 | CODE-DRIFT/GAP | **P0** DEFI_LST_DEPEG_STETH_5PCT scenario NOT implemented (UAC registry/scenarios/defi.py has stablecoin-depeg + oracle-deviation, no LST-depeg); carry depeg kill-switch (CSB-12) unverifiable by scenario; composes CUT-05 | TBD | CONFIRMED (P0) |
+| F-34 | 2026-05-22 | XAS-01 | CODE-DRIFT | ARCHETYPE_ENGINE_REGISTRY = 28 entries vs StrategyArchetype enum = 55 members (docstring says 53); 29 archetypes (VOL_*, granular MM, 2 ARBITRAGE_*, 4 PORTFOLIO_*) have no engine → KeyError at dispatch. No guard marks it a rollout-subset | TBD | NEEDS-DECISION (P1) |
+| F-35 | 2026-05-22 | XAS-06 | CODEX-DRIFT | XAS-06 invariant references UAC types not all present: AtomicInstruction (only e2e-testing, not UAC source — cross-ref EXE-11), PnLFactor (absent — aligns F-17); DefiErrorCode is plain class (no StrEnum exhaustiveness). [count = F-27] | TBD | NEEDS-CONFIRM (P2) |
+| F-36 | 2026-05-22 | XAS-08 | CODEX-DRIFT | CLAUDE.md cross-client "3 layers" aspirational: CrossClientTransferForbiddenError in execution-svc (not UAC), 1 raise (coordinator:241), 0 UAC/strategy; TransferIntent has no model_validator. Generalizes F-23. Fix: add UAC validator OR reconcile doc | TBD | CONFIRMED (P1) |
+| F-37 | 2026-05-22 | XAS-11/13 | CODE-DRIFT | (a) category="defi" → record_captured() in hedge_ratio_writer.py:142 + decision_context_writer.py:155 (should be asset_group=) + batch_handler alias; (b) inline gs:// write-path f-strings (gcs_storage_service.py:185/251/293, grid_generator.py:100) + catalogue_bucket f-string bypass resolve_bucket_name | TBD | CONFIRMED (P1) |
 
 ---
 
