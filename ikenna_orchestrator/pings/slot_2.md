@@ -1,3 +1,27 @@
+## [slot-2] 2026-05-22 — Wave 3.S UAC batch DONE (sports_per_source_rules + 5 enum flips)
+
+[2026-05-22 UTC] slot-2 DONE — **UAC Wave 3.S sports per-source rules shipped.**
+
+- NEW `unified_api_contracts/registry/sports_per_source_rules.py` — `is_expected_for_source()` entry point wiring
+  UNDERSTAT_COVERED_LEAGUES + footystats_season_status_for_day + is_transfer_window_open + SOURCE_COVERAGE_START
+- 5 EmptyConfirmedReason flips: all 5 Wave 3.S values were pre-existing in honest_coverage.py (confirmed + flipped)
+- Understat / footystats season-bounds helpers pre-existing in provider_league_ids.py + season_dates.py (flipped)
+- UAC QG: **exit 0**
+
+SHAs: UAC@83c0e789 / PM@03dae0c49
+
+**5 writegate Phase 1B/Wave3.S checkboxes flipped.**
+
+**Next dispatch items remaining:**
+
+1. UTL `_classify_sports` / `_classify_tradfi` additions (consume sports_per_source_rules.py)
+2. Phase A AvailabilityRule Protocol (5 sub-items in UAC)
+3. Codex doc audit (pure read+doc, tab branch)
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 1B / Wave 3.S)
+
+---
+
 ## [slot-2] 2026-05-22 — Sports BUNDLED_DATA_TYPES seeding DONE
 
 [2026-05-22 UTC] slot-2 DONE — **UAC sports BUNDLED_DATA_TYPES seeded.**
