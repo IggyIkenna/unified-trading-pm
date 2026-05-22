@@ -49,9 +49,9 @@ Gate: MTDS-3.2.C DeFi verification GREEN.
 
 Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.TradFi** — Relaunch MDPS TradFi reprocessor. CME futures + NASDAQ/NYSE equities.
-      `MDPS_ASSET_GROUP=tradfi`. VIX 15-min: Barchart preload + Yahoo rolling 60d per CLAUDE.md VIX-15m rule; honest gap
-      for pre-data dates.
+- [x] ✅ [AGENT slot 6] P0. **MDPS-3.3.TradFi** — Launched `mdps-backfill-tradfi-20260522-051203` VM (e2-standard-8,
+      asia-northeast1-c, 2020-01-01→2026-05-22, prod). VM RUNNING @ 136.110.98.249. `MDPS_ASSET_GROUP=TRADFI`.
+      `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-central-element-323112`. 2026-05-22.
 - [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes.
 
 ## Phase 4 — Sports MDPS reprocessor
