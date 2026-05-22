@@ -8,7 +8,7 @@ priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-07
-last_updated: 2026-05-21
+last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
@@ -128,16 +128,21 @@ reconcilers + `mtds-s4-10` rescan complete.
       `mdps_reconcile_1440_nan_placeholders.py`. Reproduction-test value moot — the bug is fixed at write-time AND
       backfill-cleaned] **CLOSED-AS-STALE 2026-05-08** — write-side bug fixed + on-disk cleanup ran; reproduction
       regression test no longer load-bearing.
-- [ ] [AGENT] P0. **Raw tables migration** (next slice — needs design): 14 entries in `TABLE_TO_EXPORT`. Source-of-truth
-      gap: pick canonical shape per table. [AUDIT 2026-05-07: FRESH — actionable; `TABLE_TO_EXPORT` confirmed at
-      `features-sports-service/features_sports_service/cli/batch_write.py:20` with 8+ test mock sites; Stage 4 of
-      `manifest_migration_SUPERSEDED_2026_05_21` per plan body]
-- [ ] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
-      Coordinated with writegate Phase 2.C. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:raw-tables-migration;
-      verified `_ensure_timestamp` still defined at
-      `features-sports-service/features_sports_service/cli/batch_write.py:38` + `cli/handlers/batch_handler.py:148`
-      (called at lines 544/628/695/766) + referenced by reconciler `scripts/features_sports_reconcile_available_at.py` —
-      9 sites; cannot delete until raw-tables migration ships]
+- [ ] [AGENT] P0. **Raw tables migration** (next slice — BLOCKED-UPSTREAM): 14 entries in `TABLE_TO_EXPORT` at
+      `features-service/features_service/sports/cli/batch_write.py:22` (features-sports-service consolidated into
+      features-service; old path in 2026-05-07 audit is stale). Reference tables already have manifest tracking in
+      `batch_handler.py:_run_reference_tables` with `row_key={"date":..., "feature_group":...}`. Design question: pick
+      canonical shard granularity per table (static tables like leagues/teams/venues should be per-season not daily;
+      C.1 + C.11 audit findings). [AUDIT 2026-05-22 slot-11: BLOCKED-UPSTREAM — gated on (1) sports rename Stage 1
+      (operator-gated, not done), (2) UAC `SchemaContract.cadence` field (not in contracts.py:92 yet), (3) new
+      `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` reason codes in UAC `honest_coverage.py`. Stage 4
+      of `manifest_master` epic (vm-defi). No slot-11 action until prerequisites clear.]
+- [x] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
+      Coordinated with writegate Phase 2.C. [AUDIT 2026-05-22 slot-11: STALE/RESOLVED — `_ensure_timestamp` is NOT in
+      active code in features-service (the consolidated repo). It appears ONLY in comments: `data/writer.py:120` (comment:
+      "Phase 2.C writegate: _ensure_timestamp shim removed") + `exporters/odds_features_exporter.py:332` (comment).
+      The shim was removed as part of Phase 2.C writegate when features-sports-service was consolidated into features-service.
+      The old path `features-sports-service/...` no longer exists. **CLOSED-AS-RESOLVED 2026-05-22** — shim already gone.]
 - [ ] [AGENT] P0. All affected downstream consumers updated in this plan (no "fix later"). [AUDIT 2026-05-07: BLOCKED-ON
       infrastructure_master:raw-tables-migration]
 - [ ] [VERIFY] P0. Manifest reads + writes use same shard key for every (service, data_type). [AUDIT 2026-05-07: FRESH —
@@ -145,9 +150,9 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [VERIFY] P0. Data-status surfaces match writer granularity (audit report only — UI fix tracked separately). [AUDIT
       2026-05-07: BLOCKED-ON infrastructure_master:Audit-findings-B.2-drilldown-depth-audit; UI fix lives in
       `data_status_drilldown_shard_atom_alignment_2026_05_07.md`]
-- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests. [AUDIT 2026-05-07: FRESH — verification gate;
-      deployment-api@`64d2be9` dropped DEFI legacy-venue read-time canonicalisation fallback (one slice complete);
-      raw-tables migration completion will retire remaining `_ensure_timestamp` fallback]
+- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests. [AUDIT 2026-05-22 slot-11: PARTIAL — `_ensure_timestamp`
+      fallback already gone (Phase 2.C writegate + consolidation); deployment-api@`64d2be9` dropped DEFI legacy-venue
+      fallback; remaining open scope is raw-tables canonical-shape design (BLOCKED-UPSTREAM per item above)]
 - [ ] [VERIFY] P0. Tests cover write-gates: row=0 → fail loud, high NaN → fail loud, schema mismatch → fail loud. [AUDIT
       2026-05-07: FRESH — verification gate; `record_empty(reason=...)` + `record_failed` shipped via UTL@`958634f9`;
       per-test-fixture verification across services pending]

@@ -296,3 +296,40 @@ Plan ref: `plans/active/epic_vm_fleet_commissioning_2026_05_21.md` Phase 3 T+10m
 - Plan item flipped: `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A item 2 → `[x]`.
 
 **PM@074b2bfd** (LDR).
+
+---
+
+## [2026-05-22] slot-11 — infrastructure_master raw-tables audit: BLOCKED-UPSTREAM + _ensure_timestamp RESOLVED
+
+Post-Phase-1.5.A, investigated the only open P0 item in `infrastructure_master` for vm-cross-cutting: the **raw tables
+migration** (14 entries in `TABLE_TO_EXPORT`).
+
+**Findings (slot-11 audit 2026-05-22)**:
+
+1. **Stale path in audit note**: infrastructure_master referenced `features-sports-service/...` — that repo was
+   consolidated into `features-service`. The live path is
+   `features-service/features_service/sports/cli/batch_write.py:22`.
+
+2. **`_ensure_timestamp` shim: ALREADY RESOLVED.** The shim is NOT in active code in features-service. It appears only
+   in comments (`data/writer.py:120` comment: "Phase 2.C writegate: _ensure_timestamp shim removed";
+   `exporters/odds_features_exporter.py:332` comment). The P0 item for deleting it has been flipped to `[x]`
+   CLOSED-AS-RESOLVED in `infrastructure_master.md`.
+
+3. **Reference tables already have manifest tracking**: `batch_handler.py:_run_reference_tables` (line 374+) tracks
+   all 14 TABLE_TO_EXPORT tables with `manifest.record_empty()` / `manifest.record_failed()` / `manifest.add()` via
+   `_flush_batch_manifest`. The current shard key is `{"date":..., "feature_group":...}` (daily granularity, uniform).
+
+4. **Raw tables migration is BLOCKED-UPSTREAM** on:
+   - Sports rename Stage 1 (operator-gated, not done)
+   - UAC `SchemaContract.cadence` field (not in `contracts.py:92` — needed for C.1/C.11 per-season shard design)
+   - New `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` reason codes in UAC `honest_coverage.py`
+   - This is manifest_master Stage 4 (vm-defi scope)
+
+5. **Slot 11 has no actionable work** in current scope for the May 22 8-hour run. All vm-cross-cutting P0 items are
+   either done, BLOCKED-UPSTREAM, or STALE. Slot 11 going IDLE pending operator direction or new assignment.
+
+**infrastructure_master updated**: raw-tables item annotated BLOCKED-UPSTREAM; `_ensure_timestamp` item flipped `[x]`.
+
+Plan ref: `plans/epics/infrastructure_master.md` P0 shard-granularity section.
+
+**PM@TBD** (LDR).
