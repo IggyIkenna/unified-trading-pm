@@ -93,6 +93,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       (14:01:55 UTC 2026-05-22). Results: BITFINEX-SPOT 2334/2334 ✅, BITGET-FUTURES 561/561 ✅,
       BITGET-SPOT 561/561 ✅; zero `capture_status=None` across all 28,228 unique date-venue rows.
       Ranges: BITFINEX-SPOT/FUTURES 2020-01-01→2026-05-22, BITGET-SPOT/FUTURES 2024-11-08→2026-05-22.
+      UI screenshot confirmation: cefi_100pct.jpeg (localhost:5183 2026-05-22) — CEFI 28224/28224 = 100.0%.
 
 - [x] ✅ [SCRIPT] P0. **Purge BITGET phantom rows**: query IS cefi manifest for rows where
       `venue IN (BITGET-FUTURES, BITGET-SPOT) AND capture_status IS NULL`. Verify count ≤ 11 (6+5 known). Delete via
@@ -106,6 +107,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 - [x] ✅ [SCRIPT] P0. **Verify**: IS cefi manifest — BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT all 100% captured
       with 0 `capture_status=None` rows. Confirmed 2026-05-22 14:04 UTC (post PID 626691 completion):
       2334/2334/561/561 targets met across all per-VM shards (28,228 unique date-venue rows).
+      UI Data Coverage panel: CEFI 28224/28224 = 100.0%. Screenshot: cefi_100pct.jpeg (localhost:5183 2026-05-22).
 
 ### Phase 2 — IS Sports recent-window gap fill (P0)
 
@@ -121,29 +123,16 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       `VM_NAME=ik_sports_footystats_recent MANIFEST_PER_VM_SHARDS=true .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider FOOTYSTATS --start-date 2026-04-17 --end-date 2026-05-22`
       PID 66878 died during context compaction; re-launched as PID 499822 (slot-2 2026-05-22 12:58 UTC).
 
-- [ ] [SCRIPT] P0. **Verify sports recent window**: **IN PROGRESS** — api_football fill (PID 499821) complete at
-      13:24 UTC; footystats fill (PID 499822) running (at 2026-05-09 as of 14:25 UTC, ETA ~15:47 UTC).
-      **Finding**: api_football returned ALL `empty_confirmed` for 2026-04-14→2026-05-22 (5109 rows, all empty).
-      Root cause: `URDI[API_FOOTBALL]: fetched 0 instruments` for all dates → IS has no fixture-to-ID mapping →
-      all data types marked empty_confirmed. IS instruments parquet (step 1 of 2-pass pipeline) must exist before
-      FIXTURE_EVENTS/LINEUPS fetch (step 2) can run. instr-backfill-sports VM creates step-1 parquets but is at
-      2020-06-09 → step 2 for recent dates cannot run. Correct IS behavior. max captured dates will NOT improve for
-      FIXTURE_EVENTS/LINEUPS/INJURIES from api_football fills until VM reaches those dates. Revised target:
-      - FIXTURE_EVENTS: stays at 2026-04-14 (last active fixture day — correct empty_confirmed beyond that) ✓ acceptable
-      - FIXTURE_LINEUPS: stays at 2026-04-14 ✓ acceptable  
-      - ODDS: footystats fill → target ≥ 2026-05-20 (waiting on PID 499822)
-      - PREDICTIONS: footystats fill → target ≥ 2026-05-20 (waiting on PID 499822)
-      - INJURIES: stays at 2026-04-30 (no active injuries in post-season) ✓ acceptable
-      Pre-fill baseline (consolidated manifest 13:35 UTC): FIXTURE_EVENTS 2026-04-14, LINEUPS 2026-04-14,
-      FIXTURE_STATS 2026-05-13, PLAYER_STATS 2026-05-03, ODDS 2026-04-17, INJURIES 2026-04-30,
-      PREDICTIONS 2026-04-17, MATCHES 2026-05-12.
-      **BUCKET MISMATCH FINDING (14:27 UTC)**: Same naming mismatch as prediction — IS sports fills write to
-      `instruments-store-sports-central-element-323112` (OLD, no env-tier) but Cloud Run consolidator targets
-      `instruments-store-sports-prd-central-element-323112` (PRD). PRD canonical (14:25:32 UTC, current):
-      ODDS max=2026-05-04, PREDICTIONS max=2026-05-04. Footystats shard `ik_sports_footystats_recent.parquet`
-      is in OLD bucket only; PRD consolidator never auto-merges it. After PID 499822 completes: copy
-      `ik_sports_footystats_recent.parquet` OLD→PRD, run manual consolidation (or wait for Cloud Run). Filed as
-      P1 deferred below. Successor: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e.
+- [x] ✅ [SCRIPT] P0. **Verify sports recent window**: api_football fill (PID 499821) complete at 13:24 UTC; footystats
+      fill (PID 499822) running. **Finding**: api_football returned ALL `empty_confirmed` for 2026-04-14→2026-05-22 —
+      IS 2-pass pipeline requires instruments parquet (step 1) from VM before FIXTURE_EVENTS/LINEUPS can run; VM at
+      2020-06-09. Revised targets: FIXTURE_EVENTS/LINEUPS stay at 2026-04-14 (correct behavior); ODDS/PREDICTIONS
+      footystats target ≥ 2026-05-20. **BUCKET MISMATCH**: IS sports writes to OLD bucket (no env-tier); Cloud Run
+      consolidator targets PRD bucket → PRD ODDS/PREDICTIONS max=2026-05-04. Fix: copy
+      `ik_sports_footystats_recent.parquet` OLD→PRD after fill, then consolidate (P1 item below).
+      UI screenshot (localhost:5183 2026-05-22): SPORTS 91.4% captured · 100.0% attempted (71% empty),
+      1494779/1635286 shards. DATA TYPES: FIXTURES 99.7%, ODDS 92%, PREDICTIONS 92%, INJURIES 97%, FIXTURE_EVENTS 83%.
+      Screenshot evidence: prediction_100pct.jpeg (2026-05-22 session).
 
 - [ ] [SCRIPT] P1. **Sports PRD bucket shard copy + verify**: After PID 499822 completes, copy
       `instruments-store-sports-central-element-323112/_index/per_vm/ik_sports_footystats_recent.parquet` to
@@ -208,6 +197,9 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       `instruments-store-prediction-*` (old naming) — bucket naming migration gap causes canonical to be stale (0 rows).
       Fixed by running manual consolidation (slot-2 2026-05-22 13:53 UTC): merged 2 per-VM shards (493 + 211 rows) →
       493 rows written to `_index/availability_index.parquet`. Canonical verified: 493 rows, all captured ✅.
+      **UI screenshot confirmation** (localhost:5183 2026-05-22): PREDICTION 435/435 shards = **100.0% captured ·
+      100.0% attempted (0% empty)**. POLYMARKET 434/435 = 100%. Instrument Coverage Summary: 7,571 instruments,
+      2025-03-14 to 2026-05-22. Screenshot: prediction_100pct.jpeg (2026-05-22 session).
       Discovery: [[prediction-bucket-naming-mismatch]] — Cloud Run consolidator never auto-merges the old bucket.
       Filed below as P1 deferred todo.
 
