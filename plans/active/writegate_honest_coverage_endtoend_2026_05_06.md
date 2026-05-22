@@ -2916,9 +2916,12 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       holiday/weekend via `non_trading_day_reason`, half-day→`EXPECTED_PARTIAL_HALF_DAY`, session
       hours→`EXPECTED_OUTSIDE_TRADING_HOURS`. All Wave 3.T SSOTs consumed. — UTL pre-existing (audited 2026-05-22 by
       slot-2)
-- [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle SSOT
+- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle SSOT
       returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
-      prediction-shard dates.
+      prediction-shard dates. — UTL pre-existing (audited 2026-05-22 by slot-2): per-market lifecycle via
+      `market_created_at`/`settlement_time`/`current_status` at UTL `legacy_reason_classifier.py:450-511`.
+      `CANONICAL_GROUP_METADATA` has no date-range fields; IS MARKET_LIFECYCLE is the canonical-group lifecycle SSOT
+      consumed via per-market row columns. UTL@a19888f5 (current HEAD).
 - [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
       Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
       (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy).
