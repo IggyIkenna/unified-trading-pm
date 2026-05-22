@@ -69,6 +69,10 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 ---
 
+## P3 lint backlog (absorbed from unused_import_audit_2026_05_18)
+
+- [ ] [AGENT] P3. Fix F401 unused imports in `instruments-service/tests/scripts/test_canonicalize_defi_manifest_data_types_2026_05_16.py` (`contextlib`, `os`, `tempfile`, `pytest`) and `instruments-service/tests/scripts/test_reconcile_lending_indices_phantom.py` (`pytest`). Run `ruff check --select F401 --fix <files>` after verifying git status is clean. Issue: `plans/archive/issues/unused_import_audit_2026_05_18.md`.
+
 ## Temporary states + their canonical follow-up plans
 
 - Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
