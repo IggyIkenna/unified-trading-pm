@@ -78,9 +78,9 @@ performance-critical paths:
   - D7 already fixed the DeFi retry loop and 7 CCXT adapters
   - Check remaining 295 violators (A1: 302 - 7 CCXT adapters fixed) in non-execution-service repos
   - Focus on MTDS adapters (high-frequency data fetchers) — unclassified errors = full retry backoff even on 400s
-  - **PARTIAL 2026-05-22**: ccxt_adapter.py (7 blocks) + aster_adapter.py (3 blocks) + hyperliquid_adapter.py (2 blocks)
-    fixed — mtds@2eb61e6e + mtds@2d71f4cd. 29 adapter files still missing classify_venue_error (mostly DeFi LST +
-    sports/prediction adapters). Full criterion requires ALL adapter except blocks — remaining work is P2 post-cutover.
+  - **PARTIAL 2026-05-22**: 5 files / 14 `except Exception` blocks fixed — ccxt_adapter (7), aster (3), hyperliquid (2),
+    aave_lending (1), lst_lido (1). mtds@2eb61e6e + mtds@2d71f4cd + mtds@89603496. 20 adapters still missing
+    classify_venue_error (DeFi LST + sports/prediction + tradfi/ibkr). Remaining work is P2 post-cutover.
 
 ### Phase 4 — Throughput benchmarking
 
