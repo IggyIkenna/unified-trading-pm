@@ -1,0 +1,633 @@
+---
+title: "AUDIT-03 — DeFi May-23 archetypes e2e drift audit (carry_staked_basis + arbitrage_price_dispersion)"
+audit_id: AUDIT-03
+created: 2026-05-21
+author: harsh + Claude Opus 4.7 (1M)
+model_tier: opus-required # audit authoring + topic-walk; remediation execution = sonnet
+status:
+  SEEDED — catalogue v1 + onboarding/reporting (§2.11/§2.12) + cross-archetype safety (§2.13 XAS); enriched from
+  Ikenna's per-epic instructions + 2026-05-21 mtg methodology (layered passes / mock-mode / e2e-tiers); F-07 + GAP-15
+  filed; no code-run yet
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+parent_pool: plans/active/issues/human_led_audit_pool_2026_05_21.md # row #3
+scope:
+  archetypes: [carry_staked_basis, arbitrage_price_dispersion]
+  pipeline:
+    instruments-service → MTDS → features-onchain/features-delta-one → strategy-service → execution-service →
+    pnl-attribution → risk
+  data_mode: live GCS data primary; synthetic fill for coverage gaps (gaps recorded as findings)
+  out_of_scope: recursive-borrow / recursive-staked variants (post-cutover — see DEFER register)
+estimate_class: design
+related_codex:
+  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
+  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
+  - codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md
+  - codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md
+  - codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md
+  - codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md
+  - codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md
+  - codex/09-strategy/architecture-v2/cross-cutting/kill-switch-circuit-breaker.md
+  - codex/04-architecture/defi-execution-overview.md
+  - codex/04-architecture/flash-loan-receiver.md
+  - codex/04-architecture/amm-slippage-simulation.md
+  - codex/04-architecture/custody-providers.md
+  - codex/04-architecture/interface-credential-convention.md
+  - codex/04-architecture/per-client-isolation-architecture.md
+  - codex/04-architecture/shard-level-failure-isolation.md
+  - codex/02-data/availability-manifest-and-data-status.md
+  - codex/02-data/honest-absence-downstream-handling.md
+  - codex/02-data/service-output-emission-semantics.md
+  - codex/02-data/defi-data-types-catalog.md
+  - codex/08-workflows/client-onboarding.md
+  - codex/04-architecture/client-config-and-risk-dimensions.md
+  - codex/04-architecture/wallet-hierarchy-and-capital-flow.md
+  - codex/04-architecture/client-reporting-architecture.md
+  - codex/14-customer-journeys/dart/mode-toggle.md
+  - codex/07-security/audit-logging.md
+related_plans:
+  - plans/active/master_to_live_defi_2026_05_23.md
+  - plans/active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
+  - plans/active/defi_master_2026_05_07.md
+  - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
+  - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
+  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
+  - plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md
+---
+
+# AUDIT-03 — DeFi May-23 archetypes e2e drift audit
+
+> **Living document.** This is a re-runnable drift-detection checklist, not a one-shot writeup. The **checkpoint
+> catalogue (§2)**, **deferred register (§3)**, **gap register (§4)**, and **maintenance rules (§7)** are the durable
+> spine — they change only by append/deprecate. The **run ledger (§5)** and **findings index (§6)** grow one row per
+> run. Each run also drops a dated result file in `audits/audit-results/runs/AUDIT-03_<date>.md`. The e2e flow under
+> audit is mapped in `audit-files/defi_strategy_e2e_flow.md`.
+
+---
+
+## §0 How to use this doc
+
+### 0.1 What it proves
+
+For the two May-23 DeFi archetypes, **does the code match what codex specs + active plans say it should do**, end to
+end? Codex + plans are the **oracle**; the code is the **subject**. When they diverge, the finding names which side is
+wrong and which plan fixes it.
+
+### 0.2 Two phases
+
+| Phase                                           | What                                                                                                            | Data                                       |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Phase 1 — static drift** (codex+plans ↔ code) | Read code vs spec/plan. Most `READ` checkpoints. Ships first, fast.                                             | none                                       |
+| **Phase 2 — e2e behaviour** (pipeline run)      | Run the real strategy→execution→pnl→risk path. All `RUN` checkpoints. Catches behaviour bugs static reads miss. | **live GCS data**, synthetic fill for gaps |
+
+Phase 1 can complete in ~30 min on a focused pass; Phase 2 (with data-coverage discovery) can run hours. Breadth is
+expected — lay out every point; depth is dialled by cadence (§0.3).
+
+**Layered passes — basics before nuance ("the audit after the audit").** A run is not expected to verify everything at
+once. The **first pass targets the basics**: does the e2e actually do the thing end-to-end, and _what data is missing_
+(the synthetic-data run surfaces absent sources — §0.6). Later passes add nuance — EigenLayer/AVS rewards, weekly
+seasonal LST rewards (the discrete "dividend in a different currency you must then sell" — PNL-03/04/05, EXE-13), finer
+execution/risk behaviour. Severity is the rough pass-layer proxy (P0/P1 = basics-first; P2 = nuance). Each re-run should
+be _more foundational-complete_ than the last; eventually the audit is about nuance, not basics.
+
+**Order within a pass: Codex → plans → code → map.** Start from codex (the organized SSOT), then plans + issues (the
+SSOT of _intention_ — check conflicts + existing todos), then read the code, then produce the map/findings. The
+codex↔plan CI gate is **not currently running** (quickmerge GH actions stale), so codex↔plan conflicts are caught here
+by hand — keep classifying them (`CODEX-DRIFT` / `PLAN-DRIFT`).
+
+**Phase 2 runs through the `e2e-testing` ("intern testing") harness**, tiered 0→6: tier 0 = all-mock, only
+decision-making real; rising tiers swap in real data as backfills land; pricing real once backfilled; execution real
+only when live. The tier is a per-run choice based on data maturity, not a fixed ladder — and don't regress to mock once
+a source is real. **Prerequisite (finding F-07):** the e2e-testing scripts are ~3-4 weeks stale and need updating for
+the strategy-service consolidation + current deployment topology before a Phase-2 run is meaningful.
+
+### 0.3 Cadence types (per checkpoint)
+
+| Cadence      | When to run                                                                                           | Typical content                                                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **fast**     | **every run** — cheap, grep-able invariant that regresses on any code change                          | enum/constant presence, "no banned pattern", param-validation exists, venue allowlist not hardcoded                                    |
+| **general**  | **each audit pass** — needs a focused read or a small targeted run                                    | threshold logic, attribution shape, leg construction, event emission                                                                   |
+| **in-depth** | **triggered, not every run** — expensive (full e2e run, data-coverage discovery) or stable-once-fixed | "data source X is wired" (once added, don't re-check until a new venue/data_type lands); full scenario-matrix run; multi-tick pipeline |
+
+**Key rule the user set:** once an `in-depth` item is resolved (e.g. a missing data source is added), it does **not**
+re-run every time — it carries a **re-run trigger** (next col) and only fires when that trigger hits.
+
+### 0.4 Verify method
+
+`READ` = static (grep / read code vs oracle). `RUN` = requires executing the pipeline (Phase 2). Shown in the **When**
+column as `cadence · method`.
+
+### 0.5 Drift classification (every finding gets exactly one)
+
+| Class         | Meaning                                                     | Plan it spawns                                        |
+| ------------- | ----------------------------------------------------------- | ----------------------------------------------------- |
+| `CODE-DRIFT`  | code doesn't match codex/plan                               | plan fixes **code**                                   |
+| `CODEX-DRIFT` | codex doc stale/wrong vs reality                            | plan fixes **codex doc**                              |
+| `PLAN-DRIFT`  | a plan asserts something no longer true / contradicts codex | plan fixes/archives the **plan**                      |
+| `GAP`         | neither code nor codex implements the intent                | plan **adds to both**                                 |
+| `DATA-GAP`    | required data source missing/partial/unwired                | plan adds **adapter / data_type / credential** (→ §4) |
+
+### 0.6 Live-vs-synthetic data policy
+
+Run on **live GCS data wherever a source exists and is captured**. Where a §2.9 `DATA-*` checkpoint shows a coverage
+gap, **inject synthetic data** for that series so the pipeline run isn't blocked — AND **file the gap as a `DATA-GAP`
+finding** (§4) so the missing source becomes a plan. Synthetic data is a test crutch, never a silent substitute: every
+synthetic injection must be logged in the run result file. Per CLAUDE.md "External Data Is Always Available" — a missing
+source is a `BLOCKED-CREDENTIALS`/new-adapter ask, never a silent descope.
+
+**Mechanism — same code, mock-mode path, not a fork.** Synthetic data MUST flow through the _same code path_ as live: a
+CLI mock-mode flag points the affected data source at a parallel GCS mock directory (identical bucket structure, mock
+dir appended) — never a separate code branch or a hand-made CSV the real pipeline would never read ("if we're testing
+completely different code, what's the point"). Mock values should be _adapter-reasonable_ (a plausible price/rate the
+adapter could itself infer), not arbitrary.
+
+**Synthesising a series IS the discovery signal.** Having to mock a feed is the tell that a real source is missing or
+thin — surfacing that is a primary Phase-2 output: every synthetic injection → a `DATA-GAP` finding (§4). The source is
+public or purchasable (on-chain via Alchemy/Graph, Kaiko, Tardis, …) — treat it as a credential/adapter ask, not a
+descope.
+
+### 0.7 How to run + record
+
+1. Pick a scope (whole catalogue, or one §2.x topic, or `cadence=fast` only).
+2. Run the checkpoints; classify each as PASS / drift-class.
+3. Drop a dated result file: `audits/audit-results/runs/AUDIT-03_<YYYY_MM_DD>.md` (per-checkpoint result + synthetic
+   injections used + code/codex shas).
+4. Append one summary row to **§5 run ledger** here.
+5. Each drift → one row in **§6 findings index** + a todo in the most-relevant active plan (favour upgrading existing
+   plans; new plan only if no home). Per CLAUDE.md commit-and-flip discipline.
+
+### 0.8 How to add / deprecate a checkpoint
+
+- **Append-only IDs.** Never renumber. New check → next free ID in its section. This is what makes "we never miss a
+  point" true across runs.
+- **Deprecate, don't delete.** Mark `~~CSB-NN~~ DEPRECATED (<reason>, <date>)`; keep the ID reserved.
+- Every new checkpoint must cite an oracle (codex § or plan line) and carry a severity + cadence.
+
+### 0.9 Scope discipline — deep on 2, safe for all 53
+
+AUDIT-03 audits **two** MVP archetypes (`carry_staked_basis`, `arbitrage_price_dispersion`) in depth. But the system
+runs **53 archetypes across 5 asset classes** (defi / cefi / tradfi / sports / prediction), and nearly every fix this
+audit spawns lands in a **shared layer** (engine framework, UAC contracts, allocators, manifest schema, asset-group
+routing, risk rules). **A fix that is correct for our two archetypes but regresses the other 51 — or another asset class
+— is a net loss.** §2.13 (XAS-\*) is the gate for that: any shared-layer change must be proven archetype-agnostic before
+a finding is closed. This is the dimension Ikenna's per-epic audit layout (`plans/audit/instructions/`) enforces by
+construction (one checklist per epic = per shared concern); here it is the explicit cross-cutting check that complements
+our archetype-deep view. Several XAS checks are the "for ALL archetypes / asset_groups" generalization of an
+archetype-scoped check elsewhere in §2 (e.g. XAS-02↔PIPE-01, XAS-03↔PIPE-02, XAS-05↔PIPE-06, XAS-08↔ALC-05).
+
+**Adjacent — owned elsewhere, not duplicated here:** archetype _constraint validity_ (invalid
+`(venue, share_class, chain)` combos must error — e.g. Betfair in `carry_staked_basis`, or a Bitcoin share-class for a
+stake-basis trade since only ETH/SOL are stakeable; rules sourced from UAC; per-archetype data-type self-report) is
+owned by the **strategy-archetype audit (pool #1)** —
+`plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`. AUDIT-03 _consumes_ its conclusions (which
+data_types a given archetype can have) but does not re-audit the constraint matrix.
+
+---
+
+## §1 SSOT register (the oracle inventory)
+
+Every checkpoint cites one of these. **When one of these docs/plans/modules changes, re-run the checkpoints that cite
+it.** Shas captured per-run in the result file.
+
+### 1.1 Codex (intent)
+
+| Oracle                                                                             | Governs                                            | Code module audited against it                                                                    |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `codex/.../archetypes/carry-staked-basis.md`                                       | carry logic, legs, config, P&L, risk               | `strategy-service/.../v2/carry_and_yield/staked_basis.py`                                         |
+| `codex/.../archetypes/arbitrage-price-dispersion.md`                               | arb logic, variants, execution modes               | `strategy-service/.../v2/arbitrage_structural/price_dispersion.py` + `funding_rate_dispersion.py` |
+| `codex/.../cross-cutting/pnl-attribution.md`                                       | P&L factors/layers, lending-yield, gas, recon      | `strategy-service/strategy_service/pnl/engine/*`                                                  |
+| `codex/.../cross-cutting/restaking-reward-economics.md`                            | 3-layer reward decomposition, dust slippage        | `pnl/engine/reward_attribution.py`                                                                |
+| `codex/.../cross-cutting/execution-policies.md`                                    | policy resolution + version pinning                | execution-service algo selection                                                                  |
+| `codex/.../cross-cutting/mev-protection.md`                                        | Flashbots/Jito submission modes                    | execution-service `mev_router.py`                                                                 |
+| `codex/.../cross-cutting/risk-gates.md`                                            | 4-layer pre-flight                                 | risk-and-exposure-service + execution preflight                                                   |
+| `codex/.../cross-cutting/kill-switch-circuit-breaker.md`                           | kill-switch hierarchy, breaker thresholds          | risk-service `circuit_breaker.py` + strategy on-kill behaviour                                    |
+| `codex/04-architecture/defi-execution-overview.md`                                 | DefiErrorCode (30), wrap preprocessor, cost models | execution-service `defi_execution/*`                                                              |
+| `codex/04-architecture/flash-loan-receiver.md`                                     | receiver bytecode validation                       | `AAVEConnector` + receiver registry                                                               |
+| `codex/04-architecture/amm-slippage-simulation.md`                                 | hedge-ratio Phase 6, slippage sim                  | `dynamic_hedge_ratio.py` + matching engine                                                        |
+| `codex/04-architecture/custody-providers.md`                                       | CLOUD_KMS signing, health-check cadence            | execution-service custody/                                                                        |
+| `codex/04-architecture/interface-credential-convention.md`                         | key lifetime, hot-reload                           | connector `connect(config=...)`                                                                   |
+| `codex/04-architecture/per-client-isolation-architecture.md`                       | spawn-per-client, TransferIntent client_id         | StrategySupervisor / ClientWorker                                                                 |
+| `codex/04-architecture/shard-level-failure-isolation.md`                           | record_failed, 4-pillar write-gate                 | service write paths                                                                               |
+| `codex/02-data/{availability-manifest,honest-absence,service-output-emission}*.md` | record_empty reasons, available_at, batch=live     | UTL `record_captured`/`record_empty` + handlers                                                   |
+| `codex/02-data/defi-data-types-catalog.md`                                         | data_type registry for DeFi                        | MTDS handlers + UAC registry                                                                      |
+| `codex/08-workflows/client-onboarding.md`                                          | client registration funnel                         | user-management-ui + user-management-api                                                          |
+| `codex/04-architecture/client-config-and-risk-dimensions.md`                       | ClientConfig + per-client risk dims                | UAC `internal/client_config.py`                                                                   |
+| `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`                       | treasury/hot wallet tiers + capital flow           | wallet provisioning                                                                               |
+| `codex/04-architecture/client-reporting-architecture.md`                           | client reports (NAV/P&L/attribution)               | client-reporting-api + ClientReportingTab                                                         |
+| `codex/14-customer-journeys/dart/mode-toggle.md`                                   | DART 3-way + ManualTradeGateDialog                 | unified-trading-system-ui DART                                                                    |
+| `codex/07-security/audit-logging.md`                                               | append-only audit records + lifecycle events       | audit sinks + GCSEventSink                                                                        |
+
+### 1.2 Plans (requirements + gates)
+
+| Plan                                                              | Supplies                                                             |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `master_to_live_defi_2026_05_23.md`                               | Group C/D/E/F/G cutover gates + continuous-verification cols → §2.10 |
+| `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md`  | carry graceful-degradation + Solana AMM + APD feature deferrals      |
+| `defi_master_2026_05_07.md`                                       | venue restrictions, Solana coverage, AAVE silent-zero                |
+| `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` | venue collateral matrix (Streams A/B/D), pnl path                    |
+| `defi_recursive_borrow_archetypes_2026_05_10.md`                  | **LegController backport DEFERRED** (→ §3)                           |
+| `promote_workflow_may23_cli_path_2026_05_10.md`                   | promote path, V2BatchHarness resolver, testnet creds                 |
+| `writegate_honest_coverage_endtoend_2026_05_06.md`                | batch=live + honest-coverage HARD RULES                              |
+
+### 1.3 Code modules in scope
+
+```
+strategy-service/strategy_service/engine/strategies/v2/
+  carry_and_yield/staked_basis.py            # carry engine
+  carry_and_yield/dynamic_hedge_ratio.py     # Phase 6B hedge sizing
+  arbitrage_structural/price_dispersion.py   # APD Variant A + dispatch
+  arbitrage_structural/funding_rate_dispersion.py  # APD Variant B
+  factory.py                                 # ARCHETYPE_ENGINE_REGISTRY
+  batch_harness.py                           # V2BatchHarness (stateful tick adapter)
+  target_universe/catalog.py                 # slot generation from matrix
+  archetype_slot_resolver.py                 # legacy-factory bridge (funding-disp slots)
+strategy-service/strategy_service/pnl/engine/*  # archetype_aggregator, reward_attribution, orchestrator
+strategy-service/strategy_service/portfolio_allocator/archetypes.py  # rank allocators
+e2e-testing/scripts/defi/colocated_engine.py   # batch/paper/live co-located engine
+e2e-testing/scripts/defi/run-batch.sh|run-paper.sh|run-live.sh
+execution-service/.../defi_execution/*         # connectors, mev_router, wrap preprocessor, cost aggregator
+unified-api-contracts/.../internal/strategy_directives.py  # directive contract
+unified-api-contracts/.../registry/venue_collateral.py     # collateral matrix SSOT
+market-tick-data-service/.../cli/handlers/{lst_rates,perp_funding,dex_pools,lending_indices}_handler.py
+features-onchain-service/.../engine/staking_apy_total.py
+features-delta-one-service/.../app/calculators/funding_oi.py
+```
+
+---
+
+## §2 Checkpoint catalogue (the spine)
+
+**Columns:** ID · Assertion (what code MUST do) · Oracle (codex §/plan) · Code anchor · Sev · When (`cadence · method`).
+Run-time result is recorded per-run in §5/§6 + the dated result file, **not** inline (keeps the spine clean across
+runs).
+
+### §2.1 carry_staked_basis — strategy logic (CSB-\*)
+
+Oracle: `carry-staked-basis.md` unless noted.
+
+| ID     | Assertion                                                                                                                                                                                                                                | Oracle §                         | Code                                        | Sev | When           |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------- | --- | -------------- |
+| CSB-01 | `LST_AS_MARGIN` is the ONLY structure — no SPLIT_STAKE / COLLATERAL_BORROW code path; no `borrow_apy_bps`/`lending_protocol`/`borrow_asset` params exist                                                                                 | "Firm rule", "Features expected" | staked_basis.py                             | P0  | fast · READ    |
+| CSB-02 | Preflight rejects slot when `venue_accepts_collateral(perp_venue, lst_asset)` is False                                                                                                                                                   | "Firm rule"                      | staked_basis.py + venue_collateral.py       | P0  | fast · READ    |
+| CSB-03 | 4-leg sequence SWAP→STAKE→TRANSFER→TRADE emitted with `execution_mode=LEADER_HEDGE`                                                                                                                                                      | "Execution semantics"            | staked_basis.py `_build_legs`               | P0  | general · READ |
+| CSB-04 | Entry iff `staking_apy_total + funding_apy − fees > entry_bps` (200); exit when below `exit_bps` (50)                                                                                                                                    | token-flow + Config              | staked_basis.py `on_tick`                   | P0  | general · RUN  |
+| CSB-05 | `staking_apy_bps` derived on-chain `((rate[t]/rate[t-1])^365−1)·1e4` from MTDS `lst_rates` — **not** DefiLlama/vendor                                                                                                                    | "On-chain APY derivation"        | lst_rates_handler.py + staking_apy_total.py | P1  | general · READ |
+| CSB-06 | Consumes exactly the 6 named features (`staking_apy_bps`, `funding_rate_apy_bps`, `usdc_idle_yield_apy_bps`, `health_factor`, `lst_native_rate`, `lst_native_rate_ts`) — no more, no fewer                                               | "Features expected"              | staked_basis.py + UIC onchain schema        | P1  | fast · READ    |
+| CSB-07 | All 6 required engine params validated at `__init__` → `ValueError` at boot if absent (not silent default)                                                                                                                               | "Config schema"                  | staked_basis.py `__init__`                  | P1  | fast · READ    |
+| CSB-08 | Dynamic hedge ratio = `eth_qty · lst_native_rate_now · (1 − margin_haircut)` via `compute_dynamic_hedge_ratio()`; `peg_drift_threshold_bps`=25 hysteresis triggers rebalance                                                             | "Hedge ratio Phase 6B"           | dynamic_hedge_ratio.py + on_tick            | P1  | general · RUN  |
+| CSB-09 | Staleness guard: `lst_native_rate_ts` >300s → fallback `lst_native_rate=1.0` + warning logged                                                                                                                                            | "Features expected"              | dynamic_hedge_ratio.py                      | P2  | general · RUN  |
+| CSB-10 | Per-venue wrap discipline: wstETH-wrap for OKX, plain stETH for Deribit+Bybit, no-wrap jitoSOL/mSOL for Drift; banned combos (wstETH→Bybit/Deribit, stETH→OKX, wrap jito/mSOL) rejected at `_build_legs`                                 | "Per-venue wrap-step discipline" | staked_basis.py / catalog.py / config       | P0  | general · READ |
+| CSB-11 | `CLOSE_LEADER_IF_HEDGE_FAILS`: perp short fail within `hedge_deadline_ms` → unwind TRANSFER+UNSTAKE+reverse-SWAP back to USDC                                                                                                            | "Execution semantics"            | staked_basis.py + execution-service         | P0  | in-depth · RUN |
+| CSB-12 | `min_health_factor`=1.25 gates the perp short vs LST-haircut breach; depeg kill-switch; funding-flip exit at `exit_bps`                                                                                                                  | "Risk profile" + Config          | staked_basis.py + risk-service              | P1  | general · RUN  |
+| CSB-13 | `react_to_equity_change` = 2-leg rescale (SWAP USDC↔ETH for principal delta + matching perp TRADE); no STAKE/UNSTAKE micro-flow per wobble                                                                                               | "Reaction to equity change"      | staked_basis.py                             | P2  | general · READ |
+| CSB-14 | `on_tick` returns `[]` (no instruction) when `staking_apy_bps` OR `funding_rate_apy_bps` missing (graceful degradation, not crash, not zero-fill)                                                                                        | phase5 plan + honest-absence     | staked_basis.py `on_tick`                   | P0  | fast · RUN     |
+| CSB-15 | `CarryStakedBasisRankAllocator` scores slot = `staking_apy_total_bps + funding_apy_bps`; drops below `min_apy_bps`=250; 2-stage LST×venue weights sum to 1                                                                               | "Per-archetype rank allocator"   | portfolio_allocator/archetypes.py           | P2  | general · READ |
+| CSB-16 | `allowed_chains`=[ethereum,solana,arbitrum] gates on-chain sizing; CeFi perps not chain-gated                                                                                                                                            | Config schema                    | staked_basis.py                             | P2  | fast · READ    |
+| CSB-17 | Catalog emits exactly the 4 live slots (jito-drift, marinade-drift, lido-deribit, lido-bybit) from `VENUE_COLLATERAL_MATRIX` at import                                                                                                   | "Catalog axis"                   | catalog.py `_build_carry_staked_basis`      | P2  | general · READ |
+| CSB-18 | `V2BatchHarness` has a resolver entry for `carry_staked_basis` (regression: was missing)                                                                                                                                                 | promote plan L313                | batch_harness.py                            | P0  | fast · READ    |
+| CSB-19 | Solana AMM legs (jitoSOL/mSOL/bSOL) produce `pool_shape=SOLANA_AMM` fills with `slippage_bps>0`; EVM AMM raises `NotImplementedError`                                                                                                    | phase5 plan L363                 | staked_basis.py + matching engine           | P1  | general · RUN  |
+| CSB-20 | Emits `StrategyPnlStreamEvent` per UAC contract; `StrategyDirectiveReloader` wired into the allocator                                                                                                                                    | master C9a–C9d                   | staked_basis.py + allocator                 | P0  | general · READ |
+| CSB-21 | Carry's CeFi perp hedge leg wires to the CeFi execution path (DeFi long + CeFi short hybrid) — codex matches code                                                                                                                        | cefi instr + archetypes          | staked_basis.py + execution-service         | P0  | general · RUN  |
+| CSB-22 | Inter-leg margin management: as perp-short P&L swings (collateral value drifts at the staked leg), the engine moves margin between the staked leg and the perp venue (TRANSFER) to hold `min_health_factor` — not just entry-time sizing | carry §Risk + token-flow         | staked_basis.py + execution-service         | P1  | general · RUN  |
+| CSB-23 | Client deposit/withdraw mid-position → `react_to_equity_change` scales up (deposit) or partially unwinds (withdraw) preserving delta-neutrality + per-client isolation; a withdrawal cannot strand the perp hedge                        | carry §Reaction + ONB-08         | staked_basis.py                             | P1  | general · RUN  |
+
+### §2.2 arbitrage_price_dispersion — strategy logic (APD-\*)
+
+Oracle: `arbitrage-price-dispersion.md` unless noted.
+
+| ID     | Assertion                                                                                                                                                          | Oracle §                    | Code                                    | Sev | When           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | --------------------------------------- | --- | -------------- |
+| APD-01 | Variant A `REQUIRED_PARAMS={"candidate_venues"}`, ≥2 venues, `ValueError` at boot if absent or <2                                                                  | "Variant A"                 | price_dispersion.py `__init__`          | P1  | fast · READ    |
+| APD-02 | Variant A defaults: `dispersion_bps`=30, `cost_bps`=10, `stake_fraction`=0.1, `hedge_deadline_ms`=5000                                                             | "Variant A"                 | price_dispersion.py                     | P2  | fast · READ    |
+| APD-03 | Variant B funding-dispersion: 6-venue universe (bybit,deribit,binance,okx,hyperliquid,aster), `pair_selection=dynamic-best-long-short`, `target_leverage`=5.0      | "Variant B"                 | funding_rate_dispersion.py              | P1  | general · READ |
+| APD-04 | Entry iff `gross_spread − (fees+slippage+gas+bridge+commission) > min_edge`                                                                                        | token-flow                  | price_dispersion.py                     | P0  | general · RUN  |
+| APD-05 | `dispersion_type` dispatch: price→`_on_tick`; funding→`_on_tick_funding_rate_dispersion`                                                                           | "Variants"                  | price_dispersion.py                     | P1  | fast · READ    |
+| APD-06 | Execution-mode selection: ATOMIC (same-chain multicall/flash-loan) vs LEADER_HEDGE (cross-venue non-atomic)                                                        | token-flow + Execution      | price_dispersion.py + execution-service | P0  | general · READ |
+| APD-07 | LEADER_HEDGE: leader fires first, `on_leader_fill`→hedge within `hedge_deadline_ms`, `CLOSE_LEADER_IF_HEDGE_FAILS` unwinds filled leg                              | "Execution semantics"       | price_dispersion.py + execution-service | P0  | in-depth · RUN |
+| APD-08 | Opportunity validation: liquidity on both legs / venue connectivity / pre-funded-or-flash-loan / preflight account health — before dispatch                        | token-flow step 2           | price_dispersion.py                     | P1  | general · RUN  |
+| APD-09 | Vol-cap `max_underlying_move_pct`=3.0 (tighter than carry's 5.0); Variant B `vol_cap_clamp` (threshold 80% / zscore 2.0 / combine=any); `realized_vol_20` from FSS | Config + Variant B          | price_dispersion.py                     | P2  | general · READ |
+| APD-10 | Kill switches: abnormal dispersion (broken feed) / consecutive execution failures / venue outage                                                                   | "Risk profile"              | price_dispersion.py + risk-service      | P1  | general · RUN  |
+| APD-11 | Funding-rate-dispersion slots resolved via `archetype_slot_resolver.py` `STRATEGY_TYPE_TO_SLOT` (legacy-factory bridge), not the catalog                           | "Example instances"         | archetype_slot_resolver.py              | P2  | fast · READ    |
+| APD-12 | `react_to_equity_change` recomputes `max_capital_per_opp`; returns `[]` (no in-flight resize)                                                                      | "Reaction to equity change" | price_dispersion.py                     | P2  | fast · READ    |
+| APD-13 | Funding-rate signal generates fills on ≥2 perp venues over 24h; PnL row present in `by_strategy/ARBITRAGE_PRICE_DISPERSION/...` within 24h of live start           | defi_master L261            | price_dispersion.py + pnl               | P0  | in-depth · RUN |
+| APD-14 | Generic SUPERSEDED config (`opportunity_type`/`eligible_venues`) used by NO live slot — only Variant A/B configs                                                   | "Config schema ⚠"           | catalog.py + slot configs               | P2  | fast · READ    |
+
+### §2.3 Execution path — MEV / flash-loan / slippage / cost / directives (EXE-\*)
+
+| ID     | Assertion                                                                                                                                                                                                                  | Oracle                                        | Code                              | Sev | When           |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------- | --- | -------------- |
+| EXE-01 | Every DeFi on-chain revert maps to one of 30 canonical `DefiErrorCode`; routes on FAIL/RETRY/SKIP prefix; no ad-hoc string matching; `classify_venue_error()` at call sites                                                | defi-execution-overview §Error Classification | execution-service defi_execution/ | P0  | fast · READ    |
+| EXE-02 | Ethereum mainnet SWAP ≥$10k uses `FLASHBOTS_PROTECT`; <$10k + all L2 use `PUBLIC_MEMPOOL`; `BLOXROUTE` appears nowhere                                                                                                     | mev-protection §Policy mapping                | mev_router.py                     | P0  | fast · READ    |
+| EXE-03 | Solana DeFi swaps use `JITO_BUNDLE` (not `PUBLIC_MEMPOOL`), resolved at dispatch via UAC `MevSubmissionMode`                                                                                                               | mev-protection                                | mev_router.py                     | P0  | fast · READ    |
+| EXE-04 | MEV algo resolved at runtime via `_DEFAULT_POLICIES` in `mev_router.py` — not hardcoded per-strategy                                                                                                                       | defi-execution-overview §MEV                  | mev_router.py                     | P1  | general · READ |
+| EXE-05 | `AAVEConnector.connect()` validates flash-loan receiver via `eth_getCode` (fail loud on empty bytecode); resolves `flash_loan_receiver` from config then UAC `testnet_contracts[chain_id]` (APD ATOMIC flash-loan variant) | flash-loan-receiver §Runtime Resolution       | AAVEConnector                     | P0  | fast · READ    |
+| EXE-06 | Uniswap slippage: quote via Quoter → `minAmountOut = expected·(1 − slippage_bps/1e4)` → revert if breached; code default is the SSOT (not the codex narrative number)                                                      | defi-execution-overview §Slippage             | protocols/uniswap.py              | P1  | fast · READ    |
+| EXE-07 | Wrap preprocessor auto-prepends WRAP (`stETH→wstETH`) for OKX leg; posting rebasing `stETH` to OKX is banned (composes with CSB-10)                                                                                        | defi-execution-overview §Wrap + pnl §5        | wrap preprocessor                 | P0  | general · RUN  |
+| EXE-08 | DeFi wallet private key NOT cached as instance attr (`self.private_key`/`self._key`/…); `connect(config={...})` happens inside the trade-dispatch loop, not at startup                                                     | interface-credential-convention §Key Lifetime | defi_execution/                   | P0  | fast · READ    |
+| EXE-09 | `select_algo()` raises `NoRuleMatched` (no silent fallthrough); strategy config pins a specific `policy_version` (no auto-upgrade)                                                                                         | execution-policies §Policy resolution         | algo selection                    | P1  | general · READ |
+| EXE-10 | `DefiCostAggregator.estimate_*_cost()` called pre-trade in BOTH batch + live; batch uses per-day median gas from `gas_fee_data` parquet, live uses RPC gas; zero divergence between modes                                  | defi-execution-overview §Phase 9 Cost Models  | cost aggregator                   | P0  | general · RUN  |
+| EXE-11 | Emitted `AtomicInstruction` validates against the UAC/UIC directive contract; execution-service per-leg validations fire                                                                                                   | strategy_directives.py + execution-service    | execution-service                 | P0  | general · RUN  |
+| EXE-12 | Venue restrictions enforced from collateral matrix at execution preflight (Aave/Uniswap/HL acceptance)                                                                                                                     | venue_collateral.py                           | execution preflight               | P0  | general · RUN  |
+| EXE-13 | `CLAIM_REWARD` auto-trigger ≥$50 accrued, max 1×/24h per token; `SELL_REWARD` when balance×price ≥$100; venues Binance spot (liquid) / Uniswap V3 (on-chain-only)                                                          | defi-execution-overview §New Operation Types  | reward handlers                   | P1  | general · READ |
+| EXE-14 | No imports of removed providers (Elysium / Arkham / Bloxroute / Infura) anywhere                                                                                                                                           | defi instr (h)                                | uac + execution-service           | P1  | fast · READ    |
+| EXE-15 | Pyth oracle used Solana-only; other chains use Chainlink — code matches codex                                                                                                                                              | defi instr (i)                                | execution-service                 | P1  | general · READ |
+| EXE-16 | No hardcoded RPC URLs — QG `no_hardcoded_venue_urls.sh` passes for DeFi service dirs                                                                                                                                       | defi instr (f)                                | execution/strategy services       | P0  | fast · READ    |
+| EXE-17 | `TestnetContractRegistry()` loads without KeyError (validates `config/testnet_contracts.yaml` at import)                                                                                                                   | defi instr (c)                                | testnet_contracts.py              | P1  | fast · RUN     |
+| EXE-18 | SwapRouter02 `0x68b3…Fc45` is a UAC constant, NOT hardcoded in execution business logic                                                                                                                                    | execution instr                               | UAC + execution-service           | P1  | fast · READ    |
+
+### §2.4 P&L + attribution (PNL-\*)
+
+Oracle: `pnl-attribution.md` / `restaking-reward-economics.md` unless noted.
+
+| ID     | Assertion                                                                                                                                                                                                               | Oracle §                           | Code                        | Sev | When           |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------- | --- | -------------- |
+| PNL-01 | Lending yield = `aToken_balance·(liquidity_index_now/prev − 1)`; `supply·apy·time` banned; `currentLiquidityRate` (APR view) banned, `liquidityIndex` mandatory (APD lending-protocol-arb slots)                        | pnl §4 Hard Rule                   | PnLCalculator               | P0  | fast · READ    |
+| PNL-02 | LST yield split by shape: wrapped non-rebasing = `holding·(rate_now/prev−1)` from lst-rates; rebasing (stETH) = `(balance_now−prev)·price` from PBMS — the two paths NOT collapsed                                      | pnl §5                             | carry attribution           | P0  | general · RUN  |
+| PNL-03 | Restaking yield decomposed into 3 sub-factors `CARRY_BASE` / `CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL`; collapse to `_eigenlayer_aggregate_apy` banned                                                           | restaking §1 Hard Rule             | reward_attribution.py       | P0  | fast · READ    |
+| PNL-04 | `REWARD_REALISATION_SLIPPAGE` computed by routing dust-swap through the matching engine on tick data — never a hardcoded haircut; paired row per AVS/seasonal                                                           | restaking §2 + pnl                 | reward_attribution.py       | P1  | general · READ |
+| PNL-05 | Pre-TGE points (KARAK/CARROT/MILES/EigenPie) emit `CARRY_ISSUER_SEASONAL` rows with `value_eth=0` + `points_pending=true`; no revenue until TGE                                                                         | restaking §3                       | reward attribution emission | P1  | fast · READ    |
+| PNL-06 | Every `PnLAttributionRow` carries BOTH `factor:PnLFactor` AND `layer:PnLLayer`; `STRATEGY_ALPHA`/`EXECUTION_ALPHA` are derived sum-by-layer views, NOT flat enum members                                                | pnl §7 + Schema                    | PnLFactor enum              | P0  | fast · READ    |
+| PNL-07 | T+1 batch reconciliation at 02:00 UTC: `RESIDUAL`<1% WARN, >5% CRITICAL; position vs PBMS exact; fills vs venue exact; batch P&L OVERRIDES live                                                                         | pnl §T+1                           | reconciliation job          | P0  | general · RUN  |
+| PNL-08 | Gas attribution = `−(gas_used · gas_price_per_block · native_usd_at_tx_block)` per chain; no hardcoded `gas_cost_usd_per_tx`; gas reserves non-deployable; FEES factor at EXECUTION layer                               | pnl §6 Hard Rule                   | gas attribution             | P0  | fast · READ    |
+| PNL-09 | ETH/BTC share class: delta target ≠0; `evaluate_base_currency_drift()` WARN>2% / CRIT>5% from `equity/fx_rate`; FX factor emitted separately (carry is USDC share-class → delta=0; applies if ETH/BTC slots exist)      | pnl §ETH/BTC Share Class           | risk_metrics.py             | P1  | general · READ |
+| PNL-10 | `archetype_aggregator` buckets by `(archetype, config_variant)` via slot-label prefix `<ARCHETYPE>@<descriptor>`; writes `by_strategy/{archetype}/year=/month=/...`; P&L engine identical batch/paper/live              | archetype_aggregator.py            | pnl/engine                  | P1  | general · RUN  |
+| PNL-11 | carry P&L attribution matches the 4-row table (staked principal `staking_apy_total×notional − mint/burn`, perp short `funding×notional − commission`, transfer `bridge/fee`, spot `bid-ask`)                            | carry §P&L attribution             | reward_attribution.py       | P1  | general · RUN  |
+| PNL-12 | APD P&L attribution: arb-edge (received−paid) / execution-slippage (detected−realized) / gas-fees-commission / adverse-move unwind cost                                                                                 | arb §P&L attribution               | pnl/engine                  | P1  | general · RUN  |
+| PNL-13 | `pnl-attribution-service` has `ARBITRAGE_PRICE_DISPERSION` references + GCS path `by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/` reachable (regression: zero refs at 2026-05-09 audit) | canonicalisation plan L231 + DG-06 | pnl-attribution-service     | P0  | fast · RUN     |
+
+### §2.5 Risk / kill-switch / circuit-breaker / recon gates (RSK-\*)
+
+Oracle: `kill-switch-circuit-breaker.md` / `risk-gates.md` unless noted.
+
+| ID     | Assertion                                                                                                                                                                                                             | Oracle §                          | Code                       | Sev | When           |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | -------------------------- | --- | -------------- |
+| RSK-01 | Kill-switch 5-level hierarchy enforced in order: `KILL_ALL_LIVE` → `KILL_PER_ASSET_GROUP_{CEFI,DEFI}` → `KILL_PER_ARCHETYPE_*` → `KILL_PER_VENUE_*` → `KILL_PER_WALLET` (latter carries non-empty `target_wallet_id`) | §Kill Switch hierarchy            | KillSwitchId enum + arming | P0  | fast · READ    |
+| RSK-02 | During kill switch: strategy does NOT re-enter; `STOP_NEW_ONLY` pauses signal emission only; `FAST/SLOW_UNWIND` emits close then halts; target-tracking loop stops, only exit-playbook processed                      | §Strategy-Service Behaviour       | strategy on-kill           | P0  | in-depth · RUN |
+| RSK-03 | Circuit breaker CLOSED→DEGRADED at `failure_rate`≥0.30 (window 20, min 5); DEGRADED→OPEN ≥0.60; 429 `CanonicalRateLimitError` NOT counted as failure (separate backoff)                                               | §Circuit Breaker Thresholds       | circuit_breaker.py         | P0  | fast · READ    |
+| RSK-04 | `KILL_PER_WALLET` arm + every wallet-tier pre-trade check writes a `WalletSpendingPreCheckResult` audit-log row (SSOT for per-attempt evidence, distinct from PubSub)                                                 | §Wallet-tier kill-switch          | wallet pre-check           | P1  | general · READ |
+| RSK-05 | Scenario `DEFI_LST_DEPEG_STETH_5PCT` fires `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` within 30s; `ScenarioOutcomeAssertion` passes                                                                                      | §Scenario-driven trips            | ScenarioRunner             | P0  | in-depth · RUN |
+| RSK-06 | 4 risk pre-flight layers in order L1 strategy self-check → L2 risk-and-exposure → L3 execution pre-trade → L4 venue; L2 veto prevents L3+L4; per-layer rejection events (`INSTRUCTION_REJECTED_RISK`) emitted         | risk-gates §4-Layer Model         | risk + execution preflight | P0  | general · RUN  |
+| RSK-07 | PBMS recon freshness required by L2 AND L3; both down → `DUAL_FAILURE_DETECTED` CRITICAL, no auto-action; recon broken but exec ok → `RECON_DEGRADED_CLOSE` on any close                                              | §Reconciliation as Pre-Close Gate | risk gates                 | P0  | general · RUN  |
+| RSK-08 | `CUSTODY_DISCONNECT_SECONDS` breaker fires `BLOCK_NEW` after custody health-ping fail ≥300s; balance-pull recon every 5min; `CUSTODY_HEALTH_DEGRADED` → PagerDuty                                                     | custody §10A                      | circuit-breaker taxonomy   | P0  | fast · READ    |
+| RSK-09 | On-chain reconciler: wallet on-chain balance vs PBMS per-chain accumulator drift > tolerance → `POSITION_LIMIT_EXCEEDED` (chain-scoped) → `CANCEL_OPEN` (independent of venue-rejection sliding window)               | §Per-state-surface reconciler     | on-chain reconciler        | P1  | in-depth · RUN |
+| RSK-10 | Multi-venue cascade: >50% venues OPEN → auto `STOP_NEW_ONLY` for affected strategies; all OPEN → firm-wide kill + CRITICAL PagerDuty; checked on every venue-breaker→OPEN transition                                  | §Multi-Venue Cascade              | circuit_breaker.py         | P0  | general · RUN  |
+| RSK-11 | `CARRY_STAKED_BASIS` 15/15 + `ARBITRAGE_PRICE_DISPERSION` 15/15 UAC risk rules fire; `run_layer2_rule_preflight()` wired                                                                                              | master L1348                      | risk rule preflight        | P0  | general · RUN  |
+| RSK-12 | `KILL_SWITCH_ACTIVATED` + `CIRCUIT_BREAKER_OPEN` events required; no order emission after kill-switch without explicit deactivation                                                                                   | master L488 + CLAUDE.md Risk      | risk-service               | P0  | fast · READ    |
+
+### §2.6 Allocation / isolation / shard-failure (ALC-\*)
+
+| ID     | Assertion                                                                                                                                                                                                         | Oracle                                          | Code                          | Sev | When           |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------------- | --- | -------------- |
+| ALC-01 | carry hedge venues = {Bybit UTA, Deribit, OKX, DRIFT} (LST_AS_MARGIN) only; APD hedge = all 7+ venues (USDC margin); eligibility from UAC registry, NO hardcoded allowlist in code                                | defi-execution-overview §DeFi Long + CeFi Short | hedge-leg selection           | P0  | fast · READ    |
+| ALC-02 | `carry_quality(net_apy)` reads all 3 reward layers (base+AVS+seasonal) + applies dust-router realisation cost; `_eigenlayer_aggregate_apy` as input banned                                                        | restaking §Integration                          | LeveragedLegController        | P0  | general · READ |
+| ALC-03 | Shard-level failure isolation: a failed `(client_id, strategy_id, day)` shard does NOT block others; calls `record_failed` (not silent drop); no partial parquets; 4-pillar write-gate on every `record_captured` | shard-level-failure-isolation                   | service write paths           | P0  | fast · READ    |
+| ALC-04 | Per-client isolation: `StrategySupervisor` spawns one `ClientWorker` per client via `multiprocessing spawn` (NOT fork); `TransferIntent` source+dest share same `client_id`                                       | per-client-isolation-architecture               | StrategySupervisor            | P0  | fast · READ    |
+| ALC-05 | Cross-client transfers forbidden: every transfer op has `source.client_id == dest.client_id`; `CrossClientTransferForbiddenError` raised at 3 layers (UAC, strategy-emit, execution-consume)                      | CLAUDE.md Client funds isolation                | UAC + strategy + execution    | P0  | fast · READ    |
+| ALC-06 | `portfolio_allocator` deterministic — same input → same allocation; no time-dependent randomness                                                                                                                  | strategy instr                                  | portfolio_allocator/          | P1  | general · RUN  |
+| ALC-07 | Attempted cross-client transfer FIRES an alert event (not just raises silently) — composes ALC-05                                                                                                                 | client_isolation instr                          | strategy/execution + alerting | P1  | general · READ |
+
+### §2.7 Custody / credentials (CUS-\*)
+
+Oracle: `custody-providers.md` / `interface-credential-convention.md`.
+
+| ID     | Assertion                                                                                                                                                                                                                                     | Oracle §                                       | Code                 | Sev | When           |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------- | --- | -------------- |
+| CUS-01 | May-23: DeFi + non-Binance CeFi sign via `CLOUD_KMS_ENCRYPTED` (`CloudKmsCustodyProvider`); `custody_config_from_wallet_provisioning()` calls `wallet.validate()` at bridge time → credential mismatch raises at config-parse, not trade-time | custody §2.5 + interface-credential-convention | custody bridge       | P0  | general · READ |
+| CUS-02 | Strategy + execution code does NOT branch on custody provider; `CustodyProvider` protocol is the single interface                                                                                                                             | custody §3                                     | strategy + execution | P0  | fast · READ    |
+| CUS-03 | Every `CustodyProvider` implements `health_check()→CustodyHealth`; ping cadence 60s, balance-pull 5min; `healthy=False` past `next_rotation_due_at`                                                                                           | custody §10A                                   | custody providers    | P1  | fast · READ    |
+| CUS-04 | `SigningSurface` flippable per-wallet via `WalletProvisioningConfig` in GCS without restart; `ApiKeyReloader` observes new provider class + emits `WALLET_PROVISIONING_RELOADED`                                                              | interface-credential-convention §hot-reload    | ApiKeyReloader       | P1  | in-depth · RUN |
+
+### §2.8 Pipeline invariants — honest-coverage / batch=live / manifest (PIPE-\*)
+
+| ID      | Assertion                                                                                                                                                                                                    | Oracle                                       | Code                        | Sev | When           |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | --------------------------- | --- | -------------- |
+| PIPE-01 | Batch=live: single code path; no separate live-only data_types, no distinct field sets, `available_at` never derived at read-time; `pipeline_mode` differentiates                                            | writegate plan L34 + CLAUDE.md               | engines + colocated_engine  | P0  | general · READ |
+| PIPE-02 | `available_at` is per-row write-time; `LookaheadBiasError(strict=True)` enforced; no point-in-time violations either archetype                                                                               | master L1214 + phase5                        | features-service            | P0  | general · RUN  |
+| PIPE-03 | `record_captured` runs 4-pillar validation (row-count>0 or record_empty, NaN-ratio<thresh, schema matches contract, cluster coverage≥expected) every shard; `MissingClusterValidationError` if kwargs absent | CLAUDE.md Manifest                           | UTL record_captured         | P0  | general · READ |
+| PIPE-04 | No silent-zero/placeholder rows; `DependencyError(fail_fast=True)` at boundaries; empty cells classified `empty_confirmed[reason=<typed>]` or `attempted_failed`                                             | master L640 + honest-absence                 | handlers + features         | P0  | general · RUN  |
+| PIPE-05 | Upstream `attempted_failed` propagates: downstream feature emits `record_failed(reason=UPSTREAM_LEG_FAILED)`, not silent skip (e.g. cross-venue arb leg fail)                                                | honest-absence-downstream-handling §Features | features services           | P1  | general · RUN  |
+| PIPE-06 | Manifest `schema_version`=v8 on production rows; populated on all new writes (incident: 0% of 7.4M rows at v8 on 2026-05-20)                                                                                 | CLAUDE.md data-pipeline incident             | write paths                 | P0  | general · RUN  |
+| PIPE-07 | data-status display accurate; shard granularity per asset-group matrix; deployment-UI rollup matches on-disk truth-set                                                                                       | master L1339-40                              | data-status + deployment-UI | P0  | general · RUN  |
+| PIPE-08 | Zero phantom manifest rows for defi (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` = 0)                                                                                              | instruments instr                            | instruments-service script  | P1  | general · RUN  |
+| PIPE-09 | MTDS handlers derive venue URLs from instruments-service — no URL construction in MTDS handler logic (`rg "http"` in handlers = 0 in business logic)                                                         | instruments instr                            | MTDS handlers               | P1  | fast · READ    |
+
+### §2.9 Data coverage — required sources + status (DATA-\*)
+
+**This is the new dimension:** does each required data source/data_type EXIST and get captured? `coverage` reflects the
+last research sweep (2026-05-21) — re-confirm against live GCS at run time. Gaps → §4. `in-depth` here because once a
+source is wired it stays wired (re-run trigger: a new venue/protocol/data_type is added).
+
+| ID      | Required series                                            | Producer + path                                                                               | Coverage (2026-05-21)                                      | Gap                                                                                  | When           |
+| ------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------- |
+| DATA-01 | `lst_rates` (carry CSB-05/08)                              | MTDS `lst_rates_handler.py` → `gs://{lst-rates}/lst_rates/date=/{proto}_{chain}_{ts}.parquet` | present: stETH/wstETH/rETH/cbETH/mETH/weETH + jitoSOL/mSOL | ezETH unsupported (GAP-02); Solana historical thin (GAP-03)                          | in-depth · RUN |
+| DATA-02 | `staking_apy_total` (carry CSB-04/15)                      | features-onchain `staking_apy_total.py` from lst_rates                                        | present (aggregator ships)                                 | —                                                                                    | general · RUN  |
+| DATA-03 | `funding_rate_apy_bps` (carry + APD)                       | features-delta-one `FundingOI` from MTDS `derivative_ticker`                                  | present BYBIT/DERIBIT/BINANCE/OKX/HYPERLIQUID              | ASTER only `perp_funding` REST, no `derivative_ticker` (GAP-04)                      | general · RUN  |
+| DATA-04 | `usdc_idle_yield_apy_bps` (carry CSB-06)                   | features-delta-one `venue_funding_yield`                                                      | **UNWIRED** → defaults 0                                   | GAP-01 / DEFER (KD-02)                                                               | fast · READ    |
+| DATA-05 | `health_factor` (carry CSB-12)                             | features-onchain regime bucket from MTDS `position_data` (top-500 users)                      | present as regime bucket                                   | per-strategy-account HF NOT sourced (GAP-08)                                         | in-depth · RUN |
+| DATA-06 | `mid_price`/`derivative_ticker` per venue (APD-04/06)      | MTDS Tardis `derivative_ticker` per venue                                                     | present 6 CeFi perps except ASTER                          | no cross-venue dispersion aggregator wired (GAP-06); ASTER (GAP-04)                  | general · RUN  |
+| DATA-07 | `dex_pools`/`dex_pool_swaps` (APD DEX arb)                 | MTDS `dex_pools_handler.py`                                                                   | present UniV3/V4, Balancer, Curve, Sushi (subgraphs)       | —                                                                                    | general · RUN  |
+| DATA-08 | `lending_indices` (APD lending-arb + PNL-01)               | MTDS `lending_indices_handler.py`                                                             | present AAVE_V3/COMPOUND_V3/MORPHO                         | AAVE ETH silent-zero early-2022 (GAP-09); Compound multichain subgraph gaps (GAP-10) | general · RUN  |
+| DATA-09 | `realized_vol_20` / `vol_regime_zscore_20` (APD-09)        | features-delta-one volatility calculators                                                     | present                                                    | —                                                                                    | general · READ |
+| DATA-10 | ≥2yr representative DeFi history (carry + APD instruments) | GCS DeFi tick + features buckets                                                              | partial — backfill 2026-04-01→05-16 thin (GAP-11)          | GAP-11                                                                               | in-depth · RUN |
+
+### §2.10 Cutover gates (CUT-\*) — master-plan readiness for these two archetypes
+
+Source: `master_to_live_defi_2026_05_23.md` Groups C/D/E/F/G + `promote_workflow_may23_cli_path_2026_05_10.md`. Many are
+operator-run; cadence reflects how often the audit re-checks the gate is still met.
+
+| ID     | Gate                                                                                                                                                                                              | Source                        | Sev              | When           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ---------------- | -------------- | ---------- |
+| CUT-01 | Both archetypes trade live on a real wallet ≥7 continuous days by 2026-05-23                                                                                                                      | master overview               | P0               | in-depth · RUN |
+| CUT-02 | paper-mode ≥3 continuous days for lead pair vs real venues + Tenderly fork + Solana devnet; events show STARTED/STOPPED + real fills daily                                                        | master pvl-p18a               | P0               | in-depth · RUN |
+| CUT-03 | `ManualTradeGateDialog` renders preview + approve/deny/timeout; execution unholds on approval; Playwright green; first 3 trading days gated                                                       | master pvl-p23c + promote L75 | P0               | general · RUN  |
+| CUT-04 | Backtest fidelity: real gas + real market impact + realistic matching engine both archetypes; `cron:mtds-paper-smoke` running                                                                     | master F17                    | P0               | general · RUN  |
+| CUT-05 | Scenario regression matrix ≥95% pass both archetypes on real VMs within ≤24h of cutover (`cron:mtds-scenario-matrix` NOT YET PROVISIONED)                                                         | master F17.5                  | P0               | in-depth · RUN |
+| CUT-06 | 2-year batch backtest across config grid run for both; candidate configs emitted (`run_2yr_config_grid_backtest.py`)                                                                              | master F18 + promote L401     | P0               | in-depth · RUN |
+| CUT-07 | `credential-probe.sh --mode live` 100% pass by 2026-05-22; CLOUD_KMS signing verified (Sepolia sign-and-broadcast)                                                                                | master F19                    | P0               | fast · RUN     |
+| CUT-08 | 5 perp venue testnets smoke-passed + per-archetype `preflight-cutover.sh` green                                                                                                                   | master F20 + promote L360     | P0               | fast · RUN     |
+| CUT-09 | Reconciliation suite (batch-vs-live + P&L attribution + execution-alpha) scheduled (`batch_live_reconciler` shipped, cron pending)                                                                | master F21                    | P1               | general · RUN  |
+| CUT-10 | Trading guardrails: breakers + kill switches armed + alerting wired + auto-recovery; alerting-paging cron scheduled                                                                               | master F22                    | P0               | fast · RUN     |
+| CUT-11 | Promotion path `paper_1d`→`live_early` only (`live_full` post-cutover); CLI primary (`run-paper.sh`→`colocated_engine.py`→`run-live.sh`) + UI secondary (`POST /api/promote/...`) both functional | master + promote L7           | P0               | fast · READ    |
+| CUT-12 | batch=live invariant cron (`cron:batch-vs-live-recon`) wired; same code path, only fill source differs                                                                                            | master C10                    | P0               | general · RUN  |
+| CUT-13 | `POST /api/promote` rejects `live_full` target with 422 pre-cutover (`paper_1d`→`live_early` only)                                                                                                | dart instr + promote plan     | promote endpoint | P1             | fast · RUN |
+
+### §2.11 Onboarding / client lifecycle (ONB-\*)
+
+Oracle: `client-onboarding.md` / `per-client-isolation-architecture.md` / `custody-providers.md`.
+
+| ID     | Assertion                                                                                                                                                            | Oracle                               | Code                       | Sev | When           |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------- | --- | -------------- |
+| ONB-01 | New client → `ClientConfig` (UAC `internal/client_config.py`) carries `client_id`, `share_class`, `categories_enabled`, `max_total_notional_usd`, `max_drawdown_pct` | client-config-and-risk-dimensions.md | UAC client_config.py       | P1  | general · READ |
+| ONB-02 | Per-client capital + risk limits in `clients.yaml` (per archetype × shard); schema `clients_yaml_schema.py`                                                          | per-client-isolation-architecture.md | deployment-service configs | P1  | general · READ |
+| ONB-03 | Wallet provisioned via `wallet_provisioning.json` in GCS; `signing_surface` selects custody provider (config-only flip, no recompile)                                | custody-providers.md                 | execution custody factory  | P0  | general · READ |
+| ONB-04 | May-23 signing = `CLOUD_KMS_ENCRYPTED` (`CloudKmsCustodyProvider`) via `custody_config_from_wallet_provisioning()` (composes CUS-01)                                 | custody §2.5                         | custody/factory.py         | P0  | fast · READ    |
+| ONB-05 | `StrategySupervisor` → `ClientAdmissionController` spawns one `ClientWorker` per `client_id` (spawn, not fork) (composes ALC-04)                                     | per-client-isolation-architecture.md | StrategySupervisor         | P0  | fast · READ    |
+| ONB-06 | `ClientWorker` boot preflight: load KMS creds → per-venue auth ping → balance check → emit `CLIENT_READY` before any trading                                         | per-client-isolation-architecture.md | ClientWorker               | P1  | general · RUN  |
+| ONB-07 | Client entity model consistent across docs — CLAUDE.md "Odum UK + Cayman" vs onboarding codex "Elysium→POD→BVI" reconciled (finding F-06)                            | client-onboarding.md + CLAUDE.md     | docs                       | P1  | fast · READ    |
+| ONB-08 | Add/remove a client at runtime without downtime; `ClientLifecycleEvent` REGISTER/REMOVE; isolation holds across cycles (cross-link audit-pool #12)                   | per-client-isolation-architecture.md | supervisor lifecycle       | P1  | in-depth · RUN |
+
+### §2.12 Reporting / audit surface (RPT-\*)
+
+Oracle: `client-reporting-architecture.md` / `dart/mode-toggle.md` / `audit-logging.md`.
+
+| ID     | Assertion                                                                                                                                                                | Oracle                           | Code                                   | Sev | When           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- | -------------------------------------- | --- | -------------- |
+| RPT-01 | `client-reporting-api` serves NAV (`/nav`), P&L-by-layer (`/pnl`), attribution (`/attribution`) from `client-reports/{client_id}/{archetype}/{date}/attribution.parquet` | client-reporting-architecture.md | client-reporting-api routes            | P1  | general · RUN  |
+| RPT-02 | `ClientReportingTab` renders NAV / P&L / attribution / drilldown (client-facing)                                                                                         | client-reporting-architecture.md | deployment-ui `ClientReportingTab.tsx` | P2  | general · READ |
+| RPT-03 | DART 3-way batch/paper/live comparison wired to REAL backend (`GET /strategy/{id}/runs?mode=`), not mock (finding F-01)                                                  | dart/mode-toggle.md (pvl-p23a/b) | unified-trading-system-ui DART         | P0  | general · RUN  |
+| RPT-04 | `ManualTradeGateDialog` renders pre-trade risk preview + approve/deny/timeout; approve → `MANUAL_APPROVED` → execution unhold; real backend (finding F-02)               | pvl-p23c + promote U5/U6         | unified-trading-system-ui              | P0  | general · RUN  |
+| RPT-05 | Strategy-audit GCS writer wired: append-only `audit/{client_id}/{date}/{ts}-strategy.json` (not only events JSONL) (finding F-03)                                        | audit-logging.md                 | strategy-service audit sink            | P1  | general · RUN  |
+| RPT-06 | Execution + risk audit paths correct + key-aligned (`audit/{client_id}/.../{risk,execution}.json`) (finding F-04)                                                        | audit-logging.md                 | execution/risk audit sinks             | P1  | general · READ |
+| RPT-07 | 11 (batch) / 12 (live) lifecycle events emitted via `GCSEventSink` to `events/{service}/{date}/events.jsonl`                                                             | events contract                  | services                               | P1  | fast · READ    |
+| RPT-08 | Audit bucket has GCS Object Versioning + Retention Lock (immutability by policy, not just construction) (finding F-05)                                                   | audit-logging.md                 | infra                                  | P1  | in-depth · RUN |
+| RPT-09 | P&L attribution rows carry `archetype_id` + `config_variant`; reachable per archetype (composes PNL-13)                                                                  | client-reporting-architecture.md | pnl-attribution-service                | P1  | general · RUN  |
+
+### §2.13 Cross-archetype / cross-asset-class regression safety (XAS-\*)
+
+**Why this section exists (operator point, 2026-05-22):** the system runs **53 archetypes across 5 asset classes**. This
+audit is deep on two, but its fixes touch shared layers. These checkpoints verify a carry/arb fix stays
+archetype-agnostic — it must not regress the other 51 archetypes or another asset class. This is the safety dimension
+Ikenna's per-epic instruction layout enforces by construction.
+
+**Meta-rule — XAS-00:** any finding fix that lands in a SHARED module (not an archetype-specific file) requires
+cross-archetype regression evidence — re-run the affected checkpoint against **≥1 archetype per family AND all 5
+asset_groups** — before it is marked done. Shared-layer fix without that evidence = review-blocking.
+
+| ID     | Invariant                                                                                                                                                                                                     | Verify                                                     | Sev | When           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --- | -------------- |
+| XAS-01 | All 53 archetypes resolve in `ARCHETYPE_ENGINE_REGISTRY` / factory — no orphan, no silent drop after an engine change                                                                                         | count registered archetypes == 53 (factory.py)             | P0  | fast · READ    |
+| XAS-02 | No `if mode == "live"` branching in signal computation for ANY archetype/asset_group (batch=live system-wide ↔ PIPE-01)                                                                                       | `rg "mode.*live"` strategy-service → review all hits       | P0  | general · READ |
+| XAS-03 | `available_at` is write-time in ALL adapters, ALL asset_groups — no read-time derivation anywhere (↔ PIPE-02)                                                                                                 | `rg "available_at.*(datetime.now\|utcnow)"` = 0            | P0  | fast · READ    |
+| XAS-04 | A3 manifest divergence: zero `MISSING_EXPECTED` + `DIVERGENT_EMPTY` across ALL 5 asset_groups simultaneously (a defi fix can't open cefi/sports/tradfi/prediction gaps)                                       | A3 scan, all 5 asset_group columns                         | P0  | in-depth · RUN |
+| XAS-05 | `schema_version` ≥95% v8 across ALL asset_groups (migration can't partially apply ↔ PIPE-06)                                                                                                                  | `a4_manifest_v8_compliance.py` by asset_group              | P0  | general · RUN  |
+| XAS-06 | Shared UAC contract changes (`AtomicInstruction` / directive / `execution_mode` / `PnLFactor` / `DefiErrorCode`) are additive + backward-compatible for ALL consumers — no rename/removal of existing members | `rg` all consumers; diff enum members before/after         | P0  | general · READ |
+| XAS-07 | No `Any` types in UAC schemas — type loosening cascades to all 53 consumers                                                                                                                                   | `rg "Any\b" unified-api-contracts/.../` → review every hit | P1  | fast · READ    |
+| XAS-08 | `CrossClientTransferForbiddenError` enforced at exactly 3 layers — a change to one doesn't drop the other two (↔ ALC-05)                                                                                      | `rg "CrossClientTransferForbiddenError"` = 3 sites         | P0  | fast · READ    |
+| XAS-09 | `BaseRankAllocator` base-class change holds for all 6 sibling allocators, not just `CarryStakedBasisRankAllocator`                                                                                            | unit-test all 6 subclasses                                 | P1  | general · RUN  |
+| XAS-10 | Catalog generation: a `VENUE_COLLATERAL_MATRIX` change for our slots leaves sibling archetype slot counts unchanged                                                                                           | diff catalog slot counts per archetype before/after        | P1  | general · RUN  |
+| XAS-11 | Asset-class routing isolation: `VENUE_TO_ASSET_GROUP` / `asset_group` hive-key — no `category=` leakage; a defi venue change doesn't misroute cefi/tradfi/sports/prediction                                   | `rg "category="` adapters = 0 + asset_group routing test   | P0  | general · READ |
+| XAS-12 | `a6_batch_live_adapter_parity.py` zero unclassified rows across ALL asset_groups (not just defi)                                                                                                              | run a6; all 5 columns paired or BLOCKED-CREDENTIALS        | P1  | in-depth · RUN |
+| XAS-13 | Bucket-name SSOT + GCS-object-op rules hold workspace-wide — our infra change adds no inline `gs://` f-string, no `subprocess gsutil/gcloud`                                                                  | QG STEP 5.69 + `rg "subprocess.*(gsutil\|gcloud)"` = 0     | P1  | fast · READ    |
+| XAS-14 | Consolidation renames resolve everywhere — zero stale `strategy_and_dart_service` (or other renamed-module) import refs across all repos                                                                      | `rg "strategy.and.dart.service"` = 0                       | P1  | fast · READ    |
+
+---
+
+## §3 Known / accepted-drift register (DEFER-\*)
+
+**Do NOT raise these as findings.** They are accepted deviations with a named successor plan. The audit's only job here:
+confirm the deferral is **still valid** (successor plan exists + not silently abandoned) and the in-scope path still
+satisfies its checkpoints. A deferral whose successor plan has vanished → THAT is a finding (`PLAN-DRIFT`).
+
+| ID    | Accepted deviation                                                                                                   | Successor plan                                                                                           | Re-confirm                                      |
+| ----- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| KD-01 | Both engines hand-build legs inline, NOT via `LegController.update()`                                                | `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase (post-cutover `..._2026_06_01.md`) | inline path still satisfies CSB-03 / APD-06/07  |
+| KD-02 | `usdc_idle_yield_apy_bps` defaults to 0 (HLP/HIP-3 not wired)                                                        | features-delta-one `venue_funding_yield` series                                                          | still 0, not silently faked (DATA-04)           |
+| KD-03 | Generic APD config schema SUPERSEDED — only Variant A/B valid                                                        | n/a (clean break)                                                                                        | no slot uses `opportunity_type` (APD-14)        |
+| KD-04 | `LeveragedLegController` recursive-borrow Phases 4/5/6/9/12                                                          | `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`                                            | out-of-scope (recursive variant)                |
+| KD-05 | Solana Marginfi/Kamino recursive-borrow Family 2                                                                     | `defi_recursive_borrow_solana_2026_06_xx.md` (TBD)                                                       | out-of-scope                                    |
+| KD-06 | `FireblocksCustodyProvider` not implemented (OUT OF SCOPE May-23)                                                    | none (operator-descoped)                                                                                 | May-23 uses CLOUD_KMS (CUS-01)                  |
+| KD-07 | CEFFU custody codex STUB; Copper+CEFFU production creds                                                              | June-1 config-only flip                                                                                  | May-23 ships CLOUD_KMS                          |
+| KD-08 | Full UI promote enrichment (pinned shas/model refs/manifest version); `live_full`; Firebase `execution-full` backend | `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (target 2026-07-04)                            | May-23 path is `paper_1d`→`live_early` (CUT-11) |
+| KD-09 | alerting-service routing for `DefiErrorCode` (30 codes exist; routing is separate repo)                              | alerting-service next slot                                                                               | codes exist (EXE-01); routing not a May-23 gate |
+| KD-10 | Real CeFi testnet execution replacing synthetic matching-engine sim (APD)                                            | `cefi_testnet_real_execution_2026_06.md`                                                                 | synthetic matching OK for paper                 |
+| KD-11 | APD multi-venue feature Phase 5 (weETH/rETH/cbETH/mSOL/bSOL funding + GMX/Aster/Pacifica)                            | `arbitrage_features_phase5_2026_05_23.md` + `funding_rate_apy_bps_multi_venue_2026_06.md`                | 6-venue core (APD-03) sufficient for May-23     |
+| KD-12 | Bybit 30-day leverage cap enforcement in risk-and-exposure for carry                                                 | `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`                                            | min_health_factor gate (CSB-12) covers May-23   |
+| KD-13 | `batch-vs-live-recon` cron scheduling (helper shipped, cron pending Wave-2 Phase 12)                                 | Wave-2 Phase 12                                                                                          | CUT-09/CUT-12 track                             |
+
+---
+
+## §4 Data-coverage gap register (GAP-\*)
+
+Each gap → live where present, **synthetic fill** for the run, AND a remediation plan. Status taxonomy per CLAUDE.md
+"External Data Is Always Available" (closed set): `unwired` / `partial` / `no-source` / `blocked-credentials`.
+
+| ID     | Gap                                                                                                                                                                                                                              | Status              | Affects                         | Remediation                                                             | Sev |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------------------- | ----------------------------------------------------------------------- | --- |
+| GAP-01 | `usdc_idle_yield_apy_bps` (HLP/HIP-3 margin yield)                                                                                                                                                                               | unwired             | carry P&L floor                 | features-delta-one `venue_funding_yield` emitter (KD-02)                | P1  |
+| GAP-02 | `ezETH` LST rate — multi-call ABI not implemented                                                                                                                                                                                | partial             | carry ezETH slots               | implement ezETH multi-call in `lst_rates_handler.py`                    | P2  |
+| GAP-03 | Solana historical LST rates (mSOL/jitoSOL) — Tier-2 subgraph `SUBGRAPH_IDS` absent; Tier-1/3 today-only                                                                                                                          | partial             | carry Solana backfill           | wire Solana subgraph IDs OR accept thin history + synthetic             | P1  |
+| GAP-04 | ASTER `derivative_ticker` (mark/index price) — only `perp_funding` REST                                                                                                                                                          | no-source           | APD 6th venue, funding-disp     | register ASTER `derivative_ticker` in UAC + adapter                     | P1  |
+| GAP-05 | CeFi funding via `derivative_ticker` is batch-daily not real-time interval                                                                                                                                                       | partial             | APD live funding                | live funding stream adapter (post-cutover)                              | P2  |
+| GAP-06 | No unified cross-venue `mid_price` dispersion aggregator                                                                                                                                                                         | partial             | APD Variant A                   | wire cross-venue dispersion feature in features-delta-one               | P1  |
+| GAP-07 | DEX-perp `perp_funding` forward-poll not wired (LIGHTER/PACIFICA/EXTENDED)                                                                                                                                                       | partial             | APD DEX-perp (future)           | forward-poll handler (post-cutover)                                     | P2  |
+| GAP-08 | per-strategy-account `health_factor` — only top-500-user snapshot exists                                                                                                                                                         | no-source           | carry live HF gate              | per-account HF from perp venue margin API                               | P1  |
+| GAP-09 | AAVE V3 Ethereum silent-zero early-2022 — `instruments-store-defi` metadata missing                                                                                                                                              | partial             | carry/APD ETH leg backtest      | backfill metadata + re-walk (data-pipeline plan)                        | P0  |
+| GAP-10 | Compound V3 multichain subgraph gaps; UniV3 ARB/OPT 35-91d gaps; SPARK missing                                                                                                                                                   | partial             | APD lending-arb history         | subgraph backfill                                                       | P1  |
+| GAP-11 | DeFi backfill 2026-04-01→05-16 (46d) thin — 2 upstream deps missing                                                                                                                                                              | partial             | full backtest window            | `issues/defi_upstream_46day_full_backfill_2026_05_16.md`                | P1  |
+| GAP-12 | Solana Trust Wallet keypair pending operator export; devnet/testnet choice                                                                                                                                                       | blocked-credentials | Solana paper/live               | operator export (master pvl-p20c)                                       | P0  |
+| GAP-13 | 5 perp venue testnet API keys (Aster/HL/Deribit/Bybit/OKX)                                                                                                                                                                       | blocked-credentials | testnet smoke                   | operator credential provision (promote L451)                            | P0  |
+| GAP-14 | Manifest v8 migration — 0% of 7.4M prod rows at v8; 1.3M NULL schema_version                                                                                                                                                     | partial             | manifest correctness            | row migration (data-pipeline incident)                                  | P0  |
+| GAP-15 | Historical discrete-reward series (EigenLayer/AVS continuous + seasonal LST rewards + pre-TGE points) for backtest — discrete weekly "dividend in a different currency" + its sell-side realisation; harder than continuous rate | partial/unknown     | carry P&L nuance (PNL-03/04/05) | source issuer/EigenLayer reward history OR synthetic for early backtest | P1  |
+
+---
+
+## §5 Run ledger
+
+One row per run. Detail (per-checkpoint result + synthetic injections + shas) lives in
+`audits/audit-results/runs/AUDIT-03_<date>.md`.
+
+| Date       | Phase                           | Scope                                                                                          | codex sha  | code sha | PASS | DRIFT         | GAP         | Result file                                        |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------------------------- | ---------- | -------- | ---- | ------------- | ----------- | -------------------------------------------------- |
+| 2026-05-21 | Phase 0 design-review           | flow + onboarding + reporting bookends                                                         | n/a (read) | n/a      | —    | 6 (F-01…F-06) | refs KD/GAP | `runs/AUDIT-03_2026_05_21_phase0_design_review.md` |
+| 2026-05-22 | Doc refinement (mtg transcript) | methodology: layered passes / mock-mode / e2e-tiers / inter-leg + client-flow / reward-history | n/a        | n/a      | —    | 1 (F-07)      | +GAP-15     | (this doc)                                         |
+| 2026-05-22 | Phase 1 READ — §2.1 carry | CSB-01..20 READ subset vs codex carry spec | strategy-svc@b303a358 | b303a358 | ~9 | 5 (F-08…F-12) | — | `runs/AUDIT-03_2026_05_22_phase1_carry.md` |
+| 2026-05-22 | Phase 1 READ — §2.2 APD | APD-* READ subset (sub-agent + Opus review) | strategy-svc@b303a358 | b303a358 | 6 | 3 (F-13…F-15) | — | `runs/AUDIT-03_2026_05_22_phase1_apd.md` |
+| 2026-05-22 | Phase 1 READ — §2.4 PNL | PNL-* READ subset (sub-agent + Opus review) | strategy-svc@b303a358 | b303a358 | 4 | 4 (F-16…F-19) | — | `runs/AUDIT-03_2026_05_22_phase1_pnl.md` |
+| 2026-05-22 | Phase 1 READ — §2.8 PIPE + §2.9 DATA | PIPE/DATA READ subset (sub-agent + Opus review) | mtds + features-onchain/delta-one | multi | 7 | 3 (F-20…F-22) | DATA coverage=Phase2 | `runs/AUDIT-03_2026_05_22_phase1_pipe_data.md` |
+| 2026-05-22 | Phase 1 READ — §2.6 ALC + §2.7 CUS + §2.11 ONB | ALC/CUS/ONB READ subset (sub-agent + Opus review) | strategy-svc@b303a358 + execution-service + UAC | multi | 8 | 4 (F-23…F-26) | — | `runs/AUDIT-03_2026_05_22_phase1_alc_cus_onb.md` |
+
+---
+
+## §6 Findings index
+
+One row per drift found, across all runs (append-only). Detail in the run result file; plan link is where it gets fixed.
+
+| Finding | Run date   | Checkpoint            | Class       | Summary                                                                                                                                          | Plan                     | Status |
+| ------- | ---------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ------ |
+| F-01    | 2026-05-21 | RPT-03                | CODE-DRIFT  | DART 3-way comparison mock-only; backend host TBD                                                                                                | TBD (pvl-p23b)           | OPEN   |
+| F-02    | 2026-05-21 | RPT-04                | CODE-DRIFT  | ManualTradeGateDialog design-only, not wired                                                                                                     | promote U5/U6            | OPEN   |
+| F-03    | 2026-05-21 | RPT-05                | CODE-DRIFT  | Strategy-audit GCS writer not wired (events JSONL only)                                                                                          | TBD                      | OPEN   |
+| F-04    | 2026-05-21 | RPT-06                | CODE-DRIFT  | Execution-audit path keyed by client_order_id not client_id                                                                                      | TBD                      | OPEN   |
+| F-05    | 2026-05-21 | RPT-08                | GAP         | Audit bucket lacks versioning + retention lock                                                                                                   | TBD                      | OPEN   |
+| F-06    | 2026-05-21 | ONB-07                | CODEX-DRIFT | Entity model: CLAUDE.md Odum/Cayman vs codex Elysium/POD/BVI                                                                                     | reconcile                | OPEN   |
+| F-07    | 2026-05-22 | Phase 2 / e2e-testing | GAP         | e2e-testing ("intern testing") scripts ~3-4 wks stale — need strategy-consolidation + deployment-topology update before a meaningful Phase-2 run | e2e-testing update (TBD) | OPEN   |
+| F-08 | 2026-05-22 | CSB-01/17 | CODE-DRIFT | staked_basis.py docstrings stale: deleted SPLIT_STAKE 3-leg path + "zero LST venues/slots" vs matrix (6 LST pairs) + codex (4 slots) | defi_master remediation TBD | OPEN |
+| F-09 | 2026-05-22 | CSB-01/04 | CODE-DRIFT | engine keeps SPLIT_STAKE f-grid + (1-f)·idle_yield; f<1 mis-sizes (no USDC-margin leg); f=1.0 not enforced | TBD | OPEN |
+| F-10 | 2026-05-22 | CSB-04 | CODE-DRIFT | net_carry omits codex `− fees` term → optimistic entry threshold | TBD | OPEN |
+| F-11 | 2026-05-22 | CSB-10 | CODE-DRIFT | per-venue wrap + banned-combo (stETH→OKX / wstETH→Deribit-Bybit) not enforced at `_build_legs`; relies on config + EXE-07 | TBD | OPEN |
+| F-12 | 2026-05-22 | CSB-16 | GAP | allowed_chains chain-gating absent from all strategy-service (codex specifies [ethereum,solana,arbitrum] gate) | TBD | OPEN |
+| F-13 | 2026-05-22 | APD-03 | CODEX-DRIFT | pair_selection_mode "dynamic-best-long-short" not a PairSelectionMode enum value; code uses single-best + venue_selection_mode — clarify intent | TBD | OPEN |
+| F-14 | 2026-05-22 | APD-09 | CODE-DRIFT | max_underlying_move_pct (codex 3.0) not enforced in APD engine; only vol_cap_clamp threshold+zscore (likely same gap in carry → XAS) | TBD | OPEN |
+| F-15 | 2026-05-22 | APD-12 | CODEX-DRIFT | codex react_to_equity_change references phantom max_capital_per_opp fields; engine auto-scales via target_equity*stake_fraction (functionally OK) | TBD | OPEN |
+| F-16 | 2026-05-22 | PNL-05 | GAP | pre-TGE points rows silently skipped instead of emitting CARRY_ISSUER_SEASONAL value_eth=0 points_pending=true (silent-absence) | TBD | OPEN |
+| F-17 | 2026-05-22 | PNL-06 | CODE-DRIFT | pnl/engine emits PnLBreakdown (no factor/layer enums) not canonical PnLAttributionRow — affects all archetypes' P&L | TBD | NEEDS-CONFIRM |
+| F-18 | 2026-05-22 | PNL-08 | CODE-DRIFT | hardcoded $3200 ETH-price fallback in pnl_input_builder _defaults (chains 1/10/8453/42161) | TBD | OPEN |
+| F-19 | 2026-05-22 | PNL-11/12 | CODE-DRIFT | funding-PnL synthetic 1bps surrogate (abs(net_qty)*last_price*0.0001) not actual funding events | TBD | OPEN |
+| F-20 | 2026-05-22 | PIPE-05 | CODE-DRIFT | features-onchain dep-checker uses GCS blob-presence not manifest capture_status → silent compute on upstream attempted_failed | TBD | OPEN |
+| F-21 | 2026-05-22 | PIPE-09 | CODE-DRIFT | hardcoded venue API URLs (HL/Aster/Pacifica) in perp_funding_handler — IS-SSOT violation | TBD | OPEN |
+| F-22 | 2026-05-22 | (incidental) | CODE-BUG | perp_funding_handler._make_session() has no headers param but called with headers= (Lighter path) → TypeError | TBD | NEEDS-CONFIRM |
+| F-23 | 2026-05-22 | ALC-05 | CODE-DRIFT | CrossClientTransferForbiddenError at 1 of 3 layers (exec only); UAC docstring-only + strategy-emit absent — isolation defence-in-depth incomplete | TBD | NEEDS-CONFIRM |
+| F-24 | 2026-05-22 | CUS-03 | GAP | health_check()→CustodyHealth absent from CustodyProvider protocol + all impls | TBD | OPEN |
+| F-25 | 2026-05-22 | ONB-01 | CODE-DRIFT | strategy-svc ClientConfig=ClientStrategyOverride missing share_class/categories_enabled/max_drawdown_pct; check reporting/client_config.py | TBD | NEEDS-CONFIRM |
+| F-26 | 2026-05-22 | CUS-02 | CODE-DRIFT | get_custody_provider() silently returns MockCustodyProvider on unknown provider (warning only) → silent mock signing in prod | TBD | OPEN |
+
+---
+
+## §7 Maintenance rules
+
+1. **Append-only IDs.** New checkpoint → next free number in its `§2.x`. Never renumber. Deprecate with
+   `~~ID~~ DEPRECATED (<reason>, <date>)`, keep the ID reserved.
+2. **Every checkpoint cites an oracle** (codex § or plan line) + carries a severity + a cadence. No orphan assertions.
+3. **Cadence promotion/demotion** is a deliberate edit, logged in the run ledger note. An `in-depth` data-coverage check
+   demotes to "resolved — re-run on trigger" once its gap closes (don't re-run wired sources every pass).
+4. **Spine vs ledger separation.** §2/§3/§4 don't carry per-run state. §5 logs the run; §6 logs only drifts. After 50
+   runs the spine is still readable.
+5. **SSOT sha refresh.** When a §1 oracle changes (codex doc edited / plan updated / code module refactored), bump its
+   sha in the next run's result file and re-run the checkpoints citing it.
+6. **Two-folder split.** This reusable audit doc lives in `audits/audit-files/` — the checklist you re-run again and
+   again. All run outputs + findings live in `audits/audit-results/`: one dated run file per run
+   (`audit-results/runs/AUDIT-03_<date>.md`) plus the findings that surface. The §5 ledger + §6 findings tables here are
+   a thin rolling index for navigation; the detail lives in `audit-results/`.
+7. **Findings → plans, not inline fixes here.** This doc never holds remediation code. Each drift becomes a todo in the
+   most-relevant active plan (favour upgrading existing plans; new plan only if no home), per CLAUDE.md commit-and-flip.
