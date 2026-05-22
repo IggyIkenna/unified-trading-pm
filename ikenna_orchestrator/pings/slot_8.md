@@ -41,8 +41,9 @@ done.
 **Wave 2 🔴 ALL BLOCKED**:
 
 1. `manifest_schema_final_gate` final verify: pre-backfill baseline captured (7,410,830 rows, 100% v8, 0 blank reasons).
-   Final post-backfill verify **GATED ON MTDS-3.2.A-V GREEN** (slot 5 Wave 2 MTDS CeFi backfill in progress — 1.3M
-   `attempted_failed` rows as of 08:00 UTC).
+   Final post-backfill verify **GATED ON MTDS-3.2.A-V GREEN** (MTDS CeFi VM `mtds-backfill-cefi-2026-05-22b` RUNNING; as
+   of 08:50 UTC still on chunk 1/175 processing 2024-01-01 — 175 chunks × ~90 min each = estimated **2-5 day ETA**, NOT
+   same-day).
 2. PagerDuty `uts-prod-live-trading` policy: **BLOCKED-CREDENTIALS** — `pagerduty-api-key` SM secret exists but has 0
    versions (never provisioned). Also DEFERRED per alerting plan Phase 4 Telegram-primary decision.
 3. `ALERT_THRESHOLDS` UAC update: **BLOCKED until 2026-05-24 08:32 UTC** — correct VM is
