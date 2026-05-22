@@ -522,6 +522,13 @@ UX).
       `--feature-family onchain --operation     compute --mode live --asset-group DEFI --feature-group ALL --start-date 2026-05-22 --end-date 2026-05-22`.
       LiveHandler ignores CLI dates and uses `datetime.now()`. (c) Force-new-deployment strategy+features-service to
       pick up UTL@a19888f5 (BLOCKED-2 fix image from CodeBuild rebuilt 08:56 UTC). SMOKE pending service startup.
+      **2026-05-22 SESSION 3 FIXES** (slot 3): (d) strategy+features+execution-service all failing exit 1:
+      `ImportError: cannot import name 'DEFI_MAJOR_ASSET_ADDRESS_LIST' from 'unified_api_contracts.registry'` — images
+      were built before UAC commit `b7288346` landed. Triggered new CodeBuilds for all 4 services (alerting, strategy,
+      features, execution) at ~UTC now. (e) alerting-service App Runner still `CREATE_FAILED` due to ENTRYPOINT
+      inheritance: base image has `ENTRYPOINT ["python"]`, alerting-service CMD also starts with `python` → combined
+      `python python -m alerting_service.cli.main` → `/app/python: No such file`. Fix: added `ENTRYPOINT []` to
+      alerting-service Dockerfile — alerting-service@6260ee7. New CodeBuild triggered. SMOKE still pending.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
