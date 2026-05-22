@@ -90,14 +90,14 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [CODE] P0. **IS-3.1.chain-fix** — Fixed `MalformedRowKeyError` in orchestrator.py:3104 — conditional chain
       inclusion in row_key (omit when empty for CeFi/TradFi). instruments-service@4c1389d. ruff+basedpyright clean.
       Tarball rebuild in progress.
-- [ ] [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Tarball rebuild in progress (instruments-service@4c1389d). Relaunch 3×
-      CeFi VMs: `--asset-group CEFI --start 2026-03-01 --end 2026-05-22`.
-- [ ] [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Relaunch TradFi VM:
-      `--asset-group TRADFI --start 2026-03-01 --end 2026-05-22`.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.CeFi-Relaunch** — Relaunched 3× CeFi VMs with `--force` (instruments-service@4c1389d
+      chain fix). `instr-backfill-cefi-1-20260522` @ 34.84.128.69, `instr-backfill-cefi-2-20260522` @ 34.180.72.34,
+      `instr-backfill-cefi-3-20260522` @ 34.84.104.165. All RUNNING. 2026-03-01→2026-05-22. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi-Relaunch** — Relaunched TradFi VM with `--force` (instruments-service@4c1389d
+      chain fix). `instr-backfill-tradfi-20260522` @ 35.200.109.205. RUNNING. 2026-03-01→2026-05-22. 2026-05-22.
 
 ## Temporary states + their canonical follow-up plans
 
 - Items gated on `sports_master` Phase 3: **BLOCKED-UPSTREAM** until rename shipped; track in `sports_master` epic
   directly.
-- CeFi + TradFi VMs ran but wrote 0 records due to MalformedRowKeyError — fix in progress (orchestrator.py:3104),
-  relaunch after QG green (above items).
+- CeFi + TradFi VMs relaunch DONE 2026-05-22 with instruments-service@4c1389d (chain fix). T+10min verify pending.
