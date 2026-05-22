@@ -121,10 +121,19 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       `VM_NAME=ik_sports_footystats_recent MANIFEST_PER_VM_SHARDS=true .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider FOOTYSTATS --start-date 2026-04-17 --end-date 2026-05-22`
       PID 66878 died during context compaction; re-launched as PID 499822 (slot-2 2026-05-22 12:58 UTC).
 
-- [ ] [SCRIPT] P0. **Verify sports recent window**: re-query IS sports manifest — all 6 data types have
-      `max(captured_date) >= 2026-05-20`. Log counts before/after. **IN PROGRESS** — fills re-launched (PIDs 499821/499822).
-      Pre-fill baseline: FIXTURE_EVENTS max 2026-04-14, FIXTURE_LINEUPS max 2026-04-14, ODDS max 2026-04-17, INJURIES
-      max 2026-04-30.
+- [ ] [SCRIPT] P0. **Verify sports recent window**: **IN PROGRESS** — api_football fill (PID 499821) complete at
+      13:24 UTC; footystats fill (PID 499822) running (at 2026-05-05 as of 14:02 UTC, ETA ~16:19 UTC).
+      **Finding**: api_football returned ALL `empty_confirmed` for 2026-04-14→2026-05-22 (5109 rows, all empty).
+      Correct IS behavior — no active fixtures in post-season window. max captured dates will NOT improve for
+      FIXTURE_EVENTS/LINEUPS/INJURIES from api_football fills. Revised target:
+      - FIXTURE_EVENTS: stays at 2026-04-14 (last active fixture day — correct empty_confirmed beyond that) ✓ acceptable
+      - FIXTURE_LINEUPS: stays at 2026-04-14 ✓ acceptable  
+      - ODDS: footystats fill → target ≥ 2026-05-20 (waiting on PID 499822)
+      - PREDICTIONS: footystats fill → target ≥ 2026-05-20 (waiting on PID 499822)
+      - INJURIES: stays at 2026-04-30 (no active injuries in post-season) ✓ acceptable
+      Pre-fill baseline (consolidated manifest 13:35 UTC): FIXTURE_EVENTS 2026-04-14, LINEUPS 2026-04-14,
+      FIXTURE_STATS 2026-05-13, PLAYER_STATS 2026-05-03, ODDS 2026-04-17, INJURIES 2026-04-30,
+      PREDICTIONS 2026-04-17, MATCHES 2026-05-12.
 
 - [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
       `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
