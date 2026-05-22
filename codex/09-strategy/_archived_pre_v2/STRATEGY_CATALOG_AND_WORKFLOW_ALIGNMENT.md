@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # Strategy catalog — Codex expectations vs `strategy-service` workflow
 
 **Purpose:** Single reference for (1) what `09-strategy/` says every strategy and the strategy _system_ must express,

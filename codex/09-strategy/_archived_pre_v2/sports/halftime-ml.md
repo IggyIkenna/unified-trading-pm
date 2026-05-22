@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # Sports Halftime ML
 
 > **Asset class:** Sports **Strategy type:** Halftime ML Prediction **Strategy ID pattern:** `SPORTS_ML_HALFTIME`

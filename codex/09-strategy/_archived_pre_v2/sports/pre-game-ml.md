@@ -1,3 +1,6 @@
+> **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:
+> `codex/09-strategy/architecture-v2/`. Do not use this document for implementation decisions.
+
 # Sports Pre-Game ML
 
 > **Asset class:** Sports **Strategy type:** ML Pre-Game Prediction **Strategy ID pattern:** `SPORTS_ML_PREGAME`
