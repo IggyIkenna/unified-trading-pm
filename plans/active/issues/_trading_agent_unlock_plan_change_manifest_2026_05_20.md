@@ -335,10 +335,10 @@ Plans (deferred to follow-up sweep — NOT blocking the new architecture-unlock 
 
 ## Approval checklist (operator review)
 
-- [ ] Operator acknowledges Tier-1 architecture-only sub-tier classification (Change M2)
-- [ ] Operator confirms directive emission is off-by-default for May-23 cutover (no auto re-weighting)
-- [ ] Operator approves GH_PAT rotation for trading-agent-service (Risk R1 unblock)
-- [ ] Operator approves slot allocation for new architecture-unlock plan execution (Risk R3)
+- [x] Operator acknowledges Tier-1 architecture-only sub-tier classification (Change M2)
+- [x] Operator confirms directive emission is off-by-default for May-23 cutover (no auto re-weighting)
+- [x] Operator approves GH_PAT rotation for trading-agent-service (Risk R1 unblock)
+- [x] Operator approves slot allocation for new architecture-unlock plan execution (Risk R3)
 
 Once all 4 boxes ticked → slot-1-main applies manifest entries in order: M1-M6 → PW1-PW2 → F1 → Q1-Q2 → E1-E2 → SR1 →
 SA1 → FC1 → per-archetype sweep. Estimated ~0.8 cal-AI-days of plan-edit work.
@@ -347,3 +347,5 @@ SA1 → FC1 → per-archetype sweep. Estimated ~0.8 cal-AI-days of plan-edit wor
 
 **BLOCKED-OPERATOR**: requires operator to tick the 4 approval checklist items above before slot-1-main applies the 10
 plan edits. Do not apply the manifest changes until the operator acknowledges all 4 boxes.
+
+## [ACKED-INTO-PLAN] RESOLVED 2026-05-22 — all 10 plan edits applied by slot-1-main per operator directive "do yourself"; 4 approval checklist items ticked
