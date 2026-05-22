@@ -97,14 +97,54 @@ per-VM. Likely the codex doc is the stale side (post-2026-05-01 sink rev), but t
 **Recommended decision (Ikenna)**: declare which is canonical. If code wins → update the codex doc. If codex wins → add
 `correlation_id` to the sink path (a code fix that then moves to the drift-backlog plan).
 
+## 6. F-22 (incidental) — perp_funding_handler `_make_session()` missing headers param **[CODE-BUG, MTDS]**
+
+**What I found** (AUDIT-03 incidental, confirmed P1): `perp_funding_handler._make_session()` accepts no `headers`
+parameter but is called with `headers=...` at L1124 (Tardis auth path, not Lighter). This is a `TypeError` at runtime on
+the Tardis funding-rate fetch path.
+
+**Why it matters**: the Tardis path is the historical funding-rate data source; a TypeError here silently breaks funding
+data ingestion for the affected instruments.
+
+**Recommended action**: trivial one-liner fix — add `headers: dict | None = None` param to `_make_session()` and pass it
+to the underlying `aiohttp.ClientSession`. Lives in MTDS (`market-tick-data-service`), not strategy-service. Route to
+whoever next touches MTDS perp funding handler, or fix as a quick standalone commit.
+
+## 7. F-25 (ONB-01) — UAC `ClientConfig` type missing: code vs codex reconciliation **[ARCHITECTURAL DECISION]**
+
+**What I found** (confirmed P1): the codex references a unified `internal.client_config.ClientConfig` type with fields
+`client_id / org_id / share_class / categories_enabled / max_total_notional_usd / max_drawdown_pct` plus per-asset-group
+sub-configs. This type does NOT exist in UAC. What exists:
+
+- `internal/reporting/client_config.py` — billing/fee `TypedDict` (no risk dims)
+- `internal/domain/strategy_service/client_config.py` — `ClientStrategyOverride` (per-strategy overrides, not a unified
+  onboarding record)
+- `internal/risk.py` — risk dimensions scattered across multiple types
+
+Additionally, codex's `categories_enabled` field uses the old vocabulary (should be `asset_group`).
+
+**Why it matters**: the codex describes a type that doesn't exist; any new service expecting to instantiate
+`ClientConfig` from UAC will fail. Also affects the client onboarding pipeline.
+
+**Recommended decision (Ikenna)**: choose one:
+
+1. Create the unified `ClientConfig` in `unified_api_contracts/internal/domain/client_config.py` with the correct
+   `asset_group`-vocabulary fields — becomes a UAC PR.
+2. Reconcile the codex to describe the actual fragmented reality + document the "intended unified type" as a future epic
+   item.
+3. Hybrid: create the minimal type with `client_id + asset_groups_enabled + max_notional_usd + max_drawdown_pct` now;
+   leave full sub-configs for the onboarding epic.
+
 ---
 
 ## Routing summary
 
-| Finding    | Type         | One-line decision needed                                   |
-| ---------- | ------------ | ---------------------------------------------------------- |
-| F-34       | DECISION     | Is the 28-engine set an intended May-23 rollout subset?    |
-| F-06       | DECISION     | Canonical operating-entity SSOT + scrub stale Elysium ref  |
-| F-13/14/15 | CODEX-INTENT | Reconcile APD codex phantom fields to code (F-14 first)    |
-| F-32       | CODEX-INTENT | Is MEV mode directive-driven (close) or size-driven (fix)? |
-| F-45       | CODEX-INTENT | events path: instance_id (code) vs correlation_id (codex)? |
+| Finding    | Type         | One-line decision needed                                        |
+| ---------- | ------------ | --------------------------------------------------------------- |
+| F-34       | DECISION     | Is the 28-engine set an intended May-23 rollout subset?         |
+| F-06       | DECISION     | Canonical operating-entity SSOT + scrub stale Elysium ref       |
+| F-13/14/15 | CODEX-INTENT | Reconcile APD codex phantom fields to code (F-14 first)         |
+| F-32       | CODEX-INTENT | Is MEV mode directive-driven (close) or size-driven (fix)?      |
+| F-45       | CODEX-INTENT | events path: instance_id (code) vs correlation_id (codex)?      |
+| F-22       | CODE-BUG     | Quick fix in MTDS: add `headers` param to `_make_session()`     |
+| F-25       | ARCHITECTURE | Create UAC `ClientConfig` unified type OR reconcile codex only? |

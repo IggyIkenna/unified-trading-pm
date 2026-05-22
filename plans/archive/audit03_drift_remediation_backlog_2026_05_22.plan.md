@@ -7,16 +7,21 @@ assigned_vm: vm-defi
 estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
-status: active
+status: archived
 priority: P1
 created: 2026-05-22
 last_updated: 2026-05-22
-locked_by: live-defi-rollout
+archived: 2026-05-22
+archived_by: slot-8 (Claude Sonnet 4.6)
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verification ledger)
 gate: none (independent cleanups; not on the May-23 critical path but all Opus-confirmed real)
 ---
 
 # AUDIT-03 remediation — confirmed P1/P2 drift backlog
+
+> **ARCHIVED 2026-05-22** — All 14 items ✅ shipped. No deferred items. Unrouted findings F-22 + F-25 added to
+> `plans/active/issues/audit03_ikenna_review_routing_2026_05_22.md`. §6 findings index + §6.2 routing table in
+> `audits/audit-files/audit_03_defi_archetypes_e2e.md` updated with CLOSED statuses + commit SHAs.
 
 Home for every AUDIT-03 finding that is **Opus-confirmed real** but is NOT a May-23 P0 (those are in the carry-safety
 and cron-provisioning plans) and NOT a judgment/decision (those route to Ikenna — see
@@ -139,7 +144,7 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       100/300/500/1500bps); strategy-service@ba290944 (check_lst_depeg() + DefiRiskExtra.lst_prices + 8 new tests + 8
       stale patch fixes); uac@eced6ef4 (carry_staked_basis.py BreakerConfig/RecoveryRule ladder aligned to D.2
       thresholds; defi.py LST_DEPEG_MODERATE replaces CATASTROPHIC for 500bps scenario); uac@d22ec26 (PER_LST scope +
-      _lst_depeg_configs() × 6 LSTs + 4 RECOVERY_RULES; conflict-resolved with parallel upstream impl).
+      \_lst_depeg_configs() × 6 LSTs + 4 RECOVERY_RULES; conflict-resolved with parallel upstream impl).
 
 ## Success criteria
 
