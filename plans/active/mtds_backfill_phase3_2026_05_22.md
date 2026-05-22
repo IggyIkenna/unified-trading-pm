@@ -52,6 +52,14 @@ before Phase 7 grows the v<8 debt.
 - [x] ✅ **MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — 63 tradfi-bf VMs. CME + NASDAQ + NYSE. 214,586 rows. 98.4% capture
       rate. See freeze plan MTDS-3.2.B for full evidence. ICE pending operator decision (`tradfi-bf-ice-ohlcv-1m.sh`
       scaffolding shipped, `ICE_ROOTS=()`).
+- [ ] [VERIFY] P1. **MTDS-3.2.B-V** — TradFi MTDS prd bucket gaps discovered (slot 5 audit 2026-05-22):
+      `market-data-tick-tradfi-prd` max=2026-05-05 vs flat max=2026-05-18. 9 missing days (2026-05-06→2026-05-18 trading
+      days) being copied flat→prd (background copy). 4-day tail gap (2026-05-19→2026-05-22) needs top-up VMs:
+      `launch-tradfi-bf-cme-ohlcv-1m.sh --start-floor 2026-05-19 --no-force-window` +
+      `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` + `launch-tradfi-bf-nyse-ohlcv-1m.sh`. Singleton lock currently clear. NOTE:
+      P1 not P0 — TradFi MTDS not on critical path for May-23 DeFi archetypes.
+- [ ] [SCRIPT] P1. **MTDS-3.2.B-TopUp** — Launch CME/NASDAQ/NYSE top-up VMs for 2026-05-19→2026-05-22 after flat→prd
+      copy completes. Use `--no-force-window` to skip manifest-pre-checked dates.
 
 ## Phase 3 — DeFi MTDS backfill (MTDS-3.2.C)
 
@@ -73,14 +81,19 @@ IS that plan.
       `mtds-lending-indices-20260522-082710` @ 35.200.55.185, `VM_OPERATION=collect-lending-indices`,
       **2026-04-15→2026-05-22**. (3) `mtds-dex-pools-backfill` had wrong start date (2026-05-17). Deleted. Relaunched @
       136.110.98.16, `VM_OPERATION=collect-dex-pools`, **2026-04-15→2026-05-22**. All 3 VMs RUNNING. T+10 pending.
-- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-* VMs write to
-      SEPARATE buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥
-      2026-05-22 ✅ DONE (53 per-VM entries, mtds-lst-rates-20260522-082742 completed); (2)
-      `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅ DONE (52 entries, 7364 records,
-      mtds-lending-indices-20260522-082740 completed); (3) `dex-pools-central-element-323112` latest date ≥ 2026-05-22
-      — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, currently ~2026-04-19, target 2026-05-22); (4)
-      `market-data-tick-defi-central-element-323112` ≥ 2329 dates ✅ (2329 confirmed, max=2026-05-18 — acceptable, new
-      collect-* data in separate buckets).
+      **CONFIRMED COMPLETE (slot-6 2026-05-22)**: lst-rates 2020-01-01→2026-05-22 continuous ✅; lending-indices
+      2022-01-01→2026-05-22 continuous ✅; dex-pools IN PROGRESS (at ~2026-04-19, target 2026-05-22).
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-VSP-GAP** — `market-data-tick-defi-central-element-323112` missing vault_share_price
+      for 2026-05-17, 2026-05-19→2026-05-22 (5 days). Launched `mtds-vault-share-price-20260522-083932` @
+      35.200.109.205, VM_OPERATION=collect-vault-share-price, **2026-05-17→2026-05-22**. RUNNING. 2026-05-22.
+- [ ] [VERIFY] P0. **MTDS-3.2.C-V** — **CRITERION CORRECTED (slot-2 2026-05-22)**: DeFi collect-\* VMs write to SEPARATE
+      buckets (not market-data-tick-defi). Verify: (1) `lst-rates-central-element-323112` latest date ≥ 2026-05-22 ✅
+      DONE (2020-01-01→2026-05-22 continuous); (2) `lending-indices-central-element-323112` latest date ≥ 2026-05-22 ✅
+      DONE (2022-01-01→2026-05-22 continuous, 7364 records/day); (3) `dex-pools-central-element-323112` latest date ≥
+      2026-05-22 — IN PROGRESS (mtds-dex-pools-backfill @ 136.110.98.16 running, currently ~2026-04-19, target
+      2026-05-22); (4) `market-data-tick-defi-central-element-323112` vault_share_price gap fixed —
+      mtds-vault-share-price-20260522-083932 RUNNING for 2026-05-17→2026-05-22; pending final date ≥ 2026-05-22
+      verification.
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
