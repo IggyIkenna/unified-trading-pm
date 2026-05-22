@@ -62,32 +62,50 @@ Same pattern for AAVEV3/AAVE_V3, COMPOUNDV3/COMPOUND_V3, MORPHOVAULTS/MORPHO_VAU
 
 Ghost entries (UNISWAPV2, UNISWAPV3, COMPOUNDV3, AAVEV3 from era-2 handlers) show in the UI as venues with no data bar.
 
-**UPDATED 2026-05-22 manifest audit findings**:
+**UPDATED 2026-05-22 schema audit findings (schema check complete)**:
 
-- `UNISWAPV3`: 187,769 rows ALL captured. Chain: ETHEREUM only. Data_types: **`dex_pool_state`/`dex_pool_swaps`** (old
-  names, ≠ canonical `dex_pools`/`dex_swaps`).
-- `UNISWAPV2`: 22,168 rows, all captured. ETHEREUM only.
-- `AAVEV3` (flat): 29,782 rows, all captured.
-- `MORPHOVAULTS`: 2,325 rows, 860 captured. `YEARNV3`: 2,324 rows, 791 captured.
+Consolidated manifest ghost rows vs canonical per-VM shard rows (audited 2026-05-22):
 
-**GCS parquet location for UNISWAPV3 rows**:
-`raw_tick_data/by_date/.../pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=UNISWAPV3-ETHEREUM/...` (VENUE-CHAIN
-embedded, different from manifest's `venue=UNISWAPV3 chain=ETHEREUM` split format)
+| Venue          | Consolidated manifest                        | Per-VM shard (local-10889) | GCS canonical parquets                            |
+| -------------- | -------------------------------------------- | -------------------------- | ------------------------------------------------- |
+| `UNISWAPV3`    | 187,769 rows captured, 2024-05-06→2026-01-23 | —                          | at `venue=UNISWAPV3-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V3`   | **0 rows**                                   | 187,769 rows captured      | ✅ EXIST at canonical split path, full date range |
+| `UNISWAPV2`    | 22,168 rows captured, 2024-05-03→2026-01-24  | —                          | at `venue=UNISWAPV2-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V2`   | **0 rows**                                   | 20,254 rows captured       | ✅ EXIST at canonical split path, full date range |
+| `AAVEV3`       | 29,782 rows captured, 2024-05-02→2026-01-23  | —                          | at `venue=AAVEV3-ETHEREUM/` (VENUE-CHAIN)         |
+| `AAVE_V3`      | **0 rows**                                   | 27,482 rows captured       | ✅ EXIST at canonical split path, full date range |
+| `MORPHOVAULTS` | 2,325 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
+| `YEARNV3`      | 2,324 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
 
-**Why phantom reconciler won't work**: Reconciler probes `venue=UNISWAPV3/chain=ETHEREUM/` paths — MISS. Parquets live
-at `venue=UNISWAPV3-ETHEREUM/`. Running reconciler would flip to `attempted_failed` incorrectly.
+**Root cause — NOT a GCS migration problem**: Canonical GCS parquets already exist at canonical split paths for ALL
+ghost date ranges. The fix is manifest-only. The consolidator's **incremental merge skips `local-10889-bd08.parquet`**
+(written 2026-05-03) because it predates the current consolidated index (updated 2026-05-22 03:44 UTC). Canonical per-VM
+shard rows sit unreachable.
 
-**Schema blocker**: Old `dex_pool_state`/`dex_pool_swaps` ≠ canonical `dex_pools`/`dex_swaps`. A venue rename without
-data_type remap breaks downstream consumers.
+**Schema comparison (UNISWAPV3-ETHEREUM parquet vs UNISWAP_V3 canonical parquet)**:
 
-**Required fix** (assign to MDPS slot):
+- Old (30 cols): in-file `data_type='swaps'/'liquidity'`, missing `instrument_id`, `chain`, `instrument_type`
+- Canonical (33 cols): in-file `data_type='dex_pool_state'`, has all three extra columns
+- **For AAVE_V3**: manifest data_types match between ghost and canonical rows: `oracle_prices`, `rate_indices`,
+  `risk_params`, `utilization` — GCS confirms these data_types exist at canonical `AAVE_V3/` path
 
-1. Schema check: sample UNISWAPV3-ETHEREUM parquet vs UNISWAP_V3 parquet — compare columns
-2. If schemas align: write `reconcile_defi_ghost_venue_rename.py` that:
-   - Remaps `venue=UNISWAPV3` rows to `venue=UNISWAPV3-ETHEREUM` (VENUE-CHAIN manifest row, matching actual path)
-   - Then in a follow-up: remaps VENUE-CHAIN rows to flat canonical + GCS path rename (pipeline_mode aware)
-   - Skips dates where canonical already has data
-3. If schemas diverge: add UNISWAPV3 deprecation gate in oracle, keep as separate legacy track
+**Why phantom reconciler still won't work**: Ghost consolidated manifest rows say `venue=UNISWAPV3 chain=ETHEREUM` →
+reconciler probes `venue=UNISWAPV3/chain=ETHEREUM/` path → MISS (parquets at `UNISWAPV3-ETHEREUM/`). Would incorrectly
+flip to `attempted_failed`.
+
+**Required fix — manifest-only (no GCS migration needed)**:
+
+1. Re-upload `_index/per_vm/local-10889-bd08.parquet` as a new dated corrector shard (e.g.
+   `ikenna-slot1-canonical-defi-20260522.parquet`) so consolidator incremental merge picks it up. Adds UNISWAP_V3
+   (187k), UNISWAP_V2 (20k), AAVE_V3 (27k), UNISWAP_V4 (6.5k) rows to consolidated manifest.
+2. In the same corrector shard: write superseding rows for ghost venues (UNISWAPV3, UNISWAPV2, AAVEV3) with newer
+   `attempted_at` timestamp and `capture_status='empty_confirmed'` + valid `EmptyConfirmedReason`. Consolidator
+   last-write-wins on `(date, venue, data_type, ...)` key — ghost rows get overridden.
+3. Verify `EmptyConfirmedReason` enum has a suitable reason for venue-renamed rows (check UAC
+   `canonical.crosscutting.honest_coverage.EmptyConfirmedReason`). If not, add one.
+4. Run manifest consolidator to pick up the new shard.
+5. Old parquets at VENUE-CHAIN paths (`UNISWAPV3-ETHEREUM/`) can remain — canonical split-path parquets already have the
+   same data with correct 33-column schema.
 
 ### Bug 4 (OPEN): LST venue name `ANKR` confusingly displayed
 
@@ -113,7 +131,9 @@ enum.
 - [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
 - [ ] Bug 2: Normalise AAVEV3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
       Assign to MTDS slot.
-- [ ] Bug 3: Run phantom reconciler for defi asset_group. Assign to MDPS/IS slot.
+- [ ] Bug 3: **Manifest-only fix** (no GCS migration). Write corrector shard re-exposing canonical UNISWAP_V3/V2/AAVE_V3
+      rows from local-10889 per-VM shard + superseding ghost UNISWAPV3/V2/AAVEV3 rows via empty_confirmed. Assign to
+      slot-1 main.
 - [ ] Bug 4: Post-cutover — add `data_source_type` taxonomy enum.
 
 ## Temporary states + their canonical follow-up plans
