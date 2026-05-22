@@ -10,6 +10,8 @@ sweep_progress:
   have named successor plans"
 ---
 
+## [ACKED-INTO-PLAN] RESOLVED 2026-05-22 — full 24/24 sweep complete; 10 orphaned DEFERRED items migrated to epics (sports_master, plan_hygiene_master, defi_master, mtds_mdps_master, manifest_master). Archive this doc.
+
 ## What I found
 
 Scanned `plans/archive/` for DEFERRED items not annotated with `MIGRATED FROM`. Found 24 archived plans with open
