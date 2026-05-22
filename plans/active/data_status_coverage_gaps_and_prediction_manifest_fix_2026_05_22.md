@@ -122,7 +122,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       PID 66878 died during context compaction; re-launched as PID 499822 (slot-2 2026-05-22 12:58 UTC).
 
 - [ ] [SCRIPT] P0. **Verify sports recent window**: **IN PROGRESS** — api_football fill (PID 499821) complete at
-      13:24 UTC; footystats fill (PID 499822) running (at 2026-05-05 as of 14:02 UTC, ETA ~16:19 UTC).
+      13:24 UTC; footystats fill (PID 499822) running (at 2026-05-09 as of 14:25 UTC, ETA ~15:47 UTC).
       **Finding**: api_football returned ALL `empty_confirmed` for 2026-04-14→2026-05-22 (5109 rows, all empty).
       Root cause: `URDI[API_FOOTBALL]: fetched 0 instruments` for all dates → IS has no fixture-to-ID mapping →
       all data types marked empty_confirmed. IS instruments parquet (step 1 of 2-pass pipeline) must exist before
@@ -137,6 +137,20 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       Pre-fill baseline (consolidated manifest 13:35 UTC): FIXTURE_EVENTS 2026-04-14, LINEUPS 2026-04-14,
       FIXTURE_STATS 2026-05-13, PLAYER_STATS 2026-05-03, ODDS 2026-04-17, INJURIES 2026-04-30,
       PREDICTIONS 2026-04-17, MATCHES 2026-05-12.
+      **BUCKET MISMATCH FINDING (14:27 UTC)**: Same naming mismatch as prediction — IS sports fills write to
+      `instruments-store-sports-central-element-323112` (OLD, no env-tier) but Cloud Run consolidator targets
+      `instruments-store-sports-prd-central-element-323112` (PRD). PRD canonical (14:25:32 UTC, current):
+      ODDS max=2026-05-04, PREDICTIONS max=2026-05-04. Footystats shard `ik_sports_footystats_recent.parquet`
+      is in OLD bucket only; PRD consolidator never auto-merges it. After PID 499822 completes: copy
+      `ik_sports_footystats_recent.parquet` OLD→PRD, run manual consolidation (or wait for Cloud Run). Filed as
+      P1 deferred below. Successor: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e.
+
+- [ ] [SCRIPT] P1. **Sports PRD bucket shard copy + verify**: After PID 499822 completes, copy
+      `instruments-store-sports-central-element-323112/_index/per_vm/ik_sports_footystats_recent.parquet` to
+      `instruments-store-sports-prd-central-element-323112/_index/per_vm/ik_sports_footystats_recent.parquet`,
+      then run manual consolidation of PRD bucket. Verify PRD canonical ODDS ≥ 2026-05-20, PREDICTIONS ≥ 2026-05-20.
+      **Discovery** (14:27 UTC): IS sports fills write to OLD bucket; Cloud Run consolidator targets PRD bucket.
+      Successor for systemic fix: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (sports).
 
 - [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify 3063 missing dates drop to < 200. **Current status (14:05 UTC)**: VM RUNNING since ~08:00 UTC. Shard `instr-backfill-sports.parquet` at 2020-06-01→2020-06-09 (589 rows, all `empty_confirmed` — COVID era no fixtures). Rate: ~1.5 sports days/hour. **ETA to complete 2020→2026**: 2190 days ÷ 1.5 = ~1460 hours = >60 days. Will NOT complete before May-23 cutover. Long-running background process. Accept: footystats/api_football recent fills cover the critical 2026-04→2026-05 window; VM covers the deep historical backfill which is a P1 background task with no May-23 dependency.
 
@@ -259,3 +273,4 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 | Legacy GCS parquets deleted (Phase 3.3) but new parquets not yet written            | Same — complete Phase 3.4 in same session before marking complete  |
 | Sports VM still running historical (3063 gap)                                       | Phase 2 P1 monitor item; no blocking dependency on Phase 3         |
 | Prediction canonical manually consolidated (old bucket, not auto-merged by Cloud Run) | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e — env-tier rollout to old IS prediction bucket |
+| Sports IS fills write to OLD bucket; PRD ODDS/PREDICTIONS max=2026-05-04 (short of ≥2026-05-20 target)     | After footystats fill: copy shard OLD→PRD + consolidate; long-term fix: Phase 0e (sports bucket env-tier) |
