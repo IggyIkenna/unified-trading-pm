@@ -768,6 +768,133 @@ YIELD_STAKING_SIMPLE@multi-lst-solana-sol-prod
 
 ---
 
+### 11. `CARRY_BASIS_DATED_INV`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Added 2026-05-22.
+
+Inverse dated-future carry: short spot + long dated future to capture negative basis (contango → negative carry). Mirror of
+`CARRY_BASIS_DATED` for markets where futures trade at discount to spot. Same `LEADER_HEDGE` execution; leader leg is the
+dated-future buy, spot short follows within deadline.
+
+#### Coverage
+
+| Category            | Instrument          | Status    | Representative venues                      | Signal variant        | Notes / Gap                                                    |
+| ------------------- | ------------------- | --------- | ------------------------------------------ | --------------------- | -------------------------------------------------------------- |
+| CeFi                | spot + dated_future | SUPPORTED | Deribit dated + Binance spot (short-spot)  | basis (negative)      | Requires margin/short-selling permissions on spot venue        |
+| DeFi                | spot + dated_future | BLOCKED   | —                                          | —                     | No DeFi dated-future venue; same gap as CARRY_BASIS_DATED      |
+| TradFi              | spot + dated_future | PARTIAL   | IBKR spot short + CME future long          | index basis (inverse) | Short-sale locate + margin cost reduce net carry               |
+| Sports & Prediction | any                 | N/A       | —                                          | —                     | No dated-future analogue                                       |
+
+#### Representative slot_labels
+
+```
+# CeFi inverted basis (BTC / ETH contango — short spot + long dated future)
+CARRY_BASIS_DATED_INV@binance-deribit-btc-inv-dated-usdt-prod
+CARRY_BASIS_DATED_INV@binance-deribit-eth-inv-dated-usdt-prod
+
+# TradFi inverted index basis
+CARRY_BASIS_DATED_INV@ibkr-cme-spy-inv-dated-usd-prod
+```
+
+---
+
+### 12. `CARRY_BASIS_PERP_INV`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Added 2026-05-22.
+
+Inverse perp basis: long perp + short spot when funding is strongly negative (market is in backwardation — longs pay less /
+receive funding). Mirror of `CARRY_BASIS_PERP`; activated when annualised funding drops below threshold (typically −15% APR).
+
+#### Coverage
+
+| Category | Instrument                 | Status    | Representative venues                              | Signal variant         | Notes / Gap                                                                    |
+| -------- | -------------------------- | --------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| CeFi     | spot + perp (single venue) | SUPPORTED | Binance, OKX, Bybit, Hyperliquid, Deribit          | funding-rate (negative)| Same margin infra as CARRY_BASIS_PERP; reversed direction flag                 |
+| CeFi     | spot + perp (cross-venue)  | SUPPORTED | Binance spot short + Bybit perp long               | funding-rate (negative)| LEADER_HEDGE; two wallets; locate cost on spot short must be modelled          |
+| DeFi     | spot + perp (same chain)   | SUPPORTED | Uniswap ETH + Hyperliquid DEX perp (long)          | funding-rate (negative)| Gas cost for spot short on DEX must be modelled vs funding premium             |
+| DeFi     | LST + perp                 | PARTIAL   | Lido stETH short + Hyperliquid DEX ETH-perp long   | funding-rate (negative)| LST short requires borrow markets (AAVE/Morpho); borrowing cost eats carry     |
+| TradFi   | any                        | N/A       | —                                                  | —                      | TradFi has no perpetuals                                                       |
+
+#### Representative slot_labels
+
+```
+# CeFi inverse perp (single venue — negative funding regime)
+CARRY_BASIS_PERP_INV@binance-btc-inv-perp-usdt-prod
+CARRY_BASIS_PERP_INV@hyperliquid-eth-inv-perp-usdt-prod
+
+# CeFi cross-venue inverse perp
+CARRY_BASIS_PERP_INV@binance-bybit-btc-inv-cross-usdt-prod
+
+# DeFi inverse perp (same chain)
+CARRY_BASIS_PERP_INV@uniswap-hyperliquid-eth-inv-perp-ethereum-prod
+```
+
+---
+
+### 13. `CARRY_STAKED_BASIS_DATED`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Added 2026-05-22.
+
+Staked-asset + dated-future combo: hold LST for staking yield AND short the dated future to capture basis convergence.
+Earns staking APR + (spot − dated-future) basis simultaneously. Unwind at expiry or when staking + basis together fall
+below threshold.
+
+#### Coverage
+
+| Category | Instrument              | Status    | Representative venues                                    | Signal variant                    | Notes / Gap                                                                     |
+| -------- | ----------------------- | --------- | -------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------- |
+| DeFi     | LST + dated_future      | SUPPORTED | Lido stETH + Deribit ETH dated (CeFi short)              | staking yield + basis             | DeFi LST long + CeFi dated short; hybrid DeFi+CeFi execution path               |
+| DeFi     | LST + dated_future      | PARTIAL   | RocketPool rETH + CME ETH future (IBKR route)            | staking yield + basis             | CME crypto future routing via IBKR not fully declared in execution_policy       |
+| CeFi     | spot + dated_future     | N/A       | —                                                        | —                                 | CeFi spot doesn't earn staking yield; use CARRY_BASIS_DATED instead             |
+| TradFi   | any                     | N/A       | —                                                        | —                                 | No LST equivalent in TradFi                                                     |
+
+#### Representative slot_labels
+
+```
+# DeFi LST + CeFi dated (hybrid)
+CARRY_STAKED_BASIS_DATED@lido-deribit-eth-staked-dated-prod
+CARRY_STAKED_BASIS_DATED@rocketpool-deribit-eth-staked-dated-prod
+CARRY_STAKED_BASIS_DATED@coinbase-cbeth-deribit-eth-staked-dated-prod
+
+# Solana LST + CME/perpetual hedge
+CARRY_STAKED_BASIS_DATED@jito-jitosol-deribit-sol-staked-dated-prod
+```
+
+---
+
+### 14. `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Added 2026-05-22.
+
+Pure recursive borrow/lend loop WITHOUT the perp hedge. Borrow an asset at protocol rate A, lend at rate B on a different
+protocol (or supply tier), capturing the rate differential. No spot or perp leg. Lower gas + execution risk vs
+`CARRY_RECURSIVE_STAKED` but exposed to rate-spread compression.
+
+#### Coverage
+
+| Category | Instrument               | Status    | Representative venues                              | Signal variant              | Notes / Gap                                                                    |
+| -------- | ------------------------ | --------- | -------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| DeFi     | lending pool (borrow+lend) | SUPPORTED | Aave V3 borrow → Compound supply; Morpho borrow → Aave supply | rate differential   | Rate spread must exceed gas + protocol fees; liquidation risk on borrow leg    |
+| DeFi     | lending pool (stablecoin) | SUPPORTED | USDC Aave V3 borrow → Morpho USDC supply           | rate differential   | Stable pair eliminates FX risk; tightest spreads                               |
+| DeFi     | lending pool (volatile)  | PARTIAL   | ETH Euler V2 borrow → Aave V3 ETH supply           | rate differential   | Collateral price drop can trigger liquidation; LTV ratio must be modelled       |
+| CeFi     | any                      | N/A       | —                                                  | —                           | CeFi lending loops exist but are margin products; not DeFi-native               |
+| TradFi   | any                      | N/A       | —                                                  | —                           | Repo/reverse-repo analogue exists; out-of-scope for DeFi archetype              |
+
+#### Representative slot_labels
+
+```
+# Stablecoin borrow/lend differential
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave-compound-usdc-lend-ethereum-prod
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave-morpho-usdc-lend-ethereum-prod
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave-morpho-usdt-lend-ethereum-prod
+
+# ETH volatile borrow/lend
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@euler-aave-eth-lend-ethereum-prod
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@morpho-compound-eth-lend-ethereum-prod
+```
+
+---
+
 ## Family 4: Arbitrage / Structural
 
 ### 11. `ARBITRAGE_PRICE_DISPERSION`
