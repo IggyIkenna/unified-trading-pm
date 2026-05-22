@@ -141,3 +141,11 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 ## Temporary states + their canonical follow-up plans
 
 - None — this plan is itself the follow-up to a temporary state in the predecessor.
+
+## P1 backlog (absorbed from issue docs)
+
+- [ ] [AGENT] P1. Add SOURCE_PRIORITY entry for BATCH_EIA:
+      `SOURCE_PRIORITY[(asset_group, data_type)] = ["batch_eia", ...]` in
+      `unified_api_contracts/canonical/crosscutting/source_priority.py`. Tradfi/EIA track owner must identify the
+      correct (asset_group, data_type) pair. Issue:
+      `plans/archive/issues/uac_batch_eia_missing_source_priority_2026_05_20.md`.

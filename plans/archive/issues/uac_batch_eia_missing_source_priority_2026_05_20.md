@@ -10,6 +10,10 @@ priority: P1
 status: open
 ---
 
+> **[ACKED-INTO-PLAN]** Archived 2026-05-22. Gap tracked in
+> `plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` as P1 todo. Tradfi/EIA track owner to add
+> SOURCE_PRIORITY entry before BATCH_EIA consumers can resolve batch-source for energy data_types.
+
 ## What I found
 
 Commit `fb3751e8` (`semver-rollout[bot] — feat(uac): add BATCH_EIA to PipelineMode for commodity features manifest`)
