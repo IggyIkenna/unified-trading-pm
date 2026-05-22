@@ -47,6 +47,18 @@ if grep -rn 'api\.phoenix\.trade' "$HANDLER_DIR" --include="*.py" 2>/dev/null | 
     VIOLATIONS=$((VIOLATIONS + 1))
 fi
 
+# Pattern: inline CeFi perp venue URL string literals (must come from UAC CEFI_PERP_VENUE_API_ENDPOINTS — F-21)
+for _PAT in \
+    '"https://api\.hyperliquid\.xyz' \
+    '"https://fapi\.asterdex\.com' \
+    '"https://api\.pacifica\.fi' \
+; do
+    if grep -rn "$_PAT" "$HANDLER_DIR" --include="*.py" 2>/dev/null | grep -v '^\s*#\|:[[:space:]]*#'; then
+        echo "ERROR: Hardcoded CeFi perp venue URL in MTDS handler (use CEFI_PERP_VENUE_API_ENDPOINTS from unified_api_contracts.registry)"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+done
+
 if [[ $VIOLATIONS -gt 0 ]]; then
     echo "ERROR: $VIOLATIONS hardcoded-URL violation(s) in MTDS handlers"
     echo "MTDS handlers MUST read source_archive_url_template from IS InstrumentRecord."
