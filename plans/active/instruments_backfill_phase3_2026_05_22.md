@@ -65,12 +65,13 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
       MANIFEST_PER_VM_SHARDS=true. instruments-service@7d9a737 (both fixes). Deleted stale TERMINATED legacy VM first.
       2026-05-22. **NOTE**: VM processed 2020-06-01 then stalled — LegacyBlankErrorReasonError on every date at FIXTURES
       honest-coverage path (17 sports `record_empty()` callsites missing `reason=`). Fix: instruments-service@55d718f.
-      Tarball rebuilt 07:22:50 UTC 2026-05-22. Relaunched same VM name @ 34.84.104.165 with @55d718f. RUNNING.
+      Tarball rebuilt 07:22:50 UTC. Relaunched @ 34.84.104.165 with @55d718f. 5 UNSUPPORTED adapters
+      (FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SFI/OPEN_METEO) — known gap, separate from this verify.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports-Relaunch** — Upgraded `instr-backfill-sports` @ 34.180.105.8 with
+      instruments-service@2aabd7b (includes @55d718f sports fix + MARKET_LIFECYCLE writer). Deleted @55d718f VM at
+      34.84.104.165 (only 2020-06-01 data, COVID era). Manifest skip ACTIVE, resumes from 2020-06-02. 2026-05-22.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
-      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @55d718f — chunk 1/71
-      (2020-06-01→2020-06-30) processing as of 07:42 UTC. Per-VM shard created (14.63 KiB). No
-      LegacyBlankErrorReasonError confirmed. 5 UNSUPPORTED adapters (FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SFI/OPEN_METEO)
-      are known issue (separate from this verify).
+      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @2aabd7b @ 34.180.105.8.
 
 ## Phase 5 — Predictions instruments forward-fill
 
@@ -143,9 +144,11 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 ## Temporary states + their canonical follow-up plans
 
-- Sports IS VM `instr-backfill-sports` booted at 07:31 UTC 2026-05-22; failed on every date (LegacyBlankErrorReasonError
-  — missing `reason=` on 17 sports `record_empty()` callsites). Fixed @55d718f, relaunched @07:30 UTC. Now RUNNING chunk
-  1/71 (2020-06-01→2020-06-30) as of 07:42 UTC. No errors, per-VM shard 14.63 KiB created.
+- Sports IS VM `instr-backfill-sports` @ 34.180.105.8 RUNNING IS@2aabd7b (includes @55d718f sports fix). Previous VM
+  @55d718f confirmed no LegacyBlankErrorReasonError. Pending completion + IS-3.1.Sports-V verify.
+- **FINDING P2**: `instr-backfill-pred` (IS@7d9a737) was at 2025-06-02 (91 captured rows) when IS@2aabd7b added
+  MARKET_LIFECYCLE writer. VM already processed 2025-03-14→2025-06-02 without MARKET_LIFECYCLE (~80 date gap).
+  Successor: targeted market_lifecycle backfill after `instr-backfill-pred` completes. Track in `predictions_master`.
 - Full-history IS VMs still RUNNING: `instr-backfill-cefi-1` (2020→2022), `instr-backfill-cefi-2` (2022→2024),
   `instr-backfill-defi` (2020→2026-02), `instr-backfill-tradfi` (2020→2026-02), `instr-backfill-pred` (2020→2026-02).
   Recent-window VMs all completed exit_code=0 (see Post-relaunch verifications section above).
@@ -163,8 +166,8 @@ buckets. Manual copy performed this session:
   (2026-05-05→2026-05-22) + per-VM shards for instr-backfill-cefi-{1,2,3}-20260522.parquet.
 - IS TradFi prd: `instruments-store-tradfi-prd-central-element-323112` — 2334 days, max=2026-05-22 ✅. Copied 18 days
   (2026-05-05→2026-05-22) + per-VM shard for instr-backfill-tradfi-20260522.parquet.
-- IS DeFi prd: `instruments-store-defi-prd-central-element-323112` — copying in progress (9 days 2026-05-05→2026-05-22 +
-  per-VM shard). Will reach max=2026-05-22 on completion.
+- IS DeFi prd: `instruments-store-defi-prd-central-element-323112` — 125,242 rows, max=2026-05-22 ✅. Per-VM shard
+  `instr-backfill-defi-20260522.parquet` confirmed present. 67,776 captured, 0 attempted_failed. 2026-05-22.
 - IS Pred prd: `instruments-store-pred-prd-central-element-323112` — 574 days, shard
   instr-backfill-pred-20260522.parquet copied. Availability_index updated: 4035 rows, 890 captured ✅.
 
