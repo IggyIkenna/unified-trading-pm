@@ -28,21 +28,25 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 ## Phase 1 — CeFi instruments forward-fill
 
 - [x] ✅ [SCRIPT] P0. **IS-3.1.CeFi** — Launched 3× CeFi IS backfill VMs (instr-backfill-cefi-{1,2,3}-20260522) @
-      34.84.104.165 / 136.110.113.253 / 35.200.109.205. 2026-03-01→2026-05-22 window. MANIFEST_PER_VM_SHARDS=true.
-      deployment-service@4884aac.
+      34.146.140.6 / 34.84.35.94 / 34.104.198.234. 2026-03-01→2026-05-22 window. MANIFEST_PER_VM_SHARDS=true.
+      instruments-service@fa93f45 (fix: PolygonOptionContract ImportError — UAC external/polygon deleted, local models).
+      deployment-service@4884aac. Relaunched after tarball rebuild — old run silently failed (ImportError masked by
+      shell loop).
 - [ ] [VERIFY] P0. **IS-3.1.CeFi-V** — Post-launch: `instruments-store-cefi-prd` gains new rows; `available_at`
       populated; 0 `attempted_failed` after first poll cycle.
 
 ## Phase 2 — DeFi instruments forward-fill
 
-- [x] ✅ [SCRIPT] P0. **IS-3.1.DeFi** — Launched instr-backfill-defi-20260522 @ 34.180.72.34. 2026-03-01→2026-05-22
-      window. MANIFEST_PER_VM_SHARDS=true. deployment-service@4884aac.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.DeFi** — Launched instr-backfill-defi-20260522 @ 35.200.66.186. 2026-03-01→2026-05-22
+      window. MANIFEST_PER_VM_SHARDS=true. instruments-service@fa93f45. deployment-service@4884aac. Relaunched after
+      tarball rebuild — old run silently failed.
 - [ ] [VERIFY] P0. **IS-3.1.DeFi-V** — `instruments-store-defi-prd` gains rows; 0 attempted_failed.
 
 ## Phase 3 — TradFi instruments forward-fill
 
-- [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi** — Launched instr-backfill-tradfi-20260522 @ 34.84.128.69. 2026-03-01→2026-05-22
-      window. MANIFEST_PER_VM_SHARDS=true. deployment-service@4884aac.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.TradFi** — Launched instr-backfill-tradfi-20260522 @ 35.200.75.132. 2026-03-01→2026-05-22
+      window. MANIFEST_PER_VM_SHARDS=true. instruments-service@fa93f45. deployment-service@4884aac. Relaunched after
+      tarball rebuild — old run silently failed.
 - [ ] [VERIFY] P0. **IS-3.1.TradFi-V** — `instruments-store-tradfi-prd` gains rows; VIX instrument present; honest-gap
       coverage for pre-Polygon dates.
 
@@ -58,8 +62,9 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 
 ## Phase 5 — Predictions instruments forward-fill
 
-- [x] ✅ [SCRIPT] P0. **IS-3.1.Pred** — Launched instr-backfill-pred-20260522 @ 35.200.74.239. 2026-03-01→2026-05-22
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Pred** — Launched instr-backfill-pred-20260522 @ 35.200.121.156. 2026-03-01→2026-05-22
       window. MANIFEST_PER_VM_SHARDS=true. Added PREDICTION to launcher + watchdog (deployment-service@4884aac).
+      instruments-service@fa93f45. Relaunched after tarball rebuild — old run silently failed.
 - [ ] [VERIFY] P0. **IS-3.1.Pred-V** — `instruments-store-pred-prd` gains rows; question groups canonicalized; 0
       attempted_failed.
 
