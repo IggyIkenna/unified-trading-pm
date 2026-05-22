@@ -125,9 +125,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [x] ✅ [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
       RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19). — cursor-configs/CLAUDE.md + codex updated; CCTP
       section added to defi-execution-overview.md.
-- [ ] [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
+- [x] ✅ [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
-      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting.
+      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting. —
+      N/A: `.extra/` directories were never tracked in git (features-service git log confirms no history under
+      `.extra/*`); directories are absent from the live workspace; nothing deploys them. §6.1 REFUTED stands — live
+      path in features-service/onchain reads capture_status correctly; no deletion needed.
 - [ ] [AGENT] P3. **NICE-TO-HAVE (risk review)** — Add a dedicated LST-depeg `CircuitBreakerId` ladder mirroring the
       `STABLECOIN_DEPEG_{WARNING,SMALL,MODERATE,CATASTROPHIC}` tiers. The shipped `DEFI_LST_DEPEG_STETH_5PCT` scenario
       (carry plan F-33, uac@56594ab3) trips the generic `DRAWDOWN_DAILY_BPS` breaker; stablecoins got their own depeg
