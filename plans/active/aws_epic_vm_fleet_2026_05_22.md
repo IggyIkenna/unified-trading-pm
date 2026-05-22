@@ -123,7 +123,8 @@ Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, S
       toggle section, bootstrap steps, event bus with both S3 + GCS paths, re-launch commands. pm@8ca18cfba. Also
       updated `data/config/backends.json` in agent-orchestrator with all 10 AWS VMs so Fleet tab shows them.
       agent-orch@79e5d23.
-- [ ] [AGENT] P2. `setup-orchestrator-iam.sh --dry-run` on CI — prevents IAM drift on future launches.
+- [x] ✅ [AGENT] P2. `setup-orchestrator-iam.sh --dry-run` on CI — prevents IAM drift on future launches.
+      deployment-service@9db6221.
 
 ## Deferred (post-cutover)
 
