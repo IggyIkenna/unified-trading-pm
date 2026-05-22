@@ -28,7 +28,10 @@
 # Container image: google/cloud-sdk:slim (bash + git + gcloud preinstalled).
 #
 # Env vars (set by Cloud Run Job):
-#   GH_PAT       — GitHub PAT secret with `repo` scope (Secret Manager → GH_PAT).
+#   GH_PAT                          — GitHub PAT secret (Secret Manager → GH_PAT).
+#   AGENT_ORCHESTRATOR_SLACK_WEBHOOK — optional; if set, posts a Slack alert to
+#                                      #agent-orchestrator-alerts when orphans are found.
+#                                      Wire via `gcloud run jobs update --update-secrets`.
 #   PM_BRANCH    — branch to checkout + push to (default: live-defi-rollout).
 #   PM_REPO_URL  — repo URL (default: https://github.com/IggyIkenna/unified-trading-pm.git).
 #   GIT_AUTHOR_NAME / GIT_AUTHOR_EMAIL / GIT_COMMITTER_NAME / GIT_COMMITTER_EMAIL
@@ -40,6 +43,23 @@ PM_BRANCH="${PM_BRANCH:-live-defi-rollout}"
 PM_REPO_URL_PUBLIC="${PM_REPO_URL:-https://github.com/IggyIkenna/unified-trading-pm.git}"
 WORKDIR="${WORKDIR:-/tmp/unified-trading-pm}"
 TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Optional Slack webhook — if AGENT_ORCHESTRATOR_SLACK_WEBHOOK is set (wired via
+# Cloud Run Job --update-secrets), posts a real-time alert to #agent-orchestrator-alerts
+# when orphans are detected. Complements the git-commit notification so operators
+# don't need to run git fetch to see the signal.
+SLACK_WEBHOOK="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-}"
+
+_slack_notify_orphans() {
+  local count="$1"
+  [[ -z "$SLACK_WEBHOOK" ]] && return 0
+  local payload
+  payload='{"text":":warning: *'"${count}"' orphan ping(s) detected* — pings in `_agent_pings.md` have no plan reference.\nRun `git pull` on your tab worktree to see details, or check orchestrator inboxes.\n_Cron: uts-prod-orphan-ping-audit @ '"${TIMESTAMP_UTC}"'_"}'
+  curl -s -o /dev/null -w "%{http_code}" -X POST \
+    -H "Content-Type: application/json" \
+    -d "$payload" \
+    "$SLACK_WEBHOOK" || echo "WARNING: Slack notify failed (non-fatal)" >&2
+}
 
 echo "── cron-orphan-ping-audit entrypoint ${TIMESTAMP_UTC} ──"
 
@@ -68,14 +88,20 @@ git config user.email "${GIT_COMMITTER_EMAIL:-orphan-ping-cron@odum-research.com
 git config user.name  "${GIT_COMMITTER_NAME:-orphan-ping-cron}"
 
 # Run the audit. It exits 1 if orphans found (script appends notifications
-# to the ping ledgers). We capture exit code but do NOT abort — we still
-# want to commit + push the notifications.
+# to the ping ledgers). We capture output + exit code but do NOT abort —
+# we still want to commit + push the notifications.
+# Write to temp file so we get both real-time Cloud Run logs AND the output
+# to extract the orphan count from.
+_AUDIT_LOG="$(mktemp)"
 set +e
-bash scripts/agents/audit_ping_orphans.sh
-AUDIT_RC=$?
+bash scripts/agents/audit_ping_orphans.sh 2>&1 | tee "$_AUDIT_LOG"
+AUDIT_RC="${PIPESTATUS[0]}"
 set -e
 
-echo "── audit exit code: ${AUDIT_RC}"
+# Extract orphan count from audit output line "── total orphans: N"
+ORPHAN_COUNT="$(grep -o 'total orphans: [0-9]*' "$_AUDIT_LOG" | grep -o '[0-9]*' || echo "?")"
+rm -f "$_AUDIT_LOG"
+echo "── audit exit code: ${AUDIT_RC} (orphans: ${ORPHAN_COUNT})"
 
 if ! git diff --quiet; then
   echo "── orphan notifications appended — committing + pushing"
@@ -111,6 +137,7 @@ Audit script: scripts/agents/audit_ping_orphans.sh.
   echo "── pushing to ${PM_BRANCH}"
   git push "$PM_REPO_URL_AUTH" "HEAD:${PM_BRANCH}" 2>&1 | sed "s|${GH_PAT}|***REDACTED***|g"
   echo "── push complete"
+  _slack_notify_orphans "${ORPHAN_COUNT}"
 else
   echo "── no orphans → no commit needed"
 fi
