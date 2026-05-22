@@ -689,6 +689,22 @@ notes.)
 
 ---
 
+## §6.2 Finding → remediation-plan routing (2026-05-22)
+
+Resolves the `Plan: TBD` column for every confirmed finding. Three remediation plans + one Ikenna-routing doc created
+2026-05-22 (local-commit only, not yet pushed). REFUTED/RESOLVED findings need no plan.
+
+| Destination                                                                  | Findings                                                                                                                                  |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `plans/active/audit03_carry_execution_safety_remediation_2026_05_22.md` (P0) | F-28, F-33, F-11, F-08, F-09, F-10, F-12                                                                                                  |
+| `plans/active/audit03_deployment_cron_provisioning_2026_05_22.md` (P0)       | F-39, F-40, F-41, F-42, F-43, F-44                                                                                                        |
+| `plans/active/audit03_drift_remediation_backlog_2026_05_22.md` (P1/P2)       | F-16, F-17, F-18, F-19, F-46, F-21, F-30, F-31, F-37a, F-37b, F-24, F-26, F-29, F-03, F-04, F-05, F-36/F-23, F-35(c), F-27, F-20 residual |
+| `plans/active/issues/audit03_ikenna_review_routing_2026_05_22.md` (decision) | F-34, F-06, F-13, F-14, F-15, F-32, F-45                                                                                                  |
+| No plan (REFUTED / RESOLVED)                                                 | F-01, F-02 (resolved); F-20 live-path + F-35 (a)(b) (refuted)                                                                             |
+| Doc reconcile only                                                           | F-07 (downgraded — informational)                                                                                                         |
+
+---
+
 ## §7 Maintenance rules
 
 1. **Append-only IDs.** New checkpoint → next free number in its `§2.x`. Never renumber. Deprecate with
