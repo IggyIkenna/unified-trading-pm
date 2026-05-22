@@ -615,12 +615,13 @@ surfaces left by the existing predictions_master phase structure.
 canonical groups (CRUDE_OIL / GOLD / DOGE / SOL / etc. — full list in archived issue) must ship from Phase 5 below
 before CME arb can link.
 
-- [ ] [SCRIPT] P0. **instruments-service MARKET_LIFECYCLE parquet writer**. Persist `market_created_at` /
+- [x] ✅ [SCRIPT] P0. **instruments-service MARKET_LIFECYCLE parquet writer**. Persist `market_created_at` /
       `resolution_time` / `settlement_time` per market_id into a separate parquet (NOT bundled into the canonical-group
       shard). Path:
       `gs://instruments-store-prediction-{pid}/market_lifecycle/by_canonical_group/group={g}/by_date/day={d}/...parquet`.
       Schema: `{market_id, canonical_question_group, market_created_at, resolution_time, settlement_time, status}`.
-      Reader-side helper `unified_trading_library.predictions.lifecycle_for_market(market_id) -> MarketLifecycle`.
+      Reader-side helper `unified_trading_library.predictions.lifecycle_for_market(market_id) -> MarketLifecycle`. —
+      IS@2aabd7b `_build_market_lifecycle_df` + `_write_market_lifecycle` + lifecycle_sink + 9 unit tests (2026-05-22)
 - [ ] [SCRIPT] P0. **MTDS umi_tick_provider lifecycle-bounded clip**. Today MTDS captures CLOB ticks for every
       registered market_id without bound; flip to read MARKET_LIFECYCLE first, then clip per-market: NO ticks before
       `market_created_at`, NO new ticks after `settlement_time`. Per CLAUDE.md "Prediction market lifecycle timing" rule
