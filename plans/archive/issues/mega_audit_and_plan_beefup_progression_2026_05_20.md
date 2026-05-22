@@ -431,3 +431,13 @@ C6 audit catches this drift before live trading exposes the gap.
 `cross_asset` as an instruments-service shard remains REJECTED. Stable synthetic-instrument identity is a separate
 concern (deferred indefinitely; revisit only for client-facing structured products or rebalanced-basket backtests —
 neither active).
+
+## Update 2026-05-22
+
+**Phase A (A1–A6)**: ALL `[x]` DONE — manifest divergence audit complete.
+**Phase B (B1)**: `[x]` DONE — bucket SSOT canonicalisation plan active.
+**Phase C (C0–C11)**: ALL `[x]` DONE — cross-repo contract audit complete.
+**Phase D (D0–D8)**: ALL `[x]` DONE — QG ratchet 6/7 patterns shipped. Pattern g (expected_coverage preflight + DIVERGENT_EMPTY post-hoc check) deferred to D2 plan. No separate plan created yet — operator decision needed on D2 scope before proceeding.
+**Phase E**: Ordering chain defined (D complete → E begins). Phase E execution status to be confirmed by slot-1 main at next planning cycle.
+
+This file remains in archive as the master progression tracker for A-D. Archival gate: all Phase E items done + Phase D pattern-g resolved.
