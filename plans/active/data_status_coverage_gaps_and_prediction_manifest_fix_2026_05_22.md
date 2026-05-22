@@ -135,10 +135,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       FIXTURE_STATS 2026-05-13, PLAYER_STATS 2026-05-03, ODDS 2026-04-17, INJURIES 2026-04-30,
       PREDICTIONS 2026-04-17, MATCHES 2026-05-12.
 
-- [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
-      `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
-      3063 missing dates drop to < 200 (residual off-season/no-fixture days are expected `empty_confirmed` rows, not
-      missing). If VM terminates with > 200 remaining, dispatch targeted re-fill per data-type for the remaining gap.
+- [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify 3063 missing dates drop to < 200. **Current status (14:05 UTC)**: VM RUNNING since ~08:00 UTC. Shard `instr-backfill-sports.parquet` at 2020-06-01→2020-06-09 (589 rows, all `empty_confirmed` — COVID era no fixtures). Rate: ~1.5 sports days/hour. **ETA to complete 2020→2026**: 2190 days ÷ 1.5 = ~1460 hours = >60 days. Will NOT complete before May-23 cutover. Long-running background process. Accept: footystats/api_football recent fills cover the critical 2026-04→2026-05 window; VM covers the deep historical backfill which is a P1 background task with no May-23 dependency.
 
 ### Phase 3 — IS Prediction manifest structural fix (P0, main work)
 
