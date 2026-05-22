@@ -1,5 +1,28 @@
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
+> **[2026-05-22 07:15 UTC] slot-3 PARTIAL ACK** — `aws_cloud_toggle` Phase 4 DONE (deployment-service@ea920bb,
+> plan-flip@baeca6a90). 7 AWS backfill scripts + watchdog prefixes registered. Continuing: aws_cloud_toggle UI-V + Phase
+> 5 SMOKE, aws_migration phases 1.B+1.C+3-6.
+
+> **[2026-05-22 ~10:00 UTC] slot-3 PROGRESS** — Phase 6 ECS deploy IN PROGRESS. deploy-ecs-fargate.sh committed
+> (deployment-service@baad550). 5/7 services deployed: execution-service (BLOCKED-CREDENTIALS — 6 AWS SM secrets
+> missing; ping below), features-service+strategy-service (IAM fix applied, new deploy forced),
+> alerting-service+deployment-api (App Runner OPERATION_IN_PROGRESS). 2 ECR builds re-triggered with buildspec YAML fix
+> (risk-and-exposure-service, position-balance-monitor-service). BLOCKED-CREDENTIALS ping below.
+
+> **CREDENTIAL APPROVAL REQUEST — execution-service AWS Secrets Manager** Vendor: AWS Secrets Manager (already
+> provisioned, just needs secrets created) What I need: operator to create 6 secrets in ap-northeast-1 under prefix
+> `unified-trading/`:
+>
+> - `unified-trading/exec-odum-binance-cefi` (Binance API key + secret)
+> - `unified-trading/exec-odum-deribit-cefi` (Deribit client ID + secret)
+> - `unified-trading/exec-odum-okx-cefi` (OKX API key + secret + passphrase)
+> - `unified-trading/exec-odum-bybit-cefi` (Bybit API key + secret)
+> - `unified-trading/exec-odum-hyperliquid-defi` (Hyperliquid wallet address + private key)
+> - `unified-trading/defi-kms-key-arn` (AWS KMS key ARN for DeFi wallet encryption) Unblocks: execution-service ECS task
+>   start; DeFi trade execution on AWS Without it: execution-service stays at 0 running tasks; other 4+ services proceed
+>   normally Plan ref: aws_migration_defi_first_2026_05_07.md Phase 6
+
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
 
 ## [slot-1-main → slot-3] 2026-05-22 ~05:15 UTC — IS backfill Wave 2 handled; continue Wave 1 AWS

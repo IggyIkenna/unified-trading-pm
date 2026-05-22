@@ -500,13 +500,15 @@ UX).
       surface required. No DNS wiring needed for staging smoke (`/health` accessible via ECS service discovery or ALB
       internal endpoint when services deploy). Post-cutover DNS wiring deferred to Phase 6.5 (UI co-location).
 - [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
-      PROGRESS 2026-05-21** (slot 3): - ECS cluster `uts-defi-prod` CREATED (ap-northeast-1, FARGATE + FARGATE_SPOT
-      capacity, containerInsights=enabled). - 7 CodeBuild image builds triggered in parallel (builds take ~15 min each):
-      alerting-service:7c0a3ec6, execution-service:51057f1f, features-service:bad0af28, strategy-service:988aeee8,
-      risk-and-exposure-service:4861c3fa, position-balance-monitor-service:a7ec3263, deployment-api:8ec6982c. -
-      **NEXT**: once all 7 builds show ECR image tags, create ECS task definitions from configs/aws/ manifests + deploy
-      4 Fargate services + 3 App Runner services + smoke `/health` for each. - Builds typically complete in 15-20 min;
-      operator or next slot can verify then deploy.
+      PROGRESS 2026-05-22** (slot 3): ECS task defs + services CREATED for 5/7 services. App Runner services also
+      created. deployment-service@f46c9e0 (`deploy-ecs-fargate.sh`). IAM roles had no policies — fixed by attaching
+      `AmazonECSTaskExecutionRolePolicy` + S3/SM policies to all 7 service roles (2026-05-22). Two blockers: (1)
+      **execution-service BLOCKED-CREDENTIALS**: `unified-trading/exec-odum-binance-cefi` and 5 other secrets not in AWS
+      SM — operator must create these secrets before execution-service can start. (2) **risk-and-exposure-service +
+      position-balance-monitor-service**: ECR builds in progress (fixed buildspec.aws.yaml YAML parse error: multi-line
+      command wrap ambiguity — rebuilt with single-line commands). **NEXT**: wait for features-service +
+      strategy-service tasks to reach RUNNING (IAM fix applied, new deploy forced); smoke `/health`; wait for 2 ECR
+      builds to complete then deploy those 2 remaining services; operator to create execution-service secrets.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
