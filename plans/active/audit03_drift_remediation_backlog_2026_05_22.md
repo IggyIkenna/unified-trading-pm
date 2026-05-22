@@ -45,8 +45,8 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
       `perp_funding_handler.py`) behind the instruments-service SSOT (`get_rpc_url()` / IS-first). Graph + Tardis are
       data-provider infra (exempt). QG STEP 5.70 should flag these.
-- [ ] [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py` instead
-      of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1 correction).
+- [x] ✅ [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py` instead
+      of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1 correction). — execution-service@769252a8; UAC QuoterV2 added at uac@1b2cfe8; UniswapConnector class constants now use get_uniswap_swap_router/quoter_v2/factory.
 - [ ] [AGENT] P1. **F-37b** (narrowed + relocated) — Genuine residual = the
       `catalogue_bucket = f"strategy-store-{project_id}"` inline bucket-NAME construction in
       `hedge_ratio_writer.py:136` + `decision_context_writer.py:149` (both already import `resolve_bucket_name` and use
@@ -65,12 +65,12 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P1. **F-24** — Add `health_check() -> CustodyHealth` to the `CustodyProvider` protocol
       (`custody/base.py`) + all 4 impls (cloud_kms/mock/copper/ceffu); codex requires ping-60s / balance-5min. Composes
       the RSK-08 custody-disconnect breaker.
-- [ ] [AGENT] P1. **F-29** — Clear `self._private_key` on `disconnect()` in the Hyperliquid connector
+- [x] ✅ [AGENT] P1. **F-29** — Clear `self._private_key` on `disconnect()` in the Hyperliquid connector
       (`hyperliquid.py:181` does NOT clear it today, unlike aave/uniswap) + stop re-injecting on `update_credentials()`;
-      align with codex Key-Lifetime.
-- [ ] [AGENT] P2. **F-26** — `get_custody_provider()` (`factory.py:120-124`) should `raise ValueError` on an unknown
+      align with codex Key-Lifetime. — execution-service@769252a8; disconnect() clears _private_key + _wallet_address under _cred_lock; update_credentials() guards against re-arming after disconnect.
+- [x] ✅ [AGENT] P2. **F-26** — `get_custody_provider()` (`factory.py:120-124`) should `raise ValueError` on an unknown
       provider instead of silently returning `MockCustodyProvider` (warning only) — prevents silent mock-signing in
-      prod.
+      prod. — execution-service@769252a8; unknown provider now raises ValueError with valid-provider list; MockCustodyProvider import retained for the explicit "mock" case.
 
 ## Theme 4 — reporting + audit-trail durability
 
