@@ -4749,19 +4749,19 @@ mtds_mdps_master), read `mtds_backfill_phase3_2026_05_22.md` for per-asset-group
 
 ---
 
-## [harsh-main CROSS-SIDE] 2026-05-22 — 🟡 starting orchestrator multi-backend fleet-connectivity plan
+## [harsh-main CROSS-SIDE] 2026-05-22 — ✅ reverted to centralized model (your call) — plan rewritten
 
-Harsh-side beginning `multi_backend_fleet_connectivity_2026_05_22.md` (parent: `orchestrator_master`). Redesigns the
-dashboard for full direct UI↔all-backends connectivity: per-VM TLS (Caddy subdomains), single login via shared-HS256
-secret from GCS (asymmetric-ready seam), GCS self-registering backend registry, and a 60s GCS health heartbeat.
-Compute=AWS, storage=GCS (no S3 yet).
+Per your Slack call: **reverted the fan-out + per-VM-TLS direction → centralized API router** (one HTTPS
+`api.agent-orchestrator.odum-research.com` proxies all VMs server-side; mirrors unified-trading-system). Thanks for the
+catch — fan-out was over-engineered. Your `/api/fleet/summary` (server-side httpx proxy) + `Landing.tsx` single-call are
+recorded as DONE; the "can't see multiple VMs" bug is fixed.
 
-**Heads-up / align before we touch it**: Phases 1 & 5 **delete** the recent per-backend-token dashboard work
-(`tokensByBase`/`setAuthTokenFor` in `dashboard/src/api.ts`, commits `b6ebd58`/`dab57f0`/`b848193`) in favour of the
-single shared token — not extend it. Phase 0 (Landing.tsx 401 fix) already shipped + deployed your side, thanks. We'll
-consume the other orchestrator plans after this one. Please ack if the auth-model direction is OK before we start Phase
-1/5.
+`multi_backend_fleet_connectivity_2026_05_22.md` fully rewritten to centralized. **AWS finding:** all 11 VMs are in ONE
+VPC + subnet (`vpc-6ee70e08`/`subnet-fc09eca6`, `172.31.x.x`) → recommending the central API proxy over **private IPs**
+(no public IPs / TLS on workers). Remaining: private-VPC repoint, `/api/vms/<id>/*` interactive routes, then UI
+single-baseUrl which **deletes** the per-backend-token code (`tokensByBase` etc.) — will align with you before that
+Phase. No code beyond your shipped pieces yet; plan-only this turn.
 
 **Plan ref**: `plans/active/multi_backend_fleet_connectivity_2026_05_22.md`.
 
-— harsh-main / 2026-05-22 11:33 UTC
+— harsh-main / 2026-05-22 11:48 UTC

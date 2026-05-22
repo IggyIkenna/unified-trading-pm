@@ -1,258 +1,185 @@
 ---
 name: multi_backend_fleet_connectivity
-title:
-  "Multi-backend fleet connectivity — direct UI↔all-backends, GCS registry, shared→asymmetric auth, GCS health
-  heartbeat, per-VM TLS"
+title: "Multi-backend fleet connectivity — centralized API router (one HTTPS backend proxies all VMs over private VPC)"
 type: active
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 estimate_class: infra
-estimate_baseline_ai_days: 7
-estimate_calibrated_ai_days: 5.5
+estimate_baseline_ai_days: 3.5
+estimate_calibrated_ai_days: 2.8
 status: active
 priority: P1
 created: 2026-05-22
 last_updated: 2026-05-22
 locked_by: live-defi-rollout
 source:
-  design discussion with operator (Harsh) 2026-05-22 — agent-orchestrator dashboard 401 triage → fleet-connectivity
-  redesign
+  design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage →
+  centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
 gate:
-  Phase 1 (auth model) + Phase 2 (per-VM TLS) must both be green before Phase 5 (UI rewire); Landing.tsx unblock (Phase
-  0) ships immediately, independent of all later phases
+  Phase 1 (private-VPC repoint) before workers drop public IPs; Phase 3 (UI single-baseUrl) deletes per-backend-token
+  code — align with the dashboard author first
 related_plans:
   - plans/epics/orchestrator_master.md
 ---
 
-# Multi-backend fleet connectivity
+# Multi-backend fleet connectivity — centralized API router
 
-One UI (Firebase Hosting, HTTPS) with **full, direct, bidirectional API access to every orchestrator backend** in the
-fleet — spawn, chat, reload, control, monitor — across ~12 backends, with a single login and a self-describing registry.
-This is **not** a read-only aggregator: interactive control stays direct fan-out (browser → each backend). Only
-**liveness/resource health** is decoupled to a push model, because a process cannot reliably report its own death.
+**Decision (reverted to the simpler model, Ikenna 2026-05-22):** ONE central HTTPS API
+(`api.agent-orchestrator.odum-research.com`) fronts the dashboard and **proxies to every worker VM server-side over the
+private VPC**. The browser only ever talks to that one URL. This is the **same shape as unified-trading-system** (one
+`unified-trading-api` fronts the UI; services stay isolated behind it) — the orchestrator mirrors it.
 
-## Operating constraints (operator-confirmed 2026-05-22)
+The central API is a **router, not a wall** (the Kubernetes API-server pattern): `POST /api/vms/<id>/...` → central
+forwards to that VM over the private network → returns to the browser. Full per-VM control (spawn / kill / log-stream /
+status on any individual VM) is preserved; the only thing that moves is **where TLS terminates** — at the one central
+API, not on each VM.
 
-- **Compute = AWS only.** All new VMs provisioned on AWS (account `427895769566`); GCP credits expired ~2 months ago.
-  Existing GCP VM (`api.agent-orchestrator.odum-research.com`) stays as the always-on bootstrap host until retired.
-- **Storage = GCS only** (`central-element-323112`, cheap, all data already there). **No S3 in this plan** — deferred to
-  a named successor (see `## Temporary states + their canonical follow-up plans`).
-- **Every AWS VM gets a static (elastic) IP** at provision. Harsh's PC has a static IP and is in-fleet. **Ikenna's
-  laptop has no static IP → excluded from interactive reach** (may still appear monitor-only via the GCS heartbeat,
-  Phase 4).
-- **Provision flow (target):** create VM → assign elastic IP → add `<id>.agent-orchestrator.odum-research.com` A-record
-  → fetch JWT secret + TLS material from GCS → start backend + TLS terminator → backend **self-registers** its hostname
-  in the GCS registry → UI sees it on next `/api/backends`.
+## Why this replaces the earlier fan-out design
 
-## Design decisions (closed)
+The prior revision of this plan proposed browser→each-VM fan-out with per-VM TLS (Caddy subdomains + DNS delegation +
+elastic IPs). That is **deleted**. It required static IP + subdomain + certbot **per VM** and does not scale; it also
+hit the HTTPS-page→`http://ip:8026` mixed-content wall. The centralized model needs **one** subdomain + **one** TLS
+endpoint, and workers need **outbound only** — no public IPs, no certbot, no per-VM DNS.
 
-1. **Connectivity:** direct browser→backend fan-out (NOT a hub). Static IPs make every backend directly reachable, so no
-   tunnel/mesh needed.
-2. **HTTPS (mixed-content fix):** terminate TLS on each backend on its own subdomain via **Caddy** (`:443 → :8026`). A
-   browser cannot call `http://<ip>:8026` from an HTTPS page, and a CA will not issue for a bare IP — so each VM needs a
-   DNS name. Default to **per-host automatic Let's Encrypt certs** (no shared private key sprayed across the fleet);
-   wildcard-cert-in-GCS is the convenience fallback only (Phase 2 records the trade-off).
-3. **Auth:** single login, fleet-wide token. **v1 = shared HS256 secret read from GCS** (simplest, removes the
-   per-backend-token hack). auth.py is structured so **HS256→RS256 asymmetric is a config swap, not a rewrite** — the
-   hardening (sign-on-one-issuer, verify-with-public-key-everywhere) is a follow-up, not a v1 blocker. Blast-radius of
-   the shared secret is the WHOLE fleet (these backends spawn agents next to live-trading surfaces) — documented,
-   accepted for v1.
-4. **Registry:** the backend list lives as a single object in GCS, served by any backend via `/api/backends`. Backends
-   **self-register on startup** (after their own health check passes) using an **etag-guarded read-modify-write**
-   (`ifGenerationMatch`) to avoid concurrent-boot races. Stored entries are **hostnames, not IPs**.
-5. **Health:** every backend writes a heartbeat + `psutil` metrics blob to GCS **every 60s** from a side-channel
-   (systemd timer, separate from the main process so it survives a hang). The monitoring UI page reads from GCS — never
-   polls a possibly-dead process for its own liveness.
+## Operating constraints (confirmed 2026-05-22)
 
-## Coordination note (HARD — read before any code)
+- **Compute = AWS** (account `427895769566`); **storage = GCS** (`central-element-323112`); no S3 yet.
+- **All worker VMs + the central backend are in ONE VPC and subnet** — `vpc-6ee70e08` / `subnet-fc09eca6`, private
+  `172.31.x.x` (default VPC, ap-northeast-1). Verified via `aws ec2 describe-instances` 2026-05-22 (11 instances). → the
+  central API can reach every VM by **private IP** directly; public IPs become optional.
+- Central API = the existing `api.agent-orchestrator.odum-research.com` (EC2 + elastic IP + nginx/certbot, already
+  HTTPS). It is the single bootstrap + router host.
 
-This direction **deletes** the other agent's recent per-backend-token work (`tokensByBase` / `setAuthTokenFor` in
-`dashboard/src/api.ts`, commits `b6ebd58`, `dab57f0`, `b848193`). Per workspace "delete deprecated code — no parallel
-paths", that machinery is removed in Phase 5, not extended. **Align with the other agent + Ikenna before starting Phase
-1/5.** No silent revert of their commits.
+## Transport recommendation (operator asked me to pick)
+
+**Central API proxies to workers over the private VPC (`172.31.x.x`).** Justification: all VMs are confirmed same-VPC +
+same-subnet, so private-IP routing works today with **no** reverse-tunnel, **no** public IPs, **no** internal TLS
+(private VPC traffic), lowest latency, smallest attack surface. Heartbeat/visibility and interactive proxying both ride
+the same private path. (A reverse-WebSocket channel would only be needed if a worker ever lived outside the VPC — not
+the case now; noted as the fallback if that changes.)
 
 ---
 
-## Pre-audit (workspace-wide, before execution)
+## DONE — central aggregation (Ikenna, 2026-05-22, on `origin/main`)
 
-- [ ] [AGENT] P0. `rg` every consumer of the symbols this plan removes/renames and embed the manifest here:
-      `tokensByBase`, `setAuthTokenFor`, `clearAuthTokens`, `backendSessionKey`, `loadSessionFor`,
-      `ORCHESTRATOR_JWT_SECRET` (env path), and the `http://<ip>:8026` URLs in `config/backends.json`. 0 hits ≠ safe —
-      open `App.tsx` + `Login.tsx` consumers and confirm.
-- [ ] [AGENT] P0. Confirm where the `odum-research.com` DNS zone is hosted (Squarespace vs Cloud DNS). Per
-      `docs/OPERATIONS.md` it was "Squarespace → Firebase CNAME". If not API-scriptable, Phase 2 must first delegate the
-      `agent-orchestrator.odum-research.com` subzone to Cloud DNS so provisioning can auto-create A-records.
-- [ ] [AGENT] P0. Read `scripts/bootstrap_vm.sh` (the VM provisioner) end-to-end — it is the integration point for
-      Phases 1–4 (cert fetch, JWT-secret fetch, Caddy install, self-register). Note current GCS-fetch steps to extend
-      rather than duplicate.
-- [ ] [AGENT] P0. Read `server/gcs_sync.py` `upload_state_to_gcs` — the health heartbeat (Phase 4) extends this, not a
-      new module. Confirm the bucket/credentials path it uses (`ORCHESTRATOR_GCS_BUCKET`).
+- [x] ✅ [AGENT] P0. `server/server.py` — `GET /api/fleet/summary` (`AUTHED_DEPS`): proxies `/api/vm/summary` from every
+      backend server-side (httpx, 5s timeout, parallel `ThreadPoolExecutor`), forwards the caller's `Authorization`
+      header. Replaces browser fan-out → no mixed-content / CORS. **Currently targets the public IPs in
+      `data/config/backends.json`** (Phase 1 repoints to private). — agent-orchestrator origin/main.
+- [x] ✅ [AGENT] P0. `dashboard/src/Landing.tsx` — removed browser fan-out; single call to `/api/fleet/summary`.
+      Multiple VMs now render through the one central API. — agent-orchestrator origin/main (`fcc59fe` + follow-up).
 
----
+> Net: the **"can't see multiple VMs" bug is fixed** and the centralized spine exists. Remaining phases harden it
+> (private-VPC, interactive per-VM routes, single-token UI, registry) and remove the now-dead fan-out code.
 
-## Phase 0 — Immediate unblock (P0) — ✅ DONE (other agent, 2026-05-22)
+## Pre-audit findings (2026-05-22)
 
-The currently-reachable backend (`api.agent-orchestrator.odum-research.com`) rendered as a blank "Fleet Overview"
-because `Landing.tsx:42` fetched `/api/backends` with **no token**, but the prod backend is strict
-(`ALLOW_ANONYMOUS=false`) → 401. One-line consistency fix (mirror `refreshOne`, which already sends the token).
-
-- [x] ✅ [AGENT] P0. `dashboard/src/Landing.tsx` — attach the bearer token to the `/api/backends` fetch. **Shipped by
-      the other agent, merged to main, and deployed to Firebase Hosting (2026-05-22).**
-- [x] ✅ [AGENT] P0. Build + deploy via CI; fleet card renders against the live backend. **Done — live.**
-
-**Success:** ✅ `https://agent-orchestrator.odum-research.com` shows the GCP backend's VM card; `/api/backends` returns
-200 with the token.
+- [x] ✅ Symbol blast-radius for the Phase-3 deletions is **2 dashboard files only**: `tokensByBase` / `setAuthTokenFor`
+      / `clearAuthTokens` defined in `dashboard/src/api.ts`, consumed in `dashboard/src/App.tsx` (L184/196/332);
+      `backendSessionKey` / `loadSessionFor` / `loadAnySession` all in `App.tsx`. `Login.tsx` consumes none. Server JWT
+      env read is `server/auth.py:83` only.
+- [x] ✅ Registry path is **`data/config/backends.json`** (`server/config.py:backends_path()`,
+      CONFIG_DIR=`data/config/`), 12 entries — NOT `config/backends.json`.
+- [x] ✅ `scripts/bootstrap_vm.sh` is **AWS-primary** and already fetches creds from GCS + Secret Manager (step 5) +
+      emits a STARTED event — the integration point for private-IP self-registration.
+- [x] ✅ `server/gcs_sync.py` `upload_state_to_gcs` exists (snapshots) — available if a GCS heartbeat is wanted later,
+      but the central proxy's 5s-timeout already gives reachable/unreachable per VM.
+- [x] ✅ DNS is NOT on Cloud DNS (0 zones; Squarespace). **No longer blocking** — centralized model needs no per-VM DNS.
+      Recorded only as the reason the fan-out path was rejected.
 
 ---
 
-## Phase 1 — Shared JWT secret from GCS, asymmetric-ready (P1) — PARALLEL with Phase 2
+## Phase 1 — Repoint central proxy to private VPC IPs (P1)
 
-- [ ] [AGENT] P1. `server/auth.py` — load `JWT_SECRET` from GCS (object path via `ORCHESTRATOR_JWT_SECRET_GCS_PATH` or
-      similar) instead of per-VM env. Keep an env fallback for local dev only.
-- [ ] [AGENT] P1. Wire JWT-secret **hot-reload** via the existing `CredsEnvPoller` machinery (the
-      `runtime setup-token     rotation` commit) so rotation = overwrite the GCS object, no fleet redeploy.
-- [ ] [AGENT] P1. Refactor `mint`/`verify` so the algorithm + key source are pluggable: `HS256` (shared secret) today,
-      `RS256/ES256` (private-key issuer + public-key verifiers) later — a config swap, not a rewrite. Add a
-      `JWT_ALGORITHM`-driven branch + key-loader abstraction. Do **not** implement RS256 now (follow-up plan), but leave
-      the seam.
-- [ ] [AGENT] P1. Provision the shared secret into GCS (least-privilege secrets bucket, per-VM SA read-only). Document
-      the rotation runbook (owner/cadence/verifier/last_executed per the runbook SSOT rule).
+- [ ] [AGENT] P1. `data/config/backends.json` — add a `private_url` (`http://172.31.x.x:8026`) per VM; have
+      `/api/fleet/summary` (and Phase-2 routes) prefer `private_url` when the central API is in-VPC, falling back to
+      public `url` only for out-of-VPC callers (e.g. local dev). Source the private IP from the EC2 metadata at
+      provision.
+- [ ] [AGENT] P1. `scripts/bootstrap_vm.sh` — on boot, register the VM's **private IP** into the registry (Phase 5
+      mechanism), so the proxy targets are private by default.
+- [ ] [AGENT] P1. Once private routing is verified, close worker `:8026` to the public (security-group → VPC-internal
+      only); workers keep public IPs only if still needed for non-orchestrator reasons.
 
-**Success:** a token minted by logging into backend A validates on backend B (both reading the same GCS secret);
-overwriting the GCS secret invalidates old tokens fleet-wide within the poller interval without a restart.
+**Success:** `/api/fleet/summary` aggregates all VMs over `172.31.x.x` with no public-internet hop; a worker with its
+public `:8026` firewalled still appears.
 
 **Full-execution criterion:**
 
-- ✅ Two real AWS backends, each reading the shared secret from GCS, accept the same operator token.
-  - **What ran**: login on VM-1, replay token against VM-2 `/api/state` — both 200.
-  - **Verification**: `curl -H "Authorization: Bearer <tok>" https://<vm2>/api/state` → 200; rotate GCS object → same
-    call → 401 within poller interval.
+- ✅ Central API aggregates ≥2 VMs purely over private IPs.
+  - **What ran**:
+    `curl -H "Authorization: Bearer <tok>" https://api.agent-orchestrator.odum-research.com/api/fleet/summary`.
+  - **Verification**: response lists the VMs; central-VM access logs show `172.31.x.x` targets; worker SG shows `:8026`
+    not publicly open.
 
----
+## Phase 2 — Interactive per-VM proxy routes (P1) — the "talk to a specific VM" path
 
-## Phase 2 — Per-VM TLS termination (P1) — PARALLEL with Phase 1
+- [ ] [AGENT] P1. `server/server.py` — generic reverse-proxy `(/api/vms/{vm_id}/{path:path})` that forwards method +
+      body + auth to `<vm private_url>/api/{path}` (httpx, timeout, error-mapped). Covers spawn / kill / pause-resume /
+      message / log-stream / state for any individual VM through the one central API.
+- [ ] [AGENT] P1. Stream-friendly handling for log/SSE endpoints (don't buffer); per-VM error surfaced as the VM's
+      status, not a 500 on the whole call.
+- [ ] [AGENT] P2. Authorize the central→VM hop with an internal credential (shared `ORCHESTRATOR_API_PASSWORD` from GCS,
+      private-VPC only) — the operator JWT terminates at the central API.
 
-- [ ] [AGENT] P1. (If Pre-audit found non-scriptable DNS) delegate `agent-orchestrator.odum-research.com` subzone to
-      Cloud DNS; otherwise script A-record creation against the existing provider API.
-- [ ] [AGENT] P1. Add **Caddy** to `scripts/bootstrap_vm.sh`: reverse-proxy `:443 → 127.0.0.1:8026`, automatic Let's
-      Encrypt per-host cert for `<id>.agent-orchestrator.odum-research.com`. Open ports 80+443 in the AWS security
-      group; close direct `:8026` to the public (localhost-only).
-- [ ] [AGENT] P1. Document the cert trade-off in `docs/OPERATIONS.md`: per-host auto-cert (default, no shared key) vs
-      wildcard-in-GCS (fallback, concentrates one private key across the fleet → only with a least-privilege secrets
-      bucket).
-- [ ] [AGENT] P1. Update CORS allow-list handling so each backend admits the Firebase UI origin
-      (`ORCHESTRATOR_CORS_ORIGINS`) — confirm it covers the prod + any custom domains.
+**Success:** every dashboard action against a specific VM works through `/api/vms/<id>/...` with identical capability to
+the old direct-to-VM path.
 
-**Success:** `https://<id>.agent-orchestrator.odum-research.com/healthz` returns 200 with a valid CA cert; the HTTPS
-Firebase UI can XHR it with no mixed-content block.
+## Phase 3 — UI: single baseUrl, delete per-backend-token code (P1) — align with dashboard author first
 
-**Full-execution criterion:**
+- [ ] [AGENT] P1. **Delete** `tokensByBase` / `setAuthTokenFor` / `clearAuthTokens` from `dashboard/src/api.ts` and
+      their `App.tsx` callers — there is now ONE backend (the central API) and ONE token. No parallel path / no shim.
+- [ ] [AGENT] P1. Pill switcher: `baseUrl = vm.url` → single central `baseUrl` + a `vm` target (path `/api/vms/<id>/...`
+      or `?vm=`). All other `api.ts` calls already route through one `http(baseUrl, path)` chokepoint → no change.
+- [ ] [AGENT] P1. Collapse per-backend session storage (`backendSessionKey` / `loadSessionFor`) to one session.
+- [ ] [AGENT] P1. UI repo gates: `tsc --noEmit`, ESLint zero-warning, prettier; runtime-verify against the live central
+      API (fleet view + a per-VM action + a deliberately-down VM).
 
-- ✅ A freshly-provisioned AWS VM serves HTTPS on its subdomain end-to-end.
-  - **What ran**: `bash scripts/bootstrap_vm.sh` on a real AWS VM + A-record creation.
-  - **Verification**: `curl -v https://<id>.agent-orchestrator.odum-research.com/api/backends` → 200, cert chain valid
-    (`openssl s_client` shows Let's Encrypt issuer); browser DevTools shows the XHR succeeding from the HTTPS UI.
+**Success:** one login → list + interact with every VM through the central API; down VM shows an error card without
+breaking the rest.
 
----
+## Phase 4 — Single-token auth consolidation (P2)
 
-## Phase 3 — GCS-backed self-registering registry (P1) — depends on Phase 2 (stores hostnames)
+- [ ] [AGENT] P2. Central API: one auth authority — shared secret/`ORCHESTRATOR_API_PASSWORD` (or HS256 JWT) read from
+      GCS, hot-reloadable via the existing `CredsEnvPoller`. Keep `auth.py` algorithm pluggable so HS256→RS256 is a
+      config swap later (asymmetric-ready seam). Workers behind the proxy don't validate operator JWTs.
+- [ ] [AGENT] P2. Document the trust boundary: operator-JWT at the edge (central API); central→VM over private VPC with
+      an internal credential. Rotation runbook (owner/cadence/verifier/last_executed).
 
-- [ ] [AGENT] P1. `config/backends.json` → migrate the canonical list to a GCS object
-      (`gs://<bucket>/fleet/registry.json`); `/api/backends` reads it (mode-aware: keep mock variant local). Entries
-      keyed by `id`, store **hostname** (not IP), `label`, `account_id`, `asset_group`/role.
-- [ ] [AGENT] P1. Backend **self-registration on startup**: after the local health check passes, read-modify-write its
-      own entry into the GCS registry with `ifGenerationMatch` (retry on generation mismatch). Idempotent — updates its
-      own entry, never clobbers siblings.
-- [ ] [AGENT] P1. Backend **deregistration / staleness**: entry carries `last_registered`; the registry read filters or
-      flags entries with no heartbeat (ties to Phase 4) so dead VMs don't linger as live.
-- [ ] [AGENT] P1. UI bootstrap hardening: pin 2–3 always-on bootstrap hosts (the GCP VM + one stable AWS VM) so one dead
-      VM can't blind the registry fetch.
+## Phase 5 — Registry: self-registration with private IP (P2)
 
-**Success:** booting a new backend makes it appear in `/api/backends` from every other backend within one registration
-cycle, with zero manual file edits and no race when two boot simultaneously.
+- [ ] [AGENT] P2. VM self-registration on boot: outbound `POST /api/vms/register` to the central API with
+      `{id, label,     private_ip, account_id, asset_group}` after the local health check passes (no inbound to the VM
+      needed). Central API persists the registry (file → GCS object for durability), `/api/backends` reads it.
+- [ ] [AGENT] P2. Staleness: a VM that stops registering / heartbeating drops out of `/api/fleet/summary` as stale
+      (heartbeat age) — the central API detects absence; a dead VM can't mask its own death.
 
-**Full-execution criterion:**
+## Phase 6 — Codex SSOT + docs (P2)
 
-- ✅ Two backends booted concurrently both appear in the GCS registry with no lost writes.
-  - **What ran**: parallel `bootstrap_vm.sh` on two AWS VMs.
-  - **Verification**: `gcloud storage cat gs://<bucket>/fleet/registry.json` shows both entries; generation history
-    shows no overwrite-loss; `GET /api/backends` on a third backend lists both.
-
----
-
-## Phase 4 — GCS health heartbeat + monitoring page (P1) — depends on nothing hard (write side); UI part pairs with Phase 5
-
-- [ ] [AGENT] P1. Extend `server/gcs_sync.py`: write `gs://<bucket>/fleet/health/<id>.json` **every 60s** with `psutil`
-      CPU/mem/disk + process uptime + `last_heartbeat` (UTC). Run from a **systemd timer separate from the main
-      process** (survives a hung backend) — add the unit to `scripts/`.
-- [ ] [AGENT] P1. `server/server.py` — new `/api/fleet/health` on the bootstrap backend that reads all
-      `fleet/health/*.json` from GCS and returns the aggregate (this is liveness telemetry, NOT interactive control —
-      does not route control through a hub).
-- [ ] [AGENT] P1. Dashboard: new **Fleet Health** page/tab that renders the aggregate — per-VM up/stale (heartbeat age >
-      90s = stale), CPU/mem/disk bars. Minimal first; extend later.
-- [ ] [AGENT] P2. Ikenna's-laptop monitor-only path: if it pushes a heartbeat to GCS, it shows on the health page even
-      though it's excluded from interactive reach. (Nice-to-have.)
-
-**Success:** killing a backend (or its VM) flips its health card to "stale (no heartbeat 90s+)" within ~2 minutes; a
-hung-but-running process is distinguishable from a downed VM.
-
-**Full-execution criterion:**
-
-- ✅ Real AWS VM writes a health blob every 60s; killing the process still leaves the last blob, and the page shows
-  stale.
-  - **What ran**: backend + health timer on a real AWS VM; then `systemctl stop` the backend.
-  - **Verification**: `gcloud storage ls gs://<bucket>/fleet/health/` shows fresh `<id>.json` (mtime < 60s while up);
-    after stop, blob stops updating and the UI flips to stale.
-
----
-
-## Phase 5 — UI rewire to single-token direct fan-out (P1) — depends on Phases 1, 2, 3
-
-- [ ] [AGENT] P1. **Delete** the per-backend-token machinery in `dashboard/src/api.ts` (`tokensByBase`,
-      `setAuthTokenFor`, `clearAuthTokens`, per-backend session keys) — single token, sent to all backends (now valid
-      everywhere via the shared secret). No re-export stubs, no parallel path.
-- [ ] [AGENT] P1. `dashboard/src/App.tsx` — `BOOTSTRAP_URL` reads the registry from a pinned bootstrap host; all backend
-      URLs become HTTPS hostnames from the registry (no `http://IP`). Direct fan-out preserved.
-- [ ] [AGENT] P1. Simplify `Login.tsx` / session storage to one session (drop the per-backend persistence added in
-      `b848193`).
-- [ ] [AGENT] P1. Full type-check + lint + build (UI repo rules: `tsc --noEmit`, ESLint zero-warning, prettier);
-      runtime-verify against ≥2 live AWS backends (golden path + a deliberately-down backend).
-
-**Success:** one login → the UI lists and **interacts** (state, chat, spawn, reload) with every live AWS backend over
-HTTPS, with a single token; a down backend shows an error card without breaking the rest.
-
----
-
-## Phase 6 — Codex SSOT updates + docs (P2)
-
-- [ ] [AGENT] P2. `codex/04-architecture/agent-orchestrator-overview.md` — document the multi-backend connectivity model
-      (direct fan-out + GCS registry + GCS health heartbeat + shared/asymmetric auth). Supersede any prior per-backend-
-      token description.
-- [ ] [AGENT] P2. `codex/05-infrastructure/` — new doc: AWS VM provisioning for orchestrator backends (elastic IP →
-      A-record → JWT+cert from GCS → Caddy → self-register). Cross-link `scripts/bootstrap_vm.sh`.
-- [ ] [AGENT] P2. `agent-orchestrator/docs/OPERATIONS.md` — update fleet/backends section (TLS, registry-in-GCS, health
-      page, single login). Remove the stale mixed-content caveat once Phase 2 lands.
-- [ ] [AGENT] P2. Add the runbook fields (owner/cadence/verifier/last_executed) for: JWT-secret rotation, cert renewal
-      monitoring, registry hygiene (stale-entry pruning).
+- [ ] [AGENT] P2. `codex/04-architecture/agent-orchestrator-overview.md` — centralized API-router model (one HTTPS
+      front, private-VPC proxy, single token). Supersede any per-VM-FQDN / per-backend-token text. Resolve the
+      `orchestrator_vm_registry.yaml` (per-VM FQDN) ↔ `worker.md` (outbound POST) drift Ikenna flagged.
+- [ ] [AGENT] P2. `agent-orchestrator/docs/OPERATIONS.md` — update fleet section (central proxy, private-VPC, single
+      login, no per-VM TLS).
 
 ---
 
 ## Parallelization
 
-- **Phase 1 ∥ Phase 2** — independent (auth vs TLS). Different files; safe to run concurrently.
-- **Phase 4 write-side** can start anytime (independent of auth/TLS).
-- **Phase 3** depends on Phase 2 (stores hostnames); **Phase 5** depends on 1+2+3; **Phase 4 UI** pairs with Phase 5.
-- **Phase 0** ships immediately, blocks nothing.
+- **Phase 1 ∥ Phase 2** (private repoint vs proxy routes — both server-side, mostly independent).
+- **Phase 3** depends on Phase 2 (per-VM route shape); **Phase 4/5** can follow.
+- **Phase 6** after the surface stabilizes.
 
 ## No technical debt
 
-Clean breaks only: per-backend-token code is **deleted** (Phase 5), not shimmed; `http://IP` URLs are **removed** from
-the registry once TLS lands; `backends.json` stops being the SSOT (GCS object is). Safe rollback = git history.
+Per-backend-token code (`tokensByBase` etc.) and the browser fan-out are **deleted**, not shimmed. The earlier per-VM
+TLS / DNS-subzone design is abandoned (recorded above only as rationale). Single code path.
 
 ## Temporary states + their canonical follow-up plans
 
-- **S3 storage parity** — this plan is GCS-only by operator direction. Successor: `plans/active/` S3-parity plan (to be
-  created when AWS storage is added) — route all fleet objects through `get_storage_client()`/`resolve_bucket_name()` so
-  the GCS→add-S3 step is a config flip, not a rewrite.
-- **Asymmetric JWT (RS256/ES256)** — Phase 1 leaves the seam; the actual issuer + public-key distribution lands in a
-  successor `orchestrator_asymmetric_auth_*` plan. Until then the shared-secret blast-radius caveat stands.
+- **S3 storage parity** — GCS-only by operator direction; successor S3-parity plan to be created when AWS storage is
+  added (route via `get_storage_client()` / `resolve_bucket_name()` for a config-flip migration).
+- **Asymmetric JWT (RS256/ES256)** — Phase 4 leaves the seam; issuer + public-key distribution lands in a successor
+  `orchestrator_asymmetric_auth_*` plan. With the centralized single-backend model the urgency is low (one issuer, one
+  verifier).
+- **Out-of-VPC worker transport** — if a future worker lives outside `vpc-6ee70e08`, a reverse-WebSocket channel (VM
+  holds an outbound connection the central API pushes commands over) replaces private-IP proxying for that VM.
