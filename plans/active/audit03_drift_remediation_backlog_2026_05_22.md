@@ -95,9 +95,10 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
       retention-lock (currently resolved at runtime via `resolve_bucket_name(kind="audit-records")` but never
       provisioned).
-- [ ] [AGENT] P2. **F-04** — Align the execution-audit path layout (`audit_log.py:67`, flat
+- [x] ✅ [AGENT] P2. **F-04** — Align the execution-audit path layout (`audit_log.py:67`, flat
       `audit/{client_id}/{date}/{event_type}/`) with codex's events-stream layout — minor (date/ext already match; only
-      the segment layout differs).
+      the segment layout differs). — execution-service@4fcd873ec; new path:
+      audit/{client_order_id}/{YYYY/MM/DD}/{ts}-{event_type}.json; content-type application/json; test updated.
 
 ## Theme 5 — cross-client enforcement + low-sev residuals
 
