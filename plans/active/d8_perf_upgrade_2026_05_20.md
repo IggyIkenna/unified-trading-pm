@@ -59,11 +59,17 @@ performance-critical paths:
 
 ### Phase 2 — resolve_bucket_name caching
 
-- [ ] [AGENT] P2. Profile `resolve_bucket_name` call frequency in hot paths (MTDS batch handlers, features
+- [x] ✅ [AGENT] P2. Profile `resolve_bucket_name` call frequency in hot paths (MTDS batch handlers, features
       OnChainDataLoader):
-  - If called per-shard (not per-service boot), add `@lru_cache(maxsize=None)` or module-level cache
-  - UTL may already implement caching — verify before adding duplicate cache
-- [ ] [AGENT] P2. Identify top 10 hot-path files by `resolve_bucket_name` call count; add per-file caching where missing
+  - UTL `_load_cloud_providers_yaml()` already has `@lru_cache(maxsize=1)` — YAML disk I/O only once per process.
+  - MTDS does NOT call `resolve_bucket_name` — uses `get_write_bucket_name()` (string templates, no YAML).
+  - features-onchain: 0 callsites. strategy-service: all callsites store result in `self._bucket` at **init** (once per
+    object, not per-shard).
+  - Conclusion: no consumer-level caching needed. UTL caching is sufficient.
+- [x] ✅ [AGENT] P2. Identify top 10 hot-path files by `resolve_bucket_name` call count; add per-file caching where
+      missing
+  - Top callers: strategy-service/engine/core/{gcs_feature_provider.py, gcs_storage_service.py,
+    strategy_config_loader.py} — all called once per object init, not per-shard. No caching additions required.
 
 ### Phase 3 — Retry overhead reduction via error classification
 
@@ -82,8 +88,9 @@ performance-critical paths:
 
 ## Success criteria
 
-- [ ] Phase 1: `rg 'subprocess.*gsutil' --type py` returns 0 hits in migration scripts
-- [ ] Phase 2: `resolve_bucket_name` called ≤1× per service boot per bucket name (cached)
+- [x] ✅ Phase 1: `rg 'subprocess.*gsutil' --type py` returns 0 hits in migration scripts — verified 2026-05-22
+- [x] ✅ Phase 2: `resolve_bucket_name` called ≤1× per service boot per bucket name (cached) — UTL already caches YAML
+      load; all hot-path callers store result at init. No changes needed. 2026-05-22
 - [ ] Phase 3: `rg 'classify_venue_error' market-tick-data-service/ --type py` returns hits in all handler except blocks
 - [ ] Phase 4: benchmark report shows ≥20% throughput improvement for DeFi MTDS handler
 
