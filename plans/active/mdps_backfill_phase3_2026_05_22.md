@@ -103,9 +103,9 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Old VMs (162604) stopped; new VMs relaunched with fixed tarball. Same pattern also resolves
       MDPS-3.3.TradFi-SchemaContract (CME/ICE trades NaN bars). Sample contract:
       `0x71aa6ab89169bb131ea6c54da3e5fa248e4ad426192c5bc5e29ae967bc83cd1a`. 2026-05-22 slot-5.
-- [ ] [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — Relaunch MDPS Prediction VMs with UAC@5ff8a25a tarball (nullable OHLC
-      fix). Use `launch-mdps-sharded-backfill.sh prediction`. 2025 VM: start 2025-03-14; 2026 VM: start 2026-01-01.
-      BLOCKED ON: old VMs (162604) must be TERMINATED first. 2026-05-22 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — Relaunched with UAC@5ff8a25a nullable OHLC fix.
+      `mdps-prediction-{2025,2026}-20260522-181105` RUNNING. 2025-03-14→2025-12-31 + 2026-01-01→2026-05-22.
+      SKIP_DEPENDENCY_CHECK=true. Old VMs 162604 confirmed TERMINATED before launch. 2026-05-22 slot-5.
 
 ---
 
