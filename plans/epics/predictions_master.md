@@ -648,8 +648,10 @@ before CME arb can link.
       instruments-service catalog + MTDS CLOB tick history; cluster-validation expected counts populated. **GATES
       `cme_polymarket_arb_2026_05_08` Phase 2 cross-link**. **UAC DONE (2026-05-22 slot-2)**: 7 CME-linked groups
       defined in `CanonicalQuestionGroup` + `PREDICTION_GROUPS` + `cme_polymarket_link.py` fully wired (UAC@9c491bdd).
-      cme-arb Phase 2 FULL. Remaining: IS catalog backfill + MTDS CLOB tick history for the 7 new groups (requires VM
-      launch — not yet dispatched).
+      cme-arb Phase 2 FULL. **Classifier rules DONE (2026-05-22 slot-2 UAC@55d068f7)**: taxonomy.py RUT slug prefixes
+      (rut-/russell-2000-/russell-) + CLASSIFIER_VERSION=2026-05-22.1; classifiers.py 7 entries in
+      `_CATEGORY_UNDERLYING_PERIOD_TO_GROUP` (NDX/DJIA/RUT/GOLD/CRUDE_OIL/NAT_GAS/EURUSD); 24 tests pass. Remaining: IS
+      catalog backfill + MTDS CLOB tick history for the 7 new groups (requires VM launch — not yet dispatched).
 
 ## `available_at` adapter stamping (coordinated)
 
