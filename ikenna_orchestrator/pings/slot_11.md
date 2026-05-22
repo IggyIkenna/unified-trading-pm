@@ -332,4 +332,4 @@ migration** (14 entries in `TABLE_TO_EXPORT`).
 
 Plan ref: `plans/epics/infrastructure_master.md` P0 shard-granularity section.
 
-**PM@TBD** (LDR).
+**PM@7474f679** (LDR).
