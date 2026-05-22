@@ -85,8 +85,12 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
       strategy-service@24fca89f + alerting-service@5c1ce04 + batch-live-recon@2aeb7f3 — clone PM from LDR). New blocker:
       all 3 builds failing on UAC test compatibility (ModuleNotFoundError unified_api_contracts.internal; per user
       direction not fixing UAC QG). MTDS `:latest` tagged → `346842a` 2026-05-22T12:33 (fast-t1-recon + cefi-t1-recon
-      unblocked from image side). Remaining: strategy/alerting/batch-live images blocked pending UAC compat fix.
-      2026-05-22.
+      unblocked from image side). Remaining: strategy/alerting/batch-live images blocked pending UAC compat fix. **Bug
+      fixed 2026-05-22**: cefi-t1-recon was exiting with code 2 (argparse error) because terraform used lowercase
+      `--asset-group cefi` but UTL STANDARD_CATEGORIES only accepts uppercase. Fixed: deployment-service@3558c40 + live
+      Cloud Run Job updated via `gcloud run jobs update`. fast-t1-recon running; cefi-t1-recon re-queued. **DEFERRED
+      TODO (P3)**: UTL `service_cli.py` STANDARD_CATEGORIES should include lowercase choices to match canonical
+      vocabulary per CLAUDE.md (keys lowercase: cefi/defi/tradfi/sports/prediction). 2026-05-22.
 
 ## Success criteria
 
