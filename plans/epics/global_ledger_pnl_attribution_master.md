@@ -12,7 +12,7 @@ last_updated: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
+  - plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md
 ---
 
@@ -60,11 +60,9 @@ first)._
 
 ### P0 — Discovery + target-state spec
 
-#### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../active/global_ledger_pnl_attribution_discovery_2026_05_21.md)
+#### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **progress**: 36/38 BACKED + 2/38 PARTIAL (enum
-expansion + TreasuryLedger split). UAC schemas + 5 service audits + 3 codex docs + CLAUDE.md pointer shipped. Remaining:
-operator [ack] on Phase 3 (late-arriving-data) + Phase 5 (greeks home) + Phase 6 (TreasuryLedger split).
+**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL. Operator [ack] pending on Phase 3/5/6; codex SSOT docs deferred post-cutover. · **estimate**: 3.6 cal AI-days (class: design)
 
 ### P1 — Implementation (gated on P0 operator [ack])
 
@@ -81,6 +79,14 @@ _(none yet — defined post-migration ship)_
 _(none yet — defined post-migration ship)_
 
 ## Archived plans
+
+### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL; UAC schemas shipped; operator [ack] pending on Phase 3/5/6.
+
+**Deferred (migrated):**
+- **Operator [ack] pending (Phase 3/5/6)**: Late-arriving-data handling + greeks home + TreasuryLedger split decisions. Gate for migration sub-plan start.
+- **Codex SSOT docs (DEFERRED-POST-CUTOVER)**: `global-ledger-architecture.md` + `ledger-event-taxonomy.md` + `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo access.
 
 ### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
 

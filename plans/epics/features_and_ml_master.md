@@ -15,7 +15,7 @@ related_plans:
   - ../archive/features_repo_consolidation_2026_05_08.plan.md
   - ../active/features_service_qg_cleanup_2026_05_11.md
   - ../active/ml_repo_consolidation_2026_05_19.md
-  - ../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
+  - ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
 ---
 
 # ML + Features Master (umbrella)
@@ -831,15 +831,24 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
 
-### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../active/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 
-**status**: active · **estimate**: 15.0 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase-H complete; Phases E/F BLOCKED-OPERATOR-DEPLOY (Cloud Run deploy gated). · **estimate**: 15.0 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
 
 ## Archived plans
+
+### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phase-H (performance_features passthrough) complete; Phases E/F BLOCKED-OPERATOR-DEPLOY.
+
+**Deferred (migrated):**
+- **Phase-E: features-service Cloud Run deploy + 24h soak (BLOCKED-OPERATOR-DEPLOY)**: `deploy_features_service_cloud_run.sh` is operator-only. Tarballs at features-service@c9729dce ready.
+- **Phase-F: paper VM relaunch + verification (BLOCKED-OPERATOR-DEPLOY)**: Sequential after deploy+soak.
+- **Post-cutover multi-venue expansions**: env-split rollback, multi-venue funding/staking/matching, health_factor — per post-cutover successor plans.
 
 ### [`features_backfill_phase3_2026_05_22`](../archive/2026_05/features_backfill_phase3_2026_05_22.md)
 
