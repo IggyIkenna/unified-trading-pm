@@ -240,8 +240,8 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       (`canonical_question_group` is NOT a `_ROW_KEY_COLUMNS` column — confirmed the hierarchy uses `underlying` for
       group identity, which IS manifest correctly populates.)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per `canonical_question_group`. The schema
-      definition per group lives in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per
+      `canonical_question_group`. The schema definition per group lives in
       `unified_api_contracts.canonical.domain.predictions.canonical_groups.CANONICAL_GROUP_METADATA`. Verify the schema
       link in the UI points to the correct UAC per-group metadata (not one flat schema for all Polymarket — each group
       has its own cadence/shape per `CanonicalQuestionGroup`).

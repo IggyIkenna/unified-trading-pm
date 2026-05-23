@@ -69,58 +69,67 @@ audit trail).
 
 ### Phase 1 — Manual action endpoint (1 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.1. `alerting-service/alerting_service/gateway/manual_action_endpoint.py` — `POST /manual-action`: body
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.1. `alerting-service/alerting_service/gateway/manual_action_endpoint.py`
+      — `POST /manual-action`: body
       `{action_type: ActionType, scope: dict, reason: str, operator_id: str, confirm_string: str}`. Body validation:
       action_type in closed-set RecoveryScriptRegistry; confirm_string matches expected per action_type (e.g.
       `KILL_ALL_BTC_PERP` for cancel_open_orders on btc-perp; `SAFE_MODE_carry_staked_basis` for enter_safe_mode).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.2. Endpoint emits IncidentEnvelope (provenance=MANUAL_OPERATOR) THEN invokes
-      `RecoveryScriptRegistry.execute(action_type, scope, dry_run=False)`. Result wired back as AgentActionEvent.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.3. Endpoint authn/authz: operator_id checked against allowlist; rate-limit 1 action per 10s per
-      operator (no accidental double-fires); audit-log every manual action attempt (success or fail).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.2. Endpoint emits IncidentEnvelope (provenance=MANUAL_OPERATOR) THEN
+      invokes `RecoveryScriptRegistry.execute(action_type, scope, dry_run=False)`. Result wired back as
+      AgentActionEvent.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.3. Endpoint authn/authz: operator_id checked against allowlist;
+      rate-limit 1 action per 10s per operator (no accidental double-fires); audit-log every manual action attempt
+      (success or fail).
 
 ### Phase 2 — Safety Ops route + widgets (3 cal-days, parallel sub-components)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` — top-level route, 4 sections: Layer-0
-      Actions / LLM Audit Verdicts / Audit-Ack Queue / Incident History.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. **Layer-0 Actions panel** — 10 buttons: - Restart Service / Restart Container / Redeploy Known-Good
-      / Resize Machine. - Failover Feed / Pause Strategy / Cancel Open Orders / Disable Venue. - Enter Safe Mode / Enter
-      Read-Only Recon Mode. Each button opens a modal: select scope (service/venue/strategy/instrument); enter reason;
-      type confirm-string (UI shows expected pattern); preview dry-run plan; commit → calls `/manual-action` endpoint.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.6. **LLM Audit Verdicts feed** — top 50 RecoveryAuditSignoff entries; color-coded by verdict; operator
-      can click DISPUTE button to force the verdict to DISPUTE_AUTOMATED_ACTION (forces SAFE_MODE + SEV0 escalation).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. **Audit-Ack Queue panel** — incidents with countdown to `audit_ack_due_at`; OperationalAckButton +
-      AuditAckButton (distinct, per `audit_acknowledgement_sla_and_state_2026_05_23`).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. **Incident History viewer** — searchable by incident_key / strategy / venue / severity / date.
-      Per-incident drilldown shows: IncidentEnvelope, all AgentActionEvent rows in chronological order, LLM signoff
-      verdicts, evidence URLs, escalation history, ack timestamps.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` —
+      top-level route, 4 sections: Layer-0 Actions / LLM Audit Verdicts / Audit-Ack Queue / Incident History.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. **Layer-0 Actions panel** — 10 buttons: - Restart Service / Restart
+      Container / Redeploy Known-Good / Resize Machine. - Failover Feed / Pause Strategy / Cancel Open Orders / Disable
+      Venue. - Enter Safe Mode / Enter Read-Only Recon Mode. Each button opens a modal: select scope
+      (service/venue/strategy/instrument); enter reason; type confirm-string (UI shows expected pattern); preview
+      dry-run plan; commit → calls `/manual-action` endpoint.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.6. **LLM Audit Verdicts feed** — top 50 RecoveryAuditSignoff entries;
+      color-coded by verdict; operator can click DISPUTE button to force the verdict to DISPUTE_AUTOMATED_ACTION (forces
+      SAFE_MODE + SEV0 escalation).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. **Audit-Ack Queue panel** — incidents with countdown to
+      `audit_ack_due_at`; OperationalAckButton + AuditAckButton (distinct, per
+      `audit_acknowledgement_sla_and_state_2026_05_23`).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. **Incident History viewer** — searchable by incident_key / strategy /
+      venue / severity / date. Per-incident drilldown shows: IncidentEnvelope, all AgentActionEvent rows in
+      chronological order, LLM signoff verdicts, evidence URLs, escalation history, ack timestamps.
 
 ### Phase 3 — Deployment-UI mirror (1.5 cal-days)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. `deployment-ui/` adds the Safety Ops tab by mounting the same widgets via shared component package
-      OR via iframe of the unified-trading-system-ui route (operator decision — recommend shared component package).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10. Tab visibility/auth: deployment-ui operator role must include `safety-ops:read` (view) +
-      `safety-ops:execute` (commit manual actions). Read role is permissive (all operators see); execute role is
-      restricted (Ikenna + Harsh + founder only initially).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. `deployment-ui/` adds the Safety Ops tab by mounting the same widgets
+      via shared component package OR via iframe of the unified-trading-system-ui route (operator decision — recommend
+      shared component package).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10. Tab visibility/auth: deployment-ui operator role must include
+      `safety-ops:read` (view) + `safety-ops:execute` (commit manual actions). Read role is permissive (all operators
+      see); execute role is restricted (Ikenna + Harsh + founder only initially).
 
 ### Phase 4 — Typed-confirm-string registry (0.5 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11. `unified_api_contracts/canonical/crosscutting/safety_ops/confirm_strings.py` — closed-set registry
-      mapping `(action_type, scope_class) → expected_confirm_template`. E.g.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11.
+      `unified_api_contracts/canonical/crosscutting/safety_ops/confirm_strings.py` — closed-set registry mapping
+      `(action_type, scope_class) → expected_confirm_template`. E.g.
       `("cancel_open_orders", "venue:binance") → "CANCEL_ALL_binance"`. UI renders the expected template; operator types
       it exactly; endpoint validates.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.12. Unit tests: every action_type × scope combo has a registered template; typo confirm rejects.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.12. Unit tests: every action_type × scope combo has a registered template;
+      typo confirm rejects.
 
 ### Phase 5 — E2E + game-day (1.5 cal-days, GATES May-23)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.13. Persona-Playwright test `tests/e2e/safety-ops-manual-cancel.spec.ts`: `live-operator` persona
-      walks Cancel Open Orders flow → opens modal → selects venue=binance → types `CANCEL_ALL_binance` → confirms →
-      assert IncidentEnvelope created with provenance=MANUAL_OPERATOR + AgentActionEvent persisted +
-      RecoveryAuditSignoff written by LLM agent.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14. Persona-Playwright test `tests/e2e/safety-ops-llm-dispute.spec.ts`: simulate an automated
-      kill_switch.activate → LLM signoff comes in APPROVED → operator clicks DISPUTE in LLM Audit Verdicts panel →
-      assert incident transitions to SAFE_MODE_ACTIVE + SEV0 escalation fires.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.15. Game-day: scratch scenario `01_cefi_venue_circuit_breaker_trip.md` — operator drives entire flow
-      from Safety Ops tab.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.13. Persona-Playwright test
+      `tests/e2e/safety-ops-manual-cancel.spec.ts`: `live-operator` persona walks Cancel Open Orders flow → opens modal
+      → selects venue=binance → types `CANCEL_ALL_binance` → confirms → assert IncidentEnvelope created with
+      provenance=MANUAL_OPERATOR + AgentActionEvent persisted + RecoveryAuditSignoff written by LLM agent.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14. Persona-Playwright test `tests/e2e/safety-ops-llm-dispute.spec.ts`:
+      simulate an automated kill_switch.activate → LLM signoff comes in APPROVED → operator clicks DISPUTE in LLM Audit
+      Verdicts panel → assert incident transitions to SAFE_MODE_ACTIVE + SEV0 escalation fires.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.15. Game-day: scratch scenario `01_cefi_venue_circuit_breaker_trip.md` —
+      operator drives entire flow from Safety Ops tab.
 
 ## Success criteria
 

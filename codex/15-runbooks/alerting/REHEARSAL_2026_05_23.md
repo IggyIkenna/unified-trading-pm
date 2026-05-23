@@ -15,11 +15,11 @@ related:
 
 > **STATUS: PENDING OPERATOR EXECUTION**
 >
-> Template created 2026-05-23 by agent slot 2. Operator must run
-> `alerting-service/scripts/inject_synthetic_alert.py` for each of the 15 alert codes below and
-> fill in pass/fail + notes for each verification step.
+> Template created 2026-05-23 by agent slot 2. Operator must run `alerting-service/scripts/inject_synthetic_alert.py`
+> for each of the 15 alert codes below and fill in pass/fail + notes for each verification step.
 >
 > Command to run rehearsal:
+>
 > ```bash
 > cd alerting-service
 > # Standard rehearsal (15 codes):
@@ -31,12 +31,14 @@ related:
 ## Instructions
 
 For each alert code below:
+
 1. Inject the synthetic alert via the script
 2. Verify each of the 6 checks (a–f)
 3. Fill in `[ ]` → `[x]` for each passing check
 4. Add notes if any check fails or needs follow-up
 
 **Verification checks:**
+
 - **(a)** Alert lands in correct channel (Telegram ops / PagerDuty / Slack per AlertRule)
 - **(b)** DART panel shows the alert (notification bell + alert detail modal)
 - **(c)** Ack flow works (click Ack in DART → alert moves to `acknowledged` state)
@@ -49,6 +51,7 @@ For each alert code below:
 ## CRITICAL Kill-switch codes
 
 ### KILL_SWITCH_DEFI_LIQUIDATION_RISK (CRITICAL, GLOBAL scope)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with CRITICAL badge
 - [ ] (c) Ack flow works
@@ -58,6 +61,7 @@ For each alert code below:
 - **Notes:**
 
 ### KILL_SWITCH_PORTFOLIO_DRAWDOWN (CRITICAL, GLOBAL scope)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with CRITICAL badge
 - [ ] (c) Ack flow works
@@ -67,6 +71,7 @@ For each alert code below:
 - **Notes:**
 
 ### KILL_SWITCH_VENUE_DISCONNECT (CRITICAL, VENUE scope)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with CRITICAL badge
 - [ ] (c) Ack flow works
@@ -76,6 +81,7 @@ For each alert code below:
 - **Notes:**
 
 ### CIRCUIT_BREAKER_OPEN (CRITICAL)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with CRITICAL badge
 - [ ] (c) Ack flow works
@@ -89,6 +95,7 @@ For each alert code below:
 ## CRITICAL DeFi codes
 
 ### DEFI_HEALTH_FACTOR_CRITICAL (CRITICAL)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with CRITICAL badge
 - [ ] (c) Ack flow works
@@ -98,6 +105,7 @@ For each alert code below:
 - **Notes:**
 
 ### DEFI_WEETH_DEPEG (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -107,6 +115,7 @@ For each alert code below:
 - **Notes:**
 
 ### DEFI_AAVE_UTILIZATION_SPIKE (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -116,6 +125,7 @@ For each alert code below:
 - **Notes:**
 
 ### DEFI_FUNDING_RATE_FLIP (WARN)
+
 - [ ] (a) Lands in Telegram ops channel (no PD for WARN)
 - [ ] (b) DART shows alert with WARN badge
 - [ ] (c) Ack flow works
@@ -125,6 +135,7 @@ For each alert code below:
 - **Notes:**
 
 ### DEFI_FEATURE_STALE (WARN)
+
 - [ ] (a) Lands in Telegram ops channel (no PD for WARN)
 - [ ] (b) DART shows alert with WARN badge
 - [ ] (c) Ack flow works
@@ -138,6 +149,7 @@ For each alert code below:
 ## Service-level codes
 
 ### PREFLIGHT_FAILED (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -147,15 +159,17 @@ For each alert code below:
 - **Notes:**
 
 ### SERVICE_DEGRADED (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Email
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
 - [ ] (d) PD notification (non-paging)
-- [ ] (e) Runbook link: [service_degraded.md](./service_degraded.md) *(doc TBC)*
+- [ ] (e) Runbook link: [service_degraded.md](./service_degraded.md) _(doc TBC)_
 - [ ] (f) Auto-resolve works
 - **Notes:**
 
 ### BALANCE_DRIFT (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -165,6 +179,7 @@ For each alert code below:
 - **Notes:**
 
 ### ORDER_REJECTION_SPIKE (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -174,6 +189,7 @@ For each alert code below:
 - **Notes:**
 
 ### MARGIN_THRESHOLD_BREACH (HIGH)
+
 - [ ] (a) Lands in PagerDuty + Telegram ops channel
 - [ ] (b) DART shows alert with HIGH badge
 - [ ] (c) Ack flow works
@@ -183,6 +199,7 @@ For each alert code below:
 - **Notes:**
 
 ### POSITION_DRIFT (WARN)
+
 - [ ] (a) Lands in Telegram ops channel
 - [ ] (b) DART shows alert with WARN badge
 - [ ] (c) Ack flow works
@@ -209,11 +226,11 @@ Run: `python3 scripts/inject_synthetic_alert.py --verify-kill-switch`
 
 ## Sign-off
 
-| Field           | Value |
-|----------------|-------|
-| Operator name  | TBD   |
-| Date           | 2026-05-23 |
-| Environment    | prod-equivalent staging |
+| Field          | Value                                                               |
+| -------------- | ------------------------------------------------------------------- |
+| Operator name  | TBD                                                                 |
+| Date           | 2026-05-23                                                          |
+| Environment    | prod-equivalent staging                                             |
 | Script version | alerting-service@6d4f222 (inject) + @2f63775 (--verify-kill-switch) |
-| Outcome        | PENDING |
+| Outcome        | PENDING                                                             |
 | Next action    | Operator to fill in pass/fail above and change Outcome to PASS/FAIL |

@@ -400,10 +400,11 @@ class AvailabilityRecord:
 - **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
 - **No `data_source` column.** Track what the data IS (transfers, injuries, odds), not where it came from
   (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
-- **`capture_status` is canonical** for shard state — closed 4-state set: `captured` (real data on disk), `empty_confirmed`
-  (source returned 200 + zero rows OR known expected gap; counts in denominator only), `attempted_failed` (exception during
-  fetch; classified via `error_reason`), `expected_unattempted` (downstream service skipped shard because upstream was
-  empty/failed or instrument is outside scope; counts in denominator; superseded by `captured` when data arrives).
+- **`capture_status` is canonical** for shard state — closed 4-state set: `captured` (real data on disk),
+  `empty_confirmed` (source returned 200 + zero rows OR known expected gap; counts in denominator only),
+  `attempted_failed` (exception during fetch; classified via `error_reason`), `expected_unattempted` (downstream service
+  skipped shard because upstream was empty/failed or instrument is outside scope; counts in denominator; superseded by
+  `captured` when data arrives).
 - **Per-asset-group + per-data-source empty-rule asymmetry** (codex audit IN-12 2026-05-12):
   - **cefi / defi / tradfi tick data**: `empty_confirmed` only at venue-level (HOLIDAY / WEEKEND / PRE_LAUNCH /
     PRE_GENESIS / PARTIAL_HALF_DAY). Per-instrument-day `empty_confirmed` is NOT legitimate — points to a writer bug.
@@ -722,8 +723,8 @@ The data status page supports an `as_of_timestamp` parameter for point-in-time v
 ### Capture-status 4-state taxonomy + supersede semantics (Phase 1.9 + writegate extension)
 
 The manifest `capture_status` column is a **closed 4-state set**: `captured` / `empty_confirmed` / `attempted_failed` /
-`expected_unattempted`. The v6 schema carries enough columns to encode all four. `capture_status` is the canonical source
-— `expected` / `available` / `instrument_count` are kept for backward compat but `capture_status` is what the
+`expected_unattempted`. The v6 schema carries enough columns to encode all four. `capture_status` is the canonical
+source — `expected` / `available` / `instrument_count` are kept for backward compat but `capture_status` is what the
 data-status UI + phantom audit read first.
 
 **Coverage formula**: `coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` —
@@ -731,13 +732,13 @@ denominator is the full expected universe. SSOT implementation: `compute_honest_
 (`unified_api_contracts.compute_honest_coverage`). See § "Honest-coverage measurement script" below for the full formula
 including the `expected_unattempted_known_empty` vs `expected_unattempted_pending_fetch` sub-split.
 
-| State                        | Manifest row? | `capture_status`       | Meaning                                                                                                                                                                                                                     |
-| ---------------------------- | ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ingested**                 | yes           | `captured`             | Real parquet on disk at the canonical path. Counts toward numerator. Supersedes a prior `expected_unattempted` row for the same `row_key` via consolidator last-writer-wins.                                                |
-| **Expected-empty**           | yes           | `empty_confirmed`      | Source returned 200 + zero rows on this date (paused league, pre-launch, pre-genesis, holiday, weekend). Counts in denominator only. `error_reason` must be a typed `EMPTY_CONFIRMED_REASON` from the closed UAC set.      |
-| **Attempted-failed**         | yes           | `attempted_failed`     | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run.                                          |
-| **Expected-unattempted**     | yes           | `expected_unattempted` | Downstream service (MTDS/MDPS/features) skipped this shard because upstream manifest was `empty_confirmed`/`expected_unattempted` OR instrument is outside runtime scope. Counts in denominator. Superseded by `captured` when data arrives. |
-| **Outside expected universe** | no row       | —                      | No manifest entry — pipeline gap or (asset_group, venue, data_type, day) triple is outside expected universe. The expected-universe enumerator (v1/v2) writes `empty_confirmed + EXPECTED_*` rows to close this gap.        |
+| State                         | Manifest row? | `capture_status`       | Meaning                                                                                                                                                                                                                                      |
+| ----------------------------- | ------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**                  | yes           | `captured`             | Real parquet on disk at the canonical path. Counts toward numerator. Supersedes a prior `expected_unattempted` row for the same `row_key` via consolidator last-writer-wins.                                                                 |
+| **Expected-empty**            | yes           | `empty_confirmed`      | Source returned 200 + zero rows on this date (paused league, pre-launch, pre-genesis, holiday, weekend). Counts in denominator only. `error_reason` must be a typed `EMPTY_CONFIRMED_REASON` from the closed UAC set.                        |
+| **Attempted-failed**          | yes           | `attempted_failed`     | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run.                                                           |
+| **Expected-unattempted**      | yes           | `expected_unattempted` | Downstream service (MTDS/MDPS/features) skipped this shard because upstream manifest was `empty_confirmed`/`expected_unattempted` OR instrument is outside runtime scope. Counts in denominator. Superseded by `captured` when data arrives. |
+| **Outside expected universe** | no row        | —                      | No manifest entry — pipeline gap or (asset*group, venue, data_type, day) triple is outside expected universe. The expected-universe enumerator (v1/v2) writes `empty_confirmed + EXPECTED*\*` rows to close this gap.                        |
 
 Before Phase 1.9 + Phase A we could not distinguish empty-vs-failed-vs-missing — any day without a manifest entry looked
 identical whether the source was silent or the pipeline had never run. `write_with_zero_fill`
@@ -1115,15 +1116,15 @@ The expected-universe is defined by two SSOT layers:
   `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` — owns the "is this `(asset_group, venue, data_type, day)` triple
   structurally possible" axis.
 - **SSOT Layer 2 (fine — instruments-service catalog)**: per-instrument lifecycle bounds (`available_from` /
-  `available_to`, prediction `market_created_at` / `settlement_time`, defi `protocol_launch_date`, sports per-fixture)
-  — owns the "given the venue/day is alive, what specific instruments exist" axis.
+  `available_to`, prediction `market_created_at` / `settlement_time`, defi `protocol_launch_date`, sports per-fixture) —
+  owns the "given the venue/day is alive, what specific instruments exist" axis.
 
 The enumerator has two grain levels that map to these two layers:
 
-- **v1 (shipped 2026-05-07)** — venue-grain expected universe (~1.4M rows); implements SSOT Layer 1 only. Walks UAC SSOTs
-  to enumerate every `(asset_group, venue, data_type, day)` row that SHOULD exist; pre-skips per-source / per-chain /
-  per-calendar windows; emits `record_expected_empty(reason=EXPECTED_*)` for every gap.
-  Implementation: `instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
+- **v1 (shipped 2026-05-07)** — venue-grain expected universe (~1.4M rows); implements SSOT Layer 1 only. Walks UAC
+  SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that SHOULD exist; pre-skips per-source /
+  per-chain / per-calendar windows; emits `record_expected_empty(reason=EXPECTED_*)` for every gap. Implementation:
+  `instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
 - **v2 (in-flight design)** — instrument-grain expected universe (~190M row estimate); adds SSOT Layer 2. Cross-joins
   v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle.
   Designed in

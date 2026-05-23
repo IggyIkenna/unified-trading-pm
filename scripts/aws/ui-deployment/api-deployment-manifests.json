@@ -37,12 +37,21 @@
               { "name": "PORT", "value": "8030" }
             ],
             "secrets": [
-              { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/database-url" },
-              { "name": "API_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/api-key" }
+              {
+                "name": "DATABASE_URL",
+                "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/database-url"
+              },
+              {
+                "name": "API_KEY",
+                "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/api-key"
+              }
             ],
             "healthCheck": {
               "command": ["CMD-SHELL", "curl -f http://localhost:8030/health || exit 1"],
-              "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 60
+              "interval": 30,
+              "timeout": 5,
+              "retries": 3,
+              "startPeriod": 60
             },
             "logConfiguration": {
               "logDriver": "awslogs",

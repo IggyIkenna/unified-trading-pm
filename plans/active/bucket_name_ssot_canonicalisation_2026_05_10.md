@@ -178,20 +178,20 @@ this plan and **Q4** below (operator decision).
       setup-buckets.py**: script has `{category_lower}` substitution bug → does NOT create env-tiered prd buckets; used
       UTL resolver directly as SSOT. **Remaining scope**: AWS prod provision + staging/dev provision + parity
       verification once large market-data-tick transfers complete (Gate 2). status: GCP prod done — parity pending.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P0**. **Phase 0d — migrate flat-bucket data into env-tiered buckets (Phase 2 physical migration; data
-      preservation critical).** For every existing flat bucket (`features-delta-one-cefi-{pid}`,
-      `features-onchain-{pid}`, `features-sports-{pid}`, `features-volatility-{ag}-{pid}`, `features-calendar-{pid}`,
-      etc. — extended per Phase 0e to include raw-tick + instruments-store + manifest buckets), copy ALL data into the
-      new env-tiered prod bucket (`features-delta-one-cefi-prod-{pid}`, etc.) using
-      `gcloud storage cp -r     --preserve-symlinks` (GCP) / `aws s3 sync` (AWS). Drift verification: post-copy object
-      count + total size + spot-check 100 random parquets per bucket must match within 0.01%. **Cutover window**: pause
-      writes to the flat buckets during the migration (operator-coordinated; ~few hours per asset_group depending on
-      volume). Post-migration: archive (don't delete) the flat buckets to a `*-archived-flat-2026-05-19/` prefix +
-      retention policy 30 days, then delete after manifest + downstream verification confirms zero readers still hit the
-      flat names. status: blocked — note: "DEFERRED-AFTER Phase 0c provisioning; Phase 2 of code_freeze umbrella; Harsh
-      slot 4 owns coordinated with operator for the write-pause window." **[BLOCKED-OPERATOR 2026-05-20 slot-8]**:
-      operator must coordinate write-pause + run flat→env-tiered data migration (code_freeze Phase 2.6). No agent action
-      possible until then.
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P0**. **Phase 0d — migrate flat-bucket data into env-tiered buckets
+      (Phase 2 physical migration; data preservation critical).** For every existing flat bucket
+      (`features-delta-one-cefi-{pid}`, `features-onchain-{pid}`, `features-sports-{pid}`,
+      `features-volatility-{ag}-{pid}`, `features-calendar-{pid}`, etc. — extended per Phase 0e to include raw-tick +
+      instruments-store + manifest buckets), copy ALL data into the new env-tiered prod bucket
+      (`features-delta-one-cefi-prod-{pid}`, etc.) using `gcloud storage cp -r     --preserve-symlinks` (GCP) /
+      `aws s3 sync` (AWS). Drift verification: post-copy object count + total size + spot-check 100 random parquets per
+      bucket must match within 0.01%. **Cutover window**: pause writes to the flat buckets during the migration
+      (operator-coordinated; ~few hours per asset_group depending on volume). Post-migration: archive (don't delete) the
+      flat buckets to a `*-archived-flat-2026-05-19/` prefix + retention policy 30 days, then delete after manifest +
+      downstream verification confirms zero readers still hit the flat names. status: blocked — note: "DEFERRED-AFTER
+      Phase 0c provisioning; Phase 2 of code_freeze umbrella; Harsh slot 4 owns coordinated with operator for the
+      write-pause window." **[BLOCKED-OPERATOR 2026-05-20 slot-8]**: operator must coordinate write-pause + run
+      flat→env-tiered data migration (code_freeze Phase 2.6). No agent action possible until then.
 
 #### Phase 0e through 0i — full (b+) env-aware bucket architecture extension (operator direction 2026-05-11)
 
@@ -422,8 +422,9 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       features-service@`89e9a972`. note: "2026-05-11 slot 4 cont. 5 — extended the original scope to also cover the
       `INPUT*\*`refs + the`paired_dispatch.py`docstring (same staleness class); surgical edits     (no whole-file prettier-reformat — the 2`.md`
       were already prettier-clean so the diff stays small)."
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
-      strings (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the
+      `dependency_checker.py` inline `"bucket_template"` strings
+      (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
       `"bucket_template": "market-data-tick-{asset_group_lower}-{project_id}"` etc. + the
       `UPSTREAM_DEPS`/`OUTPUT_BUCKETS` `_TEST` dicts + their `test_mode` infra) onto `resolve_bucket(...)`. status:
       blocked — note: "2026-05-11 slot 4 — deferred with rationale: (a) 2 of 3 extend UTL `BaseDependencyChecker` whose
@@ -441,11 +442,12 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `config.get_output_bucket` — the actual write path uses config.py's. Resumes after the UTL `BaseDependencyChecker`
       migration + a `test_mode`-infra rewrite plan." **[BLOCKED-UTL-MIGRATION 2026-05-20 slot-8]**: blocked on UTL
       BaseDependencyChecker migration landing first, then same write-pause window as Phase 2.6.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. Delegate the legacy `unified_trading_library.cloud_interface.constants.get_bucket_name` +
-      `BUCKET_PREFIXES` to `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud
-      dispatch). The legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin
-      wrapper in `get_bucket_name`, OR (b) is dropped in favour of the `${DEPLOYMENT_ENV}` axis (decide at impl time per
-      whether the per-domain override env vars are actively used). status: deferred-after-code*freeze-Phase-2.6 — note:
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. Delegate the legacy
+      `unified_trading_library.cloud_interface.constants.get_bucket_name` + `BUCKET_PREFIXES` to
+      `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud dispatch). The
+      legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin wrapper in
+      `get_bucket_name`, OR (b) is dropped in favour of the `${DEPLOYMENT_ENV}` axis (decide at impl time per whether
+      the per-domain override env vars are actively used). status: deferred-after-code*freeze-Phase-2.6 — note:
       "2026-05-11 slot 4 — the resolver docstring already names this 'a follow-up step'; folded in so it doesn't fall
       off-radar; no gate (UTL-only). Pre-audit done (slot 4): ~36+ consumers across instruments-service (~16 files) /
       execution-service (~13) / deployment-service (~7) / PM scripts — grep
@@ -538,17 +540,17 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       RED since ~2026-05-08 (AWS-only `features-calendar` addition) — added a `_KNOWN_YAML_ASYMMETRIES` allowlist with
       documented reasons + a stale-allowlist guard; undocumented drift still fails. 83 tests pass; ruff + basedpyright
       clean.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[AGENT] P1**. Plan-flip cite + workspace-wide grep audit table verifying zero remaining drift sites. status:
-      helper-shipped — note: "2026-05-11 slot 4 — the PARTIAL audit table SHIPPED (see § 'Drift audit table' above):
-      L1↔L4 verified zero-drift (parity test), L2 features-\* config.py bucket templates migrated to `resolve_bucket`,
-      inline-URI formatters ratcheted at baseline (QG STEP 5.69, no new) — all verified-zero TODAY. STILL DRIFTING (all
-      DEFERRED-AFTER code_freeze Phase 2.6 with named successors in the table): L2-tail `dependency_checker.py` probe
-      templates, L3 legacy `get_bucket_name`/`BUCKET_PREFIXES` (~36+ consumers — pre-audited ~92 candidate files), L5
-      deployment-api internal templates (~5 + 3 hardcoded). The FULL zero-drift verification (drift ≤0.01% per migrated
-      bucket + zero readers still hit flat names) runs after the Phase-2.6 provisioning + flat→env-tiered data
-      migration + the L3 delegate flip (Done-def #3 = step 2.6.4) + the L5 reader-repoint (GAP-2.4.D) — that's the
-      Phase-2.6 owner's done-def; checkbox stays `- [ ]` until then. GAP-2.4.D in
-      `code_freeze_migrate_backfill_sequencing_2026_05_10.md` extends this Done-def #6." **2026-05-19 addendum
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[AGENT] P1**. Plan-flip cite + workspace-wide grep audit table verifying zero
+      remaining drift sites. status: helper-shipped — note: "2026-05-11 slot 4 — the PARTIAL audit table SHIPPED (see §
+      'Drift audit table' above): L1↔L4 verified zero-drift (parity test), L2 features-\* config.py bucket templates
+      migrated to `resolve_bucket`, inline-URI formatters ratcheted at baseline (QG STEP 5.69, no new) — all
+      verified-zero TODAY. STILL DRIFTING (all DEFERRED-AFTER code_freeze Phase 2.6 with named successors in the table):
+      L2-tail `dependency_checker.py` probe templates, L3 legacy `get_bucket_name`/`BUCKET_PREFIXES` (~36+ consumers —
+      pre-audited ~92 candidate files), L5 deployment-api internal templates (~5 + 3 hardcoded). The FULL zero-drift
+      verification (drift ≤0.01% per migrated bucket + zero readers still hit flat names) runs after the Phase-2.6
+      provisioning + flat→env-tiered data migration + the L3 delegate flip (Done-def #3 = step 2.6.4) + the L5
+      reader-repoint (GAP-2.4.D) — that's the Phase-2.6 owner's done-def; checkbox stays `- [ ]` until then. GAP-2.4.D
+      in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` extends this Done-def #6." **2026-05-19 addendum
       (slot 8)**: Phase 0c-watchdog done — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET is now zero-drift (all 72
       f-strings → resolve_bucket_name() constants; deployment-service@d3a96cf). Remaining drift sites:
       dependency_checker.py (BLOCKED-operator), legacy get_bucket_name (off-limits this cycle), deployment-api templates
@@ -584,7 +586,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
 | **L2-tail `dependency_checker.py`**                     | `features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` inline `"bucket_template": "market-data-tick-{ag}-{pid}"` strings                                                                                                                                                                     | 🟡 DRIFTING — after Phase 0e the yaml `market-data` is env-tiered (`market-data-tick-{ag}-{env}-{pid}`) but the probe template is still flat (`market-data-tick-{ag}-{pid}`); correct for current on-disk reality but drifts from the yaml SSOT                                                                                                                                                                                                                                                                                                                                                                                                                                                   | DEFERRED-AFTER the UTL `BaseDependencyChecker` migration OR code_freeze Phase 2.6 (whichever lands first) — must land in the SAME window as the flat→env-tiered data migration                                                                                                                     |
 | **L3 legacy UTL `get_bucket_name` + `BUCKET_PREFIXES`** | `unified_trading_library/cloud_interface/constants.py` + `core/cloud_constants.py` — defns + ~36+ consumers across instruments-service (~16 files) / execution-service (~22) / MTDS (~21) / deployment-service (~7) / features-service (~8) / strategy-service (~3) / pnl-attribution (~2) / deployment-api (~1) / PM scripts (~2) | 🟡 DRIFTING — NOT yet delegated to `resolve_bucket_name`; Group-A consumers (instruments-service/MTDS — `market-data`/`instruments-store`) write continuously so a premature delegate breaks first-write (the "safe gap" reasoning per A6)                                                                                                                                                                                                                                                                                                                                                                                                                                                        | DEFERRED-AFTER code_freeze Phase 2.6 (= step 2.6.4 — flip the delegate workspace-wide during the write-pause, alongside provision→rsync→archive). Done-def #3. Pre-audit (~92 candidate files; ~36+ are the real legacy-delegate consumers) is in § Pre-audit manifest "Layer 3 migration recipe". |
 | **L4 UTL `bucket_naming` resolver**                     | `unified_trading_library/cloud_interface/bucket_naming.py` (reads L1; `_KIND_ALIASES` bridge; `${DEPLOYMENT_ENV_SHORT}` 3-char form)                                                                                                                                                                                               | ✅ TARGET — keeps in sync with L1 by construction (reads the yaml at call time). Parity test (`test_bucket_naming.py`) extended to features-\* + sports + tradfi + market-data + instruments-store + prediction (UTL@`e8dc6e3` + `2118b1e` + `ba6089c` + `4ee24b5` + `e3dd846` + `5058381`) — ZERO drift between L1 and L4 enforced by the parity test.                                                                                                                                                                                                                                                                                                                                           | —                                                                                                                                                                                                                                                                                                  |
-| **L5 deployment-api internal templates (reader-side)**  | `DataStatusService._BUCKET_TEMPLATES` (18 entries) + `data_status_drilldown._BUCKET_TEMPLATES` (16, already drifts from the first on `ml-*`) + `data_query_service.build_bucket_name` (a 3rd shape) + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."` f-strings             | 🟡 DRIFTING (flat-shape; correct for current on-disk reality) — deployment-api reads buckets continuously, so its bucket-name source must flip in lockstep with the data migration, not before                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | DEFERRED-AFTER code_freeze Phase 2.6 reader-repoint (GAP-2.4.D) — replace all with `resolve_bucket_name(...)` calls + reconcile the L5.1↔L5.2 `ml-*` drift (yaml SSOT wins). Full inventory + the `service → kind` map in § Pre-audit manifest "Layer 5".                                          |
+| **L5 deployment-api internal templates (reader-side)**  | `DataStatusService._BUCKET_TEMPLATES` (18 entries) + `data_status_drilldown._BUCKET_TEMPLATES` (16, already drifts from the first on `ml-*`) + `data_query_service.build_bucket_name` (a 3rd shape) + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."` f-strings             | 🟡 DRIFTING (flat-shape; correct for current on-disk reality) — deployment-api reads buckets continuously, so its bucket-name source must flip in lockstep with the data migration, not before                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | DEFERRED-AFTER code_freeze Phase 2.6 reader-repoint (GAP-2.4.D) — replace all with `resolve_bucket_name(...)` calls + reconcile the L5.1↔L5.2 `ml-*` drift (yaml SSOT wins). Full inventory + the `service → kind` map in § Pre-audit manifest "Layer 5".                                         |
 | **Inline `f"gs://...`/`f"s3://...` formatters**         | Workspace-wide `gs://`/`s3://` f-string URI-builders WITHOUT a `# noqa: gs-uri` marker                                                                                                                                                                                                                                             | ✅ RATCHETED + PARTIALLY LOWERED — QG STEP 5.69 (`check_inline_bucket_uri.py` + `inline_bucket_uri_baseline.yaml`) + instruments-service (1→**0** @`5210149`) + deployment-service (3→**0** @`0b802ec`) baselines lowered (4 noqa markers added to error-message strings, not bucket constructors) + PM baseline yaml @`be768d2b`. + **deployment-api (27→0** @`297b406` — 5 Cat-A events-bucket noqa, 16 Cat-B URI-composer noqa, 2 Cat-C instruments-store-sports hardcoded replaced with `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")`). Remaining: execution-service 33, UTL 23, batch-live-recon 7, UAC 5, UI 4, features-service 2, strategy-service 2 | Remaining baselines ratchet DOWN in code_freeze Phase 2.6 as L2-tail/L3/L5 migrate; v2 AST-walk drops docstring false-positives                                                                                                                                                                    |
 
 **Verified-zero-drift today (2026-05-11)**: L1↔L4 (parity test); L2 features-\* config.py bucket templates (migrated to

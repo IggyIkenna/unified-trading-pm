@@ -176,70 +176,75 @@ anti-patterns found.
 
 Per `aws_migration_defi_first_2026_05_07.md` Phase 1.5.B — inventory of GCP Pub/Sub topics for SNS+SQS parity.
 
-**Static inventory method**: `gcloud pubsub topics list --project central-element-323112` not available from AWS VM
-(no gcloud CLI or ADC credentials). Topics enumerated via static code analysis:
-- `unified_api_contracts/internal/event_topics.py` — canonical EVENT_TOPIC_REGISTRY (18 topics, inter-service domain events)
+**Static inventory method**: `gcloud pubsub topics list --project central-element-323112` not available from AWS VM (no
+gcloud CLI or ADC credentials). Topics enumerated via static code analysis:
+
+- `unified_api_contracts/internal/event_topics.py` — canonical EVENT_TOPIC_REGISTRY (18 topics, inter-service domain
+  events)
 - `unified_trading_library/config_reloader.py` — config/lifecycle infrastructure topics
 - `unified_trading_library/service_framework/_sink_factory.py` — service-level event sink topics
-- `unified-trading-pm/scripts/dev/setup-dev-pubsub.sh` — dev environment topic templates (RETIRED 2026-03-13; canonical source is now Terraform in deployment-service)
+- `unified-trading-pm/scripts/dev/setup-dev-pubsub.sh` — dev environment topic templates (RETIRED 2026-03-13; canonical
+  source is now Terraform in deployment-service)
 
 **BLOCKED-OPERATOR**: live `gcloud pubsub topics list` output from `central-element-323112` is needed to confirm no
 additional ad-hoc topics exist. Operator to run from GCP-authenticated machine:
+
 ```bash
 gcloud pubsub topics list --project central-element-323112 --format="value(name)" | sort
 gcloud pubsub subscriptions list --project central-element-323112 --format="table(name,topic)" | sort
 ```
+
 and append results as section 7.A below.
 
 #### 7.A — Statically enumerated topics (non-test, production code)
 
 **Inter-service domain events** (from `unified_api_contracts/internal/event_topics.py`):
 
-| GCP topic | Producer | Key consumers | Retention |
-|---|---|---|---|
-| `alert-dispatched` | alerting-service | risk-and-exposure-service, strategy-service | 7d |
-| `balance-snapshots` | position-balance-monitor-service | strategy-service, risk-and-exposure-service | 7d |
-| `deleverage-actions` | risk-and-exposure-service | execution-service | 7d |
-| `fill-events` | execution-service | position-balance-monitor-service, pnl-attribution-service | 7d |
-| `kill-switch-triggers` | alerting-service | execution-service, strategy-service | 7d |
-| `liquidation-alerts` | position-balance-monitor-service | alerting-service, pnl-attribution-service, risk-and-exposure-service | 30d |
-| `margin-events` | position-balance-monitor-service | alerting-service, risk-and-exposure-service, strategy-service, execution-service, pnl-attribution-service | 14d |
-| `order-events` | execution-service | position-balance-monitor-service, pnl-attribution-service | 7d |
-| `pnl-attribution` | pnl-attribution-service | strategy-service, risk-and-exposure-service | 7d |
-| `pnl-points` | pnl-attribution-service | strategy-service | 7d |
-| `position-snapshots` | position-balance-monitor-service | strategy-service, risk-and-exposure-service | 7d |
-| `price-snapshots` | position-balance-monitor-service | strategy-service | 7d |
-| `reconciliation-completed` | risk-and-exposure-service | alerting-service, pnl-attribution-service | 7d |
-| `reconciliation-deviation` | risk-and-exposure-service | alerting-service | 7d |
-| `risk-events` | risk-and-exposure-service | alerting-service, strategy-service, execution-service | 7d |
-| `shadow-comparison` | risk-and-exposure-service | alerting-service | 7d |
-| `strategy-instructions` | strategy-service | execution-service | 7d |
-| `strategy-signals` | strategy-service | strategy-service (self), execution-service | 7d |
+| GCP topic                  | Producer                         | Key consumers                                                                                             | Retention |
+| -------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------- | --------- |
+| `alert-dispatched`         | alerting-service                 | risk-and-exposure-service, strategy-service                                                               | 7d        |
+| `balance-snapshots`        | position-balance-monitor-service | strategy-service, risk-and-exposure-service                                                               | 7d        |
+| `deleverage-actions`       | risk-and-exposure-service        | execution-service                                                                                         | 7d        |
+| `fill-events`              | execution-service                | position-balance-monitor-service, pnl-attribution-service                                                 | 7d        |
+| `kill-switch-triggers`     | alerting-service                 | execution-service, strategy-service                                                                       | 7d        |
+| `liquidation-alerts`       | position-balance-monitor-service | alerting-service, pnl-attribution-service, risk-and-exposure-service                                      | 30d       |
+| `margin-events`            | position-balance-monitor-service | alerting-service, risk-and-exposure-service, strategy-service, execution-service, pnl-attribution-service | 14d       |
+| `order-events`             | execution-service                | position-balance-monitor-service, pnl-attribution-service                                                 | 7d        |
+| `pnl-attribution`          | pnl-attribution-service          | strategy-service, risk-and-exposure-service                                                               | 7d        |
+| `pnl-points`               | pnl-attribution-service          | strategy-service                                                                                          | 7d        |
+| `position-snapshots`       | position-balance-monitor-service | strategy-service, risk-and-exposure-service                                                               | 7d        |
+| `price-snapshots`          | position-balance-monitor-service | strategy-service                                                                                          | 7d        |
+| `reconciliation-completed` | risk-and-exposure-service        | alerting-service, pnl-attribution-service                                                                 | 7d        |
+| `reconciliation-deviation` | risk-and-exposure-service        | alerting-service                                                                                          | 7d        |
+| `risk-events`              | risk-and-exposure-service        | alerting-service, strategy-service, execution-service                                                     | 7d        |
+| `shadow-comparison`        | risk-and-exposure-service        | alerting-service                                                                                          | 7d        |
+| `strategy-instructions`    | strategy-service                 | execution-service                                                                                         | 7d        |
+| `strategy-signals`         | strategy-service                 | strategy-service (self), execution-service                                                                | 7d        |
 
 **Infrastructure / config topics** (from UTL `config_reloader.py` + `domain_config_reloader.py`):
 
-| GCP topic | Purpose | Pattern |
-|---|---|---|
-| `config-updates` | Global service config hot-reload (UTL `ConfigReloader`) | static |
+| GCP topic                | Purpose                                                                    | Pattern   |
+| ------------------------ | -------------------------------------------------------------------------- | --------- |
+| `config-updates`         | Global service config hot-reload (UTL `ConfigReloader`)                    | static    |
 | `config-domain-{domain}` | Per-domain config reload (e.g. `config-domain-defi`, `config-domain-cefi`) | templated |
-| `lifecycle-events` | Service STARTED/STOPPED/FAILED events | static |
-| `{service-name}-events` | Per-service event sink (UTL `_sink_factory` live mode default) | templated |
+| `lifecycle-events`       | Service STARTED/STOPPED/FAILED events                                      | static    |
+| `{service-name}-events`  | Per-service event sink (UTL `_sink_factory` live mode default)             | templated |
 
 **Service pipeline topics** (from dev script templates; Terraform-provisioned in production):
 
-| Topic pattern | Owner service | Fan-out |
-|---|---|---|
-| `instrument-events-{venue}` | instruments-service | market-tick-data-service, features-* |
-| `raw-ticks-{venue}-{itype}-{dtype}` | market-tick-data-service | market-data-processing-service, features-* |
-| `processed-candles-{venue}-{itype}-{tf}` | market-data-processing-service | features-delta-one-service, features-volatility-service |
-| `features-delta-one-{fc}-{venue}` | features-delta-one-service | strategy-service, ml-inference-service |
-| `features-volatility-{fc}-{venue}` | features-volatility-service | strategy-service, ml-inference-service |
-| `features-cross-instrument-{fc}` | features-cross-instrument-service | strategy-service |
-| `ml-predictions-{venue}` | ml-inference-service | strategy-service |
-| `execution-orders` | execution-service | position-balance-monitor-service |
-| `execution-fills` | execution-service | position-balance-monitor-service, pnl-attribution-service |
-| `circuit-breaker-events` | execution-service | alerting-service, risk-and-exposure-service |
-| `system-alerts` | alerting-service | operator notification channels |
+| Topic pattern                            | Owner service                     | Fan-out                                                   |
+| ---------------------------------------- | --------------------------------- | --------------------------------------------------------- |
+| `instrument-events-{venue}`              | instruments-service               | market-tick-data-service, features-\*                     |
+| `raw-ticks-{venue}-{itype}-{dtype}`      | market-tick-data-service          | market-data-processing-service, features-\*               |
+| `processed-candles-{venue}-{itype}-{tf}` | market-data-processing-service    | features-delta-one-service, features-volatility-service   |
+| `features-delta-one-{fc}-{venue}`        | features-delta-one-service        | strategy-service, ml-inference-service                    |
+| `features-volatility-{fc}-{venue}`       | features-volatility-service       | strategy-service, ml-inference-service                    |
+| `features-cross-instrument-{fc}`         | features-cross-instrument-service | strategy-service                                          |
+| `ml-predictions-{venue}`                 | ml-inference-service              | strategy-service                                          |
+| `execution-orders`                       | execution-service                 | position-balance-monitor-service                          |
+| `execution-fills`                        | execution-service                 | position-balance-monitor-service, pnl-attribution-service |
+| `circuit-breaker-events`                 | execution-service                 | alerting-service, risk-and-exposure-service               |
+| `system-alerts`                          | alerting-service                  | operator notification channels                            |
 
 #### 7.B — AWS SNS+SQS routing policy
 
@@ -254,22 +259,24 @@ trading topics (duplicate alerts/commands handled idempotently by consumers).
 
 **Provisioning**: `deployment-service/scripts/aws/setup-messaging.sh` (not yet written — tracked as Phase 1.5.B item 5
 in `aws_migration_defi_first_2026_05_07.md`) should create SNS topics + SQS queues for all 18 domain-event topics +
-infrastructure topics. Per-venue/instrument-type/timeframe pipeline topics (~100+ topics) are provisioned by the per-service
-launch scripts at VM startup.
+infrastructure topics. Per-venue/instrument-type/timeframe pipeline topics (~100+ topics) are provisioned by the
+per-service launch scripts at VM startup.
 
 ### 8. gcloud storage / gsutil / google.cloud.storage audit (2026-05-23)
 
-Phase 1.5.D audit — `grep -rln "gcloud storage\|gsutil\|google.cloud.storage"` across available workspace repos
-(UTL + UAC + agent-orchestrator + PM). **32 files total.** Service repos not in worktree (Wave 2).
+Phase 1.5.D audit — `grep -rln "gcloud storage\|gsutil\|google.cloud.storage"` across available workspace repos (UTL +
+UAC + agent-orchestrator + PM). **32 files total.** Service repos not in worktree (Wave 2).
 
-| Category | Files | Action |
-|---|---|---|
-| GCP provider layer (correct) | `UTL/providers/gcp.py`, `UTL/gcs_blob_ops.py`, `UTL/presigned_urls.py`, `UAC/external/gcp/gcs.py`, `UAC/external/gcp/protocols.py`, `UAC/external/gcp/firebase.py` | Compliant — GCP APIs belong in GCP provider implementation |
-| UTL production code — comments only | `manifest_consolidator.py`, `domain_client/artifact_store.py`, `io/streaming_writer.py` | Compliant — "google.cloud.storage" only in docstrings/comments, not in imports or code |
-| Operator setup + migration scripts | `PM/scripts/setup.sh`, `UAC/scripts/setup.sh`, `PM/scripts/migration/*.py`, `PM/scripts/orchestrator/push_creds_to_gcs.sh` | Exempt per Tier-3 operator script rule |
-| Dev tools | `PM/scripts/dev/*.sh`, `PM/scripts/workspace/check-import-deps.py`, `PM/scripts/openapi/*.py` | Exempt — dev environment tools |
-| UAC internal testing seeds | `seed_features.py:327`, `seed_ml_artifacts.py:258,260` | Log messages with gsutil guidance for developers; not actual gsutil imports or invocations |
-| Agent-orchestrator | `scripts/restore_from_gcs.sh` (gsutil ls/cp), `server/oauth_refresh.py`, `scripts/bootstrap_vm.sh` | `bootstrap_vm.sh` has CLOUD_PROVIDER toggle ✅. `restore_from_gcs.sh` is GCP-only recovery tool — needs `--cloud` flag as Wave 2. `oauth_refresh.py` is GCP auth only — acceptable for orchestrator VM credential management |
-| Tests | `tests/cloud_interface/conftest.py`, `test_gcp_secret_storage_build.py` | Compliant — GCP-specific test fixtures |
+| Category                            | Files                                                                                                                                                              | Action                                                                                                                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GCP provider layer (correct)        | `UTL/providers/gcp.py`, `UTL/gcs_blob_ops.py`, `UTL/presigned_urls.py`, `UAC/external/gcp/gcs.py`, `UAC/external/gcp/protocols.py`, `UAC/external/gcp/firebase.py` | Compliant — GCP APIs belong in GCP provider implementation                                                                                                                                                                   |
+| UTL production code — comments only | `manifest_consolidator.py`, `domain_client/artifact_store.py`, `io/streaming_writer.py`                                                                            | Compliant — "google.cloud.storage" only in docstrings/comments, not in imports or code                                                                                                                                       |
+| Operator setup + migration scripts  | `PM/scripts/setup.sh`, `UAC/scripts/setup.sh`, `PM/scripts/migration/*.py`, `PM/scripts/orchestrator/push_creds_to_gcs.sh`                                         | Exempt per Tier-3 operator script rule                                                                                                                                                                                       |
+| Dev tools                           | `PM/scripts/dev/*.sh`, `PM/scripts/workspace/check-import-deps.py`, `PM/scripts/openapi/*.py`                                                                      | Exempt — dev environment tools                                                                                                                                                                                               |
+| UAC internal testing seeds          | `seed_features.py:327`, `seed_ml_artifacts.py:258,260`                                                                                                             | Log messages with gsutil guidance for developers; not actual gsutil imports or invocations                                                                                                                                   |
+| Agent-orchestrator                  | `scripts/restore_from_gcs.sh` (gsutil ls/cp), `server/oauth_refresh.py`, `scripts/bootstrap_vm.sh`                                                                 | `bootstrap_vm.sh` has CLOUD_PROVIDER toggle ✅. `restore_from_gcs.sh` is GCP-only recovery tool — needs `--cloud` flag as Wave 2. `oauth_refresh.py` is GCP auth only — acceptable for orchestrator VM credential management |
+| Tests                               | `tests/cloud_interface/conftest.py`, `test_gcp_secret_storage_build.py`                                                                                            | Compliant — GCP-specific test fixtures                                                                                                                                                                                       |
 
-**Finding: ZERO violations in May-23 critical path** across all 4 available repos. Service-repo scripts (deployment-service `launch-*.sh`, instruments-service reconcilers, etc.) are Wave 2 post-cutover — Phase 9 scope per plan note "Phase 9 ships per-asset-group AWS launcher equivalents."
+**Finding: ZERO violations in May-23 critical path** across all 4 available repos. Service-repo scripts
+(deployment-service `launch-*.sh`, instruments-service reconcilers, etc.) are Wave 2 post-cutover — Phase 9 scope per
+plan note "Phase 9 ships per-asset-group AWS launcher equivalents."

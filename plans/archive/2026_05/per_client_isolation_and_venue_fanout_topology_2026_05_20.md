@@ -91,11 +91,13 @@ See `client_isolation_and_governance_master.md` § "Deferred from per_client_iso
 ## Post-cutover deferred
 
 - [x] ✅ **POST-MAY-23** [AGENT] P1. Phase E.2 -- Auto-shard supervisor signal: deployment-service consumes
-      `ShardCapacityEvent.SPAWN_NEW_SHARD` + auto-launches next shard VM. Target: 2026-05-28.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** POST-MAY-23 item targeting 2026-05-28+. Gated on deployment-service (not in slot 6 worktree) and DeFi cutover. Operator-driven post-cutover.
+      `ShardCapacityEvent.SPAWN_NEW_SHARD` + auto-launches next shard VM. Target: 2026-05-28. **[DEFERRED-POST-CUTOVER
+      2026-05-23 slot 6]** POST-MAY-23 item targeting 2026-05-28+. Gated on deployment-service (not in slot 6 worktree)
+      and DeFi cutover. Operator-driven post-cutover.
 - [x] ✅ **POST-MAY-23** [AGENT] P2. Phase E.3 -- Intra-client RebalanceCoordinator (intra-client multi-portfolio +
       intra-client multi-wallet ONLY; cross-client fund movement is NEVER in scope -- HARD RULE). Target: 2026-06-01.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** POST-MAY-23 item targeting 2026-05-28+. Gated on deployment-service (not in slot 6 worktree) and DeFi cutover. Operator-driven post-cutover.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** POST-MAY-23 item targeting 2026-05-28+. Gated on deployment-service
+      (not in slot 6 worktree) and DeFi cutover. Operator-driven post-cutover.
 
 ## Temporary states + canonical follow-up plans
 

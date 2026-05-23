@@ -76,21 +76,23 @@ sanity-check that all call sites continue to work.
 
 ### Phase 1 — UTL agent-action library (1.5 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. New module `unified_trading_library/recovery/__init__.py` exporting `AgentAction`,
-      `AgentActionEmitter`, `RecoveryScriptRegistry`, `RepeatedRepairLoopDetector`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. `AgentAction` dataclass mirrors UAC `AgentActionEvent` schema (depends_on Phase 1 of
-      `incident_gateway_and_state_machine`).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. `AgentActionEmitter.emit(action) → None` — publishes to Incident Gateway via PubSub
-      `agent-recovery-actions` topic (subscribes the LLM-audit agent + the gateway state machine).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. New module `unified_trading_library/recovery/__init__.py` exporting
+      `AgentAction`, `AgentActionEmitter`, `RecoveryScriptRegistry`, `RepeatedRepairLoopDetector`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. `AgentAction` dataclass mirrors UAC `AgentActionEvent` schema
+      (depends_on Phase 1 of `incident_gateway_and_state_machine`).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. `AgentActionEmitter.emit(action) → None` — publishes to Incident
+      Gateway via PubSub `agent-recovery-actions` topic (subscribes the LLM-audit agent + the gateway state machine).
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. `RecoveryScriptRegistry` — closed-set mapping
       `{action_type → (script_path, runbook_id,     idempotent: bool, dry_run_supported: bool, scope_required: tuple[str, ...])}`.
       10 entries.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. `RepeatedRepairLoopDetector.check(action_type, scope_key) → RepeatedLoopVerdict` — sliding-window
-      counter (default 15min). 3+ → returns `LoopDetected` which the caller MUST honour by NOT executing the action +
-      escalating to SEV0 via Incident Gateway.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.6. Unit tests in `unified-trading-library/tests/unit/recovery/test_agent_action.py` — 15+ tests
-      covering: emitter publishes correctly; registry rejects unknown action_type; repair-loop detector counts correctly
-      within window + decays outside window; LoopDetected forces SEV0 escalation.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5.
+      `RepeatedRepairLoopDetector.check(action_type, scope_key) → RepeatedLoopVerdict` — sliding-window counter (default
+      15min). 3+ → returns `LoopDetected` which the caller MUST honour by NOT executing the action + escalating to SEV0
+      via Incident Gateway.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.6. Unit tests in
+      `unified-trading-library/tests/unit/recovery/test_agent_action.py` — 15+ tests covering: emitter publishes
+      correctly; registry rejects unknown action_type; repair-loop detector counts correctly within window + decays
+      outside window; LoopDetected forces SEV0 escalation.
 
 ### Phase 2 — 10 Layer-0 deterministic scripts (5 cal-days, parallel within sub-scripts)
 
@@ -99,34 +101,39 @@ emit an `AgentAction` BEFORE attempting the action (status=STARTED) and AFTER (s
 repair-loop detector and bail out with LoopDetected escalation, (d) be idempotent (re-running is safe), (e) be runbook-
 ID-tagged.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. `restart_service.py --service <name> --reason <text> [--dry-run]` — issues Cloud Run service
-      revision flip OR GCE VM systemctl restart depending on service deployment topology. Runbook ID: `RB-INFRA-001`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. `restart_container.py --container <id> --reason <text> [--dry-run]` — Cloud Run revision restart OR
-      Docker container restart on GCE host. Runbook ID: `RB-INFRA-001`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. `redeploy_known_good.py --service <name> --to-revision <revision> --reason <text> [--dry-run]` —
-      flips Cloud Run traffic to previous revision. Runbook ID: `RB-DEPLOY-001`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. `restart_service.py --service <name> --reason <text> [--dry-run]` —
+      issues Cloud Run service revision flip OR GCE VM systemctl restart depending on service deployment topology.
+      Runbook ID: `RB-INFRA-001`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. `restart_container.py --container <id> --reason <text> [--dry-run]` —
+      Cloud Run revision restart OR Docker container restart on GCE host. Runbook ID: `RB-INFRA-001`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9.
+      `redeploy_known_good.py --service <name> --to-revision <revision> --reason <text> [--dry-run]` — flips Cloud Run
+      traffic to previous revision. Runbook ID: `RB-DEPLOY-001`.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10.
       `resize_machine_after_oom.py --vm <name> --new-machine-type <type> --reason <text>     [--dry-run]` — gcloud
       compute instance resize. Runbook ID: `RB-INFRA-001`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11. `failover_feed.py --venue <name> --primary <feed> --backup <feed> --reason <text> [--dry-run]` —
-      flips MTDS handler to backup feed; assertion: backup feed is fresh (last tick < staleness threshold). Runbook ID:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11.
+      `failover_feed.py --venue <name> --primary <feed> --backup <feed> --reason <text> [--dry-run]` — flips MTDS
+      handler to backup feed; assertion: backup feed is fresh (last tick < staleness threshold). Runbook ID:
       `RB-CONN-001`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.12. `pause_strategy.py --strategy <id> --reason <text> [--dry-run]` — calls strategy-service pause
-      endpoint; emits STRATEGY_PAUSED event. Idempotent (pausing an already-paused strategy is a no-op). Runbook ID:
-      `RB-RISK-004`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.12. `pause_strategy.py --strategy <id> --reason <text> [--dry-run]` —
+      calls strategy-service pause endpoint; emits STRATEGY_PAUSED event. Idempotent (pausing an already-paused strategy
+      is a no-op). Runbook ID: `RB-RISK-004`.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.13.
       `cancel_open_orders.py --venue <name> [--strategy <id>] [--symbol <id>] --reason <text>     [--dry-run]` — calls
       execution-service cancel-all-orders endpoint scoped by (venue, optional strategy, optional symbol). Pulls
       open-orders from venue REST first, then cancels each. Runbook ID: `RB-RECON-002`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14. `disable_venue.py --venue <name> [--strategy <id>] --reason <text> [--dry-run]` — flips
-      circuit-breaker to force-open; emits VENUE_DISABLED event; existing positions are not touched (use
-      cancel_open_orders first if needed). Runbook ID: `RB-CONN-001`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.15. `enter_safe_mode.py --strategy <id> --reason <text> [--dry-run]` — strategy-service safe-mode
-      (per-strategy definition: pauses new orders, may cancel or retain existing orders per strategy policy, confirms
-      hedges, requires human ack to resume). Runbook ID: `RB-RISK-004`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.16. `enter_readonly_recon_mode.py --service <name> --reason <text> [--dry-run]` — service still
-      reads/reconciles but rejects all writes (no new orders, no position updates). Used when DB or downstream
-      dependency is degraded. Runbook ID: `RB-CONN-004`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14.
+      `disable_venue.py --venue <name> [--strategy <id>] --reason <text> [--dry-run]` — flips circuit-breaker to
+      force-open; emits VENUE_DISABLED event; existing positions are not touched (use cancel_open_orders first if
+      needed). Runbook ID: `RB-CONN-001`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.15. `enter_safe_mode.py --strategy <id> --reason <text> [--dry-run]` —
+      strategy-service safe-mode (per-strategy definition: pauses new orders, may cancel or retain existing orders per
+      strategy policy, confirms hedges, requires human ack to resume). Runbook ID: `RB-RISK-004`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.16.
+      `enter_readonly_recon_mode.py --service <name> --reason <text> [--dry-run]` — service still reads/reconciles but
+      rejects all writes (no new orders, no position updates). Used when DB or downstream dependency is degraded.
+      Runbook ID: `RB-CONN-004`.
 
 ### Phase 3 — Wrap existing safety actions (2 cal-days)
 
@@ -136,27 +143,32 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.17. Wrap `execution-service kill_switch.activate()` to emit AgentAction
       (action_type=KILL_SWITCH_ACTIVATE, runbook_id=RB-RISK-002 or RB-RISK-003 depending on cause).
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.18. Wrap `execution-service kill_switch.deactivate()` similarly.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.19. Wrap `alerting-service circuit_breaker.force_open()` / `force_close()`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.19. Wrap `alerting-service circuit_breaker.force_open()` /
+      `force_close()`.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.20. Wrap `strategy-service.safe_mode.enter()` / `exit()`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.21. Wrap `execution-service.handlers.order_canceller.cancel_all_for_venue()`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.21. Wrap
+      `execution-service.handlers.order_canceller.cancel_all_for_venue()`.
 
 ### Phase 4 — Repeated-repair-loop integration (1 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.22. Every wrapped action checks `RepeatedRepairLoopDetector.check(action_type, scope_key)` and bails
-      if `LoopDetected`. Bail action: emits SEV0 IncidentEnvelope with problem_type=REPEATED_REPAIR_LOOP_DETECTED +
-      halts further automation on that scope (the LLM-audit agent must then ESCALATE_TO_HUMAN).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.23. Integration test: trigger 4 consecutive `restart_service` calls on same service within 15min →
-      assert 4th call bails out + SEV0 incident raised + further restarts on that service are blocked.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.22. Every wrapped action checks
+      `RepeatedRepairLoopDetector.check(action_type, scope_key)` and bails if `LoopDetected`. Bail action: emits SEV0
+      IncidentEnvelope with problem_type=REPEATED_REPAIR_LOOP_DETECTED + halts further automation on that scope (the
+      LLM-audit agent must then ESCALATE_TO_HUMAN).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.23. Integration test: trigger 4 consecutive `restart_service` calls on
+      same service within 15min → assert 4th call bails out + SEV0 incident raised + further restarts on that service
+      are blocked.
 
 ### Phase 5 — Smoke + game-day (1 cal-day, GATES May-23)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.24. Dry-run smoke: run each of the 10 scripts with `--dry-run` on staging; assert all 10 emit
-      AgentAction(status=STARTED) + log expected actions + return 0.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.24. Dry-run smoke: run each of the 10 scripts with `--dry-run` on
+      staging; assert all 10 emit AgentAction(status=STARTED) + log expected actions + return 0.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.25. Live smoke (staging, off-hours): run
       `restart_service.py --service alerting-service --reason     "smoke test" --no-dry-run`. Assert service restarts
       cleanly + AgentActionEvent persisted + recovery_verifier reports all 5 booleans True.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.26. Game-day: scratch scenario `01_cefi_venue_circuit_breaker_trip.md` — assert disable_venue +
-      cancel_open_orders + pause_strategy fire in correct order with AgentActionEvent rows logged.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.26. Game-day: scratch scenario `01_cefi_venue_circuit_breaker_trip.md` —
+      assert disable_venue + cancel_open_orders + pause_strategy fire in correct order with AgentActionEvent rows
+      logged.
 
 ## Success criteria
 

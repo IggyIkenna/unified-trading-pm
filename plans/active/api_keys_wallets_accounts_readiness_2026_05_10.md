@@ -224,8 +224,8 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Verification**: every service in workspace-manifest has an entry; `gcloud projects get-iam-policy` matches the
     yaml SSOT 1:1.
 
-- [x] ✅ [SCRIPT] P0. **1.B — AWS IAM matrix provisioning.** **Largest sub-deliverable.** Mirror GCP per-service-SA matrix
-      to AWS IAM roles. Per service: create IAM role + attached policies (`s3:GetObject`/`PutObject` per bucket,
+- [x] ✅ [SCRIPT] P0. **1.B — AWS IAM matrix provisioning.** **Largest sub-deliverable.** Mirror GCP per-service-SA
+      matrix to AWS IAM roles. Per service: create IAM role + attached policies (`s3:GetObject`/`PutObject` per bucket,
       `secretsmanager:GetSecretValue`, `events:PutRule`, `lambda:InvokeFunction`, `ecs:RunTask`, `ec2:RunInstances`).
       YAML SSOT at `deployment-service/configs/aws_iam_roles.yaml`. Provision via Terraform OR CDK (workspace pattern
       TBD; see `deployment-service/buildspec.aws.yaml` for hints).
@@ -242,10 +242,11 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
     (`arn:aws:iam::427895769566:user/harsh-worker`) does NOT have `iam:CreateRole` permission. Dry-run showed 30 roles
     would be created (10 services × 3 tiers). Blocked on operator granting `iam:CreateRole` to harsh-worker OR running
     `setup-iam-roles.sh --apply` as admin user. Ping filed in `harsh_orchestrator/pings/slot_7.md`.
-  - **[CODE-SHIPPED, EXECUTION-PENDING]** 2026-05-23 slot 2: Code artifacts confirmed shipped (scripts + YAML). IAM roles
-    NOT yet created — verified via `aws iam list-roles` access denied on uts-orchestrator-epic-role. **OPERATOR ACTION
-    REQUIRED**: run `cd deployment-service && bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user with
-    `iam:CreateRole` permission. 30 roles expected (10 services × 3 tiers). Checkbox flipped to unblock downstream tasks.
+  - **[CODE-SHIPPED, EXECUTION-PENDING]** 2026-05-23 slot 2: Code artifacts confirmed shipped (scripts + YAML). IAM
+    roles NOT yet created — verified via `aws iam list-roles` access denied on uts-orchestrator-epic-role. **OPERATOR
+    ACTION REQUIRED**: run `cd deployment-service && bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user with
+    `iam:CreateRole` permission. 30 roles expected (10 services × 3 tiers). Checkbox flipped to unblock downstream
+    tasks.
   - **[DEFERRED-POST-CUTOVER]** 2026-05-23 slot 6: Confirmed `harsh-worker` AND `uts-orchestrator-epic-role` both lack
     `iam:CreateRole` (AccessDenied on both). Per operator direction 2026-05-12, Phase 1 AWS↔GCP parity is deferred past
     May-23 cutover. BLK-dcf1da27 filed. Successor: `plans/active/aws_migration_defi_first_2026_05_07.md`.
@@ -298,9 +299,9 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Remaining**: (1) investigate 2 AWS failures + retry with escaped values if needed; (2) `UnifiedCloudConfig` AWS
     round-trip test (Block H7 verification).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **1.F — AWS SNS/SQS + EventBridge mirroring.** Create AWS SNS topic + SQS subscription + DLQ per GCP
-      Pub/Sub topic. Create AWS EventBridge rule per Cloud Scheduler job. Cross-cloud event routing not in scope for
-      May-23 — mirror is sufficient.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **1.F — AWS SNS/SQS + EventBridge mirroring.** Create AWS SNS topic +
+      SQS subscription + DLQ per GCP Pub/Sub topic. Create AWS EventBridge rule per Cloud Scheduler job. Cross-cloud
+      event routing not in scope for May-23 — mirror is sufficient.
   - **Verification**: `aws sns list-topics` count matches `gcloud pubsub topics list` count; `aws events list-rules`
     matches `gcloud scheduler jobs list`.
   - **[BLOCKED-AWS-PERMISSIONS]** 2026-05-20 slot 7: aws CLI IS available (`aws-cli/1.45.10`). Blocker corrected —
@@ -318,8 +319,9 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Remaining**: AWS_SECURITY_GROUP_IDS + AWS_SUBNET_ID must be set at runtime; IAM instance profiles gated on 1.B
     resolution (scripts work today for code review/dry-run).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **1.H — Cross-cloud Workload Identity Federation.** GCP SA assumes AWS IAM role for services spanning
-      both clouds (per `aws-iam-matrix.md`). Configure trust policy on AWS roles + WIF pool on GCP project.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **1.H — Cross-cloud Workload Identity Federation.** GCP SA assumes AWS
+      IAM role for services spanning both clouds (per `aws-iam-matrix.md`). Configure trust policy on AWS roles + WIF
+      pool on GCP project.
   - **[BLOCKED-AWS-PERMISSIONS]** 2026-05-20 slot 7: aws CLI IS available. Blocked on 1.B (IAM roles must exist first
     - harsh-worker needs `iam:CreateOpenIDConnectProvider`/`iam:UpdateAssumeRolePolicy`). Gated on 1.B resolution.
 
@@ -338,8 +340,8 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
 Audit confirmed all 6 perp + 4 additional venue adapters exist. This phase adds: native adapters for 6 venues, per-scope
 key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
-- [x] ✅ [HUMAN] P0. **2.A — Per-venue sub-key provisioning.** Operator-side, manual web-UI flow per venue. For each of the
-      10 venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster, Upbit, Kraken, Bitfinex, Bitget): create separate
+- [x] ✅ [HUMAN] P0. **2.A — Per-venue sub-key provisioning.** Operator-side, manual web-UI flow per venue. For each of
+      the 10 venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster, Upbit, Kraken, Bitfinex, Bitget): create separate
       read-only / trade / withdraw sub-keys. Pin VM egress IPs to whitelist per scope where venue supports it. Provision
       into Secret Manager paths defined by Phase 0.D `secret-manager-naming.md`:
       `<venue>-<scope>-{api-key,api-secret,passphrase}`.
@@ -413,8 +415,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     May-23 ships on Cloud KMS path (3.C.1). Checkbox flipped noting DEFERRED status — 2026-05-23 slot 2.
   - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: Verified DEFERRED status. `copper-sandbox-api-key` +
     `copper-sandbox-api-secret` + `copper-sandbox-org-id` NOT in GCP Secret Manager. Integration test auto-skips.
-    Successor: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
-    Copper integration tracked in `fireblocks_copper_client_integration_2026_06_01.md`.
+    Successor: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`. Copper integration tracked in
+    `fireblocks_copper_client_integration_2026_06_01.md`.
 
 - [x] ✅ [HUMAN+AGENT] P0. **3.B — CEFFU integration.** DEFERRED per 2026-05-12 scope contraction. 3.B.3 adapter shipped
       (execution-service@027a8153b). KYB (3.B.1) + real-fund test (3.B.4) + ops-model decision (3.B.5) all post-cutover.
@@ -423,17 +425,17 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     `execution-service/execution_service/custody/ceffu.py` raises NotImplementedError until CEFFU spec delivered June-1.
     Successor: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`. Sub-deliverables:
   - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] **3.B.1** — CEFFU institutional KYB onboarding (operator-side, 2-4 weeks).
-  - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] **3.B.2** — Confirm CEFFU's product offering: MirrorX (off-exchange-settlement linking CEFFU custody to
-        Binance perp margin without moving funds) vs direct custody API. Asset coverage: BTC + ETH + USDC + USDT
-        minimally + LST scope.
+  - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] **3.B.2** — Confirm CEFFU's product offering: MirrorX
+        (off-exchange-settlement linking CEFFU custody to Binance perp margin without moving funds) vs direct custody
+        API. Asset coverage: BTC + ETH + USDC + USDT minimally + LST scope.
   - [x] [AGENT] **3.B.3** — CEFFU SDK / API spec ingestion + factory-pattern adapter at
         `execution-service/execution_service/custody/ceffu.py` mirroring Copper shape. Register in `custody/factory.py`
         for `"ceffu"` key. HMAC / signing-key conventions per CEFFU spec. — (execution-service@027a8153b 2026-05-19
         [backfilled]; STUB pending POD CEFFU API spec June-1; OES + direct-custody dual-surface shape pre-stubbed;
         factory-registered; raises NotImplementedError until spec delivered — correct per plan direction)
   - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] **3.B.4** — End-to-end real-fund-movement test (mirror 3.A).
-  - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper for `carry_staked_basis` spot
-        leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
+  - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper
+        for `carry_staked_basis` spot leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
 
 - [x] [DECISION] P0. **3.C — HSM-grade wallet signing path RESOLVED 2026-05-12** (operator R9 sub-(a) gate closed via
       AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to `COPPER_MPC` /
@@ -458,10 +460,10 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: DEFERRED-AFTER-CUTOVER confirmed. Fireblocks credentials (June-1).
       `per_wallet flip CLOUD_KMS_ENCRYPTED → FIREBLOCKS_MPC` is config-only. Successor:
       `plans/active/fireblocks_copper_client_integration_2026_06_01.md`. Implementation:
-        `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape. Per-wallet
-        flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
-        `WalletProvisioningConfig.signing_surface` field. Successor plan:
-        `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when client creds land).
+      `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape. Per-wallet flip
+      from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
+      `WalletProvisioningConfig.signing_surface` field. Successor plan:
+      `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when client creds land).
     - **Verification**: smoke test on Sepolia signs a transaction via Fireblocks vault; latency budget within
       strategy-execution end-to-end target (HSM signing adds 100-500ms; verify under load).
     - **Sub-residual**: HD-wallet derivation under Fireblocks-protected master key → N×M wallets per R7 derive cleanly.
@@ -513,8 +515,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`: `SigningSurface`
         StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen dataclass (per_tx / per_hour /
         per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen dataclass with `validate()` enforcing 6
-        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE reject
-        withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
+        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE
+        reject withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
         `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
         `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,     WalletProvisioningConfig, WalletProvisioningError)`.
         **Cross-tab handshake artefact** consumed by slot 5 (defi_recursive_borrow archetype config — chain × protocol
@@ -529,9 +531,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 - [x] ✅ [AGENT] P1. **4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero).** Audit found intent-engine
       declares bridge steps but no adapters. Implement at least CCTP (Circle's cross-chain USDC) for May-23 — allows
-      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred unless
-      carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector full
-      implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
+      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred
+      unless carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector
+      full implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
       addresses in testnet_contracts.yaml, 25 unit tests green; Solana receive deferred — EVM-side only)
 
 - [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
@@ -543,16 +545,18 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
         include Holesky as a 6th testnet OR substitute mock contracts on Sepolia for Lido/EigenLayer integration tests.
         **Recommendation**: include Holesky — net 6 testnets. Add to plan scope. — (DECIDED: include Holesky as 6th
         testnet; chain_id 17000 in testnet_contracts.yaml with Aave V3 + EigenLayer + Lido; [backfilled 2026-05-19])
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.3** — Funded operator testnet wallets per chain × per archetype (mirror 4.A on testnets).
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.4** — Testnet RPC credentials per chain (Alchemy / QuickNode / Helius testnet tier).
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.5** — FlashLoanReceiver redeploy per testnet (or share Sepolia address per testnet_contracts.yaml comment
-        "Same receiver contract as Sepolia until a Holesky-specific deploy is registered" — operator decides
-        per-chain-deploy vs shareable; default = shareable until Phase 4.D.5b).
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.6** — Mock contracts on testnets where mainnet protocol has no testnet (Jito on Solana mainnet-only; Pyth
-        on Solana mainnet-only; some Lido vault variants). Mock contract source under
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.3** — Funded operator testnet wallets per chain × per archetype (mirror 4.A
+        on testnets).
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.4** — Testnet RPC credentials per chain (Alchemy / QuickNode / Helius
+        testnet tier).
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.5** — FlashLoanReceiver redeploy per testnet (or share Sepolia address per
+        testnet_contracts.yaml comment "Same receiver contract as Sepolia until a Holesky-specific deploy is registered"
+        — operator decides per-chain-deploy vs shareable; default = shareable until Phase 4.D.5b).
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.6** — Mock contracts on testnets where mainnet protocol has no testnet (Jito
+        on Solana mainnet-only; Pyth on Solana mainnet-only; some Lido vault variants). Mock contract source under
         `deployment-service/contracts/mocks/`.
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.7** — Faucet automation: Cloud Scheduler job per testnet that monitors operator wallet balance +
-        auto-requests faucet drip when below threshold. Per-testnet faucet API.
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **4.D.7** — Faucet automation: Cloud Scheduler job per testnet that monitors
+        operator wallet balance + auto-requests faucet drip when below threshold. Per-testnet faucet API.
 
 - [x] [SCRIPT] P0. **4.E — Pyth-on-Solana real-data smoke (R8).** Trigger MTDS `oracle_prices_handler` against mainnet
       Solana RPC + Hermes endpoint; capture per-LST price (jitoSOL / mSOL / bSOL); confirm against Pyth UI
@@ -654,11 +658,11 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ### 4.C.G — Per-venue safety-margin tuning (operator + risk-plan owner; ~0.5 cal AI-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] **R-17: tune `ltv_safety_margin` + `margin_safety_factor` per-protocol/per-venue** — defaults
-      shipped by 4.C.C (`ltv_safety_margin=0.85` lending; `margin_safety_factor=1.5` perps). Operator/risk-plan owner
-      reviews per-protocol (Aave's 90% liquidation threshold ≠ Compound's 85%; Hyperliquid's maintenance margin ≠
-      Deribit's). Codify in UAC registry (new `PROTOCOL_LIQUIDATION_PARAMS` if needed). **Owner**: risk-plan owner +
-      operator.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] **R-17: tune `ltv_safety_margin` + `margin_safety_factor`
+      per-protocol/per-venue** — defaults shipped by 4.C.C (`ltv_safety_margin=0.85` lending; `margin_safety_factor=1.5`
+      perps). Operator/risk-plan owner reviews per-protocol (Aave's 90% liquidation threshold ≠ Compound's 85%;
+      Hyperliquid's maintenance margin ≠ Deribit's). Codify in UAC registry (new `PROTOCOL_LIQUIDATION_PARAMS` if
+      needed). **Owner**: risk-plan owner + operator.
 
 **Phase 4.C done definition** (full-execution criterion):
 
@@ -680,8 +684,8 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 - [x] [SCRIPT] P0. **5.A — Sports per-source rotation runbook.** Already partially shipped via
       `deployment-service@9943e7c9` (api-football + footystats + soccer-football-info added). Phase 5 sub-deliverables:
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **5.A.1** — Provision API keys for any source not yet in Secret Manager (most exist; verify per Block E3).
-        **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **5.A.1** — Provision API keys for any source not yet in Secret Manager (most
+        exist; verify per Block E3). **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
   - [x] **5.A.2** — `codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation cadence +
         execution-owner per `Runbook Execution-Owner SSOT` HARD RULE. **DONE 2026-05-15 slot 6**: file created at
         `codex/14-customer-journeys/credentials/rotation-runbook.md` — sports (api-football/footystats/sfi 90d) +
@@ -690,18 +694,18 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4 of
         the new rotation-runbook.md with explicit "excluded" list + rationale.
 
-- [x] ✅ [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18)
-      5.B.1 Polymarket ✅ + 5.B.3 Manifold KILLED + 5.B.4 adapters ✅. 5.B.2 Kalshi BLOCKED-CREDENTIALS (operator
-      needs to provision `kalshi-api-key` + `kalshi-private-key-pem` in SM). PM@slot2 2026-05-23.
+- [x] ✅ [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18) 5.B.1 Polymarket ✅ + 5.B.3
+      Manifold KILLED + 5.B.4 adapters ✅. 5.B.2 Kalshi BLOCKED-CREDENTIALS (operator needs to provision
+      `kalshi-api-key` + `kalshi-private-key-pem` in SM). PM@slot2 2026-05-23.
   - **[CONFIRMED-STATUS]** 2026-05-23 slot 6: 5.B.1 Polymarket ✅ (polymarket-api-key in SM). 5.B.2 Kalshi still
-    BLOCKED-CREDENTIALS — operator action required per ikenna_orchestrator/pings/slot_8.md. 5.B.3 Manifold KILLED.
-    5.B.4 adapters ✅.
+    BLOCKED-CREDENTIALS — operator action required per ikenna_orchestrator/pings/slot_8.md. 5.B.3 Manifold KILLED. 5.B.4
+    adapters ✅.
   - [x] **5.B.1** — Polymarket API key provisioned. **DONE**: SM secret `polymarket-api-key` EXISTS in vault (created
         2026-03-02, v1 enabled, `gcloud secrets describe polymarket-api-key` confirmed). Added to `_TRADE_KEY_PATTERNS`
         2026-05-09. Secret value is live.
-  - [x] ✅ DEFERRED-OPERATOR-DECISION **5.B.2** — Kalshi API key. **BLOCKED-CREDENTIALS** — SM secret `kalshi-api-key` NOT FOUND in
-        `central-element-323112`. `kalshi-private-key-pem` also needs provisioning. Full KalshiAdapter is shipped at
-        `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth,
+  - [x] ✅ DEFERRED-OPERATOR-DECISION **5.B.2** — Kalshi API key. **BLOCKED-CREDENTIALS** — SM secret `kalshi-api-key`
+        NOT FOUND in `central-element-323112`. `kalshi-private-key-pem` also needs provisioning. Full KalshiAdapter is
+        shipped at `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth,
         place/cancel/positions/balance). CREDENTIAL APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
   - [x] **5.B.3** — Manifold API key. **KILLED 2026-05-20**: Manifold removed entirely from workspace per operator
         directive (play-money — pointless). No credential needed. Adapter/schemas deleted from UAC + MTDS.
@@ -714,10 +718,10 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         `KalshiAdapter` (full implementations). Audit found these — "feature calculators but not execution adapter" in
         prior audit was stale (adapters shipped since).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius keys provisioned in Secret Manager. (slot-8 audit
-      2026-05-18): - **Helius**: SM secret `helius-api-key` EXISTS (created 2026-05-15, v1 enabled). DONE. -
-      **CoinGecko**: SM secret `coingecko-api-key` NOT FOUND. **BLOCKED-CREDENTIALS**. CREDENTIAL APPROVAL REQUEST filed
-      in `ikenna_orchestrator/pings/slot_8.md`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius keys provisioned in
+      Secret Manager. (slot-8 audit 2026-05-18): - **Helius**: SM secret `helius-api-key` EXISTS (created 2026-05-15, v1
+      enabled). DONE. - **CoinGecko**: SM secret `coingecko-api-key` NOT FOUND. **BLOCKED-CREDENTIALS**. CREDENTIAL
+      APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
 
 **Phase 5 done definition** (full-execution criterion):
 
@@ -823,8 +827,8 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       `Master Plan Continuous-Verification Column` HARD RULE. Group F items 17-23 + Group G item 23 each declare cron /
       Tab / QG cadence + `Last verified` date.
 
-- [x] ✅ [SCRIPT] P0. **8.D — Pre-cutover sign-off gate.** Audit script run within 24h of May-23 cutover; output 100% pass
-      for Block I.6 criteria. Operator review + manual approval before live-trading kill-switch flip. **PROBE RUN
+- [x] ✅ [SCRIPT] P0. **8.D — Pre-cutover sign-off gate.** Audit script run within 24h of May-23 cutover; output 100%
+      pass for Block I.6 criteria. Operator review + manual approval before live-trading kill-switch flip. **PROBE RUN
       2026-05-14 (Slot 6)**: `credential-probe.sh --mode live --archetype carry_staked_basis` → PASS: 7/34 | FAIL: 27/34
       | SKIP: 9 (post-cutover). Root-cause triage: - **🔴 10 wrapped wallet keys missing** —
       `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` + `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision
@@ -841,11 +845,11 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       **Status: BLOCKED-OPERATOR-ACTION** — May-23 gate requires operator to action all 🔴+🟡 items ≥24h before cutover.
   - **[PROBE-2026-05-23 slot 6]**: Re-ran `credential-probe.sh --mode live --archetype carry_staked_basis`. Result:
     PASS: 0/34 | FAIL: 34 | SKIP: 9. Worse than May-14 because this environment lacks `gcloud` CLI (EC2 instance, not
-    GCE VM) and `uts-orchestrator-epic-role` lacks `secretsmanager:GetSecretValue`. The probe REQUIRES GCP auth to
-    check GCP SM. Known gaps from May-14 probe remain unresolved. BLK-afbcb8c9 filed.
-    **OPERATOR MUST**: (1) run probe from GCE VM with trading-VM SA or workstation with `gcloud auth app-default login`;
-    (2) provision 10 wrapped wallet keys + 11 canonical SM aliases + 3 infra keys; (3) re-run until 100% PASS.
-    Checkbox flipped to document OPERATOR-ACTION-REQUIRED state per cutover timeline.
+    GCE VM) and `uts-orchestrator-epic-role` lacks `secretsmanager:GetSecretValue`. The probe REQUIRES GCP auth to check
+    GCP SM. Known gaps from May-14 probe remain unresolved. BLK-afbcb8c9 filed. **OPERATOR MUST**: (1) run probe from
+    GCE VM with trading-VM SA or workstation with `gcloud auth app-default login`; (2) provision 10 wrapped wallet
+    keys + 11 canonical SM aliases + 3 infra keys; (3) re-run until 100% PASS. Checkbox flipped to document
+    OPERATOR-ACTION-REQUIRED state per cutover timeline.
 
 **Phase 8 done definition** (full-execution criterion):
 
@@ -920,5 +924,5 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 
 **May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP (execution-service@`d45d24b4`);
 verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams — do NOT gate May-23.
-Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to June-1
-(successor: `fireblocks_copper_client_integration_2026_06_01.md`).
+Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to
+June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).

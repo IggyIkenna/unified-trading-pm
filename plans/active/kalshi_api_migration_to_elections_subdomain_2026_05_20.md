@@ -42,23 +42,27 @@ Codex SSOTs: `codex/02-data/contracts-scope-and-layout.md`
 
 - [x] ✅ [SCRIPT] P1. Manually re-record `external/kalshi/mocks/markets.yaml`, `market_lookup.yaml`, `orderbook.yaml`
       against new host; cassette URI updated; body preserved. (UAC@`5729197`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Diff new response shapes vs `KalshiMarket`/`KalshiSeries`/`KalshiEvent` schemas.
-      **BLOCKED-CREDENTIALS**: Kalshi API key needed for live diff; tracked in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Diff new response shapes vs `KalshiMarket`/`KalshiSeries`/`KalshiEvent`
+      schemas. **BLOCKED-CREDENTIALS**: Kalshi API key needed for live diff; tracked in
       `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. If schemas drift: update schemas + normalizers + bump UAC version. Gated on credentials above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. If schemas drift: update schemas + normalizers + bump UAC version.
+      Gated on credentials above.
 
 ## Phase 3 — Credential unblock + integration verification
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Coordinate with `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2 — provision
-      `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Run integration test: authenticate against new host + fetch sample market.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Coordinate with `api_keys_wallets_accounts_readiness_2026_05_10.md`
+      5.B.2 — provision `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Run integration test: authenticate against new host + fetch sample
+      market.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Verify MTDS Kalshi adapter end-to-end fetch.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Verify execution-service Kalshi paper-order flow.
 
 ## Phase 4 — Canary regression + QG wire-in
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. After cassette refresh: dispatch UAC `weekly-validation.yml` + verify Kalshi cassettes pass.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. Add to predictions_master: Kalshi URL must point at elections subdomain as regression check.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. After cassette refresh: dispatch UAC `weekly-validation.yml` + verify
+      Kalshi cassettes pass.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. Add to predictions_master: Kalshi URL must point at elections subdomain
+      as regression check.
 
 ## Temporary states + canonical follow-up plans
 

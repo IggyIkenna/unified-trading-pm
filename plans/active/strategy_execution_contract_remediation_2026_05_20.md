@@ -398,8 +398,8 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
       `grid_generator.py` are `# noqa: gs-uri`-exempt (bucket already resolved by 4a) — NOT in scope. —
       strategy-service@5b2e9924; hedge_ratio_writer.py:135 + decision_context_writer.py:148 both use
       `resolve_bucket_name(cloud=cloud, kind="strategy-store")` for catalogue_bucket (verified 2026-05-22).
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-OPERATOR-DECISION] [MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified
-      bucket. **BLOCKED**: schemas are incompatible — old per-AG format
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-OPERATOR-DECISION] [MIGRATION] P0.** 4c. Migrate existing per-AG strategy
+      parquets into the unified bucket. **BLOCKED**: schemas are incompatible — old per-AG format
       `strategy_instructions/<strategy_id>/<date>.parquet` vs new unified format
       `strategy_instructions/client_id=/strategy_id=/day=/instructions.parquet`. Cannot `gsutil     rsync` directly.
       `cloud-providers.yaml` already flipped (4a done). Old per-AG data: CeFi bucket has 237 files (~19MB) of V2 dev

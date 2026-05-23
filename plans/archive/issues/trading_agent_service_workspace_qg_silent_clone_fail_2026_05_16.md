@@ -14,8 +14,8 @@ status: ACKED-INTO-CODE
 
 ## [ACKED-INTO-CODE] RESOLVED 2026-05-22 (GHA run 26275695242, 2m25s green)
 
-Root causes fixed: (1) GH_PAT rotated to real fine-grained PAT; (2) UAC ImportError was transient bad state on LDR;
-(3) pip-audit CVEs globally ignored in `base-service.sh`; (4) `validate_plan_links.py` fixed for partial-workspace GHA
+Root causes fixed: (1) GH_PAT rotated to real fine-grained PAT; (2) UAC ImportError was transient bad state on LDR; (3)
+pip-audit CVEs globally ignored in `base-service.sh`; (4) `validate_plan_links.py` fixed for partial-workspace GHA
 (sibling-repo links skipped by first-path-segment check). Archived 2026-05-23.
 
 ## What I found

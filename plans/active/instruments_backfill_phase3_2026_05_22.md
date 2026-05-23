@@ -71,8 +71,9 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [SCRIPT] P0. **IS-3.1.Sports-Relaunch** — Upgraded `instr-backfill-sports` @ 34.180.105.8 with
       instruments-service@2aabd7b (includes @55d718f sports fix + MARKET_LIFECYCLE writer). Deleted @55d718f VM at
       34.84.104.165 (only 2020-06-01 data, COVID era). Manifest skip ACTIVE, resumes from 2020-06-02. 2026-05-22.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
-      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @2aabd7b @ 34.180.105.8.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows;
+      `fixture_id` field populated; sports rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM
+      RUNNING @2aabd7b @ 34.180.105.8.
 
 ## Phase 5 — Predictions instruments forward-fill
 
@@ -85,8 +86,9 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [CODE] P0. **IS-3.1.Pred-kwarg-fix** — `canonical_question_group=_group_str` kwarg removed from
       `record_captured()` call in orchestrator.py:2376 at instruments-service@4c1389d. Fix was bundled into the chain
       fix commit. 2026-05-22.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-CREDENTIALS] P0. **IS-3.1.Pred-Kalshi** — Kalshi markets API returns 400 Bad Request on historical
-      backfill requests. Operator confirmed BLOCKED-CREDENTIALS — need Kalshi account registration + API key.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-CREDENTIALS] P0. **IS-3.1.Pred-Kalshi** — Kalshi markets API returns 400
+      Bad Request on historical backfill requests. Operator confirmed BLOCKED-CREDENTIALS — need Kalshi account
+      registration + API key.
       `     CREDENTIAL APPROVAL REQUEST — Kalshi markets adapter     Vendor: Kalshi (prediction markets exchange) — free tier with API key     What I need: Account registration at kalshi.com + API key (Bearer token)     Account to use: existing operator email or new account     Unblocks: prediction asset_group Kalshi question group instruments + IS-3.1.Pred-V verify     Without it: Kalshi adapter dormant; Polymarket (no key required) still writes pred instruments     `
 
 ---
@@ -137,10 +139,11 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [VERIFY] P0. **IS-3.1.Pred-Relaunch-V** — instr-backfill-pred-20260522 COMPLETED exit_code=0 @07:26 UTC. Per-VM
       shard 17.68 KiB. Kalshi 400 = BLOCKED-CREDENTIALS (expected). Full-history VM (pred: 2020-2026-02-28) still
       RUNNING. 2026-05-22.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-CREDENTIALS] P0. **IS-3.1.TradFi-Databento** — Databento SDK 403 auth_account_locked on ALL 6 TradFi
-      datasets: IFEU.IMPACT (ICE EU futures/options), IFUS.IMPACT (ICE US futures/options), GLBX.MDP3 (CME/Globex
-      futures), XNAS.ITCH (NASDAQ equities), DBEQ.BASIC (Databento Basic equities/ETFs ×2). Zero Databento-sourced
-      instruments written for 2026-03-01→2026-05-22 window. Polygon TradFi data (equities) still writes OK.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-CREDENTIALS] P0. **IS-3.1.TradFi-Databento** — Databento SDK 403
+      auth_account_locked on ALL 6 TradFi datasets: IFEU.IMPACT (ICE EU futures/options), IFUS.IMPACT (ICE US
+      futures/options), GLBX.MDP3 (CME/Globex futures), XNAS.ITCH (NASDAQ equities), DBEQ.BASIC (Databento Basic
+      equities/ETFs ×2). Zero Databento-sourced instruments written for 2026-03-01→2026-05-22 window. Polygon TradFi
+      data (equities) still writes OK.
       `     CREDENTIAL APPROVAL REQUEST — Databento TradFi instruments adapter     Vendor: Databento (market data provider)     What I need: Reactivate/unlock account — check billing status at app.databento.com or email support@databento.com. Account may have expired/hit quota limit.     Account to use: existing operator Databento account     Unblocks: IFEU/IFUS/GLBX/XNAS/DBEQ instrument records for IS TradFi backfill     Without it: TradFi instruments from Databento datasets are 0; Polygon equities still write     `
 
 ## Temporary states + their canonical follow-up plans

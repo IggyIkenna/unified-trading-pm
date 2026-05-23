@@ -64,16 +64,16 @@ on probe-fail, alerting-service enters fallback-ready mode + SEV0 incidents rout
 
 ### Phase 1 — Twilio account + SM creds (0.5 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.1. **OPERATOR**: create a fresh Twilio account separate from any other workspace account; obtain a
-      voice-capable phone number in a region matching Ikenna's primary mobile (UK +44 or similar). Estimated cost: $1
-      number + $0.013/min voice. Per-month operational cost <$5 under expected SEV0 rate.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Push `alerting-twilio-account-sid`, `alerting-twilio-auth-token`, `alerting-twilio-from-number`,
-      `alerting-twilio-to-number-primary` (Ikenna mobile), `alerting-twilio-to-number-secondary` (Harsh mobile),
-      `alerting-twilio-to-number-founder` to BOTH GCP `central-element-323112` SM AND AWS `427895769566` region
-      `ap-northeast-1` SM (mirror existing Telegram pattern).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.3. **CRITICAL**: never log Twilio auth_token in URL or stdout (Phase 4 incident learnings — token leaks
-      via httpx INFO logging). Audit `send_twilio_voice()` for `logging.getLogger("httpx").setLevel(WARNING)` before
-      first call.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.1. **OPERATOR**: create a fresh Twilio account separate from any other
+      workspace account; obtain a voice-capable phone number in a region matching Ikenna's primary mobile (UK +44 or
+      similar). Estimated cost: $1 number + $0.013/min voice. Per-month operational cost <$5 under expected SEV0 rate.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Push `alerting-twilio-account-sid`, `alerting-twilio-auth-token`,
+      `alerting-twilio-from-number`, `alerting-twilio-to-number-primary` (Ikenna mobile),
+      `alerting-twilio-to-number-secondary` (Harsh mobile), `alerting-twilio-to-number-founder` to BOTH GCP
+      `central-element-323112` SM AND AWS `427895769566` region `ap-northeast-1` SM (mirror existing Telegram pattern).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.3. **CRITICAL**: never log Twilio auth_token in URL or stdout (Phase 4
+      incident learnings — token leaks via httpx INFO logging). Audit `send_twilio_voice()` for
+      `logging.getLogger("httpx").setLevel(WARNING)` before first call.
 
 ### Phase 2 — Twilio voice + SMS notifiers (1.5 cal-day)
 
@@ -83,38 +83,41 @@ on probe-fail, alerting-service enters fallback-ready mode + SEV0 incidents rout
       element (no callback infra needed).
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.5. `alerting-service/alerting_service/notifiers/twilio_sms.py` —
       `send_twilio_sms(to_number,     message_text)`. Uses `/Accounts/{sid}/Messages.json` POST.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.6. Unit tests mocking Twilio API; assert URL paths + auth header + payload shape.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. Add `AlertChannel.TWILIO_VOICE` + `AlertChannel.TWILIO_SMS` to UAC AlertChannel StrEnum (currently
-      PAGERDUTY, TELEGRAM, SLACK, EMAIL, LOG_ONLY → add 2 more).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.6. Unit tests mocking Twilio API; assert URL paths + auth header + payload
+      shape.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. Add `AlertChannel.TWILIO_VOICE` + `AlertChannel.TWILIO_SMS` to UAC
+      AlertChannel StrEnum (currently PAGERDUTY, TELEGRAM, SLACK, EMAIL, LOG_ONLY → add 2 more).
 
 ### Phase 3 — Router fallback logic (1 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.8. `alerting-service/alerting_service/notifiers/router.py` extension — `_in_fallback_mode: bool` flag
-      set by health probe. When fallback_mode=True + severity=CRITICAL → route to TWILIO_VOICE + TELEGRAM (skip
-      PagerDuty since presumed dead).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.9. Per-rule TwilioVoice channel in `LIVE_ALERT_RULES`: add to existing CRITICAL rules as belt-and-
-      suspenders (PagerDuty + Telegram + TwilioVoice) for the highest-risk codes (KILL*SWITCH*\*,
-      LIQUIDATION_RISK_IMMINENT, ALERTING_PROVIDER_DEGRADED, DUAL_FAILURE_DETECTED).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.8. `alerting-service/alerting_service/notifiers/router.py` extension —
+      `_in_fallback_mode: bool` flag set by health probe. When fallback_mode=True + severity=CRITICAL → route to
+      TWILIO_VOICE + TELEGRAM (skip PagerDuty since presumed dead).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.9. Per-rule TwilioVoice channel in `LIVE_ALERT_RULES`: add to existing
+      CRITICAL rules as belt-and- suspenders (PagerDuty + Telegram + TwilioVoice) for the highest-risk codes
+      (KILL*SWITCH*\*, LIQUIDATION_RISK_IMMINENT, ALERTING_PROVIDER_DEGRADED, DUAL_FAILURE_DETECTED).
 
 ### Phase 4 — Primary provider health probe (1 cal-day)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.10. `alerting-service/alerting_service/health/provider_health_probe.py` — cron every 60s: - GET
-      `https://api.pagerduty.com/services/{service_id}` with auth header — assert 200 OK. - POST a test incident with
-      `urgency=low` + `alert_type=test` to `/incidents` then immediately resolve it — assert round-trip <5s. - Check
-      Telegram bot health: GET `https://api.telegram.org/bot{token}/getMe` — assert 200 + bot is_bot=True. - On any
-      probe fail: `_in_fallback_mode=True`; emit `ALERTING_PROVIDER_DEGRADED` IncidentEnvelope with severity=HIGH (the
-      provider is degraded; the system is not failed; reduce alert volume by deduping degradation events to 1/hour).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.11. Probe metrics: counters for {probe_total, probe_fail, fallback_mode_seconds} expose via Prometheus.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.10. `alerting-service/alerting_service/health/provider_health_probe.py` —
+      cron every 60s: - GET `https://api.pagerduty.com/services/{service_id}` with auth header — assert 200 OK. - POST a
+      test incident with `urgency=low` + `alert_type=test` to `/incidents` then immediately resolve it — assert
+      round-trip <5s. - Check Telegram bot health: GET `https://api.telegram.org/bot{token}/getMe` — assert 200 + bot
+      is_bot=True. - On any probe fail: `_in_fallback_mode=True`; emit `ALERTING_PROVIDER_DEGRADED` IncidentEnvelope
+      with severity=HIGH (the provider is degraded; the system is not failed; reduce alert volume by deduping
+      degradation events to 1/hour).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.11. Probe metrics: counters for {probe_total, probe_fail,
+      fallback_mode_seconds} expose via Prometheus.
 
 ### Phase 5 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.12. Synthetic SEV0 smoke: inject `KILL_SWITCH_DEFI_LIQUIDATION_RISK` IncidentEnvelope → assert
-      PagerDuty + Telegram + TwilioVoice ALL deliver within 90s. Twilio voice call should ring primary number with Alice
-      voice reading the alert summary.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.13. Synthetic provider-outage smoke: monkeypatch PagerDuty API to return 503 → assert probe detects
-      within 60s → fallback_mode=True → SEV0 routes through TwilioVoice + Telegram only.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.14. Game-day: scenario `01_cefi_venue_circuit_breaker_trip.md` with PagerDuty synthetically degraded →
-      assert end-to-end Twilio voice alert succeeds.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.12. Synthetic SEV0 smoke: inject `KILL_SWITCH_DEFI_LIQUIDATION_RISK`
+      IncidentEnvelope → assert PagerDuty + Telegram + TwilioVoice ALL deliver within 90s. Twilio voice call should ring
+      primary number with Alice voice reading the alert summary.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.13. Synthetic provider-outage smoke: monkeypatch PagerDuty API to return
+      503 → assert probe detects within 60s → fallback_mode=True → SEV0 routes through TwilioVoice + Telegram only.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.14. Game-day: scenario `01_cefi_venue_circuit_breaker_trip.md` with
+      PagerDuty synthetically degraded → assert end-to-end Twilio voice alert succeeds.
 
 ## Success criteria
 

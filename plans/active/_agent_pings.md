@@ -4834,11 +4834,11 @@ main was broken.
 
 **Your 3 open PRs that need attention** (we left these OPEN; everything else on these repos was bulk-closed):
 
-| Repo                       | PR #                                                                | Branch                                  | Title                                                                       |
-| -------------------------- | ------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
-| `execution-service`        | [#176](https://github.com/IggyIkenna/execution-service/pull/176)        | `auto/20260220-154522-490985`           | feat: Pass mode to get_order_adapter for sim/real routing (Task 350)        |
-| `market-tick-data-service` | [#94](https://github.com/IggyIkenna/market-tick-data-service/pull/94) | `data-io-production-readiness-project-9` | Data I/O Production Readiness: config, UEI migration, codex alignment       |
-| `market-tick-data-service` | [#65](https://github.com/IggyIkenna/market-tick-data-service/pull/65) | `auto/20260216-185111-354256`           | feat(epic-2): complete market data infrastructure implementation            |
+| Repo                       | PR #                                                                  | Branch                                   | Title                                                                 |
+| -------------------------- | --------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| `execution-service`        | [#176](https://github.com/IggyIkenna/execution-service/pull/176)      | `auto/20260220-154522-490985`            | feat: Pass mode to get_order_adapter for sim/real routing (Task 350)  |
+| `market-tick-data-service` | [#94](https://github.com/IggyIkenna/market-tick-data-service/pull/94) | `data-io-production-readiness-project-9` | Data I/O Production Readiness: config, UEI migration, codex alignment |
+| `market-tick-data-service` | [#65](https://github.com/IggyIkenna/market-tick-data-service/pull/65) | `auto/20260216-185111-354256`            | feat(epic-2): complete market data infrastructure implementation      |
 
 **Recovery recipe** (per PR):
 

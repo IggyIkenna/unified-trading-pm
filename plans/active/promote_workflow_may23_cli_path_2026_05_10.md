@@ -342,9 +342,9 @@ the live cutover can launch with missing custody / missing API keys / unwired al
       non-zero).
   - (e2e-testing@60283c2 — both scripts updated; --waive-\* pass-through; pre-flight runs before engine launch)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation** `[BLOCKED-CREDENTIALS]` for both paper + live
-      mode against carry_staked_basis. Resolve any failing probes by either fixing config OR explicitly waiving (write
-      `--waive-<probe>` flag with operator-justification).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation**
+      `[BLOCKED-CREDENTIALS]` for both paper + live mode against carry_staked_basis. Resolve any failing probes by
+      either fixing config OR explicitly waiving (write `--waive-<probe>` flag with operator-justification).
 
 **Phase 2 done definition**:
 
@@ -383,7 +383,8 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
     DeployableConfigCandidate emission; manifest row emission DEFERRED — requires pipeline-context design outside script
     scope)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator runs the 2yr backtest** `[BLOCKED-OPERATOR-DECISION]` for both archetypes:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator runs the 2yr backtest** `[BLOCKED-OPERATOR-DECISION]` for
+      both archetypes:
   - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3`
     (background, ~6h)
   - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype "ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion" --candidate-emit --top-k 3`
@@ -409,8 +410,8 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 4.A — F19 Copper sub-account provisioned + first live-signing dry-run
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator provisions Copper sub-account** `[BLOCKED-CREDENTIALS]` for the May-23 cutover wallet
-      (testnet first).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator provisions Copper sub-account** `[BLOCKED-CREDENTIALS]` for
+      the May-23 cutover wallet (testnet first).
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **First live-signing dry-run** `[BLOCKED-CREDENTIALS]` via
       [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py)
       HMAC-SHA256 sign + poll loop on testnet.
@@ -433,8 +434,8 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 - [x] [AGENT] P0. **Implement testnet-mode constructor** for each missing venue. Pattern: `--testnet` flag → swap base
       URL + use testnet-scoped credentials from Secret Manager `paper/<venue>/<env>` namespace.
   - (No missing venues — all adapters already support testnet. No implementation required.)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Smoke-test each testnet** `[BLOCKED-CREDENTIALS]` with read-only API call (e.g. `get_account_info`)
-      to verify credential + endpoint pair.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Smoke-test each testnet** `[BLOCKED-CREDENTIALS]` with read-only API
+      call (e.g. `get_account_info`) to verify credential + endpoint pair.
 
 ### 4.C — pvl-p20c Solana paper analogue
 
@@ -450,8 +451,8 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 4.D — Tenderly fork validated end-to-end for `carry_staked_basis`
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Tenderly fork dry-run** `[BLOCKED-CREDENTIALS]` for carry_staked_basis lead archetype on EVM side
-      (Aave staking + perp short hedge).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Tenderly fork dry-run** `[BLOCKED-CREDENTIALS]` for
+      carry_staked_basis lead archetype on EVM side (Aave staking + perp short hedge).
   - Verify mock fills produce expected P&L decomposition.
 
 **Phase 4 done definition**:
@@ -483,13 +484,15 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
       service.
   - **Evidence**: stage0_data_pipeline_recon.py uses reconcile_shard() for parquet schema+value comparison; UTL export
     added in UTL@089deda5
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **First recon dry-run** `[BLOCKED-OPERATOR-DECISION]` against carry_staked_basis paper run.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **First recon dry-run** `[BLOCKED-OPERATOR-DECISION]` against
+      carry_staked_basis paper run.
 
 ### 5.B — F22 Phase 4 alerting paging-target Secret Manager wiring
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Provision Telegram bot tokens** `[BLOCKED-CREDENTIALS]` for the May-23 alerting channel.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Provision PagerDuty integration key** `[BLOCKED-CREDENTIALS]` (or skip if Telegram-only for
-      cutover).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Provision Telegram bot tokens** `[BLOCKED-CREDENTIALS]` for the
+      May-23 alerting channel.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Provision PagerDuty integration key** `[BLOCKED-CREDENTIALS]` (or
+      skip if Telegram-only for cutover).
 - [x] [AGENT] P0. **Update `alerting-service/alerting_service/notifiers/router.py`** to read paging targets from Secret
       Manager paths defined in master plan F22 spec.
   - **Evidence**: alerting-service@9d4150d — \_PagingCredentialsReloader in config_reloaders.py reads
@@ -498,13 +501,13 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 5.C — F22 Phase 7 quietness 48h staging dry-run
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Run alerting-service in staging** `[BLOCKED-OPERATOR-DECISION]` for 48h continuous; verify zero
-      false-positive pages.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Run alerting-service in staging** `[BLOCKED-OPERATOR-DECISION]` for
+      48h continuous; verify zero false-positive pages.
 
 ### 5.D — F22 Phase 8 live rehearsal
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Live rehearsal** `[BLOCKED-OPERATOR-DECISION]` — run alerting-service against carry_staked_basis
-      paper run for 24h; verify alerts fire correctly on synthetic kill-switch trip.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Live rehearsal** `[BLOCKED-OPERATOR-DECISION]` — run alerting-service
+      against carry_staked_basis paper run for 24h; verify alerts fire correctly on synthetic kill-switch trip.
 
 **Phase 5 done definition**:
 
@@ -520,8 +523,8 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 **Why**: Audit Block I1 step 6 + master plan `pvl-p18a`. Without ≥3d paper evidence on the lead pair, no live promotion
 can be operator-justified.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Launch paper VM** for carry_staked_basis `[BLOCKED-OPERATOR-DECISION]` with the candidate config
-      selected in Phase 3.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Launch paper VM** for carry_staked_basis
+      `[BLOCKED-OPERATOR-DECISION]` with the candidate config selected in Phase 3.
   - `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --candidate-version <version>`.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Launch paper VM** for ARBITRAGE_PRICE_DISPERSION
       `[BLOCKED-OPERATOR-DECISION]`:funding-rate-dispersion with its candidate config.
@@ -795,8 +798,8 @@ the UI path before any real-capital launch.
   - Real venue handshake (auth + balance check, no order submit).
   - Real custody handshake.
   - Verify all 9 reality-check steps from Block I1 pass.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **UI path dry-run** `[BLOCKED-OPERATOR-DECISION]`: operator opens DART 3-way visualization (Phase
-      U5), clicks Promote-to-live in UI (Phase U4) on Phase 3 candidate, observes:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **UI path dry-run** `[BLOCKED-OPERATOR-DECISION]`: operator opens DART
+      3-way visualization (Phase U5), clicks Promote-to-live in UI (Phase U4) on Phase 3 candidate, observes:
   - POST /promote/.../{manifest_id} returns 200 with target_phase=LIVE_EARLY.
   - Pre-flight gates pass (Copper sandbox sign-test / venue keys / alerting / kill-switch / recon).
   - Live VM auto-launches via Phase 1 launcher with `--dry-run` flag passed through (no real fills).
@@ -804,8 +807,9 @@ the UI path before any real-capital launch.
   - ManualTradeGateDialog (Phase U6) appears on first synthetic trade signal; operator clicks Approve; trade unholds +
     dry-run executes.
   - Verify all 9 reality-check steps from Block I1 pass via UI path too.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Set the `--dry-run-live-cutover-passed` flag** `[BLOCKED-OPERATOR-DECISION]` in launch metadata so
-      live launcher accepts subsequent real-mode launches (CLI flag + Firebase claim alternative for UI path).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Set the `--dry-run-live-cutover-passed` flag**
+      `[BLOCKED-OPERATOR-DECISION]` in launch metadata so live launcher accepts subsequent real-mode launches (CLI
+      flag + Firebase claim alternative for UI path).
 
 **Phase 8 done definition**:
 
@@ -843,19 +847,20 @@ the UI path before any real-capital launch.
 fallback (if UI track hit a P0 blocker). Both produce identical event-stream + downstream behavior — only the trigger
 differs.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator launches LIVE** `[BLOCKED-OPERATOR-DECISION]` for both archetypes via PREFERRED track:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Operator launches LIVE** `[BLOCKED-OPERATOR-DECISION]` for both
+      archetypes via PREFERRED track:
   - **UI path** (preferred if Phase U-track green): operator opens Promote UI → selects candidate manifest for each
     archetype → clicks Promote-to-live → backend pre-flight + auto-launches VM → DART 3-way renders live lane.
   - **CLI fallback**:
     `bash deployment-service/scripts/vm/launch-strategy-live-vm.sh --archetype carry_staked_basis --candidate-version <version>` +
     same for `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **DART manual-trade window — first 3 days** `[BLOCKED-OPERATOR-DECISION]`: operator-monitored every
-      trade signal (per master plan G23 + line 1292 design). Operator-confirms each trade via existing CLI; full UI
-      manual-trade gate is post-cutover.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Day 4-7+ automation** `[BLOCKED-OPERATOR-DECISION]`: kill-switch + DART pause/override available;
-      automation enabled for fills.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Continuous monitoring** `[BLOCKED-OPERATOR-DECISION]`: daily reconciliation report; daily
-      event-archive verification; alerting on-call.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **DART manual-trade window — first 3 days**
+      `[BLOCKED-OPERATOR-DECISION]`: operator-monitored every trade signal (per master plan G23 + line 1292 design).
+      Operator-confirms each trade via existing CLI; full UI manual-trade gate is post-cutover.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Day 4-7+ automation** `[BLOCKED-OPERATOR-DECISION]`: kill-switch +
+      DART pause/override available; automation enabled for fills.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Continuous monitoring** `[BLOCKED-OPERATOR-DECISION]`: daily
+      reconciliation report; daily event-archive verification; alerting on-call.
 
 **Phase 10 done definition**:
 

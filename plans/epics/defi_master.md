@@ -1285,9 +1285,9 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 ### Phase 11 — Live cutover gate (7-day continuous run on real wallet)
 
-> Cross-referenced by `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.7 as the final cutover gate.
-> Gate fires when all `### End-state at May 23` checkboxes below are ✅ AND live wallet has been running ≥7 continuous
-> days. Operator flips the code_freeze Phase 3.7 checkbox; slot 3 filed BLK-ea307151 (2026-05-23) noting this gate.
+> Cross-referenced by `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.7 as the final cutover gate. Gate
+> fires when all `### End-state at May 23` checkboxes below are ✅ AND live wallet has been running ≥7 continuous days.
+> Operator flips the code_freeze Phase 3.7 checkbox; slot 3 filed BLK-ea307151 (2026-05-23) noting this gate.
 
 ### End-state at May 23 (success criteria)
 

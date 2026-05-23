@@ -11,8 +11,8 @@ status: ACKED-INTO-CODE
 
 ## [ACKED-INTO-CODE] RESOLVED 2026-05-22
 
-`--dry-run-scheduler-body` flag added to `launch-qg-snapshot-vm.sh`; Cloud Scheduler job `qg-snapshot-daily` created
-at `0 6 * * *` UTC (asia-northeast1, SA `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`). Dedicated
+`--dry-run-scheduler-body` flag added to `launch-qg-snapshot-vm.sh`; Cloud Scheduler job `qg-snapshot-daily` created at
+`0 6 * * *` UTC (asia-northeast1, SA `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`). Dedicated
 `qg-snapshot` task handler added to `setup-data-pipeline-vm.sh`. Archived 2026-05-23.
 
 ## What I found

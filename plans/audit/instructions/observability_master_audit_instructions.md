@@ -23,7 +23,7 @@ Codex SSOTs governing this epic:
 
 | Doc                                                         | Owns                                                                                                                                                |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/03-observability/alerting.md`                        | AlertSeverity (T1/T2/T3/T4 ↔ CRITICAL/HIGH/WARN/INFO) → channel routing                                                                             |
+| `codex/03-observability/alerting.md`                        | AlertSeverity (T1/T2/T3/T4 ↔ CRITICAL/HIGH/WARN/INFO) → channel routing                                                                            |
 | `codex/04-architecture/autonomous-recovery-matrix.md`       | Decision tree — every failure scenario × every recovery action                                                                                      |
 | `codex/04-architecture/kill-switch-circuit-breaker.md`      | Kill-switch state machine; circuit-breaker per-venue; auto-deactivation                                                                             |
 | `codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 deterministic Python → L1 LLM audit/signoff → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack |
@@ -329,8 +329,8 @@ compose with its neighbours.
 - [ ] (P.8) **independent_fallback_twilio ↔ incident_gateway**: TwilioVoice in AlertChannel; CRITICAL rules include it.
 - [ ] (P.9) **physical_pager ↔ audit_acknowledgement_sla**: PhysicalPager triggered ONLY by 5 closed-set conditions
       reachable from the ack-escalation cron.
-- [ ] (P.10) **incident_runbooks_evidence ↔ everything**: every IncidentEnvelope stamped with runbook_id + config_hash +
-      code_version + runbook_version.
+- [ ] (P.10) **incident_runbooks_evidence ↔ everything**: every IncidentEnvelope stamped with runbook_id +
+      config_hash + code_version + runbook_version.
 - [ ] (P.11) **deployment_ui_safety_ops ↔ incident_gateway**: manual actions flow through gateway (not direct service
       API calls).
 

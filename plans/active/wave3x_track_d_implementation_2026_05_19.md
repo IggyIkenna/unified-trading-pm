@@ -37,42 +37,43 @@ threaded at adapter construction. Post-cutover scope.
 
 **P0 — New UTL primitive**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P0. Implement `zero_activity_bars(last_snapshot, data_type, interval_close)` primitive in UTL
-      `availability_stamping.py`. Per carry-forward table: `ohlcv_*` → O=H=L=C=prior_LTP, volume=0, trade_count=0;
-      `trades` → empty parquet 0 rows; `book_snapshot_5` → carry-forward bid/ask 5 levels; `derivative_ticker` →
-      carry-forward open_interest/mark_price/index_price. Unit tests. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2:
-      plan is explicitly post-2026-05-23 scope per operator decision ("Post-cutover scope" in plan context). UTL
-      primitive is gate for all other items. 8 AI-day brand-new estimate.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P0. Implement `zero_activity_bars(last_snapshot, data_type, interval_close)`
+      primitive in UTL `availability_stamping.py`. Per carry-forward table: `ohlcv_*` → O=H=L=C=prior_LTP, volume=0,
+      trade_count=0; `trades` → empty parquet 0 rows; `book_snapshot_5` → carry-forward bid/ask 5 levels;
+      `derivative_ticker` → carry-forward open_interest/mark_price/index_price. Unit tests. **[DEFERRED-POST-CUTOVER]**
+      2026-05-19 slot 2: plan is explicitly post-2026-05-23 scope per operator decision ("Post-cutover scope" in plan
+      context). UTL primitive is gate for all other items. 8 AI-day brand-new estimate.
 
 **P0 — MTDS adapter wire-in**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MTDS] P0. Thread `instrument_catalog` into adapter construction in MTDS. Wire `zero_activity_bars()` at the
-      adapter emission boundary for case-D (source-returns-zero AND catalog reports instrument alive). Per-adapter:
-      `ohlcv_*`, `trades`, `book_snapshot_5`, `derivative_ticker`. Sports historical in instruments-service (NOT MTDS —
-      per D3 audit finding). Per-adapter smoke tests. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on UTL
-      primitive above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MTDS] P0. Thread `instrument_catalog` into adapter construction in MTDS. Wire
+      `zero_activity_bars()` at the adapter emission boundary for case-D (source-returns-zero AND catalog reports
+      instrument alive). Per-adapter: `ohlcv_*`, `trades`, `book_snapshot_5`, `derivative_ticker`. Sports historical in
+      instruments-service (NOT MTDS — per D3 audit finding). Per-adapter smoke tests. **[DEFERRED-POST-CUTOVER]**
+      2026-05-19 slot 2: gated on UTL primitive above.
 
 **P0 — MDPS calculator wire-in**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P0. Wire `zero_activity_bars()` at the candle-aggregation boundary in MDPS calculators. Per D4 audit: fix
-      dead canonical-writer path + 1440-NaN TradFi passthrough + banned `_handle_empty_tick_data` /
-      `_create_closed_market_candle` × 2 / `_maybe_write_vix_gap_placeholder`. Per-calculator smoke tests.
-      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on UTL primitive above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P0. Wire `zero_activity_bars()` at the candle-aggregation boundary in MDPS
+      calculators. Per D4 audit: fix dead canonical-writer path + 1440-NaN TradFi passthrough + banned
+      `_handle_empty_tick_data` / `_create_closed_market_candle` × 2 / `_maybe_write_vix_gap_placeholder`.
+      Per-calculator smoke tests. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on UTL primitive above.
 
 **P1 — features-service calculators**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [features] P1. Wire `zero_activity_bars()` in features-service calculators for sports/prediction
-      case-D-with-bookmaker-odds-carry-forward. Fix `np.zeros(n)` continuous-feature bug, commodity phantom manifest-row
-      bug, sports `fillna(magic)` masking-absence, presence-only manifest (`ManifestWriter.add` → `record_captured`),
-      onchain/delta_one honest-absence rows. Per D5/D6 audit findings. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2:
-      gated on UTL primitive above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [features] P1. Wire `zero_activity_bars()` in features-service calculators for
+      sports/prediction case-D-with-bookmaker-odds-carry-forward. Fix `np.zeros(n)` continuous-feature bug, commodity
+      phantom manifest-row bug, sports `fillna(magic)` masking-absence, presence-only manifest (`ManifestWriter.add` →
+      `record_captured`), onchain/delta_one honest-absence rows. Per D5/D6 audit findings. **[DEFERRED-POST-CUTOVER]**
+      2026-05-19 slot 2: gated on UTL primitive above.
 
 **P0 — Tests**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. Per-adapter smoke tests: synthetic instrument-alive-but-source-zero day → zero-activity-bar with
-      correct shape per data_type; instrument-not-yet-listed day → `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)`;
-      pre-genesis-chain day for DeFi → `record_empty(EXPECTED_PRE_GENESIS_CHAIN)`. **[DEFERRED-POST-CUTOVER]**
-      2026-05-19 slot 2: gated on UTL primitive + adapter wire-ins above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. Per-adapter smoke tests: synthetic instrument-alive-but-source-zero day →
+      zero-activity-bar with correct shape per data_type; instrument-not-yet-listed day →
+      `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)`; pre-genesis-chain day for DeFi →
+      `record_empty(EXPECTED_PRE_GENESIS_CHAIN)`. **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: gated on UTL
+      primitive + adapter wire-ins above.
 
 ## Success criteria
 

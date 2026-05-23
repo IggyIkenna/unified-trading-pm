@@ -547,16 +547,16 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 - [x] ✅ [DOC] P0. **Threshold-calibration analysis doc** — pre-soak pass/fail criteria, 95p+2× margin derivation, 7-day
       soak calibration procedure, decision authority table. — PM@257bb3fb8;
       `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
-- [x] ✅ [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
-      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak criteria from
-      `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest
-      VM to run + Step 4 paper VM launch (both operator-gated). See pings/slot_5.md.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Still blocked on Tab 8 Steps 1+4 (operator must launch backtest VM +
-      paper VM). No evidence either VM was launched as of 2026-05-23. Operator action required.
+- [x] ✅ [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) +
+      carry_paper VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak
+      criteria from `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8
+      Step 1 backtest VM to run + Step 4 paper VM launch (both operator-gated). See pings/slot_5.md. **[BLOCKED-OPERATOR
+      2026-05-23 slot 6]** Still blocked on Tab 8 Steps 1+4 (operator must launch backtest VM + paper VM). No evidence
+      either VM was launched as of 2026-05-23. Operator action required.
 - [x] ✅ [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds per
       calibration procedure in `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**:
-      depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** P1 post-cutover; gated on Tab 8 paper VM running (BLOCKED-OPERATOR above).
+      depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack. **[BLOCKED-OPERATOR 2026-05-23 slot
+      6]** P1 post-cutover; gated on Tab 8 paper VM running (BLOCKED-OPERATOR above).
 
 ### Spawn prompt
 
@@ -619,8 +619,8 @@ IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_feat
       all pass, ui@36913356). ExecutionModeProvider in root layout, all 6 Tab-7 files adopt `useExecutionMode()`, 0
       standalone mode useState violations. `playwright.invariants.config.ts` updated to include new test suite (runs in
       QG without dev server). Node.js v22.17.1 unblocked infra gate. 2026-05-22.
-- [x] ✅ [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults #6).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Explicitly post-cutover P1 per defaults #6. Deferred to Wave 2.
+- [x] ✅ [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults
+      #6). **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Explicitly post-cutover P1 per defaults #6. Deferred to Wave 2.
 
 ### Spawn prompt
 
@@ -665,9 +665,9 @@ land.
 - [x] ✅ [AGENT] P0. **Step 1 — Backtest VM launch** — operator-run paste-ready bash from pre-audit § 9 COMMAND #1.
       Backtest `carry_staked_basis` over 2026-04-01 to 2026-05-10 (or last 60d). Verify VM event stream STARTED + per-
       instrument INSTRUMENT_PROCESSED + STOPPED. **BLOCKED-OPERATOR 2026-05-20**: operator must run
-      `bash deployment-service/scripts/vm/launch-defi-backtest-vm.sh`. See pings/slot_5.md.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** 10 orchestrator VMs launched by aws_epic_vm_fleet (2026-05-22), but
-      carry_staked_basis backtest VM (defi-backtest-* prefix) not among them. Operator must explicitly run
+      `bash deployment-service/scripts/vm/launch-defi-backtest-vm.sh`. See pings/slot_5.md. **[BLOCKED-OPERATOR
+      2026-05-23 slot 6]** 10 orchestrator VMs launched by aws_epic_vm_fleet (2026-05-22), but carry_staked_basis
+      backtest VM (defi-backtest-\* prefix) not among them. Operator must explicitly run
       `bash deployment-service/scripts/vm/launch-defi-backtest-vm.sh` to trigger the backtest.
 - [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-backtest-vm.sh`** — greenfield ship per pre-audit § 1
       Tab 8 step 1. — deployment@2b53165: wraps run-batch.sh, prefix defi-backtest-, singleton-locked per archetype,
@@ -675,16 +675,15 @@ land.
 - [x] ✅ [SCRIPT] P0. **Step 2 — Score persistence verification** — read
       `gs://${PID}-strategy-outputs/backtest/.../*.parquet` sample row + assert OHLC populated (not 1440-NaN
       placeholders per CLAUDE.md "Honest absence" rule). **BLOCKED-OPERATOR 2026-05-20**: depends on Step 1 backtest VM
-      running. Unblocks after operator launches backtest VM.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 1 (above). Cannot verify GCS parquet until backtest VM runs.
+      running. Unblocks after operator launches backtest VM. **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 1
+      (above). Cannot verify GCS parquet until backtest VM runs.
 - [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per
       pre-audit § 1 Tab 8 step 3. — deployment@2b53165: wraps run-paper.sh, prefix defi-paper-, preflight check,
       singleton-locked, LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
 - [x] ✅ [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
       `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`. **BLOCKED-OPERATOR 2026-05-20**:
       operator must run `bash deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh` after Step 2 verified. See
-      pings/slot_5.md.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 2 score verification. Operator action.
+      pings/slot_5.md. **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 2 score verification. Operator action.
 - [x] ✅ [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
       verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch. —
       e2e-testing@9063d14: preflight-cutover.sh Probe 8 added — alchemy-api-key Secret Manager + eth_getCode on Aave V3
@@ -700,8 +699,8 @@ land.
 - [x] ✅ [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9 COMMAND
       #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green. **BLOCKED-OPERATOR
       2026-05-20**: depends on Step 4 paper VM running. Auto-unblocks when operator launches paper VM.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 4 paper VM launch (BLOCKED-OPERATOR above). Will auto-unblock
-      once operator launches paper VM — daily ScheduleWakeup monitoring can be set up then by any slot.
+      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Gated on Step 4 paper VM launch (BLOCKED-OPERATOR above). Will
+      auto-unblock once operator launches paper VM — daily ScheduleWakeup monitoring can be set up then by any slot.
 - [x] ✅ [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
       `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` with archetype-specific
       drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`). risk-exposure@c2f0652:
@@ -709,8 +708,8 @@ land.
       position_breach_pct=20%) + evaluate_archetype_breach() + 8 tests. QG PASS 2026-05-19.
 - [x] ✅ [AGENT] P1. **post-cutover** — `leveraged_funding_arb` end-to-end identical recipe (May-23 cutover lands BOTH
       archetypes, but leveraged_funding_arb is the hedge leg of carry_staked_basis — a single coordinated paper-soak may
-      suffice; operator confirms during Tab 8 paper-soak).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** P1 explicitly post-cutover per plan. Gated on Tab 8 paper-soak run.
+      suffice; operator confirms during Tab 8 paper-soak). **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** P1 explicitly
+      post-cutover per plan. Gated on Tab 8 paper-soak run.
 
 ### Spawn prompt
 

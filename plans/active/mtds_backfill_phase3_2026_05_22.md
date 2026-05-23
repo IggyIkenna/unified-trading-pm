@@ -64,13 +64,14 @@ before Phase 7 grows the v<8 debt.
       New VMs (all RUNNING 17:15 UTC): cefi-binance-futures-2024-light-20260523-171520,
       cefi-coinbase-spot-2021-heavy-20260523-171520, cefi-coinbase-spot-2023-heavy-20260523-171520,
       cefi-okx-spot-2023-heavy-20260523-171520, cefi-okx-swap-2024-light-20260523-171520.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
-      flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
-      attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
-      **BLOCKED-IN-FLIGHT (slot-2 2026-05-23 ~17:15 UTC)**: 5 new 171520-batch resume VMs RUNNING + 151757-batch still
-      has many VMs running. Verify once ALL CeFi VMs terminate (ETA: 171520 light VMs ~few hours; heavy resume VMs
-      coinbase-2021 ~13h, coinbase-2023 ~7h, okx-2023 <1h). **flat→prd copy NOT needed** — `_resolve_upstream_bucket`
-      returns flat bucket template. Copy script can be discarded.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MTDS-3.2.A-V** — verify
+      `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads flat, NOT prd; prd copy is NOT required
+      for this gate). Criteria: captured row count / date range continuous; 0 attempted_failed; 4-pillar sample
+      validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch. **BLOCKED-IN-FLIGHT (slot-2 2026-05-23 ~17:15
+      UTC)**: 5 new 171520-batch resume VMs RUNNING + 151757-batch still has many VMs running. Verify once ALL CeFi VMs
+      terminate (ETA: 171520 light VMs ~few hours; heavy resume VMs coinbase-2021 ~13h, coinbase-2023 ~7h, okx-2023
+      <1h). **flat→prd copy NOT needed** — `_resolve_upstream_bucket` returns flat bucket template. Copy script can be
+      discarded.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 

@@ -71,13 +71,13 @@ Dimension choices required per family:
       `_dim_kwargs` branches + `_build_config_grid` branches in
       `strategy-service/scripts/run_2yr_config_grid_backtest.py`. Extend `SUPPORTED_ARCHETYPES` tuple. Run QG. Cannot
       implement without confirmed dimension names from item 1. `ARBITRAGE_CROSS_DOMAIN_EVENT` additionally requires
-      engine factory registration before this item can close.
-      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated on item 1 + strategy-service repo.
+      engine factory registration before this item can close. **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated
+      on item 1 + strategy-service repo.
 
 - [x] **[BLOCKED-OPERATOR-DECISION — depends on item 2]** [SCRIPT] P0. Add `specs_for_archetype` smoke test per new
       family: 5-day synthetic window, coarse density, assert grid CSV non-empty + P&L delta within expected range.
-      Target: QG passes in <5 min on c3-highcpu-44.
-      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated on items 1+2 + strategy-service repo.
+      Target: QG passes in <5 min on c3-highcpu-44. **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated on items
+      1+2 + strategy-service repo.
 
 ## Done definition
 

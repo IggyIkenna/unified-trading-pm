@@ -137,10 +137,11 @@ data per asset_group — scripts can be smoke-tested before full backfill, but f
       `?cloud=aws&service=<svc>&start_date=<date>&end_date=<date>&asset_group=<ag>` and verify non-zero `captured` rows
       (or `empty_confirmed` with valid reason). Matrix: MTDS × {cefi/defi/tradfi/sports/pred} + MDPS ×
       {cefi/defi/tradfi} + instruments-service × {cefi/defi/tradfi/sports/pred}.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-2** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` — Data-status tab UI: toggle to AWS,
-      verify cells render (no 0/0 for covered asset_groups).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-3** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` — Document smoke result in
-      `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell result table (GREEN/RED/EMPTY_CONFIRMED).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-2** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` —
+      Data-status tab UI: toggle to AWS, verify cells render (no 0/0 for covered asset_groups).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-3** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` —
+      Document smoke result in `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell result table
+      (GREEN/RED/EMPTY_CONFIRMED).
 
 ---
 

@@ -401,8 +401,8 @@ topology + audit→plan→epic flow + lifecycle).
 
 **`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
 `assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. PM `quality-gates.sh` runs
-`scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is not
-in the registry. Missing or unknown `assigned_vm` is review-blocking. SSOT:
+`scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is not in
+the registry. Missing or unknown `assigned_vm` is review-blocking. SSOT:
 `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
 
 ---
