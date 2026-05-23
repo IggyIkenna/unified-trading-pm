@@ -316,7 +316,7 @@ DEFI:
     YIELD_BEARING: lst
 
   venues:
-    # DEX protocols - swaps + liquidity (folder: pool)
+    # DEX protocols - dex_swaps + dex_pools (folder: pool)
     UNISWAP_V2-ETHEREUM:
       domain: defi
       book_type: AMM
