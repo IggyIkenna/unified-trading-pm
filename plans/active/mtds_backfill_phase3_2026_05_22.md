@@ -59,19 +59,19 @@ before Phase 7 grows the v<8 debt.
       140739 VMs + 2 deribit VMs TERMINATED first (singleton lock prevents parallel launch). Run:
       `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
       (`FORCE=1` overrides singleton lock; `VM_FORCE=false` default in MTDS so already-captured dates skipped).
-      **BLOCKED**: 6 VMs still running as of 2026-05-23 ~15:15 UTC (4×140739: coinbase-spot-2021/2023-heavy,
-      okx-spot-2023-heavy, okx-swap-2021-heavy + 2 deribit-2024/2025-heavy-120101). slot-7 2026-05-23 (discovery);
-      slot-2 2026-05-23 (plan item).
+      **BLOCKED**: 3 140739 VMs still RUNNING as of 2026-05-23 ~17:30 UTC: coinbase-spot-2021-heavy,
+      coinbase-spot-2023-heavy, okx-spot-2023-heavy. (okx-swap-2021-heavy: terminated; 2 deribit 120101 VMs:
+      terminated.) slot-7 2026-05-23 (discovery); slot-2 2026-05-23 (plan item); status update slot-6 2026-05-23.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
-      **BLOCKED-IN-FLIGHT (2026-05-23 slot-2)**: 6 CeFi VMs still RUNNING as of ~15:15 UTC — 4 from `20260522-140739`
-      (coinbase-spot-2021/2023-heavy, okx-spot-2023-heavy, okx-swap-2021-heavy) + 2 deribit from `20260523-120101`. 2
-      other 140739 VMs (binance-futures-2024-light, okx-swap-2024-light) were dead — stopped by slot-7; will be
-      relaunched via MTDS-3.2.A-DeadVMRelaunch above. Verify once ALL VMs (including the 2 relaunched ones) terminate.
-      **flat→prd copy NOT needed** — `_resolve_upstream_bucket` in
-      `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket template. The copy script
-      `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
+      **BLOCKED-IN-FLIGHT (slot-6 2026-05-23 ~17:30 UTC)**: 3 CeFi 140739 VMs still RUNNING
+      (coinbase-spot-2021/2023-heavy, okx-spot-2023-heavy); 151757 batch also has many RUNNING VMs. Total still
+      in-flight: ~22 VMs. Deribit 120101 VMs: TERMINATED. 2 dead 140739 VMs (binance-futures-2024-light,
+      okx-swap-2024-light): TERMINATED — will be relaunched via MTDS-3.2.A-DeadVMRelaunch once remaining 3 terminate.
+      Verify once ALL VMs (including the 2 relaunched ones) terminate. **flat→prd copy NOT needed** —
+      `_resolve_upstream_bucket` in `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket
+      template. The copy script `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 
