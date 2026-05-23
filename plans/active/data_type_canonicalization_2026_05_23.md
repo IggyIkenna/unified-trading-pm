@@ -144,6 +144,23 @@ all service repos returns zero hits in non-test Python source.
   single-walk discipline. Feature service mtds_output_config.py maintains the `dex_pools`→`dex_pool_state` path mapping.
   Named successor: bundle into next Phase 2 GCS migration window per `gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
 
+## Completion evidence (2026-05-23)
+
+All 8 phases shipped and pushed to `live-defi-rollout`:
+
+| Repo                               | SHA       |
+| ---------------------------------- | --------- |
+| unified-api-contracts              | 7511207a  |
+| market-tick-data-service           | 16402c95  |
+| execution-service                  | 091e0b21e |
+| features-service                   | 6f662a6a  |
+| market-data-processing-service     | e4309d8   |
+| unified-trading-pm (config + plan) | 728578f70 |
+
+QG status: execution-service — 3 pre-existing unrelated failures (orchestrator, config, coverage-gaps); MTDS — 37
+pre-existing failures (native-staking, solana-defi, websocket streaming — all pre-date this PR); UAC cassette failures
+pre-existing. New regression tests: all green.
+
 ## Codex SSOT updates
 
 - Update `codex/02-data/contracts-scope-and-layout.md` after Phase 1 (new UAC types section)
