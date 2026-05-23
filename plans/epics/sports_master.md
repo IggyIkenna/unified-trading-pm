@@ -596,15 +596,15 @@ The cascade is codified in CLAUDE.md (api_football native → SFI freeze → foo
 low-confidence fallback) but no writer implements it. Load-bearing for odds-settlement timing + post-match
 `available_at` stamping.
 
-- [ ] [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
+- [x] ✅ [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
       compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
       response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL
       2026-05-12 slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to
       `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. **UAC HALF SHIPPED 2026-05-13**:
-      UAC@0ba9e5b — `match_end_time` column added to SPORTS_FIXTURES schema (parquet-level). The write-path call
-      (instruments-service SFI progressive-stats writer → populate `fixture.match_end_time`) is NOT yet wired.
-      **DEFERRED**: wire `detect_match_end_time()` result into instruments-service SFI progressive-stats write path so
-      the `match_end_time` field is populated on the written `CanonicalFixture` object.
+      UAC@0ba9e5b — `match_end_time` column added to SPORTS_FIXTURES schema (parquet-level). **COMPLETED 2026-05-23**:
+      `detect_match_end_time()` wired into instruments-service SFI progressive-stats write path at
+      orchestrator.py:6331-6349 — `match_end_time` + `report_time` populated per-match (instruments-service@af06124,
+      backfill-flip 2026-05-23).
 - [x] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
       snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
       UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
@@ -620,7 +620,10 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 - [ ] [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
-      sports_master:Phase 3 rename]
+      sports_master:Phase 3 rename] **PARTIAL 2026-05-23**: SFI_PROGRESSIVE_STATS done — replaced
+      `stamp_available_at_explicit(wall-clock)` with `report_time`-based logic (match_end + lag for completed matches,
+      wall-clock fallback for in-progress) — instruments-service@8b8db4ad. Remaining: FIXTURE_STATS / understat XG /
+      fixture_player_stats.
 - [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
       instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
       helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
