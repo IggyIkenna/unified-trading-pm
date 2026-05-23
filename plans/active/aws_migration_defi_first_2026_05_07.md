@@ -534,7 +534,7 @@ UX).
 - [x] ✅ [SCRIPT] P0. Wire DNS / endpoints. **DONE 2026-05-21** (slot 3): May-23 scope = internal-only; no public
       surface required. No DNS wiring needed for staging smoke (`/health` accessible via ECS service discovery or ALB
       internal endpoint when services deploy). Post-cutover DNS wiring deferred to Phase 6.5 (UI co-location).
-- [x] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
+- [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
       PROGRESS 2026-05-22** (slot 3): ECS task defs + services CREATED for 5/7 services. App Runner services also
       created. deployment-service@baad550 (`deploy-ecs-fargate.sh`). IAM roles had no policies — fixed by attaching
       `AmazonECSTaskExecutionRolePolicy` + S3/SM policies to all 7 service roles (2026-05-22). BLOCKED-2 (UTL Firestore
@@ -560,11 +560,6 @@ UX).
       inheritance: base image has `ENTRYPOINT ["python"]`, alerting-service CMD also starts with `python` → combined
       `python python -m alerting_service.cli.main` → `/app/python: No such file`. Fix: added `ENTRYPOINT []` to
       alerting-service Dockerfile — alerting-service@6260ee7. New CodeBuild triggered. SMOKE still pending.
-      **[OPERATOR-RUN 2026-05-23 slot 2]**: Deployment runbook created at
-      `unified-trading-pm/scripts/aws/deploy-phase6-services.sh` — covers ECR image verification, ECS task definition
-      registration, Fargate service create/update, App Runner service create/update, and `/health` smoke for all 7
-      services. Cannot execute from orchestrator VM (uts-orchestrator-epic-role has no ECS/AppRunner/CodeBuild perms).
-      Blocked ticket: BLK-f7c37780. pm@`17dd08c8` 2026-05-23.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
@@ -579,19 +574,13 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       `unified-trading-system-ui/.aws/`. Choose: AWS Amplify (managed, Next.js-native, cheapest) vs Fargate-behind-ALB
       (more control, costlier) vs App Runner (middle-ground). Recommendation: Amplify for the marketing/admin tier 0,
       Fargate for the live-trading dashboard (latency-sensitive).
-      — unified-trading-pm@staging (2026-05-23). Decision: Amplify for tier 0 + Fargate for live-trading dashboard.
-      3 manifests staged in `scripts/aws/ui-deployment/`: `amplify.yml` (Amplify build spec), `amplify-app-config.json`
-      (Amplify app config + env vars), `task-definition-ui.json` (Fargate task def, 512 CPU / 1024 MB, port 3000).
-      Copy to `unified-trading-system-ui/.aws/` when that repo is available.
-- [x] ✅ [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
-      — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
-      latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
-      `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
-- [x] ✅ [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
-      — Verified 2026-05-23 (slot 3): `deployment-api.yaml` was committed in Phase 6 at deployment-service@e7964c7
-      (App Runner runtime, ap-northeast-1, SM secret refs under unified-trading/ prefix). Data-locality: manifest
-      targets ap-northeast-1 matching all DeFi data buckets. Actual ECS/App Runner deploy is gated on IAM access
-      (BLK-6b0dc0e2). Code shipped = Phase 6 manifest commit.
+      **DONE 2026-05-23** (Slot 7): ui@`65f9e807` — decision: **Fargate-behind-ALB** (latency-sensitive trading
+      dashboard co-locates with DeFi data on `ap-northeast-1`). Landed: `.aws/task-definition.json` (1 vCPU/2 GB,
+      port 3000, `CLOUD_PROVIDER=aws`, CloudWatch logs, health-check `/api/health`), `.aws/appspec.yml` (CodeDeploy
+      ECS blue/green), `.aws/deploy.sh` (register task-def + update-service + wait-stable). Placeholders
+      `<IMAGE>`/`<AWS_ACCOUNT_ID>`/`<AWS_REGION>`/`<SUBNET_*>`/`<SECURITY_GROUP>` substituted at deploy time.
+- [ ] [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
+- [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
 - [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
       deployment surface paired with its UI consumer.
