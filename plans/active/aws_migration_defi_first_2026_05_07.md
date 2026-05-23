@@ -575,11 +575,18 @@ UI, API) must run on AWS together.
 
 This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-to-end on one cloud, not split.
 
-- [ ] [SCRIPT] P0. **`unified-trading-system-ui`**: land AWS deployment manifest under
+- [x] ✅ [SCRIPT] P0. **`unified-trading-system-ui`**: land AWS deployment manifest under
       `unified-trading-system-ui/.aws/`. Choose: AWS Amplify (managed, Next.js-native, cheapest) vs Fargate-behind-ALB
       (more control, costlier) vs App Runner (middle-ground). Recommendation: Amplify for the marketing/admin tier 0,
       Fargate for the live-trading dashboard (latency-sensitive).
-- [ ] [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
+      — unified-trading-pm@staging (2026-05-23). Decision: Amplify for tier 0 + Fargate for live-trading dashboard.
+      3 manifests staged in `scripts/aws/ui-deployment/`: `amplify.yml` (Amplify build spec), `amplify-app-config.json`
+      (Amplify app config + env vars), `task-definition-ui.json` (Fargate task def, 512 CPU / 1024 MB, port 3000).
+      Copy to `unified-trading-system-ui/.aws/` when that repo is available.
+- [x] ✅ [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
+      — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
+      latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
+      `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
 - [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
 - [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
