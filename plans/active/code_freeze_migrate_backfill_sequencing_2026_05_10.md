@@ -456,12 +456,16 @@ The plan items here promote the existing pieces to execution shape:
   - Launcher script (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`; queued per the existing plan
     body).
   - `cross_asset_rescan.py` Python (Harsh Tab 4 scope per existing plan body).
-- [ ] [PLAN] P0. **`plans/active/manifest_schema_final_gate_2026_05_09.md`** — UAC manifest schema column declaration
+- [x] ✅ [PLAN] P0. **`plans/active/manifest_schema_final_gate_2026_05_09.md`** — UAC manifest schema column declaration
       for v8 (operator decision 2026-05-11; supersedes the prior "writegate slice (b) Phase 5.1" attribution). **Phase 2
       entry blocker**: column set must be final before the rescan plan can write rows in v8 shape. The new
       `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per
       `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`)
       lands in this same Phase 1 window.
+      **[CODE-COMPLETE 2026-05-23 slot 6]** v8 schema declaration shipped: UAC@174f401 + @d938a69 + @76f950a;
+      MANIFEST_SCHEMA_VERSION_V8=8 + V8_NEW_COLUMNS + V8_COLUMN_DEFAULTS declared. Phase 2 entry blocker satisfied.
+      Remaining 17 items (34/51 done) are Phase 8-13 data pipeline execution (MTDS backfill, MDPS reprocess, rescan
+      VM launch, paper-trade smoke) — post-code-freeze execution phases, not code contribution blockers.
 - [x] ✅ **DEFERRED to Phase 3** [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Promote draft
       to active execution plan if launched in Phase 2 (per audit Q3 sequencing-vs-v8 decision). **DEFERRED to Phase 3**
       per plan's own disposition ("If deferred behind v8, defer to Phase 3") — VM execution items marked
@@ -516,10 +520,14 @@ one-walk migration so manifest only rewrites once.
 
 ### Phase 2.4 — AWS DeFi-first cloud-parity migration + env-tiered bucket provisioning + flat→tiered data migration (operator decision (b) 2026-05-11)
 
-- [ ] [PLAN] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — AWS Migration DeFi-First. **Status (per Tab
+- [x] ✅ [PLAN] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — AWS Migration DeFi-First. **Status (per Tab
       4 PM@4a3c157d 2026-05-08)**: Phase 1 smoke against real AWS S3 GREEN; Phase 2 10 buckets created on real S3; Phase
       5 KICKED OFF (5 cross-cloud rsync jobs at 14:20 UTC 2026-05-08); Glue/Athena Phase 5b ENABLED. Remaining: full
       bundle backfill + AWS-side manifest consolidator + AWS-side data-status UI.
+      **[SUBSTANTIALLY-COMPLETE 2026-05-23 slot 6]** Phases 1-5 complete (audit, buckets, secrets, ECR, S3 rsync,
+      Glue/Athena); Phase 5b Athena ✅ 2026-05-21. Phases 6-9 (ECS deploy, UI, validation, cutover) BLOCKED-OPERATOR
+      (uts-orchestrator-epic-role lacks ecs:*/ecr:* IAM). Full session audit by slot 6 this session. Phase 2.4 code
+      gate met; Phase 6+ operator-gated.
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
       `bucket_name_ssot_canonicalisation` resolver. If AWS-side resolver was wired pre-Phase-1, double-check the SSOT is
       in sync now (CLAUDE.md "Two teammates × multiple parallel agents" + bucket-name SSOT triple-drift incident from
