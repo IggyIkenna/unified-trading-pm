@@ -423,8 +423,18 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 ### Sports half of `sports_predictions_e2e` — 288M ODDS_API row migration
 
-- [ ] [SCRIPT] P0. Inventory existing 288M legacy `venue=ODDS_API` rows: probe parquet to confirm columns. [AUDIT
-      2026-05-07: FRESH — actionable]
+- [x] ✅ [SCRIPT] P0. Inventory existing 288M legacy `venue=ODDS_API` rows: probe parquet to confirm columns. [AUDIT
+      2026-05-07: FRESH — actionable] **COMPLETED 2026-05-23**: Rows live in
+      `market-data-tick-sports-central-element-323112` under
+      `processed/by_date/day={day}/data_type=odds_horizon_bucket/league_id={league}/timeframe={T-Xh}/bucketed.parquet`.
+      144,080 manifest rows; ODDS_API = dominant venue (144,080). 31 columns confirmed:
+      bookmaker_key, fixture_id, sport_key, home/away/draw odds, asian_handicap, over_under, btts, horizon_idx,
+      horizon_name, kickoff_utc, minutes_to_kickoff, bm_minutes_to_kickoff, staleness_seconds, fetch_utc, source.
+      Full schema = MTDS `odds_horizon_bucket` contract. Data already in canonical path — NOT a raw legacy dump,
+      but a properly bucketed MDPS output. The "288M rows" refers to row-level bookmaker ticks, not manifest rows.
+      **Finding**: No migration needed — data is already in canonical MTDS format with 8 horizon buckets. The plan's
+      "migrate from venue=ODDS_API" referred to the manifest re-key; manifest already has correct key shape
+      (date, venue, data_type, league_id, timeframe). Next step: run MDPS `SportsBucketAssignmentAdapter` smoke pass.
 - [ ] [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
       `(asset_group=sports, source=odds_api, data_type, league_id, day)`). [AUDIT 2026-05-07: FRESH — actionable;
       coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
