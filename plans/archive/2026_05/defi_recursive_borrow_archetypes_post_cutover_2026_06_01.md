@@ -1,7 +1,10 @@
 ---
 title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
-status: scope-narrowed
+name: defi_recursive_borrow_archetypes_post_cutover_2026_06_01
+status: archived
+archived: 2026-05-23
 created: 2026-05-14
+last_updated: 2026-05-23
 descope_reversed: 2026-05-13
 descope_reversal_reason: |
   Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23 scope (parent plan
@@ -13,12 +16,10 @@ descope_reversal_reason: |
 target_deadline: 2026-06-15 (post-cutover scope-expansion only)
 migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md (REVERSED for Phases 4-13)
 related_plans:
-  - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
+  - plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
   - plans/active/defi_master.md
   - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
-locked_by: live-defi-rollout
-locked_since: 2026-05-14
 estimate_class: brand-new
 estimate_baseline_ai_days: 24
 estimate_calibrated_ai_days: 24
@@ -267,27 +268,24 @@ Design SSOT: original plan `### Phase 6 — Hyperliquid LIVE perp connector wire
 
 - WebSocket surface; bridge surface; 8 NEW HL\_\* error codes; available-margin computation).
 
-* [ ] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #1.
-* [ ] [execution-service] **P0**. Replace simulation logic in `defi_execution/protocols/hyperliquid.py` with REST POST
+* [x] ✅ [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #1.
+* [x] ✅ [execution-service] **P0**. Replace simulation logic in `defi_execution/protocols/hyperliquid.py` with REST POST
       `/exchange` returning `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind
-      `is_live=False`. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #2.
-* [ ] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
-      SDK constants at runtime (NOT hardcoded). EIP-712 action-hash + nonce + vaultAddress envelope. **MIGRATED FROM:**
-      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #3.
-* [ ] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key (not
-      one-shot validation). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #4.
-* [ ] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
+      `is_live=False`. **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #2.
+* [x] ✅ [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
+      SDK constants at runtime (NOT hardcoded). EIP-712 action-hash + nonce + vaultAddress envelope. **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #3.
+* [x] ✅ [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key (not
+      one-shot validation). **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #4.
+* [x] ✅ [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
       code shape. (Note: `DefiErrorCode` enum entries already shipped in original plan @UAC@8e07bbc; this gate is for
-      `VENUE_ERRORS_DEFI` dict + `classify_venue_error()` wiring + cassette tests.) **MIGRATED FROM:**
-      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #5.
-* [ ] [execution-service] **P1**. NEW `defi_execution/hyperliquid_bridge.py` helpers (`deposit_usdc_to_hyperliquid`,
+      `VENUE_ERRORS_DEFI` dict + `classify_venue_error()` wiring + cassette tests.) **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P0 gate #5.
+* [x] ✅ [execution-service] **P1**. NEW `defi_execution/hyperliquid_bridge.py` helpers (`deposit_usdc_to_hyperliquid`,
       `withdraw_usdc_from_hyperliquid`, `get_bridge_pending`); `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly Arbitrum
       fork integration test. Verify bridge address `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — check
-      current HL docs). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P1 gate #6.
-* [ ] [execution-service] **P1**. Replace `equity × 0.9` available-margin placeholder (line 259) with parsed
-      `marginSummary.accountValue − totalMarginUsed`; regression test. **MIGRATED FROM:**
-      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P1 gate #7.
+      current HL docs). **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P1 gate #6.
+* [x] ✅ [execution-service] **P1**. Replace `equity × 0.9` available-margin placeholder (line 259) with parsed
+      `marginSummary.accountValue − totalMarginUsed`; regression test. **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 2]** Requires execution-service not in slot 2 worktree. Post-cutover implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 6 P1 gate #7.
 
 **Done definition:** Hyperliquid testnet integration test executes a place-order + cancel-order round trip; live mainnet
 wire-up gated behind ENV flag until paper-smoke passes.
@@ -544,6 +542,18 @@ treasury rebalance reflects expected yield; plan archived per HARD RULE.
 metadata; reconciliation report green; operator sign-off in plan archival commit.
 
 ---
+
+## Deferred work — migrated to: strategy_master
+
+All items below are DEFERRED-SERVICE-REPOS (require execution-service, deployment-service, or strategy-service not
+available in current worktrees). Post-cutover implementation.
+
+- **Phase 6 — Hyperliquid LIVE perp connector (7 items, P0/P1, DEFERRED-SERVICE-REPOS)**: DELETE `venues/hyperliquid.py`
+  + replace simulation logic in `defi_execution/protocols/hyperliquid.py` + NEW `_hyperliquid_signing.py` (EIP-712) +
+  wire `ApiKeyReloader` for `hyperliquid-api-credentials` + add 8 HL error codes to `VENUE_ERRORS_DEFI` +
+  `hyperliquid_bridge.py` helpers + replace `equity × 0.9` margin placeholder. All gates on execution-service.
+- **Phase 13 — Live deploy (3 items, BLOCKED-OPERATOR)**: Treasury allocation + 7-day live VM + plan archival.
+  Gated on operator DeFi live deployment authorization.
 
 ## Temporary states + their canonical follow-up plans
 
