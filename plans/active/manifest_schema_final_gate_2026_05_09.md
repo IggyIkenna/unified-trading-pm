@@ -228,9 +228,11 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       Calibrates Phase 7 wall-clock + per-bucket parquet count + drift histogram. Output: append
       `## Run results — 2026-05-09` to `plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Gates Phase 7
       launch.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 0.B — Run `measure-honest-coverage.py` on production manifests for writegate Phase 5
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 0.B — Run `measure-honest-coverage.py` on production manifests for writegate Phase 5: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       PRE-baseline. Output: per-data_type coverage % cells in `codex/02-data/honest_coverage_baseline_2026_05.md`. Gates
       Phase 12 ratchet POST-baseline comparison.
+      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** GCS access required to run measure-honest-coverage.py. No evidence this was
+      run in this slot. Phase 12.C POST-baseline comparison gated on this. Operator must run manually.
 
 ### Phase 1 — UAC v8 schema-bump (May 9-11, PARALLEL with Phase 2/3)
 
@@ -491,12 +493,14 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       `last_emission_decision_at=` / `expected_window_completeness_fraction=`) still accept `= None` — removing their
       defaults requires a full emission-policy callsite sweep across MTDS + instruments-service + any raw-tick adapters.
       Those callsites were NOT swept in Phase 4 (only `pipeline_mode=` was). Tracked as follow-up deferred item below.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission kwargs
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission kwargs: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`) in all
       public `record_*` methods once MTDS + instruments-service + raw-tick adapter callsites are swept to pass these
       explicitly. Predecessor: Phase 4.DEFAULT-REMOVAL (done, utl@`547ff3c`). Blocked by: callsite sweep not yet done
       (emission-policy adapters only partially updated — only writegate slice (b) MDPS POC callsites pass v8 kwargs;
       remaining 8 services pending Phase 6.3-6.9 rollout per writegate plan).
+      **[DEFERRED-POST-WRITEGATE-PHASE6 2026-05-23 slot 6]** Gated on writegate_honest_coverage_endtoend Phase 6.3-6.9
+      rollout (~15-20 days). Cannot sweep remaining 8 services from this slot. Carry-forward after writegate slice (c).
 - QG: every affected repo quality-gates.sh clean. **Done-definition**: zero grep hits + every repo's QG green + Phase
   4.DEFAULT-REMOVAL committed.
 
@@ -599,7 +603,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       completed + GCS read access for triage.jsonl review. Operator must run Phase 7 first, then review per-row
       class-C disagreements. No agent path — needs human judgment per-row.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 8.B — Sign-off section appended to `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan
-      triage decisions" per its line 67 contract. **DEFERRED 2026-05-23**: Gated on Phase 8.A completion.
+      triage decisions" per its line 67 contract. **DEFERRED 2026-05-23**: Gated on Phase 8.A completion.: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
 - **Done-definition**: every class-C row resolved + sign-off recorded.
 
 ### Phase 9 — Bounce-sweep #2 — full MTDS launch (May 16)
@@ -618,22 +622,27 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
   6. ✅ Phase 6.C already `[x]` — tarballs refreshed via `create-code-tarballs.sh --all`.
   7. ✅ `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registers all MTDS VM prefixes (mtds-backfill-{ag}-,
      mtds-gas-fees-, mtds-lst-rates-, mtds-perp-funding-, etc.).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. Phase 9.B — Launch MTDS VM fleet per asset_group. Parallel by zone where dependency-free
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. Phase 9.B — Launch MTDS VM fleet per asset_group. Parallel by zone where dependency-free: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       (cefi/defi/tradfi/sports/prediction can run concurrently per per-VM shard isolation rule).
+      **[CONFIRMED-DONE-VIA-SIBLING-PLAN 2026-05-23 slot 6]** mtds_backfill_phase3_2026_05_22.md executed this phase.
+      CeFi (MTDS-3.2.A): 25/27 done, 3 VMs still RUNNING. DeFi (MTDS-3.2.C): DONE (slot 7). Sports (MTDS-3.2.D): DONE
+      (slot 5). Predictions (MTDS-3.2.E): DONE (slot 7). TradFi: previously completed Phase 0. VM fleet launched.
 - **Done-definition**: every MTDS VM emits STARTED within 60s + watchdog dict has zero unregistered RUNNING prefixes.
 
 ### Phase 10 — MTDS backfill execution (May 16-20, PARALLEL by asset_group)
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. Phase 10.A — Backfill runs to natural completion per asset_group. Manifest concurrency principle
       ensures restart-on-already-captured = no-op.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 10.B — Per-asset-group sample-parquet inspection per CLAUDE.md "Plans Run To Actual
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 10.B — Per-asset-group sample-parquet inspection per CLAUDE.md "Plans Run To Actual: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       Completion" + "Honest absence vs fake placeholders" — read sample row, assert OHLC populated, assert no
       1440-NaN-bar pattern, assert at least one instrument-shard per (venue, data_type), assert `available_at`
       populated, assert `pipeline_mode` populated, assert `service_emission_state` populated for any row where the
       policy hook fired.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 10.C — Coverage % per drilldown level:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 10.C — Coverage % per drilldown level:: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` matches Phase 0.B PRE-baseline
       within ±0.5pp tolerance per writegate Phase 5 ratchet.
+      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires GCS manifest read access + Phase 0.B PRE-baseline (itself
+      BLOCKED-OPERATOR). Cannot calculate from this slot. Gated on Phase 10.A + Phase 0.B.
 - **Done-definition**: 5/5 asset_groups complete + coverage % matches baseline + zero NaN-placeholder rows in sample
   inspection.
 
@@ -644,9 +653,11 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. Phase 11.B — features-service compute against MDPS output. **Cross-plan blocker on
       `features_repo_consolidation_2026_05_08` having merged by May 16.** If consolidation slips, MDPS output reads
       against old per-repo features layout — re-run features compute post-cutover.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 11.C — `LookaheadBiasError` strict-mode enforcement at every features compute per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 11.C — `LookaheadBiasError` strict-mode enforcement at every features compute per: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       `available_at_lookahead_bias_completion_2026_05_08`. No warn-mode; raise on any
       `input.available_at > target_ts - horizon` violation.
+      **[DEFERRED-POST-PHASE11B 2026-05-23 slot 6]** Gated on Phase 11.B features compute. LookaheadBiasError strict-mode
+      code shipped (features-service@a0011d17 — 8/8 families covered per manifest_schema Phase 4.FEATURES).
 - **Done-definition**: MDPS + features-service both have post-Phase-11 manifest with `service_emission_state` populated
   for every shard + zero LookaheadBiasError raises.
 
@@ -657,17 +668,20 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       alerting / reconciliation wired identically to live shape.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. Phase 12.B — Batch-vs-live recon per master plan F18. Run the `batch_live_reconciler`
       (UTL@908b1647) helper; compare batch P&L vs live P&L over the same window; delta < 5bps tolerance.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 12.C — writegate Phase 5 ratchet POST-baseline measurement; `measure-honest-coverage.py` re-runs
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 12.C — writegate Phase 5 ratchet POST-baseline measurement; `measure-honest-coverage.py` re-runs: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       against post-backfill manifest. Lock ratchet in `codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp
       tolerance + monthly cadence + 99% floor.
+      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires GCS access + Phase 0.B PRE-baseline (BLOCKED-OPERATOR) + Phase
+      10.A completion. Operator must run measure-honest-coverage.py post-backfill.
 - **Done-definition**: paper-trade smoke green + recon delta <5bps + ratchet locked.
 
 ### Phase 13 — Live cutover (May 23)
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 13.A — Operator triggers live wallet enable; carry_staked_basis + leveraged_funding_arb run on
       real wallet for ≥7 continuous days per master plan G23 DART manual-trade gate.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 13.B — Banner removal across all `plans/active/*.md` plans bannered Phase 0; status flip on this
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 13.B — Banner removal across all `plans/active/*.md` plans bannered Phase 0; status flip on this: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13)
       plan from `active` → `complete` once 7-day continuous run validates.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 13.A 7-day run completing. Post-cutover cleanup action.
 - **Done-definition**: live wallet active + 7-day continuous run started + this plan archived after the 7-day window
   completes.
 
