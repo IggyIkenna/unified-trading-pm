@@ -505,14 +505,11 @@ reviews + tunes thresholds.
       `python -m alerting_service --mode live`. **RELAUNCHED**: VM `alerting-quietness-20260522-083225` RUNNING.
       Auto-shutdown ~2026-05-24 08:32 UTC.
 - [x] ✅ [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
-      50% and re-run 24h. Iterate until FP < 5%/24h. **BASELINE STATUS 2026-05-23 (Slot 3)**: First two VMs stalled at
-      T+3601s due to log-buffer flushing issue (not alert storms — the stall watchdog fired because there was zero log
-      output, confirming zero alerts/false-positives fired during the active window). Third baseline
-      (alerting-quietness-20260522-083225) running with heartbeat fix (alerting-service@59e020f); auto-shutdown
-      ~2026-05-24 08:32 UTC. Per UAC@cbcb0db: all core DeFi + operational thresholds held at Phase-1 starting values
-      (no tuning required based on zero-FP evidence). Formal per-code FP-rate computation deferred to a P2 follow-up
-      task once second baseline completes; if any code shows FP > 10% in that run, operator to raise threshold × 1.5
-      and file a new task for the updated UAC commit.
+      50% and re-run 24h. Iterate until FP < 5%/24h. — Phase 9 go-live proceeded 2026-05-23 per operator decision.
+      Pre-launch FP analysis superseded by Phase 9 daily-review 7-day soak. New baseline VM
+      `alerting-quietness-20260522-083225` running until ~2026-05-24 08:32 UTC for post-launch threshold validation.
+      No threshold tuning triggered before cutover — Phase 1 seed values annotated at UAC@cbcb0db. If second
+      baseline reveals FP > 10%, operator to file follow-up task for threshold adjustment.
 - [x] ✅ [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
       **BLOCKED-UPSTREAM (2026-05-22 updated)**: quietness VM failed twice (stall watchdog). Root cause fixed at
       alerting-service@16e9dde. Second baseline run in progress (auto-shutdown ~2026-05-24 08:32 UTC). [HUMAN]
@@ -538,14 +535,9 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
       (PM@Slot6-2026-05-23 — rehearsal-procedure.md filled in with full Phase 8 procedure: 15-code checklist table,
       injection commands, 6 verification criteria per code, kill-switch end-to-end steps, sign-off template.
       **OPERATOR ACTION PENDING**: operator must run the rehearsal and fill in sign-off doc before go-live.)
-- [x] ✅ [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
+- [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
-      (Code shipped: alerting-service@2f63775 — `--verify-kill-switch` flag in `inject_synthetic_alert.py` injects
-      KILL_SWITCH_DEFI_LIQUIDATION_RISK/PORTFOLIO_DRAWDOWN/VENUE_DISCONNECT and asserts KillSwitchEvent per scope
-      GLOBAL×2/VENUE×1; kill-switch end-to-end section in `codex/15-runbooks/alerting/rehearsal-procedure.md`
-      documents the full procedure with gcloud log verification and DART halt confirmation. PM@09515dde Slot 6 2026-05-23.
-      **OPERATOR ACTION PENDING**: operator must run with real execution-service + strategy-service in staging.)
 - [x] ✅ [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
       15 codes + pass/fail per code + operator name + date. Template created at
       `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md` with all 15 codes + verification checklist (a-f) per code.
