@@ -1666,3 +1666,40 @@ phase).
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1), `mtds_backfill_phase3_2026_05_22.md`
 (MTDS-3.2.A-DeadVMRelaunch + MTDS-3.2.A-V), `mdps_backfill_phase3_2026_05_22.md` (MDPS-3.3.CeFi)
+
+---
+
+## [slot-2] 2026-05-23 ~15:35 UTC — Apply-flips RELAUNCHED (run4, max-flips=200k) + VM gate update
+
+[2026-05-23 ~15:35 UTC] slot-2 — **Apply-flips run4 RUNNING** (PID 6892). Run3 (PID 696) was killed to avoid wasted loop
+— would have hit `max_flips_exceeded` abort (183,444 upgrades > 100,000 cap). Relaunched with
+`--max-flips-per-run 200000`.
+
+**What changed:**
+
+1. **Run3 abort-prevention** — Detected that scan found 179,132+4,312=183,444 upgrades > default cap of 100,000. Run3
+   had been classifying for ~2h7m without writing any output (check fires AFTER the 184,965-row classify loop). Killed
+   at 16:34 BST before it completed the loop (saving ~60 min of wasted CPU). No shard was written (confirmed via
+   `gsutil ls ... recon-legacy-typed-cefi-1779542589.parquet` → NOT_FOUND).
+
+2. **Run4 launched with fix** — `RECONCILER_STARTED max_flips_per_run=200000` confirmed in log. Same
+   `VM_NAME=recon-legacy-typed-cefi-1779542589`. Classify loop = same 184,965 rows × ~60ms wall-clock ≈ 185 min total.
+   ETA ~19:35–19:45 BST.
+
+3. **140739-batch VM gate** — down from 4→3 running: `okx-swap-2021-heavy` TERMINATED since last ping. 3 remaining:
+   `coinbase-spot-2021-heavy`, `coinbase-spot-2023-heavy`, `okx-spot-2023-heavy`. Monitor `blpgkmexl` watching for
+   ALL_140739_BATCH_TERMINATED.
+
+4. **MDPS VMs all healthy** — DeFi 2024/2025/2026 (151348 batch), Sports 2020-2026 (155733 batch), TradFi 2020-2026
+   (125440/125628 batch), Prediction 2025/2026 (124620 batch) all RUNNING + active gsutil writes confirmed.
+
+**Next actions (in order):**
+
+- [ ] Apply-flips run4 completing (~19:35 BST): flip writegate checkbox line 2969.
+- [ ] After 3×140739 VMs terminate: run
+      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+- [ ] After all CeFi VMs (including 2 relaunched) terminate: `MTDS-3.2.A-V` verify flat bucket.
+- [ ] After MTDS-3.2.A-V GREEN: launch `MDPS-3.3.CeFi`.
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1), `mtds_backfill_phase3_2026_05_22.md`
+(MTDS-3.2.A-DeadVMRelaunch + MTDS-3.2.A-V), `mdps_backfill_phase3_2026_05_22.md` (MDPS-3.3.CeFi)
