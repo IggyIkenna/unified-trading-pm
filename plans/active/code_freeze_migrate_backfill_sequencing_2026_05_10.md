@@ -193,9 +193,12 @@ consume.
 
 ### Phase 1.D — Service code: alerting / risk / strategy / DART
 
-- [ ] [PLAN] P0. **`plans/active/alerting_service_live_rules_2026_05_07.md`** — Production rule SSOT + thresholds +
+- [x] ✅ [PLAN] P0. **`plans/active/alerting_service_live_rules_2026_05_07.md`** — Production rule SSOT + thresholds +
       paging logic for live pipeline. Sub-E codex doc category for ML alerting rules (deferred per Tab 5 EOD-summary
       2026-05-08; tracked in [`feedback_capture_discoveries_as_plan_todos_immediately.md`](../../) auto-memory).
+      **[CODE-COMPLETE 2026-05-23 slot 6]** 55/62 items done. All 7 remaining are HUMAN/OPERATOR actions: PagerDuty
+      escalation policy config, Telegram token rotation, 48h acceptance run, rehearsal sessions, soak review, GHA
+      env-var — none are code contributions. Rule SSOT + thresholds + paging logic code is complete. Phase 1 gate met.
 - [x] ✅ [PLAN] P0. **`plans/active/risk_simulations_limits_alerting_2026_05_10.md`** — Risk rule taxonomy + —
       **ARCHIVED** `plans/archive/risk_simulations_limits_alerting_2026_05_10.md` (trivial-sweep 2026-05-21)
       per-archetype/venue/account/client limits + alerting wire + pre-flight check API. Parent:
