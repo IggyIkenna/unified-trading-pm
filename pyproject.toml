@@ -43,6 +43,12 @@ max-complexity = 7
 "scripts/dev/seed_validator.py" = ["BLE001"]
 "scripts/dev/seed_features.py" = ["BLE001"]
 "scripts/dev/smoke-test-dev.py" = ["BLE001", "S102"]
+# Audit result scripts + one-shot migration scripts: long GCS paths/query strings exceed 120 chars
+"plans/audit/results/*.py" = ["E501"]
+"scripts/plans/*.py" = ["E501"]
+"scripts/quality_gates/check_record_empty_reason_closed_set.py" = ["E501"]
+"codex/14-customer-journeys/_tools/build_scope_manifest.py" = ["E501"]
+"codex/06-coding-standards/test-templates/test_event_logging.py" = ["E501"]
 
 [tool.basedpyright]
 extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management", "../unified-internal-contracts", "../unified-api-contracts"]

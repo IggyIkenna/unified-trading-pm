@@ -261,7 +261,7 @@ def main() -> int:
         fh.write("- A6 does not check schema parity between batch + live adapters (would require running them). Operator may want to follow up with a runtime parity test (cross-checking manifest rows from each mode).\n")
         fh.write("- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures` → split into `binance` + `futures`). Per-token false positives possible — see CSV `venue_token` column for exact match.\n")
 
-    print(f"A6 scan complete:")
+    print("A6 scan complete:")
     print(f"  CSV:     {csv_path}")
     print(f"  Summary: {summary_path}")
     print(f"  In-scope tuples checked: {len(rows):,}")

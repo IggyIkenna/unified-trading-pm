@@ -37,7 +37,6 @@ sys.path.insert(0, str(UAC_ROOT))
 
 import pyarrow as pa  # noqa: E402
 import pyarrow.parquet as pq  # noqa: E402
-
 from unified_api_contracts.registry.expected_coverage import (  # noqa: E402
     EXPECTED_COVERAGE_BY_ASSET_GROUP,
     expected_coverage,
@@ -116,7 +115,7 @@ def main() -> int:
         fh.write(f"_Generated: {datetime.now(UTC).isoformat()}_\n\n")
         fh.write(f"Window: {START_DATE.isoformat()} → {END_DATE.isoformat()}\n\n")
         fh.write(f"Total rows: {len(states):,}\n\n")
-        fh.write(f"Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet` ")
+        fh.write("Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet` ")
         fh.write(f"({parquet_path.stat().st_size / 1024 / 1024:.2f} MiB)\n\n")
 
         fh.write("## State breakdown\n\n")

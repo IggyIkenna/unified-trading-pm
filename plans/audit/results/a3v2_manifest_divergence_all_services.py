@@ -19,14 +19,11 @@ Output:
 from __future__ import annotations
 
 import subprocess
-import sys
-from collections import defaultdict
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import gcsfs
 import pandas as pd
-import pyarrow as pa
 import pyarrow.parquet as pq
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[4]

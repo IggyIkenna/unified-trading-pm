@@ -226,7 +226,7 @@ def main() -> int:
         fh.write(f"_Generated: {datetime.now(UTC).isoformat()}_\n\n")
         fh.write(f"Window: {MIN_DATE.isoformat()} → {MAX_DATE.isoformat()}\n\n")
         fh.write(f"Total joined cells: {len(joined):,}\n\n")
-        fh.write(f"Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` ")
+        fh.write("Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` ")
         fh.write(f"({parquet_path.stat().st_size / 1024 / 1024:.2f} MiB)\n\n")
 
         fh.write("## Classification breakdown (workspace-wide)\n\n")
