@@ -2205,14 +2205,10 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream consumers
       (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape. — UAC@a422d0b8
       / QG ✅ (exit 0) / slot-2 tab branch 2026-05-22
-- [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is already in
-      `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
-      `unified_api_contracts.sports.candidate_parquet_paths` SSOT). For odds_api: cross-product
-      `(league_id, fixture_id, bookmaker, market_type) × dates` filtered by `kickoff_time ∈ [day_00:00, day_23:59]`.
-      Reasons: `EXPECTED_INSTRUMENT_NOT_LISTED` for fixtures-not-yet-scheduled, `EXPECTED_PAUSED_LEAGUE` for off-season
-      windows (existing reason, currently unused by enumerator), `EXPECTED_PRE_SOURCE_COVERAGE_START` for
-      pre-bookmaker-coverage dates (existing reason). Wire into `_enumerate_sports` replacing today's per-source-only
-      branch.
+- [x] [SCRIPT] P0. **Sports v2 enumerator** ✅ — market-tick-data-service@9a1bcd91 (SportsCatalogReader reads
+      instruments-store-sports fixtures parquets; orchestrator registers via register_catalog_reader + calls
+      catalog_list_instruments for per-fixture sentinels; EXPECTED_PAUSED_LEAGUE for off-season; v1 fallback when no
+      reader registered)
 - [ ] [SCRIPT] P0. **CeFi v2 enumerator** — read per-venue instrument catalog from
       `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical Tardis-derived
       layout is — needs an `instruments-service`-side audit). Cross-product
