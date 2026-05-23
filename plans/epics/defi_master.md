@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/api_keys_wallets_accounts_readiness_2026_05_10.md
+  - ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md
   - ../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
   - ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
   - ../active/cross_cutting_may_23_deliverables_2026_05_08.md
@@ -1492,9 +1492,9 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`api_keys_wallets_accounts_readiness_2026_05_10`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+### [`api_keys_wallets_accounts_readiness_2026_05_10`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 
-**status**: active · **estimate**: 64.5 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS path GREEN; May-23 credential gate met. Post-cutover deferred: AWS IAM roles, Fireblocks/Copper/CEFFU, Kalshi+CoinGecko credentials, GitHub WIF upgrade, Telegram per-env tokens, credential probe 100% pass. · **estimate**: 64.5 cal AI-days (class: design)
 
 ### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 
@@ -1578,11 +1578,25 @@ Active sub-plans owned by or closely coordinated with this epic:
 | [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active |
 | [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active |
 | [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active |
-| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                             | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | Active |
+| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)             | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | ✅ Archived |
 | [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active |
 | [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active |
 | [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active |
 | [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active |
+
+## Archived plans
+
+### [`api_keys_wallets_accounts_readiness_2026_05_10`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS custody path operational (execution-service@d45d24b4); May-23 credential gate MET.
+
+**Deferred (migrated):**
+- **AWS IAM roles (OPERATOR ACTION)**: 30 roles (10 services × 3 tiers) code shipped. Operator must run `bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user. Successor: `aws_migration_defi_first_2026_05_07.md`.
+- **Fireblocks + Copper sandbox + CEFFU KYB**: DEFERRED-AFTER-CUTOVER. Successor: `fireblocks_copper_client_integration_2026_06_01.md`.
+- **Kalshi API key + CoinGecko API key (OPERATOR ACTION)**: NOT FOUND in SM. Request in `ikenna_orchestrator/pings/slot_8.md`.
+- **Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped; operator must provision 3 bots + set GitHub secrets `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`.
+- **GitHub WIF upgrade (OPERATOR ACTION)**: GCP WIF pool + GitHub App creation needed. Runbook at `codex/07-security/gha-wif-migration.md`.
+- **Credential probe 100% pass (OPERATOR ACTION)**: Provision 10 wrapped wallet keys + 11 canonical SM name aliases from GCE VM with trading SA.
 
 ## Folded plans (archived 2026-05-07)
 
