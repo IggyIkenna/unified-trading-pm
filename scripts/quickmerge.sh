@@ -21,6 +21,7 @@
 #   ./scripts/quickmerge.sh "commit message" --dep-branch "my-feature"  # human-only; overrides manifest branch
 #   ./scripts/quickmerge.sh "commit message" --to-staging               # no-op; kept for backwards compat
 #   ./scripts/quickmerge.sh "commit message" --hotfix                   # abbreviated SIT on staging
+#   ./scripts/quickmerge.sh "commit message" --cloud aws                # route to CodeBuild (not Cloud Build)
 #
 # Branch resolution (no --dep-branch):
 #   1. Read active_feature_branch from unified-trading-pm/workspace-manifest.json
@@ -37,6 +38,9 @@
 #   --to-staging       No-op (kept for backwards compat). All human commits now route to staging by default.
 #   --hotfix           Routes to staging with abbreviated SIT (<2 min). Use for production incidents only.
 #                      Agent still validates semver label. Adds 'hotfix' label to the staging PR.
+#   --cloud gcp|aws    CI dispatch target. Default: ${CLOUD_PROVIDER:-gcp}. When aws, exports
+#                      CLOUD_PROVIDER=aws so quality gates + buildspec use AWS paths; CodeBuild
+#                      picks up the resulting PR via its GitHub webhook automatically.
 #   --quick            Skip only act simulation (Stage 4); all other checks run
 #   --skip-tests       Pass --skip-tests to quality-gates.sh (lint+type+codex only)
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
@@ -105,6 +109,7 @@ SKIP_PREFLIGHT=false
 SKIP_DEP_TIER_GATE=false
 USER_APPROVED=false
 AGENT_MODE=false
+CLOUD="${CLOUD_PROVIDER:-gcp}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -165,12 +170,23 @@ while [[ $# -gt 0 ]]; do
       AGENT_MODE=true
       shift
       ;;
+    --cloud)
+      CLOUD="$2"
+      shift 2
+      ;;
     *)
       COMMIT_MSG="$1"
       shift
       ;;
   esac
 done
+
+# Validate --cloud value; export so quality gates + buildspec inherit it.
+case "$CLOUD" in
+  gcp|aws) ;;
+  *) echo "❌ Unknown --cloud value: $CLOUD (expected gcp|aws)" >&2; exit 2 ;;
+esac
+export CLOUD_PROVIDER="$CLOUD"
 
 # --agent implicitly skips tests (lightweight: lint+format+typecheck+codex only)
 [ "$AGENT_MODE" = true ] && SKIP_TESTS="--skip-tests"
@@ -1301,6 +1317,13 @@ GH_PR_ARGS=(
   --head "$BRANCH"
 )
 [ "$HOTFIX" = true ] && GH_PR_ARGS+=(--label "hotfix")
+
+# Log which CI system will pick up this PR.
+if [ "$CLOUD" = "aws" ]; then
+  echo "[$REPO_NAME] ☁️  AWS mode: CodeBuild will pick up this PR via GitHub webhook (CLOUD_PROVIDER=aws)"
+else
+  echo "[$REPO_NAME] ☁️  GCP mode: Cloud Build will pick up this PR via GitHub webhook (CLOUD_PROVIDER=gcp)"
+fi
 
 PR_URL=$(gh pr create "${GH_PR_ARGS[@]}" 2>/dev/null)
 
