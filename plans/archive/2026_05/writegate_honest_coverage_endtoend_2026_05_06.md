@@ -4702,11 +4702,12 @@ deferred._
          `empty_confirmed SOURCE_RETURNED_ZERO` rows from per-VM shards + consolidated index across any set of GCS
          buckets. — `mtds@e86a6ad8`
 
-5. - [ ] [SCRIPT] P0. **Run reset script dry-run across all 5 MTDS buckets** and confirm row counts.
-         `python3 scripts/reset_source_returned_zero_manifest.py --all-buckets --dry-run`
+5. - [x] ✅ [SCRIPT] P0. **Run reset script dry-run across all 5 MTDS buckets** and confirm row counts. Dry-run
+         confirmed rows found across all buckets (defi 2K+/shard, cefi 1K-7K/shard). — slot-4 2026-05-23
 
 6. - [ ] [SCRIPT] P0. **Run reset script apply** (drop `--dry-run`). Then trigger manifest consolidator per-bucket so
-         `availability_index.parquet` rebuilds from cleaned shards.
+         `availability_index.parquet` rebuilds from cleaned shards. Apply running for cefi/tradfi/sports/pred; defi
+         bucket hit 429 after 7/61 shards — needs re-run once rate limit clears.
 
 7. - [ ] [SCRIPT] P1. **Re-run MTDS DeFi backfill** for `gas_fees` / `lending_indices` / `dex_swaps` date ranges
          (2020-01-01 → 2026-05-23) now manifest is clean. Verify `captured` rows replace the deleted `empty_confirmed`
