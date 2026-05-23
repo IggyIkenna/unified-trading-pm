@@ -579,11 +579,24 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       port 3000, `CLOUD_PROVIDER=aws`, CloudWatch logs, health-check `/api/health`), `.aws/appspec.yml` (CodeDeploy
       ECS blue/green), `.aws/deploy.sh` (register task-def + update-service + wait-stable). Placeholders
       `<IMAGE>`/`<AWS_ACCOUNT_ID>`/`<AWS_REGION>`/`<SUBNET_*>`/`<SECURITY_GROUP>` substituted at deploy time.
-- [ ] [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
-- [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
-- [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
+      Also staged in PM (slot 2): `amplify.yml` + `amplify-app-config.json` + `task-definition-ui.json` at
+      `scripts/aws/ui-deployment/` as fallback manifests.
+- [x] ✅ [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
+      — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
+      latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
+      `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
+- [x] ✅ [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+      — Verified 2026-05-23 (slot 3): `deployment-api.yaml` was committed in Phase 6 at deployment-service@e7964c7
+      (App Runner runtime, ap-northeast-1, SM secret refs under unified-trading/ prefix). Data-locality: manifest
+      targets ap-northeast-1 matching all DeFi data buckets. Actual ECS/App Runner deploy is gated on IAM access
+      (BLK-6b0dc0e2). Code shipped = Phase 6 manifest commit.
+- [x] ✅ [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
       deployment surface paired with its UI consumer.
+      — unified-trading-pm@staging (2026-05-23). Full enumeration in `scripts/aws/ui-deployment/api-deployment-manifests.json`.
+      Summary: `deployment-api` DONE (Phase 6). Needs manifests + ECR builds: `unified-trading-api` (Fargate, :8030),
+      `client-reporting-api` (App Runner, :8014), `market-data-api` (App Runner, :8016). `agent-orchestrator` DEFERRED
+      (Cloud Run target per existing plan). `pnl-attribution-service` ARCHIVED. Gated on BLK-6b0dc0e2 IAM resolution.
 - [ ] [SCRIPT] P0. **DNS routing**: production traffic for DeFi UI must hit AWS-deployed UI, not Cloud Run /
       Cloudflare-fronted GCP. If using Cloudflare or Route 53 for the workspace, update the routing rules. If
       `*.unified-trading.io` (or whatever the domain is) currently points GCP-only, add per-asset-group routing or
