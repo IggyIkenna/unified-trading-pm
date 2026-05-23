@@ -196,12 +196,12 @@ Group B kinds.
       "import features_service" (not /liveness); Cloud Run probes configured to /liveness per STEP 5.62 contract —
       Dockerfile healthcheck is moot for Cloud Run but should be aligned in Phase E.2 follow-up.
 
-- [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Deploy via `gcloud run deploy`** (operator). Smoke-check `/health`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Deploy via `gcloud run deploy`** (operator). Smoke-check `/health`
       returns OK + `data_freshness` is non-stale. BLK-363c4fe1 filed 2026-05-20. Command:
       `bash deployment-service/scripts/cloud-run/deploy_features_service_cloud_run.sh` (prereqs: image build + Artifact
       Registry repo + SA + mdps-redis-url-prod secret — see script header).
 
-- [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **24-hour soak**: features-service emits a feature parquet every N seconds
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **24-hour soak**: features-service emits a feature parquet every N seconds
       for every active feature_group, no FAILED events, no manifest gaps. Sequential after deploy above.
 
 ## Phase-G: MatchingEngineExecutionProvider for realistic CeFi paper fills (P0, ~2-3 days, PARALLEL with A-E)
@@ -308,15 +308,15 @@ key absent.
       features-service@c9729dce + strategy-service@35aeea77 + e2e-testing@2b48b1f now in
       `gs://deployment-scripts-central-element-323112/code/` (23.2 MiB total, 0 pin-drift errors).
 
-- [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Relaunch paper VM** `strategy-paper-carry-staked-basis-{date}-{ts}` with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Relaunch paper VM** `strategy-paper-carry-staked-basis-{date}-{ts}` with
       same waivers as today (will reduce waivers as creds land separately). Sequential after 24h soak. Tarballs already
       in GCS at features-service@c9729dce.
 
-- [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Watch run.log for `fills > 0`** within first 10 ticks (10 min). Capture
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Watch run.log for `fills > 0`** within first 10 ticks (10 min). Capture
       the sequence: features_loaded → strategy on_tick emits SWAP/STAKE/TRANSFER/TRADE → Tenderly fork executes → fill
       recorded → PnL accrues.
 
-- [ ] [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Verify `OPERATOR_CAPITAL_OVERRIDE_APPLIED` → `DEPOSIT_DETECTED` →
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR-DEPLOY] [SCRIPT] P0. **Verify `OPERATOR_CAPITAL_OVERRIDE_APPLIED` → `DEPOSIT_DETECTED` →
       strategy re-sizes positions** flow still works end-to-end (regression check on the rebalance pipeline shipped
       2026-05-19).
 
