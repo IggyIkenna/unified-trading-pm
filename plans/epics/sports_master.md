@@ -508,11 +508,15 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES SchemaContracts extended with full ColumnSpec lists.)
 - [x] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer.
       (instruments-service@539130f — all 4 normalizers wired via chain.from_iterable in api_football adapter.)
-- [ ] [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
+- [x] ✅ [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
       `record_failed(reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING, attempted_at=now)`, delete the thin parquets, then
       re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
+      **SHIPPED 2026-05-23**: `INCOMPLETE_PAYLOAD_PRE_FLATTENING` added to `RecordFailedReason` (UAC@84c8c49d);
+      migration script `flip_b1_thin_payload_to_reattempt.py` ships (instruments-service@b0a1d284).
+      **Run after sports PRD available_at migration completes** (in progress): `--dry-run` first, then `--apply
+      --delete-parquets` on both base + PRD buckets. Then launch `af-backfill-flatten-{ts}` VM.
       [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
       `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
