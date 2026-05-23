@@ -16,7 +16,7 @@ related_plans:
   - ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md
   - ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
   - ../active/defi_recursive_borrow_archetypes_2026_05_10.md
-  - ../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
+  - ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
   - ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md
   - ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md
   - ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md
@@ -114,15 +114,23 @@ dimension names and actual engine params; no operator response since 2026-05-20)
 
 **status**: active · **estimate**: 12 cal AI-days (class: design)
 
-### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
 
-**status**: scope-narrowed · **estimate**: 24 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 6 (7 items) DEFERRED-SERVICE-REPOS; Phase 13 (3 items) BLOCKED-OPERATOR; all other phases DEFERRED-SERVICE-REPOS/DEFERRED-POST-CUTOVER per slot 6 sweep. · **estimate**: 24 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
 
 ## Archived plans
+
+### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 4/5/7/8/9/11/12/13 all DEFERRED-SERVICE-REPOS or DEFERRED-POST-CUTOVER (slot 6 sweep). Phase 6 (Hyperliquid LIVE) missed by slot 6, deferred here.
+
+**Deferred (migrated):**
+- **Phase 6 — Hyperliquid LIVE perp connector (7 items, DEFERRED-SERVICE-REPOS)**: execution-service work — DELETE `venues/hyperliquid.py` + replace simulation logic + NEW `_hyperliquid_signing.py` (EIP-712) + `ApiKeyReloader` + 8 HL `VENUE_ERRORS_DEFI` error codes + `hyperliquid_bridge.py` helpers + available-margin placeholder fix.
+- **Phase 13 — Live deploy (BLOCKED-OPERATOR)**: Treasury allocation + 7-day live VM + plan archival, all gated on operator DeFi live deployment authorization.
 
 ### [`strategy_execution_contract_remediation_2026_05_20`](../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md)
 
