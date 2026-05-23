@@ -610,8 +610,13 @@ AI-days (class: infra)
   no DEX data past 2026-01-24 — MTDS gap). SEVENTH FIX: MDPS@305677e adds ORCA-SOLANA/RAYDIUM-SOLANA venue segments to
   `_DEFI_DEX_VENUE_SEGMENTS` (slot-6 2026-05-23). **MTDS 2026 DEX gap**: CURVE/UNISWAP dex_swaps_handler stopped writing
   after 2026-01-24 → no Ethereum DEX swap data for 2026-01-25→present; all 2026 date-cells will be
-  `empty_confirmed/SOURCE_RETURNED_ZERO`. Needs MTDS relaunch for 2026. Verify once 2024/2025 VMs complete: dex_swaps
-  bars present for 2024-06+; manifest v8; NaN check passes.
+  `empty_confirmed/SOURCE_RETURNED_ZERO`. Needs MTDS relaunch for 2026. ⚠️ **3 MTDS handler bugs fixed 2026-05-23
+  (slot-4)** (`mtds@69d694b1` + `@e86a6ad8`): (1) `dex_swaps` hardcoded `dex_pool_swaps` partition key — fixed; (2)
+  `gas_fees` null eth_feeHistory silently returned 0 — fallback now triggers; (3) `lending_indices` silently skipped on
+  missing The Graph key — now raises. **SOURCE_RETURNED_ZERO manifest cleanup in progress** (running
+  `scripts/reset_source_returned_zero_manifest.py` across all 5 buckets). **Relaunch VMs AFTER cleanup finishes.**
+  Verify once 2024/2025 VMs complete: dex_swaps bars present for 2024-06+; gas_fees + lending_indices captured; manifest
+  v8; NaN check passes.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once

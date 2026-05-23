@@ -4658,9 +4658,64 @@ Per-asset-group counts (from A4):
 
 ## Deferred work — migrated to: sports_master
 
-_Archived 2026-05-23 slot 2. Phases 1-6 + Phase 7.A writer-path complete. Phase 7.B/C/D and tracked open questions deferred._
+_Archived 2026-05-23 slot 2. Phases 1-6 + Phase 7.A writer-path complete. Phase 7.B/C/D and tracked open questions
+deferred._
 
-- **Phase 7.B — QG step for forward-fix**: Add `scripts/quality_gates/check_manifest_schema_version_constants.py`; ratchet workspace constants to v8. Sample 100 most-recent rows per bucket. DEFERRED-OPERATOR-DECISION.
-- **Phase 7.C — Retrospective backfill of existing rows (~6 AI-days)**: Write `UTL/migrations/upgrade_manifest_to_v8.py`; pre-migration VM drain + snapshot; run per bucket; assert 100% v8 + 0 NULL; post-migration verification. CEFI: 2.66M rows, DeFi: 1.73M rows (1.29M NULL), TradFi: 162k, Sports: 2.83M, Predictions: 21k. DEFERRED-OPERATOR-DECISION.
-- **Phase 7.D — Verification gate**: Re-run A4 (`a4_manifest_v8_compliance.py`) + A3 manifest divergence. Assert 100% v8 + 0 NULL + no new DIVERGENT_EMPTY cells. Codex SSOT update. DEFERRED-OPERATOR-DECISION.
-- **Tracked open questions 2-8/12**: `feature_group → required_inputs[]` DAG SSOT; v6 columns ownership; NaN-ratio gate lift to UTL; phantom-audit drift-probe lift to UTL; per-VM shard isolation rule; multi-source merge spec; `client_id` semantics rework.
+- **Phase 7.B — QG step for forward-fix**: Add `scripts/quality_gates/check_manifest_schema_version_constants.py`;
+  ratchet workspace constants to v8. Sample 100 most-recent rows per bucket. DEFERRED-OPERATOR-DECISION.
+- **Phase 7.C — Retrospective backfill of existing rows (~6 AI-days)**: Write
+  `UTL/migrations/upgrade_manifest_to_v8.py`; pre-migration VM drain + snapshot; run per bucket; assert 100% v8 + 0
+  NULL; post-migration verification. CEFI: 2.66M rows, DeFi: 1.73M rows (1.29M NULL), TradFi: 162k, Sports: 2.83M,
+  Predictions: 21k. DEFERRED-OPERATOR-DECISION.
+- **Phase 7.D — Verification gate**: Re-run A4 (`a4_manifest_v8_compliance.py`) + A3 manifest divergence. Assert 100%
+  v8 + 0 NULL + no new DIVERGENT_EMPTY cells. Codex SSOT update. DEFERRED-OPERATOR-DECISION.
+- **Tracked open questions 2-8/12**: `feature_group → required_inputs[]` DAG SSOT; v6 columns ownership; NaN-ratio gate
+  lift to UTL; phantom-audit drift-probe lift to UTL; per-VM shard isolation rule; multi-source merge spec; `client_id`
+  semantics rework.
+
+---
+
+## Phase 8 — SOURCE_RETURNED_ZERO manifest cleanup + DeFi handler bug fixes (2026-05-23)
+
+> **Context**: Three MTDS DeFi handler bugs caused `gas_fees` (0% captured), `lending_indices` (~0% captured), and
+> `dex_swaps` (wrong partition key) to emit `empty_confirmed SOURCE_RETURNED_ZERO` instead of real data. The
+> orchestrator pre-flight skips `empty_confirmed` slots, so the manifest must be cleaned before re-runs can process the
+> affected dates. Issue doc: `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`.
+
+### Phase 8.A — Handler bug fixes
+
+1. - [x] ✅ [SCRIPT] P0. **Fix `dex_swaps` hardcoded `dex_pool_swaps`** — `dex_swaps_handler.py:553` used literal
+         `"dex_pool_swaps"` instead of `_DEX_SWAPS_DATA_TYPE = "dex_swaps"` constant. All writes since UAC rename landed
+         in wrong partition. — `mtds@69d694b1`
+
+2. - [x] ✅ [SCRIPT] P0. **Fix `gas_fees` null eth_feeHistory silent return** — `gas_fee_client.py` returned `[]` when
+         Alchemy `result: null`; `_fee_from_block_txns` fallback never triggered → 0 rows → `SOURCE_RETURNED_ZERO`.
+         Added `ValueError` raise on null; added `"returned null result"` to fallback condition. — `mtds@69d694b1`
+
+3. - [x] ✅ [SCRIPT] P0. **Fix `lending_indices` silent API key skip** — handler did `return 0` when The Graph key
+         absent; now raises `RuntimeError` → `attempted_failed` in manifest. Added ERROR-level SM failure logging +
+         `THE_GRAPH_API_KEY` env var fallback. — `mtds@e86a6ad8`
+
+### Phase 8.B — Manifest SOURCE_RETURNED_ZERO cleanup
+
+4. - [x] ✅ [SCRIPT] P0. **Write `scripts/reset_source_returned_zero_manifest.py`** — bulk-deletes
+         `empty_confirmed SOURCE_RETURNED_ZERO` rows from per-VM shards + consolidated index across any set of GCS
+         buckets. — `mtds@e86a6ad8`
+
+5. - [ ] [SCRIPT] P0. **Run reset script dry-run across all 5 MTDS buckets** and confirm row counts.
+         `python3 scripts/reset_source_returned_zero_manifest.py --all-buckets --dry-run`
+
+6. - [ ] [SCRIPT] P0. **Run reset script apply** (drop `--dry-run`). Then trigger manifest consolidator per-bucket so
+         `availability_index.parquet` rebuilds from cleaned shards.
+
+7. - [ ] [SCRIPT] P1. **Re-run MTDS DeFi backfill** for `gas_fees` / `lending_indices` / `dex_swaps` date ranges
+         (2020-01-01 → 2026-05-23) now manifest is clean. Verify `captured` rows replace the deleted `empty_confirmed`
+         slots.
+
+### Phase 8 success criteria
+
+| Item           | Criterion                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| Handler fixes  | `gas_fees` > 0% captured; `lending_indices` > 0% captured; `dex_swaps` writes to correct partition |
+| Manifest clean | 0 `empty_confirmed SOURCE_RETURNED_ZERO` rows across all 5 MTDS buckets                            |
+| Re-run         | `gas_fees` / `lending_indices` / `dex_swaps` backfill reaches ≥80% capture rate                    |

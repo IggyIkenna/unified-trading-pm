@@ -601,8 +601,8 @@ the same data.
 **Per-(venue, chain) outcome from per-VM shard** (cross-referenced with
 `_index/per_vm/mtds-lending-indices-20260507-140418.parquet` 4,459 rows):
 
-| venue / chain                       | captured | empty_confirmed | verdict                                |
-| ----------------------------------- | -------- | --------------- | -------------------------------------- |
+| venue / chain                        | captured | empty_confirmed | verdict                                |
+| ------------------------------------ | -------- | --------------- | -------------------------------------- |
 | AAVE_V3 / ARBITRUM                   | 269      | 74              | ✅ working                             |
 | AAVE_V3 / OPTIMISM                   | 270      | 73              | ✅ working                             |
 | AAVE_V3 / POLYGON                    | 272      | 71              | ✅ working                             |
@@ -640,8 +640,8 @@ Phase 2.A spirit this should be `attempted_failed` because the GraphQL error mea
 Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some chains
 and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early DeFi protocol
 launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...` returns 404 for
-AAVE_V3/COMPOUND_V3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery script +
-its launch-date floor handling.
+AAVE_V3/COMPOUND_V3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery
+script + its launch-date floor handling.
 
 **RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
 [`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md)
@@ -657,13 +657,22 @@ carries the canonical RESOLVED block. Code commits:
 After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`) the
 lending-indices VM is ready to re-launch. Operator-owned step.
 
+> **⚠️ 2026-05-23 UPDATE — DO NOT relaunch DeFi VMs yet.** Three additional handler bugs discovered and fixed
+> (`mtds@69d694b1` + `@e86a6ad8`): (1) `dex_swaps_handler` hardcoded `"dex_pool_swaps"` — all dex_swaps writes landed in
+> wrong partition since UAC rename; (2) `gas_fee_client` silently returned `[]` on null eth_feeHistory → 0 gas rows; (3)
+> `lending_indices_handler` silently returned 0 when The Graph key absent (key IS in SM as `thegraph-api-key`; SM fetch
+> error was swallowed). These bugs produced ~100K+ fake `empty_confirmed SOURCE_RETURNED_ZERO` manifest rows. The
+> manifest is being cleaned via `scripts/reset_source_returned_zero_manifest.py`. **Wait for cleanup to finish +
+> manifest consolidator to rebuild before relaunching.** Issue:
+> `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`.
+
 **Audit 2026-05-08 (Tab 14, defi-fork1-prep-audit-tab)**: 4-bug-class diagnostic audit ran across the full Fork 1
 data-source surface BEFORE Ikenna's D4 launches. Results filed at
 [`../archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR:
 Bug classes 1-3 are ✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct).
 **Bug class 4 — UAC PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator
-spawn 4 sequential fix tabs (A: AAVE_V3 6 chains; B: COMPOUND_V3 4 chains; C: UNISWAP_V3 3 chains; D: SPARK ETH + bSOL UAC
-entry) all mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10
+spawn 4 sequential fix tabs (A: AAVE_V3 6 chains; B: COMPOUND_V3 4 chains; C: UNISWAP_V3 3 chains; D: SPARK ETH + bSOL
+UAC entry) all mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10
 oracle-USD backfill blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` —
 coverage gap. **Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC +
 MTDS + instruments-service; on May-23 critical path).
@@ -866,13 +875,13 @@ shipping with the Fork-1 prep batches below).
       post-launch + BSC AAVE_V3 post-launch + flipped pre-launch days to `empty_confirmed` in its per-VM shard, but the
       consolidator never merged it — root cause = the consolidator daemon not polling the per-data_type DeFi buckets;
       see "Discoveries" below). - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVE_V3/LINEA = 451
-      captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVE_V3/BSC = 836 captured
-      (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET https"
-      `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are reclaimed** = the
-      Priority-#5 headline deliverable. - **Consolidator-bucket Case-5 fix shipped** (deployment-service@`ad4d448` 8
-      per-data_type DeFi buckets + slot 6's @`2a76a2a` adds dex-pools+liquidations = 10); relaunched daemon
-      `manifest-consolidator-20260511-181538`; old `20260507-175639` deleted; verified the new daemon consolidates
-      `lending-indices`/`dex-swaps`/`evm-defi`/etc. - **Stale-path note**: audit said
+      captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVE_V3/BSC = 836
+      captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET
+      https" `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are
+      reclaimed** = the Priority-#5 headline deliverable. - **Consolidator-bucket Case-5 fix shipped**
+      (deployment-service@`ad4d448` 8 per-data_type DeFi buckets + slot 6's @`2a76a2a` adds dex-pools+liquidations =
+      10); relaunched daemon `manifest-consolidator-20260511-181538`; old `20260507-175639` deleted; verified the new
+      daemon consolidates `lending-indices`/`dex-swaps`/`evm-defi`/etc. - **Stale-path note**: audit said
       `market_tick_data_service/adapters/lending_indices/` — actual handler is
       `cli/handlers/lending_indices_handler.py` + adapter `market_interface/adapters/defi/aave_lending.py` (no
       `adapters/lending_indices/` dir exists). - **⏭ HANDED TO IKENNA** (Harsh tab 3 end-of-shift; pick up): - (a)
@@ -1105,20 +1114,20 @@ Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
 ### Fork-1 prep — UAC date drift fixes (migrated from `defi_fork1_prep_audit_2026_05_08`)
 
 Source issue archived. 13 UAC date drifts identified in Fork-1 scope: AAVE_V3 OPTIMISM/BASE/LINEA/BSC (141d-293d drift),
-COMPOUND_V3 ETHEREUM/BASE (12d-22d silent data loss), UNISWAP_V3 ARBITRUM/OPTIMISM (91d-35d), SPARK missing (add + remove
-from PENDING), bSOL missing from `LST_TOKEN_GENESIS`, Pyth Hermes archive gap (2022-11 → 2023-10).
+COMPOUND_V3 ETHEREUM/BASE (12d-22d silent data loss), UNISWAP_V3 ARBITRUM/OPTIMISM (91d-35d), SPARK missing (add +
+remove from PENDING), bSOL missing from `LST_TOKEN_GENESIS`, Pyth Hermes archive gap (2022-11 → 2023-10).
 
 **Critical sequencing**: all 4 batches touch `unified_api_contracts/canonical/domain/_defi.py` chain_env block — batches
 MUST merge sequentially in the recommended order (no concurrent PRs) to avoid UAC change-queue collisions. **Cross-plan
 dependency**: feeds writegate Phase 2.E EXPECTED_PRE_GENESIS_CHAIN taxonomy + manifest consolidator
 auto-row-reclassification.
 
-- [x] [SCRIPT] P0. **Batch A — AAVE_V3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
-      on-chain verification via Phase 1 script of hardcoded-values audit above; cite block + tx in comment. Single PR,
-      single commit, push to `live-defi-rollout`. **SHIPPED** UAC@6c873e4 (OPTIMISM 2022-08-04→2022-03-15 fixes 142d
-      silent data loss; POLYGON 2022-03-16→2022-03-12; AVALANCHE 2022-03-16→2022-03-12; BASE 2023-08-09→2023-08-22;
-      LINEA 2024-09-26→2025-02-11; BSC 2023-04-06→2024-01-23; all 6 pairs cited inline with subgraph-probe evidence per
-      Tab 14 audit).
+- [x] [SCRIPT] P0. **Batch A — AAVE_V3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift.
+      Per-entry on-chain verification via Phase 1 script of hardcoded-values audit above; cite block + tx in comment.
+      Single PR, single commit, push to `live-defi-rollout`. **SHIPPED** UAC@6c873e4 (OPTIMISM 2022-08-04→2022-03-15
+      fixes 142d silent data loss; POLYGON 2022-03-16→2022-03-12; AVALANCHE 2022-03-16→2022-03-12; BASE
+      2023-08-09→2023-08-22; LINEA 2024-09-26→2025-02-11; BSC 2023-04-06→2024-01-23; all 6 pairs cited inline with
+      subgraph-probe evidence per Tab 14 audit).
 - [x] [SCRIPT] P0. **Batch B — COMPOUND_V3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
       pattern as Batch A. Sequenced AFTER Batch A. **SHIPPED** UAC@6c873e4 (ETHEREUM 2022-08-25→2022-08-13; ARBITRUM
       2023-04-13→2023-05-04; BASE 2023-08-26→2023-08-04; OPTIMISM 2024-02-15→2024-04-06; POLYGON entry removed from
@@ -1494,11 +1503,15 @@ _(no plans currently assigned at this priority)_
 
 ### [`api_keys_wallets_accounts_readiness_2026_05_10`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS path GREEN; May-23 credential gate met. Post-cutover deferred: AWS IAM roles, Fireblocks/Copper/CEFFU, Kalshi+CoinGecko credentials, GitHub WIF upgrade, Telegram per-env tokens, credential probe 100% pass. · **estimate**: 64.5 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS path GREEN; May-23 credential gate met. Post-cutover deferred: AWS IAM
+roles, Fireblocks/Copper/CEFFU, Kalshi+CoinGecko credentials, GitHub WIF upgrade, Telegram per-env tokens, credential
+probe 100% pass. · **estimate**: 64.5 cal AI-days (class: design)
 
 ### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped. Phase 2.6 execution DEFERRED-SERVICE-REPOS; Phase 3 QG sweep + Phase 4.DEFAULT-REMOVAL + Phase 12 ratchet BLOCKED-OPERATOR. · **estimate**: 162.0 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped.
+Phase 2.6 execution DEFERRED-SERVICE-REPOS; Phase 3 QG sweep + Phase 4.DEFAULT-REMOVAL + Phase 12 ratchet
+BLOCKED-OPERATOR. · **estimate**: 162.0 cal AI-days (class: infra)
 
 ### [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md)
 
@@ -1555,18 +1568,18 @@ plan (DO NOT move without operator ack)
 > **MIGRATED FROM:** `api_keys_wallets_accounts_readiness_2026_05_10.md` (archived 2026-05-23) — Cloud-KMS signing,
 > venue auth, wallet provisioning shipped. Remaining items are post-cutover integrations + credential extensions.
 
-- [ ] [OPERATOR+AGENT] P2. **AWS SNS/SQS + EventBridge mirroring (1.F)** — create AWS SNS topic per service +
-      SQS subscriber queue + EventBridge rule that mirrors GCP Pub/Sub events for dual-cloud event delivery.
-      Coordinate with infrastructure_master UCI MessageBus abstraction.
+- [ ] [OPERATOR+AGENT] P2. **AWS SNS/SQS + EventBridge mirroring (1.F)** — create AWS SNS topic per service + SQS
+      subscriber queue + EventBridge rule that mirrors GCP Pub/Sub events for dual-cloud event delivery. Coordinate with
+      infrastructure_master UCI MessageBus abstraction.
 - [ ] [AGENT] P2. **Cross-cloud Workload Identity Federation (1.H)** — GCP SA assumes AWS IAM role via OIDC WIF;
       eliminates long-lived AWS access keys in service containers. Requires AWS account `427895769566` IAM config.
 - [ ] [OPERATOR+AGENT] P3. **CEFFU integration (3.B)** — CEFFU KYB + production env + signing integration. Deferred
       until Binance institutional KYB flow completes. 3.B.3 adapter scaffold already shipped (dormant).
-- [ ] [OPERATOR+AGENT] P2. **Tune `ltv_safety_margin` + `margin_safety_factor` (R-17)** — post 7-day live soak,
-      review actual LTV utilisation vs conservative defaults; recalibrate to tighten safety margins if liquidation
-      headroom is excessive. Reference: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
-- [ ] [OPERATOR] P2. **DeFi-data credentials (5.C)** — provision CoinGecko Pro + Helius paid-tier API keys into
-      Secret Manager (`COINGECKO_API_KEY`, `HELIUS_API_KEY`). Unblocks DeFi on-chain analytics adapters marked
+- [ ] [OPERATOR+AGENT] P2. **Tune `ltv_safety_margin` + `margin_safety_factor` (R-17)** — post 7-day live soak, review
+      actual LTV utilisation vs conservative defaults; recalibrate to tighten safety margins if liquidation headroom is
+      excessive. Reference: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
+- [ ] [OPERATOR] P2. **DeFi-data credentials (5.C)** — provision CoinGecko Pro + Helius paid-tier API keys into Secret
+      Manager (`COINGECKO_API_KEY`, `HELIUS_API_KEY`). Unblocks DeFi on-chain analytics adapters marked
       BLOCKED-CREDENTIALS. Ping operator for account signup approval.
 - [ ] [OPERATOR+AGENT] P3. **Firebase SA JSON storage (6.B)** — store Firebase service-account JSON in Secret Manager
       rather than GHA secrets; wire hot-reload via `ApiKeyReloader` pattern. Post-cutover scope.
@@ -1585,45 +1598,57 @@ plan (DO NOT move without operator ack)
 
 Active sub-plans owned by or closely coordinated with this epic:
 
-| Plan                                                                                                                                   | Role                                                                                                                | Status |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
-| [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active |
-| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                            | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active |
-| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active |
-| [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active |
-| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)            | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active |
-| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active |
-| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active |
-| [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active |
-| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)             | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | ✅ Archived |
-| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active |
-| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active |
-| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active |
-| [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active |
+| Plan                                                                                                                                   | Role                                                                                                                | Status      |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------- |
+| [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active      |
+| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                            | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active      |
+| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active      |
+| [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active      |
+| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)            | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active      |
+| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active      |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active      |
+| [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active      |
+| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)            | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | ✅ Archived |
+| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active      |
+| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active      |
+| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active      |
+| [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active      |
 
 ## Archived plans
 
 ### [`api_keys_wallets_accounts_readiness_2026_05_10`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS custody path operational (execution-service@d45d24b4); May-23 credential gate MET.
+**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS custody path operational (execution-service@d45d24b4); May-23 credential
+gate MET.
 
 **Deferred (migrated):**
-- **AWS IAM roles (OPERATOR ACTION)**: 30 roles (10 services × 3 tiers) code shipped. Operator must run `bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user. Successor: `aws_migration_defi_first_2026_05_07.md`.
-- **Fireblocks + Copper sandbox + CEFFU KYB**: DEFERRED-AFTER-CUTOVER. Successor: `fireblocks_copper_client_integration_2026_06_01.md`.
-- **Kalshi API key + CoinGecko API key (OPERATOR ACTION)**: NOT FOUND in SM. Request in `ikenna_orchestrator/pings/slot_8.md`.
-- **Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped; operator must provision 3 bots + set GitHub secrets `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`.
-- **GitHub WIF upgrade (OPERATOR ACTION)**: GCP WIF pool + GitHub App creation needed. Runbook at `codex/07-security/gha-wif-migration.md`.
-- **Credential probe 100% pass (OPERATOR ACTION)**: Provision 10 wrapped wallet keys + 11 canonical SM name aliases from GCE VM with trading SA.
+
+- **AWS IAM roles (OPERATOR ACTION)**: 30 roles (10 services × 3 tiers) code shipped. Operator must run
+  `bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user. Successor: `aws_migration_defi_first_2026_05_07.md`.
+- **Fireblocks + Copper sandbox + CEFFU KYB**: DEFERRED-AFTER-CUTOVER. Successor:
+  `fireblocks_copper_client_integration_2026_06_01.md`.
+- **Kalshi API key + CoinGecko API key (OPERATOR ACTION)**: NOT FOUND in SM. Request in
+  `ikenna_orchestrator/pings/slot_8.md`.
+- **Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped; operator must provision 3 bots + set GitHub secrets
+  `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`.
+- **GitHub WIF upgrade (OPERATOR ACTION)**: GCP WIF pool + GitHub App creation needed. Runbook at
+  `codex/07-security/gha-wif-migration.md`.
+- **Credential probe 100% pass (OPERATOR ACTION)**: Provision 10 wrapped wallet keys + 11 canonical SM name aliases from
+  GCE VM with trading SA.
 
 ### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 playbook done.
 
 **Deferred (migrated):**
-- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh` + verify scripts. Requires deployment-service, MTDS, MDPS not in slot worktree.
+
+- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh` + verify scripts. Requires
+  deployment-service, MTDS, MDPS not in slot worktree.
 - **Phase 3 workspace QG green**: `quality-gates.sh` sweep deferred. Tracked in `qg_sweep_2026_05_11.md`.
-- **Phase 4.DEFAULT-REMOVAL**: Remove 4 `None` defaults from `record_*` methods + `MANIFEST_SCHEMA_VERSION` 7→8 bump. Blocked-after-MTDS+FEATURES sweep.
-- **Phase 0.B + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` doesn't exist. Operator runs from GCE VM.
+- **Phase 4.DEFAULT-REMOVAL**: Remove 4 `None` defaults from `record_*` methods + `MANIFEST_SCHEMA_VERSION` 7→8 bump.
+  Blocked-after-MTDS+FEATURES sweep.
+- **Phase 0.B + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` doesn't exist. Operator runs from GCE
+  VM.
 
 ## Folded plans (archived 2026-05-07)
 
@@ -1816,9 +1841,10 @@ data — `lending_indices_handler` has no manifest-freshness skip), so it was ki
 
 - **"routing config absent" framing was STALE** — `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since
   UAC@`2db3c8e` (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVE_V3 = 2025-02-11, BSC AAVE_V3 = 2024-01-23);
-  `lending_indices` ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVE_V3"` so the pre-floor-date
-  short-circuit (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC 2024-06-01 =
-  316 rows), not 1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM shards).
+  `lending_indices` ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVE_V3"` so the
+  pre-floor-date short-circuit (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC
+  2024-06-01 = 316 rows), not 1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM
+  shards).
 - **Priority-#5 headline deliverable reclaimed** — manual `manifest_consolidator --bucket lending-indices-{pid} --once`
   → canonical now AAVE_V3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
   attempted_failed; AAVE_V3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
