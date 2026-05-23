@@ -101,8 +101,10 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
       FIXED (slot-5 2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball
-      rebuilt. 125717 VMs terminated. **RUNNING: 7 VMs `mdps-sports-{2020..2026}-20260523-151059`**. Verify once
-      complete. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+      rebuilt. 125717 + 151059 VMs terminated. **RUNNING: 7 VMs `mdps-sports-{2020..2026}-20260523-155733`** with
+      UAC@28117482 (odds_horizon_bucket registered) + MDPS@ed0f817 (related_data_types fix). First run to dispatch all 4
+      adapters. 2024+ dates expected to produce real candles (pre-2024 = old format, empty_confirmed expected). Issue
+      doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
       row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
       (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
@@ -197,6 +199,15 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       (`mdps-defi-{2023..2025}-20260523-142129`) — both running stale code. Re-launched: 7 sports VMs
       `mdps-sports-{2020..2026}-20260523-151059` + 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-151348` RUNNING.
       2026-05-23 slot-5.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-UAC-Registry** — `odds_horizon_bucket` MISSING from
+      `DATA_TYPES_BY_ASSET_GROUP["sports"]` in UAC `market_data_categories.py`. Adapter `SportsOddsHorizonBucketAdapter`
+      registered in MDPS CandleAdapterRegistry but MDPS `get_data_types_for_categories` only looks up UAC registry →
+      adapter NEVER dispatched. Fix: added `"odds_horizon_bucket"` to registry list. Also committed orphaned treasury
+      NAV helpers (Phase 3.D). UAC@28117482. QG ✅. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch3** — Tarball rebuilt with UAC@28117482 + MDPS@ed0f817 at 14:55 UTC.
+      Terminated 151059 VMs (lacked odds_horizon_bucket in UAC). Re-launched: 7 sports VMs
+      `mdps-sports-{2020..2026}-20260523-155733` RUNNING. First run to dispatch all 4 sports adapters. 2026-05-23
+      slot-5.
 
 ---
 

@@ -1,4 +1,32 @@
-> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~15:15 UTC).**
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~16:00 UTC).**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~16:00 UTC — UAC odds_horizon_bucket registry fix + 3rd sports re-launch
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+### SECOND UAC FIX: odds_horizon_bucket missing from DATA_TYPES_BY_ASSET_GROUP["sports"]
+
+After sports-2022 VM confirmed processing (76 files, adapters dispatched), found `odds_horizon_bucket` adapter exists in
+MDPS registry but UAC's `DATA_TYPES_BY_ASSET_GROUP["sports"]` only had 3 types (no `odds_horizon_bucket`).
+`get_data_types_for_categories` derives data types from UAC registry → adapter NEVER dispatched in any prior run.
+
+Fix: UAC@28117482 adds `"odds_horizon_bucket"` to sports registry. Also committed orphaned treasury NAV helpers (Phase
+3.D) that were left dirty by a dead agent session.
+
+Tarball rebuilt at 14:55 UTC with UAC@28117482 + MDPS@ed0f817. Terminated 151059 VMs. Re-launched: **7 sports VMs
+`mdps-sports-{2020..2026}-20260523-155733`** RUNNING — first run to dispatch all 4 sports adapters correctly.
+
+### Current VM fleet (16:00 UTC)
+
+- **Sports**: 7 VMs `155733` — RUNNING. All 4 adapters dispatched. 2024+ dates expected to produce candles.
+- **DeFi**: 5 VMs `151348` — RUNNING with b584c67 path fix + ed0f817 adapter fix. UAC@6aef01f9 (no DeFi impact).
+- **TradFi**: 7 VMs `125440+125628` — RUNNING (~66h/VM)
+- **Prediction**: `124620` (2 VMs) — RUNNING, writing candles ✅
+- **CeFi**: 17 MTDS VMs still RUNNING (11 new binance-futures 151757 added by another slot) → gate MTDS-3.2.A-V BLOCKED
+
+— slot-5 / ikenna / 2026-05-23
+
+---
 
 ## [slot-5 → slot-1-main] 2026-05-23 ~15:15 UTC — Sports adapter fix + tarball rebuild + sports+DeFi VMs re-launched
 
