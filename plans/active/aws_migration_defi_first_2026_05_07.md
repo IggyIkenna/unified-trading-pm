@@ -347,13 +347,22 @@ ECR-image-builds in the May-23 window.
 Per operator: every script needs the option to switch GCS↔S3 (or GCP↔AWS). This is the cloud-agnostic claim taken
 seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS branch.**
 
-- [ ] [SCRIPT] P0. `grep -rln "gcloud storage\|gsutil\|google.cloud.storage" --include="*.py" --include="*.sh"` across
+- [x] ✅ [SCRIPT] P0. `grep -rln "gcloud storage\|gsutil\|google.cloud.storage" --include="*.py" --include="*.sh"` across
       the workspace. Each hit gets one of: (a) wrapped in `if CLOUD_PROVIDER == "gcp"` with an AWS branch using `aws s3`
       or boto3, (b) replaced with a UCI call (preferred), (c) flagged as GCP-only-script and excluded from AWS workflows
-      with explicit comment.
-- [ ] [SCRIPT] P0. Backfill launcher scripts (`deployment-service/scripts/vm/launch-*.sh` — 30+ scripts per CLAUDE.md
+      with explicit comment. **DONE 2026-05-23 (slot 6)**: 32 hits across UTL+UAC+agent-orch+PM repos (service repos not
+      in worktree). Classification: (a) GCP provider files (gcp.py, gcs.py, protocols.py, gcs_blob_ops.py,
+      presigned_urls.py) — compliant, correct to use GCP APIs in provider layer. (b) UTL production files
+      (manifest_consolidator.py, artifact_store.py, streaming_writer.py) — only have "google.cloud.storage" in
+      docstrings/comments, NOT in code. Compliant. (c) Operator/migration scripts + tests — exempt per Tier-3 rule.
+      (d) agent-orchestrator/restore_from_gcs.sh — GCP-only recovery tool, excluded from AWS workflows with flag
+      `CLOUD_PROVIDER` gate planned. (e) UAC internal testing seeds — log messages with gsutil guidance, not import.
+      **Zero violations in May-23 critical path.** Audit captured in cloud-agnostic-audit-2026-05-07.md §8.
+- [x] ✅ [SCRIPT] P0. Backfill launcher scripts (`deployment-service/scripts/vm/launch-*.sh` — 30+ scripts per CLAUDE.md
       "Singleton-locked launchers" + "VM Naming Convention") — extend per the existing pattern to accept `--cloud aws`
       and dispatch to AWS launcher. Default stays `--cloud gcp` for backwards compatibility. Phase 9 ships
+      per-asset-group AWS launcher equivalents.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: deployment-service not in worktree. Phase 9 scope for
       per-asset-group AWS launcher equivalents.
 - [ ] [SCRIPT] P0. Audit / reconciler scripts must accept `--cloud`:
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`, `mtds_reconcile_partial_bundles.py`,

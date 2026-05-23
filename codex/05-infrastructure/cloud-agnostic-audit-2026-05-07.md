@@ -256,3 +256,20 @@ trading topics (duplicate alerts/commands handled idempotently by consumers).
 in `aws_migration_defi_first_2026_05_07.md`) should create SNS topics + SQS queues for all 18 domain-event topics +
 infrastructure topics. Per-venue/instrument-type/timeframe pipeline topics (~100+ topics) are provisioned by the per-service
 launch scripts at VM startup.
+
+### 8. gcloud storage / gsutil / google.cloud.storage audit (2026-05-23)
+
+Phase 1.5.D audit — `grep -rln "gcloud storage\|gsutil\|google.cloud.storage"` across available workspace repos
+(UTL + UAC + agent-orchestrator + PM). **32 files total.** Service repos not in worktree (Wave 2).
+
+| Category | Files | Action |
+|---|---|---|
+| GCP provider layer (correct) | `UTL/providers/gcp.py`, `UTL/gcs_blob_ops.py`, `UTL/presigned_urls.py`, `UAC/external/gcp/gcs.py`, `UAC/external/gcp/protocols.py`, `UAC/external/gcp/firebase.py` | Compliant — GCP APIs belong in GCP provider implementation |
+| UTL production code — comments only | `manifest_consolidator.py`, `domain_client/artifact_store.py`, `io/streaming_writer.py` | Compliant — "google.cloud.storage" only in docstrings/comments, not in imports or code |
+| Operator setup + migration scripts | `PM/scripts/setup.sh`, `UAC/scripts/setup.sh`, `PM/scripts/migration/*.py`, `PM/scripts/orchestrator/push_creds_to_gcs.sh` | Exempt per Tier-3 operator script rule |
+| Dev tools | `PM/scripts/dev/*.sh`, `PM/scripts/workspace/check-import-deps.py`, `PM/scripts/openapi/*.py` | Exempt — dev environment tools |
+| UAC internal testing seeds | `seed_features.py:327`, `seed_ml_artifacts.py:258,260` | Log messages with gsutil guidance for developers; not actual gsutil imports or invocations |
+| Agent-orchestrator | `scripts/restore_from_gcs.sh` (gsutil ls/cp), `server/oauth_refresh.py`, `scripts/bootstrap_vm.sh` | `bootstrap_vm.sh` has CLOUD_PROVIDER toggle ✅. `restore_from_gcs.sh` is GCP-only recovery tool — needs `--cloud` flag as Wave 2. `oauth_refresh.py` is GCP auth only — acceptable for orchestrator VM credential management |
+| Tests | `tests/cloud_interface/conftest.py`, `test_gcp_secret_storage_build.py` | Compliant — GCP-specific test fixtures |
+
+**Finding: ZERO violations in May-23 critical path** across all 4 available repos. Service-repo scripts (deployment-service `launch-*.sh`, instruments-service reconcilers, etc.) are Wave 2 post-cutover — Phase 9 scope per plan note "Phase 9 ships per-asset-group AWS launcher equivalents."
