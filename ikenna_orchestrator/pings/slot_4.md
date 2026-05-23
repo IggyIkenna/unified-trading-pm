@@ -117,3 +117,98 @@ Unblocked by: UAC@a422d0b8 (`InstrumentCatalogReader` Protocol + `list_instrumen
 synced to LDR. Items 1/3+4 unblocked.
 
 — slot-4 / 2026-05-22
+
+---
+
+## 2026-05-23 — [slot-4 → slot-1 main] cefi backfill DONE + defi/tradfi operator decisions needed
+
+**Plan ref**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` (line 2539 flipped PM@7bb301ba8)
+
+### cefi 12-month v2 backfill — COMPLETE ✅
+
+All 4 × 91-day apply-write chunks finished. 71,468,109 rows across 4 per-VM shards on GCS
+(`market-data-tick-cefi-central-element-323112/_index/per_vm/`):
+
+| Chunk | VM name                | Date range            | Rows       |
+| ----- | ---------------------- | --------------------- | ---------- |
+| c1    | slot4-cefi-c1-20260523 | 2026-02-22→2026-05-23 | 19,585,202 |
+| c2    | slot4-cefi-c2-20260523 | 2025-11-23→2026-02-21 | 16,134,573 |
+| c3    | slot4-cefi-c3-20260523 | 2025-08-24→2025-11-22 | 20,171,242 |
+| c4    | slot4-cefi-c4-20260523 | 2025-05-24→2025-08-23 | 16,192,092 |
+
+Plan checkbox flipped: PM@7bb301ba8. instruments-service@363af916 (upload timeout fix) + @ecabcf74 (window-overlap
+pre-filter).
+
+---
+
+### OPERATOR DECISION NEEDED — defi 12-month v2 apply-write
+
+**Status**: `BLOCKED-OPERATOR-DECISION`
+
+**What I ran (dry-run equivalent, 91-day window)**:
+`enumerate_expected_universe.py --asset-group defi --start-date 2026-02-21 --end-date 2026-05-23` → **18,766,020
+candidate rows** (9,820 instruments × 91 days × 21 data_types)
+
+**Full 12-month estimate**: ~75M rows across 4 × 91-day chunks (4 × ~18.75M). Within the pre-authorized `< 100M`
+conditional apply-write window.
+
+**Proposed chunks**:
+
+| Chunk | Date range            | Est. rows | VM name                |
+| ----- | --------------------- | --------- | ---------------------- |
+| d1    | 2026-02-21→2026-05-23 | ~18.8M    | slot4-defi-d1-20260523 |
+| d2    | 2025-11-22→2026-02-20 | ~18.8M    | slot4-defi-d2-20260523 |
+| d3    | 2025-08-23→2025-11-21 | ~18.8M    | slot4-defi-d3-20260523 |
+| d4    | 2025-05-23→2025-08-22 | ~18.8M    | slot4-defi-d4-20260523 |
+
+Each chunk: `--apply-write --max-writes-per-run 25000000 MANIFEST_PER_VM_SHARDS=true`. Wall-time estimate per chunk: ~90
+minutes (defi has 21 data_types vs cefi's 7; frozenset will be ~150M elements for a full 12-month manifest — expect
+memory pressure similar to c1c).
+
+**Pre-condition**: confirm manifest consolidator has merged all 4 cefi shards into `availability_index.parquet` before
+running defi d1 (present_set will be stale otherwise).
+
+**[ack]** this ping to proceed. Without ack, defi stays `BLOCKED-OPERATOR-DECISION`.
+
+---
+
+### CREDENTIAL APPROVAL REQUEST — tradfi Databento adapter
+
+**Status**: `BLOCKED-CREDENTIALS`
+
+**Vendor**: Databento · Historical market data (US equities, futures, options, ETFs) · Est. $200-500/month for MVP
+coverage (Starter/Developer tier)
+
+**What I need**:
+
+- Databento API key (`db-xxx` format, from https://app.databento.com/portal/keys)
+- Account to use: existing operator email `ikenna@odum-research.com` or new account
+- If new account: email + password setup (Databento requires email verification)
+
+**Unblocks**:
+
+- `tradfi` asset_group catalog (instruments-service tradfi adapter)
+- `tradfi` OHLCV + tick data backfill (MTDS tradfi handler)
+- `carry_staked_basis` + `arbitrage_price_dispersion` tradfi leg (strategy-service)
+- writegate Phase 3 tradfi lane (currently `BLOCKED-CREDENTIALS` in plan)
+
+**Without it**: tradfi adapter scaffold + unit tests ship; integration tests skip (`@pytest.mark.requires_credentials`);
+adapter dormant. Not in `DEFERRED` — stays on live list per workspace rules.
+
+**Cross-link**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § "Credential asks awaiting operator"
+(add row if section exists, else this ping is the tracker).
+
+---
+
+### Slot-4 work remaining as of 2026-05-23
+
+**~0 actionable AI days on assigned plans.** All open items are one of:
+
+- `DEFERRED-OPERATOR-DECISION` (batch-defer `6c7b67075` wiped all `- [ ]` items)
+- `BLOCKED-CREDENTIALS` (tradfi Databento, sports/prediction feeds)
+- `BLOCKED-NEW-CODE` (sports/prediction enumerators)
+- Gated on `mtds_mdps_master` Phase 7 GREEN (items 1/3+4 from 2026-05-22 ping above)
+
+**Ready if operator acks**: defi apply-write (~0.25 AI days, 4 × 90-min runs).
+
+— slot-4 / 2026-05-23
