@@ -1577,8 +1577,10 @@ Plan refs: `honest_coverage_formula_consolidation_2026_05_19.md`, `mtds_backfill
   (EXPECTED_INSTRUMENT_NOT_LISTED for legitimate catalog misses, attempted_failed/LegacyBlankErrorReasonError for SRZ
   rows classifier can't confirm), then run
   `--apply-flips MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-typed-cefi-<ts>`.
-- `MTDS-3.2.A-V` (`mtds_backfill_phase3_2026_05_22.md`) — blocked on CeFi VMs terminating + flat→prd copy. 10 VMs from
-  `20260522-140739` + 2 deribit from `20260523-120101` still RUNNING as of 13:00 UTC.
+- `MTDS-3.2.A-V` (`mtds_backfill_phase3_2026_05_22.md`) — blocked on CeFi VMs terminating. 10 VMs from
+  `20260522-140739` + 2 deribit from `20260523-120101` still RUNNING as of 13:00 UTC. **flat→prd copy NOT needed** —
+  MDPS reads flat bucket directly (`_resolve_upstream_bucket` confirmed). Verify flat bucket once all VMs terminate.
+  PM@c51146a35 corrects the verify criteria.
 - `MDPS-3.3.CeFi` (`mdps_backfill_phase3_2026_05_22.md`) — blocked on MTDS-3.2.A-V.
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`, `mtds_backfill_phase3_2026_05_22.md`,
