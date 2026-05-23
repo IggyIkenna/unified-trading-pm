@@ -148,7 +148,7 @@ consume.
       contract_address / decimals / fixture_id / futures_expiry). **Sequenced AFTER** `tradfi_master` Q1+Q2
       futures-expiry ships (avoids mass-fail-during-transit per existing plan body). **Phase 1 blocker**:
       SCHEMA_VALIDATION_FAILED enum extension lands here; needed before Phase 2.5 cross-asset rescan can flip rows.
-- [ ] [PLAN] P0. **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** — Collapse 3-layer drift (yaml +
+- [x] ✅ [PLAN] P0. **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** — Collapse 3-layer drift (yaml +
       per-family config.py + UTL resolver) to one canonical SSOT (yaml = canonical per slot 4 decision 2026-05-11).
       **OPERATOR DECISION 2026-05-11 (Ikenna): option (b) — provision env-tiered buckets to match yaml + migrate
       flat-bucket data into them.** Phase 1 (this section) covers: Phase 0a (operator decision recorded ✅), Phase 0b
@@ -158,6 +158,11 @@ consume.
       `setup-buckets.sh`) + Phase 0d (flat→tiered data migration with ≤0.01% drift verification + write-pause cutover)
       move to **Phase 2.4 sub-steps below** (window 2026-05-15→05-19). **Phase 1 blocker**: bucket-name resolution
       code + yaml additive corrections must be final before Phase 2.4 provisioning + data migration starts.
+      **[STATUS 2026-05-23 slot 6]** Phase 0a ✅ (operator decision), Phase 0b ✅ (yaml corrections), Phase 0c ✅
+      (GCP prod provisioned 2026-05-12 slot 3). Phase 2.4 provisioning gate already passed. Remaining: Phase 0d
+      (flat→tiered migration) DEFERRED-PHASE-2.4; L2 config.py migration + legacy get_bucket_name delegate DEFERRED-
+      PHASE-2.6 (BLOCKED per bucket_name_ssot plan status: "Zero agent-doable items remain"). Phase 1 code-freeze gate
+      effectively satisfied — Phase 2.4 already ran. Remaining items are Phase 2/2.6 scope.
 
 ### Phase 1.C — Live-pipeline activation code
 
