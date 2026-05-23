@@ -2529,12 +2529,20 @@ clear instruction for "what's actually there", per-service flexibility for "how 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
 - [x] ✅ [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
-      capture_status. Each asset_group gets: _ Pre-venue/chain-launch dates → continue writing
+      capture*status. Each asset_group gets: * Pre-venue/chain-launch dates → continue writing
       `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today). _
       Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW). _ Per-instrument-pre-listing
-      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. _ Per-instrument-post-delisting dates → write
+      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
       `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
       QG 2782 passed)
+- [ ] **[DEFERRED — BLOCKED-UPSTREAM: catalog in GCS]** [VM-LAUNCH] P0. Run
+      `enumerate_expected_universe.py     --enumerator-version=v2 --apply-write` per asset group (5 VMs) to backfill
+      `expected_unattempted` rows into the production manifests. **Prerequisite**: instruments-service catalog parquets
+      must be published to GCS at a known path (`--catalog-path gs://...`) before each per-asset-group run. Same recipe
+      as Phase 3.D.4 `--apply-write` sweep (scan-only review first → operator ack → apply-write). **NOT YET ASSIGNED.**
+      Surfaced 2026-05-23 — no active plan was tracking the operational run; `expected_universe_v2_design_2026_05_08.md`
+      was archived without this item. Assign to whichever slot picks up the MTDS catalog wiring (line below) — they will
+      have the catalog GCS path.
 - [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
       appropriately.
