@@ -682,6 +682,23 @@ before CME arb can link.
       (2025-11-01→2026-02-28), instr-backfill-pred-20260522 (2026-03-01→2026-05-22). All 3 RUNNING in asia-northeast1-c.
       Used --end 2026-05-22 for 3rd VM to avoid name collision with old terminated instr-backfill-pred-20260523 shard. —
       VMs RUNNING (launched 2026-05-23)
+- [x] ✅ [UAC] P1. **Phase 5.5min_split — add 5MIN/15MIN granularity to classifier** (SUPERSEDES INTRADAY-only from
+      Phase 5.parallel_vms): 2026-05-23 slot-1. Added ONE_MIN/FIVE_MIN/FIFTEEN_MIN to PredictionShardResolutionPeriod.
+      Updated \_infer_resolution_period() to extract digit from slug tokens before falling back to INTRADAY (15-minute →
+      FIFTEEN_MIN, 5-minute → FIVE_MIN, 1-minute → ONE_MIN). Added BTC/ETH_UP_DOWN_5MIN + 15MIN CanonicalQuestionGroup
+      enum values with metadata (5MIN cadence=288/day, 15MIN cadence=96/day). INTRADAY remains as fallback for
+      unknown-interval intraday slugs. Updated classifiers.py + honest_coverage.py. Bumped CLASSIFIER_VERSION
+      2026-05-23.2→2026-05-23.3. Fixed bash empty-array nounset bug in create-code-tarballs.sh. — UAC@e6ae5013
+- [x] ✅ [SCRIPT] P1. **Phase 5.5min_relaunch — stop old INTRADAY VMs + relaunch 3 IS VMs with 5MIN/15MIN classifier**:
+      2026-05-23 slot-1. Stopped instr-backfill-pred-20251031/20260228/20260522 (had written with INTRADAY-only
+      classifier). Rebuilt tarball (UAC@e6ae5013 with 5MIN/15MIN). Relaunched same 3 VMs with --force to reprocess all
+      shards. All 3 RUNNING in asia-northeast1-c. — VMs RUNNING (launched 2026-05-23)
+- [x] ✅ [SCRIPT] P1. **Phase 5.mtds_canonical — launch MTDS canonical prediction backfill VM (2020→2025)**: 2026-05-23
+      slot-1. MTDS manifest had only 268 rows with new canonical schema (vs 158K old-schema rows). Launched
+      mtds-backfill-prediction-1 via launch-mtds-backfill-vm.sh --asset-group PREDICTION --start 2020-01-01 --end
+      2025-08-01 --force. Covers the range completed by the old IS VM. After IS 2025-08→2026-05 VMs complete (~40 min),
+      second MTDS VM to be launched for that range (singleton constraint: one MTDS prediction VM at a time). — VM
+      mtds-backfill-prediction-1 RUNNING
 
 ## `available_at` adapter stamping (coordinated)
 
@@ -793,21 +810,27 @@ _(no plans currently assigned at this priority)_
 
 ### [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (URL sweep 5 repos) + Phase 2 cassette re-record done; 8 items DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provisioned). · **estimate**: 1.0 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (URL sweep 5 repos) + Phase 2 cassette re-record done; 8 items
+DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provisioned). · **estimate**: 1.0 cal AI-days
+(class: refactor)
 
 **Deferred (MIGRATED FROM archived plan)** — BLOCKED-CREDENTIALS backlog:
 
-- **Phases 2-4 (8 items, P1-P2, BLOCKED-CREDENTIALS)**: Schema diff + update; provision `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager; integration test (authenticate + fetch); MTDS Kalshi adapter verify; execution-service paper-order flow verify; UAC weekly-validation cassette regression; predictions_master URL regression check. Gate: `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+- **Phases 2-4 (8 items, P1-P2, BLOCKED-CREDENTIALS)**: Schema diff + update; provision `kalshi-api-key` +
+  `kalshi-private-key-pem` to GCP Secret Manager; integration test (authenticate + fetch); MTDS Kalshi adapter verify;
+  execution-service paper-order flow verify; UAC weekly-validation cassette regression; predictions_master URL
+  regression check. Gate: `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
 
 ### [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](../archive/2026_05/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — IS cefi/sports/prediction manifest gaps fixed; prediction bucket consolidated
-(100.0% captured); codex `prediction-schema-paths.md` + `sports-data-source-coverage-matrix.md` updated. · **estimate**: 1.2 cal AI-days
+(100.0% captured); codex `prediction-schema-paths.md` + `sports-data-source-coverage-matrix.md` updated. · **estimate**:
+1.2 cal AI-days
 
 **Deferred (MIGRATED FROM archived plan)** — P1 operator-monitoring backlog:
 
-- **Monitor `instr-backfill-sports` VM**: ~60-day background backfill for 2020→2026 historical. No May-23 gate.
-  Operator monitors until STATUS=TERMINATED; verify sports gaps drop from 3063 to < 200.
+- **Monitor `instr-backfill-sports` VM**: ~60-day background backfill for 2020→2026 historical. No May-23 gate. Operator
+  monitors until STATUS=TERMINATED; verify sports gaps drop from 3063 to < 200.
 - **Schema column in drilldown**: verify `canonical_question_group` schema link in deployment-api UI routes to correct
   `CanonicalQuestionGroup` UAC metadata per group (not flat Polymarket schema).
 
