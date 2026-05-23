@@ -61,7 +61,8 @@ GCS manifest parquets contain rows from 3+ naming convention eras:
 
 Same pattern for AAVE_V3/AAVE_V3, COMPOUND_V3/COMPOUND_V3, MORPHOVAULTS/MORPHO_VAULTS, etc.
 
-Ghost entries (UNISWAP_V2, UNISWAP_V3, COMPOUND_V3, AAVE_V3 from era-2 handlers) show in the UI as venues with no data bar.
+Ghost entries (UNISWAP_V2, UNISWAP_V3, COMPOUND_V3, AAVE_V3 from era-2 handlers) show in the UI as venues with no data
+bar.
 
 **UPDATED 2026-05-22 schema audit findings (schema check complete)**:
 
@@ -69,14 +70,14 @@ Consolidated manifest ghost rows vs canonical per-VM shard rows (audited 2026-05
 
 | Venue          | Consolidated manifest                        | Per-VM shard (local-10889) | GCS canonical parquets                            |
 | -------------- | -------------------------------------------- | -------------------------- | ------------------------------------------------- |
-| `UNISWAP_V3`    | 187,769 rows captured, 2024-05-06→2026-01-23 | —                          | at `venue=UNISWAP_V3-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V3`   | 187,769 rows captured, 2024-05-06→2026-01-23 | —                          | at `venue=UNISWAP_V3-ETHEREUM/` (VENUE-CHAIN)     |
 | `UNISWAP_V3`   | **0 rows**                                   | 187,769 rows captured      | ✅ EXIST at canonical split path, full date range |
-| `UNISWAP_V2`    | 22,168 rows captured, 2024-05-03→2026-01-24  | —                          | at `venue=UNISWAP_V2-ETHEREUM/` (VENUE-CHAIN)      |
+| `UNISWAP_V2`   | 22,168 rows captured, 2024-05-03→2026-01-24  | —                          | at `venue=UNISWAP_V2-ETHEREUM/` (VENUE-CHAIN)     |
 | `UNISWAP_V2`   | **0 rows**                                   | 20,254 rows captured       | ✅ EXIST at canonical split path, full date range |
-| `AAVE_V3`       | 29,782 rows captured, 2024-05-02→2026-01-23  | —                          | at `venue=AAVE_V3-ETHEREUM/` (VENUE-CHAIN)         |
+| `AAVE_V3`      | 29,782 rows captured, 2024-05-02→2026-01-23  | —                          | at `venue=AAVE_V3-ETHEREUM/` (VENUE-CHAIN)        |
 | `AAVE_V3`      | **0 rows**                                   | 27,482 rows captured       | ✅ EXIST at canonical split path, full date range |
 | `MORPHOVAULTS` | 2,325 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
-| `YEARN_V3`      | 2,324 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
+| `YEARN_V3`     | 2,324 rows mixed, 2020→2026-05-18            | —                          | not audited                                       |
 
 **Root cause — NOT a GCS migration problem**: Canonical GCS parquets already exist at canonical split paths for ALL
 ghost date ranges. The fix is manifest-only. The consolidator's **incremental merge skips `local-10889-bd08.parquet`**
@@ -105,8 +106,8 @@ flip to `attempted_failed`.
 3. Verify `EmptyConfirmedReason` enum has a suitable reason for venue-renamed rows (check UAC
    `canonical.crosscutting.honest_coverage.EmptyConfirmedReason`). If not, add one.
 4. Run manifest consolidator to pick up the new shard.
-5. Old parquets at VENUE-CHAIN paths (`UNISWAP_V3-ETHEREUM/`) can remain — canonical split-path parquets already have the
-   same data with correct 33-column schema.
+5. Old parquets at VENUE-CHAIN paths (`UNISWAP_V3-ETHEREUM/`) can remain — canonical split-path parquets already have
+   the same data with correct 33-column schema.
 
 ### Bug 4 (OPEN): LST venue name `ANKR` confusingly displayed
 
@@ -130,12 +131,9 @@ enum.
 ## Recommended decision
 
 - [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
-- [ ] Bug 2: Normalise AAVE_V3 → AAVE_V3 in flash_loan_events_handler + position_data_handler + liquidations_handler.
-      Assign to MTDS slot.
-      **PARTIAL 2026-05-23**: Workspace-wide rename shipped all uppercase string literals AAVEV3→AAVE_V3 across 13
-      repos (UAC, MTDS, deployment-api, deployment-service, unified-trading-system-ui, etc.). Handlers that derive
-      venue from lowercase `protocol.upper()` (e.g. `"aavev3".upper()`) were NOT renamed by sed — those need targeted
-      handler-level fix.
+- [x] Bug 2: ✅ FULLY FIXED — MTDS@d6862ca2 (2026-05-23). `_DEFAULT_PROTOCOLS = ["aave_v3", ...]` uses underscore, so
+      `protocol.upper() = "AAVE_V3"` (canonical). All 3 handlers verified: no `AAVEV3` (no-underscore) string anywhere
+      in MTDS handlers. Workspace-wide rename + handler-level fix both complete.
 - [x] Bug 3: ✅ FULLY SUPPRESSED — IS@dbf7bf6 + IS@5a709c4 (2026-05-22). MTDS (dbf7bf6): UNISWAP_V3/V2/AAVE_V3 →
       empty_confirmed. Canonical rows UNISWAP_V3(187k)/UNISWAP_V2(22k)/AAVE_V3(30k) restored. IS DeFi (5a709c4): 31,709
       rows suppressed — AAVE_V3(9252), UNISWAP_V3(7641), COMPOUND_V3(4087), PANCAKESWAP_V3(3141), SUSHISWAP_V3(2962),
@@ -146,26 +144,26 @@ enum.
 
 ### Related fixes shipped 2026-05-23 (deployment-api)
 
-- [x] `_is_legacy_defi_venue_row` regex fixed — deployment-api@ce554bc. Regex `r"V\d+$"` → `r"_?V\d+$"` so
-  canonical `AAVE_V3-ETHEREUM` (venue=`AAVE_V3`, chain=`ETHEREUM`) correctly detected as legacy row, not missed.
-- [x] `_mtds_shard_path` `asset_group=` fallback — deployment-api@9b8e9ad. Tries canonical `asset_group={cat}`
-  hive key first, falls back to `category={cat}` for pre-migration parquets. GCS audit 2026-05-23 confirms fallback
-  IS still needed: Sports prd all `category=sports/`; CEFI has `category=` orphans on days 2019-12-01→2026-04-30
-  (migration wrote `asset_group=` copies but never deleted originals; DeFi is clean).
+- [x] `_is_legacy_defi_venue_row` regex fixed — deployment-api@ce554bc. Regex `r"V\d+$"` → `r"_?V\d+$"` so canonical
+      `AAVE_V3-ETHEREUM` (venue=`AAVE_V3`, chain=`ETHEREUM`) correctly detected as legacy row, not missed.
+- [x] `_mtds_shard_path` `asset_group=` fallback — deployment-api@9b8e9ad. Tries canonical `asset_group={cat}` hive key
+      first, falls back to `category={cat}` for pre-migration parquets. GCS audit 2026-05-23 confirms fallback IS still
+      needed: Sports prd all `category=sports/`; CEFI has `category=` orphans on days 2019-12-01→2026-04-30 (migration
+      wrote `asset_group=` copies but never deleted originals; DeFi is clean).
 
 ### GCS partition key audit (2026-05-23)
 
-| Asset group | Active partition key | `category=` still on disk? |
-|-------------|---------------------|---------------------------|
-| DeFi prd/flat | `asset_group=defi/` | No — fully migrated |
-| CEFI prd/flat | `asset_group=cefi/` | Yes — orphans 2019-12-01→2026-04-30 (migration left source files) |
-| Sports prd | `category=sports/` | Yes — all days; migration never ran |
-| TradFi | `pipeline_mode=` | N/A — different first-level key |
-| Prediction | `asset_group=` | No |
+| Asset group   | Active partition key | `category=` still on disk?                                        |
+| ------------- | -------------------- | ----------------------------------------------------------------- |
+| DeFi prd/flat | `asset_group=defi/`  | No — fully migrated                                               |
+| CEFI prd/flat | `asset_group=cefi/`  | Yes — orphans 2019-12-01→2026-04-30 (migration left source files) |
+| Sports prd    | `category=sports/`   | Yes — all days; migration never ran                               |
+| TradFi        | `pipeline_mode=`     | N/A — different first-level key                                   |
+| Prediction    | `asset_group=`       | No                                                                |
 
-CEFI `category=` orphans are redundant dead data (canonical `asset_group=` copies cover 100% of days).
-Cleanup: `gsutil rm -r gs://market-data-tick-cefi-{prd,}-central-element-323112/raw_tick_data/by_date/**/category=cefi/`
-— deferred post-Sports migration (single-walk discipline).
+CEFI `category=` orphans are redundant dead data (canonical `asset_group=` copies cover 100% of days). Cleanup:
+`gsutil rm -r gs://market-data-tick-cefi-{prd,}-central-element-323112/raw_tick_data/by_date/**/category=cefi/` —
+deferred post-Sports migration (single-walk discipline).
 
 ## Temporary states + their canonical follow-up plans
 
