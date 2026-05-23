@@ -188,8 +188,8 @@ audit trail).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 1 P0.1-P0.3 — alerting-service `gateway/manual_action_endpoint.py` (`POST /manual-action`) with
-      typed-confirm-string validation + scope dispatch (pair-review with Harsh)
+- [x] ✅ Phase 1 P0.1-P0.3 — alerting-service `gateway/manual_action_endpoint.py` (`POST /manual-action`) with
+      typed-confirm-string validation + scope dispatch — alerting-service@e5c8084 (router refactor P0.1 pair-review still pending)
 - [ ] Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons + LLM
       Audit Verdicts feed + Audit-Ack Queue panel + Incident History viewer
 - [ ] Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`)
