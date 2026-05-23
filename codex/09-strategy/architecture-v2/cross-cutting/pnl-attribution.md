@@ -724,3 +724,65 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 | PnL storage            | GCS archives                        | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
 | Reporting UI           | trading-analytics-ui                | `trading-analytics-ui/`                                   |
 | BigQuery reporting     | UCI DataSink                        | `unified-cloud-interface/`                                |
+| **Global ledger SSOT** | **LedgerRow (UAC)**                 | `unified_api_contracts.canonical.crosscutting.ledger`     |
+
+---
+
+## Global Ledger Integration (2026-05-23)
+
+> **[DELTA 2026-05-23]** UAC Phase 2 — `LedgerRow` shipped at `unified-api-contracts@008e59ce`. This section maps the
+> canonical attribution factors above to their SSOT ledger rows. Full architecture:
+> `codex/04-architecture/global-ledger-architecture.md`.
+
+### Carry-as-Theta-Family Attribution Framing
+
+Carry income (funding accruals, staking rewards, lending interest) is **structurally analogous to options theta**: it is
+a time-based passive income stream that accrues while a position is held, independent of price movement. This framing
+unifies CeFi / DeFi / TradFi carry attribution under a single factor taxonomy:
+
+| Carry type              | EventType (PassiveLedger)    | Canonical attribution factor         | Theta analogy                       |
+| ----------------------- | ---------------------------- | ------------------------------------ | ----------------------------------- |
+| Perp funding received   | `FUNDING_ACCRUAL`            | `CARRY_FUNDING`                      | Long theta on the basis spread      |
+| Perp funding paid       | `FUNDING_ACCRUAL` (delta<0)  | `CARRY_FUNDING` (negative)           | Short theta on the basis spread     |
+| LST staking reward      | `STAKING_REWARD`             | `CARRY_BASE` / `CARRY_BASE_REBASING` | Theta-equivalent on staked capital  |
+| Lending supply interest | `LENDING_INTEREST`           | `CARRY_LENDING_SUPPLY`               | Theta-equivalent on lent capital    |
+| Borrow cost             | `LENDING_INTEREST` (delta<0) | `CARRY_LENDING_BORROW`               | Negative theta on borrowed capital  |
+| Cash/stock dividend     | `DIVIDEND`                   | `CARRY_DIVIDEND`                     | Theta-equivalent on equity position |
+| Settlement cash flow    | `SETTLEMENT`                 | `REALIZED_PNL` (terminal)            | Theta-at-expiry (terminal)          |
+
+The "carry-as-theta" framing means:
+
+- **Carry strategies optimise for positive theta** (time decay in their favour) across the DeFi + CeFi leg split.
+- **Attribution decomposition**: delta-PnL (price move) + gamma-PnL (convexity) + theta-PnL (carry / time) + vega-PnL
+  (IV change) + residual. Carry strategies aim to maximise theta-PnL while hedging delta.
+- **PassiveLedger is the source of truth** for all carry attribution rows. Joining InstructionLedger positions with
+  PassiveLedger accrual rows via `parent_event_id` gives the per-position carry attribution timeline.
+
+### Ledger → Attribution Factor Mapping
+
+```
+InstructionLedger (EventOrigin.INSTRUCTION)
+  ├── TRADE rows           → delta-PnL (price × delta) + REALIZED_PNL at close
+  ├── TRANSFER/BRIDGE rows → excluded from P&L (capital movement, not income)
+  ├── STAKE/UNSTAKE rows   → excluded from P&L (position transformation)
+  ├── BORROW/REPAY rows    → excluded from P&L (balance sheet, not income)
+  └── LIQUIDATION rows     → REALIZED_PNL (forced close) + LOSS_LIQUIDATION factor
+
+PassiveLedger (EventOrigin.PASSIVE)
+  ├── FUNDING_ACCRUAL      → CARRY_FUNDING
+  ├── STAKING_REWARD       → CARRY_BASE or CARRY_BASE_REBASING
+  ├── LENDING_INTEREST     → CARRY_LENDING_SUPPLY (positive) / CARRY_LENDING_BORROW (negative)
+  ├── DIVIDEND             → CARRY_DIVIDEND
+  ├── SETTLEMENT           → REALIZED_PNL (terminal cash flow)
+  └── EXPIRY               → REALIZED_PNL = 0 (OTM expiry)
+
+PricingLedger (EventType.MARK_UPDATE, written by MTDS)
+  └── MARK_UPDATE rows     → unrealized P&L MTM: PositionLedger ⨝ PricingLedger
+```
+
+**Implementation status (2026-05-23 audit findings):**
+
+- `unrealized_pnl` in strategy-service always returns 0 — MarkPrice not bridged to PnL engine.
+- `fees` not deducted from realized P&L computation.
+- PassiveLedger synthesiser not yet implemented — carry factors computed ad-hoc per archetype.
+- Migration to join-from-ledger model tracked in `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.

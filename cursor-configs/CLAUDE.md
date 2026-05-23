@@ -943,3 +943,7 @@ provider; Polygon L2 chain in `canonical/crosscutting/defi.py` intact).
 
 Import: `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`. Deep paths are
 UAC-internal. SSOT: `codex/02-data/contracts-scope-and-layout.md`.
+
+**Global ledger SSOT** (Phase 2 shipped 2026-05-23): `unified_api_contracts.canonical.crosscutting.ledger` —
+`LedgerRow` + 4 aliases (Instruction/Passive/Treasury/Pricing) + 5 StrEnums + `CrossClientTransferForbiddenError`.
+Architecture: `codex/04-architecture/global-ledger-architecture.md`. Taxonomy: `codex/02-data/ledger-event-taxonomy.md`.

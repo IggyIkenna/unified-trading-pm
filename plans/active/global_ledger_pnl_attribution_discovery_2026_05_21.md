@@ -299,10 +299,13 @@ regulatory_report_id):
 
 ### Phase 10 — Codex SSOT update (P2)
 
-- [ ] [DOC] P2. Add `codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model, universal
-      PnL recipe, synthesis recipe table, ownership table.
-- [ ] [DOC] P2. Add `codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
-      `Direction` enum SSOT.
+- [x] ✅ [DOC] P2. Add `codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model,
+      universal PnL recipe, synthesis recipe table, ownership table. — Updated existing file: Phase 2 UAC DONE banner +
+      UAC contract code block + 5-service gap table. unified-trading-pm@a7aed81d3.
+- [x] ✅ [DOC] P2. Add `codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
+      `Direction` enum SSOT. — Expanded from stub: full EventOrigin (2), EventType (15), AssetClass (14), Direction
+      (12), OptionRight (2) tables with string values + routing summary + cross-client invariant.
+      unified-trading-pm@a7aed81d3.
 - [ ] [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
       "carry-as-theta-family" attribution framing.
 - [ ] [DOC] P2. Update CLAUDE.md to add a 1-line pointer to the new ledger codex SSOT (or extend the existing
