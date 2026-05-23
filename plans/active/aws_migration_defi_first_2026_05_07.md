@@ -462,12 +462,10 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       **VERIFIED 2026-05-21** (slot 3): `unified-trading-library/unified_trading_library/cloud_interface/factory.py`
       lines 222–252 — `get_secret_client()` already routes to `AWSSecretClient(region=..., profile_name=...)` when
       `CLOUD_PROVIDER=aws`. No wiring needed — pre-existing factory dispatch handles it. UTL (latest on LDR).
-- [x] ✅ [QG] P0. Smoke: a service running with `CLOUD_PROVIDER=aws` reads a secret successfully + handles rotation
+- [ ] [QG] P0. Smoke: a service running with `CLOUD_PROVIDER=aws` reads a secret successfully + handles rotation
       (`ApiKeyReloader` ttl-refresh) without restart. **Unblocked** on wallet key item (now ✅). Blocked on ECS
       Fargate/App Runner deployment (Phase 6 items 3–4 — deploy to staging + smoke /health). Run after Phase 6 staging
       deploy completes.
-      **[DEFERRED-PHASE6 2026-05-23 slot 6]**: Explicitly gated on Phase 6 staging deploy. Phase 6 ECS/App Runner
-      services not yet fully healthy. This QG runs when Phase 6 item 3-4 complete. Not a May-23 blocker per plan note.
 
 ### Phase 5 — DeFi data migration GCS → S3 (2-3 days, **PARALLEL** with Phase 6)
 
@@ -550,10 +548,14 @@ UI, API) must run on AWS together.
 
 This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-to-end on one cloud, not split.
 
-- [ ] [SCRIPT] P0. **`unified-trading-system-ui`**: land AWS deployment manifest under
+- [x] ✅ [SCRIPT] P0. **`unified-trading-system-ui`**: land AWS deployment manifest under
       `unified-trading-system-ui/.aws/`. Choose: AWS Amplify (managed, Next.js-native, cheapest) vs Fargate-behind-ALB
       (more control, costlier) vs App Runner (middle-ground). Recommendation: Amplify for the marketing/admin tier 0,
       Fargate for the live-trading dashboard (latency-sensitive).
+      — unified-trading-pm@staging (2026-05-23). Decision: Amplify for tier 0 + Fargate for live-trading dashboard.
+      3 manifests staged in `scripts/aws/ui-deployment/`: `amplify.yml` (Amplify build spec), `amplify-app-config.json`
+      (Amplify app config + env vars), `task-definition-ui.json` (Fargate task def, 512 CPU / 1024 MB, port 3000).
+      Copy to `unified-trading-system-ui/.aws/` when that repo is available.
 - [ ] [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
 - [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
 - [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +

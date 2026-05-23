@@ -1,0 +1,35 @@
+version: 1
+# AWS Amplify build spec for unified-trading-system-ui (tier 0 — marketing/admin surfaces).
+# cp to unified-trading-system-ui/amplify.yml when that repo is available.
+#
+# Decision rationale (aws_migration_defi_first_2026_05_07.md §Phase 6.5):
+#   - Amplify: for tier 0 marketing/admin UI (static/SSR Next.js) — managed, cheapest, no infra ops.
+#   - Fargate: for live-trading dashboard (latency-sensitive, persistent websocket connections).
+#   This file covers the Amplify deployment for tier 0 surfaces only.
+#   See task-definition-ui.json for the Fargate live-trading dashboard path.
+#
+# Amplify app settings (set these in Console or via amplify-app-config.json):
+#   App name:         uts-trading-ui-prod
+#   Framework:        Next.js - SSR
+#   Branch:           live-defi-rollout (primary), main (mirror)
+#   Region:           ap-northeast-1
+#   Service role ARN: arn:aws:iam::427895769566:role/uts-amplify-service-role
+#   Environment vars: see amplify-app-config.json
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - node --version
+        - npm ci --prefer-offline
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+  buildPath: /

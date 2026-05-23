@@ -1,0 +1,28 @@
+{
+  "_comment": "AWS Amplify app configuration for unified-trading-system-ui (tier 0 — marketing/admin).",
+  "_staging_note": "Staged in unified-trading-pm/scripts/aws/ui-deployment/. Copy to unified-trading-system-ui/.aws/ when that repo is available. Apply via: aws amplify create-app --name uts-trading-ui-prod --cli-input-json file://amplify-app-config.json",
+  "name": "uts-trading-ui-prod",
+  "description": "Unified Trading System UI — AWS Amplify (tier 0: marketing/admin surfaces)",
+  "repository": "https://github.com/IggyIkenna/unified-trading-system-ui",
+  "oauthToken": "PLACEHOLDER_GITHUB_PAT",
+  "platform": "WEB_COMPUTE",
+  "iamServiceRoleArn": "arn:aws:iam::427895769566:role/uts-amplify-service-role",
+  "environmentVariables": {
+    "NEXT_PUBLIC_CLOUD_PROVIDER": "aws",
+    "NEXT_PUBLIC_REGION": "ap-northeast-1",
+    "NEXT_PUBLIC_API_BASE_URL": "PLACEHOLDER_ALB_OR_APIGW_URL",
+    "NEXT_PUBLIC_DEPLOYMENT_API_URL": "PLACEHOLDER_DEPLOYMENT_API_URL",
+    "CLOUD_PROVIDER": "aws",
+    "CLOUD_MOCK_MODE": "false",
+    "NODE_ENV": "production"
+  },
+  "autoBranchCreationConfig": {
+    "enableAutoBranchCreation": false
+  },
+  "tags": {
+    "env": "prod",
+    "service": "unified-trading-system-ui",
+    "cloud": "aws",
+    "asset_group": "all"
+  }
+}
