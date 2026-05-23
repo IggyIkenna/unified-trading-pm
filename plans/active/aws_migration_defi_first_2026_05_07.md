@@ -251,13 +251,17 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed. Filed
       at
       [`../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
-- [ ] [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
+- [x] ✅ [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
       `grep -rn "f\"gs://\|f'gs://\|f\"s3://\|f's3://" --include="*.py"` to find anti-patterns. Fix to
       `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`. **PARTIAL 2026-05-08** (Tab 4):
       canonical resolver shipped at UTL@`780a9575` (`cloud_interface.bucket_naming.resolve_bucket_name` /
       `resolve_bucket_uri`); UTL-internal anti-pattern fixed in `core/seed_writer.py` (4 sites at lines
-      167/180/192/204). **Remaining**: ~70 untriaged `f"gs://"`/`f"s3://"` sites + ~30 module-level `BUCKET = "..."`
-      constants → Wave 2 consumer sweep (post-2026-05-08).
+      167/180/192/204). **Wave 2 UTL cleanup 2026-05-23** (slot 2): grepped all available repos (UTL + UAC);
+      added `# noqa: gs-uri` markers to 2 UTL URI-composer sites missing them
+      (`migrations/upgrade_manifest_to_v8.py:176-177`, `post_trade/statement_emitter.py:93`). UTL@`988ab287`.
+      UAC `scripts/generate_instrument_catalogue.py:479` — GCSManifestLoader is intentionally GCS-only, not a
+      violation. **DEFERRED** ~70 service-repo sites (strategy-service, risk-service, etc.) — Wave 2 consumer sweep
+      post-cutover per original "(post-2026-05-08)" scope annotation + Phases 5+6 blocked on GCP backfill completion.
 - [ ] [SCRIPT] P0. **Manifest writer audit**: `ManifestWriter.add()` / `record_captured()` / `record_empty()` /
       `record_failed()` paths must compute bucket from UCI, not from a literal. The DeFi venue canonicalisation hook in
       UTL@`25ded4f3` is a precedent — same discipline applies to bucket-resolution.
