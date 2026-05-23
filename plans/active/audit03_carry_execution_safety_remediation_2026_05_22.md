@@ -56,14 +56,17 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 ## Phase 2 — execution-service wrap preprocessor (F-28, P0) — gated on Phase 1
 
-- [ ] [AGENT] P0. **F-28** — Rewire `execution_service/engine/preprocessors/wrap_preprocessor.py` to call UAC
+- [x] ✅ [AGENT] P0. **F-28** — Rewire `execution_service/engine/preprocessors/wrap_preprocessor.py` to call UAC
       `needs_wrapping()` for the ENTRY path (today it only calls `needs_unwrapping()` for exits + uses a hardcoded
       `_WRAP_RULES` dict missing stETH). Add the `stETH→wstETH` rule.
-- [ ] [AGENT] P0. **F-28** — Extend the op-type gate (L197-206) so a CeFi collateral `TRANSFER` leg whose destination
+      DONE: execution-service@db50597c + @e0ce5dba (supplemental coverage).
+- [x] ✅ [AGENT] P0. **F-28** — Extend the op-type gate (L197-206) so a CeFi collateral `TRANSFER` leg whose destination
       venue requires a non-rebasing token triggers a wrap step (or is rejected with a typed error) — currently
       `TRANSFER`/`TRADE` fall through unguarded.
-- [ ] [AGENT] P1. Classify a banned/un-wrappable collateral transfer via UAC `classify_venue_error()` + emit
+      DONE: execution-service@db50597c. TRANSFER included in op-type gate; UnsupportedCapabilityError raised for banned combos.
+- [x] ✅ [AGENT] P1. Classify a banned/un-wrappable collateral transfer via UAC `classify_venue_error()` + emit
       `ADAPTER_FETCH_FAILED`/typed reject — no silent pass-through.
+      DONE: UnsupportedCapabilityError (typed reject) raised at preprocess() — no silent pass-through. classify_venue_error wired in adapters (d7ac3ffc).
 - [ ] [SCRIPT] P0. execution-service quality-gates Pass 1 GREEN + unit test: `stETH → Deribit/Bybit/OKX` transfer now
       wraps to wstETH (or rejects); `wstETH → Deribit` still rejected.
 
@@ -71,18 +74,23 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py`
 
-- [ ] [AGENT] P0. **F-11** — Add per-venue wrap + banned-combo guard at `_build_legs` (stETH→OKX, wstETH→Deribit/Bybit)
+- [x] ✅ [AGENT] P0. **F-11** — Add per-venue wrap + banned-combo guard at `_build_legs` (stETH→OKX, wstETH→Deribit/Bybit)
       — do NOT rely solely on config + the EXE-07 preprocessor. `_derive_structure` already blocks stETH→OKX via
       `accepted_perp_collateral`; close the wstETH→Deribit/Bybit hole.
-- [ ] [AGENT] P1. **F-10** — Add the `− fees` term to `net_carry` (staked_basis.py:254) per codex
+      DONE: _BANNED_LST_PERP_COMBOS at staked_basis.py:117-118 + _build_legs guard at :334-343.
+- [x] ✅ [AGENT] P1. **F-10** — Add the `− fees` term to `net_carry` (staked_basis.py:254) per codex
       `carry-staked-basis.md:53` (`net_apy_bps = staking_apy_total + funding_apy − fees`). Removes the optimistic entry
       threshold.
-- [ ] [AGENT] P1. **F-09** — Enforce `stake_fraction == 1.0` (LST-as-margin has no spare-USDC leg); delete the
+      DONE: staked_basis.py:299 — `net_carry = f * (staking_apy + funding_apy) - fees`.
+- [x] ✅ [AGENT] P1. **F-09** — Enforce `stake_fraction == 1.0` (LST-as-margin has no spare-USDC leg); delete the
       SPLIT_STAKE-era f-grid + `(1-f)·idle_yield` term. Reject `f<1` at preflight rather than mis-size.
-- [ ] [AGENT] P1. **F-12** — Implement the `allowed_chains` gate (codex `[ethereum, solana, arbitrum]`); engine refuses
+      DONE: staked_basis.py:243-248 — `if stake_fraction != Decimal("1.0"): raise`.
+- [x] ✅ [AGENT] P1. **F-12** — Implement the `allowed_chains` gate (codex `[ethereum, solana, arbitrum]`); engine refuses
       to size on-chain positions outside the list. Currently absent from all of strategy-service.
-- [ ] [AGENT] P2. **F-08** — Delete stale docstrings: the deleted SPLIT_STAKE 3-leg path (L15-19) + "zero LST venues /
+      DONE: _ALLOWED_CHAINS frozenset at staked_basis.py:124 + preflight gate at :249-253.
+- [x] ✅ [AGENT] P2. **F-08** — Delete stale docstrings: the deleted SPLIT_STAKE 3-leg path (L15-19) + "zero LST venues /
       zero slots" claim (L128-131), which contradicts the 6 matrix pairs / 4 live carry slots.
+      DONE: staked_basis.py docstring updated — SPLIT_STAKE deletion explained at :141-148; no stale "zero LST" claim.
 - [ ] [SCRIPT] P0. strategy-service quality-gates Pass 1 GREEN + unit tests for the new guards + the corrected
       `net_carry`.
 
