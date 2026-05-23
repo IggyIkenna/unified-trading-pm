@@ -588,7 +588,7 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       Cloudflare-fronted GCP. If using Cloudflare or Route 53 for the workspace, update the routing rules. If
       `*.unified-trading.io` (or whatever the domain is) currently points GCP-only, add per-asset-group routing or
       domain split.
-      **DONE 2026-05-23** (Slot 7): pm@(next commit) — landed
+      **DONE 2026-05-23** (Slot 7): pm@`adce63d8` — landed
       `unified-trading-pm/scripts/aws/setup-dns-routing.sh`. Strategy: Route 53 hosted zone for `odum-research.com`
       + weighted A records (`www.odum-research.com`): GCP Cloud Run global LB IP (weight 100 pre-cutover, 0 post) +
       AWS ALB ALIAS (weight 0 pre-cutover, 100 post). Three modes: `setup` (initial, all traffic → GCP), `cutover`
