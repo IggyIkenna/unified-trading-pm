@@ -13,6 +13,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../active/aws_migration_defi_first_2026_05_07.md
+  - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
+  - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
 ---
 
 ## Audit 2026-05-07
@@ -428,9 +430,19 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`audit03_deployment_cron_provisioning_2026_05_22`](../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All 11 todos done. F-39/40/41/42 Cloud Run Jobs + Cloud Scheduler crons provisioned
+on GCP; F-43 Solana devnet paper path; F-44 ManualTradeGateDialog Playwright e2e. BLRS dry-run succeeded;
+strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
+
+### [`vm_launcher_startup_url_migration_2026_05_21`](../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All 17 todos done. 22 data-pipeline launchers converted to Pattern A
+(startup-script-url); 11 Pattern B exceptions documented in codex. Codex `vm-tarball-deployment.md` updated ✅
+2026-05-21. · **estimate**: 2.4 cal AI-days (class: infra)
 
 ### [`aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)
 
@@ -447,7 +459,14 @@ _(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+- [ ] [AGENT] P3. **UTL `STANDARD_CATEGORIES` lowercase** (**MIGRATED FROM:**
+      `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4) — UTL `service_cli.py` STANDARD_CATEGORIES should
+      include lowercase asset-group choices (`cefi`/`defi`/`tradfi`/`sports`/`prediction`) to match canonical vocabulary
+      per CLAUDE.md. Small UTL change; no urgency for May-23.
+- [ ] [AGENT] P3. **`launch-gcs-migration-bundle-vm.sh` GCS script staging** (**MIGRATED FROM:**
+      `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
+      from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
+      is correct for now.
 
 ## Codex SSOTs
 

@@ -1,11 +1,10 @@
 ---
+name: vm_launcher_startup_url_migration_2026_05_21
 title: "VM Launcher startup-script-url Migration (O-1 full consolidation)"
-status: active
+status: archived
 priority: P1
 assigned_vm: vm-cross-cutting
 parent_epic: infrastructure_master
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
@@ -162,6 +161,13 @@ Plan is operationally complete when:
    exceptions with the unquoted form (aave, amm, epic, features-sports-parallel, gcs-migration-bundle, planning,
    prediction-features, prediction-pipeline, zombie-watchdog). The 2 cron launchers use quoted form.
 4. `codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 11 exceptions. ✅ 2026-05-21
+
+## Deferred work — migrated to:
+
+No required deferrals. All 17 todos closed. Pattern B exceptions (11 launchers) are permanent by design, documented in
+`codex/05-infrastructure/vm-tarball-deployment.md` § "Launcher pattern decision matrix". Soft suggestion only:
+`launch-gcs-migration-bundle-vm.sh` GCS script staging could be moved to `CODE_BUCKET/scripts/` in a future pass —
+tracked as P3 in `infrastructure_master` if operator chooses to pursue.
 
 ## Temporary states + their canonical follow-up plans
 

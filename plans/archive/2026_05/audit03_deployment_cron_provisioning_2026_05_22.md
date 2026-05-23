@@ -6,11 +6,10 @@ assigned_vm: vm-cross-cutting
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2.0
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
-locked_by: live-defi-rollout
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§2.10 CUT + §6.1 re-verification ledger)
 gate: Cloud Run Jobs (Phase 1) must exist before their schedulers (Phase 2) are applied
 ---
@@ -103,6 +102,13 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
       `--dry-run`) = failed=1 as expected — Stage 0 correctly detects missing T+1 ML/strategy outputs in GCS (upstream
       pipeline hasn't produced `t1-recon/ml/{date}/_SUCCESS` yet; Stage 0 returns FAILED, pipeline aborts cleanly with
       exit 1; this is correct behavior, not an infrastructure bug). BLRS infrastructure complete.
+
+## Deferred work — migrated to:
+
+- **P3 UTL `STANDARD_CATEGORIES` lowercase** (**MIGRATED FROM:** this plan Phase 4 deferred note) →
+  `plans/epics/infrastructure_master.md` P3. UTL `service_cli.py` STANDARD_CATEGORIES should include lowercase
+  asset-group choices (`cefi`/`defi`/`tradfi`/`sports`/`prediction`) to match canonical vocabulary per CLAUDE.md. Small
+  code change in UTL; no urgency for May-23.
 
 ## Success criteria
 

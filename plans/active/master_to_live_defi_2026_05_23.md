@@ -111,7 +111,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-23 12:58 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-23 14:11 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -123,7 +123,7 @@ folded into the appropriate epic._
 | [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                 | defi_master                                | brand-new | 23/63      | 37%          | 15.2     | —        |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                           | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 34/74      | 46%          | 8.6      | —        |
 | [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                 | master                                     | brand-new | 0/5        | 0%           | 8.0      | —        |
-| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/251    | 75%          | 6.0      | —        |
+| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/250    | 75%          | 6.0      | —        |
 | [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md)                                 | batch_live_symmetry_master                 | brand-new | 0/7        | 0%           | 5.0      | —        |
 | [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 0/38       | 0%           | 3.6      | —        |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                     | batch_live_symmetry_master                 | design    | 63/71      | 89%          | 3.4      | —        |
@@ -149,9 +149,7 @@ folded into the appropriate epic._
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 25/26      | 96%          | 0.2      | —        |
 | [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
-| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | defi_master                                | infra     | 11/11      | 100%         | 0.0      | —        |
-| [`vm_launcher_startup_url_migration_2026_05_21`](./vm_launcher_startup_url_migration_2026_05_21.md)                                         | master                                     | infra     | 17/17      | 100%         | 0.0      | —        |
-| **TOTAL** (34 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **60% done** | **177**  | —        |
+| **TOTAL** (32 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **60% done** | **176**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
