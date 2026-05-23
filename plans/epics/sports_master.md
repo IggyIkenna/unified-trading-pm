@@ -1087,12 +1087,13 @@ DEFERRED (forward-fix QG step, retrospective backfill ~7.5M rows, verification A
 
 ## P3 — backlog; revisit quarterly
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md** —
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md** —
       Orchestrator zero-fixture-path bug: `recovery_fixture_ids` does not bypass `_read_fixture_ids_from_gcs`; hardcoded
       `fixture_ids_override=[]` ignores the allowlist entirely. Bug was deferred to an issue doc
       `plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md` that was never created.
       Fix: when `fixture_ids_override` is populated, skip the GCS read entirely and use the override list directly.
-      Affects API-Football backfill recovery path.
+      Affects API-Football backfill recovery path. — instruments-service@b91b88a5 (already shipped by Harsh 2026-05-14;
+      fix covers both per-fixture skip path + zero-fixture path; verified on branch)
 
 ## Archived plans
 
