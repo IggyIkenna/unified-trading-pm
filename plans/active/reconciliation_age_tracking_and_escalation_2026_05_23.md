@@ -197,8 +197,10 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.4-P0.6 — `batch-live-reconciliation-service` + `position-balance-monitor-service` engines populate age
-      fields at row-write time
+- [x] ✅ Phase 2 P0.4 + P0.6 — `batch-live-reconciliation-service` DeviationRecord.new() factory +
+      ReconciliationDimension tagging across all 7 stage files + mock_data_provider —
+      batch-live-reconciliation-service@216073a | QG green (P0.5 position-balance-monitor-service BLOCKED — not in tab-8
+      worktree)
 - [ ] Phase 3 P0.7-P0.9 — alerting-service 15-min/30-min escalation rules + per-(venue,strategy) overrides
 - [ ] Phase 4 P0.10-P0.11 — 7 ImmediateSev0Override predicates + unit tests
 - [ ] Phase 5 P0.12-P0.14 — execution-service preflight recon-freeze enforcement
@@ -218,14 +220,14 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
@@ -233,7 +235,8 @@ _(No Tier-5 items in this plan's scope.)_
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5 work landed; this plan's Phase 2+ is independent of the Tier-5 follow-ups.
+- [ ] Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5 work
+      landed; this plan's Phase 2+ is independent of the Tier-5 follow-ups.
 
 **Cross-references**:
 
@@ -244,4 +247,3 @@ _(No Tier-5 items in this plan's scope.)_
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
 - DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
-
