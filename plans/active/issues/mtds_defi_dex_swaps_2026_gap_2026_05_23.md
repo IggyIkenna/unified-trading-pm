@@ -65,8 +65,21 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **MDPS DeFi 2024+2025 VMs relaunched with fix** — killed buggy `195633` VMs, rebuilt UAC tarball (sha
       `397e71950270` with fix), relaunched `mdps-defi-2024-20260523-215530` + `mdps-defi-2025-20260523-215530` RUNNING
       (asia-northeast1-c, e2-standard-8, run-ts=20260523-215530).
-- [ ] **T+10 verify run-ts=215530** (pending): confirm both 2024+2025 VMs still RUNNING, logs clean (no SchemaContract
-      errors)
+- [x] **T+10 verify run-ts=215530** — both `mdps-defi-2024-20260523-215530` + `mdps-defi-2025-20260523-215530` confirmed
+      RUNNING at T+10. Logs show 429 rate-limiting for 2024 (expected, not an error) and schema violations for
+      `chain`/`swap_count`/`volume_quote_usd` (root-caused; fixes applied — see below)
+- [x] **Root-caused 3 new bugs blocking all dex_pool_swaps candle writes** (2026-05-23, post-T+10): (1) `swaps_ohlcv_4h`
+      missing from UAC schema registry — `_TIMEFRAMES_DEFI` lacked `"4h"` while MDPS `default_timeframes` includes it →
+      every 4h shard fails `SchemaContractNotFoundError`. Fixed: added `"4h"` to `_TIMEFRAMES_DEFI` in UAC
+      `_candle_contracts.py`. (2) `chain` column dropped during candle assembly — `_PASSTHROUGH_COLUMNS = ["league_id"]`
+      missing `"chain"` → raw tick `chain='ETHEREUM'` never reaches the candle DataFrame → schema write validation
+      fails. Fixed: added `"chain"` to `_PASSTHROUGH_COLUMNS` in MDPS `live_workers.py`. (3) `swap_count` and
+      `volume_quote_usd` never computed — required by `_DEX_EXT` schema contract but absent from
+      `DefiSwapAdapter.process_to_candles()` output. Fixed: added `swap_count` + `volume_quote_usd` fields to
+      `CandleOutput` in UAC `adapter_models.py`; populated from `count_arr` / `volume_arr` in `swap_adapter.py`; added
+      `"swap_count": "sum"` + `"volume_quote_usd": "sum"` to `COLUMN_AGG_RULES` in MDPS `aggregation_rules.py`.
+- [ ] **Rebuild tarballs + relaunch VMs with all fixes** — kill current 215530 VMs, rebuild UAC+MDPS tarballs, relaunch
+      `mdps-defi-2024-*` + `mdps-defi-2025-*`, T+10 verify
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
 
