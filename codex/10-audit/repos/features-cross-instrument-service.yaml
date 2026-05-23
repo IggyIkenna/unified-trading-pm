@@ -315,3 +315,200 @@ code_audit_items:
   REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
   REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
   REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+
+
+# ==============================================================================
+# LIVE DEFI READINESS — 7-GROUP 23-ITEM (master_to_live_defi_2026_05_23)
+# Items 1-3 (Group A · Code health) inherited from code_readiness above.
+# Items 4-23 tracked here. plan_ref for criteria details.
+# Statuses: not_assessed | partial | shipped | not_started | na
+# ==============================================================================
+live_defi_readiness:
+  schema_version: "1.0"
+  last_updated: "2026-05-23"
+  plan_ref: "plans/active/master_to_live_defi_2026_05_23.md"
+
+  group_rollup:  # snapshot from service readiness matrix 2026-05-23
+    A_code_health: "partial"          # items 1-3 (see code_readiness)
+    B_data_correctness: "partial"     # items 4-8
+    C_runtime_parity: "partial"       # items 9-11
+    D_coverage_shard: "partial"       # items 12-14
+    E_operability: "partial"          # items 15-16
+    F_trading_prereqs: "na"      # items 17-22 (incl 17.5)
+    G_operator_ux: "na"          # item 23
+
+  items:
+    # ── Group B · Data correctness ────────────────────────────
+    "4":
+      group: "B"
+      criterion: "Representative (asset_group, data_type, day) triples produce valid parquet end-to-end"
+      continuous_verifier: "cron:*-fwd- VMs per asset_group"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "5":
+      group: "B"
+      criterion: "record_{captured,empty,failed} with expected_root_clusters + cluster_extractor for bundled types"
+      continuous_verifier: "QG:UTL STEP 5.64 + STEP 5.67 + STEP 5.68"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "6":
+      group: "B"
+      criterion: "DependencyError(fail_fast=True) at boundary; honest absence categories A/B/C/D"
+      continuous_verifier: "cron:manifest-consolidator- + writegate Phase 5 ratchet"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "7":
+      group: "B"
+      criterion: "Domain types in UAC, runtime utilities in UTL (UAC/UTL abstraction)"
+      continuous_verifier: "QG:per-repo import-surface-enforcement"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "8":
+      group: "B"
+      criterion: "Parquet schema matches UAC contract per record_captured (4-pillar item 3)"
+      continuous_verifier: "QG:per-repo write-gate helper"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    # ── Group C · Runtime parity ──────────────────────────────
+    "9":
+      group: "C"
+      criterion: "Hot reload typed; ApiKeyReloader for Secret Manager creds"
+      continuous_verifier: "QG:per-service STEP 5.34 typed-config-reloaders + STEP 5.61 ServiceBootstrap"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "10":
+      group: "C"
+      criterion: "Batch = live: same code path; only fill source differs"
+      continuous_verifier: "manual (architecture invariant) + cron:batch-vs-live-recon- (Wave-2 Phase 12)"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "11":
+      group: "C"
+      criterion: "AWS + GCP parity: both VM launch paths green; CLOUD_PROVIDER toggle; bucket-name SSOT (b+)"
+      continuous_verifier: "Tab 4 (Harsh-side) + AWS Phase 1 smoke; daily until cutover"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    # ── Group D · Coverage & shard ────────────────────────────
+    "12":
+      group: "D"
+      criterion: "Deployment-UI rollup matches on-disk truth-set per asset-group canonical shard axis"
+      continuous_verifier: "cron:deployment-api rollup endpoint + UI smoke"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "13":
+      group: "D"
+      criterion: "Shard granularity correct per CLAUDE.md per-asset-group matrix"
+      continuous_verifier: "cron:reconcile_phantom_manifest_rows_all (weekly per asset_group)"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "14":
+      group: "D"
+      criterion: ">=2 years representative history captured (full-window backfill)"
+      continuous_verifier: "cron:expected-universe-enumerator- + manifest spot-check"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    # ── Group E · Operability ─────────────────────────────────
+    "15":
+      group: "E"
+      criterion: "UTS-UI surfaces visible (/ops/admin/... route exists or in-scope)"
+      continuous_verifier: "QG:unified-trading-system-ui route smoke + DART persona Playwright"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    "16":
+      group: "E"
+      criterion: "Deployment-UI launch + GCS log streaming; backfill/restart/forward-poll launchable from UI"
+      continuous_verifier: "cron:vm-zombie-watchdog- + deployment-UI heartbeat"
+      status: "not_assessed"
+      last_verified: null
+      na_reason: null
+      notes: ""
+    # ── Group F · Trading prereqs ─────────────────────────────
+    "17":
+      group: "F"
+      criterion: "Backtest fidelity: real gas, real market impact, realistic matching engine + cost+yield precision"
+      continuous_verifier: "cron:mtds-paper-smoke- + simulation_scenarios_topology_price_shocks Phase 9"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "17_5":
+      group: "F"
+      criterion: "Scenario regression matrix green per archetype (>=95% pass rate); run <=24h pre-cutover"
+      continuous_verifier: "cron:mtds-scenario-matrix- (NOT YET PROVISIONED)"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "18":
+      group: "F"
+      criterion: "2-year batch backtest run: completed across config grid; P&L variance per archetype"
+      continuous_verifier: "cron:strategy-backtest-grid-"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "19":
+      group: "F"
+      criterion: "Treasury / custody integration: CLOUD_KMS_ENCRYPTED May-23; COPPER + CEFFU June-1"
+      continuous_verifier: "cron:credential-probe-vm daily"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "20":
+      group: "F"
+      criterion: "Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors"
+      continuous_verifier: "cron:dex-perp-onboarding- + paper-trade smoke runbook"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "21":
+      group: "F"
+      criterion: "Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement"
+      continuous_verifier: "cron:batch-vs-live-recon-"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    "22":
+      group: "F"
+      criterion: "Trading guardrails: circuit breakers + kill switches + alerting + auto-recovery"
+      continuous_verifier: "cron:alerting-paging-targets-"
+      status: "na"
+      last_verified: null
+      na_reason: "service is infrastructure / data-pipeline; live-trading prereqs are n/a"
+      notes: ""
+    # ── Group G · Operator UX ─────────────────────────────────
+    "23":
+      group: "G"
+      criterion: "DART manual-trade gate end-to-end visualization"
+      continuous_verifier: "manual (operator-driven)"
+      status: "na"
+      last_verified: null
+      na_reason: "service has no direct operator UX surface for the manual-trade gate"
+      notes: ""
