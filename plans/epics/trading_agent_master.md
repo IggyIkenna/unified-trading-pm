@@ -31,9 +31,17 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`trading_agent_service_architecture_unlock_2026_05_22`](../active/trading_agent_service_architecture_unlock_2026_05_22.md)
+### [`trading_agent_service_architecture_unlock_2026_05_22`](../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md)
 
-**status**: in-progress · **estimate**: 3.2 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-8 complete: directive pipeline + event contracts + UAC schema + codex SSOT
+shipped. Phase 7 CI wired locally (GH_PAT rotation BLOCKED-OPERATOR). · **estimate**: 3.2 cal AI-days (class: refactor)
+
+**Deferred (MIGRATED FROM archived plan)** — P3 backlog, post-cutover:
+
+- No-op directive emission (Phase 6): real allocator logic; previously pointed at SUPERSEDED epic Phase 10.7
+- STUB ML/LLM subscribers (Phase 6): real derivations → `ml_repo_consolidation` + Allocator service
+- `performance_features` passthrough (Phase 3): rolling sharpe/drawdown/attribution → Allocator service
+- Phase 7 CI (GH_PAT rotation): `BLOCKED-OPERATOR` — unit tests + scaffold ship; CI triggers on PAT rotation
 
 ## P1 — important; post-current-gate
 

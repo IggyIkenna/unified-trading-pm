@@ -1550,26 +1550,44 @@ plan (DO NOT move without operator ack)
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`audit03_carry_execution_safety_remediation_2026_05_22`](../archive/2026_05/audit03_carry_execution_safety_remediation_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All P0 CSB carry + execution safety findings closed
+(F-08/09/10/11/12/26/28/29/31/33). Scenario-matrix cron provisioning (F-40) tracked separately in
+`audit03_deployment_cron_provisioning_2026_05_22.md`. · **estimate**: 2.4 cal AI-days (class: brand-new)
 
 ## Deferred work — migrated from archived plans
 
-- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived). Low-impact cosmetic fix.
-      — `execution-service@24ad81b0` (replaced "19 chains" hardcode with reference to UAC WETH_ADDRESSES)
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix
+      stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains
+      but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC
+      constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived).
+      Low-impact cosmetic fix. — `execution-service@24ad81b0` (replaced "19 chains" hardcode with reference to UAC
+      WETH_ADDRESSES)
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools` `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW
+      `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch
+      replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but
+      live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools`
+      `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC
+      `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
   - ✅ UAC `DataType.AGGREGATOR_ROUTE` + `SchemaSpec` + `SchemaContract` + `DataTypeCapability` — `uac@3d44542`
-  - ✅ MTDS `AggregatorRouteHandler` (`collect-aggregator-routes`) — `mtds@52c4ac5` (Jupiter/1inch/0x/ParaSwap; IS-first pairs; shard-isolated)
+  - ✅ MTDS `AggregatorRouteHandler` (`collect-aggregator-routes`) — `mtds@52c4ac5` (Jupiter/1inch/0x/ParaSwap; IS-first
+    pairs; shard-isolated)
   - [ ] [BLOCKED-CREDENTIALS] 1inch + 0x API keys — ping filed in `harsh_orchestrator/pings/slot_11.md`
-  - [ ] [AGENT] instruments-service catalogue entry: adapter writing `instrument_availability/by_date/day={D}/venue=AGGREGATOR-{CHAIN}/instruments.parquet`
+  - [ ] [AGENT] instruments-service catalogue entry: adapter writing
+        `instrument_availability/by_date/day={D}/venue=AGGREGATOR-{CHAIN}/instruments.parquet`
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement
       `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to
       `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20
       Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
 
-- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase 2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy.
-      — `uac@1920d56` (BinaryEventTrigger + 3 RiskRuleIds + 3 global_rules entries; 105 risk-rule tests pass)
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add
+      closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress
+      (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase
+      2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy. —
+      `uac@1920d56` (BinaryEventTrigger + 3 RiskRuleIds + 3 global_rules entries; 105 risk-rule tests pass)
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg
       ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across

@@ -6,11 +6,10 @@ assigned_vm: vm-defi
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
-locked_by: live-defi-rollout
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verification ledger)
 gate: UAC scenario + token-wrapping foundation (Phase 1) GREEN before execution/strategy consumers (Phase 2-3)
 ---
@@ -124,3 +123,9 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
 **Handoff exception**: the scenario-matrix CRON provisioning is in
 `audit03_deployment_cron_provisioning_2026_05_22.md`:Phase 2 (F-40). This plan ships the scenario + the validation; that
 plan ships the runner.
+
+## Deferred work — migrated to:
+
+No residual deferrals. All P0 carry/execution safety findings (F-08/09/10/11/12/26/28/29/31/33) closed in production.
+Cron provisioning (F-40) is tracked separately in `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 2 — that
+plan owns the cron runner.

@@ -1,12 +1,10 @@
 ---
 title: "Honest-Coverage Formula Consolidation — 2026-05-19"
 name: honest_coverage_formula_consolidation_2026_05_19
-locked_by: live-defi-rollout
-locked_since: 2026-05-19
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-status: in-flight
+status: archived
 priority: P0
 parent_epic: manifest_master
 epic_secondary: instruments_master
@@ -295,3 +293,13 @@ Touched in Phase 7:
 | Phases 1-8 implementation                    | Multi-repo, multi-day scope; not bundleable into May-19 session | This plan (Phases 1-8)                                         |
 | Tier-3 sentinel propagation completion       | Pre-existing — Phase 3D.5 pending                               | `expected_unattempted_validation_pending_phase3_2026_05_19.md` |
 | `measure-honest-coverage.py` baseline script | Pre-existing TBD per master plan audit                          | `master_to_live_defi_2026_05_23.md` Group H (new)              |
+
+## Deferred work — migrated to:
+
+Per the deferred items table (§ Deferred work after 2026-05-19 session):
+
+- **Phases 1-8 implementation**: completed in this plan (26/26 todos done).
+- **Tier-3 sentinel propagation**: **MIGRATED FROM:** this plan →
+  `plans/active/expected_unattempted_validation_pending_phase3_2026_05_19.md` (already named there).
+- **`measure-honest-coverage.py` baseline script**: **MIGRATED FROM:** this plan →
+  `plans/active/master_to_live_defi_2026_05_23.md` Group H (already named there).

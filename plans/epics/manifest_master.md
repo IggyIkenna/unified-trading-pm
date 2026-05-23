@@ -18,7 +18,7 @@ related_plans:
   - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
   - ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md
   - ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - ../active/honest_coverage_formula_consolidation_2026_05_19.md
+  - ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md
   - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
   - ../active/manifest_schema_final_gate_2026_05_09.md
 ---
@@ -110,9 +110,12 @@ pending Phase 3 MTDS run window per `issues/expected_unattempted_validation_pend
 **status**: ✅ ARCHIVED 2026-05-21 — Phases 1-7 done; Phase 8 DEFERRED-writegate-6.x (2026-06-15 date-gate) ·
 **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`honest_coverage_formula_consolidation_2026_05_19`](../active/honest_coverage_formula_consolidation_2026_05_19.md)
+### [`honest_coverage_formula_consolidation_2026_05_19`](../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md)
 
-**status**: in-flight · **estimate**: 2.4 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-23 — All 26 todos done. `compute_honest_coverage` consolidated + UTL published +
+MDPS/IS/deployment-api migrated. Tier-3 sentinel propagation →
+`expected_unattempted_validation_pending_phase3_2026_05_19.md`. Baseline script → `master_to_live_defi_2026_05_23.md`
+Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
 
 ### [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)
 

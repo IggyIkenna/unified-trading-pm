@@ -6,10 +6,8 @@ assigned_vm: planning-vm-1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-locked_by: live-defi-rollout
-locked_since: 2026-05-22
 priority: P2
-status: active
+status: archived
 ---
 
 > **TIMING CONSTRAINT — HARD**: deployment-api reads buckets continuously. Its bucket-name source MUST flip in lockstep
@@ -123,8 +121,8 @@ internal API surface (useful if other tests mock these methods directly).
     directly; replace with `resolve_bucket_name` mock at UTL boundary.
   - `tests/unit/test_data_query_service.py` — same.
 
-- [x] ✅ [DOC] P1. **Flip GAP-2.4.D checkbox** in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` once code half is
-      pushed. Execution half (Phase 0d cutover + data-status UI smoke test post-repoint) remains `[ ]` until the
+- [x] ✅ [DOC] P1. **Flip GAP-2.4.D checkbox** in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` once code half
+      is pushed. Execution half (Phase 0d cutover + data-status UI smoke test post-repoint) remains `[ ]` until the
       migration window. — code_freeze plan line 560 shows `[x] ✅` with code half evidence (deployment-api@28b7bd2 +
       uac@55a65886 + utl@52940476); verified 2026-05-22.
 
@@ -154,3 +152,14 @@ Post-repoint but pre-migration: deployment-api reads env-tiered names → data s
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Code half on tab branch, not merged                | Merge in Phase 0d window per `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.1 |
 | `[ ]` GAP-2.4.D execution half in code_freeze plan | Remains open until Phase 0d cutover + data-status UI smoke                                     |
+
+## Deferred work — migrated to:
+
+Both deferred items already tracked in their named successor:
+
+- **Code half (tab branch, not merged)**: lives in `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`
+  Phase 2.1 — merge in Phase 0d window.
+- **GAP-2.4.D execution half**: open item in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` — closes after
+  Phase 0d cutover + data-status UI smoke.
+
+No new migration needed — successors already named in Temporary states table above.

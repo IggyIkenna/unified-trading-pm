@@ -48,6 +48,12 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
+### [`gap_2_4_d_deployment_api_reader_repoint_2026_05_22`](../archive/2026_05/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Code half shipped (deployment-api reader repointed to env-tiered bucket names).
+Remaining execution half tracked in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.1 — merges in Phase
+0d window. · **estimate**: 0.8 cal AI-days (class: infra)
+
 ### [`deployment_ui_lifecycle_tabs_2026_05_08`](../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
 
 **status**: ✅ ARCHIVED 2026-05-21 — Phases A-H shipped (Slots 6+7); H4/G2/G3 DEFERRED-OPERATOR-DECISION (DNS gate) ·

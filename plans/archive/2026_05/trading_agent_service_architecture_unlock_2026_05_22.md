@@ -2,12 +2,10 @@
 title: trading-agent-service architecture unlock (May-23, off-by-default)
 parent_epic: trading_agent_master
 priority: P0
-status: active
+status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 8.0
 estimate_calibrated_ai_days: 3.2
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
 related_plans:
   - master_to_live_defi_2026_05_23.md
   - promote_workflow_may23_cli_path_2026_05_10.md
@@ -86,3 +84,14 @@ Codex SSOTs: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
 - **`performance_features` passthrough** (Phase 3): real rolling sharpe/drawdown/attribution -> epic Allocator service
   post-cutover.
 - **Phase 7 CI block**: `BLOCKED-OPERATOR` -- GH_PAT rotation required; unit + scaffold ship with local QG green.
+
+## Deferred work — migrated to:
+
+**MIGRATED FROM:** this plan → `plans/epics/trading_agent_master.md` P3:
+
+- **No-op directive emission** (Phase 6): real allocator logic — post-cutover Phase 10.7, previously in SUPERSEDED epic
+- **STUB ML/LLM subscribers** (Phase 6): real derivations — epic Phase 10.7 + `ml_repo_consolidation`
+- **`performance_features` passthrough** (Phase 3): rolling sharpe/drawdown/attribution — Allocator service,
+  post-cutover
+- **Phase 7 CI block** (GH_PAT rotation): `BLOCKED-OPERATOR` — GH_PAT rotation required; unit + scaffold shipped with
+  local QG green

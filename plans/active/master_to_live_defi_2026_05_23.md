@@ -111,7 +111,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-23 10:46 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-23 12:14 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -146,16 +146,12 @@ folded into the appropriate epic._
 | [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                       | master                                     | infra     | —          | —            | 0.4      | —        |
 | [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                      | brand-new | 22/25      | 88%          | 0.4      | —        |
 | [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | master                                     | infra     | 22/25      | 88%          | 0.2      | —        |
-| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | master                                     | infra     | 10/11      | 91%          | 0.2      | —        |
+| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | defi_master                                | infra     | 10/11      | 91%          | 0.2      | —        |
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 25/26      | 96%          | 0.2      | —        |
 | [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
-| [`audit03_carry_execution_safety_remediation_2026_05_22`](./audit03_carry_execution_safety_remediation_2026_05_22.md)                       | master                                     | brand-new | 18/18      | 100%         | 0.0      | —        |
-| [`gap_2_4_d_deployment_api_reader_repoint_2026_05_22`](./gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md)                             | master                                     | refactor  | 3/3        | 100%         | 0.0      | —        |
-| [`honest_coverage_formula_consolidation_2026_05_19`](./honest_coverage_formula_consolidation_2026_05_19.md)                                 | manifest_evolution_SUPERSEDED_2026_05_21   | refactor  | 26/26      | 100%         | 0.0      | —        |
-| [`trading_agent_service_architecture_unlock_2026_05_22`](./trading_agent_service_architecture_unlock_2026_05_22.md)                         | cefi_master                                | refactor  | 9/9        | 100%         | 0.0      | —        |
 | [`vm_launcher_startup_url_migration_2026_05_21`](./vm_launcher_startup_url_migration_2026_05_21.md)                                         | master                                     | infra     | 17/17      | 100%         | 0.0      | —        |
-| **TOTAL** (38 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **61% done** | **177**  | —        |
+| **TOTAL** (34 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **60% done** | **177**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
