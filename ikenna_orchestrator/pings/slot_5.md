@@ -1,3 +1,38 @@
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run.**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~12:30 UTC — MDPS VMs RUNNING; CeFi gate BLOCKED-IN-FLIGHT; early VERIFY sampling OK
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+### MDPS VMs (21 RUNNING with MDPS@21eb635 + UAC@6aef01f9 — all schema fixes applied)
+
+- **DeFi 2022-2026**: 5 VMs RUNNING. Defi-2022 on 2022-11-10, finding no dex_swaps (expected — data sparse for early
+  dates). No ts_event/schema errors ✅
+- **TradFi 2020-2026**: 7 VMs RUNNING (e2-highmem-8, MAX_WORKERS=2). LONG-RUNNING (~66h/VM).
+- **Sports 2020-2026**: 7 VMs RUNNING. Sports-2022 on 2022-01-23, writing to processed/by_date/. 1813 dates already in
+  bucket (prev runs). "no group column" warnings for old pre-canonical parquets (known P2 DEFERRED). No schema
+  violations ✅
+- **Prediction 2025-2026**: 2 VMs RUNNING. Pred-2025 on 2025-03-18, writing candles to processed_candles/by_date/.
+  Schema verified: ts_event=datetime64[ns,UTC] + timeframe=string ✅. 1034 manifest entries written.
+
+### Key finding: \_inject_schema_contract_columns fix CONFIRMED working
+
+Sampled `processed_candles/by_date/day=2025-03-14/timeframe=1h/data_type=trades/venue=POLYMARKET/` — ts_event present,
+timeframe present, trade_count=Int64. No pre-write validation failures in any VM log.
+
+### Gate status: MTDS-3.2.A-V BLOCKED (11 CeFi MTDS VMs still RUNNING)
+
+VMs: cefi-binance-futures-2024-light, cefi-binance-spot-2024-heavy, cefi-coinbase-spot-2020/2021/2023-heavy,
+cefi-deribit-2024/2025-heavy, cefi-okx-spot-2023/2024-heavy, cefi-okx-swap-2021-heavy/2024-light. All from
+20260522-140739 + 20260523-120101 batches.
+
+When all terminate: run `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py`, verify 4-pillar, flip
+MTDS-3.2.A-V ✅ → enables MDPS-3.3.CeFi launch.
+
+— slot-5 / ikenna / 2026-05-23
+
+---
+
 > **🟢 2026-05-22 DISPATCH — supersedes all prior entries.**
 
 > _Cleaned 2026-05-22 — audit trail stripped; history preserved in git._
