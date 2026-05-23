@@ -812,7 +812,15 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+- [ ] [SCRIPT] P2. **Prediction sentinel fan-out for `prediction_canonical_question_group` empty rows** — DEFERRED from
+      2026-05-23 prediction backfill session. Currently, when a canonical question group has zero markets trading on a
+      given day, no `data_type=prediction_canonical_question_group` `empty_confirmed` row is emitted (the tier-2
+      sentinel only emits `data_type=trades, SOURCE_RETURNED_ZERO`). Fix: after the Phase 3 finalize loop in
+      `orchestrator.py`, fan out `record_empty(SOURCE_RETURNED_ZERO)` for each CQG in the UAC canonical group registry
+      that wasn't populated in `prediction_cluster_counts_by_venue` for that (venue, day). This ensures the manifest
+      denominator includes groups with zero trading days and the deployment-UI drilldown shows honest 0% coverage for
+      inactive CQGs rather than omitting them. No blocker — ships as a standalone improvement once the backfill gap is
+      filled.
 
 ## Archived plans
 
