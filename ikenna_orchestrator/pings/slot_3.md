@@ -1,5 +1,40 @@
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
+> **[2026-05-23 slot-3] CeFi backfill VM diagnosis + launcher fix — deployment-service@38902bf**
+>
+> **13 VMs still RUNNING** from 2026-05-22 14:07 launch (~21h elapsed). All on e2-highmem-4 (32 GB).
+>
+> **Root cause of slowness (confirmed):**
+>
+> - VMs ARE downloading truly missing data (pre-flight `N/N atoms missing` confirmed — no double-work).
+> - Memory threshold (75%) is NOT too aggressive — memory is genuinely in use (not reclaimable cache).
+> - VM IS under-provisioned: `shard_memory_profile.py` recommends `e2-highmem-8` (64 GB) for DERIBIT / BINANCE-FUTURES /
+>   OKX-SWAP heavy book_snapshot_5. Running on 32 GB → 75% threshold hits at 24 GB, causing 30s pauses that extend
+>   indefinitely while RAM stays above threshold.
+> - 2024 Q4 bull-market BINANCE-SPOT data is 5-10x larger than the 2022-calibrated 18 MB profile → explains 93% RSS (30
+>   GB) observed on `cefi-binance-spot-2024-heavy`.
+> - `max_concurrent_downloads=16` (hardcoded default, no env var override).
+>
+> **Fix shipped**: `launch-cefi-sharded-backfill.sh` heavy default bumped `e2-highmem-4` → `e2-highmem-8`
+> (`deployment-service@38902bf`). Applies to next re-launch.
+>
+> **Running VMs — recommendation**: Do NOT kill. Memory pressure pauses prevent OOM (working correctly, just slow). ETA:
+> BINANCE-SPOT 2024 ~4-8h more; DERIBIT 2024/2025 ~24-48h (expiry days hit 38 GB peak on 32 GB → heaviest throttling).
+> COINBASE-SPOT + OKX-SPOT: lighter, 6-12h.
+>
+> **BLOCKED-OPERATOR-DECISION (new) — DERIBIT 2024/2025 kill+relaunch?** DERIBIT BTC-PERPETUAL book_snapshot_5 +
+> options_chain expiry days may push 32-38 GB → near-OOM territory. If you want faster completion (and are OK losing the
+> current partial-day's download), you can kill the DERIBIT VMs and relaunch with
+> `MACHINE_TYPE_HEAVY=e2-highmem-8 FORCE=1` — the launcher's pre-flight will skip already-captured days. Otherwise let
+> them run (they won't crash; they'll just be slow). Operator decides.
+>
+> **MTDS QG BLOCKED (foreign — not my change)**: `unified_trading_library.risk.rule_evaluator` imports
+> `BinaryEventTrigger` from `unified_api_contracts.risk` but that symbol is missing from the UAC `risk.py` in this slot.
+> MTDS `bash scripts/quality-gates.sh` fails at TESTS step. Pre-existing (QG fails even after reverting my change).
+> `shard_memory_profile.py` calibration note (comment-only) is staged locally, cannot push until MTDS QG unblocked.
+> Needs UAC to ship `BinaryEventTrigger` in `unified_api_contracts/risk.py`. Plan ref:
+> `plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 5 (smoke gate).
+
 > **[2026-05-22 07:15 UTC] slot-3 PARTIAL ACK** — `aws_cloud_toggle` Phase 4 DONE (deployment-service@ea920bb,
 > plan-flip@baeca6a90). 7 AWS backfill scripts + watchdog prefixes registered. Continuing: aws_cloud_toggle UI-V + Phase
 > 5 SMOKE, aws_migration phases 1.B+1.C+3-6.
