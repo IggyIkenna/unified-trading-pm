@@ -2419,7 +2419,7 @@ interface on the manifest.
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
       `captured` supersede semantics.
-  - **Evidence**: PM@<sha> — added § "Capture-status 4-state taxonomy + supersede semantics" (table with all 4 states +
+  - **Evidence**: PM@5c4aec17 — added § "Capture-status 4-state taxonomy + supersede semantics" (table with all 4 states +
     coverage formula + supersede semantics); updated capture_status bullet at §Schema to list all 4 states; added
     § "Expected-universe enumerator: v1+v2 hierarchical SSOT model" with Layer 1 (UAC coarse) + Layer 2
     (instruments-service fine) framing. 2026-05-23.
