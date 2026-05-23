@@ -675,12 +675,15 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       2026-05-13**: UAC@ac12d80 — normalize_api_football_standing() rewrite + SPORTS_STANDINGS schema flatten (14 → 32
       columns: team_id/name/logo + all/home/away × played/win/draw/lose/goals_for/goals_against). Migration still
       deferred (operational VM launch).
-- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** ✅ PARTIAL — UAC `SPORTS_XG_SHOTS` schema + UAC
+- [x] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** ✅ PARTIAL — UAC `SPORTS_XG_SHOTS` schema + UAC
       path/coverage/source registries (UAC@ab62291f). ✅ (a) instruments-service `_run_understat_shots_date()` write
       path shipped (IS@a21401ea). ✅ (b) `get_match_shots(match_id)` + `get_match_ids_for_date(date)` shipped
-      (IS@a21401ea). ✅ (c) cassette parity test for `normalize_understat_shot` shipped (UAC@d9ab06d9). **Remaining**:
-      (d) launch `us-backfill-shots-{ts}` VM to backfill XG_SHOTS for all historical dates; (e) features-sports
-      consumers updated to read per-shot dimensions.
+      (IS@a21401ea). ✅ (c) cassette parity test for `normalize_understat_shot` shipped (UAC@d9ab06d9). ✅ (d) backfill
+      VM launched: `us-backfill-20260523-211154` (2019-01-01..2026-05-23, asia-northeast1-c). ✅ (e) features-sports
+      consumers updated to read per-shot dimensions — shot_quality_calculator.py (22 cols: shot_count_avg,
+      xg_per_shot_avg, open/set_piece/penalty/counter_attack xG pcts, head/left/right foot pcts, conversion_rate) +
+      gcs_reader read_historical_xg_shots(90d) + coverage_gate XG_SHOTS wiring + \_run_simple_gated_calc integration —
+      features-service@a9d0c32c, UAC@967e2565.
 - [x] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
       replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
       FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
