@@ -750,6 +750,8 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
       (likely non-Firebase), spawn `defi_client_auth_path_2026_06_XX.md` plan. Audit found
       `unified-trading-system-ui/.firebaserc` lists prod (`central-element-323112`) + staging (`odum-staging`) projects;
       SA JSON storage location not surfaced — those config rows stay as-is, just unused during May-23.
+  - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: DEFERRED-AFTER-CUTOVER per operator direction. Firebase code stays in
+    tree (off by default). No SA JSON provisioning needed for May-23.
 
 - [x] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
       `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs. **PARTIAL**
