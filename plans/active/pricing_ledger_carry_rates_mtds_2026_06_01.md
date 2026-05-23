@@ -156,6 +156,16 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [ ] [CODE] P0. Black-Scholes greek computation kernel for vanilla European/American options — pure-Decimal
       implementation in `greeks-service/greeks_service/kernels/black_scholes.py`. Extensibility hook (`GreekKernel`
       protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan.
+- [ ] [CODE] P0. **All-asset_group coverage (the TradFi gap)** — greeks-service computes greeks for CeFi + TradFi + DeFi
+      options, NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks only** — OPRA does not distribute
+      greeks, so greeks-service IS the only TradFi greeks source. DeFi on-chain options (Lyra/Aevo/Dopex) likewise have
+      no venue greeks. greeks-service fits an IV per real strike from marks + computes BS greeks for every asset_group.
+- [ ] [CODE] P0. **Own-greeks vs venue-greeks sanity check (CeFi)** — where venue greeks DO exist (Deribit via
+      `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks` — delta/gamma/theta/vega/iv), greeks-service
+      computes its OWN greeks AND cross-checks against venue-provided. Divergence beyond ε → emit
+      `GREEKS_VENUE_DIVERGENCE` alert via alerting-service. Own-computed greeks are authoritative for PricingLedger;
+      venue greeks are the validation reference (catches our pricer bugs + venue staleness). Tardis-historical Deribit
+      greeks used the same way in batch mode.
 - [ ] [CODE] P1. Batch-mode `greeks-service` for backfill — cron-driven + EPHEMERAL_BATCH VM cohort prefix
       `greeks-compute-` registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` with
       `lifecycle_class=EPHEMERAL_BATCH`. Reads historical MTDS `mark_update` parquets; writes historical
