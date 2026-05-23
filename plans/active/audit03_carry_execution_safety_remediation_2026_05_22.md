@@ -25,13 +25,21 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 ## Pre-audit (workspace-wide, before execution)
 
-- [ ] [AGENT] P0. Grep all consumers of `wrap_preprocessor` + `_WRAP_RULES` + `needs_unwrapping` across
+- [x] ✅ [AGENT] P0. Grep all consumers of `wrap_preprocessor` + `_WRAP_RULES` + `needs_unwrapping` across
       execution-service before editing the preprocessor (F-28). Confirm no other caller depends on the DeFi-only
-      op-gate.
-- [ ] [AGENT] P0. Grep all readers of `net_carry` / `stake_fraction` / `_build_legs` in strategy-service before changing
-      the carry formula (F-09/F-10).
-- [ ] [AGENT] P0. Confirm UAC `registry/token_wrapping.py:31-33` `stETH→wstETH` rule + `needs_wrapping()` are the
-      canonical source the preprocessor should call (verified present in §6.1).
+      op-gate. FINDING: WrapPreprocessor has NO callers in production code (only __init__.py re-export + tests).
+      `_WRAP_TYPE_MAP`/`_UNWRAP_RULES` used only within wrap_preprocessor.py. Safe to edit without breaking other
+      callers. TRANSFER already in op-type gate; stETH→wstETH in _WRAP_TYPE_MAP. UAC PROTOCOL_TOKEN_PREFERENCE
+      missing Deribit/Bybit/OKX — gap for Phase 1 F-11 fix.
+- [x] ✅ [AGENT] P0. Grep all readers of `net_carry` / `stake_fraction` / `_build_legs` in strategy-service before changing
+      the carry formula (F-09/F-10). FINDING: net_carry formula at staked_basis.py:299 already `f*(staking_apy+funding_apy)-fees`;
+      only caller of _build_legs in carry path is staked_basis.py:503; sports_arb_engine.py:74 has unrelated _build_legs.
+      stake_fraction in config.py:187+720, types.py:384+397, and script files (trace_carry_staked_basis.py). Safe to
+      enforce f==1.0 — only carry engine path, no sports callers affected.
+- [x] ✅ [AGENT] P0. Confirm UAC `registry/token_wrapping.py:31-33` `stETH→wstETH` rule + `needs_wrapping()` are the
+      canonical source the preprocessor should call (verified present in §6.1). CONFIRMED: token_wrapping.py:32 has
+      TokenWrappingRule(stETH, wstETH) + PROTOCOL_TOKEN_PREFERENCE maps stETH→wstETH for AAVEV3/MORPHO but MISSING
+      DERIBIT/BYBIT/OKX — this is the gap for Phase 1 F-11 (will be added there).
 
 ## Phase 1 — UAC foundation (scenario + wrapping registry) — L0/L2, must precede consumers
 
