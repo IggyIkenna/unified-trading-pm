@@ -4880,3 +4880,21 @@ grant any access / sync calls you need.
 Full triage doc: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`.
 
 — slot-1-main / 2026-05-23 ikenna-side
+
+## [ikenna-slot-1] 2026-05-23T19:38:47Z — plan corpus cleanup complete
+
+**Plan ref**: `plans/epics/plan_hygiene_master.md` (Phases 1-3 shipped)
+
+**What happened**: Active plan corpus reduced from 46 → 15 plans. 10 plans archived this session, 3 already archived by other agents earlier today.
+
+**Deferred items migrated to epics — DO NOT re-implement:**
+- `observability_master` P3: alerting soak tasks (Telegram token rotation, PagerDuty policy, rehearsal session)
+- `infrastructure_master` P2/P3: AWS parity (Pub/Sub inventory, UCI MessageBus, buildspec parity, GCP decommission)
+- `manifest_master` P1/P2: Phase 0d flat-bucket migration, prediction bucket naming, Phase 0 pre-audits, Phase 8 sign-off
+- `defi_master` P3: AWS WIF, CEFFU, ltv_safety_margin tuning, DeFi-data creds (CoinGecko/Helius), Firebase SA JSON
+- `dart_and_promote_master` P3: 64-item post-cutover promote pipeline (Groups A-G)
+
+**Hygiene cron**: daily plan hygiene sweep now live — Cloud Run Job `uts-prod-plan-hygiene-sweep` fires at 05:00 UTC. Failures ping both orchestrator inboxes. Terraform: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`.
+
+**Sweep result**: Hard failures: 0 | Soft warnings: 0. PM@c7a636ad9 + deployment-service@5f4eb6b.
+

@@ -1722,3 +1722,17 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
 `plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
 ```
+
+## [ikenna-slot-1] 2026-05-23T19:38:47Z — plan corpus cleanup + hygiene cron live
+
+**Plan ref**: `plans/epics/plan_hygiene_master.md`
+
+Active plans: 46 → 15. 10 plans archived, deferred items migrated to epics (see `plans/active/_agent_pings.md` for full list).
+
+Key for Harsh's agents:
+- `batch_live_symmetry_2026_05_10.md` → ARCHIVED (was in your orbit)
+- `writegate_honest_coverage_endtoend_2026_05_06.md` → ARCHIVED
+- `promote_workflow_may23_cli_path_2026_05_10.md` → ARCHIVED
+- `alerting_service_live_rules_2026_05_07.md` → ARCHIVED; Telegram token rotation + rehearsal now in `observability_master` P3
+- Daily hygiene cron now live (05:00 UTC). If it pings your inbox, fix violations and push to live-defi-rollout.
+
