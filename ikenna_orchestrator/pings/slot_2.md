@@ -1695,11 +1695,44 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1),
 
 **Next actions (in order):**
 
-- [ ] Apply-flips run4 completing (~19:35 BST): flip writegate checkbox line 2969.
-- [ ] After 3×140739 VMs terminate: run
-      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+- [ ] Apply-flips run5 completing (PID 64493, started 18:02 UTC, 15.25M candidates, max-flips=200k): flip writegate
+      checkbox line 2969 on RECONCILER_COMPLETED.
+- [x] ✅ After 3×140739 VMs terminate: launched `cefi-binance-futures-2024-light-20260523-202125` +
+      `cefi-okx-swap-2024-light-20260523-202125` RUNNING (2026-05-23 ~20:22 UTC slot-2).
 - [ ] After all CeFi VMs (including 2 relaunched) terminate: `MTDS-3.2.A-V` verify flat bucket.
-- [ ] After MTDS-3.2.A-V GREEN: launch `MDPS-3.3.CeFi`.
+- [ ] After MTDS-3.2.A-V GREEN: launch `MDPS-3.3.CeFi` (DEFERRED-OPERATOR-DECISION — await explicit operator direction).
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1), `mtds_backfill_phase3_2026_05_22.md`
 (MTDS-3.2.A-DeadVMRelaunch + MTDS-3.2.A-V), `mdps_backfill_phase3_2026_05_22.md` (MDPS-3.3.CeFi)
+
+---
+
+## [slot-2] 2026-05-23 ~20:22 UTC — BINANCE-FUTURES:2024 + OKX-SWAP:2024 relaunched + UTL mtime fix filed
+
+[2026-05-23 ~20:22 UTC] slot-2 — **3×140739-batch CeFi VMs terminated; relaunched 2 light VMs.**
+
+**What changed:**
+
+1. **140739 batch all TERMINATED** — coinbase-spot-2021-heavy, coinbase-spot-2023-heavy, okx-spot-2023-heavy (+
+   binance-futures-2024-light, okx-swap-2024-light from original batch) all TERMINATED. Gate condition met.
+2. **Relaunched BINANCE-FUTURES:2024:light + OKX-SWAP:2024:light** — `cefi-binance-futures-2024-light-20260523-202125` +
+   `cefi-okx-swap-2024-light-20260523-202125` both RUNNING as of ~20:22 UTC. Full-year 2024 scope
+   (derivative_ticker/liquidations/futures_chain for top-9 symbols).
+3. **UTL `_touch_canonical_mtime` fix filed** — UTL@0ea6989c (two-tier touch: copy_blob + tier-2 re-upload fallback).
+   Issue doc filed PM@797743fc. **BLOCKS Cloud Run image rebuild**: UTL has foreign dirty files
+   (`recovery/agent_action.py`, `test_agent_action.py`, `uv.lock`) blocking quickmerge to main. Cloud Run consolidator
+   still running old image (silently failing touch). Risk: tolerable for batch VMs (one-shot startup read). Fix pending
+   foreign-file cleanup + quickmerge.
+4. **CeFi reconciler run5 still running** — PID 64493, 15.25M candidates, 71.7% CPU, 211MB RSS. No RECONCILER_COMPLETED
+   yet. Waiting to flip writegate checkbox line 2969.
+5. **DeFi VMs 2024/2025/2026** (195633 batch) still RUNNING. 2022+2023 terminated cleanly.
+
+**Next actions:**
+
+- [ ] RECONCILER_COMPLETED in `/tmp/recon-cefi-apply-flips-run5.log` → flip writegate line 2969.
+- [ ] cefi-binance-futures-2024-light-20260523-202125 + cefi-okx-swap-2024-light-20260523-202125 terminate → run
+      MTDS-3.2.A-V flat bucket verify.
+- [ ] UTL quickmerge unblocked (foreign dirty files cleared) → quickmerge + Cloud Run image rebuild.
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1),
+`plans/active/issues/utl_touch_canonical_mtime_copy_blob_silent_fail_2026_05_23.md`
