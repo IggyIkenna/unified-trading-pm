@@ -141,24 +141,22 @@ pre-filter).
 
 ---
 
-### defi 12-month v2 apply-write — COMPLETE ✅
+### defi since-genesis v2 apply-write — COMPLETE ✅
 
-**Status**: `DONE` (operator acked 2026-05-23; all 4 chunks ran within ~15 minutes total)
+**Status**: `DONE` (operator expanded to genesis 2026-05-23; all 26 chunks complete in ~17 minutes total)
 
-Actual: 3,599 instruments, 21 data_types. Fixed tz-normalization bug in `_enumerate_v2_defi`
-(instruments-service@b02943be) — defi catalog `available_from_datetime` is tz-aware (+00:00) while window timestamps
-were tz-naive. Runs were blazing fast (~8-10s each vs 90min projected — frozenset at 1.6M not 150M).
+3,599 instruments × 21 data_types × 2,334 days (2020-01-01→2026-05-23). 26 per-VM shards on GCS.
 
-| Chunk | VM name                | Date range            | Rows      |
-| ----- | ---------------------- | --------------------- | --------- |
-| d1    | slot4-defi-d1-20260523 | 2026-02-21→2026-05-23 | 6,953,268 |
-| d2    | slot4-defi-d2-20260523 | 2025-11-22→2026-02-20 | 6,747,741 |
-| d3    | slot4-defi-d3-20260523 | 2025-08-23→2025-11-21 | 6,617,793 |
-| d4    | slot4-defi-d4-20260523 | 2025-05-23→2025-08-22 | 6,429,696 |
+| Chunks  | Date range            | Rows       |
+| ------- | --------------------- | ---------- |
+| d1–d4   | 2025-05-23→2026-05-23 | 26,748,498 |
+| d5–d8   | 2024-05-24→2025-05-22 | 22,893,780 |
+| d9–d12  | 2023-05-26→2024-05-23 | 15,192,450 |
+| d13–d16 | 2022-05-27→2023-05-25 | 8,245,965  |
+| d17–d20 | 2021-05-28→2022-05-26 | 3,667,209  |
+| d21–d26 | 2020-01-01→2021-05-27 | 602,862    |
 
-**Total: 26,748,498 rows** across 4 per-VM shards on GCS
-(`market-data-tick-defi-central-element-323112/_index/per_vm/`). Consolidator merging within ~5min each. Plan item
-updated: writegate@2539 (PM this commit).
+**Total: 77,350,581 rows** across 26 shards. Plan item updated: writegate (PM this commit).
 
 ---
 

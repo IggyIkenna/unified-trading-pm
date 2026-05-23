@@ -2544,11 +2544,11 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       `market-data-tick-cefi-central-element-323112/_index/per_vm/`: c1=19,585,202 rows (2026-02-22→2026-05-23),
       c2=16,134,573 rows (2025-11-23→2026-02-21), c3=20,171,242 rows (2025-08-24→2025-11-22), c4=16,192,092 rows
       (2025-05-24→2025-08-23). Total=71,468,109 rows. instruments-service@363af916 (upload timeout fix) + @ecabcf74
-      (window-overlap filter). defi: 3,599 instruments, 21 data_types; 4 per-VM shards written to
-      `market-data-tick-defi-central-element-323112/_index/per_vm/`: d1=6,953,268 rows (2026-02-21→2026-05-23),
-      d2=6,747,741 rows (2025-11-22→2026-02-20), d3=6,617,793 rows (2025-08-23→2025-11-21), d4=6,429,696 rows
-      (2025-05-23→2025-08-22). Total=26,748,498 rows. instruments-service@b02943be (tz-fix defi v2 enumerator). tradfi:
-      BLOCKED-CREDENTIALS (Databento). sports/prediction: BLOCKED-NEW-CODE.
+      (window-overlap filter). defi: 3,599 instruments, 21 data_types; **26 per-VM shards (since genesis
+      2020-01-01→2026-05-23)** written to `market-data-tick-defi-central-element-323112/_index/per_vm/`: d1–d4
+      (12-month) = 26,748,498 rows; d5–d26 (2020-01-01→2025-05-22) = 50,602,083 rows. **Total defi = 77,350,581 rows**
+      across 26 shards. instruments-service@b02943be (tz-fix defi v2 enumerator). tradfi: BLOCKED-CREDENTIALS
+      (Databento). sports/prediction: BLOCKED-NEW-CODE.
 - [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-NEW-CODE]** [SCRIPT] P1. Build catalog for sports + prediction asset
       groups. Neither is in `CATALOGUE_SUPPORTED_ASSET_GROUPS` — `CatalogueBuilder` only covers cefi/tradfi/defi. Need a
       surrogate catalog builder that reads from `instruments-store-sports-*/venue=*/day=*/instruments.parquet` +
