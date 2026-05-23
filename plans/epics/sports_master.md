@@ -624,9 +624,11 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       SFI uses report_time (instruments-service@8b8db4ad); XG uses kickoff+24h (instruments-service@04abbd63);
       FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS use date+17h KO+2h approximation already set in code
       (instruments-service@66a887f1).
-- [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
-      instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
-      helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
+- [x] ✅ [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
+      instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). **ALREADY WIRED
+      2026-05-23**: `assert_available_at_present(data)` is called at orchestrator.py:414 inside `_gated_sink_write`,
+      which is used by all sports write paths (SFI progressive stats, FIXTURES, per-fixture entities, understat XG). No
+      additional wiring needed — verified by grep. Backfill-flip 2026-05-23.
 - [x] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Derive
       `report_time = match_end_time + SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write path.
       (instruments-service@af06124 — `match_end_time` + `report_time` columns added to SFI progressive stats rows in
