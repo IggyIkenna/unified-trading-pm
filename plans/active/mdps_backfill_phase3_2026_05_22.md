@@ -133,6 +133,18 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       `mdps-prediction-{2025,2026}-20260523-111916` RUNNING. Covers 2025-03-14→2025-12-31 + 2026-01-01→2026-05-23.
       104518 VMs (slot-7, pre-fix tarball) still running — partial overlap; manifest consolidator handles. 2026-05-23
       slot-5.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Pred-StreamingWriterFix** — **THIRD SCHEMA BUG FIXED (slot-7 2026-05-23)**: Batch 111916
+      VMs failing with
+      `StreamingParquetWriter pre-write validation failed: [schema_violation] column     'chain' missing; 'condition_id' missing; 'ts_event' missing; 'trade_count' dtype int32 expected int64;     'timeframe' missing`.
+      Root cause: `CefiTradesAdapter` (base class for `PredictionTradesAdapter`) produces only
+      `symbol, timestamp, OHLCV, HFT` columns; the `PREDICTION_MARKET` ohlcv contract requires
+      `chain, condition_id,     ts_event, timeframe` (registered with `include_chain=True`, `anchor_col=condition_id`).
+      Fix: `_enrich_prediction_candles()` in `canonical_writer.write_candle_parquet()` injecting all 5 missing/mistyped
+      columns. QG ✅. MDPS@54958d6. Issue doc: `plans/active/issues/mdps_prediction_schema_contract_gaps_2026_05_23.md`.
+      2026-05-23 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch3** — Stopped 111916 + 104518 VMs (all pre-fix). Rebuilt tarball with
+      MDPS@54958d6 (prediction enrichment fix). Relaunched: `mdps-prediction-{2025,2026}-20260523-120428` RUNNING.
+      2026-05-23 slot-7.
 
 ---
 
