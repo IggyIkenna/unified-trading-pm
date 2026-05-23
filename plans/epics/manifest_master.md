@@ -20,7 +20,7 @@ related_plans:
   - ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md
   - ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md
   - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
-  - ../active/manifest_schema_final_gate_2026_05_09.md
+  - ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md
 ---
 
 # Manifest Master (L1)
@@ -117,9 +117,9 @@ MDPS/IS/deployment-api migrated. Tier-3 sentinel propagation →
 `expected_unattempted_validation_pending_phase3_2026_05_19.md`. Baseline script → `master_to_live_defi_2026_05_23.md`
 Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
 
-### [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)
+### [`manifest_schema_final_gate_2026_05_09`](../archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 
-**status**: active · **estimate**: 2.1 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 0-9 + schema code complete (v8 writer-path shipped). Phases 10-13 require operator GCS VM execution (backfill runs, paper-trade smoke, live cutover). · **estimate**: 2.1 cal AI-days (class: design)
 
 ## P1 — important; post-current-gate
 

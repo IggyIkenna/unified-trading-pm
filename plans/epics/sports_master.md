@@ -16,7 +16,7 @@ related_plans:
   - ../archive/2026_05/hard_schema_enforcement_2026_05_08.md
   - ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md
   - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
-  - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
+  - ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
@@ -1079,9 +1079,9 @@ on operator account-provisioning ack · **estimate**: 20 cal AI-days (class: bra
 implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in →
 `available_at_lookahead_bias_completion_2026_05_08` Phase B
 
-### [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)
+### [`writegate_honest_coverage_endtoend_2026_05_06`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 
-**status**: drafted · **estimate**: 24.0 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete (write-gate + QG STEP 5.64/5.66 wired). Phases 7.B-7.D DEFERRED (forward-fix QG step, retrospective backfill ~7.5M rows, verification A3+A4). · **estimate**: 24.0 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 
@@ -1091,6 +1091,17 @@ implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in �
       `plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md` that was never created.
       Fix: when `fixture_ids_override` is populated, skip the GCS read entirely and use the override list directly.
       Affects API-Football backfill recovery path.
+
+## Archived plans
+
+### [`writegate_honest_coverage_endtoend_2026_05_06`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete. Phases 7.B/C/D deferred.
+
+**Deferred (migrated):**
+- **Phase 7.B — QG forward-fix step (DEFERRED-POST-CUTOVER)**: Add QG step to enforce write-gate for all future sports adapters going forward.
+- **Phase 7.C — Retrospective backfill (~7.5M rows, ~6 AI-days, DEFERRED-POST-CUTOVER)**: Backfill all `honest_coverage` values for historical sports rows across all asset groups using the consolidated formula.
+- **Phase 7.D — Verification A3+A4 (DEFERRED-POST-CUTOVER)**: Re-run mega-audit A3+A4 checks after backfill completes to confirm zero residual mismatches.
 
 ## Cross-references
 

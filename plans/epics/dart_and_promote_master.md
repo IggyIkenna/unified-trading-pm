@@ -12,8 +12,8 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/promote_workflow_may23_cli_path_2026_05_10.md
-  - ../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
+  - ../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md
+  - ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
@@ -104,13 +104,13 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`promote_workflow_may23_cli_path_2026_05_10`](../active/promote_workflow_may23_cli_path_2026_05_10.md)
+### [`promote_workflow_may23_cli_path_2026_05_10`](../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
 
-**status**: active · **estimate**: 4.2 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (CLI promote DAG design) complete. Phases 3-10 DEFERRED-POST-CUTOVER. Phase 2 smoke VM verification DEFERRED-OPERATOR. · **estimate**: 4.2 cal AI-days (class: design)
 
-### [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+### [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
-**status**: active · **estimate**: 20.0 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-23 — Entire plan DEFERRED-POST-CUTOVER; all 12 phases gated on DeFi 7-day live soak. · **estimate**: 20.0 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 
@@ -160,3 +160,22 @@ _(no plans currently assigned at this priority)_
 
 - [ ] [AGENT] P3. **Codex audit + CLAUDE.md update** — re-walk promote-workflow-architecture.md +
       cli-promote-paths.md; update to reflect post-cutover shipped state. Add key rules to CLAUDE.md.
+
+## Archived plans
+
+### [`promote_workflow_may23_cli_path_2026_05_10`](../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 complete; Phases 3-10 and Phase 2 VM smoke deferred.
+
+**Deferred (migrated):**
+- **Phases 3-10 (DEFERRED-POST-CUTOVER)**: Full promote-workflow pipeline (Firestore MinimalCandidateManifest write, paper VM auto-launch, ManualTradeGateDialog integration, live VM auto-launch, LIVE_EARLY→LIVE graduation, multi-tenant flow H4) — all gated on DeFi 7-day soak.
+- **Phase 2 smoke VM verification (DEFERRED-OPERATOR)**: Requires `vm-operator-ops` launch to validate CLI promote path end-to-end.
+- **MinimalCandidateManifest enrichment (DEFERRED-POST-CUTOVER)**: Pinned shas, model refs, features manifest version fields.
+- **LifecycleEventType UAC enum (DEFERRED-POST-CUTOVER)**: Extend once `strategy_master` lifecycle state machine settled.
+
+### [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Entire plan DEFERRED-POST-CUTOVER (gated on DeFi 7-day live soak).
+
+**Deferred (migrated):**
+- **All 12 phases (DEFERRED-POST-CUTOVER)**: Firebase `execution-full` enforcement, Promote button UI pipeline, state-machine consolidation, candidate manifest enrichment, Firestore backend integration, Playwright e2e matrix — all blocked until DeFi goes live and completes 7-day soak.

@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - ../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md
+  - ../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md
   - ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
   - ../active/cross_cutting_may_23_deliverables_2026_05_08.md
   - ../active/d8_perf_upgrade_2026_05_20.md
@@ -1496,9 +1496,9 @@ _(no plans currently assigned at this priority)_
 
 **status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS path GREEN; May-23 credential gate met. Post-cutover deferred: AWS IAM roles, Fireblocks/Copper/CEFFU, Kalshi+CoinGecko credentials, GitHub WIF upgrade, Telegram per-env tokens, credential probe 100% pass. · **estimate**: 64.5 cal AI-days (class: design)
 
-### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 
-**status**: active · **estimate**: 162.0 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped. Phase 2.6 execution DEFERRED-SERVICE-REPOS; Phase 3 QG sweep + Phase 4.DEFAULT-REMOVAL + Phase 12 ratchet BLOCKED-OPERATOR. · **estimate**: 162.0 cal AI-days (class: infra)
 
 ### [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md)
 
@@ -1614,6 +1614,16 @@ Active sub-plans owned by or closely coordinated with this epic:
 - **Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped; operator must provision 3 bots + set GitHub secrets `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`.
 - **GitHub WIF upgrade (OPERATOR ACTION)**: GCP WIF pool + GitHub App creation needed. Runbook at `codex/07-security/gha-wif-migration.md`.
 - **Credential probe 100% pass (OPERATOR ACTION)**: Provision 10 wrapped wallet keys + 11 canonical SM name aliases from GCE VM with trading SA.
+
+### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 playbook done.
+
+**Deferred (migrated):**
+- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh` + verify scripts. Requires deployment-service, MTDS, MDPS not in slot worktree.
+- **Phase 3 workspace QG green**: `quality-gates.sh` sweep deferred. Tracked in `qg_sweep_2026_05_11.md`.
+- **Phase 4.DEFAULT-REMOVAL**: Remove 4 `None` defaults from `record_*` methods + `MANIFEST_SCHEMA_VERSION` 7→8 bump. Blocked-after-MTDS+FEATURES sweep.
+- **Phase 0.B + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` doesn't exist. Operator runs from GCE VM.
 
 ## Folded plans (archived 2026-05-07)
 
