@@ -307,7 +307,7 @@ currently missing.
       under `deployment-service/scripts/aws/terraform/messaging/` if the existing setup uses Terraform.
       ✅ Script landed at `unified-trading-pm/scripts/aws/setup-messaging.sh` (deployment-service not in workspace).
       Provisions 5 SNS topics + paired SQS queues + SNS→SQS subscriptions + queue policies. Idempotent.
-      Dry-run verified. pm@`<sha>` 2026-05-23.
+      Dry-run verified. pm@`b7c4a40d` 2026-05-23.
 
 #### 1.5.C — Tarball deployment parity (CodeBuild → S3 → EC2 user-data)
 
