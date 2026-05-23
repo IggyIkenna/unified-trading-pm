@@ -321,9 +321,10 @@ ECR-image-builds in the May-23 window.
 - [x] ✅ [SCRIPT] P0. Land `deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh` — EC2 user-data script that
       `aws s3 cp` the tarball + bootstraps the service. Mirrors the GCS variant. Test against a single dummy EC2 launch.
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Phase 9 scope. deployment-service not in worktree.
-      ✅ Script also landed at `unified-trading-pm/scripts/vm/setup-data-pipeline-vm-aws.sh` (slot 2 2026-05-23).
+      ✅ Script also landed at `unified-trading-pm/scripts/vm/setup-data-pipeline-vm-aws.sh` (slot 2).
       Reads VM_TASK + VM_SERVICE from EC2 tags; downloads CORE tarballs from s3://uts-prod-deployment-state/code/;
-      installs Python 3.13 via uv; routes to workload CLI by VM_TASK. EC2 smoke deferred (no EC2 perms on orch VM).
+      installs Python 3.13 via uv; routes to workload CLI by VM_TASK; writes run.log + EXIT_STATUS to S3.
+      EC2 smoke deferred — no EC2 perms from orchestrator VM. pm@`e54f84ea` 2026-05-23.
 - [x] ✅ [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
       Mirror Cloud Build's tag/push behaviour exactly. CodeBuild project trigger on GitHub PR merge to `main` (matches
       Cloud Build trigger). Decision: **ECR is for live always-on services (Phase 6 ECS Fargate / App Runner
