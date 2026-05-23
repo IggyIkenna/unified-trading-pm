@@ -1584,9 +1584,10 @@ gap.
 - [ ] [DOC] `codex/04-architecture/research-service-and-dart-integration.md` (work-stream C)
 - [ ] [DOC] `codex/05-infrastructure/cloud-agnostic-build-lineage.md` (work-stream D)
 - [x] [DOC] `codex/04-architecture/ml-experiment-lifecycle.md` — ML job_id manifest separate from data manifest ✅
-  - **Evidence**: PM@f8197da3 — added § "ML manifest job_id vs data manifest job_id" documenting the two usages (ML manifest
-    PK = fitted model artifact; data manifest job_id = shard atom key for experiment outputs; both written by same training
-    run; separate consumers; JSON-index vs parquet reality per ML-6 LIFT). Updated last_reviewed. 2026-05-23.
+  - **Evidence**: PM@f8197da3 — added § "ML manifest job_id vs data manifest job_id" documenting the two usages (ML
+    manifest PK = fitted model artifact; data manifest job_id = shard atom key for experiment outputs; both written by
+    same training run; separate consumers; JSON-index vs parquet reality per ML-6 LIFT). Updated last_reviewed.
+    2026-05-23.
 - [ ] [DOC] `codex/04-architecture/live-strategy-config-hot-reload.md` — strategy config hot-reload end-to-end for live
       mode
 - [x] [DOC] CEFFU integration content folded into single custody SSOT
