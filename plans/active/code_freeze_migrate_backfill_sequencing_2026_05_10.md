@@ -1116,8 +1116,10 @@ must land at v8 + typed reason.
 - [x] ✅ [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 3 — DeFi (MTDS-3.2.C): Pyth Solana + Chainlink EVM +
       DEX-perp (Hyperliquid/Aster/Lighter/Pacifica/Extended) + LST APR feeds. Gate: Phase 7 GREEN. _(Replaces
       never-created `defi_upstream_46day_full_backfill_2026_05_16.md`.)_
-      **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Phase 7 manifest v8 gate required before DeFi MTDS launch.
-      Cannot initiate from this slot (GCS VM deployment + Phase 7 gate verification needed). Operator action.
+      **[CONFIRMED-DONE 2026-05-23 slot 6]** Architectural correction + gap fill COMPLETED by slot 7 (2026-05-22).
+      DeFi data collected via dedicated collect-* VMs (not --operation download). All 5 MTDS-3.2.C items done:
+      lst-rates 2020-01-01→2026-05-22 ✅; lending-indices 2022-01-01→2026-05-22 ✅; dex-pools 2021-01-01→2026-05-22 ✅;
+      vault_share_price gap filled ✅; MTDS-3.2.C-V GREEN (slot-2/slot-4/slot-7 2026-05-22). Gate for MDPS-3.3.DeFi OPEN.
 - [x] ✅ [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 4 — Sports (MTDS-3.2.D): af/fs/sfi/us. **BLOCKED**:
       `sports_master` Phase 3+4 (`data_available_at` → `available_at` rename) must ship first. Open items in
       `sports_master` epic: UAC/UTL/IS/features-sports 4-repo rename commits + QG + smoke + writegate Phase 2.C unblock.
