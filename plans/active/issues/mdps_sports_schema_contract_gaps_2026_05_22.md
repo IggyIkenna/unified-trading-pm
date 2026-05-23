@@ -1,10 +1,11 @@
 ---
 title: "MDPS Sports manifest MalformedRowKeyError + streaming read schema gaps"
 created: 2026-05-22
-author: slot-7
 source:
   - plans/active/mdps_backfill_phase3_2026_05_22.md (MDPS-3.3.Sports-V)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

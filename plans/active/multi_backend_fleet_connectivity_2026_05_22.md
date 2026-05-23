@@ -1,7 +1,6 @@
 ---
 name: multi_backend_fleet_connectivity
 title: "Multi-backend fleet connectivity — centralized API router (one HTTPS backend proxies all VMs over private VPC)"
-type: active
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 estimate_class: infra

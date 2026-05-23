@@ -2,9 +2,10 @@
 name: per-client-isolation-preaudit-2026-05-20
 title: Pre-audit — per-client subprocess isolation (Group H, Phase 0)
 created: 2026-05-20
-author: slot-4 (ikenna)
 status: complete
-parent_plan: per_client_isolation_and_venue_fanout_topology_2026_05_20.md
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Per-Client Isolation Pre-Audit — 2026-05-20

@@ -1,12 +1,15 @@
 ---
 title: "Data-Status Coverage Gaps + Prediction IS Manifest Structural Fix"
 created: 2026-05-22
-author: slot-1
 parent_epic: predictions_master
 assigned_vm: vm-prediction
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## Context
