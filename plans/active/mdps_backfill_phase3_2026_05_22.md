@@ -60,10 +60,13 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
 
 Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 
-- [x] ✅ [AGENT slot 5] P0. **MDPS-3.3.TradFi** — **RELAUNCHED 2026-05-23 as 7 sharded VMs**
-      `mdps-tradfi-{2020..2026}-20260523-101451` (e2-highmem-8, max_workers=2, 2020-01-01→2026-05-23). Prior single VM
-      (051203) silently disappeared (not in gcloud list, no per_vm shard found). Sharded launch is faster (7 parallel
-      year VMs vs 1 serial). slot-5 2026-05-23.
+- [x] ✅ [SCRIPT slot-7] P0. **MDPS-3.3.TradFi** — Prior single VM (051203) OOM-killed (exit 137, e2-standard-8 32GB too
+      small for CME TradFi data). Prior 101451 VMs (slot-5) + 103429 VMs (slot-7) both failed immediately (rc=2
+      `unrecognized arguments: --max-workers 2` — MDPS CLI has no such flag). **ROOT CAUSE FIX**:
+      `deployment-service@af9f679` uses `MAX_WORKERS=$resolved_max_workers` env var prefix (not CLI flag); MDPS
+      config.py reads it via `get_config("MAX_WORKERS", ...)`. **RUNNING**: 7 VMs
+      `mdps-tradfi-{2020..2026}-20260523-105240` (e2-highmem-8, MAX_WORKERS=2, 2020-01-01→2026-05-23). 2026-05-23
+      slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. LONG-RUNNING (CME has thousands of
       instruments/day → slow at ~3.7 days/hour per VM). With 7 parallel VMs each handling 1 year, ETA ~1 year ÷ 3.7
       days/hour ≈ 66 hours per VM. Verify once 2025 VM reaches 2025-12-31 (VIX active). VIX bars at 2025-01-06 in GCS
@@ -113,10 +116,11 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       `instrument_type="PREDICTION_MARKET"` (uppercase); registry had only `prediction_market` (lowercase) + no
       `ohlcv_*` contracts. Fix: added `("prediction", "PREDICTION_MARKET", "ohlcv_{tf}")` for all 7 MDPS default
       timeframes (15s/1m/5m/15m/1h/4h/1d) with nullable OHLCV + condition_id anchor. UAC@accd650c. 2026-05-23 slot-5.
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — **RELAUNCHED 2026-05-23 with UAC@accd650c**:
-      `mdps-prediction-{2025,2026}-20260523-103441` RUNNING. 2025-03-14→2025-12-31 + 2026-01-01→2026-05-23.
-      SKIP_DEPENDENCY_CHECK=true. Old VMs 181105 (outdated tarball, hitting both schema errors) confirmed TERMINATED
-      before launch. Tarball rebuilt at 10:33 UTC with UAC@accd650c + MDPS@95f685b + UTL@d3e71f24. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — **RELAUNCHED 2026-05-23 with UAC@accd650c**: Old VMs 181105 (outdated
+      tarball, hitting both schema errors) confirmed TERMINATED. Slot-5 launched 103441; slot-7 also launched 104518
+      (both RUNNING in parallel — duplicate coverage, manifest shards are per-VM so no conflict).
+      `mdps-prediction-{2025,2026}-20260523-103441` + `mdps-prediction-{2025,2026}-20260523-104518` RUNNING.
+      UAC@accd650c in GCS tarball (adds PREDICTION_MARKET trades contracts + nullable OHLC). 2026-05-23 slot-5 + slot-7.
 
 ---
 
