@@ -348,45 +348,14 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [x] [AGENT] P0. Architecture: `--recovery-fixture-ids` CLI flag (instruments-service `cbb50fa` / `e900769` /
       `7ce509e`), 4 non-api_football launchers plumbed (deployment-service `7453741`), throttle 0.1s → 0.067s for full
       Mega tier (instruments-service `070f7e7`), UTL cache split (`bf41175c`).
-- [ ] [AGENT] P0. Monitor 5 parallel recovery VMs to STOPPED: `af-backfill-20260507-033214` (api_football all 4
-      entities), `us-backfill-20260507-010653` (understat XG), `fs-backfill-20260507-010724` (footystats MATCHES +
-      PREDICTIONS + ODDS), `weather-backfill-20260507-010923` (open_meteo WEATHER), `sfi-backfill-20260507-010938`
-      (SFI_PROGRESSIVE_STATS). Verify auto-shutdown on completion (`VM_SHUTDOWN_ON_COMPLETION=true`). Allowlist parquet:
-      `gs://instruments-store-sports-central-element-323112/_audits/fixtures_recovery_allowlist_20260506-153914.parquet`
-      (112,192 af_fixture_ids). [AUDIT 2026-05-07: IN-FLIGHT — 3 of 5 named VMs RUNNING in current snapshot (af/sfi/us);
-      fs-backfill-20260507-010724 + weather-backfill-20260507-010923 NOT in current `gcloud running` listing — likely
-      already drained or auto-shutdown fired. Verify via STOPPED event log or recreate if missing. ETA for active 3:
-      2026-05-07 to 2026-05-08]
-- [ ] [OPERATOR] **P0. POST-RECOVERY PHANTOM DEDUP — REQUIRED.** Once ALL 5 recovery VMs above are STOPPED (or DELETED
-      via `VM_SHUTDOWN_ON_COMPLETION`), run the dedup script on a same-region VM (or laptop, GCS-only):
-
-      ```
-      cd instruments-service
-      python scripts/dedup_phantom_after_recovery.py --dry-run   # report counts
-      python scripts/dedup_phantom_after_recovery.py --apply     # commit
-      ```
-
-      **Why this exists**: recovery writes new `captured` rows with `venue=API_FOOTBALL` (api_football) while phantom
-      `empty_confirmed` rows carry `venue=""`. Different `venue` axis → `_merge_shard_frames` keeps BOTH rows in
-      canonical → data-status dashboard double-counts (sees same `(date, league_id, data_type)` cell as both
-      "captured" AND "empty_confirmed"). The script walks every shard (canonical + per-VM), identifies cells with
-      a captured-w/data row anywhere, and drops other rows in those cells.
-
-      **Pre-flight check**: VMs must be DONE before running, else we race the recovery writes:
-      ```
-      gcloud compute instances list \
-        --filter='(name~"^af-backfill-" OR name~"^us-backfill-" OR name~"^fs-backfill-" \
-                  OR name~"^weather-backfill-" OR name~"^sfi-backfill-") AND status=RUNNING' \
-        --zones=asia-northeast1-c
-      ```
-      Must return EMPTY.
-
-      **What the script does** (all sport per-fixture entities — handles api_football + footystats + understat +
-      sfi + open_meteo in one pass):
-        Targets: FIXTURES / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES /
-                 XG / MATCHES / ODDS / PREDICTIONS / SFI_PROGRESSIVE_STATS / WEATHER
-        Logic: for any cell with a captured-w/data row, drop empty_confirmed / attempted_failed / captured-zero rows.
-        Backups: `_index/availability_index.{run_ts}.dedup_phantom.bak.parquet` per shard (canonical + per-VM).
+- [x] ✅ [AGENT] P0. Monitor 5 parallel recovery VMs to STOPPED: all 5 VMs confirmed DELETED/STOPPED (2026-05-23).
+      `gcloud compute instances list` returned empty for all af-backfill-_, us-backfill-_, fs-backfill-_,
+      weather-backfill-_, sfi-backfill-\* prefixes in asia-northeast1-c. Auto-shutdown confirmed.
+- [x] ✅ [AGENT] **P0. POST-RECOVERY PHANTOM DEDUP — COMPLETED 2026-05-23.** All 5 recovery VMs confirmed STOPPED.
+      Dry-run: 79 shards, 366,799 phantom rows to drop (FIXTURES 105,053 / WEATHER 127,835 / PREDICTIONS 33,727 / ODDS
+      33,438 / PLAYER_STATS 25,088 / FIXTURE_LINEUPS 6,964 / FIXTURE_EVENTS 6,928 / FIXTURE_STATS 6,528 / INJURIES 9,783
+      / XG 10,818 / MATCHES 66 / SFI_PROGRESSIVE_STATS 571). Apply ran (IS@local dedup_phantom_after_recovery.py).
+      Backup parquets written per shard. 2026-05-23.
 
 - [ ] [AGENT] P0. Query deployment-api data-status: SPORTS attempted ≥50%, captured ≥45%, **% empty drops** as phantoms
       get dedup'd. [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain + post-recovery dedup script run]
@@ -697,13 +666,12 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       2026-05-13**: UAC@ac12d80 — normalize_api_football_standing() rewrite + SPORTS_STANDINGS schema flatten (14 → 32
       columns: team_id/name/logo + all/home/away × played/win/draw/lose/goals_for/goals_against). Migration still
       deferred (operational VM launch).
-- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** ✅ PARTIAL — UAC `SPORTS_XG_SHOTS` schema contract
-      added (UAC@31fb223f; 20 cols: shot_id, match_id, fixture_id, player_id, player_name, minute, result, xg, xa, x, y,
-      situation, shot_type, home_or_away, last_action, home_goals, away_goals, period, source, available_at; registry
-      key (sports, shot, xg_shots)). **Remaining**: (a) instruments-service orchestrator `_run_understat_shots_date()`
-      write path; (b) Understat adapter `get_match_shots(match_id)` calling `GET /getMatch/{match_id}`; (c) flip
-      existing XG manifest rows + delete thin parquets + re-fetch via `us-backfill-shots-flatten-{ts}` VM; (d) cassette
-      parity test for `normalize_understat_shot`; (e) features-sports consumers read per-shot dimensions.
+- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** ✅ PARTIAL — UAC `SPORTS_XG_SHOTS` schema + UAC
+      path/coverage/source registries (UAC@ab62291f). ✅ (a) instruments-service `_run_understat_shots_date()` write
+      path shipped (IS@a21401ea). ✅ (b) `get_match_shots(match_id)` + `get_match_ids_for_date(date)` shipped
+      (IS@a21401ea). ✅ (c) cassette parity test for `normalize_understat_shot` shipped (UAC@d9ab06d9). **Remaining**:
+      (d) launch `us-backfill-shots-{ts}` VM to backfill XG_SHOTS for all historical dates; (e) features-sports
+      consumers updated to read per-shot dimensions.
 - [x] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
       replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
       FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
@@ -1081,7 +1049,9 @@ implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in �
 
 ### [`writegate_honest_coverage_endtoend_2026_05_06`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete (write-gate + QG STEP 5.64/5.66 wired). Phases 7.B-7.D DEFERRED (forward-fix QG step, retrospective backfill ~7.5M rows, verification A3+A4). · **estimate**: 24.0 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete (write-gate + QG STEP 5.64/5.66 wired). Phases 7.B-7.D
+DEFERRED (forward-fix QG step, retrospective backfill ~7.5M rows, verification A3+A4). · **estimate**: 24.0 cal AI-days
+(class: design)
 
 ## P3 — backlog; revisit quarterly
 
@@ -1099,9 +1069,13 @@ implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in �
 **status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete. Phases 7.B/C/D deferred.
 
 **Deferred (migrated):**
-- **Phase 7.B — QG forward-fix step (DEFERRED-POST-CUTOVER)**: Add QG step to enforce write-gate for all future sports adapters going forward.
-- **Phase 7.C — Retrospective backfill (~7.5M rows, ~6 AI-days, DEFERRED-POST-CUTOVER)**: Backfill all `honest_coverage` values for historical sports rows across all asset groups using the consolidated formula.
-- **Phase 7.D — Verification A3+A4 (DEFERRED-POST-CUTOVER)**: Re-run mega-audit A3+A4 checks after backfill completes to confirm zero residual mismatches.
+
+- **Phase 7.B — QG forward-fix step (DEFERRED-POST-CUTOVER)**: Add QG step to enforce write-gate for all future sports
+  adapters going forward.
+- **Phase 7.C — Retrospective backfill (~7.5M rows, ~6 AI-days, DEFERRED-POST-CUTOVER)**: Backfill all `honest_coverage`
+  values for historical sports rows across all asset groups using the consolidated formula.
+- **Phase 7.D — Verification A3+A4 (DEFERRED-POST-CUTOVER)**: Re-run mega-audit A3+A4 checks after backfill completes to
+  confirm zero residual mismatches.
 
 ## Cross-references
 
