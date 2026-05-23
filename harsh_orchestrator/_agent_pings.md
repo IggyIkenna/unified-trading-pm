@@ -27,20 +27,6 @@ plans/active/issues/codex_audit_2026_05_11.md § Open questions
 
 ---
 
-<<<<<<< Updated upstream
-
-## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
-
-=======
-
-## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:34:52Z — ⚠️ 33 orphan ping(s) detected (no plan/issue/audit reference)
-
-> > > > > > > Stashed changes
-
-Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
-
-```
-<<<<<<< Updated upstream
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
@@ -66,7 +52,6 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
-=======
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
@@ -148,7 +133,6 @@ ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
 ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
->>>>>>> Stashed changes
 
 ```
 
@@ -601,10 +585,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_22.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -617,6 +601,13 @@ Phase -1 (workspace-discipline prereq).
 ---
 
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-22T18:15:21Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-22T11:00:01Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -648,6 +639,33 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 
 ```
 
@@ -656,6 +674,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
 2. **Edit the orphan ping** to add the new plan path inline,
    OR
+
+1. **File a plan** in `plans/active/<slug>_2026_05_22.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -668,6 +690,13 @@ Phase -1 (workspace-discipline prereq).
 ---
 
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-22T22:15:25Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-22T15:00:02Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -699,6 +728,33 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 
 ```
 
@@ -707,6 +763,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
 2. **Edit the orphan ping** to add the new plan path inline,
    OR
+
+1. **File a plan** in `plans/active/<slug>_2026_05_22.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -719,6 +779,13 @@ Phase -1 (workspace-discipline prereq).
 ---
 
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-23T02:15:23Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-22T19:00:00Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -750,6 +817,33 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 
 ```
 
@@ -758,6 +852,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
 2. **Edit the orphan ping** to add the new plan path inline,
    OR
+
+1. **File a plan** in `plans/active/<slug>_2026_05_22.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -770,6 +868,13 @@ Phase -1 (workspace-discipline prereq).
 ---
 
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-23T06:15:21Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-22T23:00:00Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -801,6 +906,33 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 
 ```
 
@@ -809,6 +941,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
 2. **Edit the orphan ping** to add the new plan path inline,
    OR
+
+1. **File a plan** in `plans/active/<slug>_2026_05_22.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -821,6 +957,13 @@ Phase -1 (workspace-discipline prereq).
 ---
 
 ## [orphan-ping-cron → _agent_pings.md] 2026-05-23T10:15:45Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-23T03:00:00Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
 
 Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
 
@@ -852,6 +995,33 @@ ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenn
 ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
 
 ```
 
@@ -860,6 +1030,10 @@ ORPHAN | /tmp/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
 2. **Edit the orphan ping** to add the new plan path inline,
    OR
+
+1. **File a plan** in `plans/active/<slug>_2026_05_23.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
@@ -868,3 +1042,106 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-23T07:00:00Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+
+1. **File a plan** in `plans/active/<slug>_2026_05_23.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-23T09:34:24Z — ⚠️ 27 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~10:40 UTC — Cycle 2 Day-3 cutover status + cross-side acks
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [ikenna-main → harsh-main] 2026-05-19 ~11:15 UTC — Slot 10 ownership transferred to ikenna-side; first 4 substeps SHIPPED
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/active/_agent_pings.md | ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+ORPHAN | /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/harsh_orchestrator/_agent_pings.md | ## [orphan-ping-cron → _agent_pings.md] 2026-05-20T14:50:55Z — ⚠️ 25 orphan ping(s) detected (no plan/issue/audit reference)
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+
+1. **File a plan** in `plans/active/<slug>_2026_05_23.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline, OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
