@@ -139,6 +139,7 @@ CEFI:
         - trades
         - book_snapshot_5
         - derivative_ticker
+        - perp_funding # Hyperliquid provides funding rate data via API
         # NO liquidations - Hyperliquid does not provide liquidation data via API
       start_date: "2023-05-01" # Hyperliquid S3 data start
 
@@ -150,7 +151,8 @@ CEFI:
       folders: [perpetuals]
       data_types:
         - trades
-        # Only trades available for Aster (no book_snapshot_5, derivative_ticker, or liquidations)
+        - perp_funding # Aster provides funding rate data
+        # Only trades + perp_funding available for Aster (no book_snapshot_5, derivative_ticker, or liquidations)
       start_date: "2021-08-30" # Earliest data available
 
 # =============================================================================
@@ -323,8 +325,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - swaps
-        - liquidity # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
+        - dex_swaps
+        - dex_pools # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
       start_date: "2020-05-18" # Uniswap V2 launch
 
     UNISWAP_V3-ETHEREUM:
@@ -335,8 +337,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - swaps
-        - liquidity # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
+        - dex_swaps
+        - dex_pools # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
       start_date: "2021-05-05" # Uniswap V3 launch
 
     UNISWAP_V4-ETHEREUM:
@@ -347,8 +349,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - swaps
-        - liquidity # Hourly pool snapshots via poolHourDatas (V4 subgraph supports hourly)
+        - dex_swaps
+        - dex_pools # Hourly pool snapshots via poolHourDatas (V4 subgraph supports hourly)
       start_date: "2025-02-07" # 14-day buffer after first swap (Jan 24). Was 2024-11-01.
 
     # Lending protocols (folder: pool)
@@ -363,9 +365,9 @@ DEFI:
       instrument_types: [A_TOKEN, DEBT_TOKEN]
       folders: [pool]
       data_types:
-        - rate_indices # Indices, rates, utilization (from The Graph)
+        - lending_indices # Indices, rates, utilization (from The Graph)
         - oracle_prices # On-chain oracle prices (Chainlink via AAVE)
-        - utilization # Extracted from rate_indices: utilization_rate, total_supply, total_borrow
+        - utilization # Extracted from lending_indices: utilization_rate, total_supply, total_borrow
         - risk_params # Historical: LTV, liquidation_threshold, reserve_factor (from The Graph)
       start_date: "2023-01-27"
 
@@ -376,8 +378,8 @@ DEFI:
       instrument_types: [A_TOKEN, DEBT_TOKEN]
       folders: [pool]
       data_types:
-        - rate_indices # Indices, rates, utilization (from Morpho API)
-        - utilization # Extracted from rate_indices: utilization, total_supply, total_borrow
+        - lending_indices # Indices, rates, utilization (from Morpho API)
+        - utilization # Extracted from lending_indices: utilization, total_supply, total_borrow
         - flash_loan_availability # Available liquidity for flash loans (from Morpho API historicalState)
       # NOTE: oracle_prices NOT needed for Morpho - used for flash loans (pay back same day)
       start_date: "2024-01-08"
@@ -540,6 +542,193 @@ DEFI:
         - mev_events # Proposer payload delivered stats from boost-relay.flashbots.net
       start_date: "2022-09-15" # The Merge (PoS transition)
 
+    # Perp funding rates - collected separately from CeFi perpetuals for strategy features
+    BINANCE-FUTURES-DEFI:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [PERPETUAL]
+      folders: [funding]
+      data_types:
+        - perp_funding # Funding rate snapshots (8h intervals) via Binance API
+      start_date: "2019-09-13"
+
+    BYBIT-DEFI:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [PERPETUAL]
+      folders: [funding]
+      data_types:
+        - perp_funding # Funding rate snapshots (8h intervals) via Bybit API
+      start_date: "2020-01-01"
+
+    OKX-DEFI:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [PERPETUAL]
+      folders: [funding]
+      data_types:
+        - perp_funding # Funding rate snapshots via OKX API
+      start_date: "2020-01-01"
+
+    DERIBIT-DEFI:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [PERPETUAL]
+      folders: [funding]
+      data_types:
+        - perp_funding # Funding rate snapshots via Deribit API
+      start_date: "2019-01-01"
+
+    # LST rates - exchange rates / APR for liquid staking tokens
+    LIDO-LST:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [LST]
+      folders: [lst]
+      data_types:
+        - lst_rates # stETH APR, wstETH/stETH rate via Lido API + on-chain
+      start_date: "2020-12-18"
+
+    ROCKETPOOL-LST:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [LST]
+      folders: [lst]
+      data_types:
+        - lst_rates # rETH/ETH exchange rate + APR via RocketPool API
+      start_date: "2021-11-09"
+
+    COINBASE-LST:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [LST]
+      folders: [lst]
+      data_types:
+        - lst_rates # cbETH/ETH exchange rate + APR via Coinbase API
+      start_date: "2022-08-01"
+
+    JITO-SOLANA:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [LST]
+      folders: [lst]
+      data_types:
+        - lst_rates # JitoSOL/SOL exchange rate + APR via Jito API
+        - native_staking_rates # Solana native staking APR via Jito + validator APIs
+      start_date: "2022-11-01"
+
+    MARINADE-SOLANA:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [LST]
+      folders: [lst]
+      data_types:
+        - lst_rates # mSOL/SOL exchange rate + APR via Marinade API
+        - native_staking_rates # Solana native staking APR via Marinade + validator APIs
+      start_date: "2021-06-01"
+
+    # Gas fees - chain-level gas cost data
+    ETHEREUM-GAS:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [chain]
+      data_types:
+        - gas_fees # Base fee + priority fee per block via Alchemy / on-chain RPC
+      start_date: "2021-08-05" # EIP-1559 activation
+
+    SOLANA-GAS:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [chain]
+      data_types:
+        - gas_fees # Transaction fee + priority fee per slot via RPC
+      start_date: "2020-03-16"
+
+    # EigenLayer rewards - points + restaking rewards
+    EIGENLAYER:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [rewards]
+      data_types:
+        - eigenlayer_rewards # Operator APR + AVS rewards via EigenLayer API / The Graph
+      start_date: "2023-06-14"
+
+    # Vault protocols - vault share price, APY, TVL
+    YEARN-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [YIELD_BEARING]
+      folders: [vault]
+      data_types:
+        - vault_share_price # pricePerShare per vault via Yearn API
+        - vault_apy # Net APY per vault (7d rolling) via Yearn API
+        - vault_tvl # Total assets under management via Yearn API
+      start_date: "2020-07-01"
+
+    BEEFY-MULTICHAIN:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [YIELD_BEARING]
+      folders: [vault]
+      data_types:
+        - vault_share_price # pricePerShare per vault via Beefy API
+        - vault_apy # APY per vault via Beefy API
+        - vault_tvl # Total value locked per vault via Beefy API
+      start_date: "2020-10-01"
+
+    PENDLE-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: pool
+      instrument_types: [YIELD_BEARING]
+      folders: [vault]
+      data_types:
+        - vault_share_price # PT/YT price per market via Pendle API
+        - vault_apy # Implied APY per market via Pendle API
+        - vault_tvl # TVL per market via Pendle API
+      start_date: "2021-06-24"
+
+    CONVEX-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [YIELD_BEARING]
+      folders: [vault]
+      data_types:
+        - vault_share_price # cvxCRV/CRV + pool ratio via Convex API
+        - vault_apy # Pool APY including CRV + CVX rewards via Convex API
+        - vault_tvl # Total staked per pool via Convex API
+      start_date: "2021-05-17"
+
+    IDLE-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [YIELD_BEARING]
+      folders: [vault]
+      data_types:
+        - vault_share_price # Token price per strategy via Idle API
+        - vault_apy # APY per strategy via Idle API
+        - vault_tvl # AUM per strategy via Idle API
+      start_date: "2019-10-01"
+
 # =============================================================================
 # SPORTS - Sports Betting (Post-commercialization)
 # =============================================================================
@@ -570,6 +759,10 @@ SPORTS:
         - markets
         - outcomes
         - settlements
+        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
+        - odds_movement # OHLC of line movement per event horizon
+        - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
+        - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
 
     BETFAIR:
@@ -583,6 +776,10 @@ SPORTS:
         - markets
         - outcomes
         - settlements
+        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
+        - odds_movement # OHLC of line movement per event horizon
+        - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
+        - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
 
     PINNACLE:
@@ -596,7 +793,82 @@ SPORTS:
         - markets
         - outcomes
         - settlements
+        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
+        - odds_movement # OHLC of line movement per event horizon
+        - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
+        - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
+
+    ODDS_API:
+      domain: sports
+      book_type: BOOKMAKER
+      fee_type: margin # Aggregator of multiple bookmakers
+      instrument_types: [MARKET]
+      folders: [markets]
+      data_types:
+        - odds
+        - markets
+        - outcomes
+        - settlements
+        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
+        - odds_movement # OHLC of line movement per event horizon
+        - arbitrage_opportunity # Cross-venue arb signal
+        - odds_horizon_bucket # Time-to-event classifier
+      start_date: "2020-01-01"
+
+# =============================================================================
+# PREDICTION - Prediction Markets
+# =============================================================================
+# PREDICTION venues produce canonical_question_group and market_lifecycle data.
+# These are binary event contracts where outcome is yes/no by a resolution date.
+# =============================================================================
+PREDICTION:
+  # Domain-level defaults
+  domain: prediction
+  book_type: CLOB # Central limit order book (on-chain or API)
+  fee_type: commission # 2% on winning side (Polymarket), variable others
+
+  # Common data types across all PREDICTION venues
+  common_data_types:
+    - trades
+    - prediction_canonical_question_group
+
+  venues:
+    POLYMARKET-PREDICTION:
+      domain: prediction
+      book_type: CLOB
+      fee_type: commission # 2% on winning side
+      instrument_types: [MARKET]
+      folders: [markets]
+      data_types:
+        - trades # CLOB trade events via Polymarket API
+        - prediction_canonical_question_group # Canonical grouped questions by topic
+        - market_lifecycle # Market creation + resolution + settlement events
+      start_date: "2020-06-01"
+
+    KALSHI:
+      domain: prediction
+      book_type: CLOB
+      fee_type: commission # CFTC-regulated exchange, ~3% on winning side
+      instrument_types: [MARKET]
+      folders: [markets]
+      data_types:
+        - trades # CLOB trade events via Kalshi API
+        - prediction_canonical_question_group # Canonical grouped questions by topic
+        - market_lifecycle # Market creation + resolution + settlement events
+      start_date: "2021-07-01"
+
+    MANIFOLD:
+      domain: prediction
+      book_type: AMM # Maniswap AMM (community-run)
+      fee_type: none # No fees (play money unless Manifold for Charity)
+      instrument_types: [MARKET]
+      folders: [markets]
+      data_types:
+        - trades # Bet events via Manifold API
+        - prediction_canonical_question_group # Canonical grouped questions by topic
+        - market_lifecycle # Market creation + resolution events
+      start_date: "2022-01-01"
 
 # =============================================================================
 # Chain Data Types - Special handling for options/futures

@@ -21,8 +21,10 @@ cloud_run_job_name: market-tick-data-service
 dimensions:
   - name: asset_group
     type: fixed
-    values: [CEFI, TRADFI, DEFI, SPORTS]
-    description: Market category to download (SPORTS = live odds via USEI scrapers/OpticOdds/OddsJam)
+    values: [CEFI, TRADFI, DEFI, SPORTS, PREDICTION]
+    description:
+      Market category to download (SPORTS = live odds via USEI scrapers/OpticOdds/OddsJam; PREDICTION =
+      Polymarket/Kalshi)
 
   - name: venue
     type: hierarchical
