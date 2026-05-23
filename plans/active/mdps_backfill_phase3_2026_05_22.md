@@ -84,19 +84,17 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports** — 7 VMs launched: `mdps-sports-{2020..2026}-20260522-161432`.
       `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
       Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
-- [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. **BLOCKED (slot-7
-      2026-05-22)**: All 20260522 sports VMs exited 0 but produced ZERO new output. Two root causes: (A)
-      `MalformedRowKeyError: shard-atom field 'chain' was explicitly passed as empty` — manifest writes all failed (B)
-      `Streaming read: no group column` — early 2020 raw tick data lacks `symbol`/`instrument_key` column. Existing
-      availability_index: 172,847 rows at only 8.9% v8 (15,347). Processed bar parquets from 20260519 VMs are valid
-      (home/draw/away 0 NaN, no data_available_at). Issue doc:
-      `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`. Gates MDPS-3.3.Sports-V GREEN.
-- [ ] [CODE] P2. **MDPS-3.3.Sports-SchemaContract** `**DEFERRED**` — Two fixes needed: (1) Remove `chain` from MDPS
-      sports canonical_writer row_key (or populate as non-empty constant). Same pattern as TradFi/Pred but for `chain`
-      field specifically. (2) Handle `no group column` in streaming reader for pre-canonical (pre-2022) raw tick data.
-      Also: schedule availability_index.parquet v8 migration sweep for 172k existing rows. Successor: UAC schema
-      update + MDPS fix. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`. Observed:
-      slot-7 2026-05-22.
+- [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. **RELAUNCHED
+      (slot-5 2026-05-23)**: 7 new VMs `mdps-sports-{2015..2026}-20260523-100800` launched with chain fix
+      (MDPS@95f685b). Previous VMs exited 0 but produced ZERO output due to MalformedRowKeyError (chain="") at manifest
+      write site. Fix: conditionally omit chain from row_key when empty (6 sites in canonical_writer.py). Verify once
+      VMs complete. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+- [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
+      row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Fix (2)
+      `no group     column` in streaming reader for pre-canonical (pre-2022) raw tick data: **DEFERRED** to separate P2
+      item; 2015-2022 VMs may hit this on old data. v8 migration for 172k existing rows also deferred. UAC registry
+      exports fixed: get_valid_timeframes_for_data_type + NEEDS_CANDLE_PROCESSING (UAC@f8c49e9c). UTL freshness
+      asset_class bug fixed (UTL@d3e71f24). slot-5 2026-05-23.
 
 ## Phase 5 — Predictions MDPS reprocessor
 
