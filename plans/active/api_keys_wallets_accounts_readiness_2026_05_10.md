@@ -417,7 +417,10 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 - [x] ✅ [HUMAN+AGENT] P0. **3.B — CEFFU integration.** DEFERRED per 2026-05-12 scope contraction. 3.B.3 adapter shipped
       (execution-service@027a8153b). KYB (3.B.1) + real-fund test (3.B.4) + ops-model decision (3.B.5) all post-cutover.
-      Tracked in `fireblocks_copper_client_integration_2026_06_01.md`. PM@slot2 2026-05-23. Sub-deliverables:
+      Tracked in `fireblocks_copper_client_integration_2026_06_01.md`. PM@slot2 2026-05-23.
+  - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: DEFERRED-AFTER-CUTOVER confirmed. 3.B.3 stub at
+    `execution-service/execution_service/custody/ceffu.py` raises NotImplementedError until CEFFU spec delivered June-1.
+    Successor: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`. Sub-deliverables:
   - [ ] [HUMAN] **3.B.1** — CEFFU institutional KYB onboarding (operator-side, 2-4 weeks).
   - [ ] [HUMAN] **3.B.2** — Confirm CEFFU's product offering: MirrorX (off-exchange-settlement linking CEFFU custody to
         Binance perp margin without moving funds) vs direct custody API. Asset coverage: BTC + ETH + USDC + USDT
