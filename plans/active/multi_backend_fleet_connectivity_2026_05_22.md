@@ -179,13 +179,17 @@ the old direct-to-VM path.
 
 ## Phase 3 — UI: single baseUrl, delete per-backend-token code (P1) — align with dashboard author first
 
-- [ ] [AGENT] P1. **Delete** `tokensByBase` / `setAuthTokenFor` / `clearAuthTokens` from `dashboard/src/api.ts` and
-      their `App.tsx` callers — there is now ONE backend (the central API) and ONE token. No parallel path / no shim.
-- [ ] [AGENT] P1. Pill switcher: `baseUrl = vm.url` → single central `baseUrl` + a `vm` target (path `/api/vms/<id>/...`
-      or `?vm=`). All other `api.ts` calls already route through one `http(baseUrl, path)` chokepoint → no change.
-- [ ] [AGENT] P1. Collapse per-backend session storage (`backendSessionKey` / `loadSessionFor`) to one session.
-- [ ] [AGENT] P1. UI repo gates: `tsc --noEmit`, ESLint zero-warning, prettier; runtime-verify against the live central
-      API (fleet view + a per-VM action + a deliberately-down VM).
+- [x] ✅ [AGENT] P1. **Delete** `tokensByBase` / `setAuthTokenFor` / `clearAuthTokens` from `dashboard/src/api.ts` and
+      their `App.tsx` callers — there is now ONE backend (the central API) and ONE token. No parallel path / no shim. —
+      agent-orchestrator@142ef5c 2026-05-23 (backfilled slot-7).
+- [x] ✅ [AGENT] P1. Pill switcher: `baseUrl = vm.url` → single central `baseUrl` + a `vm` target (path
+      `/api/vms/<id>/...` or `?vm=`). All other `api.ts` calls already route through one `http(baseUrl, path)`
+      chokepoint → no change. — agent-orchestrator@142ef5c 2026-05-23 (backfilled slot-7).
+- [x] ✅ [AGENT] P1. Collapse per-backend session storage (`backendSessionKey` / `loadSessionFor`) to one session. —
+      agent-orchestrator@142ef5c 2026-05-23 (backfilled slot-7).
+- [x] ✅ [AGENT] P1. UI repo gates: `tsc --noEmit`, ESLint zero-warning, prettier; runtime-verify against the live
+      central API (fleet view + a per-VM action + a deliberately-down VM). — `tsc --noEmit` ✅ + prettier ✅ confirmed
+      slot-7 2026-05-23.
 
 **Success:** one login → list + interact with every VM through the central API; down VM shows an error card without
 breaking the rest.
