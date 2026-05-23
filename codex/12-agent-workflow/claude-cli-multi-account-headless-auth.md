@@ -259,10 +259,59 @@ To revoke a specific token (e.g. compromised VM, decommissioned machine):
   7-day-out (per Phase 4c)
 - Telegram `notify_oauth_token_expiring` fires at 30-day-out + crit at 7-day-out
 
+## Interactive spawn authentication — CLAUDE_CONFIG_DIR + onboarding seed (2.1.145+)
+
+**Problem discovered 2026-05-22**: claude 2.1.145 added a first-run interactive onboarding wizard (theme → login method)
+that **ignores `CLAUDE_CODE_OAUTH_TOKEN`** and forces browser OAuth for interactive TUI sessions (`tmux spawn`). The env
+token works for `claude -p` (headless print) but the wizard blocks it for interactive sessions. This caused the entire
+orchestrator fleet to hang at a browser-OAuth prompt after the CLI upgrade.
+
+**Fix (verified live 2026-05-22)**: Give each interactive spawn an isolated, pre-seeded `CLAUDE_CONFIG_DIR`. With
+onboarding marked complete, the wizard is skipped and the env token authenticates the session directly.
+
+**Recipe (applied by `tmux_spawn._start_session()` when `env_file` is set):**
+
+1. `CLAUDE_CONFIG_DIR=<base>/<session>` — per-session isolated config dir. Base defaults to `~/.claude-configs` (env
+   `ORCHESTRATOR_CLAUDE_CONFIG_BASE`). Isolates credentials, settings, onboarding state, and session history.
+2. Seed `$CLAUDE_CONFIG_DIR/.claude.json` once on first use:
+   ```json
+   {
+     "theme": "dark",
+     "hasCompletedOnboarding": true,
+     "hasCompletedProjectOnboarding": true,
+     "hasTrustDialogAccepted": true,
+     "bypassPermissionsModeAccepted": true
+   }
+   ```
+3. `source ~/.claude-accounts/<account_id>.env` every spawn (sets `CLAUDE_CODE_OAUTH_TOKEN`, `unset ANTHROPIC_API_KEY`).
+   The token is **not persisted** to the config dir — it must be re-sourced each spawn.
+4. `exec claude <flags>` → authenticated interactive session, no wizard.
+
+**Key invariants:**
+
+- The seed is written once per config dir (file persists). The token must be sourced every spawn (never saved).
+- Multiple accounts work simultaneously in separate config dirs — account isolation is clean.
+- The `CLAUDE_CONFIG_DIR` is per-session, not per-account; the same dir can be reused across accounts if desired.
+
+**Manual verification:**
+
+```bash
+mkdir -p /tmp/ck
+printf '%s' '{"theme":"dark","hasCompletedOnboarding":true,"hasCompletedProjectOnboarding":true,"hasTrustDialogAccepted":true,"bypassPermissionsModeAccepted":true}' > /tmp/ck/.claude.json
+tmux new-session -d -s ck "CLAUDE_CONFIG_DIR=/tmp/ck bash -c 'source ~/.claude-accounts/sub-a-ikenna.env; cd /tmp; exec claude'"
+# → skips wizard, reaches chat prompt authenticated (accept one folder-trust prompt if a new dir)
+```
+
+**Remote Control caveat**: setup tokens (`CLAUDE_CODE_OAUTH_TOKEN`) cannot be used for Remote Control sessions. RC
+requires a full-scope browser-login `.credentials.json`. The headless token-auth path gives a fully functional agent
+(polls `/loop`, receives messages, runs tools) without RC. RC is deferred; both auth modes coexist via separate
+`CLAUDE_CONFIG_DIR`s.
+
 ## Bare mode limitation
 
-`CLAUDE_CODE_OAUTH_TOKEN` works with `claude` and `claude -p`. It does NOT work with bare mode (`claude --bare`) or
-Remote Control sessions — those have their own auth paths the operator doesn't currently use.
+`CLAUDE_CODE_OAUTH_TOKEN` works with `claude -p` (headless) and with interactive sessions **when the onboarding seed is
+in place** (see above). It does NOT work with bare mode (`claude --bare`) or Remote Control sessions — those have their
+own auth paths the operator doesn't currently use.
 
 ## June 15, 2026 policy change (watch)
 
@@ -281,15 +330,16 @@ plan.
 
 ## Troubleshooting
 
-| Symptom                                           | Likely cause                                              | Fix                                                                   |
-| ------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------- |
-| `401 authentication_error` immediately            | Token invalid or revoked                                  | Regenerate with `claude setup-token`                                  |
-| Billing shows API usage instead of Max            | `ANTHROPIC_API_KEY` set                                   | `unset ANTHROPIC_API_KEY`, verify with `claude /status`               |
-| `OAuth authentication is currently not supported` | Known intermittent CLI bug                                | Wait + retry; verify token wasn't accidentally revoked                |
-| All accounts hit limit simultaneously             | Rotation logic wrong OR all accounts genuinely exhausted  | `claude /status` per account; if all show limited, wait for 5h window |
-| New VM prompts for browser login                  | Token env var not set OR shell didn't source the env file | `source ~/.claude-accounts/<id>.env` before running `claude`          |
-| Token works locally but not in cron/systemd       | Env vars not inherited                                    | Source env file in cron command OR systemd `EnvironmentFile=`         |
-| Two emails seem to share quota                    | Aliases on same orgId (not distinct subs)                 | Check `claude auth status                                             | grep orgId`; remove the alias from roster |
+| Symptom                                                   | Likely cause                                                        | Fix                                                                                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `401 authentication_error` immediately                    | Token invalid or revoked                                            | Regenerate with `claude setup-token`                                                                                                                                  |
+| Billing shows API usage instead of Max                    | `ANTHROPIC_API_KEY` set                                             | `unset ANTHROPIC_API_KEY`, verify with `claude /status`                                                                                                               |
+| `OAuth authentication is currently not supported`         | Known intermittent CLI bug                                          | Wait + retry; verify token wasn't accidentally revoked                                                                                                                |
+| All accounts hit limit simultaneously                     | Rotation logic wrong OR all accounts genuinely exhausted            | `claude /status` per account; if all show limited, wait for 5h window                                                                                                 |
+| Interactive tmux spawn shows "Select login method" wizard | claude 2.1.145+ onboarding wizard ignores `CLAUDE_CODE_OAUTH_TOKEN` | Ensure `tmux_spawn._start_session()` uses `env_file=` path which seeds `CLAUDE_CONFIG_DIR`; verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` |
+| New VM prompts for browser login                          | Token env var not set OR shell didn't source the env file           | `source ~/.claude-accounts/<id>.env` before running `claude`                                                                                                          |
+| Token works locally but not in cron/systemd               | Env vars not inherited                                              | Source env file in cron command OR systemd `EnvironmentFile=`                                                                                                         |
+| Two emails seem to share quota                            | Aliases on same orgId (not distinct subs)                           | Check `claude auth status                                                                                                                                             | grep orgId`; remove the alias from roster |
 
 ## Composes with
 
