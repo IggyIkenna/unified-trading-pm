@@ -1,0 +1,179 @@
+{
+  "_comment": "AWS deployment manifests for backend APIs enumerated from ui-api-mapping.json port registry.",
+  "_staging_note": "Staged in unified-trading-pm/scripts/aws/ui-deployment/. Each manifest should go in the corresponding repo's .aws/ or deployment-service/configs/aws/. Created for aws_migration_defi_first-026.",
+  "_data_locality": "All services target ap-northeast-1 to co-locate with DeFi data buckets.",
+  "_source_registry": "unified-trading-pm/scripts/dev/ui-api-mapping.json + deployment-service/configs/cloud-providers.yaml (not in worktree).",
+
+  "enumerated_apis": [
+    {
+      "service": "deployment-api",
+      "port": 8004,
+      "ui_consumer": "deployment-ui",
+      "runtime": "app_runner",
+      "status": "DONE — Phase 6 manifest at deployment-service@e7964c7 (deployment-api.yaml)"
+    },
+    {
+      "service": "unified-trading-api",
+      "port": 8030,
+      "ui_consumer": "unified-trading-system-ui",
+      "runtime": "fargate",
+      "status": "NEEDS MANIFEST — see task_definition below",
+      "task_definition": {
+        "family": "uts-unified-trading-api",
+        "executionRoleArn": "arn:aws:iam::427895769566:role/uts-ecs-task-execution-role",
+        "taskRoleArn": "arn:aws:iam::427895769566:role/uts-ecs-task-role",
+        "networkMode": "awsvpc",
+        "requiresCompatibilities": ["FARGATE"],
+        "cpu": "1024",
+        "memory": "2048",
+        "containerDefinitions": [
+          {
+            "name": "unified-trading-api",
+            "image": "427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/unified-trading-api:latest",
+            "portMappings": [{ "containerPort": 8030, "hostPort": 8030, "protocol": "tcp" }],
+            "environment": [
+              { "name": "CLOUD_PROVIDER", "value": "aws" },
+              { "name": "CLOUD_MOCK_MODE", "value": "false" },
+              { "name": "PORT", "value": "8030" }
+            ],
+            "secrets": [
+              { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/database-url" },
+              { "name": "API_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/api/api-key" }
+            ],
+            "healthCheck": {
+              "command": ["CMD-SHELL", "curl -f http://localhost:8030/health || exit 1"],
+              "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 60
+            },
+            "logConfiguration": {
+              "logDriver": "awslogs",
+              "options": {
+                "awslogs-group": "/ecs/unified-trading-api",
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "ecs"
+              }
+            },
+            "essential": true
+          }
+        ],
+        "tags": [
+          { "key": "env", "value": "prod" },
+          { "key": "service", "value": "unified-trading-api" },
+          { "key": "cloud", "value": "aws" }
+        ]
+      }
+    },
+    {
+      "service": "client-reporting-api",
+      "port": 8014,
+      "ui_consumer": "unified-trading-system-ui",
+      "runtime": "app_runner",
+      "status": "NEEDS MANIFEST — see app_runner_config below",
+      "app_runner_config": {
+        "ServiceName": "uts-client-reporting-api-prod",
+        "SourceConfiguration": {
+          "ImageRepository": {
+            "ImageIdentifier": "427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/client-reporting-api:latest",
+            "ImageConfiguration": {
+              "Port": "8014",
+              "RuntimeEnvironmentVariables": {
+                "CLOUD_PROVIDER": "aws",
+                "CLOUD_MOCK_MODE": "false",
+                "PORT": "8014"
+              },
+              "RuntimeEnvironmentSecrets": {
+                "DATABASE_URL": "arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:unified-trading/client-reporting-api/database-url"
+              }
+            },
+            "ImageRepositoryType": "ECR"
+          },
+          "AutoDeploymentsEnabled": false
+        },
+        "InstanceConfiguration": {
+          "Cpu": "1 vCPU",
+          "Memory": "2 GB",
+          "InstanceRoleArn": "arn:aws:iam::427895769566:role/uts-app-runner-instance-role"
+        },
+        "HealthCheckConfiguration": {
+          "Protocol": "HTTP",
+          "Path": "/health",
+          "Interval": 20,
+          "Timeout": 5,
+          "HealthyThreshold": 1,
+          "UnhealthyThreshold": 5
+        },
+        "Tags": [
+          { "Key": "env", "Value": "prod" },
+          { "Key": "service", "Value": "client-reporting-api" },
+          { "Key": "cloud", "Value": "aws" }
+        ]
+      }
+    },
+    {
+      "service": "market-data-api",
+      "port": 8016,
+      "ui_consumer": null,
+      "runtime": "app_runner",
+      "status": "NEEDS MANIFEST — see app_runner_config below",
+      "note": "No UI consumer. Internal API for market data queries.",
+      "app_runner_config": {
+        "ServiceName": "uts-market-data-api-prod",
+        "SourceConfiguration": {
+          "ImageRepository": {
+            "ImageIdentifier": "427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/market-data-api:latest",
+            "ImageConfiguration": {
+              "Port": "8016",
+              "RuntimeEnvironmentVariables": {
+                "CLOUD_PROVIDER": "aws",
+                "CLOUD_MOCK_MODE": "false",
+                "PORT": "8016"
+              }
+            },
+            "ImageRepositoryType": "ECR"
+          },
+          "AutoDeploymentsEnabled": false
+        },
+        "InstanceConfiguration": {
+          "Cpu": "1 vCPU",
+          "Memory": "2 GB",
+          "InstanceRoleArn": "arn:aws:iam::427895769566:role/uts-app-runner-instance-role"
+        },
+        "HealthCheckConfiguration": {
+          "Protocol": "HTTP",
+          "Path": "/health",
+          "Interval": 20,
+          "Timeout": 5,
+          "HealthyThreshold": 1,
+          "UnhealthyThreshold": 5
+        },
+        "Tags": [
+          { "Key": "env", "Value": "prod" },
+          { "Key": "service", "Value": "market-data-api" },
+          { "Key": "cloud", "Value": "aws" }
+        ]
+      }
+    },
+    {
+      "service": "agent-orchestrator",
+      "port": 8026,
+      "ui_consumer": null,
+      "runtime": "app_runner",
+      "status": "DEFERRED — operator tooling. Cloud Run target already in plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md. AWS path post-cutover.",
+      "note": "agent-orchestrator is exempt from standard QG (per CLAUDE.md). AWS deployment not in scope for DeFi cutover."
+    },
+    {
+      "service": "pnl-attribution-service",
+      "port": 8022,
+      "ui_consumer": null,
+      "runtime": "ARCHIVED",
+      "status": "ARCHIVED — absorbed into strategy-service (Phase 11). No AWS manifest needed."
+    }
+  ],
+
+  "summary": {
+    "done": ["deployment-api"],
+    "needs_manifest_and_ecr_build": ["unified-trading-api", "client-reporting-api", "market-data-api"],
+    "deferred": ["agent-orchestrator"],
+    "archived_no_action": ["pnl-attribution-service"],
+    "next_step": "For unified-trading-api + client-reporting-api + market-data-api: (1) add buildspec.aws.yaml to each repo, (2) create ECR repos, (3) apply manifests from this file via aws ecs register-task-definition / aws apprunner create-service. Gated on BLK-6b0dc0e2 IAM resolution."
+  }
+}
