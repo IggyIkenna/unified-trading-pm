@@ -1,0 +1,25 @@
+version: 1
+# AWS Amplify build spec for deployment-ui.
+# cp to deployment-ui/amplify.yml when that repo is available.
+#
+# Decision: Amplify (managed) — deployment-ui is an admin/ops dashboard, not latency-sensitive.
+# Branch: live-defi-rollout (primary)
+# Region: ap-northeast-1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - node --version
+        - npm ci --prefer-offline
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
+  buildPath: /

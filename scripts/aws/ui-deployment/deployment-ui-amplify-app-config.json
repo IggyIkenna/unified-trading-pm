@@ -1,0 +1,29 @@
+{
+  "_comment": "AWS Amplify app configuration for deployment-ui.",
+  "_staging_note": "Staged in unified-trading-pm/scripts/aws/ui-deployment/. Copy to deployment-ui/.aws/ when that repo is available. Apply via: aws amplify create-app --name uts-deployment-ui-prod --cli-input-json file://deployment-ui-amplify-app-config.json",
+  "_decision": "Amplify (managed, cheapest) — deployment-ui is an admin/ops dashboard, not latency-sensitive. Fargate is not needed unless real-time websocket streaming is required (post-cutover evaluation).",
+  "name": "uts-deployment-ui-prod",
+  "description": "Unified Trading System Deployment Dashboard — AWS Amplify",
+  "repository": "https://github.com/IggyIkenna/deployment-ui",
+  "oauthToken": "PLACEHOLDER_GITHUB_PAT",
+  "platform": "WEB_COMPUTE",
+  "iamServiceRoleArn": "arn:aws:iam::427895769566:role/uts-amplify-service-role",
+  "environmentVariables": {
+    "NEXT_PUBLIC_CLOUD_PROVIDER": "aws",
+    "CLOUD_PROVIDER": "aws",
+    "CLOUD_MOCK_MODE": "false",
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_REGION": "ap-northeast-1",
+    "NEXT_PUBLIC_DEPLOYMENT_API_URL": "PLACEHOLDER_DEPLOYMENT_API_URL",
+    "NEXT_PUBLIC_ORCHESTRATOR_URL": "PLACEHOLDER_ORCHESTRATOR_URL"
+  },
+  "autoBranchCreationConfig": {
+    "enableAutoBranchCreation": false
+  },
+  "tags": {
+    "env": "prod",
+    "service": "deployment-ui",
+    "cloud": "aws",
+    "asset_group": "all"
+  }
+}
