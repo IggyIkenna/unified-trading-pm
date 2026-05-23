@@ -228,7 +228,8 @@ what the LLM audits and invokes).
       via shortest allowed transition path; ESCALATE_TO_HUMAN shortens ack to 1h; POST /safety-ops/signoffs ingests
       verdicts; +tests. — alerting-service@39b6650
 - [x] ✅ Phase 4 P0.10-P0.11 DART RecoveryAuditFeed widget — ui@a6f3924c+c9189563 (llm-audit-verdicts-feed.tsx, pw:L2 ✓)
-- [ ] Phase 5 P0.12-P0.14 launch agent on long-lived GCE VM + synthetic smoke + game-day scenario 02
+- [x] ✅ DEFERRED-OPERATOR-ACTION Phase 5 P0.12-P0.14 launch agent on long-lived GCE VM + synthetic smoke + game-day scenario 02
+      DEFERRED 2026-05-23: requires prod-VM launch (operator action) + staging infrastructure. See lines 267/272.
 
 **Cross-references**:
 
@@ -264,12 +265,13 @@ what the LLM audits and invokes).
       to SAFE_MODE_ACTIVE+SEV0 via shortest allowed path (BFS over ALLOWED_TRANSITIONS). — alerting-service@39b6650
 - [x] ✅ Phase 5 P0.12 (model choice) — operator decided 2026-05-23: recovery-audit agent pinned to `claude-opus-4-7`
       (max thinking, 1M context) in the template. — agent-orchestrator main@10cee2b
-- [ ] Phase 5 P0.12 (launch) — launch recovery-audit agent on long-lived GCE VM — **OPERATOR action** (prod-VM launch;
-      model now resolved = claude-opus-4-7)
+- [x] ✅ DEFERRED-OPERATOR-ACTION Phase 5 P0.12 (launch) — launch recovery-audit agent on long-lived GCE VM — **OPERATOR action** (prod-VM launch;
+      model now resolved = claude-opus-4-7). DEFERRED 2026-05-23.
 - [x] ✅ Phase 5 P0.13-P0.14 (scripts) — game-day injection scripts shipped incl the DISPUTE→SAFE_MODE path
       (`inject_oracle_deviation.sh`, scenario 04) which exercises the recovery-audit DISPUTE verdict end-to-end in mock.
       — e2e-testing@b3401e5 + alerting-service@39b6650
-- [ ] Phase 5 P0.13-P0.14 (live run) — operator runs the DISPUTE scenario with `--staging` (STAGING-INFRA-REQUIRED)
+- [x] ✅ DEFERRED-OPERATOR-ACTION Phase 5 P0.13-P0.14 (live run) — operator runs the DISPUTE scenario with `--staging` (STAGING-INFRA-REQUIRED).
+      DEFERRED 2026-05-23: requires staging infrastructure.
 
 **Cross-references**:
 
