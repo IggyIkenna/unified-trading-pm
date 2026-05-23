@@ -879,13 +879,14 @@ per-target upgrade path.
         **shipped UAC@069a223 2026-05-14**
 
 - **Item 18 (2-year batch backtest run)**:
-  - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
+  - [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
         May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
         [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md))
         against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
-        from paper_vs_live_workflow_maturity_2026_05_08)_
+        from paper_vs_live_workflow_maturity_2026_05_08)_  **DEFERRED 2026-05-23**: requires dedicated 3-day session;
+        operator to assign dedicated slot/VM. Blocked-escalated BLK-ffaf42f1.
   - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
         / paper-shippable / backtest-only / stub) for every archetype in
         `strategy-service/strategy_service/portfolio_allocator/archetypes.py`. Codified in
