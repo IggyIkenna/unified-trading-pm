@@ -169,10 +169,10 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       defi-095053 (1), sports-102325 (5 running), tradfi-105240 (7). All prediction VMs were already TERMINATED.
       Verified: `gcloud compute instances list --filter="name:mdps- AND status:RUNNING"` returns empty. 2026-05-23
       slot-5.
-- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-Relaunch** — Relaunching 21 MDPS VMs: 5 DeFi (2022-2026) + 7 TradFi (2020-2026,
-      e2-highmem-8 MAX_WORKERS=2) + 7 Sports (2020-2026, SKIP_DEP_CHECK) + 2 Prediction (2025-2026, SKIP_DEP_CHECK).
-      Command: `launch-mdps-sharded-backfill.sh defi tradfi sports prediction`. IN PROGRESS 2026-05-23 slot-5. Verify
-      T+10min: RUNNING + manifest consolidator showing captured rows (not attempted_failed).
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.AllGroups-Relaunch** — All 21 MDPS VMs RUNNING with UAC@6aef01f9 + MDPS@21eb635: 5 DeFi
+      (2022-2026, 124815+125407) + 7 TradFi (2020-2026, 125440+125628, e2-highmem-8 MAX_WORKERS=2) + 7 Sports
+      (2020-2026, 125717) + 2 Prediction (2025-2026, 124620). Prediction 124620 launched by slot-7; rest by slot-5.
+      T+10min verified RUNNING. No ts_event schema_violation errors (fix confirmed). 2026-05-23 slot-5+7.
 
 ---
 
