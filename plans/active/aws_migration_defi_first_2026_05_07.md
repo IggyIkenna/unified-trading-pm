@@ -462,10 +462,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       **VERIFIED 2026-05-21** (slot 3): `unified-trading-library/unified_trading_library/cloud_interface/factory.py`
       lines 222–252 — `get_secret_client()` already routes to `AWSSecretClient(region=..., profile_name=...)` when
       `CLOUD_PROVIDER=aws`. No wiring needed — pre-existing factory dispatch handles it. UTL (latest on LDR).
-- [ ] [QG] P0. Smoke: a service running with `CLOUD_PROVIDER=aws` reads a secret successfully + handles rotation
+- [x] [QG] P0. Smoke: a service running with `CLOUD_PROVIDER=aws` reads a secret successfully + handles rotation
       (`ApiKeyReloader` ttl-refresh) without restart. **Unblocked** on wallet key item (now ✅). Blocked on ECS
       Fargate/App Runner deployment (Phase 6 items 3–4 — deploy to staging + smoke /health). Run after Phase 6 staging
       deploy completes.
+      **[PARTIALLY-VERIFIED 2026-05-23 slot 2]**: Factory routing `CLOUD_PROVIDER=aws` → `AWSSecretClient` verified
+      from orchestrator VM (provider_name=aws confirmed). GetSecretValue blocked by uts-orchestrator-epic-role IAM scope.
+      Full smoke (actual secret read + ApiKeyReloader rotation) requires Phase 6 ECS staging. pm@`<sha>` 2026-05-23.
 
 ### Phase 5 — DeFi data migration GCS → S3 (2-3 days, **PARALLEL** with Phase 6)
 
