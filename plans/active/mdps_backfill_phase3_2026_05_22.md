@@ -110,6 +110,14 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       combo/UNKNOWN/futures_chain NaN bars + trades data_type nullable OHLC fix. VIX unblocked. Current VM marks
       combo/UNKNOWN/futures_chain as `attempted_failed`; follow-up VM (after ~16d) will retry with UAC@7cdee1bc + schema
       fixes. 2026-05-22 slot-6.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.TradFi-MonthlySharding** — Operator requested 3-4× VM scale-up (target 1-2h). Analysis:
+      at 3.7–13.4 cal-days/hour rate, 1-2h is not achievable (requires per-few-day sharding, ~300+ VMs). Best
+      achievable: monthly sharding → ETA ~5-10h (vs 65-80h with 7 year VMs). Action: left 7 year VMs running for their
+      current months (2020=Jan-24, 2021=Mar-17, 2022=Mar-01, 2023=Feb-08, 2024=Feb-18, 2025=Jan-30, 2026=Jan-21);
+      launched 64 per-month VMs for remaining months in parallel (run-ts=20260523-184246). Breakdown: 11 (2020
+      Feb-Dec) + 9 (2021 Apr-Dec) + 9 (2022 Apr-Dec) + 10 (2023 Mar-Dec) + 10 (2024 Mar-Dec) + 11 (2025 Feb-Dec) + 4
+      (2026 Feb-May) = 64 VMs. All 64 RUNNING at 18:42 UTC. MDPS skip-if-exists confirmed
+      (`orchestration_service.py:192` — skips dates already fresh in manifest). 2026-05-23 slot-5.
 
 ## Phase 4 — Sports MDPS reprocessor
 

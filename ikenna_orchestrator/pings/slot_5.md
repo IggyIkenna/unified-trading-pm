@@ -1,4 +1,41 @@
-> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~17:10 UTC).**
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~18:50 UTC).**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~18:50 UTC — TradFi monthly sharding scale-up (64 new VMs)
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md` (MDPS-3.3.TradFi-MonthlySharding)
+
+### ETA analysis (operator requested 1-2h via 3-4× VMs)
+
+**Short answer: 1-2h not achievable for TradFi.** Best achievable is ~5-10h.
+
+Rate analysis per year VM after 5.68h runtime:
+
+- 2020: 2020-01-24 — 4.3 d/h → **~81h remaining** (densest data)
+- 2021: 2021-03-17 — 13.4 d/h → ~22h remaining
+- 2022: 2022-03-01 — 10.6 d/h → ~29h remaining
+- 2023: 2023-02-08 — 6.9 d/h → ~47h remaining
+- 2024: 2024-02-18 — 8.6 d/h → ~37h remaining
+- 2025: 2025-01-30 — 5.3 d/h → ~63h remaining (options chain dense)
+- 2026: 2026-01-21 — 3.7 d/h → ~33h remaining
+
+For 1-2h target: need weekly or finer sharding (~300+ VMs). Monthly sharding → ~5-10h (limited by densest month).
+
+### Action taken: 64 monthly VMs launched
+
+Left 7 year VMs running for their current months. Launched 64 per-month VMs for remaining months:
+
+- 2020: Feb-Dec (11 VMs)
+- 2021: Apr-Dec (9 VMs)
+- 2022: Apr-Dec (9 VMs)
+- 2023: Mar-Dec (10 VMs)
+- 2024: Mar-Dec (10 VMs)
+- 2025: Feb-Dec (11 VMs)
+- 2026: Feb-May (4 VMs)
+
+All 64 RUNNING (run-ts=20260523-184246). MDPS skip-if-exists verified in orchestration_service.py:192 — overlap with
+running year VMs is safe.
+
+### Current fleet (~18:50 UTC): 71 TradFi VMs + 7 original year VMs + 6 Sports + 5 DeFi + 2 Prediction = ~84 total MDPS VMs RUNNING
 
 ## [slot-5 → slot-1-main] 2026-05-23 ~17:10 UTC — DeFi NaN OHLC schema fix + sports/DeFi re-relaunch
 
