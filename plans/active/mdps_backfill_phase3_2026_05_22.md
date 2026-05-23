@@ -82,16 +82,19 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
       Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. **RELAUNCHED
-      (slot-5 2026-05-23)**: 7 new VMs `mdps-sports-{2015..2026}-20260523-100800` launched with chain fix
-      (MDPS@95f685b). Previous VMs exited 0 but produced ZERO output due to MalformedRowKeyError (chain="") at manifest
-      write site. Fix: conditionally omit chain from row_key when empty (6 sites in canonical_writer.py). Verify once
-      VMs complete. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+      (slot-5 2026-05-23)**: 7 VMs `mdps-sports-{2020..2026}-20260523-100800` launched BUT ran OLD tarball (predated
+      fix). All produced zero manifest output (same MalformedRowKeyError). **RELAUNCHED AGAIN (slot-7 2026-05-23)**: Old
+      100800 VMs terminated. Tarball rebuilt with MDPS@bffa042 (chain fix + tests) using
+      `create-code-tarballs.sh     --asset-group SPORTS`. 7 new VMs `mdps-sports-{2020..2026}-20260523-102325` RUNNING
+      with fixed tarball. Verify once VMs complete. Issue doc:
+      `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
-      row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Fix (2)
-      `no group     column` in streaming reader for pre-canonical (pre-2022) raw tick data: **DEFERRED** to separate P2
-      item; 2015-2022 VMs may hit this on old data. v8 migration for 172k existing rows also deferred. UAC registry
-      exports fixed: get_valid_timeframes_for_data_type + NEEDS_CANDLE_PROCESSING (UAC@f8c49e9c). UTL freshness
-      asset_class bug fixed (UTL@d3e71f24). slot-5 2026-05-23.
+      row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
+      (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
+      with fix (slot-7 2026-05-23). Fix (2) `no group column` in streaming reader for pre-canonical (pre-2022) raw tick
+      data: **DEFERRED** to separate P2 item; 2015-2022 VMs may hit this on old data. v8 migration for 172k existing
+      rows also deferred. UAC registry exports fixed: get_valid_timeframes_for_data_type + NEEDS_CANDLE_PROCESSING
+      (UAC@f8c49e9c). UTL freshness asset_class bug fixed (UTL@d3e71f24). slot-5 + slot-7 2026-05-23.
 
 ## Phase 5 — Predictions MDPS reprocessor
 
