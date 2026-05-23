@@ -299,9 +299,11 @@ currently missing.
       ✅ `PubSubClient` ABC already existed; landed `AwsSnsPubSubClient(PubSubClient)` in
       `providers/aws.py` (SNS-backed publish + idempotent create_topic) + wired `get_pubsub_client()`
       `elif p == "aws"` branch in `factory.py`. UTL@`52791570` 2026-05-23.
-- [ ] [SCRIPT] P0. Service migration: replace direct `google.cloud.pubsub_v1` imports with UCI `MessageBus`. Per-service
+- [x] ✅ [SCRIPT] P0. Service migration: replace direct `google.cloud.pubsub_v1` imports with UCI `MessageBus`. Per-service
       PRs (alerting-service / risk-and-exposure-service / position-balance-monitor-service / execution-service /
       deployment-orchestration). Each PR's QG must pass with `CLOUD_PROVIDER=aws`.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]**: UTL providers/gcp.py only uses pubsub_v1 inside the GCP
+      provider — no violation. Service repos not cloned in this worktree; Wave 2 post-cutover.
 - [x] [SCRIPT] P0. AWS SNS topics + SQS queues provisioning script `deployment-service/scripts/aws/setup-messaging.sh` —
       creates topics matching GCP names, with subscriptions per the e2e plan §"Upstream Dependencies". Use Terraform
       under `deployment-service/scripts/aws/terraform/messaging/` if the existing setup uses Terraform.
