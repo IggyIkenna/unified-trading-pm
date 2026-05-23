@@ -317,9 +317,13 @@ CLAUDE.md "VM tarball deployment" describes the GCS pattern: tarballs in `gs://d
 boot via `setup-data-pipeline-vm.sh` pulling from there. AWS equivalent needed for post-May-23 backfill VMs **and** for
 ECR-image-builds in the May-23 window.
 
-- [ ] [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
+- [x] [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
       to `s3://uts-prod-deployment-state/code/{service}-{ts}.tar.gz` mirroring the GCS layout exactly. Default flag
       stays `--cloud gcp` for back-compat.
+      ✅ Script landed at `unified-trading-pm/scripts/vm/create-code-tarballs.sh` (deployment-service not in workspace).
+      Supports `--cloud gcp|aws`, `--all`, `--asset-group`, `--ml-training`, `--include`, `--dry-run`.
+      GCS path: `gs://deployment-scripts-{PROJECT}/code/<repo>-code.tar.gz` + re-uploads setup script.
+      AWS path: `s3://uts-prod-deployment-state/code/<repo>-code.tar.gz`. Both dry-run verified. pm@`<sha>` 2026-05-23.
 - [ ] [SCRIPT] P0. Land `deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh` — EC2 user-data script that
       `aws s3 cp` the tarball + bootstraps the service. Mirrors the GCS variant. Test against a single dummy EC2 launch.
 - [ ] [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
