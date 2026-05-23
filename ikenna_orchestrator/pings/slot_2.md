@@ -1546,3 +1546,40 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`
   respective VMs to complete and write per_vm shards to PRD buckets.
 
 Plan refs: `honest_coverage_formula_consolidation_2026_05_19.md`, `mtds_backfill_phase3_2026_05_22.md`
+
+---
+
+## [slot-2] 2026-05-23 — CeFi reconciler run 2 IN PROGRESS + flat→prd copy BLOCKED-IN-FLIGHT
+
+[2026-05-23 UTC] slot-2 continuation — cefi re-scan unblocked (IS CeFi catalog now available).
+
+**Delivered:**
+
+1. **CeFi flat→prd copy script created** — `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py`. Loads
+   70 shards from `_index/per_vm/*20260522-140739*`, copies 45,602 data objects + 70 shard parquets using
+   `gcs_copy_object` (32 workers, server-side rewrite API). Killed at 1000/45,672 (data files only — no shard
+   contamination) because 12 CeFi VMs from `20260522-140739` still RUNNING. Cannot copy partial shards to PRD. Re-run
+   after all VMs terminate.
+
+2. **MTDS-3.2.A-V BLOCKED-IN-FLIGHT documented** — added note to `mtds_backfill_phase3_2026_05_22.md` MTDS-3.2.A-V item.
+   12 VMs still running (binance-futures-2024-light, binance-spot-2023/2024-heavy, coinbase-spot-2020/2021/2023-heavy,
+   okx-spot-2023/2024-heavy, okx-swap-2021-heavy/2024-light) + 2 deribit VMs from `20260523-120101`. PM@7fb6a14c9.
+
+3. **CeFi reconciler run 2 STARTED** — background job (`bzddtgfrs`). Run 1 was tainted (IS catalog expired during ADC
+   DNS outage at 12:28 UTC; 5-min TTL fired at catalog boundary → all SRZ rows defaulted to LegacyBlankErrorReasonError
+   without catalog cross-ref). Run 2 started 12:47:27 UTC with confirmed DNS/network recovery. Catalog loading healthy
+   (5-min TTL refreshes at 12:48/12:53/12:58). 183,444 candidates (vs 182,157 run 1). ETA ~14:09 UTC.
+
+**Blocked / in-flight:**
+
+- `[SCRIPT] P1 cefi follow-up` (`writegate_honest_coverage_endtoend_2026_05_06.md` line ~2954) — reconciler run 2 IN
+  PROGRESS (~14:09 UTC ETA). After completion: review CSV at `/tmp/recon-cefi-run2.log`, confirm clean distribution
+  (EXPECTED_INSTRUMENT_NOT_LISTED for legitimate catalog misses, attempted_failed/LegacyBlankErrorReasonError for SRZ
+  rows classifier can't confirm), then run
+  `--apply-flips MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-typed-cefi-<ts>`.
+- `MTDS-3.2.A-V` (`mtds_backfill_phase3_2026_05_22.md`) — blocked on CeFi VMs terminating + flat→prd copy. 10 VMs from
+  `20260522-140739` + 2 deribit from `20260523-120101` still RUNNING as of 13:00 UTC.
+- `MDPS-3.3.CeFi` (`mdps_backfill_phase3_2026_05_22.md`) — blocked on MTDS-3.2.A-V.
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`, `mtds_backfill_phase3_2026_05_22.md`,
+`mdps_backfill_phase3_2026_05_22.md`
