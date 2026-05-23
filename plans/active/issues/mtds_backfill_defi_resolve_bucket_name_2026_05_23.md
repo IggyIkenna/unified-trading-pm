@@ -53,6 +53,11 @@ candles are produced. No manifest rows written. The VM loops for the full planne
 
 - 2026-05-23 ~20:45 UTC — Found by slot-2 during VM monitoring. VM is RUNNING but producing zero candles. Operator
   action required.
+- 2026-05-23 (slot-4 audit) — **Fix landed**: `MTDS@22dcada6` (remote commit
+  `fix(mtds): add remaining missing imports for get_prediction_leagues and get_league_fixture_calendar`) removed
+  `env="live"` from `resolve_bucket_name` call in `tick_data_handler.py:94`. Branch is now fast-forwarded. **Action
+  still required**: kill `mtds-backfill-defi-20260523` VM (was using tarball `498148da` which predates the fix), rebuild
+  MTDS DEFI tarball (MTDS@22dcada6 + UAC fix included), relaunch.
 
 ## Plan refs
 

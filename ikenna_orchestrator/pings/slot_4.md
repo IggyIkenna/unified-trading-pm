@@ -266,3 +266,49 @@ Monitor: `gcloud compute instances list --filter='labels.run-ts=20260523-222351'
 - All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN
 
 — slot-4 / 2026-05-23
+
+### Audit: why 215530 VMs had attempted_failed + new code from remote (2026-05-23)
+
+**Q: was that because they needed migration or fixes?**
+
+**Answer: code fixes (two of them), not migration.**
+
+**Finding 1 — UAC case-mismatch (root cause of 215530/195633 attempted_failed)**
+
+`lookup_contract` in `unified_api_contracts.internal.schemas.contracts` looked up `instrument_type='POOL'` (uppercase
+from parquet) but `CONTRACT_REGISTRY` stored keys as lowercase `'pool'`. Result: `SchemaContractNotFoundError` for every
+Uniswap/Curve pool shard.
+
+- 195633 VMs: stale tarball WITHOUT fix → all pool shards `attempted_failed`
+- 215530 VMs: LAUNCHED WITH the fix (UAC@397e7195 / equiv slot-2 @8e1e7e58) → the `attempted_failed` we saw on 215530
+  VMs was from very early-stage runs or leftover 195633 per-VM shard rows visible in the consolidated index before the
+  new shards filled in
+- 222351 VMs (our launch): use UAC@78c5ac15b663 which includes this same fix → should work
+
+Source: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`
+
+**Finding 2 — MTDS resolve_bucket_name env= kwarg removed from UTL (separate MTDS-layer bug)**
+
+`tick_data_handler.py:94` called `resolve_bucket_name(env="live")` but UTL dropped the `env` kwarg. This only affects
+MTDS **raw tick data** VMs — NOT MDPS processing VMs (our 222351 VMs are unaffected).
+
+- VM `mtds-backfill-defi-20260523` (tarball sha 498148da) loops on every chunk with
+  `TypeError: resolve_bucket_name() got an unexpected keyword argument 'env'` — 0 candles produced
+- **Fix landed**: remote commit `MTDS@22dcada6` removed `env="live"` from the call
+- Tab-4 fast-forwarded to `22dcada6` (2 remote commits picked up)
+- **Action required**: kill `mtds-backfill-defi-20260523`, rebuild MTDS DEFI tarball, relaunch
+
+Source: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md`
+
+**Finding 3 — DEX swap data gap 2026-01-25+ (source data missing, not a code bug)**
+
+Raw tick parquets in `market-data-tick-defi-prd-central-element-323112` have no DEX swap data after 2026-01-24. MDPS
+2026 VMs will produce honest `empty_confirmed/SOURCE_RETURNED_ZERO` for those dates — correct behavior. Root cause:
+upstream on-chain reader stopped writing.
+
+Source: `plans/active/issues/mtds_defi_dex_swaps_2026_gap_2026_05_23.md`
+
+**Our 222351 MDPS VMs**: unaffected by all 3 above. They run MDPS (processing), use UAC@78c5ac15b663 with UAC fix, and
+write to MDPS processed_candles. The DEX 2026 gap will produce honest SRZ rows which is correct behavior.
+
+— slot-4 / 2026-05-23 audit
