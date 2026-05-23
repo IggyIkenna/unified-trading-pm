@@ -194,3 +194,41 @@ audit ack package).
 - UPDATE: `codex/04-architecture/autonomous-recovery-matrix.md` — extend HF section with margin-ratio + ADL + venue-
   API-uncertainty pre-detection triggers.
 - UPDATE: `codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md` — point to new schema.
+
+## Tier-1-4 implementation log (2026-05-23)
+
+> **Phase-1 shipped — partial Phase-2+ where noted.** Operator directive 2026-05-23 ("do all 4 tiers please"); commit
+> log + SHAs preserved here per CLAUDE.md `Commit + Push + Flip` HARD RULE.
+
+| Tier  | Repo                      | SHA        | What landed                                                                                                   |
+| ----- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | `unified-api-contracts`   | `ae5771e2` | Phase-1 schemas + facades + 48 sanity tests (closed-set + central invariant enforced)                         |
+| 3A    | `unified-trading-library` | `6c08212e` | UTL `recovery/` library — AgentActionEmitter / RecoveryScriptRegistry / RepeatedRepairLoopDetector + 15 tests |
+| 3B+4B | `deployment-service`      | `21cd67b`  | 10 Layer-0 scripts in `scripts/recovery/` + `llm_invoke_layer0.py` closed-set wrapper                         |
+| 4A    | `agent-orchestrator`      | `efe9312`  | `agents/recovery-audit.md` boot template (role=custom, 60s poll, closed-set Layer-1.5 authority)              |
+| 2     | `alerting-service`        | `925be02`  | Gateway scaffold (state_machine + dedup + audit_ack_queue) + Twilio voice/SMS notifiers                       |
+
+**Phase-1 items that landed (this plan's scope):**
+
+- [x] ✅ Phase 1 P0.1-P0.2 UAC DrawdownThresholdKind (7-enum) + ExpectedDrawdownModelBasis (6-enum) + RiskThresholds
+      (all-7-declared + monotonic ladder enforced) + ResponsePolicy (5-flag) + 14 sanity tests —
+      unified-api-contracts@ae5771e2
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate
+- [ ] Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer
+- [ ] Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC
+      AlertCode extension
+- [ ] Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts
+- [ ] Phase 6 P0.16-P0.18 — synthetic smoke + game-day
+
+**Cross-references**:
+
+- Tier-1 UAC schemas → `unified_api_contracts.incident` / `unified_api_contracts.dependency` /
+  `unified_api_contracts.risk` facades
+- Tier-3 UTL primitives → `unified_trading_library.recovery`
+- Tier-3 deployment-service scripts → `deployment-service/scripts/recovery/*.py`
+- Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
+- Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
+- Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`

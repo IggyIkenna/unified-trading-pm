@@ -167,3 +167,41 @@ audit trail).
 - NEW: `codex/04-architecture/safety-ops-tab.md` — UI architecture + auth roles + flow diagram.
 - UPDATE: `codex/04-architecture/recovery-defence-in-depth-layers.md` — operator manual-override is the orthogonal
   "Layer-M" complementing all 5 layers (operator can act at any layer via this tab).
+
+## Tier-1-4 implementation log (2026-05-23)
+
+> **Phase-1 shipped — partial Phase-2+ where noted.** Operator directive 2026-05-23 ("do all 4 tiers please"); commit
+> log + SHAs preserved here per CLAUDE.md `Commit + Push + Flip` HARD RULE.
+
+| Tier  | Repo                      | SHA        | What landed                                                                                                   |
+| ----- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | `unified-api-contracts`   | `ae5771e2` | Phase-1 schemas + facades + 48 sanity tests (closed-set + central invariant enforced)                         |
+| 3A    | `unified-trading-library` | `6c08212e` | UTL `recovery/` library — AgentActionEmitter / RecoveryScriptRegistry / RepeatedRepairLoopDetector + 15 tests |
+| 3B+4B | `deployment-service`      | `21cd67b`  | 10 Layer-0 scripts in `scripts/recovery/` + `llm_invoke_layer0.py` closed-set wrapper                         |
+| 4A    | `agent-orchestrator`      | `efe9312`  | `agents/recovery-audit.md` boot template (role=custom, 60s poll, closed-set Layer-1.5 authority)              |
+| 2     | `alerting-service`        | `925be02`  | Gateway scaffold (state_machine + dedup + audit_ack_queue) + Twilio voice/SMS notifiers                       |
+
+**Phase-1 items that landed (this plan's scope):**
+
+- [x] ✅ Tier-1 + Tier-2 + Tier-3 + Tier-4 — Safety Ops tab UPSTREAM dependencies all shipped: UAC schemas +
+      alerting-service gateway scaffold + Layer-0 scripts + LLM agent template
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 1 P0.1-P0.3 — alerting-service `gateway/manual_action_endpoint.py` (`POST /manual-action`) with
+      typed-confirm-string validation + scope dispatch (pair-review with Harsh)
+- [ ] Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons + LLM
+      Audit Verdicts feed + Audit-Ack Queue panel + Incident History viewer
+- [ ] Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`)
+- [ ] Phase 4 P0.11-P0.12 — typed-confirm-string registry + unit tests
+- [ ] Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
+
+**Cross-references**:
+
+- Tier-1 UAC schemas → `unified_api_contracts.incident` / `unified_api_contracts.dependency` /
+  `unified_api_contracts.risk` facades
+- Tier-3 UTL primitives → `unified_trading_library.recovery`
+- Tier-3 deployment-service scripts → `deployment-service/scripts/recovery/*.py`
+- Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
+- Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
+- Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`

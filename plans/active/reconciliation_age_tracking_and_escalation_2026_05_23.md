@@ -176,3 +176,40 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
   escalation ladder.
 - NEW codex stub: `codex/04-architecture/reconciliation-age-tracking.md` — 12 dimensions, age fields, thresholds, 7
   immediate-overrides.
+
+## Tier-1-4 implementation log (2026-05-23)
+
+> **Phase-1 shipped — partial Phase-2+ where noted.** Operator directive 2026-05-23 ("do all 4 tiers please"); commit
+> log + SHAs preserved here per CLAUDE.md `Commit + Push + Flip` HARD RULE.
+
+| Tier  | Repo                      | SHA        | What landed                                                                                                   |
+| ----- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | `unified-api-contracts`   | `ae5771e2` | Phase-1 schemas + facades + 48 sanity tests (closed-set + central invariant enforced)                         |
+| 3A    | `unified-trading-library` | `6c08212e` | UTL `recovery/` library — AgentActionEmitter / RecoveryScriptRegistry / RepeatedRepairLoopDetector + 15 tests |
+| 3B+4B | `deployment-service`      | `21cd67b`  | 10 Layer-0 scripts in `scripts/recovery/` + `llm_invoke_layer0.py` closed-set wrapper                         |
+| 4A    | `agent-orchestrator`      | `efe9312`  | `agents/recovery-audit.md` boot template (role=custom, 60s poll, closed-set Layer-1.5 authority)              |
+| 2     | `alerting-service`        | `925be02`  | Gateway scaffold (state_machine + dedup + audit_ack_queue) + Twilio voice/SMS notifiers                       |
+
+**Phase-1 items that landed (this plan's scope):**
+
+- [x] ✅ Phase 1 P0.1-P0.3 UAC ReconciliationDimension (12-enum closed) + ReconciliationAgeFields mixin —
+      unified-api-contracts@ae5771e2
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 2 P0.4-P0.6 — `batch-live-reconciliation-service` + `position-balance-monitor-service` engines populate age
+      fields at row-write time
+- [ ] Phase 3 P0.7-P0.9 — alerting-service 15-min/30-min escalation rules + per-(venue,strategy) overrides
+- [ ] Phase 4 P0.10-P0.11 — 7 ImmediateSev0Override predicates + unit tests
+- [ ] Phase 5 P0.12-P0.14 — execution-service preflight recon-freeze enforcement
+- [ ] Phase 6 P0.15-P0.16 — synthetic smoke + game-day
+
+**Cross-references**:
+
+- Tier-1 UAC schemas → `unified_api_contracts.incident` / `unified_api_contracts.dependency` /
+  `unified_api_contracts.risk` facades
+- Tier-3 UTL primitives → `unified_trading_library.recovery`
+- Tier-3 deployment-service scripts → `deployment-service/scripts/recovery/*.py`
+- Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
+- Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
+- Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`

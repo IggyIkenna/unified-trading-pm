@@ -209,3 +209,41 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
   its Layer-0 script.
 - UPDATE: `codex/04-architecture/kill-switch-circuit-breaker.md` — note that kill-switch + circuit-breaker are now
   AgentAction-wrapped.
+
+## Tier-1-4 implementation log (2026-05-23)
+
+> **Phase-1 shipped — partial Phase-2+ where noted.** Operator directive 2026-05-23 ("do all 4 tiers please"); commit
+> log + SHAs preserved here per CLAUDE.md `Commit + Push + Flip` HARD RULE.
+
+| Tier  | Repo                      | SHA        | What landed                                                                                                   |
+| ----- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | `unified-api-contracts`   | `ae5771e2` | Phase-1 schemas + facades + 48 sanity tests (closed-set + central invariant enforced)                         |
+| 3A    | `unified-trading-library` | `6c08212e` | UTL `recovery/` library — AgentActionEmitter / RecoveryScriptRegistry / RepeatedRepairLoopDetector + 15 tests |
+| 3B+4B | `deployment-service`      | `21cd67b`  | 10 Layer-0 scripts in `scripts/recovery/` + `llm_invoke_layer0.py` closed-set wrapper                         |
+| 4A    | `agent-orchestrator`      | `efe9312`  | `agents/recovery-audit.md` boot template (role=custom, 60s poll, closed-set Layer-1.5 authority)              |
+| 2     | `alerting-service`        | `925be02`  | Gateway scaffold (state_machine + dedup + audit_ack_queue) + Twilio voice/SMS notifiers                       |
+
+**Phase-1 items that landed (this plan's scope):**
+
+- [x] ✅ Phase 1 P0.1-P0.6 UTL `unified_trading_library.recovery` — AgentActionEmitter / RecoveryScriptRegistry /
+      RepeatedRepairLoopDetector + 15 tests — unified-trading-library@6c08212e
+- [x] ✅ Phase 2 P0.7-P0.16 — 10 Layer-0 scripts in `deployment-service/scripts/recovery/` + `_common.py` Layer0Script
+      base — deployment-service@21cd67b
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 3 wire each script's entry point in the corresponding service (kill_switch.activate / cancel_open_orders /
+      safe_mode.enter wrappers emit AgentActionEvent)
+- [ ] Phase 4 per-script integration tests against staging endpoints
+- [ ] Phase 5 deployment-UI Safety Ops tab buttons → scripts (cross-plan handshake with deployment_ui_safety_ops_tab
+      plan)
+
+**Cross-references**:
+
+- Tier-1 UAC schemas → `unified_api_contracts.incident` / `unified_api_contracts.dependency` /
+  `unified_api_contracts.risk` facades
+- Tier-3 UTL primitives → `unified_trading_library.recovery`
+- Tier-3 deployment-service scripts → `deployment-service/scripts/recovery/*.py`
+- Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
+- Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
+- Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`

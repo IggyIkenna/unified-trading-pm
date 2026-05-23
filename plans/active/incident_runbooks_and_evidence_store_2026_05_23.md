@@ -183,3 +183,37 @@ kill-switch) + rollback
 - NEW: `codex/15-runbooks/incidents/README.md` — 22 runbooks index.
 - NEW: 22 individual runbooks.
 - UPDATE: existing `codex/15-runbooks/alerting/README.md` — point to incidents/ section for procedure-oriented runbooks.
+
+## Tier-1-4 implementation log (2026-05-23)
+
+> **Phase-1 shipped — partial Phase-2+ where noted.** Operator directive 2026-05-23 ("do all 4 tiers please"); commit
+> log + SHAs preserved here per CLAUDE.md `Commit + Push + Flip` HARD RULE.
+
+| Tier  | Repo                      | SHA        | What landed                                                                                                   |
+| ----- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | `unified-api-contracts`   | `ae5771e2` | Phase-1 schemas + facades + 48 sanity tests (closed-set + central invariant enforced)                         |
+| 3A    | `unified-trading-library` | `6c08212e` | UTL `recovery/` library — AgentActionEmitter / RecoveryScriptRegistry / RepeatedRepairLoopDetector + 15 tests |
+| 3B+4B | `deployment-service`      | `21cd67b`  | 10 Layer-0 scripts in `scripts/recovery/` + `llm_invoke_layer0.py` closed-set wrapper                         |
+| 4A    | `agent-orchestrator`      | `efe9312`  | `agents/recovery-audit.md` boot template (role=custom, 60s poll, closed-set Layer-1.5 authority)              |
+| 2     | `alerting-service`        | `925be02`  | Gateway scaffold (state_machine + dedup + audit_ack_queue) + Twilio voice/SMS notifiers                       |
+
+**Phase-1 items that landed (this plan's scope):**
+
+- [x] ✅ Phase 1 P0.1-P0.2 UAC IncidentEvidence (14 fields + 3 mandatory) — unified-api-contracts@ae5771e2
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 2 P0.3-P0.4 — `alerting_service/gateway/evidence_collector.py` + per-service evidence-capture callbacks
+- [ ] Phase 3 P0.5-P0.26 — 22 incident runbooks at `codex/15-runbooks/incidents/`
+- [ ] Phase 4 P0.27-P0.28 — runbook governance fields + hygiene script
+- [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough
+
+**Cross-references**:
+
+- Tier-1 UAC schemas → `unified_api_contracts.incident` / `unified_api_contracts.dependency` /
+  `unified_api_contracts.risk` facades
+- Tier-3 UTL primitives → `unified_trading_library.recovery`
+- Tier-3 deployment-service scripts → `deployment-service/scripts/recovery/*.py`
+- Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
+- Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
+- Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`
