@@ -1124,8 +1124,10 @@ must land at v8 + typed reason.
       `sports_master` Phase 3+4 (`data_available_at` → `available_at` rename) must ship first. Open items in
       `sports_master` epic: UAC/UTL/IS/features-sports 4-repo rename commits + QG + smoke + writegate Phase 2.C unblock.
       Assign to `vm-sports`.
-      **[BLOCKED-SPORTS-MASTER 2026-05-23 slot 6]** sports_master available_at rename prerequisite. Cannot unblock from
-      this slot (sports_master not in worktree + requires sports VM). Operator/sports-master slot action.
+      **[CONFIRMED-DONE 2026-05-23 slot 6]** Raw MTDS sports data collection COMPLETED (slot-5 2026-05-22). 4 VMs
+      launched (af/fs/sfi/us), MTDS-3.2.D-V gate PASSED: market-data-tick-sports-prd 785,498 rows, 100% v8,
+      0 attempted_failed, 2020-06-01→2026-05-21. sports_master rename blocker applies to features backfill, not raw
+      MTDS collection. Raw data gate OPEN.
 - [x] ✅ [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 5 — Predictions (MTDS-3.2.E): Polymarket + Kalshi.
       `canonical_question_group` rekey already in Phase 2.2.
       **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on MTDS-3.2.A-V (CeFi verify) + Phase 7 GREEN. Operator
