@@ -227,9 +227,11 @@ consume.
 - [x] ✅ [PLAN] P0. **`plans/active/defi_simulation_realism_2026_05_10.md`** — DeFi matching engine extension + —
       **ARCHIVED** `plans/archive/defi_simulation_realism_2026_05_10.md` (trivial-sweep 2026-05-21) risk-modeling
       enhancements. Parent: defi_master.
-- [ ] [PLAN] P0. **`plans/active/cme_polymarket_arb_2026_05_08.md`** — InstrumentType.EVENT_CONTRACT enum +
+- [x] ✅ [PLAN] P0. **`plans/active/cme_polymarket_arb_2026_05_08.md`** — InstrumentType.EVENT_CONTRACT enum +
       linked_canonical_question_group cross-link + MTDS binary-outcome shard atom + cme_polymarket_event_arb strategy
       archetype.
+      **[ARCHIVED 2026-05-23 slot 6]** Plan fully archived at `plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md`
+      (status: archived, 6/6 items done, 0 unchecked). Phase 1.E gate satisfied.
 
 ### Phase 1.F — Cross-cutting code
 
@@ -237,8 +239,11 @@ consume.
       (Deploy — **ARCHIVED** `plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md` (trivial-sweep
       2026-05-21) / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum +
       `EnvironmentTier` enum. Parent: cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.
-- [ ] [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for
+- [x] ✅ [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for
       May-23 live-DeFi cutover.
+      **[CODE-COMPLETE 2026-05-23 slot 6]** 55/59 items done. 4 remaining are P1 non-critical: AWS SNS/SQS mirroring,
+      Cross-cloud WIF, ltv_safety_margin tuning, CoinGecko/Helius key provisioning. All P0 credential provisioning for
+      May-23 DeFi cutover shipped. Phase 1.F gate met for critical path.
 - [x] ✅ [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle
       — **ARCHIVED** `plans/archive/wallet_treasury_client_flow_2026_05_10.md` (trivial-sweep 2026-05-21) MVP.
 - [x] ✅ [PLAN] P1. **`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`** — Client reporting + PnL —
