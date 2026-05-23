@@ -43,13 +43,15 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 
 ## Phase 1 — UAC foundation (scenario + wrapping registry) — L0/L2, must precede consumers
 
-- [ ] [AGENT] P0. **F-33** — Add `DEFI_LST_DEPEG_STETH_5PCT` scenario to
+- [x] ✅ [AGENT] P0. **F-33** — Add `DEFI_LST_DEPEG_STETH_5PCT` scenario to
       `unified-api-contracts/.../registry/scenarios/defi.py` (joins the existing 6). Model an LST↔ETH peg break:
       stETH/wstETH (and rETH/cbETH/JitoSOL/mSOL by parametrisation) priced 5% below ETH; instruments = the LST set (NOT
       the stablecoin set `{USDC,USDT,DAI,USDE}`). Wire `CANONICAL_*_VERSION` bump. Add to the `SCENARIOS` tuple.
-- [ ] [AGENT] P1. Confirm + (if needed) extend `registry/token_wrapping.py` `PROTOCOL_TOKEN_PREFERENCE` so CeFi-perp
+      DONE: uac@56594ab (F-33 LST depeg scenario + CeFi venue token wrapping). Uses LST_DEPEG_MODERATE breaker.
+- [x] ✅ [AGENT] P1. Confirm + (if needed) extend `registry/token_wrapping.py` `PROTOCOL_TOKEN_PREFERENCE` so CeFi-perp
       collateral targets (Deribit/Bybit/OKX) map to their required non-rebasing token (wstETH) — the matrix in UAC
-      `registry/venue_collateral.py` is the source.
+      `registry/venue_collateral.py` is the source. DONE: uac@56594ab added DERIBIT/BYBIT/OKX entries with
+      venue-specific stETH/wstETH preference (DERIBIT: stETH only; BYBIT: both; OKX: wstETH only).
 - [ ] [SCRIPT] P0. UAC quality-gates Pass 1 GREEN (`cd unified-api-contracts && bash scripts/quality-gates.sh`).
 
 ## Phase 2 — execution-service wrap preprocessor (F-28, P0) — gated on Phase 1
