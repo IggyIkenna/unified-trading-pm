@@ -728,7 +728,7 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
       `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` + `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets/vars.
     - Status: `BLOCKED-OPERATOR` until bot tokens provisioned. Backward compat: legacy token still works.
 
-- [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM
+- [x] ✅ [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM
       directive**: "we don't wanna pay for Firebase at all by May-23, that stuff can be deferred; DeFi client doesn't
       want to use Firebase so we need a non-Firebase auth path anyway." Firebase code stays in tree as feature-flag
       toggle (off by default); NO May-23 provisioning or testing. Successor: when DeFi client auth path is decided
