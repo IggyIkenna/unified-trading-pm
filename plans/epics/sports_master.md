@@ -835,9 +835,14 @@ FIXTURES_SCHEDULE rows (Phase 4 of source issue documented this dependency). Coo
       Idempotent; dry-run + apply.
 - [ ] [VERIFY] P0. Post-migration smoke: random sample of 20 (league, date) pairs across 2018-2026 — sum of per-fixture
       rows == count of captured fixtures (no orphans, no duplicates).
-- [ ] [AGENT] P1. Open question — does api_football provide a per-fixture endpoint or only bulk? If only bulk, the
+- [x] ✅ [AGENT] P1. Open question — does api_football provide a per-fixture endpoint or only bulk? If only bulk, the
       orchestrator's per-fixture iteration becomes a filter on a single bulk fetch (rate-limit budget unchanged). Verify
-      via the api_football docs + a smoke probe before committing the refactor shape.
+      via the api_football docs + a smoke probe before committing the refactor shape. **COMPLETED 2026-05-23**:
+      Per-fixture endpoint EXISTS — `GET /fixtures?id=<fixture_id>` returns 1 result (verified with id=867946 → Crystal
+      Palace vs Arsenal). Multi-fixture `?ids=X-Y-Z` syntax exists but returns 0 for tested IDs (likely consecutive IDs
+      that don't form a valid set). **Refactor shape**: orchestrator SHOULD use the `?id=<fixture_id>` endpoint for
+      targeted per-fixture updates (stats, events, lineups) after the date-bulk fetch identifies which fixtures need
+      updating — per-fixture rate budget applies (100 req/min on free, 7500/day).
 
 ### EXPECTED_BOOKMAKER_MARKET_SETS NaN-fill enumeration (migrated from `odds_fixture_anchored_nan_fill_2026_05_08`)
 
@@ -858,10 +863,12 @@ features silently miss bookmaker × market gaps.
       source didn't return it").
 - [ ] [SCRIPT] P0. Cluster validation kwargs at `record_captured` for ODDS bundled writes:
       `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate.
-- [ ] [AGENT] P1. Downstream consumer guidance — features-sports arbitrage / odds-movement calculators handle NaN rows:
-      arbitrage drops NaN bookmakers from the pricing comparison (already correct behavior); odds-movement treats NaN
-      snapshot as no-update (already correct). Document in `codex/02-data/honest-absence-downstream-handling.md` § "ODDS
-      NaN-fill semantics" (extend existing doc, not new).
+- [x] ✅ [AGENT] P1. Downstream consumer guidance — features-sports arbitrage / odds-movement calculators handle NaN
+      rows: arbitrage drops NaN bookmakers from the pricing comparison (already correct behavior); odds-movement treats
+      NaN snapshot as no-update (already correct). Document in `codex/02-data/honest-absence-downstream-handling.md` §
+      "ODDS NaN-fill semantics" (extend existing doc, not new). **COMPLETED 2026-05-23**: Section added to
+      honest-absence-downstream-handling.md with: NaN-fill vs record_empty distinction table, per-consumer policy table
+      (arbitrage/CLV/ML/execution), implementation note on cluster validation denominator — PM@(see commit).
 
 ## `available_at` + lookahead-bias coordination (2026-05-08 audit)
 

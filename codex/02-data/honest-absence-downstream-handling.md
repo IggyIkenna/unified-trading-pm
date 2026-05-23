@@ -873,3 +873,44 @@ handling (skip / NaN-fill / alert). The two scenario-aware differences are:
 the `ORDER` layer (adversarial fill rejection / matching-engine adversarial mode) — these do not produce manifest gaps
 directly. Full gap-injection scenarios (DropRows + ManifestPhantom) activate post-cutover per
 [`../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+
+---
+
+## ODDS NaN-fill semantics (sports)
+
+> Codified 2026-05-23 — fulfils sports_master.md P1 item (§ "EXPECTED_BOOKMAKER_MARKET_SETS NaN-fill enumeration").
+
+### Background
+
+The instruments-service ODDS orchestrator today fetches the day-level ODDS endpoint for each fixture date. When a
+(fixture × bookmaker × market_type) triple is expected but the source doesn't return it, zero rows are produced instead
+of a NaN-fill row. This violates the zero-volume-bar precedent from category-D MDPS: **missing triples must be
+represented as NaN-fill rows** so downstream features can distinguish "source returned no odds for this bookmaker" from
+"we never queried this bookmaker."
+
+### NaN-fill vs `record_empty` for ODDS
+
+| Scenario                                                       | Correct mechanism                                            | Why                                                                                                                           |
+| -------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Expected (fixture × bookmaker × market) not in source response | `record_captured` with NaN payload values                    | Triple was expected (per `EXPECTED_BOOKMAKER_MARKET_SETS`); source didn't return it — that's data absence, not source absence |
+| Source ODDS endpoint returned HTTP error for a date            | `record_failed(reason=CLASSIFIED_VENUE_ERROR)`               | The entire source was unavailable, not just one triple                                                                        |
+| Bookmaker genuinely doesn't offer this market type             | `record_empty(reason=EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE)` | Structural gap, not a transient miss                                                                                          |
+
+### Consumer policy for NaN-fill ODDS rows
+
+| Consumer                                                | Policy                                                                                                                                                                        |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Arbitrage calculator** (odds dispersion across books) | **Drop NaN bookmakers** from the pricing comparison. Arbitrage requires ≥2 valid book quotes; NaN book is not valid. Already the correct behavior in the existing calculator. |
+| **Odds-movement / CLV calculator**                      | **Treat NaN snapshot as no-update.** Forward-fill with the most recent non-NaN snapshot for the (fixture × bookmaker × market) triple. Already the correct behavior.          |
+| **ML training**                                         | NaN-fill the feature value and add `data_quality_flag=ODDS_MISSING_BOOKMAKER` for model discounting.                                                                          |
+| **Pre-match execution (arbitrage live)**                | Skip trade if NaN-fill drops below N_MIN_BOOKS (configurable, default 3). Do not enter a trade with only 1 book quote.                                                        |
+
+### Implementation note
+
+When `EXPECTED_BOOKMAKER_MARKET_SETS` is shipped (sports_master.md P0 orchestrator step), the NaN-fill rows are written
+at the same `record_captured` call that writes the valid triples for a fixture — same parquet, same date partition. The
+NaN payload conforms to the ODDS UAC schema: all price/volume columns are `float = NaN`; `bookmaker_id` and
+`market_type` are populated (they ARE the identity of the gap).
+
+**Cluster validation**: `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` ensures the
+validator sees the correct denominator including NaN-fill rows.
