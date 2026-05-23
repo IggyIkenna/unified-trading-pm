@@ -1130,8 +1130,9 @@ must land at v8 + typed reason.
       MTDS collection. Raw data gate OPEN.
 - [x] ✅ [PLAN] P0. **`mtds_backfill_phase3_2026_05_22.md`** Phase 5 — Predictions (MTDS-3.2.E): Polymarket + Kalshi.
       `canonical_question_group` rekey already in Phase 2.2.
-      **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on MTDS-3.2.A-V (CeFi verify) + Phase 7 GREEN. Operator
-      must launch predictions MTDS VM once prerequisites met.
+      **[CONFIRMED-DONE 2026-05-23 slot 6]** VM launched by slot-7 (2026-05-22), verified by slot-2: 16,812 rows,
+      100% schema_version=8, 14,491 captured + 2,321 empty_confirmed. MTDS-3.2.E-V [x] ✅. Note: 2026-04-30→2026-05-22
+      gap in date range (VM may not have extended to present) — gap fill is follow-up operator action.
 
 ### Phase 3.3 — MDPS bar reprocessor relaunch
 
