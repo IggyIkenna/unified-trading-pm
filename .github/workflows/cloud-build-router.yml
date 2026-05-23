@@ -765,7 +765,7 @@ jobs:
     name: Telegram — Tier Check Warning
     needs: [route-build]
     if: always() && needs.route-build.outputs.tier_check_passed == 'false'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Tier-Ordered Deploy Warning | Repo: ${{ needs.route-build.outputs.repo }} v${{
@@ -780,7 +780,7 @@ jobs:
     name: Telegram — Health Check FAILED
     needs: [route-build]
     if: always() && needs.route-build.outputs.health_check_passed == 'false'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Post-Deploy Health Check FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
@@ -797,7 +797,7 @@ jobs:
     name: Telegram — Smoke Test FAILED
     needs: [route-build]
     if: always() && needs.route-build.outputs.smoke_test_passed == 'false'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
@@ -816,7 +816,7 @@ jobs:
       always() &&
       needs.route-build.outputs.kill_switch_halted == 'true' &&
       needs.route-build.outputs.build_exit_code != '0'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "EMERGENCY: Order flow resumed after failed deploy | Repo: ${{ needs.route-build.outputs.repo }} | Build failed
@@ -835,7 +835,7 @@ jobs:
       always() &&
       needs.route-build.outputs.build_triggered == 'true' &&
       needs.route-build.outputs.build_region != 'asia-northeast1'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cloud Build Regional Fallback | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
@@ -853,7 +853,7 @@ jobs:
       always() &&
       needs.route-build.outputs.repo_type != 'library' &&
       needs.route-build.outputs.build_exit_code == '1'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cloud Build ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo }}
@@ -872,7 +872,7 @@ jobs:
       always() &&
       needs.route-build.outputs.repo_type != 'library' &&
       needs.route-build.outputs.build_exit_code == '2'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cloud Build poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
@@ -891,7 +891,7 @@ jobs:
       needs.route-build.outputs.repo_type != 'library' &&
       needs.route-build.outputs.build_triggered == 'false' &&
       needs.route-build.outputs.build_failure_reason == 'not-configured'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cloud Build Trigger Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{

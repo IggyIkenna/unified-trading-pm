@@ -159,7 +159,7 @@ jobs:
     name: Telegram — Change Freeze Block
     needs: [check]
     if: always() && needs.check.outputs.blocked == 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }}"
       severity: "WARNING"

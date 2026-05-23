@@ -223,7 +223,7 @@ jobs:
     name: Telegram — SIT Debounce Triggered
     needs: [check-and-trigger]
     if: always() && needs.check-and-trigger.result == 'success'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "SIT Debounce Triggered — quiet period elapsed, starting SIT run."
       severity: "INFO"

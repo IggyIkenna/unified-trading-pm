@@ -162,7 +162,7 @@ jobs:
     name: Telegram — Plan Change
     needs: [notify-plan-change]
     if: always() && needs.notify-plan-change.result == 'success'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Plan Updated — ${{ needs.notify-plan-change.outputs.md_summary }}. View run: ${{ github.server_url }}/${{
@@ -177,7 +177,7 @@ jobs:
     name: Telegram — Plan Approval
     needs: [handle-plan-approval]
     if: always() && needs.handle-plan-approval.result == 'success'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "Plan Approved by @${{ github.event.comment.user.login }} — agents may now begin implementation."
       severity: "INFO"

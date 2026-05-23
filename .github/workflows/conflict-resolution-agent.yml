@@ -633,7 +633,7 @@ jobs:
   notify-working:
     name: Telegram — Agent Working
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Merge Conflict — Agent Working. Repo: ${{ github.event.client_payload.repo_name || inputs.repo_name }}. ${{
@@ -650,7 +650,7 @@ jobs:
     name: Telegram — Validation Failure
     needs: [resolve-conflict]
     if: always() && needs.resolve-conflict.outputs.apply_outcome == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "conflict-resolution incomplete — manual intervention required. Repo: ${{
@@ -705,7 +705,7 @@ jobs:
     name: Telegram — Resolution Result
     needs: [resolve-conflict, notify-result-build]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.notify-result-build.outputs.message }}
       conclusion: ${{ needs.notify-result-build.outputs.conclusion }}

@@ -46,7 +46,7 @@ jobs:
     name: Telegram — Contract Replay Failure
     needs: [replay]
     if: always() && needs.replay.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Contract replay FAILED — ${{ inputs.repo }}. View: ${{ github.server_url }}/${{ github.repository

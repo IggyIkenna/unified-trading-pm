@@ -205,7 +205,7 @@ jobs:
     name: Telegram — Schema Changed Handler
     needs: [handle-schema-change]
     if: always() && needs.handle-schema-change.outputs.repo != ''
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Schema change in ${{ needs.handle-schema-change.outputs.repo }} v${{ needs.handle-schema-change.outputs.version

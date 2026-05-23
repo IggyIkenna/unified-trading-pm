@@ -164,7 +164,7 @@ jobs:
     name: Telegram — Publish Package
     needs: [publish]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |

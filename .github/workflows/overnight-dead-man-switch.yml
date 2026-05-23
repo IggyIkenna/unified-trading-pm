@@ -122,7 +122,7 @@ jobs:
     name: Telegram — Overnight Dead Man Switch
     needs: [check-orchestrator]
     if: always() && needs.check-orchestrator.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Overnight Dead Man Switch — orchestrator did not complete. Check GHA status: ${{ github.server_url }}/${{

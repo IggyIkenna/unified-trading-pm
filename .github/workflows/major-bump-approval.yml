@@ -195,7 +195,7 @@ jobs:
     name: Telegram — Major Bump Approval
     needs: [handle-approval]
     if: always() && needs.handle-approval.result == 'success'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "Major Bump Approval handled | Issue #${{ github.event.issue.number }}"
       severity: "INFO"

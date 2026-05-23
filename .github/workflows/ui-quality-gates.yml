@@ -14,7 +14,7 @@ on:
     secrets:
       GH_PAT:
         required: false
-      TELEGRAM_BOT_TOKEN:
+      SLACK_WEBHOOK_URL:
         required: false
 
 jobs:

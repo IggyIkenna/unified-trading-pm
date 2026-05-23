@@ -759,7 +759,7 @@ jobs:
   notify-working:
     name: Telegram — Agent Working
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Downstream Fix Agent — Working. Target: ${{ github.event.client_payload.target_repo || inputs.target_repo }}.
@@ -826,7 +826,7 @@ jobs:
     name: Telegram — Fix Result
     needs: [fix-downstream, notify-result-build]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.notify-result-build.outputs.message }}
       conclusion: ${{ needs.notify-result-build.outputs.conclusion }}

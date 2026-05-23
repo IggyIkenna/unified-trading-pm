@@ -186,7 +186,7 @@ jobs:
     name: T0 Failure Escalation — Telegram
     needs: [t0]
     if: always() && needs.t0.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "T0 FAILURE — Overnight Audit. Core libraries failing: ${{ needs.t0.outputs.results }}. T1-T3 results are
@@ -280,7 +280,7 @@ jobs:
     name: Telegram Morning Summary — Send
     needs: [t0, notify-summary]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.notify-summary.outputs.summary_message }}
       severity: "INFO"

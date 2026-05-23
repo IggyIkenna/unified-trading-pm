@@ -91,7 +91,7 @@ jobs:
     name: Telegram — Readiness Verifier
     needs: [verify-readiness]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "Readiness Verifier | Tier: ${{ github.event.inputs.tier || 'all' }}"
       severity: "INFO"

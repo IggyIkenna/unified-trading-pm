@@ -154,7 +154,7 @@ jobs:
     name: Telegram — SIT Gate
     needs: [lock-staging]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "SIT gate: staging locked. Commit SHAs recorded. Dispatched staging-locked to all repos."
       severity: "INFO"

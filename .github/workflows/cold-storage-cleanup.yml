@@ -400,7 +400,7 @@ jobs:
     name: Telegram — Cold Storage Cleanup
     needs: [cold-storage-cleanup]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         ${{ needs.cold-storage-cleanup.outputs.telegram_message || 'Cold storage cleanup completed. Check workflow run

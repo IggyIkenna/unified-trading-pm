@@ -340,7 +340,7 @@ jobs:
     name: Telegram — Version Update
     needs: [update-manifest]
     if: always() && needs.update-manifest.outputs.skip != 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Version update: ${{ needs.update-manifest.outputs.repo }} v${{ needs.update-manifest.outputs.version }}
@@ -355,7 +355,7 @@ jobs:
     name: Telegram — Version Bump Loop Breaker
     needs: [update-manifest]
     if: always() && needs.update-manifest.outputs.loop_breaker_triggered == 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Version Bump Loop Breaker Triggered | Repo: ${{ needs.update-manifest.outputs.repo }} v${{

@@ -141,7 +141,7 @@ jobs:
     name: Telegram — Plan Health Agent
     needs: [plan-health]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent | PM plans checked"
       severity: "INFO"

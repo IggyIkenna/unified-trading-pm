@@ -357,7 +357,7 @@ jobs:
     name: Telegram — Cascade QG Success
     needs: [cascade]
     if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected != '0'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cascade QG PASSED | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }} v${{
@@ -374,7 +374,7 @@ jobs:
     name: Telegram — Cascade QG Failure
     needs: [cascade]
     if: always() && needs.cascade.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cascade QG FAILED | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }} v${{
@@ -391,7 +391,7 @@ jobs:
     name: Telegram — No Affected Repos
     needs: [cascade]
     if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected == '0'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Cascade QG — no affected repos | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }}

@@ -145,7 +145,7 @@ jobs:
     name: Telegram — SIT Unlock
     needs: [unlock-staging]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "SIT Failed — staging unlocked. Staging is open for fixes."
       severity: "CRITICAL"

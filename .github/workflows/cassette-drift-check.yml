@@ -137,7 +137,7 @@ jobs:
     name: Telegram — Cassette Drift Check
     needs: [detect-cassette-drift]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "[Cassette Drift] Check complete"
       severity: "INFO"

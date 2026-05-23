@@ -470,7 +470,7 @@ jobs:
     name: Telegram — Semver Agent
     needs: [semver]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "semver-agent | unified-trading-pm | branch: staging | triggered by QG pass on staging (pre-SIT)"
       severity: "INFO"

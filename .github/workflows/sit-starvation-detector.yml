@@ -87,7 +87,7 @@ jobs:
     name: Telegram — SIT Starvation Detector
     needs: [check-stale-lock]
     if: always() && needs.check-stale-lock.outputs.stale == 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock: gh workflow run

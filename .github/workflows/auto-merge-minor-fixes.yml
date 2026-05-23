@@ -294,7 +294,7 @@ jobs:
     name: Telegram — Auto-Merge Summary
     needs: [auto-merge]
     if: always() && (needs.auto-merge.outputs.merged_count != '0' || needs.auto-merge.outputs.skipped_count != '0')
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Auto-Merge Minor Fixes | Merged: ${{ needs.auto-merge.outputs.merged_count }} [${{

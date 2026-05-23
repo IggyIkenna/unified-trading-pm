@@ -51,7 +51,7 @@ jobs:
     name: Telegram — Contract Drift Failure
     needs: [record]
     if: always() && needs.record.result == 'failure'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Contract drift recording FAILED. View: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{

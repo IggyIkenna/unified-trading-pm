@@ -237,7 +237,7 @@ jobs:
     name: Telegram — Rules Alignment Agent
     needs: [align-rules]
     if: always()
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "rules-alignment-agent (PM) | plans checked"
       severity: "INFO"
@@ -250,7 +250,7 @@ jobs:
     name: Telegram — Major Bump Policy Violations
     needs: [align-rules]
     if: always() && needs.align-rules.outputs.violations_found == 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Major bump policy violation detected — unauthorized MAJOR version bumps found in recent commits. Check

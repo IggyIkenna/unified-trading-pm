@@ -91,7 +91,7 @@ jobs:
     name: Telegram — Claude API Health
     needs: [health-check]
     if: always() && needs.health-check.outputs.should_alert == 'true'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message: "Claude API Health Monitor — state transition detected"
       severity: "WARNING"

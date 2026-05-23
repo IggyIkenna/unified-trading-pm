@@ -70,7 +70,7 @@ jobs:
     name: Telegram — Conflict Resolution Merged
     needs: [retry-promotion]
     if: always() && needs.retry-promotion.result == 'success'
-    uses: ./.github/workflows/notify-telegram.yml
+    uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Conflict resolved — retrying staging→main promotion | PR #${{ github.event.pull_request.number }}: ${{
