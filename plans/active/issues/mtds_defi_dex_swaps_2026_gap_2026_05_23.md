@@ -58,8 +58,17 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **MTDS DeFi backfill VM launched** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c, e2-standard-4).
       Range: 2024-01-01→2026-05-23, all DeFi data_types. Tarball sha 498148da. Handler fixes included: dex_swaps
       hardcode (69d694b1), gas_fees null (69d694b1), lending_indices SM (e86a6ad8).
-- [ ] **T+10 verify** (pending): confirm VM still RUNNING, logs showing progress
-- [ ] **Post-completion**: verify dex_swaps rows appear for 2026-01-25+ in GCS; then relaunch `mdps-defi-2026-*`
+- [x] **T+10 verify** — `mtds-backfill-defi-20260523` confirmed RUNNING at T+10.
+- [x] **UAC lookup_contract bug fixed** — `SchemaContractNotFoundError` for `instrument_type='POOL'` (uppercase)
+      diagnosed; fixed with lowercase fallback in `lookup_contract` (UAC@397e7195 local; equivalent 8e1e7e58 on LDR).
+      Both slots independently landed the same fix.
+- [x] **MDPS DeFi 2024+2025 VMs relaunched with fix** — killed buggy `195633` VMs, rebuilt UAC tarball (sha
+      `397e71950270` with fix), relaunched `mdps-defi-2024-20260523-215530` + `mdps-defi-2025-20260523-215530` RUNNING
+      (asia-northeast1-c, e2-standard-8, run-ts=20260523-215530).
+- [ ] **T+10 verify run-ts=215530** (pending): confirm both 2024+2025 VMs still RUNNING, logs clean (no SchemaContract
+      errors)
+- [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
+      rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
 
 ## Evidence
 
