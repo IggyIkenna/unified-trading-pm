@@ -9,11 +9,11 @@ scope: [engineer, admin]
 
 # Global Ledger Architecture
 
-> **[DELTA 2026-05-22]** **Current state:** Discovery phase active
-> (`global_ledger_pnl_attribution_discovery_2026_05_21.md`). The architecture described below is the target model —
-> implementation sub-plans are spawned from the discovery. **Planned delta:** Full PnL attribution architecture per
-> `plans/epics/global_ledger_pnl_attribution_master.md`. **Target architecture:** Four SSOT ledgers + four derived
-> materialised views + one filtered view, as documented below.
+> **[DELTA 2026-05-23]** **UAC schema Phase 2 DONE** — `LedgerRow` + 4 SSOT ledger aliases + 5 StrEnum enums shipped at
+> `unified-api-contracts@008e59ce`. `parent_event_id` linkage + `accrual_period` conventions codified in class
+> docstring. Cross-client HARD RULE enforced by `@model_validator`. Five-service audit complete (2026-05-23); gap
+> analysis in `plans/audit/results/global_ledger_audit_*_2026_05_23.md`. Migration sub-plan forthcoming (Phase 5-6 of
+> discovery). **Discovery plan:** `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.
 
 ## Overview
 
@@ -112,12 +112,45 @@ Derived ledger compute runs on existing `strategy-paper-*` / `strategy-live-*` /
 
 ---
 
+## UAC Contract
+
+```python
+from unified_api_contracts.canonical.crosscutting.ledger import (
+    LedgerRow,
+    InstructionLedger,  # = LedgerRow (semantic alias, not a subclass)
+    PassiveLedger,
+    TreasuryLedger,
+    PricingLedger,
+    CrossClientTransferForbiddenError,
+    assert_no_cross_client_transfer,
+    EventOrigin, EventType, AssetClass, Direction, OptionRight,
+)
+```
+
+Enum value surfaces: see `codex/02-data/ledger-event-taxonomy.md`.
+
+## Current-State Gaps (Audit 2026-05-23)
+
+Five-service audit (`plans/audit/results/global_ledger_audit_*_2026_05_23.md`) found:
+
+| Service              | Key P0 gap                                                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| execution-service    | Emission bypasses `_resolve_policy_output_data_type`; `client_id` absent from `log_event`; `build_attribution_rows()` stub                       |
+| strategy-service     | `unrealized_pnl` always 0 (MarkPrice not bridged); fees not deducted; PnL time-series API always 404                                             |
+| MTDS                 | `dividend_rate` MISSING; `rho` MISSING; `mid` must be derived from book_snapshot                                                                 |
+| instruments-service  | `exercise_style`, `settlement_style`, `dividend_schedule` absent from `InstrumentRecord`; `rocket_pool.py` missing `source_archive_url_template` |
+| client-reporting-api | `realised_pnl` hardcoded "0.00"; no canonical ledger joins; 10 HIGH severity gaps                                                                |
+
+These gaps drive the writer-side gap analysis in Phase 4 of the discovery plan and will be addressed in the migration
+sub-plan.
+
 ## Composes With
 
 - `codex/04-architecture/client-funds-isolation.md` — HARD RULE: funds never cross client boundaries; ledger rows always
   carry `client_id`
 - `codex/04-architecture/per-client-isolation-architecture.md` — each ClientWorker computes derived ledgers in isolation
 - `codex/04-architecture/client-reporting-architecture.md` — client-reporting-api consumes PnL + PnLAttribution
+- `codex/02-data/ledger-event-taxonomy.md` — EventOrigin / EventType / AssetClass / Direction / OptionRight enum values
 - `plans/epics/execution_master.md` — InstructionLedger + PassiveLedger writers (active path)
 - `plans/epics/strategy_master.md` — PositionLedger + ExposureLedger + PnLLedger + PnLAttributionLedger compute home
 - `plans/epics/mtds_mdps_master.md` — PricingLedger authoring
