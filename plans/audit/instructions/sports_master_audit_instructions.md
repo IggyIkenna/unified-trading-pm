@@ -45,7 +45,11 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
       `schema_version`. Check: A3 manifest divergence scan for `asset_group=sports` — zero `MISSING_EXPECTED`
 
 - [ ] (f) **GCS paths use `asset_group=` canonical key**: no `category=` in sports GCS paths. Grep:
-      `rg "category=" --include="*.py"` in sports adapter files — should be 0 hits
+      `rg "category=" --include="*.py"` in sports adapter files — should be 0 hits. **Migration status (2026-05-23)**:
+      GCS bucket is currently ALL `category=sports/` — `asset_group=sports/` migration never ran. Active plan:
+      `plans/active/sports_gcs_partition_rekey_2026_05_23.md`. Until migration completes, this item will FAIL on the GCS
+      spot-check (code audit should still be clean). Mark `[BLOCKED-MIGRATION]` until
+      `sports_gcs_partition_rekey_2026_05_23` Phase 2 completes.
 
 - [ ] (g) **Credential asks filed**: any adapter without live credentials has a `BLOCKED-CREDENTIALS` ping with
       Sportradar/Footystats/The-Odds-API tier + cost estimate.
