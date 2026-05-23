@@ -94,21 +94,21 @@ directly**.
 
 ## What's REMAINING (pick up tomorrow)
 
-- [ ] [AGENT] P0. **Make main/review/backup agents headless too.** `tmux_spawn.spawn_named()` (used by the agent-spawn
-      endpoint `server.py:3158 spawn_agent_endpoint` → `:3240 spawn_named`) does **NOT** take `env_file`, so agents use
-      the legacy path (no token → wizard → OAuth). Add an `env_file` param to `spawn_named()` (mirror `spawn()`), thread
-      the account's `oauth_token_env_file` through `spawn_agent_endpoint`, and apply the same
+- [x] ✅ [AGENT] P0. **Make main/review/backup agents headless too.** `tmux_spawn.spawn_named()` (used by the
+      agent-spawn endpoint `server.py:3158 spawn_agent_endpoint` → `:3240 spawn_named`) does **NOT** take `env_file`, so
+      agents use the legacy path (no token → wizard → OAuth). Add an `env_file` param to `spawn_named()` (mirror
+      `spawn()`), thread the account's `oauth_token_env_file` through `spawn_agent_endpoint`, and apply the same
       `_ensure_claude_config_dir` logic. Then main/review/backup are headless token-auth'd like workers. **Operator
-      decision: do this — headless for both main + worker now.**
+      decision: do this — headless for both main + worker now.** — agent-orchestrator@`b133cdf` (this slot).
 - [ ] [AGENT] P1. **Deploy to the fleet** (deferred by operator — "we'll do that later"). The fix is on
       `agent-orchestrator` LDR; ride LDR→main + redeploy to the 10 worker VMs + central. Each VM already has its
       accounts' `~/.claude-accounts/<id>.env` (synced from buckets). Verify a UI-spawned worker on a VM authenticates.
 - [ ] [AGENT] P1. **Usage scraping is separately broken** (`server/usage_tracker.py`). It drives the interactive
       `/usage` TUI; in 2.1.145 there's no non-interactive usage command and `claude -p '/usage'` returns only a stub.
       Needs re-engineering the TUI scrape for 2.1.145, OR dropping it for manual/backend-driven usage. Not auth-related.
-- [ ] [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
+- [x] ✅ [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
       these verified findings (the CLAUDE_CONFIG_DIR + onboarding-seed recipe; that the env token is `-p`-only WITHOUT
-      the seed). The existing doc predates the 2.1.145 findings.
+      the seed). The existing doc predates the 2.1.145 findings. — PM@`f785f13` (this slot).
 
 ---
 
