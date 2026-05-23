@@ -220,25 +220,36 @@ adapter dormant. Not in `DEFERRED` — stays on live list per workspace rules.
 Also shipped: `scripts/reset_source_returned_zero_manifest.py` — bulk-deletes `empty_confirmed SOURCE_RETURNED_ZERO`
 rows from per-VM shards + consolidated index (`mtds@e86a6ad8`).
 
-### SOURCE_RETURNED_ZERO manifest cleanup — IN PROGRESS
+### SOURCE_RETURNED_ZERO manifest cleanup — COMPLETE ✅
 
-- Dry-run confirmed: defi ~2K+/shard, cefi ~1K–7K/shard rows to delete. All 5 buckets targeted.
-- Apply running now for cefi/tradfi/sports/pred (1756 cefi shards, ~1h). Writegate Phase 8.B item 5 flipped.
-- Defi bucket hit 429 rate limit after 7/61 shards — needs re-run once cefi+others complete. 7 shards already cleaned.
-- After apply completes: trigger manifest consolidator, then flip Phase 8.B item 6.
+Grand total deleted across all 5 MTDS buckets:
+
+| Bucket    | Rows deleted  | Task                            |
+| --------- | ------------- | ------------------------------- |
+| defi      | 35,576        | bg4qul73b                       |
+| cefi      | 391,989       | bfrycvu0x                       |
+| tradfi    | 71,065        | bfrycvu0x                       |
+| sports    | 797,167       | bfrycvu0x                       |
+| pred      | 0             | 404 (bucket does not exist yet) |
+| **Total** | **1,295,797** |                                 |
+
+Notes: defi bucket hit 429 in bfrycvu0x; separate bg4qul73b task handled defi. Manifest consolidator auto-runs every 1
+min via Cloud Scheduler — no manual trigger needed. 195633-series DeFi VMs still running with OLD code → may write new
+SOURCE_RETURNED_ZERO rows; another defi cleanup pass needed after those VMs complete or are relaunched with fixed code
+(`mtds@e86a6ad8`). Writegate Phase 8.B item 6 flipped (this commit).
 
 ### Plans updated
 
 - Issue doc filed: `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`
 - `defi_master.md` — added ⚠️ DO NOT relaunch DeFi VMs until cleanup finishes
 - `mtds_mdps_master.md` — MDPS-3.3.DeFi-V updated with bug fix evidence + cleanup caveat
-- `writegate` archived plan — Phase 8 added (all 3.A items ✅, 8.B item 5 ✅, items 6/7 pending)
+- `writegate` archived plan — Phase 8 added (all 3.A items ✅, 8.B items 5+6 ✅, item 7 pending)
 
 ### Still pending (slot-4)
 
-- Flip Phase 8.B item 6 once apply completes + defi bucket re-run done
-- Re-run MTDS DeFi backfill for gas_fees / lending_indices / dex_swaps (writegate Phase 8.B item 7)
-- Trigger manifest consolidator per-bucket after apply finishes (auto-runs every 1 min via Cloud Scheduler, but shards
-  won't be picked up until per-VM shards are clean)
+- Re-run MTDS DeFi backfill for gas_fees / lending_indices / dex_swaps (writegate Phase 8.B item 7) — separate VM
+  launch; must stop/wait for 195633-series VMs first or run in parallel with new prefix
+- Second defi bucket cleanup pass after 195633 VMs stop (will write new SOURCE_RETURNED_ZERO with old code)
+- All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN
 
 — slot-4 / 2026-05-23
