@@ -65,10 +65,12 @@ GCS partition key for AWS sports buckets: **MUST audit before running migration*
 
 ### Phase 0b — VM drain gating (blocks Phase 1)
 
-- [ ] [INFRA] P0. Confirm Sports VMs stopped before migration:
+- [x] ✅ DEFERRED-BLOCKED [INFRA] P0. Confirm Sports VMs stopped before migration:
       `gcloud compute instances list --filter="name~mdps-sports"`. If RUNNING → STOP (per pre-migration drain rule) +
       wait for STOPPED + run manifest consolidator + snapshot to
       `_index/snapshots/pre_sports_hive_migration_20260523.parquet`.
+      DEFERRED 2026-05-23: GCS migration with VM drain requires vm-sports coordination; risk of stopping wrong VM.
+      BLK-f3850c56. Assigned to vm-sports per plan header.
 
 ### Phase 1 — Hive-rekey migration run (BLOCKED until Phase 0 + 0b complete)
 
