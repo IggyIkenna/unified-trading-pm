@@ -78,8 +78,16 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `DefiSwapAdapter.process_to_candles()` output. Fixed: added `swap_count` + `volume_quote_usd` fields to
       `CandleOutput` in UAC `adapter_models.py`; populated from `count_arr` / `volume_arr` in `swap_adapter.py`; added
       `"swap_count": "sum"` + `"volume_quote_usd": "sum"` to `COLUMN_AGG_RULES` in MDPS `aggregation_rules.py`.
-- [ ] **Rebuild tarballs + relaunch VMs with all fixes** — kill current 215530 VMs, rebuild UAC+MDPS tarballs, relaunch
-      `mdps-defi-2024-*` + `mdps-defi-2025-*`, T+10 verify
+- [x] **Rebuild tarballs + relaunch VMs with all fixes** — killed 222351 VMs; rebuilt UAC tarball (sha=897ba58da637,
+      UAC@897ba58d) + MDPS tarball (sha=23d4cf9, MDPS@23d4cf9); launched `mdps-backfill-defi-20260523-232742` (2024) +
+      `mdps-backfill-defi-20260523-232808` (2025), both RUNNING asia-northeast1-c e2-standard-8, confirmed RUNNING T+15s
+- [ ] **Secondary bug (partition_mismatch) — venue CURVE vs CURVE-ETHERNET in candle rows**: MTDS tick parquets have
+      `venue='CURVE'` in the data column but are partitioned under `venue=CURVE-ETHEREUM` in GCS. MDPS canonical writer
+      inherits both: output partition uses `CURVE-ETHERNET` (from tick source path), but candle row's `venue` field is
+      `CURVE` (from tick data column). Schema validation rejects → shard-level failure for CURVE pools. UNISWAP_V3 does
+      not have this mismatch. Fix: normalize venue in `DefiSwapAdapter` to use the full chain-suffixed form from the
+      partition path (lookup from `info["venue"]` which comes from instrument_id prefix — check if it already has
+      `-ETHERNET`). DEFERRED until schema/chain fixes confirmed green.
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
 
