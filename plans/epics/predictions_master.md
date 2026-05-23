@@ -667,10 +667,21 @@ before CME arb can link.
       (stored in `underlying` col) from canonical manifest + 821 from 2 per-VM shards; 108 clean rows remain
       (CPI_PRINT_PER_MONTH + BTC_UP_DOWN_HOURLY). (2) Rebuilt tarball (`--allow-dirty-tarball`; UAC@c07058537253
       includes classifier fix). (3) Launched `instr-backfill-pred-20260523` VM (2020-01-01→2026-05-23,
-      MANIFEST_PER_VM_SHARDS=true); VM RUNNING and processing chunks. Kalshi 400s on pre-2020 dates expected (no Kalshi
-      data then). VM will rebuild all purged rows with BTC_UP_DOWN_DAILY / SPX_UP_DOWN_DAILY / CRUDE_OIL_UP_DOWN_DAILY /
-      GOLD_UP_DOWN_DAILY / NATGAS_UP_DOWN_DAILY classifications. — IS@d76b877f | VM: instr-backfill-pred-20260523
-      RUNNING
+      MANIFEST_PER_VM_SHARDS=true); VM completed chunks 1-68 (2020-01-01→2025-08-01) then stopped. — IS@d76b877f | VM:
+      instr-backfill-pred-20260523 TERMINATED (replaced by parallel VMs below)
+- [x] ✅ [UAC] P1. **Phase 5.intraday — add BTC/ETH_UP_DOWN_INTRADAY canonical groups**: 2026-05-23 slot-1. 5m/15m
+      Polymarket markets (INTRADAY resolution period) had no dict entry → fell to OTHER. Added BTC_UP_DOWN_INTRADAY +
+      ETH_UP_DOWN_INTRADAY to: CanonicalQuestionGroup enum; CANONICAL_GROUP_METADATA (cadence="intraday", 288
+      markets/day, 2h settlement lag); PREDICTION_GROUPS in honest_coverage (min 20 rows);
+      \_CATEGORY_UNDERLYING_PERIOD_TO_GROUP in classifiers.py. Bumped CLASSIFIER_VERSION 2026-05-23.1→2026-05-23.2. 1h =
+      already covered (BTC/ETH_UP_DOWN_HOURLY). Monthly slug-encoded-day markets = handled by existing MONTHLY→DAILY
+      fallback (UAC@228c317a). — UAC@bd570664
+- [x] ✅ [SCRIPT] P1. **Phase 5.parallel_vms — relaunch remaining range as 3 parallel VMs with INTRADAY classifier**:
+      2026-05-23 slot-1. Rebuilt tarball with UAC@bd570664 (INTRADAY groups + CLASSIFIER_VERSION=2026-05-23.2). Launched
+      3 parallel VMs: instr-backfill-pred-20251031 (2025-08-02→2025-10-31), instr-backfill-pred-20260228
+      (2025-11-01→2026-02-28), instr-backfill-pred-20260522 (2026-03-01→2026-05-22). All 3 RUNNING in asia-northeast1-c.
+      Used --end 2026-05-22 for 3rd VM to avoid name collision with old terminated instr-backfill-pred-20260523 shard. —
+      VMs RUNNING (launched 2026-05-23)
 
 ## `available_at` adapter stamping (coordinated)
 
