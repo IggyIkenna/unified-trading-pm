@@ -225,7 +225,7 @@ what the LLM audits and invokes).
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [ ] Phase 3 P0.6-P0.9 DISPUTE_AUTOMATED_ACTION wiring in alerting-service gateway state_machine + integration test
-- [ ] Phase 4 P0.10-P0.11 DART RecoveryAuditFeed widget
+- [x] ✅ Phase 4 P0.10-P0.11 DART RecoveryAuditFeed widget — ui@a6f3924c+c9189563 (llm-audit-verdicts-feed.tsx, pw:L2 ✓)
 - [ ] Phase 5 P0.12-P0.14 launch agent on long-lived GCE VM + synthetic smoke + game-day scenario 02
 
 **Cross-references**:
