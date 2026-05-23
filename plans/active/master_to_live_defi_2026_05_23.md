@@ -790,10 +790,10 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
       `cefi_master` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
       deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
-      BLOCKED-ON `sports_master`; writegate Tier 2A sports adapters shipped at MDPS@5b52d0b; trigger scheduler shipped
-      at deployment-service `sports_trigger_*` (cloud-dispatch placeholder per `ups-p4` above). _(folded from
-      consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
+      BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A sports adapters
+      at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule E2E run
+      when sports_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
       for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
