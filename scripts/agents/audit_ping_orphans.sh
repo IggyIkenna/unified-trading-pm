@@ -62,8 +62,14 @@ scan_ping_file() {
   fi
   # Walk entry-by-entry. Each entry starts with "## [" and ends at the next "## [" or EOF.
   # Use awk to extract blocks + check for plan refs.
+  # HTML comment blocks (<!-- ... -->) are skipped entirely — archived pings inside those
+  # blocks are intentionally not active and should not be flagged as orphans.
   awk -v pattern="${PLAN_REF_PATTERN}" -v fname="${file}" '
-    BEGIN { block=""; header=""; in_block=0 }
+    BEGIN { block=""; header=""; in_block=0; in_html=0 }
+    /^<!--.*-->/ { next }
+    /^<!--/ { in_html=1; next }
+    /^-->/ { in_html=0; next }
+    in_html { next }
     /^## \[/ {
       if (in_block && block !~ pattern) {
         printf("ORPHAN | %s | %s\n", fname, header)
