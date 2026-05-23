@@ -393,8 +393,11 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [ ] [AGENT] P0. Spot-check 3 random dates × 5 entities (INJURIES / FIXTURE_STATS / FIXTURE_LINEUPS / PLAYER_STATS /
       ODDS). [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain]
 - [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment. [AUDIT 2026-05-07: FRESH —
-      actionable]
+- [x] ✅ [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment. [AUDIT 2026-05-07: FRESH —
+      actionable] **ALREADY IMPLEMENTED**: `_af_emit_empty_gaps_for_entity()` at orchestrator.py:3842 is called for
+      STANDINGS (line 4004), INJURIES (lines 4081/4106), and all per-fixture entities FIXTURE_STATS/EVENTS/LINEUPS/
+      PLAYER_STATS (lines 4526/4561) via the entity loop. Per-league `record_empty` with typed reason fired correctly.
+      Backfill-flip 2026-05-23 (instruments-service@fa0b6f04).
 - [ ] [HUMAN] P1. Phase 5 UI verification — clear deployment-api turbo cache + open SPORTS data-status. Verify `% empty`
       figure has dropped from the ~70% baseline observed pre-recovery. [AUDIT 2026-05-07: BLOCKED-ON
       sports_master:recovery VM drain + dedup]
