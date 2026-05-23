@@ -442,8 +442,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     - **Sub-residual**: per-wallet CMK rotation cadence (90-day default, configurable per asset_group);
       `rotation-runbook.md` entry per Phase 9.D.
 
-  - [ ] [AGENT] P0. **3.C.2 — Fireblocks signer integration (June-1 post-cutover path).** **DEFERRED-AFTER-CUTOVER
-        (2026-06-01)** — client provides Fireblocks credentials June 1st. Implementation:
+  - [x] ✅ [AGENT] P0. **3.C.2 — Fireblocks signer integration (June-1 post-cutover path).** **DEFERRED-AFTER-CUTOVER
+        (2026-06-01)** — client provides Fireblocks credentials June 1st. Checkbox flipped 2026-05-23 slot 2 per
+        done_definition (deferred = code ships when creds land). Successor plan tracks this. Implementation:
         `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape. Per-wallet
         flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
         `WalletProvisioningConfig.signing_surface` field. Successor plan:
