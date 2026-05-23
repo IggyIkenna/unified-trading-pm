@@ -1,6 +1,7 @@
 ---
 title: AWS manifest consolidator — scope + Terraform plan
 parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
 priority: P1
 status: blocked
 locked_by: live-defi-rollout

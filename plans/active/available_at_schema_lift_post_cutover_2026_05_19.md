@@ -1,6 +1,7 @@
 ---
 title: available_at schema-level invariant lift + QG hardening (post-cutover architectural slice)
 parent_epic: batch_live_symmetry_master
+assigned_vm: vm-cross-cutting
 priority: P1
 status: active
 estimate_class: brand-new

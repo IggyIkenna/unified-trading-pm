@@ -10,6 +10,7 @@ estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
 parent_epic: defi_master
+assigned_vm: vm-defi
 priority: P2
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
 parent_epic: batch_live_symmetry_master
+assigned_vm: vm-cross-cutting
 priority: P0
 status: active
 estimate_class: design

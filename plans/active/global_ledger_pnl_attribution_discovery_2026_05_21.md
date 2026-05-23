@@ -1,6 +1,7 @@
 ---
 title: Global Ledger + PnL Attribution — discovery, target-state spec, delta-to-current-system
 parent_epic: global_ledger_pnl_attribution_master
+assigned_vm: vm-trading-core
 priority: P0
 status: active
 estimate_class: design

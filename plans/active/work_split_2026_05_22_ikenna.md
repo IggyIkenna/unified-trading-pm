@@ -15,6 +15,7 @@ related_plans:
   - cme_polymarket_arb_2026_05_08.md
   - config_grid_archetype_extend_2026_05_20.md
 parent_epic: orchestrator_master
+assigned_vm: vm-orchestrator
 priority: P0
 status: active
 estimate_class: infra

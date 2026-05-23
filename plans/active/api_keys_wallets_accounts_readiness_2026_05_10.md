@@ -11,6 +11,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70, ~38-57). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: defi_master
+assigned_vm: vm-defi
 priority: P0
 ---
 
@@ -512,8 +513,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`: `SigningSurface`
         StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen dataclass (per_tx / per_hour /
         per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen dataclass with `validate()` enforcing 6
-        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE
-        reject withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
+        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE reject
+        withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
         `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
         `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,     WalletProvisioningConfig, WalletProvisioningError)`.
         **Cross-tab handshake artefact** consumed by slot 5 (defi_recursive_borrow archetype config — chain × protocol
@@ -528,9 +529,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 - [x] ✅ [AGENT] P1. **4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero).** Audit found intent-engine
       declares bridge steps but no adapters. Implement at least CCTP (Circle's cross-chain USDC) for May-23 — allows
-      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred
-      unless carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector
-      full implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
+      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred unless
+      carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector full
+      implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
       addresses in testnet_contracts.yaml, 25 unit tests green; Solana receive deferred — EVM-side only)
 
 - [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
@@ -913,5 +914,5 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 
 **May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP (execution-service@`d45d24b4`);
 verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams — do NOT gate May-23.
-Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to
-June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).
+Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to June-1
+(successor: `fireblocks_copper_client_integration_2026_06_01.md`).

@@ -13,6 +13,7 @@ related:
   - plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md
   - codex/08-workflows/deployment-flow.md # CI/CD + main-via-staging-and-sit path Harsh owns
 parent_epic: orchestrator_master
+assigned_vm: vm-orchestrator
 priority: P1
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

@@ -19,6 +19,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: dart_and_promote_master
+assigned_vm: vm-operator-ops
 priority: P1
 ---
 

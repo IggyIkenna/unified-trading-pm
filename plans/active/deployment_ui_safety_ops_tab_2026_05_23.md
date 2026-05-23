@@ -1,0 +1,160 @@
+---
+title: "Deployment-UI Safety Ops Tab — Manual Override For Every Layer-0 + Layer-1 Action"
+parent_epic: observability_master
+assigned_vm: vm-cross-cutting
+priority: P0
+status: active
+estimate_class: brand-new
+estimate_baseline_ai_days: 8
+estimate_calibrated_ai_days: 8.0
+estimate_calibration_note: |
+  Brand-new class — new DART/deployment-ui tab + 10+ manual action buttons with typed-confirm-string + LLM verdict
+  surface + ack-queue countdown + incident-state-history viewer. Baseline 8 = ~1 cal-day per major sub-component. No
+  multiplier (1.0×).
+parent: master_to_live_defi_2026_05_23
+locked_by: live-defi-rollout
+locked_since: 2026-05-23
+depends_on:
+  - incident_gateway_and_state_machine_2026_05_23
+  - agent_recovery_controller_layer0_deterministic_2026_05_23
+  - ai_recovery_audit_signoff_agent_2026_05_23
+  - audit_acknowledgement_sla_and_state_2026_05_23
+gates:
+  - master_to_live_defi_2026_05_23:Group-G
+related_plans:
+  - incident_gateway_and_state_machine_2026_05_23.md
+  - agent_recovery_controller_layer0_deterministic_2026_05_23.md
+  - ai_recovery_audit_signoff_agent_2026_05_23.md
+  - audit_acknowledgement_sla_and_state_2026_05_23.md
+---
+
+# Deployment-UI Safety Ops Tab — Manual Override
+
+> **🟢 SPAWNED 2026-05-23 from operator directive.** Operator's added requirement: "deployment ui should have the ui
+> oversight in one of its tabs that allows us to perform all the circuit break and disaster recovery stuff manually".
+
+## Goal
+
+Add a **Safety Ops tab** to `deployment-ui` (and a mirrored panel in DART cockpit) that surfaces every Layer-0 + Layer-1
+action as a manual operator button. Manual actions flow through the same Incident Gateway + AgentActionEvent + LLM-
+audit pipeline as automated actions (so the LLM agent signs off on manual operator actions too — defence in depth +
+audit trail).
+
+## Context
+
+**Existing capability** (verified 2026-05-23):
+
+- `unified-trading-system-ui/components/trading/kill-switch-panel.tsx` — kill-switch panel exists.
+- `components/widgets/risk/risk-circuit-breakers-widget.tsx` — circuit breakers visible.
+- `components/widgets/alerts/alerts-kill-switch-widget.tsx` — kill-switch widget.
+- DART Active Alerts panel + Ack button.
+
+**Missing for May-23**:
+
+- No consolidated Safety Ops tab.
+- Manual actions don't flow through Incident Gateway (they're direct API calls; no AgentActionEvent emitted; LLM
+  audit-signoff agent doesn't see them).
+- No typed-confirm-string pattern for high-risk actions.
+- No deployment-ui mirror (currently only DART has these widgets).
+
+## Pre-audit (blast radius)
+
+- TOUCH: `unified-trading-system-ui/app/(routes)/safety-ops/` — NEW route.
+- TOUCH: `deployment-ui/` — NEW Safety Ops tab.
+- NEW: `unified-trading-system-ui/components/widgets/safety/` — directory for safety widgets.
+- TOUCH: `alerting-service/alerting_service/gateway/manual_action_endpoint.py` — NEW endpoint
+  `POST /incidents/manual-action` that wraps any of the 10 Layer-0 scripts with `provenance=MANUAL_OPERATOR`.
+
+## Phased execution DAG
+
+### Phase 1 — Manual action endpoint (1 cal-day)
+
+- [ ] [AGENT] P0.1. `alerting-service/alerting_service/gateway/manual_action_endpoint.py` — `POST /manual-action`: body
+      `{action_type: ActionType, scope: dict, reason: str, operator_id: str, confirm_string: str}`. Body validation:
+      action_type in closed-set RecoveryScriptRegistry; confirm_string matches expected per action_type (e.g.
+      `KILL_ALL_BTC_PERP` for cancel_open_orders on btc-perp; `SAFE_MODE_carry_staked_basis` for enter_safe_mode).
+- [ ] [AGENT] P0.2. Endpoint emits IncidentEnvelope (provenance=MANUAL_OPERATOR) THEN invokes
+      `RecoveryScriptRegistry.execute(action_type, scope, dry_run=False)`. Result wired back as AgentActionEvent.
+- [ ] [AGENT] P0.3. Endpoint authn/authz: operator_id checked against allowlist; rate-limit 1 action per 10s per
+      operator (no accidental double-fires); audit-log every manual action attempt (success or fail).
+
+### Phase 2 — Safety Ops route + widgets (3 cal-days, parallel sub-components)
+
+- [ ] [SCRIPT] P0.4. `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` — top-level route, 4 sections: Layer-0
+      Actions / LLM Audit Verdicts / Audit-Ack Queue / Incident History.
+- [ ] [SCRIPT] P0.5. **Layer-0 Actions panel** — 10 buttons: - Restart Service / Restart Container / Redeploy Known-Good
+      / Resize Machine. - Failover Feed / Pause Strategy / Cancel Open Orders / Disable Venue. - Enter Safe Mode / Enter
+      Read-Only Recon Mode. Each button opens a modal: select scope (service/venue/strategy/instrument); enter reason;
+      type confirm-string (UI shows expected pattern); preview dry-run plan; commit → calls `/manual-action` endpoint.
+- [ ] [SCRIPT] P0.6. **LLM Audit Verdicts feed** — top 50 RecoveryAuditSignoff entries; color-coded by verdict; operator
+      can click DISPUTE button to force the verdict to DISPUTE_AUTOMATED_ACTION (forces SAFE_MODE + SEV0 escalation).
+- [ ] [SCRIPT] P0.7. **Audit-Ack Queue panel** — incidents with countdown to `audit_ack_due_at`; OperationalAckButton +
+      AuditAckButton (distinct, per `audit_acknowledgement_sla_and_state_2026_05_23`).
+- [ ] [SCRIPT] P0.8. **Incident History viewer** — searchable by incident_key / strategy / venue / severity / date.
+      Per-incident drilldown shows: IncidentEnvelope, all AgentActionEvent rows in chronological order, LLM signoff
+      verdicts, evidence URLs, escalation history, ack timestamps.
+
+### Phase 3 — Deployment-UI mirror (1.5 cal-days)
+
+- [ ] [SCRIPT] P0.9. `deployment-ui/` adds the Safety Ops tab by mounting the same widgets via shared component package
+      OR via iframe of the unified-trading-system-ui route (operator decision — recommend shared component package).
+- [ ] [SCRIPT] P0.10. Tab visibility/auth: deployment-ui operator role must include `safety-ops:read` (view) +
+      `safety-ops:execute` (commit manual actions). Read role is permissive (all operators see); execute role is
+      restricted (Ikenna + Harsh + founder only initially).
+
+### Phase 4 — Typed-confirm-string registry (0.5 cal-day)
+
+- [ ] [SCRIPT] P0.11. `unified_api_contracts/canonical/crosscutting/safety_ops/confirm_strings.py` — closed-set registry
+      mapping `(action_type, scope_class) → expected_confirm_template`. E.g.
+      `("cancel_open_orders", "venue:binance") → "CANCEL_ALL_binance"`. UI renders the expected template; operator types
+      it exactly; endpoint validates.
+- [ ] [TEST] P0.12. Unit tests: every action_type × scope combo has a registered template; typo confirm rejects.
+
+### Phase 5 — E2E + game-day (1.5 cal-days, GATES May-23)
+
+- [ ] [SCRIPT] P0.13. Persona-Playwright test `tests/e2e/safety-ops-manual-cancel.spec.ts`: `live-operator` persona
+      walks Cancel Open Orders flow → opens modal → selects venue=binance → types `CANCEL_ALL_binance` → confirms →
+      assert IncidentEnvelope created with provenance=MANUAL_OPERATOR + AgentActionEvent persisted +
+      RecoveryAuditSignoff written by LLM agent.
+- [ ] [SCRIPT] P0.14. Persona-Playwright test `tests/e2e/safety-ops-llm-dispute.spec.ts`: simulate an automated
+      kill_switch.activate → LLM signoff comes in APPROVED → operator clicks DISPUTE in LLM Audit Verdicts panel →
+      assert incident transitions to SAFE_MODE_ACTIVE + SEV0 escalation fires.
+- [ ] [HUMAN] P0.15. Game-day: scratch scenario `01_cefi_venue_circuit_breaker_trip.md` — operator drives entire flow
+      from Safety Ops tab.
+
+## Success criteria
+
+- Safety Ops tab in both unified-trading-system-ui + deployment-ui.
+- 10 Layer-0 action buttons + typed-confirm-string pattern.
+- LLM verdict feed + DISPUTE button.
+- Audit-ack queue with operational + audit ack buttons.
+- Incident History drilldown.
+- 2 Playwright tests green.
+- Game-day pass via Safety Ops tab.
+
+## Anti-patterns + banned approaches
+
+- ❌ Manual action that bypasses Incident Gateway — every manual action MUST flow through the gateway (audit trail
+  - LLM signoff).
+- ❌ One-click destructive action — every Layer-0 button requires typed-confirm-string per action_type.
+- ❌ Hiding LLM verdict from operator — APPROVED/APPROVED_WITH_NOTES/ESCALATE_TO_HUMAN/DISPUTE_AUTOMATED_ACTION always
+  visible in the verdict feed.
+- ❌ Allowing all operators to execute Layer-0 actions — restricted role (Ikenna/Harsh/founder).
+
+## Continuous verification
+
+- Daily: Playwright suite for Safety Ops tab green.
+- Per-cutover: walk every Layer-0 button on staging.
+- Per-incident: incident history drilldown matches IncidentEnvelope + AgentActionEvent rows from audit store.
+
+## Cross-plan blockers
+
+**Blocked by**: all 4 listed depends_on plans must reach at least Phase 2 each.
+
+**Blocks**: nothing downstream — this is the operator-facing surface.
+
+## Codex SSOT updates
+
+- NEW: `codex/04-architecture/safety-ops-tab.md` — UI architecture + auth roles + flow diagram.
+- UPDATE: `codex/04-architecture/recovery-defence-in-depth-layers.md` — operator manual-override is the orthogonal
+  "Layer-M" complementing all 5 layers (operator can act at any layer via this tab).

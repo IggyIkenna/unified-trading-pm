@@ -4,7 +4,7 @@ created: 2026-05-06
 last_updated: 2026-05-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-assigned_vm: vm-0
+assigned_vm: planning-vm
 name: master-to-live-defi-2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -123,9 +123,16 @@ folded into the appropriate epic._
 | [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                 | defi_master                                | brand-new | 23/63      | 37%          | 15.2     | —        |
 | [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master       | refactor  | 1/27       | 4%           | 11.6     | —        |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                           | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 34/74      | 46%          | 8.6      | —        |
+| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                   | master                                     | design    | 0/30       | 0%           | 8.4      | —        |
+| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                   | master                                     | brand-new | 0/15       | 0%           | 8.0      | —        |
 | [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                 | master                                     | brand-new | 0/5        | 0%           | 8.0      | —        |
 | [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/251    | 75%          | 6.0      | —        |
 | [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md)                                 | batch_live_symmetry_master                 | brand-new | 0/7        | 0%           | 5.0      | —        |
+| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                     | master                                     | design    | 0/12       | 0%           | 4.8      | —        |
+| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                                 | master                                     | design    | 0/11       | 0%           | 4.8      | —        |
+| [`independent_fallback_twilio_voice_2026_05_23`](./independent_fallback_twilio_voice_2026_05_23.md)                                         | master                                     | infra     | 0/14       | 0%           | 4.8      | —        |
+| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)                 | master                                     | research  | 0/12       | 0%           | 4.8      | —        |
+| [`reconciliation_age_tracking_and_escalation_2026_05_23`](./reconciliation_age_tracking_and_escalation_2026_05_23.md)                       | master                                     | refactor  | 0/16       | 0%           | 4.0      | —        |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                     | batch_live_symmetry_master                 | design    | 63/71      | 89%          | 3.4      | —        |
 | [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)                                             | master                                     | infra     | —          | —            | 2.5      | —        |
 | [`config_grid_archetype_extend_2026_05_20`](./config_grid_archetype_extend_2026_05_20.md)                                                   | master                                     | design    | 0/3        | 0%           | 2.4      | —        |
@@ -150,7 +157,7 @@ folded into the appropriate epic._
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
 | [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
 | [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 38/38      | 100%         | 0.0      | —        |
-| **TOTAL** (33 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **59% done** | **185**  | —        |
+| **TOTAL** (44 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **49% done** | **271**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 

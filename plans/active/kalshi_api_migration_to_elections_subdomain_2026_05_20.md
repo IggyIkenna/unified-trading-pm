@@ -1,6 +1,7 @@
 ---
 title: Kalshi API migration — trading-api.kalshi.com → api.elections.kalshi.com
 parent_epic: predictions_master
+assigned_vm: vm-prediction
 priority: P1
 status: active
 estimate_class: refactor

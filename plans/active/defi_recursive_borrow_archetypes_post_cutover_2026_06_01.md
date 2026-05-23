@@ -28,6 +28,7 @@ estimate_calibration_note: |
   Phase 9 cost-model ~3 + Phase 10 codex ~1 + Phase 11 UI/API ~2 + Phase 12 backtest ~2 + Phase 13 live ~1.
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
 parent_epic: strategy_master
+assigned_vm: vm-trading-core
 priority: P2
 ---
 

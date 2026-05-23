@@ -18,6 +18,7 @@ estimate_calibrated_ai_days: 13.2
 estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 parent_epic: observability_master
+assigned_vm: vm-cross-cutting
 ---
 
 > **🟢 VM RUNNING — alerting-quietness-20260522-083225** — Phase 7 quietness baseline VM RUNNING 2026-05-22

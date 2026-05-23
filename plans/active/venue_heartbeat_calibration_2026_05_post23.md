@@ -8,6 +8,7 @@ estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.8
 migrated_from: mdps_streaming_and_backpressure_2026_05_07.md § item 547
 parent_epic: cefi_master
+assigned_vm: vm-cefi
 priority: P2
 ---
 

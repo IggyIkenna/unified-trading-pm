@@ -1,6 +1,7 @@
 ---
 title: Plan hygiene sweep — next-session kickoff prompt
 parent_epic: plan_hygiene_master
+assigned_vm: vm-cross-cutting
 priority: P1
 status: active
 estimate_class: infra

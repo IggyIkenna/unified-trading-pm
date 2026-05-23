@@ -1,6 +1,7 @@
 ---
 title: "TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover"
 parent_epic: tradfi_master
+assigned_vm: vm-tradfi
 priority: P2
 status: active
 estimate_class: infra

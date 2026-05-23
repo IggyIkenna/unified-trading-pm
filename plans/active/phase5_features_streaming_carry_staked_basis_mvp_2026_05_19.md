@@ -20,6 +20,7 @@ estimate_calibration_note: |
   source + funding-PnL loop + factory wiring + tests). Operator pace 2026-05-12 → 2026-05-19
   averaged ~180 cal-AI-days/day, so 15 cal-AI-days fits a ≤4-day calendar window with 3+ slots.
 parent_epic: features_and_ml_master
+assigned_vm: vm-ml
 priority: P2
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: AWS migration — DeFi-first dual-cloud active (post-cutover)
 parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
 priority: P1
 status: active
 estimate_class: infra

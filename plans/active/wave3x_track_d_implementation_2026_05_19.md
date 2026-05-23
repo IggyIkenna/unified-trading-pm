@@ -12,6 +12,7 @@ estimate_calibration_note: |
   catalog threading + per-adapter wire-in across MTDS/MDPS/features-service.
   Audit docs from wave3x Track D are the spec.
 parent_epic: mtds_mdps_master
+assigned_vm: vm-ml
 priority: P2
 ---
 

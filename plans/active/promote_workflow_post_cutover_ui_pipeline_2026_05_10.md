@@ -19,6 +19,7 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: dart_and_promote_master
+assigned_vm: vm-operator-ops
 priority: P2
 ---
 

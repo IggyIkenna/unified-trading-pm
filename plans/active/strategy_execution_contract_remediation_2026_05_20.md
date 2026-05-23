@@ -11,6 +11,7 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
 status: in-progress
 parent_epic: strategy_master
+assigned_vm: vm-trading-core
 priority: P2
 ---
 
