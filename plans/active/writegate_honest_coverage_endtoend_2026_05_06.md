@@ -1505,8 +1505,10 @@ grep.
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
       workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via
       VENUE_REGISTRY)
-- [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
-      `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
+- [x] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).** ✅ —
+      market-tick-data-service@79c8f12f (group_cols expanded to [bookmaker_key, league_id, fixture_id]; GCS path
+      conditionally includes fixture_id= segment; manifest 5-tuple underlying=fixture_id) `orchestrator.py:1739`
+      currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
       (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
       `FIXTURE_PLAYER_STATS`, `INJURIES` when fixture-scoped) shard at fixture_id; aggregate data_types (`STANDINGS`,
