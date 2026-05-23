@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
   - ../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
-  - ../active/alerting_service_live_rules_2026_05_07.md
+  - ../archive/2026_05/alerting_service_live_rules_2026_05_07.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - ../active/incident_gateway_and_state_machine_2026_05_23.md
   - ../active/agent_recovery_controller_layer0_deterministic_2026_05_23.md
@@ -68,12 +68,9 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate (May-23 cutover)
 
-### [`alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.md)
+### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
-**status**: active · **estimate**: 13.2 cal AI-days (class: design) · existing — owns AlertCode taxonomy +
-LIVE_ALERT_RULES + paging targets + DART Active Alerts panel + 15 per-AlertCode runbooks + Phase 7 quietness baseline
-
-- Phase 8 rehearsal.
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete: AlertCode taxonomy + LIVE_ALERT_RULES + DART Active Alerts panel + 15 per-AlertCode runbooks + Phase 7 quietness baseline VM running. Phase 8 rehearsal + Telegram token rotation + PagerDuty setup BLOCKED-OPERATOR. · **estimate**: 13.2 cal AI-days (class: design)
 
 ### [`incident_gateway_and_state_machine_2026_05_23`](../active/incident_gateway_and_state_machine_2026_05_23.md)
 
@@ -151,3 +148,16 @@ _(no plans currently assigned at this priority. Post-cutover audits will spawn P
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete. Phase 7 quietness baseline VM running until ~2026-05-24 08:32 UTC.
+
+**Deferred (migrated):**
+- **Phase 4 — CRITICAL: rotate Telegram bot token (OPERATOR ACTION)**: Token leaked in Tab L httpx log. Rotate via @BotFather + re-push to GCP SM + AWS SM.
+- **Phase 4 — PagerDuty + Slack credential push**: DEFERRED-PER-DECISION; operator triages post-Phase 7 baseline.
+- **Phase 7 — 48h baseline FP analysis (OPERATOR ACTION)**: VM `alerting-quietness-20260522-083225` runs until ~2026-05-24. If FP > 10%/24h, file threshold-adjustment task.
+- **Phase 8 rehearsal (OPERATOR ACTION)**: Run `inject_synthetic_alert.py` for all 15 alert codes + fill sign-off doc `REHEARSAL_2026_05_23.md`.
+- **Phase 9 — 7-day soak daily review (OPERATOR ACTION)**: Monitor FP rate post-cutover; threshold re-tune if needed.

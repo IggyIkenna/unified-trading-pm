@@ -1,9 +1,8 @@
 ---
+name: alerting_service_live_rules_2026_05_07
 title: "Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging"
 priority: P0
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
-locked_since: 2026-05-07
 depends_on: []
 extends:
   - live_pipeline_mtds_mdps_features_2026_05_08 # Phase 9 alerting tier-up consumes ServiceEmissionPolicy + StreamingHealthSnapshot from live-pipeline plan; codified per audit 2026-05-08
@@ -11,7 +10,9 @@ gates:
   - master_to_live_defi_2026_05_23:work-stream-E
   - master_to_live_defi_2026_05_23:Group-F
   - master_to_live_defi_2026_05_23:Group-G
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2
@@ -830,3 +831,16 @@ alerting-service edits LOCAL until UAC unblocks. Files written locally:
 **Total**: 9-12 days. Fits in the 16-day window with margin if no blockers materialise. Compression possible by
 parallelising Phases 3 + 4 + 5 + 6 + Phase 1+2 simultaneously — that brings the floor to 7-8 days assuming clean QG
 pass.
+
+## Deferred work — migrated to: observability_master
+
+_Archived 2026-05-23 slot 2. All items below require operator action or are gated on operator decisions. Migrated to observability_master backlog._
+
+- **Phase 4 — CRITICAL: rotate Telegram bot token (OPERATOR ACTION)**: Tab L's first smoke attempt leaked the Telegram bot token in the httpx INFO request URL. Operator must rotate via @BotFather (`/revoke` → `/newbot`) and re-push to GCP SM + AWS SM. Phase 4 SM secrets currently hold the leaked token. DEFERRED-OPERATOR-DECISION.
+- **Phase 4 — SM hot-reload wiring (DEFERRED-TO-HARSH)**: alerting-service `config.py` SM hot-reload wiring (<1h work). `_PagingCredentialsReloader` class already shipped at alerting-service@9d4150d. Per CLAUDE.md "Two teammates" rule — alerting-service is Harsh's repo. Gate: Telegram bot token rotation.
+- **Phase 4 — PagerDuty + Slack credential push**: DEFERRED-PER-DECISION — Telegram-as-primary chosen; operator triages whether PagerDuty add is needed post-Phase 7 baseline. Includes PagerDuty escalation policy in PD console + `pagerduty-escalation-policy.md` capture.
+- **Phase 7 — 48h baseline acceptance criterion (OPERATOR ACTION)**: Second quietness baseline VM `alerting-quietness-20260522-083225` running until ~2026-05-24 08:32 UTC. Acceptance: 0 PagerDuty-severity FPs + ≤2 Telegram-severity FPs in 48h. If FP > 10%/24h after analysis, operator to file follow-up threshold-adjustment task.
+- **Phase 8 rehearsal (OPERATOR ACTION)**: Operator must run `alerting-service/scripts/inject_synthetic_alert.py` for all 15 alert codes and fill in sign-off doc at `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md`. Full checklist (a-f verification per code) + kill-switch end-to-end steps pre-staged. DEFERRED-OPERATOR-DECISION.
+- **Phase 8 CRITICAL-severity rehearsal (OPERATOR ACTION)**: Simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including circuit-breaker propagation to execution-service + strategy-service halt-order subscribers. DEFERRED-OPERATOR-DECISION.
+- **Phase 9 — 7-day soak daily review (OPERATOR ACTION)**: Daily review of fired alerts during 7-day post-cutover soak. Threshold re-tuning if FP rate drifts. DEFERRED-OPERATOR-DECISION.
+- **Open questions for operator (6 items)**: PagerDuty service tier (shared vs per-archetype); Telegram chat structure (single vs per-severity); on-call rotation policy; quietness baseline duration (48h fixed vs extend); carry_staked_basis alert codes (e.g. JITOSOL_VALIDATOR_DOWNTIME); SLO/error-budget framework for v2.
