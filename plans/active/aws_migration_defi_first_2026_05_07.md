@@ -311,78 +311,50 @@ CLAUDE.md "VM tarball deployment" describes the GCS pattern: tarballs in `gs://d
 boot via `setup-data-pipeline-vm.sh` pulling from there. AWS equivalent needed for post-May-23 backfill VMs **and** for
 ECR-image-builds in the May-23 window.
 
-- [x] ✅ [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
+- [ ] [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
       to `s3://uts-prod-deployment-state/code/{service}-{ts}.tar.gz` mirroring the GCS layout exactly. Default flag
       stays `--cloud gcp` for back-compat.
-      ✅ Script landed at `unified-trading-pm/scripts/vm/create-code-tarballs.sh` (deployment-service not in workspace).
-      Supports `--cloud gcp|aws`, `--all`, `--asset-group`, `--ml-training`, `--include`, `--dry-run`.
-      GCS path: `gs://deployment-scripts-{PROJECT}/code/<repo>-code.tar.gz` + re-uploads setup script.
-      AWS path: `s3://uts-prod-deployment-state/code/<repo>-code.tar.gz`. Both dry-run verified. pm@`3fe95193` 2026-05-23.
 - [x] ✅ [SCRIPT] P0. Land `deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh` — EC2 user-data script that
       `aws s3 cp` the tarball + bootstraps the service. Mirrors the GCS variant. Test against a single dummy EC2 launch.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Phase 9 scope. deployment-service not in worktree.
-      ✅ Script also landed at `unified-trading-pm/scripts/vm/setup-data-pipeline-vm-aws.sh` (slot 2).
-      Reads VM_TASK + VM_SERVICE from EC2 tags; downloads CORE tarballs from s3://uts-prod-deployment-state/code/;
-      installs Python 3.13 via uv; routes to workload CLI by VM_TASK; writes run.log + EXIT_STATUS to S3.
-      EC2 smoke deferred — no EC2 perms from orchestrator VM. pm@`e54f84ea` 2026-05-23.
-- [x] ✅ [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
+      — unified-trading-pm@staging (2026-05-23). Script staged at `scripts/vm/setup-data-pipeline-vm-aws.sh` (deployment-service
+      not in slot 3 worktree); cp to `deployment-service/scripts/vm/` + upload to `s3://uts-prod-deployment-state/vm/`
+      when deployment-service is available. Dummy EC2 launch test deferred to deployment-service onboarding slot.
+- [ ] [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
       Mirror Cloud Build's tag/push behaviour exactly. CodeBuild project trigger on GitHub PR merge to `main` (matches
       Cloud Build trigger). Decision: **ECR is for live always-on services (Phase 6 ECS Fargate / App Runner
       deployment); S3 tarballs are for batch / backfill VMs (post-May-23 Phase 9)**. Both ship in this plan; tarballs
       deferred behind ECR.
-      **[CONFIRMED-DONE 2026-05-23 slot 6]**: buildspec.aws.yaml shipped to all 8 service repos at Phase 3
-      (deployment-service@10dcea9). CodeBuild projects + webhooks wired (10/12 with ACTIVE webhooks). ECR live services
-      path complete. S3 tarball path deferred Phase 9 per plan decision.
-- [x] ✅ [SCRIPT] P0. Per-service `buildspec.aws.yaml` parity test:
+- [ ] [SCRIPT] P0. Per-service `buildspec.aws.yaml` parity test:
       `diff <(grep '^- ' cloudbuild.yaml) <(grep '^- ' buildspec.aws.yaml)` should show only command-syntax differences
       (gcloud → aws cli), not missing steps.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Partial — instruments-service CodeBuild SUCCEEDED
-      (Phase 3). Full 12-service diff test requires service repos in worktree. Post-cutover scope.
-- [x] ✅ [SCRIPT] P0. **Quickmerge AWS path**: `bash scripts/quickmerge.sh --cloud aws` should trigger CodeBuild instead of
+- [ ] [SCRIPT] P0. **Quickmerge AWS path**: `bash scripts/quickmerge.sh --cloud aws` should trigger CodeBuild instead of
       Cloud Build. Add the flag + cloud-dispatch logic.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: deployment-service not in worktree. Post-May-23 scope.
 
 #### 1.5.D — Script-level switch for GCS↔S3 (no hardcoded GCS)
 
 Per operator: every script needs the option to switch GCS↔S3 (or GCP↔AWS). This is the cloud-agnostic claim taken
 seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS branch.**
 
-- [x] ✅ [SCRIPT] P0. `grep -rln "gcloud storage\|gsutil\|google.cloud.storage" --include="*.py" --include="*.sh"` across
+- [ ] [SCRIPT] P0. `grep -rln "gcloud storage\|gsutil\|google.cloud.storage" --include="*.py" --include="*.sh"` across
       the workspace. Each hit gets one of: (a) wrapped in `if CLOUD_PROVIDER == "gcp"` with an AWS branch using `aws s3`
       or boto3, (b) replaced with a UCI call (preferred), (c) flagged as GCP-only-script and excluded from AWS workflows
-      with explicit comment. **DONE 2026-05-23 (slot 6)**: 32 hits across UTL+UAC+agent-orch+PM repos (service repos not
-      in worktree). Classification: (a) GCP provider files (gcp.py, gcs.py, protocols.py, gcs_blob_ops.py,
-      presigned_urls.py) — compliant, correct to use GCP APIs in provider layer. (b) UTL production files
-      (manifest_consolidator.py, artifact_store.py, streaming_writer.py) — only have "google.cloud.storage" in
-      docstrings/comments, NOT in code. Compliant. (c) Operator/migration scripts + tests — exempt per Tier-3 rule.
-      (d) agent-orchestrator/restore_from_gcs.sh — GCP-only recovery tool, excluded from AWS workflows with flag
-      `CLOUD_PROVIDER` gate planned. (e) UAC internal testing seeds — log messages with gsutil guidance, not import.
-      **Zero violations in May-23 critical path.** Audit captured in cloud-agnostic-audit-2026-05-07.md §8.
-      Also verified by slot 2 2026-05-23: same classification; `create-code-tarballs.sh` --cloud flag (task -010) added.
-- [x] ✅ [SCRIPT] P0. Backfill launcher scripts (`deployment-service/scripts/vm/launch-*.sh` — 30+ scripts per CLAUDE.md
+      with explicit comment.
+- [ ] [SCRIPT] P0. Backfill launcher scripts (`deployment-service/scripts/vm/launch-*.sh` — 30+ scripts per CLAUDE.md
       "Singleton-locked launchers" + "VM Naming Convention") — extend per the existing pattern to accept `--cloud aws`
       and dispatch to AWS launcher. Default stays `--cloud gcp` for backwards compatibility. Phase 9 ships
       per-asset-group AWS launcher equivalents.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: deployment-service not in worktree. Phase 9 scope for
-      per-asset-group AWS launcher equivalents.
-- [x] ✅ [SCRIPT] P0. Audit / reconciler scripts must accept `--cloud`:
+- [ ] [SCRIPT] P0. Audit / reconciler scripts must accept `--cloud`:
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`, `mtds_reconcile_partial_bundles.py`,
       `mdps_reconcile_1440_nan_placeholders.py`, `reconcile_expected_absence_reasons.py`,
       `dedup_phantom_after_recovery.py`, `migrate_sports_available_at_column.py`, etc. Each scripts gets a CLI test
       asserting it correctly hits AWS when `--cloud aws` is passed.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: instruments-service + other service repos not in worktree.
-      Phase 5 reconciler (`reconcile_phantom_manifest_rows_all.py --backend aws`) is blocked on Phase 5b Athena
-      verification prerequisite (per plan line 484). Wave 2 scope.
 - [x] [SCRIPT] P0. Codex doc `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-script-pattern.md` defines the
       canonical pattern: argparse `--cloud {gcp,aws}` with default from `CLOUD_PROVIDER` env, fallback to `gcp`,
       fail-loud on unknown values. New scripts MUST follow this pattern; QG in base-service.sh extends to enforce. **N/A
       — codex section already written at Tab 4 close-out 2026-05-08: §§ 4.1-4.5 added to
       `codex/05-infrastructure/cloud-agnostic-script-pattern.md` (PM@b02c5050).**
-- [x] ✅ [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked via
+- [ ] [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked via
       moto for unit, against actual S3 buckets in integration). No silent fallthrough.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Applies to Wave 2 service-repo scripts (not available in worktree).
-      UTL QG already passes with CLOUD_PROVIDER=aws (UTL@780a9575 + UTL@52791570 both green). Per-script moto tests are
-      Phase 9 / Wave 2 scope.
 
 ### Phase 2 — Provision 10 missing DeFi buckets + IAM (½ day, **PARALLEL** with Phase 1.5 once 1.5.A finishes)
 
@@ -459,12 +431,9 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       cleanly. **DONE 2026-05-21** (slot 3): `aws codebuild start-build --project-name instruments-service` → build
       `instruments-service:9131f012` → **SUCCEEDED** (status COMPLETED). instruments-service image in ECR confirmed
       buildable.
-- [x] ✅ [QG] P0. CodeBuild parity: each `buildspec.aws.yaml` produces an image equal-or-better to the `cloudbuild.yaml`
+- [ ] [QG] P0. CodeBuild parity: each `buildspec.aws.yaml` produces an image equal-or-better to the `cloudbuild.yaml`
       for the same commit (size, layer count, QG pass). **Partially unblocked** — instruments-service smoke SUCCEEDED;
       remaining 11 services need builds triggered and verified as next step (not blocking Phase 6 deployment).
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]**: uts-orchestrator-epic-role lacks codebuild:ListProjects / StartBuild.
-      Operator to trigger remaining 11 service builds via AWS Console or `aws codebuild start-build`. This is non-blocking
-      for Phase 6 deployment (per plan comment). Filed as prerequisite for full CodeBuild parity verification post-cutover.
 
 ### Phase 4 — AWS Secrets Manager parity (DeFi-only subset) (1 day)
 
