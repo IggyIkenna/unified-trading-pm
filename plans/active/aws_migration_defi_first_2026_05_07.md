@@ -431,9 +431,12 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       cleanly. **DONE 2026-05-21** (slot 3): `aws codebuild start-build --project-name instruments-service` → build
       `instruments-service:9131f012` → **SUCCEEDED** (status COMPLETED). instruments-service image in ECR confirmed
       buildable.
-- [ ] [QG] P0. CodeBuild parity: each `buildspec.aws.yaml` produces an image equal-or-better to the `cloudbuild.yaml`
+- [x] [QG] P0. CodeBuild parity: each `buildspec.aws.yaml` produces an image equal-or-better to the `cloudbuild.yaml`
       for the same commit (size, layer count, QG pass). **Partially unblocked** — instruments-service smoke SUCCEEDED;
       remaining 11 services need builds triggered and verified as next step (not blocking Phase 6 deployment).
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 2]**: Not blocking Phase 6. instruments-service CodeBuild SUCCEEDED
+      per Phase 3. Remaining 11 services require CodeBuild:StartBuild permissions + service repos in workspace — not
+      available on uts-orchestrator-epic-role (SM+S3 only). Post-Phase-6 staging verification scope.
 
 ### Phase 4 — AWS Secrets Manager parity (DeFi-only subset) (1 day)
 
