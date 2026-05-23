@@ -302,9 +302,12 @@ currently missing.
 - [ ] [SCRIPT] P0. Service migration: replace direct `google.cloud.pubsub_v1` imports with UCI `MessageBus`. Per-service
       PRs (alerting-service / risk-and-exposure-service / position-balance-monitor-service / execution-service /
       deployment-orchestration). Each PR's QG must pass with `CLOUD_PROVIDER=aws`.
-- [ ] [SCRIPT] P0. AWS SNS topics + SQS queues provisioning script `deployment-service/scripts/aws/setup-messaging.sh` —
+- [x] [SCRIPT] P0. AWS SNS topics + SQS queues provisioning script `deployment-service/scripts/aws/setup-messaging.sh` —
       creates topics matching GCP names, with subscriptions per the e2e plan §"Upstream Dependencies". Use Terraform
       under `deployment-service/scripts/aws/terraform/messaging/` if the existing setup uses Terraform.
+      ✅ Script landed at `unified-trading-pm/scripts/aws/setup-messaging.sh` (deployment-service not in workspace).
+      Provisions 5 SNS topics + paired SQS queues + SNS→SQS subscriptions + queue policies. Idempotent.
+      Dry-run verified. pm@`<sha>` 2026-05-23.
 
 #### 1.5.C — Tarball deployment parity (CodeBuild → S3 → EC2 user-data)
 
