@@ -11,6 +11,7 @@ estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 parent_epic: defi_master
+assigned_vm: vm-defi
 priority: P0
 ---
 
@@ -1089,9 +1090,9 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 ### Phase 3.6 — Strategy archetype paper-trade smoke
 
-- [ ] [PLAN] P0. **`plans/epics/defi_master.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke
-      (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION). *(path corrected from plans/active/ → plans/epics/ per
-      epic-foundation model 2026-05-21)*
+- [ ] [PLAN] P0. **`plans/epics/defi_master.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke (carry_staked_basis +
+      ARBITRAGE_PRICE_DISPERSION). _(path corrected from plans/active/ → plans/epics/ per epic-foundation model
+      2026-05-21)_
 - [ ] [PLAN] P0. **`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`** — Strategy archetype paper-trade
       smoke for CeFi / TradFi / Sports / Predictions; DART manual-trade UI live for human override.
 - [ ] [PLAN] P1. **`plans/active/batch_live_symmetry_2026_05_10.md`** — 8-tab design symmetry (May-23 cutover-blocking
@@ -1100,9 +1101,9 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 ### Phase 3.7 — 7-day continuous live-DeFi run on real wallet
 
 - [ ] [PLAN] P0. **`plans/epics/defi_master.md`** § "May-23 deliverable / Phase 11 — Live cutover gate" — 7-day
-      continuous run gate on real wallet. **Final cutover gate per master plan Group F-G live-only items.**
-      *(path corrected from plans/active/ → plans/epics/; Phase 11 label added to defi_master.md § May-23
-      deliverable per BLK-ea307151 doc-fix 2026-05-23)*
+      continuous run gate on real wallet. **Final cutover gate per master plan Group F-G live-only items.** _(path
+      corrected from plans/active/ → plans/epics/; Phase 11 label added to defi_master.md § May-23 deliverable per
+      BLK-ea307151 doc-fix 2026-05-23)_
 
 ### Phase 3 freeze gate (✅ to declare May-23 cutover ready)
 

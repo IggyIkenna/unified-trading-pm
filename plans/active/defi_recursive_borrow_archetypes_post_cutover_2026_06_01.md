@@ -28,6 +28,7 @@ estimate_calibration_note: |
   Phase 9 cost-model ~3 + Phase 10 codex ~1 + Phase 11 UI/API ~2 + Phase 12 backtest ~2 + Phase 13 live ~1.
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
 parent_epic: strategy_master
+assigned_vm: vm-trading-core
 priority: P2
 ---
 
@@ -317,10 +318,10 @@ before adding duplicates.
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #2. — **VERIFIED pre-existing at
       unified-api-contracts (codes.py + rules.py, added 2026-05-12 per Phase 8 design)**: all 7 codes present:
       `DEFI_HEALTH_FACTOR_CRITICAL` (WARN, codes.py:48, rules.py:289); `DEFI_LIQUIDATION_IMMINENT` (CRITICAL,
-      rules.py:324); `DEFI_FUNDING_RATE_FLIP` = FUNDING_SIGN_FLIP (WARN, rules.py:601); `DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED`
-      (CRITICAL, rules.py:349); `DEFI_CROSS_VENUE_DELTA_DRIFT` (WARN, rules.py:357); `DEFI_PERP_VENUE_OUTAGE` (CRITICAL,
-      rules.py:332); `DEFI_ORACLE_STALE_PAUSE` (CRITICAL, rules.py:341). Referenced in 4 test files. No code changes
-      needed — slot 3 audit 2026-05-23.
+      rules.py:324); `DEFI_FUNDING_RATE_FLIP` = FUNDING_SIGN_FLIP (WARN, rules.py:601);
+      `DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (CRITICAL, rules.py:349); `DEFI_CROSS_VENUE_DELTA_DRIFT` (WARN,
+      rules.py:357); `DEFI_PERP_VENUE_OUTAGE` (CRITICAL, rules.py:332); `DEFI_ORACLE_STALE_PAUSE` (CRITICAL,
+      rules.py:341). Referenced in 4 test files. No code changes needed — slot 3 audit 2026-05-23.
 - [ ] [strategy-service] **P0**. NEW `engine/circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action
       mappings (see design table in original plan). 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 →
       flash-close within single block). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0
