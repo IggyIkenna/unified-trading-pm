@@ -87,8 +87,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [x] ✅ [AGENT] P0. **UAC QG green** — `cd unified-api-contracts && bash scripts/quality-gates.sh` exits 0. Fix 1 RUF022
       `__all__` sort violation. Run `ruff check --fix . && basedpyright unified_api_contracts/ run_timeout 120`. Commit
       to `live-defi-rollout`. Evidence: exit 0 + `ruff check .` output clean. [vm: vm-cross-cutting]
-      — unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors)
-      — unified-api-contracts@897ba58 | QG exit 0 | +70 orphan allowlist entries (Phase-4 recording-templates/stubs)
+      — unified-api-contracts@f15f86f | QG exit 0 | fixed RUF022+C416×4+E501+F601×11; +70 orphan allowlist; canonicalized defi types; BATCH_MDPS_ODDS_HORIZON_BUCKET
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **UTL QG green** — Fix 3 ruff violations (F401×2 + I001×1 in
       recovery/agent_action.py + tests/unit/recovery/test_agent_action.py). `ruff check .` now clean. —
@@ -118,9 +117,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 ## Layer 2 — Data pipeline (parallel after Layer 1, P2)
 
-- [ ] [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
+- [x] ✅ [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd market-tick-data-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm:
-      vm-ml]
+      vm-ml] — mtds@1864e395 QG green (97s); fixed 22 import violations, test fixtures, orchestrator None-filter, import pattern final fix
 
 - [ ] [AGENT] P2. **features-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd features-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm: vm-ml]
