@@ -517,7 +517,13 @@ reviews + tunes thresholds.
       added `quietness_baseline_date` field to `AlertThreshold` dataclass; annotated 11 core Phase-1 +
       tick-staleness thresholds with `quietness_baseline_date="2026-05-20"` (VM alerting-quietness-20260520-111232,
       first 48h baseline run); updated source_doc on each baselined threshold; 2 new taxonomy tests; 71 total
-      alerting tests pass; coverage 84.55%. **NOTE**: if second baseline (2026-05-24) reveals tuning needs,
+      alerting tests pass; coverage 84.55%. **PHASE 1.E COMPLETION (Slot 7 2026-05-23)**: UAC@5a93775 — all
+      remaining 12 Phase 1.E thresholds annotated with `quietness_baseline_date="2026-05-20"`:
+      lending_rate_spike_sigma, gas_price_spike_gwei, gas_budget_exceeded_eth, gas_surge_multiple,
+      gas_mempool_confirmation_delay_seconds, lending_utilization_high_bps, lending_pool_outage_seconds,
+      oracle_staleness_seconds, lending_pool_unavailable_seconds, oracle_divergence_sigma,
+      market_data_stale_seconds, qg_snapshot_stale_days. 5 ML thresholds remain empty (ml-inference-service
+      baseline pending). 72 alerting tests pass. **NOTE**: if second baseline (2026-05-24) reveals tuning needs,
       update `default_value` and `quietness_baseline_date` in a follow-up task.
 - [ ] [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
       Telegram-severity false positives.
