@@ -274,19 +274,21 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [x] [SCRIPT] P0. 11 unit tests covering all 4 cases.
 - [x] [QG] P0. ruff clean; basedpyright argparse-`Any` errors out-of-scope (scripts/ excluded from typecheck).
 
-#### Phase 2 — GCS migration (RUNNING 2026-05-22 — operator-authorized, agent-run)
+#### Phase 2 — GCS migration (RE-RUN NEEDED 2026-05-23)
 
-> **🟡 IN-FLIGHT — GCS migration running locally 2026-05-22 05:11 UTC. DO NOT resume sports VMs until completion
-> verified.**
+> **🟡 IN-FLIGHT — Re-running GCS migration on GCE VM 2026-05-23. Prior macOS run (2026-05-22) migrated the BASE bucket
+> only (`instruments-store-sports-central-element-323112`) — PRD bucket was NOT migrated. Spot-check confirmed:
+> base=DONE (available_at=True), prd=NOT DONE (data_available_at=True). Re-running against PRD bucket on GCE VM.**
 
 - [x] [OPERATOR] P0. Sports VMs confirmed NOT running — no need to pause. Verified 2026-05-22.
-- [x] [AGENT] P0. Launch GCS migration from macOS (operator-authorized):
-      `scripts/migrate_sports_available_at_column.py --workers 16`. Running in background. Listing 14k+ blobs —
-      cross-region listing slow from macOS.
-- [ ] [AGENT] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names`
-      includes `available_at` and not `data_available_at`. **IN PROGRESS — waiting for migration to complete.**
+- [ ] [AGENT] P0. Launch GCS migration on GCE VM against PRD bucket (operator-authorized, re-run 2026-05-23):
+      `scripts/migrate_sports_available_at_column.py --bucket gs://instruments-store-sports-prd-central-element-323112 --workers 32`.
+      Prior macOS run (2026-05-22) only migrated base bucket. PRD bucket still has data_available_at. Running on GCE VM
+      in asia-northeast1-c for same-region speed. **IN PROGRESS — VM launched.**
+- [ ] [AGENT] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 in PRD bucket —
+      `pq.read_schema(uri).names` includes `available_at` and not `data_available_at`.
 - [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships AND Phase 2 migration
-      verified. Phase 3 is SHIPPED (2026-05-22). Waiting on Phase 2 migration completion.
+      verified. Phase 3 is SHIPPED (2026-05-22). Waiting on Phase 2 migration completion (prd bucket).
 
 #### Phase 3 — Atomic 4-repo source rename (SHIPPED 2026-05-22)
 
