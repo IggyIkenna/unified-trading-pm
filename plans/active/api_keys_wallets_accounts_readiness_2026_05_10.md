@@ -410,6 +410,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     end-to-end.
   - **[DEFERRED-AFTER-CUTOVER]** 2026-05-12 operator scope contraction: Phase 3.A (Copper sandbox) deferred to June-1+.
     May-23 ships on Cloud KMS path (3.C.1). Checkbox flipped noting DEFERRED status — 2026-05-23 slot 2.
+  - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: Verified DEFERRED status. `copper-sandbox-api-key` +
+    `copper-sandbox-api-secret` + `copper-sandbox-org-id` NOT in GCP Secret Manager. Integration test auto-skips.
+    Successor: `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
     Copper integration tracked in `fireblocks_copper_client_integration_2026_06_01.md`.
 
 - [x] ✅ [HUMAN+AGENT] P0. **3.B — CEFFU integration.** DEFERRED per 2026-05-12 scope contraction. 3.B.3 adapter shipped
