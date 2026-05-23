@@ -33,10 +33,11 @@ the in-process MDPS↔features handoff (live-pipeline Phase 1.C). Otherwise fall
 
 Gate: MTDS-3.2.A CeFi verification GREEN.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **MDPS-3.3.CeFi** — Relaunch MDPS CeFi reprocessor VM. All 15 CeFi venues. 1-min + 5-min + 15-min +
-      1h + 4h + 1d bars. `MDPS_ASSET_GROUP=cefi`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.CeFi-V** — Zero 1440-NaN-bar regressions on 10 random instrument-days (assert OHLC
-      populated OR `instruments_master` says instrument-not-listed). `available_at` populated per-row. manifest 100% v8.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **MDPS-3.3.CeFi** — Relaunch MDPS CeFi reprocessor VM. All 15 CeFi
+      venues. 1-min + 5-min + 15-min + 1h + 4h + 1d bars. `MDPS_ASSET_GROUP=cefi`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.CeFi-V** — Zero 1440-NaN-bar regressions on 10 random
+      instrument-days (assert OHLC populated OR `instruments_master` says instrument-not-listed). `available_at`
+      populated per-row. manifest 100% v8.
 
 ## Phase 2 — DeFi MDPS reprocessor
 
@@ -63,17 +64,25 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       `live_workers.py` filters by in-file `'swaps'` column. MDPS@b584c67. QG ✅. Tarball rebuilt. 5 DeFi VMs TERMINATED
       (0 candles output) + re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap data coverage: 2024-06-01
       onwards (2022/2023 = 0 Uniswap, 2024+ = candles expected). 2026-05-23 slot-5.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps bars present for 2024-06+
-      dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before = expected `empty_confirmed`).
-      vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED 2026-05-23 slot-5**: 142129 VMs
-      (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with MDPS@ed0f817. 5 new VMs
-      `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their end_date. **PARTIAL STATUS
-      (slot-6 2026-05-23 ~15:30 UTC)**: 2022 VM self-deleted (exit_code=0 at 14:25 UTC) after processing
-      2022-11-01→2022-12-31 (61 dates, 0 candles — all prior dates covered by earlier VMs with manifest skip). No shard
-      written (expected: 0 candles → no manifest entries). 2023 VM still RUNNING. 2024 VM shard
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps
+      bars present for 2024-06+ dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before =
+      expected `empty_confirmed`). vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED
+      2026-05-23 slot-5**: 142129 VMs (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with
+      MDPS@ed0f817. 5 new VMs `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their
+      end_date. **PARTIAL STATUS (slot-6 2026-05-23 ~15:30 UTC)**: 2022 VM self-deleted (exit_code=0 at 14:25 UTC) after
+      processing 2022-11-01→2022-12-31 (61 dates, 0 candles — all prior dates covered by earlier VMs with manifest
+      skip). No shard written (expected: 0 candles → no manifest entries). 2023 VM still RUNNING. 2024 VM shard
       (`mdps-defi-2024-20260523-151348.parquet`): 465 rows all `empty_confirmed/SOURCE_RETURNED_ZERO` for CURVE
       2024-05-03→2024-05-11 — at May 2024, working toward 2024-06-01 Uniswap start. 2025/2026 VMs: shards present. Full
-      verify pending 2024/2025 VMs reaching their end dates.
+      verify pending 2024/2025 VMs reaching their end dates. **NaN SCHEMA FIX (slot-5 2026-05-23 ~17:02 UTC)**: 151348
+      VMs (2024+2025) were terminated — they were producing candles but ALL were failing schema validation
+      (`SCHEMA_VALIDATION_FAILED: column 'open' has 33949 NaN/null values — NOT NULLABLE for dex_swaps`). Root cause:
+      `_fill_empty_candles(fill_method="nan")` pads the full 1440-slot/288-slot grid; NaN rows (windows without swaps)
+      fail the parquet schema enforcer. Fix: `swap_adapter.py` filters `valid_mask = ~np.isnan(result["open"])` and
+      returns only intervals with actual swap activity (sparse candle contract). MDPS@83f371c. QG ✅ (1359 passed).
+      Tarball rebuilt with MDPS@9775e22. **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING
+      (launched by another slot after 17:02 UTC tarball — have NaN fix). Sports VMs `170621` (2020-2025) also RUNNING
+      with NaN fix.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
@@ -86,10 +95,10 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       config.py reads it via `get_config("MAX_WORKERS", ...)`. **RUNNING**: 7 VMs
       `mdps-tradfi-{2020..2026}-20260523-105240` (e2-highmem-8, MAX_WORKERS=2, 2020-01-01→2026-05-23). 2026-05-23
       slot-7.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. LONG-RUNNING (CME has thousands of
-      instruments/day → slow at ~3.7 days/hour per VM). With 7 parallel VMs each handling 1 year, ETA ~1 year ÷ 3.7
-      days/hour ≈ 66 hours per VM. Verify once 2025 VM reaches 2025-12-31 (VIX active). VIX bars at 2025-01-06 in GCS
-      from prior 20260519 runs (not new output). Manifest v8 check pending.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes.
+      LONG-RUNNING (CME has thousands of instruments/day → slow at ~3.7 days/hour per VM). With 7 parallel VMs each
+      handling 1 year, ETA ~1 year ÷ 3.7 days/hour ≈ 66 hours per VM. Verify once 2025 VM reaches 2025-12-31 (VIX
+      active). VIX bars at 2025-01-06 in GCS from prior 20260519 runs (not new output). Manifest v8 check pending.
 - [x] ✅ [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — Issue doc filed at
       `plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md` (slot-6 2026-05-22). Covers: CME/ICE
       combo/UNKNOWN/futures_chain NaN bars + trades data_type nullable OHLC fix. VIX unblocked. Current VM marks
@@ -103,14 +112,17 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports** — 7 VMs launched: `mdps-sports-{2020..2026}-20260522-161432`.
       `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
       Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
-      re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
-      match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
-      FIXED (slot-5 2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball
-      rebuilt. 125717 + 151059 VMs terminated. **RUNNING: 7 VMs `mdps-sports-{2020..2026}-20260523-155733`** with
-      UAC@28117482 (odds_horizon_bucket registered) + MDPS@ed0f817 (related_data_types fix). First run to dispatch all 4
-      adapters. 2024+ dates expected to produce real candles (pre-2024 = old format, empty_confirmed expected). Issue
-      doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at`
+      in output. History: multiple re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file
+      `data_type='odds'` didn't match adapter names
+      (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE FIXED (slot-5
+      2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball rebuilt.
+      125717 + 151059 VMs terminated. 155733 batch (UAC@28117482 + MDPS@ed0f817) was the first correct run —
+      accidentally terminated by slot-5 during context-compaction recovery (incorrect belief that all data was
+      `data_type=trades` format). Re-launched as `170621` batch with MDPS@9775e22 tarball (includes NaN fix + sports
+      adapter fix). **CURRENT**: 7 VMs `mdps-sports-{2020..2026}-20260523-170621` RUNNING with full fix stack
+      (MDPS@9775e22 = ed0f817 sports fix + 83f371c NaN OHLC filter + UAC@28117482 odds_horizon_bucket). 2024+ dates
+      expected to produce real candles. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
       row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
       (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
@@ -128,12 +140,12 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       prediction (same pattern as sports). Re-launched: `mdps-prediction-{2025,2026}-20260522-162604` (2 VMs, RUNNING).
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8. **PARTIAL VERIFY (slot-6 2026-05-23 ~15:30 UTC)**: 2025
-      VM (124620): 7,775 rows all `captured`, v8, date range 2025-03-14→2025-04-20. 2026 VM (124620): 8,261 rows all
-      `captured`, v8, date range 2026-01-01→2026-01-02. Candle sample (`day=2025-04-20/timeframe=1h/trades/POLYMARKET`):
-      `ts_event` UTC-aware ✅, `timeframe` present ✅, `trade_count`/`available_at` non-null ✅, OHLCV NaN is expected
-      (nullable_ohlcv=True for binary markets — hours with 0 trades → NaN OHLC, volume=0). Full verify pending VM
-      completion (2025→2025-12-31 + 2026→2026-05-23).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8. **PARTIAL VERIFY (slot-6
+      2026-05-23 ~15:30 UTC)**: 2025 VM (124620): 7,775 rows all `captured`, v8, date range 2025-03-14→2025-04-20. 2026
+      VM (124620): 8,261 rows all `captured`, v8, date range 2026-01-01→2026-01-02. Candle sample
+      (`day=2025-04-20/timeframe=1h/trades/POLYMARKET`): `ts_event` UTC-aware ✅, `timeframe` present ✅,
+      `trade_count`/`available_at` non-null ✅, OHLCV NaN is expected (nullable_ohlcv=True for binary markets — hours
+      with 0 trades → NaN OHLC, volume=0). Full verify pending VM completion (2025→2025-12-31 + 2026→2026-05-23).
 - [x] ✅ [CODE] P2. **MDPS-3.3.Pred-SchemaContract** — Two schema gaps FIXED: (1) `SCHEMA_VALIDATION_FAILED` on trades
       bars: UAC `_candle_contracts.py` adds `_OHLCV_CORE_TRADES` (nullable=True for OHLC) + `nullable_ohlcv=True`
       parameter. Applied to all trades-derived schemas: CeFi/TradFi/DeFi/Sports/Prediction. UAC@5ff8a25a. (2)
