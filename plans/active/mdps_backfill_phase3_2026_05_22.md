@@ -105,9 +105,9 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       (`deployment-service@4dc73bc` adds 5 new Cloud Run jobs for legacy flat buckets incl. market-data-tick-defi-\*).
       Fix A (MDPS@3551f7f): added `"dex_swaps": "swaps_ohlcv"` to `_DATA_TYPE_TO_MDPS_PREFIX`. Fix B (UAC@b7407bef):
       registered
-      `("defi","UNKNOWN","swaps_ohlcv*{tf}")`fallback     contracts for all 6 DeFi timeframes;`include_chain=False` (CandleOutput has no chain column). UAC QG:     2 pre-existing failures — fix added 1 new passing test (8314 vs 8313 baseline). Tarball rebuilt:     UAC@b7407bef + MDPS@3551f7f (`market-data-processing-service-code@3551f7f6e367.tar.gz`).
-      All 184826 VMs stopped (all TERMINATED confirmed). Manual consolidation run (DeFi manifest refreshed). **PENDING
-      RELAUNCH**: 5 new VMs after manual consolidation completes. 2026-05-23 slot-2.
+      `("defi","UNKNOWN","swaps_ohlcv*{tf}")`fallback     contracts for all 6 DeFi timeframes;`include_chain=False` (CandleOutput has no chain column). UAC QG:     2 pre-existing failures — fix added 1 new passing test (8314 vs 8313 baseline). Tarball rebuilt:     UAC@b7407bef + MDPS@3551f7f (`market-data-processing-service-code@3551f7f6e367.tar.gz`).     All 184826 VMs stopped (all TERMINATED confirmed). Manual consolidation run (DeFi manifest refreshed).     Also diagnosed: `\_touch_canonical_mtime`silent-fail (GCS`copy_blob`-to-self not bumping mtime) → manifest stays     stale between content-changing consolidations. Workaround: force re-upload manifest via Python SDK (upload_from_file     bumps `Updated`+`consolidator_run_at`). Applied immediately before VM launch. Fix tracked: UTL     `\_touch_canonical_mtime`should fall back to`blob.rewrite(source)`when`copy_blob`returns no exception but mtime     unchanged (see plans/active/issues/ — TODO). **RELAUNCHED 2026-05-23 ~18:56 UTC slot-2**: 5 new VMs    `mdps-defi-{2022..2026}-20260523-195633`
+      RUNNING. Manifest touched at 18:56:33 UTC before launch to ensure freshness (< 120s at VM start). T+10min verify
+      pending.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
