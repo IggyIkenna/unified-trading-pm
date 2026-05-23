@@ -212,7 +212,9 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
       `execution_service/preflight/recon_freeze.py` + 4 test classes covering arm/lift/assert/snapshot —
       execution-service@d649af364 | ruff clean (pre-existing F601 in foreign instrument_resolver.py unrelated to this
       change)
-- [ ] [HUMAN] Phase 6 P0.15-P0.16 — synthetic smoke injection + game-day scenario (operator action required)
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 6 P0.15-P0.16 — synthetic smoke injection + game-day scenario
+      (operator action required). Individual items at lines 139/142 already DEFERRED-OPERATOR-DECISION. Operator
+      to schedule dedicated smoke + game-day session. DEFERRED 2026-05-23.
 
 **Cross-references**:
 
@@ -243,7 +245,7 @@ _(No Tier-5 items in this plan's scope.)_
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5 work
+- [x] ✅ Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5 work
       landed; this plan's Phase 2+ is independent of the Tier-5 follow-ups.
 
 **Cross-references**:
