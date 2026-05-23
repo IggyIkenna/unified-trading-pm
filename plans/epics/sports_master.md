@@ -617,14 +617,13 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       post-match timestamp → low-confidence `kickoff + 120min` fallback. Returns MatchEndTimeResolution with timestamp +
       provenance. [AUDIT 2026-05-07: FRESH — actionable] **COMPLETED 2026-05-13**: UTL@89c0ae15 — implemented
       resolve_match_end_time() with NamedTuple return + cascade logic. Tests: UTL@520cbb2a (8 unit tests).
-- [ ] [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
+- [x] ✅ [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
-      sports_master:Phase 3 rename] **PARTIAL 2026-05-23**: SFI_PROGRESSIVE_STATS done — replaced
-      `stamp_available_at_explicit(wall-clock)` with `report_time`-based logic (match_end + lag for completed matches,
-      wall-clock fallback for in-progress) — instruments-service@8b8db4ad. understat XG done — preserve `kickoff+24h`
-      already set, fillna wall-clock for missing kickoff rows — instruments-service@04abbd63. Remaining: FIXTURE_STATS /
-      fixture_player_stats (blocked on AF FIXTURES match_end_time computation in per-fixture entity write loop).
+      sports_master:Phase 3 rename] **COMPLETED 2026-05-23**: All four data types fixed — wall-clock override removed;
+      SFI uses report_time (instruments-service@8b8db4ad); XG uses kickoff+24h (instruments-service@04abbd63);
+      FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS use date+17h KO+2h approximation already set in code
+      (instruments-service@66a887f1).
 - [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
       instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
       helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
