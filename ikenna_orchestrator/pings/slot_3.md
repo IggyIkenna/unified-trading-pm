@@ -1,5 +1,121 @@
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
+> **🔥 [2026-05-23 ~18:30 UTC slot-3] CATASTROPHIC — MTDS@020442bf wiped orchestrator + bait-sentinel false-skip
+> discovery** Plan:
+> [plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md](../../plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md)
+>
+> Two independent issues, both must be resolved before relaunching backfill:
+>
+> **1. URGENT — MTDS@020442bf is a catastrophic regression (Sonnet 4.6 agent, pushed today 17:53 UTC)**
+>
+> Commit message: `feat(mtds): add mbp_10 to CME tick_window + fix G201 lint in orchestrator`. Actual diff:
+> `market_tick_data_service/engine/orchestrator.py | 3768 +----------------------` → **deleted 3,557 lines** of
+> orchestrator logic that the commit message did not mention.
+>
+> Casualties (everything DELETED from orchestrator.py at 020442bf):
+>
+> - Pre-flight skip logic (`preflight_captured_atoms`, `_filter_data_types_by_atom_coverage`) — the exact code I was
+>   about to patch for the bait-sentinel fix below.
+> - Per-venue async fan-out (`_process_venue`)
+> - Tier-3 sentinel fan-out (Phase 3.D.5 v2 enumerator including `register_catalog_reader("cefi", ...)`,
+>   `register_catalog_reader("sports", ...)`, etc.)
+> - Active venue filtering by data_type start dates
+> - Manifest writer integration (record_captured / record_empty / record_expected_unattempted)
+> - Cluster validation hooks
+> - Force-refetch override
+>
+> **process_ticks signature broken**:
+>
+> - Pre-020442bf:
+>   `process_ticks(date, asset_groups, api_keys, data_types, venues, instrument_ids, max_instruments, leagues, mvp_mode, force, per_instrument_sentinel_cap)`
+>   — 11 params.
+> - Post-020442bf: `process_ticks(date, categories, api_keys, data_types, venues)` — 5 params, reverts the
+>   `asset_groups → categories` naming (which the 2026-04-25 plan canonicalised the other direction).
+>
+> **CLI handler now broken**: `market_tick_data_service/cli/handlers/tick_data_handler.py:242` still calls
+> `process_ticks(asset_groups=..., instrument_ids=..., max_instruments=..., leagues=..., mvp_mode=..., force=..., per_instrument_sentinel_cap=...)`
+> — **every VM running MTDS will TypeError on first call.** The current backfill outage is no longer just BlobMetadata —
+> it's a complete service failure.
+>
+> **`unified_internal_contracts` module reference reintroduced** in orchestrator docstring at line 7 — per CLAUDE.md
+> "Deleted dirs (do NOT reference)" rule that module is dead.
+>
+> **Recommended operator action — P0 immediate**:
+>
+> - **Revert `git revert 020442bf`** on live-defi-rollout (it's a stand-alone commit, no dependents beyond the trivial
+>   `configs/venue_data_types.yaml` CME mbp_10 addition which can be cherry-picked separately into a clean commit).
+> - The CME mbp_10 yaml change is the only useful part of 020442bf and is independently shippable.
+> - After revert: my BlobMetadata fix (MTDS@9c91a176) remains intact, and the bait-sentinel guard below becomes
+>   applicable again.
+>
+> **2. Bait-sentinel false-skip discovery (969K rows poisoning pre-flight)**
+>
+> Walked the manifest looking for the 969,349 `capture_status=captured AND instrument_count=0` rows per your earlier
+> ask. Findings:
+>
+> | Cohort                                                                         | Count           | Implication                                                                                                  |
+> | ------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------ |
+> | Bait sentinels written 2026-05-04 11:06-13:15 UTC (single ~2h burst)           | 961,731 (99.2%) | Mass mis-emit by some MTDS process. All schema_v6, all enumerator_run_id=None, all market-tick-data-service. |
+> | Have a real-cap sibling (key=date+venue+instr+dt has both 0-cap + count>0 row) | 65,987 (6.8%)   | Harmless noise — real data exists, bait row is just duplicate.                                               |
+> | Pure orphans (no real-cap + no other-status sibling — bait is sole evidence)   | 817,323 (84.3%) | **THESE GET FALSE-SKIPPED by pre-flight.** Cell looks "captured" but no parquet exists.                      |
+>
+> **GCS reality probe** (sampled 15 zero-cap keys across 10 venues × 5 data_types; probed v5 + `pipeline_mode=batch` +
+> `pipeline_mode=live` variants):
+>
+> - **14/15 paths MISSING** in GCS (no parquet at any candidate path).
+> - **1/15 EXISTS** (BINANCE-SPOT XRPUSDT 2023-08-06 trades / 1.5 MB) — this one has the bait sentinel AND a real
+>   `captured count=121397` row from 2026-05-23T00:23 (separate successful run, made the bait moot).
+>
+> **Bait sentinel → pre-flight false-skip mechanism** (verified in
+> `market_tick_data_service/engine/orchestrator.py:2030-2082` of the pre-020442bf code):
+>
+> ```python
+> _skip_states = {CaptureStatus.CAPTURED.value, CaptureStatus.EMPTY_CONFIRMED.value}
+> # ... rows with capture_status in _skip_states are added to preflight_captured_atoms[(v, dt)]
+> # WITHOUT checking instrument_count.
+> # Then _filter_data_types_by_atom_coverage skips the (venue, dt) if
+> # expected_atoms.issubset(captured_atoms) — which is True for any caller whose universe
+> # is fully covered by the bait sentinel set.
+> ```
+>
+> **Fix prepared** (stash@{0} on MTDS slot-3 worktree) — adds bait-mask exclusion before the skip set is built. Cannot
+> push until 020442bf is reverted (the code I was patching is GONE).
+>
+> ```python
+> if "instrument_count" in _avail.columns:
+>     _bait_mask = (
+>         (_avail["capture_status"] == CaptureStatus.CAPTURED.value)
+>         & (_avail["instrument_count"].fillna(0) == 0)
+>     )
+>     _skip_cs_mask = _skip_cs_mask & ~_bait_mask
+> ```
+>
+> **Recommended operator action — P0 sequenced after revert**:
+>
+> 1. Revert 020442bf, re-cherry-pick CME mbp_10 yaml change as clean commit.
+> 2. I re-apply the bait-sentinel guard from stash@{0}.
+> 3. Decide on the 961K bait sentinels:
+>    - **Option A (clean)**: write a one-shot script to delete them from the manifest. Safe — they contain no real
+>      evidence (14/15 GCS probe confirms missing).
+>    - **Option B (defensive only)**: leave them, rely on the pre-flight guard. Risk: any OTHER consumer that reads
+>      `capture_status=captured` (downstream MDPS, features, strategy) will be tricked the same way. Workspace-wide
+>      audit needed.
+>    - Recommended: A + B (clean the data AND ship the guard).
+> 4. Rebuild VM tarballs + relaunch backfill.
+>
+> **3. Update from earlier in this session — BlobMetadata fix MTDS@9c91a176 still holds.** That commit is on
+> live-defi-rollout immediately before 020442bf, so the revert will preserve it.
+>
+> **Backfill VMs in flight**: still 17 VMs RUNNING from 14:21 + 16:15 launches, still silent. None producing data. They
+> will continue to be no-ops whether you kill them now or wait. Killing them now saves compute cost; SSH+`py-spy dump`
+> first if you want to capture the hang state for the separate watchdog-not-firing bug.
+>
+> **Stashed work on slot-3 MTDS worktree** (not pushed, awaiting revert):
+>
+> - `stash@{0}`: orchestrator.py bait-sentinel guard (will need re-apply after revert) + shard_memory_profile.py
+>   calibration comment.
+> - `stash@{1}`: same orchestrator.py edit, kept from earlier rebase attempt.
+
 > **🔴 [2026-05-23 ~17:30 UTC slot-3] CRITICAL — current CeFi backfill wave producing 0 records** Plan:
 > [plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md](../../plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md)
 >

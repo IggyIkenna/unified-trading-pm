@@ -97,3 +97,16 @@ monitor all use `blob.name` or `getattr(b, "name", "")`).
 
 - 2026-05-23 ~17:30 UTC — Fix shipped at MTDS@9c91a176. Awaiting operator: VM kill + tarball rebuild
   - relaunch. P1+P2 follow-ups deferred to post-relaunch.
+- 2026-05-23 ~18:30 UTC — Two additional critical findings expand scope (see slot_3.md ping):
+  - **969,349 bait sentinels** (`captured count=0`, no parquet in GCS, 14/15 sample probe confirmed missing) are
+    poisoning pre-flight skip — `_filter_data_types_by_atom_coverage` treats them as captured atoms → 817K orphan cells
+    get false-skipped. 99.2% of bait sentinels were written in one 2h burst on 2026-05-04 (single event, schema_v6, all
+    enumerator_run_id=None).
+  - **MTDS@020442bf catastrophic regression**: commit "feat(mtds): add mbp_10 to CME tick_window + fix G201 lint in
+    orchestrator" actually **deleted 3,557 lines** of orchestrator.py — including the pre-flight skip logic, per-venue
+    async fan-out, Tier-3 sentinel fan-out, all catalog reader registrations, and the `process_ticks` signature went
+    from 11 params to 5. CLI handler at `tick_data_handler.py:242` now TypeError's on every call (passes
+    `asset_groups=`, `instrument_ids=`, `force=` etc. to an orchestrator that no longer accepts them). MTDS is
+    functionally down on live-defi-rollout.
+- Bait-sentinel guard prepared (stash@{0} in slot-3 MTDS worktree) but unpushable until 020442bf is reverted by operator
+  (the code being patched no longer exists in HEAD).
