@@ -50,6 +50,17 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
    for `dex_swaps` / `dex_pool_swaps` covering 2026-01-25→present.
 3. **After MTDS gap filled**: relaunch `mdps-defi-2026-*` VM to produce DEX candles for 2026.
 
+## Actions taken (2026-05-23, slot-6)
+
+- [x] **Manifest reset run** — `scripts/reset_source_returned_zero_manifest.py` applied to DeFi bucket. Deleted 13,826
+      SOURCE_RETURNED_ZERO rows (defi-flat-prd-copy-20260522: 2, mtds-vault-share-price-20260508: 6911, consolidated
+      index: 6913). MTDS tarball rebuilt at sha 498148da (includes e86a6ad8 + 69d694b1 fixes).
+- [x] **MTDS DeFi backfill VM launched** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c, e2-standard-4).
+      Range: 2024-01-01→2026-05-23, all DeFi data_types. Tarball sha 498148da. Handler fixes included: dex_swaps
+      hardcode (69d694b1), gas_fees null (69d694b1), lending_indices SM (e86a6ad8).
+- [ ] **T+10 verify** (pending): confirm VM still RUNNING, logs showing progress
+- [ ] **Post-completion**: verify dex_swaps rows appear for 2026-01-25+ in GCS; then relaunch `mdps-defi-2026-*`
+
 ## Evidence
 
 - `gsutil ls gs://market-data-tick-defi-prd-central-element-323112/day=2026-01-24/` → returns CURVE/UNISWAP files

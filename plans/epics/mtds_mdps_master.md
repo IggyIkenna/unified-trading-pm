@@ -615,8 +615,11 @@ AI-days (class: infra)
   `gas_fees` null eth_feeHistory silently returned 0 — fallback now triggers; (3) `lending_indices` silently skipped on
   missing The Graph key — now raises. **SOURCE_RETURNED_ZERO manifest cleanup in progress** (running
   `scripts/reset_source_returned_zero_manifest.py` across all 5 buckets). **Relaunch VMs AFTER cleanup finishes.**
-  Verify once 2024/2025 VMs complete: dex_swaps bars present for 2024-06+; gas_fees + lending_indices captured; manifest
-  v8; NaN check passes.
+  **MTDS DeFi backfill VM launched 2026-05-23 21:15 UTC** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c,
+  e2-standard-4, range 2024-01-01→2026-05-23, tarball sha 498148da includes all 3 fixes). Manifest reset complete:
+  13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket before launch. Verify once VM completes: dex_swaps bars
+  present for 2024-06+; gas_fees + lending_indices captured; manifest v8; NaN check passes. Then relaunch
+  mdps-defi-2026-\* MDPS VM.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once

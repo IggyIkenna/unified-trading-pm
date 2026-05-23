@@ -1,3 +1,12 @@
+**[2026-05-23 ~21:15 UTC] slot-6 MTDS DeFi backfill VM launched** — ref `mtds_mdps_master` MDPS-3.3.DeFi-V
+
+**`mtds-backfill-defi-20260523` RUNNING** (asia-northeast1-c, e2-standard-4). Range: 2024-01-01→2026-05-23, all DeFi
+data_types. Tarball sha 498148da (MTDS@498148da, includes fixes 69d694b1 + e86a6ad8). Pre-launch: manifest reset ran —
+13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket. T+10 check: RUNNING ✓.
+
+Handler fixes included: (1) dex_swaps hardcode `dex_pool_swaps` → fixed; (2) gas_fees null result fallback; (3)
+lending_indices SM error now raises. Issue doc: `plans/active/issues/mtds_defi_dex_swaps_2026_gap_2026_05_23.md`.
+
 **[2026-05-23 ~20:30 UTC] slot-6 SEVENTH FIX + status update** — ref `mtds_mdps_master` MDPS-3.3.DeFi-V
 
 MDPS@305677e: added ORCA-SOLANA/RAYDIUM-SOLANA to `_DEFI_DEX_VENUE_SEGMENTS` (honest-absence when Solana swap events
