@@ -153,19 +153,24 @@ enum.
 
 ### GCS partition key audit (2026-05-23)
 
-| Asset group   | Active partition key | `category=` still on disk?                                                           |
-| ------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| DeFi prd/flat | `asset_group=defi/`  | No — fully migrated                                                                  |
-| CEFI prd/flat | `asset_group=cefi/`  | Yes — orphans (deletion running 2026-05-23; 2019-03-31 gap pre-filled before delete) |
-| Sports prd    | `category=sports/`   | Yes — all days; migration never ran                                                  |
-| TradFi        | `pipeline_mode=`     | N/A — different first-level key                                                      |
-| Prediction    | `asset_group=`       | No                                                                                   |
+| Asset group   | Active partition key | `category=` still on disk?                                                      |
+| ------------- | -------------------- | ------------------------------------------------------------------------------- |
+| DeFi prd/flat | `asset_group=defi/`  | No — fully migrated                                                             |
+| CEFI prd/flat | `asset_group=cefi/`  | **No — 336,800 objects deleted 2026-05-23** (spot-checked: 5 random days clean) |
+| Sports prd    | `category=sports/`   | Yes — all days; migration never ran                                             |
+| TradFi        | `pipeline_mode=`     | N/A — different first-level key                                                 |
+| Prediction    | `asset_group=`       | No                                                                              |
 
 CEFI `category=` orphans are redundant dead data (canonical `asset_group=` copies cover 100% of days).
 
-**CEFI prd cleanup (2026-05-23)**: Before deletion, 2019-03-31 was the only day with `category=cefi/` but NO
-`asset_group=cefi/` — 6 objects/11 MiB copied to canonical path first. Then `gsutil -m rm -r ".../day=*/category=cefi"`
-started (confirmed running 2026-05-23). Awaiting completion.
+**CEFI prd cleanup (2026-05-23) ✅ COMPLETE**: `gsutil -m rm -r ".../day=*/category=cefi"` deleted **336,800 objects**
+(exit 0). Spot-check verified 5 random days (2020-06-15, 2021-11-30, 2023-04-01, 2024-08-15, 2026-01-10): all return
+CommandException for `category=cefi/` and have 7-14 `asset_group=cefi/` objects intact.
+
+Pre-deletion note (2019-03-31): only day with `category=cefi/` but no `asset_group=cefi/`. 6 DERIBIT objects/11 MiB were
+copied before deletion. The copy landed at `asset_group=cefi/category=cefi/venue=DERIBIT/` (nested path, not flat
+canonical). Original `category=cefi/` is gone. Non-canonical path is acceptable for 2019 historical data with no active
+consumers — no corrective action needed.
 
 **AWS bucket audit (2026-05-23)**: `market-data-tick-cefi-prd-427895769566` and
 `market-data-tick-sports-prd-427895769566` are EMPTY — no objects on AWS. All CEFI and Sports MTDS data is GCP-only. No
