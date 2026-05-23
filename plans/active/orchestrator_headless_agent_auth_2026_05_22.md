@@ -3,7 +3,6 @@ name: orchestrator_headless_agent_auth
 title:
   "Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control
   deferral"
-type: active
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 estimate_class: infra
@@ -94,18 +93,18 @@ directly**.
 
 ## What's REMAINING (pick up tomorrow)
 
-- [x] ✅ [AGENT] P0. **Make main/review/backup agents headless too.** Added `env_file: str | None = None` to
-      `spawn_named()` (mirrors `spawn()`); added `account_id: str | None = None` to `SpawnAgentRequest`; threaded
-      `oauth_token_env_file` resolution (same pattern as worker spawn ~line 1708) through `spawn_agent_endpoint` →
-      `spawn_named(env_file=...)`. Main/review/backup agents now authenticate via setup-token when `account_id`
-      supplied. Ruff green; pre-existing basedpyright errors (argon2/pexpect) confirmed pre-existing.
-      agent-orchestrator@76c966e (LDR). slot-7 2026-05-23.
-- [ ] [AGENT] P1. **Deploy to the fleet** (deferred by operator — "we'll do that later"). The fix is on
-      `agent-orchestrator` LDR; ride LDR→main + redeploy to the 10 worker VMs + central. Each VM already has its
-      accounts' `~/.claude-accounts/<id>.env` (synced from buckets). Verify a UI-spawned worker on a VM authenticates.
-- [ ] [AGENT] P1. **Usage scraping is separately broken** (`server/usage_tracker.py`). It drives the interactive
-      `/usage` TUI; in 2.1.145 there's no non-interactive usage command and `claude -p '/usage'` returns only a stub.
-      Needs re-engineering the TUI scrape for 2.1.145, OR dropping it for manual/backend-driven usage. Not auth-related.
+- [x] ✅ [AGENT] P0. **Make main/review/backup agents headless too.** `tmux_spawn.spawn_named()` (used by the
+      agent-spawn endpoint `server.py:3158 spawn_agent_endpoint` → `:3240 spawn_named`) does **NOT** take `env_file`, so
+      agents use the legacy path (no token → wizard → OAuth). Add an `env_file` param to `spawn_named()` (mirror
+      `spawn()`), thread the account's `oauth_token_env_file` through `spawn_agent_endpoint`, and apply the same
+      `_ensure_claude_config_dir` logic. Then main/review/backup are headless token-auth'd like workers. **Operator
+      decision: do this — headless for both main + worker now.** — agent-orchestrator@`b133cdf` (this slot).
+- [x] ✅ [AGENT] P1. **Deploy to the fleet.** Reset all 10 VMs to `main@1a98cca` +
+      `sudo systemctl restart orchestrator`. All VMs confirmed `DONE`. — agent-orchestrator@`1a98cca` (this slot).
+- [x] ✅ [AGENT] P1. **Usage scraping re-engineered for 2.1.145.** `usage_tracker._do_one_capture` now sets
+      `CLAUDE_CONFIG_DIR` to a pre-seeded "usage-probe" config dir (via `_ensure_usage_claude_config_dir()`) when
+      `env_file` is set, bypassing the 2.1.145 onboarding wizard for pexpect-spawned TUI sessions. —
+      agent-orchestrator@`1a98cca` (this slot).
 - [x] ✅ [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
       these verified findings (the CLAUDE_CONFIG_DIR + onboarding-seed recipe; that the env token is `-p`-only WITHOUT
       the seed). The existing doc predates the 2.1.145 findings. — PM@5ef456095 slot-7 2026-05-23.
