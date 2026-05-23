@@ -2535,14 +2535,17 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
       `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
       QG 2782 passed)
-- [ ] **[DEFERRED — BLOCKED-UPSTREAM: catalog in GCS]** [VM-LAUNCH] P0. Run
-      `enumerate_expected_universe.py     --enumerator-version=v2 --apply-write` per asset group (5 VMs) to backfill
-      `expected_unattempted` rows into the production manifests. **Prerequisite**: instruments-service catalog parquets
-      must be published to GCS at a known path (`--catalog-path gs://...`) before each per-asset-group run. Same recipe
-      as Phase 3.D.4 `--apply-write` sweep (scan-only review first → operator ack → apply-write). **NOT YET ASSIGNED.**
-      Surfaced 2026-05-23 — no active plan was tracking the operational run; `expected_universe_v2_design_2026_05_08.md`
-      was archived without this item. Assign to whichever slot picks up the MTDS catalog wiring (line below) — they will
-      have the catalog GCS path.
+- [ ] **[BLOCKED-UPSTREAM: 4/5 asset groups have no catalog in GCS]** [VM-LAUNCH] P0. Run
+      `enumerate_expected_universe.py --enumerator-version=v2 --apply-write` per asset group to backfill
+      `expected_unattempted` rows into production manifests. Catalog path:
+      `gs://instruments-store-{ag}-central-element-323112/reference_data/instruments/{ag}/all.parquet`. **Probed
+      2026-05-23 (slot 4)**: cefi catalog ✅ exists (210K instruments, 2.6MB). Scan-only 7-day probe hit 500K row cap →
+      estimated ~200M rows for full cefi history (2018→today). Requires a chunked backfill VM (batch by 30-day windows,
+      raise `--max-writes-per-run` to 5M per chunk). defi ❌ / tradfi ❌ / sports ❌ / prediction ❌ — catalogs not yet
+      published to GCS; those VMs cannot launch until `refresh_catalogue` runs for each asset group. **cefi can launch
+      now** — needs dedicated EPHEMERAL_BATCH VM with chunked date loop. **BLOCKED-OPERATOR-DECISION**: confirm whether
+      to launch cefi backfill VM now (est. multi-day runtime, ~200M manifest rows) or wait until all 5 catalogs are
+      available and batch all groups together.
 - [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
       appropriately.
