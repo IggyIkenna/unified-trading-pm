@@ -1,5 +1,72 @@
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
+> **✅ [2026-05-23 ~20:15 UTC slot-3] DONE — all 3 operator-approved actions shipped + VMs killed** Plan:
+> [plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md](../../plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md)
+>
+> Sequence executed in this turn:
+>
+> 1. **17 in-flight CeFi VMs deleted** (`gcloud compute instances delete` via xargs -P5). 0 RUNNING confirmed.
+> 2. **MTDS@020442bf reverted** at `MTDS@ed0ab31c` — restores all 3,557 deleted lines of orchestrator (pre-flight skip
+>    logic, per-venue async fan-out, Tier-3 sentinel fan-out, register_catalog_reader calls for cefi/sports/defi/tradfi,
+>    process_ticks 11-param signature, etc.).
+> 3. **CME mbp_10 yaml change cherry-picked clean** at `MTDS@325beaa7` — only useful payload of 020442bf; does NOT
+>    re-add the stale `tick_windows:` section that 020442bf snuck back in (which your own file comment explicitly
+>    forbade — "SSOT is now in UAC, do NOT re-add here").
+> 4. **Bait-sentinel pre-flight guard** at `MTDS@e032b186` — `_filter_data_types_by_atom_coverage` pre-flight now
+>    excludes `capture_status=captured AND instrument_count=0` rows from the skip set unconditionally. Belt-and-braces
+>    defensive backstop even if the data cleanup is incomplete.
+> 5. **Targeted cleanup script** at `MTDS@623ce2c8` (`scripts/cleanup_may4_bait_sentinels.py`) — `--dry-run` /
+>    `--apply`, snapshots before write. Targeted variant of the general
+>    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (which projects to ~110min on the 35M-row CeFi
+>    manifest; my script runs in ~4min because the bait class is already characterised).
+> 6. **960,447 bait sentinels flipped** in the consolidated manifest to
+>    `capture_status=attempted_failed error_reason=bait_sentinel_may4_burst_no_parquet attempted_at=<now>`. Pre-flip
+>    manifest snapshotted to
+>    `gs://market-data-tick-cefi-central-element-323112/_index/snapshots/pre_bait_cleanup_2026-05-23T19-09-35Z.parquet`.
+> 7. **Bait source shard QUARANTINED** — discovered the May-4 bait was written by a single per-VM shard
+>    `_index/per_vm/local-99178-edc2.parquet` (983,904 rows, 100% captured + count==0, all in 11:06-13:15 UTC window —
+>    clearly someone's local-machine MTDS run on 2026-05-04). Snapshotted to
+>    `_index/snapshots/bait_source_local-99178-edc2_quarantined_2026-05-23.parquet` then deleted from `_index/per_vm/`.
+>    **Critical**: without this deletion the consolidator (10 Cloud Run jobs, `*/1 * * * *`) would re-introduce bait on
+>    every cycle — the consolidator's `_merge_shard_frames` reconstructs from `legacy_seed + per_vm/*.parquet` from
+>    scratch, and `legacy_seed` predates May-4. With the source shard gone, the next merge produces bait-free
+>    consolidated and stays clean.
+>
+> **Operator action needed (the only remaining manual step)**:
+>
+> 1. **Rebuild VM tarballs**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. Picks up MTDS@ed0ab31c
+>    (revert) + MTDS@9c91a176 (BlobMetadata fix) + MTDS@e032b186 (bait guard) + MTDS@325beaa7 (CME mbp_10) +
+>    MTDS@623ce2c8 (cleanup script).
+> 2. **Relaunch CeFi backfill waves** (your `deployment-service@38902bf` launcher with e2-highmem-8 default). Pre-flight
+>    will properly retry the 817K previously-false-skipped orphan cells.
+>
+> **Optional follow-up** (not required for May-23 backfill gate):
+>
+> - Run the broader `reconcile_phantom_manifest_rows_all.py --asset-group cefi --apply` async. Catches any OTHER
+>   phantom-captured rows beyond the May-4 bait window (the cefi audit is ~110min on current manifest). Same recipe
+>   applies to DeFi / TradFi / Prediction asset_groups if you want a full sweep.
+> - SSH the snapshotted bait source shard (paths under `_index/snapshots/`) to investigate WHO ran `local-99178-edc2` on
+>   May-4 11:06 UTC — would close the loop on whether the writer was a recon script gone wrong, an MTDS run with wrong
+>   input universe, etc. The shard's parquet has timestamps + venue/instrument distribution that should make it trivial
+>   to triangulate.
+>
+> **Verification read of consolidated manifest** (post-cleanup, post-shard-delete):
+>
+> - Total rows: 35,119,936 (unchanged — flips, not deletes).
+> - `captured + count==0` remaining: **8,902** (down from 969,349 → 99.1% reduction).
+> - `error_reason=bait_sentinel_may4_burst_no_parquet` rows: 960,447 (the flipped May-4 burst).
+> - The 8,902 residuals are OUTSIDE the May-4 11:00-13:15 UTC window (other historical captured-with-0 writes — likely
+>   pre-Phase-2 cluster-validation noise from earlier writers). They're not from this incident and are functionally
+>   covered by the pre-flight guard (MTDS@e032b186) which excludes the `captured AND count==0` combination regardless of
+>   when written.
+>
+> **Gates this unblocks**:
+>
+> - `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 5 (smoke) — now BLOCKED-GCP-BACKFILL-COMPLETE until the
+>   operator-relaunched VMs finish writing actual data.
+> - `aws_migration_defi_first_2026_05_07.md` Phases 5+6 — same gate.
+> - 3 prior BLOCKED-OPERATOR-DECISION items unchanged.
+
 > **🔥 [2026-05-23 ~18:30 UTC slot-3] CATASTROPHIC — MTDS@020442bf wiped orchestrator + bait-sentinel false-skip
 > discovery** Plan:
 > [plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md](../../plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md)

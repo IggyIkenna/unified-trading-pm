@@ -110,3 +110,35 @@ monitor all use `blob.name` or `getattr(b, "name", "")`).
     functionally down on live-defi-rollout.
 - Bait-sentinel guard prepared (stash@{0} in slot-3 MTDS worktree) but unpushable until 020442bf is reverted by operator
   (the code being patched no longer exists in HEAD).
+- 2026-05-23 ~20:15 UTC — All operator-approved actions executed:
+  - **17 in-flight CeFi backfill VMs deleted** (`gcloud compute instances delete` via xargs).
+  - **MTDS@020442bf reverted** at `MTDS@ed0ab31c` — restores 3,557 lines of orchestrator including pre-flight skip
+    logic, per-venue async fan-out, Tier-3 sentinel fan-out, all catalog reader registrations.
+  - **CME mbp_10 yaml change cherry-picked cleanly** at `MTDS@325beaa7` (only useful payload of 020442bf; does NOT
+    re-add the stale `tick_windows:` section that 020442bf snuck back in).
+  - **Bait-sentinel pre-flight guard shipped** at `MTDS@e032b186` — defensive backstop. Excludes captured-with-count-0
+    rows from the pre-flight skip set unconditionally.
+  - **Targeted cleanup script shipped** at `MTDS@623ce2c8` (`scripts/cleanup_may4_bait_sentinels.py`). Avoids the
+    110-min full GCS walk of `reconcile_phantom_manifest_rows_all.py` since the bait class is already characterised.
+  - **960,447 bait sentinels flipped** in consolidated manifest to
+    `attempted_failed error_reason=bait_sentinel_may4_burst_no_parquet attempted_at=<now>`. Pre-flip snapshot preserved
+    at
+    `gs://market-data-tick-cefi-central-element-323112/_index/snapshots/pre_bait_cleanup_2026-05-23T19-09-35Z.parquet`.
+  - **Bait source shard quarantined**: per-VM shard `_index/per_vm/local-99178-edc2.parquet` (983,904 rows, 100%
+    captured + count==0, all written 2026-05-04 11:06-13:15 UTC) was the single source of the bait burst. Snapshotted to
+    `_index/snapshots/bait_source_local-99178-edc2_quarantined_2026-05-23.parquet` then deleted. Without this deletion
+    the consolidator (10 Cloud Run jobs `*/1 * * * *`) would re-introduce the bait rows on the next merge cycle —
+    `legacy_seed` predates May-4 and the consolidator merges legacy_seed + per_vm/\*.parquet from scratch each cycle
+    (`_merge_shard_frames`, last-write-wins on `attempted_at`). With the source shard gone, the next merge produces a
+    bait-free consolidated.
+- **Awaiting operator** (the actual relaunch path now unblocked):
+  1. Rebuild VM tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. New tarball will include
+     MTDS@ed0ab31c (revert) + MTDS@9c91a176 (BlobMetadata fix) + MTDS@e032b186 (bait guard) + MTDS@325beaa7 (CME
+     mbp_10) + MTDS@623ce2c8 (cleanup script).
+  2. Relaunch CeFi backfill waves (heavy + light) — the launcher (`deployment-service@38902bf` with e2-highmem-8
+     default) is unchanged; relaunch resumes where the deleted VMs left off (pre-flight will properly retry the 817K
+     orphan cells that were previously false-skipped).
+  3. Decide on broader phantom audit: optional follow-up. The full
+     `reconcile_phantom_manifest_rows_all.py --asset-group cefi --apply` (~110 min on the current 35M-row CeFi manifest)
+     would catch any OTHER phantom-captured rows beyond the May-4 bait window. Not required for the May-23 backfill
+     gate.
