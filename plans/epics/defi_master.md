@@ -27,7 +27,6 @@ related_plans:
   - ../active/ruff_workspace_cleanup_2026_05_12.md
   - ../active/simulation_scenarios_post_cutover_2026_06_01.md
   - ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
@@ -1284,6 +1283,12 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
 trading. Absorbs all CARRY archetypes (staked-basis, vanilla-basis, cross-venue carry) per operator 2026-05-08 — carry's
 hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is what unlocks it.
 
+### Phase 11 — Live cutover gate (7-day continuous run on real wallet)
+
+> Cross-referenced by `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.7 as the final cutover gate.
+> Gate fires when all `### End-state at May 23` checkboxes below are ✅ AND live wallet has been running ≥7 continuous
+> days. Operator flips the code_freeze Phase 3.7 checkbox; slot 3 filed BLK-ea307151 (2026-05-23) noting this gate.
+
 ### End-state at May 23 (success criteria)
 
 - [ ] **Live trading on real wallet** for **carry archetypes** (staked-basis carry + vanilla-basis carry + cross-venue
@@ -1503,13 +1508,10 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 30.9 cal AI-days (class: design)
 
-### [`d8_perf_upgrade_2026_05_20`](../archive/2026_05/d8_perf_upgrade_2026_05_20.md)
+### [`d8_perf_upgrade_2026_05_20`](../active/d8_perf_upgrade_2026_05_20.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade
-plan (hot-path identification from A1)
-
-**Deferred (MIGRATED FROM archived plan)**: Live VM measurement (≥20% hot-path GCS improvement verification on real
-batch VM, workers=32) — post-cutover P2, no wrapper plan yet.
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade plan (hot-path
+identification from A1)
 
 ### [`defi_catalogue_chain_primitives_2026_05_10`](../active/defi_catalogue_chain_primitives_2026_05_10.md)
 
@@ -1550,50 +1552,7 @@ plan (DO NOT move without operator ack)
 
 ## P3 — backlog; revisit quarterly
 
-### [`audit03_carry_execution_safety_remediation_2026_05_22`](../archive/2026_05/audit03_carry_execution_safety_remediation_2026_05_22.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All P0 CSB carry + execution safety findings closed
-(F-08/09/10/11/12/26/28/29/31/33). Scenario-matrix cron provisioning (F-40) tracked separately in
-`audit03_deployment_cron_provisioning_2026_05_22.md`. · **estimate**: 2.4 cal AI-days (class: brand-new)
-
-## Deferred work — migrated from archived plans
-
-- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md Phase 1F** — Fix
-      stale "all 19 chains" wording in `execution-service/weth.py:56`. The comment claims WETH supports all 19 chains
-      but only reflects the chain set at time of writing; should reference `CHAIN_GENESIS_DATES` or a similar UAC
-      constant to stay current. Was deferred to `defi_catalogue_chain_primitives_2026_05_10.md` (now archived).
-      Low-impact cosmetic fix. — `execution-service@24ad81b0` (replaced "19 chains" hardcode with reference to UAC
-      WETH_ADDRESSES)
-
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2G** — Add NEW
-      `aggregator_route` MTDS data_type for capturing Jupiter/1inch/0x route JSON at decision time. Required for batch
-      replay of aggregator legs in `AggregatorRouteMatcher`. Current state: `aggregator.py` ships the matcher but
-      live-mode quote-API fetch + historical batch replay are blocked without the MTDS `dex_pools`
-      `(chain, pool_address) → PoolShape` lookup and the `aggregator_route` capture. Add UAC
-      `DataType.AGGREGATOR_ROUTE` + MTDS handler + instruments-service catalogue entry.
-  - ✅ UAC `DataType.AGGREGATOR_ROUTE` + `SchemaSpec` + `SchemaContract` + `DataTypeCapability` — `uac@3d44542`
-  - ✅ MTDS `AggregatorRouteHandler` (`collect-aggregator-routes`) — `mtds@52c4ac5` (Jupiter/1inch/0x/ParaSwap; IS-first
-    pairs; shard-isolated)
-  - [ ] [BLOCKED-CREDENTIALS] 1inch + 0x API keys — ping filed in `harsh_orchestrator/pings/slot_11.md`
-  - [ ] [AGENT] instruments-service catalogue entry: adapter writing
-        `instrument_availability/by_date/day={D}/venue=AGGREGATOR-{CHAIN}/instruments.parquet`
-
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement
-      `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to
-      `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20
-      Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
-
-- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add
-      closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress
-      (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase
-      2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy. —
-      `uac@1920d56` (BinaryEventTrigger + 3 RiskRuleIds + 3 global_rules entries; 105 risk-rule tests pass)
-
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg
-      ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across
-      USDC/USDT/DAI/USDE/FRAX/GHO/CRVUSD/SUSDE). Current backtest covers 2021-01 to 2023-09 at daily granularity. Gaps:
-      CATASTROPHIC TPR=0% (intraday trough not captured by daily snapshot); UST/PYUSD outside lake window. Operator
-      decision needed: lower CATASTROPHIC threshold to 900bps OR extend data lake to intraday timestamps.
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 
