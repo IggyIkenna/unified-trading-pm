@@ -94,12 +94,12 @@ directly**.
 
 ## What's REMAINING (pick up tomorrow)
 
-- [ ] [AGENT] P0. **Make main/review/backup agents headless too.** `tmux_spawn.spawn_named()` (used by the agent-spawn
-      endpoint `server.py:3158 spawn_agent_endpoint` → `:3240 spawn_named`) does **NOT** take `env_file`, so agents use
-      the legacy path (no token → wizard → OAuth). Add an `env_file` param to `spawn_named()` (mirror `spawn()`), thread
-      the account's `oauth_token_env_file` through `spawn_agent_endpoint`, and apply the same
-      `_ensure_claude_config_dir` logic. Then main/review/backup are headless token-auth'd like workers. **Operator
-      decision: do this — headless for both main + worker now.**
+- [x] ✅ [AGENT] P0. **Make main/review/backup agents headless too.** Added `env_file: str | None = None` to
+      `spawn_named()` (mirrors `spawn()`); added `account_id: str | None = None` to `SpawnAgentRequest`; threaded
+      `oauth_token_env_file` resolution (same pattern as worker spawn ~line 1708) through `spawn_agent_endpoint` →
+      `spawn_named(env_file=...)`. Main/review/backup agents now authenticate via setup-token when `account_id`
+      supplied. Ruff green; pre-existing basedpyright errors (argon2/pexpect) confirmed pre-existing.
+      agent-orchestrator@76c966e (LDR). slot-7 2026-05-23.
 - [ ] [AGENT] P1. **Deploy to the fleet** (deferred by operator — "we'll do that later"). The fix is on
       `agent-orchestrator` LDR; ride LDR→main + redeploy to the 10 worker VMs + central. Each VM already has its
       accounts' `~/.claude-accounts/<id>.env` (synced from buckets). Verify a UI-spawned worker on a VM authenticates.
