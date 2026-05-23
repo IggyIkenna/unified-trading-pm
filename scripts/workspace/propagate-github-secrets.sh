@@ -1,12 +1,11 @@
 #!/bin/bash
 # propagate-github-secrets.sh
 #
-# Propagates GitHub Actions secrets and variables to all repos listed in
-# workspace-manifest.json. By default propagates TELEGRAM_BOT_TOKEN (secret)
-# and TELEGRAM_CHAT_ID (variable) to all 59 repos.
+# Propagates GitHub Actions secrets to all repos listed in
+# workspace-manifest.json. Propagates SLACK_WEBHOOK_URL (secret) to all repos.
 #
 # Usage:
-#   # Propagate Telegram creds to all repos (will prompt if not set in env):
+#   # Propagate Slack webhook to all repos (will prompt if not set in env):
 #   bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh
 #
 #   # Dry-run (shows what would be set, touches nothing):
@@ -16,17 +15,16 @@
 #   bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo execution-service
 #
 #   # Pass values inline (non-interactive):
-#   TELEGRAM_BOT_TOKEN=123:ABC TELEGRAM_CHAT_ID=-100123456 \
+#   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/... \
 #     bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh
 #
-#   # Skip variables (secrets only):
+#   # Secrets only (no variables to set for Slack):
 #   bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --secrets-only
 #
-# Secrets set  : TELEGRAM_BOT_TOKEN   (masked in logs)
+# Secrets set  : SLACK_WEBHOOK_URL    (masked in logs — Slack incoming webhook URL)
 #              : GH_PAT               (required for ci-status-update dispatch; from .act-secrets or env)
 #              : GCP_PROJECT_ID       (optional; from .act-secrets or env)
 #              : AWS_ACCOUNT_ID       (optional; from .act-secrets or env)
-# Variables set: TELEGRAM_CHAT_ID     (visible in logs, non-sensitive)
 #
 # GCP_PROJECT_ID / AWS_ACCOUNT_ID: Read from WORKSPACE_ROOT/.act-secrets or env.
 # If unset, skipped (CI falls back to test-project / empty).
@@ -109,30 +107,17 @@ if [[ -f "$ACT_SECRETS" ]]; then
 fi
 
 # ── Collect credentials ───────────────────────────────────────────────────────
-# TELEGRAM_BOT_TOKEN → GitHub Actions SECRET (masked)
-# TELEGRAM_CHAT_ID   → GitHub Actions VARIABLE (visible, not sensitive)
+# SLACK_WEBHOOK_URL → GitHub Actions SECRET (masked)
 
-if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
+if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
   echo ""
-  echo "Enter TELEGRAM_BOT_TOKEN (from @BotFather — format: 123456789:ABCdef...):"
+  echo "Enter SLACK_WEBHOOK_URL (Slack incoming webhook — format: https://hooks.slack.com/services/...):"
   echo -n "> "
-  read -rs TELEGRAM_BOT_TOKEN
+  read -rs SLACK_WEBHOOK_URL
   echo ""
 fi
-if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
-  log_error "TELEGRAM_BOT_TOKEN cannot be empty."
-  exit 1
-fi
-
-if [[ -z "${TELEGRAM_CHAT_ID:-}" ]]; then
-  echo ""
-  echo "Enter TELEGRAM_CHAT_ID (your group/channel/user ID — format: -100123456789 or 123456789):"
-  echo -n "> "
-  read -r TELEGRAM_CHAT_ID
-  echo ""
-fi
-if [[ -z "${TELEGRAM_CHAT_ID:-}" ]]; then
-  log_error "TELEGRAM_CHAT_ID cannot be empty."
+if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
+  log_error "SLACK_WEBHOOK_URL cannot be empty."
   exit 1
 fi
 
@@ -155,17 +140,16 @@ fi
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo "================================================="
-echo " Telegram Secret Propagation"
+echo " Slack Secret Propagation"
 echo "================================================="
 echo "  Workspace : $WORKSPACE_ROOT"
 echo "  Repos     : ${#REPO_SLUGS[@]} (from workspace-manifest.json)"
 echo "  Dry-run   : $DRY_RUN"
 [[ -n "$FILTER_REPO" ]] && echo "  Filter    : $FILTER_REPO"
-echo "  Secrets   : TELEGRAM_BOT_TOKEN"
+echo "  Secrets   : SLACK_WEBHOOK_URL"
 [[ -n "${GH_PAT:-}" ]] && echo "  Secrets   : + GH_PAT (for ci-status-update)"
 [[ -n "${GCP_PROJECT_ID:-}" ]] && echo "  Secrets   : + GCP_PROJECT_ID"
 [[ -n "${AWS_ACCOUNT_ID:-}" ]] && echo "  Secrets   : + AWS_ACCOUNT_ID"
-[[ "$SECRETS_ONLY" == false ]] && echo "  Variables : TELEGRAM_CHAT_ID"
 echo "================================================="
 echo ""
 
@@ -185,7 +169,7 @@ for slug in "${REPO_SLUGS[@]}"; do
   echo -n "  [$slug] "
 
   if [[ "$DRY_RUN" == true ]]; then
-    log_dry "would set TELEGRAM_BOT_TOKEN + GH_PAT (if set) + GCP_PROJECT_ID + AWS_ACCOUNT_ID (if set) + TELEGRAM_CHAT_ID"
+    log_dry "would set SLACK_WEBHOOK_URL + GH_PAT (if set) + GCP_PROJECT_ID + AWS_ACCOUNT_ID (if set)"
     ((PASS++))
     continue
   fi
@@ -199,24 +183,13 @@ for slug in "${REPO_SLUGS[@]}"; do
 
   ERR=0
 
-  # Set secret: TELEGRAM_BOT_TOKEN
-  if printf '%s' "$TELEGRAM_BOT_TOKEN" | gh secret set TELEGRAM_BOT_TOKEN \
+  # Set secret: SLACK_WEBHOOK_URL
+  if printf '%s' "$SLACK_WEBHOOK_URL" | gh secret set SLACK_WEBHOOK_URL \
       --repo "$slug" --body - 2>/dev/null; then
     : # ok
   else
-    log_warn "failed to set TELEGRAM_BOT_TOKEN on $slug"
+    log_warn "failed to set SLACK_WEBHOOK_URL on $slug"
     ERR=1
-  fi
-
-  # Set variable: TELEGRAM_CHAT_ID (non-sensitive — use gh variable set)
-  if [[ "$SECRETS_ONLY" == false ]]; then
-    if gh variable set TELEGRAM_CHAT_ID \
-        --repo "$slug" --body "$TELEGRAM_CHAT_ID" 2>/dev/null; then
-      : # ok
-    else
-      log_warn "failed to set TELEGRAM_CHAT_ID variable on $slug"
-      ERR=1
-    fi
   fi
 
   if [[ $ERR -eq 0 ]]; then

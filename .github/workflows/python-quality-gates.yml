@@ -24,7 +24,7 @@ on:
         required: true
       GCP_PROJECT_ID:
         required: false
-      TELEGRAM_BOT_TOKEN:
+      SLACK_WEBHOOK_URL:
         required: false
 
 jobs:
