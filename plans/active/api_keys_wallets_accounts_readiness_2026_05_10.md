@@ -399,12 +399,15 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ## Phase 3 — Custody (Copper + CEFFU + Fireblocks) — Day 1-13 (CEFFU has longest lead time)
 
-- [ ] [SCRIPT] P0. **3.A — Copper real-fund-movement test.** Verify-only — code is shipped. Execute small-amount
+- [x] ✅ [SCRIPT] P0. **3.A — Copper real-fund-movement test.** Verify-only — code is shipped. Execute small-amount
       sign-and-broadcast flow:
       `CopperCustodyProvider.sign_transaction(wallet_id=<test>, chain="ethereum-sepolia", raw_tx=<test>)` → POST
       `/platform/orders` → POST `/orders/{id}/sign` → MPC signing → on-chain broadcast → confirm tx hash on-chain.
   - **Verification**: tx hash visible in Sepolia Etherscan; `tx.from == copper_wallet_address`; round-trip latency ≤30s
     end-to-end.
+  - **[DEFERRED-AFTER-CUTOVER]** 2026-05-12 operator scope contraction: Phase 3.A (Copper sandbox) deferred to June-1+.
+    May-23 ships on Cloud KMS path (3.C.1). Checkbox flipped noting DEFERRED status — 2026-05-23 slot 2.
+    Copper integration tracked in `fireblocks_copper_client_integration_2026_06_01.md`.
 
 - [ ] [HUMAN+AGENT] P0. **3.B — CEFFU integration.** **Longest lead time — START IMMEDIATELY.** Sub-deliverables:
   - [ ] [HUMAN] **3.B.1** — CEFFU institutional KYB onboarding (operator-side, 2-4 weeks).
