@@ -327,16 +327,19 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       exists] UAC@31372710 — 4 test classes (TestUpstreamReq, TestFeatureUpstreamRequirements, TestInCoverage,
       TestInCoverageDt) covering pre-launch dates, league coverage clips, SFI DATA_TYPE_COVERAGE_START override, derived
       source bypass. Verified 2026-05-22.
-- [ ] [AGENT] P2. features-sports-service: feature compute path calls `in_coverage` per upstream before
-      fetching/joining. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P2. NaN handling — distinguish NaN-by-design (write parquet, manifest `captured`) from
-      NaN-from-missing-upstream (manifest `empty_confirmed` no parquet) per
-      `codex/02-data/honest-absence-downstream-handling.md`. [AUDIT 2026-05-07: FRESH — actionable; codex doc shipped
-      per MEMORY entry project_master_plan_audit_continuation_2026_05_07 (A3 ship)]
-- [ ] [AGENT] P2. Backwards-compat — features computed before this change have manifest rows without coverage info;
-      one-time migration or tolerate via reader-side fallback (per honest-absence doc). [AUDIT 2026-05-07: FRESH —
-      actionable; UTL `classify_legacy_empty_row` helper landed via Tier 3D.2 per MEMORY
-      (handoff_writegate_tier3d2_2026_05_07_late4)]
+- [x] ✅ [AGENT] P2. features-sports-service: feature compute path calls `in_coverage` per upstream before running each
+      calculator. Implemented via `_gate_then_run` + `_run_simple_gated_calc` in `derived_new_calculators.py` — calls
+      `check_calculator_coverage` (which calls `in_coverage` per upstream req) before each calculator. Confirmed running
+      in all 11 Phase-4 calculators — features-service@a9d0c32c.
+- [x] ✅ [AGENT] P2. NaN handling — distinguish NaN-by-design (OUT_OF_COVERAGE → `out_of_coverage` status, parquet
+      written with NaN) from NaN-from-missing-upstream (UPSTREAM_MISSING → `upstream_missing` status, calculator
+      skipped) per `codex/02-data/honest-absence-downstream-handling.md`. quality_tracker records the distinction;
+      batch_handler uses `record_empty(SOURCE_RETURNED_ZERO)` for empty derived features groups. Tests in
+      `tests/sports/unit/test_run_new_calculators_coverage_gate.py` confirm both paths — features-service@a9d0c32c.
+- [x] ✅ [AGENT] P2. Backwards-compat — features computed before this change have manifest rows without coverage info;
+      UTL `classify_legacy_empty_row` helper (Tier 3D.2) handles reader-side fallback for rows without coverage info.
+      Reader side tolerates gracefully — no one-time migration needed (per honest-absence doc § "Per-reason-group →
+      consumer policy" reader fallback). UTL@94e43e8c.
 - [ ] [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
       reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). [AUDIT 2026-05-07:
       FRESH — actionable]
