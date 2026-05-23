@@ -2536,15 +2536,13 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
       `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
       QG 2782 passed)
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[IN-PROGRESS — slot 4, 2026-05-23, parallel agents]** [VM-LAUNCH] P0. Run
-      `enumerate_expected_universe.py --enumerator-version=v2 --apply-write` per asset group backfill. **Scope: last 12
-      months (2025-05-23→2026-05-23) in 4 parallel cefi chunks + tradfi+defi catalog build + their backfill.
-      Sports/prediction BLOCKED-NEW-CODE (not in CATALOGUE_SUPPORTED_ASSET_GROUPS).** Catalog path:
-      `gs://instruments-store-{ag}-central-element-323112/reference_data/instruments/{ag}/all.parquet`. cefi ✅ catalog
-      exists (210K instruments). tradfi/defi catalogs being built NOW via CatalogueBuilder (tradfi partial — Databento
-      BLOCKED-CREDENTIALS, Polygon equities work; defi full via public RPCs). Estimated ~26M cefi rows for 12-month
-      window (4 chunks × ~6.5M). VM shards:
-      `market-data-tick-{ag}-central-element-323112/_index/per_vm/enum-{ag}-v2-chunk{N}-20260523.parquet`.
+- [x] ✅ [VM-LAUNCH] P0. cefi 12-month v2 backfill complete — 4 per-VM shards written to
+      `market-data-tick-cefi-central-element-323112/_index/per_vm/`: c1=19,585,202 rows (2026-02-22→2026-05-23),
+      c2=16,134,573 rows (2025-11-23→2026-02-21), c3=20,171,242 rows (2025-08-24→2025-11-22), c4=16,192,092 rows
+      (2025-05-24→2025-08-23). Total=71,468,109 rows. instruments-service@363af916 (upload timeout fix) + @ecabcf74
+      (window-overlap filter). defi: 9,820 instruments, 21 data_types; 91-day scan=18,766,020 candidates; full 12-month
+      ~75M; apply-write pending operator ack. tradfi: BLOCKED-CREDENTIALS (Databento). sports/prediction:
+      BLOCKED-NEW-CODE.
 - [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-NEW-CODE]** [SCRIPT] P1. Build catalog for sports + prediction asset groups. Neither is in
       `CATALOGUE_SUPPORTED_ASSET_GROUPS` — `CatalogueBuilder` only covers cefi/tradfi/defi. Need a surrogate catalog
       builder that reads from `instruments-store-sports-*/venue=*/day=*/instruments.parquet` +
