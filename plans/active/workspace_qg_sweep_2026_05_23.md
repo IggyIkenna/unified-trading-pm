@@ -181,10 +181,11 @@ These must complete before Layer 1 repos can be reliably type-checked.
       required: SSH → `bash scripts/bootstrap_vm.sh` or spawn via API on each 0-slot VM. [BLOCKED-OPERATOR-DECISION:
       operator must start workers on 0-slot VMs]
 
-- [ ] [VERIFY] P0. **Confirm account rotation is active** — worker.md line 304 currently says "STOP. Tell the operator"
-      on rate-limit. This is manual-only. Auto-rotation needs orchestrator support: on rate-limit `/boot` response,
-      worker should re-boot on next available non-rate-limited account. Filed as separate issue:
-      `plans/active/issues/orchestrator_account_auto_rotation_2026_05_23.md`. [BLOCKED-OPERATOR-DECISION]
+- [x] ✅ [VERIFY] P0. **Account auto-rotation shipped** — server-side rotation in `boot_slot` / `heartbeat_slot` /
+      `done_slot`: when rate-limited, `_pick_next_account()` finds next non-rate-limited account round-robin,
+      `_spawn_with_account_bg()` kills old tmux session + spawns new one. Worker exits cleanly on `account-rotated:`
+      prefix. Issue resolved: `plans/active/issues/orchestrator_account_auto_rotation_2026_05_23.md`. —
+      agent-orchestrator@a03f874
 
 ---
 

@@ -46,10 +46,17 @@ needed, but requires server-side account-switching on heartbeat timeout.
 **Operator decision required**: which option, and which accounts are available on which VMs (accounts.json on each VM
 defines this — operator manages).
 
-## Current state
+## Current state — RESOLVED 2026-05-23
 
-Accounts at 19-25% weekly usage — NOT at limit. Rate-limit auto-rotation is a pre-caution for sustained QG sweep
-throughput. No immediate blocker for today's QG sweep.
+**Shipped**: Option B (server-side auto-rotation). `agent-orchestrator@a03f874` on live-defi-rollout.
 
-**Action**: operator acks this issue and chooses Option A or B. Until ack, QG sweep proceeds — operator manually
-re-boots slots if/when rate-limited during the sweep.
+Changes:
+
+- `server/config.py`: added `server_url()` for rendering replacement worker boot prompt
+- `server/server.py`: `_pick_next_account()` + `_spawn_with_account_bg()` helpers; rate-limit branches in `boot_slot()`,
+  `heartbeat_slot()`, `done_slot()` all call rotation instead of halting
+- `agents/worker.md`: worker exits cleanly on `dispatch_reason` starting with `account-rotated:`; halts only when "no
+  fallback accounts available"
+
+**Pending**: test via `POST /api/accounts/{account_id}/rate-limited` to simulate, verify activity log shows
+`account_rotation_triggered` + `account_rotation_complete` events.
