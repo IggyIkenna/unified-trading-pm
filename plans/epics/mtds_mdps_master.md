@@ -21,7 +21,7 @@ related_plans:
   - ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md
   - ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md
   - ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
-  - ../active/wave3x_track_d_implementation_2026_05_19.md
+  - ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md
   - strategy_repo_consolidation_2026_05_19.md
   - ml_repo_consolidation_2026_05_19.md
   - features_repo_consolidation_2026_05_08.md
@@ -578,9 +578,16 @@ cal AI-days (class: design)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
 
-### [`wave3x_track_d_implementation_2026_05_19`](../active/wave3x_track_d_implementation_2026_05_19.md)
+### [`wave3x_track_d_implementation_2026_05_19`](../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md)
 
-**status**: active · **estimate**: 8 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-POST-CUTOVER (UTL primitive + MTDS/MDPS/features wire-in +
+tests); no implementation before 2026-05-23 per operator decision. · **estimate**: 8 cal AI-days (class: brand-new)
+
+**Deferred (MIGRATED FROM archived plan)** — P0 post-cutover backlog:
+
+- **UTL `zero_activity_bars()` primitive**: Gate: operator start signal post-2026-05-23. 8 AI-day estimate.
+- **MTDS/MDPS/features adapter wire-ins**: Gate: UTL primitive above.
+- **Per-adapter smoke tests**: Gate: UTL primitive + adapter wire-ins.
 
 ## P3 — backlog; revisit quarterly
 

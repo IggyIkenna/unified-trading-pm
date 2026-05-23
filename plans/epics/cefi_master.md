@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/venue_heartbeat_calibration_2026_05_post23.md
+  - ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
@@ -574,9 +574,17 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`venue_heartbeat_calibration_2026_05_post23`](../active/venue_heartbeat_calibration_2026_05_post23.md)
+### [`venue_heartbeat_calibration_2026_05_post23`](../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md)
 
-**status**: active · **estimate**: 1.8 cal AI-days (class: research)
+**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-OPERATOR-DECISION; blocked on ≥7 days MTDS live telemetry.
+· **estimate**: 1.8 cal AI-days (class: research)
+
+**Deferred (MIGRATED FROM archived plan)** — P0/P1 post-cutover backlog:
+
+- **Collect inter-message gap telemetry (P0)**: Gate: MTDS live ≥7 days with `LiveConnectivityWatchdog` emitting events.
+- **Compute P99 per (venue, data_type) + update UAC `venue_thresholds.py` (P0)**: Gate: telemetry above.
+- **Staging smoke test — ≤5 spurious events/venue/day (P1)**: Gate: UAC update above.
+- **Codex update — `live-pipeline-architecture.md` heartbeat calibration subsection (P1)**: Gate: UAC update.
 
 ## P3 — backlog; revisit quarterly
 
