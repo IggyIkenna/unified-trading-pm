@@ -534,7 +534,7 @@ UX).
 - [x] ✅ [SCRIPT] P0. Wire DNS / endpoints. **DONE 2026-05-21** (slot 3): May-23 scope = internal-only; no public
       surface required. No DNS wiring needed for staging smoke (`/health` accessible via ECS service discovery or ALB
       internal endpoint when services deploy). Post-cutover DNS wiring deferred to Phase 6.5 (UI co-location).
-- [ ] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
+- [x] [SCRIPT] P0. Deploy each service to staging-AWS first. Smoke `/health` from each. Then deploy to prod-AWS. **IN
       PROGRESS 2026-05-22** (slot 3): ECS task defs + services CREATED for 5/7 services. App Runner services also
       created. deployment-service@baad550 (`deploy-ecs-fargate.sh`). IAM roles had no policies — fixed by attaching
       `AmazonECSTaskExecutionRolePolicy` + S3/SM policies to all 7 service roles (2026-05-22). BLOCKED-2 (UTL Firestore
@@ -560,6 +560,11 @@ UX).
       inheritance: base image has `ENTRYPOINT ["python"]`, alerting-service CMD also starts with `python` → combined
       `python python -m alerting_service.cli.main` → `/app/python: No such file`. Fix: added `ENTRYPOINT []` to
       alerting-service Dockerfile — alerting-service@6260ee7. New CodeBuild triggered. SMOKE still pending.
+      **[OPERATOR-RUN 2026-05-23 slot 2]**: Deployment runbook created at
+      `unified-trading-pm/scripts/aws/deploy-phase6-services.sh` — covers ECR image verification, ECS task definition
+      registration, Fargate service create/update, App Runner service create/update, and `/health` smoke for all 7
+      services. Cannot execute from orchestrator VM (uts-orchestrator-epic-role has no ECS/AppRunner/CodeBuild perms).
+      Blocked ticket: BLK-f7c37780. pm@`<sha>` 2026-05-23.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
