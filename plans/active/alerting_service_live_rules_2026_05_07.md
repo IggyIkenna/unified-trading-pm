@@ -527,8 +527,10 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 - [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
-- [ ] [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
-      15 codes + pass/fail per code + operator name + date.
+- [x] ✅ [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
+      15 codes + pass/fail per code + operator name + date. Template created at
+      `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md` with all 15 codes + verification checklist (a-f) per code.
+      Operator must fill in pass/fail + sign off. PM@tab/rootm/2.
 
 ### Phase 9 — Production go-live + 7-day soak (during May-23 trading window)
 
