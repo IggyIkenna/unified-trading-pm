@@ -210,27 +210,38 @@ audit trail).
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
-- [x] ✅ Phase 1 P0.1-P0.3 — `alerting-service/gateway/manual_action_endpoint.py` (FastAPI router; closed-set authz allowlist; 1-action/10s rate limit; typed-confirm-string exact-match registry per ActionType; async subprocess to Layer-0 with provenance=MANUAL_OPERATOR) — alerting-service@e5c8084
-- [x] ✅ Phase 2 P0.4-P0.8 SCAFFOLD — DART Safety Ops route (`app/(ops)/safety-ops/page.tsx`) + 3 widgets (Layer0Panel + LlmAuditVerdictsFeed + AuditAckQueueWidget) — unified-trading-system-ui@01e1bb69 **[UI] [BLOCKED-PLAYWRIGHT]**
-- [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) shipped in both backend + frontend (KEEP IN SYNC manually until shared schema)
+- [x] ✅ Phase 1 P0.1-P0.3 — `alerting-service/gateway/manual_action_endpoint.py` (FastAPI router; closed-set authz
+      allowlist; 1-action/10s rate limit; typed-confirm-string exact-match registry per ActionType; async subprocess to
+      Layer-0 with provenance=MANUAL_OPERATOR) — alerting-service@e5c8084
+- [x] ✅ Phase 2 P0.4-P0.8 SCAFFOLD — DART Safety Ops route (`app/(ops)/safety-ops/page.tsx`) + 3 widgets (Layer0Panel +
+      LlmAuditVerdictsFeed + AuditAckQueueWidget) — unified-trading-system-ui@01e1bb69 **[UI] [BLOCKED-PLAYWRIGHT]**
+- [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) shipped in both backend + frontend
+      (KEEP IN SYNC manually until shared schema)
 - [x] ✅ Phase 5 P0.13 — Playwright skeleton at `tests/e2e/safety-ops.spec.ts` (4 tests; mocked backend)
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [ ] Phase 1 P0.1 router refactor — pair-review with Harsh for router.py consuming IncidentEnvelope
-- [ ] Phase 2 P0.4-P0.8 [BLOCKED-PLAYWRIGHT] — UI-capable slot runs `npx playwright test --project=chromium tests/e2e/safety-ops.spec.ts` + posts evidence to flip plan-checkbox per CLAUDE.md HARD RULE
-- [ ] Phase 2 backend API proxy — Next.js /api/safety-ops/* routes proxying alerting-service
+- [x] ✅ Phase 2 P0.4-P0.8 — Safety Ops tab Playwright L2 GREEN (4/4). Root cause of prior block was the dev:mock
+      in-process `window.fetch` interceptor returning `{}` for unseeded `/api/safety-ops/*` (so `page.route` never
+      fired + widgets crashed on non-array); fixed by seeding the 3 feeds in `lib/api/mock-handler.ts` + `Array.isArray`
+      guards. — unified-trading-system-ui@a6f3924c | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
+- [x] ✅ Phase 2 backend (alerting-service side) — `GET /safety-ops/recovery-audit-signoffs|audit-ack-queue` +
+      `POST /safety-ops/incidents/{key}/{operational|audit}-ack` + manual-action router wired into api/main;
+      GatewayState holder + 20 tests; alerting-service QG exit 0. — alerting-service@53fb493
+- [ ] Phase 2 backend API proxy — Next.js /api/safety-ops/\* route handlers proxying to alerting-service (backend now
+      exists @53fb493; Next.js proxy is the remaining piece)
 - [ ] Phase 3 P0.9-P0.10 deployment-ui mirror (shared component package) + auth roles
 - [ ] Phase 5 P0.14-P0.15 — game-day scenario 01 (protocol doc shipped)
 
@@ -246,24 +257,31 @@ audit trail).
 
 ## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
 
-> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py
+> refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright
+> run; game-day operator session".
 
-| Tier | Repo                       | SHA          | What landed                                                                                          |
-| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
-| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
-| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
-| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
-| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+| Tier | Repo                        | SHA         | What landed                                                                                                                          |
+| ---- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 5b   | `alerting-service`          | `06c48c4`   | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch \_deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`         | `8b786755f` | kill_switch.activate/deactivate emit_recovery_action surgical edit                                                                   |
+| 5b   | `strategy-service`          | `2142a0f5`  | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                                                           |
+| 5b   | `unified-trading-system-ui` | `2b7d6583`  | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue)                               |
+| 5b   | `unified-trading-pm`        | (this)      | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips                                      |
 
 **Per-plan Tier-5-follow-up-2 items:**
 
-- [x] ✅ Phase 2 P0.11 — typed-confirm-string templates verified IN SYNC between backend (alerting-service@e5c8084 manual_action_endpoint.py) + frontend (unified-trading-system-ui@01e1bb69 safety-ops-layer0-panel.tsx)
-- [x] ✅ Phase 5 P0.13 — Playwright test infrastructure attempted; auth gate fixed via seedPersona admin pattern — unified-trading-system-ui@2b7d6583
+- [x] ✅ Phase 2 P0.11 — typed-confirm-string templates verified IN SYNC between backend (alerting-service@e5c8084
+      manual_action_endpoint.py) + frontend (unified-trading-system-ui@01e1bb69 safety-ops-layer0-panel.tsx)
+- [x] ✅ Phase 5 P0.13 — Playwright test infrastructure attempted; auth gate fixed via seedPersona admin pattern —
+      unified-trading-system-ui@2b7d6583
 
 **Items still `- [ ]`:**
 
-- [ ] [BLOCKED-PLAYWRIGHT-ROUTE-LOADING] Phase 5 — pw:L2 ✓ evidence: loading-boundary timing fix (waitForLoadState OR longer timeout OR widget useEffect debug)
-- [ ] Phase 2 — backend API proxy routes (/api/safety-ops/*) — Next.js handlers proxying to alerting-service
+- [x] ✅ Phase 5 — pw:L2 ✓ achieved (4/4). The "route loading boundary" symptom was the ErrorBoundary catching
+      `signoffs.map is not a function` on the `{}` returned by the dev:mock interceptor; fixed by seeding mock-handler +
+      `Array.isArray` guards; spec asserts against deterministic mock data. — unified-trading-system-ui@a6f3924c | pw:L2
+      ✓ | regression: tests/e2e/safety-ops.spec.ts
+- [ ] Phase 2 — Next.js /api/safety-ops/\* proxy route handlers (alerting-service backend shipped @53fb493; proxy is the
+      remaining piece)
 - [ ] Phase 3 — deployment-ui mirror via shared component package
-
