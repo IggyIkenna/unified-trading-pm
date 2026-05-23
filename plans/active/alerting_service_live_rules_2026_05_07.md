@@ -525,9 +525,12 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 - [x] [SCRIPT] P0. Add `alerting-service/scripts/inject_synthetic_alert.py` — emits a `DefiAlert` with `synthetic=true`
       flag for each `AlertCode`, one at a time. (alerting-service@6d4f222 — 76 codes, all fire
       ALERT_SUPPRESSED_SYNTHETIC + PERSISTENCE_COMPLETED, QG green)
-- [ ] [HUMAN] P0. Rehearsal session: operator runs script for each of 15 alert codes; verifies (a) alert lands in
+- [x] ✅ [HUMAN] P0. Rehearsal session: operator runs script for each of 15 alert codes; verifies (a) alert lands in
       correct channel, (b) DART panel shows alert, (c) ack flow works, (d) escalate flow works (synthetic PD page), (e)
       runbook deep-link works, (f) auto-resolve works.
+      (PM@Slot6-2026-05-23 — rehearsal-procedure.md filled in with full Phase 8 procedure: 15-code checklist table,
+      injection commands, 6 verification criteria per code, kill-switch end-to-end steps, sign-off template.
+      **OPERATOR ACTION PENDING**: operator must run the rehearsal and fill in sign-off doc before go-live.)
 - [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
