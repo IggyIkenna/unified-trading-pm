@@ -1,9 +1,8 @@
 ---
 title: Wave 3.X Track D — zero-activity-bar implementation (post-cutover)
-status: active
+status: archived
 created: 2026-05-19
-locked_by: live-defi-rollout
-locked_since: 2026-05-19
+archived: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
@@ -97,3 +96,19 @@ threaded at adapter construction. Post-cutover scope.
 | Temporary state                    | Successor                         |
 | ---------------------------------- | --------------------------------- |
 | DEFERRED items from wave3x Track D | This plan owns the implementation |
+
+## Deferred work — migrated to:
+
+All 5 items in this plan were marked **DEFERRED-OPERATOR-DECISION [DEFERRED-POST-CUTOVER]** on 2026-05-19 slot 2. No
+implementation occurred. These are migrated to `mtds_mdps_master` § post-cutover implementation backlog:
+
+- **UTL `zero_activity_bars()` primitive (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master §
+  post-cutover backlog. Gate: operator start signal + UTL-scoped tab. 8 AI-day brand-new estimate.
+- **MTDS adapter wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
+  Gate: UTL primitive must land first.
+- **MDPS calculator wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
+  Gate: UTL primitive must land first.
+- **features-service calculator wire-in (P1, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover
+  backlog. Gate: UTL primitive must land first.
+- **Per-adapter smoke tests (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
+  Gate: UTL primitive + adapter wire-ins.
