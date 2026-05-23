@@ -240,8 +240,10 @@ audit trail).
 - [x] ✅ Phase 2 backend (alerting-service side) — `GET /safety-ops/recovery-audit-signoffs|audit-ack-queue` +
       `POST /safety-ops/incidents/{key}/{operational|audit}-ack` + manual-action router wired into api/main;
       GatewayState holder + 20 tests; alerting-service QG exit 0. — alerting-service@53fb493
-- [ ] Phase 2 backend API proxy — Next.js /api/safety-ops/\* route handlers proxying to alerting-service (backend now
-      exists @53fb493; Next.js proxy is the remaining piece)
+- [x] ✅ Phase 2 backend API proxy — Next.js `/api/safety-ops/*` route handlers (recovery-audit-signoffs,
+      audit-ack-queue, operational-ack, audit-ack) proxy to alerting-service@53fb493; graceful degradation when
+      ALERTING_SERVICE_URL unset; dev:mock interceptor short-circuits so pw:L2 stays green. —
+      unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
 - [ ] Phase 3 P0.9-P0.10 deployment-ui mirror (shared component package) + auth roles
 - [ ] Phase 5 P0.14-P0.15 — game-day scenario 01 (protocol doc shipped)
 
@@ -282,6 +284,6 @@ audit trail).
       `signoffs.map is not a function` on the `{}` returned by the dev:mock interceptor; fixed by seeding mock-handler +
       `Array.isArray` guards; spec asserts against deterministic mock data. — unified-trading-system-ui@a6f3924c | pw:L2
       ✓ | regression: tests/e2e/safety-ops.spec.ts
-- [ ] Phase 2 — Next.js /api/safety-ops/\* proxy route handlers (alerting-service backend shipped @53fb493; proxy is the
-      remaining piece)
+- [x] ✅ Phase 2 — Next.js `/api/safety-ops/*` proxy route handlers shipped (lib/api/safety-ops-proxy.ts + 4 route.ts).
+      — unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
 - [ ] Phase 3 — deployment-ui mirror via shared component package
