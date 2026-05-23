@@ -1,4 +1,39 @@
-> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run.**
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~14:30 UTC).**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~14:30 UTC — DeFi path bug fixed + VMs re-launched; CeFi gate 8/11 remaining
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+### Key finding: DeFi MDPS dex_swaps path bug FOUND + FIXED (MDPS@b584c67)
+
+All 5 DeFi MDPS VMs (AllGroups-Relaunch) produced 0 candles because:
+
+1. Scanner looked for `data_type=dex_swaps/` in path — DeFi uses `pipeline_mode=batch_onchain_rpc/venue=UNISWAP*/`
+2. In-file `data_type` column uses legacy `'swaps'` not canonical `'dex_swaps'` → filter returned 0 rows
+
+Fix: `orchestration_scanner.py` + `swap_adapter.py`. QG ✅. Tarball rebuilt. Old 4 VMs terminated. 5 new DeFi VMs
+re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap coverage: 2024-06-01+.
+
+### CeFi gate: MTDS-3.2.A-V BLOCKED (8 CeFi MTDS VMs still RUNNING — was 11 at 12:30 UTC)
+
+**CORRECTION from slot-2** (b8dc583d1): flat→prd copy NOT needed. MTDS-3.2.A-V verifies FLAT bucket directly.
+`market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded. Still running:
+cefi-binance-spot-2024-heavy, cefi-coinbase-spot-2020/2021/2023-heavy, cefi-deribit-2024/2025-heavy,
+cefi-okx-spot-2023-heavy, cefi-okx-swap-2021-heavy.
+
+When all terminate: verify `market-data-tick-cefi-central-element-323112` (flat bucket) — captured count continuous + 0
+attempted_failed — flip MTDS-3.2.A-V ✅ → enables MDPS-3.3.CeFi.
+
+### Other VMs still RUNNING
+
+- Sports (7 VMs 20260523-125717): processing 2022-03-02, "no group column" warnings (P2 DEFERRED)
+- Prediction (2 VMs 20260523-124620): 2043+ manifest entries written, schema verified ✅
+- TradFi (7 VMs 20260523-125440/125628): ~66h per VM, 429 rate limit (non-blocking)
+- DeFi (5 VMs 20260523-142129): JUST RE-LAUNCHED with path fix
+
+— slot-5 / ikenna / 2026-05-23
+
+---
 
 ## [slot-5 → slot-1-main] 2026-05-23 ~12:30 UTC — MDPS VMs RUNNING; CeFi gate BLOCKED-IN-FLIGHT; early VERIFY sampling OK
 

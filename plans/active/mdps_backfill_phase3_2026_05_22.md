@@ -53,9 +53,20 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
 - [x] ✅ [CODE] P1. **MDPS-3.3.DeFi-ArchGap** — **RESOLVED** (slot-6 2026-05-22). Issue doc updated with code evidence:
       Option A confirmed. 3 unnecessary VMs deleted. Main DeFi MDPS VM (095053) kept for dex_swaps.
       `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` closed.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify main VM (095053): dex_swaps bars present for post-2020 DeFi dates;
-      manifest 100% v8. LONG-RUNNING (2020-01-01→2026-05-22; dex_swaps data starts ~2020-Q3). vault_share_price not
-      verified via MDPS (bypass type — verify in features-onchain plan instead).
+- [x] ✅ [CODE] P0. **MDPS-3.3.DeFi-PathFix** — **ROOT CAUSE FOUND + FIXED (slot-5 2026-05-23)**: All 5 DeFi MDPS VMs
+      (including 2022-2026 AllGroups-Relaunch VMs) produced 0 candles because scanner looked for `data_type=dex_swaps/`
+      in blob path but DeFi Uniswap/Curve data is at `pipeline_mode=batch_onchain_rpc/venue=UNISWAPV*/` (no `data_type=`
+      segment). Additionally, the in-file `data_type` column uses legacy value `'swaps'` not canonical `'dex_swaps'` —
+      adapter filter returned 0 rows. Two fixes: (1) `orchestration_scanner.py`: added `_DEFI_DEX_VENUE_SEGMENTS`
+      frozenset + updated `_blob_matches_data_type_partition` to match `dex_swaps`/`liquidity` by venue name in
+      `pipeline_mode=batch_onchain_rpc/` paths. (2) `swap_adapter.py`: added `related_data_types=['swaps']` so
+      `live_workers.py` filters by in-file `'swaps'` column. MDPS@b584c67. QG ✅. Tarball rebuilt. 5 DeFi VMs TERMINATED
+      (0 candles output) + re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap data coverage: 2024-06-01
+      onwards (2022/2023 = 0 Uniswap, 2024+ = candles expected). 2026-05-23 slot-5.
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-142129`): dex_swaps bars present for 2024-06+
+      dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before = expected `empty_confirmed`).
+      vault_share_price is bypass type — verify in features-onchain plan. RUNNING: 5 VMs
+      `mdps-defi-{2022..2026}-20260523-142129`. Verify once 2024/2025 VMs reach their end_date.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
