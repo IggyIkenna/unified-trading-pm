@@ -453,7 +453,10 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
   - [x] ✅ [AGENT] P0. **3.C.2 — Fireblocks signer integration (June-1 post-cutover path).** **DEFERRED-AFTER-CUTOVER
         (2026-06-01)** — client provides Fireblocks credentials June 1st. Checkbox flipped 2026-05-23 slot 2 per
-        done_definition (deferred = code ships when creds land). Successor plan tracks this. Implementation:
+        done_definition (deferred = code ships when creds land). Successor plan tracks this.
+    - **[CONFIRMED-DEFERRED]** 2026-05-23 slot 6: DEFERRED-AFTER-CUTOVER confirmed. Fireblocks credentials (June-1).
+      `per_wallet flip CLOUD_KMS_ENCRYPTED → FIREBLOCKS_MPC` is config-only. Successor:
+      `plans/active/fireblocks_copper_client_integration_2026_06_01.md`. Implementation:
         `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape. Per-wallet
         flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
         `WalletProvisioningConfig.signing_surface` field. Successor plan:
