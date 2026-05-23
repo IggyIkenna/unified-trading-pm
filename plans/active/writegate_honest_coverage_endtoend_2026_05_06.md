@@ -2214,12 +2214,15 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       derives canonical IDs as BASE-USDT/BASE-PERP from InstrumentRecord fields; filters expired/delisted and outside
       availability window; orchestrator registers reader at startup, loads cefi_catalog_by_venue once per sentinel date,
       overrides Tier-3 instrument-provider for CeFi venues; graceful v1 UAC seed fallback when catalog absent)
-- [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which generates
-      35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
-      `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento instruments
-      catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at); futures + options
-      chains get per-root + cluster-day enumeration with weekly + standard expiries. Calendar non-trading days remain
-      `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
+- [x] [SCRIPT] P0. **TradFi v2 enumerator** ✅ — market-tick-data-service@d50b9453 (TradFiCatalogReader reads
+      instruments-store-tradfi catalog; FUTURE/OPTION→base_asset root deduped per venue e.g. ESM6+ESU6→"ES";
+      equity→raw_symbol; CME futures_chain/options_chain Tier-3 provider override; ohlcv_1m equity rows yielded but not
+      consumed by Tier-3 today — future phase for \_PER_INSTRUMENT_SHARD_DATA_TYPES expansion) — replace today's
+      `non_trading_day_reason` cross-product (which generates 35,033 calendar rows per (venue, data_type) without
+      instrument granularity) with per- `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration
+      driven by the Databento instruments catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at,
+      delisted-at); futures + options chains get per-root + cluster-day enumeration with weekly + standard expiries.
+      Calendar non-trading days remain `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
 - [x] [SCRIPT] P0. **DeFi v2 enumerator** ✅ — market-tick-data-service@b0e4bcac (DefiCatalogReader reads
       instruments-store-defi catalog; POOL→pool_address.lower(), LENDING/LST→base_asset_contract_address.lower();
       registered in orchestrator Tier-3 provider override for DEFI venues) — extend today's PROTOCOL_LAUNCH_DATES +
