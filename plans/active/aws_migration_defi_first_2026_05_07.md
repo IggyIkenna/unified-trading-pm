@@ -468,7 +468,7 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       deploy completes.
       **[PARTIALLY-VERIFIED 2026-05-23 slot 2]**: Factory routing `CLOUD_PROVIDER=aws` → `AWSSecretClient` verified
       from orchestrator VM (provider_name=aws confirmed). GetSecretValue blocked by uts-orchestrator-epic-role IAM scope.
-      Full smoke (actual secret read + ApiKeyReloader rotation) requires Phase 6 ECS staging. pm@`<sha>` 2026-05-23.
+      Full smoke (actual secret read + ApiKeyReloader rotation) requires Phase 6 ECS staging. pm@`69403af5` 2026-05-23.
 
 ### Phase 5 — DeFi data migration GCS → S3 (2-3 days, **PARALLEL** with Phase 6)
 
