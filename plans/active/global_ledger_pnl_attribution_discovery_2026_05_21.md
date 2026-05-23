@@ -355,7 +355,8 @@ regulatory_report_id):
 
 ### Phase 9 — Migration sub-plan stub (P1)
 
-- [ ] [DOC] P1. Create `plans/active/global_ledger_pnl_attribution_migration_2026_06_XX.md`
+- [x] ✅ [DOC] P1. Create `plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md` — pm@a636100a3; stub with
+      Phases 7-9, 8 B1 acceptance criteria, pre-migration gates. Original spec:
       (`parent_epic: global_ledger_pnl_attribution_master`) with: (a) UAC schemas landing (Phase 2 deliverable
       upstream). (b) Writer-side refactors in execution-service. (c) Reader-side refactors in strategy-service `v2/`
       modules + client-reporting-api. (d) PassiveLedger synthesiser implementation (live + backtest modes). (e) Backfill
