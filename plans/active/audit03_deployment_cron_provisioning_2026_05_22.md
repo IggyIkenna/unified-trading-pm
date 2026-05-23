@@ -92,8 +92,13 @@ meaningfully run until these land (this — not e2e-script staleness, see F-07 d
       EXIST in GCP or terraform — the scheduler targets it but it was never provisioned. **New finding P1 — see deferred
       item below.** **DEFERRED TODO (P3)**: UTL `service_cli.py` STANDARD_CATEGORIES should include lowercase choices to
       match canonical vocabulary per CLAUDE.md (keys lowercase: cefi/defi/tradfi/sports/prediction). 2026-05-22.
-      **DEFERRED TODO (P1)**: Provision `uts-prod-strategy-service-t1-recon` Cloud Run Job + terraform resource for
-      `uts-prod-strategy-t1-schedule` scheduler target. Currently scheduler fires HTTP 404. 2026-05-23.
+      **DEFERRED TODO (P1) ✅ RESOLVED 2026-05-23**: Provision `uts-prod-strategy-service-t1-recon` Cloud Run Job +
+      terraform resource for `uts-prod-strategy-t1-schedule` scheduler target. CRJ provisioned via
+      `module.strategy_t1_recon_job` in `audit03_cron_provisioning.tf` — deployment-service@a1e6b54.
+      `gcloud run jobs describe uts-prod-strategy-service-t1-recon` = Ready. **BLRS**: build a7b115d4 (yaml-bundle fix
+      for `resolve_bucket_name`) in WORKING. Also fixed: test fix `test_add_recon_args` (170c0f5);
+      `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` bundled in Docker image (ae8cf38). **Remaining**: verify BLRS execution
+      succeeds after a7b115d4 completes + update Cloud Run Job + execute.
 
 ## Success criteria
 
