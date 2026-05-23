@@ -169,33 +169,28 @@ continue to round-trip; QG green on UAC.
 Design SSOT: original plan `### Phase 4 — Extended RecursiveLeverageReceiver.sol (Solidity)` (Option A action-encoder
 selected; per-chain matrix; 11 foundry tests listed; UAC schema extension; security review).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [Solidity] **P0**. Author `deployment-service/contracts/RecursiveLeverageReceiver.sol` per design spec
+- [ ] [Solidity] **P0**. Author `deployment-service/contracts/RecursiveLeverageReceiver.sol` per design spec
       (action-encoder Option A; `Action[]` struct; whitelist + nonReentrant + named errors + sweep escape). **MIGRATED
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #1.
-- [x] ✅ [Solidity] **P0**. Foundry test suite (11 tests: atomic open, atomic close, failed flash repayment, mid-callback
+- [ ] [Solidity] **P0**. Foundry test suite (11 tests: atomic open, atomic close, failed flash repayment, mid-callback
       revert, re-entrancy blocked, target/selector not allowed, owner sweep, unauthorized initiator, cross-chain deploy
       idempotency, cross-asset wstETH/WETH, persistent driver). `forge test --gas-report` green; commit `.gas-snapshot`.
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #2.
-      **DONE 2026-05-23** (Slot 7): deployment-service@c5df622 — 12 tests all pass (forge 1.7.1). Fixed
-      InsufficientRepaymentBalance expected-balance (flashAmount not 0); replaced broken approve-wrong-target test
-      with test_CrossAsset_WstETH_WETH (weth9.approve(router)+exactInputSingle via action-encoder; allowed targets);
-      added test_PersistentDriver_MultiCall (lock resets across 3 sequential calls). MockWETH9 gains mint(). .gas-snapshot
-      committed.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with
+- [ ] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with
       `receiver_kind: Literal["passthrough", "recursive_leverage"]` field; backfill existing rows as `passthrough`; add
       4 NEW rows (Ethereum mainnet, Base mainnet, Sepolia testnet, + reserve). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]` in
+- [ ] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]` in
       `unified_trading_library/config_interface/testnet_contracts.py`. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-service] **P0**. NEW launcher
+- [ ] [deployment-service] **P0**. NEW launcher
       `scripts/vm/launch-defi-recursive-leverage-receiver-deploy.sh --chain <ethereum|base|sepolia>` per
       VM-launcher-SSOT rule + zombie-watchdog dict registration. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #5.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [security] **P1**. Internal review (re-entrancy / approval scoping / repayment correctness / whitelist
+- [ ] [security] **P1**. Internal review (re-entrancy / approval scoping / repayment correctness / whitelist
       completeness) by ikenna/harsh. External audit deferred post-MVP volume scaling. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P1 gate #6.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
+- [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
       Ethereum + Base mainnet with cross-plan banner. Event-stream verification required per "No fire-and-forget" HARD
       RULE. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #7.
 
@@ -211,27 +206,27 @@ UAC `testnet_contracts.yaml`; execution-service `connect()` validates on-chain.
 Design SSOT: original plan `### Phase 5 — RecursiveLoopOrchestrator` (3 drivers: persistent/flash/unwind; event taxonomy
 closed set; 6 new `DefiErrorCode` entries; 12 test specs).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. NEW module
+- [ ] [execution-service] **P0**. NEW module
       `execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` per design spec (3 drivers:
       persistent open, flash open, unwind; shard-isolation; no `raise` in per-iter loop). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes: `RECURSIVE_LOOP_ABORTED_HF` (SKIP);
+- [ ] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes: `RECURSIVE_LOOP_ABORTED_HF` (SKIP);
       `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (SKIP); `RECURSIVE_LOOP_SLIPPAGE_REVERT` (RETRY);
       `RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND` (FAIL); `RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT` (FAIL);
       `RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS` (FAIL → alerting `LIQUIDATION_IMMINENT`). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation*id threading per closed-set
+- [ ] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation*id threading per closed-set
       event taxonomy in design spec (LOOP_OPEN_STARTED / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW /
       LOOP_OPEN_FAILED / LOOP_OPEN_COMPLETED and symmetric LOOP_CLOSE*\*). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Action-encoder helpers: `build_recursive_open_actions()` +
+- [ ] [execution-service] **P0**. Action-encoder helpers: `build_recursive_open_actions()` +
       `build_recursive_close_actions()` + round-trip ABI encode/decode property test. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. 12 unit + integration tests (persistent open lending-only; persistent close; flash
+- [ ] [execution-service] **P0**. 12 unit + integration tests (persistent open lending-only; persistent close; flash
       open; flash close; persistent open cross-asset wstETH/WETH; HF abort mid-loop; slippage revert retry; reverted
       iter mid-stream partial result; flash action failed idx; re-attempt after partial open; Tenderly fork full cycle;
       cross-chain Base). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #5.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
+- [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
       Phase-4-deployed receiver. Event-stream verification required. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #6.
 
@@ -285,14 +280,14 @@ position-balance verification; 8 unit test specs).
 Note: UAC schemas (`HedgeSizerConfig`, `RebalanceInstruction`, `MarginTopupInstruction`) already shipped at UAC
 `internal/architecture_v2/perp_hedge_sizer.py`. Python implementation module is NOT shipped.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. NEW `execution_service/defi_execution/helpers/perp_hedge_sizer.py` class:
+- [ ] [execution-service] **P0**. NEW `execution_service/defi_execution/helpers/perp_hedge_sizer.py` class:
       `PerpHedgeSizer.compute_rebalance()` + `compute_margin_topup()` per design spec. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
+- [ ] [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within
+- [ ] [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within
       ±0.001 ETH). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated
+- [ ] [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated
       event (NOT auto-execute until Group F item 19). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P1 gate #4.
 
@@ -312,22 +307,28 @@ Note: `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict shipped at UAC `registry/risk_ru
 risk-and-exposure-service wire-in NOT verified. Also note: some alert codes may already be in UAC@8e07bbc — verify
 before adding duplicates.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. NEW `execution_service/defi_execution/monitors/health_factor_monitor.py` with
+- [ ] [execution-service] **P0**. NEW `execution_service/defi_execution/monitors/health_factor_monitor.py` with
       `ServiceBootstrap` + per-chain polling cadence registry (Ethereum 12s WS / Base 2s / Arbitrum 250ms debounced).
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`: `HEALTH_FACTOR_CRITICAL` (warn); `LIQUIDATION_IMMINENT`
+- [x] ✅ [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`: `HEALTH_FACTOR_CRITICAL` (warn); `LIQUIDATION_IMMINENT`
       (critical); `FUNDING_SIGN_FLIP` (warn); `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (critical); `CROSS_VENUE_DELTA_DRIFT`
       (warn); `PERP_VENUE_OUTAGE` (critical); `ORACLE_STALE_PAUSE` (critical). Route through `alerting-service`;
       cassette tests per code. GREP-THEN-READ first — some may be partially in UAC@8e07bbc; don't duplicate. **MIGRATED
-      FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [strategy-service] **P0**. NEW `engine/circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action
+      FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #2. — **VERIFIED pre-existing at
+      unified-api-contracts (codes.py + rules.py, added 2026-05-12 per Phase 8 design)**: all 7 codes present:
+      `DEFI_HEALTH_FACTOR_CRITICAL` (WARN, codes.py:48, rules.py:289); `DEFI_LIQUIDATION_IMMINENT` (CRITICAL,
+      rules.py:324); `DEFI_FUNDING_RATE_FLIP` = FUNDING_SIGN_FLIP (WARN, rules.py:601); `DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED`
+      (CRITICAL, rules.py:349); `DEFI_CROSS_VENUE_DELTA_DRIFT` (WARN, rules.py:357); `DEFI_PERP_VENUE_OUTAGE` (CRITICAL,
+      rules.py:332); `DEFI_ORACLE_STALE_PAUSE` (CRITICAL, rules.py:341). Referenced in 4 test files. No code changes
+      needed — slot 3 audit 2026-05-23.
+- [ ] [strategy-service] **P0**. NEW `engine/circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action
       mappings (see design table in original plan). 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 →
       flash-close within single block). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0
       gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [risk-and-exposure-service] **P1**. Wire `ARCHETYPE_CONCENTRATION_MULTIPLIER` into `propose_position()` veto (UAC
+- [ ] [risk-and-exposure-service] **P1**. Wire `ARCHETYPE_CONCENTRATION_MULTIPLIER` into `propose_position()` veto (UAC
       dict already shipped; this is the consumer wire-in). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P1 gate #4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
+- [ ] [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P1 gate #5.
 
 **Done definition:** Monitor + circuit operational on Tenderly fork; alerts fire on synthetic HF degradation;
@@ -342,14 +343,14 @@ kill-switch unwind verified end-to-end.
 Blocks on `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 (lending-rate + funding-rate backfill). Verify
 catalogue Phase 3 completion status before starting.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. NEW cost models in `execution_service/matching_engine/defi/`: `gas_cost_model.py`
+- [ ] [execution-service] **P0**. NEW cost models in `execution_service/matching_engine/defi/`: `gas_cost_model.py`
       (per-action per-chain); `slippage_cost_model.py` (Uniswap V3 concentrated-liquidity slippage curve +
       Curve/Balancer fallbacks); `flash_premium_cost_model.py` (Aave V3 0.05% + Balancer alt). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Wire cost models into batch P&L attribution per "Execution alpha measurement" rule
+- [ ] [execution-service] **P0**. Wire cost models into batch P&L attribution per "Execution alpha measurement" rule
       (simulated fills with realistic costs vs benchmark always-fill). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Backtest replay: Phase 1 lending-rate + perp-funding history → matching engine →
+- [ ] [execution-service] **P0**. Backtest replay: Phase 1 lending-rate + perp-funding history → matching engine →
       per-day P&L curves for both Family 1 and Family 2. Compare vs `_net_apr_recursive` analytical prediction within
       ±2% on 1-year window. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #3.
 
@@ -400,18 +401,18 @@ patches, and `strategy-summary.md` patches are ALREADY SHIPPED (see original pla
 Design SSOT: original plan `### Phase 11 — deployment-api + deployment-ui surface` (endpoint spec, Pydantic models, 4 UI
 component specs, Playwright tests).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates
+- [ ] [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates
       `models/` directory). RBAC `@require_role(Role.READ_ONLY)`; 60s cache. Integration test against Tier-0 mock.
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #1+#2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 Family 1 + 10 Family 2 rows; per-cell badges; SWR 60s
+- [ ] [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 Family 1 + 10 Family 2 rows; per-cell badges; SWR 60s
       revalidate). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (HF chart; ReferenceLine at 1.10/1.05; UI-throttled 1-5s;
+- [ ] [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (HF chart; ReferenceLine at 1.10/1.05; UI-throttled 1-5s;
       wired into KillSwitchPanel ARCHETYPE tier). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md`
       Phase 11 P0 gate #4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (per-protocol coverage % + per-asset spread-history
+- [ ] [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (per-protocol coverage % + per-asset spread-history
       sparkline; click → modal with cell config + backtest verdict). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #5.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + NEW `GET /data-status/recursive-borrow-backtest-results`
+- [ ] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + NEW `GET /data-status/recursive-borrow-backtest-results`
       endpoint (gates on Phase 9). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P1 gate
       #6.
 
@@ -426,21 +427,21 @@ component specs, Playwright tests).
 Design SSOT (14 scenarios, test harness shape): original plan `## Phase 12 design — per-family backtest scenario set`.
 UAC `backtest_scenarios.py` module and test runner are NOT shipped yet.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] **P0**. NEW `internal/architecture_v2/backtest_scenarios.py` with `BACKTEST_SCENARIOS` list +
+- [ ] [UAC] **P0**. NEW `internal/architecture_v2/backtest_scenarios.py` with `BACKTEST_SCENARIOS` list +
       `BacktestScenario` dataclass; 14 total (4 Category A + 5 Category B + 5 Category C per design spec). **MIGRATED
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over 17
+- [ ] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over 17
       cells × 14 scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [strategy-service] **P0**. NEW `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` — Category C subset
+- [ ] [strategy-service] **P0**. NEW `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` — Category C subset
       against live testnet (Tenderly fork + HL testnet + Bybit testnet) for ≥7 continuous days. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution-service] **P0**. Run 2-year batch backtest for both variants on Phase 1 backfill window; commit per-day
+- [ ] [execution-service] **P0**. Run 2-year batch backtest for both variants on Phase 1 backfill window; commit per-day
       P&L curves to PM codex. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate
       (backtest run).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [reconciliation] **P0**. Batch-vs-live reconciliation per Group F item 21. Delta < 5bps over 7 days = green.
+- [ ] [reconciliation] **P0**. Batch-vs-live reconciliation per Group F item 21. Delta < 5bps over 7 days = green.
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate (recon).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
+- [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P1 gate #4.
 
@@ -452,17 +453,17 @@ UAC `backtest_scenarios.py` module and test runner are NOT shipped yet.
 
 **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` § "Phase 13"
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-service] **P0**. NEW launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT
+- [ ] [deployment-service] **P0**. NEW launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT
       rule. Singleton-lock pattern. VM-name prefix `defi-recursive-` registered in `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py` + watchdog VM relaunched. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [operator] **P0**. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2
+- [ ] [operator] **P0**. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2
       instance (testnet) → scale post-validation. Copper/CEFFU custody deferred per master plan Group F item 19.
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VM] **P0**. Launch + monitor for ≥7 continuous days. Event-stream verification: STARTED + daily progress +
+- [ ] [VM] **P0**. Launch + monitor for ≥7 continuous days. Event-stream verification: STARTED + daily progress +
       STOPPED with non-empty per-day P&L metadata. Alerting + kill-switch + reconciliation verified. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #3.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [PM] **P0**. Plan archival: update `status → complete`; migrate any final deferred items per "Plan Archival HARD
+- [ ] [PM] **P0**. Plan archival: update `status → complete`; migrate any final deferred items per "Plan Archival HARD
       RULE"; commit with `[unlock-plan]` tag. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase
       13 P0 gate #4.
 
