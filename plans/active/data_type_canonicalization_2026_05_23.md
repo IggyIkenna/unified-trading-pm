@@ -150,12 +150,15 @@ All 8 phases shipped and pushed to `live-defi-rollout`:
 
 | Repo                               | SHA       |
 | ---------------------------------- | --------- |
-| unified-api-contracts              | 7511207a  |
+| unified-api-contracts              | 136e8623  |
 | market-tick-data-service           | 16402c95  |
 | execution-service                  | 091e0b21e |
 | features-service                   | 6f662a6a  |
 | market-data-processing-service     | e4309d8   |
 | unified-trading-pm (config + plan) | 728578f70 |
+
+UAC has two commits: `7511207a` (registry + prediction types) and `136e8623` (features/required_inputs.py
+`liquidity`→`dex_pools` fix found in final verification grep). HEAD = `136e8623`.
 
 QG status: execution-service — 3 pre-existing unrelated failures (orchestrator, config, coverage-gaps); MTDS — 37
 pre-existing failures (native-staking, solana-defi, websocket streaming — all pre-date this PR); UAC cassette failures

@@ -234,6 +234,64 @@ when an adapter is called with an unsupported mode, environment, or auth scope. 
 
 ---
 
+## Canonical data type names — 2026-05-23 cross-service alignment
+
+**SSOT**: `registry/market_data_categories.py` → `DATA_TYPES_BY_ASSET_GROUP`.
+
+All services (MTDS adapters, YAML configs, features-service, execution-service, deployment-api) MUST use the names from
+this dict. Three-way divergence found in 2026-05-23 audit — now resolved. Banned aliases below must never reappear in
+non-test Python source or YAML config:
+
+| UAC canonical name  | Banned alias   | Where alias existed (now removed)                              |
+| ------------------- | -------------- | -------------------------------------------------------------- |
+| `dex_swaps`         | `swaps`        | venue_data_types.yaml, MTDS DEX adapters, features/execution   |
+| `dex_pools`         | `liquidity`    | venue_data_types.yaml, MTDS DEX adapters, execution-service    |
+| `lending_indices`   | `rate_indices` | venue_data_types.yaml, MTDS lending adapters, features-service |
+| `mev_events`        | `mev_bundles`  | MDPS orchestration_scanner                                     |
+| `bridge_events`     | `bridge_flows` | MDPS orchestration_scanner                                     |
+| `flash_loan_events` | `flash_loans`  | MDPS orchestration_scanner                                     |
+| `perp_funding`      | `perp-funding` | strategy-service probe script (hyphen form)                    |
+
+**DeFi types added to `DATA_TYPES_BY_ASSET_GROUP["defi"]`** (UAC@`7511207a`):
+
+`utilization`, `flash_loan_availability`, `vault_apy`, `vault_tvl`
+
+**TradFi reference types added to `DATA_TYPES_BY_ASSET_GROUP["tradfi"]`**:
+
+`corporate_action_confirmed`, `earnings_result`, `macro_result`, `mbp_10`
+
+**Sports types added to `DATA_TYPES_BY_ASSET_GROUP["sports"]`**:
+
+`markets`, `outcomes`, `settlements`
+
+**Prediction data types** — dual casing coexists intentionally:
+
+- `"market_lifecycle"` (lowercase) — MTDS/YAML on-disk hive partition key
+- `"MARKET_LIFECYCLE"` (uppercase) — instruments-service GCS write key (preserved for backward-compat)
+
+Both entries live in `DATA_TYPES_BY_ASSET_GROUP["prediction"]`. Services keying on instruments-service GCS output use
+uppercase; MTDS path resolution uses lowercase.
+
+**GCS path caveat — single-walk discipline**: `dex_pools` logical data type maps to on-disk hive segment
+`data_type=dex_pool_state` (legacy name from before the rename). This mapping lives in
+`onchain/app/core/mtds_output_config.py` in features-service. The on-disk segment is NOT re-keyed — the rename is
+deferred to the next scheduled Phase 2 GCS migration window per `gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
+
+**Regression tests** (all green as of 2026-05-23):
+
+- `unified-api-contracts/tests/test_data_type_canonicalization.py` — YAML × UAC cross-check
+- `market-tick-data-service/tests/unit/test_adapter_data_type_canonicalization.py` — adapter SUPPORTED_DATA_TYPES × UAC
+- `execution-service/tests/unit/test_amm_data_type_canonicalization.py` — AMM book_type_requirements × UAC
+
+**Verification grep** (must return zero non-test hits):
+
+```bash
+grep -r "\"swaps\"\|\"liquidity\"\|\"rate_indices\"\|\"mev_bundles\"\|\"bridge_flows\"\|\"flash_loans\"\|\"perp-funding\"" \
+  --include="*.py" --exclude-dir=".venv*" --exclude-dir="tests" .
+```
+
+---
+
 ## Audit-confirmed canonical picks — 2026-05-12 SSOT cleanup (Phase 1)
 
 Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catalogue audit
