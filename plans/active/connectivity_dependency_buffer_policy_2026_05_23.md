@@ -73,10 +73,12 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
       Uniswap/Curve/Aave/Lido/Helius/Solana- RPC/Ethereum-RPC (EXECUTION_CRITICAL_EXTERNAL); Pyth/Chainlink
       (MARKET_DATA_CRITICAL_EXTERNAL); GCP-Cloud-Run/AWS- ECS/Pub-Sub/Cloud-Storage/Secret-Manager/Artifact-Registry
       (INTERNAL_CONTROL_PLANE); BigQuery/Redis/Cloud-SQL (INTERNAL_DATA_PLANE); PagerDuty/Telegram/Twilio
-      (ALERTING_AND_OBSERVABILITY). Per-dep operator-tuned values.
+      (ALERTING_AND_OBSERVABILITY). Per-dep operator-tuned values. — deployment-service@47426ee | 27 deps / 5
+      DependencyClass tiers, all TUNE-tagged
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. Schema loader at startup:
       `deployment-service/scripts/load_dependency_policies.py` parses yaml + validates against Pydantic schema;
-      fails-loud on missing fields.
+      fails-loud on missing fields. — deployment-service@47426ee | fails-loud on ValidationError + prints per-dep
+      summary
 
 ### Phase 3 — Alerting wiring (1 cal-day)
 
@@ -86,7 +88,8 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
       WARN. - outage in [warning, warning + human_investigation_buffer_seconds (default 900s = 15min)] → SEV1. -
       outage > hard_escalation_seconds OR fallback_available=False → SEV0.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.7. Wire `DEPENDENCY_DEGRADED` + `DEPENDENCY_RECOVERED` AlertCodes in UAC;
-      add rules to `LIVE_ALERT_RULES`.
+      add rules to `LIVE_ALERT_RULES`. — uac@6f601292 | DEPENDENCY_DEGRADED (HIGH→PD+TG) + DEPENDENCY_RECOVERED
+      (INFO→TG) in codes.py + rules.py
 
 ### Phase 4 — Per-dep fallback tests (1 cal-day, parallel)
 
@@ -172,14 +175,14 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
@@ -198,4 +201,3 @@ _(No Tier-5 items in this plan's scope.)_
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
 - DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
-
