@@ -1,13 +1,14 @@
 ---
+name: global_ledger_pnl_attribution_discovery_2026_05_21
 title: Global Ledger + PnL Attribution — discovery, target-state spec, delta-to-current-system
 parent_epic: global-ledger-pnl-attribution-master
 priority: P0
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 predecessor: plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md (Group F/G MVP; archived 2026-05-16)
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
@@ -394,3 +395,11 @@ This plan is **operationally complete** (per `Plans Run To Actual Completion` HA
   owns.
 - Greeks-computation-home implementation — Phase 5 is design-only; implementation in a separate sub-plan if it lands in
   MTDS (`mtds_mdps_master.md`) or a new module.
+
+## Deferred work — migrated to: global_ledger_pnl_attribution_master
+
+- **Operator [ack] pending (Phase 3/5/6)**: Late-arriving-data handling (Phase 3), greeks home location (Phase 5),
+  TreasuryLedger split decision (Phase 6). All require operator decision before migration sub-plan can start.
+- **Codex SSOT docs (Phase 10, DEFERRED-POST-CUTOVER)**: `codex/04-architecture/global-ledger-architecture.md` +
+  `codex/02-data/ledger-event-taxonomy.md` + `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo
+  access and operator-driven design post-cutover.

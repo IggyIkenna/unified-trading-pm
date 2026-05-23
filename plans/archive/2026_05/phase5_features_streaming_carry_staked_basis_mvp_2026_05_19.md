@@ -1,10 +1,10 @@
 ---
-name: phase5-features-streaming-carry-staked-basis-mvp
+name: phase5_features_streaming_carry_staked_basis_mvp_2026_05_19
 title: "Phase 5 features streaming — carry staked basis MVP (2026-05-19)"
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-19
-locked_by: live-defi-rollout
-locked_since: 2026-05-19
 related_plans:
   - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
@@ -401,3 +401,15 @@ surface for performance-derived features to exist even if it only computes passt
 | Phase-F: Relaunch paper VM `strategy-paper-carry-staked-basis-{date}-{ts}`   | `BLOCKED-OPERATOR-DEPLOY` | sequential after 24h soak                                                      | tarballs ready in GCS at c9729dce |
 | Phase-F: fills>0 in first 10 ticks                                           | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch                                                   | —                                 |
 | Phase-F: OPERATOR_CAPITAL_OVERRIDE_APPLIED → DEPOSIT_DETECTED → resize check | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch                                                   | —                                 |
+
+## Deferred work — migrated to: features_and_ml_master
+
+- **Phase-E: features-service Cloud Run deploy (BLOCKED-OPERATOR-DEPLOY)**: `gcloud run deploy features-service` gated
+  on operator executing `deploy_features_service_cloud_run.sh` (operator-only step; BLK-363c4fe1 filed).
+- **Phase-E: 24h soak + Phase-F: paper VM relaunch (BLOCKED-OPERATOR-DEPLOY)**: sequential after Cloud Run deploy.
+  Tarballs ready in GCS at features-service@c9729dce. Paper VM `strategy-paper-carry-staked-basis-{date}-{ts}` pending
+  fills>0 verification.
+- **Post-cutover multi-venue expansions**: env-split bucket rollback → `bucket_env_split_rollout_2026_06.md`;
+  multi-venue funding → `funding_rate_apy_bps_multi_venue_2026_06.md`; multi-LST staking →
+  `staking_apy_bps_multi_lst_2026_06.md`; health_factor → `wallet_health_factor_2026_06.md`; multi-venue matching →
+  `matching_engine_provider_multi_venue_2026_06.md`.
