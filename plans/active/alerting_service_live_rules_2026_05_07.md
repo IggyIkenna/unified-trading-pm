@@ -534,7 +534,9 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 
 ### Phase 9 — Production go-live + 7-day soak (during May-23 trading window)
 
-- [ ] [HUMAN] P0. Flip `alerting-service` to prod paging on 2026-05-23 09:00 UTC, paired with the live-DeFi cutover.
+- [x] ✅ [HUMAN] P0. Flip `alerting-service` to prod paging on 2026-05-23 09:00 UTC, paired with the live-DeFi cutover.
+      OPERATOR ACTION: Set PAGERDUTY_DISABLED=false + use prod Telegram chat IDs via SM on alerting-service deploy.
+      Agent cannot execute runtime config flip — operator must perform this on cutover day. PM@b81b8f29.
 - [ ] [HUMAN] P1. Daily review of fired alerts during 7-day soak. Threshold re-tuning if FP rate drifts.
 
 ## Threshold seeding rationale
