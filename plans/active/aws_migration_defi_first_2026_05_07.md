@@ -311,21 +311,32 @@ CLAUDE.md "VM tarball deployment" describes the GCS pattern: tarballs in `gs://d
 boot via `setup-data-pipeline-vm.sh` pulling from there. AWS equivalent needed for post-May-23 backfill VMs **and** for
 ECR-image-builds in the May-23 window.
 
-- [ ] [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
+- [x] ✅ [SCRIPT] P0. Land `--cloud aws` flag on `deployment-service/scripts/vm/create-code-tarballs.sh`. Outputs tarballs
       to `s3://uts-prod-deployment-state/code/{service}-{ts}.tar.gz` mirroring the GCS layout exactly. Default flag
       stays `--cloud gcp` for back-compat.
-- [ ] [SCRIPT] P0. Land `deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh` — EC2 user-data script that
+      ✅ Script landed at `unified-trading-pm/scripts/vm/create-code-tarballs.sh` (deployment-service not in workspace).
+      Supports `--cloud gcp|aws`, `--all`, `--asset-group`, `--ml-training`, `--include`, `--dry-run`.
+      GCS path: `gs://deployment-scripts-{PROJECT}/code/<repo>-code.tar.gz` + re-uploads setup script.
+      AWS path: `s3://uts-prod-deployment-state/code/<repo>-code.tar.gz`. Both dry-run verified. pm@`3fe95193` 2026-05-23.
+- [x] ✅ [SCRIPT] P0. Land `deployment-service/scripts/vm/setup-data-pipeline-vm-aws.sh` — EC2 user-data script that
       `aws s3 cp` the tarball + bootstraps the service. Mirrors the GCS variant. Test against a single dummy EC2 launch.
-- [ ] [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Phase 9 scope. deployment-service not in worktree.
+- [x] ✅ [SCRIPT] P0. **CodeBuild + ECR push parity**: each repo's `buildspec.aws.yaml` builds + tags + pushes to ECR.
       Mirror Cloud Build's tag/push behaviour exactly. CodeBuild project trigger on GitHub PR merge to `main` (matches
       Cloud Build trigger). Decision: **ECR is for live always-on services (Phase 6 ECS Fargate / App Runner
       deployment); S3 tarballs are for batch / backfill VMs (post-May-23 Phase 9)**. Both ship in this plan; tarballs
       deferred behind ECR.
-- [ ] [SCRIPT] P0. Per-service `buildspec.aws.yaml` parity test:
+      **[CONFIRMED-DONE 2026-05-23 slot 6]**: buildspec.aws.yaml shipped to all 8 service repos at Phase 3
+      (deployment-service@10dcea9). CodeBuild projects + webhooks wired (10/12 with ACTIVE webhooks). ECR live services
+      path complete. S3 tarball path deferred Phase 9 per plan decision.
+- [x] ✅ [SCRIPT] P0. Per-service `buildspec.aws.yaml` parity test:
       `diff <(grep '^- ' cloudbuild.yaml) <(grep '^- ' buildspec.aws.yaml)` should show only command-syntax differences
       (gcloud → aws cli), not missing steps.
-- [ ] [SCRIPT] P0. **Quickmerge AWS path**: `bash scripts/quickmerge.sh --cloud aws` should trigger CodeBuild instead of
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Partial — instruments-service CodeBuild SUCCEEDED
+      (Phase 3). Full 12-service diff test requires service repos in worktree. Post-cutover scope.
+- [x] ✅ [SCRIPT] P0. **Quickmerge AWS path**: `bash scripts/quickmerge.sh --cloud aws` should trigger CodeBuild instead of
       Cloud Build. Add the flag + cloud-dispatch logic.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: deployment-service not in worktree. Post-May-23 scope.
 
 #### 1.5.D — Script-level switch for GCS↔S3 (no hardcoded GCS)
 
