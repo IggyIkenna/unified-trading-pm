@@ -170,8 +170,9 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.4-P0.5 — alerting-service `gateway/ack_escalation.py` cron + secondary-human / founder / physical-pager
-      escalation steps
+- [x] ✅ Phase 2 P0.4-P0.5 — `gateway/ack_escalation.py` escalation-ladder cron (secondary PagerDuty → founder Twilio →
+      physical pager) anchored at incident creation per AuditAckSLAPolicy; one step/tick, idempotent via
+      audit_ack_escalation_history; injectable notifier; +3 tests. — alerting-service@39b6650
 - [x] ✅ Phase 3 P0.6-P0.8 — distinct operational-ack vs audit-ack endpoints
       (`POST /safety-ops/incidents/{key}/{operational|audit}-ack`; audit-ack clears the SLA-countdown queue entry,
       op-ack records handler) backed by GatewayState; DART distinct Op-Ack / Audit-Ack buttons render + wire to them;
@@ -210,9 +211,11 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.4-P0.5 alerting-service gateway/ack_escalation.py cron + escalation ladder (audit_ack_queue exists
-      @925be02; cron pending)
-- [ ] Phase 4 P0.9-P0.10 even-APPROVED-requires-human-ack invariant test + integration test
+- [x] ✅ Phase 2 P0.4-P0.5 ack_escalation.py cron + ladder shipped. — alerting-service@39b6650
+- [x] ✅ Phase 4 P0.9 even-APPROVED-requires-human-ack — `process_signoff` leaves APPROVED incidents in the audit-ack
+      queue (no auto-close); `test_approved_does_not_transition_or_clear_queue` asserts it. — alerting-service@39b6650
+- [ ] Phase 4 P0.10 — full SEV2 6h-countdown integration test (needs time-advance harness; unit coverage shipped
+      @39b6650)
 - [ ] Phase 5 P0.11-P0.12 synthetic smoke for SEV0 + SEV2 ladders
 
 **Cross-references**:

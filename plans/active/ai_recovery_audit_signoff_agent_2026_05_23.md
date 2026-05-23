@@ -224,7 +224,9 @@ what the LLM audits and invokes).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 3 P0.6-P0.9 DISPUTE_AUTOMATED_ACTION wiring in alerting-service gateway state_machine + integration test
+- [x] ✅ Phase 3 P0.6-P0.9 DISPUTE_AUTOMATED_ACTION wiring — GatewayState.process_signoff forces SAFE_MODE_ACTIVE + SEV0
+      via shortest allowed transition path; ESCALATE_TO_HUMAN shortens ack to 1h; POST /safety-ops/signoffs ingests
+      verdicts; +tests. — alerting-service@39b6650
 - [x] ✅ Phase 4 P0.10-P0.11 DART RecoveryAuditFeed widget — ui@a6f3924c+c9189563 (llm-audit-verdicts-feed.tsx, pw:L2 ✓)
 - [ ] Phase 5 P0.12-P0.14 launch agent on long-lived GCE VM + synthetic smoke + game-day scenario 02
 
@@ -258,9 +260,12 @@ what the LLM audits and invokes).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 3 P0.6-P0.9 DISPUTE_AUTOMATED_ACTION wiring in alerting-service state_machine (call
-      gateway.transition(SAFE_MODE_ACTIVE) on DISPUTE verdict) — pair-review with Harsh
-- [ ] Phase 5 P0.12 launch agent on long-lived GCE VM — OPERATOR action (LLM model choice pending per ping doc item #5)
+- [x] ✅ Phase 3 P0.6-P0.9 DISPUTE_AUTOMATED_ACTION wiring shipped — GatewayState.process_signoff + state_machine drive
+      to SAFE_MODE_ACTIVE+SEV0 via shortest allowed path (BFS over ALLOWED_TRANSITIONS). — alerting-service@39b6650
+- [x] ✅ Phase 5 P0.12 (model choice) — operator decided 2026-05-23: recovery-audit agent pinned to `claude-opus-4-7`
+      (max thinking, 1M context) in the template. — agent-orchestrator main@10cee2b
+- [ ] Phase 5 P0.12 (launch) — launch recovery-audit agent on long-lived GCE VM — **OPERATOR action** (prod-VM launch;
+      model now resolved = claude-opus-4-7)
 - [ ] Phase 5 P0.13-P0.14 synthetic smoke + game-day scenario 02 (protocol doc shipped)
 
 **Cross-references**:
