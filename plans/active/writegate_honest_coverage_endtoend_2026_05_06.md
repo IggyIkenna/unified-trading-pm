@@ -2528,12 +2528,13 @@ clear instruction for "what's actually there", per-service flexibility for "how 
 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
-- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
-      capture*status. Each asset_group gets: * Pre-venue/chain-launch dates → continue writing
+- [x] ✅ [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
+      capture_status. Each asset_group gets: _ Pre-venue/chain-launch dates → continue writing
       `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today). _
       Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW). _ Per-instrument-pre-listing
-      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
-      `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
+      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. _ Per-instrument-post-delisting dates → write
+      `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
+      QG 2782 passed)
 - [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
       appropriately.
