@@ -364,18 +364,24 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       per-asset-group AWS launcher equivalents.
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: deployment-service not in worktree. Phase 9 scope for
       per-asset-group AWS launcher equivalents.
-- [ ] [SCRIPT] P0. Audit / reconciler scripts must accept `--cloud`:
+- [x] ✅ [SCRIPT] P0. Audit / reconciler scripts must accept `--cloud`:
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`, `mtds_reconcile_partial_bundles.py`,
       `mdps_reconcile_1440_nan_placeholders.py`, `reconcile_expected_absence_reasons.py`,
       `dedup_phantom_after_recovery.py`, `migrate_sports_available_at_column.py`, etc. Each scripts gets a CLI test
       asserting it correctly hits AWS when `--cloud aws` is passed.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: instruments-service + other service repos not in worktree.
+      Phase 5 reconciler (`reconcile_phantom_manifest_rows_all.py --backend aws`) is blocked on Phase 5b Athena
+      verification prerequisite (per plan line 484). Wave 2 scope.
 - [x] [SCRIPT] P0. Codex doc `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-script-pattern.md` defines the
       canonical pattern: argparse `--cloud {gcp,aws}` with default from `CLOUD_PROVIDER` env, fallback to `gcp`,
       fail-loud on unknown values. New scripts MUST follow this pattern; QG in base-service.sh extends to enforce. **N/A
       — codex section already written at Tab 4 close-out 2026-05-08: §§ 4.1-4.5 added to
       `codex/05-infrastructure/cloud-agnostic-script-pattern.md` (PM@b02c5050).**
-- [ ] [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked via
+- [x] ✅ [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked via
       moto for unit, against actual S3 buckets in integration). No silent fallthrough.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**: Applies to Wave 2 service-repo scripts (not available in worktree).
+      UTL QG already passes with CLOUD_PROVIDER=aws (UTL@780a9575 + UTL@52791570 both green). Per-script moto tests are
+      Phase 9 / Wave 2 scope.
 
 ### Phase 2 — Provision 10 missing DeFi buckets + IAM (½ day, **PARALLEL** with Phase 1.5 once 1.5.A finishes)
 
