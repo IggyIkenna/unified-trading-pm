@@ -151,11 +151,14 @@ attribution = decompose Δ(unrealised) into delta/gamma/theta/vega/carry/...  �
 
 ### Phase 0 — Cross-link + inventory (P0)
 
-- [ ] [DOC] P0. Cross-link this plan from `master_to_live_defi_2026_05_23.md` § "Post-cutover backlog" (or
+- [x] ✅ [DOC] P0. Cross-link this plan from `master_to_live_defi_2026_05_23.md` § "Post-cutover backlog" (or
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       operator-confirmed section).
-- [ ] [DOC] P0. Cross-link from `execution_master.md`, `strategy_master.md`, `mtds_mdps_master.md`,
+- [x] ✅ [DOC] P0. Cross-link from `execution_master.md`, `strategy_master.md`, `mtds_mdps_master.md`,
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       `instruments_master.md`, `observability_master.md`, `dart_and_promote_master.md` in `related_plans:`.
-- [ ] [SCRIPT] P0. Run `python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py` — confirm this
+- [x] ✅ [SCRIPT] P0. Run `python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py` — confirm this
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       plan shows up in master inventory.
 
 ### Phase 1 — Current-state audit (P0, parallel-safe across services)
@@ -165,33 +168,43 @@ For each of the 5 affected services, produce an audit doc at
 consumes, what state it reconstructs internally, what canonical schemas it already imports from UAC, and the gap to the
 target SSOT ledger model.
 
-- [ ] [AUDIT] P0. **execution-service** — InstructionLedger writer. Map current fill/transfer/stake emission paths;
+- [x] ✅ [AUDIT] P0. **execution-service** — InstructionLedger writer. Map current fill/transfer/stake emission paths;
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       identify which today flow through service-output emission semantics (per
       `codex/02-data/service-output-emission-semantics.md`). Flag any path that emits via custom topic without going
       through `_resolve_policy_output_data_type`.
-- [ ] [AUDIT] P0. **strategy-service** — derived-ledger writer (confirmed owner). Inventory
+- [x] ✅ [AUDIT] P0. **strategy-service** — derived-ledger writer (confirmed owner). Inventory
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       `strategy_service/position/`, `strategy_service/pnl/`, `strategy_service/risk/`,
       `strategy_service/portfolio_allocator/` modules; for each, document data sources (live event streams vs
       reconstructed state vs reconciled snapshots vs direct venue queries). The `v2/` rework directories are the
       refactor target.
-- [ ] [AUDIT] P0. **market-tick-data-service** — PricingLedger price/IV writer. Document what's already canonical
+- [x] ✅ [AUDIT] P0. **market-tick-data-service** — PricingLedger price/IV writer. Document what's already canonical
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       (mid/bid/ask/IV per `mtds_mdps_master.md`) and what's missing (greeks computation home, snapshot vs streaming).
-- [ ] [AUDIT] P0. **instruments-service** — instrument metadata + carry-family rates (funding intervals, dividend dates,
+- [x] ✅ [AUDIT] P0. **instruments-service** — instrument metadata + carry-family rates (funding intervals, dividend dates,
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       expiry timestamps, settlement style). Confirm metadata sufficiency for PassiveLedger synthesiser.
-- [ ] [AUDIT] P0. **client-reporting-api** — what it computes today (per archived attribution MVP) vs what it joins from
+- [x] ✅ [AUDIT] P0. **client-reporting-api** — what it computes today (per archived attribution MVP) vs what it joins from
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       canonical ledgers in the target model.
 
 ### Phase 2 — UAC schema spec (P0)
 
-- [ ] [UAC] P0. Draft pydantic models for `LedgerRow` + `InstructionLedger` / `PassiveLedger` / `TreasuryLedger` /
+- [x] ✅ [UAC] P0. Draft pydantic models for `LedgerRow` + `InstructionLedger` / `PassiveLedger` / `TreasuryLedger` /
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       `PricingLedger` variants in `unified_api_contracts/canonical/crosscutting/ledger/`.
-- [ ] [UAC] P0. Define `EventOrigin`, `EventType`, `AssetClass`, `Direction`, `OptionRight` enums as `StrEnum` (closed
+- [x] ✅ [UAC] P0. Define `EventOrigin`, `EventType`, `AssetClass`, `Direction`, `OptionRight` enums as `StrEnum` (closed
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       sets — extension via PR only).
-- [ ] [UAC] P0. Cross-client transfer validator: every `transfer`/`bridge` row asserts
+- [x] ✅ [UAC] P0. Cross-client transfer validator: every `transfer`/`bridge` row asserts
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
       `client_id == counterparty_client_id`; raise `CrossClientTransferForbiddenError` otherwise. Anchor to
       `codex/04-architecture/client-funds-isolation.md`.
-- [ ] [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends / enrichments.
-- [ ] [UAC] P1. Document the `accrual_period_start_utc` / `accrual_period_end_utc` convention for passive events.
+- [x] ✅ [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends / enrichments.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
+- [x] ✅ [UAC] P1. Document the `accrual_period_start_utc` / `accrual_period_end_utc` convention for passive events.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6 worktree.
 
 ### Phase 3 — Late-arriving-data discipline (P0, **BLOCKED-OPERATOR-DECISION** if no clear winner emerges)
 
@@ -204,37 +217,48 @@ regulatory_report_id):
 - **Option B: Designated-mutable columns** — initial row + named-set of columns mutable post-write with an audit log.
   Pros: query simplicity. Cons: requires audit-log machinery, breaks pure event-sourcing.
 
-- [ ] [DESIGN] P0. Survey downstream join patterns (DART, client-reporting-api, alerting-service) to determine whether
+- [x] ✅ [DESIGN] P0. Survey downstream join patterns (DART, client-reporting-api, alerting-service) to determine whether
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       (A) is tolerable or (B) is required.
-- [ ] [DESIGN] P0. Decision recorded with rationale + cross-reference to codex audit-trail requirements.
+- [x] ✅ [DESIGN] P0. Decision recorded with rationale + cross-reference to codex audit-trail requirements.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
 
 ### Phase 4 — Writer-side gap analysis (P0)
 
-- [ ] [DESIGN] P0. **execution-service**: enumerate what InstructionLedger fields the current emission paths populate vs
+- [x] ✅ [DESIGN] P0. **execution-service**: enumerate what InstructionLedger fields the current emission paths populate vs
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       what's missing. Flag fields where execution-service has no source (e.g. `combo_price` for atomic spread fills —
       needs broker exec-report parsing).
-- [ ] [DESIGN] P0. **PassiveLedger synthesiser**: enumerate every passive event type's synthesis rule (cf. table in the
+- [x] ✅ [DESIGN] P0. **PassiveLedger synthesiser**: enumerate every passive event type's synthesis rule (cf. table in the
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       conversation: funding interval, rebase interval, interest accrual index, epoch schedule, expiry timestamp,
       resolution source). Map each to an instrument-metadata source (instruments-service or MTDS).
-- [ ] [DESIGN] P0. **PassiveLedger listener gap**: which passive events MUST come from a live listener (on-chain
+- [x] ✅ [DESIGN] P0. **PassiveLedger listener gap**: which passive events MUST come from a live listener (on-chain
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       emission) vs can be synthesised from schedule. Drift-detection: listener-observed minus synthesiser-expected =
       data-quality alert.
-- [ ] [DESIGN] P0. American option exception: `exercise_style` field on the instrument; early-exercise = instruction
+- [x] ✅ [DESIGN] P0. American option exception: `exercise_style` field on the instrument; early-exercise = instruction
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       event, expiry-without-action = passive event. Both code paths defined.
 
 ### Phase 5 — Pricing + greeks gap analysis (P1)
 
-- [ ] [DESIGN] P1. PricingLedger row spec: mid/bid/ask/IV + greeks (delta/gamma/theta/vega/rho) + carry-family rates
+- [x] ✅ [DESIGN] P1. PricingLedger row spec: mid/bid/ask/IV + greeks (delta/gamma/theta/vega/rho) + carry-family rates
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       (funding_rate, lending_apr, borrow_apr, dividend_yield, staking_apr, rebase_rate).
-- [ ] [DESIGN] P1. Greeks computation home: MTDS vs strategy-service vs new module. Operator decision likely required
+- [x] ✅ [DESIGN] P1. Greeks computation home: MTDS vs strategy-service vs new module. Operator decision likely required
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       for greeks-vs-IV ownership.
-- [ ] [DESIGN] P1. Carry-family rate sourcing: which instruments-service handler emits what; gaps to fill.
-- [ ] [DESIGN] P1. Snapshot vs streaming cadence: PricingLedger row per tick? Per minute? Operator-tunable per
+- [x] ✅ [DESIGN] P1. Carry-family rate sourcing: which instruments-service handler emits what; gaps to fill.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
+- [x] ✅ [DESIGN] P1. Snapshot vs streaming cadence: PricingLedger row per tick? Per minute? Operator-tunable per
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       asset_group?
 
 ### Phase 6 — Treasury cohort vs separate table (P1)
 
-- [ ] [DESIGN] P1. Consumer-overlap survey: does fund-administration-service / client-reporting-api / regulatory
+- [x] ✅ [DESIGN] P1. Consumer-overlap survey: does fund-administration-service / client-reporting-api / regulatory
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       reporting need treasury rows separately from trading rows?
 - [x] [DESIGN] P1. Cardinality vs SLA trade-off recorded. ✅
   - **Cardinality**: InstructionLedger/PassiveLedger accumulate at trading cadence — ~1M–100M rows/day across 19
@@ -256,49 +280,62 @@ regulatory_report_id):
   - **SLA verdict**: Given treasury's batch SLA and 3-order-of-magnitude cardinality gap, both approaches are SLA-safe
     with proper indexing. The deciding factor is query ergonomics for Phase 3 (universal PnL recipe) — see Phase 6 item
     "Decision" for final call. 2026-05-23.
-- [ ] [DESIGN] P1. Decision (own table vs filter-view) with rationale.
+- [x] ✅ [DESIGN] P1. Decision (own table vs filter-view) with rationale.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
 
 ### Phase 7 — Backtest synthesiser parity (P1)
 
-- [ ] [DESIGN] P1. PassiveLedger synthesiser runs in TWO modes: live (listens + reconciles vs synthesised expectation)
+- [x] ✅ [DESIGN] P1. PassiveLedger synthesiser runs in TWO modes: live (listens + reconciles vs synthesised expectation)
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       and backtest/paper (synthesises from schedule alone). Document the contract that keeps backtest
       `Σ passive PnL = live Σ passive PnL` for the same instrument set + time window.
-- [ ] [DESIGN] P1. InstructionLedger replay-from-history for backtest (already a workspace pattern via batch=live —
+- [x] ✅ [DESIGN] P1. InstructionLedger replay-from-history for backtest (already a workspace pattern via batch=live —
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       `codex/04-architecture/batch-live-architecture.md`).
 
 ### Phase 8 — VM assignment for net-new runtime artifacts (P1)
 
-- [ ] [INFRA] P1. **ledger-reconcile-** VM prefix decision: net-new (declare in `VM_PREFIX_TO_BUCKET` with
+- [x] ✅ [INFRA] P1. **ledger-reconcile-** VM prefix decision: net-new (declare in `VM_PREFIX_TO_BUCKET` with
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       `LifecycleClass.SCHEDULED_RECURRING`, launcher in `deployment-service/scripts/vm/launch-ledger-reconcile-vm.sh`)
       vs absorb into existing `batch-live-recon-cron-` cohort.
-- [ ] [INFRA] P1. **passive-listener-** VM prefix decision: dedicated `LONG_LIVED_LIVE` daemon vs absorb into MTDS /
+- [x] ✅ [INFRA] P1. **passive-listener-** VM prefix decision: dedicated `LONG_LIVED_LIVE` daemon vs absorb into MTDS /
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       execution-service worker.
-- [ ] [INFRA] P1. Confirm derived-ledger compute home = `strategy-paper-*` + `strategy-live-*` +
+- [x] ✅ [INFRA] P1. Confirm derived-ledger compute home = `strategy-paper-*` + `strategy-live-*` +
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       `client-reporting-cutover-*` (existing cohorts; no new prefixes).
-- [ ] [INFRA] P1. Lifecycle compliance: every new prefix carries `VmPrefixSpec(bucket=..., lifecycle_class=...)` per the
+- [x] ✅ [INFRA] P1. Lifecycle compliance: every new prefix carries `VmPrefixSpec(bucket=..., lifecycle_class=...)` per the
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       workspace HARD RULE.
 
 ### Phase 9 — Migration sub-plan stub (P1)
 
-- [ ] [DOC] P1. Create `plans/active/global_ledger_pnl_attribution_migration_2026_06_XX.md`
+- [x] ✅ [DOC] P1. Create `plans/active/global_ledger_pnl_attribution_migration_2026_06_XX.md`
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       (`parent_epic: global-ledger-pnl-attribution-master`) with: (a) UAC schemas landing (Phase 2 deliverable
       upstream). (b) Writer-side refactors in execution-service. (c) Reader-side refactors in strategy-service `v2/`
       modules + client-reporting-api. (d) PassiveLedger synthesiser implementation (live + backtest modes). (e) Backfill
       of historical events into the canonical ledgers (single-walk discipline per
       `gcs_migration_bundle_pipeline_mode_2026_05_08.md`). (f) Cutover: derived views switch from service-internal state
       to canonical ledger reads.
-- [ ] [DOC] P1. Stub declares `estimate_class: refactor` (likely; 0.4× multiplier) since most work is wiring existing
+- [x] ✅ [DOC] P1. Stub declares `estimate_class: refactor` (likely; 0.4× multiplier) since most work is wiring existing
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       engines into a new SSOT, not greenfield design.
 
 ### Phase 10 — Codex SSOT update (P2)
 
-- [ ] [DOC] P2. Add `codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model, universal
+- [x] ✅ [DOC] P2. Add `codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model, universal
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       PnL recipe, synthesis recipe table, ownership table.
-- [ ] [DOC] P2. Add `codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
+- [x] ✅ [DOC] P2. Add `codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       `Direction` enum SSOT.
-- [ ] [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
+- [x] ✅ [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       "carry-as-theta-family" attribution framing.
-- [ ] [DOC] P2. Update CLAUDE.md to add a 1-line pointer to the new ledger codex SSOT (or extend the existing
+- [x] ✅ [DOC] P2. Update CLAUDE.md to add a 1-line pointer to the new ledger codex SSOT (or extend the existing
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover.
       manifest/honest-absence section if more natural).
 
 ## Full-execution criterion
