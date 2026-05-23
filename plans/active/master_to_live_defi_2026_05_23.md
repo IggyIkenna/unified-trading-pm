@@ -111,7 +111,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-23 12:14 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-23 12:58 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -123,7 +123,7 @@ folded into the appropriate epic._
 | [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                 | defi_master                                | brand-new | 23/63      | 37%          | 15.2     | —        |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                           | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 34/74      | 46%          | 8.6      | —        |
 | [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                 | master                                     | brand-new | 0/5        | 0%           | 8.0      | —        |
-| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 187/249    | 75%          | 6.0      | —        |
+| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/251    | 75%          | 6.0      | —        |
 | [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md)                                 | batch_live_symmetry_master                 | brand-new | 0/7        | 0%           | 5.0      | —        |
 | [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 0/38       | 0%           | 3.6      | —        |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                     | batch_live_symmetry_master                 | design    | 63/71      | 89%          | 3.4      | —        |
@@ -138,18 +138,18 @@ folded into the appropriate epic._
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                         | infrastructure_master                      | refactor  | 19/23      | 83%          | 1.7      | —        |
 | [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)                               | master                                     | infra     | 0/17       | 0%           | 1.6      | —        |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                             | dart_and_promote_master                    | design    | 54/80      | 68%          | 1.4      | —        |
-| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 11/17      | 65%          | 0.8      | —        |
 | [`plan_hygiene_sweep_kickoff_2026_05_21`](./plan_hygiene_sweep_kickoff_2026_05_21.md)                                                       | master                                     | infra     | —          | —            | 0.8      | —        |
 | [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md)                                                       | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 39/56      | 70%          | 0.6      | —        |
-| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                                     | infra     | 24/31      | 77%          | 0.6      | —        |
+| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 18/24      | 75%          | 0.6      | —        |
 | [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](./kalshi_api_migration_to_elections_subdomain_2026_05_20.md)                     | master                                     | refactor  | 6/14       | 43%          | 0.6      | —        |
 | [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                       | master                                     | infra     | —          | —            | 0.4      | —        |
 | [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                      | brand-new | 22/25      | 88%          | 0.4      | —        |
+| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                                     | infra     | 28/31      | 90%          | 0.3      | —        |
 | [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | master                                     | infra     | 22/25      | 88%          | 0.2      | —        |
-| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | defi_master                                | infra     | 10/11      | 91%          | 0.2      | —        |
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 25/26      | 96%          | 0.2      | —        |
 | [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
+| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | defi_master                                | infra     | 11/11      | 100%         | 0.0      | —        |
 | [`vm_launcher_startup_url_migration_2026_05_21`](./vm_launcher_startup_url_migration_2026_05_21.md)                                         | master                                     | infra     | 17/17      | 100%         | 0.0      | —        |
 | **TOTAL** (34 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **60% done** | **177**  | —        |
 
@@ -1679,6 +1679,10 @@ Slot 8 4-day cycle (2026-05-12 → 2026-05-15) shipped Phases 0-5 of
   — 11 QG-automation gaps (auto-fail vs warning enforcement; baseline-deletion ratchets). POST_CUTOVER backlog.
 - [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
   — 7 operator-UX deliverables for alerting / on-call surface (post-cutover refinement of the May-23 minimum).
+- [`global_ledger_pnl_attribution_discovery_2026_05_21.md`](./global_ledger_pnl_attribution_discovery_2026_05_21.md) —
+  4-SSOT-ledger + 4-derived-ledger architecture discovery: UAC schema spec
+  (InstructionLedger/PassiveLedger/TreasuryLedger/PricingLedger) + audit across 5 services + late-arriving-data
+  discipline + migration sub-plan stub. `parent_epic: global_ledger_pnl_attribution_master`. 0/38 items, June+ timeline.
 
 **Pre-cutover consumer sweeps + operator gates** (live work in flight):
 

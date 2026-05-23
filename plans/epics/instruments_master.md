@@ -15,6 +15,7 @@ related_plans:
   - ../active/d1_is_hardening_2026_05_20.md
   - ../active/expected_universe_v2_design_2026_05_08.md
   - ../active/trigger_based_reference_data_2026_04_13.md
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Instruments Live — Master Activation Plan

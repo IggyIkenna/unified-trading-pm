@@ -14,6 +14,7 @@ locked_since: 2026-05-21
 related_plans:
   - ../active/promote_workflow_may23_cli_path_2026_05_10.md
   - ../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
+  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # DART + Promote Workflow Master (L3)

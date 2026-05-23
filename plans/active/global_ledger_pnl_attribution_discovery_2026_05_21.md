@@ -151,12 +151,16 @@ attribution = decompose Δ(unrealised) into delta/gamma/theta/vega/carry/...  �
 
 ### Phase 0 — Cross-link + inventory (P0)
 
-- [ ] [DOC] P0. Cross-link this plan from `master_to_live_defi_2026_05_23.md` § "Post-cutover backlog" (or
-      operator-confirmed section).
-- [ ] [DOC] P0. Cross-link from `execution_master.md`, `strategy_master.md`, `mtds_mdps_master.md`,
-      `instruments_master.md`, `observability_master.md`, `dart_and_promote_master.md` in `related_plans:`.
-- [ ] [SCRIPT] P0. Run `python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py` — confirm this
-      plan shows up in master inventory.
+- [x] ✅ [DOC] P0. Cross-link this plan from `master_to_live_defi_2026_05_23.md` § "Post-cutover backlog" (or
+      operator-confirmed section). Added to "Post-cutover consolidated successor plans" section. —
+      unified-trading-pm@slot-7 2026-05-23.
+- [x] ✅ [DOC] P0. Cross-link from `execution_master.md`, `strategy_master.md`, `mtds_mdps_master.md`,
+      `instruments_master.md`, `observability_master.md`, `dart_and_promote_master.md` in `related_plans:`. Added to
+      `mtds_mdps_master`, `instruments_master`, `dart_and_promote_master` (other 3 already had it). —
+      unified-trading-pm@slot-7 2026-05-23.
+- [x] ✅ [SCRIPT] P0. Run `python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py` — confirm this
+      plan shows up in master inventory. Ran: 34 plans, 0 orphans, 60% done overall. Plan appears in inventory table. —
+      unified-trading-pm@slot-7 2026-05-23.
 
 ### Phase 1 — Current-state audit (P0, parallel-safe across services)
 
