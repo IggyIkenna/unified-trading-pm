@@ -236,17 +236,85 @@ regulatory_report_id):
 
 ### Phase 4 — Writer-side gap analysis (P0)
 
-- [ ] [DESIGN] P0. **execution-service**: enumerate what InstructionLedger fields the current emission paths populate vs
-      what's missing. Flag fields where execution-service has no source (e.g. `combo_price` for atomic spread fills —
-      needs broker exec-report parsing).
-- [ ] [DESIGN] P0. **PassiveLedger synthesiser**: enumerate every passive event type's synthesis rule (cf. table in the
-      conversation: funding interval, rebase interval, interest accrual index, epoch schedule, expiry timestamp,
-      resolution source). Map each to an instrument-metadata source (instruments-service or MTDS).
-- [ ] [DESIGN] P0. **PassiveLedger listener gap**: which passive events MUST come from a live listener (on-chain
+- [x] ✅ [DESIGN] P0. **execution-service**: enumerate what InstructionLedger fields the current emission paths populate
+      vs what's missing. Flag fields where execution-service has no source (e.g. `combo_price` for atomic spread fills —
+      needs broker exec-report parsing). — **Gap analysis from audit (2026-05-23)**:
+
+      **Currently populated** (from `CanonicalFill` → `attribution_builder.py`):
+      - `event_id` (exec_id), `timestamp_utc`, `asset_symbol`, `asset_canonical_id`, `delta`, `price`,
+        `quote_currency`, `venue`, `account_id`, `direction`, `underlying`, `expiry_date`, `option_right`, `strike`
+
+      **Missing / not yet populated**:
+      - `client_id` — not in `log_event` payloads (HIGH — blocks per-client join)
+      - `row_id` — multi-asset events not split into per-row suffixes
+      - `event_origin` / `event_type` — not explicitly set (defaults needed)
+      - `asset_group` — not in current fill schema
+      - `asset_class` — mapped loosely; ATOKEN/DEBT_TOKEN/LST/LRT/VAULT_SHARE not discriminated
+      - `fees_in_quote` — fee extraction from exec report partial; gas not converted
+      - `gas_paid_native` / `gas_currency` / `chain` / `chain_tx_hash` / `chain_block_number` —
+        on-chain fills not populating any chain metadata
+      - `combo_id` / `combo_price` — atomic spread fills require broker exec-report parsing (no source yet)
+      - `trade_id` / `leg_id` — strategy grouping not threaded through to execution
+      - `contract_multiplier` — not extracted from instrument metadata
+      - `selection` — sports/prediction fills not wiring outcome label
+
+      **Emission path gap**: `build_attribution_rows()` returns empty list. Emission does not go through
+      `_resolve_policy_output_data_type` / `_publish_emission_check`. Fix target: execution-service v2 writer refactor
+      (Phase 7 migration sub-plan). unified-trading-pm@2026-05-23.
+
+- [x] ✅ [DESIGN] P0. **PassiveLedger synthesiser**: enumerate every passive event type's synthesis rule (cf. table in
+      the conversation: funding interval, rebase interval, interest accrual index, epoch schedule, expiry timestamp,
+      resolution source). Map each to an instrument-metadata source (instruments-service or MTDS). — **Synthesis
+      rules**:
+
+      | EventType          | Synthesis rule                                              | Rate source              | Position source                | Cadence              |
+      | ------------------ | ----------------------------------------------------------- | ------------------------ | ------------------------------ | -------------------- |
+      | FUNDING_ACCRUAL    | delta = position.qty × funding_rate × sign(direction)      | MTDS `funding_rate`      | InstructionLedger TRADE rows   | 8h CeFi; block DeFi  |
+      | STAKING_REWARD     | delta = atoken_balance × (index_now/index_prev - 1)        | MTDS `lst_rates`         | InstructionLedger STAKE rows   | Oracle report / epoch|
+      | LENDING_INTEREST   | delta = balance × (liquidity_index_now/prev - 1)           | MTDS `lending_indices`   | InstructionLedger BORROW rows  | Block-level          |
+      | DIVIDEND           | delta = share_qty × dividend_per_share                     | IS `CanonicalCorporateAction` | InstructionLedger TRADE rows | Ex-dividend date     |
+      | SETTLEMENT         | delta = settlement_price × contract_multiplier × qty × sign | IS `expiry_date` + MTDS mark | InstructionLedger TRADE rows | Expiry date          |
+      | EXPIRY (OTM)       | delta = 0 (position zeroed)                                | IS `expiry_date`         | InstructionLedger TRADE rows   | Expiry date          |
+
+      **Critical gap from IS audit**: `funding_interval` not stored in IS; must be inferred from venue convention.
+      `exercise_style` absent — cannot distinguish American vs European for early exercise logic.
+      unified-trading-pm@2026-05-23.
+
+- [x] ✅ [DESIGN] P0. **PassiveLedger listener gap**: which passive events MUST come from a live listener (on-chain
       emission) vs can be synthesised from schedule. Drift-detection: listener-observed minus synthesiser-expected =
-      data-quality alert.
-- [ ] [DESIGN] P0. American option exception: `exercise_style` field on the instrument; early-exercise = instruction
-      event, expiry-without-action = passive event. Both code paths defined.
+      data-quality alert. — **Listener vs synthesiser classification**:
+
+      **MUST listen (live on-chain emission, cannot reliably synthesise)**:
+      - `STAKING_REWARD` (stETH rebase): oracle report timing is irregular; missed rebase = permanent error
+      - `STAKING_REWARD` (validator): Ethereum `Withdrawal` events must be caught at block; no predictable schedule
+      - `LIQUIDATION`: forced by protocol at any block; no schedule
+      - `DIVIDEND` (surprise/special): special dividends not in any schedule
+
+      **CAN synthesise (predictable schedule + rate data)**:
+      - `FUNDING_ACCRUAL` (CeFi): fixed 8h cadence; synthesiser queries MTDS at 00:00/08:00/16:00 UTC
+      - `FUNDING_ACCRUAL` (DeFi): block-level; synthesiser queries MTDS `funding_rate` at block
+      - `LENDING_INTEREST`: every block via `lending_indices`; synthesiser queries MTDS
+      - `SETTLEMENT` / `EXPIRY`: known from IS `expiry_date`; synthesiser reads IS at expiry time
+      - `DIVIDEND` (scheduled): cash/stock dividend on record date from IS `CanonicalCorporateAction`
+
+      **Drift detection**: synthesiser-expected row vs listener-observed row within ε tolerance per period.
+      Divergence > threshold → `PASSIVE_LEDGER_DIVERGENCE` alert. unified-trading-pm@2026-05-23.
+
+- [x] ✅ [DESIGN] P0. American option exception: `exercise_style` field on the instrument; early-exercise = instruction
+      event, expiry-without-action = passive event. Both code paths defined. — **Design**:
+
+      **Gap**: `exercise_style` (AMERICAN / EUROPEAN) absent from `InstrumentRecord` (IS audit Gap 1 — 2026-05-23).
+      Must be added to IS before this code path can be discriminated.
+
+      **Code paths once IS gap is fixed**:
+      - `exercise_style=AMERICAN`: when holder exercises early → execution-service emits
+        `EventType.TRADE` (EXERCISE direction) on InstructionLedger. Counterparty (writer) gets
+        `EventType.TRADE` (ASSIGN direction) simultaneously.
+      - `exercise_style=EUROPEAN` or AMERICAN at expiry without exercise: synthesiser emits
+        `EventType.SETTLEMENT` (cash settled) or `EventType.EXPIRY` (OTM = zero value) on PassiveLedger.
+      - **Blocker**: IS Gap 1 (`exercise_style` field) must land before Phase 7 migration sub-plan can
+        implement this split. Plan item: IS instruments_master Phase B.2 (deferred from current IS audit).
+      unified-trading-pm@2026-05-23.
 
 ### Phase 5 — Pricing + greeks gap analysis (P1)
 
@@ -306,10 +374,13 @@ regulatory_report_id):
       `Direction` enum SSOT. — Expanded from stub: full EventOrigin (2), EventType (15), AssetClass (14), Direction
       (12), OptionRight (2) tables with string values + routing summary + cross-client invariant.
       unified-trading-pm@a7aed81d3.
-- [ ] [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
-      "carry-as-theta-family" attribution framing.
-- [ ] [DOC] P2. Update CLAUDE.md to add a 1-line pointer to the new ledger codex SSOT (or extend the existing
-      manifest/honest-absence section if more natural).
+- [x] ✅ [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
+      "carry-as-theta-family" attribution framing. — Added Global Ledger Integration section: carry-as-theta table
+      (FUNDING*ACCRUAL/STAKING_REWARD/LENDING_INTEREST/DIVIDEND → CARRY*\* factors), ledger→factor mapping code block,
+      implementation status from audit. unified-trading-pm@8317120eb.
+- [x] ✅ [DOC] P2. Update CLAUDE.md to add a 1-line pointer to the new ledger codex SSOT (or extend the existing
+      manifest/honest-absence section if more natural). — Added 1-line global ledger SSOT pointer in UAC Citadel
+      Architecture section. unified-trading-pm@8317120eb.
 
 ## Full-execution criterion
 
