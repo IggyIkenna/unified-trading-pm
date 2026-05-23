@@ -72,7 +72,7 @@ def load_manifest_for_bucket(asset_group: str, fs: gcsfs.GCSFileSystem) -> pd.Da
     """
     bucket = MANIFEST_BUCKETS[asset_group]
     path = f"{bucket}/_index/availability_index.parquet"
-    print(f"  reading gs://{path} ...", flush=True)
+    print(f"  reading gs://{path} ...", flush=True)  # noqa: gs-uri — audit script diagnostic print; path is resolved from MANIFEST_BUCKETS SSOT
     with fs.open(path, "rb") as fh:
         # Project only the columns we need to keep memory in check.
         df = pq.read_table(

@@ -117,7 +117,7 @@ def probe_gcs_index(fs: gcsfs.GCSFileSystem, bucket: str) -> pd.DataFrame | None
 def probe_aws_index(bucket: str) -> dict[str, object]:
     """Lightweight AWS probe — list bucket head to confirm existence."""
     result = subprocess.run(
-        ["aws", "s3", "ls", f"s3://{bucket}/_index/"],
+        ["aws", "s3", "ls", f"s3://{bucket}/_index/"],  # noqa: gs-uri — audit script, s3:// for AWS probing, bucket is caller-provided
         capture_output=True,
         text=True,
         check=False,
