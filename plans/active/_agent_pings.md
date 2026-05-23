@@ -4817,3 +4817,66 @@ UI.
 **Plan ref**: `plans/active/multi_backend_fleet_connectivity_2026_05_22.md` § Deploy/ops DONE.
 
 — harsh-main / 2026-05-22 12:05 UTC
+
+---
+
+## [external-contributor] @CosmicTrader — 3 PRs need rebase after BFG history-scrub
+
+**Plan ref**: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`
+
+Hi @CosmicTrader — on 2026-05-20 we did a BFG history-scrub (commit `unified-trading-pm@b0d1e6faa`) to remove a leaked
+service-account-key file from git history on a couple of service repos. The scrub force-pushed `refs/heads/*` on
+`execution-service` + `market-tick-data-service`, which orphaned the merge-base of every open PR — GitHub now shows
+"merge commit not found" on yours.
+
+Your branch CONTENTS are preserved (BFG only removed the SA-key file from history); only the linkage to the pre-scrub
+main was broken.
+
+**Your 3 open PRs that need attention** (we left these OPEN; everything else on these repos was bulk-closed):
+
+| Repo                       | PR #                                                                | Branch                                  | Title                                                                       |
+| -------------------------- | ------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `execution-service`        | [#176](https://github.com/IggyIkenna/execution-service/pull/176)        | `auto/20260220-154522-490985`           | feat: Pass mode to get_order_adapter for sim/real routing (Task 350)        |
+| `market-tick-data-service` | [#94](https://github.com/IggyIkenna/market-tick-data-service/pull/94) | `data-io-production-readiness-project-9` | Data I/O Production Readiness: config, UEI migration, codex alignment       |
+| `market-tick-data-service` | [#65](https://github.com/IggyIkenna/market-tick-data-service/pull/65) | `auto/20260216-185111-354256`           | feat(epic-2): complete market data infrastructure implementation            |
+
+**Recovery recipe** (per PR):
+
+```bash
+# In your local clone of the affected repo:
+git fetch origin
+git checkout <your-branch>   # e.g. auto/20260220-154522-490985
+git rebase origin/main       # rebase onto the post-scrub main
+# resolve any conflicts (mostly should be clean since branch content is preserved)
+git push --force-with-lease origin <your-branch>
+# GitHub will automatically re-link the existing PR to the new merge-base.
+```
+
+If `git rebase origin/main` produces a lot of conflicts (which can happen if the scrubbed file paths overlapped with
+your edits), the simpler path is:
+
+```bash
+git fetch origin
+git checkout <your-branch>
+git reset --hard origin/<your-branch>     # keep your branch tip exactly as you pushed it
+# Then open a FRESH PR against the post-scrub main, link the old PR # in the body.
+```
+
+**Per-PR notes**:
+
+- `execution-service#176` (Task 350, mode-routing for `get_order_adapter`) — likely still relevant since
+  `get_order_adapter` is still the canonical credential entry point per
+  `codex/04-architecture/interface-credential-convention.md`. Worth rebasing.
+- `mtds#94` (Data I/O Production Readiness) — please cross-check against
+  `codex/02-data/data-pipeline-correctness-hard-rule.md` (codified 2026-05-20) before re-pushing; some of your earlier
+  work may now overlap with the mega-audit Phase A remediation.
+- `mtds#65` (epic-2 market data infrastructure) — please cross-check against
+  `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` (IS→MTDS contract); some MTDS-side infrastructure
+  changes may need to defer to instruments-service ownership now.
+
+**No deadline pressure** — these stay open until you decide. Pinging operator (@IggyIkenna) on this thread too so we can
+grant any access / sync calls you need.
+
+Full triage doc: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`.
+
+— slot-1-main / 2026-05-23 ikenna-side
