@@ -662,13 +662,15 @@ before CME arb can link.
       CLASSIFIER_VERSION=2026-05-23.1. Smoke-test verified: BTC/SPX/CRUDE_OIL/GOLD/NATGAS daily slugs all route to
       correct groups. Remaining: IS prediction catalog re-backfill (purge existing OTHER rows for these 5 groups + rerun
       instr-backfill-pred VM with UAC@228c317a) + MTDS CLOB tick history for 7 new groups.
-- [ ] [SCRIPT] P1. **Phase 5.reclassify — purge OTHER + re-launch IS prediction backfill with UAC@228c317a**: existing
-      7,570 Polymarket OTHER rows in IS prediction manifest include BTC/SPX/CRUDE_OIL/GOLD/NATGAS daily markets that now
-      classify correctly with the 2026-05-23.1 classifier. Steps: (1) purge IS prediction manifest rows where
-      `canonical_question_group=OTHER` AND slug matches btc-up-or-down-_/spx-up-or-down-_/crude-oil-up-or-down-_/
-      gold-up-or-down-_/nat-gas-up-or-down-\* patterns; (2) rebuild tarball instruments-service @ LDR tip; (3) launch
-      instr-backfill-pred VM (2024-01-01→2026-05-23, MANIFEST_PER_VM_SHARDS=true) — manifest skip will reuse correctly
-      classified rows and only re-write the purged ones.
+- [x] ✅ [SCRIPT] P1. **Phase 5.reclassify — purge OTHER + re-launch IS prediction backfill with UAC@228c317a**:
+      2026-05-23 slot-1. (1) Wrote IS@d76b877f `scripts/purge_prediction_other_group_rows.py` — purged 435 OTHER rows
+      (stored in `underlying` col) from canonical manifest + 821 from 2 per-VM shards; 108 clean rows remain
+      (CPI_PRINT_PER_MONTH + BTC_UP_DOWN_HOURLY). (2) Rebuilt tarball (`--allow-dirty-tarball`; UAC@c07058537253
+      includes classifier fix). (3) Launched `instr-backfill-pred-20260523` VM (2020-01-01→2026-05-23,
+      MANIFEST_PER_VM_SHARDS=true); VM RUNNING and processing chunks. Kalshi 400s on pre-2020 dates expected (no Kalshi
+      data then). VM will rebuild all purged rows with BTC_UP_DOWN_DAILY / SPX_UP_DOWN_DAILY / CRUDE_OIL_UP_DOWN_DAILY /
+      GOLD_UP_DOWN_DAILY / NATGAS_UP_DOWN_DAILY classifications. — IS@d76b877f | VM: instr-backfill-pred-20260523
+      RUNNING
 
 ## `available_at` adapter stamping (coordinated)
 
