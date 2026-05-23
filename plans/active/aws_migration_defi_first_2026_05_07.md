@@ -595,16 +595,14 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       (shift to AWS), `rollback` (instant revert to GCP). Operator must: (1) provision ALB ARN from Fargate deploy,
       (2) run `--mode setup` to create zone + records, (3) update domain registrar NS records (~48h propagation),
       (4) run `--mode cutover` at DeFi go-live.
-- [x] ✅ [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
+- [ ] [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
       UI/API services. UI/API logs a warning + emits a `CROSS_CLOUD_QUERY` event if its `CLOUD_PROVIDER` doesn't match
       the data backend's. Wire this into the alerting taxonomy (`alerting_service_live_rules:Phase 1` AlertCode
       addition: `CROSS_CLOUD_EGRESS_DETECTED`).
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6+2]** Gated on Phase 6 services deployed (BLOCKED-OPERATOR) + requires
-      changes to alerting-service (not in worktree). CROSS_CLOUD_EGRESS_DETECTED AlertCode wiring is Wave 2 scope.
 - [x] ✅ [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
       egress > $10/day during the May-23 soak (catches accidental cross-cloud reads). Land script under
       `unified-trading-pm/scripts/finops/cross-cloud-egress-watch.sh`.
-      **DONE 2026-05-23** (Slot 7): pm@(next commit) — landed
+      **DONE 2026-05-23** (Slot 7): pm@b4f3b19f — landed
       `scripts/finops/cross-cloud-egress-watch.sh`. Queries AWS Cost Explorer (`DataTransfer-Out-Bytes` /
       `Inter Region`) + GCP BigQuery billing export for N-day window. Computes daily average; alerts if >
       `ALERT_THRESHOLD_USD` (default $10/day). `--ci` flag exits 1 on breach (for cron/CI integration).
@@ -612,60 +610,47 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
 - [x] ✅ [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
       must serve from the same-cloud CDN as the underlying app (CloudFront-fronts-S3 for the AWS path;
       Cloud-CDN-fronts-GCS for GCP path).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on Phase 6.5 UI deploy live on AWS Amplify/Fargate. CloudFront
-      distribution creation requires aws:cloudfront:* perms not available from this slot. Operator action post-Phase 6.
-- [x] ✅ [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
+      **DONE 2026-05-23** (Slot 7): ui@ec772460 — landed `.aws/cloudfront.yaml` (CloudFormation: CloudFront
+      distribution + S3 bucket `uts-ui-static-ap-northeast-1`). Cache policy: `_next/static/*` + fonts/icons →
+      CachingOptimized (1y immutable, mirrors nginx.conf); `api/*` → CachingDisabled; default → CachingDisabled
+      forwarded to ALB. OAC for S3 origin (sigv4). `.aws/deploy.sh` extended: `STATIC_ASSETS_BUCKET` env var
+      triggers `aws s3 sync .next/static/ + public/` post-deploy.
+- [ ] [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
       DART pages; assert zero cross-cloud network calls in browser network tab + zero `CROSS_CLOUD_QUERY` events on the
       server side.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on Phase 6 ECS services + Phase 6.5 UI live on AWS. Cannot
-      run browser smoke test without deployed UI + services. Operator runs post-Phase 6 completion.
 
 ### Phase 7 — Dual-cloud-active validation (1-2 days, GATES Phase 8)
 
 Both GCP and AWS prod-DeFi pipelines run simultaneously, reading the same manifest, writing to their respective stores.
 Operator verifies parity.
 
-- [x] ✅ [SCRIPT] P0. Configure `instruments-service` + `features-service (onchain family)` + `strategy-service` to
+- [ ] [SCRIPT] P0. Configure `instruments-service` + `features-service (onchain family)` + `strategy-service` to
       dual-write: GCP for primary, AWS for secondary. Use a feature flag `DUAL_CLOUD_DEFI=true`.
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6+2]** Requires instruments-service, features-service, strategy-service
-      (not in worktree). Gated on Phase 6 ECS services live. Feature flag wiring is Wave 2 scope.
-- [x] ✅ [SCRIPT] P0. Run for 24h continuous. After 24h, sample 10% of DeFi shards + diff GCP vs AWS parquets. Acceptance:
+- [ ] [SCRIPT] P0. Run for 24h continuous. After 24h, sample 10% of DeFi shards + diff GCP vs AWS parquets. Acceptance:
       byte-equal or schema+row-count match (NaN-aware compare).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on dual-write feature flag (item above). Operator action post-Phase 6.
-- [x] ✅ [SCRIPT] P0. Manifest parity: `_index/availability_index.parquet` row-count + `capture_status` distribution match
+- [ ] [SCRIPT] P0. Manifest parity: `_index/availability_index.parquet` row-count + `capture_status` distribution match
       GCP↔AWS within 0.5%.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on 24h dual-write run (item above). Operator action post-Phase 6.
-- [x] ✅ [HUMAN] P0. Operator sign-off on dual-cloud parity. Capture in handover doc.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Operator action; gated on all Phase 7 script items completing.
+- [ ] [HUMAN] P0. Operator sign-off on dual-cloud parity. Capture in handover doc.
 
 ### Phase 8 — DeFi cutover on 2026-05-23T09:00 UTC (1 day)
 
-- [x] ✅ [HUMAN] P0. Cutover decision: switch `CLOUD_PROVIDER=aws` for the 6 DeFi-live services. GCP-DeFi pipeline keeps
+- [ ] [HUMAN] P0. Cutover decision: switch `CLOUD_PROVIDER=aws` for the 6 DeFi-live services. GCP-DeFi pipeline keeps
       running in shadow mode (writes-only, no reads from strategy/execution).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Operator decision; gated on Phase 7 parity sign-off. Phase 6 not
-      yet live. May-23 cutover timeline slipping per plan sequencing note (AWS after GCP, 2026-05-13).
-- [x] ✅ [HUMAN] P0. Live trading: the carry_staked_basis lead + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion;
+- [ ] [HUMAN] P0. Live trading: the carry_staked_basis lead + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion;
       renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07) archetypes go live on AWS-prod
       for the 7-day soak (per master plan).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Operator action; gated on Phase 8 cutover decision.
-- [x] ✅ [SCRIPT] P0. Hourly health check on AWS-DeFi services. Manifest write rate, P&L attribution, position drift,
+- [ ] [SCRIPT] P0. Hourly health check on AWS-DeFi services. Manifest write rate, P&L attribution, position drift,
       alerting fire rate (per `alerting_service_live_rules_2026_05_07.md` Phase 8 rehearsal).
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6+2]** Health check script requires alerting-service integration (not in
-      worktree). Gated on Phase 8 live trading start. Wave 2 automation.
-- [x] ✅ [HUMAN] P0. After 7 days continuous on AWS, GCP-DeFi shadow can be archived (move to coldline / Glacier).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Operator action; gated on 7-day AWS soak completing post-cutover.
+- [ ] [HUMAN] P0. After 7 days continuous on AWS, GCP-DeFi shadow can be archived (move to coldline / Glacier).
 
 ### Phase 9 — Full-workspace rollout (post-May-23, deferred)
 
 Sports + predictions + tradfi + cefi + remaining buckets. Same template but not on critical path. Estimated 2-4 weeks
 post-May-23.
 
-- [x] ✅ [SCRIPT] P2. Repeat Phase 2-7 for sports/predictions/tradfi/cefi.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Explicitly post-May-23 scope per plan. Gated on DeFi Phase 8 soak.
-- [x] ✅ [SCRIPT] P2. Cut over CI/CD to AWS-only once workspace is fully bilateral.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Explicitly post-May-23 scope per plan.
-- [x] ✅ [SCRIPT] P2. Decommission GCP buckets per data-retention policy.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Explicitly post-May-23 scope per plan. Gated on full-workspace rollout.
+- [ ] [SCRIPT] P2. Repeat Phase 2-7 for sports/predictions/tradfi/cefi.
+- [ ] [SCRIPT] P2. Cut over CI/CD to AWS-only once workspace is fully bilateral.
+- [ ] [SCRIPT] P2. Decommission GCP buckets per data-retention policy.
 
 ## Cost calculus (with credits + cloud-agnostic)
 
