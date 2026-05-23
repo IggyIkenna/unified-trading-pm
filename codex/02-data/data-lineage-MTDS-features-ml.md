@@ -62,8 +62,8 @@ Bucket: `market-data-tick-{category}-central-element-323112`
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=trades/.parquet`                         | `(cefi, perpetual, trades)`                               | Tardis-native columns (exchange, symbol, price, amount) |
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=book_snapshot_5/`                        | `(cefi, perpetual, book_snapshot_5)`                      | L1 + L5 bid/ask                                         |
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=derivative_ticker/`                      | `(cefi, perpetual, derivative_ticker)`                    | funding_rate, mark_price, index_price                   |
-| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=UNISWAPV3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_swaps/`                     | `(defi, pool, dex_pool_swaps)`                            | Pool swaps from The Graph                               |
-| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=AAVEV3/chain=ETHEREUM/instrument_type=a_token/data_type=lending_indices/`                    | `(defi, a_token, lending_indices)`                        | Reserve state                                           |
+| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=UNISWAP_V3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_swaps/`                     | `(defi, pool, dex_pool_swaps)`                            | Pool swaps from The Graph                               |
+| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=AAVE_V3/chain=ETHEREUM/instrument_type=a_token/data_type=lending_indices/`                    | `(defi, a_token, lending_indices)`                        | Reserve state                                           |
 | TradFi     | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=XNAS/instrument_type=equity/data_type=ohlcv_1m/`                                             | `(tradfi, equity, ohlcv_1m)` (pass-through)               | Databento-native                                        |
 | TradFi     | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=XCBO/instrument_type=future/data_type=trades/`                                               | `(tradfi, future, trades)`                                | Databento per-leg (bundled symbology)                   |
 | Sports     | `raw_tick_data/by_date/day=YYYY-MM-DD/data_source=ODDS_API/venue=BET365/league_id=PREMIER_LEAGUE/instrument_type=odds/data_type=trades/` | `(sports, odds, trades)` (per Phase 2.2)                  | Bookmaker = `venue`, provider = `data_source`           |
@@ -172,7 +172,7 @@ Lifecycle: `ServiceBootstrap` emits lifecycle events; model hot-reload via `Mode
 1. **Every write through strict-mode writer.** `grep -r 'StreamingParquetWriter(strict=False)'` outside the explicit
    legacy list returns zero matches.
 2. **Every write emits a manifest row.** Nightly audit job diffs GCS truth vs manifest; 0 drift.
-3. **Every service reads canonical paths only.** No legacy `venue=AAVEV3-ETHEREUM`-style fallbacks.
+3. **Every service reads canonical paths only.** No legacy `venue=AAVE_V3-ETHEREUM`-style fallbacks.
 4. **SchemaContract on read.** `ml-training-service.adapters.feature_data_adapter.read_features()` validates against the
    registered contract; unknown columns fail loud.
 5. **`--force` source-replay symmetry.** Re-running any adapter day D with `--force` twice produces byte-identical

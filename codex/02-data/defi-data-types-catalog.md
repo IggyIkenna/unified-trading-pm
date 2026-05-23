@@ -119,7 +119,7 @@ Perpetual funding rates. One row per market per funding interval.
 | **Instrument type** | `lending`                                                                                                      |
 | **Status**          | Production (2026-04-24)                                                                                        |
 | **Schema fields**   | symbol, ts_event, venue, chain, collateral_asset, debt_asset, collateral_amount, debt_amount, liquidator, user |
-| **Protocols**       | AAVEV3 (ETHEREUM, ARBITRUM, POLYGON), MORPHO (ETHEREUM)                                                        |
+| **Protocols**       | AAVE_V3 (ETHEREUM, ARBITRUM, POLYGON), MORPHO (ETHEREUM)                                                        |
 
 On-chain liquidation call events. One row per liquidation transaction. Distinct from `liquidations` (GMX-style
 position-level data) — this is the on-chain event log.
@@ -136,7 +136,7 @@ position-level data) — this is the on-chain event log.
 | **Instrument type** | `lending`                                                                   |
 | **Status**          | Production (2026-04-24)                                                     |
 | **Schema fields**   | symbol, ts_event, venue, chain, asset, amount, premium, initiator, borrower |
-| **Protocols**       | AAVEV3 (all supported chains via `get_supported_chains_for_protocol`)       |
+| **Protocols**       | AAVE_V3 (all supported chains via `get_supported_chains_for_protocol`)       |
 
 Aave V3 FlashLoan events. Captures flash loans including amount, premium (fee), initiator, and receiver address.
 
@@ -168,7 +168,7 @@ Daily staking yield snapshots from liquid staking protocols. One row per venue p
 | **Instrument type** | `lending`                                                                                             |
 | **Status**          | Production (2026-04-24)                                                                               |
 | **Schema fields**   | symbol, ts_event, venue, chain, user, supplied_usd, borrowed_usd, health_factor                       |
-| **Protocols**       | AAVEV3 (all supported chains), UNISWAPV3-ETHEREUM                                                     |
+| **Protocols**       | AAVE_V3 (all supported chains), UNISWAP_V3-ETHEREUM                                                     |
 
 Daily snapshot of top user positions. Captures collateral, debt, and health factor for at-risk lending positions.
 Uniswap positions use `liquidity` field mapped to `supplied_usd`.
@@ -278,10 +278,10 @@ Daily aggregate gas stats per EVM chain. One row per chain per day.
 
 | Protocol         | Chain(s)                           | Data Types                                                            |
 | ---------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| UNISWAPV2        | ETHEREUM                           | swap_events, pool_state                                               |
-| UNISWAPV3        | ETHEREUM, ARBITRUM, BASE, OPTIMISM | swap_events, pool_state, position_data                                |
-| UNISWAPV4        | ETHEREUM                           | swap_events, pool_state                                               |
-| AAVEV3           | ETHEREUM, ARBITRUM, POLYGON        | lending_metrics, liquidation_events, flash_loan_events, position_data |
+| UNISWAP_V2        | ETHEREUM                           | swap_events, pool_state                                               |
+| UNISWAP_V3        | ETHEREUM, ARBITRUM, BASE, OPTIMISM | swap_events, pool_state, position_data                                |
+| UNISWAP_V4        | ETHEREUM                           | swap_events, pool_state                                               |
+| AAVE_V3           | ETHEREUM, ARBITRUM, POLYGON        | lending_metrics, liquidation_events, flash_loan_events, position_data |
 | MORPHO           | ETHEREUM                           | lending_metrics, liquidation_events                                   |
 | LIDO             | ETHEREUM                           | oracle_prices, staking_yields                                         |
 | ETHERFI          | ETHEREUM                           | oracle_prices, staking_yields                                         |

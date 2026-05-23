@@ -3,7 +3,7 @@ scope: [engineer, admin]
 archetype: ARBITRAGE_MEV_BACKRUN
 family: ARBITRAGE_STRUCTURAL
 status: code-shipped
-venue_universe: [UNISWAPV3, BALANCER, CURVE, SUSHISWAP, BINANCE, BYBIT]
+venue_universe: [UNISWAP_V3, BALANCER, CURVE, SUSHISWAP, BINANCE, BYBIT]
 topology_requirements:
   isolation:
     execution-service: isolated

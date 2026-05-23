@@ -42,7 +42,7 @@ wasted gas, and failed strategies. This document covers:
 
 | Venue               | Accepted Collateral | Haircut | Notes                        |
 | ------------------- | ------------------- | ------- | ---------------------------- |
-| **AAVEV3-ETHEREUM** | WETH                | 17.5%   | LTV 82.5%                    |
+| **AAVE_V3-ETHEREUM** | WETH                | 17.5%   | LTV 82.5%                    |
 |                     | weETH               | 27.5%   | LTV 72.5%                    |
 |                     | wstETH              | 20.5%   | LTV 79.5%                    |
 |                     | USDC / USDT         | 23%     | LTV 77%                      |
@@ -87,9 +87,9 @@ from unified_api_contracts.registry import (
 Returns `(True, "WETH")` if wrapping is needed, `(False, None)` otherwise.
 
 ```python
-needs_wrapping("ETH", "AAVEV3")     # -> (True, "WETH")
-needs_wrapping("eETH", "AAVEV3")    # -> (True, "weETH")
-needs_wrapping("WETH", "AAVEV3")    # -> (False, None)
+needs_wrapping("ETH", "AAVE_V3")     # -> (True, "WETH")
+needs_wrapping("eETH", "AAVE_V3")    # -> (True, "weETH")
+needs_wrapping("WETH", "AAVE_V3")    # -> (False, None)
 needs_wrapping("USDC", "HYPERLIQUID")  # -> (False, None)
 ```
 
@@ -98,7 +98,7 @@ needs_wrapping("USDC", "HYPERLIQUID")  # -> (False, None)
 ```python
 venue_accepts_collateral("HYPERLIQUID", "USDC")    # -> True
 venue_accepts_collateral("HYPERLIQUID", "weETH")   # -> False
-venue_accepts_collateral("AAVEV3-ETHEREUM", "weETH")  # -> True
+venue_accepts_collateral("AAVE_V3-ETHEREUM", "weETH")  # -> True
 ```
 
 ### `get_collateral_haircut(venue, token) -> Decimal | None`
@@ -106,7 +106,7 @@ venue_accepts_collateral("AAVEV3-ETHEREUM", "weETH")  # -> True
 Returns `None` if the venue does not accept the token.
 
 ```python
-get_collateral_haircut("AAVEV3-ETHEREUM", "weETH")   # -> Decimal("0.275")
+get_collateral_haircut("AAVE_V3-ETHEREUM", "weETH")   # -> Decimal("0.275")
 get_collateral_haircut("HYPERLIQUID", "weETH")        # -> None
 ```
 
@@ -121,16 +121,16 @@ It inspects each `ExecutionInstruction` and inserts wrap/unwrap steps when neede
 **Entry flows (wrap before protocol interaction):**
 
 ```
-ETH  + AAVEV3 instruction  → [WRAP ETH->WETH, LEND WETH@AAVEV3]
-eETH + AAVEV3 instruction  → [WRAP eETH->weETH, LEND weETH@AAVEV3]
-WETH + AAVEV3 instruction  → [LEND WETH@AAVEV3]  (no wrap needed)
+ETH  + AAVE_V3 instruction  → [WRAP ETH->WETH, LEND WETH@AAVE_V3]
+eETH + AAVE_V3 instruction  → [WRAP eETH->weETH, LEND weETH@AAVE_V3]
+WETH + AAVE_V3 instruction  → [LEND WETH@AAVE_V3]  (no wrap needed)
 ```
 
 **Exit flows (unwrap after withdrawal):**
 
 ```
-WITHDRAW weETH from AAVEV3  → [WITHDRAW weETH, UNWRAP weETH->eETH]
-WITHDRAW WETH from AAVEV3   → [WITHDRAW WETH, UNWRAP WETH->ETH]
+WITHDRAW weETH from AAVE_V3  → [WITHDRAW weETH, UNWRAP weETH->eETH]
+WITHDRAW WETH from AAVE_V3   → [WITHDRAW WETH, UNWRAP WETH->ETH]
 ```
 
 The preprocessor is applied in the execution pipeline before any connector is invoked. Unsupported collateral tokens
@@ -163,11 +163,11 @@ instructions.
    (returns `None` from `_validate_collateral`). A `logger.warning` is emitted.
 
 ```python
-# Example: strategy emits ETH -> AAVEV3
+# Example: strategy emits ETH -> AAVE_V3
 # After _validate_instructions: token is auto-corrected to WETH
 
 instructions = self._validate_instructions([
-    StrategyInstruction(token_in="ETH", to_venue="AAVEV3-ETHEREUM", ...)
+    StrategyInstruction(token_in="ETH", to_venue="AAVE_V3-ETHEREUM", ...)
 ])
 # instructions[0].token_in == "WETH"
 # instructions[0].metadata["auto_wrapped_from"] == "ETH"
@@ -200,7 +200,7 @@ This strategy has two separate collateral pools that must not be mixed:
 
 | Pool        | Token | Venue           | Purpose               |
 | ----------- | ----- | --------------- | --------------------- |
-| A (lending) | weETH | AAVEV3-ETHEREUM | Yield from staked ETH |
+| A (lending) | weETH | AAVE_V3-ETHEREUM | Yield from staked ETH |
 | B (margin)  | USDC  | HYPERLIQUID     | Short ETH perp margin |
 
 The `CollateralValidationMixin` enforces this: any instruction with `weETH` directed at `HYPERLIQUID` is blocked. The

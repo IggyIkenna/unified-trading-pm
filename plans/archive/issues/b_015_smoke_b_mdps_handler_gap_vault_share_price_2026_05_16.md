@@ -14,7 +14,7 @@ source:
     2026-04-15..19/DEFI')"
   - "VM `mdps-backfill-defi-20260516-121940` exit_code 0 — DATA_INGESTION_COMPLETED severity='no files' (12:21:52 UTC)"
   - "gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2026-04-15..19/ ← 7 vault_share_price
-    parquets per day (ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARNV3/YEARN_V3)"
+    parquets per day (ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARN_V3/YEARN_V3)"
   - "market-data-processing-service/market_data_processing_service/app/adapters/defi/ ← 5 adapters: book_snapshot_5,
     dex_swaps, fx_rates, market_state, liquidity (NO vault_share_price)"
 severity: P0 (blocks B-015 paper-trade gate; affects DeFi May-23 critical path)
@@ -44,7 +44,7 @@ gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2026
   venue=MAKER/.../MAKER_ETHEREUM_1776254400.parquet
   venue=MORPHOVAULTS/.../...
   venue=MORPHO_VAULTS/.../...
-  venue=YEARNV3/.../...
+  venue=YEARN_V3/.../...
   venue=YEARN_V3/.../...
 ```
 

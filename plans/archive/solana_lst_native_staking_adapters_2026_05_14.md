@@ -66,7 +66,7 @@ Two May-23 DeFi archetypes require Solana LST data:
       hasn't scheduled capture yet). (UAC@75ee9c4 — added with Phase 3 removal note)
 - [x] [UAC] P0. Verify `JITO-SOLANA` and `MARINADE-SOLANA` are NOT in `EMPTY_OR_DEPRECATED_DEFI_VENUES` (they are real
       venues, just have 0% capture due to VM never running). If incorrectly listed there, remove. (UAC@75ee9c4 —
-      verified: only TRADER_JOEV2-AVALANCHE, UNISWAPV3-POLYGON, GMX-AVALANCHE in that set; no action needed)
+      verified: only TRADER_JOEV2-AVALANCHE, UNISWAP_V3-POLYGON, GMX-AVALANCHE in that set; no action needed)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC.
 

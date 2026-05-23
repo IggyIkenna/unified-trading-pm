@@ -52,7 +52,7 @@ Key fields for the UI list:
 | Field                                           | Type                    | Notes                                                                                         |
 | ----------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
 | `instrument_key`                                | `str` (required)        | Format: `VENUE:INSTRUMENT_TYPE:SYMBOL`                                                        |
-| `venue`                                         | `str` (required)        | e.g. `BINANCE-SPOT`, `AAVEV3-ETHEREUM`                                                        |
+| `venue`                                         | `str` (required)        | e.g. `BINANCE-SPOT`, `AAVE_V3-ETHEREUM`                                                        |
 | `instrument_type`                               | `InstrumentType` enum   | `SPOT_PAIR`, `PERPETUAL`, `FUTURE`, `OPTION`, `POOL`, `LENDING`, `LST`, `ETF`, `EQUITY`, etc. |
 | `symbol`                                        | `str` (required)        | e.g. `BTC-USDT`                                                                               |
 | `asset_class`                                   | `AssetClass` enum       | `crypto`, `equity`, `fx`, `commodity`, `fixed_income`                                         |

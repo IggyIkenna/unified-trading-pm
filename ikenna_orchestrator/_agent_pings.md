@@ -851,12 +851,12 @@ shipped at design class 0.6× ⇒ ~5-7 baseline AI-days of work).
 Family-1 design UNBLOCKED Day 1**. See
 [`defi_catalogue_chain_primitives_2026_05_10.md`](../plans/active/defi_catalogue_chain_primitives_2026_05_10.md) Phase 3
 § "PHASE 3 LENDING-INDICES SPEC FOR slot 5 (Family-1) HANDSHAKE" (commit PM@`fafecddf`). TL;DR: lending-indices data
-ALREADY AVAILABLE for Family-1 backtest with 2-year+ horizons across AAVEV3 (ETH/ARB/BASE/OPT/LINEA/BSC) + COMPOUNDV3
+ALREADY AVAILABLE for Family-1 backtest with 2-year+ horizons across AAVE_V3 (ETH/ARB/BASE/OPT/LINEA/BSC) + COMPOUND_V3
 (ETH/ARB/BASE/OPT/SCROLL) + SPARK (ETH). All 3 "Bug 1/2/3" framings closed as STALE (slot 3 2026-05-11 audit + slot 2
 2026-05-12 audit). Banner landed on
 [`defi_recursive_borrow_archetypes_2026_05_10.md`](../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md) line
 38 (this commit). **Slot 5 action**: start Family-1 design Day 1 using current captured horizons (you've already started
-per line 40 — proceed); sample-parquet probe AAVEV3 ETH SUPPLY_APY @ `2024-01-15` before commit to backtest harness
+per line 40 — proceed); sample-parquet probe AAVE_V3 ETH SUPPLY_APY @ `2024-01-15` before commit to backtest harness
 shape; pull fix Day 3 (2026-05-14) after recent-days catch-up VM (5-10min, scoped) lands. No need to wait on slot 2.
 
 [2026-05-12 18:32 UTC] [slot 2 → main] STATUS-2026-05-11: ⚪ PARTIAL `manifest_schema_final_gate` Phase 2 P2 + Phase 4

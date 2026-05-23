@@ -120,14 +120,14 @@ categories:
     description: Decentralized Finance protocols (The Graph, Direct APIs)
     venues:
       # Ethereum DEX protocols (swaps)
-      - UNISWAPV2-ETHEREUM
-      - UNISWAPV3-ETHEREUM
-      - UNISWAPV4-ETHEREUM
+      - UNISWAP_V2-ETHEREUM
+      - UNISWAP_V3-ETHEREUM
+      - UNISWAP_V4-ETHEREUM
       - CURVE-ETHEREUM
       # FUTURE IMPLEMENTATION - NOT MVP (data source issues, see adapters for details)
       # - BALANCER-ETH   # TODO: The Graph deprecated, RPC fallback needs work
       # Lending protocols
-      - AAVEV3_ETHEREUM
+      - AAVE_V3_ETHEREUM
       - COMPOUND_V3_ETH
       - MORPHO-ETHEREUM
       # - EULER-ETHEREUM   # TODO: Adapter not implemented - excluded from deployment
@@ -151,19 +151,19 @@ categories:
     # DEX = swaps + liquidity, Lending = rate_indices/utilization/oracle_prices/risk_params
     # LST = oracle_prices + rewards
     venue_data_types:
-      UNISWAPV2-ETHEREUM:
+      UNISWAP_V2-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      UNISWAPV3-ETHEREUM:
+      UNISWAP_V3-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      UNISWAPV4-ETHEREUM:
+      UNISWAP_V4-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      AAVEV3_ETHEREUM:
+      AAVE_V3_ETHEREUM:
         POOL:
           default: [rate_indices, oracle_prices, utilization, risk_params]
           tick_window: [rate_indices, oracle_prices, utilization, risk_params]
@@ -189,13 +189,13 @@ categories:
           tick_window: [oracle_prices]
     # Data provider mappings
     venue_to_provider:
-      UNISWAPV2-ETHEREUM: the_graph
-      UNISWAPV3-ETHEREUM: the_graph
-      UNISWAPV4-ETHEREUM: the_graph
+      UNISWAP_V2-ETHEREUM: the_graph
+      UNISWAP_V3-ETHEREUM: the_graph
+      UNISWAP_V4-ETHEREUM: the_graph
       # FUTURE IMPLEMENTATION - NOT MVP
       # CURVE-ETHEREUM: the_graph      # TODO: The Graph deprecated
       # BALANCER-ETH: the_graph   # TODO: The Graph deprecated
-      AAVEV3_ETHEREUM: protocol_sdk
+      AAVE_V3_ETHEREUM: protocol_sdk
       COMPOUND_V3_ETH: protocol_sdk
       MORPHO-ETHEREUM: protocol_sdk
       # EULER-ETHEREUM: protocol_sdk   # TODO: Adapter not implemented
@@ -273,10 +273,10 @@ instrument_types:
   HYPERLIQUID: [PERPETUAL]
   ASTER: [PERPETUAL]
   # DeFi protocols (instrument type = POOL or LST or YIELD_BEARING)
-  UNISWAPV2-ETHEREUM: [POOL]
-  UNISWAPV3-ETHEREUM: [POOL]
-  UNISWAPV4-ETHEREUM: [POOL]
-  AAVEV3_ETHEREUM: [POOL]
+  UNISWAP_V2-ETHEREUM: [POOL]
+  UNISWAP_V3-ETHEREUM: [POOL]
+  UNISWAP_V4-ETHEREUM: [POOL]
+  AAVE_V3_ETHEREUM: [POOL]
   COMPOUND_V3_ETH: [POOL]
   MORPHO-ETHEREUM: [POOL]
   LIDO: [LST]

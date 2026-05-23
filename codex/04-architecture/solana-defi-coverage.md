@@ -207,7 +207,7 @@ Until MTDS restaking source wiring is complete, restaking APY is not captured in
 **Two authoritative sources confirm this:**
 
 1. **UAC `registry/capability_declarations/_defi.py:687`** (inline comment):
-   `venue: Canonical venue name (e.g. "AAVEV3-ETHEREUM", "DRIFT-SOLANA")`
+   `venue: Canonical venue name (e.g. "AAVE_V3-ETHEREUM", "DRIFT-SOLANA")`
 2. **All Solana adapter `get_instruments()` implementations** return `f"{PROTOCOL}-{self._chain}"`, e.g.
    `return f"DRIFT-{self._chain}"` → `DRIFT-SOLANA`.
 

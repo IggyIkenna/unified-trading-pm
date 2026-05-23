@@ -157,17 +157,17 @@ Item 1, not parallelization blockers between items.
       strategy-service P&L attribution computed (no execution-alpha conflation per CLAUDE.md "Batch = Live"). ~3
       AI-days.
 - [ ] [TRADING] P0. **[PARALLEL]** **Lending-indices VM relaunch (Bug 2 + Bug 3)** — Tab 9 yesterday verified Bug 1 (UAC
-      SSOT fix end-to-end at AAVEV3 ETHEREUM 2023-01-27 captured rows). Bugs 2 (Compound V3 schema drift) + 3
+      SSOT fix end-to-end at AAVE_V3 ETHEREUM 2023-01-27 captured rows). Bugs 2 (Compound V3 schema drift) + 3
       (instruments-store-defi 2022 metadata floor) per
       [`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md)
       still pending. Today: **fix both bugs end-to-end + relaunch + 90s STARTED + 10-15min progress + T+30min per-VM
       manifest spot-check**. Per CLAUDE.md "No fire-and-forget VM launches". ~2 AI-days.
 - [x] [DESIGN+UAC] P0. **4 UAC `PROTOCOL_LAUNCH_DATES` drift fix sub-tabs A/B/C/D** — **SHIPPED** UAC@6c873e4 (Batches
       A/B/C/D bundled in one commit per single-file no-collision-window opportunity; 13 drift pairs flipped;
-      SPARK/ETHEREUM added at 2023-03-07 + removed from PENDING; POLYGON/COMPOUNDV3 removed and moved to PENDING since
+      SPARK/ETHEREUM added at 2023-03-07 + removed from PENDING; POLYGON/COMPOUND_V3 removed and moved to PENDING since
       `SUBGRAPH_IDS["compound_v3"]` has no POLYGON entry; 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended to
-      permit launch < chain_genesis for UNISWAPV3 ARB/OPT/BASE + COMPOUNDV3 BASE; 19/19 tests pass). Tab 14 yesterday
-      found 13 of 17 pairs drift (same shape as Tab 9's AAVEV3-ETHEREUM finding); audit's bundled drift table was
+      permit launch < chain_genesis for UNISWAP_V3 ARB/OPT/BASE + COMPOUND_V3 BASE; 19/19 tests pass). Tab 14 yesterday
+      found 13 of 17 pairs drift (same shape as Tab 9's AAVE_V3-ETHEREUM finding); audit's bundled drift table was
       shipped as one atomic commit per Tab 14's audit caveat that batches all touch the same UAC file (sequential
       merging required). **Manifest re-scan needed** post-this commit per writegate Phase 2.E reason taxonomy — moved
       dates reclassify EXPECTED_PRE_GENESIS_CHAIN ↔ SOURCE_RETURNED_ZERO rows automatically once VMs re-write per-row

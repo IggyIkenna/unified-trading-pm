@@ -79,7 +79,7 @@ verify/fix/lift/build checklist.
    - Script: `market-tick-data-service/scripts/rename_vault_venue_canonical.py` (already shipped MTDS `bf81219`).
    - Target: `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet`.
    - Action: rename rows where `data_type='vault_share_price' AND venue ∈ {MORPHO_VAULTS, YEARN_V3}` → `MORPHOVAULTS` /
-     `YEARNV3`. Backup-then-write. FRAX + MAKER already canonical.
+     `YEARN_V3`. Backup-then-write. FRAX + MAKER already canonical.
    - **Coordination**: confirm no other writer is mid-flight against the DeFi manifest before running. (BUG-X2 flip on
      the CEFI side already done in prod — see PM `94213212` evidence.)
    - After run: re-read manifest, confirm zero rows with the legacy underscore venues, delete the backup blob, **flip

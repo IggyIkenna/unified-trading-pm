@@ -221,9 +221,9 @@ Both belong in this plan — they are the math behind the drill-down hierarchy t
 
 - `unified_api_contracts/registry/chain_env.py` (or new `registry/protocol_launch.py` co-located with
   `CHAIN_GENESIS_DATES`) — add `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` keyed by `(chain, protocol)` →
-  `YYYY-MM-DD` launch date. ~50 LOC + 30 LOC unit tests. Initial seed: AAVEV3 (Arbitrum 2022-03-16, Optimism 2022-08-04,
+  `YYYY-MM-DD` launch date. ~50 LOC + 30 LOC unit tests. Initial seed: AAVE_V3 (Arbitrum 2022-03-16, Optimism 2022-08-04,
   Polygon 2022-03-16, Avalanche 2022-03-16, Base 2023-08-09, Ethereum 2022-03-14), AAVEV2 (Ethereum 2020-12-01),
-  UNISWAPV3 (Ethereum 2021-05-04, Arbitrum 2021-08-31, Optimism 2021-12-16, Polygon 2021-12-21, Base 2023-08-09), CURVE
+  UNISWAP_V3 (Ethereum 2021-05-04, Arbitrum 2021-08-31, Optimism 2021-12-16, Polygon 2021-12-21, Base 2023-08-09), CURVE
   (Ethereum 2020-01-19), COMPOUND (Ethereum 2018-09-27), LIDO (Ethereum 2020-12-19), JITO (Solana 2022-08-15), MARINADE
   (Solana 2021-08-02), ROCKETPOOL (Ethereum 2021-11-08), JUPITER (Solana 2024-01-31), RAYDIUM (Solana 2021-02-21).
   Greenfield additions populate as adapters land.
@@ -450,7 +450,7 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 - **Test gates:** new hierarchical-drilldown unit tests pass; UI vitest covers every (service, asset_group) pair the
   SSOT declares; MTDS CLI flag tests pass.
 - **Visual gate:** screenshots from a follow-up Playwright walk show TradFi CME → ohlcv_1m → futures → ESH4 → 2024-01-15
-  → download (the user's specific TradFi concern); DeFi ARBITRUM → AAVEV3 → lending_indices → 2024-03-04 → download (the
+  → download (the user's specific TradFi concern); DeFi ARBITRUM → AAVE_V3 → lending_indices → 2024-03-04 → download (the
   user's specific DeFi concern); CeFi BITFINEX-SPOT → trades → SPOT_PAIR → BTCUSDT → 2024-03-05 → download.
 - **Surgical recovery gate:** clicking "Deploy Missing" on a single leaf in the data-status panel fires an MTDS VM with
   `--shard-key=...` that re-runs ONLY that shard (verify by inspecting the VM startup script metadata).
@@ -592,7 +592,7 @@ cannot reach the truncated tail. **Two related shape problems**:
       `availability-manifest-and-data-status.md` § "Rollup-side metric inconsistency 2026-05-07 — open finding"). The
       offline rollup at `gs://*-data-status-rollups/{service}/full.json.gz` emits per-(combined-venue) DEFI entries
       where `dates_found` is non-zero for venues that have ZERO matching manifest rows (e.g.
-      `AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,     empty_confirmed: 0, attempted_failed: 0}`).
+      `AAVE_V3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,     empty_confirmed: 0, attempted_failed: 0}`).
       The "31" comes from a different source than `capture_status_counts`. Per the codex finding, the rollup worker's
       per-(combined-venue) `dates_found` must derive from the manifest row count, not from the expected denominator.
       Owner: data-status multi-axis stream per `infrastructure_master_2026_05_07.md`.

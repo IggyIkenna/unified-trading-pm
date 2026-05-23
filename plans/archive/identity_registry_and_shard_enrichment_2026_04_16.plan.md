@@ -128,7 +128,7 @@ todos:
       @dataclass
       class TradingAccount:
           client_id: str          # "patrick-elysium"
-          venue: str              # "BINANCE", "AAVEV3-ETHEREUM"
+          venue: str              # "BINANCE", "AAVE_V3-ETHEREUM"
           account_label: str      # "main", "sub-1", "hedge", wallet address for DeFi
           account_type: str       # "CEFI_EXCHANGE", "DEFI_WALLET", "TRADFI_BROKER"
           chain: str | None       # "ETHEREUM", "ARBITRUM" — DeFi only

@@ -92,12 +92,12 @@ May-23 cutover across all 19 epics. Archives after cutover. Not in `plans/epics/
 
 ## PM Methodology Standards
 
-| File                              | Purpose                                                                                      |
-| --------------------------------- | -------------------------------------------------------------------------------------------- |
+| File                              | Purpose                                                                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `audit-lifecycle.md`              | Audit lifecycle summary — 3-layer structure, archival rules, per-epic instruction co-creation rule; SSOT: `plans/audit/README.md` |
-| `dual-cloud-cost-ops-playbook.md` | GCP/AWS dual-cloud readiness gates, rollback tagging requirements                            |
-| `codex-delta-canonical-brief.md`  | PM operating model: lifecycle model, delivery flow, decision log                             |
-| `architecture-constraints.md`     | Locked architectural decisions (exchange boundary, risk stack, sign conventions, DR targets) |
+| `dual-cloud-cost-ops-playbook.md` | GCP/AWS dual-cloud readiness gates, rollback tagging requirements                                                                 |
+| `codex-delta-canonical-brief.md`  | PM operating model: lifecycle model, delivery flow, decision log                                                                  |
+| `architecture-constraints.md`     | Locked architectural decisions (exchange boundary, risk stack, sign conventions, DR targets)                                      |
 
 ---
 

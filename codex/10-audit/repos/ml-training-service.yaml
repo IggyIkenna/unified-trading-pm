@@ -313,7 +313,6 @@ code_audit_items:
   REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
   REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
 
-
 # ==============================================================================
 # LIVE DEFI READINESS — 7-GROUP 23-ITEM (master_to_live_defi_2026_05_23)
 # Items 1-3 (Group A · Code health) inherited from code_readiness above.
@@ -325,14 +324,14 @@ live_defi_readiness:
   last_updated: "2026-05-23"
   plan_ref: "plans/active/master_to_live_defi_2026_05_23.md"
 
-  group_rollup:  # snapshot from service readiness matrix 2026-05-23
-    A_code_health: "partial"          # items 1-3 (see code_readiness)
-    B_data_correctness: "partial"     # items 4-8
-    C_runtime_parity: "partial"       # items 9-11
-    D_coverage_shard: "partial"       # items 12-14
-    E_operability: "partial"          # items 15-16
-    F_trading_prereqs: "na"      # items 17-22 (incl 17.5)
-    G_operator_ux: "na"          # item 23
+  group_rollup: # snapshot from service readiness matrix 2026-05-23
+    A_code_health: "partial" # items 1-3 (see code_readiness)
+    B_data_correctness: "partial" # items 4-8
+    C_runtime_parity: "partial" # items 9-11
+    D_coverage_shard: "partial" # items 12-14
+    E_operability: "partial" # items 15-16
+    F_trading_prereqs: "na" # items 17-22 (incl 17.5)
+    G_operator_ux: "na" # item 23
 
   items:
     # ── Group B · Data correctness ────────────────────────────

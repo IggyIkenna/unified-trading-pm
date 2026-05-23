@@ -315,7 +315,7 @@ DEFI:
 
   venues:
     # DEX protocols - swaps + liquidity (folder: pool)
-    UNISWAPV2-ETHEREUM:
+    UNISWAP_V2-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # 0.3% pool fee
@@ -327,7 +327,7 @@ DEFI:
         - liquidity # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
       start_date: "2020-05-18" # Uniswap V2 launch
 
-    UNISWAPV3-ETHEREUM:
+    UNISWAP_V3-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # variable pool fee (0.01%, 0.05%, 0.3%, 1%)
@@ -339,7 +339,7 @@ DEFI:
         - liquidity # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
       start_date: "2021-05-05" # Uniswap V3 launch
 
-    UNISWAPV4-ETHEREUM:
+    UNISWAP_V4-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # variable pool fee via hooks
@@ -356,7 +356,7 @@ DEFI:
     # rate_indices includes: liquidity_index, borrow_index, utilization_rate, supply_apy, borrow_apy
     # utilization is extracted from rate_indices download (no duplicate API call)
     # risk_params queried from The Graph for historical governance parameter changes
-    AAVEV3_ETHEREUM:
+    AAVE_V3_ETHEREUM:
       domain: defi
       book_type: AMM # Lending uses pool-based matching
       fee_type: lending # borrow/supply rate based fees
@@ -423,7 +423,7 @@ DEFI:
     # ==========================================================================
 
     # Liquidation events - Aave V3 LiquidationCall + Morpho liquidationEvents
-    AAVEV3-ETHEREUM:
+    AAVE_V3-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: lending

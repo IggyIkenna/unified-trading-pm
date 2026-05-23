@@ -120,7 +120,7 @@ from 2026-05-04 audit. Post-rescan target: **0 phantoms across all 5 asset_group
 
 1. Hive-key vocab (category= vs asset_group=), 2. Path-prefix drift (raw_tick_data/by_date/ vs top-level),
 2. instrument_type casing, 4. schema-4 empty instrument_type, 5. chain-bundle equivalence,
-3. DeFi protocol underscore (AAVEV3 ↔ AAVE_V3). **Added 2026-05-13 (instruments-service@1a62547)**:
+3. DeFi protocol underscore (AAVE_V3 ↔ AAVE_V3). **Added 2026-05-13 (instruments-service@1a62547)**:
 4. TradFi Databento per-schema-bundle (trades ↔ tbbo), 8. cross-asset venue=UNKNOWN skip,
 5. Sports pre-coverage + known-gap UAC clips. All 9 auto-fix via class A above; any residual goes to class C triage.
 

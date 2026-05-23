@@ -30,7 +30,7 @@ Wallet after deploy (basic):
   - HYPERLIQUID margin                   = 15% USDC
 
 Wallet after deploy (stacked yield):
-  - AAVEV3-ETHEREUM:A_TOKEN:AWBTC        = wbtc_amount  (long, earning supply APY)
+  - AAVE_V3-ETHEREUM:A_TOKEN:AWBTC        = wbtc_amount  (long, earning supply APY)
   - HYPERLIQUID:PERPETUAL:BTC-USDC       = -btc_amount  (short)
   - HYPERLIQUID margin                   = 15% USDC
 
@@ -43,7 +43,7 @@ Net delta = 0 (long WBTC + short perp cancel)
 | ------------------------------------------------ | ----------- | ------ | -------------------------- |
 | `WALLET:SPOT_ASSET:USDT`                         | Wallet      | Spot   | Initial capital            |
 | `WALLET:SPOT_ASSET:WBTC`                         | Wallet      | Spot   | Long leg (basic variant)   |
-| `AAVEV3-ETHEREUM:A_TOKEN:AWBTC`                  | Aave V3     | aToken | Long leg (stacked variant) |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC`                  | Aave V3     | aToken | Long leg (stacked variant) |
 | `HYPERLIQUID:PERPETUAL:BTC-USDC@LIN@HYPERLIQUID` | Hyperliquid | Perp   | Short leg (hedge)          |
 
 **Multi-chain option:** Can also use cbBTC (Coinbase wrapped BTC) on Base or Arbitrum for lower gas costs:
@@ -51,7 +51,7 @@ Net delta = 0 (long WBTC + short perp cancel)
 | Instrument Key (alternative)    | Venue   | Type   | Role                    |
 | ------------------------------- | ------- | ------ | ----------------------- |
 | `WALLET:SPOT_ASSET:CBBTC`       | Wallet  | Spot   | Long leg (Base/Arb)     |
-| `AAVEV3-ARBITRUM:A_TOKEN:AWBTC` | Aave V3 | aToken | Long leg (Arb, stacked) |
+| `AAVE_V3-ARBITRUM:A_TOKEN:AWBTC` | Aave V3 | aToken | Long leg (Arb, stacked) |
 
 ## Key Features Consumed
 
@@ -98,14 +98,14 @@ wrapped BTC variant.
 
 | Leg                       | SOR? | Allowed Venues                                         | SSOT                 |
 | ------------------------- | ---- | ------------------------------------------------------ | -------------------- |
-| Step 1 (USDT-->WBTC swap) | YES  | `UNISWAPV3-ETHEREUM`, `CURVE-ETHEREUM`, `BALANCER-ETH` | `defi_base.py:84-86` |
+| Step 1 (USDT-->WBTC swap) | YES  | `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`, `BALANCER-ETH` | `defi_base.py:84-86` |
 | Step 3 (Short perp)       | NO   | Hyperliquid only (CLOB, no alternative)                | --                   |
 
 SOR picks the best price across DEX venues for the USDT-->WBTC swap. May route multi-hop (USDT-->WETH-->WBTC) for better
 pricing. The `allowed_venues` list is passed in `StrategyInstruction` to execution-service, which handles the actual
 routing.
 
-**Multi-chain SOR:** When using Arbitrum, allowed venues change to `UNISWAPV3-ARBITRUM`, `CURVE-ARBITRUM`.
+**Multi-chain SOR:** When using Arbitrum, allowed venues change to `UNISWAP_V3-ARBITRUM`, `CURVE-ARBITRUM`.
 
 **Same-wallet constraint:** All SOR venues must be on the same blockchain (same chain as WBTC holding). SSOT:
 [`SHARED_WALLET_GROUPS`](../../../unified-api-contracts/unified_api_contracts/registry/venue_constants.py)
@@ -206,7 +206,7 @@ assessment --> rebalance/exit decisions)
 | Instrument Pattern              | Exposure Type           | Used For                                  |
 | ------------------------------- | ----------------------- | ----------------------------------------- |
 | `WALLET:SPOT_ASSET:WBTC`        | Spot value (long)       | Delta calculation                         |
-| `AAVEV3-ETHEREUM:A_TOKEN:AWBTC` | Collateral value (long) | Delta calculation + Aave health (stacked) |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC` | Collateral value (long) | Delta calculation + Aave health (stacked) |
 | `HYPERLIQUID:PERPETUAL:*`       | Perp notional (short)   | Delta calculation                         |
 
 Config: `defi_mode.enabled=True`, `ml_mode.track_perp_positions=True` SSOT:

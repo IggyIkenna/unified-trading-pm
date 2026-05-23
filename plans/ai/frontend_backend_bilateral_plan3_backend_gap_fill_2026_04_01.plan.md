@@ -68,7 +68,7 @@ todos:
       - [ ] [AGENT] P0. Ensure DeFi execution endpoints work end-to-end in mock mode:
         1. `POST /execution/defi/execute` — execute DeFi operation (swap, lend, borrow, stake, etc.)
         2. Response should include all OperationType values (SWAP, LEND, BORROW, REPAY, STAKE, UNSTAKE, ADD_LIQUIDITY, etc.)
-        3. Verify it handles all DeFi venues: AAVEV3-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV3-ETHEREUM, CURVE-ETHEREUM, LIDO, ETHERFI
+        3. Verify it handles all DeFi venues: AAVE_V3-ETHEREUM, MORPHO-ETHEREUM, UNISWAP_V3-ETHEREUM, CURVE-ETHEREUM, LIDO, ETHERFI
         4. Mock mode should simulate gas costs, health factor changes, position updates
         5. Ensure DeFiSwapResult type is returned with tx_hash, gas_used, effective_price in mock mode
     status: todo

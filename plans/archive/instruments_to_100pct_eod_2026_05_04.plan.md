@@ -139,9 +139,9 @@ load avg ~41, mem 54 GB used / 38 GB free. Comfortable headroom; can sustain.
 **Backfills running** (all via `run_vm_backfill_e2e.sh` for CEFI/TRADFI/DEFI, direct CLI for SPORTS):
 
 - **DEFI 7 venues** — per-protocol cutoff dates from `DEFI_SOURCE_COVERAGE_START` in UAC
-  - AAVEV3-ETHEREUM: 2022-03-16 → today
-  - UNISWAPV3-ETHEREUM: 2021-05-05 → today
-  - UNISWAPV2-ETHEREUM: 2020-05-04 → today
+  - AAVE_V3-ETHEREUM: 2022-03-16 → today
+  - UNISWAP_V3-ETHEREUM: 2021-05-05 → today
+  - UNISWAP_V2-ETHEREUM: 2020-05-04 → today
   - CURVE-ETHEREUM: 2020-01-19 → today
   - LIDO-ETHEREUM: 2020-12-19 → today
   - BALANCER-ETHEREUM: 2021-05-13 → today
@@ -1598,7 +1598,7 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
 
 - [ ] [HUMAN] P0. Confirm Phase 0 defi gap (review `/tmp/recon-defi.log`).
 - [ ] [HUMAN] P0. **No dedicated launcher exists**. Use Path A per DeFi venue:
-      `bash     bash scripts/run_vm_backfill_e2e.sh \       --venue AAVEV3-ETHEREUM --asset-group DEFI \       --start-date 2022-03-16 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     bash scripts/run_vm_backfill_e2e.sh \       --venue UNISWAPV3-ETHEREUM --asset-group DEFI \       --start-date 2021-05-05 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     # Repeat per (protocol × chain) — see UAC DEFI_SOURCE_COVERAGE_START for inception dates.     `
+      `bash     bash scripts/run_vm_backfill_e2e.sh \       --venue AAVE_V3-ETHEREUM --asset-group DEFI \       --start-date 2022-03-16 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     bash scripts/run_vm_backfill_e2e.sh \       --venue UNISWAP_V3-ETHEREUM --asset-group DEFI \       --start-date 2021-05-05 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     # Repeat per (protocol × chain) — see UAC DEFI_SOURCE_COVERAGE_START for inception dates.     `
       DeFi instruments are monotonically-increasing (immutable contracts) per the orchestrator high-watermark logic —
       `_should_skip_shard` + per-venue HWM means most days will auto-skip. Only red shards re-run.
 
@@ -1766,9 +1766,9 @@ venues from Phase 2 backfill.
 
 | Venue               | Status | Active@day / Universe | Notes                                                              |
 | ------------------- | :----: | --------------------- | ------------------------------------------------------------------ |
-| AAVEV3-ETHEREUM     |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.              |
-| UNISWAPV3-ETHEREUM  |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.             |
-| UNISWAPV2-ETHEREUM  |   ✅   | 24 / 772              | Pool universe (subgraph).                                          |
+| AAVE_V3-ETHEREUM     |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.              |
+| UNISWAP_V3-ETHEREUM  |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.             |
+| UNISWAP_V2-ETHEREUM  |   ✅   | 24 / 772              | Pool universe (subgraph).                                          |
 | CURVE-ETHEREUM      |   ✅   | 13 / 49               |                                                                    |
 | LIDO-ETHEREUM       |   ✅   | 2 / 2                 | Liquid-staking tokens (stETH, wstETH).                             |
 | BALANCER-ETHEREUM   |   ✅   | 1,249 / 2,072         | Pool universe — biggest write count, ~60% historical-pool dropout. |
@@ -2943,12 +2943,12 @@ Result: 128342 total entries (+0 new), 2296 unique dates, 77 venues
 
 **Zero new entries** — DEFI canonical is already complete. The "24 dates missing × 25 venues" UI display is a separate
 issue: **legacy aggregate venue names** (`UNISWAP_V3`, `MORPHO`, `JITO`) stopped being written on 2026-04-11 when the
-adapter switched to **per-chain venue names** (`UNISWAPV3-ETHEREUM`, `MORPHO-ETHEREUM`, `MORPHO-BASE`, `JITO-SOLANA`).
+adapter switched to **per-chain venue names** (`UNISWAP_V3-ETHEREUM`, `MORPHO-ETHEREUM`, `MORPHO-BASE`, `JITO-SOLANA`).
 Both naming sets exist in the canonical with overlapping date coverage, but the data-status service treats them as
 independent venues.
 
 This is a UI/data-status display issue, not a data gap. Out of scope for instruments-service; needs a deployment-api
-change to alias `UNISWAP_V3` ⇒ `UNISWAPV3-*` (sum across per-chain rows).
+change to alias `UNISWAP_V3` ⇒ `UNISWAP_V3-*` (sum across per-chain rows).
 
 ### Action 4: HYPERLIQUID 200 phantom missing dates — config mismatch [x] FIXED 2026-05-05
 

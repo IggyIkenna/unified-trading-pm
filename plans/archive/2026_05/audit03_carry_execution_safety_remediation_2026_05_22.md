@@ -65,7 +65,7 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
 - [x] ✅ [SCRIPT] P0. execution-service quality-gates Pass 1 GREEN + unit test: `stETH → Deribit/Bybit/OKX` transfer now
       wraps to wstETH (or rejects); `wstETH → Deribit` still rejected. — execution-service@db50597c (QG exit 0, 308s; 14
       unit tests: stETH→OKX wraps, stETH→DERIBIT passthrough, wstETH→DERIBIT rejects, stETH→AAVE wraps) +
-      slot-7@e0ce5dba3 (+12 supplemental tests: eETH/weETH AAVEV3, WETH/MORPHO, BYBIT stETH+wstETH passthrough)
+      slot-7@e0ce5dba3 (+12 supplemental tests: eETH/weETH AAVE_V3, WETH/MORPHO, BYBIT stETH+wstETH passthrough)
 
 ## Phase 3 — strategy-service carry engine (F-08/09/10/11/12) — gated on Phase 1
 

@@ -649,7 +649,7 @@ Per-follow-up status table with commit SHAs.
   stay lowercase (`cefi` / `defi` / `tradfi` / `sports` / `prediction`), and GCS path segments stay literal
   (`category=cefi/...` blob prefixes — wire-format SSOT).
 - **DeFi composite venues** use `<PROTOCOL>_V<N>-<CHAIN>` in UAC + UI (`AAVE_V3-ETHEREUM`) but `<PROTOCOL>V<N>-<CHAIN>`
-  in GCS partition layout (`AAVEV3-ETHEREUM`). The deployment-api shard_detail handles this via
+  in GCS partition layout (`AAVE_V3-ETHEREUM`). The deployment-api shard_detail handles this via
   `_venue_aliases_for_bucket`. Any code that builds GCS paths from a UI-supplied composite venue must apply the same
   aliasing.
 - **SPORTS partition key is `league=` not `venue=`** at the top level, with a nested

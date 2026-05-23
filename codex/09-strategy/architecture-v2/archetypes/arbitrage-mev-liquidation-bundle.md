@@ -3,7 +3,7 @@ scope: [engineer, admin]
 archetype: ARBITRAGE_MEV_LIQUIDATION_BUNDLE
 family: ARBITRAGE_STRUCTURAL
 status: code-shipped
-venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAPV3, BALANCER, CURVE]
+venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAP_V3, BALANCER, CURVE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -76,7 +76,7 @@ String metadata (`self.params`):
 ```
 leg 0: BORROW   asset=debt_asset       venue=AAVE_V3 (flash)
 leg 1: TRADE    instrument=COL/DEBT    venue=AAVE_V3 (the lending protocol)
-leg 2: SWAP     instrument=COL/DEBT    venue=UNISWAPV3 (repay leg)
+leg 2: SWAP     instrument=COL/DEBT    venue=UNISWAP_V3 (repay leg)
 ```
 
 execution-service `aave_flash_bundle.py` consumes the payload and packs it into a single tx via the deployed

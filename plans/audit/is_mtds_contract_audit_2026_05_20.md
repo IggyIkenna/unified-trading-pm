@@ -237,7 +237,7 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - [x] ✅ **P1. `position_data_handler.py` + `tick_data_handler.py` + `websocket_streaming_handler.py`**: VERIFIED-CLEAN
       — both QG scripts (`no_hardcoded_venue_urls` + `no_hardcoded_venue_universe`) pass clean. `tick_data_handler` +
       `websocket_streaming_handler` have no hardcodes; plan line citations were stale. `position_data_handler` uses
-      `get_supported_chains_for_protocol("AAVEV3")` for Aave (IS-first); Uniswap V3 ETHEREUM is a documented scope
+      `get_supported_chains_for_protocol("AAVE_V3")` for Aave (IS-first); Uniswap V3 ETHEREUM is a documented scope
       constraint comment, not a blocklisted universe pattern. (2026-05-20 slot-8)
 - [x] ✅ **P1. Legacy intent audit** for `data_manifest_handler.py` / `replay_handler.py`: both documented as exempt —
       `data_manifest_handler` is a read-only GCS scanner producing deployment-UI JSON (not a capture handler);

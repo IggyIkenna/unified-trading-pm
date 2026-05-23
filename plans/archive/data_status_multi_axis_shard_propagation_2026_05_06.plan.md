@@ -664,4 +664,4 @@ Successor for DEFI hyphenated-`data_type` normalisation: still read-time in depl
   - Bucket-template fixes (ml-training-artifacts, strategy-store-{cat}, execution-store-{cat})
   - Per-service `_SERVICE_CATEGORY_RESTRICTIONS` applied to coverage-summary
   - DEFI legacy venue/chain split + 64,060-row migration
-  - PANCAKESWAPV3-ZKSYNC purge
+  - PANCAKESWAP_V3-ZKSYNC purge

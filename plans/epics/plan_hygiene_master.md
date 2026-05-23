@@ -39,9 +39,9 @@ removes the manual cost and catches regressions before they compound.
 
 ## Phase 1 — Core scripts (tooling that makes everything else automatable)
 
-- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/active/*.md` `^- \[ \]` count
-      vs `origin/live-defi-rollout` baseline; exit 1 if any plan lost open todos. Wire as pre-push hook + optional QG
-      step. **Root-cause fix for the todo-collapse failure mode.** (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/active/*.md` `^- \[ \]`
+      count vs `origin/live-defi-rollout` baseline; exit 1 if any plan lost open todos. Wire as pre-push hook + optional
+      QG step. **Root-cause fix for the todo-collapse failure mode.** (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_frontmatter.sh` — for every `plans/active/*.md` + `plans/epics/*.md`:
       assert `---` on own first line; required fields present (`parent_epic` for plans, `name` for epics); deprecated
       fields absent (`slug`, `type`, `deadline`, `owner`, `asset_group`, `horizon`); `estimate_*` fields numeric. Exit 1
@@ -50,8 +50,9 @@ removes the manual cost and catches regressions before they compound.
       `locked_by` AND >247 todos are exempt (writegate pattern). Print sorted table of offenders. (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_codex_refs.sh` — grep all `codex/...` paths cited in active plans;
       resolve relative to workspace root; report broken refs (file moved, renamed, or deleted). (PM@a85f151e9)
-- [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_archive_candidates.sh` — find plans where `^- \[ \]` count == 0 AND all
-      `^- \[x\]` > 0; print candidates with todo counts. Does not archive — outputs a list for operator review. (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_archive_candidates.sh` — find plans where `^- \[ \]` count == 0 AND
+      all `^- \[x\]` > 0; print candidates with todo counts. Does not archive — outputs a list for operator review.
+      (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify `estimate_calibrated_ai_days` ≈
       `estimate_baseline_ai_days × multiplier` for the declared `estimate_class` (refactor 0.4×, design 0.6×, infra
       0.8×, brand-new 1.0×, research 1.2×). Flag >20% drift as typos. (PM@a85f151e9)
@@ -60,9 +61,9 @@ removes the manual cost and catches regressions before they compound.
 
 ## Phase 2 — Runbook (what Ikenna and Harsh run daily on the planning VM)
 
-- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/run_hygiene_sweep.sh` — orchestrates all Phase 1 checks in sequence; prints a
-      per-check PASS/FAIL table; exits 0 only if all hard checks pass. Soft checks (line caps, estimates) print warnings
-      but don't fail. Output is human-readable and agent-parseable. (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/run_hygiene_sweep.sh` — orchestrates all Phase 1 checks in sequence; prints
+      a per-check PASS/FAIL table; exits 0 only if all hard checks pass. Soft checks (line caps, estimates) print
+      warnings but don't fail. Output is human-readable and agent-parseable. (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/run_hygiene_sweep.sh` — also runs
       `python3 scripts/plans/regenerate_active_plan_inventory.py` at end so the master plan auto-inventory is always
       fresh after a sweep. (PM@a85f151e9)
@@ -76,8 +77,8 @@ removes the manual cost and catches regressions before they compound.
       `uts-prod-plan-hygiene-sweep` + Cloud Scheduler. Failures append `## [hygiene-cron]` notification to both
       orchestrator inboxes. (deployment-service@5f4eb6b + PM@a85f151e9)
 - [x] ✅ [SCRIPT] P2. Added as `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` (adjacent to
-      `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`.
-      Reuses `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b)
+      `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`. Reuses
+      `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b)
 
 ## Phase 4 — Codex alignment audit (agent work)
 
@@ -130,5 +131,6 @@ written. · **estimate**: 2.4 cal AI-days (class: brand-new)
 ## Temporary states + canonical follow-up plans
 
 - Phase 1-3 + 5 P1: shipped. No temporary states.
-- Phase 4 (codex alignment agent work): open P1/P2 items remain — low-priority ongoing; no blocking successor plan needed.
+- Phase 4 (codex alignment agent work): open P1/P2 items remain — low-priority ongoing; no blocking successor plan
+  needed.
 - Phase 5 P2 (hook documentation in codex): open P2; update `active-plan-inventory-tracker.md` on next codex sweep.

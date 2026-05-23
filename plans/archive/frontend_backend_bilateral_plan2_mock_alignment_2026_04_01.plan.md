@@ -60,7 +60,7 @@ todos:
   - id: p2-5-seed-data-from-registry
     content: |
       - [x] [AGENT] P0. Rewrite `lib/mocks/fixtures/mock-data-seed.ts` to derive seed data from the instrument snapshot and strategy registry:
-        1. Positions: generate from actual instruments in snapshot (BTC-USDT@BINANCE, ETH-PERP@HYPERLIQUID, aWETH@AAVEV3-ETHEREUM, SPY@NASDAQ, etc.)
+        1. Positions: generate from actual instruments in snapshot (BTC-USDT@BINANCE, ETH-PERP@HYPERLIQUID, aWETH@AAVE_V3-ETHEREUM, SPY@NASDAQ, etc.)
         2. Orders: realistic orders using actual instrument keys and venue names
         3. Strategies: use all 37 strategies from system-topology, with correct instrument/venue assignments
         4. Alerts: generate from actual strategy/venue/instrument combinations
@@ -71,7 +71,7 @@ todos:
     content: |
       - [x] [AGENT] P1. Updated `lib/mocks/fixtures/execution-platform.ts`:
         1. Execution algos: added 7 backend-aligned algos (ADAPTIVE_TWAP, ALMGREN_CHRISS, POV_DYNAMIC, HYBRID_OPTIMAL, PASSIVE_AGGRESSIVE, SOR) to match execution-service's algo_library + NautilusTrader algorithms
-        2. Venue capabilities: added BINANCE-FUTURES, AAVEV3-ETHEREUM, UNISWAPV3-ETHEREUM, MORPHO-ETHEREUM venues with realistic capabilities
+        2. Venue capabilities: added BINANCE-FUTURES, AAVE_V3-ETHEREUM, UNISWAP_V3-ETHEREUM, MORPHO-ETHEREUM venues with realistic capabilities
         3. Updated ExecutionAlgoType union in types/execution-platform.ts with all new algo types
         4. Updated metrics snapshot byVenue and byAlgo with all new entries
     status: done
@@ -84,7 +84,7 @@ todos:
         4. `/api/defi/swap/quote` — token pair + amount, returns MOCK_SWAP_ROUTE with dynamic output
         5. `/api/defi/treasury` — chain breakdown with wallet allocation across ETH/ARB/SOL
         6. `/api/defi/funding-rates` — 8h + annualized rates for perps across HYPERLIQUID, BINANCE-FUTURES, DERIBIT, OKX-SPOT
-        All fixture data already uses canonical venue names (AAVEV3-ETHEREUM, MORPHO-ETHEREUM, etc.).
+        All fixture data already uses canonical venue names (AAVE_V3-ETHEREUM, MORPHO-ETHEREUM, etc.).
     status: done
   - id: p2-8-sports-mock-completion
     content: |

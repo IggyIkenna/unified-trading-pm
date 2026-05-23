@@ -51,8 +51,9 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ### Phase 1 — Restore UAC constants
 
-- [x] ✅ [SCRIPT] P0. In `unified_api_contracts/registry/market_data_categories.py`:
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
+- [x] ✅ [SCRIPT] P0. In `unified_api_contracts/registry/market_data_categories.py`: **[DEFERRED-SERVICE-REPOS
+      2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree.
+      Post-cutover DeFi-first priority.
   - Repopulate `TRADFI_TICK_DATA_WINDOWS` from `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, May 2023 + Jul 2024).
   - Re-merge `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape) into `VENUE_DATA_TYPE_COVERAGE_WINDOWS`.
   - Delete both `_DEFERRED_*` constants (they served their forward-restore purpose).
@@ -62,39 +63,43 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 ### Phase 2 — Restore UAC capability matrix
 
 - [x] ✅ [SCRIPT] P0. In `VENUE_DATA_TYPE_CAPABILITIES`: re-add `trades` + `tbbo` entries for CME / ICE / NASDAQ / NYSE
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      from `_POST_CUTOVER_TRADFI_TICK_CAPABILITIES` deferred dict. Delete the deferred dict.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority. from `_POST_CUTOVER_TRADFI_TICK_CAPABILITIES`
+      deferred dict. Delete the deferred dict.
 
 ### Phase 3 — Restore codex coverage matrix
 
 - [x] ✅ [SCRIPT] P0. `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      "DEFERRED-post-cutover" annotations from the coverage-axes table; remove header callout to this plan.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority. "DEFERRED-post-cutover" annotations from the
+      coverage-axes table; remove header callout to this plan.
 
 ### Phase 4 — Update availability-manifest codex
 
-- [x] ✅ [SCRIPT] P0. `codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data" bullet
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      from "deferred to post-cutover" to "restored — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024
-      windows". Note the historical context inline; do not delete the bullet entirely (audit trail).
+- [x] ✅ [SCRIPT] P0. `codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data"
+      bullet **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or
+      UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority. from "deferred to post-cutover" to "restored
+      — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024 windows". Note the historical context inline; do
+      not delete the bullet entirely (audit trail).
 
 ### Phase 5 — Repair / extend MTDS contract-pin test
 
 - [x] ✅ [SCRIPT] P0. `market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py`: update
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority.
       `test_tradfi_tick_window_empty_means_always_suppressed` — either delete (if the OHLCV-only mode is fully retired)
       or rename + repurpose to pin the 2-window contract (windows present + `is_in_tradfi_tick_window` returns True for
       in-window probes + False for out-of-window probes).
 - [x] ✅ [SCRIPT] P0. UAC-side test `unified-api-contracts/tests/unit/test_tradfi_ohlcv_only_mvp.py` (13 tests at
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      predecessor handoff) — repurpose to pin the restored-windows contract; rename to
-      `test_tradfi_tick_window_2window_restoration.py`.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority. predecessor handoff) — repurpose to pin the
+      restored-windows contract; rename to `test_tradfi_tick_window_2window_restoration.py`.
 
 ### Phase 6 — VM launchers for the L1-L3 backfill
 
-- [x] ✅ [SCRIPT] P0. Create per-(venue, data_type) launchers under `deployment-service/scripts/vm/` (parallel structure to
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      the OHLCV-only Phase 6 launchers):
+- [x] ✅ [SCRIPT] P0. Create per-(venue, data_type) launchers under `deployment-service/scripts/vm/` (parallel structure
+      to **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority. the OHLCV-only Phase 6 launchers):
   - `launch-tradfi-bf-cme-trades.sh` — CME ES + MES + NQ + MNQ + CL + GC + ES_OPT roots × 2 reference months.
   - `launch-tradfi-bf-cme-tbbo.sh` — same root set; 1-month-history at Standard tier (PAYG above that).
   - `launch-tradfi-bf-cme-mbp_10.sh` — same root set; 1-month-history at Standard tier (PAYG above that).
@@ -108,29 +113,34 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 ### Phase 7 — Backfill execution + validation
 
 - [x] ✅ [AGENT] P0. Launch venue × data_type VMs serially (singleton-lock matches `^tradfi-bf-` — concurrent runs risk
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      Databento contract-exceeded on the L1-L3 windows which are far denser than OHLCV).
-- [x] ✅ [AGENT] P0. 4-pillar validation per shard (same gates as predecessor Phase 7).
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority. Databento contract-exceeded on the L1-L3 windows
+      which are far denser than OHLCV).
+- [x] ✅ [AGENT] P0. 4-pillar validation per shard (same gates as predecessor Phase 7). **[DEFERRED-SERVICE-REPOS
+      2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree.
+      Post-cutover DeFi-first priority.
 - [x] ✅ [AGENT] P0. Data-status rollup verifies trades + tbbo coverage ≥99% for the 2 reference months per venue.
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
+      changes not in slot 6 worktree. Post-cutover DeFi-first priority.
 
 ### Phase 8 — Cost tracking + operator sign-off
 
-- [x] ✅ [AGENT] P1. Track Databento PAYG spend (will be significantly higher than OHLCV-only — L2 tbbo at 1-month-history
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority.
-      PAYG runs ~$179/dataset-month for windows beyond Standard coverage).
-- [x] ✅ [HUMAN] P0. Operator sign-off on actual spend vs projected.
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator action (Databento spend sign-off or HUMAN verification).
+- [x] ✅ [AGENT] P1. Track Databento PAYG spend (will be significantly higher than OHLCV-only — L2 tbbo at
+      1-month-history **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service,
+      deployment-service, or UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority. PAYG runs
+      ~$179/dataset-month for windows beyond Standard coverage).
+- [x] ✅ [HUMAN] P0. Operator sign-off on actual spend vs projected. **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires
+      operator action (Databento spend sign-off or HUMAN verification).
 
 ## Codex SSOT updates
 
-- [x] ✅ `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
-- [x] ✅ `codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
-- [x] ✅ No new codex stub required — pattern is a reverse of the predecessor's narrowing.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
+- [x] ✅ `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above. **[DEFERRED-POST-CUTOVER 2026-05-23
+      slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
+- [x] ✅ `codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above. **[DEFERRED-POST-CUTOVER 2026-05-23
+      slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
+- [x] ✅ No new codex stub required — pattern is a reverse of the predecessor's narrowing. **[DEFERRED-POST-CUTOVER
+      2026-05-23 slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing
+      (post-DeFi-cutover).
 
 ## Cross-plan impact
 

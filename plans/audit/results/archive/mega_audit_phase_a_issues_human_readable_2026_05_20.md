@@ -267,11 +267,11 @@ enumerated here** and need follow-up.
 | CURVE-ETHEREUM                                               | dex_swaps + dex_pools               |              2,314 each | full window                         |
 | CURVE-{AVALANCHE,OPTIMISM}                                   | dex_swaps + dex_pools               |                  varies | each chain window                   |
 | BALANCER-{ETHEREUM,ARBITRUM,AVALANCHE,BASE,OPTIMISM,POLYGON} | dex_swaps + dex_pools               |                  varies | each chain window                   |
-| UNISWAPV2-ETHEREUM                                           | dex_swaps + dex_pools               |              2,207 each | full window                         |
-| UNISWAPV3-{ARBITRUM,BASE,OPTIMISM,POLYGON}                   | dex_swaps + dex_pools               |                  varies | each chain window                   |
-| UNISWAPV4-ETHEREUM                                           | dex_swaps + dex_pools               |              per launch | post-V4 window                      |
-| COMPOUNDV3-{all chains}                                      | (all 4 lending types)               |                  varies | per chain window                    |
-| AAVEV3-{LINEA,BSC}                                           | (5 types — incl. flash_loan_events) |                  varies | per chain window                    |
+| UNISWAP_V2-ETHEREUM                                           | dex_swaps + dex_pools               |              2,207 each | full window                         |
+| UNISWAP_V3-{ARBITRUM,BASE,OPTIMISM,POLYGON}                   | dex_swaps + dex_pools               |                  varies | each chain window                   |
+| UNISWAP_V4-ETHEREUM                                           | dex_swaps + dex_pools               |              per launch | post-V4 window                      |
+| COMPOUND_V3-{all chains}                                      | (all 4 lending types)               |                  varies | per chain window                    |
+| AAVE_V3-{LINEA,BSC}                                           | (5 types — incl. flash_loan_events) |                  varies | per chain window                    |
 | LIDO/ETHERFI/ETHENA-ETHEREUM                                 | lst_rates + staking_yields          |              per launch | full window                         |
 | JITO-SOLANA                                                  | lst_rates + staking_yields          |              per launch | Solana window                       |
 

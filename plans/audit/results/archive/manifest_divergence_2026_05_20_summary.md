@@ -115,8 +115,8 @@ Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` (0.
 | CURVE-ETHEREUM     | dex_pools          | `MISSING_EXPECTED` | 2,314 |
 | BALANCER-ETHEREUM  | dex_swaps          | `MISSING_EXPECTED` | 2,242 |
 | BALANCER-ETHEREUM  | dex_pools          | `MISSING_EXPECTED` | 2,242 |
-| UNISWAPV2-ETHEREUM | dex_pools          | `MISSING_EXPECTED` | 2,207 |
-| UNISWAPV2-ETHEREUM | dex_swaps          | `MISSING_EXPECTED` | 2,207 |
+| UNISWAP_V2-ETHEREUM | dex_pools          | `MISSING_EXPECTED` | 2,207 |
+| UNISWAP_V2-ETHEREUM | dex_swaps          | `MISSING_EXPECTED` | 2,207 |
 | MORPHO-POLYGON     | liquidation_events | `MISSING_EXPECTED` | 2,182 |
 | MORPHO-POLYGON     | lending_indices    | `MISSING_EXPECTED` | 2,182 |
 | MORPHO-POLYGON     | position_data      | `MISSING_EXPECTED` | 2,182 |

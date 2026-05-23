@@ -355,7 +355,7 @@ never from upstream.
 
 ### 5.2 Other legacy path cleanup
 
-- [ ] [AGENT] P1. Identify legacy DeFi `venue=AAVEV3-ETHEREUM` style paths in GCS post-migration; confirm all rewritten
+- [ ] [AGENT] P1. Identify legacy DeFi `venue=AAVE_V3-ETHEREUM` style paths in GCS post-migration; confirm all rewritten
       to `venue=AAVE_V3/chain=ETHEREUM` canonical form; delete `_migrated_{ts}` backups after 7 days.
 - [ ] [AGENT] P1. Identify any TradFi `instrument_type=future/data_type=options_chain/` legacy mislabelled paths from
       the Phase-3.2 TradFi migration; confirm cleaned.

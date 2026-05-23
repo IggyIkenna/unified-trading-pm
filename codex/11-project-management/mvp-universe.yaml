@@ -29,9 +29,9 @@ instruments:
       (see instruments-service/app/core/instrument_processing_service.py lines 2286-2310). DeFi protocols (Uniswap,
       Aave, Compound) support pools with these variants."
     examples:
-      - UNISWAPV3-ETHEREUM:WETH-USDC (spot pair)
-      - UNISWAPV3-ETHEREUM:wstETH-WETH (staked ETH / wrapped ETH)
-      - AAVEV3_ETHEREUM:WETH (lending pool)
+      - UNISWAP_V3-ETHEREUM:WETH-USDC (spot pair)
+      - UNISWAP_V3-ETHEREUM:wstETH-WETH (staked ETH / wrapped ETH)
+      - AAVE_V3_ETHEREUM:WETH (lending pool)
       - COMPOUND_V3_ETH:WETH (lending market)
   tradfi:
     description: Traditional finance futures, ETFs, and derivatives
@@ -87,9 +87,9 @@ venues:
   defi:
     description: DeFi protocols on Ethereum mainnet (The Graph API)
     included:
-      - AAVEV3_ETHEREUM
-      - UNISWAPV2-ETHEREUM
-      - UNISWAPV3-ETHEREUM
+      - AAVE_V3_ETHEREUM
+      - UNISWAP_V2-ETHEREUM
+      - UNISWAP_V3-ETHEREUM
       - COMPOUND_V3_ETH
     excluded:
       - CURVE
@@ -282,9 +282,9 @@ data_availability:
     COINBASE: "2019-03-30"
     HYPERLIQUID: "2023-05-01"
     ASTER: "2021-08-30"
-    AAVEV3_ETHEREUM: "2023-01-27" # Aave V3 Ethereum launch
-    UNISWAPV2-ETHEREUM: "2020-05-18"
-    UNISWAPV3-ETHEREUM: "2021-05-05"
+    AAVE_V3_ETHEREUM: "2023-01-27" # Aave V3 Ethereum launch
+    UNISWAP_V2-ETHEREUM: "2020-05-18"
+    UNISWAP_V3-ETHEREUM: "2021-05-05"
     COMPOUND_V3_ETH: "2022-08-24"
     CME: "2020-01-01"
     CBOE: "2020-01-01"

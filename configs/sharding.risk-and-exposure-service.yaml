@@ -22,7 +22,7 @@ dimensions:
     values:
       # Dynamically populated from venues.yaml per category
       # CEFI: BINANCE-SPOT, BINANCE-FUTURES, OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER
-      # DEFI: AAVEV3_ETHEREUM, UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM, COMPOUND_V3_ETH
+      # DEFI: AAVE_V3_ETHEREUM, UNISWAP_V2-ETHEREUM, UNISWAP_V3-ETHEREUM, COMPOUND_V3_ETH
       # TRADFI: CME, CBOE, NYSE
     description: Venue to calculate risk for
 

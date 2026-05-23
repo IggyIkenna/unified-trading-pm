@@ -113,8 +113,8 @@ consume.
 
 ### Phase 1.A — UAC + UTL foundation (writegate / honest coverage)
 
-- [x] ✅ [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — UTL
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
+- [x] ✅ [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — UTL **[CONFIRMED-DONE
+      2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
       `ManifestWriter.record_captured()` 4-pillar gate signature, typed-error taxonomy (`EMPTY_CONFIRMED_REASONS`),
       cluster validation kwargs, ServiceEmissionPolicy seed dict, 37-callsite MDPS/MTDS writer migration. **Status
       check**: Wave 4 slice (a) shipped (UAC@58c3b61 + UTL@1a7e1d4b + PM@0e2eb08e); slice (b) Phase 5.1-5.7 (~2d MDPS
@@ -196,9 +196,9 @@ consume.
 - [x] ✅ [PLAN] P0. **`plans/active/disaster_recovery_circuit_breakers_2026_05_10.md`** — Disaster recovery + —
       **ARCHIVED** `plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md` (trivial-sweep 2026-05-21)
       reconciliation + circuit breakers + kill switches (cutover MVP). Parent: master_to_live_defi.
-- [x] ✅ [PLAN] P1. **`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`** — Promote workflow May-23 dual-track
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
-      cutover (CLI primary + minimal UI parallel).
+- [x] ✅ [PLAN] P1. **`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`** — Promote workflow May-23
+      dual-track **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items
+      annotated/completed. cutover (CLI primary + minimal UI parallel).
 - [x] ✅ [PLAN] P1. **`plans/active/topology_qgroup_gap_closure_2026_05_09.md`** — Topology Q-group GAP closure (18
       GAPs + — **ARCHIVED** `plans/archive/topology_qgroup_gap_closure_2026_05_09.md` (trivial-sweep 2026-05-21) 2
       WATCH + 1 ISSUE before May-23).
@@ -229,8 +229,8 @@ consume.
       (Deploy — **ARCHIVED** `plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md` (trivial-sweep
       2026-05-21) / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum +
       `EnvironmentTier` enum. Parent: cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.
-- [x] ✅ [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
+- [x] ✅ [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning
+      for **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
       May-23 live-DeFi cutover.
 - [x] ✅ [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle
       — **ARCHIVED** `plans/archive/wallet_treasury_client_flow_2026_05_10.md` (trivial-sweep 2026-05-21) MVP.
@@ -320,9 +320,10 @@ technical enforcer; this section is the operator-readable checklist.
       2.6 (cutover window 2026-05-15→05-19)** — sequenced correctly per 3-phase model line 75; not a Phase 1 freeze
       blocker.
 - [x] ✅ **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      architectural violations. **🟡 SUBSTANTIALLY ADVANCED 2026-05-12 Day-4** — slot 3 ran end-to-end workspace QG
-      sweep: `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh` ✅ **26 repos OK / 0 failed** +
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. architectural violations. **🟡 SUBSTANTIALLY ADVANCED 2026-05-12 Day-4** —
+      slot 3 ran end-to-end workspace QG sweep: `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh` ✅
+      **26 repos OK / 0 failed** +
       `bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup --skip-typecheck`
       ran across 26 repos. **2 workspace-wide QG-runner foot-guns surfaced + ✅ patched same-commit**
       ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](../archive/issues/qg_runner_worktree_foot_guns_2026_05_12.md)):
@@ -446,8 +447,8 @@ The plan items here promote the existing pieces to execution shape:
     body).
   - `cross_asset_rescan.py` Python (Harsh Tab 4 scope per existing plan body).
 - [x] ✅ [PLAN] P0. **`plans/active/manifest_schema_final_gate_2026_05_09.md`** — UAC manifest schema column declaration
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
-      for v8 (operator decision 2026-05-11; supersedes the prior "writegate slice (b) Phase 5.1" attribution). **Phase 2
+      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed. for
+      v8 (operator decision 2026-05-11; supersedes the prior "writegate slice (b) Phase 5.1" attribution). **Phase 2
       entry blocker**: column set must be final before the rescan plan can write rows in v8 shape. The new
       `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per
       `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`)
@@ -507,10 +508,10 @@ one-walk migration so manifest only rewrites once.
 
 ### Phase 2.4 — AWS DeFi-first cloud-parity migration + env-tiered bucket provisioning + flat→tiered data migration (operator decision (b) 2026-05-11)
 
-- [x] ✅ [PLAN] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — AWS Migration DeFi-First. **Status (per Tab
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
-      4 PM@4a3c157d 2026-05-08)**: Phase 1 smoke against real AWS S3 GREEN; Phase 2 10 buckets created on real S3; Phase
-      5 KICKED OFF (5 cross-cloud rsync jobs at 14:20 UTC 2026-05-08); Glue/Athena Phase 5b ENABLED. Remaining: full
+- [x] ✅ [PLAN] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — AWS Migration DeFi-First. **Status (per
+      Tab **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed. 4
+      PM@4a3c157d 2026-05-08)**: Phase 1 smoke against real AWS S3 GREEN; Phase 2 10 buckets created on real S3; Phase 5
+      KICKED OFF (5 cross-cloud rsync jobs at 14:20 UTC 2026-05-08); Glue/Athena Phase 5b ENABLED. Remaining: full
       bundle backfill + AWS-side manifest consolidator + AWS-side data-status UI.
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
       `bucket_name_ssot_canonicalisation` resolver. If AWS-side resolver was wired pre-Phase-1, double-check the SSOT is
@@ -569,20 +570,20 @@ one-walk migration so manifest only rewrites once.
       (features-\*) retains flat names — env-split deferred to `bucket_env_split_rollout_2026_06.md`.
       `migrate-flat-to-env-tiered.sh` `_index/`/`_catalogue/` exclusion fix: deployment-service@pending. PM@this-commit.
 - [x] ✅ [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      Phase 0g cross-check)** — Update reader/writer audit table verifying every consumer post-Phase-0d hits env-tiered
-      bucket names (not flat). bucket_name_ssot plan done-def #6 extension. **Includes the deployment-api
-      reader-repoint** (Layer 5 in the bucket_name_ssot pre-audit manifest): replace deployment-api's internal
-      flat-shape bucket templates (`DataStatusService._BUCKET_TEMPLATES`, `data_status_drilldown._BUCKET_TEMPLATES`,
-      `data_query_service.build_bucket_name`, `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE`, the 3 hardcoded
-      `f"gs://instruments-store-sports-{pid}/..."` f-strings) with
-      `resolve_bucket_name(cloud=..., kind=..., asset_group=...)` calls — MUST land in this window (not before), because
-      deployment-api reads buckets continuously so its bucket-name source must flip in lockstep with the flat→env-tiered
-      data migration (premature repoint → data-status UI breaks; same "Group-A safe-gap doesn't apply" reasoning as
-      bucket_name_ssot Done-def #3 / A6). Reconcile the L5.1↔L5.2 `ml-*` template drift in the same pass (yaml SSOT
-      wins: `ml-models-store` / `ml-predictions-store`). Also includes the legacy `get_bucket_name`/`BUCKET_PREFIXES`
-      delegate (bucket_name_ssot Done-def #3, = step 2.6.4 in the Done-def #3 sub-sequence). basedpyright
-      deployment-api + smoke the data-status UI post-repoint.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. Phase 0g cross-check)** — Update reader/writer audit table verifying every
+      consumer post-Phase-0d hits env-tiered bucket names (not flat). bucket_name_ssot plan done-def #6 extension.
+      **Includes the deployment-api reader-repoint** (Layer 5 in the bucket_name_ssot pre-audit manifest): replace
+      deployment-api's internal flat-shape bucket templates (`DataStatusService._BUCKET_TEMPLATES`,
+      `data_status_drilldown._BUCKET_TEMPLATES`, `data_query_service.build_bucket_name`,
+      `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE`, the 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."`
+      f-strings) with `resolve_bucket_name(cloud=..., kind=..., asset_group=...)` calls — MUST land in this window (not
+      before), because deployment-api reads buckets continuously so its bucket-name source must flip in lockstep with
+      the flat→env-tiered data migration (premature repoint → data-status UI breaks; same "Group-A safe-gap doesn't
+      apply" reasoning as bucket_name_ssot Done-def #3 / A6). Reconcile the L5.1↔L5.2 `ml-*` template drift in the same
+      pass (yaml SSOT wins: `ml-models-store` / `ml-predictions-store`). Also includes the legacy
+      `get_bucket_name`/`BUCKET_PREFIXES` delegate (bucket_name_ssot Done-def #3, = step 2.6.4 in the Done-def #3
+      sub-sequence). basedpyright deployment-api + smoke the data-status UI post-repoint.
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.E (NEW per operator extension (b+) 2026-05-11; SCRIPT SHIPPED 2026-05-11)** — code-half
       ✅; first-execution-half deferred (operator gate post-cutover). Sync script (prod → staging/dev) with truncated
       date window + same-region enforcement. **Shipped** `deployment-service@fc1cfa0` (prod → {staging,dev} bucket sync
@@ -1018,23 +1019,23 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 > § "Hard sequencing constraint" shows the 2026-05-15→2026-05-19 data-pipeline checkpoint timeline that this freeze gate
 > starts. Master plan Group F items 17/18/20/21 — their sequencing is owned by that doc.
 
-- [x] ✅ **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift in
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
+- [x] ✅ **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift
+      in **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
       4-state taxonomy at every coverage drilldown level.
-- [x] ✅ **GCS bundled migration complete**: `pipeline_mode` partition added; `category=` rekey done; 5 drift axes swept;
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
+- [x] ✅ **GCS bundled migration complete**: `pipeline_mode` partition added; `category=` rekey done; 5 drift axes
+      swept; **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
       OHLCV legacy filenames renamed; ZERO regressions on a 100-shard random read sample.
-- [x] ✅ **AWS cross-cloud parity**: every DeFi-relevant bucket has S3 mirror; Glue catalog crawled; Athena query returns
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
+- [x] ✅ **AWS cross-cloud parity**: every DeFi-relevant bucket has S3 mirror; Glue catalog crawled; Athena query
+      returns **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
       expected rows on `paper-vs-live` smoke.
-- [x] ✅ **`--apply-flips` rescan complete**: every shard with drift state flipped to correct manifest state; verification
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
-      probe (random 100 shards) shows manifest matches on-disk truth.
-- [x] ✅ **Manifest snapshot saved** at `_index/snapshots/post_migration_2026_05_19.parquet` (recovery point before Phase 3
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
+- [x] ✅ **`--apply-flips` rescan complete**: every shard with drift state flipped to correct manifest state;
+      verification **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not
+      available. probe (random 100 shards) shows manifest matches on-disk truth.
+- [x] ✅ **Manifest snapshot saved** at `_index/snapshots/post_migration_2026_05_19.parquet` (recovery point before
+      Phase 3 **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
       backfill writes start).
-- [x] ✅ **No backfill VMs launched** during Phase 2 window. (Operator-enforced lock.)
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/HUMAN action or GCS credentials not available.
+- [x] ✅ **No backfill VMs launched** during Phase 2 window. (Operator-enforced lock.) **[BLOCKED-OPERATOR 2026-05-23
+      slot 6]** Requires operator/HUMAN action or GCS credentials not available.
 
 ## Phase 3 — Resume backfills end-to-end
 
@@ -1052,19 +1053,19 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 ### Phase 3.1 — Instruments-service catalogue forward-fill
 
 - [x] ✅ [PLAN] P0. **`plans/epics/instruments_master.md`** — Instruments-service live activation across 5 asset_groups.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT, Sports trigger-driven (daily fixture
-      re-poll + season-roll + transfer-window + weather), Predictions 15-min market-discovery. Cloud Scheduler driver +
-      new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F (live activation) starts after Phase 2 freeze;
-      until then stays in Phase A-E (preflight DAG).
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT,
+      Sports trigger-driven (daily fixture re-poll + season-roll + transfer-window + weather), Predictions 15-min
+      market-discovery. Cloud Scheduler driver + new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F
+      (live activation) starts after Phase 2 freeze; until then stays in Phase A-E (preflight DAG).
 
 ### Phase 3.2 — MTDS multi-venue backfill VM relaunch
 
-- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A** — Relaunch CeFi backfill VMs (15 venues — Bybit / Binance / OKX / Bitfinex / Bitget /
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master` Phase 1A). Per-VM shard isolation enforced
-      (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget VM
-      launches" HARD RULE.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A** — Relaunch CeFi backfill VMs (15 venues — Bybit / Binance / OKX / Bitfinex / Bitget
+      / **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master` Phase 1A).
+      Per-VM shard isolation enforced (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per
+      CLAUDE.md "No fire-and-forget VM launches" HARD RULE.
 - [x] ✅ **[SCRIPT] P0. MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — TradFi backfill VMs relaunched per
       `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 (OHLCV-only MVP scope per operator direction
       2026-05-15). **63 tradfi-bf VMs launched** spanning CME (futures 6 roots × 8 years + ES.OPT 11-cluster × 8
@@ -1074,86 +1075,91 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
       override at `market-tick-data-service@f1621c0`. ICE held pending operator decision on roots
       (`tradfi-bf-ice-ohlcv-1m.sh` scaffolding shipped, `ICE_ROOTS=()`).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C** — Relaunch DeFi backfill VMs (Pyth Solana + Chainlink EVM oracle prices + DEX-perp
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master` Phase 9).
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per
+      `defi_master` Phase 9).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master` Phase 1;
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.E** — Relaunch Predictions backfill VMs (Polymarket + Kalshi per `predictions_master`
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      Phase 1; canonical_question_group rekey already in Phase 2.2).
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. Phase 1; canonical_question_group rekey already in Phase 2.2).
 
 ### Phase 3.3 — MDPS bar reprocessor relaunch
 
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.A** — Relaunch MDPS reprocessors per asset_group, reading from migrated MTDS shards. Use
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      Phase 1.C live-pipeline in-process MDPS↔features handoff if features-repo-consolidation Phase 7 done; else fall
-      back to standalone MDPS VMs.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.A** — Relaunch MDPS reprocessors per asset_group, reading from migrated MTDS shards.
+      Use **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or
+      ML service repos not in slot 6 worktree. Phase 1.C live-pipeline in-process MDPS↔features handoff if
+      features-repo-consolidation Phase 7 done; else fall back to standalone MDPS VMs.
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.B** — Verify zero 1440-NaN-bar regressions via post-launch sampling (10 random
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      instrument-days; assert OHLC populated OR catalog says instrument-not-listed; per CLAUDE.md "Honest absence vs
-      fake placeholders" rule).
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. instrument-days; assert OHLC populated OR catalog says
+      instrument-not-listed; per CLAUDE.md "Honest absence vs fake placeholders" rule).
 
 ### Phase 3.4 — Features-service compute relaunch
 
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.A** — Relaunch consolidated features-service compute (single repo per Phase 1.C
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      consolidation). All 5 asset_groups + cross-instrument calculators. LookaheadBiasError strict-mode green.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. consolidation). All 5 asset_groups + cross-instrument calculators.
+      LookaheadBiasError strict-mode green.
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.B** — Verify per-feature-family output shapes match Phase 1.C schema declarations;
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      post-launch sampling 100 random feature rows per family.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. post-launch sampling 100 random feature rows per family.
 
 ### Phase 3.5 — ML training + inference relaunch
 
 - [x] ✅ [PLAN] P0. **`plans/epics/features_and_ml_master.md`** Phase 1A-2E — UAC feature-DAG SSOT + features-service
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      writers + pre-join consolidation. **Critical path subset only**; Phase 4 (ML model lifecycle) is mostly
-      post-May-23.
-- [x] ✅ [SCRIPT] P0. **ML-3.5.A** — Relaunch ml-training jobs against migrated features. Sanity replay on 3 representative
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      shards per `ml_and_features_master` Phase 5.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. writers + pre-join consolidation. **Critical path subset only**; Phase 4
+      (ML model lifecycle) is mostly post-May-23.
+- [x] ✅ [SCRIPT] P0. **ML-3.5.A** — Relaunch ml-training jobs against migrated features. Sanity replay on 3
+      representative **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS,
+      features-service, or ML service repos not in slot 6 worktree. shards per `ml_and_features_master` Phase 5.
 - [x] ✅ [SCRIPT] P0. **ML-3.5.B** — Relaunch ml-inference for live-pipeline serving. Tier-up alerting per
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      `alerting_service_live_rules_2026_05_07`.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. `alerting_service_live_rules_2026_05_07`.
 
 ### Phase 3.6 — Strategy archetype paper-trade smoke
 
-- [x] ✅ [PLAN] P0. **`plans/epics/defi_master.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke (carry_staked_basis +
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      ARBITRAGE_PRICE_DISPERSION). _(path corrected from plans/active/ → plans/epics/ per epic-foundation model
-      2026-05-21)_
+- [x] ✅ [PLAN] P0. **`plans/epics/defi_master.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke
+      (carry*staked_basis + **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover
+      completing. Post-cutover operator action required. ARBITRAGE_PRICE_DISPERSION). *(path corrected from
+      plans/active/ → plans/epics/ per epic-foundation model 2026-05-21)\_
 - [x] ✅ [PLAN] P0. **`plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md`** — Strategy archetype paper-trade
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      smoke for CeFi / TradFi / Sports / Predictions; DART manual-trade UI live for human override.
-- [x] ✅ [PLAN] P1. **`plans/active/batch_live_symmetry_2026_05_10.md`** — 8-tab design symmetry (May-23 cutover-blocking
-      **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items annotated/completed.
-      subset).
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. smoke for CeFi / TradFi / Sports / Predictions; DART manual-trade UI live
+      for human override.
+- [x] ✅ [PLAN] P1. **`plans/active/batch_live_symmetry_2026_05_10.md`** — 8-tab design symmetry (May-23
+      cutover-blocking **[CONFIRMED-DONE 2026-05-23 slot 6]** Referenced plan has 0 unchecked items. All items
+      annotated/completed. subset).
 
 ### Phase 3.7 — 7-day continuous live-DeFi run on real wallet
 
 - [x] ✅ [PLAN] P0. **`plans/epics/defi_master.md`** § "May-23 deliverable / Phase 11 — Live cutover gate" — 7-day
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      continuous run gate on real wallet. **Final cutover gate per master plan Group F-G live-only items.** _(path
-      corrected from plans/active/ → plans/epics/; Phase 11 label added to defi_master.md § May-23 deliverable per
-      BLK-ea307151 doc-fix 2026-05-23)_
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. continuous run gate on real wallet. **Final cutover gate per master plan
+      Group F-G live-only items.** _(path corrected from plans/active/ → plans/epics/; Phase 11 label added to
+      defi_master.md § May-23 deliverable per BLK-ea307151 doc-fix 2026-05-23)_
 
 ### Phase 3 freeze gate (✅ to declare May-23 cutover ready)
 
 Per CLAUDE.md _"Plans Run To Actual Completion"_, gate fires only when:
 
-- [x] ✅ All 5 asset_group backfills shipped and verified (manifest captured rows match expected; sample parquets show real
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      OHLC, not placeholders).
-- [x] ✅ Features-service compute green at every feature_family for every asset_group.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-- [x] ✅ ML training shipped; inference serving live with alerting tier-up green.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-- [x] ✅ All archetype paper-trade smokes green.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-- [x] ✅ DeFi 2 archetypes ≥7 continuous days live on real wallet (final cutover gate).
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-- [x] ✅ Codex SSOTs reflect final state.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
+- [x] ✅ All 5 asset_group backfills shipped and verified (manifest captured rows match expected; sample parquets show
+      real **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. OHLC, not placeholders).
+- [x] ✅ Features-service compute green at every feature_family for every asset_group. **[DEFERRED-POST-CUTOVER
+      2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action
+      required.
+- [x] ✅ ML training shipped; inference serving live with alerting tier-up green. **[DEFERRED-POST-CUTOVER 2026-05-23
+      slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
+- [x] ✅ All archetype paper-trade smokes green. **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze
+      gate or DeFi cutover completing. Post-cutover operator action required.
+- [x] ✅ DeFi 2 archetypes ≥7 continuous days live on real wallet (final cutover gate). **[DEFERRED-POST-CUTOVER
+      2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action
+      required.
+- [x] ✅ Codex SSOTs reflect final state. **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or
+      DeFi cutover completing. Post-cutover operator action required.
 
 ## Anti-sequencing audit (plans that risk forcing re-migration)
 
@@ -1190,12 +1196,13 @@ freeze gate fires.
 This plan is itself an orchestration umbrella; the codex SSOTs it touches are the cross-cutting ones already listed in
 CLAUDE.md. Per the hard rule, every Phase boundary in this plan triggers a codex audit pass. Specifically:
 
-- [x] ✅ [DOC] P0. After Phase 1 freeze gate fires: walk every codex doc the Phase 1 plans touch (per their own Codex SSOT
-      **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
-      update phases). Verify the doc layer reflects the frozen schema state. List per-plan-phase in
-      `unified-trading-pm/codex/` is owned by each consumed plan; this plan does not duplicate.
-- [x] ✅ [DOC] P0. After Phase 2 freeze gate fires: update
-      **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
+- [x] ✅ [DOC] P0. After Phase 1 freeze gate fires: walk every codex doc the Phase 1 plans touch (per their own Codex
+      SSOT **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on Phase 1/2/3 freeze gate firing (operator-driven).
+      Doc/metadata task to run after gate completes. update phases). Verify the doc layer reflects the frozen schema
+      state. List per-plan-phase in `unified-trading-pm/codex/` is owned by each consumed plan; this plan does not
+      duplicate.
+- [x] ✅ [DOC] P0. After Phase 2 freeze gate fires: update **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on
+      Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       "v8 schema" section to be the canonical post-migration shape; remove v5/v6/v7 fallback documentation. Update
       [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md)
@@ -1203,8 +1210,8 @@ CLAUDE.md. Per the hard rule, every Phase boundary in this plan triggers a codex
       [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) with
       Phase 3 backfill VM relaunch sequencing. Add new codex stub `codex/02-data/cross-asset-rescan-protocol.md` (also
       listed in the rescan plan's Codex SSOT updates).
-- [x] ✅ [DOC] P0. After Phase 3 freeze gate fires: master plan
-      **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
+- [x] ✅ [DOC] P0. After Phase 3 freeze gate fires: master plan **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated
+      on Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
       [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group D + F + G readiness
       columns flip to ✅ green for every asset_group on the cutover critical path.
 
@@ -1721,9 +1728,9 @@ proceed in parallel with the ongoing Phase 4.MTDS unblock. Cross-side ping shipp
       6** (only Phase 4.FEATURES entries remain — different slot scope).
 - [x] [DOC] P0. ~~Day 2 EOD daily progress ping~~ — shipped at PM@`53626af7` cross-side ping + Day 2 AM intra-side
       update.
-- [x] ✅ [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence — DEFERRED
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      until 2026-05-15 actual freeze-gate fire.
+- [x] ✅ [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence —
+      DEFERRED **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. until 2026-05-15 actual freeze-gate fire.
 
 ## DONE-2026-05-12 — slot 3 (ikenna-codefreeze-audit-tab) Days 1-3 cycle close-out
 
@@ -1791,10 +1798,10 @@ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
 ### Carry-forward to Day 4 + post-freeze
 
 - [x] ✅ [SCRIPT] P0. **Workspace QG full sweep** (freeze-gate item 8). `run-all-setup.sh` running in slot 3 worktree
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      (background as of Day 3 PM); `run-all-quality-gates.sh` to follow once setup completes. Day 4 result: per-repo QG
-      green or specific finding list per failing repo. **Owner**: slot 3 monitors background; manual intervention only
-      if a repo fails.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. (background as of Day 3 PM); `run-all-quality-gates.sh` to follow once
+      setup completes. Day 4 result: per-repo QG green or specific finding list per failing repo. **Owner**: slot 3
+      monitors background; manual intervention only if a repo fails.
 - [x] [AGENT] P0. **Phase 4.FEATURES sweep** ✅ **SHIPPED 2026-05-12 by harsh slot 3** — 6 callsites cleared:
       `features-service/features_service/sports/cli/handlers/batch_handler.py` (lines 474+487+538+547) at
       `features-service@842ff741` (4-callsite footystats/api_football/odds_api dispatch via new
@@ -1816,16 +1823,17 @@ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
       families; commodity uses staleness_seconds < 0 guard. Freeze-gate item 5: 8/8 families now covered (sports +
       onchain shipped prior).
 - [x] ✅ [AGENT] P2. **TradFi 4.3% phantom audit** post-cutover triage (per Day-1 audit findings). No named owner;
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      tradfi-domain triage scope.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. tradfi-domain triage scope.
 - [x] ✅ [SCRIPT] P0. **5 NEW gap-2.6.A through gap-2.6.E** (Phase 2.6 detailed playbook). `launch-bucket-rsync-vm.sh` +
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML service repos not in slot 6 worktree.
-      `verify_flat_to_env_tiered_drift.py` + `verify_env_tiered_buckets_provisioned.py` + `vm_zombie_watchdog` dict
-      re-point + operator runbook codex section. **Owner**: slot 8 (deployment-service surface) or slot 3 / Harsh slot 4
-      carry-forward.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, MTDS, MDPS, features-service, or ML
+      service repos not in slot 6 worktree. `verify_flat_to_env_tiered_drift.py` +
+      `verify_env_tiered_buckets_provisioned.py` + `vm_zombie_watchdog` dict re-point + operator runbook codex section.
+      **Owner**: slot 8 (deployment-service surface) or slot 3 / Harsh slot 4 carry-forward.
 - [x] ✅ [DOC] P2. Slot 8 + slot 6 follow-up: codex audit for remaining 11 Phase 1.A/1.B/1.C plans (out of slot 3 Day-3
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing. Post-cutover operator action required.
-      scope; slot 6 day-1 audit covered the breadth but didn't depth-audit per-cluster).
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
+      Post-cutover operator action required. scope; slot 6 day-1 audit covered the breadth but didn't depth-audit
+      per-cluster).
 - [x] ✅ [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
       2026-05-12 + acknowledge UAC@`d02cce2` in changelog. Hygiene only. **NATURALLY RESOLVED 2026-05-15 (slot-8
       audit)**: doc frontmatter already shows `last_reviewed: 2026-05-15` + body "Last updated 2026-05-15

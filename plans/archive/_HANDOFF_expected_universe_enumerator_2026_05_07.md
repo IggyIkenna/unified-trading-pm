@@ -52,7 +52,7 @@ Key file shipped:
 - **Prediction**: STUB — yields 0 rows. Blocked on UAC `PREDICTION_GROUPS` registry which is empty pending the
   canonical_question_group SSOT (`predictions_master_2026_05_07.md`).
 
-The script has been **smoke-tested locally** — TradFi NASDAQ holidays, DeFi AAVEV3-ETHEREUM 2018 pre-launch, sports
+The script has been **smoke-tested locally** — TradFi NASDAQ holidays, DeFi AAVE_V3-ETHEREUM 2018 pre-launch, sports
 api_football pre-2018-01-01 all yield correct (row, reason) tuples. CLI parses cleanly. **No unit tests written yet** —
 see deferred items below.
 

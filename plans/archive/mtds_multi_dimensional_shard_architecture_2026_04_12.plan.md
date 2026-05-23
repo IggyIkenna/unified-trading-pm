@@ -160,8 +160,8 @@ Phase 4 (Integration validation)
       "CBOE": {"ohlcv_15m": "2020-01-07"},  # VIX — Barchart CSV start
       "FX": {"ohlcv_24h": "2020-01-01"},
       # DeFi — normalized 10 data types (dex_swaps, dex_pools, lending_indices, etc.)
-      "UNISWAPV3-ETHEREUM": {"dex_swaps": "2021-05-05", "dex_pools": "2021-05-05"},
-      "AAVEV3-ETHEREUM": {"lending_indices": "2023-01-27", "oracle_prices": "2023-01-27",
+      "UNISWAP_V3-ETHEREUM": {"dex_swaps": "2021-05-05", "dex_pools": "2021-05-05"},
+      "AAVE_V3-ETHEREUM": {"lending_indices": "2023-01-27", "oracle_prices": "2023-01-27",
                           "rewards": "2023-01-27", "risk_params": "2023-01-27"},
       # Sports
       "ODDS_API": {"odds": "2024-01-01", "odds_snapshot": "2024-01-01",

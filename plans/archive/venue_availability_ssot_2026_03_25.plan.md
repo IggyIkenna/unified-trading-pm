@@ -25,8 +25,8 @@ reconciliation_date: 2026-04-25
 1. **Venue launch dates are hardcoded in instruments-service** (`_VENUE_LAUNCH_DATES` dict in orchestrator.py) instead
    of being in UAC as SSOT. Different services could use different dates.
 
-2. **Venue names are inconsistent across repos** — UAC VenueMapping uses `UNISWAPV3-ETH`, URDI uses
-   `UNISWAPV3-ETHEREUM`, instruments-service uses the URDI format. No validation prevents mismatches.
+2. **Venue names are inconsistent across repos** — UAC VenueMapping uses `UNISWAP_V3-ETH`, URDI uses
+   `UNISWAP_V3-ETHEREUM`, instruments-service uses the URDI format. No validation prevents mismatches.
 
 3. **DeFi adapters return current state, not historical snapshots** — UniswapV3 returns its current 500 top pools
    regardless of the requested date. `available_since` and `available_to` fields on InstrumentRecord are `None` for all

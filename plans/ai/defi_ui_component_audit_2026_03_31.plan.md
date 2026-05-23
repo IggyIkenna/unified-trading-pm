@@ -209,7 +209,7 @@ page instead).
 
 ### Problem 2: Display vs Canonical Venue Names
 
-- `defi-risk.ts` / `defi-lending.ts`: canonical `AAVEV3-ETHEREUM`, `UNISWAPV3-ETHEREUM`
+- `defi-risk.ts` / `defi-lending.ts`: canonical `AAVE_V3-ETHEREUM`, `UNISWAP_V3-ETHEREUM`
 - `mock-data-seed.ts`: display `"Uniswap"`, `"Aave"`
 
 **Fix:** All mock data uses canonical venue IDs. `formatVenueId()` handles display formatting (already exists as
@@ -343,7 +343,7 @@ Only 1 generic DeFi alert ("Aave health factor below 1.5") in seed data. No stru
 
 #### T2.1 Lending Widget
 
-- [ ] Protocol selector shows Aave V3 (`AAVEV3-ETHEREUM`), Morpho, Compound V3
+- [ ] Protocol selector shows Aave V3 (`AAVE_V3-ETHEREUM`), Morpho, Compound V3
 - [ ] Operation buttons: LEND, BORROW, WITHDRAW, REPAY
 - [ ] Asset selector with supply/borrow rates shown
 - [ ] Amount input, slippage selector
@@ -430,7 +430,7 @@ Only 1 generic DeFi alert ("Aave health factor below 1.5") in seed data. No stru
 #### S.3 Reconciliation
 
 - [ ] Accessible for Patrick
-- [ ] DeFi venues in filter: AAVEV3-ETHEREUM, HYPERLIQUID, UNISWAPV3-ETHEREUM, ETHENA-ETHEREUM
+- [ ] DeFi venues in filter: AAVE_V3-ETHEREUM, HYPERLIQUID, UNISWAP_V3-ETHEREUM, ETHENA-ETHEREUM
 - [ ] 5 mock DeFi reconciliation records (DREC-001 through DREC-005)
 - [ ] Accept / Reject / Investigate buttons update status
 
@@ -506,7 +506,7 @@ Pre-demo: app running, treasury status = "high" (35% > 20% target).
 ### Flow 1: AAVE Lending (~3 min)
 
 1. DeFi → Wallet Summary: point to treasury $350K, treasury HIGH status
-2. DeFi → Lending: select AAVEV3-ETHEREUM, USDC, $100K, slippage → Execute
+2. DeFi → Lending: select AAVE_V3-ETHEREUM, USDC, $100K, slippage → Execute
 3. DeFi → Trade History: TRANSFER + LEND rows, P&L decomposition
 4. Positions: aUSDC position appearing
 5. P&L: mention interest accrues daily

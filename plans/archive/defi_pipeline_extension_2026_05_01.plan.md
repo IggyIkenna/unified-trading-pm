@@ -94,7 +94,7 @@ proved the leg-controller primitive works end-to-end against real on-chain data,
    blocks but must not pretend it is executable today.
 5. **Venue/chain coverage in the analysis was ~5/39 DeFi venues and ~4/9 CeFi venues.** Missing chain coverage:
    AVALANCHE, BSC, LINEA, MANTLE, AURORA, BLAST, CELO, FANTOM, GNOSIS, METIS, MODE, MOONBEAM (12 chains). Missing
-   protocol coverage: COMPOUNDV3 (5 chains), MORPHO (5 chains), FLUID, UNISWAPV2/V3/V4 (LP positions, not just swaps),
+   protocol coverage: COMPOUND_V3 (5 chains), MORPHO (5 chains), FLUID, UNISWAP_V2/V3/V4 (LP positions, not just swaps),
    Balancer, Curve, ETHENA, JITO-SOLANA. The pipeline silently treats these as unsupported.
 
 The user's directive: build a single PM action plan covering all five gaps end-to-end (UAC primitive → controller clamp

@@ -24,7 +24,7 @@ last_reviewed: 2026-05-17
 | Type             | Example             | Identity                          |
 | ---------------- | ------------------- | --------------------------------- |
 | CeFi Exchange    | Binance sub-account | `client:BINANCE:sub-1`            |
-| DeFi Wallet      | Aave on Ethereum    | `client:AAVEV3-ETHEREUM:0xABC...` |
+| DeFi Wallet      | Aave on Ethereum    | `client:AAVE_V3-ETHEREUM:0xABC...` |
 | TradFi Broker    | IBKR                | `client:IBKR:DU1234567`           |
 | Sports Bookmaker | Betfair             | `client:BETFAIR:main`             |
 

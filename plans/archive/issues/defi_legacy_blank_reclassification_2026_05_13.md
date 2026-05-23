@@ -119,7 +119,7 @@ etc.), not protocol launch dates (Aave V3 2022-02-23, Lido 2020-12, Kamino 2022-
 
 Sample verification of my 604,951 flipped rows:
 
-- AAVEV3-ETHEREUM 2018-01-01: NO parquet (Aave V3 didn't exist) — should be EXPECTED_PRE_VENUE_LAUNCH
+- AAVE_V3-ETHEREUM 2018-01-01: NO parquet (Aave V3 didn't exist) — should be EXPECTED_PRE_VENUE_LAUNCH
 - LIDO-ETHEREUM 2018-11-08: NO parquet (Lido launched Dec 2020) — should be EXPECTED_PRE_VENUE_LAUNCH
 - KAMINO-SOLANA 2020-08-16: NO parquet (Kamino launched 2022) — should be EXPECTED_PRE_VENUE_LAUNCH
 - FRAX-ETHEREUM 2018-05-21: NO parquet (Frax launched 2020) — should be EXPECTED_PRE_VENUE_LAUNCH
@@ -131,8 +131,8 @@ proper reason should be "EXPECTED_PRE_VENUE_LAUNCH".
 ### In-flight work (slot 3, after this update)
 
 1. Add `DEFI_VENUE_LAUNCH_DATES` dict to UAC `registry/venue_launch_dates.py` covering ~25-50 protocol-chain
-   combinations seen in the defi manifest (AAVEV3-\*, COMPOUNDV3-\*, UNISWAPV2/V3/V4-\*, LIDO-\*, FRAX-\*, ETHENA-\*,
-   KAMINO-\*, JITO-\*, DRIFT-\*, ROCKETPOOL-\*, BALANCER-\*, CURVE-\*, SUSHISWAPV3-\*, ETHERFI-\*, MAKER, etc.).
+   combinations seen in the defi manifest (AAVE_V3-\*, COMPOUND_V3-\*, UNISWAP_V2/V3/V4-\*, LIDO-\*, FRAX-\*, ETHENA-\*,
+   KAMINO-\*, JITO-\*, DRIFT-\*, ROCKETPOOL-\*, BALANCER-\*, CURVE-\*, SUSHISWAP_V3-\*, ETHERFI-\*, MAKER, etc.).
 2. Update `_classify_defi` to call `get_venue_launch_date("defi", venue)` and return `EXPECTED_PRE_VENUE_LAUNCH` for
    pre-launch dates (mirror of `_classify_cefi`).
 3. Write corrector script `reconcile_legacy_attempted_failed_to_pre_launch_2026_05_13.py` that reads rows in
@@ -193,7 +193,7 @@ Total defi manifest rows: 1,606,190.
 | attempted_failed | 606,368     | 37.8%     |
 | **captured**     | **311,602** | **19.4%** |
 
-Captured venues (top): UNISWAPV3 (187,769), MORPHO (45,936), AAVEV3 (29,782), UNISWAPV2 (22,168), UNISWAPV4 (15,093),
+Captured venues (top): UNISWAP_V3 (187,769), MORPHO (45,936), AAVE_V3 (29,782), UNISWAP_V2 (22,168), UNISWAP_V4 (15,093),
 CURVE (2,905), ETHENA (1,537), ETHERFI (1,225), MAKER (1,207), FRAX (933). Solana captures thin (KAMINO 32, RAYDIUM 31,
 ORCA 31, MARINADE 30, SOLEND 29, MARGINFI 16). Captured date range: 2022-11-01 → 2026-05-08.
 
@@ -201,9 +201,9 @@ ORCA 31, MARINADE 30, SOLEND 29, MARGINFI 16). Captured date range: 2022-11-01 �
 
 - 2019-07-25 CURVE-ETHEREUM (Curve launched 2020-01-19)
 - 2021-06-30 DRIFT-SOLANA (Drift launched 2021-11-08)
-- 2020-01-26 UNISWAPV2-ETHEREUM (V2 launched 2020-05-05)
+- 2020-01-26 UNISWAP_V2-ETHEREUM (V2 launched 2020-05-05)
 - 2023-08-01 ETHENA-ETHEREUM (Ethena launched 2024-02-20)
-- 2022-01-29 AAVEV3-POLYGON (V3 launched 2022-03-16)
+- 2022-01-29 AAVE_V3-POLYGON (V3 launched 2022-03-16)
 
 ### Open follow-up — cefi 789k re-fetch needed
 

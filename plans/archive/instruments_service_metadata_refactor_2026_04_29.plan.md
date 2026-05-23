@@ -102,10 +102,10 @@ todos:
           - Read-only against subgraph (rate-limit-aware, reuse UAC `get_subgraph_id`).
           - Write atomically per parquet (download + rewrite + upload; old parquet remains until rewrite completes).
           - Dry-run flag (`--dry-run`) emits diff summary without uploading.
-          - Per-venue toggle (`--venues UNISWAPV3-ETHEREUM,AAVEV3-ETHEREUM,...`) so we can validate one venue before fanning out.
+          - Per-venue toggle (`--venues UNISWAP_V3-ETHEREUM,AAVE_V3-ETHEREUM,...`) so we can validate one venue before fanning out.
         - Tests
           - Unit: mock subgraph response + mock GCS list/read/write; verify the merge fills the new columns and no other columns are touched.
-          - Integration (operator-cost): dry-run against `central-element-323112` for a single venue (UNISWAPV3-ETHEREUM, 30-day window); diff before/after parquet column NULL-fraction.
+          - Integration (operator-cost): dry-run against `central-element-323112` for a single venue (UNISWAP_V3-ETHEREUM, 30-day window); diff before/after parquet column NULL-fraction.
         - Forward verification (separate todo)
           - After tarball refresh, the next scheduled instruments-service run should write parquets with the new fields populated. Run a one-shot validator that pulls today's parquet and asserts new columns are NOT NULL for at least one row.
     status: todo

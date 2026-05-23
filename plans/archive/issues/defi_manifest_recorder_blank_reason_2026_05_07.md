@@ -32,13 +32,13 @@ event-verification + run.log inspection. All three VMs were emitting STARTED + R
 (heartbeat-only) but their run.logs showed thousands of identical warnings:
 
 ```
-WARNING DefiManifestRecorder(<handler>): record_empty failed for (venue=YEARNV3, chain=ETHEREUM,
+WARNING DefiManifestRecorder(<handler>): record_empty failed for (venue=YEARN_V3, chain=ETHEREUM,
 data_type=vault_share_price): record_empty() called with blank reason. Pass a typed reason from
 EMPTY_CONFIRMED_REASONS (EXPECTED_HOLIDAY / EXPECTED_WEEKEND / EXPECTED_PRE_VENUE_LAUNCH /
 EXPECTED_PRE_GENESIS_CHAIN / EXPECTED_PRE_SOURCE_COVERAGE_START / EXPECTED_INSTRUMENT_NOT_LISTED /
 EXPECTED_INSTRUMENT_DELISTED / EXPECTED_PARTIAL_HALF_DAY / EXPECTED_PAUSED_LEAGUE /
 EXPECTED_DEPRECATED_DATA_TYPE / EXPECTED_REFDATA_CADENCE_CHANGE / SOURCE_RETURNED_ZERO), or use record_failed
-if the absence is unexpected. [row_key={'date': '2020-01-01', 'venue': 'YEARNV3', 'chain': 'ETHEREUM',
+if the absence is unexpected. [row_key={'date': '2020-01-01', 'venue': 'YEARN_V3', 'chain': 'ETHEREUM',
 'data_type': 'vault_share_price'}]
 ```
 

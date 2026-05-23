@@ -3,7 +3,7 @@ scope: [engineer, admin]
 archetype: ARBITRAGE_MEV_SANDWICH
 family: ARBITRAGE_STRUCTURAL
 status: theoretical-only
-venue_universe: [UNISWAPV3, BALANCER, CURVE, SUSHISWAP]
+venue_universe: [UNISWAP_V3, BALANCER, CURVE, SUSHISWAP]
 topology_requirements:
   isolation:
     execution-service: isolated

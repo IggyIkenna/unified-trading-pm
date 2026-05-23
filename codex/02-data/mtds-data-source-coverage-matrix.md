@@ -36,7 +36,7 @@ These counts are live-derived from `VenueMapping` and are the authoritative deno
 | -------------- | -------------------------------------: | :--------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CEFI**       |                            17 distinct |     no     | ASTER, BINANCE-SPOT, BINANCE-FUTURES, BITFINEX-SPOT, BITFINEX-FUTURES, BITGET-SPOT, BITGET-FUTURES, BYBIT, COINBASE-SPOT, DERIBIT, HYPERLIQUID, KRAKEN-SPOT (no data yet — backfill pending), KRAKEN-FUTURES (no data yet), OKX-SPOT, OKX-FUTURES, OKX-SWAP, UPBIT                                                                                                                                                                                                                        |
 | **TRADFI**     |                                      6 |     no     | CBOE, CME, FX, ICE, NASDAQ, NYSE                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **DEFI**       | 60 entries (flat + legacy VENUE-CHAIN) | per-chain  | Two naming eras coexist — see note below. Flat (current): UNISWAP_V3, AAVE_V3, COMPOUND_V3, MORPHO, FLUID, BALANCER, CURVE, LIDO, ETHERFI, ETHENA, ROCKETPOOL, STADER, ANKR, JITO etc. Legacy VENUE-CHAIN (411k rows migrated 2026-05-07): UNISWAPV3-ETHEREUM, AAVEV3-ETHEREUM, BALANCER-ETHEREUM, LIDO-ETHEREUM etc. Both sets registered in `expected_coverage._DEFI`. Ghost venues (UNISWAPV3 no-underscore era-2) tracked: `issues/defi_coverage_capability_alignment_2026_05_22.md`. |
+| **DEFI**       | 60 entries (flat + legacy VENUE-CHAIN) | per-chain  | Two naming eras coexist — see note below. Flat (current): UNISWAP_V3, AAVE_V3, COMPOUND_V3, MORPHO, FLUID, BALANCER, CURVE, LIDO, ETHERFI, ETHENA, ROCKETPOOL, STADER, ANKR, JITO etc. Legacy VENUE-CHAIN (411k rows migrated 2026-05-07): UNISWAP_V3-ETHEREUM, AAVE_V3-ETHEREUM, BALANCER-ETHEREUM, LIDO-ETHEREUM etc. Both sets registered in `expected_coverage._DEFI`. Ghost venues (UNISWAP_V3 no-underscore era-2) tracked: `issues/defi_coverage_capability_alignment_2026_05_22.md`. |
 | **SPORTS**     |                         ~23 bookmakers |     no     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, BET365, UNIBET, MARATHONBET, … — enumerate via `get_expected_bookmakers()`                                                                                                                                                                                                                                                                                                                                     |
 | **PREDICTION** |                                      2 |     no     | POLYMARKET, KALSHI                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
@@ -58,13 +58,13 @@ These counts are live-derived from `VenueMapping` and are the authoritative deno
   because the instruments parquet IS the metadata.
 - **DEFI venue naming — two eras coexist in manifest** (2026-05-22): Era 1/3 (current handlers): `protocol.upper()` +
   chain as separate field → e.g. `venue="UNISWAP_V3" chain="ETHEREUM"`. Era 2 (post-migration 2026-05-07): 411k rows
-  with embedded chain → `venue="UNISWAPV3-ETHEREUM" chain=""`. Both registered in `expected_coverage._DEFI`. Ghost era-2
-  no-underscore rows (UNISWAPV3, AAVEV3 without chain suffix) require phantom reconciler; tracked in
+  with embedded chain → `venue="UNISWAP_V3-ETHEREUM" chain=""`. Both registered in `expected_coverage._DEFI`. Ghost era-2
+  no-underscore rows (UNISWAP_V3, AAVE_V3 without chain suffix) require phantom reconciler; tracked in
   `plans/active/issues/defi_coverage_capability_alignment_2026_05_22.md` Bug 3.
 - **DEFI handler naming inconsistency** (Bug 2 OPEN): `evm_defi_handler` writes `AAVE_V3` (underscore);
-  `flash_loan_events_handler` and `position_data_handler` hardcode `AAVEV3` (no underscore). Both in manifest as
+  `flash_loan_events_handler` and `position_data_handler` hardcode `AAVE_V3` (no underscore). Both in manifest as
   separate venues. Fix: normalise all to `AAVE_V3`. Tracked in issue doc above.
-- DEFI multi-chain legacy entries (`AAVEV3-ARBITRUM`, `AAVEV3-BASE`, etc.) now in `expected_coverage._DEFI` (flat
+- DEFI multi-chain legacy entries (`AAVE_V3-ARBITRUM`, `AAVE_V3-BASE`, etc.) now in `expected_coverage._DEFI` (flat
   variants for current handlers + VENUE-CHAIN variants for 411k migrated rows).
 
 ## 2. CEFI — per venue × data_type matrix
@@ -139,7 +139,7 @@ Instrument_type axis: POOL (DEX), LENDING (Aave/Morpho/Compound/Fluid), LST (Lid
 
 | venue              | expected data_types                                  | instrument_type category |
 | ------------------ | ---------------------------------------------------- | ------------------------ |
-| AAVEV3-ETHEREUM    | lending_indices, oracle_prices, rewards, risk_params | LENDING                  |
+| AAVE_V3-ETHEREUM    | lending_indices, oracle_prices, rewards, risk_params | LENDING                  |
 | BALANCER-ETHEREUM  | dex_pools, dex_swaps                                 | POOL                     |
 | CURVE-ETHEREUM     | dex_pools, dex_swaps                                 | POOL                     |
 | ETHENA-ETHEREUM    | lst_rates, oracle_prices                             | LST                      |
@@ -147,9 +147,9 @@ Instrument_type axis: POOL (DEX), LENDING (Aave/Morpho/Compound/Fluid), LST (Lid
 | FLUID-ETHEREUM     | lending_indices, oracle_prices                       | LENDING                  |
 | LIDO-ETHEREUM      | lst_rates, oracle_prices                             | LST                      |
 | MORPHO-ETHEREUM    | lending_indices, oracle_prices                       | LENDING                  |
-| UNISWAPV2-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
-| UNISWAPV3-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
-| UNISWAPV4-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
+| UNISWAP_V2-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
+| UNISWAP_V3-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
+| UNISWAP_V4-ETHEREUM | dex_pools, dex_swaps                                 | POOL                     |
 
 ### DEFI coverage axes
 
@@ -256,8 +256,8 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
 - ✅ **DEFI multi-chain expansion** (Phase 7 #4) — 58 canonical PROTOCOL-CHAIN venues registered across 11 chains
   (ETHEREUM / ARBITRUM / BASE / OPTIMISM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC / SOLANA).
   `VENUE_DATA_TYPE_CAPABILITIES` filled for every new venue. **2026-05-07 closeout:** UTL
-  `ManifestWriter._coerce_row_key` + `.add()` canonicalise legacy underscore venues (`AAVE_V3 → AAVEV3`,
-  `UNISWAP_V3 → UNISWAPV3`, …) at write time via UAC `LEGACY_DEFI_VENUE_ALIASES`; the manifest migration
+  `ManifestWriter._coerce_row_key` + `.add()` canonicalise legacy underscore venues (`AAVE_V3 → AAVE_V3`,
+  `UNISWAP_V3 → UNISWAP_V3`, …) at write time via UAC `LEGACY_DEFI_VENUE_ALIASES`; the manifest migration
   (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`) rewrote 411,620 historical rows.
   Read-time venue fallback in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types
   (`lending-indices → lending_indices`) still normalised at read-time via `_canonicalise_defi_data_types` — paired

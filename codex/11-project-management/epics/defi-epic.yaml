@@ -13,9 +13,9 @@
 #   - basis_trade_long_spot_short_perp
 #
 # DeFi venues in scope (MVP):
-#   - AAVEV3-ETHEREUM (start: 2023-01-27)
-#   - UNISWAPV2-ETHEREUM (start: 2020-05-18)
-#   - UNISWAPV3-ETHEREUM (start: 2021-05-05)
+#   - AAVE_V3-ETHEREUM (start: 2023-01-27)
+#   - UNISWAP_V2-ETHEREUM (start: 2020-05-18)
+#   - UNISWAP_V3-ETHEREUM (start: 2021-05-05)
 #   - COMPOUND_V3_ETH (start: 2022-08-24)
 #
 # See: unified-trading-pm/codex/11-project-management/mvp-universe.yaml for full

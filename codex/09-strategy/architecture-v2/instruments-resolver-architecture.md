@@ -91,7 +91,7 @@ Two resolver modes:
 For each `(archetype, category, instrument_type, venue)` slot in the envelope, the resolver:
 
 1. **Maps catalogue venue → parquet venue.** Catalogue uses lowercase tokens (`binance`, `okx`, `uniswap_v3@ethereum`);
-   parquet uses uppercase with variant suffixes (`BINANCE-SPOT`, `BINANCE-FUTURES`, `UNISWAPV3-ETH`).
+   parquet uses uppercase with variant suffixes (`BINANCE-SPOT`, `BINANCE-FUTURES`, `UNISWAP_V3-ETH`).
    `_CATALOGUE_VENUE_TO_PARQUET` is the SSOT map.
 2. **Resolves category bucket.** `_CATEGORY_TO_INSTRUMENT_BUCKET` — uppercase catalogue category → GCS bucket name.
 3. **Picks latest parquet.** Bucket-level `fs.find()` returns all parquet paths; deepest `day=YYYY-MM-DD` per venue

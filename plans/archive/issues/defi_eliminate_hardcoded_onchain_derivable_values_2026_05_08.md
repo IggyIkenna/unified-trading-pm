@@ -8,7 +8,7 @@ author: ikenna
 source:
   - unified-api-contracts/unified_api_contracts/registry/chain_env.py:144-192 (PROTOCOL_LAUNCH_DATES — 49 hardcoded
     entries)
-  - unified-api-contracts/unified_api_contracts/registry/chain_env.py:146 (AAVEV3 ETHEREUM = "2022-03-14" — provably
+  - unified-api-contracts/unified_api_contracts/registry/chain_env.py:146 (AAVE_V3 ETHEREUM = "2022-03-14" — provably
     wrong, actual = 2023-01-27)
   - features-onchain-service/features_onchain_service/app/calculators/aave_risk_calculator.py:40-62 (_DEFAULT_LTV per
     token + _FALLBACK_LTV=0.70 + _FALLBACK_LIQ_THRESHOLD=0.75 stale fallbacks)
@@ -22,7 +22,7 @@ source:
       script then dump to uac i.e. change the current to what the truth is so that its canoncal rather than hacking it
       based off the data we collected"
   - tab 9 incident 2026-05-08 — mtds-lending-indices-20260508-114519 reproduces Bug 1 because UAC
-    PROTOCOL_LAUNCH_DATES["ETHEREUM","AAVEV3"]="2022-03-14" causes AAVE V3 ETH 2022-03-14→2023-01-27 dates to
+    PROTOCOL_LAUNCH_DATES["ETHEREUM","AAVE_V3"]="2022-03-14" causes AAVE V3 ETH 2022-03-14→2023-01-27 dates to
     record_empty(SOURCE_RETURNED_ZERO) instead of record_expected_empty(EXPECTED_PRE_GENESIS_CHAIN)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -30,7 +30,7 @@ locked_since: 2026-05-08
 
 # DeFi: eliminate hardcoded on-chain-derivable values
 
-> **Severity**: P0 for the AAVEV3 ETHEREUM launch-date error (active VM is mis-routing today, contaminating writegate
+> **Severity**: P0 for the AAVE_V3 ETHEREUM launch-date error (active VM is mis-routing today, contaminating writegate
 > Phase 2.E `EXPECTED_PRE_GENESIS_CHAIN` taxonomy); P1 for the broader 49-entry table + LTV fallbacks; P2 for
 > e2e-testing fixtures. **Blast radius**: UAC `chain_env.py` (49 launch-date entries) + features-onchain-service (LTV
 > fallbacks) + execution-service (address constants — milder, mostly correct) + e2e-testing (block-number fixtures) +
@@ -62,11 +62,11 @@ uniform.
 [chain_env.py:144-192](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L144-L192) — 49
 hardcoded `(chain, protocol)` launch dates. Each is a write-once historical fact that's empirically derivable from
 on-chain. The values today were likely seeded from DefiLlama / docs / memory, not from on-chain truth — confirmed by the
-AAVEV3 ETHEREUM "2022-03-14" entry which is **49 days off** from the actual deployment of 2023-01-27.
+AAVE_V3 ETHEREUM "2022-03-14" entry which is **49 days off** from the actual deployment of 2023-01-27.
 
 **Specific wrong entry, P0 severity** (live VM impact today):
 
-- `("ETHEREUM", "AAVEV3"): "2022-03-14"` ← wrong. Actual mainnet deployment 2023-01-27. Caused
+- `("ETHEREUM", "AAVE_V3"): "2022-03-14"` ← wrong. Actual mainnet deployment 2023-01-27. Caused
   `mtds-lending-indices-20260508-114519` Tab 9 reproducer: AAVE V3 ETH 2022-2023 dates emit
   `record_empty(SOURCE_RETURNED_ZERO)` instead of `record_expected_empty(EXPECTED_PRE_GENESIS_CHAIN)` — violates
   writegate Phase 2.E taxonomy AND wastes RPC quota on guaranteed-empty fetches.
@@ -129,7 +129,7 @@ registry rather than inlining literals. Cleanup, not anti-pattern.
 
 ## Why it matters
 
-- **Active VM mis-routing today**: the AAVEV3 ETHEREUM date error is producing wrong manifest rows on the running
+- **Active VM mis-routing today**: the AAVE_V3 ETHEREUM date error is producing wrong manifest rows on the running
   `mtds-lending-indices-20260508-114519` VM right now. Per Tab 9, AAVE V3 ETH 2022-03-14 → 2023-01-27 dates are
   recording `SOURCE_RETURNED_ZERO` instead of `EXPECTED_PRE_GENESIS_CHAIN`. Composes badly with writegate Phase 2.E
   reason taxonomy — the manifest's reason classifier can't distinguish "venue legitimately had no data" from "we asked
@@ -147,7 +147,7 @@ registry rather than inlining literals. Cleanup, not anti-pattern.
 
 ## Recommended decision
 
-### Phase 1 (P0, immediate) — Fix the AAVEV3 ETHEREUM date + audit Cat A immutable values via SSOT script
+### Phase 1 (P0, immediate) — Fix the AAVE_V3 ETHEREUM date + audit Cat A immutable values via SSOT script
 
 Write `unified-trading-pm/scripts/onchain_truth/derive_protocol_launch_dates.py`:
 
@@ -163,8 +163,8 @@ Run on a same-region GCE VM (cross-region RPC is slow). Re-run only when adding 
 
 INPUT = [
     # (chain, protocol, contract_address_to_probe, source_method)
-    ("ETHEREUM", "AAVEV3", "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2", "binary_search_eth_getCode"),
-    ("ARBITRUM", "AAVEV3", "0x794a61358D6845594F94dc1DB02A252b5b4814aD", "binary_search_eth_getCode"),
+    ("ETHEREUM", "AAVE_V3", "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2", "binary_search_eth_getCode"),
+    ("ARBITRUM", "AAVE_V3", "0x794a61358D6845594F94dc1DB02A252b5b4814aD", "binary_search_eth_getCode"),
     # ... 47 more
 ]
 ```
@@ -177,8 +177,8 @@ change), serves as SSOT regenerator if the table is ever in dispute again.
 `block_number + tx_hash` in a comment OR be paired with a re-run of `derive_protocol_launch_dates.py` evidenced in the
 commit message. Eliminates the "someone seeded from DefiLlama / memory / vibes" failure mode.
 
-**Concrete output**: `("ETHEREUM", "AAVEV3"): "2022-03-14"` →
-`("ETHEREUM", "AAVEV3"): "2023-01-27"  # block 16496789, tx 0xfd2cee1c..., verified 2026-05-08`. Plus a paired manifest
+**Concrete output**: `("ETHEREUM", "AAVE_V3"): "2022-03-14"` →
+`("ETHEREUM", "AAVE_V3"): "2023-01-27"  # block 16496789, tx 0xfd2cee1c..., verified 2026-05-08`. Plus a paired manifest
 cleanup (per issue 12) — `record_empty(SOURCE_RETURNED_ZERO)` rows for AAVE V3 ETH 2022 dates re-classified to
 `record_expected_empty(EXPECTED_PRE_GENESIS_CHAIN)`.
 
@@ -236,7 +236,7 @@ instances grandfathered + tracked in a one-time cleanup tier.
 
 - [ ] `derive_protocol_launch_dates.py` SSOT script shipped + run; UAC `PROTOCOL_LAUNCH_DATES` table updated with
       truth-derived values + per-entry block_number/tx_hash comments.
-- [ ] AAVEV3 ETHEREUM specifically: 2022-03-14 → 2023-01-27. Manifest rows for AAVE V3 ETH 2022 dates re-classified from
+- [ ] AAVE_V3 ETHEREUM specifically: 2022-03-14 → 2023-01-27. Manifest rows for AAVE V3 ETH 2022 dates re-classified from
       `SOURCE_RETURNED_ZERO` to `EXPECTED_PRE_GENESIS_CHAIN`.
 - [ ] Pre-commit gate: changes to PROTOCOL_LAUNCH_DATES require block_number + tx_hash citation in comment OR
       script-re-run evidence in commit message.
@@ -263,7 +263,7 @@ instances grandfathered + tracked in a one-time cleanup tier.
 - Coordination with issue 11 governance params refresh: the LTV fallback removal in Phase 3 of THIS issue depends on
   issue 11's Phase 2 time-versioned governance_params parquet being shipped. Sequence: ship issue 11 Phase 2 first, then
   this issue's Phase 3.
-- Coordination with issue 12 manifest cleanup mandate: the AAVEV3 ETH date correction is exactly the kind of "entity
+- Coordination with issue 12 manifest cleanup mandate: the AAVE_V3 ETH date correction is exactly the kind of "entity
   change requires manifest cleanup" case that issue 12 codifies. Verify the cleanup workflow handles "value-correction"
   cases (re-classify existing manifest rows) not just add/remove.
 - Should the SSOT script live in `unified-trading-pm/scripts/onchain_truth/` (PM repo) or

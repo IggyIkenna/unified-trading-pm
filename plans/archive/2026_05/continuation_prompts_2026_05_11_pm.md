@@ -268,7 +268,7 @@ Agent-tag: ikenna-reconciler-tab.
 
 SHIP both items post-lending-VM. Do NOT stop at nice-haves. Sequence:
 
-Step 0 (~5 min) — VM verification: confirm `mtds-lending-indices-20260511-181115` STOPPED cleanly + canonical manifest shows LINEA AAVEV3 + BSC AAVEV3 captured for 2026-05-07→05-11. Flip defi_master Priority #5 `[x]` per slot 3 LEDGER entry. If VM hasn't landed yet, hold + monitor; pick up Step 1 once verified.
+Step 0 (~5 min) — VM verification: confirm `mtds-lending-indices-20260511-181115` STOPPED cleanly + canonical manifest shows LINEA AAVE_V3 + BSC AAVE_V3 captured for 2026-05-07→05-11. Flip defi_master Priority #5 `[x]` per slot 3 LEDGER entry. If VM hasn't landed yet, hold + monitor; pick up Step 1 once verified.
 
 Step 1 (~2-3 hr) — **Phase 0.4 MDPS `available_at` off-by-one reconciler** per `mdps_canonical_writer_off_by_one_tf_2026_05_11.md` Phase 0.4. Every MDPS-emitted candle written between Phase 1.2A.1 ship (2026-05-10) and MDPS@f004e12 fix (2026-05-11) carries the over-stamped value (1-timeframe overshoot). NEW script `market-data-processing-service/scripts/reconcile_available_at_off_by_one_tf.py`:
   - Walks `gs://{pid}-mdps/` for candles written in the bad window (filter by manifest `attempted_at` between 2026-05-10 + 2026-05-11)

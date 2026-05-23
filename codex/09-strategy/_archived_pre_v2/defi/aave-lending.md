@@ -15,13 +15,13 @@ leverage. PnL comes entirely from Aave liquidity index growth as borrowers pay i
 ```
 Start:  WALLET:SPOT_ASSET:USDT  (100% USDT)
 
-Step 1 - LEND:  USDT --> aUSDT   (supply to AAVEV3_ETHEREUM)
+Step 1 - LEND:  USDT --> aUSDT   (supply to AAVE_V3_ETHEREUM)
                 You send USDT to Aave Pool contract.
                 Aave mints aUSDT to your wallet.
                 Records entry_liquidity_index.
 
 Wallet after deploy:
-  - AAVEV3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM = initial_amount (but growing via index)
+  - AAVE_V3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM = initial_amount (but growing via index)
 
 On exit:
 Step 2 - WITHDRAW: aUSDT --> USDT  (burn aUSDT, receive USDT + accrued interest)
@@ -32,7 +32,7 @@ Step 2 - WITHDRAW: aUSDT --> USDT  (burn aUSDT, receive USDT + accrued interest)
 | Instrument Key                           | Venue   | Type   | Role                   |
 | ---------------------------------------- | ------- | ------ | ---------------------- |
 | `WALLET:SPOT_ASSET:USDT`                 | Wallet  | Spot   | Initial capital        |
-| `AAVEV3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM` | Aave V3 | aToken | Yield-bearing position |
+| `AAVE_V3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM` | Aave V3 | aToken | Yield-bearing position |
 
 ## Data Architecture
 
@@ -53,7 +53,7 @@ Step 2 - WITHDRAW: aUSDT --> USDT  (burn aUSDT, receive USDT + accrued interest)
 
 The supply token is a factory parameter (`supply_token="USDT"`) set once at initialisation:
 
-- Instrument: `AAVEV3_ETHEREUM:A_TOKEN:A{supply_token}@ETHEREUM`
+- Instrument: `AAVE_V3_ETHEREUM:A_TOKEN:A{supply_token}@ETHEREUM`
 
 There is **no dynamic token selection** — the strategy does NOT compare USDT vs USDC vs DAI supply APYs and pick the
 best one. This is a gap: a "lending SOR" could select the highest-yielding stablecoin that meets utilization and
@@ -308,7 +308,7 @@ improvement on a $10K position does not justify a $5 swap cost. The threshold is
 A dedicated factory function creates the ETH-denominated lending strategy:
 
 - **Factory:** `create_eth_lending_strategy()` with `lending_basket=["ETH", "WETH"]`
-- **Instrument:** `AAVEV3-ETHEREUM:A_TOKEN:AWETH@ETHEREUM`
+- **Instrument:** `AAVE_V3-ETHEREUM:A_TOKEN:AWETH@ETHEREUM`
 - **Target APY:** ~2% (lower than stablecoins due to lower borrow demand for ETH)
 - **Use case:** ETH-denominated returns for ETH share class clients. Avoids USD/ETH FX risk -- returns accrue in the
   same denomination as the capital base.

@@ -33,7 +33,7 @@ venues (Binance trades = multi-GB per day) will OOM if loaded entirely into memo
 
 ### Target architecture
 
-- **Shard = venue × data_type** (e.g. BINANCE-SPOT/trades, CME/trades, AAVEV3-ETHEREUM/rate_indices)
+- **Shard = venue × data_type** (e.g. BINANCE-SPOT/trades, CME/trades, AAVE_V3-ETHEREUM/rate_indices)
 - One API call per shard (batch — all instruments for that venue+data_type in one call)
 - Streaming writes: download in chunks, flush to GCS per chunk, clear memory
 - GCS path: `raw_tick_data/by_date/day={date}/venue={venue}/data_type={type}/ticks.parquet`
@@ -48,7 +48,7 @@ venues (Binance trades = multi-GB per day) will OOM if loaded entirely into memo
 | DERIBIT         | trades       | 500 MB-1 GB | 2,117       |
 | CME             | trades       | 200-500 MB  | 304         |
 | NYSE            | trades       | 1-3 GB      | 212         |
-| AAVEV3-ETHEREUM | rate_indices | 10 MB       | 51          |
+| AAVE_V3-ETHEREUM | rate_indices | 10 MB       | 51          |
 
 ### Storage pattern (confirmed from git history ~Feb 9 2026)
 
@@ -135,13 +135,13 @@ downloads trades and writes to GCS.
 
 ## Phase 2c: DeFi verification (PARALLEL with Phase 2)
 
-- [x] [AGENT] P1. Verify `BaseDefiAdapter.download_batch()` works end-to-end for AAVEV3-ETHEREUM
+- [x] [AGENT] P1. Verify `BaseDefiAdapter.download_batch()` works end-to-end for AAVE_V3-ETHEREUM
   - Instruments loaded from GCS (instruments-service output)
   - `download_market_data()` called per instrument
   - Results aggregated into DataFrame
 - [x] [AGENT] P1. Add `instrument_ids` filter support to `BaseDefiAdapter.download_batch()`
 
-**Success:** `--asset-group DEFI --venues AAVEV3-ETHEREUM --data-types rate_indices` works.
+**Success:** `--asset-group DEFI --venues AAVE_V3-ETHEREUM --data-types rate_indices` works.
 
 ## Phase 3: MTDS orchestrator — venue×data_type sharding
 
@@ -181,8 +181,8 @@ trades.
 - [x] [AGENT] P0. CeFi: HYPERLIQUID/trades (1 instrument)
 - [x] [AGENT] P0. TradFi: CME/trades (1 instrument via --instrument-ids ES)
 - [x] [AGENT] P0. TradFi: NYSE/trades (1 instrument via --instrument-ids AAPL)
-- [x] [AGENT] P0. DeFi: AAVEV3-ETHEREUM/rate_indices
-- [x] [AGENT] P0. DeFi: UNISWAPV3-ETHEREUM/trades (if available)
+- [x] [AGENT] P0. DeFi: AAVE_V3-ETHEREUM/rate_indices
+- [x] [AGENT] P0. DeFi: UNISWAP_V3-ETHEREUM/trades (if available)
 - [x] [AGENT] P1. Sports: ODDS_API (already works)
 - [x] [AGENT] P1. Prediction: POLYMARKET/trades
 

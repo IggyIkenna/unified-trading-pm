@@ -36,7 +36,7 @@ manifest rows (`MARINADE`, `DRIFT`, `JITO`, `ORCA`, `RAYDIUM`, `KAMINO`, `SOLEND
 
 **Settled by code, not by operator vote.** Two sources confirm:
 
-1. **UAC `_defi.py:687`** (comment): `venue: Canonical venue name (e.g. "AAVEV3-ETHEREUM", "DRIFT-SOLANA")`
+1. **UAC `_defi.py:687`** (comment): `venue: Canonical venue name (e.g. "AAVE_V3-ETHEREUM", "DRIFT-SOLANA")`
 2. **`instruments-service/instruments_service/reference_data/adapters/defi/drift.py:69`**:
    `return f"DRIFT-{self._chain}"` — all Solana adapters already produce `PROTOCOL-SOLANA` venue names.
 

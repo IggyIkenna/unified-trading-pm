@@ -125,8 +125,8 @@ code path as live, but gas costs are zero and state is isolated.
 ### Live Mode
 
 No fork. DeFi connectors receive the real chain RPC URL from `CHAIN_RPC_TEMPLATES` in UAC. The execution provider is not
-used for live mode -- connectors talk directly to Alchemy RPCs (+ Helius for Solana).
-Custody routing: **May-23 cutover default = CLOUD_KMS_ENCRYPTED (CloudKmsCustodyProvider)** per
+used for live mode -- connectors talk directly to Alchemy RPCs (+ Helius for Solana). Custody routing: **May-23 cutover
+default = CLOUD_KMS_ENCRYPTED (CloudKmsCustodyProvider)** per
 [`interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12 refresh. **June-1 flip targets** =
 Copper MPC / CEFFU MirrorX / Fireblocks per client cred availability. Cross-ref:
 [`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../../plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).

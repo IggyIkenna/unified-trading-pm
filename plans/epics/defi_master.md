@@ -603,16 +603,16 @@ the same data.
 
 | venue / chain                       | captured | empty_confirmed | verdict                                |
 | ----------------------------------- | -------- | --------------- | -------------------------------------- |
-| AAVEV3 / ARBITRUM                   | 269      | 74              | ✅ working                             |
-| AAVEV3 / OPTIMISM                   | 270      | 73              | ✅ working                             |
-| AAVEV3 / POLYGON                    | 272      | 71              | ✅ working                             |
-| AAVEV3 / AVALANCHE                  | 270      | 73              | ✅ working                             |
-| AAVEV3 / **ETHEREUM**               | **0**    | **343**         | ❌ **silent zero** — bug               |
-| AAVEV3 / BASE                       | 0        | 343             | ⚠️ likely correct (pre-launch in 2022) |
-| AAVEV3 / LINEA                      | 0        | 343             | ⚠️ likely correct (LINEA mainnet 2023) |
-| AAVEV3 / BSC                        | 0        | 343             | ⚠️ likely correct                      |
-| COMPOUNDV3 / ETHEREUM               | 107      | —               | ✅ working                             |
-| COMPOUNDV3 / ARBITRUM/BASE/OPTIMISM | 0        | 0 (skipped)     | ❌ **subgraph schema error**           |
+| AAVE_V3 / ARBITRUM                   | 269      | 74              | ✅ working                             |
+| AAVE_V3 / OPTIMISM                   | 270      | 73              | ✅ working                             |
+| AAVE_V3 / POLYGON                    | 272      | 71              | ✅ working                             |
+| AAVE_V3 / AVALANCHE                  | 270      | 73              | ✅ working                             |
+| AAVE_V3 / **ETHEREUM**               | **0**    | **343**         | ❌ **silent zero** — bug               |
+| AAVE_V3 / BASE                       | 0        | 343             | ⚠️ likely correct (pre-launch in 2022) |
+| AAVE_V3 / LINEA                      | 0        | 343             | ⚠️ likely correct (LINEA mainnet 2023) |
+| AAVE_V3 / BSC                        | 0        | 343             | ⚠️ likely correct                      |
+| COMPOUND_V3 / ETHEREUM               | 107      | —               | ✅ working                             |
+| COMPOUND_V3 / ARBITRUM/BASE/OPTIMISM | 0        | 0 (skipped)     | ❌ **subgraph schema error**           |
 
 **Bug 1 — AAVE V3 ETHEREUM silent zero** (P0 for `carry_staked_basis`, the most-relevant chain):
 
@@ -640,7 +640,7 @@ Phase 2.A spirit this should be `attempted_failed` because the GraphQL error mea
 Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some chains
 and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early DeFi protocol
 launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...` returns 404 for
-AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery script +
+AAVE_V3/COMPOUND_V3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery script +
 its launch-date floor handling.
 
 **RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
@@ -662,7 +662,7 @@ data-source surface BEFORE Ikenna's D4 launches. Results filed at
 [`../archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR:
 Bug classes 1-3 are ✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct).
 **Bug class 4 — UAC PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator
-spawn 4 sequential fix tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC
+spawn 4 sequential fix tabs (A: AAVE_V3 6 chains; B: COMPOUND_V3 4 chains; C: UNISWAP_V3 3 chains; D: SPARK ETH + bSOL UAC
 entry) all mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10
 oracle-USD backfill blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` —
 coverage gap. **Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC +
@@ -783,25 +783,25 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 
 - [x] [SCRIPT] P0. Ran
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi     --dry-run` locally,
-      scoped `--venues AAVEV3` (sufficient for triage; full DEFI scan deferred to GCE VM after the prober landed below
+      scoped `--venues AAVE_V3` (sufficient for triage; full DEFI scan deferred to GCE VM after the prober landed below
       to avoid 18× slowdown × 313k row × 7 prefix template explosion). Initial run reported 29782 false-positive
-      phantoms — the entire AAVEV3 dataset; would have destroyed all manifest state had `--apply` run.
+      phantoms — the entire AAVE_V3 dataset; would have destroyed all manifest state had `--apply` run.
 - [x] [AGENT] P0. Triaged for AAVE_V3-ARBITRUM specifically — **case (b)** confirmed: audit reported mass
       false-positives. Diagnosed root cause via on-disk listing: the canonical manifest has ZERO
-      `(venue=AAVEV3,     chain=ARBITRUM)` rows (all 29782 AAVEV3 rows are on `chain=ETHEREUM`). The UI's
+      `(venue=AAVE_V3,     chain=ARBITRUM)` rows (all 29782 AAVE_V3 rows are on `chain=ETHEREUM`). The UI's
       "AAVE_V3-ARBITRUM 1781/1785" claim came from the deployment-api offline rollup, which conflates the expected
       denominator with the found-on-disk count for venue+chain combos that have no manifest rows (separate rollup-side
       bug, captured in codex doc + filed under infrastructure_master Data-status multi-axis follow-up).
 - [x] [SCRIPT] P0. Found two NEW drift axes the prober missed; extended
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (instruments-service@`e8393fc`). **Axis 6** —
-      DeFi protocol-name underscore variant (`AAVEV3` ↔ `AAVE_V3` etc.) via new `_defi_protocol_variants` regex helper
+      DeFi protocol-name underscore variant (`AAVE_V3` ↔ `AAVE_V3` etc.) via new `_defi_protocol_variants` regex helper
       that probes both spellings; **Axis 7** — DeFi migrated-bundle wildcard (`ticks_migrated_*.parquet` at the
       combined-venue prefix accepted as evidence of capture for any data_type, since the bundle holds all data_types in
-      one parquet). Helper unit-tested 12/12 cases PASS. Re-run on `--venues AAVEV3` shows 29782 → 0 phantoms (100%
-      false-positive elimination). Manifest is clean for AAVEV3.
+      one parquet). Helper unit-tested 12/12 cases PASS. Re-run on `--venues AAVE_V3` shows 29782 → 0 phantoms (100%
+      false-positive elimination). Manifest is clean for AAVE_V3.
 - [x] [VERIFY] P1. After ship: launch `defi-phantom-recon-{ts}` GCE VM in `asia-northeast1-c` (add prefix to
       `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first) running the full DEFI dry-run with the new prober. Compare
-      pre-/post-fix phantom counts across all DEFI venues (UNISWAPV3 187k rows, MORPHO 45k, EIGENLAYER, MAKER, etc.).
+      pre-/post-fix phantom counts across all DEFI venues (UNISWAP_V3 187k rows, MORPHO 45k, EIGENLAYER, MAKER, etc.).
       Expected: large drop in false-positive count similar to the 2026-05-04 cefi 130k → 354 reduction. **SHIPPED
       2026-05-07**: deployment-service@ea0c2ed authored `scripts/vm/launch-defi-phantom-recon-vm.sh` (new launcher,
       singleton-locked, asset-group selectable, --dry-run by default), added `phantom-recon` VM_TASK route to
@@ -811,7 +811,7 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       relaunched as `vm-zombie-watchdog-20260507-141056`. **Result 14:24 IST (rc=0, ~10 min runtime, 86,982 prefixes
       listed at 360/sec same-region GCE)**: 309,749 real captures + **2,931 phantom captures (0.94%)**. Top phantom
       data_types: vault_share_price (1,633) + rewards (1,298). Top phantom venues: EIGENLAYER (1,298), MORPHOVAULTS
-      (851), YEARNV3 (782) — concentrated in features-onchain consumers (`eigen_rewards` + `vault_share_price`), so
+      (851), YEARN_V3 (782) — concentrated in features-onchain consumers (`eigen_rewards` + `vault_share_price`), so
       they're real blockers, not prober drift. **Next step (operator)**: run
       `bash scripts/vm/launch-defi-phantom-recon-vm.sh defi --apply` to flip the 2,931 phantoms to `attempted_failed`,
       then re-run the affected MTDS DeFi backfills (eigen_rewards via `mtds-perp-funding`/equivalent and morpho/yearn
@@ -819,7 +819,7 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 - [x] [DOC] P0. Updated `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"
       to enumerate 7 drift axes (was 5); added rollup-side metric inconsistency finding under § "Rollup-side metric
       inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07"; updated history benchmark
-      with the 2026-05-07 AAVEV3 29782 → 0 reduction.
+      with the 2026-05-07 AAVE_V3 29782 → 0 reduction.
 
 ### 988-missing-dates audit residuals (migrated from `defi_988_missing_dates_audit_2026_05_08`)
 
@@ -844,12 +844,12 @@ shipping with the Fork-1 prep batches below).
       adapter has a routing bug (which CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate" rule flags as a likely
       cause). ~0.8k blank rows pending decision.
 - [x] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
-      (which is Ethereum-AAVEV3 UAC fix). `status: closed-2026-05-13-by-ikenna-defi-catalogue-tab` (was
+      (which is Ethereum-AAVE_V3 UAC fix). `status: closed-2026-05-13-by-ikenna-defi-catalogue-tab` (was
       `backfill-aborted-handed-to-ikenna` per Harsh tab 3 end-of-shift handover 2026-05-11). **✅ FULLY CLOSED
       2026-05-13 (Day 2) by slot 2** — recent-days catch-up VM `mtds-lending-indices-20260511-204908` launched +
       ran-to-completion in ~3min (234 events including STARTED+232 progress+STOPPED at 19:55:59 UTC). Manifest verified
       at `gs://lending-indices-central-element-323112/_index/availability_index.parquet`: 65 captured rows for
-      2026-05-07..2026-05-11 (13/day × 5 days across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains + SPARK × 1 chain);
+      2026-05-07..2026-05-11 (13/day × 5 days across AAVE_V3 × 6 chains + COMPOUND_V3 × 5 chains + SPARK × 1 chain);
       2026-05-12+ → `empty_confirmed` (legitimate subgraph lag). Slot 3's handoff item (a) "recent-days catch-up" done.
       Items (b) ManifestFreshnessCache wire-in + (c) clean full-history re-run after (b) + (d) create-code-tarballs.sh
       stale-repo list remain as P1 follow-ups (not Priority-#5 blockers, not 2026-05-23 blockers). See
@@ -857,16 +857,16 @@ shipping with the Fork-1 prep batches below).
       2026-05-11):** - **"routing config absent" framing was STALE** (grep-then-conclude error in the 2026-05-08 audit):
       `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e` (Mar 2026);
       `get_supported_chains_for_protocol("aave_v3")` includes LINEA+BSC; UAC launch dates corrected at UAC@`6c873e4`
-      (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
-      `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
+      (`("LINEA","AAVE_V3")="2025-02-11"`, `("BSC","AAVE_V3")="2024-01-23"`); `lending_indices` ∈
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVE_V3"` so the pre-floor-date short-circuit
       (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA `aave_v3/LINEA/date=2025-03-01` = 475 rows
       USDC/WETH; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not 1440-NaN
       placeholders. Actual gap was operational — `lending-indices-{pid}` canonical `_index/availability_index.parquet`
-      was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147` run had already captured LINEA AAVEV3
-      post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to `empty_confirmed` in its per-VM shard, but the
+      was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147` run had already captured LINEA AAVE_V3
+      post-launch + BSC AAVE_V3 post-launch + flipped pre-launch days to `empty_confirmed` in its per-VM shard, but the
       consolidator never merged it — root cause = the consolidator daemon not polling the per-data_type DeFi buckets;
-      see "Discoveries" below). - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVEV3/LINEA = 451
-      captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVEV3/BSC = 836 captured
+      see "Discoveries" below). - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVE_V3/LINEA = 451
+      captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVE_V3/BSC = 836 captured
       (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET https"
       `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are reclaimed** = the
       Priority-#5 headline deliverable. - **Consolidator-bucket Case-5 fix shipped** (deployment-service@`ad4d448` 8
@@ -900,7 +900,7 @@ shipping with the Fork-1 prep batches below).
       consolidator's `VM_BUCKETS` covered `instruments-store-*`, `market-data-tick-*` (asset-group canonicals),
       `strategy-store-*`, `features-sports-*` — none of the per-data_type DeFi buckets. Consequence: their canonical
       `_index/availability_index.parquet` drifted stale vs per-VM shards → deployment-UI data-status showed wrong DeFi
-      coverage (e.g. lending-indices kept showing 293 LINEA + 219 BSC AAVEV3 `attempted_failed` for ~3 days after the
+      coverage (e.g. lending-indices kept showing 293 LINEA + 219 BSC AAVE_V3 `attempted_failed` for ~3 days after the
       `20260508-141147` run had reconciled them). **FIXED** — deployment-service@`ad4d448` adds the 8 per-data_type DeFi
       buckets to `launch-manifest-consolidator-vm.sh` `BUCKETS`; relaunched the consolidator daemon as
       `manifest-consolidator-20260511-181538` (old `manifest-consolidator-20260507-175639` deleted 2026-05-11 12:50 UTC
@@ -1010,7 +1010,7 @@ shipping with the Fork-1 prep batches below).
       `(asset_group, chain, protocol, data_type, day)` as `captured`; the only short-circuit is the pre-floor-date /
       chain-genesis check (date < protocol launch → `record_empty(EXPECTED_PRE_GENESIS_CHAIN)` without fetching) — a
       \_different* check from "manifest already has this day captured." So a full-history re-run re-does years of
-      already-captured OPTIMISM/ARBITRUM AAVEV3 history (idempotent — same parquet path+content, same `captured` row —
+      already-captured OPTIMISM/ARBITRUM AAVE_V3 history (idempotent — same parquet path+content, same `captured` row —
       so no corruption, just wasted compute + subgraph rate-limit quota). The UTL primitive **already exists**
       (`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` — shipped per
       `features_and_ml_master.md` P0 `[x]`); the handlers just don't use it. **This is the "refactor existing MTDS
@@ -1077,7 +1077,7 @@ Source issue archived. 3-category model: (A) immutable historical facts (token d
 addresses, protocol launch dates) — should derive from on-chain or pin to SSOT script; (B) slow-changing governance
 parameters (LTV, liquidation threshold, rate-curve kinks) — refresh hourly/daily into time-versioned parquet (covered
 separately by governance-refresh section below); (C) real-time reads (current rates, liquidity, prices) — read live.
-AAVEV3 ETHEREUM date was 49 days wrong (corrected 2023-01-27); systematic audit of remaining values needed.
+AAVE_V3 ETHEREUM date was 49 days wrong (corrected 2023-01-27); systematic audit of remaining values needed.
 
 **Cross-plan dependency**: this section's Phase 3 (Cat B fallback removal) MUST ship AFTER governance-refresh section's
 Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
@@ -1087,7 +1087,7 @@ Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
       derive from on-chain (factory.created_at block; Aave InitializeReserve event; etc.); compare against current UAC
       declaration; print drift. Pre-commit gate: any change to `PROTOCOL_LAUNCH_DATES` must run this script and include
       its output as a citation comment per entry (`# DERIVED 2026-05-08 from <chain> block <N> tx <hash>`).
-- [ ] [SCRIPT] P0. **Phase 2 — Cat A audit beyond AAVEV3.** Token decimals (every entry in UAC `TOKEN_DECIMALS`), chain
+- [ ] [SCRIPT] P0. **Phase 2 — Cat A audit beyond AAVE_V3.** Token decimals (every entry in UAC `TOKEN_DECIMALS`), chain
       genesis (every chain in `CHAIN_GENESIS_DATES`), factory addresses (Uniswap, SushiSwap, PancakeSwap, Curve, Aave,
       Compound). Probe on-chain; compare; flag drift. Output: `defi_cat_a_audit_2026_05_08_report.md` under
       `unified-api-contracts/audits/`.
@@ -1104,8 +1104,8 @@ Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
 
 ### Fork-1 prep — UAC date drift fixes (migrated from `defi_fork1_prep_audit_2026_05_08`)
 
-Source issue archived. 13 UAC date drifts identified in Fork-1 scope: AAVEV3 OPTIMISM/BASE/LINEA/BSC (141d-293d drift),
-COMPOUNDV3 ETHEREUM/BASE (12d-22d silent data loss), UNISWAPV3 ARBITRUM/OPTIMISM (91d-35d), SPARK missing (add + remove
+Source issue archived. 13 UAC date drifts identified in Fork-1 scope: AAVE_V3 OPTIMISM/BASE/LINEA/BSC (141d-293d drift),
+COMPOUND_V3 ETHEREUM/BASE (12d-22d silent data loss), UNISWAP_V3 ARBITRUM/OPTIMISM (91d-35d), SPARK missing (add + remove
 from PENDING), bSOL missing from `LST_TOKEN_GENESIS`, Pyth Hermes archive gap (2022-11 → 2023-10).
 
 **Critical sequencing**: all 4 batches touch `unified_api_contracts/canonical/domain/_defi.py` chain_env block — batches
@@ -1113,18 +1113,18 @@ MUST merge sequentially in the recommended order (no concurrent PRs) to avoid UA
 dependency**: feeds writegate Phase 2.E EXPECTED_PRE_GENESIS_CHAIN taxonomy + manifest consolidator
 auto-row-reclassification.
 
-- [x] [SCRIPT] P0. **Batch A — AAVEV3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
+- [x] [SCRIPT] P0. **Batch A — AAVE_V3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
       on-chain verification via Phase 1 script of hardcoded-values audit above; cite block + tx in comment. Single PR,
       single commit, push to `live-defi-rollout`. **SHIPPED** UAC@6c873e4 (OPTIMISM 2022-08-04→2022-03-15 fixes 142d
       silent data loss; POLYGON 2022-03-16→2022-03-12; AVALANCHE 2022-03-16→2022-03-12; BASE 2023-08-09→2023-08-22;
       LINEA 2024-09-26→2025-02-11; BSC 2023-04-06→2024-01-23; all 6 pairs cited inline with subgraph-probe evidence per
       Tab 14 audit).
-- [x] [SCRIPT] P0. **Batch B — COMPOUNDV3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
+- [x] [SCRIPT] P0. **Batch B — COMPOUND_V3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
       pattern as Batch A. Sequenced AFTER Batch A. **SHIPPED** UAC@6c873e4 (ETHEREUM 2022-08-25→2022-08-13; ARBITRUM
       2023-04-13→2023-05-04; BASE 2023-08-26→2023-08-04; OPTIMISM 2024-02-15→2024-04-06; POLYGON entry removed from
       `PROTOCOL_LAUNCH_DATES` and moved to `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` since `SUBGRAPH_IDS["compound_v3"]`
       has no POLYGON entry).
-- [x] [SCRIPT] P0. **Batch C — UNISWAPV3 multi-chain dates.** Fix ARBITRUM (91d), OPTIMISM (35d). Same pattern,
+- [x] [SCRIPT] P0. **Batch C — UNISWAP_V3 multi-chain dates.** Fix ARBITRUM (91d), OPTIMISM (35d). Same pattern,
       sequenced AFTER Batch B. **SHIPPED** UAC@6c873e4 (ARBITRUM 2021-08-31→2021-06-01; OPTIMISM 2021-12-16→2021-11-11;
       BASE 2023-08-09→2023-07-31; all 3 are subgraph indexing pre-public-launch testnet/devnet blocks; test-side
       `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended to permit launch < chain_genesis for these pairs).
@@ -1605,8 +1605,8 @@ pushed). 3 items deferred per blockers below.
 
 1. **Item 1 — 4 UAC PROTOCOL_LAUNCH_DATES drift fix sub-tabs A/B/C/D** ✅
    - `unified-api-contracts@6c873e4` — 13 (chain, protocol) drift pairs corrected per Tab 14 audit + SPARK/ETHEREUM
-     added + POLYGON/COMPOUNDV3 removed (no subgraph) + `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended for 4
-     UNISWAPV3/COMPOUNDV3 BASE indexing-pre-mainnet pairs. 19 unit tests pass; basedpyright + ruff clean.
+     added + POLYGON/COMPOUND_V3 removed (no subgraph) + `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended for 4
+     UNISWAP_V3/COMPOUND_V3 BASE indexing-pre-mainnet pairs. 19 unit tests pass; basedpyright + ruff clean.
 2. **Item 2 — bSOL coverage gap fix in UAC LST_TOKEN_GENESIS** ✅
    - Bundled into `unified-api-contracts@6c873e4` with Item 1 since both touch `_defi_lst.py` adjacent ranges.
      `bSOL: "2022-11-24"` (conservative floor) + `LST_VENUE_TO_TOKENS["BLAZESTAKE"] = ("bSOL",)`. Solana RPC mint-date
@@ -1665,10 +1665,10 @@ VM pending operator decision).
 **UAC code commits**:
 
 - UAC@6c873e4 — `fix(uac): PROTOCOL_LAUNCH_DATES drift fixes (13 pairs) + bSOL LST genesis`. Per Tab 14 fork1 audit:
-  AAVEV3 6 chains (OPTIMISM 142d data loss; POLYGON 4d; AVALANCHE 4d; BASE 13d; LINEA 138d; BSC 293d) + COMPOUNDV3 4
-  chains (ETH 12d; ARB 21d; BASE 22d; OPT 51d) + UNISWAPV3 3 chains (ARB 91d; OPT 35d; BASE 9d; subgraphs index
+  AAVE_V3 6 chains (OPTIMISM 142d data loss; POLYGON 4d; AVALANCHE 4d; BASE 13d; LINEA 138d; BSC 293d) + COMPOUND_V3 4
+  chains (ETH 12d; ARB 21d; BASE 22d; OPT 51d) + UNISWAP_V3 3 chains (ARB 91d; OPT 35d; BASE 9d; subgraphs index
   pre-public-launch testnet/devnet blocks) + SPARK/ETHEREUM added at 2023-03-07 + bSOL at 2022-11-24 conservative
-  floor + POLYGON/COMPOUNDV3 removed (no subgraph) + 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended. 19/19
+  floor + POLYGON/COMPOUND_V3 removed (no subgraph) + 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended. 19/19
   tests pass.
 - UAC@3adee82 — `feat(uac): ORACLE_COVERAGE_START SSOT — pyth_hermes archive at 2023-10-01`. NEW
   `_defi_oracle_coverage.py` module declaring per-oracle archive coverage start dates. 5 unit tests pass. Consumers:
@@ -1774,13 +1774,13 @@ data — `lending_indices_handler` has no manifest-freshness skip), so it was ki
 **✅ DONE this cycle (slot 3, 2026-05-11):**
 
 - **"routing config absent" framing was STALE** — `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since
-  UAC@`2db3c8e` (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVEV3 = 2025-02-11, BSC AAVEV3 = 2024-01-23);
-  `lending_indices` ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date
+  UAC@`2db3c8e` (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVE_V3 = 2025-02-11, BSC AAVE_V3 = 2024-01-23);
+  `lending_indices` ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVE_V3"` so the pre-floor-date
   short-circuit (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC 2024-06-01 =
   316 rows), not 1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM shards).
 - **Priority-#5 headline deliverable reclaimed** — manual `manifest_consolidator --bucket lending-indices-{pid} --once`
-  → canonical now AAVEV3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
-  attempted_failed; AAVEV3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
+  → canonical now AAVE_V3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
+  attempted_failed; AAVE_V3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
   attempted_failed — the **~576 stale "404 GET https" `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA
   blank-reason `empty_confirmed` **reclaimed**.
 - **Consolidator-bucket Case-5 fix shipped** — deployment-service@`ad4d448` (8 per-data_type DeFi buckets:

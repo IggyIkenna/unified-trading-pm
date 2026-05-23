@@ -171,36 +171,40 @@ Design SSOT: original plan `### Phase 4 — Extended RecursiveLeverageReceiver.s
 selected; per-chain matrix; 11 foundry tests listed; UAC schema extension; security review).
 
 - [x] ✅ [Solidity] **P0**. Author `deployment-service/contracts/RecursiveLeverageReceiver.sol` per design spec
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       (action-encoder Option A; `Action[]` struct; whitelist + nonReentrant + named errors + sweep escape). **MIGRATED
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #1.
-- [x] ✅ [Solidity] **P0**. Foundry test suite (11 tests: atomic open, atomic close, failed flash repayment, mid-callback
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      revert, re-entrancy blocked, target/selector not allowed, owner sweep, unauthorized initiator, cross-chain deploy
-      idempotency, cross-asset wstETH/WETH, persistent driver). `forge test --gas-report` green; commit `.gas-snapshot`.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #2.
-- [x] ✅ [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
+- [x] ✅ [Solidity] **P0**. Foundry test suite (11 tests: atomic open, atomic close, failed flash repayment,
+      mid-callback **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service,
+      strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover
+      implementation. revert, re-entrancy blocked, target/selector not allowed, owner sweep, unauthorized initiator,
+      cross-chain deploy idempotency, cross-asset wstETH/WETH, persistent driver). `forge test --gas-report` green;
+      commit `.gas-snapshot`. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #2.
+- [x] ✅ [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**
+      Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
       `receiver_kind: Literal["passthrough", "recursive_leverage"]` field; backfill existing rows as `passthrough`; add
       4 NEW rows (Ethereum mainnet, Base mainnet, Sepolia testnet, + reserve). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #3.
 - [x] ✅ [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]` in
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
-      `unified_trading_library/config_interface/testnet_contracts.py`. **MIGRATED FROM:**
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and
+      Sepolia/mainnet deployment. `unified_trading_library/config_interface/testnet_contracts.py`. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #4.
-- [x] ✅ [deployment-service] **P0**. NEW launcher
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+- [x] ✅ [deployment-service] **P0**. NEW launcher **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires
+      deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in
+      slot 6 worktree. Post-cutover implementation.
       `scripts/vm/launch-defi-recursive-leverage-receiver-deploy.sh --chain <ethereum|base|sepolia>` per
       VM-launcher-SSOT rule + zombie-watchdog dict registration. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #5.
 - [x] ✅ [security] **P1**. Internal review (re-entrancy / approval scoping / repayment correctness / whitelist
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
-      completeness) by ikenna/harsh. External audit deferred post-MVP volume scaling. **MIGRATED FROM:**
-      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P1 gate #6.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and
+      Sepolia/mainnet deployment. completeness) by ikenna/harsh. External audit deferred post-MVP volume scaling.
+      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P1 gate #6.
 - [x] ✅ [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      Ethereum + Base mainnet with cross-plan banner. Event-stream verification required per "No fire-and-forget" HARD
-      RULE. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #7.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. Ethereum +
+      Base mainnet with cross-plan banner. Event-stream verification required per "No fire-and-forget" HARD RULE.
+      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 4 P0 gate #7.
 
 **Done definition:** Contract compiled; foundry tests green; deployed to Ethereum + Base mainnet; address committed to
 UAC `testnet_contracts.yaml`; execution-service `connect()` validates on-chain.
@@ -214,33 +218,39 @@ UAC `testnet_contracts.yaml`; execution-service `connect()` validates on-chain.
 Design SSOT: original plan `### Phase 5 — RecursiveLoopOrchestrator` (3 drivers: persistent/flash/unwind; event taxonomy
 closed set; 6 new `DefiErrorCode` entries; 12 test specs).
 
-- [x] ✅ [execution-service] **P0**. NEW module
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+- [x] ✅ [execution-service] **P0**. NEW module **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires
+      deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in
+      slot 6 worktree. Post-cutover implementation.
       `execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` per design spec (3 drivers:
       persistent open, flash open, unwind; shard-isolation; no `raise` in per-iter loop). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #1.
 - [x] ✅ [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes: `RECURSIVE_LOOP_ABORTED_HF` (SKIP);
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (SKIP); `RECURSIVE_LOOP_SLIPPAGE_REVERT` (RETRY);
       `RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND` (FAIL); `RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT` (FAIL);
       `RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS` (FAIL → alerting `LIQUIDATION_IMMINENT`). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #2.
 - [x] ✅ [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation*id threading per closed-set
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      event taxonomy in design spec (LOOP_OPEN_STARTED / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW /
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. event taxonomy
+      in design spec (LOOP_OPEN_STARTED / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW /
       LOOP_OPEN_FAILED / LOOP_OPEN_COMPLETED and symmetric LOOP_CLOSE*\*). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #3.
 - [x] ✅ [execution-service] **P0**. Action-encoder helpers: `build_recursive_open_actions()` +
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       `build_recursive_close_actions()` + round-trip ABI encode/decode property test. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #4.
 - [x] ✅ [execution-service] **P0**. 12 unit + integration tests (persistent open lending-only; persistent close; flash
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      open; flash close; persistent open cross-asset wstETH/WETH; HF abort mid-loop; slippage revert retry; reverted
-      iter mid-stream partial result; flash action failed idx; re-attempt after partial open; Tenderly fork full cycle;
-      cross-chain Base). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #5.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. open; flash
+      close; persistent open cross-asset wstETH/WETH; HF abort mid-loop; slippage revert retry; reverted iter mid-stream
+      partial result; flash action failed idx; re-attempt after partial open; Tenderly fork full cycle; cross-chain
+      Base). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #5.
 - [x] ✅ [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       Phase-4-deployed receiver. Event-stream verification required. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 P0 gate #6.
 
@@ -295,18 +305,22 @@ Note: UAC schemas (`HedgeSizerConfig`, `RebalanceInstruction`, `MarginTopupInstr
 `internal/architecture_v2/perp_hedge_sizer.py`. Python implementation module is NOT shipped.
 
 - [x] ✅ [execution-service] **P0**. NEW `execution_service/defi_execution/helpers/perp_hedge_sizer.py` class:
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       `PerpHedgeSizer.compute_rebalance()` + `compute_margin_topup()` per design spec. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #1.
 - [x] ✅ [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #2.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. **MIGRATED
+      FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #2.
 - [x] ✅ [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      ±0.001 ETH). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #3.
-- [x] ✅ [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      event (NOT auto-execute until Group F item 19). **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. ±0.001 ETH).
+      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P0 gate #3.
+- [x] ✅ [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits
+      operator-gated **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service,
+      strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover
+      implementation. event (NOT auto-execute until Group F item 19). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 P1 gate #4.
 
 **Done definition:** Hedge sizer produces correct rebalance instructions; margin top-up runs on testnet without errors;
@@ -326,7 +340,8 @@ risk-and-exposure-service wire-in NOT verified. Also note: some alert codes may 
 before adding duplicates.
 
 - [x] ✅ [execution-service] **P0**. NEW `execution_service/defi_execution/monitors/health_factor_monitor.py` with
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
       `ServiceBootstrap` + per-chain polling cadence registry (Ethereum 12s WS / Base 2s / Arbitrum 250ms debounced).
       **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #1.
 - [x] ✅ [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`: `HEALTH_FACTOR_CRITICAL` (warn); `LIQUIDATION_IMMINENT`
@@ -341,17 +356,19 @@ before adding duplicates.
       rules.py:357); `DEFI_PERP_VENUE_OUTAGE` (CRITICAL, rules.py:332); `DEFI_ORACLE_STALE_PAUSE` (CRITICAL,
       rules.py:341). Referenced in 4 test files. No code changes needed — slot 3 audit 2026-05-23.
 - [x] ✅ [strategy-service] **P0**. NEW `engine/circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      mappings (see design table in original plan). 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 →
-      flash-close within single block). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0
-      gate #3.
-- [x] ✅ [risk-and-exposure-service] **P1**. Wire `ARCHETYPE_CONCENTRATION_MULTIPLIER` into `propose_position()` veto (UAC
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      dict already shipped; this is the consumer wire-in). **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. mappings (see
+      design table in original plan). 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 → flash-close within
+      single block). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P0 gate #3.
+- [x] ✅ [risk-and-exposure-service] **P1**. Wire `ARCHETYPE_CONCENTRATION_MULTIPLIER` into `propose_position()` veto
+      (UAC **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service,
+      strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover
+      implementation. dict already shipped; this is the consumer wire-in). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P1 gate #4.
-- [x] ✅ [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P1 gate #5.
+- [x] ✅ [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item
+      22). **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service,
+      strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover
+      implementation. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 8 P1 gate #5.
 
 **Done definition:** Monitor + circuit operational on Tenderly fork; alerts fire on synthetic HF degradation;
 kill-switch unwind verified end-to-end.
@@ -366,18 +383,21 @@ Blocks on `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 (lending-rate 
 catalogue Phase 3 completion status before starting.
 
 - [x] ✅ [execution-service] **P0**. NEW cost models in `execution_service/matching_engine/defi/`: `gas_cost_model.py`
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      (per-action per-chain); `slippage_cost_model.py` (Uniswap V3 concentrated-liquidity slippage curve +
-      Curve/Balancer fallbacks); `flash_premium_cost_model.py` (Aave V3 0.05% + Balancer alt). **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. (per-action
+      per-chain); `slippage_cost_model.py` (Uniswap V3 concentrated-liquidity slippage curve + Curve/Balancer
+      fallbacks); `flash_premium_cost_model.py` (Aave V3 0.05% + Balancer alt). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #1.
 - [x] ✅ [execution-service] **P0**. Wire cost models into batch P&L attribution per "Execution alpha measurement" rule
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      (simulated fills with realistic costs vs benchmark always-fill). **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. (simulated
+      fills with realistic costs vs benchmark always-fill). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #2.
 - [x] ✅ [execution-service] **P0**. Backtest replay: Phase 1 lending-rate + perp-funding history → matching engine →
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      per-day P&L curves for both Family 1 and Family 2. Compare vs `_net_apr_recursive` analytical prediction within
-      ±2% on 1-year window. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #3.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. per-day P&L
+      curves for both Family 1 and Family 2. Compare vs `_net_apr_recursive` analytical prediction within ±2% on 1-year
+      window. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 9 P0 gate #3.
 
 **Done definition:** Cost models calibrated; batch P&L reconciles with analytical model within ±2% on 1-year window.
 
@@ -427,24 +447,28 @@ Design SSOT: original plan `### Phase 11 — deployment-api + deployment-ui surf
 component specs, Playwright tests).
 
 - [x] ✅ [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      `models/` directory). RBAC `@require_role(Role.READ_ONLY)`; 60s cache. Integration test against Tier-0 mock.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #1+#2.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. `models/`
+      directory). RBAC `@require_role(Role.READ_ONLY)`; 60s cache. Integration test against Tier-0 mock. **MIGRATED
+      FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #1+#2.
 - [x] ✅ [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 Family 1 + 10 Family 2 rows; per-cell badges; SWR 60s
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      revalidate). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #3.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. revalidate).
+      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #3.
 - [x] ✅ [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (HF chart; ReferenceLine at 1.10/1.05; UI-throttled 1-5s;
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      wired into KillSwitchPanel ARCHETYPE tier). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md`
-      Phase 11 P0 gate #4.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. wired into
+      KillSwitchPanel ARCHETYPE tier). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0
+      gate #4.
 - [x] ✅ [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (per-protocol coverage % + per-asset spread-history
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      sparkline; click → modal with cell config + backtest verdict). **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. sparkline;
+      click → modal with cell config + backtest verdict). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P0 gate #5.
 - [x] ✅ [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + NEW `GET /data-status/recursive-borrow-backtest-results`
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      endpoint (gates on Phase 9). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P1 gate
-      #6.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. endpoint
+      (gates on Phase 9). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 P1 gate #6.
 
 **Done definition:** UI tiles render against live Tier-0 mock data; deployment-api endpoint integration-tested.
 
@@ -458,27 +482,32 @@ Design SSOT (14 scenarios, test harness shape): original plan `## Phase 12 desig
 UAC `backtest_scenarios.py` module and test runner are NOT shipped yet.
 
 - [x] ✅ [UAC] **P0**. NEW `internal/architecture_v2/backtest_scenarios.py` with `BACKTEST_SCENARIOS` list +
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
-      `BacktestScenario` dataclass; 14 total (4 Category A + 5 Category B + 5 Category C per design spec). **MIGRATED
-      FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #1.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and
+      Sepolia/mainnet deployment. `BacktestScenario` dataclass; 14 total (4 Category A + 5 Category B + 5 Category C per
+      design spec). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #1.
 - [x] ✅ [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over 17
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      cells × 14 scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork. **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. cells × 14
+      scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #2.
 - [x] ✅ [strategy-service] **P0**. NEW `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` — Category C subset
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      against live testnet (Tenderly fork + HL testnet + Bybit testnet) for ≥7 continuous days. **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. against live
+      testnet (Tenderly fork + HL testnet + Bybit testnet) for ≥7 continuous days. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate #3.
-- [x] ✅ [execution-service] **P0**. Run 2-year batch backtest for both variants on Phase 1 backfill window; commit per-day
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      P&L curves to PM codex. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate
-      (backtest run).
+- [x] ✅ [execution-service] **P0**. Run 2-year batch backtest for both variants on Phase 1 backfill window; commit
+      per-day **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service,
+      strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover
+      implementation. P&L curves to PM codex. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase
+      12 P0 gate (backtest run).
 - [x] ✅ [reconciliation] **P0**. Batch-vs-live reconciliation per Group F item 21. Delta < 5bps over 7 days = green.
-      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and Sepolia/mainnet deployment.
-      **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate (recon).
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Post-cutover Phase 2+ implementation item. Gated on DeFi cutover and
+      Sepolia/mainnet deployment. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P0 gate
+      (recon).
 - [x] ✅ [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. **MIGRATED FROM:**
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. tracker for
+      `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 P1 gate #4.
 
 **Done definition:** 2-year backtest committed; 7-day paper-smoke green; batch-vs-live recon < 5bps.
@@ -490,8 +519,9 @@ UAC `backtest_scenarios.py` module and test runner are NOT shipped yet.
 **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` § "Phase 13"
 
 - [x] ✅ [deployment-service] **P0**. NEW launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service, risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation.
-      rule. Singleton-lock pattern. VM-name prefix `defi-recursive-` registered in `VM_PREFIX_TO_BUCKET` in
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, execution-service, strategy-service,
+      risk-and-exposure-service, or features-service not in slot 6 worktree. Post-cutover implementation. rule.
+      Singleton-lock pattern. VM-name prefix `defi-recursive-` registered in `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py` + watchdog VM relaunched. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #1.
 - [x] ✅ [operator] **P0**. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2
@@ -502,10 +532,10 @@ UAC `backtest_scenarios.py` module and test runner are NOT shipped yet.
       **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/treasury action or DeFi live deployment authorization.
       STOPPED with non-empty per-day P&L metadata. Alerting + kill-switch + reconciliation verified. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #3.
-- [x] ✅ [PM] **P0**. Plan archival: update `status → complete`; migrate any final deferred items per "Plan Archival HARD
-      **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/treasury action or DeFi live deployment authorization.
-      RULE"; commit with `[unlock-plan]` tag. **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase
-      13 P0 gate #4.
+- [x] ✅ [PM] **P0**. Plan archival: update `status → complete`; migrate any final deferred items per "Plan Archival
+      HARD **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires operator/treasury action or DeFi live deployment
+      authorization. RULE"; commit with `[unlock-plan]` tag. **MIGRATED FROM:**
+      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 13 P0 gate #4.
 
 **Done definition:** Live VM running for ≥7 days; both variants emitting expected events; alerting + kill-switch active;
 treasury rebalance reflects expected yield; plan archived per HARD RULE.

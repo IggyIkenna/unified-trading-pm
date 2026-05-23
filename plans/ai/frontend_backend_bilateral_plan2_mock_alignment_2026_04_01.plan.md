@@ -56,7 +56,7 @@ todos:
   - id: p2-5-seed-data-from-registry
     content: |
       - [ ] [AGENT] P0. Rewrite `lib/mocks/fixtures/mock-data-seed.ts` to derive seed data from the instrument snapshot and strategy registry:
-        1. Positions: generate from actual instruments in snapshot (BTC-USDT@BINANCE, ETH-PERP@HYPERLIQUID, aWETH@AAVEV3-ETHEREUM, SPY@NASDAQ, etc.)
+        1. Positions: generate from actual instruments in snapshot (BTC-USDT@BINANCE, ETH-PERP@HYPERLIQUID, aWETH@AAVE_V3-ETHEREUM, SPY@NASDAQ, etc.)
         2. Orders: realistic orders using actual instrument keys and venue names
         3. Strategies: use all 37 strategies from system-topology, with correct instrument/venue assignments
         4. Alerts: generate from actual strategy/venue/instrument combinations
@@ -74,13 +74,13 @@ todos:
   - id: p2-7-defi-mock-completion
     content: |
       - [ ] [AGENT] P1. Complete DeFi mock data across all DeFi fixture files:
-        1. `defi-walkthrough.ts`: Use actual DeFi instruments from snapshot (AAVEV3-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV3-ETHEREUM, etc.)
+        1. `defi-walkthrough.ts`: Use actual DeFi instruments from snapshot (AAVE_V3-ETHEREUM, MORPHO-ETHEREUM, UNISWAP_V3-ETHEREUM, etc.)
         2. `defi-swap.ts`: Use real token pairs from snapshot
         3. `defi-lending.ts`: Use actual lending instruments with realistic APY/health factor
         4. `defi-staking.ts`: Use LIDO, ETHERFI, ETHENA instruments from snapshot
         5. `defi-risk.ts`: Realistic health factor, liquidation thresholds from Aave V3 params
         6. `defi-liquidity.ts`: Real pool data from Uniswap/Curve instruments
-        All venue names must match UAC canonical names (AAVEV3-ETHEREUM not "Aave").
+        All venue names must match UAC canonical names (AAVE_V3-ETHEREUM not "Aave").
     status: todo
   - id: p2-8-sports-mock-completion
     content: |

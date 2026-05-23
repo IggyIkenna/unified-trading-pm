@@ -372,7 +372,7 @@ Every leaf carries a `row_key` dict. Two operator actions consume it:
   writer captured 1 of 11 the leaf shows `empty_confirmed=10 attempted_failed=0 captured=1` rather than the
   pre-2026-05-07 `captured=1` that masked the gap.
 - Per-protocol launch dates — `_mtds_expected_dates_cached` clips pre-`max(chain_genesis, protocol_launch)` days so
-  AAVEV3-ARBITRUM drilldown 2021-08-31 → 2022-03-15 returns empty subtrees rather than inflating the denominator with
+  AAVE_V3-ARBITRUM drilldown 2021-08-31 → 2022-03-15 returns empty subtrees rather than inflating the denominator with
   always-empty days.
 
 ---

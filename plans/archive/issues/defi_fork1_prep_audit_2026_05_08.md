@@ -38,7 +38,7 @@ locked_since: 2026-05-08
 > deployment-ui data-status denominator (post-launch SOURCE_RETURNED_ZERO miscategorisation).
 >
 > **Suggested owner**: operator triage. Bug-class-4 UAC date drifts → **dedicated tab** (mirror Tab 9 precedent for
-> AAVEV3-ETHEREUM); collisions with Ikenna's writegate / Tab 9's PM stack mean Tab 14 cannot ship the UAC fix itself per
+> AAVE_V3-ETHEREUM); collisions with Ikenna's writegate / Tab 9's PM stack mean Tab 14 cannot ship the UAC fix itself per
 > workspace "Two teammates × multiple parallel agents" rule. Bug-class-1/2/3 are diagnostic-only — no code changes
 > flagged from this audit.
 
@@ -162,28 +162,28 @@ rule (avoids collisions with Ikenna's writegate + Tab 9's pending PM rebase).
 
 | (chain, protocol) pair    | UAC entry                  | actual earliest event (subgraph)                    | drift          | shape                                                                                      |
 | ------------------------- | -------------------------- | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
-| **AAVEV3 / ETHEREUM**     | 2023-01-27                 | 2023-01-27 08:00:11 UTC                             | 0d             | ✅ correct (Tab 9 fixed)                                                                   |
-| AAVEV3 / ARBITRUM         | 2022-03-16                 | 2022-03-16 16:00:45 UTC                             | 0d             | ✅ correct                                                                                 |
-| **AAVEV3 / OPTIMISM**     | 2022-08-04                 | 2022-03-15 21:48:18 UTC                             | UAC 142d LATE  | ❌ **silent data loss** — 142 days clipped as `EXPECTED_PRE_GENESIS_CHAIN`                 |
-| AAVEV3 / POLYGON          | 2022-03-16                 | 2022-03-12 19:19:07 UTC                             | UAC 4d LATE    | minor — 4d data loss                                                                       |
-| AAVEV3 / AVALANCHE        | 2022-03-16                 | 2022-03-12 20:09:36 UTC                             | UAC 4d LATE    | minor — 4d data loss                                                                       |
-| **AAVEV3 / BASE**         | 2023-08-09                 | 2023-08-22 14:48:51 UTC                             | UAC 13d EARLY  | 13d false-empty (`SOURCE_RETURNED_ZERO` instead of `EXPECTED_PRE_PROTOCOL_LAUNCH`)         |
-| **AAVEV3 / LINEA**        | 2024-09-26                 | 2025-02-11 11:56:26 UTC                             | UAC 138d EARLY | 138d false-empty                                                                           |
-| **AAVEV3 / BSC**          | 2023-04-06                 | 2024-01-23 14:47:12 UTC                             | UAC 293d EARLY | 293d false-empty                                                                           |
-| AAVEV3 / SCROLL           | 2024-04-29                 | (not probed — out of Fork 1 scope, in SUBGRAPH_IDS) | —              | n/a                                                                                        |
-| AAVEV3 / ZKSYNC           | 2024-04-09                 | (not probed — out of Fork 1 scope, in SUBGRAPH_IDS) | —              | n/a                                                                                        |
-| **COMPOUNDV3 / ETHEREUM** | 2022-08-25                 | 2022-08-13 04:18:30 UTC                             | UAC 12d LATE   | ❌ **silent data loss** — 12 days clipped                                                  |
-| **COMPOUNDV3 / ARBITRUM** | 2023-04-13                 | 2023-05-04 22:00:26 UTC                             | UAC 21d EARLY  | 21d false-empty                                                                            |
-| **COMPOUNDV3 / BASE**     | 2023-08-26                 | 2023-08-04 23:29:21 UTC                             | UAC 22d LATE   | ❌ **silent data loss** — 22 days clipped (subgraph indexes pre-mainnet-open BASE)         |
-| **COMPOUNDV3 / OPTIMISM** | 2024-02-15                 | 2024-04-06 17:09:21 UTC                             | UAC 51d EARLY  | 51d false-empty                                                                            |
-| COMPOUNDV3 / POLYGON      | 2023-02-14                 | (no subgraph in `SUBGRAPH_IDS`)                     | n/a            | UAC entry but no subgraph wired — coverage gap (handler skips, manifest empty)             |
-| COMPOUNDV3 / SCROLL       | 2024-04-22                 | (not probed)                                        | —              | n/a                                                                                        |
+| **AAVE_V3 / ETHEREUM**     | 2023-01-27                 | 2023-01-27 08:00:11 UTC                             | 0d             | ✅ correct (Tab 9 fixed)                                                                   |
+| AAVE_V3 / ARBITRUM         | 2022-03-16                 | 2022-03-16 16:00:45 UTC                             | 0d             | ✅ correct                                                                                 |
+| **AAVE_V3 / OPTIMISM**     | 2022-08-04                 | 2022-03-15 21:48:18 UTC                             | UAC 142d LATE  | ❌ **silent data loss** — 142 days clipped as `EXPECTED_PRE_GENESIS_CHAIN`                 |
+| AAVE_V3 / POLYGON          | 2022-03-16                 | 2022-03-12 19:19:07 UTC                             | UAC 4d LATE    | minor — 4d data loss                                                                       |
+| AAVE_V3 / AVALANCHE        | 2022-03-16                 | 2022-03-12 20:09:36 UTC                             | UAC 4d LATE    | minor — 4d data loss                                                                       |
+| **AAVE_V3 / BASE**         | 2023-08-09                 | 2023-08-22 14:48:51 UTC                             | UAC 13d EARLY  | 13d false-empty (`SOURCE_RETURNED_ZERO` instead of `EXPECTED_PRE_PROTOCOL_LAUNCH`)         |
+| **AAVE_V3 / LINEA**        | 2024-09-26                 | 2025-02-11 11:56:26 UTC                             | UAC 138d EARLY | 138d false-empty                                                                           |
+| **AAVE_V3 / BSC**          | 2023-04-06                 | 2024-01-23 14:47:12 UTC                             | UAC 293d EARLY | 293d false-empty                                                                           |
+| AAVE_V3 / SCROLL           | 2024-04-29                 | (not probed — out of Fork 1 scope, in SUBGRAPH_IDS) | —              | n/a                                                                                        |
+| AAVE_V3 / ZKSYNC           | 2024-04-09                 | (not probed — out of Fork 1 scope, in SUBGRAPH_IDS) | —              | n/a                                                                                        |
+| **COMPOUND_V3 / ETHEREUM** | 2022-08-25                 | 2022-08-13 04:18:30 UTC                             | UAC 12d LATE   | ❌ **silent data loss** — 12 days clipped                                                  |
+| **COMPOUND_V3 / ARBITRUM** | 2023-04-13                 | 2023-05-04 22:00:26 UTC                             | UAC 21d EARLY  | 21d false-empty                                                                            |
+| **COMPOUND_V3 / BASE**     | 2023-08-26                 | 2023-08-04 23:29:21 UTC                             | UAC 22d LATE   | ❌ **silent data loss** — 22 days clipped (subgraph indexes pre-mainnet-open BASE)         |
+| **COMPOUND_V3 / OPTIMISM** | 2024-02-15                 | 2024-04-06 17:09:21 UTC                             | UAC 51d EARLY  | 51d false-empty                                                                            |
+| COMPOUND_V3 / POLYGON      | 2023-02-14                 | (no subgraph in `SUBGRAPH_IDS`)                     | n/a            | UAC entry but no subgraph wired — coverage gap (handler skips, manifest empty)             |
+| COMPOUND_V3 / SCROLL       | 2024-04-22                 | (not probed)                                        | —              | n/a                                                                                        |
 | **SPARK / ETHEREUM**      | (PENDING_INVESTIGATION)    | 2023-03-07 04:31:11 UTC                             | needs entry    | ❌ **add to PROTOCOL_LAUNCH_DATES** + remove from `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` |
-| **UNISWAPV3 / ETHEREUM**  | 2021-05-04                 | 2021-05-04 00:00:00 UTC                             | 0d             | ✅ correct                                                                                 |
-| **UNISWAPV3 / ARBITRUM**  | 2021-08-31 (chain genesis) | 2021-06-01 00:00:00 UTC                             | UAC 91d LATE   | ❌ **silent data loss** — 91 days clipped (subgraph indexes pre-Arb-mainnet-open)          |
-| **UNISWAPV3 / BASE**      | 2023-08-09 (chain genesis) | 2023-07-31 00:00:00 UTC                             | UAC 9d LATE    | minor — 9d data loss                                                                       |
-| **UNISWAPV3 / OPTIMISM**  | 2021-12-16 (chain genesis) | 2021-11-11 00:00:00 UTC                             | UAC 35d LATE   | ❌ **silent data loss** — 35 days clipped                                                  |
-| UNISWAPV3 / POLYGON       | 2021-12-21                 | 2021-12-20 00:00:00 UTC                             | UAC 1d LATE    | OK                                                                                         |
+| **UNISWAP_V3 / ETHEREUM**  | 2021-05-04                 | 2021-05-04 00:00:00 UTC                             | 0d             | ✅ correct                                                                                 |
+| **UNISWAP_V3 / ARBITRUM**  | 2021-08-31 (chain genesis) | 2021-06-01 00:00:00 UTC                             | UAC 91d LATE   | ❌ **silent data loss** — 91 days clipped (subgraph indexes pre-Arb-mainnet-open)          |
+| **UNISWAP_V3 / BASE**      | 2023-08-09 (chain genesis) | 2023-07-31 00:00:00 UTC                             | UAC 9d LATE    | minor — 9d data loss                                                                       |
+| **UNISWAP_V3 / OPTIMISM**  | 2021-12-16 (chain genesis) | 2021-11-11 00:00:00 UTC                             | UAC 35d LATE   | ❌ **silent data loss** — 35 days clipped                                                  |
+| UNISWAP_V3 / POLYGON       | 2021-12-21                 | 2021-12-20 00:00:00 UTC                             | UAC 1d LATE    | OK                                                                                         |
 
 ### Drift table — Fork 1 oracles + LST + DEX-perp
 
@@ -221,7 +221,7 @@ Tab 9's `mtds-lending-indices-20260508-114519` per-VM shard (4,251 rows as of au
 ```
                        captured  empty_confirmed
 venue      chain
-AAVEV3     ARBITRUM        253     74    ✅ post-2022-03-16 launch correctly captures, pre-launch correctly empty
+AAVE_V3     ARBITRUM        253     74    ✅ post-2022-03-16 launch correctly captures, pre-launch correctly empty
            AVALANCHE       254     73    ✅
            BASE              0    327    pre-2023-08-22 is correctly empty (subgraph genuinely returns 0)
            BSC               0    327    pre-2024-01-23 is correctly empty
@@ -231,7 +231,7 @@ AAVEV3     ARBITRUM        253     74    ✅ post-2022-03-16 launch correctly ca
                                           112 days of legitimate post-2022-03-15 OPT data NEVER FETCHED because the floor
                                           short-circuit pre-skips 2022-03-15 → 2022-08-03. SILENT DATA LOSS.
            POLYGON         256     71    ⚠️ similar — 4 days lost
-COMPOUNDV3 ARBITRUM          0    327    pre-2023-05-04 correctly empty; UAC 2023-04-13 too early by 21d but no harm yet
+COMPOUND_V3 ARBITRUM          0    327    pre-2023-05-04 correctly empty; UAC 2023-04-13 too early by 21d but no harm yet
            BASE              0    327    pre-2023-08-04 correctly empty; UAC 2023-08-26 22d LATE → 22d data loss in 2023-Q3
            ETHEREUM         91    236    ⚠️ 91 captured rows, but UAC floor 2022-08-25 vs actual 2022-08-13 = 12d data loss
            OPTIMISM          0    327    pre-2024-04-06 correctly empty
@@ -252,14 +252,14 @@ subgraph-earliest-event probe done in this audit. Recommend adding this probe to
 ## Why it matters (May-23 critical path impact)
 
 1. **carry_staked_basis lead archetype (May-23 lead)**:
-   - AAVEV3 / OPTIMISM 142-day data loss covers the 2022-03 → 2022-08 window — material if backtest range starts
+   - AAVE_V3 / OPTIMISM 142-day data loss covers the 2022-03 → 2022-08 window — material if backtest range starts
      pre-2022-08.
-   - UNISWAPV3 / ARBITRUM + UNISWAPV3 / OPTIMISM 91d + 35d data loss — affects swap-fee history for the archetype's
+   - UNISWAP_V3 / ARBITRUM + UNISWAP_V3 / OPTIMISM 91d + 35d data loss — affects swap-fee history for the archetype's
      hedge-leg sizing on those L2s.
    - Pyth Hermes archive gap 2022-11 → 2023-10 — mSOL/jitoSOL valuation in USD terms missing for ~11 months of the
      archetype's pre-2024 history.
 2. **leveraged_funding_arb archetype**:
-   - COMPOUNDV3 / OPTIMISM (UAC 2024-02-15, actual 2024-04-06) — 51 days of false-empty in early 2024 don't hurt
+   - COMPOUND_V3 / OPTIMISM (UAC 2024-02-15, actual 2024-04-06) — 51 days of false-empty in early 2024 don't hurt
      directly but inflate the actual-deploy-date research signal.
 3. **Cross-cutting (case-5 big finding criteria)**:
    - SSOT contradiction: UAC `PROTOCOL_LAUNCH_DATES` ≠ subgraph reality (data-correctness, ≥2 repos UAC + MTDS).
@@ -277,9 +277,9 @@ into **four batches** that can each be a Tab-9-style fix tab. **Batches don't ru
 
 | Batch | Pairs                                                                                                                                       | Owner / collision risk                    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| **A** | AAVEV3 / OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC                                                                                     | UAC + Tab 9's pending PM rebase queue     |
-| **B** | COMPOUNDV3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM                                                                                             | UAC + Ikenna's writegate-related work     |
-| **C** | UNISWAPV3 / ARBITRUM, BASE, OPTIMISM                                                                                                        | UAC standalone — DEX scope, low collision |
+| **A** | AAVE_V3 / OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC                                                                                     | UAC + Tab 9's pending PM rebase queue     |
+| **B** | COMPOUND_V3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM                                                                                             | UAC + Ikenna's writegate-related work     |
+| **C** | UNISWAP_V3 / ARBITRUM, BASE, OPTIMISM                                                                                                        | UAC standalone — DEX scope, low collision |
 | **D** | SPARK / ETHEREUM (add to PROTOCOL_LAUNCH_DATES + remove from PENDING_INVESTIGATION) + bSOL (add to LST_TOKEN_GENESIS + LST_VENUE_TO_TOKENS) | UAC + instruments-service catalog impl    |
 
 **Each batch's spawn prompt** mirrors Tab 9's shape (probe → UAC update → MTDS pre-flight test → handler short-circuit
@@ -301,7 +301,7 @@ production (UAC is consulted first). Sweep after Bug-class-4 batches A+B land.
 
 ### Coverage gap — COMPOUND V3 POLYGON
 
-UAC has `("POLYGON", "COMPOUNDV3"): "2023-02-14"` but `SUBGRAPH_IDS["compound_v3"]` does NOT have a POLYGON entry
+UAC has `("POLYGON", "COMPOUND_V3"): "2023-02-14"` but `SUBGRAPH_IDS["compound_v3"]` does NOT have a POLYGON entry
 (removed per the comment "POLYGON removed: subgraph returns 0 markets (Compound V3 not active on Polygon)").
 **Recommend**: remove the POLYGON entry from UAC `PROTOCOL_LAUNCH_DATES` to avoid false denominator inflation. Tab 6's
 defi_988 audit doesn't flag this because the row count is 0 (chain genuinely has no markets).
@@ -341,7 +341,7 @@ Per CLAUDE.md decision tree:
 - **Tab 9's in-flight VM hasn't reached post-launch dates for 9 of 13 cohorts** — the audit's bug-class-4 diagnosis is
   independently confirmed via subgraph probe, not solely via the in-flight VM. The VM cross-reference validates the
   pre-launch SOURCE_RETURNED_ZERO is correctly set; post-launch validation lands at T+45min..T+150min.
-- **UNISWAPV3 BASE chain genesis 2023-08-09 vs subgraph earliest 2023-07-31** — the subgraph indexes BASE
+- **UNISWAP_V3 BASE chain genesis 2023-08-09 vs subgraph earliest 2023-07-31** — the subgraph indexes BASE
   pre-public-launch testnet/devnet phase blocks. Same shape as COMPOUND V3 BASE 2023-08-04. Not a bug; just a
   chain-genesis vs subgraph-coverage mismatch.
 - **CHAIN_GENESIS_DATES SSOT** (which is checked for post-2026-05-08 audit pass) — verified per-chain genesis dates

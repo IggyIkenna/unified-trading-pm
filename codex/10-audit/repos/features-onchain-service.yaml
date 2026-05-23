@@ -328,7 +328,7 @@ asset_group_readiness:
     mvp_ready: false
     data:
       historical_available: true
-      historical_start_date: "2020-05-18" # UNISWAPV2-ETHEREUM earliest (mvp-universe.yaml)
+      historical_start_date: "2020-05-18" # UNISWAP_V2-ETHEREUM earliest (mvp-universe.yaml)
       live_available: false
       mock_available: true # responses library; @responses.activate in tests
       testnet_available: false
@@ -341,9 +341,9 @@ asset_group_readiness:
       - staking_yield # LST staking yield rates
     ml_models: [] # DeFi uses rule-based strategies for MVP
     venue_deps:
-      - AAVEV3_ETHEREUM
-      - UNISWAPV2-ETHEREUM
-      - UNISWAPV3-ETHEREUM
+      - AAVE_V3_ETHEREUM
+      - UNISWAP_V2-ETHEREUM
+      - UNISWAP_V3-ETHEREUM
       - COMPOUND_V3_ETH
     branch_status:
       feature:
@@ -359,7 +359,6 @@ asset_group_readiness:
         qg_passed: false
         quickmerged: false
 
-
 # ==============================================================================
 # LIVE DEFI READINESS — 7-GROUP 23-ITEM (master_to_live_defi_2026_05_23)
 # Items 1-3 (Group A · Code health) inherited from code_readiness above.
@@ -371,14 +370,14 @@ live_defi_readiness:
   last_updated: "2026-05-23"
   plan_ref: "plans/active/master_to_live_defi_2026_05_23.md"
 
-  group_rollup:  # snapshot from service readiness matrix 2026-05-23
-    A_code_health: "partial"          # items 1-3 (see code_readiness)
-    B_data_correctness: "partial"     # items 4-8
-    C_runtime_parity: "partial"       # items 9-11
-    D_coverage_shard: "partial"       # items 12-14
-    E_operability: "partial"          # items 15-16
-    F_trading_prereqs: "na"      # items 17-22 (incl 17.5)
-    G_operator_ux: "na"          # item 23
+  group_rollup: # snapshot from service readiness matrix 2026-05-23
+    A_code_health: "partial" # items 1-3 (see code_readiness)
+    B_data_correctness: "partial" # items 4-8
+    C_runtime_parity: "partial" # items 9-11
+    D_coverage_shard: "partial" # items 12-14
+    E_operability: "partial" # items 15-16
+    F_trading_prereqs: "na" # items 17-22 (incl 17.5)
+    G_operator_ux: "na" # item 23
 
   items:
     # ── Group B · Data correctness ────────────────────────────

@@ -22,8 +22,8 @@ status: active
 >
 > - **184,512 `MISSING_EXPECTED` cells** across FLUID-ETHEREUM (all 4 lending types),
 >   MORPHO-{ETHEREUM,POLYGON,ARBITRUM,BASE,OPTIMISM} (all 4 lending types), CURVE-ETHEREUM (dex_swaps + dex_pools),
->   BALANCER (all 6 chains), UNISWAPV2-ETHEREUM, UNISWAPV3-{ARBITRUM,BASE,OPTIMISM,POLYGON}, UNISWAPV4-ETHEREUM,
->   COMPOUNDV3-{all chains}, AAVEV3-{LINEA,BSC}, LIDO/ETHERFI/ETHENA-ETHEREUM, JITO-SOLANA.
+>   BALANCER (all 6 chains), UNISWAP_V2-ETHEREUM, UNISWAP_V3-{ARBITRUM,BASE,OPTIMISM,POLYGON}, UNISWAP_V4-ETHEREUM,
+>   COMPOUND_V3-{all chains}, AAVE_V3-{LINEA,BSC}, LIDO/ETHERFI/ETHENA-ETHEREUM, JITO-SOLANA.
 > - **765 `DIVERGENT_EMPTY` cells** (the Drift-S3-bug class — all in DeFi). Full per-cell list in
 >   `plans/audit/results/manifest_divergence_2026_05_20.parquet`.
 >
@@ -227,7 +227,7 @@ If (A) or (B) approved, slot 1 will launch in this order:
 1. **Stage 1 — instruments-service DeFi** (must land first):
    - VM `instr-backfill-defi-46d-20260520` (asia-northeast1-c, e2-standard-4)
    - Range 2026-04-01..2026-05-16, all 7 DeFi venues (CURVE-AVALANCHE, CURVE-OPTIMISM, BALANCER-ETHEREUM,
-     UNISWAPV3-ETHEREUM, UNISWAPV3-POLYGON, RAYDIUM-SOLANA, UNISWAPV4-ETHEREUM).
+     UNISWAP_V3-ETHEREUM, UNISWAP_V3-POLYGON, RAYDIUM-SOLANA, UNISWAP_V4-ETHEREUM).
    - Expected duration: 2-4h wallclock.
    - Output:
      `gs://instruments-store-defi-central-element-323112/instrument_availability/by_date/day=2026-04-01..day=2026-05-16/`.

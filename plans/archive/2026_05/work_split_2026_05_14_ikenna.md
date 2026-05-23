@@ -129,7 +129,7 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
    Cluster D [x]): instruments-service@d78dd02 — 74 failed tests now 78 passing; IS QG confirms 2591 passed, ALL QUALITY
    GATES PASSED exit 0.
 10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count
-    drift: test expects 1 row, handler returns 2 (AAVEV3 + MORPHO dual-venue path). Diagnose-first per Findings Triage:
+    drift: test expects 1 row, handler returns 2 (AAVE_V3 + MORPHO dual-venue path). Diagnose-first per Findings Triage:
     code drifted from test intent (multi-venue is correct), so update test expectations. (research 1.2×, ~1 = 1.2 cal)
     **DONE** (MTDS@`8d54eb1`): Two distinct failures diagnosed — (1) `_fetch_aave_liquidations` missing
     `if not api_key or not subgraph_id: return []` guard (code fix, parallel parity with flash_loan handler); (2)

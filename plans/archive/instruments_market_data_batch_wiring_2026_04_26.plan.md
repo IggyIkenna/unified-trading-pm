@@ -229,7 +229,7 @@ left edge; wire to parent via callback or local state in the widget
 - GCS data_type: `oracle_prices` (preferred) or `dex_swaps`
 - `oracle_prices` gives a clean price series; aggregate to bars like CEFI trades
 - `dex_swaps` requires computing price from reserve amounts — more complex, skip for now
-- Venues confirmed with data: UNISWAP_V3, AAVEV3, CURVE, LIDO, MORPHO on Ethereum
+- Venues confirmed with data: UNISWAP_V3, AAVE_V3, CURVE, LIDO, MORPHO on Ethereum
 
 ### TimeframeResampler
 

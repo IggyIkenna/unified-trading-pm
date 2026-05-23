@@ -522,7 +522,7 @@ Owner: ikenna for sign-off + harsh for runs.
       honestly); tradfi=69.71% (98,573/141,401 — 27% empty=holidays/weekends, legit); sports=99.79% (157,174/157,500);
       prediction=86.19% (14,491/16,812 — 168 empty-venue + 21 UNKNOWN-venue rows = phantom-row pattern, see finding
       below). 5 random (ag, venue, data_type) cell probes (seed=42): (cefi, COINBASE-SPOT, trades)=70.67%, (defi,
-      SUSHISWAPV3-ETHEREUM, governance_events)=0%/all empty_confirmed (pre-venue-coverage clipping working — verify
+      SUSHISWAP_V3-ETHEREUM, governance_events)=0%/all empty_confirmed (pre-venue-coverage clipping working — verify
       reason taxonomy is `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN`), (tradfi, CME, trades)=90.61%,
       (sports, ODDS_API, odds_horizon_bucket)=99.71%, (prediction, POLYMARKET, trades)=92.10%. All 5 probes
       self-consistent (status counts sum to total). **FINDING (capture for follow-up)**: 168 rows with `venue=""`

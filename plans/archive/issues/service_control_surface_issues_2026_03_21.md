@@ -205,7 +205,7 @@ services and stamped out before they reach staging. Pattern-level bugs propagate
   `instruments-store-cefi-central-element-323112` instead of `instruments-store-defi-central-element-323112`. Data lands
   in wrong bucket. Downstream services reading from DEFI bucket get nothing.
 - **Root cause:** The DeFi processor stores instruments with `category_str="CEFI"` instead of `"DEFI"`. The venue names
-  like `AAVEV3-ETHEREUM` are being classified as CEFI in the storage layer. The `market_category` field in the DataFrame
+  like `AAVE_V3-ETHEREUM` are being classified as CEFI in the storage layer. The `market_category` field in the DataFrame
   needs to be populated correctly before the storage write.
 - **Fix:** Trace the market_category assignment in the DeFi processor. Ensure DeFi instruments have
   `market_category=DEFI` before `_upload_venue_to_datasink()` is called.

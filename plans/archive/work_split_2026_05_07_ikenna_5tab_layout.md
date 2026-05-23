@@ -321,7 +321,7 @@ launch, launch informs AWS bucket-naming, all three feed paper-trade smoke.
       DEFERRED (Bug 1 AAVE V3 ETHEREUM silent-zero + Bug 2 COMPOUND V3 subgraph schema + Bug 3 instruments-store-defi
       2022 metadata floor) per `plans/active/issues/lending_indices_handler_bugs_2026_05_07.md`. **Bug 1 root cause
       diagnosed + UAC SSOT fix shipped 2026-05-08 by Harsh Tab 9 at UAC@`6a64a56`** (corrected
-      `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` from `2022-03-14` → `2023-01-27`); when Agent 4 picks the relaunch
+      `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` from `2022-03-14` → `2023-01-27`); when Agent 4 picks the relaunch
       back up, **`git pull` UAC first** so the corrected date is in place — relaunching against a stale UAC checkout
       would reproduce Bug 1's silent-zero AAVE V3 ETHEREUM rows. Bugs 2 + 3 still pending fixes.
 - [x] [INFRA-DESIGN] P1. aws_migration Phase 2 — dual-bucket setup + Storage Transfer Service config + bucket-naming
@@ -490,7 +490,7 @@ These are the ONLY hard sync gates. Operate independently otherwise.
 - [x] **UAC `chain_env.py` `PROTOCOL_LAUNCH_DATES` (Harsh Tab 9 → Agent 4 D4) — SHIPPED 2026-05-08 at UAC@6a64a56**.
       Harsh's Tab 9 (lending-indices-relaunch-tab) diagnosed AAVE V3 ETHEREUM launch date wrong via the Bug 1 reproducer
       (per [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) Q1)
-      and shipped UAC@`6a64a56` flipping `("ETHEREUM", "AAVEV3"): "2022-03-14" → "2023-01-27"`. **Coordination pattern
+      and shipped UAC@`6a64a56` flipping `("ETHEREUM", "AAVE_V3"): "2022-03-14" → "2023-01-27"`. **Coordination pattern
       for future similar UAC SSOT fixes (any `*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` /
       `venue_trading_calendar`)**: any agent in flight on `chain_env.py` (or sibling SSOTs) when a downstream Tab is
       about to consume `PROTOCOL_LAUNCH_DATES` for VM launches MUST coordinate via a top-of-file

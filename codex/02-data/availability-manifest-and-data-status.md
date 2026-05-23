@@ -390,7 +390,7 @@ class AvailabilityRecord:
 
 - Services write ONLY the columns relevant to their shard dimensions. All others default to `""`.
 - **Never overload `venue`** with non-venue data. Use the proper column.
-- **`venue` for DeFi** = protocol name only in canonical no-underscore form (AAVEV3, not AAVE_V3 nor AAVEV3-ETHEREUM).
+- **`venue` for DeFi** = protocol name only in canonical no-underscore form (AAVE_V3, not AAVE_V3 nor AAVE_V3-ETHEREUM).
   Chain goes in `chain` column. Legacy underscore forms (AAVE_V3, UNISWAP_V3, …) are canonicalised at write time in UTL
   `manifest_writer._coerce_row_key` + `.add()` via UAC `LEGACY_DEFI_VENUE_ALIASES`; the 2026-05-07 manifest migration
   rewrote 411,620 historical rows in place
@@ -671,7 +671,7 @@ Not all shards are expected every day:
 - **Sports fixtures:** A day with no fixtures in a league is NOT a missing shard. Denominator = fixture calendar.
 - **TradFi weekends:** Saturday/Sunday are not trading days. Denominator = trading calendar.
 - **Transfer windows:** Transfer data arrives on seasonal cadence, not daily.
-- **Chain start dates:** AAVEV3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
+- **Chain start dates:** AAVE_V3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
 - **New venues/bookmakers:** A bookmaker added in 2025-06 has no expected data before that date.
 
 ### Source coverage start dates (canonical) — `SOURCE_COVERAGE_START` SSOT
@@ -908,12 +908,12 @@ venues), the catalogue is **complete** for the asset_group. Cross-references:
    both shapes as a safety net.
 5. **Chain-bundle equivalence** — manifest `instrument_type=option` / `future` (row-level) vs disk `options_chain` /
    `futures_chain` (writer bundles them per `tardis_shared.finalise_rows_and_path`); audit accepts either form.
-6. **DeFi protocol-name underscore drift** (added 2026-05-07 — C.9 audit) — manifest spells protocols as `AAVEV3` /
-   `UNISWAPV3` / `COMPOUNDV3` (post-canonicalisation, no underscore between protocol and version). Pre-2026-04 writers
+6. **DeFi protocol-name underscore drift** (added 2026-05-07 — C.9 audit) — manifest spells protocols as `AAVE_V3` /
+   `UNISWAP_V3` / `COMPOUND_V3` (post-canonicalisation, no underscore between protocol and version). Pre-2026-04 writers
    used the underscored form `AAVE_V3` / `UNISWAP_V3` / `COMPOUND_V3`. Both spellings coexist on disk under different
    `venue=` segments. The audit probes both via `_defi_protocol_variants` (a regex transform inserting/removing the
    underscore between the alphabetic prefix and the `V<digits>` version suffix). **Reference incident**: 2026-05-07
-   AAVEV3 dry-run reported 29,782 phantoms (the entire AAVEV3 dataset) BEFORE this axis was added. After: 0 phantoms.
+   AAVE_V3 dry-run reported 29,782 phantoms (the entire AAVE_V3 dataset) BEFORE this axis was added. After: 0 phantoms.
 7. **DeFi migrated-bundle wildcard** (added 2026-05-07 — C.9 audit) — `migrate_mtds_defi_legacy_venue_underscore.py`
    produced `ticks_migrated_*.parquet` bundle files at the combined-venue prefix
    (`raw_tick_data/by_date/day=*/asset_group=defi/venue=PROTOCOL-CHAIN/`) WITHOUT the trailing
@@ -968,7 +968,7 @@ the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_
 
 **History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) →
 354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry. **2026-05-07
-defi audit (C.9)** reduced AAVEV3 false-positives from 29,782 (entire dataset, would have destroyed all manifest state
+defi audit (C.9)** reduced AAVE_V3 false-positives from 29,782 (entire dataset, would have destroyed all manifest state
 if `--apply` had run) → 0 after axes 6 + 7 landed.
 
 ### Audit-script gotchas — adapter-specific path duality
@@ -1004,7 +1004,7 @@ Per-adapter quirks future audits MUST handle to avoid false-positive flips destr
   a 3-year season window when no explicit `season` is passed (covers transfer-window overlap).
 - **DeFi venue-overload + chain-bundle + protocol-name underscore + migrated-bundle wildcard** — encoded in
   `reconcile_phantom_manifest_rows_all.py` 7-axis drift handling. Axes 6 (`_defi_protocol_variants` for
-  `AAVEV3`↔`AAVE_V3` etc.) and 7 (migrated `ticks_migrated_*.parquet` bundles at the combined-venue prefix accepted as
+  `AAVE_V3`↔`AAVE_V3` etc.) and 7 (migrated `ticks_migrated_*.parquet` bundles at the combined-venue prefix accepted as
   capture-evidence for any data_type) added 2026-05-07 — see § "Phantom audit — re-runnable recipe" axes 6 + 7 above.
 
 ### Rollup-side metric inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07
@@ -1014,18 +1014,18 @@ Per-adapter quirks future audits MUST handle to avoid false-positive flips destr
 entries where `dates_found` is non-zero for venues that have ZERO rows in the canonical manifest. Example:
 
 ```
-AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0, empty_confirmed: 0, attempted_failed: 0}
+AAVE_V3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0, empty_confirmed: 0, attempted_failed: 0}
 ```
 
 `dates_found = 31` but `capture_status_counts` is all-zero — a contradiction. The canonical manifest has zero
-`(venue=AAVEV3, chain=ARBITRUM)` rows; all 29,782 AAVEV3 rows are on chain `ETHEREUM`. The "31" is a stale or
+`(venue=AAVE_V3, chain=ARBITRUM)` rows; all 29,782 AAVE_V3 rows are on chain `ETHEREUM`. The "31" is a stale or
 miscomputed value coming from a different source than `capture_status_counts`.
 
 **Likely cause**: the rollup worker's per-(combined-venue) computation conflates the EXPECTED denominator window
 (clipped to chain genesis per `_mtds_expected_dates_cached`) with the FOUND-on-disk count, OR a stale per-VM shard
 reference, OR a default initialisation that was never overwritten when the manifest had zero rows for that combo.
 
-**Impact**: deployment-ui shows misleading per-(venue, chain) progress bars (e.g. AAVEV3-ARBITRUM "0.51% complete"
+**Impact**: deployment-ui shows misleading per-(venue, chain) progress bars (e.g. AAVE_V3-ARBITRUM "0.51% complete"
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
@@ -1181,7 +1181,7 @@ manifest absence now definitively means "outside expected universe" — e.g. a p
 present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the rollup's
 expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
 `gs://market-data-tick-defi-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
-(sample: `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
+(sample: `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
 `EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` — Saturday).
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
@@ -1352,19 +1352,19 @@ Currently-tracked temporary states relevant to the manifest:
 
 | Chain       | Protocol Count | Examples                                                                                 |
 | ----------- | -------------- | ---------------------------------------------------------------------------------------- |
-| ETHEREUM    | 16             | AAVEV3, UNISWAPV3, UNISWAPV4, CURVE, BALANCER, COMPOUNDV3, MORPHO, LIDO, ETHERFI, ...    |
-| BASE        | 8              | AAVEV3, UNISWAPV3, BALANCER, AERODROMEV3, COMPOUNDV3, MORPHO, PANCAKESWAPV3, SUSHISWAPV3 |
-| ARBITRUM    | 7              | AAVEV3, UNISWAPV3, BALANCER, COMPOUNDV3, CAMELOTV3, SUSHISWAP, GMX                       |
-| AVALANCHE   | 6              | AAVEV3, BALANCER, CURVE, SUSHISWAPV3, TRADER_JOEV2, GMX                                  |
-| OPTIMISM    | 6              | AAVEV3, UNISWAPV3, BALANCER, COMPOUNDV3, CURVE, VELODROMEV2                              |
+| ETHEREUM    | 16             | AAVE_V3, UNISWAP_V3, UNISWAP_V4, CURVE, BALANCER, COMPOUND_V3, MORPHO, LIDO, ETHERFI, ...    |
+| BASE        | 8              | AAVE_V3, UNISWAP_V3, BALANCER, AERODROME_V3, COMPOUND_V3, MORPHO, PANCAKESWAP_V3, SUSHISWAP_V3 |
+| ARBITRUM    | 7              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CAMELOT_V3, SUSHISWAP, GMX                       |
+| AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOEV2, GMX                                  |
+| OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROMEV2                              |
 | SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                             |
-| POLYGON     | 3              | AAVEV3, UNISWAPV3, BALANCER                                                              |
-| BSC         | 2              | AAVEV3, PANCAKESWAPV3                                                                    |
-| LINEA       | 1              | AAVEV3                                                                                   |
+| POLYGON     | 3              | AAVE_V3, UNISWAP_V3, BALANCER                                                              |
+| BSC         | 2              | AAVE_V3, PANCAKESWAP_V3                                                                    |
+| LINEA       | 1              | AAVE_V3                                                                                   |
 | HYPERLIQUID | 1              | HYPERLIQUID                                                                              |
 | ASTER       | 1              | ASTER                                                                                    |
 
-Top multi-chain protocols: AAVEV3 (8 chains), BALANCER (6), UNISWAPV3 (5).
+Top multi-chain protocols: AAVE_V3 (8 chains), BALANCER (6), UNISWAP_V3 (5).
 
 ## Sports Bookmaker Venues (~21 Audited)
 

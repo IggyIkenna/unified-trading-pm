@@ -71,31 +71,31 @@ the actionable breakdown below is what matters for May-23.
 
 | bucket                | chain     | venue/protocol | data_type         | rows | distinct_dates | date_min   | date_max   |
 | --------------------- | --------- | -------------- | ----------------- | ---: | -------------: | ---------- | ---------- |
-| market-data-tick-defi | ETHEREUM  | YEARNV3        | VAULT_SHARE_PRICE | 1533 |           1533 | 2020-01-01 | 2024-03-12 |
+| market-data-tick-defi | ETHEREUM  | YEARN_V3        | VAULT_SHARE_PRICE | 1533 |           1533 | 2020-01-01 | 2024-03-12 |
 | market-data-tick-defi | ETHEREUM  | MORPHOVAULTS   | VAULT_SHARE_PRICE | 1465 |           1465 | 2020-01-01 | 2026-05-03 |
 | market-data-tick-defi | ETHEREUM  | ETHENA         | VAULT_SHARE_PRICE | 1414 |           1414 | 2020-01-01 | 2023-11-14 |
 | market-data-tick-defi | ETHEREUM  | FRAX           | VAULT_SHARE_PRICE | 1387 |           1387 | 2020-01-01 | 2023-10-18 |
 | market-data-tick-defi | ETHEREUM  | MAKER          | VAULT_SHARE_PRICE | 1113 |           1113 | 2020-01-01 | 2023-01-17 |
 | dex-swaps             | OPTIMISM  | CURVE          | DEX_SWAPS         |  796 |            796 | 2021-01-01 | 2026-04-14 |
 | perp-funding          | ASTER     | ASTER          | PERP_FUNDING      |  759 |            759 | 2022-11-01 | 2026-04-14 |
-| dex-swaps             | BSC       | PANCAKESWAPV3  | DEX_SWAPS         |  701 |            701 | 2021-01-01 | 2026-04-14 |
-| lending-indices       | LINEA     | AAVEV3         | LENDING_INDICES   |  357 |            357 | 2022-01-01 | 2025-02-10 |
-| evm-defi              | ETHEREUM  | AAVEV3         | LENDING_INDICES   |  319 |            319 | 2022-03-14 | 2023-01-26 |
+| dex-swaps             | BSC       | PANCAKESWAP_V3  | DEX_SWAPS         |  701 |            701 | 2021-01-01 | 2026-04-14 |
+| lending-indices       | LINEA     | AAVE_V3         | LENDING_INDICES   |  357 |            357 | 2022-01-01 | 2025-02-10 |
+| evm-defi              | ETHEREUM  | AAVE_V3         | LENDING_INDICES   |  319 |            319 | 2022-03-14 | 2023-01-26 |
 | lending-indices       | ETHEREUM  | SPARK          | LENDING_INDICES   |  293 |            293 | 2022-01-01 | 2024-12-13 |
-| lending-indices       | OPTIMISM  | COMPOUNDV3     | LENDING_INDICES   |  219 |            219 | 2022-01-01 | 2023-08-27 |
-| lending-indices       | BSC       | AAVEV3         | LENDING_INDICES   |  219 |            219 | 2022-01-01 | 2023-08-27 |
-| lending-indices       | BASE      | AAVEV3         | LENDING_INDICES   |  214 |            214 | 2022-01-01 | 2023-08-22 |
-| lending-indices       | BASE      | COMPOUNDV3     | LENDING_INDICES   |  211 |            211 | 2022-01-01 | 2023-08-19 |
-| lending-indices       | ETHEREUM  | AAVEV3         | LENDING_INDICES   |  132 |            132 | 2022-01-01 | 2022-05-12 |
-| lending-indices       | ARBITRUM  | COMPOUNDV3     | LENDING_INDICES   |  131 |            131 | 2022-01-01 | 2022-05-11 |
-| lending-indices       | ETHEREUM  | COMPOUNDV3     | LENDING_INDICES   |  131 |            131 | 2022-01-01 | 2022-05-11 |
-| dex-swaps             | POLYGON   | UNISWAPV3      | DEX_SWAPS         |  120 |            120 | 2021-01-01 | 2025-04-08 |
+| lending-indices       | OPTIMISM  | COMPOUND_V3     | LENDING_INDICES   |  219 |            219 | 2022-01-01 | 2023-08-27 |
+| lending-indices       | BSC       | AAVE_V3         | LENDING_INDICES   |  219 |            219 | 2022-01-01 | 2023-08-27 |
+| lending-indices       | BASE      | AAVE_V3         | LENDING_INDICES   |  214 |            214 | 2022-01-01 | 2023-08-22 |
+| lending-indices       | BASE      | COMPOUND_V3     | LENDING_INDICES   |  211 |            211 | 2022-01-01 | 2023-08-19 |
+| lending-indices       | ETHEREUM  | AAVE_V3         | LENDING_INDICES   |  132 |            132 | 2022-01-01 | 2022-05-12 |
+| lending-indices       | ARBITRUM  | COMPOUND_V3     | LENDING_INDICES   |  131 |            131 | 2022-01-01 | 2022-05-11 |
+| lending-indices       | ETHEREUM  | COMPOUND_V3     | LENDING_INDICES   |  131 |            131 | 2022-01-01 | 2022-05-11 |
+| dex-swaps             | POLYGON   | UNISWAP_V3      | DEX_SWAPS         |  120 |            120 | 2021-01-01 | 2025-04-08 |
 | dex-swaps             | ARBITRUM  | SUSHISWAP      | DEX_SWAPS         |   97 |             97 | 2021-01-01 | 2025-06-09 |
-| dex-swaps             | AVALANCHE | SUSHISWAPV3    | DEX_SWAPS         |   97 |             97 | 2021-01-01 | 2024-10-22 |
+| dex-swaps             | AVALANCHE | SUSHISWAP_V3    | DEX_SWAPS         |   97 |             97 | 2021-01-01 | 2024-10-22 |
 | dex-swaps             | AVALANCHE | BALANCER       | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
-| dex-swaps             | BASE      | UNISWAPV3      | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
-| dex-swaps             | BASE      | PANCAKESWAPV3  | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
-| dex-swaps             | BASE      | SUSHISWAPV3    | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
+| dex-swaps             | BASE      | UNISWAP_V3      | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
+| dex-swaps             | BASE      | PANCAKESWAP_V3  | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
+| dex-swaps             | BASE      | SUSHISWAP_V3    | DEX_SWAPS         |   96 |             96 | 2021-01-01 | 2023-02-02 |
 
 ## Archetype-relevance ranking
 
@@ -106,10 +106,10 @@ Chains in scope: ETHEREUM, SOLANA, ARBITRUM, BASE. Protocols: AAVE V3, LIDO, ROC
 
 Top concentrations (via the breakdown above):
 
-- **VAULT_SHARE_PRICE on Ethereum vaults**: 6,912 rows for YEARNV3 + MORPHOVAULTS + ETHENA + FRAX + MAKER — all
+- **VAULT_SHARE_PRICE on Ethereum vaults**: 6,912 rows for YEARN_V3 + MORPHOVAULTS + ETHENA + FRAX + MAKER — all
   currently typed `SOURCE_RETURNED_ZERO`. **Most are pre-protocol-launch** (Ethena 2024-02-19; YEARN V3 2023-07;
   MorphoVaults 2024-06; FRAX vault structure 2020-12) but classified as zero rather than as pre-launch. UAC
-  `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` already lists ETHEREUM↔YEARNV3 / MORPHOVAULTS as pending; tightening the
+  `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` already lists ETHEREUM↔YEARN_V3 / MORPHOVAULTS as pending; tightening the
   SSOT will reclassify most of these from `source_returned_zero` to `legit_pre_protocol_launch`. **Action**: research +
   add launch dates to `PROTOCOL_LAUNCH_DATES` (UAC `chain_env.py`), rerun the data-status enumerator's pre-flight clip
   pass.
@@ -117,7 +117,7 @@ Top concentrations (via the breakdown above):
   GETs. Tab 5's lending_indices_handler_bugs ships fixes for AAVE V3 ETH (Bug 1) + COMPOUND V3 schema drift (Bug 2). Tab
   5 will resolve Eth + Arb + Base + Optimism Compound V3 cohorts; the LINEA + BSC cohorts are NEW shards that need
   separate routing config.
-- **evm-defi ETHEREUM AAVEV3 LENDING_INDICES**: 319 blank-reason empty_confirmed for 2022-03-14 → 2023-01-26 (the period
+- **evm-defi ETHEREUM AAVE_V3 LENDING_INDICES**: 319 blank-reason empty_confirmed for 2022-03-14 → 2023-01-26 (the period
   AAVE V3 ETH was live but the writegate was running pre-UTL@68b3804a). Adapter relaunch with typed reasons will
   reclassify; either captures real data or stamps `EXPECTED_PRE_PROTOCOL_LAUNCH` /`SOURCE_RETURNED_ZERO`.
 
@@ -145,7 +145,7 @@ The remaining captured rows (4,757) cover the live window correctly.
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **Tab 5 ships lending_indices_handler bugs**: AAVE V3 ETH silent-zero + Compound V3 schema drift                                                               | ~2,442        | Tab 5 in flight; covers ~2,123 lending-indices attempted_failed + 319 evm-defi blank Eth-AAVE-V3                                                           |
 | 2   | **DEX subgraph schema fixes** (defi_master line 358): PancakeSwap V3 / SushiSwap V3 / Aerodrome V3 / Camelot V3 across BSC / Base / Arb / Avax / Eth / Polygon | ~1,400        | `defi_master` D4 todo "Mid-tier 60% coverage" — needs subgraph URL + GraphQL query update                                                                  |
-| 3   | **PROTOCOL_LAUNCH_DATES tightening** for ETHEREUM YEARNV3 + MORPHOVAULTS + (ETHENA/FRAX/MAKER vault variant)                                                   | ~6,912        | UAC `chain_env.py` SSOT update + UAC `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` removal — reclassifies SOURCE_RETURNED_ZERO → legit_pre_protocol_launch      |
+| 3   | **PROTOCOL_LAUNCH_DATES tightening** for ETHEREUM YEARN_V3 + MORPHOVAULTS + (ETHENA/FRAX/MAKER vault variant)                                                   | ~6,912        | UAC `chain_env.py` SSOT update + UAC `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` removal — reclassifies SOURCE_RETURNED_ZERO → legit_pre_protocol_launch      |
 | 4   | **ASTER chain genesis SSOT + perp-funding adapter audit** (P0 if ASTER on hedge-leg path)                                                                      | 759           | UAC `CHAIN_GENESIS_DATES` add ASTER (2024-09 mainnet) + verify `perp-funding` adapter routes ASTER post-launch correctly; needs operator priority decision |
 | 5   | **Lending-indices LINEA / BSC routing config** (separate from Tab 5's Eth scope)                                                                               | ~576          | `mtds-lending-indices` adapter — chain→subgraph URL config for LINEA + BSC + remaining unfixed cohorts                                                     |
 

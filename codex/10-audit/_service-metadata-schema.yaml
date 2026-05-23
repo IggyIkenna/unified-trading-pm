@@ -127,7 +127,7 @@ domain_coverage:
     venues:
       type: list[string]
       description: "Supported venues (or ALL for platform/UI services)"
-      example: ["BINANCE", "COINBASE", "DERIBIT", "AAVEV3_ETHEREUM"]
+      example: ["BINANCE", "COINBASE", "DERIBIT", "AAVE_V3_ETHEREUM"]
 
     asset_groupes:
       type: list[enum]

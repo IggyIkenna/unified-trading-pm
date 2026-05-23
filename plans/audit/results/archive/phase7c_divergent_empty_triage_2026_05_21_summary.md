@@ -16,15 +16,15 @@ adapter-level bug (handler returned 0 data when protocol had activity) — NOT a
 
 | venue           | data_type          | cells   | triage_decision     |
 | --------------- | ------------------ | ------- | ------------------- |
-| AAVEV3-OPTIMISM | flash_loan_events  | 141     | phase_11_rebackfill |
-| AAVEV3-OPTIMISM | lending_indices    | 141     | phase_11_rebackfill |
-| AAVEV3-OPTIMISM | liquidation_events | 141     | phase_11_rebackfill |
-| AAVEV3-OPTIMISM | position_data      | 141     | phase_11_rebackfill |
-| AAVEV3-OPTIMISM | risk_params        | 141     | phase_11_rebackfill |
-| COMPOUNDV3-BASE | lending_indices    | 15      | phase_11_rebackfill |
-| COMPOUNDV3-BASE | liquidation_events | 15      | phase_11_rebackfill |
-| COMPOUNDV3-BASE | position_data      | 15      | phase_11_rebackfill |
-| COMPOUNDV3-BASE | risk_params        | 15      | phase_11_rebackfill |
+| AAVE_V3-OPTIMISM | flash_loan_events  | 141     | phase_11_rebackfill |
+| AAVE_V3-OPTIMISM | lending_indices    | 141     | phase_11_rebackfill |
+| AAVE_V3-OPTIMISM | liquidation_events | 141     | phase_11_rebackfill |
+| AAVE_V3-OPTIMISM | position_data      | 141     | phase_11_rebackfill |
+| AAVE_V3-OPTIMISM | risk_params        | 141     | phase_11_rebackfill |
+| COMPOUND_V3-BASE | lending_indices    | 15      | phase_11_rebackfill |
+| COMPOUND_V3-BASE | liquidation_events | 15      | phase_11_rebackfill |
+| COMPOUND_V3-BASE | position_data      | 15      | phase_11_rebackfill |
+| COMPOUND_V3-BASE | risk_params        | 15      | phase_11_rebackfill |
 | **TOTAL**       |                    | **765** |                     |
 
 ## Triage buckets (master_coord § Phase 7(c))
@@ -37,6 +37,6 @@ adapter-level bug (handler returned 0 data when protocol had activity) — NOT a
 
 ## Next steps
 
-- Phase 11 owner: queue MTDS handler investigation for AAVEV3-OPTIMISM (5 data_types) + COMPOUNDV3-BASE (4 data_types)
+- Phase 11 owner: queue MTDS handler investigation for AAVE_V3-OPTIMISM (5 data_types) + COMPOUND_V3-BASE (4 data_types)
 - D4 plan (`plans/active/...`) should track the per-venue re-backfill tasks
 - 0 label-flip actions needed in Phase 7 — no capture_status changes in Phase 7 for these cells

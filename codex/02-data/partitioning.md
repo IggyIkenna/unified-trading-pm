@@ -150,7 +150,7 @@ Venues are defined in `venues.yaml` and are the canonical list:
 
 ### DEFI Venues
 
-`UNISWAPV2-ETHEREUM`, `UNISWAPV3-ETHEREUM`, `UNISWAPV4-ETHEREUM`, `CURVE-ETHEREUM`, `AAVEV3-ETHEREUM`,
+`UNISWAP_V2-ETHEREUM`, `UNISWAP_V3-ETHEREUM`, `UNISWAP_V4-ETHEREUM`, `CURVE-ETHEREUM`, `AAVE_V3-ETHEREUM`,
 `MORPHO-ETHEREUM`, `LIDO-ETHEREUM`, `ETHERFI`, `ETHENA-ETHEREUM`
 
 ---
@@ -195,8 +195,8 @@ Determined by venue (from `venues.yaml`):
 | DERIBIT                | PERPETUAL, FUTURE, OPTION (with v6 disambiguation: `quote_asset` + `margin_type` for inverse vs linear)                           |
 | CME                    | FUTURE, OPTION (with v6 `combo_type` + `leg_weights` for spreads / butterflies / iron condors)                                    |
 | NASDAQ, NYSE           | EQUITY, ETF (IBIT, ETHA on NASDAQ post-2026-05-05 MVP scope)                                                                      |
-| UNISWAPV3-ETHEREUM     | POOL                                                                                                                              |
-| AAVEV3-ETHEREUM        | POOL                                                                                                                              |
+| UNISWAP_V3-ETHEREUM     | POOL                                                                                                                              |
+| AAVE_V3-ETHEREUM        | POOL                                                                                                                              |
 | LIDO-ETHEREUM, ETHERFI | LST                                                                                                                               |
 | HYPERLIQUID, ASTER     | PERPETUAL only (UnsupportedCapabilityError raised on OPTION / FUTURE)                                                             |
 | POLYMARKET, KALSHI     | PREDICTION_MARKET (with per-market lifecycle: `market_created_at` / `resolution_time` / `settlement_time` per predictions Plan A) |

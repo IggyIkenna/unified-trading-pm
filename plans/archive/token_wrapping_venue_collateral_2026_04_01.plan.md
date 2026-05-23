@@ -195,8 +195,8 @@ Phase 3 (E2E + Docs)
   def get_protocol_token(token: str, protocol: str) -> str:
       """Return the token version a protocol actually accepts.
 
-      E.g., get_protocol_token("ETH", "AAVEV3") → "WETH"
-            get_protocol_token("eETH", "AAVEV3") → "weETH"
+      E.g., get_protocol_token("ETH", "AAVE_V3") → "WETH"
+            get_protocol_token("eETH", "AAVE_V3") → "weETH"
             get_protocol_token("ETH", "ETHERFI") → "ETH" (accepts native)
       """
 
@@ -204,8 +204,8 @@ Phase 3 (E2E + Docs)
       """Check if token needs wrapping for target protocol.
 
       Returns (needs_wrap, wrapped_token_name).
-      E.g., needs_wrapping("ETH", "AAVEV3") → (True, "WETH")
-            needs_wrapping("WETH", "AAVEV3") → (False, None)
+      E.g., needs_wrapping("ETH", "AAVE_V3") → (True, "WETH")
+            needs_wrapping("WETH", "AAVE_V3") → (False, None)
       """
   ```
 
@@ -213,7 +213,7 @@ Phase 3 (E2E + Docs)
   ```python
   # Which token version each protocol/venue prefers
   PROTOCOL_TOKEN_PREFERENCE: dict[str, dict[str, str]] = {
-      "AAVEV3": {
+      "AAVE_V3": {
           "ETH": "WETH",       # Must wrap
           "eETH": "weETH",     # Must wrap (rebasing not supported)
           "stETH": "wstETH",   # Must wrap
@@ -226,7 +226,7 @@ Phase 3 (E2E + Docs)
           "WBTC": "WBTC",
       },
       "MORPHO": {
-          # Same as AAVEV3 — wrapped tokens only
+          # Same as AAVE_V3 — wrapped tokens only
           "ETH": "WETH", "eETH": "weETH", "stETH": "wstETH",
       },
       "ETHERFI": {
@@ -236,7 +236,7 @@ Phase 3 (E2E + Docs)
       "LIDO": {
           "ETH": "ETH",        # Accepts native ETH only
       },
-      "UNISWAPV3": {
+      "UNISWAP_V3": {
           "ETH": "WETH",       # Router uses WETH internally
       },
       "HYPERLIQUID": {
@@ -264,7 +264,7 @@ Phase 3 (E2E + Docs)
 
   @dataclass(frozen=True)
   class CollateralAcceptance:
-      venue: str              # "HYPERLIQUID", "BINANCE", "AAVEV3-ETHEREUM"
+      venue: str              # "HYPERLIQUID", "BINANCE", "AAVE_V3-ETHEREUM"
       token: str              # "USDC", "weETH", "WETH"
       accepted: bool          # Whether venue accepts this as collateral
       haircut_pct: Decimal | None  # E.g., 0.275 means 72.5% LTV (27.5% haircut)
@@ -283,12 +283,12 @@ Phase 3 (E2E + Docs)
       CollateralAcceptance("ASTER", "USDT", True, Decimal("0.01"), "CROSS", "Slight haircut"),
 
       # Aave V3 — from defi_reserve_params.py (import existing data)
-      CollateralAcceptance("AAVEV3-ETHEREUM", "WETH", True, Decimal("0.175"), "ISOLATED", "LTV 82.5%"),
-      CollateralAcceptance("AAVEV3-ETHEREUM", "weETH", True, Decimal("0.275"), "ISOLATED", "LTV 72.5%"),
-      CollateralAcceptance("AAVEV3-ETHEREUM", "wstETH", True, Decimal("0.205"), "ISOLATED", "LTV 79.5%"),
-      CollateralAcceptance("AAVEV3-ETHEREUM", "USDT", True, Decimal("0.23"), "ISOLATED", "LTV 77%"),
-      CollateralAcceptance("AAVEV3-ETHEREUM", "USDC", True, Decimal("0.23"), "ISOLATED", "LTV 77%"),
-      CollateralAcceptance("AAVEV3-ETHEREUM", "WBTC", True, Decimal("0.27"), "ISOLATED", "LTV 73%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "WETH", True, Decimal("0.175"), "ISOLATED", "LTV 82.5%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "weETH", True, Decimal("0.275"), "ISOLATED", "LTV 72.5%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "wstETH", True, Decimal("0.205"), "ISOLATED", "LTV 79.5%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "USDT", True, Decimal("0.23"), "ISOLATED", "LTV 77%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "USDC", True, Decimal("0.23"), "ISOLATED", "LTV 77%"),
+      CollateralAcceptance("AAVE_V3-ETHEREUM", "WBTC", True, Decimal("0.27"), "ISOLATED", "LTV 73%"),
 
       # Binance Futures (linear = USDT margin)
       CollateralAcceptance("BINANCE", "USDT", True, Decimal("0"), "CROSS", "Linear futures"),
@@ -359,7 +359,7 @@ Phase 3 (E2E + Docs)
   def _ensure_correct_token_version(self, instruction: StrategyInstruction) -> StrategyInstruction:
       """Ensure instruction uses the token version the protocol actually accepts.
 
-      Example: instruction says LEND ETH to AAVEV3 → auto-correct to LEND WETH.
+      Example: instruction says LEND ETH to AAVE_V3 → auto-correct to LEND WETH.
       If wrapping is needed, prepend a WRAP instruction before the main instruction.
       """
       from unified_api_contracts import needs_wrapping, get_protocol_token
@@ -395,11 +395,11 @@ Phase 3 (E2E + Docs)
   class WrapPreprocessor:
       """Inspects instruction token vs protocol expectation, inserts wrap/unwrap steps.
 
-      If instruction says LEND ETH to AAVEV3:
+      If instruction says LEND ETH to AAVE_V3:
         1. Insert WRAP instruction (ETH → WETH via WETH contract)
         2. Modify LEND to use WETH
 
-      If instruction says SUPPLY eETH to AAVEV3:
+      If instruction says SUPPLY eETH to AAVE_V3:
         1. Insert WRAP instruction (eETH → weETH via weETH contract)
         2. Modify SUPPLY to use weETH
       """

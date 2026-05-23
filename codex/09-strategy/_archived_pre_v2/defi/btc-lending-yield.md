@@ -24,7 +24,7 @@ Step 1 - SWAP:     USDT --> WBTC         (100% of capital, via Uniswap/Curve SOR
 Step 2 - SUPPLY:   WBTC --> Aave V3      (supply WBTC, receive aWBTC)
 
 Wallet after deploy:
-  - AAVEV3-{CHAIN}:A_TOKEN:AWBTC        = wbtc_amount  (earning supply APY)
+  - AAVE_V3-{CHAIN}:A_TOKEN:AWBTC        = wbtc_amount  (earning supply APY)
 
 === Leveraged Variant (2x example) ===
 
@@ -35,8 +35,8 @@ Step 4 - SWAP:     USDC --> WBTC         (swap borrowed USDC to WBTC)
 Step 5 - SUPPLY:   WBTC --> Aave V3      (supply additional WBTC)
 
 Wallet after deploy (2x leveraged):
-  - AAVEV3-{CHAIN}:A_TOKEN:AWBTC        = 2 * wbtc_amount  (earning supply APY)
-  - AAVEV3-{CHAIN}:DEBT_TOKEN:DEBTUSDC  = borrow_amount    (paying borrow APY)
+  - AAVE_V3-{CHAIN}:A_TOKEN:AWBTC        = 2 * wbtc_amount  (earning supply APY)
+  - AAVE_V3-{CHAIN}:DEBT_TOKEN:DEBTUSDC  = borrow_amount    (paying borrow APY)
 
 Net yield = (supply_apy * 2) - (borrow_apy * 1) = spread * leverage
 
@@ -54,12 +54,12 @@ Only triggers when: net_APY_new - net_APY_current > annualized(gas_cost + bridge
 | Instrument Key                       | Venue   | Type      | Role                           |
 | ------------------------------------ | ------- | --------- | ------------------------------ |
 | `WALLET:SPOT_ASSET:USDT`             | Wallet  | Spot      | Initial capital                |
-| `AAVEV3-ETHEREUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Ethereum)     |
-| `AAVEV3-ARBITRUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Arbitrum)     |
-| `AAVEV3-OPTIMISM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Optimism)     |
-| `AAVEV3-POLYGON:A_TOKEN:AWBTC`       | Aave V3 | aToken    | Supply position (Polygon)      |
-| `AAVEV3-BASE:A_TOKEN:ACBBTC`         | Aave V3 | aToken    | Supply position (Base, cbBTC)  |
-| `AAVEV3-{CHAIN}:DEBT_TOKEN:DEBTUSDC` | Aave V3 | debtToken | Borrow position (if leveraged) |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Ethereum)     |
+| `AAVE_V3-ARBITRUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Arbitrum)     |
+| `AAVE_V3-OPTIMISM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Optimism)     |
+| `AAVE_V3-POLYGON:A_TOKEN:AWBTC`       | Aave V3 | aToken    | Supply position (Polygon)      |
+| `AAVE_V3-BASE:A_TOKEN:ACBBTC`         | Aave V3 | aToken    | Supply position (Base, cbBTC)  |
+| `AAVE_V3-{CHAIN}:DEBT_TOKEN:DEBTUSDC` | Aave V3 | debtToken | Borrow position (if leveraged) |
 
 ## Key Features Consumed
 
@@ -106,7 +106,7 @@ Unlike most DeFi strategies, this strategy dynamically selects which chain to de
 
 | Leg                       | SOR? | Allowed Venues                                                 | SSOT                 |
 | ------------------------- | ---- | -------------------------------------------------------------- | -------------------- |
-| Step 1 (USDT-->WBTC swap) | YES  | Chain-dependent (e.g., `UNISWAPV3-ETHEREUM`, `CURVE-ETHEREUM`) | `defi_base.py:84-86` |
+| Step 1 (USDT-->WBTC swap) | YES  | Chain-dependent (e.g., `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`) | `defi_base.py:84-86` |
 
 ### Layer 2: CrossChainSOR (chain selection)
 
@@ -208,9 +208,9 @@ assessment --> rebalance/exit decisions)
 
 | Instrument Pattern             | Exposure Type    | Used For                       |
 | ------------------------------ | ---------------- | ------------------------------ |
-| `AAVEV3-*:A_TOKEN:AWBTC`       | Collateral value | Health factor numerator        |
-| `AAVEV3-*:A_TOKEN:ACBBTC`      | Collateral value | Health factor numerator (Base) |
-| `AAVEV3-*:DEBT_TOKEN:DEBTUSDC` | Debt value       | Health factor denominator      |
+| `AAVE_V3-*:A_TOKEN:AWBTC`       | Collateral value | Health factor numerator        |
+| `AAVE_V3-*:A_TOKEN:ACBBTC`      | Collateral value | Health factor numerator (Base) |
+| `AAVE_V3-*:DEBT_TOKEN:DEBTUSDC` | Debt value       | Health factor denominator      |
 
 Config: `defi_mode.enabled=True`, `defi_mode.track_aave_positions=True` SSOT:
 [`ExposureMonitorConfig`](../../../strategy-service/strategy_service/config.py)

@@ -620,9 +620,9 @@ mvp_requirements:
       - HYPERLIQUID
       - ASTER
     defi:
-      - AAVEV3_ETHEREUM
-      - UNISWAPV2-ETHEREUM
-      - UNISWAPV3-ETHEREUM
+      - AAVE_V3_ETHEREUM
+      - UNISWAP_V2-ETHEREUM
+      - UNISWAP_V3-ETHEREUM
       - COMPOUND_V3_ETH
     tradfi:
       - CME
@@ -674,8 +674,8 @@ validator_coverage:
   failing: 0
 data_catalogue:
   venues:
-    - AAVEV3_ETHEREUM
-    - UNISWAPV3-ETHEREUM
+    - AAVE_V3_ETHEREUM
+    - UNISWAP_V3-ETHEREUM
     - COMPOUND_V3_ETH
   asset_groupes:
     - DEFI

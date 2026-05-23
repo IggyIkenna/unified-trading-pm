@@ -376,7 +376,7 @@ from 2023. Treated as future optimization; not read in this plan's scope.
 | `NYSE`               | `JPM`           | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
 | `HYPERLIQUID`        | `ETH`           | cefi   | `trades`           | not verified — out of MVP set |
 | `CME`                | `ES`            | tradfi | `ohlcv_1m`         | not verified — out of MVP set |
-| `UNISWAPV3-ETHEREUM` | `WETH-USDC-500` | defi   | varies             | not in scope                  |
+| `UNISWAP_V3-ETHEREUM` | `WETH-USDC-500` | defi   | varies             | not in scope                  |
 
 **MVP target symbols for D-grade acceptance: 6 symbols with verified-existing shards.** Others render "No chart data
 available" — correct behavior, not a regression.
@@ -496,7 +496,7 @@ Audit `DEFAULT_INSTRUMENTS` against `curated_symbols.py`. Issues spot- checked 2
 - TRADFI symbols (AAPL/MSFT/GOOGL/JPM) need entries with `data_type=ohlcv_1m`. If the file has them with
   `data_type=trades`, fix.
 - BINANCE-FUTURES BTCUSDT/ETHUSDT need `data_type=trades`.
-- Symbols not yet backfilled (HYPERLIQUID:ETH, CME:ES, UNISWAPV3-ETHEREUM:WETH-USDC-500) — leave entries optional. UTL
+- Symbols not yet backfilled (HYPERLIQUID:ETH, CME:ES, UNISWAP_V3-ETHEREUM:WETH-USDC-500) — leave entries optional. UTL
   client returns `[]`, chart shows empty state. No regression.
 
 Eventually `curated_symbols.py` should be replaced by the instruments-service catalogue lookup. Out of scope; flagged in

@@ -562,8 +562,8 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       service-code rows remain (all BLOCKED). Checkbox stays `- [ ]`. **2026-05-23 slot 2 (R-006)**: QG STEP 5.69
       workspace-wide noqa-marker sweep complete — 10 inline-URI sites lacking `# noqa: gs-uri` found and fixed across
       agent-orchestrator (5 sites, orch@`7fd81b3`), UTL (2 sites, UTL@`09a85d50`), and PM audit scripts (2 sites, this
-      commit). 5 UAC residuals (old `# gs-uri:` comment format, Ikenna-owned) documented in § "2026-05-23 QG 5.69
-      sweep" below. QG STEP 5.69 now 0/0/0 (agent-orchestrator/UTL/PM). Checkbox stays `- [ ]` per Phase 2.6 gate.
+      commit). 5 UAC residuals (old `# gs-uri:` comment format, Ikenna-owned) documented in § "2026-05-23 QG 5.69 sweep"
+      below. QG STEP 5.69 now 0/0/0 (agent-orchestrator/UTL/PM). Checkbox stays `- [ ]` per Phase 2.6 gate.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 
@@ -658,31 +658,31 @@ owner's done-def (GAP-2.4.D extends Done-def #6).
 >
 > **Fixed sites (10 total)**:
 >
-> | Repo                   | File:Line                                           | Pattern / reason                                              | Commit       |
-> | ---------------------- | --------------------------------------------------- | ------------------------------------------------------------- | ------------ |
-> | `agent-orchestrator`   | `server/gcs_sync.py:100`                            | `f"gs://{bucket_name}/{blob_path}"` — orchestrator state bucket from env var | `orch@7fd81b3` |
-> | `agent-orchestrator`   | `server/gcs_sync.py:152`                            | same — SQLite backup path                                     | `orch@7fd81b3` |
-> | `agent-orchestrator`   | `server/oauth_refresh.py:269`                       | `f"gs://{_GCS_BUCKET}/.../{account_id}.json"` — creds backplane bucket from env var | `orch@7fd81b3` |
-> | `agent-orchestrator`   | `server/creds_env_poller.py:78`                     | `f"s3://{s3_bucket}/{prefix}/"` — orchestrator creds bucket from env var | `orch@7fd81b3` |
-> | `agent-orchestrator`   | `server/creds_env_poller.py:81`                     | `f"gs://{gcs_bucket}/{prefix}/"` — orchestrator creds bucket from env var | `orch@7fd81b3` |
-> | `unified-trading-library` | `cloud_interface/gcs_blob_ops.py:33`             | `f"Expected gs:// URI, got: {uri!r}"` — error message text, not URI build | `UTL@09a85d50` |
-> | `unified-trading-library` | `domain_client/catalog/bq_catalog.py:49`         | Python 3.12 AST joins f-string concat; real `gs://` on line 56 already has noqa | `UTL@09a85d50` |
-> | `unified-trading-pm`   | `plans/audit/results/a3_manifest_divergence.py:75`  | `print(f"  reading gs://{path} ...")` — audit diagnostic, path resolved from SSOT | this commit  |
-> | `unified-trading-pm`   | `plans/audit/results/a3v2_manifest_divergence_all_services.py:120` | `f"s3://{bucket}/_index/"` — AWS probe, bucket caller-provided | this commit  |
+> | Repo                      | File:Line                                                          | Pattern / reason                                                                    | Commit         |
+> | ------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------------- |
+> | `agent-orchestrator`      | `server/gcs_sync.py:100`                                           | `f"gs://{bucket_name}/{blob_path}"` — orchestrator state bucket from env var        | `orch@7fd81b3` |
+> | `agent-orchestrator`      | `server/gcs_sync.py:152`                                           | same — SQLite backup path                                                           | `orch@7fd81b3` |
+> | `agent-orchestrator`      | `server/oauth_refresh.py:269`                                      | `f"gs://{_GCS_BUCKET}/.../{account_id}.json"` — creds backplane bucket from env var | `orch@7fd81b3` |
+> | `agent-orchestrator`      | `server/creds_env_poller.py:78`                                    | `f"s3://{s3_bucket}/{prefix}/"` — orchestrator creds bucket from env var            | `orch@7fd81b3` |
+> | `agent-orchestrator`      | `server/creds_env_poller.py:81`                                    | `f"gs://{gcs_bucket}/{prefix}/"` — orchestrator creds bucket from env var           | `orch@7fd81b3` |
+> | `unified-trading-library` | `cloud_interface/gcs_blob_ops.py:33`                               | `f"Expected gs:// URI, got: {uri!r}"` — error message text, not URI build           | `UTL@09a85d50` |
+> | `unified-trading-library` | `domain_client/catalog/bq_catalog.py:49`                           | Python 3.12 AST joins f-string concat; real `gs://` on line 56 already has noqa     | `UTL@09a85d50` |
+> | `unified-trading-pm`      | `plans/audit/results/a3_manifest_divergence.py:75`                 | `print(f"  reading gs://{path} ...")` — audit diagnostic, path resolved from SSOT   | this commit    |
+> | `unified-trading-pm`      | `plans/audit/results/a3v2_manifest_divergence_all_services.py:120` | `f"s3://{bucket}/_index/"` — AWS probe, bucket caller-provided                      | this commit    |
 >
 > **UAC residual (5 sites — old `# gs-uri:` format, not `# noqa: gs-uri`; Ikenna-owned, not fixed here)**:
 >
-> | File:Line                                                       | Pattern                              |
-> | --------------------------------------------------------------- | ------------------------------------ |
-> | `canonical/domain/sports/gcs_paths.py:261`                      | `# gs-uri:` comment (old format)     |
-> | `canonical/domain/sports/mapping_resolver.py:53,72,90`          | `# gs-uri:` comment (old format, 3×) |
-> | `internal/testing/seed_ml_artifacts.py:256`                     | `# gs-uri:` comment (old format)     |
+> | File:Line                                              | Pattern                              |
+> | ------------------------------------------------------ | ------------------------------------ |
+> | `canonical/domain/sports/gcs_paths.py:261`             | `# gs-uri:` comment (old format)     |
+> | `canonical/domain/sports/mapping_resolver.py:53,72,90` | `# gs-uri:` comment (old format, 3×) |
+> | `internal/testing/seed_ml_artifacts.py:256`            | `# gs-uri:` comment (old format)     |
 >
 > UAC residuals use an earlier comment convention that predates the `# noqa: gs-uri` standard. QG v2 treats these as
 > violations but they are in Ikenna-owned code — fix belongs in a UAC PR, not this sweep.
 >
-> **QG STEP 5.69 final state**: agent-orchestrator=0, unified-trading-library=0, unified-trading-pm=0.
-> UAC=5 (old format residuals). All other repos remain at baseline=0 (established 2026-05-18, per 2026-05-19 addendum above).
+> **QG STEP 5.69 final state**: agent-orchestrator=0, unified-trading-library=0, unified-trading-pm=0. UAC=5 (old format
+> residuals). All other repos remain at baseline=0 (established 2026-05-18, per 2026-05-19 addendum above).
 
 ## Dependencies / sequencing
 

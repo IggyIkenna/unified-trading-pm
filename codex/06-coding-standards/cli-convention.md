@@ -186,7 +186,7 @@ mtds collect-trades --shard-key="cefi|BINANCE-FUTURES|trades|PERPETUAL|btcusdt|2
 mtds collect-options-chain --shard-key="tradfi|CME|options_chain|options_chain|ES.OPT|2024-01-15"
 
 # DeFi protocol shard with empty instrument_type:
-mtds collect-lending-indices --shard-key="defi|AAVEV3-ARBITRUM|lending_indices||USDC|2024-03-04"
+mtds collect-lending-indices --shard-key="defi|AAVE_V3-ARBITRUM|lending_indices||USDC|2024-03-04"
 ```
 
 Per-service implementations call `market_tick_data_service.cli.shard_key.decompose_shard_key(args)` once on entry to

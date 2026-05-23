@@ -44,7 +44,7 @@ based on what exists on each date.
   "base_currencies": ["ETH"],
   "lending_basket": ["USDC", "USDT", "DAI"],
   "basis_coins": ["ETH", "BTC", "SOL", "AVAX"],
-  "allowed_venues": ["UNISWAPV3-ETHEREUM", "CURVE-ETHEREUM"],
+  "allowed_venues": ["UNISWAP_V3-ETHEREUM", "CURVE-ETHEREUM"],
   "perp_venues": ["HYPERLIQUID", "BINANCE-FUTURES", "OKX", "BYBIT", "DERIBIT", "ASTER"]
 }
 ```
@@ -63,8 +63,8 @@ The strategy config (GCS JSON) declares:
 Instruments-service resolves this intent to specific IDs:
 
 ```
-AAVEV3-ETHEREUM:A_TOKEN:AUSDC@ETHEREUM
-AAVEV3-ETHEREUM:A_TOKEN:AUSDT@ETHEREUM
+AAVE_V3-ETHEREUM:A_TOKEN:AUSDC@ETHEREUM
+AAVE_V3-ETHEREUM:A_TOKEN:AUSDT@ETHEREUM
 HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID
 BINANCE-FUTURES:PERPETUAL:ETHUSDT@LIN@BINANCE-FUTURES
 ```

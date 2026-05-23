@@ -850,7 +850,7 @@ from unified_api_contracts.registry.venue_constants import (
 
 _EXEC_CLOB_ALIASES: frozenset[str] = frozenset({"BINANCE", "COINBASE", "UPBIT"})
 _EXEC_DEX_ALIASES: frozenset[str] = frozenset({
-    "UNISWAPV2", "UNISWAPV3", "UNISWAPV4",
+    "UNISWAP_V2", "UNISWAP_V3", "UNISWAP_V4",
     "UNISWAP_V2", "UNISWAP_V3", "UNISWAP_V4",
     "BALANCER", "BALANCER-ETH", "CURVE",
 })

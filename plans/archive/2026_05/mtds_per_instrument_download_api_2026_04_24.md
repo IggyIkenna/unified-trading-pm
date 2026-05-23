@@ -141,8 +141,8 @@ class CanonicalParquetReader:
 > `market_tick_data_service/reader.py` (386 lines + 472-line test suite). Supports CeFi / TradFi / Sports shard keys.
 > **Two axes from the new shard-granularity HANDOVER are missing** and block DeFi + Prediction reads:
 >
-> - **DeFi**: per HANDOVER lines 130–145, `chain` is a first-class shard-key axis (e.g. `AAVEV3-ETHEREUM` vs
->   `AAVEV3-ARBITRUM` are distinct shards). Current
+> - **DeFi**: per HANDOVER lines 130–145, `chain` is a first-class shard-key axis (e.g. `AAVE_V3-ETHEREUM` vs
+>   `AAVE_V3-ARBITRUM` are distinct shards). Current
 >   `read_shard(venue, data_type, instrument_type, target_date, instrument_id)` derives asset_group from venue but
 >   doesn't accept `chain` — DeFi reads on chain-agnostic venue tokens may collide / silently return wrong-chain rows.
 > - **Prediction**: per HANDOVER line 143, `canonical_question_group` is the bundling axis (analog of options_chain).

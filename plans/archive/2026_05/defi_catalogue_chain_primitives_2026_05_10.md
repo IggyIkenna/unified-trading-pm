@@ -174,17 +174,17 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       marked "pipeline"; LEGACY_DEFI_VENUE_ALIASES extended with 13 bare-name aliases; `chain_env.py`
       PROTOCOL_LAUNCH_DATES extended with 12 confident dates (CONVEX/PENDLE/IDLE on ETH, SYMBIOTIC/KARAK/RENZO/KELPDAO
       on ETH, PENDLE/RADIANT on ARB, RADIANT on BSC, JUPITER/JITORESTAKING on SOL);
-      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` extended with 13 pairs (Beefy multi-chain rollouts + YEARNV3 L2
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` extended with 13 pairs (Beefy multi-chain rollouts + YEARN_V3 L2
       rollouts + IDLE/KARAK/RENZO L2 + SOLBLAZE) that fall back to chain genesis until subgraph-truth probe lands.
       **Phase 1B research close-out 2026-05-12 by slot 5 (ikenna-aggressive-may15-tab) — 45 of 46 pending pairs shipped
       @uac@`458f17d` via 5-sub-agent fan-out**: PROTOCOL_LAUNCH_DATES now 98 pairs (was 53);
-      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` reduced to 2 pairs (`(POLYGON, COMPOUNDV3)` — Compound not on Polygon;
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` reduced to 2 pairs (`(POLYGON, COMPOUND_V3)` — Compound not on Polygon;
       `(SOLANA, SOLBLAZE)` — medium-low confidence pending Solscan pool-creation-tx audit). Per-sub-agent partitioning:
       A (ETH lending/vault, 8) + B (LST/restaking + Solana, 8) + C (Balancer/PancakeSwap/Sushi multi-chain, 9) + D
       (DEX/AMM multi-chain, 9) + E (Beefy/Yearn/Idle/Karak/Renzo, 12) = 46 pairs researched, 45 shipped. Confidence
       tiers: 32 high (primary-source verified) + 11 medium (announcement-anchored) + 2 low (conservative pre-launch
       placeholders for Beefy ETH + Yearn V3 ARB/OPT — flagged for tightening if precision matters). Test fix: 2 BASE
-      pairs (BALANCER, SUSHISWAPV3) CLAMPED to BASE chain genesis 2023-08-09 (sub-agent dates pre-dated chain mainnet
+      pairs (BALANCER, SUSHISWAP_V3) CLAMPED to BASE chain genesis 2023-08-09 (sub-agent dates pre-dated chain mainnet
       GA). tests/unit/test_protocol_launch_dates.py 19/19 pass. **DEFERRED — `data_types` per-venue declarations**: each
       new protocol's `data_types` matrix (vault_share_price / dex_swaps / lending_indices / etc.) is encoded via
       per-protocol `SourceCapability` objects in `registry/capability_declarations/_defi_source_capabilities.py`
@@ -453,7 +453,7 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 >   `eigenlayer`, `ethena`, `etherfi`, `ethfi` (gov), `euler_v2`, `fluid`, `jito`, `kamino`, `lido`, `marinade`,
 >   `morpho`, `orca`, `radiant`, `raydium`, `spark`, `uniswap_v2`, `uniswap_v3`, `uniswap_v4`, `venus`. (Adapters wired
 >   multi-chain dynamically via `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` × `get_supported_chains_for_protocol()` — e.g.
->   `AAVEV3-ARBITRUM`/`MORPHO-BASE`/… auto-registered.)
+>   `AAVE_V3-ARBITRUM`/`MORPHO-BASE`/… auto-registered.)
 > * **DEX-fork "adapters" — ALREADY DONE via reuse**: `pancakeswap_v3`, `sushiswap_v3` (+ `sushiswap` V2),
 >   `aerodrome_v3`, `camelot_v3`, `velodrome_v2`, `trader_joe_v2`, `gmx` all map to the `uniswap_v3` adapter class
 >   (Messari/UniV3-schema subgraphs) via `_PROTOCOL_TO_ADAPTER_KEY` + carry their own subgraph IDs. So Phase 2 cells for
@@ -626,18 +626,18 @@ Owner: harsh + parallel agents per protocol.
 >
 > | Protocol   | Chain    | SUPPLY_APY / BORROW_APY / UTILISATION                                                                                    | Horizon                                                  | Slot 5 unblock |
 > | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | -------------- |
-> | AAVEV3     | ETHEREUM | ✅ captured                                                                                                              | 2022-03-01 → 2026-05-07 (tail behind today)              | ✅ NOW         |
-> | AAVEV3     | ARBITRUM | ✅ captured (consolidator-confirmed)                                                                                     | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
-> | AAVEV3     | OPTIMISM | ✅ captured                                                                                                              | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
-> | AAVEV3     | BASE     | ✅ captured                                                                                                              | 2023-08-09 → 2026-05-07                                  | ✅ NOW         |
-> | AAVEV3     | LINEA    | ✅ captured (slot 3 reclaim 451 rows)                                                                                    | 2025-02-11 → 2026-05-07                                  | ✅ NOW         |
-> | AAVEV3     | BSC      | ✅ captured (slot 3 reclaim 836 rows)                                                                                    | 2024-01-23 → 2026-05-07                                  | ✅ NOW         |
-> | COMPOUNDV3 | ETHEREUM | ✅ adapter wired + dispatched                                                                                            | 2022-08-13 → present (verify on next consolidator cycle) | ✅ NOW         |
-> | COMPOUNDV3 | ARBITRUM | ✅ adapter wired + dispatched                                                                                            | 2023-05-04 → present                                     | ✅ NOW         |
-> | COMPOUNDV3 | BASE     | ✅ adapter wired + dispatched                                                                                            | 2023-08-04 → present                                     | ✅ NOW         |
-> | COMPOUNDV3 | OPTIMISM | ✅ adapter wired + dispatched                                                                                            | 2024-04-06 → present                                     | ✅ NOW         |
-> | COMPOUNDV3 | SCROLL   | ✅ adapter wired                                                                                                         | 2024-04-22 → present                                     | ✅ NOW         |
-> | COMPOUNDV3 | POLYGON  | ⛔ INTENTIONALLY EXCLUDED — Compound V3 not deployed on Polygon (`SUBGRAPH_IDS` no POLYGON entry per `chain_env.py:218`) | n/a                                                      | n/a            |
+> | AAVE_V3     | ETHEREUM | ✅ captured                                                                                                              | 2022-03-01 → 2026-05-07 (tail behind today)              | ✅ NOW         |
+> | AAVE_V3     | ARBITRUM | ✅ captured (consolidator-confirmed)                                                                                     | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
+> | AAVE_V3     | OPTIMISM | ✅ captured                                                                                                              | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
+> | AAVE_V3     | BASE     | ✅ captured                                                                                                              | 2023-08-09 → 2026-05-07                                  | ✅ NOW         |
+> | AAVE_V3     | LINEA    | ✅ captured (slot 3 reclaim 451 rows)                                                                                    | 2025-02-11 → 2026-05-07                                  | ✅ NOW         |
+> | AAVE_V3     | BSC      | ✅ captured (slot 3 reclaim 836 rows)                                                                                    | 2024-01-23 → 2026-05-07                                  | ✅ NOW         |
+> | COMPOUND_V3 | ETHEREUM | ✅ adapter wired + dispatched                                                                                            | 2022-08-13 → present (verify on next consolidator cycle) | ✅ NOW         |
+> | COMPOUND_V3 | ARBITRUM | ✅ adapter wired + dispatched                                                                                            | 2023-05-04 → present                                     | ✅ NOW         |
+> | COMPOUND_V3 | BASE     | ✅ adapter wired + dispatched                                                                                            | 2023-08-04 → present                                     | ✅ NOW         |
+> | COMPOUND_V3 | OPTIMISM | ✅ adapter wired + dispatched                                                                                            | 2024-04-06 → present                                     | ✅ NOW         |
+> | COMPOUND_V3 | SCROLL   | ✅ adapter wired                                                                                                         | 2024-04-22 → present                                     | ✅ NOW         |
+> | COMPOUND_V3 | POLYGON  | ⛔ INTENTIONALLY EXCLUDED — Compound V3 not deployed on Polygon (`SUBGRAPH_IDS` no POLYGON entry per `chain_env.py:218`) | n/a                                                      | n/a            |
 > | SPARK      | ETHEREUM | ✅ adapter wired (`_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3"]`)                                            | 2023-05-09 → present                                     | ✅ NOW         |
 >
 > **Family-1 backtest data envelope** (slot 5 plan dependency): ≥2-year window of SUPPLY_APY / BORROW_APY / UTILISATION
@@ -658,7 +658,7 @@ Owner: harsh + parallel agents per protocol.
 > 1. Read `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 1 reframed-as-blocker section + AD-1 through AD-6.
 > 2. Start Family-1 design (orchestrator config schema + per-chain dispatch + recursion params + flash-vs-persistent
 >    mode toggle) using the data envelope above.
-> 3. Sample parquet probe (gcs-cat) for 1 row of AAVEV3 ETHEREUM SUPPLY_APY @ `2024-01-15` to verify non-NaN value
+> 3. Sample parquet probe (gcs-cat) for 1 row of AAVE_V3 ETHEREUM SUPPLY_APY @ `2024-01-15` to verify non-NaN value
 >    BEFORE committing to backtest harness shape. (Slot 3's 2026-05-11 audit confirmed parquet shape is real, but
 >    re-verify for Family-1's specific data_type subset.)
 > 4. Day 3 (2026-05-14): pull fix — re-fetch latest manifest state including recent-days catch-up (a).
@@ -692,7 +692,7 @@ Owner: harsh + parallel agents per protocol.
 >       which already covers exactly the (chain, protocol) → launch-date semantic the plan body asked for
 >       `LENDING_INDICES_COVERAGE_START` to provide. Per `lending_indices_handler.py:322` the handler reads
 >       `get_protocol_launch_date(chain, venue_prefix)` and short-circuits to `expected_unattempted` for pre-launch
->       dates (per MTDS@`c6bdf96`). Pairs covered: `(ETHEREUM, AAVEV3)` 2022-03-16, `(ETHEREUM, COMPOUNDV3)` 2022-08-13,
+>       dates (per MTDS@`c6bdf96`). Pairs covered: `(ETHEREUM, AAVE_V3)` 2022-03-16, `(ETHEREUM, COMPOUND_V3)` 2022-08-13,
 >       `(ETHEREUM, SPARK)` 2023-05-09, etc. — full per-chain matrix already in the registry; slot 5 confirmed 45/46
 >       pending-pairs shipped 2026-05-12 at UAC@`458f17d`. No separate `LENDING_INDICES_COVERAGE_START` constant needed
 >       (single PROTOCOL_LAUNCH_DATES SSOT covers it).
@@ -708,7 +708,7 @@ Owner: harsh + parallel agents per protocol.
 >       234 events including STARTED + ~232 progress events + STOPPED at 19:55:59 UTC. VM auto-deleted on completion
 >       (shutdown_on_completion=true). Total runtime ~3 minutes for 7-day window. **Manifest verification**: read
 >       `gs://lending-indices-central-element-323112/_index/availability_index.parquet` — 65 captured rows for
->       2026-05-07..2026-05-11 (13/day across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains + SPARK × 1 chain = 12
+>       2026-05-07..2026-05-11 (13/day across AAVE_V3 × 6 chains + COMPOUND_V3 × 5 chains + SPARK × 1 chain = 12
 >       protocol-chain combos). 2026-05-12+ → `empty_confirmed` (legitimate — The Graph subgraphs lag ~1 day behind
 >       real-time; not a data gap). **Priority #5 in `defi_master.md` cleared** — slot 3's handoff item (a) "Recent-days
 >       catch-up" done.
@@ -732,11 +732,11 @@ Owner: harsh + parallel agents per protocol.
 >       `EXPECTED_PRE_GENESIS_CHAIN` (via UAC `get_protocol_launch_date(chain, venue_prefix)` from
 >       `unified_api_contracts.registry.chain_env`) or `SOURCE_RETURNED_ZERO` (post-launch). Idempotent re-runs.
 >       **Bug-fix follow-up 2026-05-16 by slot 2** at `instruments-service@70074a0`: real-data dry-run caught 3 critical
->       bugs (100% false-positive rate before fixes): (1) `_audit_captured_rows` passed manifest venue (`AAVEV3`
+>       bugs (100% false-positive rate before fixes): (1) `_audit_captured_rows` passed manifest venue (`AAVE_V3`
 >       uppercase) directly into the path template; actual GCS flat-prefix layout uses lowercase + underscored slug
 >       (`aave_v3`). Added `_VENUE_TO_SLUG` inverse map. (2) `_classify_phantom` expected slug but callers passed venue;
 >       all rows fell through to `SOURCE_RETURNED_ZERO` regardless of date. Rewrote to take venue directly. (3)
->       `--protocols` filter used `.str.lower()` (no-op for slug match: `AAVEV3.lower() == aavev3 ∉ {aave_v3}`); fixed
+>       `--protocols` filter used `.str.lower()` (no-op for slug match: `AAVE_V3.lower() == aavev3 ∉ {aave_v3}`); fixed
 >       to translate via `_VENUE_TO_SLUG` before `.isin()` comparison. Bonus fix: `data_type` filter now accepts both
 >       `lending_indices` (snake) AND `lending-indices` (kebab legacy 24,976 rows) — see archived
 >       `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`. (Vocab-drift kebab rows since
@@ -750,9 +750,9 @@ Owner: harsh + parallel agents per protocol.
 >       - Total captured rows audited: **64,827** (includes both kebab + snake data_type rows)
 >       - Real captures (parquet found): **64,476** (99.5%)
 >       - Phantom captures: **351** (0.54%) — all classified `SOURCE_RETURNED_ZERO`
->       - Phantom distribution by venue: AAVEV3 216 / COMPOUNDV3 108 / SPARK 27
+>       - Phantom distribution by venue: AAVE_V3 216 / COMPOUND_V3 108 / SPARK 27
 >       - Phantom distribution by chain: ETHEREUM 81 / ARBITRUM 54 / BASE 54 / OPTIMISM 54 / others 27 each
->       - Sample phantoms: 2026-04-15 across multiple AAVEV3 chains — recent backfill misses, not legacy phantoms
+>       - Sample phantoms: 2026-04-15 across multiple AAVE_V3 chains — recent backfill misses, not legacy phantoms
 >       Manifest is operationally clean; 351 phantoms are operator-decision: run `--apply-flips --confirm` to flip to
 >       `empty_confirmed/SOURCE_RETURNED_ZERO` (recommended once consolidator race resolved per
 >       `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`). Log archived at
@@ -1286,7 +1286,7 @@ Per `work_split_2026_05_12_ikenna.md` row 2 cross-side handshake — "Ikenna des
 ### Critical-path handshake status
 
 - **Slot 5 (ikenna-recursive-borrow-tab) Family-1 design**: ✅ UNBLOCKED Day 1. Lending-indices data with 2-year+
-  horizons across AAVEV3 (6 chains) + COMPOUNDV3 (5 chains) + SPARK (ETH). Slot 5 confirmed pivot per their STATUS line;
+  horizons across AAVE_V3 (6 chains) + COMPOUND_V3 (5 chains) + SPARK (ETH). Slot 5 confirmed pivot per their STATUS line;
   Family-1 + Family-2 topology design SSOT shipped same-day (PM@`5cb0952f` + PM@`3fbe82ca`).
 - **Slot 5 Day-3 (2026-05-14)**: pull fix after 3-LENDING.4 recent-days catch-up VM lands (slot 2 Day 2 AM action).
 

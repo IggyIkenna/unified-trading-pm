@@ -201,8 +201,8 @@ passes.
 
 These have bitten previous sessions. They fail quietly — no stack trace, just empty output or a missing field.
 
-- **`validate_api_keys_for_venues` expects canonical venue names, not data-source slugs.** Pass `UNISWAPV3-ETHEREUM`,
-  `AAVEV3-ETHEREUM`, etc. — NOT `thegraph` / `databento`. Returns an empty dict silently when given the wrong shape, so
+- **`validate_api_keys_for_venues` expects canonical venue names, not data-source slugs.** Pass `UNISWAP_V3-ETHEREUM`,
+  `AAVE_V3-ETHEREUM`, etc. — NOT `thegraph` / `databento`. Returns an empty dict silently when given the wrong shape, so
   downstream adapters look like they're missing keys when they actually got nothing. Fixed in instruments-service
   `96867e8` for the DeFi side; reapplied the same pattern.
 - **CeFi VM `rc=137` (OOM-kill) does NOT write `EXIT_STATUS`.** `atexit` handlers don't fire on `SIGKILL`, so the

@@ -12,7 +12,7 @@ venue_universe:
     HYPERLIQUID,
     ASTER,
     KRAKEN,
-    UNISWAPV3,
+    UNISWAP_V3,
     BALANCER,
     CURVE,
     UNITY,

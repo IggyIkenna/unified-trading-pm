@@ -99,6 +99,7 @@ system is concerned.
 The same `job_id` field appears in two different manifests, tracking different things. Confusing them is a common error.
 
 **ML manifest `job_id`** — model artifact primary key:
+
 - Identifies a **fitted model artifact** and its lifecycle state (training → validated → champion → retired).
 - Format: `<model_family>__<training_period>__<git_sha>__<seed>`
 - Written by ml-training-service when a training run completes.
@@ -108,22 +109,24 @@ The same `job_id` field appears in two different manifests, tracking different t
   whether to build the parquet artefact or document around the JSON-index reality.
 
 **Data manifest `job_id`** — shard atom key for experiment outputs:
+
 - Column in `availability_manifest.parquet` (v7 schema, shipped UTL@`ed658e9b`).
 - Identifies **which experiment run produced each data shard** (features rows, ML output rows).
-- Shard atoms by service: `(model_family, training_period, job_id)` for ML training;
-  `(strategy_id, job_id)` for strategy backtests; `(strategy_id, instruction_type, job_id)` for execution backtests.
+- Shard atoms by service: `(model_family, training_period, job_id)` for ML training; `(strategy_id, job_id)` for
+  strategy backtests; `(strategy_id, instruction_type, job_id)` for execution backtests.
 - Re-running identical configs = new `job_id` = full audit trail of every experiment version.
 - Consumed by deployment-api coverage calculations + downstream data-status UI.
 
 **Relationship**: when ml-training-service runs, it writes to **both** manifests with the same `job_id`:
+
 1. ML manifest entry — model artifact URI, hyperparameters, lifecycle state, git_sha.
 2. Data manifest rows — shard-level tracking of features/predictions written by this run.
 
 The two manifests serve different consumers: ML manifest → inference/strategy model selection; data manifest →
-deployment-api/downstream data availability + coverage rollups. They must not be merged — the ML manifest tracks
-*what model exists and its quality state*; the data manifest tracks *what data that job produced and its capture
-status*. See `../02-data/availability-manifest-and-data-status.md` § "Capture-status 4-state taxonomy" for the
-data manifest's capture_status semantics (separate from ML lifecycle states).
+deployment-api/downstream data availability + coverage rollups. They must not be merged — the ML manifest tracks _what
+model exists and its quality state_; the data manifest tracks _what data that job produced and its capture status_. See
+`../02-data/availability-manifest-and-data-status.md` § "Capture-status 4-state taxonomy" for the data manifest's
+capture_status semantics (separate from ML lifecycle states).
 
 ## Cross-references
 

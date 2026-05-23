@@ -128,7 +128,7 @@ archives, every Q&A item is closed.
    belong in deployment-api `data_status_service.py` (per_league_periodic etc.), not in the manifest. Executes inside
    Phase 1.5 main rebuild.
 
-3. **F20 DeFi venue-key mismatch (`AAVE_V3` vs `AAVEV3`)** — **RESOLVED 2026-05-06**: premise was partially wrong. Both
+3. **F20 DeFi venue-key mismatch (`AAVE_V3` vs `AAVE_V3`)** — **RESOLVED 2026-05-06**: premise was partially wrong. Both
    manifest writer (`_defi_manifest.py`) and disk writer (`write_defi_rows`) store `(venue, chain)` separately and ARE
    aligned. The audit false-flag is a CASING+ALIAS issue handled by FIX-7+8 (already shipped — recon script normaliser).
    Verify with a post-Phase-1.5 audit re-run. No new code change needed beyond what's shipped.
@@ -136,8 +136,8 @@ archives, every Q&A item is closed.
 4. **F21 DeFi vault_share_price aliases** (FRAX/MAKER/MORPHO_VAULTS/YEARN_V3) — **RESOLVED 2026-05-06**: these are
    architecturally distinct protocols (Morpho Blue lending ≠ MetaMorpho curated vaults; YearnV3, Frax, Maker are
    standalone yield protocols). Currently emitted by `vault_share_price_handler.py` but undeclared in UAC
-   `ALL_DEFI_VENUES`. Decision: declare canonically as `MORPHOVAULTS-ETHEREUM`, `YEARNV3-ETHEREUM`, `FRAX-ETHEREUM`,
-   `MAKER-ETHEREUM` (matches existing no-underscore pattern AAVEV3/UNISWAPV3/COMPOUNDV3); add
+   `ALL_DEFI_VENUES`. Decision: declare canonically as `MORPHOVAULTS-ETHEREUM`, `YEARN_V3-ETHEREUM`, `FRAX-ETHEREUM`,
+   `MAKER-ETHEREUM` (matches existing no-underscore pattern AAVE_V3/UNISWAP_V3/COMPOUND_V3); add
    `LEGACY_DEFI_VENUE_ALIASES` mapping; update vault_share_price_handler to emit canonical. Executes in Phase 1.5a-1.
 
 5. **F4/F5 stale test buckets** — **RESOLVED 2026-05-06**: live `gcloud storage ls` probe on all 4 candidate buckets
@@ -183,9 +183,9 @@ passing.
 ### Phase 1.5a-1 — UAC SSOT alignment (Q&A 4 + Q&A 9)
 
 - [x] [SCRIPT] P0. **UAC** `unified_api_contracts/registry/defi_venues.py`: - Add to `ALL_DEFI_VENUES`:
-      `MORPHOVAULTS-ETHEREUM`, `YEARNV3-ETHEREUM`, `FRAX-ETHEREUM`, `MAKER-ETHEREUM` (no-underscore canonical form per
+      `MORPHOVAULTS-ETHEREUM`, `YEARN_V3-ETHEREUM`, `FRAX-ETHEREUM`, `MAKER-ETHEREUM` (no-underscore canonical form per
       Q&A 4 decision). - Add to `LEGACY_DEFI_VENUE_ALIASES`: `MORPHO_VAULTS → MORPHOVAULTS-ETHEREUM`,
-      `YEARN_V3 → YEARNV3-ETHEREUM`, `FRAX → FRAX-ETHEREUM`, `MAKER → MAKER-ETHEREUM`. Audit-script normaliser
+      `YEARN_V3 → YEARN_V3-ETHEREUM`, `FRAX → FRAX-ETHEREUM`, `MAKER → MAKER-ETHEREUM`. Audit-script normaliser
       auto-handles the legacy form via these aliases until the handler change in Phase 1.5a-2 lands. **Done 2026-05-06
       UAC `a901e91`** (CosmicTrader).
 - [x] [SCRIPT] P0. **UAC** `unified_api_contracts/canonical/domain/prediction/coverage_starts.py` (or wherever
@@ -198,7 +198,7 @@ passing.
       `a901e91`** — shipped as `PREDICTION_KNOWN_COVERAGE_GAPS` keyed `("POLYMARKET", "*")` (uppercase to match the
       per-asset-group dict pattern in `coverage_starts.py`).
 - [x] [SCRIPT] P0. **MTDS** `cli/handlers/vault_share_price_handler.py`: emit canonical venue names (`MORPHOVAULTS`,
-      `YEARNV3`, `FRAX`, `MAKER`) instead of legacy `MORPHO_VAULTS` / `YEARN_V3`. **Done 2026-05-06 MTDS `8bf742a`**
+      `YEARN_V3`, `FRAX`, `MAKER`) instead of legacy `MORPHO_VAULTS` / `YEARN_V3`. **Done 2026-05-06 MTDS `8bf742a`**
       (CosmicTrader).
 - [ ] [HUMAN] P0. UAC + MTDS quality-gates pass; commit + push (UAC first → wait for AR `:latest` to land per CLAUDE.md
       UTL→consumer race rule → then MTDS). **Operator-verify**: both repos pushed to origin/live-defi-rollout per
@@ -249,7 +249,7 @@ passing.
 - [x] [SCRIPT] P0. **Vault venue manifest rename** (Q&A 4 follow-up): for each row in
       `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` where
       `data_type='vault_share_price'` AND `venue ∈ {MORPHO_VAULTS, YEARN_V3}` → rewrite venue to canonical form
-      (MORPHOVAULTS, YEARNV3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write. **Done
+      (MORPHOVAULTS, YEARN_V3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write. **Done
       2026-05-05 MTDS `bf81219`** — `scripts/rename_vault_venue_canonical.py` shipped; production run is the operator
       action below.
 - [x] [HUMAN] P0. **Production run — CEFI BUG-X2 flip done 2026-05-06T10:15:42Z** (executed via inline equivalent of
@@ -661,13 +661,13 @@ Surfaced by smoke run of patched recon on PREDICTION 2025-12-01..2025-12-07.
 Surfaced by GCS spot-check during full-range recon:
 
 ```
-gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2024-06-15/asset_group=defi/venue=AAVEV3-ETHEREUM/ticks_migrated_20260418T132205Z.parquet
+gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2024-06-15/asset_group=defi/venue=AAVE_V3-ETHEREUM/ticks_migrated_20260418T132205Z.parquet
 ```
 
 The DeFi disk layout has:
 
 - `asset_group=defi` ✅
-- `venue=AAVEV3-ETHEREUM` ❌ (legacy venue overload — chain baked in, no separate `chain=` segment — axis 6)
+- `venue=AAVE_V3-ETHEREUM` ❌ (legacy venue overload — chain baked in, no separate `chain=` segment — axis 6)
 - ❌ NO `instrument_type=` segment at all
 - ❌ NO `data_type=` segment at all
 - File is `ticks_migrated_<TIMESTAMP>.parquet` (suggests last-touched-by-migration provenance)
@@ -861,7 +861,7 @@ The `_migrated_*` exclusion was likely added to avoid double-counting during the
 with names like `ticks_migrated_20260418T132205Z.parquet`. But many of these files are the only copy of the data (the
 migration didn't delete the source — it only copied + renamed).
 
-Combined with F16: the DeFi `venue=AAVEV3-ETHEREUM/ticks_migrated_*.parquet` files are real data on disk. UTL rebuild
+Combined with F16: the DeFi `venue=AAVE_V3-ETHEREUM/ticks_migrated_*.parquet` files are real data on disk. UTL rebuild
 silently drops them.
 
 **Severity**: HIGH — UTL rebuild will under-count DeFi by ~5-7% (the F16 axis-6 venue-overload population, all named
@@ -1009,7 +1009,7 @@ Surfaced by smoke run of patched recon on DEFI 2024-06-15:
 - Manifest claims (sample, 20 phantoms): `('2024-06-15', 'AAVE_V3', 'a_token', 'oracle_prices')`,
   `('2024-06-15', 'CURVE', 'pool', 'dex_pool_state')`, etc. — **canonical split** form (venue=PROTOCOL, instrument_type
   populated, data_type populated).
-- Disk truth (sample, 8 missing-rows): `('2024-06-15', 'AAVEV3-ETHEREUM', '', '')`,
+- Disk truth (sample, 8 missing-rows): `('2024-06-15', 'AAVE_V3-ETHEREUM', '', '')`,
   `('2024-06-15', 'CURVE-ETHEREUM', '', '')`, etc. — **overload** form (venue=PROTOCOL-CHAIN, no instrument_type, no
   data_type).
 
@@ -1150,7 +1150,7 @@ These rows DON'T need re-fetching. They need either:
 | PREDICTION | 14,369        | 573,451 raw_tick_data + 26 canonical-with-BTC-itype                                                                                                                   | 81% of expected days TRUE GAP (F26)                                                             | 420 (some blank-venue F30b)                                        | 26 (F30a — _migrated_\* second layout)                | 1,752 / 2,154 (pre-fetch)          | Disk starts 2025-03-14 (F26); F30 finds new layout                          |
 | SPORTS     | 17,288        | 25,709 raw_tick_data: 15,155 axis-10 + 4,921 axis-9 + 1,815 axis-4 + 3,818 axis-11 unmatched (F28); recon matched 3,649 / phantoms 603 / missing 0 / true-gap 37 days | 86% match                                                                                       | **603** (mostly 2020-06-01..05 — F27)                              | **0**                                                 | 37 (recent — forward-poll lapse)   | 100% v4 manifest (F1); 4 distinct disk layouts (axis-4/9/10/11)             |
 | TRADFI     | 73,316        | 1,786,848 raw_tick_data: 1,478,899 canonical + 206,141 axis-4 + 101,808 F25 dash                                                                                      | matched=21,424 (29% of manifest)                                                                | **5,562** (empty-itype v4 mix — F2-TRADFI)                         | 1,735 (disk-has-canonical, manifest-has-v4)           | 368/2682 (13.7%)                   | F25 dash + axis-4 disk-side both present. Migration scripts exist (Q&A 10)  |
-| DEFI       | 313,365       | 312k canonical + 5,332 axis-6                                                                                                                                         | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0**                                                              | 278                                                   | 1,295 / 2,317                      | F16 → 1.7% legacy. Missing rows include UNISWAPV4-ETHEREUM with empty itype |
+| DEFI       | 313,365       | 312k canonical + 5,332 axis-6                                                                                                                                         | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0**                                                              | 278                                                   | 1,295 / 2,317                      | F16 → 1.7% legacy. Missing rows include UNISWAP_V4-ETHEREUM with empty itype |
 | CEFI       | 2,226,631     | 1,224,121 raw_tick_data (1,217,195 canonical / 65,066 unique tuples)                                                                                                  | 99.4% disk match                                                                                | **14,131** (mostly empty-itype empty-dtype v4 — F2-CEFI confirmed) | 452 (BITFINEX/KRAKEN-FUTURES — manifest didn't track) | 89/2682 (3.3% — CEFI well-covered) | Mostly canonical; 14k phantoms = v4 schema mix predicted                    |
 
 ### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
@@ -2012,7 +2012,7 @@ inverse direction too):
 
 Plus DeFi-specific:
 
-6. **Legacy DeFi venue overload** — `venue=PROTOCOL-CHAIN/` (e.g. `venue=AAVEV3-ETHEREUM/`) where canonical splits to
+6. **Legacy DeFi venue overload** — `venue=PROTOCOL-CHAIN/` (e.g. `venue=AAVE_V3-ETHEREUM/`) where canonical splits to
    `venue=AAVE_V3/chain=ETHEREUM/`.
 7. **No-asset-group hive segment** — old DeFi writes that omit the AG segment entirely.
 
@@ -2277,7 +2277,7 @@ Per-protocol-per-chain inception dates from `DEFI_SOURCE_COVERAGE_START`. DeFi M
       signal. Either add the singleton-lock pattern to each (copy from `launch-mtds-prediction-backfill-vm.sh`) or
       document why each is exempt. Tracked as a P0 follow-up — do NOT run multiple in parallel until landed.
 - [ ] [HUMAN] P1. **`validate_api_keys_for_venues` venue-name gotcha** — passes canonical venue names
-      (`UNISWAPV3-ETHEREUM`, `AAVEV3-ETHEREUM`), NOT data-source slugs (`thegraph`). Returns empty dict silently on
+      (`UNISWAP_V3-ETHEREUM`, `AAVE_V3-ETHEREUM`), NOT data-source slugs (`thegraph`). Returns empty dict silently on
       wrong shape; downstream adapters silently fail. If a DeFi VM logs "missing key" on a venue you know has the
       secret, suspect this first.
 
@@ -2415,7 +2415,7 @@ owns), `launch-mdps-backfill-vm.sh` / `launch-mdps-sharded-backfill.sh` (downstr
 
 ## Known gotchas (from playbook + handoff doc — re-stated for self-containment)
 
-- `validate_api_keys_for_venues` wants canonical venue names (`UNISWAPV3-ETHEREUM`), not data-source slugs (`thegraph`).
+- `validate_api_keys_for_venues` wants canonical venue names (`UNISWAP_V3-ETHEREUM`), not data-source slugs (`thegraph`).
   Returns empty dict silently on wrong shape.
 - CeFi VM `rc=137` (OOM-kill) writes no `EXIT_STATUS` and no `DEPLOYMENT_FAILED` event — atexit handlers don't fire on
   SIGKILL. Diagnose via Cloud Logging kernel OOM query.

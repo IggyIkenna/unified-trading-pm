@@ -105,8 +105,8 @@ todos:
 
   - id: mdps-venue-name-alignment
     content: |
-      - [ ] [AGENT] P1. UAC `VENUES_BY_CATEGORY` uses old names (AAVE_V3_ETH, UNISWAPV2-ETH) while GCS paths use canonical
-        (AAVEV3-ETHEREUM, UNISWAPV2-ETHEREUM). Align UAC venue names to canonical PROTOCOL-CHAIN format. Update all consumers.
+      - [ ] [AGENT] P1. UAC `VENUES_BY_CATEGORY` uses old names (AAVE_V3_ETH, UNISWAP_V2-ETH) while GCS paths use canonical
+        (AAVE_V3-ETHEREUM, UNISWAP_V2-ETHEREUM). Align UAC venue names to canonical PROTOCOL-CHAIN format. Update all consumers.
     status: pending
 
   - id: mdps-manifest-writer

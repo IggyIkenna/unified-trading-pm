@@ -33,9 +33,9 @@ features-onchain-service (publishes: pool_price, tick, fee_apy, IL_pct, utilizat
 
 | Pool Type  | Venue              | Liquidity Model                         | LP Token                       | IL Profile                       |
 | ---------- | ------------------ | --------------------------------------- | ------------------------------ | -------------------------------- |
-| Uniswap V2 | UNISWAPV2-ETHEREUM | Uniform (0→∞)                           | ERC-20 (fungible)              | Standard (~5.7% at 2x move)      |
-| Uniswap V3 | UNISWAPV3-ETHEREUM | Concentrated (tick range)               | ERC-721 NFT (unique per range) | Amplified within range           |
-| Uniswap V4 | UNISWAPV4-ETHEREUM | Concentrated + hooks                    | ERC-721 NFT                    | Hook-dependent                   |
+| Uniswap V2 | UNISWAP_V2-ETHEREUM | Uniform (0→∞)                           | ERC-20 (fungible)              | Standard (~5.7% at 2x move)      |
+| Uniswap V3 | UNISWAP_V3-ETHEREUM | Concentrated (tick range)               | ERC-721 NFT (unique per range) | Amplified within range           |
+| Uniswap V4 | UNISWAP_V4-ETHEREUM | Concentrated + hooks                    | ERC-721 NFT                    | Hook-dependent                   |
 | Curve      | CURVE-ETHEREUM     | StableSwap (auto-concentrated near peg) | ERC-20 (fungible)              | Very low for like-kind assets    |
 | Balancer   | BALANCER-ETH       | Weighted (custom weights 2-8 tokens)    | ERC-20 (fungible)              | Weight-dependent (80/20 < 50/50) |
 
@@ -67,7 +67,7 @@ Step 1 - ADD_LIQUIDITY:
   Receive: NFT position token representing your LP position
 
 Wallet after deploy:
-  - UNISWAPV3-ETHEREUM:LP_POSITION:ETH-USDT@ETHEREUM = NFT position
+  - UNISWAP_V3-ETHEREUM:LP_POSITION:ETH-USDT@ETHEREUM = NFT position
   - Accruing: swap fees in ETH + USDT (claimable via COLLECT_FEES)
 
 On rebalance (price exits range):
@@ -82,7 +82,7 @@ Step 4 - REMOVE_LIQUIDITY + COLLECT_FEES: burn NFT, claim all fees
 
 | Instrument Key                                     | Venue      | Type   | Role               |
 | -------------------------------------------------- | ---------- | ------ | ------------------ |
-| `UNISWAPV3-ETHEREUM:LP_POSITION:ETH-USDT@ETHEREUM` | Uniswap V3 | LP NFT | Active LP position |
+| `UNISWAP_V3-ETHEREUM:LP_POSITION:ETH-USDT@ETHEREUM` | Uniswap V3 | LP NFT | Active LP position |
 | `WALLET:SPOT_ASSET:ETH`                            | Wallet     | Spot   | Deposited asset    |
 | `WALLET:SPOT_ASSET:USDT`                           | Wallet     | Spot   | Deposited asset    |
 

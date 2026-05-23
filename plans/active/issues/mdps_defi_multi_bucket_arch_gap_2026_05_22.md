@@ -14,7 +14,7 @@ locked_since: 2026-05-21
 
 MDPS DeFi (`MDPS_ASSET_GROUP=DEFI`) can only process data from ONE source bucket
 (`PROTOCOL_DATA_SOURCE_BUCKET_DEFI = market-data-tick-defi-central-element-323112`). That bucket contains only
-**vault_share_price** data (venues: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3).
+**vault_share_price** data (venues: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3).
 
 The other 3 DeFi raw-data categories are stored in **separate buckets** with a **flat** `day=YYYY-MM-DD/` prefix (not
 `raw_tick_data/by_date/day=YYYY-MM-DD/` that MDPS expects):

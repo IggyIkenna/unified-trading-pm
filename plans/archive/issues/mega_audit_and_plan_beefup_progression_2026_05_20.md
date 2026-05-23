@@ -116,7 +116,7 @@ This file closes when (a) all audits in `plans/audit/` are complete, AND (b) all
       findings:** - **765 `DIVERGENT_EMPTY` cells** (the Drift-bug class — review-blocking) — all in DeFi. - **236,892
       `MISSING_EXPECTED` cells** (silent gaps — review-blocking) — DeFi 184k, sports 25k, cefi 16k, tradfi 7k,
       prediction 3k. Top venues: - DeFi: FLUID-ETHEREUM (lending) + MORPHO-ETHEREUM/POLYGON (lending) + CURVE-ETHEREUM +
-      BALANCER + UNISWAPV2 (all dex_pools/dex_swaps missing). - Sports: every bookmaker
+      BALANCER + UNISWAP_V2 (all dex_pools/dex_swaps missing). - Sports: every bookmaker
       (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE) missing all 2,332-day odds_snapshot/movement window. -
       Prediction: KALSHI (1,756 cells) + POLYMARKET (1,686 cells) missing trades. - CeFi: OKX + COINBASE + UPBIT missing
       trades/book_snapshot_5 backfill chunks. - TradFi: ICE + CME tbbo gaps, YAHOO_FINANCE ohlcv windows, NYSE/NASDAQ

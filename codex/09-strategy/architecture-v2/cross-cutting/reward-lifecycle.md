@@ -98,7 +98,7 @@ token sales from regular position rebalancing.
     min_claim_threshold_usd: 50
     min_sell_threshold_usd: 100
     claim_cooldown_hours: 24
-    sell_venue: "BINANCE"    # or "UNISWAPV3-ETHEREUM"
+    sell_venue: "BINANCE"    # or "UNISWAP_V3-ETHEREUM"
     max_slippage_bps: 100
   ```
 

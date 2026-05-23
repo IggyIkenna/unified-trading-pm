@@ -1037,7 +1037,7 @@ data_types (FIXTURE_STATS, etc.) confirmed.
 
 **Defi 604k bad flip alert**: My session at 14:17 UTC ran `--apply-flips --max-flips-per-run 1000000` on defi. 604,951
 rows flipped `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (598k) + `empty_confirmed/SOURCE_RETURNED_ZERO` (7k) →
-`attempted_failed/LegacyBlankErrorReasonError`. Sample verification: AAVEV3-ETHEREUM 2018-01-01 (Aave V3 launched 2022)
+`attempted_failed/LegacyBlankErrorReasonError`. Sample verification: AAVE_V3-ETHEREUM 2018-01-01 (Aave V3 launched 2022)
 has NO parquet — should be `EXPECTED_PRE_VENUE_LAUNCH`. **Root cause: UAC `venue_launch_dates.py` has NO
 `DEFI_VENUE_LAUNCH_DATES` dict** — `_classify_defi` only checks chain genesis, not protocol launch. Per-VM shard at
 `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` already consolidated
@@ -2272,7 +2272,7 @@ VM `mdps-backfill-defi-20260516-121940` ran clean (STARTED 11:21:43 → STOPPED 
 in the DeFi tick bucket.
 
 **Root cause**: raw_tick_data for 2026-04-15..19 contains exclusively `data_type=vault_share_price` parquets (7/day:
-ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARNV3/YEARN_V3 on ETHEREUM). MDPS DeFi adapters cover `book_snapshot_5` /
+ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARN_V3/YEARN_V3 on ETHEREUM). MDPS DeFi adapters cover `book_snapshot_5` /
 `dex_swaps` / `fx_rates` / `market_state` / `liquidity` only — **no `vault_share_price` handler exists**. MDPS will
 NEVER produce processed_candles for this data_type. The fix path "run MDPS to fill the gap" was based on Smoke B's
 pre-flight error message; the real architectural fix is upstream of MDPS.

@@ -26,8 +26,8 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
       asset_groupes:
         - CRYPTO_CEFI
         - DEFI
@@ -148,8 +148,8 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
       asset_groupes:
         - CRYPTO_CEFI
         - DEFI
@@ -196,8 +196,8 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
       asset_groupes:
         - CRYPTO_CEFI
         - DEFI
@@ -352,8 +352,8 @@ services:
       output_bucket: gs://features-onchain
     domain_coverage:
       venues:
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
         - COMPOUND_V3_ETH
       asset_groupes:
         - DEFI
@@ -597,8 +597,8 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
       asset_groupes:
         - CRYPTO_CEFI
         - DEFI
@@ -836,8 +836,8 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-        - AAVEV3_ETHEREUM
-        - UNISWAPV3-ETHEREUM
+        - AAVE_V3_ETHEREUM
+        - UNISWAP_V3-ETHEREUM
       asset_groupes:
         - CRYPTO_CEFI
         - DEFI

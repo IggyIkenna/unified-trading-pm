@@ -286,7 +286,7 @@ All in existing trading terminal tabs. NOT strategy families (blocked).
   - TRADE → DIRECT_MARKET
   - TRANSFER → DIRECT
   - FLASH_BORROW → FLASH_LOAN_MORPHO / FLASH_LOAN_AAVE
-- [x] [AGENT] P0. Align venue names to canonical IDs (UNISWAPV3-ETHEREUM not "Uniswap")
+- [x] [AGENT] P0. Align venue names to canonical IDs (UNISWAP_V3-ETHEREUM not "Uniswap")
 - [x] [AGENT] P0. Align instrument IDs to canonical format
 - [x] [AGENT] P0. Add `max_slippage_bps`, `expected_output`, `benchmark_price` to instruction params
 - [x] [AGENT] P0. Add `instant_pnl` decomposition to order/fill types (gross, slippage, gas, fees, net)
@@ -327,7 +327,7 @@ All in existing trading terminal tabs. NOT strategy families (blocked).
   - LP position from Uniswap subgraph vs our tracker
   - Perp position from Hyperliquid API vs our records
   - Break types: position, pnl, fee, gas (same schema as CeFi recon)
-  - Add DeFi venues to reconciliation.ts mock data (AAVEV3-ETHEREUM, UNISWAPV3-ETHEREUM, etc.)
+  - Add DeFi venues to reconciliation.ts mock data (AAVE_V3-ETHEREUM, UNISWAP_V3-ETHEREUM, etc.)
 - [x] [AGENT] P1. Reconciliation resolution workflow — already fully implemented in
       `batch-live-reconciliation-service/batch_live_reconciliation_service/api/resolution_api.py`:
       `POST /reconciliation/breaks/{id}/accept`, `/reject`, `/investigate`, `/book-correction`; `ReconciliationAction` +

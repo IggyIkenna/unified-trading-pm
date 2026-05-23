@@ -57,7 +57,7 @@ consumption) therefore focuses on the universe-discovery path, not on handler �
 
 | asset_group | IS adapters available                              | strategy-service consumption                                                           | Violation type                                                            |
 | ----------- | -------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| DeFi        | IS writes instrument_availability per (venue, day) | `discover_instruments()` reads `instruments-store-defi` parquet — **DeFi only**        | ⚠ Partial: only AAVEV3/COMPOUNDV3/MORPHO venues supported in `venue_map` |
+| DeFi        | IS writes instrument_availability per (venue, day) | `discover_instruments()` reads `instruments-store-defi` parquet — **DeFi only**        | ⚠ Partial: only AAVE_V3/COMPOUND_V3/MORPHO venues supported in `venue_map` |
 | CeFi        | IS writes per-venue CeFi catalogues                | **NOT READ** — CEFI instruments hardcoded in `cli/resolvers.py` INSTRUMENT_SHORTCUTS   | ❌ Hardcoded universe bypasses IS                                         |
 | TradFi      | IS writes TradFi catalogues                        | **NOT READ** — TradFi instruments hardcoded (SPY/ES/NQ etc.) in resolvers + catalog.py | ❌ Hardcoded universe bypasses IS                                         |
 | Sports      | IS writes sports adapters                          | N/A — strategy-service does not trade sports (no sports strategies)                    | out of scope                                                              |
@@ -152,8 +152,8 @@ parquet — **but only for DeFi strategies with a GCS config**. The code path is
 
 ```python
 venue_map = {
-    "AAVE_V3": f"AAVEV3-{chain}",
-    "COMPOUND_V3": f"COMPOUNDV3-{chain}",
+    "AAVE_V3": f"AAVE_V3-{chain}",
+    "COMPOUND_V3": f"COMPOUND_V3-{chain}",
     "MORPHO": f"MORPHO-{chain}",
 }
 ```

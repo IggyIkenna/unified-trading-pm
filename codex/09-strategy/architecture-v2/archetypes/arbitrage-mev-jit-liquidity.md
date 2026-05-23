@@ -3,7 +3,7 @@ scope: [engineer, admin]
 archetype: ARBITRAGE_MEV_JIT_LIQUIDITY
 family: ARBITRAGE_STRUCTURAL
 status: code-shipped
-venue_universe: [UNISWAPV3, PANCAKESWAP_V3, SUSHISWAP_V3]
+venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3]
 topology_requirements:
   isolation:
     execution-service: isolated

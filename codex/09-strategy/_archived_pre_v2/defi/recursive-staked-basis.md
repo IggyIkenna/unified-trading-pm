@@ -65,8 +65,8 @@ Health Factor (E-Mode)   = ($22,500 * 0.95)  / $13,500 = 1.58  ← auto-detected
 ### Wallet After Deploy
 
 ```
-AAVEV3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM              = 7.246 weETH (collateral, positive)
-AAVEV3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM          = 4.5 ETH    (debt, negative in equity)
+AAVE_V3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM              = 7.246 weETH (collateral, positive)
+AAVE_V3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM          = 4.5 ETH    (debt, negative in equity)
 HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID    = -7.5 ETH   (short)
 ```
 
@@ -105,8 +105,8 @@ rapid liquidation risk.
 
 All instruments are fixed at strategy initialisation:
 
-- Collateral: `AAVEV3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM` — always weETH as collateral
-- Debt: `AAVEV3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM` — always borrow WETH
+- Collateral: `AAVE_V3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM` — always weETH as collateral
+- Debt: `AAVE_V3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM` — always borrow WETH
 - Perp: `{perp_venue}:PERPETUAL:ETH-USDC@LIN@{perp_venue}` — venue configurable, instrument fixed
 - Flash loan: Morpho Blue (0% fee) preferred over Aave (0.05%) or Balancer (0%)
 
@@ -123,7 +123,7 @@ collateral/debt pair across Aave markets.
 
 | Leg                               | SOR? | Allowed Venues                                         | SSOT                 |
 | --------------------------------- | ---- | ------------------------------------------------------ | -------------------- |
-| Step 3 (WETH→weETH swap)          | YES  | `CURVE-ETHEREUM`, `BALANCER-ETH`, `UNISWAPV3-ETHEREUM` | `defi_base.py:84-86` |
+| Step 3 (WETH→weETH swap)          | YES  | `CURVE-ETHEREUM`, `BALANCER-ETH`, `UNISWAP_V3-ETHEREUM` | `defi_base.py:84-86` |
 | Step 1 (Flash borrow from Morpho) | NO   | Morpho Blue only (hardcoded)                           | —                    |
 | Step 4 (Deposit to Aave)          | NO   | Aave V3 only                                           | —                    |
 | Step 8 (Short perp)               | NO   | Hyperliquid only                                       | —                    |
@@ -143,8 +143,8 @@ steps (perp hedge) are separate instructions.
 | Instrument Key                                   | Venue       | Type      | Role                              |
 | ------------------------------------------------ | ----------- | --------- | --------------------------------- |
 | `WALLET:SPOT_ASSET:USDT`                         | Wallet      | Spot      | Initial capital                   |
-| `AAVEV3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM`        | Aave V3     | aToken    | Collateral (long, leveraged)      |
-| `AAVEV3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM`   | Aave V3     | debtToken | Debt (negative equity)            |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM`        | Aave V3     | aToken    | Collateral (long, leveraged)      |
+| `AAVE_V3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM`   | Aave V3     | debtToken | Debt (negative equity)            |
 | `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID` | Hyperliquid | Perp      | Short leg (hedge, leveraged size) |
 
 ## Key Features Consumed

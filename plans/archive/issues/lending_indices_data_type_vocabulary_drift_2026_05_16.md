@@ -63,7 +63,7 @@ confirmed via `gsutil ls`. **Only the manifest `data_type` column carries the ke
 | `lending_indices` | **21,044** |
 | **Total**         | 46,020     |
 
-- **Venues** (3): AAVEV3 (28,512), COMPOUNDV3 (14,197), SPARK (3,311). Note `AAVEV3` not `AAVE_V3` (no underscore).
+- **Venues** (3): AAVE_V3 (28,512), COMPOUND_V3 (14,197), SPARK (3,311). Note `AAVE_V3` not `AAVE_V3` (no underscore).
 - **Chains** (10): ETHEREUM / OPTIMISM / BASE / ARBITRUM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC.
 - **capture_status**: 39,851 captured / 6,012 empty_confirmed / 157 attempted_failed.
 

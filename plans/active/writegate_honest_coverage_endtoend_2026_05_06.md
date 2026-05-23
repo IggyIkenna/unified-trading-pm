@@ -2126,7 +2126,7 @@ sub-phase ships the enumerator that physically writes those rows.
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM commit
       shas (PM@79e47874 + PM@341bb285) + spot-check evidence (DeFi 688,220 EXPECTED_PRE_GENESIS_CHAIN sample
-      `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`; TradFi 35,050 EXPECTED_WEEKEND sample
+      `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`; TradFi 35,050 EXPECTED_WEEKEND sample
       `venue=BARCHART day=2018-01-06`).
 
 **QG between Phase 3.D.4 and Phase 4**: every asset_group's enumerator scan-only run reviewed by operator;

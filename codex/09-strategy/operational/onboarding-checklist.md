@@ -154,7 +154,7 @@ gas_config:
 allowed_venues:
   - BINANCE
   - HYPERLIQUID
-  - UNISWAPV3-ETHEREUMEREUM
+  - UNISWAP_V3-ETHEREUMEREUM
 ```
 
 ## Phase 3: Risk Limits & Monitoring

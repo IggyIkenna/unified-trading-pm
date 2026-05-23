@@ -139,7 +139,7 @@ commit pending on live-defi-rollout).
 ### Phase 5 — Deployment-api expected counts + data status tab (SEQUENTIAL after Phase 2)
 
 - [x] [AGENT] P0. Add expected-count rows for all 8 new DeFi data types in `configs/venue_data_types.yaml` (symlink
-      target: `unified-trading-pm/configs/venue_data_types.yaml`). Added 12 new venue entries: AAVEV3-ETHEREUM
+      target: `unified-trading-pm/configs/venue_data_types.yaml`). Added 12 new venue entries: AAVE_V3-ETHEREUM
       (liquidation_events, flash_loan_events, position_data), MORPHO-ETHEREUM-EVENTS (liquidation_events), LIDO-ETHEREUM
       (staking_yields), ETHERFI-ETHEREUM (staking_yields), ALCHEMY-ETHEREUM (token_transfers), ACROSS-ETHEREUM
       (bridge_events), STARGATE-ETHEREUM (bridge_events), COMPOUND-ETHEREUM (governance_events), AAVE-ETHEREUM

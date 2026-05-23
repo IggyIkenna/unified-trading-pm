@@ -23,7 +23,7 @@ severity:
 
 The `lending-indices-central-element-323112` bucket's manifest claims 65 captured rows in the B-015 paper-trade window
 (2026-04-15..19) across
-`(AAVEV3, COMPOUNDV3, SPARK) × (ETHEREUM, ARBITRUM, OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC) × data_type=lending_indices`,
+`(AAVE_V3, COMPOUND_V3, SPARK) × (ETHEREUM, ARBITRUM, OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC) × data_type=lending_indices`,
 but the bucket itself has ZERO parquets for those days. Real data exists through 2026-04-14; the entire B-015 window is
 phantom-only.
 
@@ -107,7 +107,7 @@ generalisation. Owner: slot-3 (manifest reconciliation expertise) or features-se
 `reconcile_phantom_manifest_rows_all.py`: (a) new `--manifest-bucket` + `--manifest-index` CLI flags route both manifest
 read AND prefix-path probing to any override bucket (lending-indices, lst-rates, oracle-prices, perp-funding,
 eigenlayer-rewards), and (b) DeFi venue-needle now applies `_defi_protocol_variants()` so the substring check accepts
-both `AAVEV3` ↔ `AAVE_V3` / `COMPOUNDV3` ↔ `COMPOUND_V3` spellings (was matching only the manifest's literal spelling
+both `AAVE_V3` ↔ `AAVE_V3` / `COMPOUND_V3` ↔ `COMPOUND_V3` spellings (was matching only the manifest's literal spelling
 even though the prefix template already probed both — root cause of 60/65 false phantoms on the original audit).
 Verified end-to-end against the lending-indices bucket:
 `--asset-group defi --manifest-bucket lending-indices-central-element-323112 --dry-run --start-date 2026-04-15 --end-date 2026-04-19`

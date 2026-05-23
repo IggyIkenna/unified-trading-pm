@@ -247,7 +247,7 @@ shipped (UTL@246ab77): (1) testnet_contracts.py `_default_yaml_path()` path fix 
 PROTOCOL_SCHEMAS validation unblocked — removed `recursive_leverage_receiver` from aave_v3 required (not deployed on any
 chain, 6 × missing) and `swap_router` from uniswap_v3 required (key varies by chain: swap_router vs swap_router_02, 3 ×
 missing → 9 total missing fixed); (3) test_testnet_contracts.py YAML path fix (5 levels up); (4) test_venue_config.py
-stale venue name: UNISWAPV2-ETH → UNISWAPV2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR wired into UTL
+stale venue name: UNISWAP_V2-ETH → UNISWAP_V2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR wired into UTL
 quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ + events/ +
 events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR in
 base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.

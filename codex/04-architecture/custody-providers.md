@@ -20,9 +20,9 @@ last_reviewed: 2026-05-17
 >
 > **🟢 POD client scope clarified 2026-05-12** — see
 > [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md).
-> POD (AIFM Ireland; BVI Fund) is our first DeFi allocator client. POD manages Copper + CEFFU KYB
-> directly. **Fireblocks is OUT OF SCOPE per POD stack choice** — POD uses Copper + CEFFU only.
-> `SigningSurface.FIREBLOCKS_MPC` stays in UAC enum for future-flexibility but is NOT a May-23 / June-1 target.
+> POD (AIFM Ireland; BVI Fund) is our first DeFi allocator client. POD manages Copper + CEFFU KYB directly. **Fireblocks
+> is OUT OF SCOPE per POD stack choice** — POD uses Copper + CEFFU only. `SigningSurface.FIREBLOCKS_MPC` stays in UAC
+> enum for future-flexibility but is NOT a May-23 / June-1 target.
 >
 > Operator-runbook for every cutover + June-1 onboarding step:
 > [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
@@ -296,11 +296,11 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 3.C SPLIT (R9 RESOLVED 2026-05-12).** **CEFFU is OUT-OF-SCOPE for the May-23 cutover.** May-23 ships on
 > `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK envelope encryption per § 2.5 / Plan Phase 3.C.1); the per-wallet
-> `SigningSurface` flip to `COPPER_MPC` / CEFFU happens June-1+ when POD (BVI Fund) delivers
-> institutional KYB-approved credentials. The §2.4 subsection content below (CEFFU OES architecture, onboarding flow,
-> expected API integration shape) is preserved as **design intent for the June-1+ flip** — it is NOT a May-23
-> implementation gate. Master plan Group F Item 19's "Copper + CEFFU treasury wired" criterion is correspondingly
-> deferred to the June-1+ checkpoint. Codified per slot 4 audit refresh
+> `SigningSurface` flip to `COPPER_MPC` / CEFFU happens June-1+ when POD (BVI Fund) delivers institutional KYB-approved
+> credentials. The §2.4 subsection content below (CEFFU OES architecture, onboarding flow, expected API integration
+> shape) is preserved as **design intent for the June-1+ flip** — it is NOT a May-23 implementation gate. Master plan
+> Group F Item 19's "Copper + CEFFU treasury wired" criterion is correspondingly deferred to the June-1+ checkpoint.
+> Codified per slot 4 audit refresh
 > [`codex/04-architecture/interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12.
 >
 > **STATUS: STUB SHIPPED 2026-05-10** (the stub envelope is what reaches factory + supports the eventual June-1+ flip).

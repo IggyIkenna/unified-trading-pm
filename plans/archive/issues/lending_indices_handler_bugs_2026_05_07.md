@@ -24,7 +24,7 @@ locked_since: 2026-05-07
 > (lending-indices handler) + instruments-service DeFi instrument discovery.
 >
 > **STATUS RE-FRAMING (2026-05-08, Tab 9 Q1/A1)**: Bug 1's "silent zero" was a **UAC SSOT misdiagnosis**, NOT a code
-> bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` was `2022-03-14` (the L2 cohort date) when AAVE V3 on Ethereum
+> bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` was `2022-03-14` (the L2 cohort date) when AAVE V3 on Ethereum
 > mainnet actually deployed `2023-01-27`. The 11-month difference manifested as 343 days of `empty_confirmed` for AAVE
 > V3 ETH in the previous failed run — those days were genuinely pre-deployment, NOT silent-zero. Tab 5's 2026-05-07
 > cascade fix (`mtds@d2f365e`) was correct work for OTHER chains/protocols (it prevents silent-zero on schema-error days
@@ -52,16 +52,16 @@ silently writing `empty_confirmed` for dates where data should exist.
 
 | venue / chain             | captured | empty_confirmed | verdict                                |
 | ------------------------- | -------- | --------------- | -------------------------------------- |
-| AAVEV3 / ARBITRUM         | 269      | 74              | ✅ working                             |
-| AAVEV3 / OPTIMISM         | 270      | 73              | ✅ working                             |
-| AAVEV3 / POLYGON          | 272      | 71              | ✅ working                             |
-| AAVEV3 / AVALANCHE        | 270      | 73              | ✅ working                             |
-| AAVEV3 / **ETHEREUM**     | **0**    | **343**         | ❌ **silent zero — Bug 1**             |
-| AAVEV3 / BASE             | 0        | 343             | ⚠️ likely correct (pre-launch in 2022) |
-| AAVEV3 / LINEA            | 0        | 343             | ⚠️ likely correct (LINEA mainnet 2023) |
-| AAVEV3 / BSC              | 0        | 343             | ⚠️ likely correct                      |
-| COMPOUNDV3 / ETHEREUM     | 107      | —               | ✅ working                             |
-| COMPOUNDV3 / ARB/BASE/OPT | 0        | 0 (skipped)     | ❌ **subgraph schema error — Bug 2**   |
+| AAVE_V3 / ARBITRUM         | 269      | 74              | ✅ working                             |
+| AAVE_V3 / OPTIMISM         | 270      | 73              | ✅ working                             |
+| AAVE_V3 / POLYGON          | 272      | 71              | ✅ working                             |
+| AAVE_V3 / AVALANCHE        | 270      | 73              | ✅ working                             |
+| AAVE_V3 / **ETHEREUM**     | **0**    | **343**         | ❌ **silent zero — Bug 1**             |
+| AAVE_V3 / BASE             | 0        | 343             | ⚠️ likely correct (pre-launch in 2022) |
+| AAVE_V3 / LINEA            | 0        | 343             | ⚠️ likely correct (LINEA mainnet 2023) |
+| AAVE_V3 / BSC              | 0        | 343             | ⚠️ likely correct                      |
+| COMPOUND_V3 / ETHEREUM     | 107      | —               | ✅ working                             |
+| COMPOUND_V3 / ARB/BASE/OPT | 0        | 0 (skipped)     | ❌ **subgraph schema error — Bug 2**   |
 
 ## Bug 1 — AAVE V3 ETHEREUM silent zero (P0) ✅ RESOLVED 2026-05-08 (Tab 9 — UAC SSOT misdiagnosis, not code bug)
 
@@ -71,7 +71,7 @@ silently writing `empty_confirmed` for dates where data should exist.
 code; only ETHEREUM silent-zeroed.
 
 **Actual root cause (Tab 9 2026-05-08)**: NOT a code bug. UAC
-`PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")] = "2022-03-14"` (the L2 cohort date) was wrong — AAVE V3 on Ethereum
+`PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")] = "2022-03-14"` (the L2 cohort date) was wrong — AAVE V3 on Ethereum
 mainnet actually deployed `2023-01-27`. So all 343 `empty_confirmed` days observed in the previous failed VM (2022-01-01
 → 2022-12-09 ish) were genuinely pre-deployment; the AAVE V3 ETH subgraph correctly returned 0 rows because the protocol
 literally hadn't been deployed yet. The L2 chains (Arbitrum/Optimism/Polygon/Avalanche) all had real captured rows
@@ -83,7 +83,7 @@ cascade in UAC.
 
 **Fixes shipped (Tab 9 2026-05-08)**:
 
-- `unified-api-contracts@6a64a56` — corrected `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` from `"2022-03-14"` to
+- `unified-api-contracts@6a64a56` — corrected `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` from `"2022-03-14"` to
   `"2023-01-27"` with inline source citation (subgraph probe). UAC test `tests/unit/test_protocol_launch_dates.py`
   updated.
 - `instruments-service@6ae50de` — `tests/unit/test_evm_creation_resolver.py` updated to assert the corrected floor (Tab
@@ -124,7 +124,7 @@ mis-routing: this is case C (downstream calc dropped all rows due to malformed s
 **Original framing (2026-05-07)**: Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to
 subgraph discovery works for some chains and not others. Deeper question: does instruments-service's lookback cover
 early DeFi protocol launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...`
-returns 404 for AAVEV3/COMPOUNDV3/etc. across all chains.
+returns 404 for AAVE_V3/COMPOUND_V3/etc. across all chains.
 
 **Two-part fix shipped**:
 
@@ -244,14 +244,14 @@ has been crossed.
 
 | venue / chain             | captured | empty_confirmed | verdict                                                                                                                                                                               |
 | ------------------------- | -------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AAVEV3 / ARBITRUM         | 370      | 74              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
-| AAVEV3 / AVALANCHE        | 371      | 73              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
-| AAVEV3 / OPTIMISM         | 371      | 73              | ✅ unchanged — UAC says 2022-08-04, real subgraph 2022-03-15                                                                                                                          |
-| AAVEV3 / POLYGON          | 373      | 71              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
-| **AAVEV3 / ETHEREUM**     | **53**   | 391             | ✅ **Bug 1 RESOLVED** — captured dates start exactly 2023-01-27 (53 captured rows post-launch over 2023-01-27 → 2023-03-20). UAC fix end-to-end verified by real subgraph data.       |
-| AAVEV3 / BASE/LINEA/BSC   | 0        | 444 each        | ✅ correct pre-launch (UAC: 2023-08-09 / 2024-09-26 / 2023-04-06)                                                                                                                     |
-| COMPOUNDV3 / ETHEREUM     | 208      | 236             | ✅ Bug 2 baseline preserved — captured starts 2022-08-25 launch boundary                                                                                                              |
-| COMPOUNDV3 / ARB/BASE/OPT | 0        | 444 each        | ⏳ correct pre-launch so far (UAC: 2023-04-13 / 2023-08-26 / 2024-02-15) — VM not yet at post-launch dates; defer Bug 2 multi-chain post-launch verdict to next run with new tarballs |
+| AAVE_V3 / ARBITRUM         | 370      | 74              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
+| AAVE_V3 / AVALANCHE        | 371      | 73              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
+| AAVE_V3 / OPTIMISM         | 371      | 73              | ✅ unchanged — UAC says 2022-08-04, real subgraph 2022-03-15                                                                                                                          |
+| AAVE_V3 / POLYGON          | 373      | 71              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
+| **AAVE_V3 / ETHEREUM**     | **53**   | 391             | ✅ **Bug 1 RESOLVED** — captured dates start exactly 2023-01-27 (53 captured rows post-launch over 2023-01-27 → 2023-03-20). UAC fix end-to-end verified by real subgraph data.       |
+| AAVE_V3 / BASE/LINEA/BSC   | 0        | 444 each        | ✅ correct pre-launch (UAC: 2023-08-09 / 2024-09-26 / 2023-04-06)                                                                                                                     |
+| COMPOUND_V3 / ETHEREUM     | 208      | 236             | ✅ Bug 2 baseline preserved — captured starts 2022-08-25 launch boundary                                                                                                              |
+| COMPOUND_V3 / ARB/BASE/OPT | 0        | 444 each        | ⏳ correct pre-launch so far (UAC: 2023-04-13 / 2023-08-26 / 2024-02-15) — VM not yet at post-launch dates; defer Bug 2 multi-chain post-launch verdict to next run with new tarballs |
 | SPARK / ETHEREUM          | 1        | 443             | ✅ first captured row appears at the Spark mainnet boundary (2023-03-20)                                                                                                              |
 
 ### Boundary verification — AAVE V3 ETHEREUM 2023-01-25 → 2023-02-05
@@ -295,7 +295,7 @@ The boundary lines up exactly with the 2023-01-27 08:00:11 UTC subgraph probe fi
 
 ### Commits
 
-- `unified-api-contracts@6a64a56` — UAC SSOT correction (`("ETHEREUM","AAVEV3")` → `2023-01-27`) + test updated. PUSHED.
+- `unified-api-contracts@6a64a56` — UAC SSOT correction (`("ETHEREUM","AAVE_V3")` → `2023-01-27`) + test updated. PUSHED.
 - `instruments-service@6ae50de` — `TestGetProtocolFloorDate` test updated to assert corrected floor. PUSHED.
 - `market-tick-data-service@c6bdf96` — pre-floor-date short-circuit in `lending_indices_handler.process()` + 2 new unit
   tests passing. PUSHED.
@@ -315,7 +315,7 @@ Tab 9 ships + goes quiet per the spawn-prompt close-out clause.
 
 ## Open questions
 
-### Q1 — [lending-indices-relaunch-tab, 2026-05-08 06:35 UTC] — Bug 1 NOT validated by Tab 9 relaunch; UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` likely wrong
+### Q1 — [lending-indices-relaunch-tab, 2026-05-08 06:35 UTC] — Bug 1 NOT validated by Tab 9 relaunch; UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` likely wrong
 
 **Status**: ✅ RESOLVED — operator (Harsh) approved Tab 9's recommended decision (4 items) and extended Tab 9's scope to
 ship the fix end-to-end. See A1 below.
@@ -327,19 +327,19 @@ per-(venue, chain) outcome is:
 
 | venue / chain           | captured | empty_confirmed | error_reason           | verdict                                                                          |
 | ----------------------- | -------- | --------------- | ---------------------- | -------------------------------------------------------------------------------- |
-| AAVEV3 / ARBITRUM       | 28       | 74              | (mix)                  | ✅ working post-2022-03-16 launch                                                |
-| AAVEV3 / AVALANCHE      | 29       | 73              | (mix)                  | ✅ working post-2022-03-12                                                       |
-| AAVEV3 / OPTIMISM       | 29       | 73              | (mix)                  | ✅ working post-2022-03-15                                                       |
-| AAVEV3 / POLYGON        | 31       | 71              | (mix)                  | ✅ working post-2022-03-12                                                       |
-| **AAVEV3 / ETHEREUM**   | **0**    | **102**         | `SOURCE_RETURNED_ZERO` | ❌ **Bug 1 reproducer still fires**                                              |
-| AAVEV3 / BASE/LINEA/BSC | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC dates 2023-08-09 / 2024-09-26 / 2023-04-06)                      |
-| COMPOUNDV3 / all 4      | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC ETH=2022-08-25, ARB=2023-04-13, BASE=2023-08-26, OPT=2024-02-15) |
+| AAVE_V3 / ARBITRUM       | 28       | 74              | (mix)                  | ✅ working post-2022-03-16 launch                                                |
+| AAVE_V3 / AVALANCHE      | 29       | 73              | (mix)                  | ✅ working post-2022-03-12                                                       |
+| AAVE_V3 / OPTIMISM       | 29       | 73              | (mix)                  | ✅ working post-2022-03-15                                                       |
+| AAVE_V3 / POLYGON        | 31       | 71              | (mix)                  | ✅ working post-2022-03-12                                                       |
+| **AAVE_V3 / ETHEREUM**   | **0**    | **102**         | `SOURCE_RETURNED_ZERO` | ❌ **Bug 1 reproducer still fires**                                              |
+| AAVE_V3 / BASE/LINEA/BSC | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC dates 2023-08-09 / 2024-09-26 / 2023-04-06)                      |
+| COMPOUND_V3 / all 4      | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC ETH=2022-08-25, ARB=2023-04-13, BASE=2023-08-26, OPT=2024-02-15) |
 | SPARK / ETHEREUM        | 0        | 102             | `SOURCE_RETURNED_ZERO` | pre-launch (Spark mainnet ~2023-05-09)                                           |
 
 **Root cause traced via run.log** (line `06:28:03,338-3,602`):
 
 1. `_query_and_parse` cascade for `aave_v3` runs in order `aave_v3_native → messari_lending` per Tab 5's fix.
-2. **`aave_v3_native` schema succeeds (no schema error) but returns 0 rows** for AAVEV3-ETHEREUM 2022-03-14.
+2. **`aave_v3_native` schema succeeds (no schema error) but returns 0 rows** for AAVE_V3-ETHEREUM 2022-03-14.
    `non_schema_attempts` increments to 1.
 3. `messari_lending` raises `SubgraphSchemaError` (`Type Query has no field marketDailySnapshots`); caught,
    `last_schema_error` set.
@@ -350,12 +350,12 @@ So the cascade correctly avoids the silent-zero **only when EVERY variant raises
 without a schema error AND legitimately returns 0 rows, the cascade falls through to `record_empty` — which is the SAME
 OUTCOME as pre-fix. Bug 1's behaviour for AAVE V3 ETHEREUM is unchanged.
 
-**Why does `aave_v3_native` return 0 rows for AAVEV3-ETHEREUM 2022-03-14 when the same query returns rows for
+**Why does `aave_v3_native` return 0 rows for AAVE_V3-ETHEREUM 2022-03-14 when the same query returns rows for
 ARBITRUM/AVALANCHE/OPTIMISM/POLYGON the same day?** Most likely the UAC entry is wrong:
 
 ```python
 # unified_api_contracts/registry/chain_env.py:146
-("ETHEREUM", "AAVEV3"): "2022-03-14",   # ← suspect; AAVE V3 Ethereum
+("ETHEREUM", "AAVE_V3"): "2022-03-14",   # ← suspect; AAVE V3 Ethereum
                                         #   mainnet was 2023-01-27 per
                                         #   public record (Tab 5 DONE-block
                                         #   itself notes "from 2023-01-27
@@ -374,7 +374,7 @@ Bug 1 framing. See "Recommended decision" below.
 **Pending validation** (VM still running at ~30 days/min × 13 shards):
 
 - AAVE V3 ETHEREUM dates from 2023-01-27 onward (~T+45min). If captured rows appear → confirms UAC date is wrong but
-  cascade is otherwise healthy. If still 0 → cascade has a deeper bug for AAVEV3-ETHEREUM specifically.
+  cascade is otherwise healthy. If still 0 → cascade has a deeper bug for AAVE_V3-ETHEREUM specifically.
 - COMPOUND V3 ETHEREUM dates from 2022-08-25 (~T+27min). If captured → Bug 2 routing pending the all-fail case. COMPOUND
   V3 ARB/BASE/OPT post-launch dates (2023+) — once we reach those the all-fail case can be tested (the issue doc said
   Compound V3 multi-chain Messari schema fails on all variants).
@@ -433,7 +433,7 @@ diagnostic context is fresh, work is highest-leverage if you keep going.
    - If non-empty for any date → there's a different bug. Pause; raise Q2 here with the new evidence.
 
 2. **UAC SSOT correction** (P0): `unified_api_contracts/registry/chain_env.py:146`:
-   `("ETHEREUM", "AAVEV3"): "2022-03-14"` → `"2023-01-27"`. Add a comment citing the AAVE V3 Ethereum mainnet deployment
+   `("ETHEREUM", "AAVE_V3"): "2022-03-14"` → `"2023-01-27"`. Add a comment citing the AAVE V3 Ethereum mainnet deployment
    date + verification source (your subgraph probe). Run UAC quality-gates.sh to ensure PROTOCOL_LAUNCH_DATES tests
    still pass.
 

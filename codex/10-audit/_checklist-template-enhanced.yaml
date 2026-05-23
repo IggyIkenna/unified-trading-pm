@@ -593,7 +593,7 @@ items:
       Service supports MVP universe per mvp-universe.yaml:
       - Instruments: BTC, ETH
       - CEFI venues: BINANCE-SPOT, BINANCE-FUTURES, OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER
-      - DeFi venues: AAVEV3_ETHEREUM, UNISWAP_V3_ETH, COMPOUND_V3_ETH
+      - DeFi venues: AAVE_V3_ETHEREUM, UNISWAP_V3_ETH, COMPOUND_V3_ETH
       - TradFi venues: CME, CBOE, NYSE
     applies_to: "pipeline"
     mode: "both"

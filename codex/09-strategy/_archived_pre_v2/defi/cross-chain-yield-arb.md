@@ -44,15 +44,15 @@ Exit signal: spread narrows below 1% annualized (no venue offers sufficient edge
 | Instrument Key                         | Venue       | Type   | Role                             |
 | -------------------------------------- | ----------- | ------ | -------------------------------- |
 | `WALLET:SPOT_ASSET:USDC`               | Wallet      | Spot   | Initial capital                  |
-| `AAVEV3_{CHAIN}:A_TOKEN:AUSDC@{CHAIN}` | Aave V3     | aToken | Yield position (Aave, any chain) |
-| `COMPOUNDV3_{CHAIN}:C_TOKEN:CUSDC`     | Compound V3 | cToken | Yield position (Compound)        |
+| `AAVE_V3_{CHAIN}:A_TOKEN:AUSDC@{CHAIN}` | Aave V3     | aToken | Yield position (Aave, any chain) |
+| `COMPOUND_V3_{CHAIN}:C_TOKEN:CUSDC`     | Compound V3 | cToken | Yield position (Compound)        |
 | `MORPHO_{CHAIN}:M_TOKEN:MUSDC`         | Morpho      | mToken | Yield position (Morpho)          |
 | `SOCKET:BRIDGE:USDC`                   | Socket      | Bridge | Cross-chain capital transfer     |
 
 **Same-protocol arb pairs (Aave V3 USDC):**
 
-- AAVEV3-ETHEREUM vs AAVEV3-ARBITRUM vs AAVEV3-BASE vs AAVEV3-OPTIMISM vs AAVEV3-POLYGON vs AAVEV3-AVALANCHE vs
-  AAVEV3-SCROLL vs AAVEV3-ZKSYNC vs AAVEV3-GNOSIS vs AAVEV3-METIS
+- AAVE_V3-ETHEREUM vs AAVE_V3-ARBITRUM vs AAVE_V3-BASE vs AAVE_V3-OPTIMISM vs AAVE_V3-POLYGON vs AAVE_V3-AVALANCHE vs
+  AAVE_V3-SCROLL vs AAVE_V3-ZKSYNC vs AAVE_V3-GNOSIS vs AAVE_V3-METIS
 
 **Cross-protocol arb pairs (same asset, different protocols, different chains):**
 
@@ -190,8 +190,8 @@ assessment -> rebalance/exit decisions)
 
 | Instrument Pattern       | Exposure Type                      | Used For                   |
 | ------------------------ | ---------------------------------- | -------------------------- |
-| `AAVEV3_*:A_TOKEN:*`     | aToken balance (growing via index) | Yield tracking per chain   |
-| `COMPOUNDV3_*:C_TOKEN:*` | cToken balance (via exchange rate) | Yield tracking per chain   |
+| `AAVE_V3_*:A_TOKEN:*`     | aToken balance (growing via index) | Yield tracking per chain   |
+| `COMPOUND_V3_*:C_TOKEN:*` | cToken balance (via exchange rate) | Yield tracking per chain   |
 | `MORPHO_*:M_TOKEN:*`     | mToken balance                     | Yield tracking per chain   |
 | `WALLET:SPOT_ASSET:*`    | Wallet balance (idle capital)      | Capital tracking           |
 | `SOCKET:BRIDGE:*`        | In-transit capital                 | Bridge exposure monitoring |

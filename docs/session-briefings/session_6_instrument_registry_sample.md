@@ -94,7 +94,7 @@ TRADFI_FUTURES: dict[str, list[tuple[str, str, float, float]]] = {
 # DeFi tokens per venue
 # Format: (symbol, underlying, instrument_type, extra_params)
 DEFI_INSTRUMENTS: dict[str, list[dict[str, object]]] = {
-    "AAVEV3-ETHEREUM": [
+    "AAVE_V3-ETHEREUM": [
         {"symbol": "aUSDC", "underlying": "USDC", "type": "A_TOKEN", "ltv": 0.825},
         {"symbol": "aUSDT", "underlying": "USDT", "type": "A_TOKEN", "ltv": 0.75},
         {"symbol": "aWETH", "underlying": "WETH", "type": "A_TOKEN", "ltv": 0.825},
@@ -105,7 +105,7 @@ DEFI_INSTRUMENTS: dict[str, list[dict[str, object]]] = {
     "COMPOUND_V3_ETH": [
         {"symbol": "cUSDCv3", "underlying": "USDC", "type": "POOL"},
     ],
-    "UNISWAPV3-ETHEREUM": [
+    "UNISWAP_V3-ETHEREUM": [
         {"symbol": "USDT-ETH-0.3%", "underlying": "ETH", "type": "POOL", "fee_tier": 3000},
         {"symbol": "USDC-ETH-0.05%", "underlying": "ETH", "type": "POOL", "fee_tier": 500},
     ],

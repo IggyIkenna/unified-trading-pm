@@ -112,7 +112,7 @@ Cost analysis for $100,000 rebalance:
 | `AAVE_V3-BASE:A_TOKEN:USDC`        | Aave V3 BASE | aToken   | Lending position (target chain) |
 | `AAVE_V3-POLYGON:A_TOKEN:USDC`     | Aave V3 POLY | aToken   | Lending position (target chain) |
 | `AAVE_V3-AVALANCHE:A_TOKEN:USDC`   | Aave V3 AVAX | aToken   | Lending position (target chain) |
-| `UNISWAPV3-ETHEREUM:LP_POSITION:*` | Uniswap V3   | LP NFT   | LP position (source/target)     |
+| `UNISWAP_V3-ETHEREUM:LP_POSITION:*` | Uniswap V3   | LP NFT   | LP position (source/target)     |
 | `WALLET:SPOT_ASSET:USDC`           | Wallet       | Spot     | In-transit / undeployed capital |
 | `WALLET:SPOT_ASSET:ETH`            | Wallet       | Spot     | Gas token (Ethereum)            |
 | `WALLET:SPOT_ASSET:MATIC`          | Wallet       | Spot     | Gas token (Polygon)             |
@@ -191,7 +191,7 @@ assessment -> rebalance/exit decisions)
 | Instrument Pattern          | Exposure Type             | Used For                              |
 | --------------------------- | ------------------------- | ------------------------------------- |
 | `AAVE_V3-*:A_TOKEN:*`       | Lending position value    | Per-chain capital deployment tracking |
-| `UNISWAPV3-*:LP_POSITION:*` | LP position value         | Per-chain LP capital tracking         |
+| `UNISWAP_V3-*:LP_POSITION:*` | LP position value         | Per-chain LP capital tracking         |
 | `WALLET:SPOT_ASSET:*`       | Undeployed capital        | Idle capital detection                |
 | `SOCKET-BRIDGE:TRANSFER:*`  | In-transit capital        | Capital stuck in bridge monitoring    |
 | `WALLET:SPOT_ASSET:ETH`     | Gas token balance (ETH)   | Ensure sufficient gas on Ethereum     |

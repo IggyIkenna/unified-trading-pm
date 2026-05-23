@@ -130,7 +130,7 @@ IS that plan.
       `get_valid_data_types_for_venue`). TWO FIXES: (1) UAC@ab72717e re-exports from top-level (slot-5); (2)
       MTDS@105b8d15 moves import to registry (slot-4). Also: slot-6 applied UAC@058be427 + MTDS@470951df as redundant
       parallel fix. Relaunched `mtds-vault-share-price-20260522-091041` — COMPLETED + self-deleted. GCS confirmed:
-      ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3 at `raw_tick_data/by_date/day=2026-05-22/asset_group=defi/` ✅.
+      ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 at `raw_tick_data/by_date/day=2026-05-22/asset_group=defi/` ✅.
 - [x] ✅ [CODE] P0. **MTDS-3.2.C-VSP-FIX** — UAC@ab72717e + MTDS@105b8d15 (canonical). Also slot-6 parallel:
       market-tick-data-service@470951df + unified-api-contracts@058be427. 2026-05-22.
 - [x] ✅ [VERIFY] P0. **MTDS-3.2.C-V** — **GREEN (slot-2/slot-4/slot-7 2026-05-22)**: All 4 criteria met. (1) lst-rates

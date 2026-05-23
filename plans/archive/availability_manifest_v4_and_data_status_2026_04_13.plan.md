@@ -386,7 +386,7 @@ changes** — same shards written, same data, just proper column assignments.
       Write: `feature_group=entity_name` (or leave venue empty, write league_id). Sports reference tracks league×date
       coverage, not source×date.
 
-- [ ] [AGENT] P0. `engine/orchestrator.py`: DeFi instruments — split venue (AAVEV3-ETHEREUM) into venue=AAVE_V3 +
+- [ ] [AGENT] P0. `engine/orchestrator.py`: DeFi instruments — split venue (AAVE_V3-ETHEREUM) into venue=AAVE_V3 +
       chain=ETHEREUM. Add instrument_type (POOL, LENDING, LST, STAKING) from InstrumentType enum.
 
 - [ ] [AGENT] P0. `engine/orchestrator.py`: CEFI/TRADFI — add instrument_type (SPOT_PAIR, PERPETUAL, FUTURE, OPTION,

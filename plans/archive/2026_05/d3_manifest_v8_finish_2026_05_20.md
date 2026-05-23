@@ -149,7 +149,7 @@ that plan was written (2026-05-09):
 - [x] ✅ [OPERATOR] P0. Run detector post-migration: target 0 `DIVERGENT_EMPTY` in DEFI asset_group (765 cells found in
       A3)
   - Detector ran 2026-05-21 post-migration: DIVERGENT_EMPTY=765 (matches A3 exactly) — detector working correctly
-  - Cells are Drift S3 adapter-level bugs: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`
+  - Cells are Drift S3 adapter-level bugs: AAVE_V3-OPTIMISM `flash_loan_events` + COMPOUND_V3-BASE `risk_params`
   - CSV: `plans/audit/results/divergence_2026-05-21.csv` (1,792,168 rows total, 765 DIVERGENT_EMPTY, 214,344
     MISSING_EXPECTED)
   - These are pre-existing adapter bugs unresolved by schema migration; require MTDS handler backfill — tracked under D4
@@ -157,7 +157,7 @@ that plan was written (2026-05-09):
 - [x] ✅ [AGENT] P0. Phase 7C triage — classify all 765 DIVERGENT_EMPTY cells; produce triage CSV (slot-5 2026-05-21)
   - Triage CSV: `plans/audit/results/phase7c_divergent_empty_triage_2026_05_21.csv`
   - All 765 cells → `phase_11_rebackfill` (any_captured=False, any_empty=True — genuinely empty, not mislabelled)
-  - AAVEV3-OPTIMISM: 705 cells across 5 data_types; COMPOUNDV3-BASE: 60 cells across 4 data_types
+  - AAVE_V3-OPTIMISM: 705 cells across 5 data_types; COMPOUND_V3-BASE: 60 cells across 4 data_types
   - 0 label-flip-applied (no captured data to restore); 0 operator-scope
   - Phase 11 owner queues MTDS handler investigation for these venues
 
@@ -187,7 +187,7 @@ that plan was written (2026-05-09):
 - Rows with NULL backfilled v8 enhanced columns (service_emission_state=NULL) — acceptable until services start writing
   v8 rows natively (post-Phase 3 migration). Follow-up: services start writing real `service_emission_state` values as
   they process new shards.
-- DIVERGENT_EMPTY cells in defi (765 cells: AAVEV3-OPTIMISM `flash_loan_events` + COMPOUNDV3-BASE `risk_params`) — Drift
+- DIVERGENT_EMPTY cells in defi (765 cells: AAVE_V3-OPTIMISM `flash_loan_events` + COMPOUND_V3-BASE `risk_params`) — Drift
   S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require MTDS
   handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
 - DIVERGENT_EMPTY cells in sports/prediction/cefi/tradfi — addressed per their D4/D5/D1 plans after this D3 migration

@@ -962,7 +962,7 @@ REPORT-BACK:
 #### Tab 9 (history) — scope extended to bug-fix (operational + code, ~30min + ~2-3h)
 
 > **🟢 UAC `chain_env.py:146` FIX LANDED 2026-05-08 at UAC@`6a64a56`** — Tab 9's diagnosis shipped:
-> `PROTOCOL_LAUNCH_DATES[("ETHEREUM", "AAVEV3")]` `"2022-03-14"` → `"2023-01-27"`. **Coordination mirror in Ikenna's
+> `PROTOCOL_LAUNCH_DATES[("ETHEREUM", "AAVE_V3")]` `"2022-03-14"` → `"2023-01-27"`. **Coordination mirror in Ikenna's
 > 5-tab layout § Cross-tab handshakes** (the gate is documented as a SHIPPED row there + an Agent 4 dependency note on
 > the deferred lending-indices relaunch). **Pattern for future similar UAC SSOT fixes** (any `*_LAUNCH_DATES` /
 > `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`): any agent in flight on `chain_env.py` (or
@@ -1390,13 +1390,13 @@ REPORT-BACK: 1 commit (proposal section); push per conditional rule.
 - **Verified by main 2026-05-08 07:44 UTC** — PM@`c08f7a6` exists + pushed to origin. Audit doc filed at
   `plans/active/issues/defi_fork1_prep_audit_2026_05_08.md` (33,372 bytes — substantial output).
 - **HEADLINE FINDING (case-5 BIG)**: **13 of 17 probed (chain, protocol) pairs in Fork 1 scope have UAC
-  `PROTOCOL_LAUNCH_DATES` SSOT drift** — same shape as Tab 9's AAVEV3-ETHEREUM finding, applied across the broader Fork
+  `PROTOCOL_LAUNCH_DATES` SSOT drift** — same shape as Tab 9's AAVE_V3-ETHEREUM finding, applied across the broader Fork
   1 surface. Includes carry_staked_basis lead-archetype legs (AAVE V3 OPTIMISM 142d data loss; UNISWAP V3 ARBITRUM 91d
   data loss). Plus: Pyth Hermes archive doesn't cover ~11 months of jitoSOL history (2022-11 → 2023-10) needed for
   carry_staked_basis Solana leg. bSOL is in Fork 1 brief but NOT in UAC `LST_TOKEN_GENESIS` — coverage gap.
 - **What Tab 14 correctly did NOT do**: ship the UAC fix. Avoiding collision with Ikenna's writegate work
   - Tab 9's still-stacked PM commits + the parallel-agent rule. **Operator triage required** — Tab 14 recommends 4
-    sequential fix tabs A/B/C/D (mirror Tab 9's AAVEV3-ETHEREUM precedent).
+    sequential fix tabs A/B/C/D (mirror Tab 9's AAVE_V3-ETHEREUM precedent).
 - **Bug classes 1/2/3 results**: diagnostic-only, no findings flagged for those (silent-zero, schema drift, launch-date
   floor handling all clean across the audited surface).
 - **Going quiet** per spawn protocol — won't pick up new work.
@@ -1436,16 +1436,16 @@ classes** that Tab 5 + Tab 9 surfaced and partially fixed:
     instruments-service's get_protocol_floor_date returns the UAC PROTOCOL_LAUNCH_DATES SSOT
     value, not a hard-coded floor.
   Bug class 4 (NEW — added per Tab 9 discovery 2026-05-08): **UAC PROTOCOL_LAUNCH_DATES
-    date drift**. Tab 9 found `("ETHEREUM","AAVEV3"): "2022-03-14"` in UAC chain_env.py was
+    date drift**. Tab 9 found `("ETHEREUM","AAVE_V3"): "2022-03-14"` in UAC chain_env.py was
     wrong — actual mainnet deploy was `2023-01-27` (11-month gap → 343 days of false-empty).
     Probe-verify this for EVERY (chain, protocol) pair in PROTOCOL_LAUNCH_DATES — query the
     matching subgraph for the earliest `*HistoryItems` event (or equivalent first-write
     indicator). If the UAC date is more than ~14 days before the earliest on-chain event,
     flag as a likely date-drift bug. Critical pairs to check first (high relevance to
     May-23 archetypes):
-    * AAVEV3 / BASE, LINEA, BSC, METIS, GNOSIS — multi-chain Aave V3 cohorts beyond Tab 9's
+    * AAVE_V3 / BASE, LINEA, BSC, METIS, GNOSIS — multi-chain Aave V3 cohorts beyond Tab 9's
       already-fixed ETHEREUM.
-    * COMPOUNDV3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM — multi-chain Compound V3 (Bug 2
+    * COMPOUND_V3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM — multi-chain Compound V3 (Bug 2
       surface).
     * SPARK / ETHEREUM — Maker-spinoff lending; UAC date suspect.
     * Any other (chain, protocol) pair in chain_env.py with a date that pre-dates the
