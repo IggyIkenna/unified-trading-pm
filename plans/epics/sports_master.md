@@ -370,7 +370,12 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       2022-03-12, 2023-08-15. All have `available_at=True, data_available_at=False` (migration clean). INJURIES empty
       parquets (0 rows, pre-schema) exist but are pre-migration artifacts. PLAYER_STATS/FIXTURE_STATS/FIXTURE_LINEUPS
       across EPL/BUNDESLIGA/UCL all ✅. 2026-05-23.
-- [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM. [AUDIT 2026-05-07: FRESH — actionable]
+- [x] ✅ [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM. — instruments-service@76be157d.
+      Verified f36651c (zero-fixture record_empty) is deployed on forward-poll VMs. Also found + fixed a second bug:
+      `kind="instruments"` → `kind="instruments-store"` in both `instruments_handler.py` and
+      `sports_fixtures_daily_repoll.py` — caused ManifestWriter final flush to silently fail on all 4 asset groups
+      (SPORTS/CEFI/DEFI/TRADFI) every run. Forward-poll run footystats-fwd-20260523-230012 confirmed rc=0 with fix
+      deployed. 2026-05-23.
 - [x] ✅ [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment. [AUDIT 2026-05-07: FRESH —
       actionable] **ALREADY IMPLEMENTED**: `_af_emit_empty_gaps_for_entity()` at orchestrator.py:3842 is called for
       STANDINGS (line 4004), INJURIES (lines 4081/4106), and all per-fixture entities FIXTURE_STATS/EVENTS/LINEUPS/
