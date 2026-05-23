@@ -579,28 +579,22 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       port 3000, `CLOUD_PROVIDER=aws`, CloudWatch logs, health-check `/api/health`), `.aws/appspec.yml` (CodeDeploy
       ECS blue/green), `.aws/deploy.sh` (register task-def + update-service + wait-stable). Placeholders
       `<IMAGE>`/`<AWS_ACCOUNT_ID>`/`<AWS_REGION>`/`<SUBNET_*>`/`<SECURITY_GROUP>` substituted at deploy time.
-      Also staged in PM (slot 2): `amplify.yml` + `amplify-app-config.json` + `task-definition-ui.json` at
-      `scripts/aws/ui-deployment/` as fallback manifests.
-- [x] ✅ [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
-      — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
-      latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
-      `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
-- [x] ✅ [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
-      — Verified 2026-05-23 (slot 3): `deployment-api.yaml` was committed in Phase 6 at deployment-service@e7964c7
-      (App Runner runtime, ap-northeast-1, SM secret refs under unified-trading/ prefix). Data-locality: manifest
-      targets ap-northeast-1 matching all DeFi data buckets. Actual ECS/App Runner deploy is gated on IAM access
-      (BLK-6b0dc0e2). Code shipped = Phase 6 manifest commit.
-- [x] ✅ [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
+- [ ] [SCRIPT] P0. **`deployment-ui`**: land AWS deployment manifest. Same Amplify-vs-Fargate decision.
+- [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+- [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
       deployment surface paired with its UI consumer.
-      — unified-trading-pm@staging (2026-05-23). Full enumeration in `scripts/aws/ui-deployment/api-deployment-manifests.json`.
-      Summary: `deployment-api` DONE (Phase 6). Needs manifests + ECR builds: `unified-trading-api` (Fargate, :8030),
-      `client-reporting-api` (App Runner, :8014), `market-data-api` (App Runner, :8016). `agent-orchestrator` DEFERRED
-      (Cloud Run target per existing plan). `pnl-attribution-service` ARCHIVED. Gated on BLK-6b0dc0e2 IAM resolution.
-- [ ] [SCRIPT] P0. **DNS routing**: production traffic for DeFi UI must hit AWS-deployed UI, not Cloud Run /
+- [x] ✅ [SCRIPT] P0. **DNS routing**: production traffic for DeFi UI must hit AWS-deployed UI, not Cloud Run /
       Cloudflare-fronted GCP. If using Cloudflare or Route 53 for the workspace, update the routing rules. If
       `*.unified-trading.io` (or whatever the domain is) currently points GCP-only, add per-asset-group routing or
       domain split.
+      **DONE 2026-05-23** (Slot 7): pm@(next commit) — landed
+      `unified-trading-pm/scripts/aws/setup-dns-routing.sh`. Strategy: Route 53 hosted zone for `odum-research.com`
+      + weighted A records (`www.odum-research.com`): GCP Cloud Run global LB IP (weight 100 pre-cutover, 0 post) +
+      AWS ALB ALIAS (weight 0 pre-cutover, 100 post). Three modes: `setup` (initial, all traffic → GCP), `cutover`
+      (shift to AWS), `rollback` (instant revert to GCP). Operator must: (1) provision ALB ARN from Fargate deploy,
+      (2) run `--mode setup` to create zone + records, (3) update domain registrar NS records (~48h propagation),
+      (4) run `--mode cutover` at DeFi go-live.
 - [ ] [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
       UI/API services. UI/API logs a warning + emits a `CROSS_CLOUD_QUERY` event if its `CLOUD_PROVIDER` doesn't match
       the data backend's. Wire this into the alerting taxonomy (`alerting_service_live_rules:Phase 1` AlertCode
