@@ -1,9 +1,8 @@
 ---
 title: Extend run_2yr_config_grid_backtest.py to all 6 Tier-A archetype families
-status: active
+status: archived
 created: 2026-05-20
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
+archived: 2026-05-23
 priority: P1
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
@@ -83,3 +82,15 @@ Dimension choices required per family:
 
 `SUPPORTED_ARCHETYPES` covers all 6 Tier-A families; 4 new integration tests pass; `quality-gates.sh` green; plan
 flipped.
+
+## Deferred work — migrated to:
+
+All 3 items DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2. No implementation. Migrated to `strategy_master` §
+post-cutover backlog:
+
+- **Confirm per-archetype grid dimension names (P0, BLOCKED-OPERATOR-DECISION)**: Migrated to: strategy_master §
+  post-cutover backlog. Critical mismatch between plan's proposed dims and actual engine params (see plan body);
+  operator must choose (a) update plan dims to match engine or (b) add params to engines first.
+  `ARBITRAGE_CROSS_DOMAIN_EVENT` additionally needs engine factory registration.
+- **Implement `_DIMENSIONS_BY_ARCHETYPE` entries + grid branches (P0)**: Gate: operator decision above.
+- **Smoke test per new family (P0)**: Gate: implementation above + strategy-service repo.

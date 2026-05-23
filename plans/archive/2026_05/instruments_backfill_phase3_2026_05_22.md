@@ -6,13 +6,12 @@ assigned_vm: vm-cefi
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
+archived: 2026-05-23
 gate: Phase 2 freeze lifted + instruments_master Phase A-E preflight GREEN
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
 
 # Instruments-service catalogue forward-fill — Phase 3 per-asset-group
@@ -182,3 +181,15 @@ buckets. Manual copy performed this session:
   instr-backfill-pred-20260522.parquet copied. Availability_index updated: 4035 rows, 890 captured ✅.
 
 Long-term fix: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (IS bucket resolver migration).
+
+## Deferred work — migrated to:
+
+22 items shipped (✅); 3 items DEFERRED-OPERATOR-DECISION. Migrated to `instruments_master` § post-cutover backlog:
+
+- **IS-3.1.Sports-V — verify `instruments-store-sports-prd` gains rows (P0, DEFERRED-OPERATOR-DECISION)**:
+  Migrated to: instruments_master § post-cutover backlog. Gate: `instr-backfill-sports` completes; track in
+  `predictions_master`.
+- **IS-3.1.TradFi-Databento — backfill TradFi instruments via Databento SDK (P0, BLOCKED-CREDENTIALS)**:
+  Migrated to: instruments_master § post-cutover backlog. Gate: operator reactivates Databento account (auth_account_locked).
+- **IS bucket canonicalisation — flat→env-tiered IS bucket migration (P2)**:
+  Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.

@@ -6,13 +6,12 @@ assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
+archived: 2026-05-23
 gate: mdps_backfill_phase3 per-ag verification GREEN (features reads from MDPS bars)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
 
 # Features-service compute relaunch — Phase 3 per-asset-group
@@ -101,3 +100,18 @@ Gate: phases 1-5 verification GREEN for the relevant upstream asset groups.
 - Sports gate: blocked on `sports_master` Phase 3+4; track there.
 - ML training (Phase 3.5 in freeze plan): separate plan — `features_and_ml_master` Phase 4+. This plan covers
   compute-only; model training follows after features verified GREEN.
+
+## Deferred work — migrated to:
+
+All 18 items DEFERRED-OPERATOR-DECISION (compute VMs need operator launch authorization post-cutover). Migrated to
+`features_and_ml_master` § post-cutover backlog:
+
+- **FEAT-3.4.CeFi VMs (DeltaOne, Volatility, MTF, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
+  features_and_ml_master § post-cutover compute launch. Gate: operator VM launch authorization.
+- **FEAT-3.4.DeFi VMs (Onchain, DeltaOne, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
+  features_and_ml_master § post-cutover compute launch.
+- **FEAT-3.4.TradFi VMs (DeltaOne, Volatility, MTF, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
+  features_and_ml_master § post-cutover compute launch.
+- **FEAT-3.4.Sports VMs (P0, DEFERRED-OPERATOR-DECISION)**: Gate: sports_master Phase 3+4 + operator authorization.
+- **FEAT-3.4.Pred VMs (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: features_and_ml_master § post-cutover backlog.
+- **FEAT-3.4.Calendar + XInstrument cross-cutting (P0, DEFERRED-OPERATOR-DECISION)**: Gate: phases 1-5 GREEN.

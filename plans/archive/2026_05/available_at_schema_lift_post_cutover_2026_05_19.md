@@ -3,12 +3,11 @@ title: available_at schema-level invariant lift + QG hardening (post-cutover arc
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
+archived: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-locked_by: live-defi-rollout
-locked_since: 2026-05-19
 related_plans:
   - available_at_lookahead_bias_completion_2026_05_08.md
 ---
@@ -62,3 +61,14 @@ Gate: `features_repo_consolidation_2026_05_08` Phase 5.c ships + Tab 12 wiring c
 
 - Phase A gated on monorepo migration: ride with Block B1 ADT lift post-May-23.
 - Phase B gated on features consolidation: `features_repo_consolidation_2026_05_08` Phase 5.c.
+
+## Deferred work — migrated to:
+
+All 7 items DEFERRED-OPERATOR-DECISION (post-cutover architectural slice). Migrated to `batch_live_symmetry_master` §
+post-cutover backlog:
+
+- **UAC `AvailabilityRule` Protocol — Phase A (5 items, P1/P2, DEFERRED-POST-CUTOVER)**: Migrated to:
+  batch_live_symmetry_master § post-cutover backlog. Gate: monorepo migration Block B1 ADT lift.
+  Covers: `availability_rule.py`, row base class, per-source migration, `availability_stamping.py` reduction, SSOT update.
+- **QG STEP 5.67/5.68 static enforcement — Phase B (2 items, P2, DEFERRED-POST-CUTOVER)**: Migrated to:
+  batch_live_symmetry_master § post-cutover backlog. Gate: Phase A + `features_repo_consolidation` Phase 5.c.
