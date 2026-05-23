@@ -2209,14 +2209,11 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       instruments-store-sports fixtures parquets; orchestrator registers via register_catalog_reader + calls
       catalog_list_instruments for per-fixture sentinels; EXPECTED_PAUSED_LEAGUE for off-season; v1 fallback when no
       reader registered)
-- [ ] [SCRIPT] P0. **CeFi v2 enumerator** — read per-venue instrument catalog from
-      `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical Tardis-derived
-      layout is — needs an `instruments-service`-side audit). Cross-product
-      `(venue, instrument_type, instrument_id, data_type) × dates` filtered by `available_from ≤ day ≤ available_to`.
-      Today's `EXPECTED_PRE_VENUE_LAUNCH` becomes a special-case of `EXPECTED_INSTRUMENT_NOT_LISTED` (every instrument's
-      `available_from` ≥ venue launch date by definition). For options/futures: bundled-by-root cluster atoms —
-      `EXPECTED_INSTRUMENT_NOT_LISTED` gates per-root-day. For perp futures: `EXPECTED_INSTRUMENT_DELISTED` when
-      contract expires.
+- [x] [SCRIPT] P0. **CeFi v2 enumerator** ✅ — market-tick-data-service@09361718 (CeFiCatalogReader reads
+      instruments-store-cefi catalog — latest `reference_data/instruments/asset_group=cefi/written_at=*/all.parquet`;
+      derives canonical IDs as BASE-USDT/BASE-PERP from InstrumentRecord fields; filters expired/delisted and outside
+      availability window; orchestrator registers reader at startup, loads cefi_catalog_by_venue once per sentinel date,
+      overrides Tier-3 instrument-provider for CeFi venues; graceful v1 UAC seed fallback when catalog absent)
 - [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which generates
       35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
       `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento instruments
