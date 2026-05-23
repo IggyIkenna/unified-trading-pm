@@ -7,7 +7,7 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P1
-status: open
+status: BLOCKED-OPERATOR
 ---
 
 ## What I found

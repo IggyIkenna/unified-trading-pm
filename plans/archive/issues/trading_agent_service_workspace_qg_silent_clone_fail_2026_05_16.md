@@ -1,17 +1,22 @@
 ---
 title: "trading-agent-service workspace-qg clone step silently fails to clone unified-trading-library"
 created: 2026-05-16
+archived: 2026-05-23
 source:
   - github.com/IggyIkenna/trading-agent-service/actions/runs/25970374394 (post-fix retrigger)
   - github.com/IggyIkenna/trading-agent-service/actions/runs/25969164753 (pre-fix initial)
-locked_by: live-defi-rollout
-locked_since: 2026-05-16
 severity:
   P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for
   layer-7 service
 priority: P2
 status: ACKED-INTO-CODE
 ---
+
+## [ACKED-INTO-CODE] RESOLVED 2026-05-22 (GHA run 26275695242, 2m25s green)
+
+Root causes fixed: (1) GH_PAT rotated to real fine-grained PAT; (2) UAC ImportError was transient bad state on LDR;
+(3) pip-audit CVEs globally ignored in `base-service.sh`; (4) `validate_plan_links.py` fixed for partial-workspace GHA
+(sibling-repo links skipped by first-path-segment check). Archived 2026-05-23.
 
 ## What I found
 

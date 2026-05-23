@@ -5,12 +5,7 @@ title:
 created: 2026-05-21
 updated: 2026-05-21
 priority: P1
-status:
-  FILED 2026-05-21 14:24 UTC by main agent (this VM) per operator request after a recurring `/login` prompt cycle during
-  the 2026-05-21 cutover/post-cutover window. Operator hypothesised sudo install — RULED OUT (see §3). Real root cause
-  is OAuth refresh-token rotation against a shared `.credentials.json` plus in-memory token staleness in long-running
-  consumers (slot workers, VS Code extension chats). Operator will pick this up with a separate agent for the structural
-  fix; this doc is the brief.
+status: BLOCKED-OPERATOR
 related_plans:
   - agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
   - orchestrator_spawn_tmux_silent_failure_2026_05_20.md

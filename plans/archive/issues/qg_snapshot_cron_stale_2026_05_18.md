@@ -1,13 +1,19 @@
 ---
 title: QG daily snapshot cron VM stale — last run 2026-05-14 (4 days)
 created: 2026-05-18
+archived: 2026-05-23
 source:
   - work_split_2026_05_18_harsh.md § Slot 7 item 3
   - plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 4.A (B-018)
-locked_by: live-defi-rollout
 priority: P2
 status: ACKED-INTO-CODE
 ---
+
+## [ACKED-INTO-CODE] RESOLVED 2026-05-22
+
+`--dry-run-scheduler-body` flag added to `launch-qg-snapshot-vm.sh`; Cloud Scheduler job `qg-snapshot-daily` created
+at `0 6 * * *` UTC (asia-northeast1, SA `uts-prod-batch-sa@central-element-323112.iam.gserviceaccount.com`). Dedicated
+`qg-snapshot` task handler added to `setup-data-pipeline-vm.sh`. Archived 2026-05-23.
 
 ## What I found
 

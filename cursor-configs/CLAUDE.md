@@ -70,7 +70,8 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 3. `.cursor/rules/no-type-any-use-specific.mdc` — no Any types
 4. `unified-trading-pm/codex/06-coding-standards/README.md` — coding standards
 5. `unified-trading-pm/plans/PLAN_FORMAT.md` — plan format; Cursor checkboxes (`- [x]` / `- [ ]`) required
-6. **Asset-group vocabulary**: `asset_group` (not `category`). CLI `--asset-group`, envs
+6. `plans/audit/README.md` — audit lifecycle; every epic has instructions in `plans/audit/instructions/`
+7. **Asset-group vocabulary**: `asset_group` (not `category`). CLI `--asset-group`, envs
    `VM_ASSET_GROUP`/`MDPS_ASSET_GROUP`. Keys lowercase: `cefi`/`defi`/`tradfi`/`sports`/`prediction`. GCS hive-key:
    `asset_group=` canonical. Plan: `plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md`.
 
