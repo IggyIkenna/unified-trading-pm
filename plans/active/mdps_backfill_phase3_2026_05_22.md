@@ -126,6 +126,14 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       Feb-Dec) + 9 (2021 Apr-Dec) + 9 (2022 Apr-Dec) + 10 (2023 Mar-Dec) + 10 (2024 Mar-Dec) + 11 (2025 Feb-Dec) + 4
       (2026 Feb-May) = 64 VMs. All 64 RUNNING at 18:42 UTC. MDPS skip-if-exists confirmed
       (`orchestration_service.py:192` — skips dates already fresh in manifest). 2026-05-23 slot-5.
+- [x] ✅ [INFRA] P0. **MDPS-3.3.TradFi-ConsolidatorFix** — `ManifestReader: consolidated blob age 101554s` root cause:
+      MDPS launch scripts hardcode legacy bucket name (`market-data-tick-tradfi-central-element-323112`, no env suffix)
+      while Cloud Run consolidator targets env-tiered bucket (`-prd-`). Fix: (1) manual consolidation on 3 stale legacy
+      buckets (tradfi 331K rows/79s, sports 335K rows/38s, prediction 189K rows/26s); (2) added 5 new Cloud Run jobs + 5
+      Cloud Scheduler crons (`*/1 * * * *`) for legacy market-data buckets (cefi/defi/tradfi/sports/prediction); (3)
+      removed duplicate `plan_hygiene_scheduler.tf` (superseded by `hygiene_sweep_scheduler.tf`). deployment-
+      service@4dc73bc. QG STEP 5.69 violation in launch-mdps-sharded-backfill.sh line 205 tracked under
+      `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0f. 2026-05-23 slot-5.
 
 ## Phase 4 — Sports MDPS reprocessor
 
