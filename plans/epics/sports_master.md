@@ -427,14 +427,14 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       2026-05-07: FRESH — actionable] **COMPLETED 2026-05-23**: Rows live in
       `market-data-tick-sports-central-element-323112` under
       `processed/by_date/day={day}/data_type=odds_horizon_bucket/league_id={league}/timeframe={T-Xh}/bucketed.parquet`.
-      144,080 manifest rows; ODDS_API = dominant venue (144,080). 31 columns confirmed:
-      bookmaker_key, fixture_id, sport_key, home/away/draw odds, asian_handicap, over_under, btts, horizon_idx,
-      horizon_name, kickoff_utc, minutes_to_kickoff, bm_minutes_to_kickoff, staleness_seconds, fetch_utc, source.
-      Full schema = MTDS `odds_horizon_bucket` contract. Data already in canonical path — NOT a raw legacy dump,
-      but a properly bucketed MDPS output. The "288M rows" refers to row-level bookmaker ticks, not manifest rows.
-      **Finding**: No migration needed — data is already in canonical MTDS format with 8 horizon buckets. The plan's
-      "migrate from venue=ODDS_API" referred to the manifest re-key; manifest already has correct key shape
-      (date, venue, data_type, league_id, timeframe). Next step: run MDPS `SportsBucketAssignmentAdapter` smoke pass.
+      144,080 manifest rows; ODDS_API = dominant venue (144,080). 31 columns confirmed: bookmaker_key, fixture_id,
+      sport_key, home/away/draw odds, asian_handicap, over_under, btts, horizon_idx, horizon_name, kickoff_utc,
+      minutes_to_kickoff, bm_minutes_to_kickoff, staleness_seconds, fetch_utc, source. Full schema = MTDS
+      `odds_horizon_bucket` contract. Data already in canonical path — NOT a raw legacy dump, but a properly bucketed
+      MDPS output. The "288M rows" refers to row-level bookmaker ticks, not manifest rows. **Finding**: No migration
+      needed — data is already in canonical MTDS format with 8 horizon buckets. The plan's "migrate from venue=ODDS_API"
+      referred to the manifest re-key; manifest already has correct key shape (date, venue, data_type, league_id,
+      timeframe). Next step: run MDPS `SportsBucketAssignmentAdapter` smoke pass.
 - [ ] [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
       `(asset_group=sports, source=odds_api, data_type, league_id, day)`). [AUDIT 2026-05-07: FRESH — actionable;
       coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
@@ -524,10 +524,10 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
       **SHIPPED 2026-05-23**: `INCOMPLETE_PAYLOAD_PRE_FLATTENING` added to `RecordFailedReason` (UAC@84c8c49d);
-      migration script `flip_b1_thin_payload_to_reattempt.py` ships (instruments-service@b0a1d284).
-      **Run after sports PRD available_at migration completes** (in progress): `--dry-run` first, then `--apply
-      --delete-parquets` on both base + PRD buckets. Then launch `af-backfill-flatten-{ts}` VM.
-      [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
+      migration script `flip_b1_thin_payload_to_reattempt.py` ships (instruments-service@b0a1d284). **Run after sports
+      PRD available_at migration completes** (in progress): `--dry-run` first, then `--apply     --delete-parquets` on
+      both base + PRD buckets. Then launch `af-backfill-flatten-{ts}` VM. [AUDIT 2026-05-07: FRESH — actionable;
+      coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
       `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
       skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
@@ -691,15 +691,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       2026-05-13**: UAC@ac12d80 — normalize_api_football_standing() rewrite + SPORTS_STANDINGS schema flatten (14 → 32
       columns: team_id/name/logo + all/home/away × played/win/draw/lose/goals_for/goals_against). Migration still
       deferred (operational VM launch).
-- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** UAC `normalize_understat_feature_record` is
-      currently ONE feature value per shot. Replace with `normalize_understat_shot` returning a flat dict with all ~15
-      fields: `xg`, `xa`, `minute`, `player_id`, `player_name`, `situation` (open_play / set_piece / penalty),
-      `shot_type` (header / left_foot / right_foot / other), `result` (goal / saved / missed / blocked / post), `x`,
-      `y`, `last_action`, `home_or_away` (h / a), `assist_player_id`, `season`, `match_id`. Lift `feature_name=shot_xg`
-      callers to read from the `xg` column instead. Same B.1 migration shape (flip + delete + re-fetch via dedicated
-      `us-backfill-shots-flatten-{ts}` VM + cassette parity). features-sports consumers updated to read per-shot
-      dimensions; XG features become much richer (position-on-pitch, shot-quality decomposition, set-piece vs open-play
-      splits).
+- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** ✅ PARTIAL — UAC `SPORTS_XG_SHOTS` schema contract
+      added (UAC@31fb223f; 20 cols: shot_id, match_id, fixture_id, player_id, player_name, minute, result, xg, xa, x, y,
+      situation, shot_type, home_or_away, last_action, home_goals, away_goals, period, source, available_at; registry
+      key (sports, shot, xg_shots)). **Remaining**: (a) instruments-service orchestrator `_run_understat_shots_date()`
+      write path; (b) Understat adapter `get_match_shots(match_id)` calling `GET /getMatch/{match_id}`; (c) flip
+      existing XG manifest rows + delete thin parquets + re-fetch via `us-backfill-shots-flatten-{ts}` VM; (d) cassette
+      parity test for `normalize_understat_shot`; (e) features-sports consumers read per-shot dimensions.
 - [x] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
       replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
       FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
