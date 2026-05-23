@@ -633,10 +633,10 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       `report_time = match_end_time + SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write path.
       (instruments-service@af06124 — `match_end_time` + `report_time` columns added to SFI progressive stats rows in
       orchestrator per-match loop, using `detect_match_end_time()` + `SFI_DATA_LAG_P95_SECONDS=300`.)
-- [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
-      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5 (instruments-service@9bffca2)**: 5 unit tests for
-      freeze-detect + announced_at + PST/CANC shipped in `test_phase2d_match_timing.py`. Cascade-branch tests (Step 3
-      UTL helper) still needed.
+- [x] ✅ [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
+      2026-05-07: FRESH — actionable] **COMPLETED 2026-05-23**: 6 new C.6 tests added to `test_phase2d_match_timing.py`
+      (14 tests total): report_time→available_at, None report_time→wall-clock, mixed rows, detect_match_end_time+lag
+      derivation, XG kickoff+24h preserved, XG None-kickoff fallback — instruments-service@fa0b6f04. All 14 PASSED.
 - [ ] [VERIFY] P0. After ship + smoke, deployment-ui schema modal for FIXTURES / SFI_PROGRESSIVE_STATS / FIXTURE_STATS
       shows `match_end_time` column populated for completed fixtures. [AUDIT 2026-05-07: BLOCKED-ON above C.6 ship]
 
