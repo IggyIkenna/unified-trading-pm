@@ -655,8 +655,20 @@ before CME arb can link.
       defined in `CanonicalQuestionGroup` + `PREDICTION_GROUPS` + `cme_polymarket_link.py` fully wired (UAC@9c491bdd).
       cme-arb Phase 2 FULL. **Classifier rules DONE (2026-05-22 slot-2 UAC@55d068f7)**: taxonomy.py RUT slug prefixes
       (rut-/russell-2000-/russell-) + CLASSIFIER_VERSION=2026-05-22.1; classifiers.py 7 entries in
-      `_CATEGORY_UNDERLYING_PERIOD_TO_GROUP` (NDX/DJIA/RUT/GOLD/CRUDE_OIL/NAT_GAS/EURUSD); 24 tests pass. Remaining: IS
-      catalog backfill + MTDS CLOB tick history for the 7 new groups (requires VM launch — not yet dispatched).
+      `_CATEGORY_UNDERLYING_PERIOD_TO_GROUP` (NDX/DJIA/RUT/GOLD/CRUDE_OIL/NAT_GAS/EURUSD); 24 tests pass. **Classifier
+      MONTHLY→DAILY fallback DONE (2026-05-23 slot-1 UAC@228c317a)**: Polymarket daily-price markets use month+day slugs
+      (e.g. "btc-up-or-down-may-22") → taxonomy assigns MONTHLY → no dict hit → OTHER. Fixed by adding
+      RANGE_BRACKET+MONTHLY→DAILY fallback in `classify_polymarket_to_canonical_group`; bumped
+      CLASSIFIER_VERSION=2026-05-23.1. Smoke-test verified: BTC/SPX/CRUDE_OIL/GOLD/NATGAS daily slugs all route to
+      correct groups. Remaining: IS prediction catalog re-backfill (purge existing OTHER rows for these 5 groups + rerun
+      instr-backfill-pred VM with UAC@228c317a) + MTDS CLOB tick history for 7 new groups.
+- [ ] [SCRIPT] P1. **Phase 5.reclassify — purge OTHER + re-launch IS prediction backfill with UAC@228c317a**: existing
+      7,570 Polymarket OTHER rows in IS prediction manifest include BTC/SPX/CRUDE_OIL/GOLD/NATGAS daily markets that now
+      classify correctly with the 2026-05-23.1 classifier. Steps: (1) purge IS prediction manifest rows where
+      `canonical_question_group=OTHER` AND slug matches btc-up-or-down-_/spx-up-or-down-_/crude-oil-up-or-down-_/
+      gold-up-or-down-_/nat-gas-up-or-down-\* patterns; (2) rebuild tarball instruments-service @ LDR tip; (3) launch
+      instr-backfill-pred VM (2024-01-01→2026-05-23, MANIFEST_PER_VM_SHARDS=true) — manifest skip will reuse correctly
+      classified rows and only re-write the purged ones.
 
 ## `available_at` adapter stamping (coordinated)
 
