@@ -1,17 +1,9 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-22
+last_reviewed: 2026-05-19
 ---
 
 # Availability Manifest & Data Status — SSOT
-
-> **[DELTA 2026-05-22]** **Current state:** Writers at v8 schema (code constant `MANIFEST_SCHEMA_VERSION = 8`); ~3.4M
-> existing rows still at v<8 — Phase 7 migration in progress (slot 5). 765 `DIVERGENT_EMPTY` cells and blank/NULL
-> `empty_confirmed.reason` labels present in production manifests. `asset_group` partition key added at v8 — CeFi rows
-> written before Phase 7 lack this column. **Planned delta:** `mtds_mdps_master` Phase 7 will migrate all v<8 rows +
-> flip bad/blank `empty_confirmed.reason` labels + triage 765 `DIVERGENT_EMPTY` cells. After Phase 7.D completion this
-> doc gets a `## Schema v8 migration — COMPLETE` banner. **Target architecture:** 100% v8 across all buckets, 0 NULL
-> reason, 0 DIVERGENT_EMPTY.
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
@@ -308,18 +300,6 @@ sweep across MTDS + instruments-service (tracked as deferred follow-up in Phase 
 backfills missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion cutoff. The runtime SSOT
 lives in `unified-trading-library/unified_trading_library/manifest_writer.py`.
 
-> **[DELTA 2026-05-22 — v8 data-side divergence (CRITICAL)]** **Current state (2026-05-20 mega-audit A4 finding):** Code
-> constant says `MANIFEST_SCHEMA_VERSION = 8`. **0% of 7.4M production manifest rows are actually at v8.** All prod rows
-> are v4-v7. 1.3M rows have NULL `schema_version`. The code constant does NOT reflect the data state. Do NOT trust the
-> constant to verify data state — always read actual `schema_version` column distribution from the bucket. **Reference
-> incident:** Operator 2026-05-20: "I'm tired of doing this same thing a million times. We're on version eight for a
-> reason. It's because you keep being sloppy and keep missing out stuff." The code-constant ≠ data-state class of bug.
-> **Planned delta:** `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 7 (7.A writer-path fix + 7.B forward-fix +
-> 7.C backfill + 7.D verification) will migrate all 7.4M+ rows to v8. At Phase 7.D completion, this section will gain a
-> migration completion banner. **Target architecture:** 100% of prod manifest rows at v8; NULL `schema_version` count =
-> 0; A4 re-run returns 100% v8 across all 10 buckets (5 MTDS + 5 IS). This codex doc gets a
-> `## Schema v8 migration — COMPLETE` banner at that point per plan line 4558.
-
 ```python
 MANIFEST_SCHEMA_VERSION = 8  # v8: pipeline_mode default removed (Phase 4.DEFAULT-REMOVAL, 2026-05-12)
 
@@ -406,32 +386,6 @@ class AvailabilityRecord:
     expected_window_completeness_fraction: float | None = None  # 0.0-1.0 fraction of expected per-row window populated (renamed from _pct at UAC@76f950a 2026-05-11)
 ```
 
-### v8 CeFi reshaping note (asset_group partition key)
-
-Schema v8 added `asset_group` as a partition key at the manifest row level. For CeFi, this means:
-
-- **New writes (post-v8):** Every `record_captured` / `record_empty` / `record_expected_unattempted` call passes
-  `asset_group=cefi` (or the appropriate domain) explicitly. The hive path on GCS includes `asset_group=cefi/` as a
-  partition prefix.
-- **Legacy rows (v<8, pre-migration):** Rows written before Phase 7 have `asset_group=None` or are missing the column
-  entirely. `read_availability_index()` backfills the column to `""` for these rows.
-- **Migration requirement:** Any agent checking manifest row schema MUST verify `schema_version=8` in production before
-  trusting `asset_group` presence. The code constant `MANIFEST_SCHEMA_VERSION = 8` does NOT reflect the data state —
-  always read the actual `schema_version` column distribution from the bucket (reference incident 2026-05-20: 0% of 7.4M
-  prod rows at v8 despite constant = 8).
-- **Phase 7 remediation:** `mtds_mdps_master` Phase 7 walks every existing row and adds the `asset_group` column value
-  derived from the bucket's registered `asset_group`. After Phase 7.D, `asset_group` is 100% populated for all rows.
-
-**Pre-flight check (mandatory for any script reading manifests):**
-
-```python
-# Verify schema_version before trusting asset_group
-df = pd.read_parquet("gs://.../availability_index.parquet")
-v8_pct = (df["schema_version"] == 8).mean()
-if v8_pct < 0.99:
-    logger.warning("%.1f%% of rows at v8; asset_group column may be absent in older rows", v8_pct * 100)
-```
-
 ### Column Rules
 
 - Services write ONLY the columns relevant to their shard dimensions. All others default to `""`.
@@ -446,9 +400,10 @@ if v8_pct < 0.99:
 - **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
 - **No `data_source` column.** Track what the data IS (transfers, injuries, odds), not where it came from
   (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
-- **`capture_status` is canonical** for shard state — `captured` (real data on disk), `empty_confirmed` (source returned
-  200 + zero rows; counts in denominator only), `attempted_failed` (exception during fetch; classified via
-  `error_reason`).
+- **`capture_status` is canonical** for shard state — closed 4-state set: `captured` (real data on disk), `empty_confirmed`
+  (source returned 200 + zero rows OR known expected gap; counts in denominator only), `attempted_failed` (exception during
+  fetch; classified via `error_reason`), `expected_unattempted` (downstream service skipped shard because upstream was
+  empty/failed or instrument is outside scope; counts in denominator; superseded by `captured` when data arrives).
 - **Per-asset-group + per-data-source empty-rule asymmetry** (codex audit IN-12 2026-05-12):
   - **cefi / defi / tradfi tick data**: `empty_confirmed` only at venue-level (HOLIDAY / WEEKEND / PRE_LAUNCH /
     PRE_GENESIS / PARTIAL_HALF_DAY). Per-instrument-day `empty_confirmed` is NOT legitimate — points to a writer bug.
@@ -764,19 +719,25 @@ The `written_at` column records when each manifest entry was written. This enabl
 
 The data status page supports an `as_of_timestamp` parameter for point-in-time views.
 
-### Expected-Empty vs Missing Shards (Phase 1.9)
+### Capture-status 4-state taxonomy + supersede semantics (Phase 1.9 + writegate extension)
 
-The v6 schema carries enough columns to encode the four distinct states a shard can be in on a given day. The
-`capture_status` column (added in v5, honest-coverage Phase A) is the canonical source — `expected` / `available` /
-`instrument_count` are kept for backward compat but `capture_status` is what the data-status UI + phantom audit read
-first.
+The manifest `capture_status` column is a **closed 4-state set**: `captured` / `empty_confirmed` / `attempted_failed` /
+`expected_unattempted`. The v6 schema carries enough columns to encode all four. `capture_status` is the canonical source
+— `expected` / `available` / `instrument_count` are kept for backward compat but `capture_status` is what the
+data-status UI + phantom audit read first.
 
-| State                | Manifest row? | `capture_status`   | `instrument_count` | Meaning                                                                                                                                                                                               |
-| -------------------- | ------------- | ------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ingested**         | yes           | `captured`         | `> 0`              | Real parquet on disk at the canonical path. Counts toward numerator.                                                                                                                                  |
-| **Expected-empty**   | yes           | `empty_confirmed`  | `= 0`              | Source returned 200 + zero rows on this date (paused league, dated future not yet trading, lending market with no activity). Counts in denominator only.                                              |
-| **Attempted-failed** | yes           | `attempted_failed` | `0`                | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. The orchestrator's `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run. |
-| **Missing**          | no row        | —                  | —                  | Never attempted — pipeline gap. Counts in denominator; triggers alerts. The phantom audit flips manifest rows whose `captured` claim has no matching parquet on disk to `attempted_failed`.           |
+**Coverage formula**: `coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` —
+denominator is the full expected universe. SSOT implementation: `compute_honest_coverage()` in UAC
+(`unified_api_contracts.compute_honest_coverage`). See § "Honest-coverage measurement script" below for the full formula
+including the `expected_unattempted_known_empty` vs `expected_unattempted_pending_fetch` sub-split.
+
+| State                        | Manifest row? | `capture_status`       | Meaning                                                                                                                                                                                                                     |
+| ---------------------------- | ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**                 | yes           | `captured`             | Real parquet on disk at the canonical path. Counts toward numerator. Supersedes a prior `expected_unattempted` row for the same `row_key` via consolidator last-writer-wins.                                                |
+| **Expected-empty**           | yes           | `empty_confirmed`      | Source returned 200 + zero rows on this date (paused league, pre-launch, pre-genesis, holiday, weekend). Counts in denominator only. `error_reason` must be a typed `EMPTY_CONFIRMED_REASON` from the closed UAC set.      |
+| **Attempted-failed**         | yes           | `attempted_failed`     | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run.                                          |
+| **Expected-unattempted**     | yes           | `expected_unattempted` | Downstream service (MTDS/MDPS/features) skipped this shard because upstream manifest was `empty_confirmed`/`expected_unattempted` OR instrument is outside runtime scope. Counts in denominator. Superseded by `captured` when data arrives. |
+| **Outside expected universe** | no row       | —                      | No manifest entry — pipeline gap or (asset_group, venue, data_type, day) triple is outside expected universe. The expected-universe enumerator (v1/v2) writes `empty_confirmed + EXPECTED_*` rows to close this gap.        |
 
 Before Phase 1.9 + Phase A we could not distinguish empty-vs-failed-vs-missing — any day without a manifest entry looked
 identical whether the source was silent or the pipeline had never run. `write_with_zero_fill`
@@ -826,69 +787,6 @@ for instruments/shards that legitimately should not be processed.
 | **MDPS**            | Read MTDS manifest via `DependencyChecker`; if MTDS shard absent or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
 | **features**        | At `_get_instruments()` call: compare full catalog vs runtime `subscription_list` scope gate        | `record_expected_unattempted(..., reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` | `EXPECTED_OUTSIDE_PROCESSING_SCOPE` |
 | **features/sports** | Sports classifier: check fixture existence for fixture-pinned sources (SFI, footystats, open_meteo) | `record_empty(reason=EXPECTED_NO_FIXTURE)` via legacy_reason_classifier      | `EXPECTED_NO_FIXTURE`               |
-
-#### `expected_unattempted` cascade contract (codified 2026-05-22)
-
-`expected_unattempted` is the **4th `capture_status` value** alongside `captured`, `empty_confirmed`, and
-`attempted_failed`. It means:
-
-> "This shard was expected to have data based on the schedule and instrument universe, but the job that would produce it
-> has not run yet."
-
-**What it is NOT:**
-
-- It is NOT a gap — the orchestrator has not yet attempted this shard.
-- It is NOT `attempted_failed` — no failure occurred; no attempt was made.
-- It is NOT `empty_confirmed` — we do not know the source will return empty.
-
-**Downstream consumers MUST NOT treat `expected_unattempted` as a gap or error.** Consumers reading the manifest for
-pre-flight checks MUST handle all 4 states:
-
-| `capture_status`       | Downstream pre-flight action                                                           |
-| ---------------------- | -------------------------------------------------------------------------------------- |
-| `captured`             | Process normally — data is on disk                                                     |
-| `empty_confirmed`      | NaN-handle per consumer class (ML NaN-fill; execution skip; feature window-adjust)     |
-| `attempted_failed`     | Raise `DependencyError(fail_fast=True)` — real upstream bug; do NOT mask with `--skip` |
-| `expected_unattempted` | **Propagate as `expected_unattempted`** in your own manifest row — do NOT fail or skip |
-
-**Cascade propagation rule (HARD RULE):**
-
-When upstream (e.g. instruments-service or MTDS) has `expected_unattempted` for a shard, every downstream service (MDPS,
-features, strategy, execution) MUST also record `expected_unattempted` for that same shard — NOT `attempted_failed` and
-NOT silence. The reason code to use is `EXPECTED_UPSTREAM_EMPTY` (`EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY`).
-
-```python
-# Canonical cascade pattern (MDPS / features pre-flight gate)
-upstream_status = manifest.lookup(shard_key)
-if upstream_status == "expected_unattempted":
-    writer.record_expected_unattempted(
-        row_key=shard_row_key,
-        reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY,
-        pipeline_mode=pipeline_mode,
-    )
-    continue  # skip compute — propagate honest absence
-elif upstream_status == "attempted_failed":
-    raise DependencyError(fail_fast=True, upstream_shard=shard_key)
-# else: captured or empty_confirmed → proceed per consumer class rules
-```
-
-**Scheduling artifact:** When a new day's pipeline window opens, the orchestrator pre-populates `expected_unattempted`
-rows for every `(service, shard_key, day)` in the expected universe before any VMs run. As VMs complete each shard,
-their `record_captured` / `record_empty` / `record_failed` calls supersede the `expected_unattempted` row. The
-transition from `expected_unattempted` → `captured` is the atomic "done" signal per shard.
-
-**Coverage formula impact:** `expected_unattempted` rows count in the denominator (total expected universe) but NOT in
-the numerator (captured shards). Coverage % =
-`captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. Consumers computing coverage MUST
-use `compute_honest_coverage(CaptureStatusCounts(...))` from UAC — do NOT roll your own formula. SSOT:
-`honest_coverage_formula_consolidation_2026_05_19.md`.
-
-**Implementation refs:**
-
-- UTL `ManifestWriter.record_expected_unattempted()` — the write-side method
-- MDPS `canonical_writer.record_expected_unattempted_for_shard()` +
-  `CandleOrchestrationService._record_expected_unattempted_on_skip()` (mdps@3f70cf6)
-- Plan: `plans/active/expected_unattempted_propagation_chain_2026_05_12.md`
 
 #### Three new EmptyConfirmedReason values added (2026-05-12–13)
 
@@ -1209,13 +1107,29 @@ manifest entry**; the enumerator covers the **rows that have no manifest entry a
 | CeFi        | Instrument lifecycle (`available_from`, `available_to`, `expiry`) × venue × `DATA_TYPES_BY_ASSET_GROUP['cefi']` × dates                                                        |
 | Prediction  | Market lifecycle (`market_created_at`, `settlement_time`) × canonical_question_group registry × `DATA_TYPES_BY_ASSET_GROUP['prediction']` × dates                              |
 
-#### Expected-universe enumerator: v1 (shipped) vs v2 (in-flight design)
+#### Expected-universe enumerator: v1+v2 hierarchical SSOT model
 
-The enumerator has two grain levels — v1 captures venue-grain coverage; v2 cross-joins the instruments-service catalog
-to capture per-instrument lifecycle bounds. Both share the same SSOT inputs (UAC `*_LAUNCH_DATES` / `*_GENESIS_DATES` /
-`SOURCE_COVERAGE_START` / `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS`); v2 adds the second SSOT half (per CLAUDE.md
-"Two SSOTs for the manifest's expected universe": instruments-service catalog × dates × data_types cross-product applied
-at expected-row generation, not just at write-side).
+The expected-universe is defined by two SSOT layers:
+
+- **SSOT Layer 1 (coarse — UAC)**: `*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` /
+  `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` — owns the "is this `(asset_group, venue, data_type, day)` triple
+  structurally possible" axis.
+- **SSOT Layer 2 (fine — instruments-service catalog)**: per-instrument lifecycle bounds (`available_from` /
+  `available_to`, prediction `market_created_at` / `settlement_time`, defi `protocol_launch_date`, sports per-fixture)
+  — owns the "given the venue/day is alive, what specific instruments exist" axis.
+
+The enumerator has two grain levels that map to these two layers:
+
+- **v1 (shipped 2026-05-07)** — venue-grain expected universe (~1.4M rows); implements SSOT Layer 1 only. Walks UAC SSOTs
+  to enumerate every `(asset_group, venue, data_type, day)` row that SHOULD exist; pre-skips per-source / per-chain /
+  per-calendar windows; emits `record_expected_empty(reason=EXPECTED_*)` for every gap.
+  Implementation: `instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
+- **v2 (in-flight design)** — instrument-grain expected universe (~190M row estimate); adds SSOT Layer 2. Cross-joins
+  v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle.
+  Designed in
+  [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
+  (folded into `manifest_evolution_SUPERSEDED_2026_05_21` umbrella; sequenced AFTER v8 schema in gate G3). v2 plan body
+  owns the canonical per-asset-group grain matrix — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
 - **v1 (shipped 2026-05-07)** — venue-grain expected universe; ~1.4M rows merged into canonical across all 5
   asset*groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
@@ -1367,18 +1281,6 @@ the SOURCE differs (some live sources are faster than canonical historical archi
 `available_at` with the live-pipeline-equivalent arrival time, NOT the historical archive's slower archive time. Banned:
 separate live-only data_types like `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH`; field sets that diverge between live +
 batch parquets.
-
-> **[DELTA 2026-05-22 — post-cutover boundary]** **Current state (pre-cutover / May-23):** `available_at` is opt-in via
-> explicit stamping helpers in `unified_trading_library.availability_stamping`. The `assert_available_at_present` check
-> is enforced at `record_captured()` call time (QG STEP L7 ratchet). Silent-wrong-rule bugs are possible if the wrong
-> stamping helper is used. **Planned delta:** `available_at_schema_lift_post_cutover_2026_05_19.md` (P1, gated
-> post-cutover) will introduce UAC `AvailabilityRule` Protocol — each row-class carries its own `AvailabilityRule`
-> implementation. Stamping becomes automatic via pydantic validator; silent-wrong-rule becomes type-level
-> unrepresentable. `unified_trading_library/availability_stamping.py` collapses from ~330 lines to ~50 lines (per-source
-> rule implementations only). **Target architecture:** `AvailabilityRule` Protocol as the canonical SSOT for
-> `available_at` stamping. CLAUDE.md `available_at` rules updated to point to UAC `AvailabilityRule`. QG STEP 5.67
-> (record_captured preceded by stamping) and STEP 5.68 (feature-compute assert_no_lookahead) ship as static enforcement
-> at completion. Gate: features_repo_consolidation Phase 5.c + Block B1 ADT lift (monorepo migration).
 
 ### 6. Three-category empty-output decision tree (post-2026-05-06)
 

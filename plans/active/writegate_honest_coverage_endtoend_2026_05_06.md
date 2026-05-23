@@ -22,7 +22,6 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: sports_master
-assigned_vm: vm-sports
 priority: P0
 ---
 
@@ -50,41 +49,41 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 ### Phase/Wave status
 
-| Phase                                                                       | Status     | Key commits / blocker                                                                                                                                                                                                                                                                                   |
-| --------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0-2 Steps 1-4 + 6                                                          | ✅         | mdps@d717c59…a964b96 + mdps@89eacc6                                                                                                                                                                                                                                                                     |
-| P0-2 Step 5 (OHLCV nullability)                                             | 🔒         | Blocked: `hard_schema_enforcement_2026_05_08` → tradfi futures-expiry                                                                                                                                                                                                                                   |
-| 1A — UTL contract (record_captured + stamping + 14 tests)                   | ✅         | UTL@958634f9; open: QG ratchet step                                                                                                                                                                                                                                                                     |
-| 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)                                                                                                                                                                                         |
-| 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                                                                                                             |
-| 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                                                                                                                        |
-| 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope)                                                                                             |
-| 2.C — features-sports stamping                                              | ✅         | fixture_lineups/player_stats wired + \_ensure_timestamp deleted + \_FETCH_COMPLETED_AT cache + 14-table available_at stamping + 27 tests — features-service@6040ee81                                                                                                                                    |
-| 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                                                                                                                   |
-| 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; QG STEP 5.89 wired (check_record_empty_reason_closed_set.py) — PM@2026-05-22                                                                                                                                                                                                |
-| 2.E.2 — per-service writer migration                                        | ✅         | instruments + features-sports + MDPS done; partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED shipped mtds@06b6c0e1 ✅                                                                                                                                                                                     |
-| 2.E.3 — downstream consumer audit (7 services)                              | ✅         | All 7 services audited (execution/ml-training/ml-inference/features-vol/features-sports/features-cross/strategy/reconciliation); E2E smoke features-service@81cdaf4f ✅ slot-5 2026-05-19                                                                                                               |
-| 3.A — reconciliation scripts (4 scripts)                                    | ✅ partial | Open: pre-v5 row purge, category=→asset_group= GCS migration runbook                                                                                                                                                                                                                                    |
-| 3.B/3.C — GCS backfills + reconciler observability                          | ❌         | Ready; ~2-3 days                                                                                                                                                                                                                                                                                        |
-| 3.D.1 — reconcile_expected_absence_reasons.py                               | ✅         | instruments-service@1f93745 + UTL@c5c2669e                                                                                                                                                                                                                                                              |
-| 3.D.2 — reader-side classify_legacy_empty_row                               | ✅         | UTL@c5c2669e + deployment-api@176c599                                                                                                                                                                                                                                                                   |
-| 3.D.4 — v1 enumerator (1,455,901 rows / 5 asset_groups)                     | ✅         | All 5 VMs complete; deployment-ui spot-check pending                                                                                                                                                                                                                                                    |
-| 3.D.5 — v2 catalog-driven enumeration                                       | ❌         | 0% started; ~8-12 days                                                                                                                                                                                                                                                                                  |
-| Wave 3 — cross-service cascade (expected_unattempted)                       | ❌         | Depends on 3.D.5; ~5-7 days                                                                                                                                                                                                                                                                             |
-| Wave 3.S — sports/prediction per-source rules                               | ✅ partial | UAC@83c0e789 (sports_per_source_rules.py + is_expected_for_source()); codex updated PM@662c5ebc4; open: prediction per-source rules (Polymarket/Kalshi group lifecycle)                                                                                                                                 |
-| Wave 3.M — CeFi zero-activity bars                                          | ❌         | 0% started; UTL zero_activity_bars helper doesn't exist yet                                                                                                                                                                                                                                             |
-| Wave 3.X — dimensions audit (11 SSOTs)                                      | ✅ partial | `wave3x_residual_ssots` plan ARCHIVED — UAC SSOTs shipped (HALF_DAY_SESSIONS + VENUE_SESSION_HOURS UAC@bdc84edc; UNDERSTAT_COVERED_LEAGUES UAC@83c0e789). Open: consumer integration → `wave3x_track_d_implementation_2026_05_19.md` (5 P0 items: zero_activity_bars UTL primitive + MTDS/MDPS wire-in) |
-| Wave 4 Slice (a) — ServiceEmissionPolicy enum + 48 tests                    | ✅         | UAC@58c3b61 + UTL@1a7e1d4b                                                                                                                                                                                                                                                                              |
-| Wave 4 Slice (b) — Phase 5.1-5.7 MDPS POC + API + UI                        | ✅         | MDPS@9e1a93e + deployment-api@3a0948e + deployment-ui@00132db                                                                                                                                                                                                                                           |
-| Wave 4 Slice (c) Phase 6.1 — MTDS audit (n/a)                               | ✅         | MTDS is originator, no wiring needed                                                                                                                                                                                                                                                                    |
-| Wave 4 Slice (c) Phase 6.2 — MDPS remaining 3 data_types                    | ✅         | MDPS@d0df50c + @311614a; 1 follow-on: v8 col passthrough to record_captured                                                                                                                                                                                                                             |
-| Wave 4 Slice (c) Phase 6.3-6.9 — per-service rollout                        | ❌         | ~15-20 days; Phase 6.3 features-vol = BUILD FROM SCRATCH                                                                                                                                                                                                                                                |
-| 4.A — deployment-api typed-reason rendering                                 | ✅         | deployment-api@3b0477a                                                                                                                                                                                                                                                                                  |
-| 4.B — deployment-ui (badges + stacks + leaf modal)                          | ✅         | deployment-ui@a7384a0+621f0b3+8f630a6                                                                                                                                                                                                                                                                   |
-| 4.A/4.B residual — live-vs-historical alert + badge                         | ❌         | Multi-repo; ~2-3 days                                                                                                                                                                                                                                                                                   |
-| 5 — baseline + ratchet helper                                               | ✅ partial | UTL@59996210 + PM@5c876f9d; open: measure script (needs GCE VM), CI gate, write-gate quartet integration test                                                                                                                                                                                           |
-| CeFi Tardis re-shape (migrated issue)                                       | ❌         | Decision → Option A; re-rescan 252 shards                                                                                                                                                                                                                                                               |
-| MDPS liquidity baseline (migrated issue)                                    | ❌         | TickRateBaseline VM + DATA_QUALITY_SUSPECTED_GAP reason                                                                                                                                                                                                                                                 |
+| Phase                                                                       | Status     | Key commits / blocker                                                                                                                                                                                       |
+| --------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0-2 Steps 1-4 + 6                                                          | ✅         | mdps@d717c59…a964b96 + mdps@89eacc6                                                                                                                                                                         |
+| P0-2 Step 5 (OHLCV nullability)                                             | 🔒         | Blocked: `hard_schema_enforcement_2026_05_08` → tradfi futures-expiry                                                                                                                                       |
+| 1A — UTL contract (record_captured + stamping + 14 tests)                   | ✅         | UTL@958634f9; open: QG ratchet step                                                                                                                                                                         |
+| 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)                                                                                             |
+| 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
+| 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
+| 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
+| 2.C — features-sports stamping                                              | ✅         | fixture_lineups/player_stats wired + \_ensure_timestamp deleted + \_FETCH_COMPLETED_AT cache + 14-table available_at stamping + 27 tests — features-service@6040ee81                                        |
+| 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
+| 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
+| 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
+| 2.E.3 — downstream consumer audit (7 services)                              | ❌         | Ready; ~3-4 days                                                                                                                                                                                            |
+| 3.A — reconciliation scripts (4 scripts)                                    | ✅ partial | Open: pre-v5 row purge, category=→asset_group= GCS migration runbook                                                                                                                                        |
+| 3.B/3.C — GCS backfills + reconciler observability                          | ❌         | Ready; ~2-3 days                                                                                                                                                                                            |
+| 3.D.1 — reconcile_expected_absence_reasons.py                               | ✅         | instruments-service@1f93745 + UTL@c5c2669e                                                                                                                                                                  |
+| 3.D.2 — reader-side classify_legacy_empty_row                               | ✅         | UTL@c5c2669e + deployment-api@176c599                                                                                                                                                                       |
+| 3.D.4 — v1 enumerator (1,455,901 rows / 5 asset_groups)                     | ✅         | All 5 VMs complete; deployment-ui spot-check pending                                                                                                                                                        |
+| 3.D.5 — v2 catalog-driven enumeration                                       | ❌         | 0% started; ~8-12 days                                                                                                                                                                                      |
+| Wave 3 — cross-service cascade (expected_unattempted)                       | ❌         | Depends on 3.D.5; ~5-7 days                                                                                                                                                                                 |
+| Wave 3.S — sports/prediction per-source rules                               | ❌         | ~2-3 days                                                                                                                                                                                                   |
+| Wave 3.M — CeFi zero-activity bars                                          | ❌         | 0% started; UTL zero_activity_bars helper doesn't exist yet                                                                                                                                                 |
+| Wave 3.X — dimensions audit (11 SSOTs)                                      | ❌         | ~5-8 days                                                                                                                                                                                                   |
+| Wave 4 Slice (a) — ServiceEmissionPolicy enum + 48 tests                    | ✅         | UAC@58c3b61 + UTL@1a7e1d4b                                                                                                                                                                                  |
+| Wave 4 Slice (b) — Phase 5.1-5.7 MDPS POC + API + UI                        | ✅         | MDPS@9e1a93e + deployment-api@3a0948e + deployment-ui@00132db                                                                                                                                               |
+| Wave 4 Slice (c) Phase 6.1 — MTDS audit (n/a)                               | ✅         | MTDS is originator, no wiring needed                                                                                                                                                                        |
+| Wave 4 Slice (c) Phase 6.2 — MDPS remaining 3 data_types                    | ✅         | MDPS@d0df50c + @311614a; 1 follow-on: v8 col passthrough to record_captured                                                                                                                                 |
+| Wave 4 Slice (c) Phase 6.3-6.9 — per-service rollout                        | ❌         | ~15-20 days; Phase 6.3 features-vol = BUILD FROM SCRATCH                                                                                                                                                    |
+| 4.A — deployment-api typed-reason rendering                                 | ✅         | deployment-api@3b0477a                                                                                                                                                                                      |
+| 4.B — deployment-ui (badges + stacks + leaf modal)                          | ✅         | deployment-ui@a7384a0+621f0b3+8f630a6                                                                                                                                                                       |
+| 4.A/4.B residual — live-vs-historical alert + badge                         | ❌         | Multi-repo; ~2-3 days                                                                                                                                                                                       |
+| 5 — baseline + ratchet helper                                               | ✅ partial | UTL@59996210 + PM@5c876f9d; open: measure script (needs GCE VM), CI gate, write-gate quartet integration test                                                                                               |
+| CeFi Tardis re-shape (migrated issue)                                       | ❌         | Decision → Option A; re-rescan 252 shards                                                                                                                                                                   |
+| MDPS liquidity baseline (migrated issue)                                    | ❌         | TickRateBaseline VM + DATA_QUALITY_SUSPECTED_GAP reason                                                                                                                                                     |
 
 ### Active blockers (external)
 
@@ -914,12 +913,17 @@ ikenna-slot8-p0-2-surgery:
       (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim pending Step 4 enum ship. 22 NaN-bar-shape
       tests deleted across `test_orchestration_writer.py` + `test_orchestration_workers.py` (they asserted the banned
       NaN-OHLC shape).
-- [x] ✅ **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` → `_record_vix_gap_empty` upgraded to
-      `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **SHIPPED** mdps@01f08b6 (2026-05-11) — `record_empty_for_shard`
-      accepts `reason` kwarg; VIX gap routes `EXPECTED_KNOWN_SOURCE_GAP`. UAC enum gate ✅ (landed UAC@017b332). Method
-      renamed from `_maybe_write_vix_gap_placeholder` → `_record_vix_gap_empty` at mdps@cb5863a. Checkbox backfilled
-      2026-05-22 (slot 8) — code was shipped before this flip was posted.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
+- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417
+      pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
+      (market-data-processing-service@2f163c1): the method was refactored from the now-deleted
+      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so the
+      manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
+      **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC
+      `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved 2026-05-11 per wave3x
+      TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg from `SOURCE_RETURNED_ZERO`
+      → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the manifest honest + the banned NaN-bar
+      write removed — that's the P0-2 critical-path win.
+- [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
       **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
       `tradfi_master` futures-expiry shipping. Per task instructions, skipped.
 - [x] ✅ **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
@@ -962,9 +966,10 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   3.D.5 Wave 3 (instrument_catalog wired into MTDS/MDPS adapter construction). Until it ships, the conservative
   `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim from Step 3 stays in place for non-VIX-gap callers — this is
   the design intent per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
-- **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in `hard_schema_enforcement_2026_05_08.md`
-  (archived → `plans/archive/2026_05/`) — Step 5 will land via that plan after futures-expiry tradfi work.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
+- **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in
+  [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
+  after futures-expiry tradfi work.
+- [ ] **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
       mismatches found during Step 6 audit (2026-05-22 slot 8): (1) `CandleOutput.trade_count` → schema column named
       `count`; (2) `CandleOutput.liquidation_count` + `liquidation_volume` → schema columns named
       `liquidation_cascade_event_count` + `liquidation_cascade_total_volume` + `liquidation_cascade_max_cluster_size`.
@@ -1459,7 +1464,7 @@ grep.
       Tier 2A/C/D/E (MDPS@5b52d0b/b9f9328/80cf141/e9520a0); integration tests verifying the path-routing remain
       unwritten.] — MDPS@fefd65b: 7 tests (path A ×4 adapters, path B ×2, path C ×1); all pass; guards 0-row output
       contract vs legacy 1440-NaN grid. 2026-05-20 slot-6.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
+- [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
       manifest reflects honest verb; spot-check 1 parquet per data_type; assert OHLC populated where claimed `captured`.
       [AUDIT 2026-05-07: IN-FLIGHT — VMs running 2026-05-07T03:30 UTC are end-to-end live tests (37 VMs
       CeFi/TradFi/Sports). Per the writegate contract they MUST emit honest record_empty/record_captured/record_failed.
@@ -1506,10 +1511,8 @@ grep.
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
       workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via
       VENUE_REGISTRY)
-- [x] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).** ✅ —
-      market-tick-data-service@79c8f12f (group_cols expanded to [bookmaker_key, league_id, fixture_id]; GCS path
-      conditionally includes fixture_id= segment; manifest 5-tuple underlying=fixture_id) `orchestrator.py:1739`
-      currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
+- [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
+      `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
       (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
       `FIXTURE_PLAYER_STATS`, `INJURIES` when fixture-scoped) shard at fixture_id; aggregate data_types (`STANDINGS`,
@@ -1531,10 +1534,15 @@ grep.
     reconciler script in Phase 3.A handles the migration: read old parquet, split per-fixture, write new parquets, mark
     old `attempted_failed[reason=ShardSchemaMigrated]` for re-attempt under new contract.
 
-- [x] ✅ [SCRIPT] P0. **Sports `BUNDLED_DATA_TYPES` registry seeding** — added `odds_snapshot`, `odds_movement`,
-      `arbitrage_opportunity` to `BUNDLED_DATA_TYPES` + `DATA_TYPE_TO_CLUSTER_REGISTRY → SPORTS_FIXTURE_CLUSTERS`.
-      ManifestWriter now enforces bookmaker cluster validation on `record_captured()` for all three data_types. —
-      UAC@340aac8e / QG ✅ (exit 0) / slot-2 tab branch 2026-05-22
+- [ ] [SCRIPT] P0. **Sports `BUNDLED_DATA_TYPES` registry seeding** (couples to per-fixture sharding above). Per-fixture
+      data_types that aggregate multiple bookmakers/sub-rows in one shard's parquet → `BUNDLED_DATA_TYPES`-eligible.
+      Concrete entries: - `ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE` — cluster_extractor: `bookmaker`.
+      `SPORTS_FIXTURE_CLUSTERS = {tier_1: {pinnacle, bet365, ...}, tier_2: {...}}` per league-tier (UAC seeds tier-1 EU
+      football tier list; expand per follow-up). - `FIXTURE_STATS` / `FIXTURE_PLAYER_STATS` from a single source —
+      typically NOT bundled (one row per fixture or per (fixture, player)) unless multi-source merge is enabled
+      (deferred to multi-source merge plan). `sports_fixture_bundle` in `BUNDLED_DATA_TYPES` is a logical category; the
+      actual `data_type` strings registered are the per-data_type entries above (`ODDS_SNAPSHOT`, etc.). Update Phase 1B
+      `BUNDLED_DATA_TYPES` seed to include those concrete data_type names.
 - [x] ✅ [SCRIPT] P0. GMX multi-chain — `perp_funding_handler.py:225` currently writes `chain=""`; emit per-chain Tier-2
       fan-out per HANDOVER follow-up note. — market-tick-data-service@d5773c3 (\_collect_gmx → dict[str, int], process()
       loops per chain)
@@ -1556,10 +1564,6 @@ grep.
 - [x] ✅ [QG] P0. MTDS quality-gates.sh green. 1886 passed, 9 skipped, 0 failed. — market-tick-data-service@668c17ab.
 
 ### Phase 2.C — features-sports forward fixes
-
-> **Sports rename Phase 3+4 shipped 2026-05-22** — `data_available_at` → `available_at` atomic rename complete across
-> instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350. Phase 2B GCS migration running. Sports
-> backfill VMs unblocked once migration verified.
 
 **Audit 2026-05-06 update** (amendment E + audit #0.4 findings):
 
@@ -1647,10 +1651,10 @@ grep.
 > in-scope ONLY for `event_time` (derivable from `kickoff_utc + elapsed_min` per-event). The other three columns ship
 > with low-confidence default values + audit columns + named successor plan reference.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **In-scope schema bump (event_time only — derivable)**: Add `event_time: timestamp_utc not null` to
+- [ ] [SCRIPT] P0. **In-scope schema bump (event_time only — derivable)**: Add `event_time: timestamp_utc not null` to
       `FIXTURE_EVENTS_COLUMNS` (verify whether already there per-event in the audit). Populate at MTDS /
       instruments-service write time as `kickoff_utc + timedelta(minutes=event.elapsed_min)`. No source dependency.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Deferred schema bumps with low-confidence fallback shipping today (named successor plan listed
+- [ ] [SCRIPT] P0. **Deferred schema bumps with low-confidence fallback shipping today (named successor plan listed
       below)**: `announced_at` (FIXTURES), `report_time` (INJURIES), `match_end_time` (FIXTURE*STATS /
       FIXTURE_PLAYER_STATS) ship as nullable columns with paired `*_confidence`audit columns: -    `announced_at:
       timestamp_utc nullable`+    `announced_at_confidence: Literal["source_native",
@@ -1665,7 +1669,7 @@ grep.
       timestamp_utc
       nullable`(in `INJURIES_COLUMNS`) — populated when injury fixture's `fixture_events`table contains the injury event; else null. No fallback.     **Successor plan**:`sports_forward_poll_timestamps_2026*<TBD>.md`— captures real-time scraping of announcement, injury report, and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor plan lands + retrospective backfill completes, the `\*\_confidence`
       audit columns surface low-default fixtures in data-status panel for re-attempt.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection IS achievable today)**. Cascade
+- [ ] [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection IS achievable today)**. Cascade
       per-fixture (UAC `MATCH_END_TIME_DETECTORS` registry, source-priority ordered): 1. `api_football` —
       `fixture.fixture.timestamp` +
       `status_long ∈ {"Match Finished", "Finished after extra time", "Finished after penalties"}` resolves to actual end
@@ -1867,24 +1871,24 @@ split.
       `--apply-flips` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` (verified guards fire with exit 4).
       RECONCILER\_\* events, CSV audit, `--max-flips-per-run` 100k halt safety. Smoke-verified path parser handles both
       per-league (`league={id}/feature_group={fg}/...`) and bare (`feature_group={fg}/...`) layouts.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Pre-v5 / pre-v6 manifest row purge — wire
+- [ ] [SCRIPT] P0. Pre-v5 / pre-v6 manifest row purge — wire
       `instruments-service/scripts/dedupe_manifest_schema_drift.py` + `purge_legacy_unsharded_manifest_rows.py` into the
       orchestrator boot sequence (per parent HANDOVER §"Migration items"). Delete the fallback readers that previously
       handled legacy shapes.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. `category=` → `asset_group=` GCS migration runbook — confirm migration scripts exist for every
+- [ ] [SCRIPT] P0. `category=` → `asset_group=` GCS migration runbook — confirm migration scripts exist for every
       asset_group (cefi/defi/tradfi/sports/prediction); run sequentially per asset_group with a verification step
       (sample list_blobs after each, assert ≥99% canonical hive vocab). Do NOT delete the legacy fallback reader until
       100% migrated AND a hold-period confirms no readers fail.
 
 ### Phase 3.B — GCS available_at backfill (sports + others)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. For every sports parquet on disk pre-Phase-2.C, add `available_at` column with the value derived from
+- [ ] [SCRIPT] P0. For every sports parquet on disk pre-Phase-2.C, add `available_at` column with the value derived from
       the new UAC semantic + the row's existing columns (kickoff_utc / event_time / report_time / match_end_time /
       fetch_completed_at). One-shot rewrite per file. Manifest update: `available_at_stamped_at = <run_time>` audit
       column.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Delete legacy `_ensure_timestamp`-stamped `timestamp` columns where they equalled the (now-incorrect)
+- [ ] [SCRIPT] P0. Delete legacy `_ensure_timestamp`-stamped `timestamp` columns where they equalled the (now-incorrect)
       midnight UTC fallback. The new `available_at` column replaces them as the SSOT.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Per-(asset_group, data_type) backfill scope: - **sports** (above) - **CeFi**: confirm raw_tick
+- [ ] [SCRIPT] P0. Per-(asset_group, data_type) backfill scope: - **sports** (above) - **CeFi**: confirm raw_tick
       partitions already have implicit per-tick `timestamp` column → derive
       `available_at = timestamp + scrape_latency_estimate` per source priority registry - **DeFi**: similar to CeFi but
       per-block + RPC-latency offset - **TradFi**: similar to CeFi - **Prediction**: deferred until
@@ -1892,12 +1896,12 @@ split.
 
 ### Phase 3.C — Reconciler observability + halt-on-error
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Every reconciler script wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)` (per
+- [ ] [SCRIPT] P0. Every reconciler script wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)` (per
       existing run_lifecycle SSOT rollout). Emits `RECONCILER_STARTED` / `RECONCILER_PROGRESS` (per-asset-group with row
       counts) / `RECONCILER_COMPLETED` / `RECONCILER_FAILED`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Each reconciler script supports `--max-flips-per-run` halt safety; default 100k. Operator confirms
+- [ ] [SCRIPT] P0. Each reconciler script supports `--max-flips-per-run` halt safety; default 100k. Operator confirms
       first 100k flips look right before lifting the cap.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Each reconciler emits a CSV/JSON audit report at `gs://{pid}-reconciler-audit/{run_id}/` listing
+- [ ] [SCRIPT] P0. Each reconciler emits a CSV/JSON audit report at `gs://{pid}-reconciler-audit/{run_id}/` listing
       every flipped (row_key, old_status, new_status, error_reason).
 
 QG between Phase 3 and Phase 4: every reconciler has run end-to-end on a 1-week sample window; audit reports reviewed by
@@ -2107,7 +2111,7 @@ sub-phase ships the enumerator that physically writes those rows.
       ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all 5
       per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285 after
       the `ArrowTypeError` on `instrument_count` was patched).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
+- [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
       all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and drilldown
       % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel. Fine-grained
       per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is the v2
@@ -2199,46 +2203,47 @@ Adding a new venue / data_type / instrument anywhere in the workspace = adding i
 **Tasks.** Sequential per asset_group — start with the asset_group whose catalog is most mature (sports fixtures +
 tradfi Databento) and end with the asset_group whose catalog needs the most work (defi + prediction).
 
-- [x] ✅ [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must expose a
+- [ ] [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must expose a
       uniform `list_instruments(asset_group, start_date, end_date) -> Iterator[CatalogRow]` shape — same columns as the
       manifest's row_key (`venue`, `chain`, `data_type`, `instrument_type`, `instrument_id`, `league_id`, ...) plus the
       lifecycle columns (`available_from`, `available_to`, `expiry`, etc.). Define the contract in
       `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream consumers
-      (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape. — UAC@a422d0b8
-      / QG ✅ (exit 0) / slot-2 tab branch 2026-05-22
-- [x] [SCRIPT] P0. **Sports v2 enumerator** ✅ — market-tick-data-service@9a1bcd91 (SportsCatalogReader reads
-      instruments-store-sports fixtures parquets; orchestrator registers via register_catalog_reader + calls
-      catalog_list_instruments for per-fixture sentinels; EXPECTED_PAUSED_LEAGUE for off-season; v1 fallback when no
-      reader registered)
-- [x] [SCRIPT] P0. **CeFi v2 enumerator** ✅ — market-tick-data-service@09361718 (CeFiCatalogReader reads
-      instruments-store-cefi catalog — latest `reference_data/instruments/asset_group=cefi/written_at=*/all.parquet`;
-      derives canonical IDs as BASE-USDT/BASE-PERP from InstrumentRecord fields; filters expired/delisted and outside
-      availability window; orchestrator registers reader at startup, loads cefi_catalog_by_venue once per sentinel date,
-      overrides Tier-3 instrument-provider for CeFi venues; graceful v1 UAC seed fallback when catalog absent)
-- [x] [SCRIPT] P0. **TradFi v2 enumerator** ✅ — market-tick-data-service@d50b9453 (TradFiCatalogReader reads
-      instruments-store-tradfi catalog; FUTURE/OPTION→base_asset root deduped per venue e.g. ESM6+ESU6→"ES";
-      equity→raw_symbol; CME futures_chain/options_chain Tier-3 provider override; ohlcv_1m promoted to per-instrument
-      shard in UAC@42097bd8 — equity tickers now consumed by Tier-3) — replace today's `non_trading_day_reason`
-      cross-product (which generates 35,033 calendar rows per (venue, data_type) without instrument granularity) with
-      per- `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento
-      instruments catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at); futures +
-      options chains get per-root + cluster-day enumeration with weekly + standard expiries. Calendar non-trading days
-      remain `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
-- [x] [SCRIPT] P0. **DeFi v2 enumerator** ✅ — market-tick-data-service@b0e4bcac (DefiCatalogReader reads
-      instruments-store-defi catalog; POOL→pool_address.lower(), LENDING/LST→base_asset_contract_address.lower();
-      registered in orchestrator Tier-3 provider override for DEFI venues) — extend today's PROTOCOL_LAUNCH_DATES +
-      CHAIN_GENESIS_DATES cross-product with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list
-      of pools/instruments that get added/removed over time (Aave V3 listing/delisting individual reserves, Uniswap V3
-      pool deployments, Curve gauge additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040
-      rows for "protocol on chain hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we
-      mark individual pools/positions correctly.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
+      (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape.
+- [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is already in
+      `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
+      `unified_api_contracts.sports.candidate_parquet_paths` SSOT). For odds_api: cross-product
+      `(league_id, fixture_id, bookmaker, market_type) × dates` filtered by `kickoff_time ∈ [day_00:00, day_23:59]`.
+      Reasons: `EXPECTED_INSTRUMENT_NOT_LISTED` for fixtures-not-yet-scheduled, `EXPECTED_PAUSED_LEAGUE` for off-season
+      windows (existing reason, currently unused by enumerator), `EXPECTED_PRE_SOURCE_COVERAGE_START` for
+      pre-bookmaker-coverage dates (existing reason). Wire into `_enumerate_sports` replacing today's per-source-only
+      branch.
+- [ ] [SCRIPT] P0. **CeFi v2 enumerator** — read per-venue instrument catalog from
+      `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical Tardis-derived
+      layout is — needs an `instruments-service`-side audit). Cross-product
+      `(venue, instrument_type, instrument_id, data_type) × dates` filtered by `available_from ≤ day ≤ available_to`.
+      Today's `EXPECTED_PRE_VENUE_LAUNCH` becomes a special-case of `EXPECTED_INSTRUMENT_NOT_LISTED` (every instrument's
+      `available_from` ≥ venue launch date by definition). For options/futures: bundled-by-root cluster atoms —
+      `EXPECTED_INSTRUMENT_NOT_LISTED` gates per-root-day. For perp futures: `EXPECTED_INSTRUMENT_DELISTED` when
+      contract expires.
+- [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which generates
+      35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
+      `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento instruments
+      catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at); futures + options
+      chains get per-root + cluster-day enumeration with weekly + standard expiries. Calendar non-trading days remain
+      `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
+- [ ] [SCRIPT] P0. **DeFi v2 enumerator** — extend today's PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES cross-product
+      with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list of pools/instruments that get
+      added/removed over time (Aave V3 listing/delisting individual reserves, Uniswap V3 pool deployments, Curve gauge
+      additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040 rows for "protocol on chain
+      hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we mark individual
+      pools/positions correctly.
+- [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
       `predictions_master.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
       `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor; v2 adds
       canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years) so per-day coverage
       of recurring groups is honest.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset*groups, add a new
+- [ ] [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset*groups, add a new
       Key-Rules-Quick-Reference bullet: *"MTDS / instruments-service / data-status missing-data checks for ANY
       asset*group derive their expected universe from the instruments-service catalog for that asset_group, NOT from
       inline / hardcoded venue / data_type / date lists. The catalog IS the SSOT for `what should exist`. Adding a new
@@ -2380,20 +2385,20 @@ interface on the manifest.
       `ManifestWriter.record_expected_unattempted(row_key=,     attempted_at=)` helper added mirroring `record_empty` /
       `record_failed`. Per-VM shard isolation via `_record_status` (same path as the other write methods).
       Last-writer-wins supersede happens naturally via the consolidator's row_key dedup.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed` last-writer-wins audit —
+- [ ] [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed` last-writer-wins audit —
       verify the supersede path (prior `expected_unattempted` row → MTDS writes `captured` for same row_key). Smoke test
       on a CeFi manifest after Wave 3 enumerator lands. **DEFERRED** — manifest-consolidator already does
       last-writer-wins on row_key (existing design), so the new `expected_unattempted` rows participate naturally. Audit
       pass + unit test for the supersede path remain.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi / tradfi / defi
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi / tradfi / defi
       / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument whose
       `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a stronger status.
       Today's v1 keeps writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` etc.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes `expected_unattempted`
+- [ ] [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes `expected_unattempted`
       count. Surface the breakdown in the response payload (`captured`, `empty_confirmed`, `attempted_failed`,
       `expected_unattempted` as 4 buckets). Backwards-compat: if `expected_unattempted` count is 0, response shape
       unchanged.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction 2026-05-07: _"data
+- [ ] [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction 2026-05-07: _"data
       status in deployment ui needs to be able to visualise that to the instrument granularity breakdown so we can
       visually see, per instrument, which days are available and which are missing. Since there can be so many
       instruments, I think there's already something in the UI that groups them and we can click to see more, click to
@@ -2410,12 +2415,15 @@ interface on the manifest.
       be unnecessary if rendered as a calendar (8 years × 365 = ~2920 days per instrument fits a single tall page). For
       instrument-types with thousands of expiring contracts (options chains), the per-cluster bundle drilldown already
       collapses; per-day for the bundle root is the relevant grain.
-- [x] [DOCS] P0. Update
+- [x] [DOCS] P0. Update ✅
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
-      `captured` supersede semantics. ✅ PM@77f0ef404 — added `expected_unattempted` cascade contract subsection with
-      4-state routing table, scheduling artifact semantics, supersede contract, and coverage formula impact.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
+      `captured` supersede semantics.
+  - **Evidence**: PM@<sha> — added § "Capture-status 4-state taxonomy + supersede semantics" (table with all 4 states +
+    coverage formula + supersede semantics); updated capture_status bullet at §Schema to list all 4 states; added
+    § "Expected-universe enumerator: v1+v2 hierarchical SSOT model" with Layer 1 (UAC coarse) + Layer 2
+    (instruments-service fine) framing. 2026-05-23.
+- [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
       `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` / `attempted_failed` /
       `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`, `SOURCE_COVERAGE_START`,
       `venue_trading_calendar`) own the coarse 'is this triple structurally possible' axis. instruments-service catalog
@@ -2429,7 +2437,7 @@ interface on the manifest.
 - [x] [UAC] P0 (shipped UAC@e855051 2026-05-07). `EmptyFromLiveInstrumentError` + `LegacyBlankErrorReasonError` typed
       exceptions added to `unified_api_contracts.canonical.crosscutting.honest_coverage` exports. Both feed the writer
       guard + migration script. Pattern mirrors `MissingClusterValidationError` / `UpstreamTimestampBiasError`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending Wave 3 (depends on
+- [ ] [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending Wave 3 (depends on
       MTDS adapters wiring the `instrument_catalog` callable at construction). `EmptyFromLiveInstrumentError` typed
       class shipped today (UAC@e855051); the writer-side guard is a follow-up that requires MTDS / MDPS / features-\* to
       pass the catalog reference. Until then the blank-reason guard (next item, shipped) catches the most-common
@@ -2529,47 +2537,31 @@ clear instruction for "what's actually there", per-service flexibility for "how 
 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
-- [x] ✅ [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
       capture*status. Each asset_group gets: * Pre-venue/chain-launch dates → continue writing
       `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today). _
       Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW). _ Per-instrument-pre-listing
       dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
-      `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
-      QG 2782 passed)
-- [x] ✅ [VM-LAUNCH] P0. cefi 12-month v2 backfill complete — 4 per-VM shards written to
-      `market-data-tick-cefi-central-element-323112/_index/per_vm/`: c1=19,585,202 rows (2026-02-22→2026-05-23),
-      c2=16,134,573 rows (2025-11-23→2026-02-21), c3=20,171,242 rows (2025-08-24→2025-11-22), c4=16,192,092 rows
-      (2025-05-24→2025-08-23). Total=71,468,109 rows. instruments-service@363af916 (upload timeout fix) + @ecabcf74
-      (window-overlap filter). defi: 9,820 instruments, 21 data_types; 91-day scan=18,766,020 candidates; full 12-month
-      ~75M; apply-write pending operator ack. tradfi: BLOCKED-CREDENTIALS (Databento). sports/prediction:
-      BLOCKED-NEW-CODE.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-NEW-CODE]** [SCRIPT] P1. Build catalog for sports + prediction asset groups. Neither is in
-      `CATALOGUE_SUPPORTED_ASSET_GROUPS` — `CatalogueBuilder` only covers cefi/tradfi/defi. Need a surrogate catalog
-      builder that reads from `instruments-store-sports-*/venue=*/day=*/instruments.parquet` +
-      `instruments-store-pred-*/venue=*/day=*/instruments.parquet` and derives per-instrument
-      available_from/available_to from observed date range. Once catalog exists, v2 enumerator backfill follows same
-      pattern. **Assign to next sports/prediction epic cycle.**
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
+      `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
+- [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
       appropriately.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked `expected_unattempted` upstream,
+- [ ] [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked `expected_unattempted` upstream,
       MDPS writes its own `expected_unattempted` (no compute possible without raw ticks). For shards marked
       `empty_confirmed/EXPECTED_*`, MDPS propagates the same reason (e.g. `EXPECTED_PRE_VENUE_LAUNCH` upstream →
       `EXPECTED_PRE_VENUE_LAUNCH` downstream).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted` /
+- [ ] [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted` /
       `empty_confirmed/EXPECTED_*` shards, write own row with the same status. The `feature_group → required_inputs` DAG
       already encodes which features depend on which data_types; the cascade walks that DAG.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [ml-training] P1. Training-window selector reads features manifest; omits days where any required feature*group is
+- [ ] [ml-training] P1. Training-window selector reads features manifest; omits days where any required feature*group is
       `expected_unattempted` or `empty_confirmed/EXPECTED*\*`. Training set size becomes honest about the universe.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where upstream is not
+- [ ] [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where upstream is not
       `captured` or `empty_confirmed/SOURCE_RETURNED_ZERO`. (Honest source-zero is OK to signal on; pre-launch /
       unattempted is not.)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
+- [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
       pre-flight gate — this is an audit pass.)
-- [x] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
-      consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract. ✅
-      PM@77f0ef404 — added `## Per-service consumer-class — 4-state capture_status handling` table +
-      `expected_unattempted` cascade contract subsection in availability-manifest-and-data-status.md.
+- [ ] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
+      consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract.
 
 **Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan to date.
 Cross-repo touch:
@@ -2657,23 +2649,22 @@ been empty_confirmed" finding adds:
 
 **Tasks for the per-asset-group catalog SSOT extension (Wave 3.S — sports / prediction):**
 
-- [x] ✅ [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — `is_expected_for_source()` wraps
-      UNDERSTAT_COVERED_LEAGUES + footystats_season_status_for_day + is_transfer_window_open + SOURCE_COVERAGE_START.
-      Returns (bool, EmptyConfirmedReason-str|None). QG ✅ (exit 0). — UAC@83c0e789 / slot-2 tab branch 2026-05-22
-- [x] ✅ [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — both already landed in honest_coverage.py (lines 128, 147). No new code
-      needed. — UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
+- [ ] [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — codify `UNDERSTAT_COVERED_LEAGUES`,
+      `TRANSFER_WINDOWS`, `FOOTYSTATS_LEAGUE_SEASONS`, plus a uniform
+      `is_expected_for_source(source, league_id, day) -> tuple[bool, str|None]` helper that returns (is_expected,
+      reason_if_not). Mirrors the chain_env / venue_launch_dates / source_coverage_start pattern.
+- [ ] [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Or use `EXPECTED_INSTRUMENT_NOT_LISTED` semantically with these as
+      classifier-internal — operator preference.)
+- [ ] [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
       `instruments-store-sports-{pid}/fixtures/…` per-day fixtures catalog; cross-product with
       `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
       the shards we DO expect; emits `empty_confirmed` with the right EXPECTED\_\* for shards we DON'T expect.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
+- [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
       UAC `PREDICTION_GROUPS` per `predictions_master.md`). Yields `expected_unattempted` for active markets,
       `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
-- [x] ✅ [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
-      typed-reason-taxonomy expansion process. — PM@662c5ebc4 (Wave 3.S per-source section: understat/footystats/
-      api_football table + is_expected_for_source() usage + bundled cluster validation note + expansion recipe;
-      EXPECTED_OUTSIDE_TRANSFER_WINDOW description corrected to cover sports player-transfer windows)
+- [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
+      typed-reason-taxonomy expansion process.
 
 **Wave 3.M — Zero-activity-bars-during-market-hours (operator msg 6 + msg 8 — broadened scope).**
 
@@ -2736,30 +2727,30 @@ fix.
 
 **Tasks:**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
+- [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
       Each adapter has a per-shard fetch loop; the post-fetch branch on "fetched empty / source returned no rows" must
       distinguish: (a) instrument NOT alive that day per catalog → write `empty_confirmed/EXPECTED_INSTRUMENT_*` (b)
       instrument alive, day within market hours → **NEW:** write zero-volume bars with prior LTP, record `captured` with
       real bar count > 0 (typically full interval grid for the day). (c) instrument alive, day outside market hours
       (calendar non-trading) → write `empty_confirmed/EXPECTED_HOLIDAY/WEEKEND` (existing flow). Use the catalog-aware
       write-gate (Wave 2 `instrument_catalog` callable) to drive (a) vs (b)/(c).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single `unified_trading_library.zero_activity_bars`
+- [ ] [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single `unified_trading_library.zero_activity_bars`
       helper that generates the right zero-activity shape per data_type per the table above. Adapters call
       `make_zero_activity_bars(data_type, instrument_id, day, prior_ltp, market_hours)` and write the result through
       ManifestWriter. Avoids per-adapter inlined zero-bar logic drift.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the previous day's
+- [ ] [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the previous day's
       `captured` parquet for the same instrument; if not available, fall back to the most recent captured day in the
       manifest (lookback up to N days). UTL helper
       `get_prior_ltp(asset_group, venue, instrument_id, day) -> Decimal | None`. None → still write zero-activity bars
       but with `null` price (volume=0, trade_count=0; consumers can handle).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now has zero-volume bars
+- [ ] [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now has zero-volume bars
       (post-Wave 3.M), MDPS sees them as `captured` and processes them through the normal candle pipeline — output
       candles also have zero volume. No special logic; the cascade handles it. **Audit needed**: confirm MDPS doesn't
       have a special-case "drop zero-volume bars" filter that would re-introduce the gap.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol that picks a recent
+- [ ] [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol that picks a recent
       options chain day, asserts the smile has all 11 ES.OPT clusters present (per UAC `ES_OPTIONS_CLUSTERS`) — no
       missing strikes, even for far-OTM. Catches Wave 3.M regressions automatically.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case: **D. Source returned 0
+- [ ] [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case: **D. Source returned 0
       ticks but instrument is alive per catalog AND day falls within market hours** → write zero-activity bars with
       prior LTP, `record_captured` (real OHLC, zero volume). Distinct from cases A/B/C — this is the "honest tradeable
       but no activity" path.
@@ -2899,84 +2890,49 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
 
 **Tasks added (incremental over existing Wave 3 / 3.S / 3.M):**
 
-- [x] ✅ [UAC] P1. **Half-day sessions calendar.** NEW SSOT `unified_api_contracts/registry/half_day_sessions.py` —
-      `HALF_DAY_SESSIONS: dict[venue, frozenset[date]]` with CME / NYSE / NASDAQ half-day calendar dates.
-      `EXPECTED_PARTIAL_HALF_DAY` reason fires when shard falls on a listed date. — UAC@bdc84edc (slot-2 audit
-      2026-05-22)
-- [x] ✅ [UAC] P1. **Intra-day session hours.** NEW SSOT `unified_api_contracts/registry/venue_session_hours.py` —
-      `VENUE_SESSION_HOURS: dict[(venue, weekday), (open_utc, close_utc)]` covering CME/NYSE/NASDAQ/CBOE/Eurex/FX per
-      weekday. `EXPECTED_OUTSIDE_TRADING_HOURS` reason fires on shards outside the published session window. —
-      UAC@bdc84edc (slot-2 audit 2026-05-22)
-- [x] ✅ [UAC] P1. **Understat covered leagues.** `UNDERSTAT_COVERED_LEAGUES` already in `provider_league_ids.py`
-      (5-league frozenset). `is_expected_for_source("understat", ...)` in new `sports_per_source_rules.py` returns
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for non-covered leagues. — UAC@83c0e789 / slot-2 audit 2026-05-22
-- [x] ✅ [UAC] P1. **Per-league season bounds for footystats.** `footystats_season_status_for_day()` +
-      `get_footystats_season_bounds()` + `is_within_footystats_season()` already in `season_dates.py`.
-      `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` wired into `is_expected_for_source("footystats", ...)`. —
-      UAC@83c0e789 / slot-2 audit 2026-05-22
-- [x] ✅ [UAC] P1. Five EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS`,
-      `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, `EXPECTED_PRE_SEASON`, `EXPECTED_POST_SEASON`,
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — all already in honest_coverage.py (lines 120, 128, 135, 143, 147). —
-      UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
-- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_sports` pre-existing in `legacy_reason_classifier.py:208`:
-      understat→`EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`, transfermarkt→`EXPECTED_OUTSIDE_TRANSFER_WINDOW`,
-      footystats→`EXPECTED_PRE_SEASON`/`EXPECTED_POST_SEASON`, SFI→fixture-pin. All Wave 3.S SSOTs consumed. — UTL
-      pre-existing (audited 2026-05-22 by slot-2)
-- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_tradfi` pre-existing in `legacy_reason_classifier.py:161`:
-      holiday/weekend via `non_trading_day_reason`, half-day→`EXPECTED_PARTIAL_HALF_DAY`, session
-      hours→`EXPECTED_OUTSIDE_TRADING_HOURS`. All Wave 3.T SSOTs consumed. — UTL pre-existing (audited 2026-05-22 by
-      slot-2)
-- [x] ✅ [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle
-      SSOT returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
-      prediction-shard dates. — UTL pre-existing (audited 2026-05-22 by slot-2): per-market lifecycle via
-      `market_created_at`/`settlement_time`/`current_status` at UTL `legacy_reason_classifier.py:450-511`.
-      `CANONICAL_GROUP_METADATA` has no date-range fields; IS MARKET_LIFECYCLE is the canonical-group lifecycle SSOT
-      consumed via per-market row columns. UTL@a19888f5 (current HEAD).
-- [x] ✅ [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
+- [ ] [UAC] P1. **Half-day sessions calendar.** NEW SSOT `unified_api_contracts/registry/half_day_sessions.py` —
+      `HALF_DAY_SESSIONS: dict[venue, list[(iso_date,     close_time_HHMM, reason)]]`. Populate per CME / NYSE / NASDAQ
+      documented half-days (Thanksgiving Friday, Christmas Eve, etc.). Wire `non_trading_day_reason` to also return
+      `EXPECTED_PARTIAL_HALF_DAY` when applicable.
+- [ ] [UAC] P1. **Intra-day session hours.** NEW SSOT `unified_api_contracts/registry/venue_session_hours.py` —
+      `VENUE_SESSION_HOURS: dict[venue, dict[weekday, list[(open_HHMM_TZ, close_HHMM_TZ)]]]`. Cover NYSE 9:30-16:00 ET,
+      CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc. NEW
+      `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`. Used by ohlcv_15m / book_snapshot adapters to
+      gate intra-day shards.
+- [ ] [UAC] P1. **Understat covered leagues + seasons.** NEW SSOT
+      `unified_api_contracts.canonical.domain.sports.understat_coverage.UNDERSTAT_COVERED_LEAGUES:     dict[league_id → list[season_id]]`
+      with the 5 covered leagues (EPL / La Liga / Serie A / Bundesliga / Ligue 1) and their season ranges. Classifier
+      extension: pre-fixture-day check returns `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for understat shards outside this
+      set.
+- [ ] [UAC] P1. **Per-league season bounds for footystats.** Extend `FOOTYSTATS_SEASON_IDS` with season_start /
+      season_end tuples (already partly available — needs explicit bounds-check helper
+      `get_footystats_season_window(league, day) -> tuple[start, end] | None`). NEW `EXPECTED_PRE_SEASON` /
+      `EXPECTED_POST_SEASON` reasons; classifier branch.
+- [ ] [UAC] P1. Two new EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS` and
+      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and `EXPECTED_PRE_SEASON` and `EXPECTED_POST_SEASON` and
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (5 new typed reasons.)
+- [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer*windows,
+      footystats_season_bounds, understat_coverage) returning the appropriate typed
+      `EXPECTED*\*`reason. Same     discriminated`(capture_status, error_reason)` shape as today.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_tradfi` consumes the half-day calendar + session hours SSOTs
+      returning `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` where applicable.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle SSOT
+      returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
+      prediction-shard dates.
+- [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
       Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
-      (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy). — PM@this commit: CLAUDE.md
-      updated (17→31 members, codex pointer added); codex new section "Per-reason-group → consumer policy
-      quick-reference" (10-row table, 31 reasons across 9 groups + attempted_failed; key calendar-closed vs
-      temporary-gap rolling-window distinction documented).
-- [x] ✅ [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using
-      the extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
+      (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy).
+- [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
+      extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
       attempted*failed/LegacyBlankErrorReasonError, those rows that should actually be typed (e.g. rows during
       understat-not-covered-league fixtures, cefi-perp pre-listing dates per catalog) are recoverable on the next
       migration pass. New reconciler: `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds
       attempted_failed/ LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
       empty_confirmed/EXPECTED*\* if a typed-reason rule fires (otherwise leaves as attempted_failed for retry).
-      tradfi+defi+sports+prediction DONE 2026-05-22 (slot-2); cefi follow-up item below. UAC@6498446 + PM@this commit.
-
-      **APPLIED 2026-05-22 (slot-2) for tradfi+defi+sports+prediction (cefi blocked — see follow-up item below):**
-      - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
-      - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
-        EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
-      - Applied results:
-        | asset_group | candidates | applied | breakdown | shard |
-        |-------------|-----------|---------|-----------|-------|
-        | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
-        | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
-        | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
-        | prediction | 51 | 0 | No upgrades | — |
-        | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
-      - Consolidator merges tradfi+defi shards within ~5 min of apply.
 
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
 3.P (prediction) — distinct asset_group surfaces.
-
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202
-      `empty_confirmed/SOURCE_RETURNED_ZERO` cefi rows need lifecycle cross-ref to route correctly
-      (EXPECTED_INSTRUMENT_NOT_LISTED vs attempted_failed). Catalog NOT FOUND at
-      `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` during 2026-05-22
-      scan. Gate: IS CeFi backfill (`instruments_backfill_phase3_2026_05_22.md`) Phase 1 CeFi GREEN. Re-run:
-      `python scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` (scan-only first, then
-      `--apply-flips` after CSV review). **APPLY-FLIPS IN PROGRESS (2026-05-23 ~14:23 UTC slot-2)**:
-      `VM_NAME=recon-legacy-typed-cefi-1779542589`, 184,965 candidates, catalog loaded (210,340 rows),
-      `CATALOG_CACHE_TTL_SECONDS=7200` (no mid-run expiry risk). Run 2 scan (bzddtgfrs, completed 14:00 UTC) was
-      scan-only: 179,132→`attempted_failed/LegacyBlankErrorReasonError`, 4,312→`EXPECTED_INSTRUMENT_NOT_LISTED`.
-      Apply-flips writes transitions directly to manifest. ETA ~15:36 UTC. Flip this checkbox once
-      `RECONCILER_COMPLETED` event appears in `/tmp/recon-cefi-apply-flips.log`.
 
 #### Phase 3.D.5 Wave 4 — Service-output emission policy + completeness semantics (operator msg 10, 2026-05-08)
 
@@ -3130,19 +3086,19 @@ Downstream reads parquet + events identically — no batch-specific or live-spec
       details carry `service` / `output_data_type` / `policy` / `completeness_fraction` / `incomplete_window_count` /
       `row_key` / `policy_declared` flag + 50-row sample of `incomplete_window` for operator drill-down. Severity
       routing: BLOCK_CRITICAL+gap → ERROR; gaps with other policies → WARNING; full-window → INFO.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) + `incomplete_window`
+- [ ] [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) + `incomplete_window`
       (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows write null (n/a —
       manifest-layer concern, not service-output-layer); derived-service rows populate them.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners: _ MDPS: candle adapters per
+- [ ] [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners: _ MDPS: candle adapters per
       data_type (`ohlcv_1m` / `ohlcv_1h` / `ohlcv_24h` / `book_snapshot_5`) _ features-_ (8 services): per feature_group
       _ ml-training / ml-inference: per model output _ strategy: per archetype signal _ execution: per
       order/fill/position emission _ risk-and-exposure: per risk metric _ position-balance-monitor: per state field \*
       instruments-service: per catalog data_type Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC +
       wires `publish_with_policy` at its emission boundary.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
+- [ ] [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
       `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type policy table +
       lifecycle event taxonomy.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
+- [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
       with correct completeness_fraction; BLOCK_CRITICAL fires alert. End-to-end: a missing-1h-bar test that propagates
       STRICT_FAIL through MDPS → features-vol → strategy → no execution signal.
 
@@ -3225,13 +3181,13 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.2 — UAC manifest schema columns (P1, ~2hr — additive)**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] P1. Add two new columns to UAC manifest schema: `completeness_fraction` (Float64 nullable) +
+- [ ] [UAC] P1. Add two new columns to UAC manifest schema: `completeness_fraction` (Float64 nullable) +
       `incomplete_window` (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows
       write null (n/a — manifest layer is upstream-state, not service-output-layer); derived-service rows populate them
       via the publish_with_policy emission. Update `unified_api_contracts.canonical.crosscutting.manifest_schema` (or
       wherever the manifest column declaration lives — verify via grep) + the consolidator's column-coercion table so
       legacy parquets without these columns read as `null`/`null` without raising.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P1. UAC manifest-schema parity test reads a legacy parquet without the new columns + a new parquet with
+- [ ] [TEST] P1. UAC manifest-schema parity test reads a legacy parquet without the new columns + a new parquet with
       them; both load via `pa.parquet` reader without error; legacy one carries null values, new one carries populated.
 
 **Phase 5.3 — MDPS adapter wire-in: `ohlcv_1h:current` (P0, ~3hr)**
@@ -3270,7 +3226,7 @@ shape codified in slice (a)'s seed dict.
       integration coverage. The unit-test suite already covers the slice resolver (`yesterday_utc_returns_historical`,
       `distant_past_returns_historical`) + the slice threading through to `publish_with_manifest_lookup` kwargs
       (`historical_slice_threads_to_output_data_type`).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P1. **DEFERRED**: 30-day end-to-end integration test (planted-gap upstream manifest → `ohlcv_1h:historical`
+- [ ] [TEST] P1. **DEFERRED**: 30-day end-to-end integration test (planted-gap upstream manifest → `ohlcv_1h:historical`
       rows with mixed completeness + `PUBLISHED_DEGRADED` only on gap-hours). Belongs in MDPS integration tests once
       `manifest_schema_final_gate` Phase 2 ships the completeness columns + the per-service consumer-class audit
       (writegate Phase 6.2) wires `publish_with_manifest_lookup` at every MDPS data_type. Unit-test slice coverage in
@@ -3375,10 +3331,10 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       QG: 1151 tests passed; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` UTL `StartupValidationError`
       on `ENVIRONMENT='test'` — unrelated to emission policy); basedpyright clean on edited files (0 errors on
       canonical_writer slice-(b)/Phase-6.2 sections + test file).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
+- [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
+- [ ] [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
       `EmissionDecision` whose `service_emission_state` / `last_emission_decision_at` / `completeness_fraction` v8
       column values are **NOT forwarded** to the paired `ManifestWriter.record_captured` call at
       `market_data_processing_service/app/core/canonical_writer.py:950-965`. Phase 6.2 wired the publish-or-not gate
@@ -3820,7 +3776,7 @@ Pre-emptive wiring before the helper API stabilises = rework risk.
       and coord echo. **DEFERRED to follow-up commit**: TTL cache (currently each request re-reads from GCS — fine for
       the schema-modal use case which is one-click-per-modal, not a hot path); lift to a 5-min TTL cache once Phase
       4.B.3 modal lands and reveals real query patterns.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
+- [ ] [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
       window AND `live_pipeline_already_wrote = true` → emit `LIVE_HISTORICAL_DOUBLE_WRITE` warning event.
       **Investigation 2026-05-07**: multi-repo write-time guard. Needs (a) a UAC `LIVE_HISTORICAL_DOUBLE_WRITE` event
       type addition, (b) UTL `manifest_writer` write-time guard that detects the double-write at `record_captured` time,
@@ -3865,7 +3821,7 @@ Pre-emptive wiring before the helper API stabilises = rework risk.
       `subData.data_types`, AUTO `instrument_type` — deployment-api's `/leaf-stats` route resolves the leaf parquet via
       `_gcs_path_for_shard` + the AUTO sentinel resolution path). The full UTL → API → UI typed-error → leaf- parquet
       drill-down loop is now operator-visible end-to-end without any pre-flight intervention.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
+- [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
 
 QG between Phase 4 and Phase 5: UI smoke-test (Tier 0 + Tier 1) — every new color/badge/drill-down renders correctly
 against seeded fixtures.
@@ -3884,7 +3840,7 @@ against seeded fixtures.
 > same-region GCE VM — helper consumes the output) + base-service.sh QG STEP wiring (calls helper on PR commits to
 > `main`). Helper is the primitive; the script + STEP wire-in remain.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Per-service end-to-end coverage measurement (post-reconcile): - Denominator =
+- [ ] [SCRIPT] P0. Per-service end-to-end coverage measurement (post-reconcile): - Denominator =
       `expected_dates × expected_instruments × expected_data_types` clipped by `SOURCE_COVERAGE_START` /
       `KNOWN_COVERAGE_GAPS` / `venue_trading_calendar` - Numerator =
       `count(manifest_rows where capture_status == "captured")` - Honest empty =
@@ -3910,13 +3866,13 @@ against seeded fixtures.
       endpoint roundtrip → API response shape assertions. Validates honest-coverage emission contract end-to-end.
       (evidence: system-integration-tests@47a1e04 2026-05-18; sit QG ✅. **BACKFILLED** from slot-4 work-split item 12 —
       plan-of-record flip per CLAUDE.md Half-2 rule.)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
+- [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
+- [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
       `record_empty`; partial bundle → `record_failed(ClusterCoverageError)`; high NaN →
       `record_failed(NanRatioExceededError)` (deferred to follow-up plan once that pillar lands); schema mismatch →
       `record_failed(SchemaMismatchError)`. CI-runnable.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. Workspace-wide QG on every repo touched (UTL, UAC, MDPS, MTDS, features-sports, instruments-service,
+- [ ] [QG] P0. Workspace-wide QG on every repo touched (UTL, UAC, MDPS, MTDS, features-sports, instruments-service,
       deployment-api, deployment-ui, unified-trading-pm). Per-repo `quality-gates.sh` green.
 
 QG end-of-plan: user signs off on baseline document; ratchet floor activated.
@@ -4198,20 +4154,20 @@ fire-and-forget" SSOT. Both contradict CLAUDE.md SSOTs.
 **Cross-plan banner**: `cefi_master` operational decision required — re-rescan vs accept-batch vs in-place rewrite for
 the 37-VM in-flight output once this section's Option A/B/C decision lands. Coordinate.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
+- [ ] [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
       Tardis data (clean but expensive); B = accept the bundle-shape rows + run a one-shot manifest migration that
       splits each bundle row into per-instrument rows from the existing parquet (cheaper, reversible); C = mixed (B for
       past output, A enforced for future VMs). Issue archived has cost-benefit per option. Decision gates the Phase 2.A
       codification below.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Per-row record_failed pattern codification**. Today's CeFi Tardis adapter calls `record_captured`
+- [ ] [SCRIPT] P0. **Per-row record_failed pattern codification**. Today's CeFi Tardis adapter calls `record_captured`
       at bundle granularity; flip to per-row per-instrument. The pattern lives in UTL + cefi-Tardis adapter; codify as
       part of Phase 2.A non-adapter items. Cassette parity test for every venue checking the per-row vs bundle shape.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **PROCESSING_COMPLETED + INSTRUMENT_PROCESSED event field augmentation**. Both must carry
+- [ ] [SCRIPT] P0. **PROCESSING_COMPLETED + INSTRUMENT_PROCESSED event field augmentation**. Both must carry
       `rows_captured: int` (and `rows_empty` / `rows_failed`) per CLAUDE.md "no fire-and-forget VM launches" rule.
       Workspace-wide adapter audit for same violations across cefi/tradfi/defi MTDS handlers (the issue flagged that
       this likely isn't isolated to Tardis — there are at least 8 MTDS handlers with similar shape that need the same
       field added).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md` § "Re-shape decision
+- [ ] [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md` § "Re-shape decision
       codification" capturing the per-instrument-vs-bundle decision per asset_group + per data_type (this is the SSOT
       that reflects whichever Option A/B/C the operator picks).
 
@@ -4227,20 +4183,20 @@ Source issue archived. Issue has TWO halves: (1) writegate-side (this plan) — 
 `mdps_streaming_and_backpressure_2026_05_07` Phase 1.1+ for end-to-end correctness — staleness without an upstream gap
 signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Phase 3 wiring.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **`TickRateBaseline` dataclass + per-(venue, instrument, period) storage/refresh VM**. UAC
+- [ ] [SCRIPT] P0. **`TickRateBaseline` dataclass + per-(venue, instrument, period) storage/refresh VM**. UAC
       `unified_api_contracts/canonical/crosscutting/liquidity_baseline.py` declares the dataclass. Per-venue observation
       script under `market-data-processing-service/scripts/refresh_tick_rate_baseline.py` runs nightly, writes to
       `gs://market-data-tick-{ag}-{pid}/liquidity_baselines/by_venue/venue={v}/by_period/period={p}/...parquet`. Period
       axis: regular session vs pre-market vs post-market vs overnight (cross-references the Databento session-type work
       in tradfi_master Batch D — coordinate columns).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **MDPS write-gate baseline consultation + `DATA_QUALITY_SUSPECTED_GAP` reason addition**. When MDPS
+- [ ] [SCRIPT] P0. **MDPS write-gate baseline consultation + `DATA_QUALITY_SUSPECTED_GAP` reason addition**. When MDPS
       write-gate sees a tick-rate < threshold% of baseline for the period, route to
       `record_failed(reason=DATA_QUALITY_SUSPECTED_GAP)`. Threshold default 20%; per-venue override available in UAC.
       Add `DATA_QUALITY_SUSPECTED_GAP` to UAC `RecordFailedReason` enum.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **3rd state for "baseline-says-shouldn't-be-zero"**. Today writegate Phase 3.D.5 Wave 3.M defines
+- [ ] [SCRIPT] P0. **3rd state for "baseline-says-shouldn't-be-zero"**. Today writegate Phase 3.D.5 Wave 3.M defines
       zero-volume-bar mechanism for "venue quiet, baseline says zero is OK"; add 3rd state for "baseline says non-zero
       expected, but observed is near-zero" → `record_failed(SUSPECTED_GAP)`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
+- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
       `DATA_QUALITY_SUSPECTED_GAP` reason semantics + the 3-state-vs-2-state explanation.
 
 ## Open questions
@@ -4565,19 +4521,19 @@ execution per mega-audit tracker `mega_audit_and_plan_beefup_progression_2026_05
 
 ### Phase 7.A — Diagnose the v8 writer-path gap (~2 cal AI-days)
 
-1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Walk every `record_captured` / `record_empty` / `record_failed` callsite in unified-trading-library +
+1. - [ ] **P0**. Walk every `record_captured` / `record_empty` / `record_failed` callsite in unified-trading-library +
          each service. Confirm each goes through the canonical writer that stamps `MANIFEST_SCHEMA_VERSION = 8`. If any
          path writes with a stale constant or hardcoded older value, fix it.
-2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Identify the source of the 1.3M NULL-schema-version rows in DeFi manifest. Likely an older code path
+2. - [ ] **P0**. Identify the source of the 1.3M NULL-schema-version rows in DeFi manifest. Likely an older code path
          that didn't stamp schema_version at all (pre-v4 era). Document the path + fix it.
-3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Verify the consolidator (`_index/per_vm/*.parquet` → `availability_index.parquet`) does NOT downgrade
+3. - [ ] **P0**. Verify the consolidator (`_index/per_vm/*.parquet` → `availability_index.parquet`) does NOT downgrade
          schema_version during merge. If it does, fix.
 
 ### Phase 7.B — Forward-fix verification (~1 cal AI-day)
 
-1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. After 7.A: every new `record_captured` write must land at v8. Sample 100 most-recent rows per
+1. - [ ] **P0**. After 7.A: every new `record_captured` write must land at v8. Sample 100 most-recent rows per
          (asset_group, bucket); assert all `schema_version == 8`.
-2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Add QG step `scripts/quality_gates/check_manifest_schema_version_constants.py` per A1 + A4 gap
+2. - [ ] **P0**. Add QG step `scripts/quality_gates/check_manifest_schema_version_constants.py` per A1 + A4 gap
          analysis. Ratchets workspace constants to v8.
 
 ### Phase 7.C — Retrospective backfill of existing rows (~6 cal AI-days)
@@ -4594,20 +4550,20 @@ Per-asset-group counts (from A4):
 - **Sports**: 2,833,196 rows (v2 + v4 + v5 + v6 + v7 mix)
 - **Prediction**: 20,752 rows
 
-1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Write `unified_trading_library/migrations/upgrade_manifest_to_v8.py` that walks each
+1. - [ ] **P0**. Write `unified_trading_library/migrations/upgrade_manifest_to_v8.py` that walks each
          `_index/availability_index.parquet` per bucket + rewrites every row with `schema_version = 8`. Handle NULL rows
          by inferring from sibling columns (`capture_status`, `data_type` presence) — never silently drop.
-2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Pre-migration drain per CLAUDE.md HARD RULE: stop all VMs across GCP + AWS, consolidate manifests,
+2. - [ ] **P0**. Pre-migration drain per CLAUDE.md HARD RULE: stop all VMs across GCP + AWS, consolidate manifests,
          snapshot to `_index/snapshots/pre_v8_migration_2026_05_XX.parquet`.
-3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Run migration per bucket. Asserts post-run: 100% v8 row count + 0 NULL rows.
-4. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Post-migration: restart VMs, verify new writes land at v8.
+3. - [ ] **P0**. Run migration per bucket. Asserts post-run: 100% v8 row count + 0 NULL rows.
+4. - [ ] **P0**. Post-migration: restart VMs, verify new writes land at v8.
 
 ### Phase 7.D — Verification gate (~3 cal AI-days)
 
-1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Re-run A4 data side per `plans/audit/results/a4_manifest_v8_compliance.py`. Assert 100% v8 + 0 NULL
+1. - [ ] **P0**. Re-run A4 data side per `plans/audit/results/a4_manifest_v8_compliance.py`. Assert 100% v8 + 0 NULL
          across all 10 buckets (5 MTDS + 5 IS).
-2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells introduced by the migration.
-3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Codex SSOT update — extend `codex/02-data/availability-manifest-and-data-status.md` with the v8
+2. - [ ] **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells introduced by the migration.
+3. - [ ] **P0**. Codex SSOT update — extend `codex/02-data/availability-manifest-and-data-status.md` with the v8
          migration completion banner + reference incident.
 
 ### Phase 7 success criteria
