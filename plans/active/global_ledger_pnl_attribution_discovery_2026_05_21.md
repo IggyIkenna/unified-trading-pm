@@ -169,31 +169,48 @@ For each of the 5 affected services, produce an audit doc at
 consumes, what state it reconstructs internally, what canonical schemas it already imports from UAC, and the gap to the
 target SSOT ledger model.
 
-- [ ] [AUDIT] P0. **execution-service** — InstructionLedger writer. Map current fill/transfer/stake emission paths;
+- [x] ✅ [AUDIT] P0. **execution-service** — InstructionLedger writer. Map current fill/transfer/stake emission paths;
       identify which today flow through service-output emission semantics (per
       `codex/02-data/service-output-emission-semantics.md`). Flag any path that emits via custom topic without going
-      through `_resolve_policy_output_data_type`.
-- [ ] [AUDIT] P0. **strategy-service** — derived-ledger writer (confirmed owner). Inventory
+      through `_resolve_policy_output_data_type`. —
+      `plans/audit/results/global_ledger_audit_execution_service_2026_05_23.md` (4 P0 gaps: no
+      `_resolve_policy_output_data_type`, manifest failures silently swallowed, client_id absent from log_event
+      payloads, `build_attribution_rows()` dead-end). unified-trading-pm@2026-05-23.
+- [x] ✅ [AUDIT] P0. **strategy-service** — derived-ledger writer (confirmed owner). Inventory
       `strategy_service/position/`, `strategy_service/pnl/`, `strategy_service/risk/`,
       `strategy_service/portfolio_allocator/` modules; for each, document data sources (live event streams vs
       reconstructed state vs reconciled snapshots vs direct venue queries). The `v2/` rework directories are the
-      refactor target.
-- [ ] [AUDIT] P0. **market-tick-data-service** — PricingLedger price/IV writer. Document what's already canonical
-      (mid/bid/ask/IV per `mtds_mdps_master.md`) and what's missing (greeks computation home, snapshot vs streaming).
-- [ ] [AUDIT] P0. **instruments-service** — instrument metadata + carry-family rates (funding intervals, dividend dates,
-      expiry timestamps, settlement style). Confirm metadata sufficiency for PassiveLedger synthesiser.
-- [ ] [AUDIT] P0. **client-reporting-api** — what it computes today (per archived attribution MVP) vs what it joins from
-      canonical ledgers in the target model.
+      refactor target. — `plans/audit/results/global_ledger_audit_strategy_service_2026_05_23.md` (unrealized_pnl always
+      0 — MarkPrice not bridged; fees not deducted; PnL reconciliation not wired; PnL time-series API always 404).
+      unified-trading-pm@2026-05-23.
+- [x] ✅ [AUDIT] P0. **market-tick-data-service** — PricingLedger price/IV writer. Document what's already canonical
+      (mid/bid/ask/IV per `mtds_mdps_master.md`) and what's missing (greeks computation home, snapshot vs streaming). —
+      `plans/audit/results/global_ledger_audit_mtds_2026_05_23.md` (dividend_rate MISSING; rho MISSING from entire
+      stack; mid not stored — must derive (bid+ask)/2; 8+ DeFi handlers annotated
+      `# QG-allow: emission-policy-not-applicable`). unified-trading-pm@2026-05-23.
+- [x] ✅ [AUDIT] P0. **instruments-service** — instrument metadata + carry-family rates (funding intervals, dividend
+      dates, expiry timestamps, settlement style). Confirm metadata sufficiency for PassiveLedger synthesiser. —
+      `plans/audit/results/global_ledger_audit_instruments_service_2026_05_23.md` (IS NECESSARY but NOT SUFFICIENT; 7
+      gaps: exercise_style/settlement_style/dividend_schedule absent, funding_interval not stored, rocket_pool.py
+      missing source_archive_url_template, Sanctum not wired, native_staking_rates deferred).
+      unified-trading-pm@2026-05-23.
+- [x] ✅ [AUDIT] P0. **client-reporting-api** — what it computes today (per archived attribution MVP) vs what it joins
+      from canonical ledgers in the target model. —
+      `plans/audit/results/global_ledger_audit_client_reporting_api_2026_05_23.md` (10 HIGH severity gaps: no canonical
+      ledger joins, realised_pnl hardcoded "0.00"). unified-trading-pm@2026-05-23.
 
 ### Phase 2 — UAC schema spec (P0)
 
-- [ ] [UAC] P0. Draft pydantic models for `LedgerRow` + `InstructionLedger` / `PassiveLedger` / `TreasuryLedger` /
-      `PricingLedger` variants in `unified_api_contracts/canonical/crosscutting/ledger/`.
-- [ ] [UAC] P0. Define `EventOrigin`, `EventType`, `AssetClass`, `Direction`, `OptionRight` enums as `StrEnum` (closed
-      sets — extension via PR only).
-- [ ] [UAC] P0. Cross-client transfer validator: every `transfer`/`bridge` row asserts
+- [x] ✅ [UAC] P0. Draft pydantic models for `LedgerRow` + `InstructionLedger` / `PassiveLedger` / `TreasuryLedger` /
+      `PricingLedger` variants in `unified_api_contracts/canonical/crosscutting/ledger/`. — 32-field frozen Pydantic
+      model; 4 type aliases; re-exported from canonical.crosscutting. unified-api-contracts@13155355.
+- [x] ✅ [UAC] P0. Define `EventOrigin`, `EventType`, `AssetClass`, `Direction`, `OptionRight` enums as `StrEnum`
+      (closed sets — extension via PR only). — `ledger/_enums.py`: 5 StrEnums, all closed (14 EventType values, 14
+      AssetClass values, 12 Direction values). unified-api-contracts@13155355.
+- [x] ✅ [UAC] P0. Cross-client transfer validator: every `transfer`/`bridge` row asserts
       `client_id == counterparty_client_id`; raise `CrossClientTransferForbiddenError` otherwise. Anchor to
-      `codex/04-architecture/client-funds-isolation.md`.
+      `codex/04-architecture/client-funds-isolation.md`. — `assert_no_cross_client_transfer()` + `@model_validator` on
+      LedgerRow enforces HARD RULE at construction time. unified-api-contracts@13155355.
 - [ ] [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends / enrichments.
 - [ ] [UAC] P1. Document the `accrual_period_start_utc` / `accrual_period_end_utc` convention for passive events.
 
