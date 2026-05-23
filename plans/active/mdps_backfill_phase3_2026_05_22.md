@@ -106,16 +106,17 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
 - [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
-- [x] ✅ [CODE] P2. **MDPS-3.3.Pred-SchemaContract** — `SCHEMA_VALIDATION_FAILED` on `POLYMARKET:PREDICTION_MARKET:*`
-      trades bars FIXED. UAC `_candle_contracts.py` adds `_OHLCV_CORE_TRADES` (nullable=True for open/high/low/close) +
-      `nullable_ohlcv=True` parameter to `_build()`. Applied to all trades-derived schemas:
-      CeFi/TradFi/DeFi/Sports/Prediction. UAC@5ff8a25a pushed to LDR 2026-05-22 slot-5. VM tarball rebuilt 18:04 UTC.
-      Old VMs (162604) stopped; new VMs relaunched with fixed tarball. Same pattern also resolves
-      MDPS-3.3.TradFi-SchemaContract (CME/ICE trades NaN bars). Sample contract:
-      `0x71aa6ab89169bb131ea6c54da3e5fa248e4ad426192c5bc5e29ae967bc83cd1a`. 2026-05-22 slot-5.
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — Relaunched with UAC@5ff8a25a nullable OHLC fix.
-      `mdps-prediction-{2025,2026}-20260522-181105` RUNNING. 2025-03-14→2025-12-31 + 2026-01-01→2026-05-22.
-      SKIP_DEPENDENCY_CHECK=true. Old VMs 162604 confirmed TERMINATED before launch. 2026-05-22 slot-5.
+- [x] ✅ [CODE] P2. **MDPS-3.3.Pred-SchemaContract** — Two schema gaps FIXED: (1) `SCHEMA_VALIDATION_FAILED` on trades
+      bars: UAC `_candle_contracts.py` adds `_OHLCV_CORE_TRADES` (nullable=True for OHLC) + `nullable_ohlcv=True`
+      parameter. Applied to all trades-derived schemas: CeFi/TradFi/DeFi/Sports/Prediction. UAC@5ff8a25a. (2)
+      `SchemaContractNotFoundError` for `(prediction, PREDICTION_MARKET, ohlcv_1d)`: Polymarket tick parquets store
+      `instrument_type="PREDICTION_MARKET"` (uppercase); registry had only `prediction_market` (lowercase) + no
+      `ohlcv_*` contracts. Fix: added `("prediction", "PREDICTION_MARKET", "ohlcv_{tf}")` for all 7 MDPS default
+      timeframes (15s/1m/5m/15m/1h/4h/1d) with nullable OHLCV + condition_id anchor. UAC@accd650c. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch** — **RELAUNCHED 2026-05-23 with UAC@accd650c**:
+      `mdps-prediction-{2025,2026}-20260523-103441` RUNNING. 2025-03-14→2025-12-31 + 2026-01-01→2026-05-23.
+      SKIP_DEPENDENCY_CHECK=true. Old VMs 181105 (outdated tarball, hitting both schema errors) confirmed TERMINATED
+      before launch. Tarball rebuilt at 10:33 UTC with UAC@accd650c + MDPS@95f685b + UTL@d3e71f24. 2026-05-23 slot-5.
 
 ---
 
