@@ -425,10 +425,15 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       2026-04-14 → 2352 raw rows → 501 bucketed rows (8 horizons, 22 bookmakers, 16 league×horizon shards). Manifest
       updated (335,105+17 entries; 1 day-level + 16 league×horizon shards). Fixed 2 bugs in script: stale
       `category=sports` path prefix (MDPS@34d7172) + `record_empty()` missing typed reason (MDPS@7f7c1ad).
-- [ ] [ANALYSIS] P0. Bucket-coverage check: how many fixtures have ≥1 row per (fixture, bookmaker, bucket). [AUDIT
-      2026-05-07: BLOCKED-ON sports_master:bucket smoke run]
+- [x] ✅ [ANALYSIS] P0. Bucket-coverage check: how many fixtures have ≥1 row per (fixture, bookmaker, bucket). —
+      2024-11-01 sample: 22 fixtures × 22 bookmakers × 8 timeframes (T-0/T-10m/T-1h/T-2h/T-4h/T-6h/T-12h/T-24h); 77.8%
+      of (fixture,bookmaker) combos have all 7 non-T-0 timeframes; 99.8% have ≥5. Processed bucket: 1813/1837 raw days
+      bucketed (98.7%). Only 24 days missing: 20× Sep-Oct 2022 + 3 isolated (2023-06-25, 2024-05-11, 2025-02-01). All
+      existing bucketed dates have 100% timeframe coverage. Analysis 2026-05-23.
 - [ ] [SCRIPT] P0. Backfill MDPS bucketing across full historical window (5+ years) on migrated rows. [AUDIT 2026-05-07:
-      BLOCKED-ON sports_master:bucket smoke verified]
+      BLOCKED-ON sports_master:bucket smoke verified] **24 days missing** (1813/1837 done=98.7%): run
+      `reprocess_sports_odds.py` for the 24 specific missing dates (Sep-Oct 2022 gap + 3 isolated). Already 98.7%
+      complete from prior runs.
 - [ ] [SCRIPT] P1. Run features-sports-service (FSS) on bucketed dataset — verify odds features populate (velocity, CLV,
       steam, late-money). [AUDIT 2026-05-07: BLOCKED-ON sports_master:full bucket backfill]
 - [ ] [SCRIPT] P1. Verify feature matrix is ML-ready (one row per fixture × bucket, NaN only where honest-absence).
