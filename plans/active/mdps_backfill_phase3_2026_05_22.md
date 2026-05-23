@@ -145,6 +145,32 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch3** — Stopped 111916 + 104518 VMs (all pre-fix). Rebuilt tarball with
       MDPS@54958d6 (prediction enrichment fix). Relaunched: `mdps-prediction-{2025,2026}-20260523-120428` RUNNING.
       2026-05-23 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.AllGroups-UACContractFix** — **UAC PREDICTION_MARKET contract corrected (slot-5
+      2026-05-23)**: MDPS@54958d6 fix was based on wrong UAC contracts (include_chain=True, anchor_col=condition_id).
+      Root cause: UAC `_candle_contracts.py` @ accd650c registered PREDICTION_MARKET with `include_chain=True` +
+      `anchor_col=condition_id`, causing canonical_writer to inject chain + condition_id (columns CandleOutput never
+      produces). Correct schema: PREDICTION_MARKET is NOT DeFi — no chain; CandleOutput uses `symbol` not
+      `condition_id`; OHLCV nullable. Fix: UAC `_candle_contracts.py` PREDICTION_MARKET loop changed to
+      `include_chain=False`, `anchor_col=None`, `symbol_column="symbol"`, `nullable_ohlcv=True`. New test
+      `test_prediction_market_uppercase_trades_candles` added. QG ✅. UAC@5e44eee0. 2026-05-23 slot-5.
+- [x] ✅ [CODE] P0. **MDPS-3.3.AllGroups-CanonicalWriterFix** — **ALL ASSET GROUPS schema injection fixed (slot-5
+      2026-05-23)**: Root cause of StreamingParquetWriter failures across ALL asset groups: `_build()` in UAC
+      `_candle_contracts` always adds `TS_EVENT_COL` + `_TIMEFRAME_COL` to every SchemaContract;
+      `CandleOutput.to_dataframe()` never produces them. The per-category conditional fix at MDPS@54958d6 only patched
+      PREDICTION and injected wrong columns. Fix: renamed `_enrich_prediction_candles()` →
+      `_inject_schema_contract_columns(timeframe)`, removed chain/condition_id injection, applied to ALL asset groups in
+      both `write_candle_parquet` and `write_streaming_chunk`. Handles UTC-aware ts_event coercion (int ns/us/ms/s +
+      naive dt). trade_count int32→int64 coercion preserved. QG ✅. MDPS@21eb635. Pairs with UAC@5e44eee0. 2026-05-23
+      slot-5.
+- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-TarballRebuild** — Rebuild ALL asset-group tarballs with UAC@5e44eee0 +
+      MDPS@21eb635. UAC is CORE_REPO (bundled in every tarball). Command:
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh` (rebuilds all groups).
+- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-VMTerminate** — Terminate ALL running MDPS VMs (on stale tarballs with wrong
+      schema injection): defi-095053 (1 VM), prediction-104518 (2 VMs), prediction-111916 (2 VMs), prediction-120428 (2
+      VMs — the 54958d6-based fix, now superseded), sports-102325 (6 VMs), tradfi-105240 (7 VMs). Verify all TERMINATED.
+- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-Relaunch** — Relaunch MDPS VMs for all asset groups with rebuilt tarballs
+      (UAC@5e44eee0 + MDPS@21eb635). Verify T+10min: RUNNING + manifest consolidator showing captured rows (not
+      attempted_failed).
 
 ---
 
