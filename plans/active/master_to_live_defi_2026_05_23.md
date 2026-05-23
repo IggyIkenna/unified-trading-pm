@@ -111,7 +111,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-23 14:02 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-23 14:17 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -121,7 +121,7 @@ folded into the appropriate epic._
 | [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                         | dart_and_promote_master                    | infra     | 0/64       | 0%           | 20.0     | —        |
 | [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                                     | defi_master                                | design    | 64/87      | 74%          | 17.1     | —        |
 | [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                 | defi_master                                | brand-new | 23/63      | 37%          | 15.2     | —        |
-| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | **orphan**                                 | refactor  | 0/27       | 0%           | 12.0     | —        |
+| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master       | refactor  | 0/27       | 0%           | 12.0     | —        |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                           | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 34/74      | 46%          | 8.6      | —        |
 | [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                 | master                                     | brand-new | 0/5        | 0%           | 8.0      | —        |
 | [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/251    | 75%          | 6.0      | —        |
@@ -137,7 +137,6 @@ folded into the appropriate epic._
 | [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md)                                             | cefi_master                                | research  | 0/5        | 0%           | 1.8      | —        |
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                         | infrastructure_master                      | refactor  | 19/23      | 83%          | 1.7      | —        |
 | [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)                               | master                                     | infra     | 0/17       | 0%           | 1.6      | —        |
-| [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 22/38      | 58%          | 1.5      | —        |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                             | dart_and_promote_master                    | design    | 54/80      | 68%          | 1.4      | —        |
 | [`plan_hygiene_sweep_kickoff_2026_05_21`](./plan_hygiene_sweep_kickoff_2026_05_21.md)                                                       | master                                     | infra     | —          | —            | 0.8      | —        |
 | [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md)                                                       | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 39/56      | 70%          | 0.6      | —        |
@@ -150,9 +149,8 @@ folded into the appropriate epic._
 | [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 25/26      | 96%          | 0.2      | —        |
 | [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
-| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                   | defi_master                                | infra     | 11/11      | 100%         | 0.0      | —        |
-| [`vm_launcher_startup_url_migration_2026_05_21`](./vm_launcher_startup_url_migration_2026_05_21.md)                                         | master                                     | infra     | 17/17      | 100%         | 0.0      | —        |
-| **TOTAL** (35 plans)                                                                                                                        | 1 orphans, 0 TBD                           | —         | —          | **59% done** | **186**  | —        |
+| [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 38/38      | 100%         | 0.0      | —        |
+| **TOTAL** (33 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **59% done** | **185**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
