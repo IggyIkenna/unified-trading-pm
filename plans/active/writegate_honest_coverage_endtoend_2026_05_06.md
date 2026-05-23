@@ -2220,12 +2220,14 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at); futures + options
       chains get per-root + cluster-day enumeration with weekly + standard expiries. Calendar non-trading days remain
       `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
-- [ ] [SCRIPT] P0. **DeFi v2 enumerator** — extend today's PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES cross-product
-      with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list of pools/instruments that get
-      added/removed over time (Aave V3 listing/delisting individual reserves, Uniswap V3 pool deployments, Curve gauge
-      additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040 rows for "protocol on chain
-      hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we mark individual
-      pools/positions correctly.
+- [x] [SCRIPT] P0. **DeFi v2 enumerator** ✅ — market-tick-data-service@b0e4bcac (DefiCatalogReader reads
+      instruments-store-defi catalog; POOL→pool_address.lower(), LENDING/LST→base_asset_contract_address.lower();
+      registered in orchestrator Tier-3 provider override for DEFI venues) — extend today's PROTOCOL_LAUNCH_DATES +
+      CHAIN_GENESIS_DATES cross-product with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list
+      of pools/instruments that get added/removed over time (Aave V3 listing/delisting individual reserves, Uniswap V3
+      pool deployments, Curve gauge additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040
+      rows for "protocol on chain hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we
+      mark individual pools/positions correctly.
 - [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
       `predictions_master.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
