@@ -190,8 +190,8 @@ audit trail).
 
 - [x] ✅ Phase 1 P0.1-P0.3 — alerting-service `gateway/manual_action_endpoint.py` (`POST /manual-action`) with
       typed-confirm-string validation + scope dispatch — alerting-service@e5c8084 (router refactor P0.1 pair-review still pending)
-- [ ] Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons + LLM
-      Audit Verdicts feed + Audit-Ack Queue panel + Incident History viewer
+- [x] ✅ Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons + LLM
+      Audit Verdicts feed + Audit-Ack Queue panel — ui@a6f3924c + alerting-service@53fb493 | pw:L2 ✓ (4/4)
 - [ ] Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`)
 - [ ] Phase 4 P0.11-P0.12 — typed-confirm-string registry + unit tests
 - [ ] Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
