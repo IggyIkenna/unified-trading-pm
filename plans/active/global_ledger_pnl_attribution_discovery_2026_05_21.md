@@ -211,8 +211,13 @@ target SSOT ledger model.
       `client_id == counterparty_client_id`; raise `CrossClientTransferForbiddenError` otherwise. Anchor to
       `codex/04-architecture/client-funds-isolation.md`. — `assert_no_cross_client_transfer()` + `@model_validator` on
       LedgerRow enforces HARD RULE at construction time. unified-api-contracts@13155355.
-- [ ] [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends / enrichments.
-- [ ] [UAC] P1. Document the `accrual_period_start_utc` / `accrual_period_end_utc` convention for passive events.
+- [x] ✅ [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends /
+      enrichments. — Codified in `LedgerRow` class docstring: 5 linkage patterns (settlement→trade, funding→perp fill,
+      dividend→buy fill, staking/lending→stake/borrow, enrichment→original). unified-api-contracts@008e59ce.
+- [x] ✅ [UAC] P1. Document the `accrual_period_start_utc` / `accrual_period_end_utc` convention for passive events. —
+      Codified in `LedgerRow` class docstring: per-event-type intervals (FUNDING_ACCRUAL 8h CeFi/block DeFi; DIVIDEND
+      ex-div→payment; STAKING_REWARD LST oracle/epoch; LENDING_INTEREST liquidity-index blocks). Field descriptions
+      updated. unified-api-contracts@008e59ce.
 
 ### Phase 3 — Late-arriving-data discipline (P0, **BLOCKED-OPERATOR-DECISION** if no clear winner emerges)
 
