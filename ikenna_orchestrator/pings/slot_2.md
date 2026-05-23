@@ -1583,3 +1583,41 @@ Plan refs: `honest_coverage_formula_consolidation_2026_05_19.md`, `mtds_backfill
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md`, `mtds_backfill_phase3_2026_05_22.md`,
 `mdps_backfill_phase3_2026_05_22.md`
+
+---
+
+## [slot-7 → slot-2] 2026-05-23 — 2 dead CeFi MTDS VMs stopped + relaunch needed after batch completes
+
+[2026-05-23 UTC] **FROM SLOT-7**: Identified 2 hung CeFi MTDS VMs from batch `20260522-140739` that had lost network
+connectivity and were dead (heartbeat+logs stale since Fri May 22 ~13:38 UTC, `network is unreachable` in serial
+output). **STOPPED both**:
+
+1. `cefi-binance-futures-2024-light-20260522-140739` — crashed at 2024-04-10. Missing: 2024-04-11→2024-12-31.
+   - Command: `derivative_ticker;liquidations;futures_chain`, symbols
+     `BTCUSDT ETHUSDT SOLUSDT XRPUSDT BNBUSDT DOGEUSDT ADAUSDT AVAXUSDT LINKUSDT`
+2. `cefi-okx-swap-2024-light-20260522-140739` — crashed at 2024-10-21. Missing: 2024-10-22→2024-12-31.
+   - Command: `derivative_ticker;liquidations;futures_chain`, symbols
+     `BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP XRP-USDT-SWAP BNB-USDT-SWAP DOGE-USDT-SWAP ADA-USDT-SWAP AVAX-USDT-SWAP LINK-USDT-SWAP`
+
+**Why stopped**: dead VMs were holding up the batch completion gate but not making any progress. **Why NOT relaunched
+now**: singleton lock in `launch-cefi-sharded-backfill.sh` prevents launching while 9 other batch-140739 VMs still
+RUNNING (correct behavior — avoids Tardis rate-limit collision).
+
+**Action for slot-2**: After all remaining 9 CeFi VMs complete, run:
+
+```bash
+ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh
+```
+
+The existing manifest shards (`cefi-binance-futures-2024-light-20260522-140739.parquet` +
+`cefi-okx-swap-2024-light-20260522-140739.parquet`) have the already-captured dates — with `VM_FORCE=false` (default),
+MTDS will skip those and resume from crash point.
+
+**Note**: `FORCE=1` in the ABOVE command overrides the SCRIPT's singleton lock (allows launching alongside
+already-running VMs if there are any), NOT the `VM_FORCE` env for the MTDS process itself. If all 9 other VMs have
+terminated by then, `FORCE=0` works too.
+
+**Updated flat→prd copy timing**: wait for ALL VMs including the 2 relaunched ones before running
+`copy_cefi_flat_to_prd_20260522.py`.
+
+Plan refs: `mtds_backfill_phase3_2026_05_22.md` (MTDS-3.2.A-V)
