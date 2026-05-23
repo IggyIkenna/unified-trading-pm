@@ -83,7 +83,9 @@ augmented with Position + Exposure snapshot at event time.
 
 ### P1 — Implementation (sub-plans spawned from discovery)
 
-_(none yet — sub-plans land here as the discovery plan produces them)_
+- [`global_ledger_pnl_attribution_migration_2026_06_01.md`](../active/global_ledger_pnl_attribution_migration_2026_06_01.md)
+  — Phases 7-9: execution-service InstructionLedger writer refactor, strategy-service PassiveLedger synthesiser,
+  DART/client-reporting-api/alerting-service reader refactors. Gated on discovery operator decisions (Phase 3/4/5).
 
 ### P2 — Continuous-verification + reconciliation
 
