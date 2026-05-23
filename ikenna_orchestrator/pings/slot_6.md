@@ -168,38 +168,6 @@ agent_reliability_mitigations, canary_coverage_qg_enforcement). All §Slot 6 ite
 
 ---
 
-## [slot-6 → operator] 2026-05-23 — OPERATOR DECISION REQUEST: strategy bucket 4c migration
-
-**Plan ref**: `plans/active/strategy_execution_contract_remediation_2026_05_20.md` item 4c (last open item)
-
-**Finding**: Item 4c ("Migrate per-AG strategy parquets into unified bucket via gsutil rsync") cannot be executed as
-written. Schema mismatch between old and new formats:
-
-- **Old per-AG format**: `strategy_instructions/<strategy_id>/<date>.parquet`
-- **New unified format**: `strategy_instructions/client_id=<id>/strategy_id=<id>/day=<date>/instructions.parquet`
-
-Cannot `gsutil rsync` directly — path key mapping requires explicit transformation.
-
-**Bucket audit (2026-05-23)**:
-
-- `strategy-store-cefi-central-element-323112`: 237 files, ~19MB — V2 CeFi dev backtest runs (2025-01-01 dates only); no
-  client_id mapping available
-- `strategy-store-defi-central-element-323112`: 0 objects
-- `strategy-store-tradfi-central-element-323112`: 0 objects
-- All `*-prod-*` per-AG buckets: 0 bytes
-- Unified `strategy-store-central-element-323112`: currently active, 383KB new data, correct schema
-
-**Decision needed** (one of two options):
-
-- **(A) Abandon old dev data**: mark old per-AG CeFi bucket data as abandoned (no valid client_id → cannot migrate).
-  Archive the item as irrelevant for prod. Mark bucket for deletion after 30d grace.
-- **(B) Write migration script**: assign a slot to write a path-transform script mapping `<strategy_id>/<date>` → a
-  specific `client_id/` prefix. Requires knowing which client owns the old CeFi dev backtest runs.
-
-Code is correct (4a/4b/4d all shipped). This is purely a data migration decision on pre-existing dev-env artifacts.
-
-**Status**: BLOCKED-OPERATOR-DECISION at PM@01196bc76. Plan item annotated.
-
 > **⚠️ PRIOR ENTRIES BELOW — audit trail only.**
 
 ---

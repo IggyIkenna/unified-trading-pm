@@ -263,9 +263,12 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       UAC `scripts/generate_instrument_catalogue.py:479` — GCSManifestLoader is intentionally GCS-only, not a
       violation. **DEFERRED** ~70 service-repo sites (strategy-service, risk-service, etc.) — Wave 2 consumer sweep
       post-cutover per original "(post-2026-05-08)" scope annotation + Phases 5+6 blocked on GCP backfill completion.
-- [ ] [SCRIPT] P0. **Manifest writer audit**: `ManifestWriter.add()` / `record_captured()` / `record_empty()` /
+- [x] ✅ [SCRIPT] P0. **Manifest writer audit**: `ManifestWriter.add()` / `record_captured()` / `record_empty()` /
       `record_failed()` paths must compute bucket from UCI, not from a literal. The DeFi venue canonicalisation hook in
-      UTL@`25ded4f3` is a precedent — same discipline applies to bucket-resolution.
+      UTL@`25ded4f3` is a precedent — same discipline applies to bucket-resolution. **DONE 2026-05-23** (slot 2):
+      Audited manifest_writer.py — zero hardcoded `gs://` or `s3://` in write paths. `catalogue_bucket` is always a
+      caller-provided variable; writes use cloud-agnostic `client.upload_bytes`/`client.download_bytes`. No service-repo
+      caller sites accessible from this workspace; service-repo callers deferred to Wave 2 post-cutover.
 
 #### 1.5.B — Pub/Sub topic + subscription parity (SNS+SQS or EventBridge)
 
