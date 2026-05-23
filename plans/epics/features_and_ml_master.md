@@ -838,3 +838,18 @@ _(no plans currently assigned at this priority)_
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`features_backfill_phase3_2026_05_22`](../archive/2026_05/features_backfill_phase3_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All 18 items DEFERRED-OPERATOR-DECISION (compute VMs need operator launch
+authorization post-cutover). · **estimate**: 2.4 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)** — post-cutover compute launch:
+
+- **CeFi feature compute VMs (DeltaOne, Volatility, MTF) + DeFi + TradFi + Cross-cutting (P0)**: Gate: operator VM
+  launch authorization post-cutover.
+- **Sports features (P0)**: Gate: `sports_master` Phase 3+4.
+- **Prediction features (P0)**: Gate: operator authorization.
+- **Calendar + XInstrument cross-cutting (P0)**: Gate: phases 1-5 GREEN.

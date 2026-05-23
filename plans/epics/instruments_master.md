@@ -383,3 +383,17 @@ _(no plans currently assigned at this priority)_
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`instruments_backfill_phase3_2026_05_22`](../archive/2026_05/instruments_backfill_phase3_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — 22 items shipped (CeFi/DeFi/TradFi/Pred backfills + catalogue builds); 3 items
+DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)** — post-cutover backlog:
+
+- **IS-3.1.Sports-V verification (P0, DEFERRED-OPERATOR-DECISION)**: Gate: `instr-backfill-sports` completes; track
+  in `predictions_master`.
+- **IS-3.1.TradFi-Databento (P0, BLOCKED-CREDENTIALS)**: Gate: operator reactivates Databento account.
+- **IS bucket canonicalisation (P2)**: Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.

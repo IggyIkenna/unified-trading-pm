@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/available_at_schema_lift_post_cutover_2026_05_19.md
+  - ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md
   - ../active/batch_live_symmetry_2026_05_10.md
 ---
 
@@ -58,10 +58,16 @@ available_at_schema_lift_post_cutover Phase B)
 
 ## P2 — useful; opportunistic
 
-### [`available_at_schema_lift_post_cutover_2026_05_19`](../active/available_at_schema_lift_post_cutover_2026_05_19.md)
+### [`available_at_schema_lift_post_cutover_2026_05_19`](../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md)
 
-**status**: todo · **estimate**: 5 cal AI-days (class: brand-new) **title**: available_at schema-level invariant lift +
-QG hardening (post-cutover architectural slice)
+**status**: ✅ ARCHIVED 2026-05-23 — All 7 items DEFERRED-OPERATOR-DECISION (post-cutover architectural slice; gated
+on monorepo migration Block B1 ADT lift + features consolidation Phase 5.c). · **estimate**: 5 cal AI-days
+
+**Deferred (MIGRATED FROM archived plan)** — post-cutover architectural backlog:
+
+- **Phase A — UAC `AvailabilityRule` Protocol (5 items, P1)**: Gate: monorepo migration Block B1 ADT lift.
+- **Phase B — QG STEP 5.67/5.68 static enforcement (2 items, P2)**: Gate: Phase A + features_repo_consolidation
+  Phase 5.c.
 
 ### [`batch_live_symmetry_2026_05_10`](../active/batch_live_symmetry_2026_05_10.md)
 

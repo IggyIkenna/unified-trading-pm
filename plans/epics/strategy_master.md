@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
   - ../active/compute_optimization_mock_data_2026_05_13.md
-  - ../active/config_grid_archetype_extend_2026_05_20.md
+  - ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md
   - ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
   - ../active/defi_recursive_borrow_archetypes_2026_05_10.md
   - ../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
@@ -97,9 +97,16 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: design)
 
-### [`config_grid_archetype_extend_2026_05_20`](../active/config_grid_archetype_extend_2026_05_20.md)
+### [`config_grid_archetype_extend_2026_05_20`](../archive/2026_05/config_grid_archetype_extend_2026_05_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — All 3 items DEFERRED-OPERATOR-DECISION (critical mismatch between plan's proposed
+dimension names and actual engine params; no operator response since 2026-05-20). · **estimate**: 2.4 cal AI-days
+
+**Deferred (MIGRATED FROM archived plan)** — post-cutover backlog:
+
+- **Confirm per-archetype grid dimension names (P0, BLOCKED-OPERATOR-DECISION)**: Operator must align dims with actual
+  engine params or add proposed params to engines first. `ARBITRAGE_CROSS_DOMAIN_EVENT` needs engine factory entry.
+- **Implement grid branches + smoke tests (P0)**: Gate: operator decision above.
 
 ## P2 — useful; opportunistic
 
