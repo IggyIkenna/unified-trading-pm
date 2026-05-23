@@ -1,5 +1,65 @@
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
+> **🔴 [2026-05-23 ~17:30 UTC slot-3] CRITICAL — current CeFi backfill wave producing 0 records** Plan:
+> [plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md](../../plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md)
+>
+> **TL;DR**: All 17 in-flight CeFi backfill VMs (waves 14:21 + 16:15 UTC) recorded `0 venues ok, 0 records` for every
+> date attempted due to a `BlobMetadata.endswith()` AttributeError in `CeFiCatalogReader._load_latest_catalog` (line 108
+> type-annotated `list[str]` but `list_blobs()` returns `list[BlobMetadata]`). Orchestrator's broad `except Exception`
+> swallowed the type error → fell back to UAC seed → 0 instruments for the backfill venues. VMs then went silent
+> (heartbeat frozen 45min-2.5h; serial console empty past bootstrap; `gcloud` still says RUNNING; STALL_TIMEOUT_SEC
+> watchdog did NOT trigger — likely separate hang bug).
+>
+> **Fix shipped**: MTDS@9c91a176 on live-defi-rollout (--no-verify, per your authorisation; MTDS QG remains pre-broken
+> on BinaryEventTrigger which is not my change).
+>
+> **Need from operator**:
+>
+> 1. Stop the 17 running CeFi VMs (they'll keep producing 0 records until tarball rebuild).
+> 2. Rebuild VM tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh`.
+> 3. Relaunch the heavy + light waves (your launcher: deployment-service@38902bf with e2-highmem-8 default).
+> 4. Decide whether to investigate the silence-without-watchdog-kill before deleting (SSH + `py-spy dump` could capture
+>    the hang state).
+>
+> **17 running VMs (all silent, ALL producing 0 records)**:
+>
+> ```
+> gcloud compute instances list --filter="name~cefi AND status=RUNNING" \
+>   --format="value(name)" 2>/dev/null
+> # cefi-binance-futures-2020-light-20260523-151757
+> # cefi-binance-futures-2024-light-20260523-171520
+> # cefi-binance-futures-2025-light-20260523-151757
+> # cefi-binance-spot-2023-heavy-20260523-151757
+> # cefi-binance-spot-2024-heavy-20260523-151757
+> # cefi-bybit-2024-heavy-20260523-151757
+> # cefi-bybit-2025-heavy-20260523-151757
+> # cefi-coinbase-spot-2021-heavy-20260523-171520
+> # cefi-coinbase-spot-2022-heavy-20260523-151757
+> # cefi-deribit-2021-light-20260523-151757
+> # cefi-deribit-2022-light-20260523-151757
+> # cefi-deribit-2026-light-20260523-151757
+> # cefi-okx-spot-2023-heavy-20260523-171520
+> # cefi-okx-spot-2026-heavy-20260523-151757
+> # cefi-okx-swap-2023-heavy-20260523-151757
+> # cefi-okx-swap-2024-heavy-20260523-151757
+> # cefi-upbit-2025-heavy-20260523-151757
+> ```
+>
+> **Manifest snapshot** (`gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet`): 35.1M
+> rows total — captured=1.4M (3.9%) · empty_confirmed=28.4M (80.8%) · expected_unattempted=4.1M (11.7%) ·
+> attempted_failed=1.2M (3.5%). Freshest `written_at` captured row: 2026-05-23T14:33:49 UTC (OKX-SWAP date=2021-08-01),
+> so VMs DID write briefly in their first ~12 min before catalog cascade failed.
+>
+> **Gates still BLOCKED-GCP-BACKFILL-COMPLETE**:
+>
+> - `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 5 (smoke)
+> - `aws_migration_defi_first_2026_05_07.md` Phases 5+6
+> - PLUS the 3 prior BLOCKED-OPERATOR-DECISION items unchanged: BLOCKED-1 (GCP AR base image path), BLOCKED-3 (SM
+>   secrets for execution-service).
+>
+> Not touching MTDS QG (still pre-broken on BinaryEventTrigger). The `shard_memory_profile.py` calibration comment is
+> still staged locally; will not push since QG is pre-broken and the comment is non-urgent.
+
 > **[2026-05-23 slot-3] CeFi backfill VM diagnosis + launcher fix — deployment-service@38902bf**
 >
 > **13 VMs still RUNNING** from 2026-05-22 14:07 launch (~21h elapsed). All on e2-highmem-4 (32 GB).

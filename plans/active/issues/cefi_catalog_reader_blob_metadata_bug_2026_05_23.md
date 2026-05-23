@@ -1,0 +1,99 @@
+---
+title: CeFi backfill VMs silently capturing 0 records — BlobMetadata.endswith() crash in CeFiCatalogReader
+created: 2026-05-23
+author: slot-3-ikenna
+source:
+  - market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py
+  - market-tick-data-service@09361718 # introducing commit (Phase 3.D.5 v2 enumerator)
+  - plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
+  - plans/active/aws_migration_defi_first_2026_05_07.md
+locked_by: live-defi-rollout
+---
+
+## What I found
+
+**17 CeFi backfill VMs** launched in two waves on 2026-05-23 (~14:21 UTC and ~16:15 UTC) recorded "0 venues ok, 0
+failed, 0 skipped (no instruments), 0 total records" for every processing date attempted, and have produced **no log
+output** for 45 min – 2.5 h (heartbeat uploader frozen; serial console silent past initial bootstrap).
+
+Root cause is a type-mismatch crash in `CeFiCatalogReader._load_latest_catalog`:
+
+```python
+# market_tick_data_service/engine/cefi_catalog_reader.py (pre-fix)
+raw_blobs = self._client.list_blobs(self._bucket, prefix=_CATALOG_PREFIX)
+blobs: list[str] = list(raw_blobs)                              # ← actually list[BlobMetadata]
+parquet_blobs = [b for b in blobs if b.endswith("all.parquet")]  # ← AttributeError
+```
+
+`StorageClient.list_blobs()` returns `Iterator[BlobMetadata]`, not strings. `BlobMetadata` is a `@dataclass` with a
+`.name: str` field
+([unified-trading-library abstractions.py:38](../../../unified-trading-library/unified_trading_library/cloud_interface/abstractions.py#L38)).
+Calling `.endswith()` on the dataclass itself raises
+`AttributeError: 'BlobMetadata' object has no attribute 'endswith'`. The orchestrator's broad `except Exception` at
+[orchestrator.py:3163](../../../market-tick-data-service/market_tick_data_service/engine/orchestrator.py#L3163) catches
+it and falls back to UAC seed instruments — which then produces 0 records for the venues the VMs were launched to
+backfill.
+
+Repro from any VM run.log:
+
+```
+WARNING CeFi catalog read failed for date=2024-01-04: 'BlobMetadata' object has no attribute 'endswith'
+        — falling back to UAC seed instruments
+INFO    Manifest updated: date=2024-01-04 venues=0 shards=0 total_records=0 complete=False
+INFO    Processed date=2024-01-04: 0 venues ok, 0 failed, 0 skipped (no instruments), 0 total records
+```
+
+Introduced by `market-tick-data-service@09361718` ("feat: add CeFi v2 catalog enumerator (Phase 3.D.5)").
+`SportsCatalogReader` uses direct per-league path templates and is unaffected. All other workspace `list_blobs()`
+callers correctly extract `.name` (verified workspace-wide grep — client-reporting-api, MDPS scripts, deployment-service
+monitor all use `blob.name` or `getattr(b, "name", "")`).
+
+## Why it matters
+
+- **Data-pipeline correctness HARD RULE violation**: 17 VMs burned ~3h compute producing 0 records; the entire current
+  CeFi backfill wave is wasted.
+- **Silent failure pattern**: orchestrator's `except Exception` swallows the type error, so this only surfaces by
+  reading run.log line-by-line. Manifest "captured" counter freezes; no alert fires.
+- **Compounds with VM hang**: even after catalog falls back, processes go SILENT (no log output, no STOPPED/FAILED) for
+  45min-2.5h with `gcloud instances list` still reporting RUNNING. The `STALL_TIMEOUT_SEC=1800s` watchdog from
+  `deployment-service@88c53ad` did NOT trigger — suggests either the watchdog isn't deployed in these VM tarballs OR a
+  separate hang occurs in the fallback path that the watchdog can't detect (e.g. heartbeat daemon dies but process holds
+  CPU).
+- **Blocks May-23 backfill gate**: `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 5 +
+  `aws_migration_defi_first_2026_05_07.md` Phases 5+6 are all gated on GCP CeFi backfill 100% complete.
+
+## Recommended decision
+
+**P0 — fix shipped, VM relaunch required**:
+
+1. **Fix shipped**: `market-tick-data-service@9c91a176`
+   (`fix(catalog): CeFiCatalogReader.endswith() crash — BlobMetadata not str`) pushed to `live-defi-rollout`. One-line
+   change: `blobs: list[str] = [b.name for b in raw_blobs]`. Pushed with `--no-verify` per operator authorisation
+   (pre-existing MTDS QG failure on `unified_trading_library.risk.rule_evaluator` BinaryEventTrigger import — foreign,
+   not introduced by this change).
+2. **Operator action needed**: stop the 17 in-flight CeFi backfill VMs (`gcloud compute instances delete ...`), rebuild
+   VM tarballs via `bash deployment-service/scripts/vm/create-code-tarballs.sh` to pick up @9c91a176, relaunch the
+   waves. Without rebuild + relaunch the running VMs continue producing 0 records.
+3. **P1 follow-up — investigate VM hang** (likely separate bug): heartbeat daemon stops uploading logs after the
+   catalog-read failure cascade. STALL_TIMEOUT_SEC watchdog should have caught the silence but didn't. Suspected: either
+   watchdog code not in the tarball, or the python process is genuinely deadlocked (e.g. in pre-flight) and the
+   heartbeat thread died with the main thread alive. Needs SSH into a hung VM before delete + thread dump
+   (`py-spy dump --pid <pid>`).
+4. **P2 follow-up — orchestrator should NOT swallow `AttributeError` in catalog fallback path**: the broad
+   `except Exception` at `orchestrator.py:3163` masks type-mismatch bugs. Consider tightening to
+   `except (KeyError, IOError, GCSError)` so genuine code bugs raise loud per the "schema-drift bug → RAISE LOUD"
+   Manifest+Honest Absence HARD RULE.
+
+## Composes with
+
+- `Data Pipeline Correctness Is The Heartbeat` (HARD RULE) — every cell either `captured` or
+  `empty_confirmed[reason=<typed>]`; silently emitting 0 records is neither.
+- `Manifest + Honest Absence` HARD RULE — "schema-drift bug → RAISE LOUD" applies here; the broad exception catch in
+  orchestrator.py:3163 violates this.
+- `External Data Is Always Available` — root cause is code bug, NOT data absence; current 17 VMs do NOT qualify for
+  BLOCKED-CREDENTIALS or BLOCKED-OPERATOR-DECISION.
+
+## Status
+
+- 2026-05-23 ~17:30 UTC — Fix shipped at MTDS@9c91a176. Awaiting operator: VM kill + tarball rebuild
+  - relaunch. P1+P2 follow-ups deferred to post-relaunch.
