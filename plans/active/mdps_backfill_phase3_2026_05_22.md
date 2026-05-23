@@ -60,17 +60,14 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
 
 Gate: MTDS-3.2.B TradFi already DONE (data in prd).
 
-- [x] ✅ [AGENT slot 6] P0. **MDPS-3.3.TradFi** — Launched `mdps-backfill-tradfi-20260522-051203` VM (e2-standard-8,
-      asia-northeast1-c, 2020-01-01→2026-05-22, prod). VM RUNNING @ 136.110.98.249. `MDPS_ASSET_GROUP=TRADFI`.
-      `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-central-element-323112`. 2026-05-22.
-- [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. NOTE: VM at 2020-01-14 after 3.5h
-      running (very slow — ~10 min/day × 2333 days = ~16 days ETA). VIX bars at 2020-01-01+ will eventually appear.
-      LONG-RUNNING — verify once VM reaches 2026-05-22. **CORRECTION (slot-7 2026-05-22 ~17:30 UTC)**: Prior "VM at
-      2026-01-21 @ 184 days/hour" was WRONG — that was reading OLD 20260519 VM output, not 051203 progress. Actual
-      state: VM started 04:14 UTC, is at 2020-02-18 after ~13h (rate ~3.7 days/hour; CME has thousands of files/day).
-      ETA to reach 2026-05-22: ~2280 remaining days ÷ 3.7 = ~620 hours ≈ 26 more days. VIX bars at 2025-01-06 exist in
-      GCS from prior 20260519 VM runs (not new 051203 output). 051203 VM RUNNING and producing candles for early 2020
-      dates — will verify manifest v8 + VIX presence only once VM actually reaches 2026-05-22.
+- [x] ✅ [AGENT slot 5] P0. **MDPS-3.3.TradFi** — **RELAUNCHED 2026-05-23 as 7 sharded VMs**
+      `mdps-tradfi-{2020..2026}-20260523-101451` (e2-highmem-8, max_workers=2, 2020-01-01→2026-05-23). Prior single VM
+      (051203) silently disappeared (not in gcloud list, no per_vm shard found). Sharded launch is faster (7 parallel
+      year VMs vs 1 serial). slot-5 2026-05-23.
+- [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. LONG-RUNNING (CME has thousands of
+      instruments/day → slow at ~3.7 days/hour per VM). With 7 parallel VMs each handling 1 year, ETA ~1 year ÷ 3.7
+      days/hour ≈ 66 hours per VM. Verify once 2025 VM reaches 2025-12-31 (VIX active). VIX bars at 2025-01-06 in GCS
+      from prior 20260519 runs (not new output). Manifest v8 check pending.
 - [x] ✅ [CODE] P2. **MDPS-3.3.TradFi-SchemaContract** — Issue doc filed at
       `plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md` (slot-6 2026-05-22). Covers: CME/ICE
       combo/UNKNOWN/futures_chain NaN bars + trades data_type nullable OHLC fix. VIX unblocked. Current VM marks
