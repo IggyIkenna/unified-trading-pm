@@ -4,15 +4,14 @@ created: 2026-05-20
 source:
   - plans/audit/strategy_execution_contract_audit_2026_05_20.md
   - plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md (Phase D6)
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
-status: in-progress
+status: archived
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 priority: P2
+archived: 2026-05-23
 ---
 
 # strategy→execution contract remediation — 2026-05-20
@@ -462,3 +461,10 @@ instructions
 - **P3 schema-version assessment**: blocked until Phase 1+2 manifest emission adds rows. Follow-up: once rows land, run
   `SELECT DISTINCT schema_version FROM _index/availability_index.parquet` on `strategy-store` bucket to verify
   schema_version=8. No separate plan — verify during paper-trade smoke (full-execution criterion).
+
+## Deferred work — migrated to:
+
+- **4c. Per-AG → unified bucket migration (P0, BLOCKED-OPERATOR-DECISION)**: CeFi bucket has 237 files (~19MB) of V2
+  dev backtest runs (2025-01-01 dates); all prod per-AG buckets are 0-byte. Operator must choose: (a) abandon old dev
+  data (no client_id mapping) + delete bucket, OR (b) write migration script for old format → new partitioned format.
+  **Migrated to**: `plans/epics/strategy_master.md` § P0 operator-decision backlog. Ping filed slot-6 2026-05-23.

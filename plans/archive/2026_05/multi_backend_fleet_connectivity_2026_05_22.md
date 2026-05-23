@@ -6,11 +6,11 @@ assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.8
-status: active
+status: archived
 priority: P1
 created: 2026-05-22
-last_updated: 2026-05-22
-locked_by: live-defi-rollout
+last_updated: 2026-05-23
+archived: 2026-05-23
 source:
   design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage →
   centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
@@ -248,3 +248,12 @@ TLS / DNS-subzone design is abandoned (recorded above only as rationale). Single
   verifier).
 - **Out-of-VPC worker transport** — if a future worker lives outside `vpc-6ee70e08`, a reverse-WebSocket channel (VM
   holds an outbound connection the central API pushes commands over) replaces private-IP proxying for that VM.
+
+## Deferred work — migrated to:
+
+- **GCS JWT secret read (P3, BLOCKED-OPERATOR)** + **`reload_secret()` poller (P3, BLOCKED-COUPLED)**: operator must
+  grant `storage.objectViewer` on `central-element-323112-orchestrator-creds` to the central VM's ADC or provision a
+  SA. These two items ship together. **Migrated to**: `plans/epics/orchestrator_master.md` § P3 backlog.
+- **RS256/ES256 asymmetric auth (P3, NEEDS-GO-AHEAD)**: fleet-wide auth migration with explicit go-ahead. HS256 shared
+  secret works fine for this internal tool. **Migrated to**: future `orchestrator_asymmetric_auth_<date>.md` plan
+  (per "Temporary states" section above); operator triggers when ready.

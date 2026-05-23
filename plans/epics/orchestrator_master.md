@@ -206,6 +206,19 @@ deployed to main@1a98cca; usage scraping re-engineered for Claude 2.1.145. · **
   `claude.ai/code` Remote Control URL for live session drop-in. Separate build-out from setup-token flow; both auth
   types coexist via separate CLAUDE_CONFIG_DIRs.
 
+### [`multi_backend_fleet_connectivity_2026_05_22`](../archive/2026_05/multi_backend_fleet_connectivity_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-6 done: centralized API router with private-VPC proxying; single-token
+auth (HS256); per-VM interactive proxy; self-registration + staleness; codex updated. · **estimate**: 2.8 cal AI-days
+
+**Deferred (MIGRATED FROM archived plan)** — P3 backlog:
+
+- **GCS JWT secret read** + **`reload_secret()` poller**: grant `storage.objectViewer` on
+  `central-element-323112-orchestrator-creds` to central VM's ADC, or provision a VM SA. Two items ship together.
+  BLOCKED-OPERATOR (needs project-owner action).
+- **RS256/ES256 asymmetric auth**: fleet-wide auth migration; seam already in Phase 4. Successor:
+  `orchestrator_asymmetric_auth_<date>` plan when operator gives go-ahead.
+
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_

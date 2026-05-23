@@ -18,7 +18,7 @@ related_plans:
   - ../active/defi_recursive_borrow_archetypes_2026_05_10.md
   - ../active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
   - ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md
-  - ../active/strategy_execution_contract_remediation_2026_05_20.md
+  - ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md
   - ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
@@ -111,10 +111,21 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
 
 **status**: scope-narrowed · **estimate**: 24 cal AI-days (class: brand-new)
 
-### [`strategy_execution_contract_remediation_2026_05_20`](../active/strategy_execution_contract_remediation_2026_05_20.md)
-
-**status**: in-progress · **estimate**: 3.0 cal AI-days (class: brand-new)
-
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`strategy_execution_contract_remediation_2026_05_20`](../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5+Q done: strategy manifest emission (`record_captured`/`record_failed`),
+`resolve_bucket_name(kind="strategy-store")` bucket SSOT, preflight gate via `validate_config_can_run()`, error
+classification (`ADAPTER_FETCH_FAILED`), QG ratchet, codex SSOT updated. · **estimate**: 3.0 cal AI-days
+
+**Deferred (MIGRATED FROM archived plan)** — P0 operator-decision:
+
+- **4c. Per-AG → unified bucket migration**: CeFi bucket has 237 files (~19MB) dev backtest data (2025-01-01). All
+  prod per-AG buckets are 0-byte. Operator choose: (a) abandon old dev data + delete per-AG buckets, OR (b) write
+  migration script (old `strategy_instructions/<id>/<date>.parquet` → new `strategy_instructions/client_id=/.../`).
+  BLOCKED-OPERATOR-DECISION. Ping filed slot-6 2026-05-23.

@@ -793,6 +793,20 @@ _(no plans currently assigned at this priority)_
 
 _(no plans currently assigned at this priority)_
 
+## Archived plans
+
+### [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](../archive/2026_05/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — IS cefi/sports/prediction manifest gaps fixed; prediction bucket consolidated
+(100.0% captured); codex `prediction-schema-paths.md` + `sports-data-source-coverage-matrix.md` updated. · **estimate**: 1.2 cal AI-days
+
+**Deferred (MIGRATED FROM archived plan)** — P1 operator-monitoring backlog:
+
+- **Monitor `instr-backfill-sports` VM**: ~60-day background backfill for 2020→2026 historical. No May-23 gate.
+  Operator monitors until STATUS=TERMINATED; verify sports gaps drop from 3063 to < 200.
+- **Schema column in drilldown**: verify `canonical_question_group` schema link in deployment-api UI routes to correct
+  `CanonicalQuestionGroup` UAC metadata per group (not flat Polymarket schema).
+
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_

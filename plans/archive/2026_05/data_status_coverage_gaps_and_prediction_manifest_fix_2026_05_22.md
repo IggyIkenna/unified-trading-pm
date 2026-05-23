@@ -7,9 +7,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+status: archived
+archived: 2026-05-23
 ---
 
 ## Context
@@ -280,3 +279,14 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 | Sports VM still running historical (3063 gap)                                                          | Phase 2 P1 monitor item; no blocking dependency on Phase 3                                                |
 | Prediction canonical manually consolidated (old bucket, not auto-merged by Cloud Run)                  | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e — env-tier rollout to old IS prediction bucket |
 | Sports IS fills write to OLD bucket; PRD ODDS/PREDICTIONS max=2026-05-04 (short of ≥2026-05-20 target) | After footystats fill: copy shard OLD→PRD + consolidate; long-term fix: Phase 0e (sports bucket env-tier) |
+
+## Deferred work — migrated to:
+
+- **Monitor `instr-backfill-sports` VM (P1, DEFERRED-OPERATOR-DECISION)**: long-running background backfill (~60-day
+  ETA to complete 2020→2026 historical). No May-23 dependency. **Migrated to**: `plans/epics/predictions_master.md`
+  § P1 operator-monitoring backlog.
+- **Fix prediction bucket naming mismatch (P1, DEFERRED-OPERATOR-DECISION)**: IS writes to old flat bucket; Cloud Run
+  consolidator targets prd bucket. **Migrated to**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`
+  Phase 0e (env-tier rollout to Group A IS prediction bucket) — already named successor per "Temporary states" above.
+- **Schema column in drilldown (P1, DEFERRED-OPERATOR-DECISION)**: verify `canonical_question_group` schema link in
+  deployment-api UI. **Migrated to**: `plans/epics/predictions_master.md` § P1 codex/UI verification backlog.
