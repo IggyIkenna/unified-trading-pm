@@ -10,6 +10,8 @@ estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 10
 created: 2026-05-22
 last_updated: 2026-05-22
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Codex ↔ Plan Differential Audit 2026-05-22
