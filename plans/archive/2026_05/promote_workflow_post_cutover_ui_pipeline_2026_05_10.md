@@ -23,6 +23,19 @@ assigned_vm: vm-operator-ops
 priority: P2
 ---
 
+## Deferred work — migrated to:
+
+All 64 DEFERRED-OPERATOR-DECISION items represent post-cutover implementation scope. Migrated in 7 delivery
+groups to `plans/epics/dart_and_promote_master.md` § P3 (Groups A-G):
+- A: StrategyMaturityPhase enum + lifecycle events
+- B: CandidateManifest enrichment + Firestore + BacktestRunManifest + ranking
+- C: Promote UI endpoints + event-stream convergence
+- D: DART all-archetype visualization
+- E: OperationalMode refactor (pvl-p17a-d)
+- F: Strategy drift watchdog + backtest cron VMs
+- G: Codex + CLAUDE.md post-cutover update
+Full 64-item spec preserved in this archived plan for reference.
+Archiving 2026-05-23.
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
 
 > **🔵 SLOT-7 AUDIT 2026-05-18**: All items in this plan require backend integration (Firestore

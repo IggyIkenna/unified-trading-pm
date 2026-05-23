@@ -79,6 +79,15 @@ parent_epic: manifest_master
 assigned_vm: vm-defi
 ---
 
+## Deferred work — migrated to:
+
+Manifest v8 schema design complete + writegate Phases 1-7 shipped. Execution gates migrated to:
+- `plans/epics/manifest_master.md` § P1: Phase 0 pre-audits + Phase 8 operator sign-off.
+- `plans/epics/manifest_master.md` § P2: Phase 4 DEFAULT-REMOVAL-v8kwargs.
+- `plans/epics/mtds_mdps_master.md`: Phase 9 MTDS VM launches + Phase 10-11 backfill execution
+  + Phase 12 paper-trade/recon + Phase 13 live wallet enable.
+- `plans/active/master_to_live_defi_2026_05_23.md` § Groups A-C (cutover gates).
+Archiving 2026-05-23.
 # Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
 
 > **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +

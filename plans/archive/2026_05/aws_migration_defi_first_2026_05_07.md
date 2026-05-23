@@ -15,6 +15,14 @@ related_plans:
   - gcs_migration_bundle_pipeline_mode_2026_05_08.md
 ---
 
+## Deferred work — migrated to:
+
+DeFi S3/Athena/Glue migration complete (10 buckets, 346,920 objects, 36.83 GB). Post-cutover items migrated to:
+- `plans/epics/infrastructure_master.md` § P3: GCP Pub/Sub inventory, UCI MessageBus abstraction,
+  buildspec.aws.yaml parity (BLOCKED-OPERATOR), reconciler --cloud flag, defi-validation key,
+  AWS IAM perms, operator dual-cloud sign-off, sports/predictions repeat (P3), CI/CD cutover (P3),
+  GCP decommission (P3).
+Archiving 2026-05-23.
 > **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
 >
 > AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes post-cutover

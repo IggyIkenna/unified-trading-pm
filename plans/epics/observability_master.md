@@ -147,17 +147,24 @@ _(no plans currently assigned at this priority. Post-cutover audits will spawn P
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+> **MIGRATED FROM:** `alerting_service_live_rules_2026_05_07.md` (archived 2026-05-23) — Phases 1-9 complete.
+> Phase 7 quietness baseline VM ran until ~2026-05-24. Operator soak + rehearsal tasks below.
+
+- [ ] [OPERATOR] P3. **Rotate Telegram bot token** — CRITICAL: token exposed in Tab L httpx log. Rotate via
+      @BotFather → update Secret Manager `TELEGRAM_BOT_TOKEN` (GCP + AWS) + redeploy alerting-service.
+- [ ] [OPERATOR] P3. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings so CI smoke
+      alerts route to ops channel (not the default).
+- [ ] [OPERATOR] P3. **PagerDuty escalation policy** — define in PD console: tier-1 (email) → tier-2 (SMS 5min) →
+      tier-3 (voice 10min). Wire `PAGERDUTY_ROUTING_KEY` Secret Manager key. Slack credential push post-Phase-7 baseline.
+- [ ] [OPERATOR+AGENT] P3. **Alert rehearsal session** — run `inject_synthetic_alert.py` for all 15 alert codes +
+      fill sign-off doc `REHEARSAL_2026_05_23.md`. CRITICAL-severity simulation (position > 10× threshold).
+- [ ] [OPERATOR] P3. **48h FP baseline review** — if FP > 10%/24h post-cutover, file threshold-adjustment task.
+      7-day soak daily review; threshold re-tune if needed.
+- [ ] [AGENT] P3. **Harsh pair-review PR** — alerting-service is Harsh's repo; raise PR for Tab L diff + get
+      Harsh's sign-off before merging to main.
 
 ## Archived plans
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete. Phase 7 quietness baseline VM running until ~2026-05-24 08:32 UTC.
-
-**Deferred (migrated):**
-- **Phase 4 — CRITICAL: rotate Telegram bot token (OPERATOR ACTION)**: Token leaked in Tab L httpx log. Rotate via @BotFather + re-push to GCP SM + AWS SM.
-- **Phase 4 — PagerDuty + Slack credential push**: DEFERRED-PER-DECISION; operator triages post-Phase 7 baseline.
-- **Phase 7 — 48h baseline FP analysis (OPERATOR ACTION)**: VM `alerting-quietness-20260522-083225` runs until ~2026-05-24. If FP > 10%/24h, file threshold-adjustment task.
-- **Phase 8 rehearsal (OPERATOR ACTION)**: Run `inject_synthetic_alert.py` for all 15 alert codes + fill sign-off doc `REHEARSAL_2026_05_23.md`.
-- **Phase 9 — 7-day soak daily review (OPERATOR ACTION)**: Monitor FP rate post-cutover; threshold re-tune if needed.
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete. Deferred operator tasks migrated to P3 above.

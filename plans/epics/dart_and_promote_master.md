@@ -114,4 +114,49 @@ _(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+> **MIGRATED FROM:** `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (archived 2026-05-23). Full 64-item
+> spec in archived plan. Grouped below by delivery cluster. All DEFERRED-POST-CUTOVER; start window 2026-06-01.
+
+### Post-cutover Group A — Strategy lifecycle events + maturity model
+
+- [ ] [AGENT] P3. **`StrategyMaturityPhase` canonical enum** — pick between 10-state UAC enum; deprecate legacy
+      `StrategyLifecycleStage` (8-state) + `StrategyMaturity` (v2 8-state). Workspace-grep audit every consumer.
+      Add `STRATEGY_LIVE_PAUSED` + `STRATEGY_LIFECYCLE_DEMOTED` event types. Emit `STRATEGY_LIFECYCLE_CHANGED` on PATCH.
+- [ ] [AGENT] P3. **Phase history → audit_log Firestore mirror** — `phase_history` array mirrored to
+      `audit_log` collection for operator drill-down. Per `codex/04-architecture/promote-workflow-architecture.md`.
+
+### Post-cutover Group B — CandidateManifest + Firestore persistence
+
+- [ ] [AGENT] P3. **Extend `MinimalCandidateManifest` → full `CandidateManifest`** — pinned shas + model ref +
+      features manifest version + strategy config snapshot. `strategy_candidate_manifests` Firestore collection.
+      `POST /strategy/{id}/candidate-manifest` admin endpoint + PATCH hook at paper→live gate crossing.
+- [ ] [AGENT] P3. **`BacktestRunManifest` + ranking infrastructure** — `BacktestResultWriter` UTL helper +
+      `GroupBMetrics` UAC lift + `RankedCandidate` type + `rank_candidates()` + ranked board UI + API endpoint.
+- [ ] [AGENT] P3. **Rollback runbook endpoint** — given `manifest_id`, restore pinned shas + notify alerting-service.
+
+### Post-cutover Group C — Promote UI endpoints + event-stream
+
+- [ ] [AGENT] P3. **`POST /promote/{id}/{run_id}` + `/promote-to-live/{id}/{manifest_id}`** endpoints. Wire
+      `useRecordPromoteWorkflow()` UI callback. Optimistic state + event-stream convergence. Firebase `execution-full`
+      claim gates promote-to-live path.
+- [ ] [AGENT] P3. **Per-strategy pause/kill-switch + retire UI** buttons wired to backend endpoints.
+
+### Post-cutover Group D — DART visualization
+
+- [ ] [AGENT] P3. **DART across all archetypes** — extend 3-way visualization from DeFi to sports/prediction/tradfi.
+      Signal explainability + per-trade audit drill-down + multi-archetype side-by-side P&L comparison.
+
+### Post-cutover Group E — `OperationalMode` refactor (`pvl-p17a-d`)
+
+- [ ] [AGENT] P3. **UAC `OperationalMode` 4-cell enum** replacing `paper_trade: bool` + `_PAPER_VENUE_KEYS` dict.
+      Propagate through every adapter/venue handler. Delete `paper_trade` field post-migration.
+
+### Post-cutover Group F — Strategy drift watchdog + backtest cron VMs
+
+- [ ] [AGENT] P3. **`strategy-drift-watchdog` VM prefix** in `VM_PREFIX_TO_BUCKET`; `STRATEGY_CANDIDATE_DRIFT`
+      alerting rule. **`strategy-backtest-cron` VM prefix**; periodic backtest vs champion score comparison cron.
+
+### Post-cutover Group G — Codex + CLAUDE.md
+
+- [ ] [AGENT] P3. **Codex audit + CLAUDE.md update** — re-walk promote-workflow-architecture.md +
+      cli-promote-paths.md; update to reflect post-cutover shipped state. Add key rules to CLAUDE.md.

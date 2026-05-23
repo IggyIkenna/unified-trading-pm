@@ -15,6 +15,13 @@ assigned_vm: vm-defi
 priority: P0
 ---
 
+## Deferred work — migrated to:
+
+Phases 1-2 (GCS bundle migration + v8 schema bump) complete. Post-cutover gates tracked in:
+- `plans/active/master_to_live_defi_2026_05_23.md` § Groups B-G (features green, ML, paper-trade, live archetypes).
+- `plans/epics/mtds_mdps_master.md` (Phases 11-14 sequencing).
+- Backfill plans archived 2026-05-23; execution evidence in git history.
+Archiving 2026-05-23.
 # Code-freeze → migrate → backfill sequencing master
 
 ## Why this plan exists

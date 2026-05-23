@@ -16,6 +16,12 @@ assigned_vm: vm-defi
 priority: P0
 ---
 
+## Deferred work — migrated to:
+
+Cloud-KMS signing + venue auth + wallet provisioning shipped. Post-cutover items migrated to:
+- `plans/epics/defi_master.md` § P3: AWS SNS/SQS mirroring (1.F), Cross-cloud WIF (1.H), CEFFU (3.B),
+  ltv_safety_margin tuning (R-17), DeFi-data credentials (5.C), Firebase SA JSON (6.B).
+Archiving 2026-05-23.
 # API keys + wallets + accounts readiness — May-23 cutover plan
 
 ## Why this plan exists

@@ -1552,7 +1552,24 @@ plan (DO NOT move without operator ack)
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+> **MIGRATED FROM:** `api_keys_wallets_accounts_readiness_2026_05_10.md` (archived 2026-05-23) — Cloud-KMS signing,
+> venue auth, wallet provisioning shipped. Remaining items are post-cutover integrations + credential extensions.
+
+- [ ] [OPERATOR+AGENT] P2. **AWS SNS/SQS + EventBridge mirroring (1.F)** — create AWS SNS topic per service +
+      SQS subscriber queue + EventBridge rule that mirrors GCP Pub/Sub events for dual-cloud event delivery.
+      Coordinate with infrastructure_master UCI MessageBus abstraction.
+- [ ] [AGENT] P2. **Cross-cloud Workload Identity Federation (1.H)** — GCP SA assumes AWS IAM role via OIDC WIF;
+      eliminates long-lived AWS access keys in service containers. Requires AWS account `427895769566` IAM config.
+- [ ] [OPERATOR+AGENT] P3. **CEFFU integration (3.B)** — CEFFU KYB + production env + signing integration. Deferred
+      until Binance institutional KYB flow completes. 3.B.3 adapter scaffold already shipped (dormant).
+- [ ] [OPERATOR+AGENT] P2. **Tune `ltv_safety_margin` + `margin_safety_factor` (R-17)** — post 7-day live soak,
+      review actual LTV utilisation vs conservative defaults; recalibrate to tighten safety margins if liquidation
+      headroom is excessive. Reference: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
+- [ ] [OPERATOR] P2. **DeFi-data credentials (5.C)** — provision CoinGecko Pro + Helius paid-tier API keys into
+      Secret Manager (`COINGECKO_API_KEY`, `HELIUS_API_KEY`). Unblocks DeFi on-chain analytics adapters marked
+      BLOCKED-CREDENTIALS. Ping operator for account signup approval.
+- [ ] [OPERATOR+AGENT] P3. **Firebase SA JSON storage (6.B)** — store Firebase service-account JSON in Secret Manager
+      rather than GHA secrets; wire hot-reload via `ApiKeyReloader` pattern. Post-cutover scope.
 
 ## Cross-references
 

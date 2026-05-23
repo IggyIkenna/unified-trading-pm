@@ -161,3 +161,31 @@ _(no plans currently assigned at this priority)_
       deleted because the plan lacked a dedicated "deletion + 1-cycle deprecation" successor. Successor plan should:
       grep workspace for any remaining `.add(` call sites → confirm 0 remaining callers → delete `ManifestWriter.add` →
       update codex `availability-manifest-and-data-status.md` to mark the method removed.
+
+> **MIGRATED FROM:** `bucket_name_ssot_canonicalisation_2026_05_10.md` (archived 2026-05-23) — bucket naming SSOT
+> complete for DeFi/CeFi/core paths; remaining items are env-tiered migration + prediction bucket + workspace audit.
+
+- [ ] [OPERATOR+AGENT] P1. **Phase 0d — migrate flat-bucket data into env-tiered buckets** (DEFERRED-OPERATOR-DECISION)
+      — operator must approve the migration date + window before execution. Flat-bucket data still in
+      `unified-trading-defi-*` style buckets; env-tiered target is `uts-prod-defi-*`. Full migration playbook in
+      `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d.
+- [ ] [OPERATOR+AGENT] P2. **Prediction bucket naming migration** (DEFERRED-OPERATOR-DECISION) — prediction service
+      uses legacy bucket naming pattern; migrate to `resolve_bucket_name()` pattern per STEP 5.69. Requires
+      operator decision on migration window + dry-run first.
+- [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero
+      inline `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
+      `resolve_bucket_name()`. Update QG ratchet baseline.
+- [ ] [AGENT] P2. **Legacy bucket rename delegation** — delegate any remaining legacy bucket renames to the
+      appropriate service-repo owners. Confirm each service's QG STEP 5.69 check is green.
+
+> **MIGRATED FROM:** `manifest_schema_final_gate_2026_05_09.md` (archived 2026-05-23) — v8 schema design complete;
+> Phases 8-13 are execution gates tracked in mtds_mdps_master + master plan.
+
+- [ ] [OPERATOR] P1. **Phase 0.A+0.B pre-audit** — run `gcs_migration Phase 0` pre-audit on same-region test bucket
+      + `measure-honest-coverage.py` on production manifests for each asset_group before full migration execution.
+      Human sign-off required before Phase 9 VM launches.
+- [ ] [AGENT] P2. **Phase 4.DEFAULT-REMOVAL-v8kwargs** — remove `= None` defaults from v8 schema kwargs across
+      UTL `ManifestWriter` + UAC schema definitions; enforce required fields. Low urgency once v8 migration runs are
+      complete.
+- [ ] [OPERATOR] P1. **Phase 8.A+8.B sign-off** — operator reviews class-C triage rows + appends sign-off section
+      to `manifest_divergence_triage_2026_05_09.md` confirming production manifest state post-migration.

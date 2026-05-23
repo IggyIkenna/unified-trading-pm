@@ -22,6 +22,11 @@ parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 ---
 
+## Deferred work — migrated to:
+
+Alerting code shipped. Operator soak + rehearsal tasks migrated to `plans/epics/observability_master.md` § P3
+(Telegram token rotation, PagerDuty escalation policy, alert rehearsal, 48h soak, pair-review with Harsh).
+Archiving 2026-05-23.
 > **🟢 VM RUNNING — alerting-quietness-20260522-083225** — Phase 7 quietness baseline VM RUNNING 2026-05-22
 > (asia-northeast1-c, staging, 48h). Fix set: alerting-service@59e020f (live→orchestrator.run_subscriber_loop so
 > heartbeat fires) + deployment-service@40fdc3d (setup-data-pipeline-vm.sh alerting-quietness-baseline task handler:

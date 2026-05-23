@@ -9,17 +9,11 @@ estimate_calibrated_ai_days: 3
 assigned_vm: vm-ml
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-deadline: 2026-06-15
 predecessor: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md (Phase 5 operator-ACK 2026-05-23)
 related_plans:
-  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
   - plans/epics/mtds_mdps_master.md
   - plans/epics/instruments_master.md
-related_codex:
-  - codex/04-architecture/greeks-service-overview.md
-  - codex/04-architecture/global-ledger-architecture.md
-  - codex/02-data/ledger-event-taxonomy.md
 ---
 
 # PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake

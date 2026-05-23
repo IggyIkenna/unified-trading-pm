@@ -30,6 +30,12 @@ assigned_vm: vm-defi
 priority: P0
 ---
 
+## Deferred work — migrated to:
+
+Bucket SSOT canonicalisation shipped (resolve_bucket_name() + QG STEP 5.69). Remaining items migrated to:
+- `plans/epics/manifest_master.md` § "Deferred work — migrated from archived plans": Phase 0d flat-bucket
+  migration (DEFERRED-OPERATOR-DECISION), prediction bucket naming, workspace-grep audit, legacy rename delegation.
+Archiving 2026-05-23.
 # Bucket-name SSOT canonicalisation
 
 > **Severity**: P1 — silent operational failure surface. The disagreement caused 7 of 55 deleted-but-needed empty

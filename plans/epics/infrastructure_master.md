@@ -485,6 +485,33 @@ _(no plans currently assigned at this priority)_
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
       is correct for now.
 
+> **MIGRATED FROM:** `aws_migration_defi_first_2026_05_07.md` (archived 2026-05-23) — DeFi S3/Athena/Glue migration
+> complete; remaining items are AWS parity extensions + post-cutover cross-asset-group work.
+
+- [ ] [AGENT] P2. **GCP Pub/Sub topic inventory** — inventory all Pub/Sub topics + subscriptions; document UCI
+      `MessageBus` abstraction gap (deploy-service currently GCP-only; AWS SNS equivalent not wired). Gate: confirm
+      whether AWS SNS mirroring is needed before post-cutover backfill VMs launch.
+- [ ] [AGENT] P2. **UCI `MessageBus` abstraction** — once inventory done, create `MessageBus` interface in UTL that
+      wraps GCP Pub/Sub + AWS SNS behind a single emit API driven by `CLOUD_PROVIDER` env. Required for service repos
+      to push events to both clouds in dual-cloud mode.
+- [ ] [AGENT] P2. **`defi-validation` key in `cloud-providers.yaml`** — GCP has `defi-validation` bucket in
+      `configs/cloud-providers.yaml`; AWS does not. Add corresponding S3 bucket key so `resolve_bucket_name()` works
+      on AWS. Small config + QG STEP 5.69 impact.
+- [ ] [OPERATOR] P2. **Per-service `buildspec.aws.yaml` parity test** — run CodeBuild parity test for all services
+      that have `buildspec.aws.yaml`. BLOCKED-OPERATOR: requires AWS IAM perms for CodeBuild + ECR in account
+      `427895769566`. Ping operator for creds.
+- [ ] [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in
+      `instruments-service/scripts/`, `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and
+      route to S3 vs GCS appropriately.
+- [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
+      handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
+- [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining
+      asset_groups using the same playbook as DeFi. Post-cutover scope.
+- [ ] [AGENT] P3. **CI/CD cutover to AWS-only** — once workspace fully bilateral, cut CI/CD to build + push to AWS
+      ECR; decommission GCP Cloud Build triggers. Post-cutover scope.
+- [ ] [AGENT] P3. **GCP bucket decommission** — after AWS parity confirmed + TTL expired, decommission GCP buckets
+      per data-retention policy. Post-cutover scope.
+
 ## Codex SSOTs
 
 > **[DONE 2026-05-22]** Group D audit: all referenced docs verified to exist and reflect shipped state.
@@ -496,7 +523,7 @@ _(no plans currently assigned at this priority)_
 | `codex/05-infrastructure/gcs-object-operations.md`             | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                    |
 | `codex/05-infrastructure/launcher-script-ssot.md`              | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                            |
 | `codex/02-data/availability-manifest-and-data-status.md`       | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                            |
-| `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69)                                                                                                                          |
+| `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69) — ARCHIVED 2026-05-23 |
 
 ## Cross-references
 
