@@ -121,6 +121,17 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       (both RUNNING in parallel — duplicate coverage, manifest shards are per-VM so no conflict).
       `mdps-prediction-{2025,2026}-20260523-103441` + `mdps-prediction-{2025,2026}-20260523-104518` RUNNING.
       UAC@accd650c in GCS tarball (adds PREDICTION_MARKET trades contracts + nullable OHLC). 2026-05-23 slot-5 + slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Pred-PreUploadFix** — **SECOND SCHEMA BUG FIXED**: pre-upload validation in
+      `candle_write_mixin.py` used `PROCESSED_CANDLE_SCHEMA` (nullable=False for OHLCV) for ALL categories, blocking
+      Category D prediction bars (alive market, zero trades → NaN OHLCV) BEFORE reaching the canonical writer. Root
+      cause: `get_schema_for_data_type(data_type)` ignored category. Fix: added `PROCESSED_CANDLE_SCHEMA_NULLABLE_OHLCV`
+      variant + made `get_schema_for_data_type(data_type, category=)` category-aware; updated 3 call sites
+      (candle_write_mixin.py, data_sink.py, orchestration_writer.py) to pass `category.value`. QG ✅. MDPS@88e292e.
+      Tarball rebuilt (GCS manifest now shows 88e292e). Old 103441 VMs TERMINATED. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Pred-Relaunch2** — Relaunched prediction VMs with MDPS@88e292e tarball (both fixes):
+      `mdps-prediction-{2025,2026}-20260523-111916` RUNNING. Covers 2025-03-14→2025-12-31 + 2026-01-01→2026-05-23.
+      104518 VMs (slot-7, pre-fix tarball) still running — partial overlap; manifest consolidator handles. 2026-05-23
+      slot-5.
 
 ---
 
