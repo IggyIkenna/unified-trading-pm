@@ -1597,11 +1597,10 @@ a Group F item; ownership routes to the named agent/tab.
       already wired (5 hits). `grep "AlertCode" alerting-service/` now returns hits in all 3 rule files. Gates Group F
       item 22 ("Trading guardrails — alerting-service rules cover live data-freshness + P&L deviation + position
       breaches"). Slot 5 / 2026-05-17.
-- [ ] [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
-      tuple-typed required_inputs / (c) namespaced names. Currently deferred. Gates features-service (sports family)
-      consumer migration (Phase 2A of ml_and_features_master) which in turn gates the
-      `assert_no_lookahead_for_feature_group` helper from silently no-oping on sports calculators. Owner: operator +
-      Agent 2 (writegate / consumer-migration). Already filed in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
+      tuple-typed required_inputs / (c) namespaced names. **Recommendation: (c) namespaced names** — use existing
+      `data_type: str` in InputReq with sports uppercase strings (e.g. `"FIXTURES"`), zero structural change to InputReq.
+      See BLK-6e61d26f for operator confirmation. Owner: operator + Agent 2 (writegate / consumer-migration). Already filed in
       [`features_and_ml_master`](../epics/features_and_ml_master.md) Phase 1A.3; this todo is the cross-tab visibility
       marker against May-23 critical path.
 - [ ] [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
