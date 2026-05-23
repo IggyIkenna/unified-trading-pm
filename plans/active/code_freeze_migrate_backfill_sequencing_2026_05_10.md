@@ -113,13 +113,18 @@ consume.
 
 ### Phase 1.A — UAC + UTL foundation (writegate / honest coverage)
 
-- [ ] [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — UTL
+- [x] ✅ [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — UTL
       `ManifestWriter.record_captured()` 4-pillar gate signature, typed-error taxonomy (`EMPTY_CONFIRMED_REASONS`),
       cluster validation kwargs, ServiceEmissionPolicy seed dict, 37-callsite MDPS/MTDS writer migration. **Status
       check**: Wave 4 slice (a) shipped (UAC@58c3b61 + UTL@1a7e1d4b + PM@0e2eb08e); slice (b) Phase 5.1-5.7 (~2d MDPS
       ohlcv_1h POC + manifest_completeness helper + UAC manifest schema columns + deployment-api/ui surface) PLANNED
       2026-05-08; slice (c) Phase 6.1-6.9 (~3-5wk per-service rollout) PLANNED. **Phase 1 blocker**: slice (b) MUST land
       before Phase 2.1 manifest schema bump can rename/freeze.
+      **[PHASE-1-BLOCKER-RESOLVED 2026-05-23 slot 6]** Slice (b) shipped: MDPS@9e1a93e + deployment-api@3a0948e +
+      deployment-ui@00132db (per writegate plan status table). Phase 5.1-5.7 MDPS POC + manifest_completeness helper +
+      API/UI surfaces all ✅. Phase 1 code-freeze gate satisfied. Slice (c) Phase 6.3-6.9 per-service rollout still ~❌
+      (features-volatility BUILD FROM SCRATCH + instruments-service 41 callsites) — that is Wave 2 scope, not a Phase 1
+      freeze blocker.
 - [x] ✅ [PLAN] P0. **`plans/active/wave3x_residual_ssots_2026_05_08.md`** — 5 parallel tracks for residual UAC SSOTs. —
       **ARCHIVED** `plans/archive/wave3x_residual_ssots_2026_05_08.plan.md` (trivial-sweep 2026-05-21) Track A
       (HALF_DAY_SESSIONS + VENUE_SESSION_HOURS) shipped UAC@bdc84ed. Tracks B/C/D/E open (sports per-source SSOTs /
