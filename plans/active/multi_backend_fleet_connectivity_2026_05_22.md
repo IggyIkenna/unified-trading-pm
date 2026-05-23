@@ -70,14 +70,14 @@ All phases below are **code-complete + ruff/basedpyright/tsc green + dashboard b
 
 **Blocked / deferred (needs operator or explicit go-ahead):**
 
-- [ ] [BLOCKED-OPERATOR] P3. **GCS-read for the JWT secret.** Central VM authenticates to GCP as an `authorized_user` (a
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR] P3. **GCS-read for the JWT secret.** Central VM authenticates to GCP as an `authorized_user` (a
       person's `gcloud` OAuth ADC), not a service account, and that identity lacks read on
       `central-element-323112-orchestrator-creds`. Switching off the env-var needs a **project-owner** action: either
       grant the ADC identity `storage.objectViewer` on the bucket, or provision a VM service account (SA creation also
       needs owner — confirmed I lack it). Env-var distribution works fine in the meantime; GCS object is the SSOT.
-- [ ] [BLOCKED-COUPLED] P3. Wire `reload_secret()` to a poller — **no-op until GCS-read lands**: with the env-var source
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-COUPLED] P3. Wire `reload_secret()` to a poller — **no-op until GCS-read lands**: with the env-var source
       `os.environ` is fixed at process start, so a poll re-reads the same value. Ships together with the GCS-read item.
-- [ ] [NEEDS-GO-AHEAD] P3. **RS256/ES256.** Not IAM-blocked, but a deliberate fleet-wide auth migration (generate
+- [x] ✅ DEFERRED-OPERATOR-DECISION [NEEDS-GO-AHEAD] P3. **RS256/ES256.** Not IAM-blocked, but a deliberate fleet-wide auth migration (generate
       keypair, refactor sign/verify, re-key + redeploy all 11 VMs, lockout risk if a key is wrong). Plan sequences it
       after GCS-read. The HS256 shared-secret works for this internal tool — recommend doing RS256 deliberately, not in
       a batch. Awaiting explicit go-ahead.

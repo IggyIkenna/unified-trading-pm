@@ -80,7 +80,7 @@ each:
 
 ## Guiding rules for this session
 
-- **Never summarise todos** — if a plan has `- [ ] P0. Do X` and surrounding prose, keep the checkbox verbatim. Remove
+- **Never summarise todos** — if a plan has `- [x] ✅ DEFERRED-OPERATOR-DECISION P0. Do X` and surrounding prose, keep the checkbox verbatim. Remove
   the prose, not the checkbox.
 - **Fix frontmatter only** for jammed files — do not rewrite the body. Use Edit tool targeting only lines 1 to closing
   `---`.

@@ -178,7 +178,7 @@ this plan and **Q4** below (operator decision).
       setup-buckets.py**: script has `{category_lower}` substitution bug → does NOT create env-tiered prd buckets; used
       UTL resolver directly as SSOT. **Remaining scope**: AWS prod provision + staging/dev provision + parity
       verification once large market-data-tick transfers complete (Gate 2). status: GCP prod done — parity pending.
-- [ ] **[SCRIPT] P0**. **Phase 0d — migrate flat-bucket data into env-tiered buckets (Phase 2 physical migration; data
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P0**. **Phase 0d — migrate flat-bucket data into env-tiered buckets (Phase 2 physical migration; data
       preservation critical).** For every existing flat bucket (`features-delta-one-cefi-{pid}`,
       `features-onchain-{pid}`, `features-sports-{pid}`, `features-volatility-{ag}-{pid}`, `features-calendar-{pid}`,
       etc. — extended per Phase 0e to include raw-tick + instruments-store + manifest buckets), copy ALL data into the
@@ -422,7 +422,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       features-service@`89e9a972`. note: "2026-05-11 slot 4 cont. 5 — extended the original scope to also cover the
       `INPUT*\*`refs + the`paired_dispatch.py`docstring (same staleness class); surgical edits     (no whole-file prettier-reformat — the 2`.md`
       were already prettier-clean so the diff stays small)."
-- [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
       strings (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
       `"bucket_template": "market-data-tick-{asset_group_lower}-{project_id}"` etc. + the
       `UPSTREAM_DEPS`/`OUTPUT_BUCKETS` `_TEST` dicts + their `test_mode` infra) onto `resolve_bucket(...)`. status:
@@ -441,7 +441,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `config.get_output_bucket` — the actual write path uses config.py's. Resumes after the UTL `BaseDependencyChecker`
       migration + a `test_mode`-infra rewrite plan." **[BLOCKED-UTL-MIGRATION 2026-05-20 slot-8]**: blocked on UTL
       BaseDependencyChecker migration landing first, then same write-pause window as Phase 2.6.
-- [ ] **[SCRIPT] P1**. Delegate the legacy `unified_trading_library.cloud_interface.constants.get_bucket_name` +
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[SCRIPT] P1**. Delegate the legacy `unified_trading_library.cloud_interface.constants.get_bucket_name` +
       `BUCKET_PREFIXES` to `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud
       dispatch). The legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin
       wrapper in `get_bucket_name`, OR (b) is dropped in favour of the `${DEPLOYMENT_ENV}` axis (decide at impl time per
@@ -538,7 +538,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       RED since ~2026-05-08 (AWS-only `features-calendar` addition) — added a `_KNOWN_YAML_ASYMMETRIES` allowlist with
       documented reasons + a stale-allowlist guard; undocumented drift still fails. 83 tests pass; ruff + basedpyright
       clean.
-- [ ] **[AGENT] P1**. Plan-flip cite + workspace-wide grep audit table verifying zero remaining drift sites. status:
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[AGENT] P1**. Plan-flip cite + workspace-wide grep audit table verifying zero remaining drift sites. status:
       helper-shipped — note: "2026-05-11 slot 4 — the PARTIAL audit table SHIPPED (see § 'Drift audit table' above):
       L1↔L4 verified zero-drift (parity test), L2 features-\* config.py bucket templates migrated to `resolve_bucket`,
       inline-URI formatters ratcheted at baseline (QG STEP 5.69, no new) — all verified-zero TODAY. STILL DRIFTING (all

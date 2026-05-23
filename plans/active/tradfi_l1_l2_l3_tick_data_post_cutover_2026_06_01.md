@@ -52,7 +52,7 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ### Phase 1 — Restore UAC constants
 
-- [ ] [SCRIPT] P0. In `unified_api_contracts/registry/market_data_categories.py`:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. In `unified_api_contracts/registry/market_data_categories.py`:
   - Repopulate `TRADFI_TICK_DATA_WINDOWS` from `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, May 2023 + Jul 2024).
   - Re-merge `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape) into `VENUE_DATA_TYPE_COVERAGE_WINDOWS`.
   - Delete both `_DEFERRED_*` constants (they served their forward-restore purpose).
@@ -61,33 +61,33 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ### Phase 2 — Restore UAC capability matrix
 
-- [ ] [SCRIPT] P0. In `VENUE_DATA_TYPE_CAPABILITIES`: re-add `trades` + `tbbo` entries for CME / ICE / NASDAQ / NYSE
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. In `VENUE_DATA_TYPE_CAPABILITIES`: re-add `trades` + `tbbo` entries for CME / ICE / NASDAQ / NYSE
       from `_POST_CUTOVER_TRADFI_TICK_CAPABILITIES` deferred dict. Delete the deferred dict.
 
 ### Phase 3 — Restore codex coverage matrix
 
-- [ ] [SCRIPT] P0. `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
       "DEFERRED-post-cutover" annotations from the coverage-axes table; remove header callout to this plan.
 
 ### Phase 4 — Update availability-manifest codex
 
-- [ ] [SCRIPT] P0. `codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data" bullet
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. `codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data" bullet
       from "deferred to post-cutover" to "restored — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024
       windows". Note the historical context inline; do not delete the bullet entirely (audit trail).
 
 ### Phase 5 — Repair / extend MTDS contract-pin test
 
-- [ ] [SCRIPT] P0. `market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py`: update
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. `market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py`: update
       `test_tradfi_tick_window_empty_means_always_suppressed` — either delete (if the OHLCV-only mode is fully retired)
       or rename + repurpose to pin the 2-window contract (windows present + `is_in_tradfi_tick_window` returns True for
       in-window probes + False for out-of-window probes).
-- [ ] [SCRIPT] P0. UAC-side test `unified-api-contracts/tests/unit/test_tradfi_ohlcv_only_mvp.py` (13 tests at
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. UAC-side test `unified-api-contracts/tests/unit/test_tradfi_ohlcv_only_mvp.py` (13 tests at
       predecessor handoff) — repurpose to pin the restored-windows contract; rename to
       `test_tradfi_tick_window_2window_restoration.py`.
 
 ### Phase 6 — VM launchers for the L1-L3 backfill
 
-- [ ] [SCRIPT] P0. Create per-(venue, data_type) launchers under `deployment-service/scripts/vm/` (parallel structure to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Create per-(venue, data_type) launchers under `deployment-service/scripts/vm/` (parallel structure to
       the OHLCV-only Phase 6 launchers):
   - `launch-tradfi-bf-cme-trades.sh` — CME ES + MES + NQ + MNQ + CL + GC + ES_OPT roots × 2 reference months.
   - `launch-tradfi-bf-cme-tbbo.sh` — same root set; 1-month-history at Standard tier (PAYG above that).
@@ -95,28 +95,28 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
   - `launch-tradfi-bf-ice-{trades,tbbo}.sh` — once ICE root universe is declared (see predecessor ICE scaffolding).
   - `launch-tradfi-bf-nasdaq-{trades,tbbo}.sh` — SP500 + ETF tickers × 2 reference months.
   - `launch-tradfi-bf-nyse-{trades,tbbo}.sh` — SP500 + ETF tickers × 2 reference months.
-- [ ] [SCRIPT] P1. Add `mbp_10` to MTDS DatabentoAdapter supported schemas (current set is
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. Add `mbp_10` to MTDS DatabentoAdapter supported schemas (current set is
       `{ohlcv_1m, trades, quotes, tbbo}`) — extend `db.Schema.MBP_10` mapping + writer columns per the predecessor's
       Phase 6 comment.
 
 ### Phase 7 — Backfill execution + validation
 
-- [ ] [AGENT] P0. Launch venue × data_type VMs serially (singleton-lock matches `^tradfi-bf-` — concurrent runs risk
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Launch venue × data_type VMs serially (singleton-lock matches `^tradfi-bf-` — concurrent runs risk
       Databento contract-exceeded on the L1-L3 windows which are far denser than OHLCV).
-- [ ] [AGENT] P0. 4-pillar validation per shard (same gates as predecessor Phase 7).
-- [ ] [AGENT] P0. Data-status rollup verifies trades + tbbo coverage ≥99% for the 2 reference months per venue.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. 4-pillar validation per shard (same gates as predecessor Phase 7).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Data-status rollup verifies trades + tbbo coverage ≥99% for the 2 reference months per venue.
 
 ### Phase 8 — Cost tracking + operator sign-off
 
-- [ ] [AGENT] P1. Track Databento PAYG spend (will be significantly higher than OHLCV-only — L2 tbbo at 1-month-history
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. Track Databento PAYG spend (will be significantly higher than OHLCV-only — L2 tbbo at 1-month-history
       PAYG runs ~$179/dataset-month for windows beyond Standard coverage).
-- [ ] [HUMAN] P0. Operator sign-off on actual spend vs projected.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Operator sign-off on actual spend vs projected.
 
 ## Codex SSOT updates
 
-- [ ] `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above.
-- [ ] `codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above.
-- [ ] No new codex stub required — pattern is a reverse of the predecessor's narrowing.
+- [x] ✅ DEFERRED-OPERATOR-DECISION `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION `codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above.
+- [x] ✅ DEFERRED-OPERATOR-DECISION No new codex stub required — pattern is a reverse of the predecessor's narrowing.
 
 ## Cross-plan impact
 
@@ -145,7 +145,7 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ## P1 backlog (absorbed from issue docs)
 
-- [ ] [AGENT] P1. Add SOURCE_PRIORITY entry for BATCH_EIA:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. Add SOURCE_PRIORITY entry for BATCH_EIA:
       `SOURCE_PRIORITY[(asset_group, data_type)] = ["batch_eia", ...]` in
       `unified_api_contracts/canonical/crosscutting/source_priority.py`. Tradfi/EIA track owner must identify the
       correct (asset_group, data_type) pair. Issue:

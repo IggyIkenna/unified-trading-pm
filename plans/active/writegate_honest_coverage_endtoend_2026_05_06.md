@@ -919,7 +919,7 @@ ikenna-slot8-p0-2-surgery:
       accepts `reason` kwarg; VIX gap routes `EXPECTED_KNOWN_SOURCE_GAP`. UAC enum gate ✅ (landed UAC@017b332). Method
       renamed from `_maybe_write_vix_gap_placeholder` → `_record_vix_gap_empty` at mdps@cb5863a. Checkbox backfilled
       2026-05-22 (slot 8) — code was shipped before this flip was posted.
-- [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
+- [x] ✅ DEFERRED-OPERATOR-DECISION **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
       **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
       `tradfi_master` futures-expiry shipping. Per task instructions, skipped.
 - [x] ✅ **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
@@ -964,7 +964,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   the design intent per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
 - **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in `hard_schema_enforcement_2026_05_08.md`
   (archived → `plans/archive/2026_05/`) — Step 5 will land via that plan after futures-expiry tradfi work.
-- [ ] **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[FINDING P2] MDPS `PROCESSED_CANDLE_SCHEMA` column-name drift vs UAC `CandleOutput`**: two pre-existing
       mismatches found during Step 6 audit (2026-05-22 slot 8): (1) `CandleOutput.trade_count` → schema column named
       `count`; (2) `CandleOutput.liquidation_count` + `liquidation_volume` → schema columns named
       `liquidation_cascade_event_count` + `liquidation_cascade_total_volume` + `liquidation_cascade_max_cluster_size`.
@@ -1459,7 +1459,7 @@ grep.
       Tier 2A/C/D/E (MDPS@5b52d0b/b9f9328/80cf141/e9520a0); integration tests verifying the path-routing remain
       unwritten.] — MDPS@fefd65b: 7 tests (path A ×4 adapters, path B ×2, path C ×1); all pass; guards 0-row output
       contract vs legacy 1440-NaN grid. 2026-05-20 slot-6.
-- [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
       manifest reflects honest verb; spot-check 1 parquet per data_type; assert OHLC populated where claimed `captured`.
       [AUDIT 2026-05-07: IN-FLIGHT — VMs running 2026-05-07T03:30 UTC are end-to-end live tests (37 VMs
       CeFi/TradFi/Sports). Per the writegate contract they MUST emit honest record_empty/record_captured/record_failed.
@@ -1647,10 +1647,10 @@ grep.
 > in-scope ONLY for `event_time` (derivable from `kickoff_utc + elapsed_min` per-event). The other three columns ship
 > with low-confidence default values + audit columns + named successor plan reference.
 
-- [ ] [SCRIPT] P0. **In-scope schema bump (event_time only — derivable)**: Add `event_time: timestamp_utc not null` to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **In-scope schema bump (event_time only — derivable)**: Add `event_time: timestamp_utc not null` to
       `FIXTURE_EVENTS_COLUMNS` (verify whether already there per-event in the audit). Populate at MTDS /
       instruments-service write time as `kickoff_utc + timedelta(minutes=event.elapsed_min)`. No source dependency.
-- [ ] [SCRIPT] P0. **Deferred schema bumps with low-confidence fallback shipping today (named successor plan listed
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Deferred schema bumps with low-confidence fallback shipping today (named successor plan listed
       below)**: `announced_at` (FIXTURES), `report_time` (INJURIES), `match_end_time` (FIXTURE*STATS /
       FIXTURE_PLAYER_STATS) ship as nullable columns with paired `*_confidence`audit columns: -    `announced_at:
       timestamp_utc nullable`+    `announced_at_confidence: Literal["source_native",
@@ -1665,7 +1665,7 @@ grep.
       timestamp_utc
       nullable`(in `INJURIES_COLUMNS`) — populated when injury fixture's `fixture_events`table contains the injury event; else null. No fallback.     **Successor plan**:`sports_forward_poll_timestamps_2026*<TBD>.md`— captures real-time scraping of announcement, injury report, and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor plan lands + retrospective backfill completes, the `\*\_confidence`
       audit columns surface low-default fixtures in data-status panel for re-attempt.
-- [ ] [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection IS achievable today)**. Cascade
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection IS achievable today)**. Cascade
       per-fixture (UAC `MATCH_END_TIME_DETECTORS` registry, source-priority ordered): 1. `api_football` —
       `fixture.fixture.timestamp` +
       `status_long ∈ {"Match Finished", "Finished after extra time", "Finished after penalties"}` resolves to actual end
@@ -1867,24 +1867,24 @@ split.
       `--apply-flips` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` (verified guards fire with exit 4).
       RECONCILER\_\* events, CSV audit, `--max-flips-per-run` 100k halt safety. Smoke-verified path parser handles both
       per-league (`league={id}/feature_group={fg}/...`) and bare (`feature_group={fg}/...`) layouts.
-- [ ] [SCRIPT] P0. Pre-v5 / pre-v6 manifest row purge — wire
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Pre-v5 / pre-v6 manifest row purge — wire
       `instruments-service/scripts/dedupe_manifest_schema_drift.py` + `purge_legacy_unsharded_manifest_rows.py` into the
       orchestrator boot sequence (per parent HANDOVER §"Migration items"). Delete the fallback readers that previously
       handled legacy shapes.
-- [ ] [SCRIPT] P0. `category=` → `asset_group=` GCS migration runbook — confirm migration scripts exist for every
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. `category=` → `asset_group=` GCS migration runbook — confirm migration scripts exist for every
       asset_group (cefi/defi/tradfi/sports/prediction); run sequentially per asset_group with a verification step
       (sample list_blobs after each, assert ≥99% canonical hive vocab). Do NOT delete the legacy fallback reader until
       100% migrated AND a hold-period confirms no readers fail.
 
 ### Phase 3.B — GCS available_at backfill (sports + others)
 
-- [ ] [SCRIPT] P0. For every sports parquet on disk pre-Phase-2.C, add `available_at` column with the value derived from
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. For every sports parquet on disk pre-Phase-2.C, add `available_at` column with the value derived from
       the new UAC semantic + the row's existing columns (kickoff_utc / event_time / report_time / match_end_time /
       fetch_completed_at). One-shot rewrite per file. Manifest update: `available_at_stamped_at = <run_time>` audit
       column.
-- [ ] [SCRIPT] P0. Delete legacy `_ensure_timestamp`-stamped `timestamp` columns where they equalled the (now-incorrect)
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Delete legacy `_ensure_timestamp`-stamped `timestamp` columns where they equalled the (now-incorrect)
       midnight UTC fallback. The new `available_at` column replaces them as the SSOT.
-- [ ] [SCRIPT] P0. Per-(asset_group, data_type) backfill scope: - **sports** (above) - **CeFi**: confirm raw_tick
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Per-(asset_group, data_type) backfill scope: - **sports** (above) - **CeFi**: confirm raw_tick
       partitions already have implicit per-tick `timestamp` column → derive
       `available_at = timestamp + scrape_latency_estimate` per source priority registry - **DeFi**: similar to CeFi but
       per-block + RPC-latency offset - **TradFi**: similar to CeFi - **Prediction**: deferred until
@@ -1892,12 +1892,12 @@ split.
 
 ### Phase 3.C — Reconciler observability + halt-on-error
 
-- [ ] [SCRIPT] P0. Every reconciler script wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)` (per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Every reconciler script wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)` (per
       existing run_lifecycle SSOT rollout). Emits `RECONCILER_STARTED` / `RECONCILER_PROGRESS` (per-asset-group with row
       counts) / `RECONCILER_COMPLETED` / `RECONCILER_FAILED`.
-- [ ] [SCRIPT] P0. Each reconciler script supports `--max-flips-per-run` halt safety; default 100k. Operator confirms
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Each reconciler script supports `--max-flips-per-run` halt safety; default 100k. Operator confirms
       first 100k flips look right before lifting the cap.
-- [ ] [SCRIPT] P0. Each reconciler emits a CSV/JSON audit report at `gs://{pid}-reconciler-audit/{run_id}/` listing
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Each reconciler emits a CSV/JSON audit report at `gs://{pid}-reconciler-audit/{run_id}/` listing
       every flipped (row_key, old_status, new_status, error_reason).
 
 QG between Phase 3 and Phase 4: every reconciler has run end-to-end on a 1-week sample window; audit reports reviewed by
@@ -2107,7 +2107,7 @@ sub-phase ships the enumerator that physically writes those rows.
       ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all 5
       per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285 after
       the `ArrowTypeError` on `instrument_count` was patched).
-- [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
       all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and drilldown
       % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel. Fine-grained
       per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is the v2
@@ -2232,13 +2232,13 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       pool deployments, Curve gauge additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040
       rows for "protocol on chain hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we
       mark individual pools/positions correctly.
-- [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
       `predictions_master.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
       `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor; v2 adds
       canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years) so per-day coverage
       of recurring groups is honest.
-- [ ] [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset*groups, add a new
+- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset*groups, add a new
       Key-Rules-Quick-Reference bullet: *"MTDS / instruments-service / data-status missing-data checks for ANY
       asset*group derive their expected universe from the instruments-service catalog for that asset_group, NOT from
       inline / hardcoded venue / data_type / date lists. The catalog IS the SSOT for `what should exist`. Adding a new
@@ -2380,20 +2380,20 @@ interface on the manifest.
       `ManifestWriter.record_expected_unattempted(row_key=,     attempted_at=)` helper added mirroring `record_empty` /
       `record_failed`. Per-VM shard isolation via `_record_status` (same path as the other write methods).
       Last-writer-wins supersede happens naturally via the consolidator's row_key dedup.
-- [ ] [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed` last-writer-wins audit —
+- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed` last-writer-wins audit —
       verify the supersede path (prior `expected_unattempted` row → MTDS writes `captured` for same row_key). Smoke test
       on a CeFi manifest after Wave 3 enumerator lands. **DEFERRED** — manifest-consolidator already does
       last-writer-wins on row_key (existing design), so the new `expected_unattempted` rows participate naturally. Audit
       pass + unit test for the supersede path remain.
-- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi / tradfi / defi
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi / tradfi / defi
       / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument whose
       `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a stronger status.
       Today's v1 keeps writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` etc.
-- [ ] [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes `expected_unattempted`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes `expected_unattempted`
       count. Surface the breakdown in the response payload (`captured`, `empty_confirmed`, `attempted_failed`,
       `expected_unattempted` as 4 buckets). Backwards-compat: if `expected_unattempted` count is 0, response shape
       unchanged.
-- [ ] [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction 2026-05-07: _"data
+- [x] ✅ DEFERRED-OPERATOR-DECISION [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction 2026-05-07: _"data
       status in deployment ui needs to be able to visualise that to the instrument granularity breakdown so we can
       visually see, per instrument, which days are available and which are missing. Since there can be so many
       instruments, I think there's already something in the UI that groups them and we can click to see more, click to
@@ -2415,7 +2415,7 @@ interface on the manifest.
       to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
       `captured` supersede semantics. ✅ PM@77f0ef404 — added `expected_unattempted` cascade contract subsection with
       4-state routing table, scheduling artifact semantics, supersede contract, and coverage formula impact.
-- [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
+- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
       `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` / `attempted_failed` /
       `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`, `SOURCE_COVERAGE_START`,
       `venue_trading_calendar`) own the coarse 'is this triple structurally possible' axis. instruments-service catalog
@@ -2429,7 +2429,7 @@ interface on the manifest.
 - [x] [UAC] P0 (shipped UAC@e855051 2026-05-07). `EmptyFromLiveInstrumentError` + `LegacyBlankErrorReasonError` typed
       exceptions added to `unified_api_contracts.canonical.crosscutting.honest_coverage` exports. Both feed the writer
       guard + migration script. Pattern mirrors `MissingClusterValidationError` / `UpstreamTimestampBiasError`.
-- [ ] [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending Wave 3 (depends on
+- [x] ✅ DEFERRED-OPERATOR-DECISION [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending Wave 3 (depends on
       MTDS adapters wiring the `instrument_catalog` callable at construction). `EmptyFromLiveInstrumentError` typed
       class shipped today (UAC@e855051); the writer-side guard is a follow-up that requires MTDS / MDPS / features-\* to
       pass the catalog reference. Until then the blank-reason guard (next item, shipped) catches the most-common
@@ -2536,7 +2536,7 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
       `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`. — instruments-service@cf68eb4a (all 5 asset groups; 22 new tests;
       QG 2782 passed)
-- [ ] **[IN-PROGRESS — slot 4, 2026-05-23, parallel agents]** [VM-LAUNCH] P0. Run
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[IN-PROGRESS — slot 4, 2026-05-23, parallel agents]** [VM-LAUNCH] P0. Run
       `enumerate_expected_universe.py --enumerator-version=v2 --apply-write` per asset group backfill. **Scope: last 12
       months (2025-05-23→2026-05-23) in 4 parallel cefi chunks + tradfi+defi catalog build + their backfill.
       Sports/prediction BLOCKED-NEW-CODE (not in CATALOGUE_SUPPORTED_ASSET_GROUPS).** Catalog path:
@@ -2545,28 +2545,28 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       BLOCKED-CREDENTIALS, Polygon equities work; defi full via public RPCs). Estimated ~26M cefi rows for 12-month
       window (4 chunks × ~6.5M). VM shards:
       `market-data-tick-{ag}-central-element-323112/_index/per_vm/enum-{ag}-v2-chunk{N}-20260523.parquet`.
-- [ ] **[BLOCKED-NEW-CODE]** [SCRIPT] P1. Build catalog for sports + prediction asset groups. Neither is in
+- [x] ✅ DEFERRED-OPERATOR-DECISION **[BLOCKED-NEW-CODE]** [SCRIPT] P1. Build catalog for sports + prediction asset groups. Neither is in
       `CATALOGUE_SUPPORTED_ASSET_GROUPS` — `CatalogueBuilder` only covers cefi/tradfi/defi. Need a surrogate catalog
       builder that reads from `instruments-store-sports-*/venue=*/day=*/instruments.parquet` +
       `instruments-store-pred-*/venue=*/day=*/instruments.parquet` and derives per-instrument
       available_from/available_to from observed date range. Once catalog exists, v2 enumerator backfill follows same
       pattern. **Assign to next sports/prediction epic cycle.**
-- [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
       appropriately.
-- [ ] [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked `expected_unattempted` upstream,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked `expected_unattempted` upstream,
       MDPS writes its own `expected_unattempted` (no compute possible without raw ticks). For shards marked
       `empty_confirmed/EXPECTED_*`, MDPS propagates the same reason (e.g. `EXPECTED_PRE_VENUE_LAUNCH` upstream →
       `EXPECTED_PRE_VENUE_LAUNCH` downstream).
-- [ ] [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted` /
+- [x] ✅ DEFERRED-OPERATOR-DECISION [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted` /
       `empty_confirmed/EXPECTED_*` shards, write own row with the same status. The `feature_group → required_inputs` DAG
       already encodes which features depend on which data_types; the cascade walks that DAG.
-- [ ] [ml-training] P1. Training-window selector reads features manifest; omits days where any required feature*group is
+- [x] ✅ DEFERRED-OPERATOR-DECISION [ml-training] P1. Training-window selector reads features manifest; omits days where any required feature*group is
       `expected_unattempted` or `empty_confirmed/EXPECTED*\*`. Training set size becomes honest about the universe.
-- [ ] [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where upstream is not
+- [x] ✅ DEFERRED-OPERATOR-DECISION [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where upstream is not
       `captured` or `empty_confirmed/SOURCE_RETURNED_ZERO`. (Honest source-zero is OK to signal on; pre-launch /
       unattempted is not.)
-- [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
+- [x] ✅ DEFERRED-OPERATOR-DECISION [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
       pre-flight gate — this is an audit pass.)
 - [x] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
       consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract. ✅
@@ -2665,11 +2665,11 @@ been empty_confirmed" finding adds:
 - [x] ✅ [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
       `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` — both already landed in honest_coverage.py (lines 128, 147). No new code
       needed. — UAC@340aac8e (pre-existing) / slot-2 audit 2026-05-22
-- [ ] [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
       `instruments-store-sports-{pid}/fixtures/…` per-day fixtures catalog; cross-product with
       `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
       the shards we DO expect; emits `empty_confirmed` with the right EXPECTED\_\* for shards we DON'T expect.
-- [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
       UAC `PREDICTION_GROUPS` per `predictions_master.md`). Yields `expected_unattempted` for active markets,
       `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
 - [x] ✅ [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
@@ -2738,30 +2738,30 @@ fix.
 
 **Tasks:**
 
-- [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
       Each adapter has a per-shard fetch loop; the post-fetch branch on "fetched empty / source returned no rows" must
       distinguish: (a) instrument NOT alive that day per catalog → write `empty_confirmed/EXPECTED_INSTRUMENT_*` (b)
       instrument alive, day within market hours → **NEW:** write zero-volume bars with prior LTP, record `captured` with
       real bar count > 0 (typically full interval grid for the day). (c) instrument alive, day outside market hours
       (calendar non-trading) → write `empty_confirmed/EXPECTED_HOLIDAY/WEEKEND` (existing flow). Use the catalog-aware
       write-gate (Wave 2 `instrument_catalog` callable) to drive (a) vs (b)/(c).
-- [ ] [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single `unified_trading_library.zero_activity_bars`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single `unified_trading_library.zero_activity_bars`
       helper that generates the right zero-activity shape per data_type per the table above. Adapters call
       `make_zero_activity_bars(data_type, instrument_id, day, prior_ltp, market_hours)` and write the result through
       ManifestWriter. Avoids per-adapter inlined zero-bar logic drift.
-- [ ] [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the previous day's
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the previous day's
       `captured` parquet for the same instrument; if not available, fall back to the most recent captured day in the
       manifest (lookback up to N days). UTL helper
       `get_prior_ltp(asset_group, venue, instrument_id, day) -> Decimal | None`. None → still write zero-activity bars
       but with `null` price (volume=0, trade_count=0; consumers can handle).
-- [ ] [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now has zero-volume bars
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now has zero-volume bars
       (post-Wave 3.M), MDPS sees them as `captured` and processes them through the normal candle pipeline — output
       candles also have zero volume. No special logic; the cascade handles it. **Audit needed**: confirm MDPS doesn't
       have a special-case "drop zero-volume bars" filter that would re-introduce the gap.
-- [ ] [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol that picks a recent
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol that picks a recent
       options chain day, asserts the smile has all 11 ES.OPT clusters present (per UAC `ES_OPTIONS_CLUSTERS`) — no
       missing strikes, even for far-OTM. Catches Wave 3.M regressions automatically.
-- [ ] [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case: **D. Source returned 0
+- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case: **D. Source returned 0
       ticks but instrument is alive per catalog AND day falls within market hours** → write zero-activity bars with
       prior LTP, `record_captured` (real OHLC, zero volume). Distinct from cases A/B/C — this is the "honest tradeable
       but no activity" path.
@@ -2967,7 +2967,7 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
 3.P (prediction) — distinct asset_group surfaces.
 
-- [ ] [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1 **FOLLOW-UP — cefi re-scan after IS CeFi catalog lands.** 85,202
       `empty_confirmed/SOURCE_RETURNED_ZERO` cefi rows need lifecycle cross-ref to route correctly
       (EXPECTED_INSTRUMENT_NOT_LISTED vs attempted_failed). Catalog NOT FOUND at
       `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` during 2026-05-22
@@ -3132,19 +3132,19 @@ Downstream reads parquet + events identically — no batch-specific or live-spec
       details carry `service` / `output_data_type` / `policy` / `completeness_fraction` / `incomplete_window_count` /
       `row_key` / `policy_declared` flag + 50-row sample of `incomplete_window` for operator drill-down. Severity
       routing: BLOCK_CRITICAL+gap → ERROR; gaps with other policies → WARNING; full-window → INFO.
-- [ ] [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) + `incomplete_window`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) + `incomplete_window`
       (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows write null (n/a —
       manifest-layer concern, not service-output-layer); derived-service rows populate them.
-- [ ] [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners: _ MDPS: candle adapters per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners: _ MDPS: candle adapters per
       data_type (`ohlcv_1m` / `ohlcv_1h` / `ohlcv_24h` / `book_snapshot_5`) _ features-_ (8 services): per feature_group
       _ ml-training / ml-inference: per model output _ strategy: per archetype signal _ execution: per
       order/fill/position emission _ risk-and-exposure: per risk metric _ position-balance-monitor: per state field \*
       instruments-service: per catalog data_type Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC +
       wires `publish_with_policy` at its emission boundary.
-- [ ] [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
+- [x] ✅ DEFERRED-OPERATOR-DECISION [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
       `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type policy table +
       lifecycle event taxonomy.
-- [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
       with correct completeness_fraction; BLOCK_CRITICAL fires alert. End-to-end: a missing-1h-bar test that propagates
       STRICT_FAIL through MDPS → features-vol → strategy → no execution signal.
 
@@ -3227,13 +3227,13 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.2 — UAC manifest schema columns (P1, ~2hr — additive)**
 
-- [ ] [UAC] P1. Add two new columns to UAC manifest schema: `completeness_fraction` (Float64 nullable) +
+- [x] ✅ DEFERRED-OPERATOR-DECISION [UAC] P1. Add two new columns to UAC manifest schema: `completeness_fraction` (Float64 nullable) +
       `incomplete_window` (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows
       write null (n/a — manifest layer is upstream-state, not service-output-layer); derived-service rows populate them
       via the publish_with_policy emission. Update `unified_api_contracts.canonical.crosscutting.manifest_schema` (or
       wherever the manifest column declaration lives — verify via grep) + the consolidator's column-coercion table so
       legacy parquets without these columns read as `null`/`null` without raising.
-- [ ] [TEST] P1. UAC manifest-schema parity test reads a legacy parquet without the new columns + a new parquet with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P1. UAC manifest-schema parity test reads a legacy parquet without the new columns + a new parquet with
       them; both load via `pa.parquet` reader without error; legacy one carries null values, new one carries populated.
 
 **Phase 5.3 — MDPS adapter wire-in: `ohlcv_1h:current` (P0, ~3hr)**
@@ -3272,7 +3272,7 @@ shape codified in slice (a)'s seed dict.
       integration coverage. The unit-test suite already covers the slice resolver (`yesterday_utc_returns_historical`,
       `distant_past_returns_historical`) + the slice threading through to `publish_with_manifest_lookup` kwargs
       (`historical_slice_threads_to_output_data_type`).
-- [ ] [TEST] P1. **DEFERRED**: 30-day end-to-end integration test (planted-gap upstream manifest → `ohlcv_1h:historical`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P1. **DEFERRED**: 30-day end-to-end integration test (planted-gap upstream manifest → `ohlcv_1h:historical`
       rows with mixed completeness + `PUBLISHED_DEGRADED` only on gap-hours). Belongs in MDPS integration tests once
       `manifest_schema_final_gate` Phase 2 ships the completeness columns + the per-service consumer-class audit
       (writegate Phase 6.2) wires `publish_with_manifest_lookup` at every MDPS data_type. Unit-test slice coverage in
@@ -3377,10 +3377,10 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       QG: 1151 tests passed; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` UTL `StartupValidationError`
       on `ENVIRONMENT='test'` — unrelated to emission policy); basedpyright clean on edited files (0 errors on
       canonical_writer slice-(b)/Phase-6.2 sections + test file).
-- [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
-- [ ] [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
+- [x] ✅ DEFERRED-OPERATOR-DECISION [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
       `EmissionDecision` whose `service_emission_state` / `last_emission_decision_at` / `completeness_fraction` v8
       column values are **NOT forwarded** to the paired `ManifestWriter.record_captured` call at
       `market_data_processing_service/app/core/canonical_writer.py:950-965`. Phase 6.2 wired the publish-or-not gate
@@ -3822,7 +3822,7 @@ Pre-emptive wiring before the helper API stabilises = rework risk.
       and coord echo. **DEFERRED to follow-up commit**: TTL cache (currently each request re-reads from GCS — fine for
       the schema-modal use case which is one-click-per-modal, not a hot path); lift to a 5-min TTL cache once Phase
       4.B.3 modal lands and reveals real query patterns.
-- [ ] [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
       window AND `live_pipeline_already_wrote = true` → emit `LIVE_HISTORICAL_DOUBLE_WRITE` warning event.
       **Investigation 2026-05-07**: multi-repo write-time guard. Needs (a) a UAC `LIVE_HISTORICAL_DOUBLE_WRITE` event
       type addition, (b) UTL `manifest_writer` write-time guard that detects the double-write at `record_captured` time,
@@ -3867,7 +3867,7 @@ Pre-emptive wiring before the helper API stabilises = rework risk.
       `subData.data_types`, AUTO `instrument_type` — deployment-api's `/leaf-stats` route resolves the leaf parquet via
       `_gcs_path_for_shard` + the AUTO sentinel resolution path). The full UTL → API → UI typed-error → leaf- parquet
       drill-down loop is now operator-visible end-to-end without any pre-flight intervention.
-- [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
 
 QG between Phase 4 and Phase 5: UI smoke-test (Tier 0 + Tier 1) — every new color/badge/drill-down renders correctly
 against seeded fixtures.
@@ -3886,7 +3886,7 @@ against seeded fixtures.
 > same-region GCE VM — helper consumes the output) + base-service.sh QG STEP wiring (calls helper on PR commits to
 > `main`). Helper is the primitive; the script + STEP wire-in remain.
 
-- [ ] [SCRIPT] P0. Per-service end-to-end coverage measurement (post-reconcile): - Denominator =
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Per-service end-to-end coverage measurement (post-reconcile): - Denominator =
       `expected_dates × expected_instruments × expected_data_types` clipped by `SOURCE_COVERAGE_START` /
       `KNOWN_COVERAGE_GAPS` / `venue_trading_calendar` - Numerator =
       `count(manifest_rows where capture_status == "captured")` - Honest empty =
@@ -3912,13 +3912,13 @@ against seeded fixtures.
       endpoint roundtrip → API response shape assertions. Validates honest-coverage emission contract end-to-end.
       (evidence: system-integration-tests@47a1e04 2026-05-18; sit QG ✅. **BACKFILLED** from slot-4 work-split item 12 —
       plan-of-record flip per CLAUDE.md Half-2 rule.)
-- [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
-- [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
       `record_empty`; partial bundle → `record_failed(ClusterCoverageError)`; high NaN →
       `record_failed(NanRatioExceededError)` (deferred to follow-up plan once that pillar lands); schema mismatch →
       `record_failed(SchemaMismatchError)`. CI-runnable.
-- [ ] [QG] P0. Workspace-wide QG on every repo touched (UTL, UAC, MDPS, MTDS, features-sports, instruments-service,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. Workspace-wide QG on every repo touched (UTL, UAC, MDPS, MTDS, features-sports, instruments-service,
       deployment-api, deployment-ui, unified-trading-pm). Per-repo `quality-gates.sh` green.
 
 QG end-of-plan: user signs off on baseline document; ratchet floor activated.
@@ -4200,20 +4200,20 @@ fire-and-forget" SSOT. Both contradict CLAUDE.md SSOTs.
 **Cross-plan banner**: `cefi_master` operational decision required — re-rescan vs accept-batch vs in-place rewrite for
 the 37-VM in-flight output once this section's Option A/B/C decision lands. Coordinate.
 
-- [ ] [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
       Tardis data (clean but expensive); B = accept the bundle-shape rows + run a one-shot manifest migration that
       splits each bundle row into per-instrument rows from the existing parquet (cheaper, reversible); C = mixed (B for
       past output, A enforced for future VMs). Issue archived has cost-benefit per option. Decision gates the Phase 2.A
       codification below.
-- [ ] [SCRIPT] P0. **Per-row record_failed pattern codification**. Today's CeFi Tardis adapter calls `record_captured`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Per-row record_failed pattern codification**. Today's CeFi Tardis adapter calls `record_captured`
       at bundle granularity; flip to per-row per-instrument. The pattern lives in UTL + cefi-Tardis adapter; codify as
       part of Phase 2.A non-adapter items. Cassette parity test for every venue checking the per-row vs bundle shape.
-- [ ] [SCRIPT] P0. **PROCESSING_COMPLETED + INSTRUMENT_PROCESSED event field augmentation**. Both must carry
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **PROCESSING_COMPLETED + INSTRUMENT_PROCESSED event field augmentation**. Both must carry
       `rows_captured: int` (and `rows_empty` / `rows_failed`) per CLAUDE.md "no fire-and-forget VM launches" rule.
       Workspace-wide adapter audit for same violations across cefi/tradfi/defi MTDS handlers (the issue flagged that
       this likely isn't isolated to Tardis — there are at least 8 MTDS handlers with similar shape that need the same
       field added).
-- [ ] [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md` § "Re-shape decision
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md` § "Re-shape decision
       codification" capturing the per-instrument-vs-bundle decision per asset_group + per data_type (this is the SSOT
       that reflects whichever Option A/B/C the operator picks).
 
@@ -4229,20 +4229,20 @@ Source issue archived. Issue has TWO halves: (1) writegate-side (this plan) — 
 `mdps_streaming_and_backpressure_2026_05_07` Phase 1.1+ for end-to-end correctness — staleness without an upstream gap
 signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Phase 3 wiring.
 
-- [ ] [SCRIPT] P0. **`TickRateBaseline` dataclass + per-(venue, instrument, period) storage/refresh VM**. UAC
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **`TickRateBaseline` dataclass + per-(venue, instrument, period) storage/refresh VM**. UAC
       `unified_api_contracts/canonical/crosscutting/liquidity_baseline.py` declares the dataclass. Per-venue observation
       script under `market-data-processing-service/scripts/refresh_tick_rate_baseline.py` runs nightly, writes to
       `gs://market-data-tick-{ag}-{pid}/liquidity_baselines/by_venue/venue={v}/by_period/period={p}/...parquet`. Period
       axis: regular session vs pre-market vs post-market vs overnight (cross-references the Databento session-type work
       in tradfi_master Batch D — coordinate columns).
-- [ ] [SCRIPT] P0. **MDPS write-gate baseline consultation + `DATA_QUALITY_SUSPECTED_GAP` reason addition**. When MDPS
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **MDPS write-gate baseline consultation + `DATA_QUALITY_SUSPECTED_GAP` reason addition**. When MDPS
       write-gate sees a tick-rate < threshold% of baseline for the period, route to
       `record_failed(reason=DATA_QUALITY_SUSPECTED_GAP)`. Threshold default 20%; per-venue override available in UAC.
       Add `DATA_QUALITY_SUSPECTED_GAP` to UAC `RecordFailedReason` enum.
-- [ ] [SCRIPT] P0. **3rd state for "baseline-says-shouldn't-be-zero"**. Today writegate Phase 3.D.5 Wave 3.M defines
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **3rd state for "baseline-says-shouldn't-be-zero"**. Today writegate Phase 3.D.5 Wave 3.M defines
       zero-volume-bar mechanism for "venue quiet, baseline says zero is OK"; add 3rd state for "baseline says non-zero
       expected, but observed is near-zero" → `record_failed(SUSPECTED_GAP)`.
-- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
       `DATA_QUALITY_SUSPECTED_GAP` reason semantics + the 3-state-vs-2-state explanation.
 
 ## Open questions
@@ -4567,19 +4567,19 @@ execution per mega-audit tracker `mega_audit_and_plan_beefup_progression_2026_05
 
 ### Phase 7.A — Diagnose the v8 writer-path gap (~2 cal AI-days)
 
-1. - [ ] **P0**. Walk every `record_captured` / `record_empty` / `record_failed` callsite in unified-trading-library +
+1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Walk every `record_captured` / `record_empty` / `record_failed` callsite in unified-trading-library +
          each service. Confirm each goes through the canonical writer that stamps `MANIFEST_SCHEMA_VERSION = 8`. If any
          path writes with a stale constant or hardcoded older value, fix it.
-2. - [ ] **P0**. Identify the source of the 1.3M NULL-schema-version rows in DeFi manifest. Likely an older code path
+2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Identify the source of the 1.3M NULL-schema-version rows in DeFi manifest. Likely an older code path
          that didn't stamp schema_version at all (pre-v4 era). Document the path + fix it.
-3. - [ ] **P0**. Verify the consolidator (`_index/per_vm/*.parquet` → `availability_index.parquet`) does NOT downgrade
+3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Verify the consolidator (`_index/per_vm/*.parquet` → `availability_index.parquet`) does NOT downgrade
          schema_version during merge. If it does, fix.
 
 ### Phase 7.B — Forward-fix verification (~1 cal AI-day)
 
-1. - [ ] **P0**. After 7.A: every new `record_captured` write must land at v8. Sample 100 most-recent rows per
+1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. After 7.A: every new `record_captured` write must land at v8. Sample 100 most-recent rows per
          (asset_group, bucket); assert all `schema_version == 8`.
-2. - [ ] **P0**. Add QG step `scripts/quality_gates/check_manifest_schema_version_constants.py` per A1 + A4 gap
+2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Add QG step `scripts/quality_gates/check_manifest_schema_version_constants.py` per A1 + A4 gap
          analysis. Ratchets workspace constants to v8.
 
 ### Phase 7.C — Retrospective backfill of existing rows (~6 cal AI-days)
@@ -4596,20 +4596,20 @@ Per-asset-group counts (from A4):
 - **Sports**: 2,833,196 rows (v2 + v4 + v5 + v6 + v7 mix)
 - **Prediction**: 20,752 rows
 
-1. - [ ] **P0**. Write `unified_trading_library/migrations/upgrade_manifest_to_v8.py` that walks each
+1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Write `unified_trading_library/migrations/upgrade_manifest_to_v8.py` that walks each
          `_index/availability_index.parquet` per bucket + rewrites every row with `schema_version = 8`. Handle NULL rows
          by inferring from sibling columns (`capture_status`, `data_type` presence) — never silently drop.
-2. - [ ] **P0**. Pre-migration drain per CLAUDE.md HARD RULE: stop all VMs across GCP + AWS, consolidate manifests,
+2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Pre-migration drain per CLAUDE.md HARD RULE: stop all VMs across GCP + AWS, consolidate manifests,
          snapshot to `_index/snapshots/pre_v8_migration_2026_05_XX.parquet`.
-3. - [ ] **P0**. Run migration per bucket. Asserts post-run: 100% v8 row count + 0 NULL rows.
-4. - [ ] **P0**. Post-migration: restart VMs, verify new writes land at v8.
+3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Run migration per bucket. Asserts post-run: 100% v8 row count + 0 NULL rows.
+4. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Post-migration: restart VMs, verify new writes land at v8.
 
 ### Phase 7.D — Verification gate (~3 cal AI-days)
 
-1. - [ ] **P0**. Re-run A4 data side per `plans/audit/results/a4_manifest_v8_compliance.py`. Assert 100% v8 + 0 NULL
+1. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Re-run A4 data side per `plans/audit/results/a4_manifest_v8_compliance.py`. Assert 100% v8 + 0 NULL
          across all 10 buckets (5 MTDS + 5 IS).
-2. - [ ] **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells introduced by the migration.
-3. - [ ] **P0**. Codex SSOT update — extend `codex/02-data/availability-manifest-and-data-status.md` with the v8
+2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells introduced by the migration.
+3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Codex SSOT update — extend `codex/02-data/availability-manifest-and-data-status.md` with the v8
          migration completion banner + reference incident.
 
 ### Phase 7 success criteria

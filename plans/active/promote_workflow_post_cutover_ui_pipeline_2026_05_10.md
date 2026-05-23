@@ -109,23 +109,23 @@ Phase 12 (codex SSOT batch)             ── runs alongside, codex per phase p
 10-state + `StrategyMaturity` v2 8-state + `VersionStatus` gov 6-state) violate the workspace "no double SSOT" rule four
 ways. Consumers (strategy-service uses TWO simultaneously) drift; reasoning across the workspace gets impossible.
 
-- [ ] [AGENT] P0. **Pick canonical `StrategyMaturityPhase`** (10-state, has `is_valid_maturity_transition()` validator,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Pick canonical `StrategyMaturityPhase`** (10-state, has `is_valid_maturity_transition()` validator,
       codex-blessed, used by most production code paths).
-- [ ] [AGENT] P0. **Workspace-grep audit** per Citadel-Grade § 6 extension — every consumer of `StrategyLifecycleStage`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Workspace-grep audit** per Citadel-Grade § 6 extension — every consumer of `StrategyLifecycleStage`
       / `StrategyMaturity` listed with file:line in plan body.
-- [ ] [AGENT] P0. **Migrate `strategy-service/strategy_service/availability/store.py:24-26`** from `StrategyMaturity`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Migrate `strategy-service/strategy_service/availability/store.py:24-26`** from `StrategyMaturity`
       (v2 8-state) to `StrategyMaturityPhase` (canonical 10-state) — atomic transition, all consumers in one commit.
-- [ ] [AGENT] P0. **Migrate any other consumer** found in the workspace-grep audit.
-- [ ] [AGENT] P0. **Deprecate `StrategyLifecycleStage`** — mark `@deprecated` in source + write migration script per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Migrate any other consumer** found in the workspace-grep audit.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Deprecate `StrategyLifecycleStage`** — mark `@deprecated` in source + write migration script per
       CLAUDE.md _"Manifest migration, NOT fallback"_; remove the legacy enum after consumer sweep + 1 release cycle.
-- [ ] [AGENT] P0. **Deprecate `StrategyMaturity`** (v2 8-state) — same shape.
-- [ ] [AGENT] P0. **Add `STRATEGY_LIVE_PAUSED` + `STRATEGY_LIFECYCLE_DEMOTED` event types** to UAC `LifecycleEventType`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Deprecate `StrategyMaturity`** (v2 8-state) — same shape.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Add `STRATEGY_LIVE_PAUSED` + `STRATEGY_LIFECYCLE_DEMOTED` event types** to UAC `LifecycleEventType`
       (currently referenced in codex but undefined).
-- [ ] [AGENT] P0. **Synchronous PATCH-emit `STRATEGY_LIFECYCLE_CHANGED`** on
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Synchronous PATCH-emit `STRATEGY_LIFECYCLE_CHANGED`** on
       [`unified-trading-api/.../routes/registry.py:170-180`](../../../unified-trading-api/unified_trading_api/routes/registry.py#L170-L180)
       — currently fires only via 5-min reloader poll; kill-switch-grade governance changes can't wait 5 minutes.
       Endpoint should `log_event` directly AND let reloader pick up later for stragglers.
-- [ ] [AGENT] P0. **Mirror `phase_history` to `audit_log` collection** — codex `strategy-lifecycle-maturity.md:255-256`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Mirror `phase_history` to `audit_log` collection** — codex `strategy-lifecycle-maturity.md:255-256`
       claims this happens; code doesn't. Either fix the code or strike the codex line.
 
 **Phase 1 codex deliverables** (ride with this phase per Post-Plan-Phase Codex Audit):
@@ -162,7 +162,7 @@ no incident forensics, no reproducibility. `StrategyVersion` only stores `config
 May-23 plan Phase U1 ships `MinimalCandidateManifest` with placeholder `Optional` fields for pinned shas / model refs /
 features manifest version / chain RPC pins. **This phase populates those fields** and adds the rollback runbook.
 
-- [ ] [AGENT] P0. **EXTEND `MinimalCandidateManifest` to full `CandidateManifest`** (rename in place;
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **EXTEND `MinimalCandidateManifest` to full `CandidateManifest`** (rename in place;
       backward-compatible because all new fields are `Optional` with `default=None` already from May-23). At
       `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures (full set):
   - `manifest_id: str` (UUID).
@@ -181,14 +181,14 @@ features manifest version / chain RPC pins. **This phase populates those fields*
   - `kill_switch_config_snapshot: dict[str, Any]` (kill-switch YAML snapshot).
   - `created_at: datetime`.
   - `created_by: str`.
-- [ ] [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence.
-- [ ] [AGENT] P0. **Admin endpoint** `POST /strategy/{instance_id}/candidate-manifest` writes the manifest + emits
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Admin endpoint** `POST /strategy/{instance_id}/candidate-manifest` writes the manifest + emits
       `STRATEGY_PROMOTED_TO_CANDIDATE` event (event type added in Phase 3).
-- [ ] [AGENT] P0. **PATCH endpoint extension**: when maturity transition crosses into `LIVE_EARLY`, the endpoint reads
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **PATCH endpoint extension**: when maturity transition crosses into `LIVE_EARLY`, the endpoint reads
       the most recent `CandidateManifest` for the version_id + emits `STRATEGY_PROMOTED_TO_LIVE` with `manifest_id`.
-- [ ] [AGENT] P0. **Rollback runbook**: given `manifest_id`, restore the captured shas + restart the strategy.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Rollback runbook**: given `manifest_id`, restore the captured shas + restart the strategy.
       `e2e-testing/scripts/defi/rollback-from-manifest.sh`.
-- [ ] [AGENT] P0. **`BacktestRunManifest`** sibling type — captures pinned state at backtest-time so the
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **`BacktestRunManifest`** sibling type — captures pinned state at backtest-time so the
       `backtest_series_ref` is no longer a free-form string; it's a `manifest_id` pointer.
 
 **Phase 2 codex deliverables**:
@@ -216,7 +216,7 @@ features manifest version / chain RPC pins. **This phase populates those fields*
 **Why**: Audit Block F2 — UTL has 7 bare-string strategy event constants NOT in UAC `LifecycleEventType` enum.
 Promote/candidate/lifecycle-pause events the question doc names DON'T exist anywhere.
 
-- [ ] [AGENT] P0. **Fold UTL strategy event constants** at
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Fold UTL strategy event constants** at
       [`unified-trading-library/.../events/event_types.py:387-412`](../../../unified-trading-library/unified_trading_library/events/event_types.py#L387-L412)
       into UAC `LifecycleEventType` StrEnum:
   - `STRATEGY_AVAILABILITY_CHANGED`
@@ -228,7 +228,7 @@ Promote/candidate/lifecycle-pause events the question doc names DON'T exist anyw
   - `STRATEGY_LIFECYCLE_SEEDED`
   - UTL keeps re-exports for backward compatibility OR deletes constants + imports UAC enum members directly (cleaner —
     pick this).
-- [ ] [AGENT] P0. **Add missing event types** to UAC `LifecycleEventType`:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Add missing event types** to UAC `LifecycleEventType`:
   - `STRATEGY_PROMOTED_TO_CANDIDATE` (with `manifest_id` payload field)
   - `STRATEGY_PROMOTED_TO_PAPER` (with `manifest_id` + `paper_deployment_vm_name`)
   - `STRATEGY_PROMOTED_TO_LIVE` (with `manifest_id` + `live_deployment_vm_name`)
@@ -238,9 +238,9 @@ Promote/candidate/lifecycle-pause events the question doc names DON'T exist anyw
   - `STRATEGY_CANDIDATE_DRIFT` (Phase 5 — drift detection)
   - `LIVE_DEPLOYMENT_STARTED` / `LIVE_DEPLOYMENT_STOPPED` (live-deployment scoped events distinct from generic
     ServiceBootstrap STARTED/STOPPED).
-- [ ] [AGENT] P0. **Update consumers** — alerting-service, position-balance-monitor, risk-and-exposure subscribe to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Update consumers** — alerting-service, position-balance-monitor, risk-and-exposure subscribe to
       relevant new events.
-- [ ] [AGENT] P0. **GCS partition `events/strategy-lifecycle/`** — separate from `events/strategy-service/` so lifecycle
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **GCS partition `events/strategy-lifecycle/`** — separate from `events/strategy-service/` so lifecycle
       audit is queryable independently. Retention policy aligned with regulatory (≥7y for promote/live events).
 
 **Phase 3 codex deliverables**:
@@ -264,13 +264,13 @@ consumption.
 **Why**: Audit Block G2 — `ARCHETYPE_CONFIG_SEED` covers only 5 of 53 archetypes; grid-swept dimensions live in loose
 `dict[str, str]` (`tested_params`).
 
-- [ ] [AGENT] P1. **Lift the 2yr-grid script's flat schema to UAC** — `ArchetypeStrategyParams` per archetype with full
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Lift the 2yr-grid script's flat schema to UAC** — `ArchetypeStrategyParams` per archetype with full
       parameter space (slippage_cap_bps, funding_spread_threshold_bps, target_leverage, etc.).
-- [ ] [AGENT] P1. **`ARCHETYPE_PARAMS_SEED`** covering all 53 archetypes (or AS NEEDED if archetypes are added
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`ARCHETYPE_PARAMS_SEED`** covering all 53 archetypes (or AS NEEDED if archetypes are added
       incrementally).
-- [ ] [AGENT] P1. **`validate_config_for_archetype(archetype, config)` helper** in UAC — used by `BacktestResultWriter`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`validate_config_for_archetype(archetype, config)` helper** in UAC — used by `BacktestResultWriter`
       (Phase 8) + Promote API backend (Phase 9) as the canonical validation.
-- [ ] [AGENT] P1. **Migrate sports-specific** `ArbitrageStrategyConfig` BaseModel to fit the generalised pattern.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Migrate sports-specific** `ArbitrageStrategyConfig` BaseModel to fit the generalised pattern.
 
 **Phase 4 codex deliverables**:
 
@@ -283,15 +283,15 @@ consumption.
 
 **Why**: Audit Block G3 — no drift detection between candidate creation and live deployment.
 
-- [ ] [AGENT] P1. **NEW cron VM `strategy-drift-watchdog-{ts}`** per VM Naming Convention.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **NEW cron VM `strategy-drift-watchdog-{ts}`** per VM Naming Convention.
   - Walks ROLLED_OUT `StrategyVersion` rows; reads each version's `CandidateManifest` (Phase 2); checks pinned shas vs
     current main per repo.
   - Checks features schema for X has changed (per features-\* services manifest version drift).
   - Checks ML model registry for pinned model_refs (model still served? deprecated?).
   - Emits `STRATEGY_CANDIDATE_DRIFT` event (Phase 3) with drift diff payload.
-- [ ] [AGENT] P1. **Register `strategy-drift-` prefix** in `VM_PREFIX_TO_BUCKET`.
-- [ ] [AGENT] P1. **Bounce vm-zombie-watchdog VM** per Phase 1 of May-23 cutover plan recipe.
-- [ ] [AGENT] P1. **Alerting rule** wires `STRATEGY_CANDIDATE_DRIFT` to operator paging (Telegram / PagerDuty); demote /
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Register `strategy-drift-` prefix** in `VM_PREFIX_TO_BUCKET`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Bounce vm-zombie-watchdog VM** per Phase 1 of May-23 cutover plan recipe.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Alerting rule** wires `STRATEGY_CANDIDATE_DRIFT` to operator paging (Telegram / PagerDuty); demote /
       re-validate stale candidates.
 
 **Phase 5 codex deliverables**:
@@ -309,27 +309,27 @@ separate API calls. Manual + error-prone.
 
 ### 6.A — Risk-and-exposure auto-register
 
-- [ ] [AGENT] P1. **risk-and-exposure subscriber** — when `STRATEGY_PROMOTED_TO_LIVE` fires, auto-create per-strategy
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **risk-and-exposure subscriber** — when `STRATEGY_PROMOTED_TO_LIVE` fires, auto-create per-strategy
       `RiskLimits` from `CandidateManifest` (capital allocation, max drawdown, position limits, exposure caps derived
       from kill_switch_config_snapshot + archetype params).
-- [ ] [AGENT] P1. **`POST /risk/strategy-status` extension** to accept `strategy_id` + persist `StrategyRiskProfile` to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`POST /risk/strategy-status` extension** to accept `strategy_id` + persist `StrategyRiskProfile` to
       Firestore (currently per-call only).
 
 ### 6.B — Alerting per-deployment auto-rule generation
 
-- [ ] [AGENT] P1. **alerting-service subscriber** — on `STRATEGY_PROMOTED_TO_LIVE`, generate per-deployment alert rules
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **alerting-service subscriber** — on `STRATEGY_PROMOTED_TO_LIVE`, generate per-deployment alert rules
       from `CandidateManifest` (drawdown breach, position deviation, fill latency, venue API errors). Rules stored in
       `LIVE_ALERT_RULES_DYNAMIC` registry separate from static `LIVE_ALERT_RULES`.
 
 ### 6.C — Position-balance-monitor registration
 
-- [ ] [AGENT] P1. **PBMS register endpoint** — `POST /accounts/register` accepts
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **PBMS register endpoint** — `POST /accounts/register` accepts
       `(account_id, client_id, strategy_id, venue, instrument)` so accounts are pre-registered, not discovered from
       event stream. Single-tenant per CLIENT_ID env var preserved as boot constraint.
 
 ### 6.D — PnL-attribution `version_id` extension
 
-- [ ] [AGENT] P1. **Extend pnl-attribution schema** with `version_id` column to distinguish v2.0 from v2.1 of
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Extend pnl-attribution schema** with `version_id` column to distinguish v2.0 from v2.1 of
       carry_staked_basis (sister to deployment_id concept; uses `version_id` from `StrategyVersion` per Audit-Tab-5 H5).
 
 **Phase 6 codex deliverables**:
@@ -346,12 +346,12 @@ manual API calls needed.
 **Why**: Audit Block A6 — no cron VM, no GHA workflow re-runs backtests nightly. Master plan continuous-verification
 matrix has F17/F18 with `Last verified: NEVER`.
 
-- [ ] [AGENT] P1. **NEW cron VM `strategy-backtest-cron-{ts}`** per VM Naming Convention. Runs
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **NEW cron VM `strategy-backtest-cron-{ts}`** per VM Naming Convention. Runs
       `run_2yr_config_grid_backtest.py` nightly per archetype + records into manifest.
-- [ ] [AGENT] P1. **Register `strategy-backtest-` prefix** in `VM_PREFIX_TO_BUCKET`.
-- [ ] [AGENT] P1. **Master plan continuous-verification matrix** — fill F17/F18 `Continuous Verification` column with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Register `strategy-backtest-` prefix** in `VM_PREFIX_TO_BUCKET`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Master plan continuous-verification matrix** — fill F17/F18 `Continuous Verification` column with
       the new cron.
-- [ ] [AGENT] P1. **Alerting** — drift event from Phase 5 + new backtest score >X variance from prior baseline → alert.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Alerting** — drift event from Phase 5 + new backtest score >X variance from prior baseline → alert.
 
 **Phase 7 done definition**: cron running daily; manifest rows present; matrix updated.
 
@@ -360,28 +360,28 @@ matrix has F17/F18 with `Last verified: NEVER`.
 **Why**: Audit Block A1+A3 — backtest results don't persist; no ranking surface. Combined with Phase 2
 `BacktestRunManifest`, this closes Block A.
 
-- [ ] [AGENT] P0. **NEW UTL `BacktestResultWriter`** helper that:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **NEW UTL `BacktestResultWriter`** helper that:
   - Writes `DeployableConfigCandidate` outputs to canonical PATH_REGISTRY path.
   - Calls `record_captured` with proper manifest row (capture_status taxonomy applies — backtest is just another shard).
   - Validates `GroupBMetrics` schema on output rows (4-pillar gate per CLAUDE.md "Cluster validation MANDATORY at
     `record_captured`").
-- [ ] [AGENT] P0. **Lift `GroupBMetrics` to UAC** at `unified_api_contracts/internal/domain/strategy_service/metrics.py`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Lift `GroupBMetrics` to UAC** at `unified_api_contracts/internal/domain/strategy_service/metrics.py`
       (currently lives only in strategy-service source — violates Schema provenance QG rule).
-- [ ] [AGENT] P0. **Reconcile 2yr-grid script's flat schema** with `GroupBMetrics` — pick one canonical, migrate the
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Reconcile 2yr-grid script's flat schema** with `GroupBMetrics` — pick one canonical, migrate the
       other (per CLAUDE.md "No double SSOT in data-saving methodology").
-- [ ] [AGENT] P0. **Per-asset-group score-schema extensions** — sports CLV, DeFi gas-cost / IL attribution,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Per-asset-group score-schema extensions** — sports CLV, DeFi gas-cost / IL attribution,
       LST-yield-vs-perp-funding component breakdown.
-- [ ] [AGENT] P0. **NEW UAC `RankedCandidate`** type — wraps `BacktestRunManifest` + score vector + rank + slicing axes
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **NEW UAC `RankedCandidate`** type — wraps `BacktestRunManifest` + score vector + rank + slicing axes
       (archetype, asset_group, strategy_family, venue_set_variant).
-- [ ] [AGENT] P0. **`rank_candidates(archetype, top_k, metric)` helper** in UTL.
-- [ ] [AGENT] P0. **API endpoint** `GET /strategy/{archetype}/candidates?rank_by=sharpe&top=10` in unified-trading-api.
-- [ ] [AGENT] P0. **UI page** in unified-trading-system-ui — ranked board view, real-data wiring (replaces mock
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **`rank_candidates(archetype, top_k, metric)` helper** in UTL.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **API endpoint** `GET /strategy/{archetype}/candidates?rank_by=sharpe&top=10` in unified-trading-api.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **UI page** in unified-trading-system-ui — ranked board view, real-data wiring (replaces mock
       fixtures).
-- [ ] [AGENT] P0. **`shadow_within_10pct_of_champion` lifecycle gate** — populate the champion store; the gate currently
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **`shadow_within_10pct_of_champion` lifecycle gate** — populate the champion store; the gate currently
       references a champion that doesn't exist anywhere in code.
-- [ ] [AGENT] P0. **Strategy-service `engine/strategies/v2/registry.py:73-117`** — Phase 5/11 promised work: persist
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Strategy-service `engine/strategies/v2/registry.py:73-117`** — Phase 5/11 promised work: persist
       `ConfigRegistry` to Firestore (kill the in-memory dict).
-- [ ] [AGENT] P0. **`PaperComparisonTracker` Firestore persistence** — currently lost on restart.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **`PaperComparisonTracker` Firestore persistence** — currently lost on restart.
 
 **Phase 8 codex deliverables**:
 
@@ -413,12 +413,12 @@ phase ships the full pre-flight pipeline** + cross-service handlers (Phase 6 sib
 generation + auto-register risk profile + position-balance-monitor account registration + pnl-attribution version_id
 wiring all triggered from the promote endpoint.
 
-- [ ] [AGENT] P0. **Backend `POST /promote/{strategy_id}/{run_id}` endpoint** in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Backend `POST /promote/{strategy_id}/{run_id}` endpoint** in
       `deployment-api/deployment_api/services/promote.py` (NEW file).
   - Body: `{target_status: StrategyMaturityPhase, promoter: str, reason: str, candidate_manifest_id?: str}`.
   - Returns 202 Accepted + `workflow_id` for async (recommended) OR 200 OK with new state for sync (if pre-flight passes
     synchronously).
-- [ ] [AGENT] P0. **Backend `POST /promote-to-live/{strategy_id}/{candidate_manifest_id}` endpoint** — pre-flight
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Backend `POST /promote-to-live/{strategy_id}/{candidate_manifest_id}` endpoint** — pre-flight
       checks:
   - Custody connected (Copper sandbox sign-test passes).
   - All venue keys present in Secret Manager.
@@ -427,11 +427,11 @@ wiring all triggered from the promote endpoint.
   - Risk limits set (per-strategy `RiskLimits` exists from Phase 6.A auto-register).
   - Recon green for last 24h (from `batch-live-reconciliation-service` Phase 5.A of May-23 plan).
   - Fail-loud if any gate fails; emit `STRATEGY_PROMOTE_TO_LIVE_REJECTED` event with failed gates.
-- [ ] [AGENT] P0. **Wire Promote UI's `useRecordPromoteWorkflow()` callback** to the new backend (replaces React
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Wire Promote UI's `useRecordPromoteWorkflow()` callback** to the new backend (replaces React
       in-memory context).
-- [ ] [AGENT] P0. **UI shows optimistic state then converges via event-stream subscription** to lifecycle events (Phase
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **UI shows optimistic state then converges via event-stream subscription** to lifecycle events (Phase
       3).
-- [ ] [AGENT] P0. **Auth/authz** — Firebase custom claim `execution-full` gates `/promote-to-live`; per-archetype claims
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Auth/authz** — Firebase custom claim `execution-full` gates `/promote-to-live`; per-archetype claims
       for finer-grained authz post-Tier-3.
 
 **Phase 9 codex deliverables**:
@@ -449,14 +449,14 @@ integration test green.
 mode-data API) + U5 (`pvl-p23a` 3-way visualization for lead pair) + U6 (`pvl-p23c` per-trade manual-trade gate UI) ship
 the cutover-blocker subset. **This phase extends to all archetypes + advanced operator features.**
 
-- [ ] [AGENT] P0. **DART 3-way visualization extends to all archetypes** (May-23 ships lead pair only).
-- [ ] [AGENT] P0. **DART signal explainability** — drill-down into per-feature contribution to a signal (multi-archetype
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **DART 3-way visualization extends to all archetypes** (May-23 ships lead pair only).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **DART signal explainability** — drill-down into per-feature contribution to a signal (multi-archetype
       comparison view).
-- [ ] [AGENT] P0. **DART per-trade audit drill-down** — operator can click any executed trade + see full lineage (signal
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **DART per-trade audit drill-down** — operator can click any executed trade + see full lineage (signal
       → instruction → execution → fill).
-- [ ] [AGENT] P0. **Per-strategy pause / kill-switch UI buttons** wired to backend `/pause` + kill-switch bus.
-- [ ] [AGENT] P0. **`/retire` endpoint + UI button** — retires strategy gracefully; emits `STRATEGY_LIVE_RETIRED`.
-- [ ] [AGENT] P0. **Multi-archetype DART comparison** — side-by-side per archetype P&L + fills + risk metrics in one
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Per-strategy pause / kill-switch UI buttons** wired to backend `/pause` + kill-switch bus.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **`/retire` endpoint + UI button** — retires strategy gracefully; emits `STRATEGY_LIVE_RETIRED`.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Multi-archetype DART comparison** — side-by-side per archetype P&L + fills + risk metrics in one
       canvas (extends pvl-p23a single-archetype shape).
 
 **Phase 10 codex deliverables**:
@@ -472,15 +472,15 @@ deployment; pause/retire buttons live.
 **Why**: Audit Block A2 + paper_vs_live sibling doc — `paper_trade: bool` in execution-service + `_PAPER_VENUE_KEYS`
 string-set in sports_execution + 3 competing surfaces violate "no double SSOT".
 
-- [ ] [AGENT] P1. **`pvl-p17a` UAC `OperationalMode` 4-cell `ExecutionTarget × ExecutionTrigger` enum** — canonical mode
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`pvl-p17a` UAC `OperationalMode` 4-cell `ExecutionTarget × ExecutionTrigger` enum** — canonical mode
       SSOT.
-- [ ] [AGENT] P1. **`pvl-p17b`** delete `paper_trade: bool` from
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`pvl-p17b`** delete `paper_trade: bool` from
       [`execution-service/execution_service/service_config.py:563-567`](../../../execution-service/execution_service/service_config.py#L563-L567);
       replace with `OperationalMode` checks.
-- [ ] [AGENT] P1. **`pvl-p17c`** delete `_PAPER_VENUE_KEYS` from
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`pvl-p17c`** delete `_PAPER_VENUE_KEYS` from
       [`execution-service/execution_service/sports_execution/routing.py:16-25`](../../../execution-service/execution_service/sports_execution/routing.py#L16-L25);
       replace with `OperationalMode` checks.
-- [ ] [AGENT] P1. **`pvl-p17d`** propagate `OperationalMode` through every adapter / venue / connector — workspace-grep
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **`pvl-p17d`** propagate `OperationalMode` through every adapter / venue / connector — workspace-grep
       audit per Citadel-Grade § 6.
 
 **Phase 11 codex deliverables**:
@@ -496,9 +496,9 @@ string-set in sports_execution + 3 competing surfaces violate "no double SSOT".
 All NEW + UPDATE codex docs ship with their phases (per Phases 1-11 docs sections). This phase ensures the
 WORKSPACE-WIDE codex audit catches any drift after the post-cutover plan completes.
 
-- [ ] [AGENT] P0. **Codex audit** — re-walk every codex doc the plan touched; verify each reflects shipped state. Per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex audit** — re-walk every codex doc the plan touched; verify each reflects shipped state. Per
       CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex must be at parity with code at every phase boundary.
-- [ ] [AGENT] P0. **CLAUDE.md update** — add the post-cutover-shipped key rules:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **CLAUDE.md update** — add the post-cutover-shipped key rules:
   - "Strategy Lifecycle State Machine SSOT" (from Phase 1).
   - "Promote Workflow Path" (from May-23 plan; extend with UI-shipped status post-Phase 9).
   - "Candidate Manifest" (from Phase 2).

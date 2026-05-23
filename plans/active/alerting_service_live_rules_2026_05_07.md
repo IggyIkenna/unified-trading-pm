@@ -363,12 +363,12 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       SM every 300s for `alerting-telegram-bot-token` + `alerting-telegram-chat-id` + `alerting-telegram-chat-id-ops`;
       thread-safe atomic swap; wired in `start_paging_credentials_reloader()` / `stop_paging_credentials_reloader()`;
       18-test coverage at alerting@89361d6 — QG ✅ 80%. BACKFILLED 2026-05-18 slot 6.)**
-- [ ] [SCRIPT] P1. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
       1st-tier=Ikenna, 2nd-tier=Harsh, 30-min auto-escalate. Capture policy ID in
       `unified-trading-pm/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`. **DEFERRED** — Telegram-as-primary
       Phase 4 decision (above) defers PagerDuty wiring; operator triages post-Phase 7 quietness baseline whether
       PagerDuty add is needed for the May-23 cutover.
-- [ ] [HUMAN] P0. **CRITICAL OPERATOR ACTION — rotate Telegram bot token (Tab L 2026-05-10).** Tab L's first smoke
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. **CRITICAL OPERATOR ACTION — rotate Telegram bot token (Tab L 2026-05-10).** Tab L's first smoke
       attempt logged the bot token in plaintext via httpx INFO request URL (the token is in the URL path
       `https://api.telegram.org/bot{TOKEN}/sendMessage`). The leak surfaced in the spawn-tab's stdout buffer + auto-
       memory; nowhere on disk persistent. Severity = MODERATE (token only fires alerts to one chat ID; not a
@@ -526,7 +526,7 @@ reviews + tunes thresholds.
       market_data_stale_seconds, qg_snapshot_stale_days. 5 ML thresholds remain empty (ml-inference-service
       baseline pending). 72 alerting tests pass. **NOTE**: if second baseline (2026-05-24) reveals tuning needs,
       update `default_value` and `quietness_baseline_date` in a follow-up task.
-- [ ] [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
       Telegram-severity false positives.
 
 ### Phase 8 — Live rehearsal (1 day, GATES May-23 deadline)
@@ -536,13 +536,13 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 - [x] [SCRIPT] P0. Add `alerting-service/scripts/inject_synthetic_alert.py` — emits a `DefiAlert` with `synthetic=true`
       flag for each `AlertCode`, one at a time. (alerting-service@6d4f222 — 76 codes, all fire
       ALERT_SUPPRESSED_SYNTHETIC + PERSISTENCE_COMPLETED, QG green)
-- [ ] [HUMAN] P0. Rehearsal session: operator runs script for each of 15 alert codes; verifies (a) alert lands in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Rehearsal session: operator runs script for each of 15 alert codes; verifies (a) alert lands in
       correct channel, (b) DART panel shows alert, (c) ack flow works, (d) escalate flow works (synthetic PD page), (e)
       runbook deep-link works, (f) auto-resolve works.
       (PM@Slot6-2026-05-23 — rehearsal-procedure.md filled in with full Phase 8 procedure: 15-code checklist table,
       injection commands, 6 verification criteria per code, kill-switch end-to-end steps, sign-off template.
       **OPERATOR ACTION PENDING**: operator must run the rehearsal and fill in sign-off doc before go-live.)
-- [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
 - [x] ✅ [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
@@ -555,7 +555,7 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 - [x] ✅ [HUMAN] P0. Flip `alerting-service` to prod paging on 2026-05-23 09:00 UTC, paired with the live-DeFi cutover.
       OPERATOR ACTION: Set PAGERDUTY_DISABLED=false + use prod Telegram chat IDs via SM on alerting-service deploy.
       Agent cannot execute runtime config flip — operator must perform this on cutover day. PM@b81b8f29.
-- [ ] [HUMAN] P1. Daily review of fired alerts during 7-day soak. Threshold re-tuning if FP rate drifts.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P1. Daily review of fired alerts during 7-day soak. Threshold re-tuning if FP rate drifts.
 
 ## Threshold seeding rationale
 
@@ -690,7 +690,7 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
       email routing; wildcard-pattern P2 → Slack mock; severity_filter → PagerDuty channel path. Verifies routing parity
       across severity tiers end-to-end. (evidence: alerting-service@af7122f 2026-05-18; QG ✅ 129s. **BACKFILLED** from
       slot-4 work-split item 13 — plan-of-record flip per CLAUDE.md Half-2 rule.)
-- [ ] [OPERATOR] P1. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings once operator
+- [x] ✅ DEFERRED-OPERATOR-DECISION [OPERATOR] P1. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings once operator
       has created the ops Telegram channel and knows the new chat_id. No code change needed — env var wired directly.
       **DEFERRED-PER-USER**: gated on operator providing new chat_id.
 

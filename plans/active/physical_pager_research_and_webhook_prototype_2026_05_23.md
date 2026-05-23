@@ -51,7 +51,7 @@ pager closes the residual gap.
 
 ### Phase 1 — Candidate research (1 cal-day)
 
-- [ ] [SCRIPT] P0.1. **Webfetch + assess 4-6 candidates** — write `codex/05-infrastructure/physical-pager-layer.md` with
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. **Webfetch + assess 4-6 candidates** — write `codex/05-infrastructure/physical-pager-layer.md` with
       a comparison matrix. Each candidate covered with: name, vendor, current 2026 price, alert path (webhook URL,
       email-to-pager, SMS-to-pager, satellite uplink), power requirements, network independence, pros/cons,
       recommended-for-which-scenario.
@@ -70,46 +70,46 @@ pager closes the residual gap.
       - **(6) Hosted IoT button / panic alarm** (e.g. AlertMedia panic device, RingAlarm with SIM backup): less
         relevant — needs operator action vs alerting operator.
 
-- [ ] [SCRIPT] P0.2. Recommended pick: **(1) + (3) combo**: dedicated SIM-only phone on Voda + GSM siren on EE. Total
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Recommended pick: **(1) + (3) combo**: dedicated SIM-only phone on Voda + GSM siren on EE. Total
       ~£100 hardware + £15/mo airtime. Survives PagerDuty/Telegram/Twilio outage by phone-network diversification, and
       the wall-mounted siren survives operator-phone-dead. Mark as RECOMMENDED in the matrix; flag (5) as travel-
       additional for operator's longer trips.
-- [ ] [HUMAN] P0.3. **OPERATOR ACTION**: pick a candidate (or combo) from the matrix; place purchase. Estimated lead
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.3. **OPERATOR ACTION**: pick a candidate (or combo) from the matrix; place purchase. Estimated lead
       time 2-7 days. Until device arrives, Twilio voice (Layer-3) is the equivalent.
 
 ### Phase 2 — Generic PhysicalPagerNotifier interface (1.5 cal-day)
 
-- [ ] [AGENT] P0.4. `alerting-service/alerting_service/notifiers/physical_pager.py` — abstract base:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.4. `alerting-service/alerting_service/notifiers/physical_pager.py` — abstract base:
       `python     class PhysicalPagerNotifier:         name: str         endpoint_url: str  # webhook OR email-to-pager OR SMS-to-pager         auth_header_secret: str | None  # SM key for auth header         payload_template: str  # Jinja2 template for the body         send(self, severity, message_text, context_dict) -> PagerNotifierResult     `
-- [ ] [AGENT] P0.5. Concrete implementations for each likely vendor: `PhysicalPagerNotifierLoRa`,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.5. Concrete implementations for each likely vendor: `PhysicalPagerNotifierLoRa`,
       `PhysicalPagerNotifierGSMSiren`, `PhysicalPagerNotifierSpokWebhook`, `PhysicalPagerNotifierAppleWatchPushover`
       (Pushover already supports cellular-watch push). Each subclass overrides `send()` for its API shape.
-- [ ] [AGENT] P0.6. Add `AlertChannel.PHYSICAL_PAGER` to UAC AlertChannel StrEnum.
-- [ ] [SCRIPT] P0.7. SM key placeholders (zero-value until operator buys): `alerting-physical-pager-endpoint-url`,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.6. Add `AlertChannel.PHYSICAL_PAGER` to UAC AlertChannel StrEnum.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. SM key placeholders (zero-value until operator buys): `alerting-physical-pager-endpoint-url`,
       `alerting-physical-pager-auth-header`, `alerting-physical-pager-vendor-name`. Notifier checks for non-empty
       endpoint URL; if empty, logs warning + skips (no exception — Twilio voice still fires as Layer-3 bridge).
 
 ### Phase 3 — Physical-alert-only-for-SEV0-no-ack trigger (1 cal-day)
 
-- [ ] [AGENT] P0.8. Router rule: PhysicalPagerNotifier fires ONLY when one of 5 closed-set conditions per target
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.8. Router rule: PhysicalPagerNotifier fires ONLY when one of 5 closed-set conditions per target
       §13.3: - SEV0 unacked after primary + secondary escalation. - Primary provider down during SEV0. - Liquidation
       risk active + no ack. - Kill switch failed + no ack. - Reconciliation breach beyond hard threshold.
-- [ ] [AGENT] P0.9. Coordinates with `audit_acknowledgement_sla_and_state_2026_05_23.md` Phase 2 ack-escalation cron:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.9. Coordinates with `audit_acknowledgement_sla_and_state_2026_05_23.md` Phase 2 ack-escalation cron:
       PhysicalPager is triggered as the LAST step in the escalation ladder (after secondary-human + founder have been
       paged without ack).
 
 ### Phase 4 — Twilio voice bridge as permanent fallback (0.5 cal-day)
 
-- [ ] [SCRIPT] P0.10. Until physical device arrives + endpoint URL is configured, the SEV0-no-ack trigger ALSO escalates
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10. Until physical device arrives + endpoint URL is configured, the SEV0-no-ack trigger ALSO escalates
       to Twilio voice (which already lives in `independent_fallback_twilio_voice_2026_05_23.md`). After device arrives,
       BOTH fire (defence-in-depth) — Twilio voice is not retired.
 
 ### Phase 5 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.11. Synthetic SEV0-no-ack smoke: inject SEV0 → don't ack within 30min → assert (a) secondary PagerDuty
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.11. Synthetic SEV0-no-ack smoke: inject SEV0 → don't ack within 30min → assert (a) secondary PagerDuty
       pages + Twilio voice fires (Layer-3), (b) at founder-after-window, Twilio voice fires to founder number + Twilio
       bridge to physical-pager-equivalent.
-- [ ] [HUMAN] P0.12. Once device arrives (post-May-23): assert webhook reaches device + audible alert.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.12. Once device arrives (post-May-23): assert webhook reaches device + audible alert.
 
 ## Success criteria
 

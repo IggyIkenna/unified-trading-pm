@@ -80,19 +80,19 @@ backup actuator.
 
 ### Phase 1 — UAC schema + audit-store path (1 cal-day)
 
-- [ ] [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/incident/recovery_audit.py`: - `SignoffVerdict`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/incident/recovery_audit.py`: - `SignoffVerdict`
       StrEnum: APPROVED | APPROVED_WITH_NOTES | ESCALATE_TO_HUMAN | DISPUTE_AUTOMATED_ACTION (closed 4-set). -
       `RecoveryAuditSignoff` Pydantic:
       `event_id, parent_incident_key, agent_id, timestamp, verdict, narrative,       layer0_action_event_ids: list[str], evidence_links: list[str], recommended_next_action: str | None,       confidence: float | None, llm_model: str, llm_session_id: str`.
-- [ ] [SCRIPT] P0.2. Audit-store write path: `RecoveryAuditSignoff` writes to GCS via
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Audit-store write path: `RecoveryAuditSignoff` writes to GCS via
       `resolve_bucket_name(kind='kill-switch-audit', ...)` with prefix
       `incidents/{YYYY-MM-DD}/{incident_key}/signoffs/{signoff_event_id}.json`.
-- [ ] [SCRIPT] P0.3. UAC sanity tests: SignoffVerdict closed; DISPUTE_AUTOMATED_ACTION reachable from any `verdict`;
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. UAC sanity tests: SignoffVerdict closed; DISPUTE_AUTOMATED_ACTION reachable from any `verdict`;
       confidence ∈ [0,1] if non-None.
 
 ### Phase 2 — agent-orchestrator template (2 cal-day)
 
-- [ ] [SCRIPT] P0.4. New `agent-orchestrator/agents/recovery-audit.md` — modelled on `monitor.md`. Sections: - STEP 0:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. New `agent-orchestrator/agents/recovery-audit.md` — modelled on `monitor.md`. Sections: - STEP 0:
       read `agents/RULES.md` + `codex/04-architecture/recovery-defence-in-depth-layers.md`. - STEP 1: register as
       `role: custom, label: recovery-audit-signoff` on the machine running this Claude session. - STEP 2: subscribe to
       PubSub `agent-recovery-actions` topic (via gateway audit-store polling — every 30s). - STEP 3: for each new
@@ -102,41 +102,41 @@ backup actuator.
       action_status=FAILED on most recent AgentActionEvent → enter Layer-1.5 mode: invoke
       `deployment-service/scripts/recovery/llm_invoke_layer0.py <action_type> <scope_args>` via Bash. NO arbitrary
       shell; only the wrapper script.
-- [ ] [SCRIPT] P0.5. Closed-set authority guard: `llm_invoke_layer0.py` validates that `action_type` is one of the 10
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. Closed-set authority guard: `llm_invoke_layer0.py` validates that `action_type` is one of the 10
       registered actions in `RecoveryScriptRegistry`; emits AgentActionEvent with `provenance=LLM_LAYER15`; rejects
       unknown action types with non-zero exit.
 
 ### Phase 3 — DISPUTE escalation path (1 cal-day)
 
-- [ ] [AGENT] P0.6. `alerting-service/alerting_service/gateway/state_machine.py`: subscribe to RecoveryAuditSignoff
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.6. `alerting-service/alerting_service/gateway/state_machine.py`: subscribe to RecoveryAuditSignoff
       stream. On verdict=DISPUTE_AUTOMATED_ACTION: force the parent incident to `SAFE_MODE_ACTIVE`; raise severity_hint
       to SEV0; immediately invoke `pause_strategy.py` for the affected strategy (Layer-0 script call with
       provenance=GATEWAY_DISPUTE).
-- [ ] [AGENT] P0.7. On verdict=ESCALATE_TO_HUMAN: ensure `human_operational_ack_required=True` + audit-ack-due-at is
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.7. On verdict=ESCALATE_TO_HUMAN: ensure `human_operational_ack_required=True` + audit-ack-due-at is
       shortened to 1h (vs default 6h) so the human is paged sooner.
-- [ ] [AGENT] P0.8. On verdict=APPROVED_WITH_NOTES: incident continues to RESOLVED but the notes appear in DART Active
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.8. On verdict=APPROVED_WITH_NOTES: incident continues to RESOLVED but the notes appear in DART Active
       Alerts panel as an info banner.
-- [ ] [TEST] P0.9. Integration test: simulate AgentActionEvent for `enter_safe_mode` → assert LLM agent picks it up,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.9. Integration test: simulate AgentActionEvent for `enter_safe_mode` → assert LLM agent picks it up,
       writes signoff doc; force DISPUTE verdict → assert state machine transitions to SAFE_MODE_ACTIVE + pause_strategy
       invoked.
 
 ### Phase 4 — DART surface (1 cal-day)
 
-- [ ] [SCRIPT] P0.10. `unified-trading-system-ui/components/widgets/safety/recovery-audit-feed.tsx` — shows last 50
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10. `unified-trading-system-ui/components/widgets/safety/recovery-audit-feed.tsx` — shows last 50
       RecoveryAuditSignoff entries; color-coded by verdict; deep-links to the parent incident.
-- [ ] [SCRIPT] P0.11. Each ack-queue row shows the LLM signoff verdict alongside the incident — operator's ack decision
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11. Each ack-queue row shows the LLM signoff verdict alongside the incident — operator's ack decision
       is informed by LLM verdict.
 
 ### Phase 5 — Launch + game-day (1 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.12. Launch the recovery-audit agent on the live-defi VM (e.g. `recovery-audit-20260523-100000` GCE
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.12. Launch the recovery-audit agent on the live-defi VM (e.g. `recovery-audit-20260523-100000` GCE
       instance, asia-northeast1-c, e2-standard-2, auto-shutdown disabled, runs indefinitely). Pre-flight: confirm
       AGENT_ORCHESTRATOR_URL + GH_PAT + AUDIT_STORE_BUCKET secrets in SM.
-- [ ] [HUMAN] P0.13. Synthetic smoke: inject AgentActionEvent(action_type=restart_service, action_status=FAILED) →
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.13. Synthetic smoke: inject AgentActionEvent(action_type=restart_service, action_status=FAILED) →
       assert LLM agent (a) writes RecoveryAuditSignoff within 90s, (b) invokes
       `llm_invoke_layer0.py restart_service ...` as Layer-1.5 backup, (c) emits a new AgentActionEvent with
       provenance=LLM_LAYER15.
-- [ ] [HUMAN] P0.14. Game-day: scenario `02_defi_chain_rpc_outage_solana.md` — Layer-0 fails to failover (Solana RPC
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.14. Game-day: scenario `02_defi_chain_rpc_outage_solana.md` — Layer-0 fails to failover (Solana RPC
       all-down) → assert LLM agent ESCALATE_TO_HUMAN verdict + Layer-1.5 attempts an alternate RPC + audit-ack shortened
       to 1h.
 

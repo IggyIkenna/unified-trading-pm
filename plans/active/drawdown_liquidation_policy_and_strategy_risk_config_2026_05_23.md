@@ -71,7 +71,7 @@ risk pre-detector. Ship the drawdown + liquidation investigation report template
 
 ### Phase 1 — UAC schemas (1.5 cal-day)
 
-- [ ] [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/risk/drawdown.py`: - `DrawdownThresholdKind` StrEnum
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/risk/drawdown.py`: - `DrawdownThresholdKind` StrEnum
       (7): WARNING, INVESTIGATION, HUMAN_ESCALATION, AUTO_PAUSE, AUTO_REDUCE, AUTO_CLOSE_ALL, LIQUIDATION_RISK. -
       `RiskThresholds` Pydantic — `pnl_drawdown: dict[DrawdownThresholdKind, Decimal | None]` (None = "not configured" —
       explicit-no-trigger; UnsetThresholdError raised at construct-time if a kind is missing from the dict). -
@@ -80,76 +80,76 @@ risk pre-detector. Ship the drawdown + liquidation investigation report template
       `basis: ExpectedDrawdownModelBasis, confidence_level: Decimal | None,       lookback_window: timedelta | None, regime_adjustment: str | None`. -
       `ResponsePolicy` Pydantic — 5 booleans (allow_agent_investigation, allow_auto_pause, allow_auto_reduce,
       allow_auto_close_all, require_human_for_resume). All MUST be declared (no defaults).
-- [ ] [SCRIPT] P0.2. UAC sanity tests: 7 DrawdownThresholdKind members; 6 ExpectedDrawdownModelBasis members; 5
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. UAC sanity tests: 7 DrawdownThresholdKind members; 6 ExpectedDrawdownModelBasis members; 5
       ResponsePolicy fields all declared on every instance; missing DrawdownThresholdKind in `pnl_drawdown` dict raises.
 
 ### Phase 2 — Strategy config migration (2 cal-day, parallel per strategy)
 
-- [ ] [SCRIPT] P0.3. For every live + paper strategy in `strategy-service/configs/`, add `risk_thresholds:` block per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. For every live + paper strategy in `strategy-service/configs/`, add `risk_thresholds:` block per
       target model §8.2. **For May-23: minimum 2 strategies** (`carry_staked_basis` + `arbitrage_price_dispersion`).
       Operator approves threshold values per-strategy.
-- [ ] [SCRIPT] P0.4. `strategy-service/strategy_service/config_loader.py` — assert every loaded strategy declares all 3
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. `strategy-service/strategy_service/config_loader.py` — assert every loaded strategy declares all 3
       risk-config blocks (RiskThresholds, ExpectedDrawdownModel, ResponsePolicy); fail-loud on missing.
-- [ ] [SCRIPT] P0.5. Add `bash strategy-service/scripts/quality-gates.sh` STEP that verifies every strategy yaml passes
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. Add `bash strategy-service/scripts/quality-gates.sh` STEP that verifies every strategy yaml passes
       the schema (regression gate).
 
 ### Phase 3 — Drawdown investigation report (1.5 cal-day)
 
-- [ ] [SCRIPT] P0.6. `risk-and-exposure-service/scripts/drawdown_investigation_report.py` — for a given (strategy_id,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.6. `risk-and-exposure-service/scripts/drawdown_investigation_report.py` — for a given (strategy_id,
       time_window), emits a `DrawdownInvestigationReport` Pydantic with the 17 fields per target §8.4 (strategy_id,
       account/venue scope, drawdown_amount + drawdown_pct, realised/unrealised PnL, time_window, market_move_context,
       exposure_before/after, open_orders, position_concentration, venue_specific_issues, data_quality_issues,
       expected_distribution_check, signal_sanity, slippage_contribution, fees_funding_borrow_contribution,
       risk_limit_breaches, recommended_action).
-- [ ] [SCRIPT] P0.7. Report writer auto-triggered when `human_escalation` or higher threshold breaches. Output to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. Report writer auto-triggered when `human_escalation` or higher threshold breaches. Output to
       audit-store at `incidents/{YYYY-MM-DD}/{incident_key}/drawdown_investigation.json`.
-- [ ] [SCRIPT] P0.8. DART surface: `unified-trading-system-ui/components/widgets/risk/drawdown-investigation-viewer.tsx`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. DART surface: `unified-trading-system-ui/components/widgets/risk/drawdown-investigation-viewer.tsx`
       — renders the 17 fields in operator-readable format with deep-links to dashboards.
 
 ### Phase 4 — Liquidation event + liquidation-risk (2 cal-day)
 
-- [ ] [SCRIPT] P0.9. `risk-and-exposure-service/detectors/liquidation_event_detector.py` — subscribes to venue-execution
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. `risk-and-exposure-service/detectors/liquidation_event_detector.py` — subscribes to venue-execution
       events; closed-set predicates per venue family (CeFi perp, DeFi lending, DeFi perp). On detection emits
       `LIQUIDATION_EVENT_DETECTED` AlertCode with min SEV1; escalates to SEV0 per target §9.2 closed- set (material
       liquidation OR more-risk-remains OR cause-unknown OR strategy-still-trading OR margin-collateral-uncertain OR
       cross-account-may-be-affected OR internal-state-did-not-predict).
-- [ ] [SCRIPT] P0.10. `risk-and-exposure-service/detectors/liquidation_risk_predetector.py` — 6 trigger conditions per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.10. `risk-and-exposure-service/detectors/liquidation_risk_predetector.py` — 6 trigger conditions per
       target §9.3: margin_ratio_breach (closed set per venue), liquidation_distance_below_threshold,
       collateral_transfer_fail, ADL_or_insurance_fund_risk_signal, venue_API_cannot_confirm_margin_state,
       price_gap_exceeds_model_assumptions. Emits `LIQUIDATION_RISK_IMMINENT` AlertCode with SEV0.
-- [ ] [SCRIPT] P0.11. `LiquidationInvestigationReport` Pydantic per target §9.4 (16 fields: venue, account, strategy,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.11. `LiquidationInvestigationReport` Pydantic per target §9.4 (16 fields: venue, account, strategy,
       instrument, liquidated_quantity, liquidation_price, mark_index_price_path, margin_mode,
       collateral_balances_before/after, open_orders_before_liquidation, risk_limits_in_force,
       alerts_fired_before_liquidation, strategy_expected_risk, close_reduce_logic_failed, venue_api_data_stale,
       human_escalation_triggered, remediation_recommendations).
-- [ ] [SCRIPT] P0.12. New AlertCode members in UAC: `LIQUIDATION_EVENT_DETECTED` (SEV1 default, SEV0 per overrides),
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.12. New AlertCode members in UAC: `LIQUIDATION_EVENT_DETECTED` (SEV1 default, SEV0 per overrides),
       `LIQUIDATION_RISK_IMMINENT` (SEV0), `LIQUIDATION_INVESTIGATION_REPORT_WRITTEN` (SEV1 INFO). Add to
       `LIVE_ALERT_RULES` + thresholds.
 
 ### Phase 5 — Per-strategy idempotent close-all scripts (1.5 cal-day, parallel per strategy)
 
-- [ ] [SCRIPT] P0.13. `strategy-service/strategy_service/close_all/_template.py` — abstract base class
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.13. `strategy-service/strategy_service/close_all/_template.py` — abstract base class
       `StrategyCloseAllScript` enforcing: `dry_run(...) → CloseAllPlan` (idempotent, side-effect-free),
       `execute(...)     → CloseAllResult`. Contract clauses: - Idempotent (re-running on already-flat strategy returns
       no-op result). - Venue-specific order semantics (reduce-only vs normal per venue). - Derivatives / spot / options
       / margin / collateral / cross-account-hedge aware. - MUST NOT close positions belonging to OTHER strategies (read
       strategy_id scope from position metadata). - Generates post-close `CloseAllReconciliationReport` linked to the
       parent incident.
-- [ ] [SCRIPT] P0.14. Per-strategy implementations: `close_all/carry_staked_basis.py`,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14. Per-strategy implementations: `close_all/carry_staked_basis.py`,
       `close_all/arbitrage_price_dispersion.py` (2 strategies for May-23 cutover). Each subclasses the template + adds
       strategy-specific unwind sequencing.
-- [ ] [TEST] P0.15. Per-strategy dry-run test asserts plan matches expected scope; integration test on staging venue
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.15. Per-strategy dry-run test asserts plan matches expected scope; integration test on staging venue
       runs `execute()` against synthetic positions + asserts post-close recon = 0.
 
 ### Phase 6 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.16. Synthetic drawdown smoke: simulate `carry_staked_basis` PnL drop to investigation threshold →
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.16. Synthetic drawdown smoke: simulate `carry_staked_basis` PnL drop to investigation threshold →
       assert investigation report written + DART shows it; bump to auto-close-all threshold → assert close-all dry-run
       plan generated.
-- [ ] [HUMAN] P0.17. Synthetic liquidation smoke: inject `LIQUIDATION_EVENT_DETECTED` event → assert
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.17. Synthetic liquidation smoke: inject `LIQUIDATION_EVENT_DETECTED` event → assert
       LiquidationInvestigationReport written + SEV1 fires; flip 1 closed-set predicate (e.g. cause-unknown=True) →
       assert SEV0 escalation.
-- [ ] [HUMAN] P0.18. Game-day: scenario `15_liquidation_proximity_auto_deleverage.md` — assert pre-detector fires +
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.18. Game-day: scenario `15_liquidation_proximity_auto_deleverage.md` — assert pre-detector fires +
       auto-deleverage runs + investigation report links to incident.
 
 ## Success criteria

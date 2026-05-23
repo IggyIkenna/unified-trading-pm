@@ -59,45 +59,45 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
 
 ### Phase 1 — UAC schema + 5-class taxonomy (1 cal-day)
 
-- [ ] [SCRIPT] P0.1. `DependencyClass` StrEnum (5 closed): EXECUTION_CRITICAL_EXTERNAL, MARKET_DATA_CRITICAL_EXTERNAL,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `DependencyClass` StrEnum (5 closed): EXECUTION_CRITICAL_EXTERNAL, MARKET_DATA_CRITICAL_EXTERNAL,
       INTERNAL_CONTROL_PLANE, INTERNAL_DATA_PLANE, ALERTING_AND_OBSERVABILITY.
-- [ ] [SCRIPT] P0.2. `DependencyHealthPolicy` Pydantic —
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. `DependencyHealthPolicy` Pydantic —
       `dependency_id, dependency_class,     expected_recovery_time_seconds, warning_buffer_seconds, human_investigation_buffer_seconds (default 900),     hard_escalation_seconds, fallback_available, protected_mode_available, owner, runbook_doc, test_method`.
-- [ ] [SCRIPT] P0.3. UAC sanity tests: 5 DependencyClass members; policy roundtrip yaml↔model; defaults applied
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. UAC sanity tests: 5 DependencyClass members; policy roundtrip yaml↔model; defaults applied
       correctly.
 
 ### Phase 2 — Registry YAML (1 cal-day)
 
-- [ ] [SCRIPT] P0.4. `deployment-service/configs/dependency_health_policies.yaml` — enumerate every known dep:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. `deployment-service/configs/dependency_health_policies.yaml` — enumerate every known dep:
       Binance/Bybit/OKX/Deribit/Hyperliquid/Aster (EXECUTION_CRITICAL_EXTERNAL); Uniswap/Curve/Aave/Lido/Helius/Solana-
       RPC/Ethereum-RPC (EXECUTION_CRITICAL_EXTERNAL); Pyth/Chainlink (MARKET_DATA_CRITICAL_EXTERNAL); GCP-Cloud-Run/AWS-
       ECS/Pub-Sub/Cloud-Storage/Secret-Manager/Artifact-Registry (INTERNAL_CONTROL_PLANE); BigQuery/Redis/Cloud-SQL
       (INTERNAL_DATA_PLANE); PagerDuty/Telegram/Twilio (ALERTING_AND_OBSERVABILITY). Per-dep operator-tuned values.
-- [ ] [SCRIPT] P0.5. Schema loader at startup: `deployment-service/scripts/load_dependency_policies.py` parses yaml +
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.5. Schema loader at startup: `deployment-service/scripts/load_dependency_policies.py` parses yaml +
       validates against Pydantic schema; fails-loud on missing fields.
 
 ### Phase 3 — Alerting wiring (1 cal-day)
 
-- [ ] [AGENT] P0.6. `alerting-service/alerting_service/rules/connectivity_rules.py` — new evaluator:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.6. `alerting-service/alerting_service/rules/connectivity_rules.py` — new evaluator:
       `evaluate_dependency_health(dependency_id, current_outage_seconds) → AlertSeverity | None`. Logic: - outage <
       expected_recovery_time → None (no alert). - outage in [expected, expected + warning_buffer_seconds] → WARN. -
       outage in [warning, warning + human_investigation_buffer_seconds (default 900s = 15min)] → SEV1. - outage >
       hard_escalation_seconds OR fallback_available=False → SEV0.
-- [ ] [AGENT] P0.7. Wire `DEPENDENCY_DEGRADED` + `DEPENDENCY_RECOVERED` AlertCodes in UAC; add rules to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.7. Wire `DEPENDENCY_DEGRADED` + `DEPENDENCY_RECOVERED` AlertCodes in UAC; add rules to
       `LIVE_ALERT_RULES`.
 
 ### Phase 4 — Per-dep fallback tests (1 cal-day, parallel)
 
-- [ ] [TEST] P0.8. For each dep with `fallback_available=true`, integration test exercises the fallback. Mark each test
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.8. For each dep with `fallback_available=true`, integration test exercises the fallback. Mark each test
       `@pytest.mark.dependency_fallback_<dep_id>`. CI: `pytest -m dependency_fallback` runs the suite nightly.
-- [ ] [SCRIPT] P0.9. Test report writer: emits a `DependencyFallbackTestReport` per nightly run to audit-store; if any
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. Test report writer: emits a `DependencyFallbackTestReport` per nightly run to audit-store; if any
       fallback failed, raises SEV1.
 
 ### Phase 5 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.10. Synthetic dep-outage: simulate Pub/Sub unreachable for 5min → assert no alert; 6min → WARN; 21min →
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.10. Synthetic dep-outage: simulate Pub/Sub unreachable for 5min → assert no alert; 6min → WARN; 21min →
       SEV1 (expected 5min + warning 60s + human_investigation 900s); 31min OR fallback-fail → SEV0.
-- [ ] [HUMAN] P0.11. Game-day: scenario `06_defi_mempool_congestion.md` — assert dep-policy fires for Ethereum RPC
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.11. Game-day: scenario `06_defi_mempool_congestion.md` — assert dep-policy fires for Ethereum RPC
       backup; assert fallback to Helius primary holds.
 
 ## Success criteria

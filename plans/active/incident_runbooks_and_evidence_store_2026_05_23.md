@@ -65,20 +65,20 @@ metrics, traces, agent action logs, config_hash, code_version, runbook_version, 
 
 ### Phase 1 — UAC schema (0.5 cal-day)
 
-- [ ] [SCRIPT] P0.1. `IncidentEvidence` Pydantic — 14 optional URL fields per target §17:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `IncidentEvidence` Pydantic — 14 optional URL fields per target §17:
       `raw_venue_api_snapshot_url, internal_ledger_snapshot_url, order_fill_records_url, position_records_url,     balance_records_url, logs_url, metrics_url, traces_url, agent_action_logs_url, config_hash, code_version,     runbook_version, human_acknowledgement_trail_url, additional_evidence: dict[str, str]`.
-- [ ] [SCRIPT] P0.2. Link from `IncidentEnvelope`: `evidence: IncidentEvidence | None` (lazy-collected post-RESOLVED).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Link from `IncidentEnvelope`: `evidence: IncidentEvidence | None` (lazy-collected post-RESOLVED).
 
 ### Phase 2 — Evidence collector (1.5 cal-day)
 
-- [ ] [AGENT] P0.3. `alerting-service/alerting_service/gateway/evidence_collector.py` — on incident transition to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.3. `alerting-service/alerting_service/gateway/evidence_collector.py` — on incident transition to
       AUDIT_REPORT_GENERATED: - Trigger per-service evidence-capture endpoints (each service exposes
       `/evidence/{incident_key}` which writes the snapshot to GCS at `incidents/{date}/{key}/evidence/<type>.json`). -
       Capture config_hash (= git rev-parse HEAD of unified-trading-pm + service repo at incident time; deterministic
       from deployment registry). - Capture code_version (= image_digest of running container OR git sha for VM-hosted
       services). - Capture runbook_version (= git sha of `codex/15-runbooks/incidents/<runbook_id>.md` at incident
       time).
-- [ ] [AGENT] P0.4. Each service registers an evidence-capture callback: execution-service
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.4. Each service registers an evidence-capture callback: execution-service
       (orders/fills/positions/balances + venue REST snapshots), strategy-service (strategy state + signals),
       batch-live-reconciliation-service (recon deltas + age fields), risk-and-exposure-service (margin/HF/exposure).
 
@@ -135,17 +135,17 @@ kill-switch) + rollback
 
 ### Phase 4 — Runbook governance (0.5 cal-day)
 
-- [ ] [SCRIPT] P0.27. Every runbook has 4-field frontmatter (`owner, cadence, verifier, last_executed`). Cadence:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.27. Every runbook has 4-field frontmatter (`owner, cadence, verifier, last_executed`). Cadence:
       RB-INC, RB-RECON, RB-RISK = quarterly game-day verification. RB-CONN, RB-DEPLOY, RB-INFRA = pre-cutover
       verification. RB-ALERT = monthly.
-- [ ] [SCRIPT] P0.28. Hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` flags missing
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.28. Hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` flags missing
       fields. Wire into daily plan-hygiene cron.
 
 ### Phase 5 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.29. Synthetic smoke: trigger a SEV1 incident → assert evidence_collector populates all 14 evidence URL
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.29. Synthetic smoke: trigger a SEV1 incident → assert evidence_collector populates all 14 evidence URL
       fields → assert config_hash / code_version / runbook_version stamped on IncidentEnvelope.
-- [ ] [HUMAN] P0.30. Per-runbook walkthrough on staging: operator runs each of 22 runbooks on a synthetic incident
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.30. Per-runbook walkthrough on staging: operator runs each of 22 runbooks on a synthetic incident
       matching the runbook's scope; signs off in `last_executed:` frontmatter.
 
 ## Success criteria

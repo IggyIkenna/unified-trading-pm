@@ -67,51 +67,51 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 
 ### Phase 1 — SLA timer (1 cal-day)
 
-- [ ] [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/incident/sla.py`: - `AuditAckSLAPolicy` Pydantic —
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `unified_api_contracts/canonical/crosscutting/incident/sla.py`: - `AuditAckSLAPolicy` Pydantic —
       `severity: AlertSeverity, default_seconds: int, secondary_human_after_seconds:       int, founder_after_seconds: int`. -
       `LIVE_AUDIT_ACK_POLICIES: tuple[AuditAckSLAPolicy, ...]` — 4 entries: - CRITICAL: default=300 (5min),
       secondary_after=600 (10min), founder_after=1800 (30min). - HIGH: default=7200 (2h), secondary_after=10800 (3h),
       founder_after=21600 (6h). - WARN: default=21600 (6h), secondary_after=43200 (12h), founder_after=86400 (24h). -
       INFO: default=None (no enforcement).
-- [ ] [SCRIPT] P0.2. Operator-tunable per-strategy / per-archetype overrides via `audit_ack_policy:` key in strategy
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Operator-tunable per-strategy / per-archetype overrides via `audit_ack_policy:` key in strategy
       config (operator approves stricter overrides).
-- [ ] [SCRIPT] P0.3. UAC sanity tests: closed set; defaults make sense; per-strategy override loads correctly.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. UAC sanity tests: closed set; defaults make sense; per-strategy override loads correctly.
 
 ### Phase 2 — Ack escalation cron (1 cal-day)
 
-- [ ] [AGENT] P0.4. `alerting-service/alerting_service/gateway/ack_escalation.py` — runs every 30s: - Scan audit-ack
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.4. `alerting-service/alerting_service/gateway/ack_escalation.py` — runs every 30s: - Scan audit-ack
       queue for incidents with `audit_ack_due_at < now()` and not yet acked. - Per-incident: load SLA policy from
       severity; check elapsed time since due_at. - If `elapsed > secondary_human_after_seconds` and no secondary-page
       sent yet → trigger Layer-2 PagerDuty page to secondary on-call (Harsh if Ikenna is primary; vice versa). - If
       `elapsed > founder_after_seconds` and no founder-page sent yet → trigger Layer-3 Twilio voice call to
       founder/responsible-officer.
-- [ ] [AGENT] P0.5. Audit trail: each escalation step appends to `audit_ack_escalation_history` on the incident
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.5. Audit trail: each escalation step appends to `audit_ack_escalation_history` on the incident
       envelope.
 
 ### Phase 3 — Operational ack vs audit ack (1 cal-day)
 
-- [ ] [SCRIPT] P0.6. UAC `IncidentEnvelope` extension —
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.6. UAC `IncidentEnvelope` extension —
       `operational_acked_by: str | None, operational_acked_at:     datetime | None, audit_acked_by: str | None, audit_acked_at: datetime | None`.
       Operational ack does NOT transition incident state (incident stays in its current state); audit ack transitions to
       `HUMAN_AUDIT_ACKED`.
-- [ ] [SCRIPT] P0.7. `alerting-service` ack endpoints: `POST /incidents/{key}/operational-ack` (sets fields, no state
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. `alerting-service` ack endpoints: `POST /incidents/{key}/operational-ack` (sets fields, no state
       transition); `POST /incidents/{key}/audit-ack` (sets fields + transitions to `HUMAN_AUDIT_ACKED`).
-- [ ] [SCRIPT] P0.8. DART: `OperationalAckButton` + `AuditAckButton` as distinct components. Audit ack button is
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. DART: `OperationalAckButton` + `AuditAckButton` as distinct components. Audit ack button is
       disabled until the AUDIT_REPORT_GENERATED state has been reached.
 
 ### Phase 4 — Even-APPROVED-requires-human-ack rule (0.5 cal-day)
 
-- [ ] [AGENT] P0.9. `incident_gateway_and_state_machine` state machine: even when LLM RecoveryAuditSignoff
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.9. `incident_gateway_and_state_machine` state machine: even when LLM RecoveryAuditSignoff
       verdict=APPROVED + recovery_confirmed=True, the audit-ack queue MUST hold the incident open until human audit-ack
       within the per-severity window. LLM verdict is informational; not a substitute for human ack.
-- [ ] [TEST] P0.10. Integration test: simulate APPROVED LLM signoff on a SEV2 incident → assert incident remains open in
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.10. Integration test: simulate APPROVED LLM signoff on a SEV2 incident → assert incident remains open in
       audit-ack queue with 6h countdown; assert manual audit-ack closes it.
 
 ### Phase 5 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.11. Synthetic smoke: create a SEV2 incident → wait → at 6h+10min assert secondary-human PagerDuty page
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.11. Synthetic smoke: create a SEV2 incident → wait → at 6h+10min assert secondary-human PagerDuty page
       sent; at 24h assert founder Twilio voice call placed; manually ack → assert escalation stops.
-- [ ] [HUMAN] P0.12. SEV0 smoke: at 10min unacked → secondary; at 30min → founder.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.12. SEV0 smoke: at 10min unacked → secondary; at 30min → founder.
 
 ## Success criteria
 

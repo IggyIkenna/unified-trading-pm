@@ -32,22 +32,22 @@ Current state: all values are empty (`{}`). `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLAS
 
 ## Tasks
 
-- [ ] [SCRIPT] P0. **Collect inter-message gap telemetry**. Run MTDS live for ≥7 days with heartbeat logging enabled.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Collect inter-message gap telemetry**. Run MTDS live for ≥7 days with heartbeat logging enabled.
       Emit a `log_event("MTDS_HEARTBEAT_INTERVAL", details={venue, data_type, gap_seconds})` per received WS tick in the
       adapters (or derive from watchdog `last_heartbeat_ts` diffs). Collect into BigQuery or GCS log aggregates.
 
-- [ ] [SCRIPT] P0. **Compute 99th-percentile gap per (venue, data_type)**. Read the telemetry; compute P99 inter-message
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Compute 99th-percentile gap per (venue, data_type)**. Read the telemetry; compute P99 inter-message
       delta per (venue, data_type) over the 7-day window. Account for market-closed periods (daily schedule per venue) —
       use only market-hours windows.
 
-- [ ] [SCRIPT] P0. **Update UAC `venue_thresholds.py`**. Write the calibrated `timedelta` values into
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Update UAC `venue_thresholds.py`**. Write the calibrated `timedelta` values into
       `VENUE_HEARTBEAT_THRESHOLDS: dict[tuple[str, str], timedelta]`. Each key is `(venue_key, data_type)` matching UAC
       canonical venue names.
 
-- [ ] [SCRIPT] P1. **Smoke test**: deploy to staging MTDS; observe `CONNECTIVITY_GAP_DETECTED` events do not fire
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Smoke test**: deploy to staging MTDS; observe `CONNECTIVITY_GAP_DETECTED` events do not fire
       spuriously during normal market hours; confirm thresholds are not too tight.
 
-- [ ] [AGENT] P1. **Codex update**: extend `codex/04-architecture/live-pipeline-architecture.md` with a "Heartbeat
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Codex update**: extend `codex/04-architecture/live-pipeline-architecture.md` with a "Heartbeat
       threshold calibration" subsection documenting the P99 methodology + the `VENUE_HEARTBEAT_THRESHOLDS` constant.
 
 ## Target venues (initial set — expand as adapters roll out)

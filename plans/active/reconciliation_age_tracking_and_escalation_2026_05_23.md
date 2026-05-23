@@ -74,38 +74,38 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
 
 ### Phase 1 — UAC schema additions (0.5 cal-day)
 
-- [ ] [SCRIPT] P0.1. `ReconciliationDimension` StrEnum in `unified_api_contracts/internal/reconciliation.py`. 12
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. `ReconciliationDimension` StrEnum in `unified_api_contracts/internal/reconciliation.py`. 12
       members: ORDERS, FILLS, POSITIONS, BALANCES, FUNDING_PAYMENTS, FEES, TRANSFERS, BORROW_LENDING_BALANCES,
       COLLATERAL_BALANCES, MARGIN_MODE_AND_LEVERAGE, STRATEGY_LEVEL_ALLOCATION, ACCOUNT_LEVEL_AGGREGATE.
-- [ ] [SCRIPT] P0.2. `ReconciliationAgeFields` mixin (Pydantic) — `first_seen_at`, `last_seen_at`, `event_time`,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. `ReconciliationAgeFields` mixin (Pydantic) — `first_seen_at`, `last_seen_at`, `event_time`,
       `venue_trade_time`, `internal_trade_time`, `last_successful_reconciliation_at`, `unreconciled_age_seconds`,
       `oldest_unreconciled_trade_age_seconds`, `oldest_unreconciled_order_age_seconds`,
       `oldest_unreconciled_position_age_seconds`. All tz-aware UTC datetimes; ages computed at row-write-time, not
       query-time.
-- [ ] [SCRIPT] P0.3. Apply mixin to all existing reconciliation row models (`ReconciliationDelta`,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.3. Apply mixin to all existing reconciliation row models (`ReconciliationDelta`,
       `OrderReconciliationDelta`, `PositionReconciliationDelta`, `BalanceReconciliationDelta`, etc).
 
 ### Phase 2 — Engine populates fields (1 cal-day)
 
-- [ ] [AGENT] P0.4. `batch-live-reconciliation-service/` reconciliation engine sets all age fields on row creation. Use
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.4. `batch-live-reconciliation-service/` reconciliation engine sets all age fields on row creation. Use
       UTL `utc_now()` consistently — never naive datetime.
-- [ ] [AGENT] P0.5. `position-balance-monitor-service/reconciliation_engine.py` + `fee_reconciliation_engine.py` same.
-- [ ] [AGENT] P0.6. Per-dimension subgraph: dimension-specific reconciler emits rows tagged with the right
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.5. `position-balance-monitor-service/reconciliation_engine.py` + `fee_reconciliation_engine.py` same.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.6. Per-dimension subgraph: dimension-specific reconciler emits rows tagged with the right
       `ReconciliationDimension`. 12 distinct sub-engines (existing 2-3 grow to 12; new ones may share infra but emit
       distinct dimensions).
 
 ### Phase 3 — Escalation thresholds (1 cal-day)
 
-- [ ] [SCRIPT] P0.7. `alerting-service/alerting_service/rules/reconciliation_rules.py` adds threshold ladder:
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.7. `alerting-service/alerting_service/rules/reconciliation_rules.py` adds threshold ladder:
       `recon_age_warn_seconds=300` (5min Slack), `recon_age_investigate_seconds=900` (15min SEV1),
       `recon_age_critical_seconds=1800` (30min SEV0). Values in UAC `ALERT_THRESHOLDS` registry per existing pattern.
-- [ ] [SCRIPT] P0.8. Per-(venue, strategy, instrument_type, account) overrides via UAC `per_archetype_overrides` — match
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.8. Per-(venue, strategy, instrument_type, account) overrides via UAC `per_archetype_overrides` — match
       existing AlertThreshold pattern.
-- [ ] [SCRIPT] P0.9. Wire rule into `LIVE_ALERT_RULES`: pattern `RECONCILIATION_AGE_*` → SEV escalates by age band.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.9. Wire rule into `LIVE_ALERT_RULES`: pattern `RECONCILIATION_AGE_*` → SEV escalates by age band.
 
 ### Phase 4 — 7 immediate-SEV0 overrides (0.5 cal-day)
 
-- [ ] [AGENT] P0.10. `alerting-service/alerting_service/rules/reconciliation_rules.py` — `evaluate_immediate_sev0(row)`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0.10. `alerting-service/alerting_service/rules/reconciliation_rules.py` — `evaluate_immediate_sev0(row)`
       function checks 7 closed-set predicates per `ImmediateSev0Override` enum from
       `incident_gateway_and_state_machine_2026_05_23`: - UNKNOWN_NET_EXPOSURE — venue total ≠ internal total + no
       explanation row in transfers/funding. - OPEN_ORDERS_UNCONFIRMABLE — venue REST returns 5xx + we have N open orders
@@ -115,26 +115,26 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
       internal record of. - MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED — balance moved > USD threshold + no
       transfer/fill/funding row. - MARGIN_COLLATERAL_SAFETY_UNCERTAIN — venue API can't confirm margin state OR
       ADL/insurance-fund signal.
-- [ ] [TEST] P0.11. 7 unit tests in `alerting-service/tests/unit/rules/test_immediate_sev0_overrides.py` — one per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0.11. 7 unit tests in `alerting-service/tests/unit/rules/test_immediate_sev0_overrides.py` — one per
       predicate.
 
 ### Phase 5 — Freeze-on-recon-risk (0.5 cal-day)
 
-- [ ] [SCRIPT] P0.12. `execution-service/execution_service/preflight/recon_freeze.py` — preflight check invoked before
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.12. `execution-service/execution_service/preflight/recon_freeze.py` — preflight check invoked before
       every order submission. Reads `batch-live-reconciliation-service` API for current freeze set; rejects orders for
       (strategy, venue, symbol) tuples in the freeze set.
-- [ ] [SCRIPT] P0.13. Freeze set publisher: when `recon_age_critical_seconds` breaches OR any immediate-SEV0 fires,
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.13. Freeze set publisher: when `recon_age_critical_seconds` breaches OR any immediate-SEV0 fires,
       alerting-service publishes `RECON_FREEZE_ARMED` event to PubSub topic `reconciliation-freeze`. Execution-service
       subscribes and updates in-memory freeze set within 5s.
-- [ ] [SCRIPT] P0.14. Unfreeze path: human-only — operator clicks "Unfreeze" in DART after acknowledging incident and
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.14. Unfreeze path: human-only — operator clicks "Unfreeze" in DART after acknowledging incident and
       verifying recon delta resolved. Emits `RECON_FREEZE_LIFTED` event.
 
 ### Phase 6 — Smoke + game-day (0.5 cal-day, GATES May-23)
 
-- [ ] [HUMAN] P0.15. Synthetic smoke: inject a position-recon delta with `first_seen_at` = now-20min → assert SEV1
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.15. Synthetic smoke: inject a position-recon delta with `first_seen_at` = now-20min → assert SEV1
       fires; bump to now-40min → assert SEV0 fires + freeze set armed; submit a synthetic order → assert preflight
       rejects.
-- [ ] [HUMAN] P0.16. Game-day: scenario `11_handshake_integration.md` — assert age fields populate; recon-recovery
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0.16. Game-day: scenario `11_handshake_integration.md` — assert age fields populate; recon-recovery
       events fire when oldest_unreconciled_age decreases below threshold.
 
 ## Success criteria
