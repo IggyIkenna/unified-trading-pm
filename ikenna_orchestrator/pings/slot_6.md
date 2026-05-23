@@ -1,3 +1,21 @@
+**[2026-05-23 ~18:50 UTC] slot-6 DeFi MDPS FIFTH FIX + VM RELAUNCH** — ref `mdps_backfill_phase3_2026_05_22.md`
+MDPS-3.3.DeFi-V
+
+Root cause of 181236 VM `empty_confirmed/SOURCE_RETURNED_ZERO`: new structured Curve/Uniswap files write
+`data_type='dex_pool_swaps'` in parquet; `swap_adapter.py` `related_data_types=["swaps"]` filtered them out →
+SOURCE_RETURNED_ZERO for every structured file. Also: `_aggregate_from_15s_polars` missing `group_by=["instrument_id"]`
+→ multi-instrument bundles mixed into one time-bucket set (1440 full-day 1m candles from sparse cross-pool data).
+
+Two fixes shipped as MDPS@d1637cf:
+
+1. `swap_adapter.py`: add `"dex_pool_swaps"` to `related_data_types`; add Curve column handling
+   (`amount_in_usd/amount_in`) in `_calculate_price` and volume calc.
+2. `fast_candle_aggregation.py`: split multi-instrument base candles by `instrument_id` before Polars/pandas
+   aggregation.
+
+QG ✅ (1299 pass). Tarball rebuilt 18:41 UTC. 5 DeFi VMs relaunched: `mdps-defi-{2022..2026}-20260523-184826` RUNNING.
+Verify pending (ETA: 2022/2023 = ~30m, 2024/2025/2026 = several hours).
+
 > **🟢 2026-05-22 WAVE 2 DISPATCH** — codex audit Wave 1 DONE (ff137da7d). Start Wave 2 now.
 
 ## [slot-1-main → slot-6] 2026-05-22 ~05:15 UTC — Wave 2: Phase 3 codex bulk pass → MDPS backfill
