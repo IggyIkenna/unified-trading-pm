@@ -564,7 +564,7 @@ UX).
       `unified-trading-pm/scripts/aws/deploy-phase6-services.sh` — covers ECR image verification, ECS task definition
       registration, Fargate service create/update, App Runner service create/update, and `/health` smoke for all 7
       services. Cannot execute from orchestrator VM (uts-orchestrator-epic-role has no ECS/AppRunner/CodeBuild perms).
-      Blocked ticket: BLK-f7c37780. pm@`<sha>` 2026-05-23.
+      Blocked ticket: BLK-f7c37780. pm@`17dd08c8` 2026-05-23.
 
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
