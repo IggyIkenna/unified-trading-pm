@@ -593,11 +593,13 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 ### Phase 8 — Cross-asset rescan triage review (May 15)
 
-- [ ] [HUMAN] P0. Phase 8.A — Review class-C triage rows at `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`. Operator
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 8.A — Review class-C triage rows at `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`. Operator
       decides per row: (a) flip the disagreement per disk reality, (b) flip per manifest, (c) leave as-is (legitimate
-      dual-shape — currently no known cases).
-- [ ] [HUMAN] P0. Phase 8.B — Sign-off section appended to `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan
-      triage decisions" per its line 67 contract.
+      dual-shape — currently no known cases). **DEFERRED 2026-05-23**: Requires Phase 7 GCS bundled walk to have
+      completed + GCS read access for triage.jsonl review. Operator must run Phase 7 first, then review per-row
+      class-C disagreements. No agent path — needs human judgment per-row.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 8.B — Sign-off section appended to `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan
+      triage decisions" per its line 67 contract. **DEFERRED 2026-05-23**: Gated on Phase 8.A completion.
 - **Done-definition**: every class-C row resolved + sign-off recorded.
 
 ### Phase 9 — Bounce-sweep #2 — full MTDS launch (May 16)
