@@ -501,6 +501,46 @@ regulatory_report_id):
       manifest/honest-absence section if more natural). — Added 1-line global ledger SSOT pointer in UAC Citadel
       Architecture section. unified-trading-pm@8317120eb.
 
+### Phase 11 — Post-audit reconciliation (P0; landed 2026-05-23)
+
+> Discovered 2026-05-23 by post-flip backing-evidence audit (36/38 BACKED + 2/38 PARTIAL). Three drift items closed
+> same-day; one operator gate surfaced. Captured here so the work is visible to the orchestrator + the
+> `Post-Plan-Phase Codex Audit` HARD RULE.
+
+- [x] ✅ [UAC] P0. **Phase 2 enum expansion** — `EventType` 15 → 37 (19 INSTRUCTION + 18 PASSIVE) and `AssetClass` 14 →
+      17 (added STABLE / ETF / NFT). Backwards-compatible (no removals/renames). `MARK_UPDATE` + `EXPIRY` retained per
+      codex SSOT routing (MARK_UPDATE = PricingLedger discriminator; EXPIRY = OTM position-zeroing distinct from
+      SETTLEMENT = ITM cash flow). Ruff + basedpyright green on edited dir. — uac edit landed 2026-05-23 (Agent B work,
+      pending commit).
+- [x] ✅ [DOC] P0. **Codex taxonomy sync** — `codex/02-data/ledger-event-taxonomy.md` updated to reflect 37 EventTypes +
+      17 AssetClasses; Routing Summary expanded with new TreasuryLedger event types (DEPOSIT, WITHDRAWAL_TO_BANK,
+      CUSTODY_MOVE); Changelog footer added with 2026-05-23 expansion entry. Closes the codex-drift gap flagged by Agent
+      B during Phase 11 enum expansion. — codex edit landed 2026-05-23 (Agent C work, pending commit).
+- [x] ✅ [EPIC] P0. **Epic format compliance** — added missing `owner: ikenna` + `asset_group: cross-cutting`
+      frontmatter fields; trimmed epic body to canonical pattern (Owns / Status / Codex SSOTs table / Cross-epic
+      handshakes / Assigned active plans priority blocks / VM assignment notes / Continuous-verification table); removed
+      architecture-summary content that duplicated the codex SSOT docs (epic is read-mostly per `plans/epics/README.md`
+      § "How to use these epics"). — epic edit landed 2026-05-23 (pending commit).
+- [x] ✅ [README] P0. **Epic registry update** — `plans/epics/README.md` table 19 → 20 epics; added row 13 for
+      `global_ledger_pnl_attribution_master` (L2 / `vm-trading-core`); updated `vm-trading-core` row in VM topology
+      table to include this epic; updated 2 header counts. — README edit landed 2026-05-23 (pending commit).
+- [ ] [SCRIPT] P0. **Run `python3 scripts/orchestrator/regen_vm_registry.py --check`** — confirm the new epic + its
+      assigned_vm pass the orchestrator VM registry validation. Expected exit 0.
+- [ ] [SCRIPT] P0. **Run `python3 scripts/plans/regenerate_active_plan_inventory.py`** — confirm 0 orphans + the new
+      epic + its 2 assigned plans are reflected in the master inventory.
+- [ ] [QG] P0. `bash scripts/quality-gates.sh` in `unified-api-contracts/` — confirm enum expansion + LedgerRow are
+      QG-green workspace-wide (Agent B reported targeted ruff + basedpyright green; full QG hung on test-cassette
+      collection in agent environment).
+- [ ] [OPERATOR] P0. **Operator [ack] on Phase 3 decision** — late-arriving-data discipline (recommended Option A:
+      event-sourced append-only with pre-join view layer). **BLOCKED-OPERATOR-DECISION** — migration plan Phase 7 gated
+      until [ack] received.
+- [ ] [OPERATOR] P0. **Operator [ack] on Phase 5 decision** — PricingLedger greeks-computation-home (MTDS vs
+      strategy-service vs new module) + snapshot-vs-streaming cadence. **BLOCKED-OPERATOR-DECISION** — migration plan
+      Phase 8 + 9 gated until [ack] received.
+- [ ] [OPERATOR] P0. **Operator [ack] on Phase 6 decision** — TreasuryLedger split (own table vs cohort of
+      InstructionLedger; current draft = own table per consumer-overlap evidence). **BLOCKED-OPERATOR-DECISION** —
+      migration plan Phase 7 partition routing gated until [ack] received.
+
 ## Full-execution criterion
 
 This plan is **operationally complete** (per `Plans Run To Actual Completion` HARD RULE) when:

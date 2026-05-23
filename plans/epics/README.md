@@ -152,34 +152,35 @@ Epic body MUST organise its referenced active plans into priority-grouped sectio
 The VM main agent reads priority blocks in order — workers pick up P0 items first, P1 only when P0 is empty. Without
 priority blocks, workers cannot self-direct.
 
-## 19 epics in 5 tiers
+## 20 epics in 5 tiers
 
-| #   | Tier | Epic slug                                | Assigned VM            | Owns                                                                                         |
-| --- | ---- | ---------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
-| 1   | L0   | `defi_master`                            | `vm-defi`              | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes                        |
-| 2   | L0   | `cefi_master`                            | `vm-cefi`              | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes                             |
-| 3   | L0   | `tradfi_master`                          | `vm-tradfi`            | TradFi adapters + dated futures + TradFi archetypes                                          |
-| 4   | L0   | `sports_master`                          | `vm-sports`            | Sports adapters + GBP settlement + sports archetypes                                         |
-| 5   | L0   | `predictions_master`                     | `vm-prediction`        | Polymarket + Kalshi + binary-outcome archetypes                                              |
-| 6   | L1   | `instruments_master`                     | `vm-cefi` (co-located) | instruments-service IS reference + universe SSOT                                             |
-| 7   | L1   | `mtds_mdps_master`                       | `vm-ml`                | MTDS adapters + MDPS candles + writegate + raw market data                                   |
-| 8   | L1   | `features_and_ml_master`                 | `vm-ml`                | features-service (8 families) + ml-service (inference + training)                            |
-| 9   | L1   | `manifest_master`                        | `vm-defi` (co-located) | Manifest v8 + honest absence + backfill + evolution discipline                               |
-| 10  | L2   | `strategy_master`                        | `vm-trading-core`      | strategy-service post-consolidation; 53 archetypes; portfolio_allocator; risk; position; pnl |
-| 11  | L2   | `execution_master`                       | `vm-trading-core`      | execution-service handlers + transfers + treasury + custody + flash loan + matching engine   |
-| 12  | L2   | `trading_agent_master`                   | `vm-trading-core`      | trading-agent-service closed-loop allocator                                                  |
-| 13  | L3   | `dart_and_promote_master`                | `vm-operator-ops`      | DART + ManualTradeGateDialog + promote workflow + state machine                              |
-| 14  | L3   | `deployment_and_user_management_master`  | `vm-operator-ops`      | deployment-api + deployment-ui + user-management                                             |
-| 15  | L4   | `infrastructure_master`                  | `vm-cross-cutting`     | VMs + tarballs + per-tab worktrees + cloud + bootstrap                                       |
-| 16  | L4   | `observability_master`                   | `vm-cross-cutting`     | alerting-service + monitoring + telemetry + 3am-auto-recovery                                |
-| 17  | L4   | `batch_live_symmetry_master`             | `vm-cross-cutting`     | Per-service batch=live audit; reconciliation                                                 |
-| 18  | L4   | `client_isolation_and_governance_master` | `vm-cross-cutting`     | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema             |
-| 19  | L5   | `orchestrator_master`                    | `vm-orchestrator`      | agent-orchestrator multi-VM stack + planning VM + dashboard                                  |
+| #   | Tier | Epic slug                                | Assigned VM            | Owns                                                                                                        |
+| --- | ---- | ---------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | L0   | `defi_master`                            | `vm-defi`              | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes                                       |
+| 2   | L0   | `cefi_master`                            | `vm-cefi`              | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes                                            |
+| 3   | L0   | `tradfi_master`                          | `vm-tradfi`            | TradFi adapters + dated futures + TradFi archetypes                                                         |
+| 4   | L0   | `sports_master`                          | `vm-sports`            | Sports adapters + GBP settlement + sports archetypes                                                        |
+| 5   | L0   | `predictions_master`                     | `vm-prediction`        | Polymarket + Kalshi + binary-outcome archetypes                                                             |
+| 6   | L1   | `instruments_master`                     | `vm-cefi` (co-located) | instruments-service IS reference + universe SSOT                                                            |
+| 7   | L1   | `mtds_mdps_master`                       | `vm-ml`                | MTDS adapters + MDPS candles + writegate + raw market data                                                  |
+| 8   | L1   | `features_and_ml_master`                 | `vm-ml`                | features-service (8 families) + ml-service (inference + training)                                           |
+| 9   | L1   | `manifest_master`                        | `vm-defi` (co-located) | Manifest v8 + honest absence + backfill + evolution discipline                                              |
+| 10  | L2   | `strategy_master`                        | `vm-trading-core`      | strategy-service post-consolidation; 53 archetypes; portfolio_allocator; risk; position; pnl                |
+| 11  | L2   | `execution_master`                       | `vm-trading-core`      | execution-service handlers + transfers + treasury + custody + flash loan + matching engine                  |
+| 12  | L2   | `trading_agent_master`                   | `vm-trading-core`      | trading-agent-service closed-loop allocator                                                                 |
+| 13  | L2   | `global_ledger_pnl_attribution_master`   | `vm-trading-core`      | Global ledger SSOT (Instruction/Passive/Treasury/Pricing) + derived PnL/Position/Exposure/Attribution views |
+| 14  | L3   | `dart_and_promote_master`                | `vm-operator-ops`      | DART + ManualTradeGateDialog + promote workflow + state machine                                             |
+| 15  | L3   | `deployment_and_user_management_master`  | `vm-operator-ops`      | deployment-api + deployment-ui + user-management                                                            |
+| 16  | L4   | `infrastructure_master`                  | `vm-cross-cutting`     | VMs + tarballs + per-tab worktrees + cloud + bootstrap                                                      |
+| 17  | L4   | `observability_master`                   | `vm-cross-cutting`     | alerting-service + monitoring + telemetry + 3am-auto-recovery                                               |
+| 18  | L4   | `batch_live_symmetry_master`             | `vm-cross-cutting`     | Per-service batch=live audit; reconciliation                                                                |
+| 19  | L4   | `client_isolation_and_governance_master` | `vm-cross-cutting`     | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema                            |
+| 20  | L5   | `orchestrator_master`                    | `vm-orchestrator`      | agent-orchestrator multi-VM stack + planning VM + dashboard                                                 |
 
 **Cutover master (NOT an epic)**: `plans/active/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan tracking
-the May-23 live DeFi rollout across all 19 epics. Archives after cutover. Not in `plans/epics/`.
+the May-23 live DeFi rollout across all 20 epics. Archives after cutover. Not in `plans/epics/`.
 
-## VM topology (10 VMs serving 19 epics)
+## VM topology (10 VMs serving 20 epics)
 
 Multiple epics can share a VM if workload is bounded; one epic never spans multiple VMs.
 
@@ -192,7 +193,7 @@ Multiple epics can share a VM if workload is bounded; one epic never spans multi
 | `vm-sports`        | `sports_master`                                                                                                         | Standalone                                        |
 | `vm-prediction`    | `predictions_master`                                                                                                    | Standalone                                        |
 | `vm-ml`            | `mtds_mdps_master`, `features_and_ml_master`                                                                            | Data → features → ML chain co-located             |
-| `vm-trading-core`  | `strategy_master`, `execution_master`, `trading_agent_master`                                                           | Tightly coupled trading machinery                 |
+| `vm-trading-core`  | `strategy_master`, `execution_master`, `trading_agent_master`, `global_ledger_pnl_attribution_master`                   | Tightly coupled trading machinery                 |
 | `vm-operator-ops`  | `dart_and_promote_master`, `deployment_and_user_management_master`                                                      | Operator surfaces                                 |
 | `vm-cross-cutting` | `infrastructure_master`, `observability_master`, `batch_live_symmetry_master`, `client_isolation_and_governance_master` | Workspace-wide audit cadence                      |
 | `vm-orchestrator`  | `orchestrator_master`                                                                                                   | Self-managing                                     |

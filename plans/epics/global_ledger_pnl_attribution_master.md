@@ -7,108 +7,102 @@ status: active
 priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
+owner: ikenna
 created: 2026-05-21
-last_updated: 2026-05-21
+last_updated: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+asset_group: cross-cutting
 related_plans:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
+  - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
 ---
 
 # Global Ledger + PnL Attribution Master
 
 **Owns**: the canonical ledger architecture from which position, exposure, PnL, and PnL-attribution are all derived.
-Four SSOT ledgers (Instruction, Passive, Treasury, Pricing) + four derived materialised views (Position, Exposure, PnL,
-PnLAttribution) + one filtered view (Risk).
+Four SSOT ledgers (Instruction / Passive / Treasury / Pricing) authored by execution-service + strategy-service + MTDS +
+instruments-service; four derived materialised views (Position / Exposure / PnL / PnLAttribution) computed in
+strategy-service `position/` + `risk/` + `pnl/` + `portfolio_allocator/`; one RiskView consumed by alerting-service.
 
-**Why a new epic** (vs absorbing into `execution_master` or `strategy_master`):
+**Status (2026-05-23)**: UAC schemas SHIPPED — `LedgerRow` + 5 enums (`EventOrigin`, `EventType` 37 values, `AssetClass`
+17 values, `Direction`, `OptionRight`) + `CrossClientTransferForbiddenError` validator landed in
+`unified_api_contracts.canonical.crosscutting.ledger/`. Discovery plan 36/38 BACKED + 2/38 PARTIAL (Phase 2 enum
+expansion + Phase 6 TreasuryLedger split — closed by enum expansion + recorded decision; operator [ack] pending).
+Migration plan 0/27 — gated on operator [ack] of discovery Phase 3 / 4 / 5 decisions before implementation starts
+(target window: post-cutover, 2026-06-01).
 
-- The architecture spans **5 services as writers** (execution-service, treasury writers in execution-service, MTDS +
-  instruments-service for PricingLedger, strategy-service as derived-ledger writer) and **many more as readers** (DART,
-  alerting-service, client-reporting-api, strategy-service backtest + live engines).
-- The SSOT lives in UAC (`unified_api_contracts.canonical.crosscutting.ledger/`) which is cross-cutting.
-- The Group F/G MVP from `client_reporting_pnl_attribution_mvp_2026_05_10.md` (archived 2026-05-16) shipped a per-client
-  NAV/PnL surface for the May-23 cutover. This epic generalises that MVP into the SSOT ledger model so every downstream
-  consumer joins one of four canonical surfaces.
+See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
-**Cross-references**:
+## Codex SSOTs
 
-- `execution_master.md` — InstructionLedger + PassiveLedger writers (active path).
-- `strategy_master.md` — `strategy_service/position/`, `strategy_service/pnl/`, `strategy_service/risk/`,
-  `strategy_service/portfolio_allocator/` are the derived-ledger compute home (these modules already exist and shipped
-  via the archived attribution MVP).
-- `mtds_mdps_master.md` — PricingLedger (price + mid + IV + greeks) authoring.
-- `instruments_master.md` — instrument metadata that drives passive-event synthesis (expiry timestamps, funding
-  intervals, rebase schedules, dividend/coupon dates, settlement style).
-- `observability_master.md` — RiskView consumes PassiveLedger liquidation/slashing rows for alerting.
-- `dart_and_promote_master.md` — DART consumes PnL + PnLAttribution.
+| Doc                                                                  | Owns                                                                                                                              |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/04-architecture/global-ledger-architecture.md`                | 4-SSOT-+-4-derived ledger model; universal PnL recipe; ownership table; per-service writer/reader gap status                      |
+| `codex/02-data/ledger-event-taxonomy.md`                             | `EventOrigin` / `EventType` (37) / `AssetClass` (17) / `Direction` / `OptionRight` enum SSOT + routing summary + invariant tables |
+| `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` | Carry-as-theta-family attribution framing; ledger→factor decomposition (delta/gamma/theta/vega/carry/funding/settlement/residual) |
+| `codex/04-architecture/client-funds-isolation.md`                    | Cross-client transfer HARD RULE — `client_id == counterparty_client_id` on every transfer/bridge row                              |
 
-## Architecture summary
+## Cross-epic handshakes
 
-**Event taxonomy** (every row in InstructionLedger or PassiveLedger):
-
-| Origin                 | Event types                                                                                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instruction` (active) | trade, swap, transfer, stake, unstake, supply, withdraw, borrow, repay, bridge, wrap, unwrap, early_exercise, cash_out, deposit, withdrawal_to_bank, custody_move, fx_conversion                                          |
-| `passive` (automatic)  | funding, rebase, interest_accrual, staking_reward, validator_reward, mev_reward, airdrop, dividend, coupon, expiry_settlement, sports_resolution, prediction_resolution, liquidation, slashing, gas_refund, auto_compound |
-
-**Four SSOT ledgers** (append-only, event-sourced):
-
-| Ledger            | Writer                                                         | Cardinality             | Storage notes                                                                             |
-| ----------------- | -------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------- |
-| InstructionLedger | execution-service                                              | ~thousands/day          | Append-only; enrichments arrive as separate rows with `parent_event_id`                   |
-| PassiveLedger     | execution-service synthesiser + on-chain/venue listeners       | ~thousands–millions/day | Synthesisable from instrument metadata + clock for backtest parity                        |
-| TreasuryLedger    | execution-service (operator-tools subset)                      | ~tens/day               | Cohort of InstructionLedger; may be its own table for accounting SLA — discovery decision |
-| PricingLedger     | MTDS (price/mid/IV/greeks) + instruments-service (carry rates) | ~millions/day           | Instrument-agnostic from a write-perspective; client/strategy-agnostic                    |
-
-**Four derived ledgers** (materialised views over the SSOT):
-
-| Ledger               | Definition                                                                                                                                | Owner module                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| PositionLedger       | `Σ delta` per `(client_id, account, asset_canonical_id)` over time                                                                        | `strategy_service/position/`                                         |
-| ExposureLedger       | PositionLedger ⨝ PricingLedger → notional + delta-adj + vega + theta exposure by underlying/venue/client                                  | `strategy_service/risk/core/exposure_aggregator.py`                  |
-| PnLLedger            | Δ(cash + MTM value of positions) per period                                                                                               | `strategy_service/pnl/engine/`                                       |
-| PnLAttributionLedger | Decomposition: delta-PnL + gamma-PnL + theta-PnL + vega-PnL + carry-PnL + funding-PnL + settlement-PnL + fees + slippage + gas + residual | `strategy_service/pnl/engine/breakdown.py` + `reward_attribution.py` |
-
-**One view**: RiskView — filtered slice of PassiveLedger (liquidation, slashing, margin-call, kill-switch-trip)
-augmented with Position + Exposure snapshot at event time.
+| Partner epic                             | Handshake                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `execution_master`                       | InstructionLedger + PassiveLedger writers (`attribution_builder.build_attribution_rows`); emits via writegate path |
+| `strategy_master`                        | Derived-ledger compute (`strategy_service/{position,pnl,risk,portfolio_allocator}/`); PassiveLedger synthesiser    |
+| `mtds_mdps_master`                       | PricingLedger writes (`MARK_UPDATE` rows with mid/bid/ask/IV/greeks); carry-rate emission                          |
+| `instruments_master`                     | Instrument metadata for passive-event synthesis (expiry / funding interval / rebase schedule / `exercise_style`)   |
+| `client_isolation_and_governance_master` | UAC schema governance + cross-client funds isolation HARD RULE validator                                           |
+| `observability_master`                   | RiskView consumes PassiveLedger LIQUIDATION/SLASHING rows for alerting                                             |
+| `dart_and_promote_master`                | DART consumes PnL + PnLAttribution for promote workflow decisions                                                  |
 
 ## Assigned active plans
 
+_2 active plans declare `parent_epic: global_ledger_pnl_attribution_master`. Workers pick up in priority order (P0
+first)._
+
 ### P0 — Discovery + target-state spec
 
-- [`global_ledger_pnl_attribution_discovery_2026_05_21.md`](../active/global_ledger_pnl_attribution_discovery_2026_05_21.md)
-  — current-state audit across 5+ services, UAC schema spec, late-arriving-data discipline, writer/reader gap analysis,
-  VM-prefix additions for net-new runtime artifacts.
+#### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../active/global_ledger_pnl_attribution_discovery_2026_05_21.md)
 
-### P1 — Implementation (sub-plans spawned from discovery)
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **progress**: 36/38 BACKED + 2/38 PARTIAL (enum
+expansion + TreasuryLedger split). UAC schemas + 5 service audits + 3 codex docs + CLAUDE.md pointer shipped. Remaining:
+operator [ack] on Phase 3 (late-arriving-data) + Phase 5 (greeks home) + Phase 6 (TreasuryLedger split).
 
-- [`global_ledger_pnl_attribution_migration_2026_06_01.md`](../active/global_ledger_pnl_attribution_migration_2026_06_01.md)
-  — Phases 7-9: execution-service InstructionLedger writer refactor, strategy-service PassiveLedger synthesiser,
-  DART/client-reporting-api/alerting-service reader refactors. Gated on discovery operator decisions (Phase 3/4/5).
+### P1 — Implementation (gated on P0 operator [ack])
+
+#### [`global_ledger_pnl_attribution_migration_2026_06_01`](../active/global_ledger_pnl_attribution_migration_2026_06_01.md)
+
+**status**: active (stub) · **estimate**: 12 cal AI-days (class: refactor) · **progress**: 0/27. Pre-migration gates: 3
+operator-decision items + 1 IS Gap (`exercise_style` SHIPPED uac@6dcaa89e). Phases 7-9: execution-service
+InstructionLedger writer refactor → strategy-service PassiveLedger synthesiser → DART / client-reporting-api /
+alerting-service reader refactor. Start window: 2026-06-01 (post-cutover backlog cycle).
 
 ### P2 — Continuous-verification + reconciliation
 
-_(none yet — to be defined post-discovery)_
+_(none yet — defined post-migration ship)_
 
 ### P3 — Post-cutover enrichments
 
-_(none yet — to be defined post-discovery)_
+_(none yet — defined post-migration ship)_
 
 ## VM assignment notes
 
-This epic runs on **`vm-trading-core`** alongside `execution_master` and `trading_agent_master`. Net-new runtime
-artifacts emerging from the discovery plan declare their own VM prefixes via `VM_PREFIX_TO_BUCKET` in
-`deployment-service/scripts/vm/vm_zombie_watchdog.py`. Anticipated additions (subject to discovery confirmation):
+Epic runs on **`vm-trading-core`** co-located with `execution_master` + `strategy_master` + `trading_agent_master` (per
+`README.md` § "19 epics in 5 tiers"). Bulk of implementation lands in execution-service + strategy-service code, which
+is the trading-core service trio. UAC schema PRs route through `client_isolation_and_governance_master` review per its
+UAC-schema ownership.
 
-- `ledger-reconcile-` → `SCHEDULED_RECURRING`, nightly venue-vs-ledger reconciliation. May absorb into existing
-  `batch-live-recon-cron-` cohort if the workload fits the same daily window.
-- `passive-listener-` → `LONG_LIVED_LIVE` if on-chain emission listening is dedicated. Discovery decides whether MTDS /
-  execution-service workers absorb this.
-- No new prefixes for derived ledgers — `strategy-paper-*` / `strategy-live-*` / `client-reporting-cutover-*` already
-  exist and are the compute home.
+**Anticipated net-new VM prefixes** (discovery Phase 8 confirmed ABSORB-into-existing for all):
 
-## Continuous-verification path
+- `ledger-reconcile-` → **ABSORB into existing `batch-live-recon-cron-`** (SCHEDULED_RECURRING) for daily
+  venue-vs-ledger reconciliation.
+- `passive-listener-` → **ABSORB into existing `strategy-live-*`** (LONG_LIVED_LIVE) — PassiveLedger synthesiser runs
+  inside `StrategySupervisor` per-client subprocess.
+- Derived ledgers → use existing `strategy-paper-*` / `strategy-live-*` / `client-reporting-cutover-*` cohorts.
+
+No new prefixes added to `VM_PREFIX_TO_BUCKET`.
+
+## Continuous-verification path (post-migration)
 
 | Surface                                              | Verification                      | Cadence      |
 | ---------------------------------------------------- | --------------------------------- | ------------ |
