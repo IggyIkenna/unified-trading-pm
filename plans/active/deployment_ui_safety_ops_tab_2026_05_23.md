@@ -244,3 +244,26 @@ audit trail).
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
 - DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
 
+## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
+
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+
+| Tier | Repo                       | SHA          | What landed                                                                                          |
+| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
+| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
+| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
+| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+
+**Per-plan Tier-5-follow-up-2 items:**
+
+- [x] ✅ Phase 2 P0.11 — typed-confirm-string templates verified IN SYNC between backend (alerting-service@e5c8084 manual_action_endpoint.py) + frontend (unified-trading-system-ui@01e1bb69 safety-ops-layer0-panel.tsx)
+- [x] ✅ Phase 5 P0.13 — Playwright test infrastructure attempted; auth gate fixed via seedPersona admin pattern — unified-trading-system-ui@2b7d6583
+
+**Items still `- [ ]`:**
+
+- [ ] [BLOCKED-PLAYWRIGHT-ROUTE-LOADING] Phase 5 — pw:L2 ✓ evidence: loading-boundary timing fix (waitForLoadState OR longer timeout OR widget useEffect debug)
+- [ ] Phase 2 — backend API proxy routes (/api/safety-ops/*) — Next.js handlers proxying to alerting-service
+- [ ] Phase 3 — deployment-ui mirror via shared component package
+

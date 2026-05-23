@@ -281,3 +281,25 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
 - DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
 
+## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
+
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+
+| Tier | Repo                       | SHA          | What landed                                                                                          |
+| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
+| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
+| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
+| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+
+**Per-plan Tier-5-follow-up-2 items:**
+
+- [x] ✅ Phase 3 — execution-service kill_switch.activate/deactivate emits AgentActionEvent (provenance=AUTOMATIC, ActionType.ENTER_SAFE_MODE, runbook_id=RB-RISK-004) — execution-service@8b786755f
+- [x] ✅ Phase 3 — strategy-service kill_switch_bus_subscriber.on_bus_event emits AgentActionEvent (provenance=AUTOMATIC, ActionType.PAUSE_STRATEGY, scope from KillSwitchEvent fields) — strategy-service@2142a0f5
+
+**Items still `- [ ]`:**
+
+- [ ] Phase 3 — execution-service cancel-orders entry point (no central function found — per-venue handlers; recommend adding cancel-orders central wrapper in a follow-up)
+- [ ] Phase 3 — strategy-service auto-pause/auto-reduce/auto-close-all emit (when response_policy auto-actions fire)
+

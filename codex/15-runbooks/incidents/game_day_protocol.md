@@ -146,3 +146,187 @@ If any assert fails:
 ## Last executed
 
 _never — run pre-cutover_
+
+---
+
+## Bash-runnable game-day kit (operator-facing)
+
+> **⚠️ STAGING-INFRA-REQUIRED**: this section needs the live staging stack to
+> be running (alerting-service + execution-service + strategy-service +
+> recovery-audit-signoff agent + dev:mock UI dev server on 3100). A
+> single-host session WITHOUT staging infrastructure cannot complete the
+> end-to-end gate — it can only run the unit + Playwright legs.
+>
+> Operator runs each block from a fresh tmux pane while watching:
+> - DART Safety Ops tab (`/safety-ops` after admin auth)
+> - PagerDuty mobile app (acks)
+> - Twilio voice call ring on configured number
+> - Tail of `gs://<kill-switch-audit>/incidents/$(date +%Y-%m-%d)/` for envelopes + signoffs
+
+### Pre-flight checklist (operator, 30 min)
+
+```bash
+# 1. Tarball + verify Tier-1-4 + Tier-5 + Tier-5 follow-up shipped
+cd ${WORKSPACE_ROOT}/unified-trading-pm
+git log origin/live-defi-rollout --oneline -20 | grep -E "Tier-1-4|Tier-2 follow-up|Tier-3|Tier-5"
+
+# 2. Confirm secrets in STAGING SM (separate from prod)
+gcloud secrets list --project=central-element-323112 --filter="name:alerting-* OR name:twilio-*" --format="value(name)" | sort
+
+# 3. Confirm recovery-audit-signoff GCE VM running in staging
+gcloud compute instances list --filter="name:recovery-audit-staging-* AND status:RUNNING" --format=table
+
+# 4. UI dev server up on 3100 (if running locally)
+curl -sf http://localhost:3100/safety-ops > /dev/null && echo "UI :3100 OK" || echo "UI :3100 DOWN"
+
+# 5. Open DART Safety Ops in browser + admin-login via seeded persona
+open http://localhost:3100/safety-ops
+```
+
+### Scenario 1 launcher — `01_cefi_venue_circuit_breaker_trip`
+
+```bash
+# Inject synthetic venue outage; observe Layer-0..5 cascade
+cd ${WORKSPACE_ROOT}/e2e-testing
+bash scripts/defi/scenarios/inject_venue_outage.sh \
+    --venue binance \
+    --duration 300 \
+    --staging \
+    --incident-key "game-day-$(date +%Y%m%d-%H%M%S)-scenario-01"
+
+# Real-time observation (open in 2 panes):
+gcloud pubsub subscriptions pull agent-recovery-actions-staging \
+    --project=central-element-323112 --auto-ack --limit=20 \
+    --format=json | jq -r '.[] | "\(.publishTime) \(.message.attributes.action_type) \(.message.attributes.action_status)"'
+
+# Tail incident envelopes
+gcloud storage cat \
+    "gs://kill-switch-audit-staging/incidents/$(date +%Y-%m-%d)/*/envelope.json" \
+    --project=central-element-323112 2>&1 | jq -r '.state'
+
+# Per-assert pass/fail recording (operator types Y/N):
+echo "(1) Layer-0 acts within 60s? (Y/N):"
+read pass_1
+echo "(2) AgentActionEvent rows persisted? (Y/N):"
+read pass_2
+# ... continue through (3)-(7) per Section O.10.d ...
+```
+
+### Scenario 2 launcher — `15_liquidation_proximity_auto_deleverage`
+
+```bash
+cd ${WORKSPACE_ROOT}/e2e-testing
+bash scripts/defi/scenarios/inject_oracle_price_drop.sh \
+    --asset weETH \
+    --pct 0.05 \
+    --staging \
+    --incident-key "game-day-$(date +%Y%m%d-%H%M%S)-scenario-15"
+
+# Observe:
+# - LiquidationRiskPredetector fires SEV0 within 10s
+# - Layer-0 enter_safe_mode runs for carry_staked_basis
+# - Per-strategy close-all dry-run plan generated
+# - LiquidationInvestigationReport 16/16 fields
+# - LLM signoff verdict references the report
+```
+
+### Scenario 3 launcher — `04_defi_oracle_deviation_30sigma` (with provider-outage layered)
+
+```bash
+cd ${WORKSPACE_ROOT}/e2e-testing
+
+# Step A — kill the PagerDuty probe to force fallback_mode
+bash scripts/alerting/simulate_provider_outage.sh --provider pagerduty --duration 300 --staging
+
+# Step B — inject the oracle deviation
+bash scripts/defi/scenarios/inject_oracle_deviation.sh \
+    --magnitude 30sigma \
+    --staging \
+    --incident-key "game-day-$(date +%Y%m%d-%H%M%S)-scenario-04"
+
+# Verify:
+# - provider_health_probe emits ALERTING_PROVIDER_DEGRADED within 60s
+# - router fallback_mode=True
+# - Twilio voice call arrives within 90s
+# - Operator can Audit Ack via DART even with PagerDuty down
+
+# Restore PagerDuty probe after run
+bash scripts/alerting/restore_provider.sh --provider pagerduty --staging
+```
+
+### Acceptance recorder
+
+```bash
+cd ${WORKSPACE_ROOT}/unified-trading-pm
+DATE_TAG="$(date +%Y_%m_%d)"
+RESULT_FILE="plans/audit/results/game_day_${DATE_TAG}.md"
+
+cat > "$RESULT_FILE" <<RESULT_EOF
+---
+title: "Game-Day Acceptance — ${DATE_TAG}"
+type: audit-result
+epic: observability_master
+parent: master_to_live_defi_2026_05_23
+locked_by: live-defi-rollout
+locked_since: ${DATE_TAG//_/-}
+---
+
+# Game-Day Acceptance Result — ${DATE_TAG}
+
+Operator: <name>
+Secondary on-call: <name>
+Start: <UTC>
+End: <UTC>
+
+## Per-scenario × per-assert pass/fail (21/21 = GREEN)
+
+| Scenario | (1) Layer-0 acts | (2) AgentActionEvent | (3) LLM signoff non-DISPUTE | (4) Layer-2/3 cascade | (5) Ack queue countdown | (6) Safety Ops UI | (7) HUMAN_AUDIT_ACKED → CLOSED |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 01_cefi_venue_circuit_breaker_trip |   |   |   |   |   |   |   |
+| 15_liquidation_proximity_auto_deleverage |   |   |   |   |   |   |   |
+| 04_defi_oracle_deviation_30sigma |   |   |   |   |   |   |   |
+
+**Total: __ / 21**. Required for GREEN: 21/21.
+
+## Evidence
+
+- GCS incident envelopes: \`gs://kill-switch-audit-staging/incidents/${DATE_TAG//_/-}/<keys>/\`
+- DART screenshots (3 per scenario, total 9): \`<linked here>\`
+- Twilio voice call recordings (if applicable): \`<call SIDs>\`
+- PagerDuty incidents (acked): \`<incident IDs>\`
+
+## Sign-off
+
+| Role | Name | Signature | Date |
+| --- | --- | --- | --- |
+| Operator | | | |
+| Secondary on-call | | | |
+| (If 21/21 GREEN) Cutover-go decision | | | |
+RESULT_EOF
+
+echo "Result template written to: $RESULT_FILE"
+```
+
+### What to do if a scenario fails an assert
+
+1. STOP cutover preparation.
+2. File `plans/active/game_day_<scenario>_failure_<date>.md` (parent_epic: observability_master).
+3. Reproduce the failure on staging via the same script.
+4. Bisect: which Tier-1-4 / Tier-5 piece broke?
+5. Ship fix + re-run the full 3-scenario protocol.
+6. Do NOT promote any strategy to `live_full` until 21/21 GREEN.
+
+### Why a single-agent session can't ship this gate alone
+
+| Requirement                                | Available in single-agent session? |
+| ------------------------------------------ | --- |
+| Staging GCE VMs (alerting-service + execution + strategy + recovery-audit-signoff) running | ❌ — needs operator-driven deploy |
+| Synthetic-injection scripts under `e2e-testing/scripts/defi/scenarios/` | ❌ — need separate authoring + staging-stack wiring (out of observability epic scope) |
+| Twilio account + paid voice minutes (for live calls) | ❌ — operator-only per ping doc item #1 |
+| Operator phone receiving Twilio calls + acking via mobile | ❌ — physical operator |
+| Secondary on-call observing in parallel | ❌ — second human |
+
+Therefore: this gate is **operator-driven**. The agent provides the protocol +
+the bash-runnable kit + the result-recorder template; the operator runs it.
+The agent flips the audit checkbox to GREEN ONLY after the operator posts the
+`plans/audit/results/game_day_<date>.md` result with 21/21 + signs the row.
