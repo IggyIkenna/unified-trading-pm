@@ -84,9 +84,10 @@ SSOT links:
 
 These must complete before Layer 1 repos can be reliably type-checked.
 
-- [ ] [AGENT] P0. **UAC QG green** — `cd unified-api-contracts && bash scripts/quality-gates.sh` exits 0. Fix 1 RUF022
+- [x] [AGENT] P0. **UAC QG green** — `cd unified-api-contracts && bash scripts/quality-gates.sh` exits 0. Fix 1 RUF022
       `__all__` sort violation. Run `ruff check --fix . && basedpyright unified_api_contracts/ run_timeout 120`. Commit
       to `live-defi-rollout`. Evidence: exit 0 + `ruff check .` output clean. [vm: vm-cross-cutting]
+      — unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors)
 
 - [ ] [AGENT] P0. **UTL QG green** — `cd unified-trading-library && bash scripts/quality-gates.sh` exits 0. Fix 3 ruff
       violations (F401 unused-import, I001 unsorted-imports). Run
