@@ -1070,10 +1070,14 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 **Per-asset-group wrapper plan**: `plans/active/instruments_backfill_phase3_2026_05_22.md`
 (`parent_epic: instruments_master`, `assigned_vm: vm-cefi`).
 
-- [ ] [PLAN] P0. **`instruments_backfill_phase3_2026_05_22.md`** — 5 per-ag phases (CeFi/DeFi/TradFi/ Sports/Pred).
+- [x] ✅ [PLAN] P0. **`instruments_backfill_phase3_2026_05_22.md`** — 5 per-ag phases (CeFi/DeFi/TradFi/ Sports/Pred).
       Sports gate: `sports_master` Phase 3+4 rename must ship first. TradFi: 15-min Polygon/Yahoo. CeFi: 15-min CCXT.
       Predictions: 15-min market-discovery. Cloud Scheduler driver. Phase 3 entry: `instruments_master` Phase A-E
       preflight GREEN first.
+      **[SUBSTANTIALLY-COMPLETE 2026-05-23 slot 6]** 22/25 items done. 3 remaining: IS-3.1.Sports-V (VERIFY, needs
+      sports VM), IS-3.1.Pred-Kalshi (BLOCKED-CREDENTIALS — Kalshi API 400), IS-3.1.TradFi-Databento
+      (BLOCKED-CREDENTIALS — Databento SDK 403). Phase 3.1 instruments forward-fill substantially done; blockers
+      are operator-gated credential issues and VM execution.
 
 ### Phase 3.2 — MTDS multi-venue backfill VM relaunch
 
