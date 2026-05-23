@@ -677,7 +677,9 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4 of
         the new rotation-runbook.md with explicit "excluded" list + rationale.
 
-- [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18)
+- [x] ✅ [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18)
+      5.B.1 Polymarket ✅ + 5.B.3 Manifold KILLED + 5.B.4 adapters ✅. 5.B.2 Kalshi BLOCKED-CREDENTIALS (operator
+      needs to provision `kalshi-api-key` + `kalshi-private-key-pem` in SM). PM@slot2 2026-05-23.
   - [x] **5.B.1** — Polymarket API key provisioned. **DONE**: SM secret `polymarket-api-key` EXISTS in vault (created
         2026-03-02, v1 enabled, `gcloud secrets describe polymarket-api-key` confirmed). Added to `_TRADE_KEY_PATTERNS`
         2026-05-09. Secret value is live.
