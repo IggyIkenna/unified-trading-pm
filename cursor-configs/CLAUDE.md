@@ -399,10 +399,10 @@ review-blocking.** Audit docs land in `plans/audit/results/<slug>_YYYY_MM_DD.md`
 topology + audit→plan→epic flow + lifecycle).
 
 **`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
-`assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. Run
-`python3 scripts/orchestrator/regen_vm_registry.py --check` to validate; `--check` must exit 0 before push. Missing or
-unknown `assigned_vm` is review-blocking. SSOT: `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` §
-Phase 1.
+`assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. PM `quality-gates.sh` runs
+`scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is not
+in the registry. Missing or unknown `assigned_vm` is review-blocking. SSOT:
+`plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
 
 ---
 
@@ -682,7 +682,10 @@ Sports + Prediction tracks have parallel coverage targets independent of the DeF
 - Plan reviewer rejects any plan that contains "DEFERRED — no data" / "no API access" / "post-cutover — credentials"
   without an operator [ack] ping link.
 - Inventory regenerator surfaces `BLOCKED-CREDENTIALS` count as a master plan column.
-- QG STEP TBD scans `pyproject.toml` extras + adapter docstrings for un-acked credential asks (future codification).
+- PM `quality-gates.sh` runs `scripts/quality_gates/check_credential_ask_orphans.py` — baselined ratchet that fails on
+  any `BLOCKED-CREDENTIALS` plan line lacking a ping reference (±5-line context: `*orchestrator/pings/slot_N.md` path,
+  `CREDENTIAL APPROVAL REQUEST`, `[ack]`, named SM secret, or `CONFIRMED-STATUS`). Re-baseline only with
+  `--baseline-write` after intentional debt.
 
 Composes with: Findings Triage (this rule is the per-data-source case of "fix now if you have context"); Capture
 Discoveries As Plan Todos (the ping IS the discovery capture); Commit + Push + Flip (the `BLOCKED-CREDENTIALS` status is

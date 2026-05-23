@@ -330,6 +330,41 @@ if [ -f "$CODEX_FRESHNESS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: VM registry validation — assigned_vm frontmatter must reference known vm-id ──
+# SSOT: plans/epics/README.md § "VM topology (10 VMs serving 20 epics)" + orchestrator_vm_registry.yaml.
+# Every epic + master plan declares assigned_vm: <vm-id> in frontmatter; vm-id MUST exist in
+# orchestrator_vm_registry.yaml or dispatch breaks silently. Exit 0/1 from regen_vm_registry.py --check.
+VM_REGISTRY_CHECKER="${REPO_ROOT}/scripts/orchestrator/regen_vm_registry.py"
+if [ -f "$VM_REGISTRY_CHECKER" ]; then
+    echo "Running VM registry validation (assigned_vm frontmatter)..."
+    if python3 "$VM_REGISTRY_CHECKER" --check >/dev/null; then
+        log_success "VM registry validation passed"
+    else
+        echo "❌ VM registry validation — assigned_vm references unknown vm-id" >&2
+        echo "   See plans/epics/README.md § 'VM topology' for the canonical 10-VM registry" >&2
+        echo "   Either fix the plan's assigned_vm OR add the vm to orchestrator_vm_registry.yaml" >&2
+        exit 1
+    fi
+fi
+
+# ── Post-gates: Credential-ask orphan scanner — baselined ratchet ──
+# SSOT: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE).
+# Every BLOCKED-CREDENTIALS plan item MUST cite an operator credential-ask ping (filed in
+# <side>_orchestrator/pings/slot_<N>.md or _agent_pings.md). Orphan items block dispatch silently.
+# Current baseline (2026-05-23): 7 — ratchet down as plans get cleaned up.
+CRED_ASK_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_credential_ask_orphans.py"
+if [ -f "$CRED_ASK_CHECKER" ]; then
+    echo "Running credential-ask orphan scanner (ratchet mode)..."
+    if python3 "$CRED_ASK_CHECKER" >/dev/null; then
+        log_success "Credential-ask orphan scanner passed (at-or-below baseline)"
+    else
+        echo "❌ Credential-ask orphan regression — see CLAUDE.md § 'External Data Is Always Available'" >&2
+        echo "   File the ping + reference it in the plan line, OR" >&2
+        echo "   if intentional debt, re-baseline with: python3 ${CRED_ASK_CHECKER} --baseline-write" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then

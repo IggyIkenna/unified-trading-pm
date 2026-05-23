@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Credential-ask orphan QG check.
+
+Per CLAUDE.md "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE):
+every `BLOCKED-CREDENTIALS` plan item MUST cite an operator credential-ask ping
+(filed in `<side>_orchestrator/pings/slot_<N>.md` or `_agent_pings.md`) so the
+operator can action it. Orphan `BLOCKED-CREDENTIALS` items — items lacking any
+ping reference, `CREDENTIAL APPROVAL REQUEST`, secret-name, or `[ack]` token
+in their immediate context — block dispatch silently.
+
+This check walks `plans/active/*.md`, finds every `BLOCKED-CREDENTIALS` line,
+and reports any without a recognisable ping-reference token in ±5 lines of
+context.
+
+Baseline-ratchet semantics (matching codex_doc_freshness + plan_discipline):
+  --baseline-write writes current orphan count to
+    `scripts/quality_gates/credential_ask_orphans_baseline.yaml`.
+  Default mode fails if orphan count exceeds baseline.
+
+Exit codes:
+  0 — at-or-below baseline (clean)
+  1 — regression (more orphans than baseline)
+  2 — argument / IO error
+
+SSOT: CLAUDE.md § "External Data Is Always Available" (2026-05-14 codification).
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+import yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_BASELINE_PATH = Path(__file__).parent / "credential_ask_orphans_baseline.yaml"
+
+# Active plans where BLOCKED-CREDENTIALS items aggregate / track but don't originate.
+# These reference other plans; their occurrences are NOT orphans by design.
+SUMMARY_PLAN_NAMES = {
+    "master_to_live_defi_2026_05_23.md",
+    "human_work_backlog_2026_05_20.md",
+    "_agent_pings.md",
+}
+
+# Tokens accepted as evidence that an operator ask has been filed.
+PING_PATH_RE = re.compile(r"(ikenna|harsh)_orchestrator/(?:pings/slot_\d+|_agent_pings)\.md")
+ACK_TOKENS = (
+    "CREDENTIAL APPROVAL REQUEST",
+    "[ack]",
+    "[ACK]",
+    "[ack-pending]",
+    "CONFIRMED-STATUS",
+    "DEFERRED-OPERATOR-DECISION",  # operator has explicitly articulated descope
+)
+# Common secret-name patterns (operator has named the SM key needed)
+SECRET_NAME_RE = re.compile(r"\b[a-z][a-z0-9-]+-(api-key|api-secret|secret-key|private-key|passphrase|pem)\b")
+
+BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
+
+CONTEXT_LINES = 5
+
+
+def _has_ask_evidence(lines: list[str], lineno: int) -> bool:
+    """Check ±CONTEXT_LINES around lineno for any ask-evidence token."""
+    start = max(0, lineno - CONTEXT_LINES)
+    end = min(len(lines), lineno + CONTEXT_LINES + 1)
+    blob = "\n".join(lines[start:end])
+    if PING_PATH_RE.search(blob):
+        return True
+    if SECRET_NAME_RE.search(blob):
+        return True
+    return any(tok in blob for tok in ACK_TOKENS)
+
+
+def _scan_plan(path: Path) -> list[tuple[int, str]]:
+    """Return [(lineno, line_text), ...] for orphan BLOCKED-CREDENTIALS lines."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    orphans: list[tuple[int, str]] = []
+    for i, line in enumerate(lines):
+        if not BLOCKED_RE.search(line):
+            continue
+        if _has_ask_evidence(lines, i):
+            continue
+        orphans.append((i + 1, line.strip()))
+    return orphans
+
+
+def _scan_workspace() -> dict[str, list[tuple[int, str]]]:
+    """Return {plan_rel_path: [orphan_tuples, ...]}."""
+    active_dir = REPO_ROOT / "plans" / "active"
+    results: dict[str, list[tuple[int, str]]] = {}
+    for p in sorted(active_dir.glob("*.md")):
+        if p.name in SUMMARY_PLAN_NAMES:
+            continue
+        orphans = _scan_plan(p)
+        if orphans:
+            results[str(p.relative_to(REPO_ROOT))] = orphans
+    return results
+
+
+def _load_baseline(path: Path) -> int:
+    if not path.is_file():
+        return 0
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return int(data.get("orphan_count", 0))
+
+
+def _write_baseline(path: Path, count: int) -> None:
+    path.write_text(
+        yaml.dump({"orphan_count": count}, default_flow_style=False, sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--baseline-path",
+        type=Path,
+        default=DEFAULT_BASELINE_PATH,
+        help="Path to baseline YAML (default: scripts/quality_gates/credential_ask_orphans_baseline.yaml)",
+    )
+    parser.add_argument(
+        "--baseline-write",
+        action="store_true",
+        help="Write current orphan count to baseline path (use after intentional debt)",
+    )
+    parser.add_argument(
+        "--show-orphans",
+        action="store_true",
+        help="Print every orphan line (default: just the count)",
+    )
+    args = parser.parse_args()
+
+    results = _scan_workspace()
+    total_orphans = sum(len(v) for v in results.values())
+
+    if args.baseline_write:
+        _write_baseline(args.baseline_path, total_orphans)
+        print(f"Wrote baseline: {total_orphans} orphan BLOCKED-CREDENTIALS lines across {len(results)} plans")
+        return 0
+
+    baseline = _load_baseline(args.baseline_path)
+
+    if args.show_orphans or total_orphans > baseline:
+        for plan, items in results.items():
+            print(f"\n  {plan}")
+            for lineno, text in items:
+                snippet = text[:120] + ("..." if len(text) > 120 else "")
+                print(f"    L{lineno}: {snippet}")
+
+    if total_orphans > baseline:
+        print(
+            f"\nERROR: {total_orphans} orphan BLOCKED-CREDENTIALS lines (baseline {baseline}). "
+            f"Each must cite a ping (e.g. ikenna_orchestrator/pings/slot_N.md) or filed CREDENTIAL APPROVAL REQUEST.",
+            file=sys.stderr,
+        )
+        print(
+            "  Either: (a) file the ping + reference it in the plan line, or "
+            "(b) if intentional debt, re-baseline with --baseline-write.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"OK — {total_orphans} orphan BLOCKED-CREDENTIALS (at-or-below baseline {baseline})")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
