@@ -59,8 +59,10 @@ monitor all use `blob.name` or `getattr(b, "name", "")`).
   `deployment-service@88c53ad` did NOT trigger — suggests either the watchdog isn't deployed in these VM tarballs OR a
   separate hang occurs in the fallback path that the watchdog can't detect (e.g. heartbeat daemon dies but process holds
   CPU).
-- **Blocks May-23 backfill gate**: `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` Phase 5 +
-  `aws_migration_defi_first_2026_05_07.md` Phases 5+6 are all gated on GCP CeFi backfill 100% complete.
+- **Blocks AWS smoke + ECS deployment**: AWS Phase 5 smoke + Phase 6 ECS Fargate deploy (both tracked in
+  `plans/epics/infrastructure_master.md` § P3 — the source plans `aws_cloud_toggle_and_backfill_parity_2026_05_22.md`
+  and `aws_migration_defi_first_2026_05_07.md` were archived 2026-05-23; deferred work migrated to epic) are gated on
+  GCP CeFi backfill 100% complete.
 
 ## Recommended decision
 
