@@ -108,7 +108,7 @@ directly**.
       Needs re-engineering the TUI scrape for 2.1.145, OR dropping it for manual/backend-driven usage. Not auth-related.
 - [x] ✅ [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
       these verified findings (the CLAUDE_CONFIG_DIR + onboarding-seed recipe; that the env token is `-p`-only WITHOUT
-      the seed). The existing doc predates the 2.1.145 findings. — PM@(codex-update) slot-7 2026-05-23.
+      the seed). The existing doc predates the 2.1.145 findings. — PM@5ef456095 slot-7 2026-05-23.
 
 ---
 
