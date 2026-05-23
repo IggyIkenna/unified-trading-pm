@@ -604,7 +604,11 @@ def propose_parent_epic(plan_path: Path) -> Proposal:
             confidence = "high"
         else:
             proposed = top_slug
-            reasoning = f"SUPERSEDED reroute overridden by content: top_score={top_score}, default={default_target}({scores.get(default_target, 0)})"
+            reasoning = (
+                f"SUPERSEDED reroute overridden by content:"
+                f" top_score={top_score},"
+                f" default={default_target}({scores.get(default_target, 0)})"
+            )
             confidence = "medium"
     elif current == "strategy_and_dart_master_SUPERSEDED_2026_05_21":
         # Strategy vs DART split — pick whichever scored higher

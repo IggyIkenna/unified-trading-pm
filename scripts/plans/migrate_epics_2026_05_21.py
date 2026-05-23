@@ -208,7 +208,10 @@ STUBS: list[CreateStub] = [
         tier="L2",
         assigned_vm="vm-trading-core",
         asset_group="cross-cutting",
-        owns="execution-service: handlers + transfers + treasury coordinator + custody integration + flash loan + matching engine",
+        owns=(
+            "execution-service: handlers + transfers + treasury coordinator"
+            " + custody integration + flash loan + matching engine"
+        ),
     ),
     CreateStub(
         slug="deployment_and_user_management_master",
@@ -244,7 +247,9 @@ STUBS: list[CreateStub] = [
         tier="L2",
         assigned_vm="vm-trading-core",
         asset_group="cross-cutting",
-        owns="strategy-service post-consolidation (engine + portfolio_allocator + risk + position + pnl); 53 archetypes",
+        owns=(
+            "strategy-service post-consolidation (engine + portfolio_allocator + risk + position + pnl); 53 archetypes"
+        ),
         derived_from="strategy_and_dart_master_SUPERSEDED_2026_05_21 (split)",
     ),
     CreateStub(
@@ -261,8 +266,13 @@ STUBS: list[CreateStub] = [
         tier="L1",
         assigned_vm="vm-defi",
         asset_group="cross-cutting",
-        owns="manifest schema v8 + honest absence + backfill + evolution discipline (consolidates manifest_evolution + manifest_migration)",
-        derived_from="manifest_evolution_SUPERSEDED_2026_05_21 + manifest_migration_SUPERSEDED_2026_05_21 (consolidate)",
+        owns=(
+            "manifest schema v8 + honest absence + backfill + evolution discipline"
+            " (consolidates manifest_evolution + manifest_migration)"
+        ),
+        derived_from=(
+            "manifest_evolution_SUPERSEDED_2026_05_21 + manifest_migration_SUPERSEDED_2026_05_21 (consolidate)"
+        ),
     ),
     # EXTEND output (operator carries cross_cutting_may_23 scope + adds client/jurisdiction/share-class)
     CreateStub(
@@ -270,7 +280,11 @@ STUBS: list[CreateStub] = [
         tier="L4",
         assigned_vm="vm-cross-cutting",
         asset_group="cross-cutting",
-        owns="per-client subprocess isolation + cross-client funds isolation HARD RULE + jurisdiction restrictions + share-class enum reconciliation + UAC schema evolution + hardcoded-value cleanup",
+        owns=(
+            "per-client subprocess isolation + cross-client funds isolation HARD RULE"
+            " + jurisdiction restrictions + share-class enum reconciliation"
+            " + UAC schema evolution + hardcoded-value cleanup"
+        ),
         derived_from="cross_cutting_may_23_SUPERSEDED_2026_05_21 (extend)",
     ),
 ]

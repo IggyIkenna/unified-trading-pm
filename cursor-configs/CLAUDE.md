@@ -159,6 +159,16 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
 `gs://` f-string. `deployment-service/configs/cloud-providers.yaml` is canonical. QG STEP 5.69 enforces. SSOT:
 `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`.
 
+### UI changes — playwright gate (HARD RULE — codified 2026-05-23)
+
+Any todo touching `unified-trading-system-ui`, `deployment-ui`, or `user-management-ui` MUST NOT be ticked `- [x] ✅`
+without: (1) tag `[UI]` appended to role tag; (2) **`pw:L2 ✓`** — `npx playwright test --project=chromium tests/smoke/`
+exits 0; (3) **regression guard cited** — spec path in `tests/e2e/`, `tests/playbooks/`, `tests/widgets/`, or
+`tests/smoke/` written/updated to catch reverting the change. Evidence format:
+`— repo@sha | pw:L2 ✓ | regression: tests/path/spec.ts`. Reviewer rejects ticks without `pw:` + `regression:` evidence.
+Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-capable slot verifies. SSOT:
+`plans/PLAN_FORMAT.md` § 9 + `codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement".
+
 ### Other key rules
 
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in

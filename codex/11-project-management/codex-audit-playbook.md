@@ -34,7 +34,8 @@ Priority: P0 = agent assumption violated; P1 = next-agent confusion; P2 = cleanu
 
 ```markdown
 > **[DELTA YYYY-MM-DD]** **Current state:** [what's shipped to live] **Planned delta:** [what active plan `<slug>` is >
-> delivering] **Target architecture:** [final destination]
+>
+> > delivering] **Target architecture:** [final destination]
 ```
 
 ## Phase 0 — Structural scan (automated)

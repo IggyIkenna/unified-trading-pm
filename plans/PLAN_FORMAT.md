@@ -175,6 +175,11 @@ shows filled vs hollow circles correctly.
 **Format:** `- [x]` or `- [ ]` (space inside brackets for pending) followed by the role tag `[SCRIPT]`, `[AGENT]`,
 `[HUMAN]`, or `[HUMAN+AGENT]`, then the rest of the description.
 
+**`[UI]` modifier (MANDATORY for UI todos — codified 2026-05-23):** Any todo that creates, modifies, or validates
+behaviour in a UI repo (`unified-trading-system-ui`, `deployment-ui`, `user-management-ui`) MUST append `[UI]` to the
+role tag — e.g. `[AGENT][UI]`, `[HUMAN][UI]`. This modifier triggers the playwright verification gate (§ 9 below).
+Reviewer rejects ✅ ticks on `[UI]`-tagged todos that lack `pw:` evidence.
+
 **Why:** Cursor reads the checkbox from the content; `status:` in YAML alone does not render filled circles. Without
 this prefix, done tasks still appear hollow in the UI.
 
@@ -289,6 +294,53 @@ A "Handoff exception" that doesn't name a real plan in `plans/active/` or `plans
 **Hard-stops** (the only legitimate operator-pauses): wallet private keys + custody endpoint approvals, live-trading
 kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree. Everything
 else: agent has ADC admin on GCP `central-element-323112` + AWS `427895769566` and runs to completion.
+
+### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
+
+Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
+conditions are met and **evidenced in the tick line**:
+
+**Condition 1 — Playwright route smoke passes (pw:L2 ✓)**
+
+```bash
+cd <ui-repo> && npx playwright test --project=chromium tests/smoke/
+# Must exit 0 — zero console errors, every route loads, auth redirects correct
+```
+
+For fleet VM workers where a dev server cannot run: todo stays `- [ ] [BLOCKED-PLAYWRIGHT]` until a slot with UI access
+verifies. Do not fake the tick.
+
+**Condition 2 — Regression guard written or updated**
+
+A spec file in one of these paths MUST be written (new feature) or updated (modified feature) to catch reverting the
+change:
+
+| Change type                          | Regression guard location                          |
+| ------------------------------------ | -------------------------------------------------- |
+| New widget / widget behaviour change | `tests/widgets/<widget-id>.test.tsx` (L1.5)        |
+| New route or route behaviour change  | `tests/smoke/routes.spec.ts` or new entry (L2)     |
+| New playbook scenario / UX flow      | `tests/playbooks/<flow>.spec.ts` (L3a)             |
+| Strategy execute / trade history UI  | `tests/e2e/strategies/<archetype>.spec.ts` (L3b)  |
+| Visual layout / component snapshot   | `tests/visual/<component>.spec.ts` (L4)            |
+
+The spec file path MUST be cited in the tick evidence. Writing a test that passes vacuously (no assertions) is a
+violation — reviewer reads the diff.
+
+**Evidence format (MANDATORY — reviewer rejects without this):**
+
+```markdown
+- [x] ✅ [AGENT][UI] P1. Add ManualTradeGateDialog approve/deny flow — unified-trading-system-ui@<sha> | pw:L2 ✓ | regression: tests/e2e/manual_trade_gate.spec.ts
+```
+
+Minimal fields: `repo@sha` + `pw:L2 ✓` + `regression: <path>`. Any UI tick missing `pw:` or `regression:` is
+**review-blocking** — same weight as a missing `docs(plans):` flip.
+
+**Scope.** This gate applies regardless of whether the change is a new feature, a bug fix, a refactor, or a copy
+change. If the file touched is in a UI repo: the gate applies.
+
+**Relation to ui-testing-layers.md.** The 8 layers in `codex/06-coding-standards/ui-testing-layers.md` define WHAT
+each layer tests and WHEN it runs. This section defines the plan-level enforcement: a todo cannot be declared done
+until the appropriate layer passes and a regression guard exists. The two documents compose — do not weaken either.
 
 ---
 

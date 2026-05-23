@@ -190,7 +190,10 @@ def _check_file(path: Path) -> list[Finding]:
                     line=call_line,
                     method=method_name,
                     reason_value="<blank>",
-                    message="blank reason string — raises LegacyBlankErrorReasonError at runtime; pass a typed reason from EMPTY_CONFIRMED_REASONS",
+                    message=(
+                        "blank reason string — raises LegacyBlankErrorReasonError at runtime;"
+                        " pass a typed reason from EMPTY_CONFIRMED_REASONS"
+                    ),
                 )
             )
         elif reason_str not in KNOWN_REASONS:
@@ -200,7 +203,10 @@ def _check_file(path: Path) -> list[Finding]:
                     line=call_line,
                     method=method_name,
                     reason_value=reason_str,
-                    message=f"unknown reason {reason_str!r} — not in EMPTY_CONFIRMED_REASONS; add to EmptyConfirmedReason enum in UAC honest_coverage.py",
+                    message=(
+                        f"unknown reason {reason_str!r} — not in EMPTY_CONFIRMED_REASONS;"
+                        " add to EmptyConfirmedReason enum in UAC honest_coverage.py"
+                    ),
                 )
             )
 

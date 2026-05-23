@@ -199,10 +199,12 @@ def render_priority_block(priority: str, plans: list[PlanRef]) -> str:
 def render_assigned_section(epic_slug: str, plans: list[PlanRef]) -> str:
     """Build the full '## Assigned active plans' section with P0/P1/P2/P3 sub-blocks."""
     if not plans:
-        return f"""## Assigned active plans
-
-_(no active plans currently declare `parent_epic: {epic_slug}`. Audit-pool wrapper plans for this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
-"""
+        no_plans_body = (
+            f"_(no active plans currently declare `parent_epic: {epic_slug}`."
+            " Audit-pool wrapper plans for this epic land here as they are"
+            " dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_"
+        )
+        return f"## Assigned active plans\n\n{no_plans_body}\n"
     # Group by priority
     by_priority: dict[str, list[PlanRef]] = defaultdict(list)
     for p in plans:
@@ -211,7 +213,11 @@ _(no active plans currently declare `parent_epic: {epic_slug}`. Audit-pool wrapp
     parts = [
         "## Assigned active plans",
         "",
-        f"_{len(plans)} active plans declare `parent_epic: {epic_slug}` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._",
+        (
+            f"_{len(plans)} active plans declare `parent_epic: {epic_slug}`"
+            " in their frontmatter. Workers pick up in priority order (P0 first)."
+            " Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._"
+        ),
         "",
     ]
     for priority in ["P0", "P1", "P2", "P3"]:

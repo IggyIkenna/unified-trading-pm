@@ -183,7 +183,7 @@ Source of truth for engine registration: `strategy_service/engine/strategies/v2/
 | ◐ paper-shippable  | 2      | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending) |
 | ◯ backtest-only    | 24     | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired    |
 | ☐ stub/placeholder | 31     | Not in factory; Phase 9 expansion names or theoretical          |
-| **Total**          | **57** | Updated 2026-05-22: 4 new stubs added since 2026-05-17 audit   |
+| **Total**          | **57** | Updated 2026-05-22: 4 new stubs added since 2026-05-17 audit    |
 
 ## Solana-specific addendum
 

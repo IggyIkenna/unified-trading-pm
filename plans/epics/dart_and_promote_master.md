@@ -46,6 +46,28 @@ Strategy archetype + portfolio_allocator + risk/position/pnl scope went to [`str
 (L2). Full archaeology:
 [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_dart_master_SUPERSEDED_2026_05_21.md).
 
+## UI Verification Contract (HARD RULE — codified 2026-05-23)
+
+All active plans under this epic that touch any UI repo (`unified-trading-system-ui`, `deployment-ui`,
+`user-management-ui`) MUST pass the playwright verification gate before any todo is ticked ✅ done. Per
+`plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
+
+- **`[UI]` tag**: every UI-touching todo MUST use `[AGENT][UI]` or `[HUMAN][UI]` (not bare `[AGENT]`).
+- **pw:L2 ✓**: `npx playwright test --project=chromium tests/smoke/` exits 0 before tick.
+- **regression guard**: spec written/updated in `tests/e2e/`, `tests/playbooks/`, `tests/widgets/`, or `tests/smoke/`
+  matched to the change layer (widget→L1.5, route→L2, playbook flow→L3a, strategy execute→L3b, visual→L4).
+- **Evidence format**: `— repo@sha | pw:L2 ✓ | regression: tests/path/spec.ts` appended to tick line.
+- **Reviewer rejects** ticks missing `pw:` or `regression:` — same weight as a missing `docs(plans):` flip.
+
+Key DART/promote surfaces and their required layers:
+
+| Surface                       | Layer | Regression guard path                            |
+| ----------------------------- | ----- | ------------------------------------------------ |
+| ManualTradeGateDialog         | L3a   | `tests/playbooks/promote_workflow.spec.ts`       |
+| Promote button → API call     | L3a   | `tests/playbooks/promote_workflow.spec.ts`       |
+| DART cockpit route loads      | L2    | `tests/smoke/routes.spec.ts`                     |
+| Strategy lifecycle state chip | L1.5  | `tests/widgets/strategy-lifecycle-chip.test.tsx` |
+
 ## Codex SSOTs
 
 - [`codex/04-architecture/promote-workflow-architecture.md`](../../codex/04-architecture/promote-workflow-architecture.md)

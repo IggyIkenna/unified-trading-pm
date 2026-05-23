@@ -736,6 +736,43 @@ Phase 5 — staging smoke + release readiness
 
 ---
 
+## Plan-Level Enforcement (codified 2026-05-23)
+
+This document defines **what** each layer tests and **when** it runs. The plan-level enforcement — what must be true
+before a plan todo can be ticked done — lives in `plans/PLAN_FORMAT.md` § 9 (UI Verification Gate). The two documents
+compose:
+
+| Layer(s) that changed | Required regression guard location                  | Plan-tick evidence tag            |
+| --------------------- | --------------------------------------------------- | --------------------------------- |
+| L1.5 (widget)         | `tests/widgets/<widget-id>.test.tsx`                | `regression: tests/widgets/...`   |
+| L2 (route smoke)      | `tests/smoke/routes.spec.ts` or `redirects.spec.ts` | `regression: tests/smoke/...`     |
+| L3a (playbook)        | `tests/playbooks/<flow>.spec.ts`                    | `regression: tests/playbooks/...` |
+| L3b (trader workflow) | `tests/e2e/strategies/<archetype>.spec.ts`          | `regression: tests/e2e/...`       |
+| L4 (visual/a11y)      | `tests/visual/<component>.spec.ts`                  | `regression: tests/visual/...`    |
+
+**The mandatory ✅ tick evidence format:**
+
+```markdown
+- [x] ✅ [AGENT][UI] P1. <description> — <repo>@<sha> | pw:L2 ✓ | regression: <spec-path>
+```
+
+**`pw:L2 ✓`** means `npx playwright test --project=chromium tests/smoke/` exited 0 in the agent's local environment. If
+the agent cannot run a dev server, the todo stays `- [ ] [BLOCKED-PLAYWRIGHT]` until a slot with UI access verifies.
+
+Any plan todo for a UI repo that is ticked `✅` without `pw:` + `regression:` evidence is **review-blocking**. Agents
+and reviewers MUST enforce this — it is equivalent in weight to the `docs(plans):` flip rule.
+
+**Quick cross-check checklist before ticking any UI todo done:**
+
+1. `- [ ]` My change is in `unified-trading-system-ui/`, `deployment-ui/`, or `user-management-ui/`? → Must add `[UI]`
+   to role tag.
+2. `- [ ]` Did I run `npx playwright test --project=chromium tests/smoke/` and it exited 0? → Append `pw:L2 ✓`.
+3. `- [ ]` Did I write or update a spec that would catch reverting my change? → Append
+   `regression: tests/<layer>/<spec>.ts`.
+4. `- [ ]` Is the spec path real and the assertions non-vacuous? → Reviewer will read the diff.
+
+---
+
 ## References
 
 - **Backend SSOT (mirror target):** [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)

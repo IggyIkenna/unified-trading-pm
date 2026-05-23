@@ -389,8 +389,8 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 - [x] ✅ **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template + `check_strategy_instructions()` +
       `build_instructions_location()` all use the unified bucket. Pre-existing write=unified vs read=per-AG mismatch
       resolved at the yaml level. — deployment-service@aa51965 + execution-service@0948346e
-- [x] ✅ **[CODE] P1.** 4d. (AUDIT-03 F-37b residual — folded here 2026-05-22) The carry manifest writers still hand-build
-      the catalogue bucket name: `catalogue_bucket = f"strategy-store-{cfg.project_id}"` at
+- [x] ✅ **[CODE] P1.** 4d. (AUDIT-03 F-37b residual — folded here 2026-05-22) The carry manifest writers still
+      hand-build the catalogue bucket name: `catalogue_bucket = f"strategy-store-{cfg.project_id}"` at
       `hedge_ratio_writer.py:136` + `decision_context_writer.py:149`, bypassing the
       `resolve_bucket_name(kind="strategy-store")` that the SAME files already use on L92 for the data bucket. Replace
       both with `resolve_bucket_name(...)`. NOTE: the `gs://{bucket}/...` display strings in `gcs_storage_service.py` +
