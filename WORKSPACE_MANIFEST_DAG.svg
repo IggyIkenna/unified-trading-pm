@@ -291,9 +291,9 @@
   <circle cx="914" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="858" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="934" y="1247" width="167" height="38" class="svc" />
-  <rect x="934" y="1247" width="4" height="38" fill="#84cc16" rx="2" />
+  <rect x="934" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1017" y="1265" text-anchor="middle" class="label">trading-agent-service</text>
-  <circle cx="1091" cy="1255" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
+  <circle cx="1091" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1017" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L9: Operational services + API gateways (3 repos) -->
   <rect x="40" y="1319" width="2320" height="107" class="level-bg" />
