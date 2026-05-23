@@ -347,7 +347,6 @@ mev_policy_id: mainnet-swap-standard-v3 # Reference to artifact-versioned policy
 | MEV Blocker             | Active            | Available as fallback / alternative                |
 | Manifold                | Opt-in            | Use when backrun revenue share valuable            |
 | Jito Bundle (Solana)    | Phase 5A buildout | New Solana MEV protection mode                     |
-| Bloxroute               | **REMOVED**       | Per CLAUDE.md; do not re-introduce                 |
 | Eden                    | Not active        | Consider if Flashbots congested                    |
 
 ## Operational Run-Book

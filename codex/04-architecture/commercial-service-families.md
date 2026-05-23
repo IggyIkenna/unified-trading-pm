@@ -118,7 +118,7 @@ persona-under-demo between paired Base and Full tiers, so they can click through
 - Mounted in `components/shell/lifecycle-nav.tsx` before the org-display button, so it's always visible in the nav.
 - Consults a `TOGGLE_MAP` to find the paired persona for the current user:
   - `desmond-dart-full` ↔ `desmond-signals-in`
-  - `elysium-defi-full` ↔ `elysium-defi`
+  - `{defi-client-slug}-defi-full` ↔ `{defi-client-slug}-defi`
 - On click, calls `loginByEmail(pairedPersonaId, "")` — `DemoAuthProvider` accepts persona IDs directly in its
   `loginByEmail` signature for this flow (password param ignored when credential matches a known persona id).
 - Tier styling: emerald for the Full tier, amber for the Base / Signals-In tier. Visible tier label rendered next to the
@@ -131,7 +131,7 @@ persona-under-demo between paired Base and Full tiers, so they can click through
 {client-slug}-signals-in      (the base / entry tier)
 ```
 
-For DeFi-first shapes (Elysium):
+For DeFi-first shapes (DeFi-allocator client):
 
 ```
 {client-slug}-defi-full       (upgrade preview)
