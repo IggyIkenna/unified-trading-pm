@@ -1,3 +1,65 @@
+## [slot-2] 2026-05-23 — Reconciler vectorized + CeFi gate status + DeFi VMs
+
+[2026-05-23 ~21:00 UTC] slot-2 status report.
+
+### Reconciler run5 killed (~20:40 UTC)
+
+Run5 (`--asset-group cefi`, PID 64493) had 15.25M candidates — per-row Python loop at ~60ms/row = ~254h estimate. Root
+cause: `read_instruments_catalog_bounds` does 3 full pandas column scans per row × 15.25M rows = 45M+ column scans
+total. SIGTERM sent; 0 processes remaining confirmed.
+
+### Reconciler vectorized — IS@3cc140eb
+
+Rewrote the classification loop for cefi/defi:
+
+- `_build_catalog_lookup_maps()`: iterates catalog once (~50k rows), builds 3 flat hash maps (by instrument_key /
+  VENUE||raw_symbol / VENUE||base_asset). O(1) per-row lookup instead of 3 full DataFrame scans.
+- `_vectorized_classify_cefi_defi()`: `pd.Series.map()` + string comparisons on all candidates at once (venue_launch →
+  chain_genesis → catalog_bounds → attempted_failed fallback).
+- `--date-start / --date-end` args: filter candidates by date range before classification. Enables multi-VM sharding
+  (e.g. 6 VMs × 1 year each = parallel execution).
+- `--fast` on by default; `--no-fast` forces per-row fallback (parity check).
+- **Estimated speedup**: ~10,000x. 15.25M CeFi rows: ~30-60s total vs 254h previously.
+- Pre-existing QG lint failures (orchestrator.py/validation_utils.py) not introduced by this change.
+
+### Multi-VM launcher pattern (after operator rebuilds tarballs)
+
+8 VMs in parallel, each with `--date-start <year>-01-01 --date-end <year+1>-01-01`:
+
+```bash
+for year in 2018 2019 2020 2021 2022 2023 2024 2025; do
+  VM_NAME="recon-cefi-${year}-$(date +%s)" MANIFEST_PER_VM_SHARDS=true \
+  python scripts/reconcile_legacy_blank_to_typed_reason.py \
+    --asset-group cefi --apply-flips --max-flips-per-run 2000000 \
+    --date-start ${year}-01-01 --date-end $((year+1))-01-01
+done
+```
+
+Each VM runs ~1.9M rows × ~10ms vectorized = ~19s. 8 VMs in parallel → ~1 hour total (network/upload overhead
+dominates). Operator: rebuild tarball first to pick up IS@3cc140eb.
+
+### CeFi backfill gate — BLOCKED-OPERATOR
+
+Slot-3 cleaned up (2026-05-23 ~20:15 UTC):
+
+- 17 in-flight CeFi VMs deleted; MTDS revert (ed0ab31c) + BlobMetadata fix (9c91a176) + bait guard (e032b186) + CME
+  mbp_10 (325beaa7) + cleanup script (623ce2c8) all on LDR.
+- 960,447 bait sentinels flipped; source shard quarantined.
+
+Awaiting operator: `bash deployment-service/scripts/vm/create-code-tarballs.sh` then relaunch CeFi backfill waves. Gate
+unblocked after operator action.
+
+### DeFi VMs (195633 batch)
+
+`mdps-defi-2024-20260523-195633`: RUNNING
+`mdps-defi-2025-20260523-195633`: RUNNING
+(All other batches TERMINATED)
+
+Plan refs: `plans/epics/mtds_mdps_master.md` (MTDS-3.2.A-V verify + bait cleanup)
+`plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md`
+
+---
+
 ## [slot-2] 2026-05-22 — predictions_master L618 DONE: IS MARKET_LIFECYCLE writer + tarball rebuilt
 
 [2026-05-22 UTC] slot-2 DONE — **predictions_master Phase 3 L618 (MARKET_LIFECYCLE writer) shipped.**
