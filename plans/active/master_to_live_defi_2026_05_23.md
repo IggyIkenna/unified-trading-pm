@@ -794,16 +794,16 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
       BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A sports adapters
       at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule E2E run
       when sports_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
-      for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
+      for all DEFI work — 46 open items as of 2026-05-23). Operator to schedule when defi_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
       BLOCKED-ON `tradfi_master`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0; `DATABENTO_API_KEY`
-      presence is the human-side credential gate. _(folded from consolidated_operational_validation_2026_04_15)_
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
-      `predictions_master` (canonical*question_group migration in flight). *(folded from
-      consolidated*operational_validation_2026_04_15)*
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
-      preceding per-cluster e2e tests. _(folded from consolidated_operational_validation_2026_04_15)_
+      credential gate (operator action). _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
+      `predictions_master` (canonical question_group migration in flight as of 2026-05-23). Operator to schedule when ready. _(folded from
+      consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
+      preceding per-cluster e2e tests (all deferred-blocked above). _(folded from consolidated_operational_validation_2026_04_15)_
 
 **Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
 
