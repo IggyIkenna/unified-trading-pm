@@ -53,15 +53,13 @@ before Phase 7 grows the v<8 debt.
       heavy per-year stays well under 16GB. Covers 2020-2026, all 9 CeFi venues, ~83 VMs in parallel (MAX_CONCURRENT=15
       staggered). VM_FORCE=false (skips already-captured dates via preflight). Launch timestamp: **LAUNCHED
       2026-05-22**. 2026-05-22 slot 5.
-- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — `market-data-tick-cefi-prd` partition count ≥ flat bucket; 0 attempted_failed;
-      4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch. **BLOCKED-IN-FLIGHT
-      (2026-05-23 slot-2)**: 12 CeFi VMs from `20260522-140739` still RUNNING (binance-futures-2024-light,
-      binance-spot-2023-heavy/2024-heavy, coinbase-spot-2020-heavy/2021-heavy/2023-heavy, deribit-2024-heavy/2025-heavy,
-      okx-spot-2023-heavy/2024-heavy, okx-swap-2021-heavy/2024-light) + 2 new deribit VMs from `20260523-120101`. Cannot
-      copy partial shards to PRD until ALL VMs complete. Script
-      `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` ready; 1000 data files already copied (safe,
-      immutable), shard copy aborted before partial shards landed. Re-run after all VMs terminate. Then verify + flip
-      this checkbox.
+- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
+      flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
+      attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
+      **BLOCKED-IN-FLIGHT (2026-05-23 slot-2)**: 10 CeFi VMs from `20260522-140739` + 2 deribit from `20260523-120101`
+      still RUNNING. Verify once ALL VMs terminate. **flat→prd copy NOT needed** — `_resolve_upstream_bucket` in
+      `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket template. The copy script
+      `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 
