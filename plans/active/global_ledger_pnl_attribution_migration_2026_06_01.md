@@ -58,7 +58,8 @@ Codex SSOTs:
 - [ ] Phase 4 decision: TreasuryLedger split (BLOCKED-OPERATOR-DECISION).
 - [ ] Phase 5 decision: PricingLedger row spec (greeks computation home — operator decision on MTDS vs
       strategy-service).
-- [ ] IS Gap 1: `exercise_style` field added to `InstrumentRecord` (American option code path blocked until then).
+- [x] ✅ IS Gap 1: `exercise_style` field added to `InstrumentRecord` — uac@6dcaa89e (American option code path
+      unblocked).
 
 ---
 
