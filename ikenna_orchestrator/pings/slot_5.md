@@ -1,4 +1,44 @@
-> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~16:00 UTC).**
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~17:10 UTC).**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~17:10 UTC — DeFi NaN OHLC schema fix + sports/DeFi re-relaunch
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+### DeFi SCHEMA_VALIDATION_FAILED root cause FIXED (MDPS@83f371c)
+
+151348 DeFi VMs (2024+2025) were producing candles but ALL uploads were rejected:
+`SCHEMA_VALIDATION_FAILED: column 'open' has 33949 NaN/null values — NOT NULLABLE for dex_swaps`
+
+Root cause: `swap_adapter.py` called `_fill_empty_candles(fill_method="nan")` which pads the full 1440-slot grid. DEX
+swaps are sparse — most windows have no trades → NaN OHLC → schema enforcer rejects.
+
+Fix: added `valid_mask = ~np.isnan(result["open"])` filter; only intervals with actual swap activity are returned
+(sparse candle contract). 4 unit tests updated to assert sparse output (2 candles from 20 swaps across 2 hours, not full
+24-slot grid). MDPS@83f371c + MDPS@9775e22 (uv.lock). QG ✅ (1359 passed).
+
+### Tarball rebuilt + VMs relaunched
+
+- Tarball rebuilt 17:02 UTC with MDPS@9775e22 (includes NaN fix + sports fix + UAC@28117482)
+- DeFi 151348 (2024+2025) terminated; new DeFi `181236` batch (2022-2026) RUNNING with NaN fix
+- Sports 155733 batch accidentally terminated during context-compaction recovery; re-launched as `170621` batch with
+  MDPS@9775e22 (full fix stack). RUNNING: 2020-2025 (2026 self-terminated).
+
+### Current VM fleet (~17:10 UTC)
+
+- **Sports**: 6 VMs `170621` RUNNING (2020-2025). Full fix stack: NaN filter + related_data_types + UAC
+- **DeFi**: 5 VMs `181236` RUNNING (2022-2026). NaN fix confirmed in tarball
+- **TradFi**: 7 VMs `125440+125628` RUNNING (e2-highmem-8, ~66h/VM)
+- **Prediction**: 2 VMs `124620` RUNNING, writing candles ✅
+- **CeFi**: BLOCKED on MTDS (some cefi-\* VMs still RUNNING)
+
+### Remaining active work for slot-5
+
+0 open coding items in mdps_backfill_phase3 — all verify items DEFERRED-OPERATOR-DECISION per batch defer. Slot-5 is
+monitoring only until operator unblocks or VM completions trigger verify gates.
+
+— slot-5 / ikenna / 2026-05-23
+
+---
 
 ## [slot-5 → slot-1-main] 2026-05-23 ~16:00 UTC — UAC odds_horizon_bucket registry fix + 3rd sports re-launch
 
