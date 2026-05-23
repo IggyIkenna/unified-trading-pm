@@ -1,6 +1,6 @@
 ---
 scope: [engineer, ml-engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-23
 ---
 
 # ML experiment lifecycle
@@ -94,11 +94,42 @@ Batch backtests load by `job_id` via the ML manifest the same way live inference
 fallback. A job_id either has a manifest row + an artifact at the canonical URI, or it does not exist as far as the
 system is concerned.
 
+## ML manifest job_id vs data manifest job_id
+
+The same `job_id` field appears in two different manifests, tracking different things. Confusing them is a common error.
+
+**ML manifest `job_id`** — model artifact primary key:
+- Identifies a **fitted model artifact** and its lifecycle state (training → validated → champion → retired).
+- Format: `<model_family>__<training_period>__<git_sha>__<seed>`
+- Written by ml-training-service when a training run completes.
+- Read by ml-inference-service + strategy-service to load the champion model.
+- **Current reality**: JSON index at `model_registry/manifest.json` (UTL `ModelRegistry.MANIFEST_PATH`). The parquet
+  `ml_manifest.parquet` schema in this doc is design intent (per ML-6 LIFT 2026-05-12). Operator decision pending on
+  whether to build the parquet artefact or document around the JSON-index reality.
+
+**Data manifest `job_id`** — shard atom key for experiment outputs:
+- Column in `availability_manifest.parquet` (v7 schema, shipped UTL@`ed658e9b`).
+- Identifies **which experiment run produced each data shard** (features rows, ML output rows).
+- Shard atoms by service: `(model_family, training_period, job_id)` for ML training;
+  `(strategy_id, job_id)` for strategy backtests; `(strategy_id, instruction_type, job_id)` for execution backtests.
+- Re-running identical configs = new `job_id` = full audit trail of every experiment version.
+- Consumed by deployment-api coverage calculations + downstream data-status UI.
+
+**Relationship**: when ml-training-service runs, it writes to **both** manifests with the same `job_id`:
+1. ML manifest entry — model artifact URI, hyperparameters, lifecycle state, git_sha.
+2. Data manifest rows — shard-level tracking of features/predictions written by this run.
+
+The two manifests serve different consumers: ML manifest → inference/strategy model selection; data manifest →
+deployment-api/downstream data availability + coverage rollups. They must not be merged — the ML manifest tracks
+*what model exists and its quality state*; the data manifest tracks *what data that job produced and its capture
+status*. See `../02-data/availability-manifest-and-data-status.md` § "Capture-status 4-state taxonomy" for the
+data manifest's capture_status semantics (separate from ML lifecycle states).
+
 ## Cross-references
 
 - Data lineage (data manifest companion):
   [`../02-data/data-lineage-MTDS-features-ml.md`](../02-data/data-lineage-MTDS-features-ml.md)
-- Availability manifest schema:
+- Availability manifest schema + 4-state taxonomy:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)

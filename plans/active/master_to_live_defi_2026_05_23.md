@@ -4,7 +4,7 @@ created: 2026-05-06
 last_updated: 2026-05-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-assigned_vm: planning-vm
+assigned_vm: vm-0
 name: master-to-live-defi-2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -111,53 +111,89 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-23 15:17 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-21 18:56 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
-| Plan                                                                                                                                        | Owner                                      | Class     | Checkboxes | % done       | Cal left | Deadline |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | --------- | ---------- | ------------ | -------- | -------- |
-| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md)                             | cefi_master                                | infra     | 79/129     | 61%          | 62.8     | —        |
-| [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                         | dart_and_promote_master                    | infra     | 0/64       | 0%           | 20.0     | —        |
-| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                                     | defi_master                                | design    | 64/87      | 74%          | 17.1     | —        |
-| [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                 | defi_master                                | brand-new | 23/63      | 37%          | 15.2     | —        |
-| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master       | refactor  | 1/27       | 4%           | 11.6     | —        |
-| [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                           | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 34/74      | 46%          | 8.6      | —        |
-| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                   | master                                     | design    | 0/30       | 0%           | 8.4      | —        |
-| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                   | master                                     | brand-new | 0/15       | 0%           | 8.0      | —        |
-| [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                 | master                                     | brand-new | 0/5        | 0%           | 8.0      | —        |
-| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                       | cefi_master                                | design    | 188/251    | 75%          | 6.0      | —        |
-| [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md)                                 | batch_live_symmetry_master                 | brand-new | 0/7        | 0%           | 5.0      | —        |
-| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                     | master                                     | design    | 0/12       | 0%           | 4.8      | —        |
-| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                                 | master                                     | design    | 0/11       | 0%           | 4.8      | —        |
-| [`independent_fallback_twilio_voice_2026_05_23`](./independent_fallback_twilio_voice_2026_05_23.md)                                         | master                                     | infra     | 0/14       | 0%           | 4.8      | —        |
-| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)                 | master                                     | research  | 0/12       | 0%           | 4.8      | —        |
-| [`reconciliation_age_tracking_and_escalation_2026_05_23`](./reconciliation_age_tracking_and_escalation_2026_05_23.md)                       | master                                     | refactor  | 0/16       | 0%           | 4.0      | —        |
-| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                     | batch_live_symmetry_master                 | design    | 63/71      | 89%          | 3.4      | —        |
-| [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)                                             | master                                     | infra     | —          | —            | 2.5      | —        |
-| [`config_grid_archetype_extend_2026_05_20`](./config_grid_archetype_extend_2026_05_20.md)                                                   | master                                     | design    | 0/3        | 0%           | 2.4      | —        |
-| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md)                                                           | master                                     | infra     | 0/18       | 0%           | 2.4      | —        |
-| [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md)                                                   | defi_master                                | design    | —          | —            | 2.4      | —        |
-| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                     | README                                     | design    | 62/172     | 36%          | 2.3      | —        |
-| [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md)                                                     | instruments_master                         | design    | 55/66      | 83%          | 2.2      | —        |
-| [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](./phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)           | features_and_ml_master                     | brand-new | 36/41      | 88%          | 1.8      | —        |
-| [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md)                                             | cefi_master                                | research  | 0/5        | 0%           | 1.8      | —        |
-| [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                         | infrastructure_master                      | refactor  | 19/23      | 83%          | 1.7      | —        |
-| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)                               | master                                     | infra     | 0/17       | 0%           | 1.6      | —        |
-| [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                             | dart_and_promote_master                    | design    | 54/80      | 68%          | 1.4      | —        |
-| [`plan_hygiene_sweep_kickoff_2026_05_21`](./plan_hygiene_sweep_kickoff_2026_05_21.md)                                                       | master                                     | infra     | —          | —            | 0.8      | —        |
-| [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md)                                                       | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 39/56      | 70%          | 0.6      | —        |
-| [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](./kalshi_api_migration_to_elections_subdomain_2026_05_20.md)                     | master                                     | refactor  | 6/14       | 43%          | 0.6      | —        |
-| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 23/29      | 79%          | 0.5      | —        |
-| [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                       | master                                     | infra     | —          | —            | 0.4      | —        |
-| [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                      | brand-new | 22/25      | 88%          | 0.4      | —        |
-| [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                                     | infra     | 25/27      | 93%          | 0.3      | —        |
-| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                                     | infra     | 28/31      | 90%          | 0.3      | —        |
-| [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | master                                     | infra     | 22/25      | 88%          | 0.2      | —        |
-| [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                             | master                                     | brand-new | 18/19      | 95%          | 0.2      | —        |
-| [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                                     | infra     | 23/26      | 88%          | 0.1      | —        |
-| [`global_ledger_pnl_attribution_discovery_2026_05_21`](./global_ledger_pnl_attribution_discovery_2026_05_21.md)                             | client_isolation_and_governance_master     | design    | 38/38      | 100%         | 0.0      | —        |
-| **TOTAL** (44 plans)                                                                                                                        | 0 orphans, 0 TBD                           | —         | —          | **49% done** | **271**  | —        |
+| Plan                                                                                                                                                 | Owner                                      | Class     | Checkboxes | % done       | Cal left | Deadline                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | --------- | ---------- | ------------ | -------- | ---------------------------------------- |
+| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md)                                      | cefi_master                                | infra     | 56/124     | 45%          | 88.8     | 2026-05-23                               |
+| [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md)                                                            | cross_cutting_may_23_SUPERSEDED_2026_05_21 | brand-new | —          | —            | 30.0     | —                                        |
+| [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                                    | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 12/73      | 16%          | 26.7     | 2026-06-04                               |
+| [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                                  | master                                     | infra     | 0/64       | 0%           | 20.0     | 2026-07-04                               |
+| [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md)                                                            | master                                     | brand-new | —          | —            | 20.0     | post-cutover (target 2026-06-01)         |
+| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                                              | master                                     | design    | 64/87      | 74%          | 17.1     | 2026-05-23                               |
+| [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                          | master                                     | brand-new | 23/63      | 37%          | 15.2     | —                                        |
+| [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md)                                                                                | master                                     | brand-new | —          | —            | 15.0     | —                                        |
+| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                                | cefi_master                                | design    | 147/247    | 60%          | 9.7      | —                                        |
+| [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md)                                                          | master                                     | brand-new | 0/5        | 0%           | 8.0      | post-2026-05-23                          |
+| [`canary_coverage_qg_enforcement_2026_05_20`](./canary_coverage_qg_enforcement_2026_05_20.md)                                                        | **orphan**                                 | infra     | 0/20       | 0%           | 6.4      | 2026-05-23                               |
+| [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md)                                          | master                                     | brand-new | 0/7        | 0%           | 5.0      | —                                        |
+| [`agent_orchestrator_cloud_run_deployment_2026_05_19`](./agent_orchestrator_cloud_run_deployment_2026_05_19.md)                                      | infrastructure_master                      | infra     | —          | —            | 4.8      | —                                        |
+| [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md)                                                              | master                                     | refactor  | —          | —            | 4.8      | 2026-05-13                               |
+| [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md)                                                | manifest_evolution_SUPERSEDED_2026_05_21   | infra     | —          | —            | 4.8      | 2026-05-15                               |
+| [`hard_schema_enforcement_2026_05_08`](./hard_schema_enforcement_2026_05_08.md)                                                                      | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | —          | —            | 4.8      | —                                        |
+| [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md)                                                              | master                                     | design    | —          | —            | 4.8      | —                                        |
+| [`defi_master`](../epics/defi_master.md)                                                                                                             | README                                     | design    | 78/118     | 66%          | 4.8      | —                                        |
+| [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](./per_client_isolation_and_venue_fanout_topology_2026_05_20.md)                        | master                                     | brand-new | 1/12       | 8%           | 4.6      | 2026-05-23                               |
+| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                              | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 61/70      | 87%          | 3.9      | 2026-05-23                               |
+| [`agent_orchestrator_workers_on_vms_2026_05_19`](./agent_orchestrator_workers_on_vms_2026_05_19.md)                                                  | infrastructure_master                      | infra     | 4/8        | 50%          | 3.2      | —                                        |
+| [`trading_agent_service_architecture_unlock_2026_05_22`](./trading_agent_service_architecture_unlock_2026_05_22.md)                                  | cefi_master                                | refactor  | —          | —            | 3.2      | 2026-05-22                               |
+| [`config_grid_archetype_extend_2026_05_20`](./config_grid_archetype_extend_2026_05_20.md)                                                            | master                                     | design    | 0/3        | 0%           | 2.4      | 2026-05-23                               |
+| [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md)                                                            | master                                     | design    | —          | —            | 2.4      | 2026-06-04                               |
+| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                              | README                                     | design    | 60/172     | 35%          | 2.3      | —                                        |
+| [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md)                                                              | instruments_master                         | design    | 55/66      | 83%          | 2.2      | 2026-05-23                               |
+| [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](./phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)                    | master                                     | brand-new | 32/37      | 86%          | 2.0      | 2026-05-23                               |
+| [`agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)                               | infrastructure_master                      | infra     | —          | —            | 2.0      | —                                        |
+| [`hard_schema_phase1_field_flip_migration_2026_05_19`](./hard_schema_phase1_field_flip_migration_2026_05_19.md)                                      | master                                     | refactor  | —          | —            | 2.0      | —                                        |
+| [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md)                                                      | master                                     | research  | 0/5        | 0%           | 1.8      | —                                        |
+| [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                                  | manifest_evolution_SUPERSEDED_2026_05_21   | refactor  | 19/23      | 83%          | 1.7      | —                                        |
+| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)                                        | master                                     | infra     | 0/16       | 0%           | 1.6      | 2026-06-15                               |
+| [`AUDIT_pre_may_8_cleanup_2026_05_13`](../audit/results/AUDIT_pre_may_8_cleanup_2026_05_13.md)                                                       | master                                     | design    | —          | —            | 1.5      | 2026-05-15                               |
+| [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                                      | master                                     | design    | 52/79      | 66%          | 1.4      | 2026-05-23                               |
+| [`agent_reliability_mitigations_2026_05_20`](./agent_reliability_mitigations_2026_05_20.md)                                                          | **orphan**                                 | infra     | —          | —            | 1.2      | 2026-05-22                               |
+| [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md)                                                          | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | —          | —            | 1.2      | 2026-05-23                               |
+| [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](./kalshi_api_migration_to_elections_subdomain_2026_05_20.md)                              | **orphan**                                 | refactor  | 0/17       | 0%           | 1.0      | 2026-05-23                               |
+| [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)                                           | infrastructure_master                      | infra     | —          | —            | 0.8      | —                                        |
+| [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)                         | master                                     | refactor  | —          | —            | 0.8      | —                                        |
+| [`strategy_repo_consolidation_2026_05_19`](./strategy_repo_consolidation_2026_05_19.md)                                                              | master                                     | infra     | 17/18      | 94%          | 0.7      | 2026-05-23                               |
+| [`honest_coverage_formula_consolidation_2026_05_19`](./honest_coverage_formula_consolidation_2026_05_19.md)                                          | manifest_evolution_SUPERSEDED_2026_05_21   | refactor  | 19/26      | 73%          | 0.6      | 2026-05-23                               |
+| [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md)                                                                | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 39/56      | 70%          | 0.6      | 2026-05-23                               |
+| [`agent_orchestrator_dual_deployment_2026_05_19`](./agent_orchestrator_dual_deployment_2026_05_19.md)                                                | **orphan**                                 | design    | 0/7        | 0%           | 0.6      | —                                        |
+| [`strategy_execution_contract_remediation_2026_05_20`](./strategy_execution_contract_remediation_2026_05_20.md)                                      | **orphan**                                 | brand-new | 13/16      | 81%          | 0.6      | —                                        |
+| [`uac_source_capability_metadata_promotion_2026_05_20`](./uac_source_capability_metadata_promotion_2026_05_20.md)                                    | **orphan**                                 | refactor  | 20/26      | 77%          | 0.4      | 2026-05-25                               |
+| [`pm_coordination_ledger_2026_05_13`](../archive/2026_05/pm_coordination_ledger_2026_05_13.md)                                                       | master                                     | design    | —          | —            | 0.3      | —                                        |
+| [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)         | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 7/7        | 100%         | 0.0      | 2026-08-31                               |
+| [`api_football_minimal_flattening_removal_2026_05_07`](../archive/api_football_minimal_flattening_removal_2026_05_07.md)                             | master                                     | refactor  | 16/16      | 100%         | 0.0      | —                                        |
+| [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)                       | cefi_master                                | design    | 47/47      | 100%         | 0.0      | —                                        |
+| [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../archive/2026_05/codex_vs_citadel_infrastructure_audit_2026_05_10.md)                         | master                                     | research  | 33/33      | 100%         | 0.0      | 2026-05-23                               |
+| [`compute_optimization_mock_data_2026_05_13`](../archive/2026_05/compute_optimization_mock_data_2026_05_13.md)                                       | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 20/20      | 100%         | 0.0      | 2026-05-23                               |
+| [`cross_cutting_may_23_deliverables_2026_05_08`](../archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md)                                 | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 30/30      | 100%         | 0.0      | 2026-05-23                               |
+| [`data_status_drilldown_shard_atom_alignment_2026_05_07`](../archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md)                       | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 41/41      | 100%         | 0.0      | —                                        |
+| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | master                                     | design    | 40/40      | 100%         | 0.0      | —                                        |
+| [`defi_catalogue_chain_primitives_2026_05_10`](../archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)                                     | master                                     | design    | 68/68      | 100%         | 0.0      | 2026-05-23                               |
+| [`defi_recursive_borrow_archetypes_2026_05_10`](../archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)                                   | master                                     | design    | 154/154    | 100%         | 0.0      | —                                        |
+| [`deployment_and_qg_strategy_implementation_2026_05_13`](../archive/deployment_and_qg_strategy_implementation_2026_05_13.md)                         | cross_cutting_may_23_SUPERSEDED_2026_05_21 | infra     | 90/90      | 100%         | 0.0      | 2026-05-23                               |
+| [`dex_perp_and_venue_data_expansion_2026_05_12`](../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | master                                     | brand-new | 34/34      | 100%         | 0.0      | 2026-05-23                               |
+| [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)                         | cefi_master                                | design    | 12/12      | 100%         | 0.0      | —                                        |
+| [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md)                                        | manifest_evolution_SUPERSEDED_2026_05_21   | brand-new | 44/44      | 100%         | 0.0      | 2026-05-15                               |
+| [`expected_universe_v2_design_2026_05_08`](../archive/2026_05/expected_universe_v2_design_2026_05_08.md)                                             | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 15/15      | 100%         | 0.0      | —                                        |
+| [`features_service_qg_cleanup_2026_05_11`](../archive/2026_05/features_service_qg_cleanup_2026_05_11.md)                                             | infrastructure_master                      | refactor  | 11/11      | 100%         | 0.0      | —                                        |
+| [`features_tick_observation_audit_2026_05_18`](../archive/2026_05/features_tick_observation_audit_2026_05_18.md)                                     | master                                     | brand-new | 19/19      | 100%         | 0.0      | —                                        |
+| [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)                                   | instruments_master                         | design    | 2/2        | 100%         | 0.0      | 2026-05-23                               |
+| [`manifest_cross_asset_rescan_design_2026_05_08`](../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md)                               | manifest_evolution_SUPERSEDED_2026_05_21   | infra     | 6/6        | 100%         | 0.0      | —                                        |
+| [`mdps_streaming_and_backpressure_2026_05_07`](../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md)                                     | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 7/7        | 100%         | 0.0      | 2026-05-23                               |
+| [`missing_question_docs_disposition_2026_05_10`](../archive/2026_05/missing_question_docs_disposition_2026_05_10.md)                                 | master                                     | design    | 3/3        | 100%         | 0.0      | pre-cutover (P0 — May-23 plans cite ghos |
+| [`ml_repo_consolidation_2026_05_19`](../archive/2026_05/ml_repo_consolidation_2026_05_19.md)                                                         | master                                     | infra     | 17/17      | 100%         | 0.0      | 2026-05-23                               |
+| [`mock_data_pipeline_benchmarking_2026_05_10`](../archive/2026_05/mock_data_pipeline_benchmarking_2026_05_10.md)                                     | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 31/31      | 100%         | 0.0      | 2026-05-23                               |
+| [`mtds_per_instrument_download_api_2026_04_24`](../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md)                                   | cross_cutting_may_23_SUPERSEDED_2026_05_21 | design    | 20/20      | 100%         | 0.0      | —                                        |
+| [`ruff_workspace_cleanup_2026_05_12`](../archive/2026_05/ruff_workspace_cleanup_2026_05_12.md)                                                       | infrastructure_master                      | refactor  | 31/31      | 100%         | 0.0      | —                                        |
+| [`simulation_scenarios_post_cutover_2026_06_01`](../archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md)                                 | master                                     | infra     | 16/16      | 100%         | 0.0      | post-cutover (target 2026-07-15)         |
+| [`simulation_scenarios_topology_price_shocks_2026_05_09`](../archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md)               | master                                     | design    | 74/74      | 100%         | 0.0      | 2026-05-23                               |
+| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)                                       | master                                     | infra     | 17/17      | 100%         | 0.0      | 2026-05-23                               |
+| [`trigger_based_reference_data_2026_04_13`](../archive/2026_05/trigger_based_reference_data_2026_04_13.md)                                           | instruments_master                         | design    | 20/20      | 100%         | 0.0      | —                                        |
+| [`wave3x_residual_ssots_2026_05_08`](./wave3x_residual_ssots_2026_05_08.md)                                                                          | manifest_evolution_SUPERSEDED_2026_05_21   | design    | 23/23      | 100%         | 0.0      | 2026-05-23                               |
+| **TOTAL** (76 plans)                                                                                                                                 | 6 orphans, 0 TBD                           | —         | —          | **68% done** | **338**  | —                                        |
 
 <!-- AUTO-INVENTORY-END -->
 
@@ -772,45 +808,45 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 
 **Pipeline scheduling remaining code** (extends items 21–22 — live-trading scheduler + trigger backend):
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. `ups-p2-run-tag-mtds-calendar`: Wire `--run-tag` into MTDS GCS output path + features-service
+- [ ] [AGENT] P1. `ups-p2-run-tag-mtds-calendar`: Wire `--run-tag` into MTDS GCS output path + features-service
       (calendar family) (PARTIALLY*DONE — CLI flag exists at MTDS `cli/main.py:288`; needs threading into GCS output
       path templates + features-calendar adoption). Not on May-23 critical path. *(folded from
       consolidated*operational_validation_2026_04_15)*
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch
+- [ ] [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch
       (PARTIALLY*DONE — local subprocess works, cloud placeholder). Confirmed at deployment-service
       `deployment_service/sports_trigger_periodic.py` + `sports_trigger_scheduler.py` + `sports_trigger_state.py`;
       cloud-dispatch shim is the named gap. *(folded from consolidated*operational_validation_2026_04_15)*
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
       `cefi_master` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
       deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
       BLOCKED-ON `sports_master`; writegate Tier 2A sports adapters shipped at MDPS@5b52d0b; trigger scheduler shipped
       at deployment-service `sports_trigger_*` (cloud-dispatch placeholder per `ups-p4` above). _(folded from
       consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
       for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
       BLOCKED-ON `tradfi_master`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0; `DATABENTO_API_KEY`
       presence is the human-side credential gate. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
       `predictions_master` (canonical*question_group migration in flight). *(folded from
       consolidated*operational_validation_2026_04_15)*
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
       preceding per-cluster e2e tests. _(folded from consolidated_operational_validation_2026_04_15)_
 
 **Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet without `data_types`
+- [ ] [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet without `data_types`
       column. instruments-service production code grep for `data_types` returns 0 hits; references remain only in legacy
       ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is GCS cleanup of legacy
       parquets that still carry the column — operator-driven backfill rerun. _(folded from
       consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. `rdt-p4-workspace-qg`: Run `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup
+- [ ] [AGENT] P1. `rdt-p4-workspace-qg`: Run `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup
       above to validate the column removal. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. `mtb-p6e-final-qg-sweep`: Full QG sweep across all 6 affected repos. Final QG gate; depends on every
+- [ ] [AGENT] P1. `mtb-p6e-final-qg-sweep`: Full QG sweep across all 6 affected repos. Final QG gate; depends on every
       preceding "qg" item plus the cluster e2e tests being passable on a representative day's data. _(folded from
       consolidated_operational_validation_2026_04_15)_
 
@@ -875,19 +911,18 @@ per-target upgrade path.
         **shipped UAC@069a223 2026-05-14**
 
 - **Item 18 (2-year batch backtest run)**:
-  - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
+  - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
         May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
         [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md))
         against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
         from paper_vs_live_workflow_maturity_2026_05_08)_
-  - [x] ✅ [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy
-        (paper-runnable / paper-shippable / backtest-only / stub) for every archetype in
+  - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
+        / paper-shippable / backtest-only / stub) for every archetype in
         `strategy-service/strategy_service/portfolio_allocator/archetypes.py`. Codified in
         `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` (NEW). _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_ — doc fully populated by slot-5@2026-05-17 (57/57 archetypes);
-        summary corrected 53→57 + status stub→complete + last_verified 2026-05-22 (pm@this)
+        paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 20 (Live testnet replicates prod)**:
   - [x] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`
@@ -1442,11 +1477,11 @@ Today exposes `/api/data-status`, `/api/deployments/{service}/deploy`, `/api/clo
 A new tab/section monitoring **live** trading services. Today deployment-ui is batch-job + data-status console; live
 monitoring not covered.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] `/ops/live-deployments` route in deployment-ui
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Live-services panel — running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Live alert pane consuming alerting-service feed
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Per-service live log tail (deployment-api `/api/vm/events`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Codex SSOT at `codex/05-infrastructure/live-deployment-monitoring.md` (currently missing)
+- [ ] [UI] `/ops/live-deployments` route in deployment-ui
+- [ ] [UI] Live-services panel — running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds
+- [ ] [UI] Live alert pane consuming alerting-service feed
+- [ ] [UI] Per-service live log tail (deployment-api `/api/vm/events`)
+- [ ] [DOC] Codex SSOT at `codex/05-infrastructure/live-deployment-monitoring.md` (currently missing)
 
 ### C · UTS-UI ↔ DART terminal — research, backtest, **manual-trade**
 
@@ -1454,17 +1489,17 @@ Today UTS-UI has strategy-catalogue / strategy-evaluations / strategy-lifecycle-
 strategy-backtest, execution-backtest launch surfaces, and **the DART manual-trade lane** (visualize the DeFi archetype,
 place trades manually through the same backend as automation, monitor before flipping to auto).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DECIDE] research-service repo vs fold into deployment-api (default: fold-in)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests` tabs
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] **DART terminal — DeFi archetype visualization + manual trade entry**
-  - [x] ✅ DEFERRED-OPERATOR-DECISION Render archetype state (positions, funding, LST yields, hedge basis) in real-time
-  - [x] ✅ DEFERRED-OPERATOR-DECISION Manual trade entry → goes through execution-service same path as automation (NOT a side door)
-  - [x] ✅ DEFERRED-OPERATOR-DECISION Operator-monitored window before automation flip
-  - [x] ✅ DEFERRED-OPERATOR-DECISION Automation toggle gated by checklist Group F + G complete
-- [x] ✅ DEFERRED-OPERATOR-DECISION [API] All tabs wired to deployment-api (work-stream A)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Borrow VmDeployments.tsx tracker pattern from deployment-ui
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Codex SSOT at `codex/04-architecture/research-service-and-dart-integration.md`
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Extend `codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` with the DART
+- [ ] [DECIDE] research-service repo vs fold into deployment-api (default: fold-in)
+- [ ] [UI] `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests` tabs
+- [ ] [UI] **DART terminal — DeFi archetype visualization + manual trade entry**
+  - [ ] Render archetype state (positions, funding, LST yields, hedge basis) in real-time
+  - [ ] Manual trade entry → goes through execution-service same path as automation (NOT a side door)
+  - [ ] Operator-monitored window before automation flip
+  - [ ] Automation toggle gated by checklist Group F + G complete
+- [ ] [API] All tabs wired to deployment-api (work-stream A)
+- [ ] [UI] Borrow VmDeployments.tsx tracker pattern from deployment-ui
+- [ ] [DOC] Codex SSOT at `codex/04-architecture/research-service-and-dart-integration.md`
+- [ ] [DOC] Extend `codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` with the DART
       manual-trade lane
 
 ### D · Cloud-agnostic full-parity proof (data + batch + ML + live + monitoring on AWS)
@@ -1474,50 +1509,50 @@ migration is gated by cost.
 
 **D.1 — Data migration to AWS (sized to DeFi only, NOT full corpus)**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Cost analysis: GCS storage + egress for DeFi-relevant data → AWS S3 storage + ingress estimate; report in
+- [ ] [SCRIPT] Cost analysis: GCS storage + egress for DeFi-relevant data → AWS S3 storage + ingress estimate; report in
       `unified-trading-pm/docs/aws-migration-cost-2026-05.md`
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Selective copy of DeFi-relevant manifests + parquet (instruments / MTDS / MDPS / features-onchain) to S3,
+- [ ] [SCRIPT] Selective copy of DeFi-relevant manifests + parquet (instruments / MTDS / MDPS / features-onchain) to S3,
       preserving hive layout. **Skip TradFi / Sports / Prediction data — wasteful re-fetch.**
-- [x] ✅ DEFERRED-OPERATOR-DECISION [API] Update deployment-api data-status endpoints to be cloud-agnostic — read from GCS or S3 based on
+- [ ] [API] Update deployment-api data-status endpoints to be cloud-agnostic — read from GCS or S3 based on
       `CLOUD_PROVIDER`
 
 **D.2 — Batch deployment side proof (AWS)**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] AWS EC2 launcher equivalents alongside `gcloud` launchers — minimum: instruments / MTDS /
+- [ ] [SCRIPT] AWS EC2 launcher equivalents alongside `gcloud` launchers — minimum: instruments / MTDS /
       features-onchain in AWS mode
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Run a backfill on AWS with `--force` for a small DeFi window — proves the deployment-side batch path
+- [ ] [SCRIPT] Run a backfill on AWS with `--force` for a small DeFi window — proves the deployment-side batch path
       works on AWS, not just dataset migration
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Cloud Build dual-provider trigger taking deps tarball + code-from-GitHub (CodeBuild already partial via
+- [ ] [SCRIPT] Cloud Build dual-provider trigger taking deps tarball + code-from-GitHub (CodeBuild already partial via
       `_code_builds_aws.py`)
 
 **D.3 — Backtest + ML on AWS**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Run a strategy backtest example on AWS via deployment-api `/api/strategy/backtest/launch` (work-stream A)
+- [ ] [SCRIPT] Run a strategy backtest example on AWS via deployment-api `/api/strategy/backtest/launch` (work-stream A)
       — proves end-to-end batch surface
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Run an ML training example on AWS via deployment-api `/api/ml/experiment/launch` — proves ML side
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Run an execution backtest example on AWS — proves execution-side batch
+- [ ] [SCRIPT] Run an ML training example on AWS via deployment-api `/api/ml/experiment/launch` — proves ML side
+- [ ] [SCRIPT] Run an execution backtest example on AWS — proves execution-side batch
 
 **D.4 — Live deployment + monitoring on AWS**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] One live archetype instance running on AWS (carry_staked_basis on smaller capital) — proves live trading
+- [ ] [SCRIPT] One live archetype instance running on AWS (carry_staked_basis on smaller capital) — proves live trading
       works on AWS-as-deployment-target
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Live Deployment UI tab (work-stream B) reads from both GCS and S3 event streams, surfaces both live
+- [ ] [UI] Live Deployment UI tab (work-stream B) reads from both GCS and S3 event streams, surfaces both live
       deployments
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Seamless-switch test: pause GCP-live archetype, resume on AWS-live, verify position state preserved via
+- [ ] [SCRIPT] Seamless-switch test: pause GCP-live archetype, resume on AWS-live, verify position state preserved via
       custody / position-balance-monitor
 
 **D.5 — Build lineage tab**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [API] `/api/builds/history` (work-stream A) returns combined GCP + AWS records
-- [x] ✅ DEFERRED-OPERATOR-DECISION [UI] Build-history tab in deployment-ui — branch / commit / image tag / target cloud / deployer / triggered-by
+- [ ] [API] `/api/builds/history` (work-stream A) returns combined GCP + AWS records
+- [ ] [UI] Build-history tab in deployment-ui — branch / commit / image tag / target cloud / deployer / triggered-by
       (tarball vs Claude build vs CI)
 
 **D.6 — Codex updates**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Augment `codex/04-architecture/cloud-agnostic-migration.md` with VM-launcher parity appendix + the
+- [ ] [DOC] Augment `codex/04-architecture/cloud-agnostic-migration.md` with VM-launcher parity appendix + the
       data-migration cost-gate principle
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Codex SSOT at `codex/05-infrastructure/cloud-agnostic-build-lineage.md`
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] Codex SSOT at `codex/04-architecture/seamless-cloud-switch.md` — preserved-state semantics when migrating a
+- [ ] [DOC] Codex SSOT at `codex/05-infrastructure/cloud-agnostic-build-lineage.md`
+- [ ] [DOC] Codex SSOT at `codex/04-architecture/seamless-cloud-switch.md` — preserved-state semantics when migrating a
       live deployment between clouds
 
 ### E · Live-mode services (REVISED post-2026-05-06 audit — 1 new plan, 4 extensions)
@@ -1528,12 +1563,12 @@ gap.
 - [x] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
       `live-defi-rollout`. References checklist Groups F + G. (verified 2026-05-07:
       plans/active/alerting_service_live_rules_2026_05_07.md exists)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
+- [ ] [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
       **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor +
       child-venue attribution already shipped per plan body).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **risk-and-exposure
+- [ ] [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **risk-and-exposure
       intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live closure).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **pnl-attribution
+- [ ] [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **pnl-attribution
       `--operation compute --mode live` todo** alongside the existing batch CLI.
 - [x] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
       items**. **DONE 2026-05-07**: source plan archived; its 11 unchecked todos (incl. batch-vs-live cluster E2E)
@@ -1545,11 +1580,14 @@ gap.
 
 - [x] ✅ [DOC] codex/04-architecture/trading-agent-service-directive-pipeline.md — trading-agent directive pipeline
       SSOT. — PM@147931207
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] `codex/05-infrastructure/live-deployment-monitoring.md` (work-stream B)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] `codex/04-architecture/research-service-and-dart-integration.md` (work-stream C)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] `codex/05-infrastructure/cloud-agnostic-build-lineage.md` (work-stream D)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] `codex/04-architecture/ml-experiment-lifecycle.md` — ML job_id manifest separate from data manifest
-- [x] ✅ DEFERRED-OPERATOR-DECISION [DOC] `codex/04-architecture/live-strategy-config-hot-reload.md` — strategy config hot-reload end-to-end for live
+- [ ] [DOC] `codex/05-infrastructure/live-deployment-monitoring.md` (work-stream B)
+- [ ] [DOC] `codex/04-architecture/research-service-and-dart-integration.md` (work-stream C)
+- [ ] [DOC] `codex/05-infrastructure/cloud-agnostic-build-lineage.md` (work-stream D)
+- [x] [DOC] `codex/04-architecture/ml-experiment-lifecycle.md` — ML job_id manifest separate from data manifest ✅
+  - **Evidence**: PM@<sha> — added § "ML manifest job_id vs data manifest job_id" documenting the two usages (ML manifest
+    PK = fitted model artifact; data manifest job_id = shard atom key for experiment outputs; both written by same training
+    run; separate consumers; JSON-index vs parquet reality per ML-6 LIFT). Updated last_reviewed. 2026-05-23.
+- [ ] [DOC] `codex/04-architecture/live-strategy-config-hot-reload.md` — strategy config hot-reload end-to-end for live
       mode
 - [x] [DOC] CEFFU integration content folded into single custody SSOT
       [`codex/04-architecture/custody-providers.md § 2.4 CeffuCustodyProvider — PLANNED`](../../codex/04-architecture/custody-providers.md).
@@ -1589,14 +1627,14 @@ a Group F item; ownership routes to the named agent/tab.
       already wired (5 hits). `grep "AlertCode" alerting-service/` now returns hits in all 3 rule files. Gates Group F
       item 22 ("Trading guardrails — alerting-service rules cover live data-freshness + P&L deviation + position
       breaches"). Slot 5 / 2026-05-17.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
+- [ ] [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
       tuple-typed required_inputs / (c) namespaced names. Currently deferred. Gates features-service (sports family)
       consumer migration (Phase 2A of ml_and_features_master) which in turn gates the
       `assert_no_lookahead_for_feature_group` helper from silently no-oping on sports calculators. Owner: operator +
       Agent 2 (writegate / consumer-migration). Already filed in
       [`features_and_ml_master`](../epics/features_and_ml_master.md) Phase 1A.3; this todo is the cross-tab visibility
       marker against May-23 critical path.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
+- [ ] [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
       Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the DeFi side per
       `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end. Owner: Agent 4
       (DeFi launch tab covers cross-venue execution). Verify each connector points at the correct testnet endpoint +
@@ -1644,29 +1682,29 @@ self-superseded artefacts.
 
 **Frontmatter backfill (one-shot script):**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (re-derive count at script
+- [ ] [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (re-derive count at script
       time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the surface is now
       `~28 active/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups Tab 8) — most missing
       `last_updated` rows are in `archive/` and `ai/`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive count at script time;
+- [ ] [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive count at script time;
       original 2026-05-06 audit said 142 plans across active+ai+archive)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it (re-derive count at script
+- [ ] [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it (re-derive count at script
       time; original 2026-05-06 audit said 31 plans active-only; verify each is actually mid-flight first; otherwise
       leave unset)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Add YAML frontmatter to 5 plans that have none (`_sports_phantom_fixtures_recovery_handover_2026_05_06`,
+- [ ] [SCRIPT] Add YAML frontmatter to 5 plans that have none (`_sports_phantom_fixtures_recovery_handover_2026_05_06`,
       `dashboard_services_grid_collapse_2026_04_21`, `defi-strategy-ui-verification`, `tiered_help_chatbot_2026_03_22`,
       `universe_ssot_fix_2026_04_20`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Fix the 1 filename↔name mismatch (`path_to_100m_finalization_2026_04_20`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Fix the 2 YAML errors
+- [ ] [SCRIPT] Fix the 1 filename↔name mismatch (`path_to_100m_finalization_2026_04_20`)
+- [ ] [SCRIPT] Fix the 2 YAML errors
 
 **Re-tag children of cluster umbrellas:**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Add `parent: writegate_honest_coverage_endtoend_2026_05_06` to the 4 child plans
+- [ ] [SCRIPT] Add `parent: writegate_honest_coverage_endtoend_2026_05_06` to the 4 child plans
 - [x] [SCRIPT] Add `parent: defi_e2e_pipeline_2026_04_30` to defi_pipeline_extension / leveraged_leg_controller /
       carry_staked_basis where appropriate
       `[AUDIT 2026-05-07: STALE — defi_e2e_pipeline_2026_04_30, defi_pipeline_extension_2026_05_01, leveraged_leg_controller_2026_05_01, carry_staked_basis_structure_axis_2026_05_04 all archived 2026-05-07 Stage 7 consolidation; defi_master is the umbrella. parent: tagging no longer applicable.]`
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery + recon plans
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25` under
+- [ ] [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery + recon plans
+- [ ] [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25` under
       `venue_axis_asset_group_vocabulary_2026_04_25`
 
 ---
@@ -1685,10 +1723,6 @@ Slot 8 4-day cycle (2026-05-12 → 2026-05-15) shipped Phases 0-5 of
   — 11 QG-automation gaps (auto-fail vs warning enforcement; baseline-deletion ratchets). POST_CUTOVER backlog.
 - [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
   — 7 operator-UX deliverables for alerting / on-call surface (post-cutover refinement of the May-23 minimum).
-- [`global_ledger_pnl_attribution_discovery_2026_05_21.md`](./global_ledger_pnl_attribution_discovery_2026_05_21.md) —
-  4-SSOT-ledger + 4-derived-ledger architecture discovery: UAC schema spec
-  (InstructionLedger/PassiveLedger/TreasuryLedger/PricingLedger) + audit across 5 services + late-arriving-data
-  discipline + migration sub-plan stub. `parent_epic: global_ledger_pnl_attribution_master`. 0/38 items, June+ timeline.
 
 **Pre-cutover consumer sweeps + operator gates** (live work in flight):
 
@@ -1845,18 +1879,18 @@ Agent 5):
       `infrastructure_master` is the SSOT umbrella (folds in `shard_granularity_propagation` +
       `data_status_multi_axis` + `deployment_service_build_infrastructure_repair`). Multi-axis correction shipped per
       deployment-service@`456acb9`; 4-state capture_status SSOT codified PM@`28e975b0`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Close TradFi MVP residuals (cluster-validation wiring at `record_captured`). **PARTIAL 2026-05-07** — Tier 2E
+- [ ] Close TradFi MVP residuals (cluster-validation wiring at `record_captured`). **PARTIAL 2026-05-07** — Tier 2E
       tradfi adapters complete (MDPS@`e9520a0`); ES.OPT 11-cluster validation gate wired (MTDS@`260325c`); 35,033 tradfi
       EXPECTED_HOLIDAY/WEEKEND rows landed (PM@`79e47874`). **REMAINING**: market-hours + holiday SSOT integration
       across 12 affected repos (databento.py adapter, ml-training-service data_filters.py + mock_feature_generator.py,
       strategy base class config), 5 mdps-tradfi VMs draining ETA 2026-05-08.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate). **PARTIAL
+- [ ] Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate). **PARTIAL
       2026-05-07** — Pyth Hermes (Solana) + Chainlink EVM multi-chain oracle adapters shipped per `mtds-s3-5` +
       `mtds-s3-6`. **🚨 RISK 1 (HIGH/HIGH)**: Lending-indices silent-zero cascade on AAVE V3 ETHEREUM — VM
       `mtds-lending-indices-20260507-140418` ran + diagnosed 3 bugs (AAVE V3 ETH 0/343 captured / COMPOUND V3
       multi-chain subgraph schema error / instruments-store-defi metadata 404 for early-2022 dates); **MUST FIX BY
       2026-05-12** else carry_staked_basis batch e2e fails Week 2. Owner: Agent 4 / defi_master Fork 1.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Close sports phantom recovery — frees VM-quota for DeFi + AWS work. **PARTIAL 2026-05-07** — Phase 1 + Phase 3
+- [ ] Close sports phantom recovery — frees VM-quota for DeFi + AWS work. **PARTIAL 2026-05-07** — Phase 1 + Phase 3
       pre-req shipped (instruments-service@`9f0e3f9` `dedup_phantom_after_recovery.py`; chain-runner architecture
       @`cbb50fa`/`e900769`/`7ce509e`); 4 sports recovery VMs in flight (af / fs / sfi / us) ETA 2026-05-08; LEAGUES
       daily-dump killed (instruments-service@`93efebf`); ODDS source confirmed footystats (codex doc updated). **POST
@@ -1874,7 +1908,7 @@ Agent 5):
       1 UAC types shipped (UAC@`a70b3f6`). Phase 2+3 routes shipped: deployment-api@cade1e1 (backfill/launch) +
       deployment-api@a038145 (vm events) + deployment-api@f407c54 (ml/strategy/execution launch). All handlers + QG
       complete. (audit-backfilled 2026-05-19)
-- [x] ✅ DEFERRED-OPERATOR-DECISION Decide research-service repo question (work-stream C). **PENDING** — fold into deployment-api default; no decision
+- [ ] Decide research-service repo question (work-stream C). **PENDING** — fold into deployment-api default; no decision
       logged. Owner: operator + Agent 4.
 - [x] AWS migration cost analysis (work-stream D.1) → user signs off scope. **DONE 2026-05-07** — research artefact
       shipped at `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`, then archived 2026-05-08 per
@@ -1882,21 +1916,21 @@ Agent 5):
       snapshot extracted to `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; recommendation
       SUPERSEDED by dual-cloud decision per `aws_migration_defi_first_2026_05_07.md` Phase 0 (≥$40k credit confirmed; no
       service / region / account locks). Phase 2 dual-bucket setup is Agent 4 Day 4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone (parallel — tier 2 ladder).
+- [ ] Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone (parallel — tier 2 ladder).
       **BLOCKED ON VM DRAIN** — sports + tradfi VMs draining 2026-05-08; cefi VMs draining 2026-05-08/09 per cefi_master
       audit. Post-drain: ML smoke + backtest grid actionable for each.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Hyperliquid + Aster perp DEX integration: instrument registry + market-data live (these don't have CEFFU
+- [ ] Hyperliquid + Aster perp DEX integration: instrument registry + market-data live (these don't have CEFFU
       equivalents — direct on-chain). **PARTIAL 2026-05-07** — Lighter zkSync + Pacifica Solana DEX onboarding shipped
       (MTDS@`10aa715` + `51fecd5` + UAC@`e890022` for ohlcv_1m); Hyperliquid + Aster live execution wiring pending.
       Owner: Agent 4 (defi_master Fork 1 hedging-leg).
-- [x] ✅ DEFERRED-OPERATOR-DECISION **Lending-indices silent-zero fix + re-launch** (Day 1 = today, 2026-05-08). **NEW 2026-05-07 deep-audit** — Risk
+- [ ] **Lending-indices silent-zero fix + re-launch** (Day 1 = today, 2026-05-08). **NEW 2026-05-07 deep-audit** — Risk
       1: AAVE V3 ETHEREUM 0/343 captured silently on `mtds-lending-indices-20260507-140418`; root-cause + commit fix +
       re-launch VM. Gates carry_staked_basis batch e2e (Week 2). Owner: Agent 4 (defi_master Fork 1).
-- [x] ✅ DEFERRED-OPERATOR-DECISION **4-service QG sweep** (strategy / execution / R&E / features-onchain; Days 2-5). **NEW 2026-05-07 deep-audit** —
+- [ ] **4-service QG sweep** (strategy / execution / R&E / features-onchain; Days 2-5). **NEW 2026-05-07 deep-audit** —
       Risk 2: 37 unchecked defi_master items + 9 execution-service connectors untested on testnet. Parallelize across 3
       agents Days 2-3; testnet smoke Day 4-5. EOD May 12 gate: all 4 services pass + 9 connectors validated. Owner:
       Agent 4 (DeFi launch tab).
-- [x] ✅ DEFERRED-OPERATOR-DECISION **PBM + R&E + pnl-attr live-mode owner assignment** (Day 3). **NEW 2026-05-07 deep-audit** — Risk 3: defi_master
+- [ ] **PBM + R&E + pnl-attr live-mode owner assignment** (Day 3). **NEW 2026-05-07 deep-audit** — Risk 3: defi_master
       Fork 1 folded `defi_e2e_pipeline` but did NOT explicitly scope "live-mode wiring" as separate todos — they sit as
       free-floating audit findings. Assign owner + add explicit todos in defi_master Fork 1 by 2026-05-10 else slips
       into Week 3 or ships half-baked post-cutover.
@@ -1906,15 +1940,15 @@ Agent 5):
 > **Refreshed 2026-05-07 evening (deep-audit Item 3)** — each Week 2 bullet now has its blocker chain explicit. Items at
 > HIGH risk of slipping into Week 3 are flagged 🚨.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills (Group F item 17).
+- [ ] `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills (Group F item 17).
       **Blockers**: 4-service QG (strategy / execution / R&E / features-onchain — none yet passing), execution-service
       Aave/Uniswap/Lido testnet validation (NOT yet started), vault-share-price + lst-rates MTDS VMs (NOT yet launched).
       Lending-indices silent-zero fix is the gate.
-- [x] ✅ DEFERRED-OPERATOR-DECISION `ARBITRAGE_PRICE_DISPERSION` runs end-to-end in batch — cross-venue funding spread across 6 perp venues.
+- [ ] `ARBITRAGE_PRICE_DISPERSION` runs end-to-end in batch — cross-venue funding spread across 6 perp venues.
       **Blockers**: funding_oi calculator backfill VMs in flight 2026-05-05; cross-venue funding spread feature;
       4-service QG; Hyperliquid + Aster live execution wiring (Lighter + Pacifica shipped, but Hyperliquid + Aster
       pending).
-- [x] ✅ DEFERRED-OPERATOR-DECISION 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨 **VM-shape
+- [ ] 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨 **VM-shape
       sizing**: benchmark report `gs://central-element-323112-benchmark-reports/benchmark_report/` shows c2-standard-8
       within budget for `mtds_read` (~8s P95) + `strategy` (~6.5s P95). `features`/`mdps_compute`/
       `matching_engine`/`ml_inference` stages failed in benchmark (blocked on Phase 3.D per-reader threading). Sized VM:
@@ -1922,33 +1956,33 @@ Agent 5):
       assertion**: `UTL.synthetic.check_budget()` at f942dc54. **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py`
       exists yet — P0 follow-up filed in work-stream F § Deep-audit P0 follow-ups. Owner: Agent 4. Existing
       `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` are tracing/simulation, NOT config-grid sweeps.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT YET validated** —
+- [ ] Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT YET validated** —
       master plan assumes testnet wiring exists; deep audit found 0 testnet branch paths in execution-service. Owner:
       Agent 4 (CeFi side) + Agent 4 (DeFi side). Tenderly fork fixtures shipped DeFi-side per
       `execution-service/tests/integration/conftest.py`; CeFi side fully unvalidated.
   - DeFi: Aave / Uniswap / Lido (carry_staked_basis); Hyperliquid + Aster (ARBITRAGE_PRICE_DISPERSION on-chain leg)
   - CeFi: Bybit perp + Deribit options/perp + Binance perp + OKX perp (the four CeFi venues)
-- [x] ✅ DEFERRED-OPERATOR-DECISION Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated. 🚨 **OWNER UNASSIGNED** —
+- [ ] Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated. 🚨 **OWNER UNASSIGNED** —
       Risk 3 from deep audit. defi_master Fork 1 folded `defi_e2e_pipeline` but live-mode wiring sits as free-floating
       audit findings. PBM Pub/Sub + R&E intent-subscriber + pnl-attribution `--mode live` CLI all pending.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Alerting-service: live rules fired on synthetic violations. **Blocked**: alerting Phase 2 (Agent 1 tab) — consumer
+- [ ] Alerting-service: live rules fired on synthetic violations. **Blocked**: alerting Phase 2 (Agent 1 tab) — consumer
       wiring (`grep AlertCode alerting-service/` returns 0 hits as of 2026-05-07 evening). UAC AlertCode taxonomy
       shipped UAC@`d00326d`; rules engine integration is the gap.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Live Deployment UI tab shipped (work-stream B). **Blockers**: codex SSOT
+- [ ] Live Deployment UI tab shipped (work-stream B). **Blockers**: codex SSOT
       `codex/05-infrastructure/live-deployment-monitoring.md` (still missing), deployment-api `/api/vm/events` endpoint
       (work-stream A Phase 2), deployment-ui `/ops/live-deployments` route. Owner: Harsh Day 4-5 + Agent 4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **AWS data migration completed** (DeFi-only, work-stream D.1) — 🟢 **DEFERRED PAST MAY-23** per operator direction
+- [ ] **AWS data migration completed** (DeFi-only, work-stream D.1) — 🟢 **DEFERRED PAST MAY-23** per operator direction
       2026-05-13. AWS runs AFTER GCP backfills + manifest quality verified (don't double cloud load before data quality
       is green). May-23 ships GCP-only; AWS dual-cloud parity becomes post-cutover stabilisation goal (target
       2026-06-04). See `aws_migration_defi_first_2026_05_07.md` Phase 5 gate on master Gate 4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2). 🟢 **DEFERRED PAST MAY-23** — same
+- [ ] **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2). 🟢 **DEFERRED PAST MAY-23** — same
       operator direction. Post-Gate-4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION **AWS backtest + ML examples** run via deployment-api (work-stream D.3). 🟢 **DEFERRED PAST MAY-23** — same
+- [ ] **AWS backtest + ML examples** run via deployment-api (work-stream D.3). 🟢 **DEFERRED PAST MAY-23** — same
       operator direction. Post-Gate-4.
-- [x] ✅ DEFERRED-OPERATOR-DECISION DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C). **Blocked**:
+- [ ] DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C). **Blocked**:
       research-service repo decision (Week 1 above); UTS-UI `/research/ml-experiments` +
       `/research/strategy-backtests` + `/research/execution-backtests` tabs; work-stream A endpoints.
-- [x] ✅ DEFERRED-OPERATOR-DECISION Treasury: Copper integration validated; CEFFU manual handoff documented. 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** per
+- [ ] Treasury: Copper integration validated; CEFFU manual handoff documented. 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** per
       operator direction 2026-05-13. Copper + CEFFU are the client's institutional onboarding workstreams
       (post-cutover); they do NOT gate May-23. May-23 ships on `CLOUD_KMS_ENCRYPTED` custody (verified shipped:
       execution-service@`d45d24b4` provider + 10 GCP CMKs in `wallets-prod` / `wallets-staging` keyrings, 90d
@@ -1957,15 +1991,15 @@ Agent 5):
 
 ### Week 3 (May 20–23) · cutover (live trading + AWS live deployment)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION Real wallet funded testnet → mainnet
-- [x] ✅ DEFERRED-OPERATOR-DECISION DART manual-trade window: 3 days operator-monitored on `carry_staked_basis`
-- [x] ✅ DEFERRED-OPERATOR-DECISION Automation flip on `carry_staked_basis` → 7-day continuous run begins (extends past May 23 into May 30)
-- [x] ✅ DEFERRED-OPERATOR-DECISION `ARBITRAGE_PRICE_DISPERSION` enters DART manual-trade window (lags carry_staked_basis by ~2 days)
-- [x] ✅ DEFERRED-OPERATOR-DECISION **AWS live archetype** running in parallel — one carry_staked_basis instance on smaller capital deployed to AWS
+- [ ] Real wallet funded testnet → mainnet
+- [ ] DART manual-trade window: 3 days operator-monitored on `carry_staked_basis`
+- [ ] Automation flip on `carry_staked_basis` → 7-day continuous run begins (extends past May 23 into May 30)
+- [ ] `ARBITRAGE_PRICE_DISPERSION` enters DART manual-trade window (lags carry_staked_basis by ~2 days)
+- [ ] **AWS live archetype** running in parallel — one carry_staked_basis instance on smaller capital deployed to AWS
       (work-stream D.4)
-- [x] ✅ DEFERRED-OPERATOR-DECISION **Seamless-switch test** between GCP-live ↔ AWS-live (work-stream D.4)
-- [x] ✅ DEFERRED-OPERATOR-DECISION Build-history tab in deployment-ui shipped (work-stream D.5)
-- [x] ✅ DEFERRED-OPERATOR-DECISION Batch-vs-live reconciliation matches within tolerance per archetype config (Group F item 21)
+- [ ] **Seamless-switch test** between GCP-live ↔ AWS-live (work-stream D.4)
+- [ ] Build-history tab in deployment-ui shipped (work-stream D.5)
+- [ ] Batch-vs-live reconciliation matches within tolerance per archetype config (Group F item 21)
 
 ---
 
@@ -1975,9 +2009,9 @@ Agent 5):
 - [x] Audit companion at `unified-trading-pm/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md` (pointer + drift
       table mirror)
 - [x] Referenced from `CLAUDE.md` so every agent session loads it
-- [x] ✅ DEFERRED-OPERATOR-DECISION Per-service yamls at `codex/10-audit/repos/<service>.yaml` extended with the 7-group / 23-item structure for
+- [ ] Per-service yamls at `codex/10-audit/repos/<service>.yaml` extended with the 7-group / 23-item structure for
       tier-1 services
-- [x] ✅ DEFERRED-OPERATOR-DECISION Update cadence: Tier-1 readiness rollup refreshed by EOD daily; critical-path DAG checked at start of each week
+- [ ] Update cadence: Tier-1 readiness rollup refreshed by EOD daily; critical-path DAG checked at start of each week
 - No duplication: sub-plans in `plans/active/` remain authoritative; this plan only references and orchestrates
 
 ---
@@ -1986,36 +2020,36 @@ Agent 5):
 
 **DeFi live (the headline goal)**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION `carry_staked_basis` cycle on real wallet (testnet → mainnet) via DART manual-trade lane → backend execution →
+- [ ] `carry_staked_basis` cycle on real wallet (testnet → mainnet) via DART manual-trade lane → backend execution →
       automation flip → ≥7-day continuous run; P&L matches batch sim within configured bps tolerance per Group F item 21
-- [x] ✅ DEFERRED-OPERATOR-DECISION `ARBITRAGE_PRICE_DISPERSION` running across ≥3 perp venues with cross-venue funding spread captured
+- [ ] `ARBITRAGE_PRICE_DISPERSION` running across ≥3 perp venues with cross-venue funding spread captured
 
 **Perp venue coverage**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION All 6 venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster — one trade each verified via deployment-UI
+- [ ] All 6 venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster — one trade each verified via deployment-UI
 
 **Observability + guardrails**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION Tail VM event logs from deployment-UI without SSH for 24h on a live forward-poll VM
-- [x] ✅ DEFERRED-OPERATOR-DECISION Live alerting fires on synthetic data-freshness, P&L deviation, and position-breach violations injected via test
+- [ ] Tail VM event logs from deployment-UI without SSH for 24h on a live forward-poll VM
+- [ ] Live alerting fires on synthetic data-freshness, P&L deviation, and position-breach violations injected via test
       fixtures
-- [x] ✅ DEFERRED-OPERATOR-DECISION Kill switch fires on synthetic risk-breach trigger
+- [ ] Kill switch fires on synthetic risk-breach trigger
 
 **Cloud parity (work-stream D)**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION DeFi-relevant data migrated to AWS S3 (manifest + parquet) with same shard layout as GCS
-- [x] ✅ DEFERRED-OPERATOR-DECISION AWS data status query works in deployment-UI and matches GCS truth
-- [x] ✅ DEFERRED-OPERATOR-DECISION AWS batch backfill `--force` produces parquet end-to-end
-- [x] ✅ DEFERRED-OPERATOR-DECISION AWS strategy backtest + ML training + execution backtest examples run via deployment-api
-- [x] ✅ DEFERRED-OPERATOR-DECISION AWS live carry_staked_basis instance running on smaller capital
-- [x] ✅ DEFERRED-OPERATOR-DECISION Seamless-switch (GCP-live → AWS-live → back) preserves position state via custody / position-balance-monitor
+- [ ] DeFi-relevant data migrated to AWS S3 (manifest + parquet) with same shard layout as GCS
+- [ ] AWS data status query works in deployment-UI and matches GCS truth
+- [ ] AWS batch backfill `--force` produces parquet end-to-end
+- [ ] AWS strategy backtest + ML training + execution backtest examples run via deployment-api
+- [ ] AWS live carry_staked_basis instance running on smaller capital
+- [ ] Seamless-switch (GCP-live → AWS-live → back) preserves position state via custody / position-balance-monitor
 
 **Readiness rollup**
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION All Tier-1 services pass 23/23 readiness checklist (or have explicit n/a justified) — verified per
+- [ ] All Tier-1 services pass 23/23 readiness checklist (or have explicit n/a justified) — verified per
       `codex/10-audit/repos/<service>.yaml`
-- [x] ✅ DEFERRED-OPERATOR-DECISION All 9 drift-audit rows resolved (none remaining `⚠`)
-- [x] ✅ DEFERRED-OPERATOR-DECISION `codex/00-SSOT-INDEX.md` updated to reference all new SSOT docs (work-streams D.6 + F)
+- [ ] All 9 drift-audit rows resolved (none remaining `⚠`)
+- [ ] `codex/00-SSOT-INDEX.md` updated to reference all new SSOT docs (work-streams D.6 + F)
 - [x] `CLAUDE.md` cross-references this master plan in a new "Master Plan" section (verified 2026-05-07:
       .claude/CLAUDE.md line 22 has `## Master Plan — Live DeFi Trading by 2026-05-23` section)
 
