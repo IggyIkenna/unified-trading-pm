@@ -599,9 +599,14 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       UI/API services. UI/API logs a warning + emits a `CROSS_CLOUD_QUERY` event if its `CLOUD_PROVIDER` doesn't match
       the data backend's. Wire this into the alerting taxonomy (`alerting_service_live_rules:Phase 1` AlertCode
       addition: `CROSS_CLOUD_EGRESS_DETECTED`).
-- [ ] [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
+- [x] ✅ [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
       egress > $10/day during the May-23 soak (catches accidental cross-cloud reads). Land script under
       `unified-trading-pm/scripts/finops/cross-cloud-egress-watch.sh`.
+      **DONE 2026-05-23** (Slot 7): pm@(next commit) — landed
+      `scripts/finops/cross-cloud-egress-watch.sh`. Queries AWS Cost Explorer (`DataTransfer-Out-Bytes` /
+      `Inter Region`) + GCP BigQuery billing export for N-day window. Computes daily average; alerts if >
+      `ALERT_THRESHOLD_USD` (default $10/day). `--ci` flag exits 1 on breach (for cron/CI integration).
+      Writes JSON report `cost_egress_report_YYYYMMDD.json`. Skips provider gracefully if credentials absent.
 - [ ] [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
       must serve from the same-cloud CDN as the underlying app (CloudFront-fronts-S3 for the AWS path;
       Cloud-CDN-fronts-GCS for GCP path).
