@@ -87,8 +87,16 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       verify pending 2024/2025 VMs reaching their end dates. **NaN SCHEMA FIX (slot-5 2026-05-23 ~17:02 UTC)**: 151348
       VMs (2024+2025) terminated — failing schema validation. Fix: MDPS@83f371c. **SOURCE_PRIORITY FIX (slot-2
       2026-05-23 ~18:10 UTC)**: 170621 VMs (83f371c tarball, missing dex_swaps→swap bridge) terminated. Tarball rebuilt
-      MDPS@b3e0c2a. **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING (have both NaN +
-      SOURCE_PRIORITY fixes). Sports VMs `170621` (2020-2025) also RUNNING with NaN fix.
+      MDPS@b3e0c2a. 181236 VMs TERMINATED with `empty_confirmed/SOURCE_RETURNED_ZERO` for ALL dates — root cause: new
+      structured Curve/Uniswap files use `data_type='dex_pool_swaps'` in parquet, not `'swaps'`; `related_data_types`
+      only matched `'swaps'` so structured files returned 0 rows. Also: Polars `group_by_dynamic` lacked
+      `group_by=["instrument_id"]` — multi-instrument bundles mixed into one time-bucket set → 1440 full-day 1m candles
+      (wrong). **FIFTH FIX (slot-6 2026-05-23 ~18:38 UTC)**: MDPS@d1637cf — (1) added `'dex_pool_swaps'` to
+      `related_data_types` + Curve column handling (`amount_in_usd/amount_in`) in `_calculate_price` and volume calc;
+      (2) `aggregate_from_15s_efficient`: split multi-instrument df by `instrument_id` before Polars/pandas aggregation.
+      QG ✅ (1299 pass, 5 pre-existing test_feature_freshness failures unrelated). Tarball rebuilt 18:41 UTC.
+      **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-184826` RUNNING (run-ts=20260523-184826). Sports VMs
+      `170621` (2020-2025) also RUNNING with NaN fix.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
