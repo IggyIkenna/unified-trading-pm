@@ -56,8 +56,8 @@ GCS partition key for AWS sports buckets: **MUST audit before running migration*
       events emitted: `MIGRATE_SPORTS_HIVE_RUN_STARTED` / `MIGRATE_SPORTS_HIVE_DAY_COMPLETED` /
       `MIGRATE_SPORTS_HIVE_RUN_COMPLETED`. Uses UTL `gcs_copy_object`/`gcs_delete_object`. Supports `--dry-run`. —
       mtds@da09d72c, ruff+basedpyright clean
-- [ ] [SCRIPT] P1. Update `migrate_sports_canonical.py` docstring + source prefix constant from `category=sports/` →
-      `asset_group=sports/` so post-hive-rekey run sees canonical paths.
+- [x] ✅ [SCRIPT] P1. Update `migrate_sports_canonical.py` docstring + source prefix constant from `category=sports/` →
+      `asset_group=sports/` so post-hive-rekey run sees canonical paths. — mtds@224f91da
 
 - [ ] [SCRIPT] P1. Audit AWS sports buckets for `category=sports/` vs `asset_group=sports/` partition key state. Update
       this plan with findings. If AWS has `category=sports/` objects: add AWS path to migration script.
