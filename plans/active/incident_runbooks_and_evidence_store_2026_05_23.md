@@ -222,25 +222,30 @@ kill-switch) + rollback
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
-- [x] ✅ Phase 2 P0.3-P0.4 `alerting_service/gateway/evidence_collector.py` (14-field IncidentEvidence bundle assembler; async fan-out to per-service /evidence/{incident_key} endpoints; defensive — never raises) — alerting-service@e5c8084
-- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks in `codex/15-runbooks/incidents/` (RB-INC-001/002/003 + RB-RECON-001/002/003 + RB-RISK-001/002/003/004 + RB-CONN-001/002/003/004/005 + RB-DEPLOY-001 + RB-INFRA-001/002/003 + RB-ALERT-001/002/003 + README index)
+- [x] ✅ Phase 2 P0.3-P0.4 `alerting_service/gateway/evidence_collector.py` (14-field IncidentEvidence bundle assembler;
+      async fan-out to per-service /evidence/{incident_key} endpoints; defensive — never raises) —
+      alerting-service@e5c8084
+- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks in `codex/15-runbooks/incidents/` (RB-INC-001/002/003 +
+      RB-RECON-001/002/003 + RB-RISK-001/002/003/004 + RB-CONN-001/002/003/004/005 + RB-DEPLOY-001 +
+      RB-INFRA-001/002/003 + RB-ALERT-001/002/003 + README index)
 - [x] ✅ Phase 4 P0.27 — all runbook frontmatter carries owner/cadence/verifier/last_executed per CLAUDE.md HARD RULE
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector calls them; endpoints pending per-service)
-- [ ] Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` (template — extend existing plan-hygiene)
+- [ ] Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` (template —
+      extend existing plan-hygiene)
 - [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped)
 
 **Cross-references**:
@@ -255,22 +260,30 @@ kill-switch) + rollback
 
 ## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
 
-> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py
+> refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright
+> run; game-day operator session".
 
-| Tier | Repo                       | SHA          | What landed                                                                                          |
-| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
-| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
-| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
-| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
-| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+| Tier | Repo                        | SHA         | What landed                                                                                                                          |
+| ---- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 5b   | `alerting-service`          | `06c48c4`   | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch \_deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`         | `8b786755f` | kill_switch.activate/deactivate emit_recovery_action surgical edit                                                                   |
+| 5b   | `strategy-service`          | `2142a0f5`  | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                                                           |
+| 5b   | `unified-trading-system-ui` | `2b7d6583`  | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue)                               |
+| 5b   | `unified-trading-pm`        | (this)      | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips                                      |
 
 **Per-plan Tier-5-follow-up-2 items:**
 
-- [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended with bash-runnable kit + per-scenario one-line invocations + acceptance recorder template + STAGING-INFRA-REQUIRED markers (this commit)
+- [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended with bash-runnable kit + per-scenario one-line invocations +
+      acceptance recorder template + STAGING-INFRA-REQUIRED markers (this commit)
 
 **Items still `- [ ]`:**
 
-- [ ] [STAGING-INFRA-REQUIRED] Phase 5 P0.30 — operator runs 3 scenarios end-to-end on staging stack; 21/21 GREEN gate; result lands at plans/audit/results/game_day_<date>.md
-- [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector ships in alerting-service@e5c8084; endpoints pending per-service)
-
+- [x] ✅ Phase 5 P0.30 (injection scripts) — 3 game-day fault-injection scripts shipped + green in CLOUD_MOCK_MODE
+      (UAC-validated synthetic incident + cascade print + 7-assert checklist):
+      `e2e-testing/scripts/defi/scenarios/inject_venue_outage.sh` (01) / `inject_oracle_price_drop.sh` (15) /
+      `inject_oracle_deviation.sh` (04, DISPUTE→SAFE_MODE). — e2e-testing@b3401e5
+- [ ] [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs the 3 scripts with `--staging` on the staging
+      stack; 21/21 GREEN gate (asserts 2/4/6/7 need live infra); result lands at plans/audit/results/game*day*<date>.md
+- [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector ships in alerting-service@e5c8084;
+      endpoints pending per-service)

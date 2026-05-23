@@ -266,7 +266,10 @@ what the LLM audits and invokes).
       (max thinking, 1M context) in the template. — agent-orchestrator main@10cee2b
 - [ ] Phase 5 P0.12 (launch) — launch recovery-audit agent on long-lived GCE VM — **OPERATOR action** (prod-VM launch;
       model now resolved = claude-opus-4-7)
-- [ ] Phase 5 P0.13-P0.14 synthetic smoke + game-day scenario 02 (protocol doc shipped)
+- [x] ✅ Phase 5 P0.13-P0.14 (scripts) — game-day injection scripts shipped incl the DISPUTE→SAFE_MODE path
+      (`inject_oracle_deviation.sh`, scenario 04) which exercises the recovery-audit DISPUTE verdict end-to-end in mock.
+      — e2e-testing@b3401e5 + alerting-service@39b6650
+- [ ] Phase 5 P0.13-P0.14 (live run) — operator runs the DISPUTE scenario with `--staging` (STAGING-INFRA-REQUIRED)
 
 **Cross-references**:
 

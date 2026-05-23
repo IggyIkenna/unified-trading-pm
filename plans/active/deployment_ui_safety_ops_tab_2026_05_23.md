@@ -189,11 +189,13 @@ audit trail).
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [x] ✅ Phase 1 P0.1-P0.3 — alerting-service `gateway/manual_action_endpoint.py` (`POST /manual-action`) with
-      typed-confirm-string validation + scope dispatch — alerting-service@e5c8084 (router refactor P0.1 pair-review still pending)
-- [x] ✅ Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons + LLM
-      Audit Verdicts feed + Audit-Ack Queue panel — ui@a6f3924c + alerting-service@53fb493 | pw:L2 ✓ (4/4)
+      typed-confirm-string validation + scope dispatch — alerting-service@e5c8084 (router refactor P0.1 pair-review
+      still pending)
+- [x] ✅ Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons +
+      LLM Audit Verdicts feed + Audit-Ack Queue panel — ui@a6f3924c + alerting-service@53fb493 | pw:L2 ✓ (4/4)
 - [ ] Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`)
-- [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) — alerting-service@e5c8084 | in-sync verified
+- [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) — alerting-service@e5c8084 | in-sync
+      verified
 - [ ] Phase 4 P0.12 — unit tests (every action_type × scope combo) — needs alerting-service tests (BLK filed)
 - [ ] Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
 
@@ -246,8 +248,13 @@ audit trail).
       ALERTING_SERVICE_URL unset; dev:mock interceptor short-circuits so pw:L2 stays green. —
       unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
 - [ ] Phase 3 P0.9-P0.10 deployment-ui mirror (shared component package) + auth roles
-- [x] ✅ Phase 5 P0.14 — `SafeModeActiveBanner` client component + Playwright spec `tests/e2e/safety-ops-llm-dispute.spec.ts` (5 tests: banner visible, heading, incident key in body, DISPUTE verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped (node_modules not installed in slot env; pre-existing)
-- [ ] Phase 5 P0.15 — game-day: scenario `01_cefi_venue_circuit_breaker_trip.md` — [HUMAN] operator session required
+- [x] ✅ Phase 5 P0.14 — `SafeModeActiveBanner` client component + Playwright spec
+      `tests/e2e/safety-ops-llm-dispute.spec.ts` (5 tests: banner visible, heading, incident key in body, DISPUTE
+      verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped
+      (node_modules not installed in slot env; pre-existing)
+- [x] ✅ Phase 5 P0.15 (script) — `inject_venue_outage.sh` (scenario 01) shipped + mock-runnable. — e2e-testing@b3401e5
+- [ ] Phase 5 P0.15 (live run) — [HUMAN] operator runs scenario 01 with `--staging` + records 7 asserts
+      (STAGING-INFRA-REQUIRED)
 
 **Cross-references**:
 
