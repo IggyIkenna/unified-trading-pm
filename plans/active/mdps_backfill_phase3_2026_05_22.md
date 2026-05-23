@@ -162,15 +162,17 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       both `write_candle_parquet` and `write_streaming_chunk`. Handles UTC-aware ts_event coercion (int ns/us/ms/s +
       naive dt). trade_count int32→int64 coercion preserved. QG ✅. MDPS@21eb635. Pairs with UAC@5e44eee0. 2026-05-23
       slot-5.
-- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-TarballRebuild** — Rebuild ALL asset-group tarballs with UAC@5e44eee0 +
-      MDPS@21eb635. UAC is CORE_REPO (bundled in every tarball). Command:
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh` (rebuilds all groups).
-- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-VMTerminate** — Terminate ALL running MDPS VMs (on stale tarballs with wrong
-      schema injection): defi-095053 (1 VM), prediction-104518 (2 VMs), prediction-111916 (2 VMs), prediction-120428 (2
-      VMs — the 54958d6-based fix, now superseded), sports-102325 (6 VMs), tradfi-105240 (7 VMs). Verify all TERMINATED.
-- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-Relaunch** — Relaunch MDPS VMs for all asset groups with rebuilt tarballs
-      (UAC@5e44eee0 + MDPS@21eb635). Verify T+10min: RUNNING + manifest consolidator showing captured rows (not
-      attempted_failed).
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.AllGroups-TarballRebuild** — Rebuilt all asset-group tarballs with UAC@6aef01f9 (which
+      contains 5e44eee0 fix) + MDPS@21eb635. `market-data-processing-service-code.manifest.json` in GCS confirmed
+      pointing to 21eb635. `market-data-processing-service-code.tar.gz` latest pointer updated. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.AllGroups-VMTerminate** — Terminated ALL 13 running MDPS VMs (on stale tarballs):
+      defi-095053 (1), sports-102325 (5 running), tradfi-105240 (7). All prediction VMs were already TERMINATED.
+      Verified: `gcloud compute instances list --filter="name:mdps- AND status:RUNNING"` returns empty. 2026-05-23
+      slot-5.
+- [ ] [SCRIPT] P0. **MDPS-3.3.AllGroups-Relaunch** — Relaunching 21 MDPS VMs: 5 DeFi (2022-2026) + 7 TradFi (2020-2026,
+      e2-highmem-8 MAX_WORKERS=2) + 7 Sports (2020-2026, SKIP_DEP_CHECK) + 2 Prediction (2025-2026, SKIP_DEP_CHECK).
+      Command: `launch-mdps-sharded-backfill.sh defi tradfi sports prediction`. IN PROGRESS 2026-05-23 slot-5. Verify
+      T+10min: RUNNING + manifest consolidator showing captured rows (not attempted_failed).
 
 ---
 
