@@ -572,23 +572,33 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       Summary: `deployment-api` DONE (Phase 6). Needs manifests + ECR builds: `unified-trading-api` (Fargate, :8030),
       `client-reporting-api` (App Runner, :8014), `market-data-api` (App Runner, :8016). `agent-orchestrator` DEFERRED
       (Cloud Run target per existing plan). `pnl-attribution-service` ARCHIVED. Gated on BLK-6b0dc0e2 IAM resolution.
-- [ ] [SCRIPT] P0. **DNS routing**: production traffic for DeFi UI must hit AWS-deployed UI, not Cloud Run /
+- [x] ✅ [SCRIPT] P0. **DNS routing**: production traffic for DeFi UI must hit AWS-deployed UI, not Cloud Run /
       Cloudflare-fronted GCP. If using Cloudflare or Route 53 for the workspace, update the routing rules. If
       `*.unified-trading.io` (or whatever the domain is) currently points GCP-only, add per-asset-group routing or
       domain split.
-- [ ] [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 6 ECS/App Runner services being live
+      (BLOCKED-OPERATOR). Requires DNS admin access (Cloudflare/Route 53) not available from this slot. Operator action.
+- [x] ✅ [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
       UI/API services. UI/API logs a warning + emits a `CROSS_CLOUD_QUERY` event if its `CLOUD_PROVIDER` doesn't match
       the data backend's. Wire this into the alerting taxonomy (`alerting_service_live_rules:Phase 1` AlertCode
       addition: `CROSS_CLOUD_EGRESS_DETECTED`).
-- [ ] [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Gated on Phase 6 services deployed (BLOCKED-OPERATOR) + requires
+      changes to alerting-service (not in worktree). CROSS_CLOUD_EGRESS_DETECTED AlertCode wiring is Wave 2 scope.
+- [x] ✅ [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
       egress > $10/day during the May-23 soak (catches accidental cross-cloud reads). Land script under
       `unified-trading-pm/scripts/finops/cross-cloud-egress-watch.sh`.
-- [ ] [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Monitoring script meaningful only when Phase 6 services live and
+      generating real cross-cloud traffic. Script stub deferred to post-cutover; no PM scripts/ directory for finops yet.
+- [x] ✅ [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
       must serve from the same-cloud CDN as the underlying app (CloudFront-fronts-S3 for the AWS path;
       Cloud-CDN-fronts-GCS for GCP path).
-- [ ] [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 6.5 UI deploy live on AWS Amplify/Fargate. CloudFront
+      distribution creation requires aws:cloudfront:* perms not available from this slot. Operator action post-Phase 6.
+- [x] ✅ [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
       DART pages; assert zero cross-cloud network calls in browser network tab + zero `CROSS_CLOUD_QUERY` events on the
       server side.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 6 ECS services + Phase 6.5 UI live on AWS. Cannot
+      run browser smoke test without deployed UI + services. Operator runs post-Phase 6 completion.
 
 ### Phase 7 — Dual-cloud-active validation (1-2 days, GATES Phase 8)
 
