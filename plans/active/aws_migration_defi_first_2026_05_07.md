@@ -358,6 +358,7 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       (d) agent-orchestrator/restore_from_gcs.sh — GCP-only recovery tool, excluded from AWS workflows with flag
       `CLOUD_PROVIDER` gate planned. (e) UAC internal testing seeds — log messages with gsutil guidance, not import.
       **Zero violations in May-23 critical path.** Audit captured in cloud-agnostic-audit-2026-05-07.md §8.
+      Also verified by slot 2 2026-05-23: same classification; `create-code-tarballs.sh` --cloud flag (task -010) added.
 - [x] ✅ [SCRIPT] P0. Backfill launcher scripts (`deployment-service/scripts/vm/launch-*.sh` — 30+ scripts per CLAUDE.md
       "Singleton-locked launchers" + "VM Naming Convention") — extend per the existing pattern to accept `--cloud aws`
       and dispatch to AWS launcher. Default stays `--cloud gcp` for backwards compatibility. Phase 9 ships
