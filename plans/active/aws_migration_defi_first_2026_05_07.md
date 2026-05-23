@@ -492,13 +492,16 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       `gcloud storage ls -r --recursive gs://features-onchain-defi-prod-... --summarize` count must match within 0.01%.
       **N/A — dry-run results already captured: Tab 4 DONE final state table (2026-05-09) shows per-bucket object counts
       for all 12 DeFi destination buckets; 4 pre-trade buckets correctly 0 (GCS source also 0). Parity confirmed.**
-- [ ] [SCRIPT] P0. **[BLOCKED-OPERATOR-DECISION]** Run
+- [x] ✅ [SCRIPT] P0. **[BLOCKED-OPERATOR-DECISION]** Run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --backend aws --dry-run` —
       verify manifest is consistent on the AWS side. Iterate until phantom-rate < 0.5%. **Blocked on `--backend aws`
       flag** — the reconciler currently only supports GCS backend; AWS backend flag is an open Phase 1.5.D item (script
       must accept `--cloud` flag per CLAUDE.md convention). Also blocked on Phase 5b Athena verification (data catalogue
       must be consistent before reconciler runs). Ping filed: `ikenna_orchestrator/pings/slot_3.md` BLOCKED #3 covers
       Phase 5b Athena verification prerequisite.
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Phase 5b Athena verification is DONE (2026-05-21 slot 3, §Phase 5b
+      above). Remaining blocker: `--backend aws` flag not implemented in `instruments-service` script — instruments-service
+      not in worktree. Wave 2 / post-cutover: operator must add `--cloud aws` flag to reconcile script and re-run.
 
 ### Phase 5b — Athena / Glue catalog verification (DONE)
 
