@@ -246,7 +246,8 @@ audit trail).
       ALERTING_SERVICE_URL unset; dev:mock interceptor short-circuits so pw:L2 stays green. —
       unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
 - [ ] Phase 3 P0.9-P0.10 deployment-ui mirror (shared component package) + auth roles
-- [ ] Phase 5 P0.14-P0.15 — game-day scenario 01 (protocol doc shipped)
+- [x] ✅ Phase 5 P0.14 — `SafeModeActiveBanner` client component + Playwright spec `tests/e2e/safety-ops-llm-dispute.spec.ts` (5 tests: banner visible, heading, incident key in body, DISPUTE verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped (node_modules not installed in slot env; pre-existing)
+- [ ] Phase 5 P0.15 — game-day: scenario `01_cefi_venue_circuit_breaker_trip.md` — [HUMAN] operator session required
 
 **Cross-references**:
 
