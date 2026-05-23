@@ -74,7 +74,7 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       `("defi", "dex_swaps")`. Fix: added `("defi", "dex_swaps"): "swap"` to bridge map. MDPS@b3e0c2a. QG ✅ (5
       pre-existing test_feature_freshness failures unrelated). Tarball rebuilt (GCS manifest → b3e0c2a). Stopped 4
       170621 VMs, re-launched 5 VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING. 2026-05-23 slot-2.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps
+- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex*swaps
       bars present for 2024-06+ dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before =
       expected `empty_confirmed`). vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED
       2026-05-23 slot-5**: 142129 VMs (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with
@@ -96,7 +96,18 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       (2) `aggregate_from_15s_efficient`: split multi-instrument df by `instrument_id` before Polars/pandas aggregation.
       QG ✅ (1299 pass, 5 pre-existing test_feature_freshness failures unrelated). Tarball rebuilt 18:41 UTC.
       **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-184826` RUNNING (run-ts=20260523-184826). Sports VMs
-      `170621` (2020-2025) also RUNNING with NaN fix.
+      `170621` (2020-2025) also RUNNING with NaN fix. **SIXTH FIX (slot-2 2026-05-23 ~19:15 UTC)**: 184826 VMs
+      OOM-crashing with two interleaved bugs: (1)
+      `SchemaContractNotFoundError: No SchemaContract for asset_group='defi' instrument_type='UNKNOWN'     data_type='dex_swaps_15s'`
+      — `mdps_data_type_key("dex_swaps","15s")` falls back to `"dex_swaps_15s"` because `"dex_swaps"` was absent from
+      `_DATA_TYPE_TO_MDPS_PREFIX`; (2) DeFi consolidated manifest stale (6060s >> 120s threshold) → VM loaded all 32
+      per-VM shards → OOM; root cause Cloud Run consolidator bucket mismatch now fixed by slot-5
+      (`deployment-service@4dc73bc` adds 5 new Cloud Run jobs for legacy flat buckets incl. market-data-tick-defi-\*).
+      Fix A (MDPS@3551f7f): added `"dex_swaps": "swaps_ohlcv"` to `_DATA_TYPE_TO_MDPS_PREFIX`. Fix B (UAC@b7407bef):
+      registered
+      `("defi","UNKNOWN","swaps_ohlcv*{tf}")`fallback     contracts for all 6 DeFi timeframes;`include_chain=False` (CandleOutput has no chain column). UAC QG:     2 pre-existing failures — fix added 1 new passing test (8314 vs 8313 baseline). Tarball rebuilt:     UAC@b7407bef + MDPS@3551f7f (`market-data-processing-service-code@3551f7f6e367.tar.gz`).
+      All 184826 VMs stopped (all TERMINATED confirmed). Manual consolidation run (DeFi manifest refreshed). **PENDING
+      RELAUNCH**: 5 new VMs after manual consolidation completes. 2026-05-23 slot-2.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
