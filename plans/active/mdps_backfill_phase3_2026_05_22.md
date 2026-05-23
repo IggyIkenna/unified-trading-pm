@@ -63,10 +63,11 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       `live_workers.py` filters by in-file `'swaps'` column. MDPS@b584c67. QG ✅. Tarball rebuilt. 5 DeFi VMs TERMINATED
       (0 candles output) + re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap data coverage: 2024-06-01
       onwards (2022/2023 = 0 Uniswap, 2024+ = candles expected). 2026-05-23 slot-5.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-142129`): dex_swaps bars present for 2024-06+
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps bars present for 2024-06+
       dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before = expected `empty_confirmed`).
-      vault_share_price is bypass type — verify in features-onchain plan. RUNNING: 5 VMs
-      `mdps-defi-{2022..2026}-20260523-142129`. Verify once 2024/2025 VMs reach their end_date.
+      vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED 2026-05-23 slot-5**: 142129 VMs
+      (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with MDPS@ed0f817. 5 new VMs
+      `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their end_date.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
@@ -96,13 +97,12 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports** — 7 VMs launched: `mdps-sports-{2020..2026}-20260522-161432`.
       `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
       Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
-- [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. **RELAUNCHED
-      (slot-5 2026-05-23)**: 7 VMs `mdps-sports-{2020..2026}-20260523-100800` launched BUT ran OLD tarball (predated
-      fix). All produced zero manifest output (same MalformedRowKeyError). **RELAUNCHED AGAIN (slot-7 2026-05-23)**: Old
-      100800 VMs terminated. Tarball rebuilt with MDPS@bffa042 (chain fix + tests) using
-      `create-code-tarballs.sh     --asset-group SPORTS`. 7 new VMs `mdps-sports-{2020..2026}-20260523-102325` RUNNING
-      with fixed tarball. Verify once VMs complete. Issue doc:
-      `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+- [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
+      re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
+      match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
+      FIXED (slot-5 2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball
+      rebuilt. 125717 VMs terminated. **RUNNING: 7 VMs `mdps-sports-{2020..2026}-20260523-151059`**. Verify once
+      complete. Issue doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
       row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
       (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
@@ -184,6 +184,19 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       (2022-2026, 124815+125407) + 7 TradFi (2020-2026, 125440+125628, e2-highmem-8 MAX_WORKERS=2) + 7 Sports
       (2020-2026, 125717) + 2 Prediction (2025-2026, 124620). Prediction 124620 launched by slot-7; rest by slot-5.
       T+10min verified RUNNING. No ts_event schema_violation errors (fix confirmed). 2026-05-23 slot-5+7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-AdapterFix** — **ROOT CAUSE: sports adapter in-file data_type mismatch (slot-5
+      2026-05-23)**: All sports VMs (125717, 102325, 100800) produced 100% `empty_confirmed` manifest entries. Root
+      cause: all 4 sports adapters (`odds_snapshot`, `arbitrage_opportunity`, `odds_movement`, `odds_horizon_bucket`)
+      were registered under canonical names but sports raw data stores in-file `data_type='odds'` (legacy).
+      `live_workers.py` filtered by exact adapter name → 0 rows → 0 candles. Fix: added
+      `related_data_types: list[str] = ["odds"]` to all 4 sports adapters — same pattern as `swap_adapter.py`
+      `related_data_types=['swaps']` (DeFi-PathFix). MDPS@ed0f817. QG ✅. 2026-05-23 slot-5.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-DeFi-Relaunch2** — Tarball rebuilt with MDPS@ed0f817
+      (`--include     market-data-processing-service --allow-dirty-tarball`). GCS manifest confirmed SHA ed0f817 at
+      14:07 UTC. Terminated: 5 sports VMs (`mdps-sports-{2021..2025}-20260523-125717`) + 3 DeFi VMs
+      (`mdps-defi-{2023..2025}-20260523-142129`) — both running stale code. Re-launched: 7 sports VMs
+      `mdps-sports-{2020..2026}-20260523-151059` + 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-151348` RUNNING.
+      2026-05-23 slot-5.
 
 ---
 

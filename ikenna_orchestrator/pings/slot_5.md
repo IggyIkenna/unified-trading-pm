@@ -1,4 +1,38 @@
-> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~14:30 UTC).**
+> **🟢 2026-05-23 STATUS UPDATE — slot-5 autonomous overnight run (updated ~15:15 UTC).**
+
+## [slot-5 → slot-1-main] 2026-05-23 ~15:15 UTC — Sports adapter fix + tarball rebuild + sports+DeFi VMs re-launched
+
+**Plan ref**: `plans/active/mdps_backfill_phase3_2026_05_22.md`
+
+### KEY FIX: Sports adapter data_type mismatch (MDPS@ed0f817)
+
+All sports VMs (3 generations: 100800, 102325, 125717) produced 100% `empty_confirmed` entries. Root cause:
+
+- Sports raw data in-file `data_type='odds'` (legacy), all 4 adapters registered as `odds_snapshot` etc.
+- `live_workers.py` filtered by exact adapter name → 0 rows → 0 candles
+
+Fix: `related_data_types: list[str] = ["odds"]` on all 4 sports adapters (same pattern as DeFi `swap_adapter.py`).
+
+### Tarball rebuild + VM re-launch (15:07-15:14 UTC)
+
+- Tarball rebuilt:
+  `bash scripts/vm/create-code-tarballs.sh --allow-dirty-tarball --include market-data-processing-service` GCS manifest
+  confirmed SHA `ed0f817` at 14:07 UTC.
+- Terminated: 5 sports VMs (`125717`) + 3 DeFi VMs (`142129`)
+- Re-launched: **7 sports VMs** `mdps-sports-{2020..2026}-20260523-151059` RUNNING
+- Re-launched: **5 DeFi VMs** `mdps-defi-{2022..2026}-20260523-151348` RUNNING
+
+### Current VM fleet (15:15 UTC)
+
+- **Sports**: 7 VMs `151059` — RUNNING with ed0f817 fix. First run to have correct in-file filter.
+- **DeFi**: 5 VMs `151348` — RUNNING with both b584c67 path fix + ed0f817 sports fix.
+- **TradFi**: 7 VMs `125440+125628` — RUNNING (~66h/VM, unaffected)
+- **Prediction**: `124620` (2 VMs) — RUNNING, writing candles ✅
+- **CeFi**: 7 MTDS VMs still RUNNING → gate MTDS-3.2.A-V still BLOCKED
+
+— slot-5 / ikenna / 2026-05-23
+
+---
 
 ## [slot-5 → slot-1-main] 2026-05-23 ~14:30 UTC — DeFi path bug fixed + VMs re-launched; CeFi gate 8/11 remaining
 
