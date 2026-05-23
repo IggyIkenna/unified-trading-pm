@@ -693,21 +693,20 @@ before CME arb can link.
       2026-05-23 slot-1. Stopped instr-backfill-pred-20251031/20260228/20260522 (had written with INTRADAY-only
       classifier). Rebuilt tarball (UAC@e6ae5013 with 5MIN/15MIN). Relaunched same 3 VMs with --force to reprocess all
       shards. All 3 RUNNING in asia-northeast1-c. — VMs RUNNING (launched 2026-05-23)
-- [x] ✅ [SCRIPT] P1. **Phase 5.mtds_canonical — launch MTDS canonical prediction backfill VM (2020→2025)**: 2026-05-23
-      slot-1. MTDS manifest had only 268 rows with new canonical schema (vs 158K old-schema rows). Launched
-      mtds-backfill-prediction-1 via launch-mtds-backfill-vm.sh. **BUG**: original VM ran with ImportError
-      (get_venues_for_categories → get_venues_for_asset_groups rename missed in tick_data_handler.py); all 292 chunks
-      wrote attempted_failed rows. Fixed import (MTDS@498148da), rebuilt tarball, relaunched with --force at 21:14 UTC
-      2026-05-23. — MTDS@498148da
+- [x] ✅ [SCRIPT] P1. **Phase 5.mtds_canonical — launch MTDS canonical prediction backfill (10 parallel VMs)**:
+      2026-05-23 slot-1. Fixed ImportError (MTDS@498148da). Operator requested 5× concurrency → 1/5 time. Split full
+      2020-01-01→2026-05-22 range into 10 shards, all launched with --force bypassing singleton. VMs 1-5 (2020→2025):
+      1=(2020-01-01→2021-02-11) 2=(2021-02-11→2022-03-25) 3=(2022-03-25→2023-05-06) 4=(2023-05-06→2024-06-16)
+      5=(2024-06-16→2025-08-01). VMs 6-10 (2025→2026): 6=(2025-08-02→2025-09-29) 7=(2025-09-29→2025-11-26)
+      8=(2025-11-26→2026-01-23) 9=(2026-01-23→2026-03-22) 10=(2026-03-22→2026-05-22). All 10 RUNNING ~58 chunks each.
+      ETA: ~1-1.5h total. — MTDS@498148da
 - [x] ✅ [SCRIPT] P1. **Phase 5.mtds_import_fix — fix ImportError in tick_data_handler.py + relaunch**: 2026-05-23
       slot-1. get_venues_for_categories → get_venues_for_asset_groups at 3 locations in tick_data_handler.py. QG green
-      (pre-existing failures only). Committed MTDS@498148da, pushed LDR. Rebuilt tarball (GCS 21:10:42 UTC). Stopped old
-      VM (already TERMINATED). Relaunched mtds-backfill-prediction-1 RUNNING. — MTDS@498148da
-- [ ] [SCRIPT] P1. **Phase 5.mtds_canonical_2 — launch MTDS canonical prediction backfill VM (2025-08→2026-05)**: IS VMs
-      (instr-backfill-pred-20251031/20260228/20260522) confirmed TERMINATED. Waiting for mtds-backfill-prediction-1
-      rerun (2020→2025, launched 21:14 UTC) to TERMINATE (singleton freed). Then:
-      `bash deployment-service/scripts/vm/launch-mtds-backfill-vm.sh --asset-group PREDICTION --start 2025-08-02 --end 2026-05-22 --force`
-      ETA: mtds-backfill-prediction-1 runs ~5-6h → singleton free ~02:00-03:00 UTC 2026-05-24.
+      (pre-existing failures only). Committed MTDS@498148da, pushed LDR. Rebuilt tarball (GCS 21:10:42 UTC). —
+      MTDS@498148da
+- [x] ✅ [SCRIPT] P1. **Phase 5.mtds_canonical_2 — launch MTDS canonical prediction backfill VM (2025-08→2026-05)**:
+      Absorbed into Phase 5.mtds_canonical 10-VM split (VMs 6-10 cover this range). IS VMs confirmed TERMINATED. All 10
+      VMs RUNNING as of 2026-05-23 ~21:20 UTC.
 
 ## `available_at` adapter stamping (coordinated)
 
