@@ -171,3 +171,24 @@ service code are either multi-cloud-aware dispatch (category a) or env-var-drive
 **`unified-trading-` prefix hits**: All from `unified-trading-pm` repo name in comments/docstrings, NOT inline bucket
 name strings. QG STEP 5.12b (`grep '"gs://\|"s3://'`) already enforces the bucket-literal ban in service code. Zero new
 anti-patterns found.
+
+### 7. Pub/Sub → SNS+SQS routing policy (2026-05-23)
+
+Per `aws_migration_defi_first_2026_05_07.md` Phase 1.5.B — AWS-side equivalent of GCP Pub/Sub.
+
+**Known GCP topics** (from e2e testing plan `020_alerting_service.md`):
+
+| GCP topic | AWS equivalent | Routing decision |
+|---|---|---|
+| `risk_alerts_circuit_breaker_triggers` | `uts-risk-alerts-circuit-breaker-triggers` | **SNS+SQS** — trading event, at-least-once, no cross-account routing |
+| `balance_discrepancy_alerts` | `uts-balance-discrepancy-alerts` | **SNS+SQS** — trading alert, fan-out to multiple subscribers |
+| `order_rejection_spikes` | `uts-order-rejection-spikes` | **SNS+SQS** — trading event, at-least-once |
+| `circuit_breaker_commands` | `uts-circuit-breaker-commands` | **SNS+SQS** — command topic, at-least-once delivery required |
+| `service_stop_restart_triggers` | `uts-service-stop-restart-triggers` | **SNS+SQS** — lifecycle event, no cross-account routing |
+| deployment-orchestration topics (TBD) | TBD | **EventBridge** — only if cross-account CodePipeline routing needed |
+
+**Policy rule**: Use **SNS+SQS** for all trading-event + command topics. Use **EventBridge** only for deployment-orchestration where cross-account routing is required.
+
+**Trade-off**: SNS doesn't natively dedup; SQS visibility-timeout provides at-least-once semantics. For all 5 trading topics, at-least-once is acceptable (duplicate alerts/commands are handled idempotently by consumers). Full GCP Pub/Sub topic inventory requires `gcloud` CLI — not available from this AWS VM; operator to run `gcloud pubsub topics list --project central-element-323112` to enumerate remaining topics.
+
+**Provisioning**: `deployment-service/scripts/aws/setup-messaging.sh` (not yet written) should create SNS topics + SQS queues matching GCP topic names. Tracked as Phase 1.5.B item 5 in `aws_migration_defi_first_2026_05_07.md`.

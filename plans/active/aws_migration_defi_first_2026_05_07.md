@@ -281,10 +281,13 @@ currently missing.
 - [ ] [SCRIPT] P0. Inventory GCP Pub/Sub topics + subscriptions:
       `gcloud pubsub topics list --project central-element-323112` + `gcloud pubsub subscriptions list`. Filter to
       non-test. Capture in `cloud-agnostic-audit-2026-05-07.md`.
-- [ ] [SCRIPT] P0. Per-topic decision: **SNS+SQS fan-out** (default — at-least-once, lowest-friction) vs **EventBridge**
+- [x] ✅ [SCRIPT] P0. Per-topic decision: **SNS+SQS fan-out** (default — at-least-once, lowest-friction) vs **EventBridge**
       (rules-based, schema-registry-aware). Recommendation: SNS+SQS for trading-event topics; EventBridge only if
       cross-account routing is needed. Trade-off: SNS doesn't natively dedup; SQS visibility-timeout works around
-      at-least-once. Document the policy.
+      at-least-once. Document the policy. **DONE 2026-05-23** (slot 2): Policy documented in
+      `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` § 7 — 5 trading topics → SNS+SQS;
+      deployment-orchestration → EventBridge only if cross-account needed. Full GCP Pub/Sub inventory
+      blocked (gcloud not available on AWS VM); operator to run `gcloud pubsub topics list`. pm@2026-05-23.
 - [ ] [SCRIPT] P0. **UCI MessageBus abstraction**: check
       `grep -rn "publish\|subscribe\|MessageBus\|PubSub" unified-trading-library/unified_trading_library/cloud_interface/`.
       If a `MessageBus` protocol doesn't exist, land `unified_trading_library/cloud_interface/messaging.py` with
