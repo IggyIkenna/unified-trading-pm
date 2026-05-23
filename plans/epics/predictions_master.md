@@ -699,6 +699,11 @@ before CME arb can link.
       2025-08-01 --force. Covers the range completed by the old IS VM. After IS 2025-08→2026-05 VMs complete (~40 min),
       second MTDS VM to be launched for that range (singleton constraint: one MTDS prediction VM at a time). — VM
       mtds-backfill-prediction-1 RUNNING
+- [ ] [SCRIPT] P1. **Phase 5.mtds_canonical_2 — launch MTDS canonical prediction backfill VM (2025-08→2026-05)**: Wait
+      for instr-backfill-pred-20251031 / 20260228 / 20260522 to TERMINATE (IS coverage of 2025-08-02→2026-05-22
+      complete) AND for mtds-backfill-prediction-1 to TERMINATE (singleton freed). Then:
+      `bash deployment-service/scripts/vm/launch-mtds-backfill-vm.sh --asset-group PREDICTION --start 2025-08-02 --end 2026-05-22 --force`
+      Wakeup timer set for ~21:02 local.
 
 ## `available_at` adapter stamping (coordinated)
 
