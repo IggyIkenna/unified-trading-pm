@@ -1647,6 +1647,7 @@
           "features-service",
           "features-sports-service",
           "features-volatility-service",
+          "greeks-service",
           "fund-administration-service",
           "market-data-processing-service",
           "market-tick-data-service",
