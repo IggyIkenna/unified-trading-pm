@@ -292,11 +292,14 @@ currently missing.
       `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` § 7 — 5 trading topics → SNS+SQS;
       deployment-orchestration → EventBridge only if cross-account needed. Full GCP Pub/Sub inventory
       blocked (gcloud not available on AWS VM); operator to run `gcloud pubsub topics list`. pm@2026-05-23.
-- [ ] [SCRIPT] P0. **UCI MessageBus abstraction**: check
+- [x] [SCRIPT] P0. **UCI MessageBus abstraction**: check
       `grep -rn "publish\|subscribe\|MessageBus\|PubSub" unified-trading-library/unified_trading_library/cloud_interface/`.
       If a `MessageBus` protocol doesn't exist, land `unified_trading_library/cloud_interface/messaging.py` with
       `MessageBus` protocol + 2 implementations: `GcpPubSubMessageBus` + `AwsSnsSqsMessageBus`. Wire factory.py to
       dispatch by `CLOUD_PROVIDER` env.
+      ✅ `PubSubClient` ABC already existed; landed `AwsSnsPubSubClient(PubSubClient)` in
+      `providers/aws.py` (SNS-backed publish + idempotent create_topic) + wired `get_pubsub_client()`
+      `elif p == "aws"` branch in `factory.py`. UTL@`52791570` 2026-05-23.
 - [ ] [SCRIPT] P0. Service migration: replace direct `google.cloud.pubsub_v1` imports with UCI `MessageBus`. Per-service
       PRs (alerting-service / risk-and-exposure-service / position-balance-monitor-service / execution-service /
       deployment-orchestration). Each PR's QG must pass with `CLOUD_PROVIDER=aws`.
