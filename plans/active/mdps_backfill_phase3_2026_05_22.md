@@ -67,7 +67,13 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before = expected `empty_confirmed`).
       vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED 2026-05-23 slot-5**: 142129 VMs
       (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with MDPS@ed0f817. 5 new VMs
-      `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their end_date.
+      `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their end_date. **PARTIAL STATUS
+      (slot-6 2026-05-23 ~15:30 UTC)**: 2022 VM self-deleted (exit_code=0 at 14:25 UTC) after processing
+      2022-11-01→2022-12-31 (61 dates, 0 candles — all prior dates covered by earlier VMs with manifest skip). No shard
+      written (expected: 0 candles → no manifest entries). 2023 VM still RUNNING. 2024 VM shard
+      (`mdps-defi-2024-20260523-151348.parquet`): 465 rows all `empty_confirmed/SOURCE_RETURNED_ZERO` for CURVE
+      2024-05-03→2024-05-11 — at May 2024, working toward 2024-06-01 Uniswap start. 2025/2026 VMs: shards present. Full
+      verify pending 2024/2025 VMs reaching their end dates.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
@@ -122,7 +128,12 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       prediction (same pattern as sports). Re-launched: `mdps-prediction-{2025,2026}-20260522-162604` (2 VMs, RUNNING).
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
-- [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8.
+- [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8. **PARTIAL VERIFY (slot-6 2026-05-23 ~15:30 UTC)**: 2025
+      VM (124620): 7,775 rows all `captured`, v8, date range 2025-03-14→2025-04-20. 2026 VM (124620): 8,261 rows all
+      `captured`, v8, date range 2026-01-01→2026-01-02. Candle sample (`day=2025-04-20/timeframe=1h/trades/POLYMARKET`):
+      `ts_event` UTC-aware ✅, `timeframe` present ✅, `trade_count`/`available_at` non-null ✅, OHLCV NaN is expected
+      (nullable_ohlcv=True for binary markets — hours with 0 trades → NaN OHLC, volume=0). Full verify pending VM
+      completion (2025→2025-12-31 + 2026→2026-05-23).
 - [x] ✅ [CODE] P2. **MDPS-3.3.Pred-SchemaContract** — Two schema gaps FIXED: (1) `SCHEMA_VALIDATION_FAILED` on trades
       bars: UAC `_candle_contracts.py` adds `_OHLCV_CORE_TRADES` (nullable=True for OHLC) + `nullable_ohlcv=True`
       parameter. Applied to all trades-derived schemas: CeFi/TradFi/DeFi/Sports/Prediction. UAC@5ff8a25a. (2)
