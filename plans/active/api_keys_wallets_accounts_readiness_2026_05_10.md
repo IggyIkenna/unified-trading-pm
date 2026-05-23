@@ -692,6 +692,9 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 - [x] ✅ [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18)
       5.B.1 Polymarket ✅ + 5.B.3 Manifold KILLED + 5.B.4 adapters ✅. 5.B.2 Kalshi BLOCKED-CREDENTIALS (operator
       needs to provision `kalshi-api-key` + `kalshi-private-key-pem` in SM). PM@slot2 2026-05-23.
+  - **[CONFIRMED-STATUS]** 2026-05-23 slot 6: 5.B.1 Polymarket ✅ (polymarket-api-key in SM). 5.B.2 Kalshi still
+    BLOCKED-CREDENTIALS — operator action required per ikenna_orchestrator/pings/slot_8.md. 5.B.3 Manifold KILLED.
+    5.B.4 adapters ✅.
   - [x] **5.B.1** — Polymarket API key provisioned. **DONE**: SM secret `polymarket-api-key` EXISTS in vault (created
         2026-03-02, v1 enabled, `gcloud secrets describe polymarket-api-key` confirmed). Added to `_TRADE_KEY_PATTERNS`
         2026-05-09. Secret value is live.
