@@ -1,10 +1,10 @@
 ---
 title: "Promote Workflow — Post-cutover UI pipeline + state-machine consolidation"
-name: promote-workflow-post-cutover-ui-pipeline
-status: active
+name: promote_workflow_post_cutover_ui_pipeline_2026_05_10
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-10
-locked_by: live-defi-rollout
-locked_since: 2026-05-10
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
@@ -585,3 +585,9 @@ WORKSPACE-WIDE codex audit catches any drift after the post-cutover plan complet
   matrix.
 - `plans/active/master_to_live_defi_2026_05_23.md` Group F/G — post-cutover items track here; master plan refresh per
   CLAUDE.md "Master Plan Continuous-Verification Column" HARD RULE.
+
+## Deferred work — migrated to: dart_and_promote_master
+
+_Archived 2026-05-23 slot 2. This plan is the post-cutover companion to `promote_workflow_may23_cli_path_2026_05_10.md`. All 12 phases require post-cutover execution._
+
+- **This entire plan is DEFERRED-POST-CUTOVER**: All 12 phases (lifecycle state-machine consolidation, `CandidateManifest` UAC type, `LifecycleEventType` enum, per-archetype Pydantic config schemas for 48/53 archetypes, drift detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, paper auto-launch, champion store, operational modes consolidation, multi-tenant client-id flow) are gated on DeFi 7-day live soak completing. Pick up after `promote_workflow_may23_cli_path_2026_05_10.md` Phase 13.A completes.

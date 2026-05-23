@@ -1,8 +1,10 @@
 ---
+name: writegate_honest_coverage_endtoend_2026_05_06
 title: "Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)"
 role: umbrella
-locked_by: live-defi-rollout
-locked_since: 2026-05-06
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-06
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
@@ -4653,3 +4655,12 @@ Per-asset-group counts (from A4):
 - "Bump the constant + add a NaN/None tolerance — that's good enough" — banned. The actual schema_version column must
   read 8 for every row.
 - "Migrate CEFI + DeFi but defer Sports/Prediction" — banned. Every asset_group is in scope.
+
+## Deferred work — migrated to: sports_master
+
+_Archived 2026-05-23 slot 2. Phases 1-6 + Phase 7.A writer-path complete. Phase 7.B/C/D and tracked open questions deferred._
+
+- **Phase 7.B — QG step for forward-fix**: Add `scripts/quality_gates/check_manifest_schema_version_constants.py`; ratchet workspace constants to v8. Sample 100 most-recent rows per bucket. DEFERRED-OPERATOR-DECISION.
+- **Phase 7.C — Retrospective backfill of existing rows (~6 AI-days)**: Write `UTL/migrations/upgrade_manifest_to_v8.py`; pre-migration VM drain + snapshot; run per bucket; assert 100% v8 + 0 NULL; post-migration verification. CEFI: 2.66M rows, DeFi: 1.73M rows (1.29M NULL), TradFi: 162k, Sports: 2.83M, Predictions: 21k. DEFERRED-OPERATOR-DECISION.
+- **Phase 7.D — Verification gate**: Re-run A4 (`a4_manifest_v8_compliance.py`) + A3 manifest divergence. Assert 100% v8 + 0 NULL + no new DIVERGENT_EMPTY cells. Codex SSOT update. DEFERRED-OPERATOR-DECISION.
+- **Tracked open questions 2-8/12**: `feature_group → required_inputs[]` DAG SSOT; v6 columns ownership; NaN-ratio gate lift to UTL; phantom-audit drift-probe lift to UTL; per-VM shard isolation rule; multi-source merge spec; `client_id` semantics rework.

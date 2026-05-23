@@ -1,10 +1,10 @@
 ---
 title: "Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)"
-name: promote-workflow-may23-dual-track
-status: active
+name: promote_workflow_may23_cli_path_2026_05_10
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-10
-locked_by: live-defi-rollout
-locked_since: 2026-05-10
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -953,3 +953,13 @@ differs.
 - `plans/active/master_to_live_defi_2026_05_23.md` — this plan executes the Group F/G live-only items.
 - `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` — Phase 2 pre-flight composes with credential matrix.
 - `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` — companion plan for everything deferred.
+
+## Deferred work — migrated to: dart_and_promote_master
+
+_Archived 2026-05-23 slot 2. Phase 1 (launchers) + Phase 2 (V2BatchHarness resolver + ServiceBootstrap) DONE. Phases 3-10 all DEFERRED to companion post-cutover plan._
+
+- **Phases 3-10 — All DEFERRED to `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`**: Copper sub-account setup, Tenderly fork setup, live rehearsal, UI state-machine, per-archetype Pydantic configs (48/53 missing), drift detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, operational modes consolidation.
+- **Phase 2 P0 smoke VM verification**: `strategy-paper-carry-staked-basis-20260512-200952` deleted before end-to-end verification. Next session: re-run smoke VM to verify resolver end-to-end.
+- **`MinimalCandidateManifest` enrichment**: Full enrichment (pinned shas / model refs / features manifest version) deferred to post-cutover plan Phase 2 (`CandidateManifest` UAC type).
+- **`LifecycleEventType` UAC enum membership**: UTL bare-string events (`STRATEGY_PROMOTED_TO_CANDIDATE` etc.) functional but not in UAC enum. Deferred to post-cutover plan Phase 3.
+- **Multi-tenant client-id flow (H4)**: Deferred to Tier 3 post-launch.

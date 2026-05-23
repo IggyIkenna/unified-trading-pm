@@ -1,14 +1,14 @@
 ---
 title: "Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)"
-name: manifest-schema-final-gate-2026-05-09
+name: manifest_schema_final_gate_2026_05_09
 epic: epic-infra
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 priority: P0
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
-locked_since: 2026-05-09
 created: 2026-05-09
-last_updated: 2026-05-09
+parent_epic: manifest_master
 
 completion_gates:
   code: C5
@@ -796,3 +796,16 @@ Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Code
   ratifications: E2=(a), A1=NO, A1-sub=ratify-now, B2=workspace-wide, B3=bundled-into-Phase-3, E1=v8-final,
   E3=ratified-as-listed-7-item-checklist. Operator direction verbatim: _"i want the best manifest before may 23rd not a
   partial one all the items done"_ + _"yeah do all this v8 should not be deferred should be done"_.
+
+## Deferred work — migrated to: manifest_master
+
+_Archived 2026-05-23 slot 2. Phases 0-9 + schema code complete. Phases 10-13 require operator VM execution (GCS access, real data)._
+
+- **Phase 0.B PRE-baseline + `measure-honest-coverage.py` (OPERATOR ACTION)**: Script does not exist. Operator must author + run from GCE VM with trading SA. Gates Phase 12 ratchet. BLOCKED-OPERATOR.
+- **Phase 10.A/B — Backfill runs + sample inspection (OPERATOR ACTION)**: Run per-asset-group backfill VMs to natural completion. Manifest concurrency principle ensures restart is a no-op. DEFERRED-OPERATOR-DECISION.
+- **Phase 10.C — Coverage % baseline match (OPERATOR ACTION)**: BLOCKED-OPERATOR. Requires GCS access + Phase 0.B PRE-baseline + Phase 10.A completion. Cannot calculate from slot.
+- **Phase 11.A/B/C — MDPS reprocess + features compute + LookaheadBiasError (OPERATOR ACTION)**: MDPS reprocess against Phase 10 output; features compute against MDPS output; strict LookaheadBiasError enforcement (code shipped at features-service@a0011d17). DEFERRED-OPERATOR-DECISION.
+- **Phase 12.A/B — Paper-trade smoke + batch-vs-live recon (OPERATOR ACTION)**: `carry_staked_basis` + `leveraged_funding_arb` paper-trade smoke + `batch_live_reconciler` recon delta < 5bps. DEFERRED-OPERATOR-DECISION.
+- **Phase 12.C — writegate Phase 5 ratchet POST-baseline (OPERATOR ACTION)**: BLOCKED-OPERATOR. Requires GCS access + Phase 0.B + Phase 10.A. Operator runs `measure-honest-coverage.py` post-backfill.
+- **Phase 13.A — Live cutover (OPERATOR ACTION)**: Operator triggers live wallet enable; `carry_staked_basis` + `leveraged_funding_arb` on real wallet for ≥7 continuous days.
+- **Phase 13.B — Banner removal (DEFERRED-POST-CUTOVER)**: Flip plan `active` → `complete`; remove Phase 0 banners from `plans/active/` plans. Gated on Phase 13.A 7-day run completing.

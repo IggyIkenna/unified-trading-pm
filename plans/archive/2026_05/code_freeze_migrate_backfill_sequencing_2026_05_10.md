@@ -1,9 +1,10 @@
 ---
+name: code_freeze_migrate_backfill_sequencing_2026_05_10
 title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-10
-locked_by: live-defi-rollout
-locked_since: 2026-05-10
 estimate_class: infra
 estimate_baseline_ai_days: 202.5
 estimate_calibrated_ai_days: 162.0
@@ -1858,3 +1859,14 @@ Day 3.
 
 **Day-4 plan**: monitor workspace QG full sweep completion (running in slot 3 worktree background); commit results;
 final cycle-close DONE-2026-05-15 block + final cross-side ping at 2026-05-15 actual freeze-gate fire.
+
+## Deferred work — migrated to: defi_master
+
+_Archived 2026-05-23 slot 2. Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped. Post-cutover execution items and service-repo work deferred._
+
+- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh`, `verify_flat_to_env_tiered_drift.py`, `verify_env_tiered_buckets_provisioned.py`, `vm_zombie_watchdog` dict re-point + codex section. Requires deployment-service, MTDS, MDPS, features-service not available in slot 6 worktree. Owner: slot 8 (deployment-service surface).
+- **Phase 3 — Full workspace QG green**: `quality-gates.sh` sweep deferred all cycle (slot worktrees have no per-repo `.venv`). Highest-risk repos: UAC, UTL, MTDS, MDPS, features-service, deployment-api. Tracked in `qg_sweep_2026_05_11.md`.
+- **Phase 4.DEFAULT-REMOVAL**: Blocked-after-MTDS+FEATURES+GREP-VERIFY sweep. Remove 4 `None` defaults from 5 `record_*` methods + bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + reconcile codex prose.
+- **Phase 0.B PRE-baseline + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` does not exist; requires GCS access from GCE VM. Operator must author + run from trading-VM SA. Gates Phase 12 ratchet lock-in.
+- **TradFi 4.3% phantom audit**: Post-cutover operator triage of TradFi phantom percentage (tradfi-domain scope).
+- **`cme_polymarket_arb` Phases 2-5**: DEFERRED-POST-CUTOVER; depends on predictions-master + tradfi-master.
