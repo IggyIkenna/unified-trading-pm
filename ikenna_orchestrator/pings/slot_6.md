@@ -1,3 +1,11 @@
+**[2026-05-23 ~20:30 UTC] slot-6 SEVENTH FIX + status update** — ref `mtds_mdps_master` MDPS-3.3.DeFi-V
+
+MDPS@305677e: added ORCA-SOLANA/RAYDIUM-SOLANA to `_DEFI_DEX_VENUE_SEGMENTS` (honest-absence when Solana swap events
+land). KAMINO excluded (lending_indices, bypass type). Plan: mdps_backfill_phase3 archived → tracking in
+mtds_mdps_master. 195633 VMs (2024+2025) RUNNING — slot-2 SIXTH FIX. 2026 DeFi VMs:
+`empty_confirmed/SOURCE_RETURNED_ZERO` expected (MTDS dex_swaps_handler stopped writing after 2026-01-24 — MTDS 2026 gap
+noted in mtds_mdps_master). PM@<sha> docs(plans): update mtts_mdps_master DeFi-V status + Solana fix.
+
 **[2026-05-23 ~18:50 UTC] slot-6 DeFi MDPS FIFTH FIX + VM RELAUNCH** — ref `mdps_backfill_phase3_2026_05_22.md`
 MDPS-3.3.DeFi-V
 
