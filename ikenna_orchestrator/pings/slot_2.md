@@ -1,3 +1,31 @@
+## [slot-2] 2026-05-23 — OPERATOR ACTION: mtds-backfill-defi-20260523 broken + 195633 VMs stale
+
+⚠️ **Two separate DeFi backfill issues found by slot-2 monitoring. Operator action needed.**
+
+### ISSUE 1 — mtds-backfill-defi-20260523: resolve_bucket_name 'env' kwarg error (KILL IMMEDIATELY)
+
+`mtds-backfill-defi-20260523` (RUNNING, 125 chunks, 2024-01-01→2026-05-23) is looping on EVERY chunk:
+
+```
+Handler TickDataHandler failed during setup/preflight:
+resolve_bucket_name() got an unexpected keyword argument 'env'
+```
+
+Zero candles produced. VM is burning e2-standard-4 resources for nothing. Kill it:
+
+```bash
+gcloud compute instances delete mtds-backfill-defi-20260523 --zone=asia-northeast1-c --quiet
+```
+
+Root cause: tarball has `tick_data_handler.py` still calling `resolve_bucket_name(env="live")` but UTL dropped that
+kwarg (current worktree uses `get_tick_data_bucket()` instead). Tarball needs rebuild with consistent MTDS+UTL versions.
+Issue doc: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md` Plan ref:
+`plans/epics/mtds_mdps_master.md` — MDPS-3.3.DeFi-V verify gate
+
+### ISSUE 2 — 195633 batch VMs: POOL/pool case bug (let complete, then rebuild tarball)
+
+---
+
 ## [slot-2] 2026-05-23 — CRITICAL: DeFi dex_swaps schema lookup fix UAC@8e1e7e58
 
 [2026-05-23 ~21:xx UTC] P0 fix shipped.
