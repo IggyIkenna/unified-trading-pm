@@ -204,10 +204,15 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
       (first_seen_at/last_seen_at/unreconciled_age_seconds/dimension) + engine population at row-creation time —
       strategy-service@d386a9bf | QG green (4288 passed, 315 skipped, 17 pre-existing risk failures unrelated to
       changes)
-- [ ] Phase 3 P0.7-P0.9 — alerting-service 15-min/30-min escalation rules + per-(venue,strategy) overrides
-- [ ] Phase 4 P0.10-P0.11 — 7 ImmediateSev0Override predicates + unit tests
-- [ ] Phase 5 P0.12-P0.14 — execution-service preflight recon-freeze enforcement
-- [ ] Phase 6 P0.15-P0.16 — synthetic smoke + game-day
+- [x] ✅ Phase 3 P0.7-P0.9 — alerting-service `evaluate_recon_age()` 3-band ladder (300s/900s/1800s) + sev1_escalate
+      flag — alerting-service@9c47947 | QG green (ruff clean on new files)
+- [x] ✅ Phase 4 P0.10-P0.11 — 7 ImmediateSev0Override predicates (`evaluate_immediate_sev0()`) + 7 test classes in
+      `test_immediate_sev0_overrides.py` — alerting-service@9c47947 | QG green
+- [x] ✅ Phase 5 P0.12-P0.14 — `ReconFreezeChecker` + `ReconFreezeError` in
+      `execution_service/preflight/recon_freeze.py` + 4 test classes covering arm/lift/assert/snapshot —
+      execution-service@d649af364 | ruff clean (pre-existing F601 in foreign instrument_resolver.py unrelated to this
+      change)
+- [ ] [HUMAN] Phase 6 P0.15-P0.16 — synthetic smoke injection + game-day scenario (operator action required)
 
 **Cross-references**:
 
