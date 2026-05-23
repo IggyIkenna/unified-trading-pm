@@ -622,8 +622,9 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
       sports_master:Phase 3 rename] **PARTIAL 2026-05-23**: SFI_PROGRESSIVE_STATS done — replaced
       `stamp_available_at_explicit(wall-clock)` with `report_time`-based logic (match_end + lag for completed matches,
-      wall-clock fallback for in-progress) — instruments-service@8b8db4ad. Remaining: FIXTURE_STATS / understat XG /
-      fixture_player_stats.
+      wall-clock fallback for in-progress) — instruments-service@8b8db4ad. understat XG done — preserve `kickoff+24h`
+      already set, fillna wall-clock for missing kickoff rows — instruments-service@04abbd63. Remaining: FIXTURE_STATS /
+      fixture_player_stats (blocked on AF FIXTURES match_end_time computation in per-fixture entity write loop).
 - [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
       instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
       helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
