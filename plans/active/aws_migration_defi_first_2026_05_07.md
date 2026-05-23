@@ -587,7 +587,11 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
       latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
       `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
-- [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+- [x] ✅ [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+      — Verified 2026-05-23 (slot 3): `deployment-api.yaml` was committed in Phase 6 at deployment-service@e7964c7
+      (App Runner runtime, ap-northeast-1, SM secret refs under unified-trading/ prefix). Data-locality: manifest
+      targets ap-northeast-1 matching all DeFi data buckets. Actual ECS/App Runner deploy is gated on IAM access
+      (BLK-6b0dc0e2). Code shipped = Phase 6 manifest commit.
 - [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
       deployment surface paired with its UI consumer.
