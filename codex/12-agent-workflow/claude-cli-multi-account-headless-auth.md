@@ -47,6 +47,82 @@ sudo systemctl show orchestrator --property=Environment | tr ' ' '\n' | grep ANT
 # (empty = correct — no override)
 ```
 
+## Interactive sessions: CLAUDE_CONFIG_DIR + onboarding seed (added 2026-05-22)
+
+**Context**: `claude` v2.1.145 introduced a first-run onboarding wizard (theme → "Select login method") that **ignores
+`CLAUDE_CODE_OAUTH_TOKEN` for interactive TUI sessions** and forces browser OAuth regardless of the env var. This broke
+every orchestrator-spawned interactive agent (main + workers) after the upgrade.
+
+**Key distinction** — the env token has different behaviour by invocation mode:
+
+| Mode                     | `CLAUDE_CODE_OAUTH_TOKEN` sufficient?          | Notes                                        |
+| ------------------------ | ---------------------------------------------- | -------------------------------------------- |
+| `claude -p 'prompt'`     | **YES** — works without seed                   | Headless print; wizard never runs            |
+| Interactive `claude` TUI | **NO** — wizard blocks it in v2.1.145          | Must seed `CLAUDE_CONFIG_DIR` (see below)    |
+| Remote Control session   | **NO** — setup tokens are inferred-scoped only | Needs full browser-login `.credentials.json` |
+
+### The fix: per-session `CLAUDE_CONFIG_DIR` + onboarding seed
+
+For every interactive spawn, give the agent an **isolated, pre-seeded `CLAUDE_CONFIG_DIR`** so the wizard is skipped:
+
+1. **Set `CLAUDE_CONFIG_DIR`** to a per-session path (e.g. `~/.claude-configs/<session_id>/`). This isolates creds,
+   settings, and onboarding state across agents and accounts.
+2. **Seed `$CLAUDE_CONFIG_DIR/.claude.json`** once on first use:
+   ```json
+   {
+     "theme": "dark",
+     "hasCompletedOnboarding": true,
+     "hasCompletedProjectOnboarding": true,
+     "hasTrustDialogAccepted": true,
+     "bypassPermissionsModeAccepted": true
+   }
+   ```
+3. **Source the account env file every spawn** (`source ~/.claude-accounts/<id>.env`). The token is NOT persisted to the
+   config dir — `echo $CLAUDE_CODE_OAUTH_TOKEN` is empty in a plain shell; must be re-injected each time.
+4. **`exec claude <flags>`** — now reaches the chat prompt authenticated, no wizard.
+
+The seeded `.claude.json` persists across re-spawns of the same session (one-time per config dir). The token is
+re-sourced from the env file each spawn. The `CLAUDE_CONFIG_DIR` is account-agnostic (the token isn't stored there), so
+the same config dir can serve multiple accounts, or use separate dirs per (slot, account) — either works.
+
+### Orchestrator implementation (agent-orchestrator)
+
+The orchestrator wires this via two layers:
+
+**tmux_spawn.py** (`_ensure_claude_config_dir()` + `_ONBOARDING_SEED`):
+
+- Derives `CLAUDE_CONFIG_DIR=<base>/<session>` where base = `ORCHESTRATOR_CLAUDE_CONFIG_BASE` env (default
+  `~/.claude-configs`).
+- Creates the dir and writes `.claude.json` from `_ONBOARDING_SEED` on first call per session.
+- Both `spawn()` (worker path) and `spawn_named()` (main/review/backup agent path) accept `env_file: str | None`.
+- Commits: workers `1717768` (2026-05-22), main/review/backup agents `76c966e` (2026-05-23).
+
+**server.py** (`spawn_agent_endpoint`):
+
+- `SpawnAgentRequest.account_id: str | None` — new field (2026-05-23).
+- When set, resolves `oauth_token_env_file` from `data/config/accounts.json` via `load_accounts()` and passes it as
+  `env_file` to `spawn_named()`.
+- Pattern mirrors the worker spawn path at `~line 1808` (`tmux_spawn.spawn(env_file=…)`).
+
+### Quick verification recipe
+
+```bash
+# Prove setup token works headless (no seed needed):
+set -a; . ~/.claude-accounts/harsh-primary.env; set +a
+claude -p 'reply AUTH_OK'   # → AUTH_OK
+
+# Prove the interactive headless recipe (with seed):
+mkdir -p /tmp/ck && printf '%s' \
+  '{"theme":"dark","hasCompletedOnboarding":true,"hasCompletedProjectOnboarding":true,"hasTrustDialogAccepted":true,"bypassPermissionsModeAccepted":true}' \
+  > /tmp/ck/.claude.json
+tmux new-session -d -s ck "CLAUDE_CONFIG_DIR=/tmp/ck bash -c 'source ~/.claude-accounts/harsh-primary.env; cd /tmp; exec claude'"
+# → skips wizard, reaches chat prompt authenticated (accept one folder-trust prompt with Enter)
+
+# Prove the orchestrator spawn path:
+python3 -c "from server import tmux_spawn; print(tmux_spawn.spawn(slot_id=99, boot_prompt='reply SPAWN_WORKS', cwd='/tmp', env_file='$HOME/.claude-accounts/harsh-primary.env'))"
+tmux capture-pane -t orch-slot-99 -p | tail   # → authenticated, replied SPAWN_WORKS
+```
+
 ## One-time setup (on a machine with browser)
 
 For EACH distinct Max subscription:
