@@ -775,6 +775,38 @@
       "role": "service",
       "tags": ["im", "fund-admin", "subscription-redemption"]
     },
+    "greeks-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture"],
+      "version": "0.0.1",
+      "version_source": "pyproject.toml",
+      "dependencies": [
+        { "name": "unified-trading-library", "version": ">=0.3.167,<1.0.0", "required": true },
+        { "name": "unified-api-contracts", "version": ">=0.1.20,<1.0.0", "required": true }
+      ],
+      "ci_status": "NEW_REPO",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "notes": "PricingLedger greeks + carry-rate writer. Subscribes to MTDS mark_update; consumes IS InstrumentRecord; writes option_delta/gamma/theta/vega/rho + funding/lending/borrow/staking/dividend/rebase to PricingLedger MARK_UPDATE rows. Two modes: live (streaming) + batch (backfill). Stubbed 2026-05-23 (greeks-service@b9dbade, 15 files); worktree model wired. Folded under mtds_mdps_master epic. Plan: pricing_ledger_carry_rates_mtds_2026_06_01. (Re-added 2026-05-23 after stale-commit 54cd3245e clobbered the original 1b7dca671 registration.)",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["event_bus", "data_sink"],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/greeks-service",
+      "completion_path": "cross-cutting",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": ["cefi", "defi", "tradfi", "pricing-ledger", "greeks", "carry-rates"]
+    },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
       "arch_tier": "infrastructure",
@@ -1605,6 +1637,7 @@
           "features-service",
           "features-sports-service",
           "features-volatility-service",
+          "greeks-service",
           "fund-administration-service",
           "market-data-processing-service",
           "market-tick-data-service",
