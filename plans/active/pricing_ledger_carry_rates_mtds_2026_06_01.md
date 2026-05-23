@@ -9,11 +9,17 @@ estimate_calibrated_ai_days: 3
 assigned_vm: vm-ml
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-predecessor: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md (Phase 5 operator-ACK 2026-05-23)
+predecessor: plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation; Phase 5 operator-ACK captured below in "Operator decisions" section)
 related_plans:
-  - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
+  - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded into this plan)
   - plans/epics/mtds_mdps_master.md
   - plans/epics/instruments_master.md
+  - plans/epics/global_ledger_pnl_attribution_master.md
+shipped_commits:
+  - uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry (funding/lending/borrow/staking/dividend/rebase) columns
+  - deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes
+  - greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees)
+  - pm@f7ca196a1 — workspace-manifest topologicalOrder level 4
 ---
 
 # PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake
@@ -28,6 +34,49 @@ per-snapshot delta of `lst_rates.exchange_rate` (cumulative exchange_rate stays 
 `greeks-service` is the writer for both greek columns and carry-family columns on `PricingLedger.MARK_UPDATE` rows. This
 plan sequences the three workstreams; no UAC schema changes are in scope (the `LedgerRow` columns shipped 2026-05-23 in
 the discovery plan's Phase 2 — see commit verification under Risk callouts).
+
+> **Consolidation note (2026-05-23)**: the parent discovery + migration plans
+> (`global_ledger_pnl_attribution_discovery_2026_05_21.md` + `..._migration_2026_06_01.md`) were ARCHIVED in the
+> 2026-05-23 PM consolidation sweep. Their operator-decision capture (Phase 11) + greeks-service bootstrap (Phase 6.5)
+> are folded into this active plan below so the orchestrator tracks them here, not in archived files.
+
+## Operator decisions (ACK'd 2026-05-23 — folded from archived discovery plan Phase 11)
+
+- [x] ✅ Phase 3 late-arriving-data → **Option A: event-sourced append-only** + pre-join view layer at API boundary.
+      Enrichment closed set: clearing_house_id, final_fee_corrected, fx_rate_locked, regulatory_report_id,
+      custody_reconciled. Pre-join fn in UTL (not a new service). Option G (snapshots) deferred; Option C (bi-temporal)
+      opt-in for `regulatory_reportable=true` only.
+- [x] ✅ Phase 4/6 TreasuryLedger split → **separate partition** `ledger_type=treasury/client_id={cid}/`. Writer =
+      fund-administration-service.
+- [x] ✅ Phase 5a greeks home → **new `greeks-service/` repo** (not folded into MTDS or strategy-service).
+- [x] ✅ Phase 5b PricingLedger cadence → **per-asset_group default**: perps per-funding (8h CeFi / 1h DeFi), options
+      per-minute, equities per-day, spot per-minute. Operator-tunable.
+- [x] ✅ Phase 5c `dividend_yield` → **BOTH paths** (per-event PassiveLedger DIVIDEND row + derived annualised
+      PricingLedger rate). → Phase 1 of this plan.
+- [x] ✅ Phase 5c `rebase_rate` → **BOTH paths** (cumulative IS lst_rates.exchange_rate + derived delta). → Phase 2 of
+      this plan.
+
+## Shipped 2026-05-23 — greeks-service bootstrap (folded from archived migration plan Phase 6.5)
+
+- [x] ✅ [UAC] `LedgerRow` extended with greek + carry columns — uac@709e9aff (option_delta/gamma/theta/vega/rho +
+      funding_rate/lending_rate/borrow_rate/staking_apy/dividend_yield/rebase_rate; all nullable Decimal).
+- [x] ✅ [INFRA] greeks-compute VM prefixes registered — deployment-service@460bb6e (`greeks-compute-live-`
+      LONG_LIVED_LIVE + `greeks-compute-batch-` EPHEMERAL_BATCH).
+- [x] ✅ [REPO] greeks-service repo created + skeleton pushed — greeks-service@b9dbade (15 files, 575 lines) +
+      `gh repo create IggyIkenna/greeks-service --private`; worktree model wired (main clone at workspace root on
+      live-defi-rollout + 11 tab worktrees on tab/ikennaigboaka/N); cron auto-discovers (branch_for_repo defaults to
+      live-defi-rollout, no script edit).
+- [x] ✅ [INFRA] workspace-manifest registration — pm (repositories dict + topologicalOrder level 4 @ pm@f7ca196a1).
+- [x] ✅ [SCRIPT] `uv lock` generated in greeks-service (203 packages).
+- [x] ✅ [DOC] codex/04-architecture/greeks-service-overview.md (197 lines, 10 sections) + boundary-vs-features-service.
+- [ ] [INFRA] P1. Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for PricingLedger sink
+      bucket — DEFERRED until bucket-SSOT canonicalisation (`bucket_name_ssot_canonicalisation_2026_05_10.md`)
+      stabilises. Bucket lookup MUST use `resolve_bucket_name()` per QG STEP 5.69.
+- [ ] [CODE] P0. **features-service volatility ⟷ greeks-service boundary** — features-service volatility consumes
+      greeks-service PricingLedger surface/greeks instead of (often-absent) venue greeks. Single authoritative surface
+      (greeks-service fits SVI/SABR; features-service consumes for normalised moneyness/skew/term-structure features).
+      Removes the venue-greeks-missing gap (DeFi options have no venue greeks). See Phase 3 + codex
+      `greeks-service-overview.md` § "Boundary vs features-service volatility".
 
 ## Readiness gates (per PLAN_FORMAT.md)
 
@@ -60,7 +109,7 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       IS `CanonicalCorporateAction` via IS HTTP API; computes annualised rate per `instrument_id` using the formula from
       the design item. Decimal arithmetic; no float drift.
 - [ ] [CODE] P0. Wire `dividend_yield` into MTDS `MARK_UPDATE` row emission via UAC `LedgerRow.dividend_yield` field
-      (shipped in `unified-api-contracts@<sha-pending-2026-05-23>` — verify before merge). Equities/ETFs only; crypto
+      (shipped in `unified-api-contracts@709e9aff` — verify before merge). Equities/ETFs only; crypto
       paths emit `None`.
 - [ ] [TEST] P0. Unit tests: SPY 2024-Q4 dividend stream → assert annualised yield matches expected ~1.3% within
       tolerance; AAPL with quarterly cadence; a no-dividend equity (TSLA) emits `None`. Backtest fixture in
@@ -99,7 +148,7 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       exercise_style/asset_class) at startup + on `InstrumentRecord` change events. Cached locally with TTL + hot-reload
       via `ApiKeyReloader` pattern.
 - [ ] [CODE] P0. `greeks-service` writes back to `PricingLedger.MARK_UPDATE` rows with option_delta/gamma/theta/vega/rho
-      populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@<sha-pending-2026-05-23>`). Same `event_id`
+      populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@709e9aff`). Same `event_id`
       keyed back to the originating MTDS event.
 - [ ] [CODE] P0. `greeks-service` writes carry-family columns (funding_rate/lending_rate/borrow_rate/staking_apy/
       dividend_yield/rebase_rate) reading from MTDS rate feeds (funding/lending/borrow) + IS LST data
@@ -134,10 +183,11 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - **Foundation-completion-gate**: PricingLedger carry + greek columns depend on the UAC `LedgerRow` extension shipped
   2026-05-23 in the discovery plan's Phase 2. **Pending commit verification** — slot-1 main confirms UAC@sha before
   Phase 1 code lands. Layer-N+1 work in `greeks-service` cannot begin until that UAC commit is on `live-defi-rollout`.
-- **greeks-service repo bootstrap**: the `greeks-service` repo must be initialised
-  (`gh repo create IggyIkenna/greeks-service`) + onboarded to PM workflow templates + tarball deployment scripts before
-  Phase 3 code can land. Operator-actionable; capture as a slot-1 ping under this plan if not done by Phase 1
-  completion.
+- **greeks-service repo bootstrap**: ✅ DONE 2026-05-23 — repo created (greeks-service@b9dbade), worktree model wired
+  (main clone + 11 tab worktrees), workspace-manifest + topologicalOrder registered, cron auto-discovers. Remaining:
+  onboard to PM workflow templates (`rollout-workflow-templates.sh`) + tarball deployment scripts
+  (`create-code-tarballs.sh`) + per-worktree `.venv` (on-demand when a slot works greeks-service). These are
+  Phase-3-blocking only for the deploy/CI steps, not for local code landing.
 - **Annualisation methodology (Phase 1)**: quant-call. Operator likely wants to review the formula spec before
   implementation. Phase 1 DESIGN todo is gated on operator-ACK; do not start Phase 1 CODE without that ACK.
 - **Phase 2 owner-repo split**: MTDS-derived vs IS-write-time is an architecture call. The decision impacts the IS↔MTDS
