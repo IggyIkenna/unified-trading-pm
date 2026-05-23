@@ -199,8 +199,11 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
 
 - [x] ✅ Phase 2 P0.4 + P0.6 — `batch-live-reconciliation-service` DeviationRecord.new() factory +
       ReconciliationDimension tagging across all 7 stage files + mock_data_provider —
-      batch-live-reconciliation-service@216073a | QG green (P0.5 position-balance-monitor-service BLOCKED — not in tab-8
-      worktree)
+      batch-live-reconciliation-service@216073a | QG green
+- [x] ✅ Phase 2 P0.5 — `strategy-service` ReconciliationSnapshot + FeeReconciliationSnapshot age-tracking fields
+      (first_seen_at/last_seen_at/unreconciled_age_seconds/dimension) + engine population at row-creation time —
+      strategy-service@d386a9bf | QG green (4288 passed, 315 skipped, 17 pre-existing risk failures unrelated to
+      changes)
 - [ ] Phase 3 P0.7-P0.9 — alerting-service 15-min/30-min escalation rules + per-(venue,strategy) overrides
 - [ ] Phase 4 P0.10-P0.11 — 7 ImmediateSev0Override predicates + unit tests
 - [ ] Phase 5 P0.12-P0.14 — execution-service preflight recon-freeze enforcement
