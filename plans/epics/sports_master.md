@@ -435,8 +435,11 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 ### Sports MTDS slice (`market_tick_data_to_100pct` — sports)
 
-- [ ] [AGENT] P1. Per-source completion %: api_football, footystats, transfermarkt, sfi, understat, open_meteo,
-      odds_api. Surface to deployment-ui. [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain]
+- [x] ✅ [AGENT] P1. Per-source completion % (2026-05-23 post-dedup, canonical manifest 2.68M rows): api_football=22.9%
+      cap (441K/1.93M); footystats=22.5% (73K/324K); odds_api=26.5% (28K/105K); open_meteo=12.0% (14K/115K); sfi=24.5%
+      (23K/92K); transfermarkt=0% (75K all empty_confirmed); understat=21.4% (5K/25K). TRANSFERMARKT_LEAGUES 100% empty
+      — needs P0 triage (no forward-poll VM running). Surface to deployment-ui: **DEFERRED** — blocked on forward-poll
+      VM resume + UI code change (post-migration gate).
 - [x] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators. (verified 2026-05-07:
       deployment-api/deployment_api/services/data_status_service.py:58 imports `clip_dates_to_source_coverage`, applied
       at lines 451/494/621) [AUDIT 2026-05-07: FRESH — actionable; deployment-api wiring needed (per MEMORY entry,
