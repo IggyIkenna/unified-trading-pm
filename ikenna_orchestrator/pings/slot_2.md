@@ -1,3 +1,49 @@
+## [slot-2] 2026-05-23 — DeFi swaps_ohlcv SCHEMA_VALIDATION_FAILED root cause fixed (3 root causes)
+
+[2026-05-23 ~22:xx UTC] P0 schema gap fix shipped across UAC + MDPS + UTL.
+
+### 215530 batch VMs — zero captured rows, all SCHEMA_VALIDATION_FAILED
+
+After POOL→pool case fix (UAC@8e1e7e58), relaunched DeFi 2024+2025 VMs at 215530. Both terminated with 0 captured
+`swaps_ohlcv_*` rows. Root cause investigation from run.log:
+
+**Root cause 1** — `DefiSwapAdapter.process_to_candles()` returns `CandleOutput` without `chain`, `swap_count`,
+`volume_quote_usd`. UAC `(defi, pool, swaps_ohlcv_*)` contract requires all 3. `validate_dataframe` raises
+`missing_column` violation on every shard → `SCHEMA_VALIDATION_FAILED`.
+
+**Root cause 2** — `_TIMEFRAMES_DEFI` lacked `4h`. MDPS generates 4h DeFi candles →
+`SchemaContractNotFoundError: swaps_ohlcv_4h` on every pool shard.
+
+**Root cause 3 (manifest)** — `_infer_chain()` returns `""` for 3-part DeFi pool instrument IDs like
+`UNISWAP_V3:POOL:0x...`. Updated fallback to parse chain from canonical venue form `UNISWAP_V3-ETHEREUM` → `ETHEREUM`.
+
+### Fixes shipped
+
+| Repo | SHA      | Change                                                                                                  |
+| ---- | -------- | ------------------------------------------------------------------------------------------------------- |
+| UAC  | c8c93328 | `_TIMEFRAMES_DEFI` gets `4h`; `CandleOutput` gets `chain`/`swap_count`/`volume_quote_usd` fields        |
+| MDPS | 7f1a5b5  | `DefiSwapAdapter` populates chain from tick data; maps trade_count→swap_count, USD vol→volume_quote_usd |
+| UTL  | a56c22c6 | `freshness_monitor`: `asset_class` → `asset_group` (pre-existing MDPS test failure, fixed in passing)   |
+
+### ⚠️ OPERATOR ACTION NEEDED
+
+All 3 schema bugs are now fixed. To complete DeFi swaps_ohlcv backfill:
+
+```bash
+# Step 1: Rebuild tarballs (picks up UAC@c8c93328 + MDPS@7f1a5b5 + UTL@a56c22c6 + earlier fixes)
+bash deployment-service/scripts/vm/create-code-tarballs.sh
+
+# Step 2: Relaunch MDPS DeFi 2024-2025 backfill (new VMs with fixed tarball)
+# Previous 195633 and 215530 batches both failed — retry the full date range
+```
+
+Both 195633 VMs should have terminated by now. 215530 VMs terminated with 0 rows (schema failure, not data issue).
+
+Issue doc: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md` Plan ref:
+`plans/epics/mtds_mdps_master.md` (MDPS-3.3.DeFi-V verify gate)
+
+---
+
 ## [slot-2] 2026-05-23 — OPERATOR ACTION: mtds-backfill-defi-20260523 broken + 195633 VMs stale
 
 ⚠️ **Two separate DeFi backfill issues found by slot-2 monitoring. Operator action needed.**

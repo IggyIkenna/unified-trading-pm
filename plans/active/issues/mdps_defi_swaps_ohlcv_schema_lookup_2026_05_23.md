@@ -61,10 +61,41 @@ When operator rebuilds tarballs post-195633 and relaunches, new MDPS VMs pick up
 3. **Verify**: after relaunch, spot-check `swaps_ohlcv_15s` parquets for `UNISWAP_V3-ETHEREUM` pool shards in 2024-07
    and 2025-02 dates.
 
+## Second schema gap — found from 215530 VM (SCHEMA_VALIDATION_FAILED)
+
+The 215530 MDPS VMs (relaunched after POOL→pool fix) produced zero captured rows with `SCHEMA_VALIDATION_FAILED` on
+**all** `swaps_ohlcv_*` shards. Three root causes from run.log investigation:
+
+### Root cause 1: Missing `chain`/`swap_count`/`volume_quote_usd` columns
+
+`DefiSwapAdapter.process_to_candles()` returned `CandleOutput` without `chain`, `swap_count`, `volume_quote_usd`. The
+UAC `(defi, pool, swaps_ohlcv_*)` contract requires all three (chain: non-nullable; swap_count/volume_quote_usd:
+nullable). `CandleOutput.to_dataframe()` produced a DataFrame missing these columns → `missing_column` violations.
+
+### Root cause 2: No `swaps_ohlcv_4h` contract
+
+`_TIMEFRAMES_DEFI` was `("15s", "1m", "5m", "15m", "1h", "1d")` — no `4h`. MDPS generates 4h candles for DeFi but no
+contract existed → `SchemaContractNotFoundError: swaps_ohlcv_4h`.
+
+### Root cause 3 (manifest only): `_infer_chain()` returns "" for 3-part instrument IDs
+
+`UNISWAP_V3:POOL:0x...` is 3-part — `_infer_chain()` needed a fallback to parse chain from venue canonical form.
+`canonical_writer.py` was updated to also extract chain from `UNISWAP_V3-ETHEREUM` → `ETHEREUM`.
+
+### Fixes shipped (2026-05-23 ~22:xx UTC)
+
+| Repo | Commit   | Change                                                                                                                                                                                  |
+| ---- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UAC  | c8c93328 | `_candle_contracts.py`: add `"4h"` to `_TIMEFRAMES_DEFI`; `adapter_models.py`: add `chain`, `swap_count`, `volume_quote_usd` to `CandleOutput`                                          |
+| MDPS | 7f1a5b5  | `swap_adapter.py`: extract `chain` from tick data `chain` column; set `swap_count`=trade_count, `volume_quote_usd`=USD volume; `canonical_writer.py`: improve `_infer_chain()` fallback |
+| UTL  | a56c22c6 | `freshness_monitor.py`: rename `asset_class` → `asset_group` (pre-existing MDPS test failure)                                                                                           |
+
 ## Status
 
-- 2026-05-23 ~21:xx UTC — Fix shipped at UAC@8e1e7e58. In-flight 195633 VMs cannot benefit (stale tarball). Awaiting
-  operator: VM completion + tarball rebuild + relaunch.
+- 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
+- 2026-05-23 ~22:xx UTC — chain/swap_count/volume_quote_usd + 4h fix shipped: UAC@c8c93328 + MDPS@7f1a5b5 +
+  UTL@a56c22c6. 215530 VMs also failed (stale tarball).
+- **Awaiting operator**: tarball rebuild + relaunch MDPS DeFi 2024-2025.
 
 ## Plan refs
 
