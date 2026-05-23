@@ -882,9 +882,13 @@ features silently miss bookmaker × market gaps.
 > shipped 2026-05-07) is the canonical reconciler shape to generalize for cefi / defi / tradfi / predictions
 > (coordinator Phase 2).
 
-- [ ] [SCRIPT] P0. **Sports feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~60 sports feature_groups (form,
+- [x] ✅ [SCRIPT] P0. **Sports feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~60 sports feature_groups (form,
       league_strength, fixture_xg, lineup_quality, market_consensus, etc.) need registry entries. Source-of-truth:
       `features-sports-service/features_sports_service/calculators/` calculator metadata. Coordinator Phase 4.
+      **COMPLETED 2026-05-23**: 36 sports feature_groups registered in `required_inputs.py`; 9 missing raw data_types
+      (XG/XG_SHOTS/MATCHES/STANDINGS/WEATHER/PREDICTIONS/ODDS/ODDS_HORIZON_BUCKET/TRANSFER_RECORDS) added to
+      `AVAILABILITY_AT_SEMANTICS` + `source_priority.py`. `validate_required_inputs()` → 0 issues; 38/38 UAC tests pass.
+      UAC@e9a613b8.
 
 ## May-23 deliverable (folded from `sports_ml_may_23_2026.epic` 2026-05-08)
 
