@@ -1,7 +1,6 @@
 ---
 name: audit03_deployment_cron_provisioning
 title: "AUDIT-03 remediation — deployment cron + cutover-gate provisioning (May-23 P0)"
-type: active
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra

@@ -1,7 +1,6 @@
 ---
 title: "AUDIT-03 — findings routed to Ikenna for decision / codex-intent"
 created: 2026-05-22
-author: Harsh (Claude Opus 4.7)
 priority: P1
 status: active
 locked_by: live-defi-rollout

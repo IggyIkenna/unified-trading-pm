@@ -1,13 +1,14 @@
 ---
 title: DeFi expected_coverage VENUE-CHAIN phantom entries + handler naming inconsistency
 created: 2026-05-22
-author: slot-1-main
 source:
   - data-status UI audit 2026-05-22
   - expected_coverage.py code review
 locked_by: live-defi-rollout
 parent_epic: epics/infrastructure_master.md
 assigned_vm: planning-vm
+priority: P2
+status: active
 ---
 
 ## What I found

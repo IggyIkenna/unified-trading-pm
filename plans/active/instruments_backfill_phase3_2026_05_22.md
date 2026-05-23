@@ -1,7 +1,6 @@
 ---
 name: instruments_backfill_phase3
 title: "Instruments-service catalogue forward-fill — Phase 3 per-asset-group"
-type: active
 parent_epic: instruments_master
 assigned_vm: vm-cefi
 estimate_class: infra
@@ -12,6 +11,8 @@ priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
 gate: Phase 2 freeze lifted + instruments_master Phase A-E preflight GREEN
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Instruments-service catalogue forward-fill — Phase 3 per-asset-group

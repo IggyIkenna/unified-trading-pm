@@ -1503,10 +1503,13 @@ _(no plans currently assigned at this priority)_
 
 **status**: active · **estimate**: 30.9 cal AI-days (class: design)
 
-### [`d8_perf_upgrade_2026_05_20`](../active/d8_perf_upgrade_2026_05_20.md)
+### [`d8_perf_upgrade_2026_05_20`](../archive/2026_05/d8_perf_upgrade_2026_05_20.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade plan (hot-path
-identification from A1)
+**status**: ✅ ARCHIVED 2026-05-23 · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade
+plan (hot-path identification from A1)
+
+**Deferred (MIGRATED FROM archived plan)**: Live VM measurement (≥20% hot-path GCS improvement verification on real
+batch VM, workers=32) — post-cutover P2, no wrapper plan yet.
 
 ### [`defi_catalogue_chain_primitives_2026_05_10`](../active/defi_catalogue_chain_primitives_2026_05_10.md)
 
@@ -1560,12 +1563,19 @@ _(no plans currently assigned at this priority)_
   - [ ] [BLOCKED-CREDENTIALS] 1inch + 0x API keys — ping filed in `harsh_orchestrator/pings/slot_11.md`
   - [ ] [AGENT] instruments-service catalogue entry: adapter writing `instrument_availability/by_date/day={D}/venue=AGGREGATOR-{CHAIN}/instruments.parquet`
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20 Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/defi_simulation_realism_2026_05_10.md Phase 2H** — Implement
+      `SolidlyCLForkPool` for Velodrome/Aerodrome Slipstream V3-tick concentrated-liquidity pools. Registered to
+      `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator. Validation gate: ≥20
+      Velodrome + ≥20 Aerodrome historical swaps within 5 bps.
 
 - [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase 2.F** — Add closed-set `RiskRuleId` entries for oracle outage (`ORACLE_OUTAGE_HALT`) + cross-cloud egress (`CROSS_CLOUD_EGRESS_HALT`) + custody endpoint unreachable (`CUSTODY_ENDPOINT_HALT`). These were noted in Phase 2.F but deferred pending "seam review" on enum additions. Required for complete kill-switch taxonomy.
       — `uac@1920d56` (BinaryEventTrigger + 3 RiskRuleIds + 3 global_rules entries; 105 risk-rule tests pass)
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across USDC/USDT/DAI/USDE/FRAX/GHO/CRVUSD/SUSDE). Current backtest covers 2021-01 to 2023-09 at daily granularity. Gaps: CATASTROPHIC TPR=0% (intraday trough not captured by daily snapshot); UST/PYUSD outside lake window. Operator decision needed: lower CATASTROPHIC threshold to 900bps OR extend data lake to intraday timestamps.
+- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/risk_simulations_limits_alerting_2026_05_10.md Phase D.4** — Run depeg
+      ladder sensitivity sweep (300bps / 500bps / 800bps KILL_ALL thresholds across
+      USDC/USDT/DAI/USDE/FRAX/GHO/CRVUSD/SUSDE). Current backtest covers 2021-01 to 2023-09 at daily granularity. Gaps:
+      CATASTROPHIC TPR=0% (intraday trough not captured by daily snapshot); UST/PYUSD outside lake window. Operator
+      decision needed: lower CATASTROPHIC threshold to 900bps OR extend data lake to intraday timestamps.
 
 ## Cross-references
 

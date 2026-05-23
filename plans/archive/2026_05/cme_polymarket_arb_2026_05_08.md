@@ -2,12 +2,10 @@
 title: CME x Polymarket cross-venue event-arb
 parent_epic: tradfi_master
 priority: P1
-status: active
+status: archived
 estimate_class: brand-new
 estimate_baseline_ai_days: 15.0
 estimate_calibrated_ai_days: 15.0
-locked_by: live-defi-rollout
-locked_since: 2026-05-08
 related_plans:
   - trading_agent_service_architecture_unlock_2026_05_22.md
   - tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
@@ -78,3 +76,12 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 - Phase 2 CLEARED: all 9 roots wired — UAC@9c491bdd (2026-05-22). `predictions_master` Phase 5 UAC portion done.
 - Phase 5 post-cutover: full `cme_polymarket_event_arb` archetype via standard paper-trade onboarding checklist.
 - Manifest re-classification of existing `instrument_type=OPTION` rows for 9 EC\* roots: deferred until Phase 3 ships.
+
+## Deferred work — migrated to:
+
+**MIGRATED FROM:** this plan → `plans/epics/tradfi_master.md` P2:
+
+- **Phase 5 full archetype onboarding**: `cme_polymarket_event_arb` archetype paper-trade → live via standard promote
+  checklist (post-cutover, no date set)
+- **OPTION row re-classification**: manifest re-classification of existing `instrument_type=OPTION` rows for 9 EC\*
+  roots (ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ) — deferred until IS Phase 3 ships

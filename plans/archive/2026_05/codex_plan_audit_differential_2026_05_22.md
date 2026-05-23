@@ -4,7 +4,7 @@ title: Codex ↔ Plan Differential Audit 2026-05-22
 parent_epic: plan_hygiene_master
 assigned_vm: vm-planning
 priority: P1
-status: active
+status: archived
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 10
@@ -318,3 +318,9 @@ _Operator: "do everything all of it now." Scope: all 277 remaining stale-marker 
 4. ✅ `plans/audit/results/codex_plan_diff_scan_2026_05_22.md` with before/after counts published
 5. ✅ `codex/11-project-management/codex-audit-playbook.md` stub written
 6. ✅ All 277 stale-marker docs annotated (Phase 5 P2 sweep) — `post-May-23` count = 0 workspace-wide
+
+## Deferred work — migrated to:
+
+- **~3 P2 codex-alignment items** already tagged DEFERRED in plan body with named epics (`manifest_master`,
+  `strategy_master`). No new migration needed — epics are the active home.
+- All Phase 1+2+3 items completed in full. No outstanding deferred items require new plan entries.

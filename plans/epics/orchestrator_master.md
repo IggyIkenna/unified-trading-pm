@@ -183,6 +183,29 @@ pending harsh setup-token
 **status**: ✅ ARCHIVED 2026-05-21 — Phases 1-4 done (mirror-events, dirty-state gate, claim tag, in-flight files).
 Phase 5 gitignore-on-demand DEFERRED-POST-CUTOVER. · **estimate**: 1.2 cal AI-days (class: infra)
 
+### [`aws_epic_vm_fleet_2026_05_22`](../archive/2026_05/aws_epic_vm_fleet_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — AWS EC2 fleet commissioned (10 VMs); CLOUD_PROVIDER=aws default flipped; GCP path
+retained. All phases done. · **estimate**: 1.2 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)** — post-cutover P3:
+
+- DNS: point `api-<vm>.agent-orchestrator.odum-research.com` to AWS EIPs or ALB
+- EIP allocation: stable EIPs for DNS (currently dynamic IPs); update `backends.json` once allocated
+- AWS Secrets Manager rotation: automate quarterly rotation via Lambda
+- Cost monitoring: weekly `aws ce get-cost-and-usage` report for orchestrator fleet
+
+### [`orchestrator_headless_agent_auth_2026_05_22`](../archive/2026_05/orchestrator_headless_agent_auth_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Headless token-auth shipped for workers + main/review/backup agents; 10-VM fleet
+deployed to main@1a98cca; usage scraping re-engineered for Claude 2.1.145. · **estimate**: original scope (infra)
+
+**Deferred (MIGRATED FROM archived plan)** — P3 backlog:
+
+- RC-capable agents: `.credentials.json` capture/sync pipeline + per-account CLAUDE_CONFIG_DIR wiring; unblocks
+  `claude.ai/code` Remote Control URL for live session drop-in. Separate build-out from setup-token flow; both auth
+  types coexist via separate CLAUDE_CONFIG_DIRs.
+
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_

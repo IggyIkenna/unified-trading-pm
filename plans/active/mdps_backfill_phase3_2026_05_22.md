@@ -1,7 +1,6 @@
 ---
 name: mdps_backfill_phase3
 title: "MDPS bar reprocessor relaunch — Phase 3 per-asset-group"
-type: active
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 estimate_class: infra
@@ -12,6 +11,8 @@ priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
 gate: mtds_backfill_phase3 per-ag verification GREEN (MDPS reads from MTDS shards)
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # MDPS bar reprocessor relaunch — Phase 3 per-asset-group

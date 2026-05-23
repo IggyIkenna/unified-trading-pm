@@ -2,10 +2,8 @@
 name: d8-perf-upgrade-2026-05-20
 title: D8 — Performance upgrade plan (hot-path identification from A1)
 created: 2026-05-20
-status: active
+status: archived
 priority: P2
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
@@ -108,3 +106,9 @@ performance-critical paths:
 ## Temporary states
 
 None — this plan is additive (performance improvements don't create transitional states).
+
+## Deferred work — migrated to:
+
+- **Live VM measurement (≥20% target verification)**: deferred post-cutover P2. **MIGRATED FROM:** this plan. Home:
+  `plans/epics/defi_master.md` P2 — add new item "D8 live VM benchmark: verify ≥20% GCS hot-path improvement on real
+  batch VM (workers=32, real data) once fleet stable post-cutover."

@@ -8,11 +8,10 @@ assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
-locked_by: live-defi-rollout
 source: live debugging session with operator (Harsh) 2026-05-22 — agents stuck on OAuth after claude 2.1.145 upgrade
 related_plans:
   - plans/epics/orchestrator_master.md
@@ -183,3 +182,12 @@ tmux capture-pane -t orch-slot-99 -p | tail   # → authenticated, replied SPAWN
 - Token SSOT buckets: `gs://central-element-323112-orchestrator-creds/accounts/`,
   `s3://uts-orchestrator-creds-427895769566/accounts/`.
 - Codex SSOT (update pending): `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+
+## Deferred work — migrated to:
+
+- **Remote Control (RC) via `.credentials.json`**: browser-login capture/sync + per-account config dirs for RC-capable
+  agents. **MIGRATED FROM:** this plan. Home: `plans/epics/orchestrator_master.md` P3 — "RC-capable agents:
+  `.credentials.json` capture/sync pipeline + per-account CLAUDE_CONFIG_DIR wiring; unblocks `claude.ai/code` Remote
+  Control URL for live session drop-in."
+- All other items shipped 2026-05-23 (headless token-auth for main+worker+review agents; fleet deployed; usage scraping
+  re-engineered).

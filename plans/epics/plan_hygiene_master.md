@@ -100,6 +100,14 @@ removes the manual cost and catches regressions before they compound.
 - [ ] [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
       — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`).
 
+## Completed wrapper plans
+
+### [`codex_plan_audit_differential_2026_05_22`](../archive/2026_05/codex_plan_audit_differential_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1+2+3 all complete: broken-ref scan (0 refs), codex SSOT audit (23 plans
+classified), L0-L2 epic SSOT pointers added, `post-May-23` markers cleaned (0 stale), `codex-audit-playbook.md` stub
+written. · **estimate**: 2.4 cal AI-days (class: brand-new)
+
 ## Deferred work — migrated from archived plans
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/codex_refactor_2026_05_08.plan.md Phase B.4-bis** — Expand the

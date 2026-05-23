@@ -22,6 +22,8 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 created: 2026-05-22
 last_updated: 2026-05-22
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Ikenna work-split 2026-05-22 (8-hour autonomous run)

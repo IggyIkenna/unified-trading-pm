@@ -3,12 +3,10 @@ title: AWS epic VM fleet — CLOUD_PROVIDER toggle + AWS-preferred default
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-locked_by: live-defi-rollout
-locked_since: 2026-05-22
 related_plans:
   - epic_vm_fleet_commissioning_2026_05_21.md (archived)
 ---
@@ -140,3 +138,12 @@ Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, S
 - GCP planning VM (34.146.53.106) remains live until DNS cutover to AWS. Successor: DNS + EIP allocation (deferred).
 - AWS IAM (Phase 2) complete — profile `uts-orchestrator-epic` in account 427895769566.
 - `CLOUD_PROVIDER` default is `aws` (flipped at agent-orch@ff0d5ff after Phase 4 smoke).
+
+## Deferred work — migrated to:
+
+**MIGRATED FROM:** this plan → `plans/epics/orchestrator_master.md` P2:
+
+- **DNS**: point `api-<vm>.agent-orchestrator.odum-research.com` to AWS EIPs or ALB once EIPs allocated
+- **EIP allocation**: replace dynamic public IPs with stable EIPs; update `backends.json` once allocated
+- **AWS Secrets Manager rotation**: automate quarterly secret rotation via Lambda rotation function
+- **Cost monitoring**: add `aws ce get-cost-and-usage` weekly cost report for orchestrator fleet

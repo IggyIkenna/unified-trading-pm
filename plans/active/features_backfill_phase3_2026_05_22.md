@@ -1,7 +1,6 @@
 ---
 name: features_backfill_phase3
 title: "Features-service compute relaunch — Phase 3 per-asset-group"
-type: active
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
 estimate_class: infra
@@ -12,6 +11,8 @@ priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
 gate: mdps_backfill_phase3 per-ag verification GREEN (features reads from MDPS bars)
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Features-service compute relaunch — Phase 3 per-asset-group
