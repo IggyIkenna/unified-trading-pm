@@ -2972,7 +2972,12 @@ depends on the extended classifier). Tasks can be parallelised within Wave 3.S (
       `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet` during 2026-05-22
       scan. Gate: IS CeFi backfill (`instruments_backfill_phase3_2026_05_22.md`) Phase 1 CeFi GREEN. Re-run:
       `python scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi` (scan-only first, then
-      `--apply-flips` after CSV review).
+      `--apply-flips` after CSV review). **APPLY-FLIPS IN PROGRESS (2026-05-23 ~14:23 UTC slot-2)**:
+      `VM_NAME=recon-legacy-typed-cefi-1779542589`, 184,965 candidates, catalog loaded (210,340 rows),
+      `CATALOG_CACHE_TTL_SECONDS=7200` (no mid-run expiry risk). Run 2 scan (bzddtgfrs, completed 14:00 UTC) was
+      scan-only: 179,132→`attempted_failed/LegacyBlankErrorReasonError`, 4,312→`EXPECTED_INSTRUMENT_NOT_LISTED`.
+      Apply-flips writes transitions directly to manifest. ETA ~15:36 UTC. Flip this checkbox once
+      `RECONCILER_COMPLETED` event appears in `/tmp/recon-cefi-apply-flips.log`.
 
 #### Phase 3.D.5 Wave 4 — Service-output emission policy + completeness semantics (operator msg 10, 2026-05-08)
 
