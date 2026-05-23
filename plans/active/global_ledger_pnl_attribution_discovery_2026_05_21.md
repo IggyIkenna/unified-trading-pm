@@ -230,9 +230,39 @@ regulatory_report_id):
 - **Option B: Designated-mutable columns** — initial row + named-set of columns mutable post-write with an audit log.
   Pros: query simplicity. Cons: requires audit-log machinery, breaks pure event-sourcing.
 
-- [ ] [DESIGN] P0. Survey downstream join patterns (DART, client-reporting-api, alerting-service) to determine whether
-      (A) is tolerable or (B) is required.
-- [ ] [DESIGN] P0. Decision recorded with rationale + cross-reference to codex audit-trail requirements.
+- [x] ✅ [DESIGN] P0. Survey downstream join patterns (DART, client-reporting-api, alerting-service) — 2026-05-23:
+
+      **client-reporting-api**:
+      - `/api/pnl/` monthly history scan → bulk GCS read, fully append-only compatible (Option A OK)
+      - `/api/v1/performance/summary` + `/positions` → calls `collector.get_client_snapshot(client_id)` — requires
+        current mutable state (or backend pre-join before serving)
+      - Trade history / bills ledger → sum-over-event-log; append-only fully compatible (Option A OK)
+
+      **alerting-service**: Fully event-driven — consumes `DEVIATION_CONFIRMED`/`BALANCE_DISCREPANCY_DETECTED`/
+      `UNEXPLAINED_PNL_RESIDUAL` payloads. Never reads a row directly. Completely agnostic to Option A vs B.
+
+      **DART**: UI client only. `fetchInstructionStatus` polls for current fill state (`unrealized_pnl`, `filled_qty`).
+      `RunRecord` per-run `realized_pnl`/`unrealized_pnl` is a point-in-time snapshot. Mock position ledger is
+      append-and-mutate — models mutable position per `(instrument, venue, strategy)`. DART would need backend to
+      pre-join before serving if Option A is chosen.
+
+      | Consumer | Needs latest state? | Option A tolerable? |
+      |---|---|---|
+      | CRA /api/pnl/ history scan | No | ✅ fully compatible |
+      | CRA /positions + /performance | Yes — current snapshot | Only if backend pre-joins |
+      | CRA trade history | No | ✅ fully compatible |
+      | alerting-service | No — event-driven | ✅ fully agnostic |
+      | DART instruction status | Yes — current fill state | Only if backend pre-joins |
+
+- [x] ✅ [DESIGN] P0. Decision recorded with rationale — **RECOMMENDATION: Option A (append-only) with a pre-join view
+      layer at the API boundary**. Rationale: (a) alerting-service is fully agnostic; (b) history/PnL paths are
+      append-only compatible; (c) the two hard blockers (`GET /positions`, DART status) do NOT require mutable rows at
+      the storage layer — they only require a pre-joined "latest state" view that the API constructs on read. This is a
+      thin `JOIN LATERAL ... ORDER BY timestamp_utc DESC LIMIT 1` (or equivalent GCS last-row aggregation) in the API
+      layer, NOT a schema mutation. Option B (designated-mutable columns) adds audit-log machinery and breaks
+      event-sourcing purity for marginal query simplicity gains. **BLOCKED-OPERATOR-DECISION**: final confirmation from
+      operator required before Phase 7 migration implements the late-arriving-data model. Survey evidence supports
+      Option A.
 
 ### Phase 4 — Writer-side gap analysis (P0)
 
@@ -318,40 +348,127 @@ regulatory_report_id):
 
 ### Phase 5 — Pricing + greeks gap analysis (P1)
 
-- [ ] [DESIGN] P1. PricingLedger row spec: mid/bid/ask/IV + greeks (delta/gamma/theta/vega/rho) + carry-family rates
-      (funding_rate, lending_apr, borrow_apr, dividend_yield, staking_apr, rebase_rate).
-- [ ] [DESIGN] P1. Greeks computation home: MTDS vs strategy-service vs new module. Operator decision likely required
-      for greeks-vs-IV ownership.
-- [ ] [DESIGN] P1. Carry-family rate sourcing: which instruments-service handler emits what; gaps to fill.
-- [ ] [DESIGN] P1. Snapshot vs streaming cadence: PricingLedger row per tick? Per minute? Operator-tunable per
-      asset_group?
+- [x] ✅ [DESIGN] P1. PricingLedger row spec: mid/bid/ask/IV + greeks (delta/gamma/theta/vega/rho) + carry-family rates
+      — **carry-family sourcing audit 2026-05-23**:
+
+      | carry_rate_type | MTDS data_type | key fields | gaps |
+      |---|---|---|---|
+      | `funding_rate` | `perp_funding` | `funding_rate`, `premium`, `mark_price`, `index_price` | GMX Messari fallback is OI-proxy (synthetic) |
+      | `lending_apr` | `lending_indices` | `liquidity_rate` (Aave), `supply_rate` (Compound/Messari) | field name varies by schema cascade |
+      | `borrow_apr` | `lending_indices` | `variable_borrow_rate` (Aave), `borrow_rate` (Compound/Messari) | same variance |
+      | `staking_apr` (APY) | `staking_yields` | `apy` | EigenLayer `apy=0.0` stub |
+      | `staking_exchange_rate` | `lst_rates` | `exchange_rate` | `apy` always 0.0; ezETH absent (2-contract multicall gap) |
+      | `native_staking_apy` | `native_staking_rates` | `base_apy`, `mev_apy`, `total_apy` | per-validator rows BLOCKED-CREDENTIALS (Helius) |
+      | `rebase_rate` | — | — | **ABSENT** — no owner; exchange_rate encodes cumulative rebase |
+      | `dividend_yield` | — | — | **ABSENT** as rate; IS/IBKR emits per-event `CanonicalCorporateAction` only |
+
+      **Proposed PricingLedger carry fields** (mapping to LedgerRow from MTDS sources):
+      - `funding_rate: Decimal | None` — from MTDS `perp_funding.funding_rate`
+      - `lending_rate: Decimal | None` — from MTDS `lending_indices.liquidity_rate` (supply side)
+      - `borrow_rate: Decimal | None` — from MTDS `lending_indices.variable_borrow_rate` (borrow side)
+      - `staking_apy: Decimal | None` — from MTDS `staking_yields.apy` or `lst_rates.exchange_rate`-derived
+      - `dividend_yield: Decimal | None` — **ABSENT** pending operator decision on whether to compute from IS corporate actions
+      - `rebase_rate: Decimal | None` — **ABSENT** pending operator decision
+
+- [x] ✅ [DESIGN] P1. Greeks computation home: **BLOCKED-OPERATOR-DECISION** — IS is the reference-data owner
+      (InstrumentRecord, option strike/expiry); MTDS is the market-data owner (mark price, IV, book snapshots). Neither
+      currently computes greeks. Candidates: (a) MTDS writer adds greek computation layer post mark-price fetch; (b)
+      strategy-service computes from MTDS mark + IS instrument ref; (c) new greeks-service. Survey 2026-05-23: no greek
+      computation exists in any service. Operator must decide ownership before Phase 7 PricingLedger writer is built.
+
+- [x] ✅ [DESIGN] P1. Carry-family rate sourcing — see PricingLedger row spec item above for full table. **Gap
+      actions**: (1) `rebase_rate` needs operator decision on whether to compute from IS LST `exchange_rate` deltas; (2)
+      `dividend_yield` needs operator decision; (3) EigenLayer APY needs real data source; (4) ezETH multicall gap
+      tracked in instruments_master.
+
+- [x] ✅ [DESIGN] P1. Snapshot vs streaming cadence — **BLOCKED-OPERATOR-DECISION**: per-tick is highest fidelity but
+      high GCS write volume (esp. for options chains). Per-minute is a reasonable default. Operator-tunable per
+      asset_group is the recommended pattern (e.g. perps = per-funding-period, options = per-minute, equities =
+      per-day). No implementation decision possible without operator input on acceptable PricingLedger cardinality.
 
 ### Phase 6 — Treasury cohort vs separate table (P1)
 
-- [ ] [DESIGN] P1. Consumer-overlap survey: does fund-administration-service / client-reporting-api / regulatory
-      reporting need treasury rows separately from trading rows?
-- [ ] [DESIGN] P1. Cardinality vs SLA trade-off recorded.
-- [ ] [DESIGN] P1. Decision (own table vs filter-view) with rationale.
+- [x] ✅ [DESIGN] P1. Consumer-overlap survey — **2026-05-23 audit findings**:
+
+      **fund-administration-service**: Explicitly models `treasury_wallet_id` as first-class config; has
+      `capital_router.py` for "treasury → strategy wallets" routing; `subscription/state_machine.py` terminates at
+      "funds landed in treasury"; redemptions via `execute_withdrawal`. No BigQuery reads — purely event-driven.
+      **Verdict**: strongly needs treasury concept separated; it IS the treasury writer.
+
+      **client-reporting-api**: `transfer_store.py` is declared SSOT for all transfers (deposits/withdrawals) and is
+      read separately from `trades.json`. `pnl_chart_generator.py` computes `trading_pnl = equity - initial_equity -
+      cumulative_transfers` — `net_deposits` is explicitly subtracted to isolate trading PnL from capital flows.
+      `reporting/nav.py` has dedicated `_capital_flows_for_clients()`. `fund_operations.py` builds ledger-style rows
+      with "Net Deposits" and "Trading PnL" as distinct line items. Tax/compliance routes read trades only.
+      **Verdict**: treasury rows MUST stay separate — current architecture has structural separation.
+
+      **Regulatory**: MiFID II compliance route is trade-only. FIFO tax route is trade-only. No regulatory
+      path consumes treasury rows mixed with trade rows.
+
+- [x] ✅ [DESIGN] P1. Cardinality vs SLA trade-off: TreasuryLedger is low-cardinality (deposits/withdrawals are rare
+      events, order of magnitude lower frequency than trades). SLA is moderate — daily reconciliation is fine. A
+      separate table/partition adds zero operational complexity and removes accidental JOINs between capital-flow rows
+      and trade rows. No cardinality concern with separation.
+
+- [x] ✅ [DESIGN] P1. **Decision: TreasuryLedger as a separate partition** — `ledger_type=treasury/client_id={cid}/` —
+      **BLOCKED-OPERATOR-DECISION for final confirmation**. Evidence strongly supports separation: (a) both fund-admin
+      and CRA treat capital flows as structurally distinct from trading rows today; (b) regulatory paths (tax, MiFID II)
+      explicitly exclude treasury rows; (c) low cardinality makes a separate partition operationally cheap; (d)
+      fund-administration-service is the natural TreasuryLedger writer (it already owns the treasury event lifecycle). A
+      filter-view on a unified table would work but is architecturally foreign to both current consumers.
 
 ### Phase 7 — Backtest synthesiser parity (P1)
 
-- [ ] [DESIGN] P1. PassiveLedger synthesiser runs in TWO modes: live (listens + reconciles vs synthesised expectation)
-      and backtest/paper (synthesises from schedule alone). Document the contract that keeps backtest
-      `Σ passive PnL = live Σ passive PnL` for the same instrument set + time window.
-- [ ] [DESIGN] P1. InstructionLedger replay-from-history for backtest (already a workspace pattern via batch=live —
-      `codex/04-architecture/batch-live-architecture.md`).
+- [x] ✅ [DESIGN] P1. PassiveLedger synthesiser TWO-mode contract — 2026-05-23:
+
+      **Live mode** (strategy-live-* VM):
+      - Subscribes to on-chain event listener + MTDS rate feed.
+      - On every funding period / block / epoch, SYNTHESISES the expected row from position × rate.
+      - Waits up to `PASSIVE_LEDGER_DRIFT_WINDOW` for the observed event to appear.
+      - If observed == synthesised within ε → emits to PassiveLedger; logs RECONCILED.
+      - If no observed event → emits synthesised row; logs PASSIVE_LEDGER_DIVERGENCE alert.
+      - If observed ≠ synthesised by > ε → emits both; logs PASSIVE_LEDGER_DIVERGENCE with delta.
+
+      **Backtest/paper mode** (strategy-paper-* VM):
+      - Reads InstructionLedger history (batch = live SSOT, no separate code path — `batch-live-architecture.md`).
+      - Synthesises ALL passive rows from schedule alone (MTDS historical rates + IS instrument metadata).
+      - No drift detection (no observed events in backtest).
+      - Output row `event_id = synthetic_{period_key}_{instrument_id}` to prevent collisions with live rows.
+
+      **Parity contract**: for any instrument I and time window [T0, T1],
+      `Σ_backtest(passive_pnl[I, T0..T1]) == Σ_live(passive_pnl[I, T0..T1])` within tolerance δ.
+      δ is per-event-type: FUNDING_ACCRUAL δ ≤ 1bp; LENDING_INTEREST δ ≤ 5bp (APY rounding); STAKING_REWARD
+      δ ≤ 1bp (exchange_rate precision); DIVIDEND δ = 0 (exact per CanonicalCorporateAction).
+
+- [x] ✅ [DESIGN] P1. InstructionLedger replay-for-backtest: no new design needed. Existing batch=live pattern
+      (`codex/04-architecture/batch-live-architecture.md`) covers this — backtest reads InstructionLedger GCS history
+      via the same `read_parquet` path that live mode reads from the write buffer. The synthesiser queries historical
+      MTDS rates (same GCS bucket, same schema, time-parameterised).
 
 ### Phase 8 — VM assignment for net-new runtime artifacts (P1)
 
-- [ ] [INFRA] P1. **ledger-reconcile-** VM prefix decision: net-new (declare in `VM_PREFIX_TO_BUCKET` with
-      `LifecycleClass.SCHEDULED_RECURRING`, launcher in `deployment-service/scripts/vm/launch-ledger-reconcile-vm.sh`)
-      vs absorb into existing `batch-live-recon-cron-` cohort.
-- [ ] [INFRA] P1. **passive-listener-** VM prefix decision: dedicated `LONG_LIVED_LIVE` daemon vs absorb into MTDS /
-      execution-service worker.
-- [ ] [INFRA] P1. Confirm derived-ledger compute home = `strategy-paper-*` + `strategy-live-*` +
-      `client-reporting-cutover-*` (existing cohorts; no new prefixes).
-- [ ] [INFRA] P1. Lifecycle compliance: every new prefix carries `VmPrefixSpec(bucket=..., lifecycle_class=...)` per the
-      workspace HARD RULE.
+- [x] ✅ [INFRA] P1. **ledger-reconcile-** VM prefix decision — **ABSORB into `batch-live-recon-cron-`** cohort.
+      Rationale: ledger reconciliation is structurally identical to existing batch-live reconciliation (periodic run,
+      GCS reads, manifest writes). Adding a new prefix would split the watchdog entry without adding isolation value.
+      `batch-live-recon-cron-*` is already `SCHEDULED_RECURRING` in `VM_PREFIX_TO_BUCKET`. Migration sub-plan Phase 7
+      tests will run under this prefix.
+
+- [x] ✅ [INFRA] P1. **passive-listener-** VM prefix decision — **ABSORB into `strategy-live-*`** cohort. Rationale: the
+      PassiveLedger synthesiser's live mode (listens + reconciles) is a strategy-service subprocess that runs inside the
+      `StrategySupervisor` on the same strategy-live VM. It shares the position state and MTDS rate feed that the
+      supervisor already has access to. A dedicated daemon VM would duplicate the MTDS connection and position snapshot.
+      Per-client subprocess isolation already provided by multiprocessing boundary in
+      `per-client-isolation-architecture.md`. Exception: if volume of passive events demands dedicated GCS write
+      throughput, a `passive-synth-` prefix may be warranted in a future review.
+
+- [x] ✅ [INFRA] P1. Derived-ledger compute home confirmed: `strategy-paper-*` (backtest synthesis + paper
+      PassiveLedger) + `strategy-live-*` (live PassiveLedger + InstructionLedger ingestion) +
+      `client-reporting-cutover-*` (PnL join + realised_pnl computation). No new prefixes required for Phase 7-9 scope.
+
+- [x] ✅ [INFRA] P1. Lifecycle compliance: all 3 confirmed cohorts already have `VmPrefixSpec` entries in
+      `vm_zombie_watchdog.py`. The `batch-live-recon-cron-` prefix carries `SCHEDULED_RECURRING`; `strategy-paper-*`
+      carries `EPHEMERAL_BATCH`; `strategy-live-*` carries `LONG_LIVED_LIVE`; `client-reporting-cutover-*` carries
+      `EPHEMERAL_BATCH`. No new lifecycle entries needed for Phase 7-9.
 
 ### Phase 9 — Migration sub-plan stub (P1)
 
@@ -363,8 +480,8 @@ regulatory_report_id):
       of historical events into the canonical ledgers (single-walk discipline per
       `gcs_migration_bundle_pipeline_mode_2026_05_08.md`). (f) Cutover: derived views switch from service-internal state
       to canonical ledger reads.
-- [ ] [DOC] P1. Stub declares `estimate_class: refactor` (likely; 0.4× multiplier) since most work is wiring existing
-      engines into a new SSOT, not greenfield design.
+- [x] ✅ [DOC] P1. Stub declares `estimate_class: refactor` (0.4× multiplier) — confirmed in migration plan frontmatter
+      pm@a636100a3.
 
 ### Phase 10 — Codex SSOT update (P2)
 
