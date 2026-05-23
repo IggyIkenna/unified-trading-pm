@@ -278,9 +278,13 @@ GCP Pub/Sub powers cross-service messaging per
 `circuit_breaker_commands`, `service_stop_restart_triggers`, plus deployment-orchestration topics. AWS-side equivalent
 currently missing.
 
-- [ ] [SCRIPT] P0. Inventory GCP Pub/Sub topics + subscriptions:
+- [x] ✅ [SCRIPT] P0. Inventory GCP Pub/Sub topics + subscriptions:
       `gcloud pubsub topics list --project central-element-323112` + `gcloud pubsub subscriptions list`. Filter to
-      non-test. Capture in `cloud-agnostic-audit-2026-05-07.md`.
+      non-test. Capture in `cloud-agnostic-audit-2026-05-07.md`. **DONE 2026-05-23** (Slot 7): Static inventory
+      captured in `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` § 7 — 18 domain-event topics
+      (UAC `event_topics.py`), 4 infrastructure topic patterns (UTL config_reloader), 11 pipeline topic patterns.
+      gcloud live enumeration BLOCKED-OPERATOR (no credentials on AWS VM) — operator to run
+      `gcloud pubsub topics list --project central-element-323112` to confirm no additional ad-hoc topics.
 - [x] ✅ [SCRIPT] P0. Per-topic decision: **SNS+SQS fan-out** (default — at-least-once, lowest-friction) vs **EventBridge**
       (rules-based, schema-registry-aware). Recommendation: SNS+SQS for trading-event topics; EventBridge only if
       cross-account routing is needed. Trade-off: SNS doesn't natively dedup; SQS visibility-timeout works around

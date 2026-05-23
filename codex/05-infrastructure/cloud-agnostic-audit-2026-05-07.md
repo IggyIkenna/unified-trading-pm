@@ -172,23 +172,87 @@ service code are either multi-cloud-aware dispatch (category a) or env-var-drive
 name strings. QG STEP 5.12b (`grep '"gs://\|"s3://'`) already enforces the bucket-literal ban in service code. Zero new
 anti-patterns found.
 
-### 7. Pub/Sub → SNS+SQS routing policy (2026-05-23)
+### 7. GCP Pub/Sub topic + subscription inventory (2026-05-23)
 
-Per `aws_migration_defi_first_2026_05_07.md` Phase 1.5.B — AWS-side equivalent of GCP Pub/Sub.
+Per `aws_migration_defi_first_2026_05_07.md` Phase 1.5.B — inventory of GCP Pub/Sub topics for SNS+SQS parity.
 
-**Known GCP topics** (from e2e testing plan `020_alerting_service.md`):
+**Static inventory method**: `gcloud pubsub topics list --project central-element-323112` not available from AWS VM
+(no gcloud CLI or ADC credentials). Topics enumerated via static code analysis:
+- `unified_api_contracts/internal/event_topics.py` — canonical EVENT_TOPIC_REGISTRY (18 topics, inter-service domain events)
+- `unified_trading_library/config_reloader.py` — config/lifecycle infrastructure topics
+- `unified_trading_library/service_framework/_sink_factory.py` — service-level event sink topics
+- `unified-trading-pm/scripts/dev/setup-dev-pubsub.sh` — dev environment topic templates (RETIRED 2026-03-13; canonical source is now Terraform in deployment-service)
 
-| GCP topic | AWS equivalent | Routing decision |
+**BLOCKED-OPERATOR**: live `gcloud pubsub topics list` output from `central-element-323112` is needed to confirm no
+additional ad-hoc topics exist. Operator to run from GCP-authenticated machine:
+```bash
+gcloud pubsub topics list --project central-element-323112 --format="value(name)" | sort
+gcloud pubsub subscriptions list --project central-element-323112 --format="table(name,topic)" | sort
+```
+and append results as section 7.A below.
+
+#### 7.A — Statically enumerated topics (non-test, production code)
+
+**Inter-service domain events** (from `unified_api_contracts/internal/event_topics.py`):
+
+| GCP topic | Producer | Key consumers | Retention |
+|---|---|---|---|
+| `alert-dispatched` | alerting-service | risk-and-exposure-service, strategy-service | 7d |
+| `balance-snapshots` | position-balance-monitor-service | strategy-service, risk-and-exposure-service | 7d |
+| `deleverage-actions` | risk-and-exposure-service | execution-service | 7d |
+| `fill-events` | execution-service | position-balance-monitor-service, pnl-attribution-service | 7d |
+| `kill-switch-triggers` | alerting-service | execution-service, strategy-service | 7d |
+| `liquidation-alerts` | position-balance-monitor-service | alerting-service, pnl-attribution-service, risk-and-exposure-service | 30d |
+| `margin-events` | position-balance-monitor-service | alerting-service, risk-and-exposure-service, strategy-service, execution-service, pnl-attribution-service | 14d |
+| `order-events` | execution-service | position-balance-monitor-service, pnl-attribution-service | 7d |
+| `pnl-attribution` | pnl-attribution-service | strategy-service, risk-and-exposure-service | 7d |
+| `pnl-points` | pnl-attribution-service | strategy-service | 7d |
+| `position-snapshots` | position-balance-monitor-service | strategy-service, risk-and-exposure-service | 7d |
+| `price-snapshots` | position-balance-monitor-service | strategy-service | 7d |
+| `reconciliation-completed` | risk-and-exposure-service | alerting-service, pnl-attribution-service | 7d |
+| `reconciliation-deviation` | risk-and-exposure-service | alerting-service | 7d |
+| `risk-events` | risk-and-exposure-service | alerting-service, strategy-service, execution-service | 7d |
+| `shadow-comparison` | risk-and-exposure-service | alerting-service | 7d |
+| `strategy-instructions` | strategy-service | execution-service | 7d |
+| `strategy-signals` | strategy-service | strategy-service (self), execution-service | 7d |
+
+**Infrastructure / config topics** (from UTL `config_reloader.py` + `domain_config_reloader.py`):
+
+| GCP topic | Purpose | Pattern |
 |---|---|---|
-| `risk_alerts_circuit_breaker_triggers` | `uts-risk-alerts-circuit-breaker-triggers` | **SNS+SQS** — trading event, at-least-once, no cross-account routing |
-| `balance_discrepancy_alerts` | `uts-balance-discrepancy-alerts` | **SNS+SQS** — trading alert, fan-out to multiple subscribers |
-| `order_rejection_spikes` | `uts-order-rejection-spikes` | **SNS+SQS** — trading event, at-least-once |
-| `circuit_breaker_commands` | `uts-circuit-breaker-commands` | **SNS+SQS** — command topic, at-least-once delivery required |
-| `service_stop_restart_triggers` | `uts-service-stop-restart-triggers` | **SNS+SQS** — lifecycle event, no cross-account routing |
-| deployment-orchestration topics (TBD) | TBD | **EventBridge** — only if cross-account CodePipeline routing needed |
+| `config-updates` | Global service config hot-reload (UTL `ConfigReloader`) | static |
+| `config-domain-{domain}` | Per-domain config reload (e.g. `config-domain-defi`, `config-domain-cefi`) | templated |
+| `lifecycle-events` | Service STARTED/STOPPED/FAILED events | static |
+| `{service-name}-events` | Per-service event sink (UTL `_sink_factory` live mode default) | templated |
 
-**Policy rule**: Use **SNS+SQS** for all trading-event + command topics. Use **EventBridge** only for deployment-orchestration where cross-account routing is required.
+**Service pipeline topics** (from dev script templates; Terraform-provisioned in production):
 
-**Trade-off**: SNS doesn't natively dedup; SQS visibility-timeout provides at-least-once semantics. For all 5 trading topics, at-least-once is acceptable (duplicate alerts/commands are handled idempotently by consumers). Full GCP Pub/Sub topic inventory requires `gcloud` CLI — not available from this AWS VM; operator to run `gcloud pubsub topics list --project central-element-323112` to enumerate remaining topics.
+| Topic pattern | Owner service | Fan-out |
+|---|---|---|
+| `instrument-events-{venue}` | instruments-service | market-tick-data-service, features-* |
+| `raw-ticks-{venue}-{itype}-{dtype}` | market-tick-data-service | market-data-processing-service, features-* |
+| `processed-candles-{venue}-{itype}-{tf}` | market-data-processing-service | features-delta-one-service, features-volatility-service |
+| `features-delta-one-{fc}-{venue}` | features-delta-one-service | strategy-service, ml-inference-service |
+| `features-volatility-{fc}-{venue}` | features-volatility-service | strategy-service, ml-inference-service |
+| `features-cross-instrument-{fc}` | features-cross-instrument-service | strategy-service |
+| `ml-predictions-{venue}` | ml-inference-service | strategy-service |
+| `execution-orders` | execution-service | position-balance-monitor-service |
+| `execution-fills` | execution-service | position-balance-monitor-service, pnl-attribution-service |
+| `circuit-breaker-events` | execution-service | alerting-service, risk-and-exposure-service |
+| `system-alerts` | alerting-service | operator notification channels |
 
-**Provisioning**: `deployment-service/scripts/aws/setup-messaging.sh` (not yet written) should create SNS topics + SQS queues matching GCP topic names. Tracked as Phase 1.5.B item 5 in `aws_migration_defi_first_2026_05_07.md`.
+#### 7.B — AWS SNS+SQS routing policy
+
+**Policy rule**: Use **SNS+SQS** for all trading-event, domain-event, and command topics. Use **EventBridge** only for
+deployment-orchestration where cross-account CodePipeline routing is required.
+
+**Trade-off**: SNS doesn't natively dedup; SQS visibility-timeout provides at-least-once semantics acceptable for all
+trading topics (duplicate alerts/commands handled idempotently by consumers).
+
+**AWS naming convention**: `uts-{gcp-topic-name}` (e.g. GCP `margin-events` → AWS SNS `uts-margin-events` + SQS
+`uts-margin-events-{consumer-service}`). Follows the `unified-trading-` prefix convention established in section 3.
+
+**Provisioning**: `deployment-service/scripts/aws/setup-messaging.sh` (not yet written — tracked as Phase 1.5.B item 5
+in `aws_migration_defi_first_2026_05_07.md`) should create SNS topics + SQS queues for all 18 domain-event topics +
+infrastructure topics. Per-venue/instrument-type/timeframe pipeline topics (~100+ topics) are provisioned by the per-service
+launch scripts at VM startup.
