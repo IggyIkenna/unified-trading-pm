@@ -7,12 +7,10 @@ status: active
 priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
-owner: ikenna
 created: 2026-05-21
 last_updated: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-cutting
 related_plans:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
