@@ -1,9 +1,16 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-23
 ---
 
 # Autonomous Recovery Matrix
+
+> **2026-05-23 SCOPE NOTE**: this doc owns the per-failure-scenario decision tree (what action fires for which error
+> class). The **5-layer defence-in-depth model** that surrounds these actions lives in
+> [`recovery-defence-in-depth-layers.md`](recovery-defence-in-depth-layers.md). The Layer-0 deterministic recovery
+> scripts each action maps to live in `deployment-service/scripts/recovery/` (per
+> `plans/active/agent_recovery_controller_layer0_deterministic_2026_05_23.md`). The Layer-1 LLM audit-signoff agent (per
+> `plans/active/ai_recovery_audit_signoff_agent_2026_05_23.md`) audits every action emitted from this decision tree.
 
 ## Principle
 
@@ -12,6 +19,10 @@ position management. Human intervention is only required when both reconciliatio
 simultaneously — the 0.1% case.
 
 **Live-mode only.** All recovery mechanisms are disabled in batch/backtest.
+
+**Every action in this decision tree** is wrapped by Layer-0 deterministic scripts emitting structured
+`AgentActionEvent` to the Incident Gateway. The operator gets a human audit ack within 6h (per
+`codex/15-runbooks/alerting/audit-acknowledgement-flow.md`).
 
 ---
 

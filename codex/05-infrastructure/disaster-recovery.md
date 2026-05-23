@@ -1,9 +1,22 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-23
 ---
 
 # Disaster Recovery -- RTO/RPO Targets
+
+> **2026-05-23 SCOPE EXTENSION**: this doc owns RTO/RPO + Tier 0-3 recovery + manifest-restore + GCS backup locations.
+> The broader **incident operating model** (5-layer defence-in-depth, incident state machine, audit-ack SLA, LLM
+> recovery-audit-signoff, physical pager) lives in:
+>
+> - `codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
+> - `codex/04-architecture/incident-gateway-state-machine.md` — 13-state incident lifecycle
+> - `codex/05-infrastructure/physical-pager-layer.md` — Layer-4 device comparison + webhook
+> - `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 6h ack SLA + escalation ladder
+> - `plans/active/issues/disaster_recovery.md` — operator-supplied target operating model (sections 1-22)
+> - `plans/audit/results/observability_disaster_recovery_audit_2026_05_23.md` — gap audit of target model vs prod
+>
+> The 11 active plans under `parent_epic: observability_master` close the gap surfaced in the 2026-05-23 audit.
 
 ## Recovery Targets by Environment
 

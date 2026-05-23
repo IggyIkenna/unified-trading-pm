@@ -249,5 +249,13 @@ codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
 
 - `04-architecture/autonomous-recovery-matrix.md` — full decision tree for failure scenarios
 - `04-architecture/kill-switch-circuit-breaker.md` — kill switch and circuit breaker mechanics
+- `04-architecture/recovery-defence-in-depth-layers.md` — **NEW 2026-05-23** the 5+1 layer recovery model (Layer-0
+  deterministic Python → Layer-1 LLM audit/signoff → Layer-2 PagerDuty cascade → Layer-3 Twilio voice → Layer-4 physical
+  pager → Layer-5 human audit ack)
+- `04-architecture/incident-gateway-state-machine.md` — **NEW 2026-05-23** 13-state incident lifecycle + dedup-key +
+  audit-ack queue
+- `05-infrastructure/physical-pager-layer.md` — **NEW 2026-05-23** Layer-4 device comparison + webhook prototype
+- `15-runbooks/alerting/audit-acknowledgement-flow.md` — **NEW 2026-05-23** Layer-5 ack SLA + escalation ladder
+- `05-infrastructure/disaster-recovery.md` — RTO/RPO targets + Tier 0-3 recovery
 - `03-observability/lifecycle-events.md` — mandatory event sequences
 - `03-observability/coordination-events.md` — service-to-service event wiring
