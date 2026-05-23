@@ -241,9 +241,9 @@ OKX only); `ARBITRAGE_PRICE_DISPERSION` uses all 6 for cross-venue funding sprea
 Stream E correction 2026-05-07. TradFi / Sports / Prediction stay batch-only this cycle — but their ML readiness ladders
 progress in parallel so the \_next* archetypes after DeFi launch quickly.
 
-**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated
-to AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests /
-ML / strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
+**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated to
+AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests / ML
+/ strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
 team can seamlessly switch any deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. _Not every byte gets
 migrated_ (waste of API quota when GCS already has it) — only what's needed for the DeFi proof.
 
@@ -332,11 +332,11 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit
 
 This is the deliverable that ties the audit to action. For each high-leverage change area, flag whether the codex SSOT,
-the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this
-plan, before agents start writing code in the affected area.**
+the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this plan,
+before agents start writing code in the affected area.**
 
-| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                              | Resolve via                                                                                                                                                               |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                             | Resolve via                                                                                                                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                                                                              | ⚠ Confirmed — `availability_manifest_v4_…` is the only stale active plan; self-tagged superseded         | Archive the v4 plan via work-stream G; doc already canonical v6 with v4/v5 hive-key fallback                                                                              |
 | Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06`                                                       | ⚠ Confirmed — `writegate_…` declared umbrella; other two are children but not yet `parent:`-tagged       | Re-tag children with `parent: writegate_honest_coverage_endtoend_2026_05_06` (work-stream G); surface only umbrella                                                       |
 | Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                                                                        | ⚠ Doc partially describes target; VM launchers GCP-only in code                                          | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                                                                    |
@@ -417,7 +417,7 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 | Plans missing `name` field                      |    11 |
 | Plans missing `last_updated` (95%)              |   140 |
 | `superseded_by` set but plan still in `active/` |    18 |
-| Filename ↔ `name` field mismatch               |     1 |
+| Filename ↔ `name` field mismatch                |     1 |
 | YAML errors                                     |     2 |
 
 **Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
@@ -427,14 +427,14 @@ from filename + body, populate `locked_by: live-defi-rollout` for any that are m
 
 | Service                   | Active plans touching it |
 | ------------------------- | -----------------------: |
-| instruments-service       |                **35** ⚠ |
-| deployment-service        |                    16 ⚠ |
-| strategy-service          |                    16 ⚠ |
-| deployment-api            |                    16 ⚠ |
-| unified-trading-system-ui |                    12 ⚠ |
-| execution-service         |                    12 ⚠ |
-| deployment-ui             |                    12 ⚠ |
-| market-tick-data-service  |                    10 ⚠ |
+| instruments-service       |                 **35** ⚠ |
+| deployment-service        |                     16 ⚠ |
+| strategy-service          |                     16 ⚠ |
+| deployment-api            |                     16 ⚠ |
+| unified-trading-system-ui |                     12 ⚠ |
+| execution-service         |                     12 ⚠ |
+| deployment-ui             |                     12 ⚠ |
+| market-tick-data-service  |                     10 ⚠ |
 
 Eight services with >5 active plans = real overlap risk. The `instruments-service` 35-plan count is the clearest
 consolidation target post-cutover.
@@ -812,10 +812,12 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
       (calendar family) (PARTIALLY*DONE — CLI flag exists at MTDS `cli/main.py:288`; needs threading into GCS output
       path templates + features-calendar adoption). Not on May-23 critical path. *(folded from
       consolidated*operational_validation_2026_04_15)*
-- [ ] [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch
-      (PARTIALLY*DONE — local subprocess works, cloud placeholder). Confirmed at deployment-service
+- [x] ✅ [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch —
+      deployment-service@4990d21. CloudRunBackend wired into `_dispatch_services`; lazy cache per job_name;
+      cloud_run_job_name field added to all 16 service entries in sports-trigger-tiers.yaml. Previously: (PARTIALLY_DONE
+      — local subprocess works, cloud placeholder). Confirmed at deployment-service
       `deployment_service/sports_trigger_periodic.py` + `sports_trigger_scheduler.py` + `sports_trigger_state.py`;
-      cloud-dispatch shim is the named gap. *(folded from consolidated*operational_validation_2026_04_15)*
+      cloud-dispatch shim is the named gap. _(folded from consolidated_operational_validation_2026_04_15)_
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
@@ -943,11 +945,11 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
-  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
-        paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
-        codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
-        batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
-        closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
+        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
+        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live
+        since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
+        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped batch-live-reconciliation-service@48f12ce 2026-05-15**
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
