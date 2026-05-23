@@ -200,3 +200,45 @@ adapter dormant. Not in `DEFERRED` — stays on live list per workspace rules.
 **Ready if operator acks**: defi apply-write (~0.25 AI days, 4 × 90-min runs).
 
 — slot-4 / 2026-05-23
+
+---
+
+## 2026-05-23 (session 2) — [slot-4 → slot-1 main] MTDS DeFi handler bugs fixed + SOURCE_RETURNED_ZERO cleanup
+
+**Plan refs**: `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md` ·
+`plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` (Phase 8) · `plans/epics/mtds_mdps_master.md`
+(MDPS-3.3.DeFi-V) · `plans/epics/defi_master.md`
+
+### 3 MTDS DeFi handler bugs fixed ✅
+
+| Bug                                                            | Fix                                                                              | Commit          |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------- |
+| `dex_swaps` hardcoded `"dex_pool_swaps"` partition key         | `data_type=_DEX_SWAPS_DATA_TYPE`                                                 | `mtds@69d694b1` |
+| `gas_fees` null `eth_feeHistory` result → silent `[]` → 0 rows | `ValueError` raise + `"returned null result"` fallback                           | `mtds@69d694b1` |
+| `lending_indices` silent API-key skip → `return 0`             | `RuntimeError` raise + ERROR-level SM logging + `THE_GRAPH_API_KEY` env fallback | `mtds@e86a6ad8` |
+
+Also shipped: `scripts/reset_source_returned_zero_manifest.py` — bulk-deletes `empty_confirmed SOURCE_RETURNED_ZERO`
+rows from per-VM shards + consolidated index (`mtds@e86a6ad8`).
+
+### SOURCE_RETURNED_ZERO manifest cleanup — IN PROGRESS
+
+- Dry-run confirmed: defi ~2K+/shard, cefi ~1K–7K/shard rows to delete. All 5 buckets targeted.
+- Apply running now for cefi/tradfi/sports/pred (1756 cefi shards, ~1h). Writegate Phase 8.B item 5 flipped.
+- Defi bucket hit 429 rate limit after 7/61 shards — needs re-run once cefi+others complete. 7 shards already cleaned.
+- After apply completes: trigger manifest consolidator, then flip Phase 8.B item 6.
+
+### Plans updated
+
+- Issue doc filed: `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`
+- `defi_master.md` — added ⚠️ DO NOT relaunch DeFi VMs until cleanup finishes
+- `mtds_mdps_master.md` — MDPS-3.3.DeFi-V updated with bug fix evidence + cleanup caveat
+- `writegate` archived plan — Phase 8 added (all 3.A items ✅, 8.B item 5 ✅, items 6/7 pending)
+
+### Still pending (slot-4)
+
+- Flip Phase 8.B item 6 once apply completes + defi bucket re-run done
+- Re-run MTDS DeFi backfill for gas_fees / lending_indices / dex_swaps (writegate Phase 8.B item 7)
+- Trigger manifest consolidator per-bucket after apply finishes (auto-runs every 1 min via Cloud Scheduler, but shards
+  won't be picked up until per-VM shards are clean)
+
+— slot-4 / 2026-05-23
