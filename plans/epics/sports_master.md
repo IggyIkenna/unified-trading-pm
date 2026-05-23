@@ -435,12 +435,18 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       needed — data is already in canonical MTDS format with 8 horizon buckets. The plan's "migrate from venue=ODDS_API"
       referred to the manifest re-key; manifest already has correct key shape (date, venue, data_type, league_id,
       timeframe). Next step: run MDPS `SportsBucketAssignmentAdapter` smoke pass.
-- [ ] [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
-      `(asset_group=sports, source=odds_api, data_type, league_id, day)`). [AUDIT 2026-05-07: FRESH — actionable;
-      coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
-- [ ] [SCRIPT] P0. Run MDPS `SportsBucketAssignmentAdapter` on migrated rows for 1 recent week (smoke pass) — all 8
-      horizons (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0). [AUDIT 2026-05-07: BLOCKED-ON
-      sports_master:288M migration above]
+- [x] ✅ [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
+      `(asset_group=sports, source=odds_api, data_type, league_id, day)`). **COMPLETED 2026-05-23**: Migration already
+      ran as part of bucket SSOT canonicalisation (2026-04). Raw data is at
+      `raw_tick_data/by_date/day={D}/asset_group=sports/data_source=ODDS_API/` (2020-2025) and
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_api_football/asset_group=sports/data_source=ODDS_API/` (2026+).
+      Manifest key shape is already canonical. Fixed `reprocess_sports_odds.py` bug where `_CANONICAL_PREFIX_TEMPLATE`
+      used stale `category=sports` instead of `asset_group=sports` — MDPS@34d7172.
+- [x] ✅ [SCRIPT] P0. Run MDPS `SportsBucketAssignmentAdapter` on migrated rows for 1 recent week (smoke pass) — all 8
+      horizons (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0). **COMPLETED 2026-05-23**: live run verified
+      2026-04-14 → 2352 raw rows → 501 bucketed rows (8 horizons, 22 bookmakers, 16 league×horizon shards). Manifest
+      updated (335,105+17 entries; 1 day-level + 16 league×horizon shards). Fixed 2 bugs in script: stale
+      `category=sports` path prefix (MDPS@34d7172) + `record_empty()` missing typed reason (MDPS@7f7c1ad).
 - [ ] [ANALYSIS] P0. Bucket-coverage check: how many fixtures have ≥1 row per (fixture, bookmaker, bucket). [AUDIT
       2026-05-07: BLOCKED-ON sports_master:bucket smoke run]
 - [ ] [SCRIPT] P0. Backfill MDPS bucketing across full historical window (5+ years) on migrated rows. [AUDIT 2026-05-07:
