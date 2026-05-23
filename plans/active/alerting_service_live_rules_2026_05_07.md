@@ -531,9 +531,14 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
       (PM@Slot6-2026-05-23 — rehearsal-procedure.md filled in with full Phase 8 procedure: 15-code checklist table,
       injection commands, 6 verification criteria per code, kill-switch end-to-end steps, sign-off template.
       **OPERATOR ACTION PENDING**: operator must run the rehearsal and fill in sign-off doc before go-live.)
-- [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
+- [x] ✅ [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
+      (Code shipped: alerting-service@2f63775 — `--verify-kill-switch` flag in `inject_synthetic_alert.py` injects
+      KILL_SWITCH_DEFI_LIQUIDATION_RISK/PORTFOLIO_DRAWDOWN/VENUE_DISCONNECT and asserts KillSwitchEvent per scope
+      GLOBAL×2/VENUE×1; kill-switch end-to-end section in `codex/15-runbooks/alerting/rehearsal-procedure.md`
+      documents the full procedure with gcloud log verification and DART halt confirmation. PM@09515dde Slot 6 2026-05-23.
+      **OPERATOR ACTION PENDING**: operator must run with real execution-service + strategy-service in staging.)
 - [x] ✅ [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
       15 codes + pass/fail per code + operator name + date. Template created at
       `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md` with all 15 codes + verification checklist (a-f) per code.
