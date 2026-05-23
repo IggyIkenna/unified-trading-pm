@@ -53,25 +53,24 @@ before Phase 7 grows the v<8 debt.
       heavy per-year stays well under 16GB. Covers 2020-2026, all 9 CeFi venues, ~83 VMs in parallel (MAX_CONCURRENT=15
       staggered). VM_FORCE=false (skips already-captured dates via preflight). Launch timestamp: **LAUNCHED
       2026-05-22**. 2026-05-22 slot 5.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Relaunch 2 dead VMs stopped by slot-7 (crashed, no progress): (1)
-      `cefi-binance-futures-2024-light-20260522-140739` — crashed at 2024-04-10, missing 2024-04-11→2024-12-31. (2)
-      `cefi-okx-swap-2024-light-20260522-140739` — crashed at 2024-10-21, missing 2024-10-22→2024-12-31. Gate: all other
-      140739 VMs + 2 deribit VMs TERMINATED first (singleton lock prevents parallel launch). Run:
-      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
-      (`FORCE=1` overrides singleton lock; `VM_FORCE=false` default in MTDS so already-captured dates skipped).
-      **BLOCKED**: 3 140739 VMs still RUNNING as of 2026-05-23 ~17:30 UTC: coinbase-spot-2021-heavy,
-      coinbase-spot-2023-heavy, okx-spot-2023-heavy. (okx-swap-2021-heavy: terminated; 2 deribit 120101 VMs:
-      terminated.) slot-7 2026-05-23 (discovery); slot-2 2026-05-23 (plan item); status update slot-6 2026-05-23.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Relaunched all 5 VMs (2 dead + 3 OOM-stuck) 2026-05-23 17:15 UTC
+      slot-2. **OOM DISCOVERY**: The 3 remaining 140739-batch VMs were OOM-hung (not processing): coinbase-spot-2021 at
+      mem=85.9% since 14:49 UTC, coinbase-spot-2023 at mem=89.3% since 14:36 UTC, okx-spot-2023 at mem=90.0% since 14:35
+      UTC. `faulthandler.dump_traceback failed: fileno` in all 3 = Python OOM crash. VMs were stuck RUNNING with no
+      auto-shutdown (process exited abnormally, vm-exec shutdown path not reached). Manually stopped all 3. Per-VM
+      shards written before OOM: coinbase-spot-2021 max_date=2021-09-01, coinbase-spot-2023 max_date=2023-10-15,
+      okx-spot-2023 max_date=2023-12-21. Relaunched all 5 with `VM_FORCE=false` — already-captured dates skipped:
+      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light COINBASE-SPOT:2021:heavy COINBASE-SPOT:2023:heavy OKX-SPOT:2023:heavy" FORCE=1`
+      New VMs (all RUNNING 17:15 UTC): cefi-binance-futures-2024-light-20260523-171520,
+      cefi-coinbase-spot-2021-heavy-20260523-171520, cefi-coinbase-spot-2023-heavy-20260523-171520,
+      cefi-okx-spot-2023-heavy-20260523-171520, cefi-okx-swap-2024-light-20260523-171520.
+- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
-      **BLOCKED-IN-FLIGHT (slot-6 2026-05-23 ~17:30 UTC)**: 3 CeFi 140739 VMs still RUNNING
-      (coinbase-spot-2021/2023-heavy, okx-spot-2023-heavy); 151757 batch also has many RUNNING VMs. Total still
-      in-flight: ~22 VMs. Deribit 120101 VMs: TERMINATED. 2 dead 140739 VMs (binance-futures-2024-light,
-      okx-swap-2024-light): TERMINATED — will be relaunched via MTDS-3.2.A-DeadVMRelaunch once remaining 3 terminate.
-      Verify once ALL VMs (including the 2 relaunched ones) terminate. **flat→prd copy NOT needed** —
-      `_resolve_upstream_bucket` in `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket
-      template. The copy script `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
+      **BLOCKED-IN-FLIGHT (slot-2 2026-05-23 ~17:15 UTC)**: 5 new 171520-batch resume VMs RUNNING + 151757-batch still
+      has many VMs running. Verify once ALL CeFi VMs terminate (ETA: 171520 light VMs ~few hours; heavy resume VMs
+      coinbase-2021 ~13h, coinbase-2023 ~7h, okx-2023 <1h). **flat→prd copy NOT needed** — `_resolve_upstream_bucket`
+      returns flat bucket template. Copy script can be discarded.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 

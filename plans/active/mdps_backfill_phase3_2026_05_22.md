@@ -64,6 +64,16 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       `live_workers.py` filters by in-file `'swaps'` column. MDPS@b584c67. QG ✅. Tarball rebuilt. 5 DeFi VMs TERMINATED
       (0 candles output) + re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap data coverage: 2024-06-01
       onwards (2022/2023 = 0 Uniswap, 2024+ = candles expected). 2026-05-23 slot-5.
+- [x] ✅ [CODE] P0. **MDPS-3.3.DeFi-SourcePriorityFix** — **FOURTH FIX (slot-2 2026-05-23 ~18:10 UTC)**: 170621 VMs
+      (83f371c tarball) hitting
+      `Error writing candles to GCS: "No source priority registered for asset_group='defi',     data_type='dex_swaps'"`.
+      Root cause: `_MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY` in `canonical_writer.py` had
+      `("defi", "dex_pool_swaps"): "swap"` but NOT `("defi", "dex_swaps"): "swap"`. `DefiSwapAdapter` registers under
+      canonical data_type `dex_swaps` (not legacy `dex_pool_swaps`); lookup fell through to
+      `get_primary_source("defi",     "dex_swaps")` which raised since UAC `SOURCE_PRIORITY` has `("defi", "swap")` not
+      `("defi", "dex_swaps")`. Fix: added `("defi", "dex_swaps"): "swap"` to bridge map. MDPS@b3e0c2a. QG ✅ (5
+      pre-existing test_feature_freshness failures unrelated). Tarball rebuilt (GCS manifest → b3e0c2a). Stopped 4
+      170621 VMs, re-launched 5 VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING. 2026-05-23 slot-2.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps
       bars present for 2024-06+ dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before =
       expected `empty_confirmed`). vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED
@@ -75,14 +85,10 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       (`mdps-defi-2024-20260523-151348.parquet`): 465 rows all `empty_confirmed/SOURCE_RETURNED_ZERO` for CURVE
       2024-05-03→2024-05-11 — at May 2024, working toward 2024-06-01 Uniswap start. 2025/2026 VMs: shards present. Full
       verify pending 2024/2025 VMs reaching their end dates. **NaN SCHEMA FIX (slot-5 2026-05-23 ~17:02 UTC)**: 151348
-      VMs (2024+2025) were terminated — they were producing candles but ALL were failing schema validation
-      (`SCHEMA_VALIDATION_FAILED: column 'open' has 33949 NaN/null values — NOT NULLABLE for dex_swaps`). Root cause:
-      `_fill_empty_candles(fill_method="nan")` pads the full 1440-slot/288-slot grid; NaN rows (windows without swaps)
-      fail the parquet schema enforcer. Fix: `swap_adapter.py` filters `valid_mask = ~np.isnan(result["open"])` and
-      returns only intervals with actual swap activity (sparse candle contract). MDPS@83f371c. QG ✅ (1359 passed).
-      Tarball rebuilt with MDPS@9775e22. **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING
-      (launched by another slot after 17:02 UTC tarball — have NaN fix). Sports VMs `170621` (2020-2025) also RUNNING
-      with NaN fix.
+      VMs (2024+2025) terminated — failing schema validation. Fix: MDPS@83f371c. **SOURCE_PRIORITY FIX (slot-2
+      2026-05-23 ~18:10 UTC)**: 170621 VMs (83f371c tarball, missing dex_swaps→swap bridge) terminated. Tarball rebuilt
+      MDPS@b3e0c2a. **CURRENT**: 5 DeFi VMs `mdps-defi-{2022..2026}-20260523-181236` RUNNING (have both NaN +
+      SOURCE_PRIORITY fixes). Sports VMs `170621` (2020-2025) also RUNNING with NaN fix.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
