@@ -613,7 +613,7 @@ AI-days (class: infra)
 - **MDPS-3.3.DeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 195633 VMs RUNNING for 2024+2025 (SIXTH FIX MDPS@3551f7f +
   UAC@b7407bef — slot-2 2026-05-23 ~18:56 UTC). 2022/2023/2026 terminated (0 candles expected before 2024-06; 2026 has
   no DEX data past 2026-01-24 — MTDS gap). SEVENTH FIX: MDPS@305677e adds ORCA-SOLANA/RAYDIUM-SOLANA venue segments to
-  `_DEFI_DEX_VENUE_SEGMENTS` (slot-6 2026-05-23). **MTDS 2026 DEX gap**: CURVE/UNISWAP dex_swaps_handler stopped writing
+  `_DEFI_DEX_VENUE_SEGMENTS` (slot-6 2026-05-23). **MTDS 2026 DEX gap**: CURVE/UNISWAP dex*swaps_handler stopped writing
   after 2026-01-24 → no Ethereum DEX swap data for 2026-01-25→present; all 2026 date-cells will be
   `empty_confirmed/SOURCE_RETURNED_ZERO`. Needs MTDS relaunch for 2026. ⚠️ **3 MTDS handler bugs fixed 2026-05-23
   (slot-4)** (`mtds@69d694b1` + `@e86a6ad8`): (1) `dex_swaps` hardcoded `dex_pool_swaps` partition key — fixed; (2)
@@ -622,9 +622,15 @@ AI-days (class: infra)
   `scripts/reset_source_returned_zero_manifest.py` across all 5 buckets). **Relaunch VMs AFTER cleanup finishes.**
   **MTDS DeFi backfill VM launched 2026-05-23 21:15 UTC** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c,
   e2-standard-4, range 2024-01-01→2026-05-23, tarball sha 498148da includes all 3 fixes). Manifest reset complete:
-  13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket before launch. Verify once VM completes: dex_swaps bars
-  present for 2024-06+; gas_fees + lending_indices captured; manifest v8; NaN check passes. Then relaunch
-  mdps-defi-2026-\* MDPS VM.
+  13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket before launch. ⚠️ **EIGHTH FIX — UAC@8e1e7e58 (slot-2
+  2026-05-23)**: `lookup_contract` added lowercase fallback for `instrument_type` — raw parquets write `POOL`
+  (uppercase) but registry keys are `pool` (lowercase). Fix averts `SchemaContractNotFoundError` on every DEX pool
+  shard (`swaps_ohlcv_*` candles were silently absent in 195633 batch). 195633 VMs CANNOT benefit (stale tarball).
+  **Operator action after 195633 VMs + backfill-defi VM complete**: rebuild tarballs (picks up UAC@8e1e7e58), relaunch
+  MDPS DeFi 2024-2025 to backfill missing `swaps_ohlcv_*` candles. Issue:
+  `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`. Verify once VM completes + relaunched:
+  dex_swaps bars present for 2024-06+; gas_fees + lending_indices captured; manifest v8; NaN check passes. Then
+  relaunch mdps-defi-2026-\* MDPS VM.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once

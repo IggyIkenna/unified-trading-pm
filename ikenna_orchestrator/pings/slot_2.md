@@ -1,3 +1,40 @@
+## [slot-2] 2026-05-23 — CRITICAL: DeFi dex_swaps schema lookup fix UAC@8e1e7e58
+
+[2026-05-23 ~21:xx UTC] P0 fix shipped.
+
+### Bug found in 195633 DeFi VMs — swaps_ohlcv schema lookup crash
+
+While monitoring `mdps-defi-2024-20260523-195633` and `mdps-defi-2025-20260523-195633` run.logs, found repeated CRITICAL
+errors on every DEX pool shard:
+
+```
+No SchemaContract registered for asset_group='defi' instrument_type='POOL'
+data_type='swaps_ohlcv_15s' venue='UNISWAP_V3-ETHEREUM'
+```
+
+**Root cause**: `_infer_instrument_type` reads `instrument_type='POOL'` (uppercase) from raw tick parquets.
+`CONTRACT_REGISTRY` keys are lowercase `'pool'`. Exact match fails → `SchemaContractNotFoundError` on every
+Uniswap/Curve/USDC pool shard. All `swaps_ohlcv_*` candles for 2024-2025 are absent.
+
+**Fix**: UAC@8e1e7e58 — `lookup_contract` now retries with `instrument_type.lower()` after exact key miss. Existing
+`UNKNOWN`/`PREDICTION_MARKET` uppercase registrations unaffected (they still match on first-pass). QG: 10 pre-existing
+failures, 0 new. Issue doc: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
+
+**Operator action needed** (after 195633 VMs complete):
+
+- Rebuild tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh` (picks up UAC@8e1e7e58 among others)
+- Relaunch MDPS DeFi 2024-2025 to backfill `swaps_ohlcv_*` candles for pool shards
+
+DeFi VMs still RUNNING (heartbeating ~60s, gsutil uploads visible):
+
+- `mdps-defi-2024-20260523-195633`: processing 2024-07-02+
+- `mdps-defi-2025-20260523-195633`: processing 2025-02-22+
+
+Plan refs: `plans/epics/mtds_mdps_master.md` (MDPS-3.3.DeFi-V verify gate)
+`plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`
+
+---
+
 ## [slot-2] 2026-05-23 — Reconciler vectorized + CeFi gate status + DeFi VMs
 
 [2026-05-23 ~21:00 UTC] slot-2 status report.
@@ -51,9 +88,7 @@ unblocked after operator action.
 
 ### DeFi VMs (195633 batch)
 
-`mdps-defi-2024-20260523-195633`: RUNNING
-`mdps-defi-2025-20260523-195633`: RUNNING
-(All other batches TERMINATED)
+`mdps-defi-2024-20260523-195633`: RUNNING `mdps-defi-2025-20260523-195633`: RUNNING (All other batches TERMINATED)
 
 Plan refs: `plans/epics/mtds_mdps_master.md` (MTDS-3.2.A-V verify + bait cleanup)
 `plans/active/issues/cefi_catalog_reader_blob_metadata_bug_2026_05_23.md`
