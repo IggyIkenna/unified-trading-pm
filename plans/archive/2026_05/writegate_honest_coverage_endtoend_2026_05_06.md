@@ -4710,9 +4710,13 @@ deferred._
          Manifest consolidator auto-runs every 1 min via Cloud Scheduler — no manual trigger needed. pred bucket does
          not exist yet (404). — bg4qul73b (defi) + bfrycvu0x (cefi/tradfi/sports) | 2026-05-23
 
-7. - [ ] [SCRIPT] P1. **Re-run MTDS DeFi backfill** for `gas_fees` / `lending_indices` / `dex_swaps` date ranges
-         (2020-01-01 → 2026-05-23) now manifest is clean. Verify `captured` rows replace the deleted `empty_confirmed`
-         slots.
+7. - [x] ✅ [VM-LAUNCH] P1. **Re-run MTDS DeFi backfill** — 5 VMs launched (run-ts=20260523-222351):
+         `mdps-defi-{2022..2026}-20260523-222351`. Tarballs rebuilt with all fixes (MTDS@498148da + UAC@78c5ac15b
+         including swaps_ohlcv case-mismatch fix + gas_fees/lending_indices/dex_swaps handler fixes). Stale
+         215530-series VMs (0 captured rows) stopped before launch. VMs self-terminate when complete. Defi date range
+         2022-11-01 → 2026-05-23 (sharded backfill script DeFi floor). 2020-2022 range has no DeFi raw tick data per
+         launcher constraint (DEFI_YEARS starts 2022). Post-run: verify gas_fees/lending_indices/dex_swaps captured
+         rows + run cleanup pass for any residual SRZ from stale VMs. — slot-4 2026-05-23
 
 ### Phase 8 success criteria
 

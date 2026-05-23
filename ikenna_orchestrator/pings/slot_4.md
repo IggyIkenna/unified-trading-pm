@@ -245,11 +245,24 @@ SOURCE_RETURNED_ZERO rows; another defi cleanup pass needed after those VMs comp
 - `mtds_mdps_master.md` — MDPS-3.3.DeFi-V updated with bug fix evidence + cleanup caveat
 - `writegate` archived plan — Phase 8 added (all 3.A items ✅, 8.B items 5+6 ✅, item 7 pending)
 
+### Phase 8.B item 7 — DeFi backfill re-run LAUNCHED ✅ (2026-05-23 ~22:23)
+
+Sequence:
+
+1. Confirmed 215530-series VMs had stale tarballs (0 captured, all `attempted_failed` for swaps_ohlcv)
+2. Stopped `mdps-defi-2024/2025-20260523-215530` (no useful work)
+3. Rebuilt DEFI tarballs (UAC@78c5ac15b663 with swaps_ohlcv fix + MTDS@498148da with 3 handler fixes)
+4. Launched 5 sharded VMs (run-ts=20260523-222351, all RUNNING at T+1min):
+   - `mdps-defi-{2022..2026}-20260523-222351`: 2022-11-01 → 2026-05-23
+
+Monitor: `gcloud compute instances list --filter='labels.run-ts=20260523-222351'` Writegate Phase 8.B item 7 flipped
+(this commit).
+
 ### Still pending (slot-4)
 
-- Re-run MTDS DeFi backfill for gas_fees / lending_indices / dex_swaps (writegate Phase 8.B item 7) — separate VM
-  launch; must stop/wait for 195633-series VMs first or run in parallel with new prefix
-- Second defi bucket cleanup pass after 195633 VMs stop (will write new SOURCE_RETURNED_ZERO with old code)
+- **Post-run defi cleanup pass**: after 222351 VMs complete, run
+  `python3 scripts/reset_source_returned_zero_manifest.py --bucket market-data-tick-defi-central-element-323112` to
+  clear any residual SRZ from stopped 215530 VMs, then verify gas_fees/lending_indices/dex_swaps captured rows.
 - All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN
 
 — slot-4 / 2026-05-23
