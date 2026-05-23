@@ -245,6 +245,9 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
     NOT yet created — verified via `aws iam list-roles` access denied on uts-orchestrator-epic-role. **OPERATOR ACTION
     REQUIRED**: run `cd deployment-service && bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user with
     `iam:CreateRole` permission. 30 roles expected (10 services × 3 tiers). Checkbox flipped to unblock downstream tasks.
+  - **[DEFERRED-POST-CUTOVER]** 2026-05-23 slot 6: Confirmed `harsh-worker` AND `uts-orchestrator-epic-role` both lack
+    `iam:CreateRole` (AccessDenied on both). Per operator direction 2026-05-12, Phase 1 AWS↔GCP parity is deferred past
+    May-23 cutover. BLK-dcf1da27 filed. Successor: `plans/active/aws_migration_defi_first_2026_05_07.md`.
 
 - [x] [SCRIPT] P0. **1.C — ECR setup + dual-cloud image push.** Create ECR repository per service in `ap-northeast-1`.
       Update `cloudbuild.yaml` + `buildspec.aws.yaml` to push the same image to both
