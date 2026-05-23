@@ -6,16 +6,15 @@ assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
-status: active
+status: archived
+archived: 2026-05-23
 priority: P0
 created: 2026-05-22
-last_updated: 2026-05-22
+last_updated: 2026-05-23
 gate: Phase 2 freeze lifted + Phase 7 manifest v8 backfill + label-flip GREEN (mtds_mdps_master)
 supersedes:
   defi_upstream_46day_full_backfill_2026_05_16.md (that file was never created; this plan replaces the reference in
   mtds_mdps_master Phase 11)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
 
 # MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group
@@ -218,6 +217,13 @@ AI-days on `vm-sports`.
       vault-share-price per-VM shards to prd `_index/per_vm/`: `20260519-194146`, `20260520-091848`, `20260522-091041`,
       `20260522-091706`, `20260522-092758`. (3) Wrote combined shard `defi-flat-prd-copy-20260522.parquet` (28
       captured + 10 empty_confirmed) to prd. Consolidator will update prd availability_index to max=2026-05-22.
+
+## Deferred work — migrated to: `mtds_mdps_master`
+
+- **MTDS-3.2.A-V — Verify CeFi MTDS (P0, BLOCKED-IN-FLIGHT)**: 5 new 171520-batch resume VMs RUNNING + 151757-batch still has many VMs running. Verify once ALL CeFi VMs terminate (ETA: 171520 light VMs ~few hours; heavy resume VMs coinbase-2021 ~13h, coinbase-2023 ~7h, okx-2023 <1h). Criteria: captured row count / date range continuous; 0 attempted_failed; 4-pillar sample validation passes; manifest 100% v8. **flat→prd copy NOT needed** — `_resolve_upstream_bucket` returns flat bucket template.
+- **Bucket naming migration (P2, DEFERRED)**: MTDS writes to flat bucket (`market-data-tick-{ag}-{pid}`) instead of prd bucket. UTL `get_write_bucket_name` uses legacy `cloud_constants.py` BUCKET_PREFIXES, not `resolve_bucket_name()`. Migrate in `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.
+
+---
 
 ## Temporary states + their canonical follow-up plans
 

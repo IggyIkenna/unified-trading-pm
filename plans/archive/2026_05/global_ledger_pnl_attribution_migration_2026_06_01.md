@@ -1,14 +1,14 @@
 ---
 title: Global Ledger + PnL Attribution — Migration Sub-Plan
+name: global_ledger_pnl_attribution_migration_2026_06_01
 parent_epic: global_ledger_pnl_attribution_master
 priority: P0
-status: active
+status: archived
+archived: 2026-05-23
 estimate_class: refactor
 estimate_baseline_ai_days: 30
 estimate_calibrated_ai_days: 12
 assigned_vm: vm-trading-core
-locked_by: live-defi-rollout
-locked_since: 2026-05-23
 predecessor: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 related_plans:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
@@ -129,6 +129,19 @@ Codex SSOTs:
 - [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. **alerting-service RiskView**: consume PassiveLedger LIQUIDATION rows for
       liquidation alerts.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. `bash scripts/quality-gates.sh` in all 3 services — green before merge.
+
+---
+
+## Deferred work — migrated to: `global_ledger_pnl_attribution_master`
+
+All items DEFERRED-OPERATOR-DECISION (stub plan; gated on discovery plan Phase 3/4/5 operator [ack]; start window: 2026-06-01 post-cutover):
+
+- **Pre-Migration Phase 3 decision (P0, BLOCKED-OPERATOR-DECISION)**: Late-arriving-data discipline — operator must decide reconciliation model.
+- **Pre-Migration Phase 4 decision (P0, BLOCKED-OPERATOR-DECISION)**: TreasuryLedger split — operator must decide routing.
+- **Pre-Migration Phase 5 decision (P0, BLOCKED-OPERATOR-DECISION)**: PricingLedger row spec — greeks computation home (MTDS vs strategy-service).
+- **Phase 7 — execution-service InstructionLedger writer refactor (P0, DEFERRED-OPERATOR-DECISION)**: Wire `LedgerRow` construction; route via `_resolve_policy_output_data_type`; add `client_id` to log events; multi-asset `row_id` suffix; `asset_class` discriminator; gas extraction; combo_id/leg_id; unit tests; QG green.
+- **Phase 8 — strategy-service PassiveLedger synthesiser (P0, DEFERRED-OPERATOR-DECISION)**: Create `passive_ledger_synthesiser.py`; implement per-EventType synthesis rules (FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST/DIVIDEND/SETTLEMENT/EXPIRY); `parent_event_id`; `accrual_period_start/end_utc`; drift detection; American option exception; QG green.
+- **Phase 9 — DART/client-reporting-api/alerting-service reader refactor (P0, DEFERRED-OPERATOR-DECISION)**: client-reporting-api `realised_pnl` join from InstructionLedger + PassiveLedger; strategy-service `unrealized_pnl` bridge from PricingLedger; fees deduction from InstructionLedger; DART canonical ledger API joins; alerting-service LIQUIDATION rows; QG green for all 3 services.
 
 ---
 

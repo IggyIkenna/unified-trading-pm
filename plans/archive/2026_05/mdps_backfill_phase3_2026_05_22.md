@@ -6,13 +6,12 @@ assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
+status: archived
+archived: 2026-05-23
 priority: P0
 created: 2026-05-22
-last_updated: 2026-05-22
+last_updated: 2026-05-23
 gate: mtds_backfill_phase3 per-ag verification GREEN (MDPS reads from MTDS shards)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 ---
 
 # MDPS bar reprocessor relaunch — Phase 3 per-asset-group
@@ -272,6 +271,19 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Terminated 151059 VMs (lacked odds_horizon_bucket in UAC). Re-launched: 7 sports VMs
       `mdps-sports-{2020..2026}-20260523-155733` RUNNING. First run to dispatch all 4 sports adapters. 2026-05-23
       slot-5.
+
+---
+
+## Deferred work — migrated to: `mtds_mdps_master`
+
+All deferred items are DEFERRED-OPERATOR-DECISION (VMs in-flight; verify once VMs complete):
+
+- **MDPS-3.3.CeFi — Relaunch MDPS CeFi reprocessor VM (P0, BLOCKED-OPERATOR-DECISION)**: All 15 CeFi venues, 1-min through 1d bars, `MDPS_ASSET_GROUP=cefi`. Gate: MTDS-3.2.A-V GREEN.
+- **MDPS-3.3.CeFi-V — Verify CeFi NaN check (P0, BLOCKED-OPERATOR-DECISION)**: Zero 1440-NaN-bar regressions on 10 random instrument-days; `available_at` populated; manifest 100% v8.
+- **MDPS-3.3.DeFi-V — Verify DeFi VMs (P0, BLOCKED-OPERATOR-DECISION)**: SIXTH FIX applied (MDPS@3551f7f + UAC@b7407bef); 5 new VMs `mdps-defi-{2022..2026}` PENDING RELAUNCH after manual DeFi manifest consolidation. Verify dex_swaps bars present for 2024-06+ dates; manifest v8; NaN check passes.
+- **MDPS-3.3.TradFi-V — Verify TradFi VIX bars (P0, BLOCKED-OPERATOR-DECISION)**: LONG-RUNNING (~66h per VM); 7 year VMs + 64 per-month VMs running. VIX bars at 2025-01-06 from prior runs; manifest v8 check pending. Verify once 2025 VM reaches 2025-12-31.
+- **MDPS-3.3.Sports-V — Verify Sports NaN check (P0, BLOCKED-OPERATOR-DECISION)**: VMs `mdps-sports-{2020..2026}-20260523-170621` RUNNING with full fix stack (MDPS@9775e22). Verify NaN check; manifest v8; no `data_available_at` in output.
+- **MDPS-3.3.Pred-V — Verify Prediction VMs (P0, BLOCKED-OPERATOR-DECISION)**: VMs `mdps-prediction-{2025,2026}-20260523` RUNNING. Full verify pending VM completion (2025→2025-12-31 + 2026→2026-05-23).
 
 ---
 

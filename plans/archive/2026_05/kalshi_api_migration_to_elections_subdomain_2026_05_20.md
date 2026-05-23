@@ -1,14 +1,14 @@
 ---
 title: Kalshi API migration — trading-api.kalshi.com → api.elections.kalshi.com
+name: kalshi_api_migration_to_elections_subdomain_2026_05_20
 parent_epic: predictions_master
 assigned_vm: vm-prediction
 priority: P1
-status: active
+status: archived
+archived: 2026-05-23
 estimate_class: refactor
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
-locked_by: live-defi-rollout
-locked_since: 2026-05-20
 related_plans:
   - predictions_master.md
   - api_keys_wallets_accounts_readiness_2026_05_10.md
@@ -63,6 +63,19 @@ Codex SSOTs: `codex/02-data/contracts-scope-and-layout.md`
       Kalshi cassettes pass.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P2. Add to predictions_master: Kalshi URL must point at elections subdomain
       as regression check.
+
+## Deferred work — migrated to: `predictions_master`
+
+All Phase 2-4 items DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provisioned):
+
+- **Phase 2 — Schema diff (P1, BLOCKED-CREDENTIALS)**: Diff new response shapes vs `KalshiMarket`/`KalshiSeries`/`KalshiEvent` schemas against new `api.elections.kalshi.com` host. Requires live Kalshi API key.
+- **Phase 2 — Schema update (P1, BLOCKED-CREDENTIALS)**: If schemas drift, update schemas + normalizers + bump UAC version. Gated on diff above.
+- **Phase 3 — Provision credentials (P1, BLOCKED-CREDENTIALS)**: Provision `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager per `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+- **Phase 3 — Integration test (P1, BLOCKED-CREDENTIALS)**: Authenticate against new host + fetch sample market.
+- **Phase 3 — MTDS verify (P1, BLOCKED-CREDENTIALS)**: Verify MTDS Kalshi adapter end-to-end fetch.
+- **Phase 3 — Execution verify (P1, BLOCKED-CREDENTIALS)**: Verify execution-service Kalshi paper-order flow.
+- **Phase 4 — Canary regression (P2, BLOCKED-CREDENTIALS)**: Dispatch UAC `weekly-validation.yml` + verify Kalshi cassettes pass after cassette refresh.
+- **Phase 4 — predictions_master regression check (P2, BLOCKED-CREDENTIALS)**: Add to predictions_master: Kalshi URL must point at elections subdomain as regression check.
 
 ## Temporary states + canonical follow-up plans
 
