@@ -397,9 +397,15 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
       `grid_generator.py` are `# noqa: gs-uri`-exempt (bucket already resolved by 4a) — NOT in scope. —
       strategy-service@5b2e9924; hedge_ratio_writer.py:135 + decision_context_writer.py:148 both use
       `resolve_bucket_name(cloud=cloud, kind="strategy-store")` for catalogue_bucket (verified 2026-05-22).
-- [ ] **[MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified bucket via `gsutil rsync`;
-      verify zero data loss + flip `cloud-providers.yaml` atomically. Bundle into master coordinator Phase 1 bucket
-      symmetry window.
+- [ ] **[BLOCKED-OPERATOR-DECISION] [MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified
+      bucket. **BLOCKED**: schemas are incompatible — old per-AG format
+      `strategy_instructions/<strategy_id>/<date>.parquet` vs new unified format
+      `strategy_instructions/client_id=/strategy_id=/day=/instructions.parquet`. Cannot `gsutil     rsync` directly.
+      `cloud-providers.yaml` already flipped (4a done). Old per-AG data: CeFi bucket has 237 files (~19MB) of V2 dev
+      backtest runs (2025-01-01 dates); all prod per-AG buckets are 0-byte. Operator decision needed: (a) abandon old
+      dev data (no client_id mapping) + mark bucket for deletion, OR (b) write a migration script that maps old
+      strategy_id/date → client_id/strategy_id/day format. Gated: master coordinator Phase 1 bucket symmetry window.
+      Filed slot-6 ping 2026-05-23.
 - [x] ✅ **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — workspace-wide rg confirms zero inline
       strategy-store f-strings post 4a/4b.
 
