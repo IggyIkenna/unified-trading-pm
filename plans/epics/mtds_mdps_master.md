@@ -593,6 +593,28 @@ tests); no implementation before 2026-05-23 per operator decision. · **estimate
 
 _(no plans currently assigned at this priority)_
 
+## Archived plans
+
+### [`mdps_backfill_phase3_2026_05_22`](../archive/2026_05/mdps_backfill_phase3_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All phases shipped (DeFi/TradFi/Sports/Pred fixes + monthly TradFi sharding + consolidator fix); 6 items DEFERRED-OPERATOR-DECISION (verify gates pending long-running VMs). · **estimate**: 2.4 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)** — P0 verify backlog:
+
+- **MDPS-3.3.CeFi + CeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: Relaunch CeFi reprocessor VM + verify NaN check; gate: MTDS-3.2.A-V GREEN.
+- **MDPS-3.3.DeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 5 new DeFi VMs pending relaunch (SIXTH FIX MDPS@3551f7f + UAC@b7407bef). Verify dex_swaps bars 2024-06+; manifest v8.
+- **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX bars + manifest v8 once 2025 VM completes.
+- **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once complete.
+
+### [`mtds_backfill_phase3_2026_05_22`](../archive/2026_05/mtds_backfill_phase3_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5 done: CeFi/TradFi/DeFi/Sports/Predictions backfill VMs launched + DeFi gap filled + TradFi prd gap filled + manifest consolidator terraform fixed; 2 items DEFERRED. · **estimate**: 4.0 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)**:
+
+- **MTDS-3.2.A-V (P0, BLOCKED-IN-FLIGHT)**: CeFi MTDS verify gate; 171520-batch + 151757-batch VMs still RUNNING. Verify once all CeFi VMs terminate (ETA: light VMs ~few hours; heavy coinbase-2021 ~13h).
+- **Bucket naming migration (P2, DEFERRED)**: MTDS writes to flat bucket (legacy `cloud_constants.py`); migrate in `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.
+
 ## Deferred work — migrated from archived plans
 
 - [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/issues/audit_2026_05_08_substantial_unfixed_items.md** — Wire

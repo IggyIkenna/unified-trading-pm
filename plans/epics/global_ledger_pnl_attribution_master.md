@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
-  - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
+  - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md
 ---
 
 # Global Ledger + PnL Attribution Master
@@ -68,12 +68,9 @@ operator [ack] on Phase 3 (late-arriving-data) + Phase 5 (greeks home) + Phase 6
 
 ### P1 — Implementation (gated on P0 operator [ack])
 
-#### [`global_ledger_pnl_attribution_migration_2026_06_01`](../active/global_ledger_pnl_attribution_migration_2026_06_01.md)
+#### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
 
-**status**: active (stub) · **estimate**: 12 cal AI-days (class: refactor) · **progress**: 0/27. Pre-migration gates: 3
-operator-decision items + 1 IS Gap (`exercise_style` SHIPPED uac@6dcaa89e). Phases 7-9: execution-service
-InstructionLedger writer refactor → strategy-service PassiveLedger synthesiser → DART / client-reporting-api /
-alerting-service reader refactor. Start window: 2026-06-01 (post-cutover backlog cycle).
+**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; all 27 items DEFERRED-OPERATOR-DECISION (gated on discovery plan Phase 3/4/5 operator [ack]; start window 2026-06-01).
 
 ### P2 — Continuous-verification + reconciliation
 
@@ -82,6 +79,20 @@ _(none yet — defined post-migration ship)_
 ### P3 — Post-cutover enrichments
 
 _(none yet — defined post-migration ship)_
+
+## Archived plans
+
+### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; 0/27 items implemented (all DEFERRED-OPERATOR-DECISION, start window 2026-06-01 post-cutover).
+
+**Deferred (migrated):**
+- **Pre-migration gate — Phase 3 operator [ack]**: Late-arriving-data handling decision (operator [ack] pending from discovery plan).
+- **Pre-migration gate — Phase 4 operator [ack]**: Greeks home (where greeks rows live in ledger) decision (operator [ack] pending from discovery plan).
+- **Pre-migration gate — Phase 5 operator [ack]**: TreasuryLedger split decision (operator [ack] pending from discovery plan).
+- **Phase 7 — execution-service InstructionLedger writer refactor**: `attribution_builder.build_attribution_rows` → emit via writegate path. DEFERRED-POST-CUTOVER (gate: Phase 3/4/5 ack).
+- **Phase 8 — strategy-service PassiveLedger synthesiser**: Per-event divergence check path. DEFERRED-POST-CUTOVER (gate: Phase 3/4/5 ack).
+- **Phase 9 — DART / client-reporting-api / alerting-service reader refactor**: Consumes PnL + PnLAttribution. DEFERRED-POST-CUTOVER (gate: Phase 7/8).
 
 ## VM assignment notes
 

@@ -15,6 +15,7 @@ related_plans:
   - ../active/aws_migration_defi_first_2026_05_07.md
   - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
   - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
+  - ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
 ---
 
 ## Audit 2026-05-07
@@ -456,6 +457,18 @@ strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra
 ## P2 — useful; opportunistic
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-4 done: AWS cloud toggle wired end-to-end (service+route+UI layers), GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 3 items DEFERRED-OPERATOR-DECISION (BLOCKED-GCP-BACKFILL-COMPLETE). · **estimate**: 3.0 cal AI-days (class: brand-new)
+
+**Deferred (MIGRATED FROM archived plan)** — BLOCKED-GCP-BACKFILL-COMPLETE backlog:
+
+- **SMOKE-1 — AWS 1-day smoke test (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: For each asset_group × service (MTDS × 5 + MDPS × 3 + IS × 5), fetch 1 day via deployment-api `?cloud=aws` and verify non-zero captured rows.
+- **SMOKE-2 — Data-status UI AWS toggle verify (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Toggle to AWS; verify cells render.
+- **SMOKE-3 — Document smoke result (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Per-cell result table at `plans/audit/results/aws_smoke_1day_<date>.md`. Gate for full AWS backfill execution.
 
 ## P3 — backlog; revisit quarterly
 

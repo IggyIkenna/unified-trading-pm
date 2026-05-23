@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
+  - ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
@@ -785,15 +785,19 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](../active/kalshi_api_migration_to_elections_subdomain_2026_05_20.md)
-
-**status**: open · **estimate**: 1.0 cal AI-days (class: refactor)
-
 ## P2 — useful; opportunistic
 
 _(no plans currently assigned at this priority)_
 
 ## Archived plans
+
+### [`kalshi_api_migration_to_elections_subdomain_2026_05_20`](../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (URL sweep 5 repos) + Phase 2 cassette re-record done; 8 items DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provisioned). · **estimate**: 1.0 cal AI-days (class: refactor)
+
+**Deferred (MIGRATED FROM archived plan)** — BLOCKED-CREDENTIALS backlog:
+
+- **Phases 2-4 (8 items, P1-P2, BLOCKED-CREDENTIALS)**: Schema diff + update; provision `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager; integration test (authenticate + fetch); MTDS Kalshi adapter verify; execution-service paper-order flow verify; UAC weekly-validation cassette regression; predictions_master URL regression check. Gate: `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
 
 ### [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](../archive/2026_05/data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md)
 

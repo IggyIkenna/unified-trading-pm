@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../archive/2026_05/cme_polymarket_arb_2026_05_08.md
-  - ../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
+  - ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
   - ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
@@ -653,14 +653,20 @@ Databento backfill (drop L1-L3 to post-cutover)
 - OPTION row re-classification: manifest re-classification of `instrument_type=OPTION` rows for 9 EC\* roots — blocked
   on IS Phase 3
 
-### [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](../active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi L1-L3 tick data (trades / tbbo /
-mbp_10) — restoration post-cutover
-
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — All 20 items DEFERRED-SERVICE-REPOS 2026-05-23 slot 6 (post-cutover; gated on DeFi-first cutover + operator Databento PAYG spend sign-off). · **estimate**: 1.6 cal AI-days (class: infra)
+
+**Deferred (MIGRATED FROM archived plan)** — P0 post-cutover backlog:
+
+- **Phases 1-7 (P0, DEFERRED-POST-CUTOVER)**: Restore `TRADFI_TICK_DATA_WINDOWS` + capability matrix + codex coverage matrix + availability-manifest codex + MTDS contract-pin test; create VM launchers + launch + validate for CME/ICE/NASDAQ/NYSE trades + tbbo (May 2023 + Jul 2024 reference months).
+- **Phase 8 operator sign-off (P0, BLOCKED-OPERATOR)**: Databento PAYG spend for L1-L3 significantly higher than OHLCV-only (~$179/dataset-month for windows beyond Standard coverage); operator sign-off required before execution.
 
 ## Cross-references
 
