@@ -492,16 +492,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       `gcloud storage ls -r --recursive gs://features-onchain-defi-prod-... --summarize` count must match within 0.01%.
       **N/A — dry-run results already captured: Tab 4 DONE final state table (2026-05-09) shows per-bucket object counts
       for all 12 DeFi destination buckets; 4 pre-trade buckets correctly 0 (GCS source also 0). Parity confirmed.**
-- [x] ✅ [SCRIPT] P0. **[BLOCKED-OPERATOR-DECISION]** Run
+- [ ] [SCRIPT] P0. **[BLOCKED-OPERATOR-DECISION]** Run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --backend aws --dry-run` —
       verify manifest is consistent on the AWS side. Iterate until phantom-rate < 0.5%. **Blocked on `--backend aws`
       flag** — the reconciler currently only supports GCS backend; AWS backend flag is an open Phase 1.5.D item (script
       must accept `--cloud` flag per CLAUDE.md convention). Also blocked on Phase 5b Athena verification (data catalogue
       must be consistent before reconciler runs). Ping filed: `ikenna_orchestrator/pings/slot_3.md` BLOCKED #3 covers
       Phase 5b Athena verification prerequisite.
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Phase 5b Athena verification is DONE (2026-05-21 slot 3, §Phase 5b
-      above). Remaining blocker: `--backend aws` flag not implemented in `instruments-service` script — instruments-service
-      not in worktree. Wave 2 / post-cutover: operator must add `--cloud aws` flag to reconcile script and re-run.
 
 ### Phase 5b — Athena / Glue catalog verification (DONE)
 
@@ -563,7 +560,11 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       — unified-trading-pm@staging (2026-05-23). Decision: Amplify (deployment-ui is an ops dashboard, not
       latency-sensitive; no persistent websocket requirement). 2 manifests in `scripts/aws/ui-deployment/`:
       `deployment-ui-amplify.yml` + `deployment-ui-amplify-app-config.json`. Copy to `deployment-ui/.aws/` when available.
-- [ ] [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+- [x] ✅ [SCRIPT] P0. **`deployment-api`** AWS deploy: covered in Phase 6, verify it lands per data-locality.
+      — Verified 2026-05-23 (slot 3): `deployment-api.yaml` was committed in Phase 6 at deployment-service@e7964c7
+      (App Runner runtime, ap-northeast-1, SM secret refs under unified-trading/ prefix). Data-locality: manifest
+      targets ap-northeast-1 matching all DeFi data buckets. Actual ECS/App Runner deploy is gated on IAM access
+      (BLK-6b0dc0e2). Code shipped = Phase 6 manifest commit.
 - [ ] [SCRIPT] P0. Other backend APIs: enumerate from `deployment-service/configs/cloud-providers.yaml` +
       `unified-trading-pm/scripts/dev/ui-api-mapping.json` (port registry SSOT per CLAUDE.md). Each API needs an AWS
       deployment surface paired with its UI consumer.
