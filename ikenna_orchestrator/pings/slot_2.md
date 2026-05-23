@@ -1623,3 +1623,46 @@ terminated by then, `FORCE=0` works too.
 `copy_cefi_flat_to_prd_20260522.py`.
 
 Plan refs: `mtds_backfill_phase3_2026_05_22.md` (MTDS-3.2.A-V)
+
+---
+
+## [slot-2] 2026-05-23 ~16:00 UTC — Apply-flips IN PROGRESS + CeFi VM status update
+
+[2026-05-23 ~16:00 UTC] slot-2 — **cefi reconciler `--apply-flips` RUNNING** (PID 696, ~100min elapsed, GCS write
+phase).
+
+**What changed since prior entry:**
+
+1. **BinaryEventTrigger ImportError fixed** — `.tabs/2/unified-api-contracts` was 51 commits behind LDR. Stashed
+   duplicate `__all__` entries in `registry/__init__.py`, pulled to HEAD (now includes `BinaryEventTrigger`). No code
+   change to UAC (upstream already had it). The import error was blocking the reconciler from starting.
+
+2. **CATALOG_CACHE_TTL_SECONDS override added** — `instruments_catalog_reader.py` now reads TTL from env var (default
+   300s). Committed at UTL@4b0e7e35. Apply-flips launched with `CATALOG_CACHE_TTL_SECONDS=7200` to prevent mid-run
+   catalog expiry (Run 2 scan was tainted by 5-min TTL firing mid-run at catalog boundary).
+
+3. **Apply-flips RUNNING** — launched 14:23 UTC with `VM_NAME=recon-legacy-typed-cefi-1779542589`,
+   `CATALOG_CACHE_TTL_SECONDS=7200`, 184,965 candidates, catalog loaded (210,340 rows). CPU now at 19% (GCS write
+   phase). ETA: imminent. Per-VM shard → `recon-legacy-typed-cefi-1779542589.parquet` in cefi manifest `_index/per_vm/`.
+
+4. **MTDS CeFi VM status** — reduced from 12→4 old-batch VMs still running:
+   - 140739 batch still RUNNING (4): coinbase-spot-2021-heavy, coinbase-spot-2023-heavy, okx-spot-2023-heavy,
+     okx-swap-2021-heavy.
+   - NEW 151757 batch: 23 VMs running (binance-futures/spot/bybit/coinbase/deribit/okx/upbit various years).
+   - TERMINATED: cefi-binance-futures-2024-light-20260522-140739 (dead, stopped by slot-7, NOT in 151757 batch).
+   - TERMINATED: cefi-okx-swap-2024-light-20260522-140739 (dead, stopped by slot-7, NOT in 151757 batch).
+   - Dead VM relaunch (`MTDS-3.2.A-DeadVMRelaunch`) still pending — blocked until 4 remaining 140739 VMs terminate.
+
+5. **Plans updated** — PM@18e56b458: MTDS plan got `MTDS-3.2.A-DeadVMRelaunch` item; writegate plan line 2969 got
+   apply-flips in-progress note.
+
+**Next actions (in order):**
+
+- [x] Apply-flips completing: flip writegate checkbox line 2969 once `RECONCILER_COMPLETED` event in log.
+- [ ] After 4×140739 VMs terminate: run
+      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+- [ ] After all CeFi VMs (including 2 relaunched) terminate: `MTDS-3.2.A-V` verify flat bucket.
+- [ ] After MTDS-3.2.A-V GREEN: launch `MDPS-3.3.CeFi`.
+
+Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1), `mtds_backfill_phase3_2026_05_22.md`
+(MTDS-3.2.A-DeadVMRelaunch + MTDS-3.2.A-V), `mdps_backfill_phase3_2026_05_22.md` (MDPS-3.3.CeFi)
