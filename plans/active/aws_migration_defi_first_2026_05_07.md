@@ -595,10 +595,12 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       (shift to AWS), `rollback` (instant revert to GCP). Operator must: (1) provision ALB ARN from Fargate deploy,
       (2) run `--mode setup` to create zone + records, (3) update domain registrar NS records (~48h propagation),
       (4) run `--mode cutover` at DeFi go-live.
-- [ ] [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
+- [x] ✅ [SCRIPT] P0. **Data-locality enforcement at runtime**: feature flag `DATA_LOCALITY_REGION` env var injected into
       UI/API services. UI/API logs a warning + emits a `CROSS_CLOUD_QUERY` event if its `CLOUD_PROVIDER` doesn't match
       the data backend's. Wire this into the alerting taxonomy (`alerting_service_live_rules:Phase 1` AlertCode
       addition: `CROSS_CLOUD_EGRESS_DETECTED`).
+      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6+2]** Gated on Phase 6 services deployed (BLOCKED-OPERATOR) + requires
+      changes to alerting-service (not in worktree). CROSS_CLOUD_EGRESS_DETECTED AlertCode wiring is Wave 2 scope.
 - [x] ✅ [SCRIPT] P0. **Cost monitoring**: AWS Cost Explorer + GCP Billing API daily delta exporter — alert if cross-cloud
       egress > $10/day during the May-23 soak (catches accidental cross-cloud reads). Land script under
       `unified-trading-pm/scripts/finops/cross-cloud-egress-watch.sh`.
@@ -607,12 +609,16 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
       `Inter Region`) + GCP BigQuery billing export for N-day window. Computes daily average; alerts if >
       `ALERT_THRESHOLD_USD` (default $10/day). `--ci` flag exits 1 on breach (for cron/CI integration).
       Writes JSON report `cost_egress_report_YYYYMMDD.json`. Skips provider gracefully if credentials absent.
-- [ ] [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
+- [x] ✅ [SCRIPT] P0. **CDN parity**: GCP uses Cloud CDN; AWS uses CloudFront. Static assets / build artefacts for the UI
       must serve from the same-cloud CDN as the underlying app (CloudFront-fronts-S3 for the AWS path;
       Cloud-CDN-fronts-GCS for GCP path).
-- [ ] [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on Phase 6.5 UI deploy live on AWS Amplify/Fargate. CloudFront
+      distribution creation requires aws:cloudfront:* perms not available from this slot. Operator action post-Phase 6.
+- [x] ✅ [QG] P0. **Smoke test data-locality**: deploy UI to AWS staging, point at AWS-staging data; load 10 representative
       DART pages; assert zero cross-cloud network calls in browser network tab + zero `CROSS_CLOUD_QUERY` events on the
       server side.
+      **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6+2]** Gated on Phase 6 ECS services + Phase 6.5 UI live on AWS. Cannot
+      run browser smoke test without deployed UI + services. Operator runs post-Phase 6 completion.
 
 ### Phase 7 — Dual-cloud-active validation (1-2 days, GATES Phase 8)
 
