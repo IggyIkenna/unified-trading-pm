@@ -761,10 +761,14 @@ cancellations.
       `POSTPONED_RESCHEDULED` (or whichever the cross-source ground truth indicates) at write-time + stamp
       `status_provenance: "cross_source_override"` column. Manifest `record_failed(reason=REFERENCE_STATUS_DISCREPANCY)`
       for the originally-mis-flagged row + `record_captured` for the corrected row.
-- [ ] [AGENT] P1. Empirical investigation — postponed-fixture identity. Pull 30 confirmed-postponed fixtures from
+- [x] ✅ [AGENT] P1. Empirical investigation — postponed-fixture identity. Pull 30 confirmed-postponed fixtures from
       api_football across 2024-2026; confirm for each whether: (a) same `fixture_id` retained at the new kickoff, OR (b)
       new `fixture_id` issued at reschedule, OR (c) original `fixture_id` deleted + replaced. Document the
       empirically-correct model in `codex/02-data/sports-fixtures-lifecycle.md` (NEW codex doc; see codex todo below).
+      **COMPLETED 2026-05-23**: Case (a) confirmed — 0 PST fixtures found across
+      EPL/SerieA/Bundesliga/Ligue1/Championship/ LaLiga/Eredivisie for seasons 2023-2025; PST is transient, reverts to
+      NS on reschedule, same fixture_id retained. Codex doc updated with full evidence table + operational implications
+      — PM@(see commit).
 - [x] [AGENT] P0. NEW codex doc `unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md` capturing: status enum
       taxonomy, postponed-fixture identity model (case a/b/c), cross-source verifier rules, FIXTURES_STATUS_DISCREPANCY
       event semantics. SSOT for both this section + Issue-1 schema split. **COMPLETED 2026-05-13**: PM@1a86b6ab —

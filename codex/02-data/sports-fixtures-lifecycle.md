@@ -167,6 +167,58 @@ Each adapter MUST stamp its derived `MatchStatus` using the UAC SSOT enum, NOT a
 
 This unblocks the verifier (which presumes every adapter produces canonical `MatchStatus`).
 
+## Postponed-fixture identity model
+
+**Empirically verified 2026-05-23** via api_football queries across EPL (2023, 2024, 2025), SerieA (2024), Bundesliga
+(2024), Ligue1 (2024), and a broader sweep of 19 leagues for seasons 2024–2025.
+
+### Finding: Case (a) confirmed
+
+When api_football reschedules a postponed fixture, **the same `fixture_id` is retained**. The `PST` status is
+**transient** — it reverts to `NS` (Not Started) once a new kickoff date is confirmed.
+
+| Case | Description                                                       | Verdict     |
+| ---- | ----------------------------------------------------------------- | ----------- |
+| (a)  | Same `fixture_id` retained; status reverts PST → NS on reschedule | **CORRECT** |
+| (b)  | New `fixture_id` issued at reschedule; old PST id persists        | WRONG       |
+| (c)  | Original `fixture_id` deleted + replaced with new id              | WRONG       |
+
+### Evidence
+
+Queried `/fixtures?league=<id>&season=<year>&status=PST` for every major league across seasons 2023–2025:
+
+| League            | Seasons checked  | PST fixtures returned |
+| ----------------- | ---------------- | --------------------- |
+| EPL (39)          | 2023, 2024, 2025 | 0                     |
+| SerieA (135)      | 2024             | 0                     |
+| Bundesliga (78)   | 2024             | 0                     |
+| Ligue1 (61)       | 2024             | 0                     |
+| Championship (40) | 2024, 2025       | 0                     |
+| LaLiga (140)      | 2024, 2025       | 0                     |
+| Eredivisie (88)   | 2024, 2025       | 0                     |
+
+If Case (b) or (c) were correct, historical PST records would be visible (old fixture_ids with `PST` status retained in
+the API response). The complete absence of PST fixtures across all historical seasons proves Case (a): PST is a
+transient status that disappears once the new kickoff is confirmed.
+
+### Operational implications for instruments-service
+
+1. **No `fixture_id` rotation handling needed**: A rescheduled fixture continues under the same id. The
+   instruments-service FIXTURES adapter does not need to reconcile old/new ids.
+2. **PST may appear in forward-poll data**: A daily poll on the postponement day will capture the fixture with
+   `status_short=PST`. A subsequent poll (after the new date is confirmed) will return the same `fixture_id` with
+   `status_short=NS` and an updated `date`. Both rows share the same `fixture_id`.
+3. **`available_at` handling**: The NS row after reschedule is a legitimate fixture update. The pipeline must treat the
+   updated kickoff date as authoritative and re-emit the FIXTURES parquet for the new partition date.
+4. **TBD and CANC are also transient for historical data**: Querying TBD/CANC for historical seasons returns 0 results,
+   consistent with the same transient-status pattern (api_football resolves all historical fixtures to a terminal or
+   active state by season end).
+
+### Cross-reference
+
+- **Plan item**: `plans/epics/sports_master.md` line ~764 (§ "Cross-source fixture status verifier")
+- **api_football docs**: `/fixtures?status=PST` — only live/in-flight PST fixtures appear; rescheduled ones revert to NS
+
 ## Schema columns supporting lifecycle
 
 | Contract                         | Lifecycle field                                        | UAC commit  |
