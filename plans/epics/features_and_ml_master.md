@@ -811,6 +811,11 @@ _4 active plans declare `parent_epic: features_and_ml_master` in their frontmatt
 
 ## P0 — must complete before next foundation gate
 
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
+
+**status**: 🟠 ACTIVE — QG sweep for features-service + ml-service + ml-inference-service + ml-training-service. All
+ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: MTDS QG green. [vm: vm-ml]
+
 ### [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md)
 
 **status**: ✅ ARCHIVED 2026-05-21 — Phases 0-10 shipped; Phase 6 parity RUN deferred to
@@ -833,7 +838,8 @@ _(no plans currently assigned at this priority)_
 
 ### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase-H complete; Phases E/F BLOCKED-OPERATOR-DEPLOY (Cloud Run deploy gated). · **estimate**: 15.0 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase-H complete; Phases E/F BLOCKED-OPERATOR-DEPLOY (Cloud Run deploy gated). ·
+**estimate**: 15.0 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 
@@ -843,12 +849,16 @@ _(no plans currently assigned at this priority)_
 
 ### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase-H (performance_features passthrough) complete; Phases E/F BLOCKED-OPERATOR-DEPLOY.
+**status**: ✅ ARCHIVED 2026-05-23 — Phase-H (performance_features passthrough) complete; Phases E/F
+BLOCKED-OPERATOR-DEPLOY.
 
 **Deferred (migrated):**
-- **Phase-E: features-service Cloud Run deploy + 24h soak (BLOCKED-OPERATOR-DEPLOY)**: `deploy_features_service_cloud_run.sh` is operator-only. Tarballs at features-service@c9729dce ready.
+
+- **Phase-E: features-service Cloud Run deploy + 24h soak (BLOCKED-OPERATOR-DEPLOY)**:
+  `deploy_features_service_cloud_run.sh` is operator-only. Tarballs at features-service@c9729dce ready.
 - **Phase-F: paper VM relaunch + verification (BLOCKED-OPERATOR-DEPLOY)**: Sequential after deploy+soak.
-- **Post-cutover multi-venue expansions**: env-split rollback, multi-venue funding/staking/matching, health_factor — per post-cutover successor plans.
+- **Post-cutover multi-venue expansions**: env-split rollback, multi-venue funding/staking/matching, health_factor — per
+  post-cutover successor plans.
 
 ### [`features_backfill_phase3_2026_05_22`](../archive/2026_05/features_backfill_phase3_2026_05_22.md)
 

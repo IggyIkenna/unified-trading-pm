@@ -25,7 +25,14 @@ blocks listing all assigned active plans.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
+## P0 — must complete before next foundation gate
+
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — execution-service cluster
+
+**status**: 🟠 ACTIVE — QG sweep for execution-service (20 ruff errors) + trading-agent-service (ruff clean). Run
+`bash scripts/quality-gates.sh` exit 0 in each. PREREQ: UTL QG green. [vm: vm-trading-core]
+
 ## Assigned active plans
 
-_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as
-they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
+_(no other active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land
+here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_

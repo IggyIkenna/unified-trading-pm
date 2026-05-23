@@ -77,6 +77,12 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — strategy-service cluster
+
+**status**: 🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors, **SURFACE ONLY — LOGIC FREEZE in effect**). Only
+ruff/pyright surface fixes. No changes to `engine/strategies/v2/`, `engine/allocator/`, collateral, liquidation,
+cross-venue transfer. Resume full logic fixes after `🟢 STRATEGY-LOGIC UNFREEZE` ping lands. [vm: vm-trading-core]
+
 ### [`defi_recursive_borrow_archetypes_2026_05_10`](../active/defi_recursive_borrow_archetypes_2026_05_10.md)
 
 **status**: active · **estimate**: 42.3 cal AI-days (class: design)
@@ -116,7 +122,9 @@ dimension names and actual engine params; no operator response since 2026-05-20)
 
 ### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 6 (7 items) DEFERRED-SERVICE-REPOS; Phase 13 (3 items) BLOCKED-OPERATOR; all other phases DEFERRED-SERVICE-REPOS/DEFERRED-POST-CUTOVER per slot 6 sweep. · **estimate**: 24 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 6 (7 items) DEFERRED-SERVICE-REPOS; Phase 13 (3 items) BLOCKED-OPERATOR; all
+other phases DEFERRED-SERVICE-REPOS/DEFERRED-POST-CUTOVER per slot 6 sweep. · **estimate**: 24 cal AI-days (class:
+brand-new)
 
 ## P3 — backlog; revisit quarterly
 
@@ -126,11 +134,16 @@ _(no plans currently assigned at this priority)_
 
 ### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 4/5/7/8/9/11/12/13 all DEFERRED-SERVICE-REPOS or DEFERRED-POST-CUTOVER (slot 6 sweep). Phase 6 (Hyperliquid LIVE) missed by slot 6, deferred here.
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 4/5/7/8/9/11/12/13 all DEFERRED-SERVICE-REPOS or DEFERRED-POST-CUTOVER (slot
+6 sweep). Phase 6 (Hyperliquid LIVE) missed by slot 6, deferred here.
 
 **Deferred (migrated):**
-- **Phase 6 — Hyperliquid LIVE perp connector (7 items, DEFERRED-SERVICE-REPOS)**: execution-service work — DELETE `venues/hyperliquid.py` + replace simulation logic + NEW `_hyperliquid_signing.py` (EIP-712) + `ApiKeyReloader` + 8 HL `VENUE_ERRORS_DEFI` error codes + `hyperliquid_bridge.py` helpers + available-margin placeholder fix.
-- **Phase 13 — Live deploy (BLOCKED-OPERATOR)**: Treasury allocation + 7-day live VM + plan archival, all gated on operator DeFi live deployment authorization.
+
+- **Phase 6 — Hyperliquid LIVE perp connector (7 items, DEFERRED-SERVICE-REPOS)**: execution-service work — DELETE
+  `venues/hyperliquid.py` + replace simulation logic + NEW `_hyperliquid_signing.py` (EIP-712) + `ApiKeyReloader` + 8 HL
+  `VENUE_ERRORS_DEFI` error codes + `hyperliquid_bridge.py` helpers + available-margin placeholder fix.
+- **Phase 13 — Live deploy (BLOCKED-OPERATOR)**: Treasury allocation + 7-day live VM + plan archival, all gated on
+  operator DeFi live deployment authorization.
 
 ### [`strategy_execution_contract_remediation_2026_05_20`](../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md)
 
@@ -140,7 +153,7 @@ classification (`ADAPTER_FETCH_FAILED`), QG ratchet, codex SSOT updated. · **es
 
 **Deferred (MIGRATED FROM archived plan)** — P0 operator-decision:
 
-- **4c. Per-AG → unified bucket migration**: CeFi bucket has 237 files (~19MB) dev backtest data (2025-01-01). All
-  prod per-AG buckets are 0-byte. Operator choose: (a) abandon old dev data + delete per-AG buckets, OR (b) write
-  migration script (old `strategy_instructions/<id>/<date>.parquet` → new `strategy_instructions/client_id=/.../`).
+- **4c. Per-AG → unified bucket migration**: CeFi bucket has 237 files (~19MB) dev backtest data (2025-01-01). All prod
+  per-AG buckets are 0-byte. Operator choose: (a) abandon old dev data + delete per-AG buckets, OR (b) write migration
+  script (old `strategy_instructions/<id>/<date>.parquet` → new `strategy_instructions/client_id=/.../`).
   BLOCKED-OPERATOR-DECISION. Ping filed slot-6 2026-05-23.

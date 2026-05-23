@@ -533,6 +533,11 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — MTDS/MDPS cluster
+
+**status**: 🟠 ACTIVE — QG sweep for market-tick-data-service + market-data-processing-service. Both ruff clean; run
+full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: instruments-service QG green. [vm: vm-ml]
+
 ### [`d4_mtds_adapters_preflight_2026_05_20`](../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md)
 
 **status**: ✅ ARCHIVED 2026-05-21 — Phases 1-4 done; 8 BATCH_ONLY cells BLOCKED-OPERATOR-DECISION

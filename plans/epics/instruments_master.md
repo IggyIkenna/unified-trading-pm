@@ -362,6 +362,11 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — instruments-service cluster
+
+**status**: 🟠 ACTIVE — QG sweep for instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0.
+PREREQ: UTL QG green (vm-cross-cutting). See plan for full dep-chain. [vm: vm-cefi]
+
 ### [`d1_is_hardening_2026_05_20`](../active/d1_is_hardening_2026_05_20.md)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D1 — instruments-service hardening plan
@@ -393,7 +398,7 @@ DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
 
 **Deferred (MIGRATED FROM archived plan)** — post-cutover backlog:
 
-- **IS-3.1.Sports-V verification (P0, DEFERRED-OPERATOR-DECISION)**: Gate: `instr-backfill-sports` completes; track
-  in `predictions_master`.
+- **IS-3.1.Sports-V verification (P0, DEFERRED-OPERATOR-DECISION)**: Gate: `instr-backfill-sports` completes; track in
+  `predictions_master`.
 - **IS-3.1.TradFi-Databento (P0, BLOCKED-CREDENTIALS)**: Gate: operator reactivates Databento account.
 - **IS bucket canonicalisation (P2)**: Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.

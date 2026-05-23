@@ -12,6 +12,7 @@ last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/workspace_qg_sweep_2026_05_23.md
   - ../archive/2026_05/aws_migration_defi_first_2026_05_07.md
   - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
   - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
@@ -431,6 +432,14 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md)
+
+**status**: 🟠 ACTIVE — Workspace-wide QG green sweep. All 20 Python repos to `bash scripts/quality-gates.sh` exit 0.
+Dep-chain: UAC → UTL → IS/deployment-service → MTDS/features/strategy/execution → ML/misc. Fan-out across
+vm-cross-cutting (root + misc), vm-cefi (instruments-service), vm-ml (data pipeline), vm-trading-core (trading
+machinery), vm-operator-ops (deployment-service/api). Pre-flight ruff counts recorded in plan body. · **estimate**: 1.2
+cal AI-days (class: refactor, 0.4× multiplier)
+
 ### [`audit03_deployment_cron_provisioning_2026_05_22`](../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — All 11 todos done. F-39/40/41/42 Cloud Run Jobs + Cloud Scheduler crons provisioned
@@ -447,7 +456,9 @@ strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra
 
 ### [`aws_migration_defi_first_2026_05_07`](../archive/2026_05/aws_migration_defi_first_2026_05_07.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first: 10 S3 buckets, 346k objects / 36.83 GB migrated, Glue DB + Athena configured). Phase 5 cross-cloud rsync + Phase 6 ECS Fargate + Phase 9 full-workspace DEFERRED-POST-CUTOVER. · **estimate**: 32 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first: 10 S3 buckets, 346k objects / 36.83 GB migrated,
+Glue DB + Athena configured). Phase 5 cross-cloud rsync + Phase 6 ECS Fargate + Phase 9 full-workspace
+DEFERRED-POST-CUTOVER. · **estimate**: 32 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 
@@ -460,19 +471,27 @@ _(no plans currently assigned at this priority)_
 **status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first).
 
 **Deferred (migrated):**
-- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on GCP manifest + data-quality green (master plan Gate 4).
-- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS using ECR images.
+
+- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on GCP manifest + data-quality green (master plan
+  Gate 4).
+- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS using ECR
+  images.
 - **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups post-cutover.
 
 ### [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-4 done: AWS cloud toggle wired end-to-end (service+route+UI layers), GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 3 items DEFERRED-OPERATOR-DECISION (BLOCKED-GCP-BACKFILL-COMPLETE). · **estimate**: 3.0 cal AI-days (class: brand-new)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-4 done: AWS cloud toggle wired end-to-end (service+route+UI layers),
+GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 3 items DEFERRED-OPERATOR-DECISION
+(BLOCKED-GCP-BACKFILL-COMPLETE). · **estimate**: 3.0 cal AI-days (class: brand-new)
 
 **Deferred (MIGRATED FROM archived plan)** — BLOCKED-GCP-BACKFILL-COMPLETE backlog:
 
-- **SMOKE-1 — AWS 1-day smoke test (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: For each asset_group × service (MTDS × 5 + MDPS × 3 + IS × 5), fetch 1 day via deployment-api `?cloud=aws` and verify non-zero captured rows.
-- **SMOKE-2 — Data-status UI AWS toggle verify (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Toggle to AWS; verify cells render.
-- **SMOKE-3 — Document smoke result (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Per-cell result table at `plans/audit/results/aws_smoke_1day_<date>.md`. Gate for full AWS backfill execution.
+- **SMOKE-1 — AWS 1-day smoke test (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: For each asset_group × service (MTDS × 5 +
+  MDPS × 3 + IS × 5), fetch 1 day via deployment-api `?cloud=aws` and verify non-zero captured rows.
+- **SMOKE-2 — Data-status UI AWS toggle verify (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Toggle to AWS; verify cells
+  render.
+- **SMOKE-3 — Document smoke result (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Per-cell result table at
+  `plans/audit/results/aws_smoke_1day_<date>.md`. Gate for full AWS backfill execution.
 
 ## P3 — backlog; revisit quarterly
 
@@ -492,38 +511,37 @@ _(no plans currently assigned at this priority)_
       `MessageBus` abstraction gap (deploy-service currently GCP-only; AWS SNS equivalent not wired). Gate: confirm
       whether AWS SNS mirroring is needed before post-cutover backfill VMs launch.
 - [ ] [AGENT] P2. **UCI `MessageBus` abstraction** — once inventory done, create `MessageBus` interface in UTL that
-      wraps GCP Pub/Sub + AWS SNS behind a single emit API driven by `CLOUD_PROVIDER` env. Required for service repos
-      to push events to both clouds in dual-cloud mode.
+      wraps GCP Pub/Sub + AWS SNS behind a single emit API driven by `CLOUD_PROVIDER` env. Required for service repos to
+      push events to both clouds in dual-cloud mode.
 - [ ] [AGENT] P2. **`defi-validation` key in `cloud-providers.yaml`** — GCP has `defi-validation` bucket in
-      `configs/cloud-providers.yaml`; AWS does not. Add corresponding S3 bucket key so `resolve_bucket_name()` works
-      on AWS. Small config + QG STEP 5.69 impact.
-- [ ] [OPERATOR] P2. **Per-service `buildspec.aws.yaml` parity test** — run CodeBuild parity test for all services
-      that have `buildspec.aws.yaml`. BLOCKED-OPERATOR: requires AWS IAM perms for CodeBuild + ECR in account
-      `427895769566`. Ping operator for creds.
-- [ ] [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in
-      `instruments-service/scripts/`, `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and
-      route to S3 vs GCS appropriately.
+      `configs/cloud-providers.yaml`; AWS does not. Add corresponding S3 bucket key so `resolve_bucket_name()` works on
+      AWS. Small config + QG STEP 5.69 impact.
+- [ ] [OPERATOR] P2. **Per-service `buildspec.aws.yaml` parity test** — run CodeBuild parity test for all services that
+      have `buildspec.aws.yaml`. BLOCKED-OPERATOR: requires AWS IAM perms for CodeBuild + ECR in account `427895769566`.
+      Ping operator for creds.
+- [ ] [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in `instruments-service/scripts/`,
+      `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and route to S3 vs GCS appropriately.
 - [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
       handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
 - [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining
       asset_groups using the same playbook as DeFi. Post-cutover scope.
-- [ ] [AGENT] P3. **CI/CD cutover to AWS-only** — once workspace fully bilateral, cut CI/CD to build + push to AWS
-      ECR; decommission GCP Cloud Build triggers. Post-cutover scope.
-- [ ] [AGENT] P3. **GCP bucket decommission** — after AWS parity confirmed + TTL expired, decommission GCP buckets
-      per data-retention policy. Post-cutover scope.
+- [ ] [AGENT] P3. **CI/CD cutover to AWS-only** — once workspace fully bilateral, cut CI/CD to build + push to AWS ECR;
+      decommission GCP Cloud Build triggers. Post-cutover scope.
+- [ ] [AGENT] P3. **GCP bucket decommission** — after AWS parity confirmed + TTL expired, decommission GCP buckets per
+      data-retention policy. Post-cutover scope.
 
 ## Codex SSOTs
 
 > **[DONE 2026-05-22]** Group D audit: all referenced docs verified to exist and reflect shipped state.
 
-| Doc                                                            | Owns                                                                                                                                                                                                                     |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `codex/05-infrastructure/vm-tarball-deployment.md`             | VM tarball deployment; `lifecycle_class` requirements (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE); Pattern A vs B startup; T+10min post-launch verification; singleton-lock pattern |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md`        | Manifest consolidator runtime (Cloud Run + Cloud Scheduler, 10 jobs, `*/1 * * * *`) — GCE VM DELETED 2026-05-20; legacy launcher DELETED                                                                                 |
-| `codex/05-infrastructure/gcs-object-operations.md`             | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                    |
-| `codex/05-infrastructure/launcher-script-ssot.md`              | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                            |
-| `codex/02-data/availability-manifest-and-data-status.md`       | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                            |
-| `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69) — ARCHIVED 2026-05-23 |
+| Doc                                                                     | Owns                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `codex/05-infrastructure/vm-tarball-deployment.md`                      | VM tarball deployment; `lifecycle_class` requirements (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE); Pattern A vs B startup; T+10min post-launch verification; singleton-lock pattern |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`                 | Manifest consolidator runtime (Cloud Run + Cloud Scheduler, 10 jobs, `*/1 * * * *`) — GCE VM DELETED 2026-05-20; legacy launcher DELETED                                                                                 |
+| `codex/05-infrastructure/gcs-object-operations.md`                      | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                    |
+| `codex/05-infrastructure/launcher-script-ssot.md`                       | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                            |
+| `codex/02-data/availability-manifest-and-data-status.md`                | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                            |
+| `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69) — ARCHIVED 2026-05-23                                                                                                    |
 
 ## Cross-references
 
