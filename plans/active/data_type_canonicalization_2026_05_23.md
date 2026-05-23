@@ -1,0 +1,150 @@
+---
+title: Data Type Canonicalization — Cross-Service Alignment
+slug: data_type_canonicalization_2026_05_23
+created: 2026-05-23
+last_updated: 2026-05-23
+parent_epic: mtds_mdps_master
+assigned_vm: vm-cross-cutting
+estimate_class: refactor
+estimate_baseline_ai_days: 3.0
+estimate_calibrated_ai_days: 1.2
+status: active
+---
+
+# Data Type Canonicalization — Cross-Service Alignment
+
+## Problem Statement
+
+A cross-service audit (2026-05-23) found that data type string names are **not consistent** across the stack. MTDS
+handlers write canonical UAC names to GCS/manifest; the YAML config, downstream service code (features, execution,
+MDPS), and MTDS adapters all use old/divergent names. Result: deployment UI data status misses coverage, execution
+service reads wrong GCS paths, features service loads from wrong paths.
+
+## Root Cause Summary
+
+Three-way name split for core DeFi types:
+
+| UAC canonical     | venue_data_types.yaml | MTDS adapters  | Features         | Execution         |
+| ----------------- | --------------------- | -------------- | ---------------- | ----------------- |
+| `dex_swaps`       | `swaps`               | `swaps`        | `swaps`          | `swaps`           |
+| `dex_pools`       | `liquidity`           | `liquidity`    | `dex_pool_state` | `liquidity`       |
+| `lending_indices` | `rate_indices`        | `rate_indices` | `rate_indices`   | `lending_indices` |
+
+Additional issues:
+
+- MDPS scanner uses `mev_bundles`/`bridge_flows`/`flash_loans` instead of
+  `mev_events`/`bridge_events`/`flash_loan_events`
+- Legacy retired prediction types still in `_PER_INSTRUMENT_SHARD_DATA_TYPES`
+- Missing DeFi types in venue_data_types.yaml (perp_funding, lst_rates, gas_fees, eigenlayer_rewards, vault_share_price,
+  native_staking_rates, utilization, flash_loan_availability, vault_apy, vault_tvl)
+- Prediction category entirely absent from venue_data_types.yaml
+- TradFi reference types in YAML but not UAC
+- deployment-api can't find venue_data_types.yaml (wrong path)
+- Strategy script uses `"perp-funding"` hyphen form
+
+## Codex SSOTs
+
+- `codex/02-data/contracts-scope-and-layout.md`
+- `codex/02-data/honest-absence-downstream-handling.md`
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
+
+## Full Execution Criterion
+
+All data types written to GCS by MTDS appear under the same canonical name in:
+
+1. UAC `DATA_TYPES_BY_ASSET_GROUP`
+2. `venue_data_types.yaml` (all 3 copies in sync)
+3. MTDS adapter `SUPPORTED_DATA_TYPES` / `_default_data_types()`
+4. Features service data type references
+5. Execution service data type references
+6. Deployment UI data status (visible via path_combinatorics loading YAML)
+
+Verification: `grep -r "swaps\|liquidity\|rate_indices\|mev_bundles\|bridge_flows\|flash_loans\|perp-funding"` across
+all service repos returns zero hits in non-test Python source.
+
+---
+
+## Phase 1 — UAC: Canonical source fixes [P0]
+
+- [x] [SCRIPT] P0. Remove retired prediction types from `_PER_INSTRUMENT_SHARD_DATA_TYPES`: `prediction_trades`,
+      `prediction_book_snapshot`, `prediction_market_metadata` — unified-api-contracts
+- [x] [SCRIPT] P0. Add missing DeFi types to `DATA_TYPES_BY_ASSET_GROUP["defi"]`: `utilization`,
+      `flash_loan_availability`, `vault_apy`, `vault_tvl` — unified-api-contracts
+- [x] [SCRIPT] P0. Add TradFi reference types to `DATA_TYPES_BY_ASSET_GROUP["tradfi"]`: `corporate_action_confirmed`,
+      `earnings_result`, `macro_result` — unified-api-contracts
+- [x] [SCRIPT] P0. Add Sports YAML types to `DATA_TYPES_BY_ASSET_GROUP["sports"]`: `markets`, `outcomes`, `settlements`
+      — unified-api-contracts
+- [x] [SCRIPT] P0. Update `BASE_GRANULARITY_BY_DATA_TYPE` and `NEEDS_CANDLE_PROCESSING` for all new types —
+      unified-api-contracts
+
+## Phase 2 — venue_data_types.yaml: Config fixes [P0]
+
+- [x] [SCRIPT] P0. Rename DeFi: `swaps`→`dex_swaps`, `liquidity`→`dex_pools`, `rate_indices`→`lending_indices` in YAML
+      (all 3 copies) — deployment-service, unified-trading-pm, market-tick-data-service
+- [x] [SCRIPT] P0. Add missing DeFi venue entries: perp_funding (HYPERLIQUID, ASTER), lst_rates, gas_fees,
+      eigenlayer_rewards, vault_share_price, native_staking_rates, utilization, flash_loan_availability —
+      deployment-service
+- [x] [SCRIPT] P0. Add Sports processed data types to YAML: `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
+      `odds_horizon_bucket` — deployment-service
+- [x] [SCRIPT] P0. Add Prediction category section to YAML — deployment-service
+- [x] [SCRIPT] P0. Fix deployment-api path_combinatorics.py: `"configs"` → `"pm-configs"` so YAML loads at runtime —
+      deployment-api
+
+## Phase 3 — MTDS adapters: Old name fixes [P0]
+
+- [x] [SCRIPT] P0. uniswapv2_adapter.py: `swaps`→`dex_swaps`, `liquidity`→`dex_pools` — market-tick-data-service
+- [x] [SCRIPT] P0. uniswap_v3_adapter.py: same — market-tick-data-service
+- [x] [SCRIPT] P0. uniswapv4_adapter.py: same — market-tick-data-service
+- [x] [SCRIPT] P0. curve_adapter.py: same — market-tick-data-service
+- [x] [SCRIPT] P0. balancer_adapter.py: same — market-tick-data-service
+- [x] [SCRIPT] P0. morpho_adapter.py: `rate_indices`→`lending_indices` — market-tick-data-service
+- [x] [SCRIPT] P0. base_defi_adapter.py: `rate_indices`→`lending_indices` — market-tick-data-service
+- [x] [SCRIPT] P0. fluid_adapter.py: `rate_indices`→`lending_indices` — market-tick-data-service
+- [x] [SCRIPT] P0. aave_positions.py: `rate_indices`→`lending_indices` — market-tick-data-service
+
+## Phase 4 — MDPS scanner: Event type name fixes [P1]
+
+- [x] [SCRIPT] P1. orchestration_scanner.py: `mev_bundles`→`mev_events`, `bridge_flows`→`bridge_events`,
+      `flash_loans`→`flash_loan_events` — market-data-processing-service
+
+## Phase 5 — Features service: Old name fixes [P0]
+
+- [x] [SCRIPT] P0. delta_one/engine/orchestrator.py: `swaps`→`dex_swaps` in `DEFI_DATA_TYPE_OVERRIDES` —
+      features-service
+- [x] [SCRIPT] P0. delta_one/app/core/dependency_checker.py: `"swaps"`→`"dex_swaps"` in candle path check —
+      features-service
+- [x] [SCRIPT] P0. onchain/app/core/mtds_output_config.py: `rate_indices`→`lending_indices` as bypass key —
+      features-service
+
+## Phase 6 — Execution service: Old name fixes [P0]
+
+- [x] [SCRIPT] P0. utils/instrument_resolver.py: `data_type=swaps`→`data_type=dex_swaps` in GCS paths —
+      execution-service
+- [x] [SCRIPT] P0. cli/multi_leg_config_gcs.py: `data_type=swaps`→`data_type=dex_swaps` — execution-service
+- [x] [SCRIPT] P0. engine/validation/catalog_validator.py: AMM `["swaps", "liquidity"]`→`["dex_swaps", "dex_pools"]` —
+      execution-service
+- [x] [SCRIPT] P0. engine/validation/data_availability_validator.py: same — execution-service
+
+## Phase 7 — Strategy script fix [P1]
+
+- [x] [SCRIPT] P1. scripts/probe_funding_rate_dispersion_coverage.py: remove `"perp-funding"` hyphen form —
+      strategy-service
+
+## Phase 8 — Regression tests [P1]
+
+- [x] [TEST] P1. UAC test: validate all venue_data_types.yaml data_types appear in DATA_TYPES_BY_ASSET_GROUP —
+      unified-api-contracts
+- [x] [TEST] P1. MTDS test: validate adapter SUPPORTED_DATA_TYPES all appear in UAC DATA_TYPES_BY_ASSET_GROUP —
+      market-tick-data-service
+- [x] [TEST] P1. Execution test: validate AMM book_type_requirements keys match UAC canonical names — execution-service
+
+## Temporary states + their canonical follow-up plans
+
+- `dex_pool_state` on-disk GCS path segment for `dex_pools`: intentional legacy — GCS data is NOT re-keyed per
+  single-walk discipline. Feature service mtds_output_config.py maintains the `dex_pools`→`dex_pool_state` path mapping.
+  Named successor: bundle into next Phase 2 GCS migration window per `gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
+
+## Codex SSOT updates
+
+- Update `codex/02-data/contracts-scope-and-layout.md` after Phase 1 (new UAC types section)
+- No codex doc invalidated — this is additive + rename only
