@@ -155,8 +155,8 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.4-P0.5 — `deployment-service/configs/dependency_health_policies.yaml` registry for all known deps +
-      startup schema loader
+- [x] ✅ Phase 2 P0.4-P0.5 — `deployment-service/configs/dependency_health_policies.yaml` registry for all known deps +
+      startup schema loader — ds@47426ee (27 deps / 5 DependencyClass tiers; scripts/load_dependency_policies.py)
 - [ ] Phase 3 P0.6-P0.7 — alerting-service `evaluate_dependency_health` rule wiring + UAC AlertCode extension
 - [ ] Phase 4 P0.8-P0.9 — per-dep fallback integration tests + nightly report
 - [ ] Phase 5 P0.10-P0.11 — synthetic smoke + game-day
