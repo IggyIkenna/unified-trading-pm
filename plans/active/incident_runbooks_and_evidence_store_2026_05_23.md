@@ -217,3 +217,39 @@ kill-switch) + rollback
 - Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
 - Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
 - Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`
+
+## Tier-5 implementation log (2026-05-23, follow-up)
+
+> Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
+
+| Tier | Repo                       | SHA          | What landed                                                                                        |
+| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
+| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
+| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
+| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
+| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+
+**Per-plan Tier-5 items shipped (this plan's scope):**
+
+- [x] ✅ Phase 2 P0.3-P0.4 `alerting_service/gateway/evidence_collector.py` (14-field IncidentEvidence bundle assembler; async fan-out to per-service /evidence/{incident_key} endpoints; defensive — never raises) — alerting-service@e5c8084
+- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks in `codex/15-runbooks/incidents/` (RB-INC-001/002/003 + RB-RECON-001/002/003 + RB-RISK-001/002/003/004 + RB-CONN-001/002/003/004/005 + RB-DEPLOY-001 + RB-INFRA-001/002/003 + RB-ALERT-001/002/003 + README index)
+- [x] ✅ Phase 4 P0.27 — all runbook frontmatter carries owner/cadence/verifier/last_executed per CLAUDE.md HARD RULE
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector calls them; endpoints pending per-service)
+- [ ] Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` (template — extend existing plan-hygiene)
+- [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped)
+
+**Cross-references**:
+
+- Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
+- 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
+- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
+- Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
+- Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
+- DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
+

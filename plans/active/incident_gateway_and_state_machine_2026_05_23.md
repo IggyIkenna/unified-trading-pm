@@ -259,3 +259,40 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 - Tier-4 LLM agent template → `agent-orchestrator/agents/recovery-audit.md`
 - Tier-2 alerting-service gateway → `alerting-service/alerting_service/gateway/`
 - Tier-2 Twilio notifiers → `alerting-service/alerting_service/notifiers/twilio_voice.py` + `twilio_sms.py`
+
+## Tier-5 implementation log (2026-05-23, follow-up)
+
+> Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
+
+| Tier | Repo                       | SHA          | What landed                                                                                        |
+| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
+| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
+| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
+| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
+| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+
+**Per-plan Tier-5 items shipped (this plan's scope):**
+
+- [x] ✅ P0.7-P0.9 + envelope_adapter — alerting-service@e5c8084 (state_machine ships; manual_action_endpoint ships; envelope_adapter wraps legacy alerts → IncidentEnvelope without big-bang router refactor)
+- [x] ✅ P0.11 incident_persister.py SCAFFOLD via evidence_collector — alerting-service@e5c8084
+
+**Items still `- [ ]` for follow-up sessions (per-plan):**
+
+- [ ] P0.10 recovery_verifier.py — per-service callback dispatcher (helpers exist as recovery_event_helper.py in execution + strategy; router subscription pending)
+- [ ] P0.12 router.py FULL refactor (consume IncidentEnvelope; drop dict-shaped path) — pair-review with Harsh
+- [ ] P0.13 ImmediateSev0Override evaluator wired into router pre-routing
+- [ ] P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition via state_machine.transition (router caller adds the call)
+- [ ] P0.15-P0.23 Phase 4 DART ack-queue widget integration (scaffold shipped UI@01e1bb69 [BLOCKED-PLAYWRIGHT]) + Phase 5 per-service recovery callbacks + Phase 6 game-day (protocol doc shipped)
+
+**Cross-references**:
+
+- Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
+- 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
+- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
+- Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
+- Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)
+- DART Tier-5 → `unified-trading-system-ui@01e1bb69` (safety-ops route + widgets)
+
