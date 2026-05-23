@@ -1,14 +1,15 @@
 ---
+name: batch_live_symmetry_2026_05_10
 title: Batch=Live design symmetry — 8-tab execution plan (May-23 cutover-blocking subset)
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 50.0
 estimate_calibrated_ai_days: 30.0
-locked_by: live-defi-rollout
-locked_since: 2026-05-10
 related_plans:
   - master_to_live_defi_2026_05_23.md
   - live_pipeline_mtds_mdps_features_2026_05_08.md
@@ -880,3 +881,15 @@ owner must use the file list in Tab 2 L7 checkbox body above.
 8. Tab 6 spawns DAY-3 once Tab 5 manifest schema stabilises.
 9. Tab 7 spawns DAY-1 in parallel (independent).
 10. Daily soak checkpoint via ScheduleWakeup during Tab 8's 7-day window.
+
+## Deferred work — migrated to: batch_live_symmetry_master
+
+_Archived 2026-05-23 slot 2. Tabs 1-5 + most code-phase checkboxes complete. VM-launch and post-cutover items deferred._
+
+- **Tab 6 — Paper-mode smoke + 7-day soak calibration (OPERATOR ACTION)**: BLOCKED-OPERATOR. Requires Tab6 reconciler VM launch first. Operator must launch reconciler VM then run 7-day paper soak.
+- **Tab 7 — P0 Playwright e2e matrix (BLOCKED-INFRA)**: Node.js ≥20 not installed on machine. Operator must install Node.js ≥20; then re-assign to slot for execution.
+- **Tab 8 — Backtest VM launch + paper-deploy + 7-day soak (OPERATOR ACTION)**: BLOCKED-OPERATOR. All VM operations are human-only.
+- **Phase 4 — `record_captured(df=...)` full migration (DEFAULT-REMOVAL)**: DEFERRED post-cutover. Successor: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4.
+- **L2 instruments-service orchestrator.py×2 true violations (Q3)**: BLOCKED — baselined noqa. Design call needed on DeFi caching architecture (move to CLI handler vs inject DeFi-cache-strategy object vs noqa baseline).
+- **Q1 L3 UI deferred**: RuntimeMode copy in `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` — design call needed (UAC dep vs copy-exemption).
+- **Post-cutover code items**: D4 (shadow-simulated fills in live), J1 (phase→mode helper full wiring), L4 (LIVE_ event-prefix rename), G1 (LIVE_ event rename), F4/F5 (UI mode refactor), I2 (TradFi live execution), I5 (Prediction live WebSocket).

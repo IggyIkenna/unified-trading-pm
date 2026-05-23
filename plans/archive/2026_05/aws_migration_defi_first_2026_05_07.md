@@ -1,14 +1,15 @@
 ---
+name: aws_migration_defi_first_2026_05_07
 title: AWS migration — DeFi-first dual-cloud active (post-cutover)
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 estimate_class: infra
 estimate_baseline_ai_days: 20.0
 estimate_calibrated_ai_days: 16.0
-locked_by: live-defi-rollout
-locked_since: 2026-05-07
 related_plans:
   - master_to_live_defi_2026_05_23.md
   - gcs_migration_bundle_pipeline_mode_2026_05_08.md
@@ -790,3 +791,13 @@ sports/predictions/tradfi/cefi GCP-resident until post-deadline rollout.
 Phases 1-5b completed 2026-05-08/09 (tabs 4 + re-execution under "Plans Run To Actual Completion" HARD RULE). Full
 narrative in PM git history @ commits around b02c5050. Highlights: 10 S3 buckets provisioned, 346,920 objects / 36.83 GB
 migrated, Glue DB + Athena workgroup configured. Events bucket go-forward only per Live=Batch judgment.
+
+## Deferred work — migrated to: infrastructure_master
+
+_Archived 2026-05-23 slot 2. Phases 1-5b complete (DeFi-first). Post-cutover phases migrated to infrastructure_master._
+
+- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on master plan Gate 4 (GCP manifest + data-quality green). GCS→S3 rsync per bucket when GCP primary confirmed green.
+- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS Fargate using ECR images. Operator must kick off after GCP primary stable.
+- **Phase 7 — Dual-cloud active mode**: Post-cutover target 2026-06-04. Shadow-mode validation + dual-write routing via UTL `cloud_interface/factory.py`.
+- **Phase 8 — Shadow-mode validation**: Validate byte-equal or within 0.5% drift between GCP↔AWS for all service writes.
+- **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups (CeFi, TradFi, Sports, Predictions).

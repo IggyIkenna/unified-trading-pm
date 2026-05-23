@@ -1,12 +1,13 @@
 ---
+name: bucket_name_ssot_canonicalisation_2026_05_10
 title:
   "Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one +
   provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)"
-status: active
+status: archived
+archived: 2026-05-23
+last_updated: 2026-05-23
 created: 2026-05-10
 parent: manifest_evolution_SUPERSEDED_2026_05_21
-locked_by: live-defi-rollout
-locked_since: 2026-05-10
 execution:
   owner:
     Harsh slot 4 (provisioning + L2 config.py migration + data migration coordination); Ikenna slot 1 (operator
@@ -743,3 +744,11 @@ owner's done-def (GAP-2.4.D extends Done-def #6).
 - Yaml SSOT: `deployment-service/configs/cloud-providers.yaml`
 - Legacy resolver to fold in: `unified-trading-library/unified_trading_library/cloud_interface/constants.py`
   (`BUCKET_PREFIXES` dict + `get_bucket_name(domain, asset_group, project_id)`)
+
+## Deferred work — migrated to: manifest_master
+
+_Archived 2026-05-23 slot 2. Phases 0a/0b/0c/0e/L1/L2-non-service complete. Service-code legacy delegate rows deferred (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION)._
+
+- **L2 dependency_checker.py probe templates** (ml-inference-service × 2, execution-service × 5, features-service × 16): BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration (Phase 2.6 or `code_freeze_migrate_backfill_sequencing` Phase 2.6).
+- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution-service × 2, execution-service × 1, UTL seed_writer × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window alongside manifest atomic rename + GCS bundled migration.
+- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`, `data_status_drilldown._BUCKET_TEMPLATES`, `data_query_service.build_bucket_name`, `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE`, 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data migration.

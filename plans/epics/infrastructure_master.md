@@ -12,7 +12,7 @@ last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/aws_migration_defi_first_2026_05_07.md
+  - ../archive/2026_05/aws_migration_defi_first_2026_05_07.md
   - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
   - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
   - ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
@@ -445,20 +445,24 @@ strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra
 (startup-script-url); 11 Pattern B exceptions documented in codex. Codex `vm-tarball-deployment.md` updated ✅
 2026-05-21. · **estimate**: 2.4 cal AI-days (class: infra)
 
-### [`aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)
+### [`aws_migration_defi_first_2026_05_07`](../archive/2026_05/aws_migration_defi_first_2026_05_07.md)
 
-**status**: active · **estimate**: 32 cal AI-days (class: infra)
-
-> **🔴 GATE — GCP-BACKFILL-COMPLETE (2026-05-22)**: Phase 5 (cross-cloud rsync) + Phase 6 (ECS deployment) + all AWS
-> backfill execution are **BLOCKED** until GCP full data backfill is 100% operator-acked. Phases 1.B/1.C/3/4 (IAM, ECR,
-> secrets, provisioning) may proceed. AWS backfill scripts ready for 1-day smoke test only (Phase 4 ✅ at
-> `deployment-service@ea920bb`). See `aws_cloud_toggle_and_backfill_parity_2026_05_22.md` for smoke-test gate.
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first: 10 S3 buckets, 346k objects / 36.83 GB migrated, Glue DB + Athena configured). Phase 5 cross-cloud rsync + Phase 6 ECS Fargate + Phase 9 full-workspace DEFERRED-POST-CUTOVER. · **estimate**: 32 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 
 _(no plans currently assigned at this priority)_
 
 ## Archived plans
+
+### [`aws_migration_defi_first_2026_05_07`](../archive/2026_05/aws_migration_defi_first_2026_05_07.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first).
+
+**Deferred (migrated):**
+- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on GCP manifest + data-quality green (master plan Gate 4).
+- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS using ECR images.
+- **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups post-cutover.
 
 ### [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md)
 

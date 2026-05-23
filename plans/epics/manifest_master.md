@@ -12,7 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/bucket_name_ssot_canonicalisation_2026_05_10.md
+  - ../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md
   - ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md
   - ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md
   - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
@@ -129,9 +129,9 @@ Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
 
 ## P2 — useful; opportunistic
 
-### [`bucket_name_ssot_canonicalisation_2026_05_10`](../active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+### [`bucket_name_ssot_canonicalisation_2026_05_10`](../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 
-**status**: active · **estimate**: 10.0 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete. 13 service-code legacy delegate rows remain DEFERRED (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION). · **estimate**: 10.0 cal AI-days (class: refactor)
 
 ### [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)
 
@@ -141,6 +141,17 @@ AI-days (class: infra)
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`bucket_name_ssot_canonicalisation_2026_05_10`](../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete.
+
+**Deferred (migrated):**
+- **L2 dependency_checker.py probe templates** (ml-inference × 2, execution-service × 5, features-service × 16): BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration.
+- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution × 2, execution-service × 1, UTL × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window.
+- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`, 3 shapes + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data migration.
 
 ## Deferred work — migrated from archived plans
 

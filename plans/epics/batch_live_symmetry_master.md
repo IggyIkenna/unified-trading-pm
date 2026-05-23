@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
   - ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md
-  - ../active/batch_live_symmetry_2026_05_10.md
+  - ../archive/2026_05/batch_live_symmetry_2026_05_10.md
 ---
 
 # Batch Live Symmetry Master
@@ -69,10 +69,23 @@ on monorepo migration Block B1 ADT lift + features consolidation Phase 5.c). · 
 - **Phase B — QG STEP 5.67/5.68 static enforcement (2 items, P2)**: Gate: Phase A + features_repo_consolidation
   Phase 5.c.
 
-### [`batch_live_symmetry_2026_05_10`](../active/batch_live_symmetry_2026_05_10.md)
+### [`batch_live_symmetry_2026_05_10`](../archive/2026_05/batch_live_symmetry_2026_05_10.md)
 
-**status**: active · **estimate**: 30 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Tabs 1-5 + code-phase checkboxes complete. Tab 6 paper-soak, Tab 7 Playwright e2e, Tab 8 backtest VM BLOCKED-OPERATOR. Post-cutover architectural items deferred. · **estimate**: 30 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 
 _(no plans currently assigned at this priority)_
+
+## Archived plans
+
+### [`batch_live_symmetry_2026_05_10`](../archive/2026_05/batch_live_symmetry_2026_05_10.md)
+
+**status**: ✅ ARCHIVED 2026-05-23 — Tabs 1-5 complete; VM-launch tabs (6/7/8) BLOCKED-OPERATOR.
+
+**Deferred (migrated):**
+- **Tab 6 — Paper-mode smoke + 7-day soak (OPERATOR ACTION)**: Requires reconciler VM launch. Operator-gated.
+- **Tab 7 — Playwright e2e matrix (BLOCKED-INFRA)**: Node.js ≥20 not installed. Operator installs Node.js ≥20 → re-assign to slot.
+- **Tab 8 — Backtest VM launch + 7-day soak (OPERATOR ACTION)**: All VM operations are human-only.
+- **Phase 4 — `record_captured(df=...)` DEFAULT-REMOVAL**: DEFERRED post-cutover. Successor: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4.
+- **Post-cutover**: D4 (shadow fills), J1 (phase→mode helper), L4/G1 (LIVE_ rename), F4/F5 (UI refactor), I2 (TradFi live), I5 (Prediction live WebSocket)._
