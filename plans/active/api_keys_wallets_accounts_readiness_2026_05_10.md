@@ -409,7 +409,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     May-23 ships on Cloud KMS path (3.C.1). Checkbox flipped noting DEFERRED status — 2026-05-23 slot 2.
     Copper integration tracked in `fireblocks_copper_client_integration_2026_06_01.md`.
 
-- [ ] [HUMAN+AGENT] P0. **3.B — CEFFU integration.** **Longest lead time — START IMMEDIATELY.** Sub-deliverables:
+- [x] ✅ [HUMAN+AGENT] P0. **3.B — CEFFU integration.** DEFERRED per 2026-05-12 scope contraction. 3.B.3 adapter shipped
+      (execution-service@027a8153b). KYB (3.B.1) + real-fund test (3.B.4) + ops-model decision (3.B.5) all post-cutover.
+      Tracked in `fireblocks_copper_client_integration_2026_06_01.md`. PM@slot2 2026-05-23. Sub-deliverables:
   - [ ] [HUMAN] **3.B.1** — CEFFU institutional KYB onboarding (operator-side, 2-4 weeks).
   - [ ] [HUMAN] **3.B.2** — Confirm CEFFU's product offering: MirrorX (off-exchange-settlement linking CEFFU custody to
         Binance perp margin without moving funds) vs direct custody API. Asset coverage: BTC + ETH + USDC + USDT
