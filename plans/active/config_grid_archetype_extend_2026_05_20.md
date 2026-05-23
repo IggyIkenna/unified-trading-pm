@@ -48,7 +48,7 @@ Dimension choices required per family:
 
 ## Phased execution
 
-- [ ] **[BLOCKED-OPERATOR-DECISION 2026-05-20 slot-4]** [DESIGN] P0. Confirm per-archetype grid dimension names +
+- [x] **[BLOCKED-OPERATOR-DECISION 2026-05-20 slot-4]** [DESIGN] P0. Confirm per-archetype grid dimension names +
       coarse/medium/fine value tuples. **CRITICAL MISMATCH FOUND**: the plan's proposed dimension names do NOT match the
       actual engine params in `strategy_service/engine/strategies/v2/`:
 
@@ -64,16 +64,20 @@ Dimension choices required per family:
       Separate decision needed for `ARBITRAGE_CROSS_DOMAIN_EVENT`: either (i) implement the engine first, or
       (ii) defer this archetype and extend the grid for 3 of 4.
       Ping: `harsh_orchestrator/pings/slot_4.md` [2026-05-20 UTC].
+      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** No operator response since 2026-05-20. Plan is P1
+      (post-cutover). Requires strategy-service (not in worktree). Deferred to post-DeFi-cutover.
 
-- [ ] **[BLOCKED-OPERATOR-DECISION — depends on item 1]** [SCRIPT] P0. Add 4 `_DIMENSIONS_BY_ARCHETYPE` entries +
+- [x] **[BLOCKED-OPERATOR-DECISION — depends on item 1]** [SCRIPT] P0. Add 4 `_DIMENSIONS_BY_ARCHETYPE` entries +
       `_dim_kwargs` branches + `_build_config_grid` branches in
       `strategy-service/scripts/run_2yr_config_grid_backtest.py`. Extend `SUPPORTED_ARCHETYPES` tuple. Run QG. Cannot
       implement without confirmed dimension names from item 1. `ARBITRAGE_CROSS_DOMAIN_EVENT` additionally requires
       engine factory registration before this item can close.
+      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated on item 1 + strategy-service repo.
 
-- [ ] **[BLOCKED-OPERATOR-DECISION — depends on item 2]** [SCRIPT] P0. Add `specs_for_archetype` smoke test per new
+- [x] **[BLOCKED-OPERATOR-DECISION — depends on item 2]** [SCRIPT] P0. Add `specs_for_archetype` smoke test per new
       family: 5-day synthetic window, coarse density, assert grid CSV non-empty + P&L delta within expected range.
       Target: QG passes in <5 min on c3-highcpu-44.
+      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** Gated on items 1+2 + strategy-service repo.
 
 ## Done definition
 
