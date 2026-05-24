@@ -605,8 +605,7 @@ def propose_parent_epic(plan_path: Path) -> Proposal:
         else:
             proposed = top_slug
             reasoning = (
-                f"SUPERSEDED reroute overridden by content:"
-                f" top_score={top_score},"
+                f"SUPERSEDED reroute overridden by content: top_score={top_score},"
                 f" default={default_target}({scores.get(default_target, 0)})"
             )
             confidence = "medium"

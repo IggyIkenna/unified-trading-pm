@@ -87,7 +87,13 @@ def main() -> int:
                     }
                 )
                 first_segment = link_path.lstrip("./").split("/", 1)[0]
-                if first_segment and ((ws_root / first_segment).is_dir() or first_segment not in _PM_INTERNAL):
+                # Sibling-repo tolerance: skip if segment resolves as a directory OR looks
+                # like a repo name (no dot — repo dirs never have extensions like ".md").
+                # Keeps plain-filename links (e.g. "nonexistent.md") strictly checked.
+                if first_segment and (
+                    (ws_root / first_segment).is_dir()
+                    or (first_segment not in _PM_INTERNAL and "." not in first_segment)
+                ):
                     continue
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

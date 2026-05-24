@@ -160,7 +160,8 @@ def classify_doc(path: Path, pm_root: Path, verbose: bool) -> tuple[list[str], b
     if scopes is None:
         if verbose:
             print(
-                f"[default] {path.relative_to(pm_root)} — frontmatter has no `scope:`, applied default {list(DEFAULT_SCOPE)}",
+                f"[default] {path.relative_to(pm_root)} — frontmatter has no `scope:`,"
+                f" applied default {list(DEFAULT_SCOPE)}",
                 file=sys.stderr,
             )
         return list(DEFAULT_SCOPE), True
@@ -235,7 +236,10 @@ def main(argv: list[str] | None = None) -> int:
 
     here = Path(__file__).resolve().parent
     pm_root = args.root.resolve() if args.root is not None else find_pm_root(here)
-    output = args.output if args.output is not None else pm_root / "codex/14-customer-journeys/_generated/scope-manifest.json"
+    output = (
+        args.output if args.output is not None
+        else pm_root / "codex/14-customer-journeys/_generated/scope-manifest.json"
+    )
 
     manifest, uncovered = build_manifest(pm_root, verbose=args.verbose, fail_on_default=args.check_only)
 

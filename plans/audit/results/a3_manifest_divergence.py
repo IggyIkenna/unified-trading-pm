@@ -55,7 +55,10 @@ MAX_DATE = date(2026, 5, 20)
 
 def load_expected_dump() -> pd.DataFrame:
     """Read the A2 dump as a pandas DataFrame."""
-    dump_path = WORKSPACE_ROOT / "unified-trading-pm" / "plans" / "audit" / "results" / "expected_coverage_dump_2026_05_20.parquet"
+    dump_path = (
+        WORKSPACE_ROOT / "unified-trading-pm" / "plans" / "audit" / "results"
+        / "expected_coverage_dump_2026_05_20.parquet"
+    )
     if not dump_path.exists():
         msg = f"A2 dump not found at {dump_path}; run a2_materialize_expected_coverage_dump.py first."
         raise FileNotFoundError(msg)
@@ -72,7 +75,7 @@ def load_manifest_for_bucket(asset_group: str, fs: gcsfs.GCSFileSystem) -> pd.Da
     """
     bucket = MANIFEST_BUCKETS[asset_group]
     path = f"{bucket}/_index/availability_index.parquet"
-    print(f"  reading gs://{path} ...", flush=True)  # noqa: gs-uri — audit script diagnostic print; path is resolved from MANIFEST_BUCKETS SSOT
+    print(f"  reading gs://{path} ...", flush=True)
     with fs.open(path, "rb") as fh:
         # Project only the columns we need to keep memory in check.
         df = pq.read_table(
@@ -265,11 +268,29 @@ def main() -> int:
                 fh.write(f"| {r['venue']} | {r['data_type']} | `{r['classification']}` | {r['cells']:,} |\n")
 
         fh.write("\n## Notes\n\n")
-        fh.write("- A2 oracle has known gaps (sports off-seasons + DeFi protocol pauses not yet encoded). Cells classified as `SHOULD_HAVE_DATA` in those domains may actually be honest empties.\n")
-        fh.write("- `DIVERGENT_EMPTY` is the highest-priority class — these are likely silent adapter bugs (the Drift S3 class). Each (venue, data_type) row above should be inspected for the source of the empty.\n")
-        fh.write("- `MISSING_EXPECTED` indicates a silent gap (the adapter never emitted a manifest row at all). Either the venue's date enumerator skipped these cells, or the orchestrator scope doesn't enumerate them.\n")
-        fh.write("- `ATTEMPTED_FAILED` is per-row noise unless concentrated on specific (venue, data_type) pairs — check the `error_reason` column in the parquet for the failure taxonomy.\n")
-        fh.write("- Buckets read: `market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112` (one `_index/availability_index.parquet` each — single-walk discipline).\n")
+        fh.write(
+            "- A2 oracle has known gaps (sports off-seasons + DeFi protocol pauses not yet encoded)."
+            " Cells classified as `SHOULD_HAVE_DATA` in those domains may actually be honest empties.\n"
+        )
+        fh.write(
+            "- `DIVERGENT_EMPTY` is the highest-priority class — these are likely silent adapter bugs"
+            " (the Drift S3 class). Each (venue, data_type) row above should be inspected"
+            " for the source of the empty.\n"
+        )
+        fh.write(
+            "- `MISSING_EXPECTED` indicates a silent gap (the adapter never emitted a manifest row at all)."
+            " Either the venue's date enumerator skipped these cells,"
+            " or the orchestrator scope doesn't enumerate them.\n"
+        )
+        fh.write(
+            "- `ATTEMPTED_FAILED` is per-row noise unless concentrated on specific (venue, data_type) pairs"
+            " — check the `error_reason` column in the parquet for the failure taxonomy.\n"
+        )
+        fh.write(
+            "- Buckets read:"
+            " `market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112`"
+            " (one `_index/availability_index.parquet` each — single-walk discipline).\n"
+        )
 
     print(f"\nWrote {summary_path}", flush=True)
     print(f"\nDIVERGENT_EMPTY:  {classification_counts.get('DIVERGENT_EMPTY', 0):,}")

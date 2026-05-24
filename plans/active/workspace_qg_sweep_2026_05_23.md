@@ -115,8 +115,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       — deployment-api@11ccdd9 | QG exit 0 (323s) | fixed I001 ruff, BinaryEventTrigger UTL dispatch, AssetGroup UTL export, _is_legacy_defi_venue_row regex fix, import patterns, MAX_DURATION=700
       — additional: deployment-api@bbdffba | utl@5247b3fa | DEPRECATED_DEFI_GHOST_VENUE_NAMES→EMPTY_OR_DEPRECATED_DEFI_VENUES (3 files), gcs_delete_object added to UTL __init__ facade
 
-- [ ] [AGENT] P1. **unified-trading-pm QG green** — 71 ruff errors (largest workspace backlog).
+- [x] ✅ [AGENT] P1. **unified-trading-pm QG green** — 71 ruff errors (largest workspace backlog).
       `cd unified-trading-pm && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
+      — utm@49dc39ad | QG exit 0 | fixed 75 E501 line-too-long (15 files); validate_plan_links.py broken-link detection regression
 
 ---
 

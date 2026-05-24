@@ -103,7 +103,9 @@ class FileScan:
 
 # Regex patterns.
 MANIFEST_READ = re.compile(r"availability_index|read.*manifest|manifest.*read|read_index_only_dataframe")
-RAISES_DEP = re.compile(r"raise\s+(\w*Dependency\w*Error|UpstreamMissingError|UpstreamDataError)\b|fail_fast\s*=\s*True")
+RAISES_DEP = re.compile(
+    r"raise\s+(\w*Dependency\w*Error|UpstreamMissingError|UpstreamDataError)\b|fail_fast\s*=\s*True"
+)
 RAISES_STALE = re.compile(r"raise\s+(\w*Stale\w*Error|StaleUpstreamError|StaleDataError|FreshnessError)\b")
 CATCH_DEP_SILENT = re.compile(
     r"except\s+\w*Dependency\w*Error\s*[^\n]*:\s*\n\s*(pass|continue|return\s+(?:None|\[\]|\{\}|0|False))",
@@ -119,9 +121,16 @@ RECORD_EMPTY_FREEFORM = re.compile(r"""record_empty\s*\([^)]*reason\s*=\s*["']([
 # Closed set of EmptyConfirmedReason members (read from UAC honest_coverage.py at scan time).
 EMPTY_CONFIRMED_REASONS: set[str] = set()
 try:
-    hc_path = WORKSPACE_ROOT / "unified-api-contracts" / "unified_api_contracts" / "canonical" / "crosscutting" / "honest_coverage.py"
+    hc_path = (
+        WORKSPACE_ROOT / "unified-api-contracts" / "unified_api_contracts"
+        / "canonical" / "crosscutting" / "honest_coverage.py"
+    )
     if hc_path.exists():
-        for m in re.finditer(r"^\s*([A-Z_][A-Z0-9_]*)\s*=\s*['\"]\1['\"]", hc_path.read_text(encoding="utf-8"), re.MULTILINE):
+        for m in re.finditer(
+            r"^\s*([A-Z_][A-Z0-9_]*)\s*=\s*['\"]\1['\"]",
+            hc_path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        ):
             EMPTY_CONFIRMED_REASONS.add(m.group(1))
 except OSError:
     pass
@@ -271,9 +280,15 @@ def main() -> int:
         fh.write(f"Known EmptyConfirmedReason enum members harvested from UAC: {len(EMPTY_CONFIRMED_REASONS)}\n\n")
 
         fh.write("## Per-service × mode summary\n\n")
-        fh.write("| Service | Batch handlers | Live handlers | Files raising DependencyError | Files raising StaleUpstreamError | Silent catches | Blank `reason=\"\"` | Freeform reason |\n")
+        fh.write(
+            "| Service | Batch handlers | Live handlers | Files raising DependencyError"
+            " | Files raising StaleUpstreamError | Silent catches | Blank `reason=\"\"`"
+            " | Freeform reason |\n"
+        )
         fh.write("|---|---:|---:|---:|---:|---:|---:|---:|\n")
-        all_repos = sorted(set(per_service_handler_total) | set(per_service_raises_dep) | set(per_service_catches_silent))
+        all_repos = sorted(
+            set(per_service_handler_total) | set(per_service_raises_dep) | set(per_service_catches_silent)
+        )
         for repo in all_repos:
             fh.write(
                 f"| {repo} | {per_service_batch_handler.get(repo, 0)} | {per_service_live_handler.get(repo, 0)} | "
@@ -283,7 +298,11 @@ def main() -> int:
             )
 
         fh.write("\n## Review-blocking violations (silent catches + blank reasons + freeform reasons)\n\n")
-        fh.write("Per the data-pipeline-correctness HARD RULE, every consumer-side miss MUST raise loudly (batch) or raise StaleUpstreamError (live). Patterns below are **all** the silent-swallowing patterns the scanner detected.\n\n")
+        fh.write(
+            "Per the data-pipeline-correctness HARD RULE, every consumer-side miss MUST raise loudly (batch)"
+            " or raise StaleUpstreamError (live)."
+            " Patterns below are **all** the silent-swallowing patterns the scanner detected.\n\n"
+        )
         violators = [s for s in scans if s.review_blocking_violations > 0]
         violators.sort(key=lambda x: -x.review_blocking_violations)
         fh.write(f"Total files with review-blocking violations: **{len(violators)}**\n\n")
@@ -295,14 +314,28 @@ def main() -> int:
             if top.warns_but_proceeds:
                 fh.write(f"- Warn-but-proceed pattern (lines): {top.warns_but_proceeds[:5]}\n")
             if top.record_empty_with_blank_reason:
-                fh.write(f"- `record_empty(reason=\"\")` blank-reason (lines): {top.record_empty_with_blank_reason[:5]}\n")
+                fh.write(
+                    f"- `record_empty(reason=\"\")` blank-reason (lines): {top.record_empty_with_blank_reason[:5]}\n"
+                )
             if top.record_empty_with_freeform_reason:
-                fh.write(f"- `record_empty(reason=\"NOT_IN_ENUM\")` freeform-reason (lines): {top.record_empty_with_freeform_reason[:5]}\n")
+                fh.write(
+                    "- `record_empty(reason=\"NOT_IN_ENUM\")` freeform-reason (lines):"
+                    f" {top.record_empty_with_freeform_reason[:5]}\n"
+                )
 
         fh.write("\n## Next actions\n\n")
-        fh.write("- Every review-blocking violation must be either (a) fixed in code (raise loudly), or (b) given an operator-acked `BLOCKED-OPERATOR-DECISION` explaining why the silent path is correct.\n")
-        fh.write("- Wire a new QG step `scripts/quality_gates/check_dependency_fail_propagation.py` that ratchets these counts down per service × mode.\n")
-        fh.write("- Per CLAUDE.md HARD RULE, slots doing layer-N+1 work on services with open A5 violations are review-blocked.\n")
+        fh.write(
+            "- Every review-blocking violation must be either (a) fixed in code (raise loudly),"
+            " or (b) given an operator-acked `BLOCKED-OPERATOR-DECISION` explaining why the silent path is correct.\n"
+        )
+        fh.write(
+            "- Wire a new QG step `scripts/quality_gates/check_dependency_fail_propagation.py`"
+            " that ratchets these counts down per service × mode.\n"
+        )
+        fh.write(
+            "- Per CLAUDE.md HARD RULE, slots doing layer-N+1 work on services with open A5 violations"
+            " are review-blocked.\n"
+        )
 
     print(f"A5 scan complete: {total_files} files scanned")
     print(f"  CSV:     {csv_path}")

@@ -177,8 +177,7 @@ def main() -> int:
         fixed += 1
         print(
             f"  {'FIXED' if apply else 'WOULD fix'} {f.name:<48}"
-            f" tier={REGISTRY[slug][0]} vm={REGISTRY[slug][1]}"
-            f" ag={REGISTRY[slug][2]} related={len(related)}"
+            f" tier={REGISTRY[slug][0]} vm={REGISTRY[slug][1]} ag={REGISTRY[slug][2]} related={len(related)}"
         )
     print(f"\n{'Fixed' if apply else 'Would fix'}: {fixed} epics")
     return 0

@@ -43,7 +43,10 @@ ADAPTER_REPOS: list[str] = [
 ]
 
 SKIP_DIR_NAMES: frozenset[str] = frozenset(
-    {".venv", ".venv-workspace", "build", "dist", "node_modules", "__pycache__", ".git", ".tox", ".pytest_cache", "tests"},
+    {
+        ".venv", ".venv-workspace", "build", "dist", "node_modules",
+        "__pycache__", ".git", ".tox", ".pytest_cache", "tests",
+    },
 )
 
 # Path patterns to classify a file as batch vs live.
@@ -226,12 +229,16 @@ def main() -> int:
 
         fh.write("\n## BATCH_ONLY cells (live equivalent MUST be built per CLAUDE.md Batch = Live)\n\n")
         batch_only = [r for r in rows if r["parity_status"] == "BATCH_ONLY"]
-        fh.write(f"Total BATCH_ONLY cells: **{len(batch_only)}** (review-blocking — every batch adapter MUST have a live equivalent)\n\n")
+        fh.write(
+            f"Total BATCH_ONLY cells: **{len(batch_only)}**"
+            " (review-blocking — every batch adapter MUST have a live equivalent)\n\n"
+        )
         if batch_only:
             fh.write("| asset_group | venue | data_type | batch file count | sample |\n|---|---|---|---:|---|\n")
             for r in sorted(batch_only, key=lambda x: (x["asset_group"], x["venue_token"], x["data_type"]))[:40]:
                 fh.write(
-                    f"| {r['asset_group']} | {r['venue_token']} | {r['data_type']} | {r['batch_files']} | `{r['sample_batch_path']}` |\n",
+                    f"| {r['asset_group']} | {r['venue_token']} | {r['data_type']}"
+                    f" | {r['batch_files']} | `{r['sample_batch_path']}` |\n",
                 )
             if len(batch_only) > 40:
                 fh.write(f"\n_(showing first 40 of {len(batch_only)} BATCH_ONLY cells — see CSV for full list)_\n")
@@ -246,7 +253,9 @@ def main() -> int:
             if len(missing_both) > 40:
                 fh.write(f"\n_(showing first 40 of {len(missing_both)} MISSING_BOTH cells)_\n")
 
-        fh.write("\n## LIVE_ONLY cells (suspicious — usually intentional only for derived/streaming-only data_types)\n\n")
+        fh.write(
+            "\n## LIVE_ONLY cells (suspicious — usually intentional only for derived/streaming-only data_types)\n\n"
+        )
         live_only = [r for r in rows if r["parity_status"] == "LIVE_ONLY"]
         fh.write(f"Total LIVE_ONLY cells: **{len(live_only)}**\n\n")
         if live_only:
@@ -255,11 +264,28 @@ def main() -> int:
                 fh.write(f"| {r['asset_group']} | {r['venue_token']} | {r['data_type']} |\n")
 
         fh.write("\n## Caveats (sampling transparency)\n\n")
-        fh.write("- Venue + data_type extraction is **regex-based on file paths + first 4000 chars**. Adapters that don't put venue/data_type in their path or module header are missed.\n")
-        fh.write("- Path classification `is_batch` / `is_live` based on path tokens (`/handlers/`, `/live/`, `/stream/`, etc.). Ambiguous files default to batch.\n")
-        fh.write("- An adapter may exist in code but not be wired into the orchestrator scope — A6 only checks *adapter file existence*, not whether it's enumerated.\n")
-        fh.write("- A6 does not check schema parity between batch + live adapters (would require running them). Operator may want to follow up with a runtime parity test (cross-checking manifest rows from each mode).\n")
-        fh.write("- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures` → split into `binance` + `futures`). Per-token false positives possible — see CSV `venue_token` column for exact match.\n")
+        fh.write(
+            "- Venue + data_type extraction is **regex-based on file paths + first 4000 chars**."
+            " Adapters that don't put venue/data_type in their path or module header are missed.\n"
+        )
+        fh.write(
+            "- Path classification `is_batch` / `is_live` based on path tokens"
+            " (`/handlers/`, `/live/`, `/stream/`, etc.). Ambiguous files default to batch.\n"
+        )
+        fh.write(
+            "- An adapter may exist in code but not be wired into the orchestrator scope"
+            " — A6 only checks *adapter file existence*, not whether it's enumerated.\n"
+        )
+        fh.write(
+            "- A6 does not check schema parity between batch + live adapters (would require running them)."
+            " Operator may want to follow up with a runtime parity test"
+            " (cross-checking manifest rows from each mode).\n"
+        )
+        fh.write(
+            "- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures`"
+            " → split into `binance` + `futures`)."
+            " Per-token false positives possible — see CSV `venue_token` column for exact match.\n"
+        )
 
     print("A6 scan complete:")
     print(f"  CSV:     {csv_path}")

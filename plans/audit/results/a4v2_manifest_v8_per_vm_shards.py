@@ -129,14 +129,22 @@ def main() -> int:
     with csv_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(
             fh,
-            fieldnames=["asset_group", "bucket", "vm_shard", "total_rows", "v8_rows", "v_lt_8_rows", "null_rows", "schema_versions_seen"],
+            fieldnames=[
+                "asset_group", "bucket", "vm_shard",
+                "total_rows", "v8_rows", "v_lt_8_rows", "null_rows", "schema_versions_seen",
+            ],
         )
         writer.writeheader()
-        for r in sorted(rows, key=lambda x: (-int(x["v_lt_8_rows"]) - int(x["null_rows"]), x["asset_group"], x["bucket"], x["vm_shard"])):
+        for r in sorted(
+            rows,
+            key=lambda x: (-int(x["v_lt_8_rows"]) - int(x["null_rows"]), x["asset_group"], x["bucket"], x["vm_shard"]),
+        ):
             writer.writerow(r)
 
     # Per-bucket aggregates.
-    per_bucket: dict[str, dict[str, int]] = defaultdict(lambda: {"total": 0, "v8": 0, "v_lt_8": 0, "null": 0, "shards": 0})
+    per_bucket: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"total": 0, "v8": 0, "v_lt_8": 0, "null": 0, "shards": 0}
+    )
     for r in rows:
         b = str(r["bucket"])
         per_bucket[b]["total"] += int(r["total_rows"])
@@ -164,7 +172,10 @@ def main() -> int:
         bad = [r for r in rows if int(r["v_lt_8_rows"]) > 0 or int(r["null_rows"]) > 0]
         if bad:
             fh.write(f"Total problematic shards: **{len(bad)}**\n\n")
-            fh.write("| asset_group | bucket | shard | total | v<8 | NULL | versions |\n|---|---|---|---:|---:|---:|---|\n")
+            fh.write(
+                "| asset_group | bucket | shard | total | v<8 | NULL | versions |\n"
+                "|---|---|---|---:|---:|---:|---|\n"
+            )
             for r in sorted(bad, key=lambda x: -int(x["v_lt_8_rows"]) - int(x["null_rows"]))[:50]:
                 fh.write(
                     f"| {r['asset_group']} | `{r['bucket'].split('-')[0]}-{r['asset_group']}` | "
@@ -177,7 +188,12 @@ def main() -> int:
             fh.write("_All per-VM shards at v8 — no per-VM-writer regressions detected._\n")
 
         fh.write("\n## Composition with A4 v1 (master availability_index)\n\n")
-        fh.write("Master availability_index has 0% v8 rows workspace-wide (A4 v1). If per-VM shards are also v<8, the consolidator preserves the source version (correct behavior). If per-VM shards ARE at v8 but master isn't, the consolidator should be regenerating master from per-VM shards — gap.\n\n")
+        fh.write(
+            "Master availability_index has 0% v8 rows workspace-wide (A4 v1)."
+            " If per-VM shards are also v<8, the consolidator preserves the source version (correct behavior)."
+            " If per-VM shards ARE at v8 but master isn't, the consolidator should be regenerating master"
+            " from per-VM shards — gap.\n\n"
+        )
         fh.write("Compare aggregates above to A4 v1 numbers to identify drift between the two paths.\n")
 
     print(f"\nWrote {csv_path}")

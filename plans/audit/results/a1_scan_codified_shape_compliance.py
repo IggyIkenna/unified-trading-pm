@@ -133,13 +133,17 @@ LC_LOG_UPLOAD_TRAP = re.compile(r"lc_log_upload_trap_block")
 
 # Check 2: Manifest writers must declare schema_version=8 (not 4).
 MANIFEST_V_OLD = re.compile(r"schema_version\s*=\s*[1-7]\b|MANIFEST_SCHEMA_VERSION\s*=\s*[1-7]\b")
-MANIFEST_WRITER_INDICATOR = re.compile(r"record_captured\s*\(|record_empty\s*\(|record_failed\s*\(|manifest_writer\.\w+|ManifestWriter\(")
+MANIFEST_WRITER_INDICATOR = re.compile(
+    r"record_captured\s*\(|record_empty\s*\(|record_failed\s*\(|manifest_writer\.\w+|ManifestWriter\("
+)
 
 # Check 3: Handlers MUST emit at least one record_captured|record_empty|record_failed.
 # Heuristic: a "handler" is a file matching `handlers?/.*\.py` OR containing `def fetch(` /
 # `def collect(` / `def handle(` / `def process_shard(`. If so, require at least one
 # `record_*` callsite. Missing = violation.
-HANDLER_INDICATOR = re.compile(r"def\s+(fetch|collect|handle|process_shard|run_capture|capture_shard)\s*\(|class\s+\w*Handler\b")
+HANDLER_INDICATOR = re.compile(
+    r"def\s+(fetch|collect|handle|process_shard|run_capture|capture_shard)\s*\(|class\s+\w*Handler\b"
+)
 RECORD_EMISSION = re.compile(r"record_captured\s*\(|record_empty\s*\(|record_failed\s*\(")
 
 # Check 4: record_empty(reason=...) must use EmptyConfirmedReason enum, not raw strings.
@@ -278,7 +282,9 @@ def scan_file(repo: str, repo_root: Path, path: Path) -> FileScan:
         if not CLASSIFY_VENUE_ERROR.search(content):
             scan.classify_venue_error_violations.append((0, "(adapter has except blocks but no classify_venue_error)"))
         if not ADAPTER_FETCH_FAILED.search(content):
-            scan.classify_venue_error_violations.append((0, "(adapter has except blocks but no ADAPTER_FETCH_FAILED emit)"))
+            scan.classify_venue_error_violations.append(
+                (0, "(adapter has except blocks but no ADAPTER_FETCH_FAILED emit)")
+            )
 
     # Check 6: inline gs:// f-string when file is a GCS user.
     is_gcs_user = GCS_USER_INDICATOR.search(content) is not None
@@ -402,14 +408,34 @@ def write_summary(scans: list[FileScan], out_path: Path, total_files: int) -> No
         qg_map = {
             "has_log_upload_trap": ("(deployment-service@6b4610c trap-fix bundled across 14 launchers)", "SHIPPED"),
             "manifest_v8": ("base-library.sh STEP 5.x manifest-schema-version", "PARTIAL — verify version pin"),
-            "record_emission": ("scripts/qg/no_silent_absence_handlers.sh + scripts/quality_gates/check_emission_policy_paired_callsites.py", "SHIPPED"),
-            "typed_empty_reason": ("(no current QG — relies on LegacyBlankErrorReasonError at runtime)", "GAP — needs QG step"),
-            "classify_venue_error": ("scripts/qg/no_adapter_contract_regression.sh + scripts/quality_gates/check_adapter_contract_regression.py", "SHIPPED"),
-            "resolve_bucket_name": ("scripts/quality_gates/check_inline_bucket_uri.py + inline_bucket_uri_baseline.yaml", "SHIPPED — ratcheting"),
-            "lifecycle_class": ("(declared in vm_zombie_watchdog.py VM_PREFIX_TO_BUCKET — CLAUDE.md hard rule)", "PARTIAL — needs CI check"),
+            "record_emission": (
+                "scripts/qg/no_silent_absence_handlers.sh"
+                " + scripts/quality_gates/check_emission_policy_paired_callsites.py",
+                "SHIPPED",
+            ),
+            "typed_empty_reason": (
+                "(no current QG — relies on LegacyBlankErrorReasonError at runtime)",
+                "GAP — needs QG step",
+            ),
+            "classify_venue_error": (
+                "scripts/qg/no_adapter_contract_regression.sh"
+                " + scripts/quality_gates/check_adapter_contract_regression.py",
+                "SHIPPED",
+            ),
+            "resolve_bucket_name": (
+                "scripts/quality_gates/check_inline_bucket_uri.py + inline_bucket_uri_baseline.yaml",
+                "SHIPPED — ratcheting",
+            ),
+            "lifecycle_class": (
+                "(declared in vm_zombie_watchdog.py VM_PREFIX_TO_BUCKET — CLAUDE.md hard rule)",
+                "PARTIAL — needs CI check",
+            ),
             "no_hardcoded_venue_urls": ("scripts/qg/no_hardcoded_venue_urls.sh", "SHIPPED"),
             "no_hardcoded_venue_universe": ("scripts/qg/no_hardcoded_venue_universe.sh", "SHIPPED"),
-            "uac_import_surface": ("imports/uac-import-surface-enforcement.mdc + (no enforcement script)", "GAP — cursor rule only"),
+            "uac_import_surface": (
+                "imports/uac-import-surface-enforcement.mdc + (no enforcement script)",
+                "GAP — cursor rule only",
+            ),
         }
         for check_name, _ in check_columns:
             qg_step, status = qg_map[check_name]
@@ -431,14 +457,33 @@ def write_summary(scans: list[FileScan], out_path: Path, total_files: int) -> No
             fh.write(f"| {i} | {s.repo} | `{s.rel_path}` | {s.file_kind} | {s.total_violations} |\n")
 
         fh.write("\n## Gap analysis — checks lacking workspace-wide QG enforcement\n\n")
-        fh.write("The mega-audit Phase A1 promised 10 checks; below are the ones where existing QG enforcement is partial or absent. ")
-        fh.write("These slot into the **Cross-cutting QG ratchet plan** referenced from the mega-audit tracker (no new SSOT — extend existing plan).\n\n")
+        fh.write(
+            "The mega-audit Phase A1 promised 10 checks; below are the ones"
+            " where existing QG enforcement is partial or absent. "
+            "These slot into the **Cross-cutting QG ratchet plan** referenced from the mega-audit tracker"
+            " (no new SSOT — extend existing plan).\n\n"
+        )
         fh.write("| Check | Gap | Proposed remediation |\n")
         fh.write("|---|---|---|\n")
-        fh.write("| `typed_empty_reason` | Runtime-only via `LegacyBlankErrorReasonError`; no static catch. | Add `scripts/quality_gates/check_typed_empty_reason.py` that scans for `record_empty(reason=\"...\")` string literals and asserts `EmptyConfirmedReason.X` usage. |\n")
-        fh.write("| `uac_import_surface` | Cursor rule only (`imports/uac-import-surface-enforcement.mdc`) — not enforced in CI. | Promote to `scripts/quality_gates/check_uac_import_surface.py` + per-repo wiring. |\n")
-        fh.write("| `lifecycle_class` | Mandatory per CLAUDE.md but no CI checker. | Add `scripts/quality_gates/check_vm_lifecycle_class.py` that parses `vm_zombie_watchdog.py` + asserts every entry has a typed `LifecycleClass`. |\n")
-        fh.write("| `manifest_v8` | base-library.sh STEP enforces but A1 surfaces drift candidates. | Cross-check `MANIFEST_SCHEMA_VERSION` constants workspace-wide; raise to ERROR in QG. |\n")
+        fh.write(
+            "| `typed_empty_reason` | Runtime-only via `LegacyBlankErrorReasonError`; no static catch."
+            " | Add `scripts/quality_gates/check_typed_empty_reason.py` that scans for"
+            " `record_empty(reason=\"...\")` string literals and asserts `EmptyConfirmedReason.X` usage. |\n"
+        )
+        fh.write(
+            "| `uac_import_surface` | Cursor rule only (`imports/uac-import-surface-enforcement.mdc`)"
+            " — not enforced in CI."
+            " | Promote to `scripts/quality_gates/check_uac_import_surface.py` + per-repo wiring. |\n"
+        )
+        fh.write(
+            "| `lifecycle_class` | Mandatory per CLAUDE.md but no CI checker."
+            " | Add `scripts/quality_gates/check_vm_lifecycle_class.py` that parses `vm_zombie_watchdog.py`"
+            " + asserts every entry has a typed `LifecycleClass`. |\n"
+        )
+        fh.write(
+            "| `manifest_v8` | base-library.sh STEP enforces but A1 surfaces drift candidates."
+            " | Cross-check `MANIFEST_SCHEMA_VERSION` constants workspace-wide; raise to ERROR in QG. |\n"
+        )
 
 
 def main() -> int:

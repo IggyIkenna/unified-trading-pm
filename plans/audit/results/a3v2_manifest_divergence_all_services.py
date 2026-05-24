@@ -114,7 +114,7 @@ def probe_gcs_index(fs: gcsfs.GCSFileSystem, bucket: str) -> pd.DataFrame | None
 def probe_aws_index(bucket: str) -> dict[str, object]:
     """Lightweight AWS probe — list bucket head to confirm existence."""
     result = subprocess.run(
-        ["aws", "s3", "ls", f"s3://{bucket}/_index/"],  # noqa: gs-uri — audit script, s3:// for AWS probing, bucket is caller-provided
+        ["aws", "s3", "ls", f"s3://{bucket}/_index/"],
         capture_output=True,
         text=True,
         check=False,
@@ -197,7 +197,9 @@ def main() -> int:
         fh.write(f"AWS buckets probed: {len(AWS_BUCKETS)}\n\n")
 
         fh.write("## GCS bucket inventory + manifest index presence\n\n")
-        fh.write("| asset_group | service_kind | bucket | index? | rows | v8 | v<8 | NULL | captured | empty | failed |\n")
+        fh.write(
+            "| asset_group | service_kind | bucket | index? | rows | v8 | v<8 | NULL | captured | empty | failed |\n"
+        )
         fh.write("|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|\n")
         for r in per_bucket_stats:
             fh.write(
@@ -212,9 +214,13 @@ def main() -> int:
             fh.write("| asset_group | service_kind | bucket |\n|---|---|---|\n")
             for r in no_index:
                 fh.write(f"| {r['asset_group']} | {r['service_kind']} | `{r['bucket']}` |\n")
-            fh.write("\n**Action**: per-service emission to `_index/availability_index.parquet` MUST be wired. Either:\n")
+            fh.write(
+                "\n**Action**: per-service emission to `_index/availability_index.parquet` MUST be wired. Either:\n"
+            )
             fh.write("- The service writes to a different bucket (look in `service-output-emission-semantics.md`)\n")
-            fh.write("- The service has NOT yet been wired into the manifest-emission pipeline (data-correctness gap)\n")
+            fh.write(
+                "- The service has NOT yet been wired into the manifest-emission pipeline (data-correctness gap)\n"
+            )
             fh.write("- The consolidator doesn't run on these buckets (consolidator coverage gap)\n")
         else:
             fh.write("_All probed buckets have a consolidated manifest._\n")
@@ -236,7 +242,10 @@ def main() -> int:
         for r in aws_results:
             fh.write(f"| {r['asset_group']} | {r['service_kind']} | `{r['bucket']}` | {r['status']} |\n")
 
-        fh.write("\n**Operator decision needed** (R21 in audit doc): are AWS S3 manifest indexes still actively maintained, or deprecated in favour of GCP? Either:\n")
+        fh.write(
+            "\n**Operator decision needed** (R21 in audit doc):"
+            " are AWS S3 manifest indexes still actively maintained, or deprecated in favour of GCP? Either:\n"
+        )
         fh.write("- If active: wire consolidator + extend A3 to read them per-cell (current A3 only reads GCS).\n")
         fh.write("- If deprecated: archive AWS section of `cloud-providers.yaml` + remove from bucket-name SSOT.\n")
 

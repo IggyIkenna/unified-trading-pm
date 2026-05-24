@@ -140,10 +140,24 @@ def main() -> int:
             )
 
         fh.write("\n## Notes\n\n")
-        fh.write("- No per-symbol axis in v1 (operator decision 2026-05-20). A3 introduces per-symbol comparison by reading manifest rows directly.\n")
-        fh.write("- Sports off-season calendars are not yet encoded in UAC; in-scope sports cells default to `SHOULD_HAVE_DATA`. Tracked in `expected_coverage_calendar_decisions_2026_05_20.md`.\n")
-        fh.write("- DeFi protocol pause windows are not yet encoded; in-scope DeFi cells default to `SHOULD_HAVE_DATA` once chain genesis + venue launch pass.\n")
-        fh.write("- `SourceCapability.coverage_start` (per-data_type) was promoted by slot-3 plan `uac_source_capability_metadata_promotion_2026_05_20.md` but a lookup index integration is pending (slot-3 Phase 4).\n")
+        fh.write(
+            "- No per-symbol axis in v1 (operator decision 2026-05-20)."
+            " A3 introduces per-symbol comparison by reading manifest rows directly.\n"
+        )
+        fh.write(
+            "- Sports off-season calendars are not yet encoded in UAC;"
+            " in-scope sports cells default to `SHOULD_HAVE_DATA`."
+            " Tracked in `expected_coverage_calendar_decisions_2026_05_20.md`.\n"
+        )
+        fh.write(
+            "- DeFi protocol pause windows are not yet encoded;"
+            " in-scope DeFi cells default to `SHOULD_HAVE_DATA` once chain genesis + venue launch pass.\n"
+        )
+        fh.write(
+            "- `SourceCapability.coverage_start` (per-data_type) was promoted by slot-3 plan"
+            " `uac_source_capability_metadata_promotion_2026_05_20.md`"
+            " but a lookup index integration is pending (slot-3 Phase 4).\n"
+        )
 
     print(f"Wrote {summary_path}", flush=True)
     return 0

@@ -86,7 +86,9 @@ SKIP_DIR_NAMES: frozenset[str] = frozenset(
 # Regex patterns.
 HARDCODED_VERSION_LT_8 = re.compile(r"schema_version\s*[=:]\s*[1-7]\b|MANIFEST_SCHEMA_VERSION\s*=\s*[1-7]\b")
 V8_CONSUMER_INDICATOR = re.compile(r"schema_version\s*[><=]+\s*8|MANIFEST_SCHEMA_VERSION\s*[=]\s*8|capture_status\s*==")
-LEGACY_FALLBACK_PATTERN = re.compile(r"(?:legacy|v[1-7])(?:.{0,30})(?:fallback|coerce|to_v8|migrate|backfill)", re.IGNORECASE)
+LEGACY_FALLBACK_PATTERN = re.compile(
+    r"(?:legacy|v[1-7])(?:.{0,30})(?:fallback|coerce|to_v8|migrate|backfill)", re.IGNORECASE
+)
 MANIFEST_READ_PATTERN = re.compile(r"read.*manifest|manifest.*read|availability_index|read.*_index/")
 
 
@@ -115,7 +117,10 @@ def audit_data_side(fs: gcsfs.GCSFileSystem) -> list[dict[str, object]]:
                 continue
             vc = df["schema_version"].value_counts(dropna=False).to_dict()
             for sv, count in vc.items():
-                sv_key = "NULL" if (sv is None or (isinstance(sv, float) and sv != sv)) else str(int(sv) if isinstance(sv, (int, float)) else sv)
+                sv_key = (
+                    "NULL" if (sv is None or (isinstance(sv, float) and sv != sv))
+                    else str(int(sv) if isinstance(sv, (int, float)) else sv)
+                )
                 rows.append(
                     {
                         "asset_group": ag,
@@ -187,9 +192,14 @@ def main() -> int:
 
     code_csv = out_dir / "manifest_v8_compliance_2026_05_20_code.csv"
     with code_csv.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["repo", "rel_path", "v_lt_8_count", "v8_indicator", "legacy_fallback_count"])
+        writer = csv.DictWriter(
+            fh, fieldnames=["repo", "rel_path", "v_lt_8_count", "v8_indicator", "legacy_fallback_count"]
+        )
         writer.writeheader()
-        for row in sorted(code_rows, key=lambda r: (-int(r["v_lt_8_count"]) - int(r["legacy_fallback_count"]), r["repo"], r["rel_path"])):
+        for row in sorted(
+            code_rows,
+            key=lambda r: (-int(r["v_lt_8_count"]) - int(r["legacy_fallback_count"]), r["repo"], r["rel_path"]),
+        ):
             writer.writerow(row)
 
     # Summary.
@@ -247,10 +257,19 @@ def main() -> int:
                 fh.write(f"| {r['repo']} | `{r['rel_path']}` | {r['legacy_fallback_count']} |\n")
 
         fh.write("\n## Next actions\n\n")
-        fh.write("- Any v<8 row at the data side requires backfill/migration before next bucket cutover (per single-walk discipline, must bundle into Phase 2 migration).\n")
+        fh.write(
+            "- Any v<8 row at the data side requires backfill/migration before next bucket cutover"
+            " (per single-walk discipline, must bundle into Phase 2 migration).\n"
+        )
         fh.write("- Any v<8 hardcoded constant in code requires update + a QG check that raises on resurgence.\n")
-        fh.write("- Legacy-fallback patterns should be reviewed for sunset dates — temporary state per CLAUDE.md must have a named successor plan.\n")
-        fh.write("- Recommend new QG step: `scripts/quality_gates/check_manifest_schema_version_constants.py` that scans the workspace for any non-v8 manifest-schema constant.\n")
+        fh.write(
+            "- Legacy-fallback patterns should be reviewed for sunset dates"
+            " — temporary state per CLAUDE.md must have a named successor plan.\n"
+        )
+        fh.write(
+            "- Recommend new QG step: `scripts/quality_gates/check_manifest_schema_version_constants.py`"
+            " that scans the workspace for any non-v8 manifest-schema constant.\n"
+        )
 
     print(f"Wrote {data_csv}", flush=True)
     print(f"Wrote {code_csv}", flush=True)
