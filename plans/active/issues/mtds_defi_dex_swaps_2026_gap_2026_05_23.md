@@ -149,11 +149,19 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       made. No dex_swaps data for 2026-01-25→2026-05-23 was ever fetched. Local MTDS HEAD `71a47f78` already has the
       fix: `get_tick_data_bucket(None, asset_group=primary_ag.lower() ...)`. Confirmed: April 18, 2026 migration wrote
       dex_pool_swaps up to 2026-01-24; nothing for 2026-01-25+.
-- [x] **Rebuild MTDS tarball + launch backfill VM** (2026-05-24): rebuilt tarballs with `--allow-dirty-tarball` (UTL has
-      foreign uncommitted changes in `recovery/agent_action.py` — unrelated to data download; MTDS clean). MTDS tarball
-      `mtds-code.tar.gz` at `71a47f78be56` uploaded. Launched `mtds-backfill-defi-20260524` RUNNING (asia-northeast1-c,
-      e2-standard-4). Range: 2026-01-25→2026-05-23, all DeFi data_types.
-- [ ] **T+10 verify mtds-backfill-defi-20260524** — confirm RUNNING + first chunk progressing (~12:04 UTC)
+- [x] **Rebuild MTDS tarball + first launch attempt** (2026-05-24): rebuilt tarballs with `--allow-dirty-tarball` (UTL
+      has foreign uncommitted changes — unrelated to data download; MTDS at `71a47f78be56` clean). Launched
+      `mtds-backfill-defi-20260524` with `--operation download` — WRONG. `download` operation skips all 124 DeFi venues:
+      "Skipping 124 DeFi venues (use collect-\* handlers)". Killed after diagnosis.
+- [x] **Root-caused: collect-dex-swaps is the right operation** (2026-05-24): `vm_mtds_backfill.sh` hardcodes
+      `--operation download` (line 212). DeFi DEX data requires `--operation collect-dex-swaps` (maps to
+      `DexSwapsHandler`). Pattern: `VM_TASK=defi-backfill` + `VM_OPERATION=collect-dex-swaps` (same as dex-pools
+      launcher but with dex-swaps op). Launch script for dex-swaps doesn't exist — launched via direct gcloud.
+- [x] **Relaunch with correct operation** (2026-05-24): Launched `mtds-backfill-defi-dexswaps-20260524` RUNNING
+      (asia-northeast1-c, e2-standard-4) with
+      `VM_TASK=defi-backfill, VM_OPERATION=collect-dex-swaps, DEFI,     2026-01-25→2026-05-23`. MTDS tarball
+      `71a47f78be56`.
+- [ ] **T+10 verify mtds-backfill-defi-dexswaps-20260524** — confirm RUNNING + TheGraph requests progressing
 - [ ] **Post-completion**: verify dex_pool_swaps rows appear in MTDS GCS for 2026-01-25+; then reset
       SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
