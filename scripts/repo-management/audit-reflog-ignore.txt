@@ -69,3 +69,10 @@ unified-trading-system-ui
 # Intentional reset from rebase/ff-pull workflow during 2026-05-14/15 multi-agent session
 # All confirmed safe — work was either already on origin/live-defi-rollout or was rebased forward
 execution-service:8c260f681
+
+# Intentional resets to origin/live-defi-rollout — branch alignment 2026-05-24
+agent-orchestrator:eee66cd
+deployment-service:e439811
+fund-administration-service:77f2989
+ml-service:5edac74
+ml-training-service:6515277
