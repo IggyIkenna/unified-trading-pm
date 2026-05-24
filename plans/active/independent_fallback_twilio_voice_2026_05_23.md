@@ -243,6 +243,6 @@ physical pager device is researched + purchased).
 
 **Items still `- [ ]`:**
 
-- [ ] Phase 1 P0.1-P0.3 — **OPERATOR ACTION** Twilio account creation + 7 SM creds push per ping doc item #1
-- [ ] Phase 4 P0.10 — `_get_paging_credentials` reloader extension for twilio_* SM keys (currently uses env-var fallback path only)
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — **OPERATOR ACTION** Twilio account creation + 7 SM creds push per ping doc item #1; awaiting operator
+- [x] ✅ Phase 4 P0.10 — `_get_paging_credentials` reloader extension for twilio_* SM keys — alerting-service@464441f | 6 Twilio SM keys added to _PagingCredentialsReloader; get_paging_credentials() returns all 9 keys; QG green
 
