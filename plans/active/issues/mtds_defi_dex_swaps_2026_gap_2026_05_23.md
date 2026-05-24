@@ -92,6 +92,13 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **Rebuild tarball + relaunch VMs with venue+dtype fixes** — MDPS tarball rebuilt (MDPS@cb3d11b, includes 561fdbe
       venue+dtype fix); launched `mdps-backfill-defi-20260524-082217` (2024) + `mdps-backfill-defi-20260524-082231`
       (2025), both RUNNING asia-northeast1-c e2-standard-8, T+10 RUNNING confirmed 2026-05-24
+- [x] **Root-caused tarball race condition + killed 082217/082231 VMs** (2026-05-24): 082217/082231 used stale tarball
+      (b3e0c2a5, uploaded 2026-05-23T17:10Z) because VMs booted at 07:24:58Z but cb3d11b tarball not uploaded until
+      07:25:16Z (18s race). Fixed: killed both, confirmed cb3d11b now at fixed-name path, relaunched
+      `mdps-backfill-defi-20260524-083220` (2024) + `mdps-backfill-defi-20260524-083234` (2025), both RUNNING
+      asia-northeast1-c e2-standard-8 2026-05-24
+- [ ] **T+10 verify + log check for 083220/083234** — confirm RUNNING + zero schema_violation/partition_mismatch for
+      swaps_ohlcv shards
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
 
