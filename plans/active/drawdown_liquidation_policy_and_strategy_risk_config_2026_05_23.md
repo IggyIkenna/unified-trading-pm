@@ -221,7 +221,7 @@ audit ack package).
 - [ ] Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer
 - [x] ✅ Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC AlertCode extension — strategy-service@9acf34c (P0.9+P0.10 detectors + 40 unit tests) | uac@8cb9036 (P0.11 LiquidationInvestigationReport 16-field schema) | P0.12 already shipped uac@6f601292 | QG 4033 passed 0 failed
 - [x] ✅ Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts — strategy-service@57f620e | venue API integration + 19 tests | QG green
-- [ ] Phase 6 P0.16-P0.18 — synthetic smoke + game-day
+- [x] ✅ Phase 6 P0.16-P0.18 — synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (TestDrawdownThresholdLadder 9 + TestDrawdownReportBuilt 2 + TestLiquidationSmokeP017 5 + TestLiquidationProximityScenario15 4) | QG green
 
 **Cross-references**:
 
@@ -261,7 +261,7 @@ audit ack package).
 - [x] ✅ Phase 3 P0.6-P0.8 drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (drawdown_investigation_writer.py: build_report + should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx 7-section renderer) | QG 4315 passed 0 failed
 - [x] ✅ Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport — strategy-service@9acf34c | uac@8cb9036 | QG 4033 passed 0 failed
 - [x] ✅ Phase 5 P0.13-P0.15 venue API integration in close-all scripts — strategy-service@57f620e | execution_service_url + httpx MARKET close + emit_recovery_action STARTED/SUCCESS/FAILED + 19 unit tests | QG green
-- [ ] Phase 6 P0.16-P0.18 synthetic smoke + game-day (game-day protocol doc shipped)
+- [x] ✅ Phase 6 P0.16-P0.18 synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (9 drawdown ladder + 2 report + 5 liquidation SEV0/SEV1 + 4 scenario-15 proximity) | QG 4399 passed 0 failed
 
 **Cross-references**:
 
