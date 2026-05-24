@@ -158,10 +158,10 @@ all service repos returns zero hits in non-test Python source.
 - [x] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
       `SWAPS="swaps"`→`DEX_SWAPS="dex_swaps"`, `RATE_INDICES="rate_indices"`→`LENDING_INDICES="lending_indices"` —
       unified-trading-system-ui@79d3915d (Python-only; playwright gate does not apply)
-- [ ] [SCRIPT] P0. schemas/output_schemas.py `RATE_INDEX_SCHEMA`: `name="rate_indices"`→`name="lending_indices"` —
-      market-data-processing-service
-- [ ] [SCRIPT] P0. scripts/seed_mock_data.py: `"rate_indices"`→`"lending_indices"` (4+ occurrences) —
-      market-data-processing-service
+- [x] [SCRIPT] P0. schemas/output_schemas.py `RATE_INDEX_SCHEMA`: `name="rate_indices"`→`name="lending_indices"` —
+      market-data-processing-service@fa9d912
+- [x] [SCRIPT] P0. scripts/seed_mock_data.py: `"rate_indices"`→`"lending_indices"` (4+ occurrences, function
+      `_build_rate_indices_df` renamed to `_build_lending_indices_df`) — market-data-processing-service@fa9d912
 
 ## Temporary states + their canonical follow-up plans
 
