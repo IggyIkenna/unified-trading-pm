@@ -148,6 +148,21 @@ all service repos returns zero hits in non-test Python source.
       resolution. Successor to archived `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. — market-tick-data-service,
       features-service, unified-trading-pm
 
+## Phase 10 — Remaining stale names found in 2026-05-24 audit [P0]
+
+- [x] [SCRIPT] P0. engine/backtest/data_loader.py: `data_type == "swaps"`→`"dex_swaps"` — execution-service@c82f34825
+- [ ] [SCRIPT] P0. registry/processed_data_dependencies.py: remove stale `"rate_indices": "rate_ohlcv"` alias (canonical
+      `"lending_indices": "lending_ohlcv"` already present on line 31) — unified-api-contracts
+- [ ] [SCRIPT] P0. domain/validation.py `DATA_TYPE_SCHEMAS`: `"swaps"`→`"dex_swaps"`, `"liquidity"`→`"dex_pools"`,
+      `"rate_indices"`→`"lending_indices"` — unified-trading-library
+- [ ] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
+      `SWAPS="swaps"`→`DEX_SWAPS="dex_swaps"`, `RATE_INDICES="rate_indices"`→`LENDING_INDICES="lending_indices"` —
+      unified-trading-system-ui (Python-only; playwright gate does not apply)
+- [ ] [SCRIPT] P0. schemas/output_schemas.py `RATE_INDEX_SCHEMA`: `name="rate_indices"`→`name="lending_indices"` —
+      market-data-processing-service
+- [ ] [SCRIPT] P0. scripts/seed_mock_data.py: `"rate_indices"`→`"lending_indices"` (4+ occurrences) —
+      market-data-processing-service
+
 ## Temporary states + their canonical follow-up plans
 
 - `dex_pool_state` on-disk GCS path segment for `dex_pools`: intentional legacy — GCS data is NOT re-keyed per
