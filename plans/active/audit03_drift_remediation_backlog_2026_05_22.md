@@ -57,8 +57,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       (best-of-both) — see its AUDIT-03 follow-up todo. Tracked there, not here.**
 - [ ] [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
       (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule.
-- [ ] [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
-      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`).
+- [x] ✅ [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
+      (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632a
+      (refactor(rpc-fallback): remove infura from all chain fallback lists, backfilled 2026-05-24)
 
 ## Theme 3 — custody + DeFi credential safety (execution-service)
 
@@ -92,8 +93,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       satisfies the codex "raising layer" requirement + the required test) OR reconcile the CLAUDE.md/codex "3 raising
       layers" wording to the actual mechanism (single `client_id` by construction + 1 coordinator raise at
       `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally.
-- [ ] [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
-      `errors/defi.py:27`) for exhaustiveness guarantees.
+- [x] ✅ [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
+      `errors/defi.py:27`) for exhaustiveness guarantees. — unified-api-contracts@e8094607 (refactor(errors): convert
+      DefiErrorCode plain class to StrEnum, backfilled 2026-05-24)
 - [x] ✅ [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
       RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19). — PM@e4e099b6e (MASTER_READINESS codex updated
       2026-05-24; workspace CLAUDE.md + defi-execution-overview.md already correct)
