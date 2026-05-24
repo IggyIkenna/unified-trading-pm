@@ -24,13 +24,15 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 1 — P&L attribution: honest emission + canonical schema (strategy-service pnl/engine + UAC)
 
-- [ ] [AGENT] P1. **F-17** — Emit canonical `PnLAttributionRow` (with `factor: PnLFactor` + `layer: PnLLayer`) instead
-      of the free-form `PnLBreakdown` (`account_id` string). The canonical types EXIST in UAC `internal/risk.py`
+- [x] ✅ [AGENT] P1. **F-17** — Emit canonical `PnLAttributionRow` (with `factor: PnLFactor` + `layer: PnLLayer`)
+      instead of the free-form `PnLBreakdown` (`account_id` string). The canonical types EXIST in UAC `internal/risk.py`
       (PnLFactor = 16-member StrEnum) — this is emit-path adoption, not type creation. Affects ALL archetypes' P&L
-      row-level attribution.
-- [ ] [AGENT] P1. **F-16** — Emit pre-TGE points rows honestly as
+      row-level attribution. — strategy-service@dca2a801 (feat(pnl): F-17 adopt PnLAttributionRow in reward attribution,
+      backfilled 2026-05-24)
+- [x] ✅ [AGENT] P1. **F-16** — Emit pre-TGE points rows honestly as
       `CARRY_ISSUER_SEASONAL value_eth=0 points_pending=true` instead of silently `continue`-ing them
-      (`reward_attribution.py:159`).
+      (`reward_attribution.py:159`). — strategy-service@86d49cd0 (fix(reward-attribution): F-16 emit zero-value row,
+      backfilled 2026-05-24)
 - [x] ✅ [AGENT] P1. **F-46** — Make `FillAttributionContext.archetype_id` required (`str`, not `str | None`) + add
       `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution. —
       execution-service@49f42f770 (fix(pnl_attribution): archetype_id required str + config_variant added, backfilled
