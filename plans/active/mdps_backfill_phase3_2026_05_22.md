@@ -220,6 +220,19 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       Terminated 151059 VMs (lacked odds_horizon_bucket in UAC). Re-launched: 7 sports VMs
       `mdps-sports-{2020..2026}-20260523-155733` RUNNING. First run to dispatch all 4 sports adapters. 2026-05-23
       slot-5.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-StallFix** — **ROOT CAUSE: stall watchdog killed VMs before manifest shard flush
+      (slot-7 2026-05-24)**: 155733 VMs TERMINATED with 290 orphaned 2024 candle files in GCS but NO manifest shard
+      entries. Root cause: `STALL_TIMEOUT_SEC` was reduced 3600→1800 on 2026-05-23 (same day sports VMs launched).
+      Sports MDPS processes long empty-date stretches (no betting events → no log output) that falsely triggered the
+      1800s threshold, SIGKILLing the process before UTL flushed the manifest shard. Fix: (1)
+      `setup-data-pipeline-vm.sh` reads `STALL_TIMEOUT_SEC` metadata key and exports it so `vm-exec-with-gcs-tee.sh`
+      inherits the override; (2) `launch-mdps-sharded-backfill.sh` passes `STALL_TIMEOUT_SEC=7200` for sports VMs.
+      `setup-data-pipeline-vm.sh` uploaded to `gs://deployment-scripts-central-element-323112/vm/`.
+      deployment-service@ffe9d6d. 2026-05-24 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch4** — Re-launched 7 sports VMs with stall fix
+      `mdps-sports-{2020..2026}-20260524-215548` RUNNING. Pinned MDPS@6c9045160577 + UTL@e51699c8 SHA tarballs.
+      `STALL_TIMEOUT_SEC=7200` in metadata → 2h stall window for empty-date stretches. Source:
+      `market-data-tick-sports-prd-central-element-323112`. 2026-05-24 slot-7.
 
 ---
 
