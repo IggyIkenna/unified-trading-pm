@@ -304,7 +304,8 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `mdps-defi-2026-01-20260524-202532` RUNNING (asia-northeast1-c, e2-standard-8) with
       MDPS_TARBALL_SHA=6c9045160577c79e10e6579488b4bc28e29cd17d + UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22.
       Source bucket: market-data-tick-defi-prd-central-element-323112. T+10 pending.
-- [ ] **T+10 verify mdps-defi-2026-01-20260524-202532** — confirm processing first dates with dex_swaps candles.
+- [x] ✅ **T+10 verify mdps-defi-2026-01-20260524-202532** — RUNNING. Processing day=2026-01-15, found 9 dex_swaps files
+      from newly-completed MTDS backfill. 5546 defi instruments loaded. Dep check passed. — slot-7 2026-05-24 ~19:31 UTC
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 - [ ] **Final 2026 coverage verify** — after all VMs complete: check processed_candles/by_date/day=2026-01-25→2026-05-22
       for non-empty dex_swaps candle rows.
