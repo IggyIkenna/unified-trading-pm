@@ -144,6 +144,54 @@ Five-service audit (`plans/audit/results/global_ledger_audit_*_2026_05_23.md`) f
 These gaps drive the writer-side gap analysis in Phase 4 of the discovery plan and will be addressed in the migration
 sub-plan.
 
+## `rebase_rate` — delta-computation strategy (Phase 2 DESIGN spec)
+
+**Applicable instruments**: LST/LRT only (`is_rebasing=True` in `InstrumentRecord`). `None` for all others.
+
+### Decision: MTDS-derived, per-consecutive-snapshot delta
+
+| Option | Formula | Recommendation |
+| --- | --- | --- |
+| **Per-snapshot delta (chosen)** | `(rate_t - rate_{t-1}) / rate_{t-1}` annualised | Reflects latest rate; consistent cadence with MTDS tick frequency; smooth LST curve makes per-snapshot noise negligible |
+| Daily-checkpoint delta | `(eod_rate_t - eod_rate_{t-1}) / eod_rate_{t-1}` × 365 | Adds 12–24h latency; requires MTDS to distinguish "end-of-day" snapshot — not available in IS `lst_rates` schema |
+
+| Owner-repo option | Pros | Recommendation |
+| --- | --- | --- |
+| **MTDS-derived (chosen)** | Consistent with `dividend_yield` architecture; IS stays pure reference data; no IS↔MTDS contract drift | ✓ |
+| IS-write-time | Closer to source; no MTDS state | Violates IS reference-only contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); blurs contract boundary |
+
+### Formula (operator-ACK pending 2026-05-24)
+
+```
+annualised_rebase_rate = ((rate_current - rate_prev) / rate_prev)
+                         × (seconds_per_year / (t_current - t_prev).total_seconds())
+```
+
+Where:
+- `rate_current`, `rate_prev` = consecutive `exchange_rate` rows from IS `lst_rates` for the same `(instrument_id, chain)`
+- `t_current - t_prev` = elapsed time between snapshots (IS write timestamps)
+- `seconds_per_year = 365.25 × 86400`
+- Result stored as annualised continuous rate (dimensionless); emitted on `PricingLedger.MARK_UPDATE` row
+
+### Invariant: IS cumulative column stays untouched
+
+`lst_rates.exchange_rate` (cumulative) is the SSOT. The derived `rebase_rate` lives only in `PricingLedger`.
+Any code that writes a derived `delta_exchange_rate` column back to IS `lst_rates` is a HARD RULE violation.
+
+### Edge cases
+
+| Case | Handling |
+| --- | --- |
+| First snapshot (no prior row) | Emit `None` — insufficient history for delta |
+| Gap > 48h between snapshots | Emit `None` — stale; IS feed outage or instrument delisted |
+| Negative delta (rebase rate < 0) | Valid for negative-rebase LRTs; emit as-is (can be negative) |
+| Non-LST instrument | Emit `None` |
+
+**SSOT**: `codex/04-architecture/global-ledger-architecture.md` (this section) + `codex/02-data/ledger-event-taxonomy.md` § `rebase_rate`.
+**CODE gated on operator-ACK**: see `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 2 risk callout.
+
+---
+
 ## Composes With
 
 - `codex/04-architecture/client-funds-isolation.md` — HARD RULE: funds never cross client boundaries; ledger rows always

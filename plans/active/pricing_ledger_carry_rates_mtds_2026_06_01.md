@@ -122,10 +122,12 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 
 ## Phase 2 — `rebase_rate` delta computation (MTDS or IS)
 
-- [ ] [DESIGN] P0. Delta-computation strategy decision — per-snapshot delta on every new `lst_rates` row vs
+- [x] ✅ [DESIGN] P0. Delta-computation strategy decision — per-snapshot delta on every new `lst_rates` row vs
       daily-checkpoint delta. Operator/quant decision (rolling-window cost vs latency for greeks-service consumers).
       Owner repo decision: MTDS derived layer (consistent with `dividend_yield`) vs IS write-time (closer to the source
       table). Captured in `codex/04-architecture/global-ledger-architecture.md` under `rebase_rate`.
+      **Decision: MTDS-derived, per-consecutive-snapshot delta** annualised via seconds_per_year/elapsed. Documented with
+      edge-case table. CODE gated on operator-ACK. — unified-trading-pm (see global-ledger-architecture.md)
 - [ ] [CODE] P0. Add `rebase_rate` derivation in the repo chosen above — reads consecutive `lst_rates.exchange_rate`
       snapshots (per `instrument_id` × `chain`); computes per-snapshot delta as `Decimal`. Cumulative `exchange_rate`
       column in IS `lst_rates` parquet stays untouched (SSOT invariant — enforced by integration test).
