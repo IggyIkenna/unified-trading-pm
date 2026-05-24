@@ -193,12 +193,15 @@ audit trail).
       still pending)
 - [x] ✅ Phase 2 P0.4-P0.8 — `unified-trading-system-ui/app/(routes)/safety-ops/page.tsx` + 10 Layer-0 action buttons +
       LLM Audit Verdicts feed + Audit-Ack Queue panel — ui@a6f3924c + alerting-service@53fb493 | pw:L2 ✓ (4/4)
-- [ ] Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`)
+- [x] ✅ Phase 3 P0.9-P0.10 — deployment-ui mirror + auth roles (`safety-ops:read` + `safety-ops:execute`) —
+      deployment-ui@39539e8 | pw:L2 ✓ (10/10 e2e + 38/38 smoke) | regression: tests/e2e/safety-ops-deployment-ui.spec.ts
 - [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) — alerting-service@e5c8084 | in-sync
       verified
-- [x] ✅ Phase 4 P0.12 — unit tests (every action_type x scope combo) — alerting-service@3725a67 | 10 combos parametrized: registry completeness + rendering + typo-reject via TestClient; QG green 66s
-- [x] ✅ Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
-      — P0.13 pw:L2 ✓ (4/4) ui@a6f3924c | P0.14 SafeModeActiveBanner+spec ui@6375d547 | P0.15 inject_venue_outage.sh e2e-testing@b3401e5 | P0.15 live run = [HUMAN] STAGING-INFRA-REQUIRED (line 257)
+- [x] ✅ Phase 4 P0.12 — unit tests (every action_type x scope combo) — alerting-service@3725a67 | 10 combos
+      parametrized: registry completeness + rendering + typo-reject via TestClient; QG green 66s
+- [x] ✅ Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01 — P0.13 pw:L2 ✓ (4/4) ui@a6f3924c | P0.14
+      SafeModeActiveBanner+spec ui@6375d547 | P0.15 inject_venue_outage.sh e2e-testing@b3401e5 | P0.15 live run =
+      [HUMAN] STAGING-INFRA-REQUIRED (line 257)
 
 **Cross-references**:
 
@@ -236,8 +239,9 @@ audit trail).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ Phase 1 P0.1 router refactor — pair-review with Harsh for router.py consuming IncidentEnvelope
-      — alerting-service@e8af1af | route_incident(IncidentEnvelope) typed entry point; normalises to (problem_type, details) + delegates to existing route_event() machinery; dict-shape callers unchanged; QG exit 0
+- [x] ✅ Phase 1 P0.1 router refactor — pair-review with Harsh for router.py consuming IncidentEnvelope —
+      alerting-service@e8af1af | route_incident(IncidentEnvelope) typed entry point; normalises to (problem_type,
+      details) + delegates to existing route_event() machinery; dict-shape callers unchanged; QG exit 0
 - [x] ✅ Phase 2 P0.4-P0.8 — Safety Ops tab Playwright L2 GREEN (4/4). Root cause of prior block was the dev:mock
       in-process `window.fetch` interceptor returning `{}` for unseeded `/api/safety-ops/*` (so `page.route` never
       fired + widgets crashed on non-array); fixed by seeding the 3 feeds in `lib/api/mock-handler.ts` + `Array.isArray`
@@ -249,7 +253,8 @@ audit trail).
       audit-ack-queue, operational-ack, audit-ack) proxy to alerting-service@53fb493; graceful degradation when
       ALERTING_SERVICE_URL unset; dev:mock interceptor short-circuits so pw:L2 stays green. —
       unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
-- [ ] Phase 3 P0.9-P0.10 deployment-ui mirror (shared component package) + auth roles
+- [x] ✅ Phase 3 P0.9-P0.10 deployment-ui mirror + auth roles — deployment-ui@39539e8 | pw:L2 ✓ (10/10 e2e + 38/38
+      smoke) | regression: tests/e2e/safety-ops-deployment-ui.spec.ts
 - [x] ✅ Phase 5 P0.14 — `SafeModeActiveBanner` client component + Playwright spec
       `tests/e2e/safety-ops-llm-dispute.spec.ts` (5 tests: banner visible, heading, incident key in body, DISPUTE
       verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped
