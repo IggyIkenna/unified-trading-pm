@@ -89,6 +89,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       to `live-defi-rollout`. Evidence: exit 0 + `ruff check .` output clean. [vm: vm-cross-cutting]
       — unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors)
       — unified-api-contracts@897ba58 | QG exit 0 | +70 orphan allowlist entries (Phase-4 recording-templates/stubs)
+      — unified-api-contracts@e62df97 | QG re-green | RUF022 regression: sort __all__ in risk.py + risk/__init__.py; regen archetype_capability_manifest.json
 
 - [x] ✅ [AGENT] P0. **UTL QG green** — `cd unified-trading-library && bash scripts/quality-gates.sh` exits 0.
       — unified-trading-library@4b69f0fa | ruff ✓ clean (prior partial)
