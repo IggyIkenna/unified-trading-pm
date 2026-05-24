@@ -35,11 +35,14 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution. —
       execution-service@49f42f770 (fix(pnl_attribution): archetype_id required str + config_variant added, backfilled
       2026-05-24)
-- [ ] [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
-      `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events.
-- [ ] [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
+- [x] ✅ [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
+      `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events. —
+      strategy-service@1d55f235 (fix(pnl): F-19 replace synthetic surrogate with real funding accumulation, backfilled
+      2026-05-24)
+- [x] ✅ [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
       (`pnl_input_builder.py:142-151`); fail-fast or source the native-token price honestly when the gas parquet lacks
-      `native_token_price_usd`.
+      `native_token_price_usd`. — strategy-service@962ca47d (refactor(pnl): fail-fast on missing native_token_price_usd,
+      backfilled 2026-05-24)
 
 ## Theme 2 — bucket / URL / vocab SSOT hardening
 
