@@ -90,17 +90,35 @@ contract existed → `SchemaContractNotFoundError: swaps_ohlcv_4h`.
 | MDPS | 7f1a5b5  | `swap_adapter.py`: extract `chain` from tick data `chain` column; set `swap_count`=trade_count, `volume_quote_usd`=USD volume; `canonical_writer.py`: improve `_infer_chain()` fallback |
 | UTL  | a56c22c6 | `freshness_monitor.py`: rename `asset_class` → `asset_group` (pre-existing MDPS test failure)                                                                                           |
 
+## Third schema gap — found 2026-05-24 (chain column absent from DataFrame)
+
+083200 VMs (cb3d11b tarball) still produced 0 captured rows — all `SCHEMA_VALIDATION_FAILED`.
+
+**Root cause**: `_infer_chain()` correctly infers `"ETHEREUM"` from `UNISWAP_V2-ETHEREUM` venue token and uses it in
+`partition_path=.../chain=ETHEREUM`. BUT `_inject_schema_contract_columns()` did not inject the `chain` column into
+`candles_df` before calling `_utl_write_chunk`. The adapter sets `chain_arr=None` for legacy UNISWAP_V2 ticks (no
+explicit `chain` column in raw tick data) → `CandleOutput.to_dataframe()` drops it → UTL partition consistency validator
+raised `SCHEMA_VALIDATION_FAILED`.
+
+**Fix shipped**: MDPS@6fe0f01 — extend `_inject_schema_contract_columns(chain: str = "")` to backfill the column when
+absent; add `chain: str = ""` field to `CandleStreamingWriteContext`; both callers updated.
+
 ## Status
 
 - 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
 - 2026-05-23 ~22:xx UTC — chain/swap_count/volume_quote_usd + 4h fix shipped: UAC@c8c93328 + MDPS@7f1a5b5 +
   UTL@a56c22c6. 215530 VMs also failed (stale tarball).
 - 2026-05-24 ~08:25 UTC — Tarballs rebuilt (UAC@8cb9036f + UTL@ad99ec7a + MDPS@cb3d11b). All 11 fixes included.
-- 2026-05-24 ~08:32 UTC — **VMs launched** (run-ts=20260524-083200):
-  - `mdps-defi-2024-20260524-083200` → 2024-01-01..2024-12-31 (e2-standard-8, asia-northeast1-c) RUNNING
-  - `mdps-defi-2025-20260524-083200` → 2025-01-01..2025-12-31 (e2-standard-8, asia-northeast1-c) RUNNING
-- **T+10min verification pending** (~08:42 UTC). Monitor:
-  `gcloud compute instances list --filter='labels.run-ts=20260524-083200' --format='table(name,status)'`
+- 2026-05-24 ~08:32 UTC — 083200 VMs launched (2024+2025 only) — still failed (chain column bug).
+- 2026-05-24 ~08:44 UTC — MDPS@6fe0f01 chain column injection fix shipped. QG green (0 type errors).
+- 2026-05-24 ~08:47 UTC — Tarballs rebuilt with DEFI asset group (MDPS@6fe0f01 included). 083200 VMs stopped.
+- 2026-05-24 ~08:52 UTC — **5 VMs relaunched** (run-ts=20260524-085204, ALL years):
+  - `mdps-defi-2022-20260524-085204` → 2022-11-01..2022-12-31 RUNNING ✓
+  - `mdps-defi-2023-20260524-085204` → 2023-01-01..2023-12-31 RUNNING ✓
+  - `mdps-defi-2024-20260524-085204` → 2024-01-01..2024-12-31 RUNNING ✓
+  - `mdps-defi-2025-20260524-085204` → 2025-01-01..2025-12-31 RUNNING ✓
+  - `mdps-defi-2026-20260524-085204` → 2026-01-01..2026-05-24 RUNNING ✓
+- **Next**: verify captured rows appear in per-VM shards within ~30 min of VM start.
 
 ## Plan refs
 
