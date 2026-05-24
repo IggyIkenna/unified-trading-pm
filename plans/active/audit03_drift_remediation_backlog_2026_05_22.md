@@ -31,8 +31,10 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 - [ ] [AGENT] P1. **F-16** — Emit pre-TGE points rows honestly as
       `CARRY_ISSUER_SEASONAL value_eth=0 points_pending=true` instead of silently `continue`-ing them
       (`reward_attribution.py:159`).
-- [ ] [AGENT] P1. **F-46** — Make `FillAttributionContext.archetype_id` required (`str`, not `str | None`) + add
-      `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution.
+- [x] ✅ [AGENT] P1. **F-46** — Make `FillAttributionContext.archetype_id` required (`str`, not `str | None`) + add
+      `config_variant` field (`rows.py:62`); prevents `None` → unqueryable per-archetype attribution. —
+      execution-service@49f42f770 (fix(pnl_attribution): archetype_id required str + config_variant added, backfilled
+      2026-05-24)
 - [ ] [AGENT] P2. **F-19** — Replace the synthetic 1bps funding-PnL surrogate (`abs(net_qty)·last_price·0.0001`,
       `pnl_input_builder.py:198`) with `position_qty × funding_rate × interval` from actual funding events.
 - [ ] [AGENT] P2. **F-18** — Remove the hardcoded `"3200"` ETH-price `_defaults` fallback
