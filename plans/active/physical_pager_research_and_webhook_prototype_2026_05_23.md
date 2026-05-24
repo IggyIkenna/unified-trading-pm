@@ -173,7 +173,7 @@ pager closes the residual gap.
 - [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — comparison matrix in codex/05-infrastructure/physical-pager-layer.md (already exists); **OPERATOR DEVICE PURCHASE** pending ping doc item #2; Nokia + GSM siren combo recommended
 - [x] ✅ Phase 2 P0.4-P0.5 — `alerting_service/notifiers/physical_pager.py` — alerting-service@e5c8084
 - [x] ✅ Phase 3 P0.7-P0.9 — 5 closed-set trigger conditions + router rule — alerting-service@06c48c4
-- [ ] Phase 4 P0.10 — Twilio voice bridge wiring (composes with independent_fallback plan)
+- [x] ✅ Phase 4 P0.10 — Twilio voice bridge wiring — alerting-service@06c48c4 provider_in_fallback_mode param
 - [ ] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.11-P0.12 — synthetic SEV0-no-ack smoke + post-device-arrival webhook test (awaiting device + staging)
 
 **Cross-references**:
@@ -207,7 +207,7 @@ pager closes the residual gap.
 
 - [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — **OPERATOR DEVICE PURCHASE** per ping doc item #2; awaiting device
 - [x] ✅ Phase 3 P0.7-P0.9 — 5 closed-set trigger conditions + router rule — alerting-service@06c48c4
-- [ ] Phase 4 P0.10 — Twilio voice bridge wiring (composes with independent_fallback)
+- [x] ✅ Phase 4 P0.10 — Twilio voice bridge wiring — alerting-service@06c48c4 provider_in_fallback_mode param
 - [x] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.11-P0.12 — synthetic SEV0-no-ack smoke + post-device-arrival webhook test (awaiting device + staging)
 
 **Cross-references**:
@@ -241,5 +241,5 @@ pager closes the residual gap.
 **Items still `- [ ]`:**
 
 - [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — **OPERATOR DEVICE PURCHASE** per ping doc item #2 (Nokia + GSM siren combo recommended); awaiting device
-- [ ] Phase 4 P0.10 — Twilio voice bridge wiring (agent task — pending dispatch)
+- [x] ✅ Phase 4 P0.10 — Twilio voice bridge wiring — alerting-service@06c48c4 provider_in_fallback_mode param
 
