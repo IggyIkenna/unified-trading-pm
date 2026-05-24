@@ -68,6 +68,18 @@ before Phase 7 grows the v<8 debt.
       GB → OOM confirmed (Binance DEPLOYMENT_FAILED exit_code=137 at 20:17:34 UTC; OKX manually deleted). Fix: bumped
       MACHINE_TYPE_LIGHT to e2-highmem-8 (64 GB). deployment-service@4ad475c. Relaunched:
       `cefi-binance-futures-2024-light-20260524-220853` + `cefi-okx-swap-2024-light-20260524-220853`. 2026-05-24 slot-7.
+      **THIRD OOM (2026-05-24 slot-7)**: 220853 VMs rc=137 at STARTUP (7 min after launch, before writing any data).
+      Root cause (new — distinct from second OOM): `availability_index.parquet` was 55 min old (> 120s default
+      threshold) when VMs launched. ManifestReader fell back to loading ALL 1,758 per-VM shards from GCS (includes 4
+      migration bundles at 38 MB each = 34.9M rows, ~41.79 GB expanded in Pandas). PROCESS_MEMORY_CRITICAL at T+7 min →
+      rc=137. Why was consolidated manifest stale? Consolidator (Cloud Run) only writes a new availability_index.parquet
+      when new shards exist since last write — idle window 20:16→21:11 (55 min) meant no new shards → consolidator ran
+      every minute and completed in 44s but wrote nothing → timestamp stayed at 20:16. Fix:
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` in VM metadata — makes ManifestReader use consolidated index even if
+      24h old, skipping per-VM shard fallback entirely. setup-data-pipeline-vm.sh reads + exports the env var.
+      deployment-service@ba76803. GCS setup script uploaded. Terminated OKX 220853 VM; Binance already TERMINATED.
+      Relaunched: `cefi-binance-futures-2024-light-20260524-223425` + `cefi-okx-swap-2024-light-20260524-223425`. Both
+      e2-highmem-8 + MANIFEST_CONSOLIDATED_STALENESS_SEC=86400. 2026-05-24 slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
