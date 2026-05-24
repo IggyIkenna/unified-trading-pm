@@ -235,8 +235,11 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `market-data-processing-service-code@3799c8def919.tar.gz` uploaded.
 - [x] **Relaunched MDPS 2026 VM with amount_usd fix** (2026-05-24): `mdps-defi-2026-20260524-165353` RUNNING
       (asia-northeast1-c, e2-standard-8) with `MDPS_TARBALL_SHA=3799c8def919` + `UTL_TARBALL_SHA=e51699c8`.
-- [ ] **T+10 verify mdps-defi-2026-20260524-165353** — confirm RUNNING + non-zero candles for dates ≥2026-01-25, no
-      schema_violation or volume_quote_usd errors.
+- [x] **T+10 verify mdps-defi-2026-20260524-165353** (2026-05-24 16:02 UTC): RUNNING. Correct prd bucket confirmed.
+      39,497 candles for 2026-01-30 (18/18 succeeded), pool IDs
+      BALANCER-ARBITRUM/AVALANCHE/POLYGON/OPTIMISM/BASE/ETHEREUM. No schema_violation or volume_quote_usd errors.
+      Manifest shard: 224/224 captured, schema_version=8, 6 chains. 429 rate-limit warnings on manifest writes are
+      retried by UTL — no entries dropped. VM on 2026-02-05 advancing.
 - [ ] **Monitor 165353 to completion** — verify final candle counts for all 119 days with dex_swaps data.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
