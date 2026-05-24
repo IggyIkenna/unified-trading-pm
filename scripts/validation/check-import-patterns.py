@@ -35,7 +35,9 @@ EXTERNAL_PACKAGES = {
 
 # Patterns for detecting deep imports
 _sorted_pkgs = sorted(EXTERNAL_PACKAGES, key=len, reverse=True)
-DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(_sorted_pkgs) + r")\.(\w+(?:\.\w+)*)\s+import")
+DEEP_IMPORT_PATTERN = re.compile(
+    r"^from\s+(" + "|".join(_sorted_pkgs) + r")\.(\w+(?:\.\w+)*)\s+import"
+)
 
 # Pattern for from imports
 FROM_IMPORT_PATTERN = re.compile(
@@ -71,7 +73,10 @@ class ImportViolation:
         return f"{indent}from {self.package} import {self.imports}"
 
     def __str__(self) -> str:
-        return f"{self.file_path}:{self.line_no}: Deep import from {self.package}.{self.module_path}"
+        return (
+            f"{self.file_path}:{self.line_no}: "
+            f"Deep import from {self.package}.{self.module_path}"
+        )
 
 
 class ImportChecker:
@@ -108,7 +113,10 @@ class ImportChecker:
         import_match = FROM_IMPORT_PATTERN.match(line)
         if not import_match:
             return None
-        return ImportViolation(str(file_path), line_no, line.rstrip(), package, module_path, import_match.group(3))
+        return ImportViolation(
+            str(file_path), line_no, line.rstrip(),
+            package, module_path, import_match.group(3)
+        )
 
     def check_file(self, file_path: Path) -> list[ImportViolation]:
         """Check a single file for import violations."""

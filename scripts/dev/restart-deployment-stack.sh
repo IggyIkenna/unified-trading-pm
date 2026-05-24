@@ -95,7 +95,7 @@ start_api() {
   # in-process _ROLLUP_CACHE; the 30-min TTL means they all warm up after
   # one cold hit each.
   env CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DISABLE_AUTH=true \
-      ENVIRONMENT=development \
+      ENVIRONMENT=development DEPLOYMENT_ENV=prod \
     nohup .venv/bin/python -m uvicorn deployment_api.main:app \
       --host 0.0.0.0 --port "$API_PORT" --workers 4 \
     > "$logfile" 2>&1 &

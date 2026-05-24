@@ -309,4 +309,6 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 - [x] ✅ Phase 3 — execution-service cancel-orders entry point: added kill_switch.cancel_open_orders() — invokes
       registered callbacks + emits ActionType.CANCEL_OPEN_ORDERS — execution-service@6c23178fd
-- [ ] Phase 3 — strategy-service auto-pause/auto-reduce/auto-close-all emit (when response_policy auto-actions fire)
+- [x] ✅ Phase 3 — strategy-service auto-pause/auto-reduce/auto-close-all emit (when response_policy auto-actions fire)
+      — strategy-service@4894a961 | real httpx execute() + emit_recovery_action STARTED+SUCCEEDED/FAILED in
+      CarryStakedBasisCloseAll + ArbitragePriceDispersionCloseAll; 19/19 tests pass, QG green
