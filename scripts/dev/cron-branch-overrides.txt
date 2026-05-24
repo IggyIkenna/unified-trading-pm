@@ -7,7 +7,12 @@
 # Add a row when a repo's canonical integration branch is NOT live-defi-rollout
 # (e.g., infra repos that ship via `main` directly).
 #
-# agent-orchestrator ships via `main` — every push to main rebuilds the
-# Firebase dashboard UI, so main is its canonical deploy + integration branch.
-# All its worktrees (main + tabs) track origin/main; cron FFs them from main.
-agent-orchestrator main
+# agent-orchestrator: server code ships via live-defi-rollout (deployed by
+# systemd restart on the EC2 host); dashboard (Vite SPA) ships via main
+# (deploy-dashboard.yml GHA triggers on push to main). Slot worktrees hold
+# server code → FF from live-defi-rollout. Dashboard-only PRs target main
+# directly; merged separately.
+# Removed 2026-05-24: override was stale — main worktree is on LDR and all
+# slot worktrees track origin/live-defi-rollout. Keeping this line caused
+# every agent-orchestrator slot to appear as "diverged" in ff-pull reports.
+# agent-orchestrator main
