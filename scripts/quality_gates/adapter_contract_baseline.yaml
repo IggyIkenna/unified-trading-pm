@@ -292,7 +292,7 @@ baseline:
     count: 38
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/manifest_schema.py:
     count: 4
-  unified-api-contracts/unified_api_contracts/canonical/crosscutting/scenario_overlay.py:
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/scenario_overlay/_enums.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py:
     count: 1
