@@ -219,8 +219,7 @@ audit ack package).
 
 - [x] ✅ Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate — strategy-service@dc9db1d | _validate_risk_config_blocks() wired into _validate_and_cache() + load_config_from_path(); 9 new unit tests; QG 4307 passed 0 failed
 - [ ] Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer
-- [ ] Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC
-      AlertCode extension
+- [x] ✅ Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC AlertCode extension — strategy-service@9acf34c (P0.9+P0.10 detectors + 40 unit tests) | uac@8cb9036 (P0.11 LiquidationInvestigationReport 16-field schema) | P0.12 already shipped uac@6f601292 | QG 4033 passed 0 failed
 - [ ] Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts
 - [ ] Phase 6 P0.16-P0.18 — synthetic smoke + game-day
 
@@ -260,7 +259,7 @@ audit ack package).
 
 - [x] ✅ Phase 2 P0.5 strategy_service/config_loader.py wires UAC RiskThresholds validation at strategy load time — strategy-service@dc9db1d | QG 4307 passed 0 failed
 - [x] ✅ Phase 3 P0.6-P0.8 drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (drawdown_investigation_writer.py: build_report + should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx 7-section renderer) | QG 4315 passed 0 failed
-- [ ] Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport
+- [x] ✅ Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport — strategy-service@9acf34c | uac@8cb9036 | QG 4033 passed 0 failed
 - [ ] Phase 5 P0.13-P0.15 venue API integration in close-all scripts (replace PLACEHOLDER logs with real order
       placement)
 - [ ] Phase 6 P0.16-P0.18 synthetic smoke + game-day (game-day protocol doc shipped)
