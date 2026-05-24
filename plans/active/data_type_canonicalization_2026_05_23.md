@@ -162,6 +162,10 @@ all service repos returns zero hits in non-test Python source.
       market-data-processing-service@fa9d912
 - [x] [SCRIPT] P0. scripts/seed_mock_data.py: `"rate_indices"`→`"lending_indices"` (4+ occurrences, function
       `_build_rate_indices_df` renamed to `_build_lending_indices_df`) — market-data-processing-service@fa9d912
+- [x] [SCRIPT] P1. Codex docs audit: fix stale DeFi data type names across 4 codex docs (`pipeline-coverage-matrix.md`,
+      `availability-manifest-and-data-status.md`, `partitioning.md`, `PARSER_FIXES_AND_BOOK_SNAPSHOT_CLARIFICATION.md`)
+      — unified-trading-pm@c1687646f Intentional non-changes: TradFi `rate_indices` (distinct domain); AMM simulation
+      `"liquidity"` field (pool state JSON payload, not data_type name).
 
 ## Temporary states + their canonical follow-up plans
 
