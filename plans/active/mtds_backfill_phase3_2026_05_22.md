@@ -112,6 +112,13 @@ before Phase 7 grows the v<8 debt.
       **flat→prd copy NOT needed** — `_resolve_upstream_bucket` in
       `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket template. The copy script
       `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
+- [x] ✅ [INFRA] P0. **MTDS-3.2.A-DailyWorkflowFix** — **Fixed broken CeFi daily collection (slot-7 2026-05-25 UTC)**:
+      `market-tick-daily` workflow has been failing DAILY since at least 2026-05-20 (5+ FAILED executions). Root cause:
+      workflow calls `market-tick-data-handler` (404 NOT_FOUND — this job was renamed/replaced). Fix: (1) updated
+      `market-tick-daily` workflow to call correct job `uts-prod-market-tick-data-service-cefi-t1-recon` with canonical
+      vocabulary `--operation download --mode batch --asset-group cefi`; (2) updated `market-tick-daily-trigger`
+      scheduler body from `category=CEFI` to `asset_group=cefi`. TEST RUN: `SUCCEEDED` immediately.
+      `gcloud workflows deploy market-tick-daily` + `gcloud scheduler jobs update`. 2026-05-25 slot-7.
 
 ## Phase 2 — TradFi MTDS backfill (MTDS-3.2.B — ALREADY DONE)
 
