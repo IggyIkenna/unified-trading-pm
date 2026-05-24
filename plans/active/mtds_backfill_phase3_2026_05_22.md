@@ -53,9 +53,12 @@ before Phase 7 grows the v<8 debt.
       heavy per-year stays well under 16GB. Covers 2020-2026, all 9 CeFi venues, ~83 VMs in parallel (MAX_CONCURRENT=15
       staggered). VM_FORCE=false (skips already-captured dates via preflight). Launch timestamp: **LAUNCHED
       2026-05-22**. 2026-05-22 slot 5.
-- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Relaunched 2 dead VMs (all prior CeFi VMs TERMINATED, blocker cleared).
-      `cefi-binance-futures-2024-light-20260524-202308` RUNNING. `cefi-okx-swap-2024-light-20260524-202308` RUNNING.
-      Both asia-northeast1-c, VM_FORCE=false (skips already-captured dates). T+10 pending. — slot-7 2026-05-24
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Root cause: `launch-cefi-sharded-backfill.sh` had no
+      `--boot-disk-size` so VMs used GCP default 10 GB. Ubuntu OS + Python packages + wheel cache = disk full <1GB free;
+      ResourceProfiler(disk_crit=1GB) killed process at 5s. Fix: added `--boot-disk-size=50GB` (matching MDPS launcher).
+      deployment-service@041fa4c. GCS tarball updated. Relaunched: `cefi-binance-futures-2024-light-20260524-204809` +
+      `cefi-okx-swap-2024-light-20260524-204809`. Both e2-highmem-2, asia-northeast1-c, VM_FORCE=false. T+10 pending. —
+      slot-7 2026-05-24
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
