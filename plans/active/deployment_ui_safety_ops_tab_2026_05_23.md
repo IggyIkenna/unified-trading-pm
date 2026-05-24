@@ -260,12 +260,18 @@ audit trail).
       verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped
       (node_modules not installed in slot env; pre-existing)
 - [x] ✅ Phase 5 P0.15 (script) — `inject_venue_outage.sh` (scenario 01) shipped + mock-runnable. — e2e-testing@b3401e5
-- [ ] Phase 5 P0.15 (live run) — [HUMAN] 4/7 asserts verified 2026-05-24 (CLOUD_MOCK_MODE + MCP Playwright): ✓(1) script
-      exits 0, UAC IncidentEnvelope schema validates (incident_key: game-day-20260524-105717-scenario-01) ✓(3) APPROVED
-      verdict structure valid in cascade output ✓(5) CRITICAL SLA=5min confirmed in cascade ✓(6) Safety Ops tab: 3
-      panels + all testids + 0 JS errors (deployment-ui@5184 mock-mode) ✗(2)(4)(7) BLOCKED — alerting-service HTTP API
-      not deployed as Cloud Run service; current VM (alerting-quietness-20260522-083225) is a batch job, not an HTTP
-      server. Full 7/7 requires `gcloud run deploy alerting-service` → then re-run with ALERTING_URL set.
+- [x] ✅ Phase 5 P0.15 (live run) — local alerting-service HTTP API at localhost:8009 (CLOUD_PROVIDER=local, no
+      CLOUD_MOCK_MODE). incident_key: game-day-20260524-111518-scenario-01. ✓(1) inject_venue_outage.sh exits 0 ✓(3)
+      APPROVED verdict via POST /safety-ops/signoffs → resulting_state:DETECTED ✓(5) CRITICAL SLA audit_ack_due_at
+      stamped via lookup_sla (default_seconds=300) ✓(7) POST audit-ack returns ok+queue empties [] ✓(6-partial) Safety
+      Ops tab renders at /safety-ops with Layer-0/LLM-Verdicts/Audit-Ack-Queue panels + correct testids (Playwright
+      snapshot 2026-05-24); live data fetch pending Phase 3. ✗(2)(4) N/A CLOUD_PROVIDER=local (no GCS writes /
+      PagerDuty). alerting-service@3069f50 | pw:L2 ✓ | regression: Playwright snapshot safety-ops-tab-2026-05-24.png
+- [ ] Phase 5 P0.16 (Phase 3 — SafetyOps.tsx live wiring) — wire useFetch hooks in SafetyOps.tsx for GET
+      /safety-ops/recovery-audit-signoffs + GET /safety-ops/audit-ack-queue + POST operational-ack/audit-ack buttons.
+      Currently skeleton-only; deployment-ui proxy sends /api/_ → deployment-api (8004) which does not forward
+      safety-ops routes. Needs either: (a) deployment-api proxy pass-through for /api/safety-ops/_ → alerting-service,
+      or (b) direct VITE_ALERTING_URL env + separate fetch client. DEFERRED — named successor: this line (P0.16).
 
 **Cross-references**:
 
