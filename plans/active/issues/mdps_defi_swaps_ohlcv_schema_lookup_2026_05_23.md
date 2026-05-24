@@ -95,7 +95,12 @@ contract existed → `SchemaContractNotFoundError: swaps_ohlcv_4h`.
 - 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
 - 2026-05-23 ~22:xx UTC — chain/swap_count/volume_quote_usd + 4h fix shipped: UAC@c8c93328 + MDPS@7f1a5b5 +
   UTL@a56c22c6. 215530 VMs also failed (stale tarball).
-- **Awaiting operator**: tarball rebuild + relaunch MDPS DeFi 2024-2025.
+- 2026-05-24 ~08:25 UTC — Tarballs rebuilt (UAC@8cb9036f + UTL@ad99ec7a + MDPS@cb3d11b). All 11 fixes included.
+- 2026-05-24 ~08:32 UTC — **VMs launched** (run-ts=20260524-083200):
+  - `mdps-defi-2024-20260524-083200` → 2024-01-01..2024-12-31 (e2-standard-8, asia-northeast1-c) RUNNING
+  - `mdps-defi-2025-20260524-083200` → 2025-01-01..2025-12-31 (e2-standard-8, asia-northeast1-c) RUNNING
+- **T+10min verification pending** (~08:42 UTC). Monitor:
+  `gcloud compute instances list --filter='labels.run-ts=20260524-083200' --format='table(name,status)'`
 
 ## Plan refs
 
