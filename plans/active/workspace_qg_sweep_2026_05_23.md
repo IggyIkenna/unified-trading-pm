@@ -180,11 +180,13 @@ These must complete before Layer 1 repos can be reliably type-checked.
       PREREQ: features-service QG green. [vm: vm-ml]
       — ml-service@6519ca8 | QG exit 0 (292s) | ModelRegistry cloud provider guard (local→no bucket), root test conftest env vars, ruff I001×3+F541×1
 
-- [ ] [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
       `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
+      — N/A: repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service, archive_date=2026-05-20)
 
-- [ ] [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
       `cd ml-training-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
+      — N/A: repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service, archive_date=2026-05-20)
 
 - [ ] [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
       `cd trading-agent-service && bash scripts/quality-gates.sh` exits 0. PREREQ: execution-service QG green. [vm:
