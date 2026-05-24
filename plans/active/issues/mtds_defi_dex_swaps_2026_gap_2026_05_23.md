@@ -240,7 +240,16 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       BALANCER-ARBITRUM/AVALANCHE/POLYGON/OPTIMISM/BASE/ETHEREUM. No schema_violation or volume_quote_usd errors.
       Manifest shard: 224/224 captured, schema_version=8, 6 chains. 429 rate-limit warnings on manifest writes are
       retried by UTL — no entries dropped. VM on 2026-02-05 advancing.
-- [ ] **Monitor 165353 to completion** — verify final candle counts for all 119 days with dex_swaps data.
+- [x] **Monitor 165353 — OOM-killed at 2026-02-06** (2026-05-24 16:02 UTC): exit_code=137. Memory backpressure at 92.3%
+      (29.5/32GB). Root cause: 2026-01-25 to 2026-02-05 had 18 files/day (2 MTDS backfill runs → duplicate parquets per
+      venue+chain), accumulating ~2.5GB/day of unreleased state by day 12. 2026-02-06 had 9 files (normal) but VM was at
+      limit. Final captured: 12 dates (2026-01-25→2026-02-05), 224 manifest rows.
+- [x] **Diagnosed + launched fix VM with e2-highmem-8** (2026-05-24 16:26 UTC): `mdps-defi-2026-20260524-182633` RUNNING
+      asia-northeast1-c e2-highmem-8 (64GB RAM) with `MDPS_TARBALL_SHA=3799c8def919` + `UTL_TARBALL_SHA=e51699c8`. Will
+      skip 2026-01-25→2026-02-05 (already in 165353 shard), process 2026-02-06→2026-05-23 (107 remaining days).
+- [ ] **T+10 verify mdps-defi-2026-20260524-182633** — confirm RUNNING, e2-highmem-8, no OOM, processing 2026-02-06
+      dates with non-zero candles.
+- [ ] **Monitor 182633 to completion** — verify all 107 remaining dex_swaps dates captured (2026-02-06→2026-05-23).
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
