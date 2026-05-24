@@ -244,7 +244,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher
+- [x] ✅ P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher — alerting-service@215fad8 | RecoveryVerifier + 14 unit tests | QG green
 - [ ] P0.11 incident_persister.py — append-only JSONL → GCS
 - [ ] P0.12-P0.14 router.py refactor + ImmediateSev0Override evaluator +
       AUTO_ACTION_SUCCEEDED→RECOVERY_VERIFICATION_STARTED wiring (pair-review with Harsh required)
@@ -280,7 +280,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] P0.10 recovery_verifier.py — per-service callback dispatcher (helpers exist as recovery_event_helper.py in execution + strategy; router subscription pending)
+- [x] ✅ P0.10 recovery_verifier.py — per-service callback dispatcher — alerting-service@215fad8 | RecoveryVerifier.register() + verify() + _invoke() + 14 unit tests | QG green
 - [ ] P0.12 router.py FULL refactor (consume IncidentEnvelope; drop dict-shaped path) — pair-review with Harsh
 - [ ] P0.13 ImmediateSev0Override evaluator wired into router pre-routing
 - [ ] P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition via state_machine.transition (router caller adds the call)
