@@ -37,6 +37,26 @@ Staging staleness (commits behind LDR, 2026-05-24):
    changes across the window.
 3. cloud-build trigger also fails.
 
+## Root cause (the real mechanism)
+
+Pushes to `live-defi-rollout` run **NO remote CI** (per CLAUDE.md "CI Verification": LDR quality is enforced only by
+_local_ `quality-gates.sh`). The `quality-gates` SIT only runs on the **staging PR**. So the staging PR is the **first
+time CI exercises a month of accumulated LDR state** — and it surfaces **cross-repo SIT failures that local QG never
+runs** (tests that need the full sibling-repo workspace checkout). This is accumulated CI debt, not just staleness.
+
+**UAC pilot (PR #48) — the 2 real CI failures (representative of the per-repo work):**
+
+1. `tests/test_cassette_orphan_checker.py::test_no_unallowlisted_orphans` — 14 orphan cassettes (coingecko/ticker,
+   defillama/{coins_historical,protocols,yields}, fred/dgs10, nautilus/stub, tardis/{4}, thegraph/{4}) need a prod
+   consumer OR a `tests/cassette_orphan_allowlist.yaml` entry (+reason +operator ack). **Judgment call per cassette** —
+   allowlisting blindly masks genuinely-removed consumers.
+2. `tests/test_feature_dag_ssot.py::test_every_service_has_workspace_directory` — `features-service` declared in
+   `EXPECTED_FEATURE_GROUPS_BY_SERVICE` but absent from the CI checkout — a **CI sibling-checkout / topology-drift** fix
+   (the `workspace-qg` clone step), not a UAC code fix.
+
+→ Each of the 8 repos will surface its own accumulated cross-repo-SIT failures. The cross-repo workspace-checkout
+failures (#2 class) likely repeat across repos → fixing the shared `workspace-qg` clone step once helps all.
+
 ## Why it matters
 
 - Nothing recent is on staging → `odum-portal-staging` (DART) + every staging service is a ~month-old build. The
