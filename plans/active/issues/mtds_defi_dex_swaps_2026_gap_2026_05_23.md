@@ -161,7 +161,9 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       (asia-northeast1-c, e2-standard-4) with
       `VM_TASK=defi-backfill, VM_OPERATION=collect-dex-swaps, DEFI,     2026-01-25→2026-05-23`. MTDS tarball
       `71a47f78be56`.
-- [ ] **T+10 verify mtds-backfill-defi-dexswaps-20260524** — confirm RUNNING + TheGraph requests progressing
+- [x] **T+10 verify mtds-backfill-defi-dexswaps-20260524** — RUNNING at T+10, correct op confirmed:
+      `python -m     market_tick_data_service --operation collect-dex-swaps --mode batch --asset-group DEFI --start-date 2026-01-25     --end-date 2026-05-23`
+      (serial port at 11:11:28 UTC). GCS tee at vm-logs/mtds-backfill-defi-dexswaps-20260524/run.log.
 - [ ] **Post-completion**: verify dex_pool_swaps rows appear in MTDS GCS for 2026-01-25+; then reset
       SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
