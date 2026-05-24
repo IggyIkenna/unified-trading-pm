@@ -203,10 +203,12 @@ kill-switch) + rollback
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.3-P0.4 — `alerting_service/gateway/evidence_collector.py` + per-service evidence-capture callbacks
-- [ ] Phase 3 P0.5-P0.26 — 22 incident runbooks at `codex/15-runbooks/incidents/`
-- [ ] Phase 4 P0.27-P0.28 — runbook governance fields + hygiene script
-- [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough
+- [x] ✅ Phase 2 P0.3-P0.4 — `alerting_service/gateway/evidence_collector.py` + per-service evidence-capture callbacks — alerting-service@e5c8084 | 14-field IncidentEvidence bundle assembler; async fan-out; per-service HTTP endpoints remain DEFERRED-OPERATOR-DECISION
+- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks at `codex/15-runbooks/incidents/` — unified-trading-pm (shipped in Tier-5)
+- [x] ✅ Phase 4 P0.27 — runbook governance frontmatter (owner/cadence/verifier/last_executed) — unified-trading-pm (Tier-5)
+- [ ] Phase 4 P0.28 — hygiene script `check_runbook_fields.py` (DEFERRED)
+- [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended + injection scripts shipped — e2e-testing@b3401e5 + unified-trading-pm (Tier-5b)
+- [ ] [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs 3 scripts on staging; 21/21 GREEN gate
 
 **Cross-references**:
 
