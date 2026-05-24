@@ -707,6 +707,17 @@ before CME arb can link.
 - [x] ✅ [SCRIPT] P1. **Phase 5.mtds_canonical_2 — launch MTDS canonical prediction backfill VM (2025-08→2026-05)**:
       Absorbed into Phase 5.mtds_canonical 10-VM split (VMs 6-10 cover this range). IS VMs confirmed TERMINATED. All 10
       VMs RUNNING as of 2026-05-23 ~21:20 UTC.
+- [x] ✅ [SCRIPT] P0. **Phase 5.mtds_trades_gap_fill — fix 23-day MTDS trades gap (2026-04-30..2026-05-22) + root
+      causes**: 2026-05-24 slot-1. Two root-cause bugs fixed: (1) `base_prediction_adapter.py` +
+      `polymarket_adapter.py` + `kalshi_adapter.py` used `get_write_bucket_name("instruments","prediction")` → wrong
+      bucket `instruments-store-prediction-*` (correct: `instruments-store-pred-prd-*`); replaced with
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store-prediction")`. Also fixed `defi_catalog_reader.py`
+      `BlobMetadata.endswith()` crash. (2) `tick_data_handler.py` called `process_ticks()` without `force=self._force` —
+      even with `--force` CLI flag, the orchestrator pre-flight read VM3 empty_confirmed rows as "fully covered" and
+      skipped POLYMARKET. Fixed by adding `force=self._force` to the `process_ticks()` call. Also added `--vm-force`
+      flag to `launch-mtds-prediction-backfill-vm.sh`. VM5 (`mtds-prediction-20260524-015510`) ran clean: 5,655 captured
+      rows across 21 dates; 230 empty_confirmed for 23 dates (2026-05-13 + 2026-05-18 legitimately empty); zero
+      attempted_failed. Consolidated into availability_index. — MTDS@e5e3ca36,2b7c7760
 
 ## `available_at` adapter stamping (coordinated)
 
