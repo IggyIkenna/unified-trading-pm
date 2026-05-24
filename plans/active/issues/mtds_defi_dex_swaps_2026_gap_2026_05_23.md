@@ -210,10 +210,29 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       (`market-data-tick-{ag}-{project}`) — missing env-short. Fixed to use env-tiered name
       (`market-data-tick-{ag}-prd-{project}` for prod) + added `--source-bucket-override BUCKET` flag for legacy
       2024/2025 DeFi re-launches (dex_pool_swaps in flat bucket). Deployment-service@f5073fd. Pushed to LDR.
-- [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-prd-*` for 2026-01-25+;
-      reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps; relaunch `mdps-defi-2026-*` using fixed
-      launcher (`--env prod` → env-tiered prd bucket). Also verify dex_pool_swaps candles in processed_candles/ for
-      2022-2025 once 2024+2025 VMs complete.
+- [x] **MTDS dex_swaps backfill completed** (2026-05-24): `mtds-dex-swaps-backfill` exit_code=0, all 119/119 days
+      (2026-01-25→2026-05-23) processed, 2737 manifest entries. VM self-deleted. Confirmed data_type=dex_swaps/ parquets
+      exist in prd bucket with real swap rows (e.g. BALANCER ARBITRUM day=2026-01-31: 2042 rows).
+- [x] **Manifest reset applied to prd bucket** (2026-05-24): `reset_source_returned_zero_manifest.py` — 118
+      SOURCE_RETURNED_ZERO rows deleted from per-VM shard (mtds-dex-swaps-backfill.parquet). Consolidated index upload
+      timed out (1.6M rows); manifest consolidator (Cloud Run, every 1 min) auto-rebuilds.
+- [x] **MDPS 2026 VM (160218) launched + T+10 verified** (2026-05-24): `mdps-defi-2026-20260524-160218` RUNNING, correct
+      prd bucket `market-data-tick-defi-prd-central-element-323112`, processing started. BUT produced 0 candles for all
+      dates including ones with real swap data.
+- [x] **Diagnosed dex_swaps in-file filter bug** (2026-05-24): `live_workers.py:_streaming_filter_slice` filters
+      tick_data rows by `data_type` column to `related_data_types = ["swaps", "dex_pool_swaps"]`. New MTDS prd-bucket
+      files have `data_type='dex_swaps'` in column — NOT in `related_data_types` → all rows filtered out → 0 candles for
+      every date. All 470 per-VM shard entries were `empty_confirmed`.
+- [x] **Fixed: added "dex_swaps" to DefiSwapAdapter.related_data_types** (2026-05-24): MDPS@dd5a0b5. Stopped buggy VM
+      160218, deleted its per-VM shard (470 empty_confirmed entries), rebuilt tarballs
+      (`market-data-processing-service-code@dd5a0b5`).
+- [x] **Relaunched MDPS 2026 VM with fix** (2026-05-24): `mdps-defi-2026-20260524-163710` RUNNING (asia-northeast1-c,
+      e2-standard-8) with `MDPS_TARBALL_SHA=dd5a0b55d7b736454ced8e184b4db0053af46e30` +
+      `UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22`.
+- [ ] **T+10 verify mdps-defi-2026-20260524-163710** — confirm RUNNING + correct prd bucket + non-zero candles for dates
+      ≥2026-01-25 (dex_swaps data starts there).
+- [ ] **Monitor 163710 to completion** — verify final candle counts for all 119 days with dex_swaps data.
+- [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
 
