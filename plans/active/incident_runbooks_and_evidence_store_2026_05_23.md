@@ -256,7 +256,9 @@ kill-switch) + rollback
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector calls them; endpoints pending per-service)
+- [x] ✅ Phase 2 per-service /evidence/{incident_key} HTTP endpoints — execution-service@75682cc27
+      (order_fill_records_url) + strategy-service@43641626 (position_records_url); GCS path
+      incidents/{date}/{key}/evidence/<type>.json; 9 unit tests total
 - [x] ✅ Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` — wired into
       run_hygiene_sweep.sh as hard check; validates owner/cadence/verifier/last_executed on all 22 runbooks
 - [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped)
@@ -298,5 +300,5 @@ kill-switch) + rollback
       `inject_oracle_deviation.sh` (04, DISPUTE→SAFE_MODE). — e2e-testing@b3401e5
 - [ ] [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs the 3 scripts with `--staging` on the staging
       stack; 21/21 GREEN gate (asserts 2/4/6/7 need live infra); result lands at plans/audit/results/game*day*<date>.md
-- [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector ships in alerting-service@e5c8084;
+- [x] ✅ Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector ships in alerting-service@e5c8084;
       endpoints pending per-service)
