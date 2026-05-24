@@ -205,9 +205,15 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       Writing to `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/`. No BucketNamingError.
       2026-01-27: 21,695 rows (BALANCER/CURVE/SUSHISWAP writing; UNISWAP_V3/PANCAKESWAP/AERODROME 0 — subgraph missing).
       ManifestWriter updating per-VM shard. UTL_TARBALL_SHA=e51699c8025cfebc + MTDS_TARBALL_SHA=ef195e57d2cb confirmed.
-- [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-*` for 2026-01-25+; then
-      reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
-      verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
+      At day=2026-03-05: 920 manifest entries, still writing correctly (slot-6 re-verified).
+- [x] **Fixed MDPS launcher bucket bug** (2026-05-24): `launch-mdps-sharded-backfill.sh` line 214 hardcoded flat bucket
+      (`market-data-tick-{ag}-{project}`) — missing env-short. Fixed to use env-tiered name
+      (`market-data-tick-{ag}-prd-{project}` for prod) + added `--source-bucket-override BUCKET` flag for legacy
+      2024/2025 DeFi re-launches (dex_pool_swaps in flat bucket). Deployment-service@f5073fd. Pushed to LDR.
+- [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-prd-*` for 2026-01-25+;
+      reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps; relaunch `mdps-defi-2026-*` using fixed
+      launcher (`--env prod` → env-tiered prd bucket). Also verify dex_pool_swaps candles in processed_candles/ for
+      2022-2025 once 2024+2025 VMs complete.
 
 ## Evidence
 
