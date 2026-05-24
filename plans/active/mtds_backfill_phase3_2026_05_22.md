@@ -53,15 +53,9 @@ before Phase 7 grows the v<8 debt.
       heavy per-year stays well under 16GB. Covers 2020-2026, all 9 CeFi venues, ~83 VMs in parallel (MAX_CONCURRENT=15
       staggered). VM_FORCE=false (skips already-captured dates via preflight). Launch timestamp: **LAUNCHED
       2026-05-22**. 2026-05-22 slot 5.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Relaunch 2 dead VMs stopped by slot-7 (crashed, no progress): (1)
-      `cefi-binance-futures-2024-light-20260522-140739` — crashed at 2024-04-10, missing 2024-04-11→2024-12-31. (2)
-      `cefi-okx-swap-2024-light-20260522-140739` — crashed at 2024-10-21, missing 2024-10-22→2024-12-31. Gate: all other
-      140739 VMs + 2 deribit VMs TERMINATED first (singleton lock prevents parallel launch). Run:
-      `ONLY="BINANCE-FUTURES:2024:light OKX-SWAP:2024:light" FORCE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
-      (`FORCE=1` overrides singleton lock; `VM_FORCE=false` default in MTDS so already-captured dates skipped).
-      **BLOCKED**: 6 VMs still running as of 2026-05-23 ~15:15 UTC (4×140739: coinbase-spot-2021/2023-heavy,
-      okx-spot-2023-heavy, okx-swap-2021-heavy + 2 deribit-2024/2025-heavy-120101). slot-7 2026-05-23 (discovery);
-      slot-2 2026-05-23 (plan item).
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-DeadVMRelaunch** — Relaunched 2 dead VMs (all prior CeFi VMs TERMINATED, blocker cleared).
+      `cefi-binance-futures-2024-light-20260524-202308` RUNNING. `cefi-okx-swap-2024-light-20260524-202308` RUNNING.
+      Both asia-northeast1-c, VM_FORCE=false (skips already-captured dates). T+10 pending. — slot-7 2026-05-24
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
