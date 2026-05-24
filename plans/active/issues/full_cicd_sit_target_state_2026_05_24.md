@@ -14,9 +14,13 @@ The 2026-05-24 staging audit exposed that our CI/CD + SIT is **not actually cont
 behind LDR across all 8 active repos (~5000 commits) and **nobody's pipeline caught it**, because of four compounding
 structural holes:
 
-1. **`live-defi-rollout` has NO remote CI.** Per CLAUDE.md "CI Verification": LDR quality is enforced _only_ by local
-   `quality-gates.sh`. Hundreds of commits/day land on LDR with zero server-side validation. Whatever a slot didn't run
-   locally (or ran in a partial workspace) accumulates silently.
+1. **`live-defi-rollout` CI runs but is RED + UN-GATED** (corrected 2026-05-24 after verifying actual runs — earlier
+   claim "LDR has no CI" was wrong). `workspace-qg` _does_ trigger on every LDR push (the template trigger is
+   `[main, staging, live-defi-rollout]`). But LDR has **no branch protection**, so a RED run does not block the push —
+   so failures accumulate and nobody fixes them (the runs have been failing for the whole sprint). The accumulated-red
+   is the same per-repo cross-repo-SIT-misfire (#4) + whatever else slots didn't catch locally. **Fix = make LDR CI
+   green + treated as a real signal**, not "add CI" (it exists). Confirmed: UAC LDR runs were failing on the
+   cross-repo-SIT misfires; fixed @f7627f8e + @5b0707f0.
 2. **The only real CI gate is the `staging` PR.** `quality-gates` (the SIT) runs when `quickmerge` opens a `→ staging`
    PR. So the _first_ time a month of LDR state meets CI is the staging PR — which then surfaces a month of accumulated
    failures at once (the worst possible time to discover them).
@@ -45,10 +49,13 @@ integration of the actual integration branch (LDR)**.
 
 ## Target state — full CI/CD with real SIT
 
-### Tier A — per-repo CI (mostly exists; keep)
+### Tier A — per-repo CI on LDR: make it GREEN + a real signal (the trigger already exists)
 
-- `workspace-qg` on every push to `main/staging/live-defi-rollout` (NOT just main/staging). Today LDR has no CI; **add
-  LDR to the trigger** so repo-local lint/type/unit/codex run on every LDR push. Fast (no cross-repo checkout).
+- `workspace-qg` already triggers on `live-defi-rollout` — the gap is it's been RED + ignored (no LDR branch
+  protection). **Fix the accumulated-red so LDR CI is trustworthy** (started: the cross-repo-SIT-misfire fix @f7627f8e +
+  @5b0707f0 greens UAC; replicate per repo). Then decide whether to add LDR branch protection (blocks the rapid
+  direct-push flow — likely keep LDR un-gated but **monitored**: a dashboard / ping when LDR CI goes red, so it's fixed
+  in hours not weeks).
 - Keep `dep_repos` = upstream deps only (build/resolve correctness).
 
 ### Tier B — full-workspace SIT job (NEW — the missing layer)
@@ -105,9 +112,12 @@ makes staging current), so Tier C automation starts from a current baseline.
 
 ## Status
 
-- [x] Gap + target state documented
-- [x] Tier-B cross-repo-SIT-misfire pattern fixed for UAC (UAC@f7627f8e) — replicate per repo
-- [ ] Tier A: add LDR to workspace-qg trigger
+- [x] Gap + target state documented (root-cause #1 CORRECTED: LDR has CI; it's red+ungated, not absent)
+- [x] Cross-repo-SIT-misfire fixed for UAC — both code paths: pytest guards (UAC@f7627f8e) + STEP 5.86 shell checker
+      (UAC@5b0707f0). Tests/type/codex/STEP-5.86 now green in per-repo CI; validation preserved in full workspace.
+- [~] Tier A: LDR CI trigger already exists; making it GREEN per repo (UAC done; replicate to 7 others — each has its
+  own accumulated-red to clear)
+- [ ] Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
 - [ ] Tier B: full-workspace SIT job
 - [ ] Tier C: auto LDR→staging promotion bot (dep-order)
 - [ ] Tier D: per-service Cloud Run deploy-config audit
