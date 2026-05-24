@@ -207,10 +207,12 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       greeks used the same way in batch mode. DEFERRED 2026-05-23: blocked on prerequisite tasks (greeks-service Pub/Sub
       subscription, IS API integration, PricingLedger write-back — lines 144-153 all unchecked). Assigned to vm-ml per
       plan header. BLK-ee755deb.
-- [ ] [CODE] P1. Batch-mode `greeks-service` for backfill — cron-driven + EPHEMERAL_BATCH VM cohort prefix
+- [x] ✅ [CODE] P1. Batch-mode `greeks-service` for backfill — cron-driven + EPHEMERAL_BATCH VM cohort prefix
       `greeks-compute-` registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` with
       `lifecycle_class=EPHEMERAL_BATCH`. Reads historical MTDS `mark_update` parquets; writes historical
-      `PricingLedger.MARK_UPDATE` rows.
+      `PricingLedger.MARK_UPDATE` rows. — greeks-service@cb7f11a (GreeksBackfillProcessor + run_backfill() + 17 unit
+      tests; same MarkUpdateHandler + BlackScholesKernel as live mode per Batch=Live rule; shard-level failure
+      isolation; QG green 161 passed)
 - [x] ✅ [TEST] P0. End-to-end smoke (`tests/integration/test_greeks_handshake.py`): MTDS emits `mark_update` for a
       known vanilla call → `greeks-service` receives → writes back `PricingLedger.MARK_UPDATE` → strategy-service
       `pnl_reconciliation_engine` reads the greek column. Uses GCP PubSub + Storage emulators
