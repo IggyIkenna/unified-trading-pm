@@ -47,9 +47,21 @@ credential IDs broadly do not match real GCP Secret Manager** (`central-element-
   per-client resolver fills `exec-<client>-okx-*` at runtime; confirm with the credential resolver design.
 - Coordinate — `credentials_per_*.yaml` is being actively edited; do not double-edit.
 
-## Status
+## Status — RESOLVED (2026-05-24)
 
 - [x] bybit test aligned to real SM id (UAC@728a1353) — unblocks UAC CI
-- [ ] `credentials_per_archetype.yaml` + tests: bybit/aster/binance/deribit/hyperliquid rename to real SM ids
-- [ ] okx: reconcile flat `okx-trade-api-key` with per-client `exec-<client>-okx-*` model
-- [ ] Verify no other config (deployment-service, execution-service) references the non-existent flat ids
+- [x] `credentials_per_archetype.yaml` + tests renamed to real SM ids (UAC@4e3fc932): bybit/aster single key,
+      binance/deribit `-trade-api-key-secret`, hyperliquid `-trade-key`, dropped redundant `bybit-read-api-key`; 18/18
+      tests pass
+- [x] okx reconciled to per-client `pattern:exec-<client>-okx-*` (UAC@4e3fc932) + `credential-probe.sh` expands &
+      verifies it per client (deployment-service@c0537bf). **Live-verified**: all 8 clients × {api-key,api-secret,
+      passphrase} PASS, plus bybit/binance/deribit/hyperliquid/aster all PASS against real Secret Manager
+- [x] No other config/code references the old flat ids (workspace grep clean; only display-mangled docstring examples)
+
+## Separate observation (NOT this finding — out of scope; flag only)
+
+`credential-probe.sh --archetype carry_staked_basis` still FAILs the **wallet** creds (`csb-*-hot-*-v1-wrapped`,
+`gas-reserve-*-v1-wrapped`) — the archetype config lists them as literal SM-secret ids but they are KMS-wrapped wallet
+keys stored differently (per-mode config uses `pattern:*-wrapped`). So the cutover gate can't hit 100% until wallet
+handling is reconciled too — that's a distinct wallet/custody-provisioning concern, not the credential-id naming drift
+fixed here. Worth a follow-up (wallet-key probe handling + provisioning).
