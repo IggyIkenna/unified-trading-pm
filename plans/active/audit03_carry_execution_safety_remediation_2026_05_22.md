@@ -103,8 +103,10 @@ File: `strategy-service/.../engine/strategies/v2/carry_and_yield/staked_basis.py
       `mtds-scenario-matrix` cron (F-40) that RUNS this lives in `audit03_deployment_cron_provisioning_2026_05_22.md`. —
       strategy-service@46b38b5d (scenario test) + @a64cb023 (D.2 calibration) + @ba290944 (check_lst_depeg) (backfilled
       2026-05-24)
-- [ ] [SCRIPT] P0. Re-run AUDIT-03 §2.1 (CSB) + §2.3 (EXE) + §2.5 (RSK) READ checkpoints; flip the closed findings in
-      audit §6 + §6.2 routing table.
+- [x] ✅ [SCRIPT] P0. Re-run AUDIT-03 §2.1 (CSB) + §2.3 (EXE) + §2.5 (RSK) READ checkpoints; flip the closed findings in
+      audit §6 + §6.2 routing table. — grep-verified all 7 fixes in code; §6 updated 2026-05-24: F-08/09/10/11/12 CLOSED
+      (strategy-service@dfe9d231/33b7168e), F-28 CLOSED (execution-service@db50597cf), F-33 CLOSED
+      (strategy-service@46b38b5d) — PM@(this commit)
 
 ## Success criteria
 
