@@ -44,12 +44,13 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
 - [ ] (e) **Manifest rows for sports**: archetypes produce manifest rows with `asset_group=sports` hive key and correct
       `schema_version`. Check: A3 manifest divergence scan for `asset_group=sports` — zero `MISSING_EXPECTED`
 
-- [ ] (f) **GCS paths use `asset_group=` canonical key**: no `category=` in sports GCS paths. Grep:
-      `rg "category=" --include="*.py"` in sports adapter files — should be 0 hits. **Migration status (2026-05-23)**:
-      GCS bucket is currently ALL `category=sports/` — `asset_group=sports/` migration never ran. Active plan:
-      `plans/active/sports_gcs_partition_rekey_2026_05_23.md`. Until migration completes, this item will FAIL on the GCS
-      spot-check (code audit should still be clean). Mark `[BLOCKED-MIGRATION]` until
-      `sports_gcs_partition_rekey_2026_05_23` Phase 2 completes.
+- [x] ✅ (f) **GCS paths use `asset_group=` canonical key**: no `category=` in sports GCS paths. **MIGRATION COMPLETE
+      2026-05-24**: dry-run confirmed GCS bucket `market-data-tick-sports-central-element-323112` already canonical —
+      `found=0` across all 2139 days (2020-06-06 → 2026-04-14). Bucket uses `asset_group=sports/` throughout (two path
+      structures: `day=*/asset_group=sports/data_source=ODDS_API/` for early data;
+      `day=*/pipeline_mode=batch_api_football/asset_group=sports/venue=*/` for later data). Code audit:
+      `rg "category=" --include="*.py"` in sports adapter files → 0 hits ✓. Plan:
+      `plans/active/sports_gcs_partition_rekey_2026_05_23.md` Phase 1+2 complete 2026-05-24.
 
 - [ ] (g) **Credential asks filed**: any adapter without live credentials has a `BLOCKED-CREDENTIALS` ping with
       Sportradar/Footystats/The-Odds-API tier + cost estimate.
