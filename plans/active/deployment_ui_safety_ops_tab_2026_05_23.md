@@ -260,8 +260,12 @@ audit trail).
       verdict in LLM feed, banner above header) — unified-trading-system-ui@6375d547 | QG note: tsc skipped
       (node_modules not installed in slot env; pre-existing)
 - [x] ✅ Phase 5 P0.15 (script) — `inject_venue_outage.sh` (scenario 01) shipped + mock-runnable. — e2e-testing@b3401e5
-- [ ] Phase 5 P0.15 (live run) — [HUMAN] operator runs scenario 01 with `--staging` + records 7 asserts
-      (STAGING-INFRA-REQUIRED)
+- [ ] Phase 5 P0.15 (live run) — [HUMAN] 4/7 asserts verified 2026-05-24 (CLOUD_MOCK_MODE + MCP Playwright): ✓(1) script
+      exits 0, UAC IncidentEnvelope schema validates (incident_key: game-day-20260524-105717-scenario-01) ✓(3) APPROVED
+      verdict structure valid in cascade output ✓(5) CRITICAL SLA=5min confirmed in cascade ✓(6) Safety Ops tab: 3
+      panels + all testids + 0 JS errors (deployment-ui@5184 mock-mode) ✗(2)(4)(7) BLOCKED — alerting-service HTTP API
+      not deployed as Cloud Run service; current VM (alerting-quietness-20260522-083225) is a batch job, not an HTTP
+      server. Full 7/7 requires `gcloud run deploy alerting-service` → then re-run with ALERTING_URL set.
 
 **Cross-references**:
 
