@@ -351,7 +351,10 @@ else
     V=$(( V + 1 ))
 fi
 
-ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
+# `!**/testing/**` mirrors the empty-fallback + inside-import checks: in-package test-support
+# utilities (e.g. internal/testing/ seed validators) legitimately carry `pd.Series[Any]` that
+# pandas-stubs forces and that basedpyright's reportUnknownVariableType requires be annotated.
+ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" --glob "!**/testing/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"
 
 _raw_json_extra_globs=()
