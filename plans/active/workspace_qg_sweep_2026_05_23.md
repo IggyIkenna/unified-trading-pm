@@ -183,8 +183,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [ ] [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
       `cd ml-training-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
 
-- [ ] [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
       `cd trading-agent-service && bash scripts/quality-gates.sh` exits 0. PREREQ: execution-service QG green. [vm:
+      — trading-agent-service@64bc382 | QG exit 0 (46s) | starlette>=1.0.1 pin (PYSEC-2026-161)
       vm-trading-core]
 
 ---
