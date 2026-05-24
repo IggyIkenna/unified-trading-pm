@@ -638,8 +638,38 @@ AI-days (class: infra)
 
 **Deferred (MIGRATED FROM archived plan)**:
 
-- **MTDS-3.2.A-V (P0, BLOCKED-IN-FLIGHT)**: CeFi MTDS verify gate; 171520-batch + 151757-batch VMs still RUNNING. Verify
-  once all CeFi VMs terminate (ETA: light VMs ~few hours; heavy coinbase-2021 ~13h).
+- **MTDS-3.2.A-V (P0, BLOCKED-PHASE7-PREREQUISITE — 4 findings, 2026-05-24)**: CeFi MTDS verify gate run 2026-05-24.
+  Bucket: `market-data-tick-cefi-central-element-323112`. 34,933,247 total rows. **4 findings**:
+
+  **Finding 1 — schema_version FIXED ✅ (2026-05-24)**: v8 upgrade ran live via `upgrade_manifest_to_v8.py`. Result:
+  34,839,742 rows upgraded (32,322,206 NULL + 2,517,536 pre-v8 → all set to 8); 93,505 already at v8. 100% of rows now
+  at schema_version=8.
+
+  **Finding 2 — Legacy markers (2.09M rows) — OPEN**:
+  - `bait_sentinel_may4_burst_no_parquet` (960K): attempted_failed rows from May-4 phantom burst.
+    `cleanup_may4_bait_sentinels.py` already ran to create these rows. Needs MTDS retry with `VM_FORCE=true` to
+    re-attempt; OR relabel as `empty_confirmed[SOURCE_RETURNED_ZERO]` if Tardis confirms data absent.
+  - `LegacyBlankErrorReasonError` (674K): pre-typed-reason rows. Relabeling pass via `legacy_reason_classifier.py`
+    needed.
+  - `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` (452K): May-7 reconciliation markers. Need investigation to determine
+    correct `EmptyConfirmedReason` or retry target.
+
+  **Finding 3 — Fresh failures (106K rows) — OPEN**:
+  - BINANCE-SPOT (15,036): all `VENUE_FETCH_FAILED`, only `book_snapshot_5`+`trades`, all years 2020–2026,
+    attempted_at=2026-05-06. Likely Tardis data gaps for specific dates. Action: MTDS retry with FORCE=true OR relabel
+    as `empty_confirmed[EXPECTED_NO_SOURCE_DATA]` after Tardis probe.
+  - DERIBIT (51,730): split evenly across `book_snapshot_5`/`derivative_ticker`/`trades` (17,240 each), all years.
+    Expected historical gaps. Action: relabel as `empty_confirmed[EXPECTED_NO_SOURCE_DATA]`.
+  - HYPERLIQUID (17K approx): expected gaps. Action: same as DERIBIT.
+
+  **Finding 4 — Bait sentinel gate**: 960K rows with `bait_sentinel_may4_burst_no_parquet` were already flipped to
+  `attempted_failed` by `cleanup_may4_bait_sentinels.py` (correct). MTDS preflight now excludes
+  `captured AND instrument_count==0` (MTDS@e032b186). Gate unblocked for preflight; remediation still needed.
+
+  **Gate status**: 2 of 4 criteria FAIL (fresh failures + legacy markers). v8 criterion now GREEN. Gate remains
+  BLOCKED-PHASE7-PREREQUISITE until legacy markers relabeled + fresh failures resolved. Remediation tracked in
+  `plans/active/issues/cefi_manifest_remediation_2026_05_24.md`.
+
 - **Bucket naming migration (P2, DEFERRED)**: MTDS writes to flat bucket (legacy `cloud_constants.py`); migrate in
   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.
 
