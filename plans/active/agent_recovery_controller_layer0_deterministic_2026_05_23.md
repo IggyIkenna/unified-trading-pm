@@ -232,8 +232,8 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 3 wire each script's entry point in the corresponding service (kill_switch.activate / cancel_open_orders /
-      safe_mode.enter wrappers emit AgentActionEvent)
+- [x] ✅ Phase 3 wire each script's entry point in the corresponding service (kill_switch.activate / cancel_open_orders /
+      safe_mode.enter wrappers emit AgentActionEvent) — execution-service@6c23178fd + 8b786755f; strategy-service@f2fd5e58 + 2142a0f5 + 4894a961
 - [ ] Phase 4 per-script integration tests against staging endpoints
 - [ ] Phase 5 deployment-UI Safety Ops tab buttons → scripts (cross-plan handshake with deployment_ui_safety_ops_tab
       plan)
