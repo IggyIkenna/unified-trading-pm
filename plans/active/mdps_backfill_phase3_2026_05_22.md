@@ -63,17 +63,18 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       `live_workers.py` filters by in-file `'swaps'` column. MDPS@b584c67. QG ✅. Tarball rebuilt. 5 DeFi VMs TERMINATED
       (0 candles output) + re-launched: `mdps-defi-{2022..2026}-20260523-142129`. Uniswap data coverage: 2024-06-01
       onwards (2022/2023 = 0 Uniswap, 2024+ = candles expected). 2026-05-23 slot-5.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-V** — Verify fixed VMs (`20260523-151348`): dex_swaps bars present for 2024-06+
-      dates; manifest v8; NaN check passes. Uniswap data starts ~2024-06-01 (dates before = expected `empty_confirmed`).
-      vault_share_price is bypass type — verify in features-onchain plan. **RELAUNCHED 2026-05-23 slot-5**: 142129 VMs
-      (b584c67 tarball, lacked ed0f817 sports fix) terminated. Tarball rebuilt with MDPS@ed0f817. 5 new VMs
-      `mdps-defi-{2022..2026}-20260523-151348` RUNNING. Verify once 2024/2025 VMs reach their end_date. **PARTIAL STATUS
-      (slot-6 2026-05-23 ~15:30 UTC)**: 2022 VM self-deleted (exit_code=0 at 14:25 UTC) after processing
-      2022-11-01→2022-12-31 (61 dates, 0 candles — all prior dates covered by earlier VMs with manifest skip). No shard
-      written (expected: 0 candles → no manifest entries). 2023 VM still RUNNING. 2024 VM shard
-      (`mdps-defi-2024-20260523-151348.parquet`): 465 rows all `empty_confirmed/SOURCE_RETURNED_ZERO` for CURVE
-      2024-05-03→2024-05-11 — at May 2024, working toward 2024-06-01 Uniswap start. 2025/2026 VMs: shards present. Full
-      verify pending 2024/2025 VMs reaching their end dates.
+- [x] ✅ [VERIFY] P0. **MDPS-3.3.DeFi-V** — **VERIFIED (slot-7 2026-05-24 ~20:00 UTC)**: Verification via 101628 VMs
+      (TERMINATED, final state) + GCS parquet spot-checks. Results: **Manifest**: 2024=11,786 captured (63 dates) +
+      4,945 empty_confirmed, schema_version=8 for ALL rows ✓; 2025=11,983 captured (64 dates) + 4,999 empty_confirmed,
+      schema_version=8 for ALL rows ✓. **Data types**: 7 present (swaps_ohlcv_15s/1m/5m/15m/1h/4h/1d) — 4h included ✓.
+      **NaN check**: 4 random samples (2024-06-15 UNISWAP_V3, 2024-09-01 CURVE, 2025-08-01 UNISWAP_V2, 2025-11-01
+      UNISWAP_V3): 0 null OHLCV across all rows ✓. **Field check**: chain='ETHEREUM' ✓, swap_count=int64 ✓,
+      volume_quote_usd populated ✓. **Uniswap start**: 2024-06-01 UNISWAP_V3 files=140 ✓; dates before = empty_confirmed
+      (expected) ✓. 2026 status: `mdps-defi-2026-20260524-195319` RUNNING (MDPS@6c9045160577, all fixes).
+      2026-01-01→2026-01-24 pending MTDS backfill (`mtds-dex-swaps-backfill` RUNNING). Partial 2026 data (2026-01-25+)
+      will be written. **NOTE**: 2024+2025 candles are in flat bucket `market-data-tick-defi-central-element-323112`;
+      2026 candles go to prd bucket `market-data-tick-defi-prd-central-element-323112`. Features DeFi compute must read
+      from BOTH buckets or data migration must occur first. Flag for features launch operator decision.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
