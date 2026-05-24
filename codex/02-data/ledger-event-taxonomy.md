@@ -53,8 +53,8 @@ Routes rows to derived-ledger computation in strategy-service. Grouped by origin
 | `CASH_OUT`           | `cash_out`           | Prediction-market / sports-book cash-out of an open position before resolution (operator-initiated close at the book's current quote). Distinct from TRADE because it is a venue-mediated unwind     |
 | `DEPOSIT`            | `deposit`            | Client funds inflow to a venue/account/wallet from an external source (bank wire, on-chain incoming transfer from a non-tracked address). Feeds TreasuryLedger when counterparty_client_id is None   |
 | `WITHDRAWAL_TO_BANK` | `withdrawal_to_bank` | Client funds outflow from a venue/account/wallet to an off-platform destination (bank wire, on-chain outgoing transfer to a non-tracked address). Feeds TreasuryLedger                               |
-| `CUSTODY_MOVE`       | `custody_move`       | Movement of assets between custody providers / sub-custodians for the same client (Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet). HARD RULE: counterparty_client_id == client_id   |
-| `FX_CONVERSION`      | `fx_conversion`      | Stablecoin / fiat / currency conversion that is not order-book mediated (e.g. on-chain stablecoin swap via 1:1 oracle, custodian-quoted FX fill, USDC ↔ USDT bridge-equivalent)                     |
+| `CUSTODY_MOVE`       | `custody_move`       | Movement of assets between custody providers / sub-custodians for the same client (Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet). HARD RULE: counterparty_client_id == client_id      |
+| `FX_CONVERSION`      | `fx_conversion`      | Stablecoin / fiat / currency conversion that is not order-book mediated (e.g. on-chain stablecoin swap via 1:1 oracle, custodian-quoted FX fill, USDC ↔ USDT bridge-equivalent)                      |
 | `LIQUIDATION`        | `liquidation`        | Forced liquidation by venue/protocol (partial or full). Counted as instruction-driven because the venue's keeper acts as the instructing agent on behalf of the protocol                             |
 
 ### Passive events (EventOrigin.PASSIVE) — 18 values
@@ -196,42 +196,86 @@ window. Computed from IS `DividendRecord` history via IS HTTP API; stored as an 
 
 **Rationale for TTM-sum over alternatives**:
 
-| Option | Formula | Why rejected |
-| --- | --- | --- |
-| Cadence extrapolation | `latest_div × N / spot` | Single data point; corrupted by special dividends; cadence change = wrong multiplier for up to N months |
-| **TTM sum (chosen)** | `sum(divs[-365d]) / spot` | Market standard; handles irregular cadence; naturally decays on suspension; no frequency inference |
-| Forward estimate | analyst consensus / spot | Requires Bloomberg/FactSet — not in our pipeline; `BLOCKED-CREDENTIALS` until provisioned |
+| Option                | Formula                   | Why rejected                                                                                            |
+| --------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Cadence extrapolation | `latest_div × N / spot`   | Single data point; corrupted by special dividends; cadence change = wrong multiplier for up to N months |
+| **TTM sum (chosen)**  | `sum(divs[-365d]) / spot` | Market standard; handles irregular cadence; naturally decays on suspension; no frequency inference      |
+| Forward estimate      | analyst consensus / spot  | Requires Bloomberg/FactSet — not in our pipeline; `BLOCKED-CREDENTIALS` until provisioned               |
 
 **Edge cases**:
 
-| Case | Handling |
-| --- | --- |
-| `dividend_type = SPECIAL` | Excluded from TTM sum — capital-return event, not recurring income |
-| Spin-off / rights issue | Excluded — use `StockSplitRecord` for price adjustment only; not a `DividendRecord` |
-| Suspended dividends | Yield naturally decays to 0 as 12-month window passes — no special handling |
+| Case                                                | Handling                                                                                                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dividend_type = SPECIAL`                           | Excluded from TTM sum — capital-return event, not recurring income                                                                                   |
+| Spin-off / rights issue                             | Excluded — use `StockSplitRecord` for price adjustment only; not a `DividendRecord`                                                                  |
+| Suspended dividends                                 | Yield naturally decays to 0 as 12-month window passes — no special handling                                                                          |
 | New listing / IPO (<12 months since first dividend) | Annualise from available history: `q = sum(divs_available) / spot × (365 / days_of_history)`. Minimum 30 days; emit `None` if `days_of_history < 30` |
-| No dividends in TTM window | Emit `0.0` (not `None`) — instrument IS equity-class, yield IS zero |
-| Non-equity spot token (crypto) | Emit `None` — not applicable |
-| DRIP / reinvestment scheme | Treat as regular dividend at ex-date spot price — same as cash dividend |
+| No dividends in TTM window                          | Emit `0.0` (not `None`) — instrument IS equity-class, yield IS zero                                                                                  |
+| Non-equity spot token (crypto)                      | Emit `None` — not applicable                                                                                                                         |
+| DRIP / reinvestment scheme                          | Treat as regular dividend at ex-date spot price — same as cash dividend                                                                              |
 
 **Data source**: `InstrumentRecord.dividend_records: list[DividendRecord]` from IS HTTP API, field `dividend_type`.
+
+**Writer**: MTDS `MarkUpdatePublisher.publish_from_rows()` — non-None path via
+`MarkUpdateEnricher.get_dividend_yield()`. Default `NoOpEnricher` returns `None` until the IS corporate-action enricher
+wires in Phase 1 follow-up. Non-applicable instruments (crypto, futures, perps, sports, prediction) always emit `None` —
+never a synthetic zero.
+
+**Implementation**:
+`market_tick_data_service.derived.dividend_yield_compute.compute_dividend_yield(actions, spot_price, as_of)` —
+`market-tick-data-service@1762f1aa`.
 
 ---
 
 ### `rebase_rate` — LST/LRT rebase delta
 
 **Applicable instruments**: `AssetClass.SPOT_TOKEN` with `is_rebasing=True` (stETH, rETH, cbETH, mSOL, JitoSOL and
-equivalents). `None` for all others.
+equivalents). `None` for everything else — never a synthetic zero for non-LST instruments.
 
-Formula spec: Phase 2 DESIGN item — **pending operator-ACK on delta-computation strategy** (per-snapshot vs
-daily-checkpoint; MTDS-derived vs IS-write-time). See `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md`
-§ Phase 2.
+**Formula (operator-ACK'd 2026-05-23 — MTDS-derived, per-consecutive-snapshot delta)**:
+
+```
+rebase_rate = (rate_t2 - rate_t1) / rate_t1 × (seconds_per_year / elapsed_seconds)
+```
+
+Where:
+
+- `rate_t1` / `rate_t2` = consecutive `lst_rates.exchange_rate` values (cumulative LST/ETH ratio from IS `lst_rates`
+  parquet). The cumulative `exchange_rate` column remains in IS `lst_rates` as the SSOT — this function only computes
+  the _delta_.
+- `seconds_per_year` = 31,557,600 (Julian year: 365.25 × 24 × 3600)
+- Result is annualised (e.g. `0.0365` ≈ 3.65% APR)
+
+**Edge cases**:
+
+| Case                          | Handling                                                                                                                   |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `elapsed_seconds ≤ 0`         | Return `None` — prevents division by zero; same-block snapshots                                                            |
+| `rate_t1 ≤ 0`                 | Return `None` — degenerate oracle value; should not occur in practice                                                      |
+| `rate_t2 ≤ 0`                 | Return `None` — same                                                                                                       |
+| Non-LST instrument            | Emit `None` at publisher layer (NoOpEnricher default); enforced by `MarkUpdateEnricher.get_rebase_rate()`                  |
+| IS `lst_rates` SSOT invariant | Cumulative `exchange_rate` column in IS parquet must not be modified by the MTDS derivation; integration test asserts this |
+
+**Data source**: consecutive rows of IS `lst_rates.exchange_rate` parquet, read via IS HTTP API per
+`instrument_id × chain`.
+
+**Writer**: MTDS `MarkUpdatePublisher.publish_from_rows()` — non-None path via `MarkUpdateEnricher.get_rebase_rate()`.
+Default `NoOpEnricher` returns `None` until the IS `lst_rates` enricher wires in Phase 2 follow-up.
+
+**Implementation**: `market_tick_data_service.derived.rebase_rate_compute.compute_rebase_rate(prev, curr)` —
+`market-tick-data-service@1762f1aa`.
 
 ---
 
 ## Changelog
 
-- 2026-05-24: added PricingLedger carry-rate columns section — `dividend_yield` annualisation spec (TTM-sum formula, edge-case table) + `rebase_rate` placeholder. Per `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 1 DESIGN.
+- 2026-05-24: completed `dividend_yield` + `rebase_rate` carry-rate column docs. `dividend_yield`: wiring note +
+  implementation ref (`market-tick-data-service@1762f1aa`). `rebase_rate`: full formula
+  (`(rate_t2-rate_t1)/rate_t1 × sec_per_year/elapsed`), edge-case table, writer note, implementation ref. Per
+  `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 1+2 DOC P1.
+- 2026-05-24 (earlier): added PricingLedger carry-rate columns section — `dividend_yield` annualisation spec (TTM-sum
+  formula, edge-case table) + `rebase_rate` placeholder. Per
+  `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 1 DESIGN.
 - 2026-05-23: expanded to 37 EventTypes + 17 AssetClasses per
   `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md` Phase 2. Added 11 instruction events (SWAP,
   SUPPLY, WITHDRAW, WRAP, UNWRAP, EARLY_EXERCISE, CASH_OUT, DEPOSIT, WITHDRAWAL_TO_BANK, CUSTODY_MOVE, FX_CONVERSION) +

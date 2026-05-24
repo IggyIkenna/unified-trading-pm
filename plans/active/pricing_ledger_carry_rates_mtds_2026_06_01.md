@@ -131,8 +131,10 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       regression on `unified-api-contracts` consumer tests (`pricing_ledger` cassette parity). —
       market-tick-data-service@1762f1aa (derived 25/25 passed; pre-existing UAC-update failures HYPERLIQUID/ASTER
       asset_group + log assertion excluded per operator directive 2026-05-24)
-- [ ] [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `dividend_yield` row notes "populated for
-      equities/ETFs only; `None` for crypto/futures/options"; cite the annualisation formula from Phase 1 design.
+- [x] ✅ [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `dividend_yield` row notes "populated for
+      equities/ETFs only; `None` for crypto/futures/options"; cite the annualisation formula from Phase 1 design. —
+      unified-trading-pm@f7238fb1 (codex/02-data/ledger-event-taxonomy.md: writer note + implementation ref
+      market-tick-data-service@1762f1aa; non-applicable → None hardcoded)
 
 ## Phase 2 — `rebase_rate` delta computation (MTDS or IS)
 
@@ -161,8 +163,10 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       regression on the other side of the IS↔MTDS contract (per
       `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`). — market-tick-data-service@1762f1aa (same QG run
       as Phase 1; derived 25/25 passed; pre-existing UAC-update failures excluded per operator directive 2026-05-24)
-- [ ] [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `rebase_rate` row notes "populated for LST/LRT only;
-      `None` for everything else; cumulative `exchange_rate` remains in IS `lst_rates` table as SSOT".
+- [x] ✅ [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `rebase_rate` row notes "populated for LST/LRT
+      only; `None` for everything else; cumulative `exchange_rate` remains in IS `lst_rates` table as SSOT". —
+      unified-trading-pm@f7238fb1 (codex/02-data/ledger-event-taxonomy.md: full formula + edge-case table + writer
+      note + IS SSOT invariant; implementation ref market-tick-data-service@1762f1aa)
 
 ## Phase 3 — greeks-service ⟷ MTDS handshake (greeks-service)
 
