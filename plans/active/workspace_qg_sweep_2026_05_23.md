@@ -174,11 +174,13 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [ ] [AGENT] P3. **ml-service QG green** — 4 ruff errors. `cd ml-service && bash scripts/quality-gates.sh` exits 0.
       PREREQ: features-service QG green. [vm: vm-ml]
 
-- [ ] [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
       `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
+      — CONSOLIDATED into ml-service per plans/active/ml_repo_consolidation_2026_05_19.md; no separate repo to QG
 
-- [ ] [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
       `cd ml-training-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
+      — CONSOLIDATED into ml-service per plans/active/ml_repo_consolidation_2026_05_19.md; no separate repo to QG
 
 - [ ] [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
       `cd trading-agent-service && bash scripts/quality-gates.sh` exits 0. PREREQ: execution-service QG green. [vm:
