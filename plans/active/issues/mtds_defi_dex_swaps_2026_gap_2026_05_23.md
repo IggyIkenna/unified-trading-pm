@@ -164,8 +164,23 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **T+10 verify mtds-backfill-defi-dexswaps-20260524** — RUNNING at T+10, correct op confirmed:
       `python -m     market_tick_data_service --operation collect-dex-swaps --mode batch --asset-group DEFI --start-date 2026-01-25     --end-date 2026-05-23`
       (serial port at 11:11:28 UTC). GCS tee at vm-logs/mtds-backfill-defi-dexswaps-20260524/run.log.
-- [ ] **Post-completion**: verify dex_pool_swaps rows appear in MTDS GCS for 2026-01-25+; then reset
-      SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
+- [x] **Root-caused wrong write bucket** (2026-05-24): `mtds-backfill-defi-dexswaps-20260524` was writing dex_swaps to
+      `dex-swaps-central-element-323112` (wrong bucket) instead of `market-data-tick-defi-central-element-323112`
+      (canonical MDPS source). Root cause: `dex_swaps_handler.py:334` used `get_write_bucket_name("dex-swaps")` → all
+      other DeFi handlers use `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")`. Data in wrong
+      bucket also has wrong path prefix (`day=.../category=defi/...` not `raw_tick_data/by_date/...`) — cannot be
+      copied.
+- [x] **Fixed dex_swaps_handler write bucket** (2026-05-24): replaced `get_write_bucket_name("dex-swaps")` with
+      `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")`, removed stale import, updated 3 unit
+      tests. MTDS@6be284e702d0. QG: 7 failed (all pre-existing, 3 test_dex_swaps_handler now passing). Pushed to LDR.
+- [x] **Killed wrong-bucket VM + relaunched with fix** (2026-05-24): killed `mtds-backfill-defi-dexswaps-20260524` (was
+      writing to wrong bucket). Created `launch-mtds-dex-swaps-backfill-vm.sh` launcher + registered
+      `mtds-dex-swaps-backfill` in `vm_zombie_watchdog.py`. Deployment-service@0ba3844. Rebuilt tarballs
+      (MTDS@6be284e702d0 clean). Launched `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c, e2-standard-4,
+      2026-01-25→2026-05-23).
+- [ ] **T+10 verify mtds-dex-swaps-backfill** — confirm RUNNING + correct op + writes to correct bucket
+- [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-*` for 2026-01-25+; then
+      reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
 
 ## Evidence
