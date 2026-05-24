@@ -235,7 +235,8 @@ audit trail).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 1 P0.1 router refactor — pair-review with Harsh for router.py consuming IncidentEnvelope
+- [x] ✅ Phase 1 P0.1 router refactor — pair-review with Harsh for router.py consuming IncidentEnvelope
+      — alerting-service@e8af1af | route_incident(IncidentEnvelope) typed entry point; normalises to (problem_type, details) + delegates to existing route_event() machinery; dict-shape callers unchanged; QG exit 0
 - [x] ✅ Phase 2 P0.4-P0.8 — Safety Ops tab Playwright L2 GREEN (4/4). Root cause of prior block was the dev:mock
       in-process `window.fetch` interceptor returning `{}` for unseeded `/api/safety-ops/*` (so `page.route` never
       fired + widgets crashed on non-array); fixed by seeding the 3 feeds in `lib/api/mock-handler.ts` + `Array.isArray`
