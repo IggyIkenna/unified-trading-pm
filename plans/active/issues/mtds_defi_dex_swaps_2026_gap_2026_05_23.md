@@ -97,10 +97,25 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       07:25:16Z (18s race). Fixed: killed both, confirmed cb3d11b now at fixed-name path, relaunched
       `mdps-backfill-defi-20260524-083220` (2024) + `mdps-backfill-defi-20260524-083234` (2025), both RUNNING
       asia-northeast1-c e2-standard-8 2026-05-24
-- [ ] **T+10 verify + log check for 083220/083234** — confirm RUNNING + zero schema_violation/partition_mismatch for
-      swaps_ohlcv shards
-- [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
-      rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
+- [x] **Root-caused UTL instrument_id_validator partition_mismatch bug** (2026-05-24): `validate_partition_consistency`
+      calls `_split_venue_chain` on the instrument_id venue (UNISWAP_V2-ETHEREUM → UNISWAP_V2) but compared against
+      `expected_venue_uc` from partition path WITHOUT stripping chain — UNISWAP_V2 ≠ UNISWAP_V2-ETHERNET → permanent
+      mismatch. Fixed: also apply `_split_venue_chain` to `expected_venue_uc` before comparison in both
+      `validate_partition_consistency` and `validate_instrument_id_column`. Added 2 regression tests. UTL@18e2e072.
+- [x] **Concurrently another slot landed MDPS fix** `555ade1` (strip chain suffix from DeFi venue in partition_path) —
+      alternative approach that also resolves the mismatch from MDPS side. Both fixes are correct and complementary.
+- [x] **Fixed tarball concurrent-rebuild race condition** (2026-05-24): multiple slots running `create-code-tarballs.sh`
+      concurrently were overwriting each other's fixed-name UTL tarballs. Fixed: added `UTL_TARBALL_SHA` /
+      `MDPS_TARBALL_SHA` / `UAC_TARBALL_SHA` metadata support to `setup-data-pipeline-vm.sh` (downloads SHA-pinned
+      tarball instead of fixed-name when set) + `--utl-sha` / `--mdps-sha` CLI flags to
+      `launch-mdps-sharded-backfill.sh`. Deployment-service@f42973f, setup-data-pipeline-vm.sh uploaded to GCS.
+- [x] **Killed all stale DeFi VMs + relaunched with SHA-pinned tarballs** (2026-05-24): killed 085204 + 091405 VMs
+      (wrong UTL/MDPS tarballs). Launched `mdps-defi-{2022-2026}-20260524-092158` with `UTL_TARBALL_SHA=18e2e072` +
+      `MDPS_TARBALL_SHA=555ade19`. All 5 VMs RUNNING as of T+1 check.
+- [ ] **T+10 verify 092158 VMs** — confirm RUNNING + zero partition_mismatch for swaps_ohlcv shards at DEX data dates
+      (2024-06-01+)
+- [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2022-2025; verify dex_swaps
+      rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*` for 2026 once MTDS gap investigated
 
 ## Evidence
 
