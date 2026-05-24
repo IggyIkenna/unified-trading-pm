@@ -226,12 +226,18 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **Fixed: added "dex_swaps" to DefiSwapAdapter.related_data_types** (2026-05-24): MDPS@dd5a0b5. Stopped buggy VM
       160218, deleted its per-VM shard (470 empty_confirmed entries), rebuilt tarballs
       (`market-data-processing-service-code@dd5a0b5`).
-- [x] **Relaunched MDPS 2026 VM with fix** (2026-05-24): `mdps-defi-2026-20260524-163710` RUNNING (asia-northeast1-c,
-      e2-standard-8) with `MDPS_TARBALL_SHA=dd5a0b55d7b736454ced8e184b4db0053af46e30` +
-      `UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22`.
-- [ ] **T+10 verify mdps-defi-2026-20260524-163710** — confirm RUNNING + correct prd bucket + non-zero candles for dates
-      ≥2026-01-25 (dex_swaps data starts there).
-- [ ] **Monitor 163710 to completion** — verify final candle counts for all 119 days with dex_swaps data.
+- [x] **Relaunched MDPS 2026 VM with related_data_types fix** (2026-05-24): `mdps-defi-2026-20260524-163710` RUNNING
+      with MDPS@dd5a0b5. T+10 revealed 2 new bugs: (1) `volume_quote_usd missing` schema violation — new parquets use
+      `amount_usd` not `amountUSD`/`amount_in_usd`; (2) "No price columns found" — `_calculate_price` had no branch for
+      `amount_usd/amount_in` ratio. Stopped 163710, deleted its per-VM shard.
+- [x] **Fixed amount_usd column support** (2026-05-24): MDPS@3799c8d — added `amount_usd` volume branch
+      (`has_usd_volume=True`) and `_calculate_price` method 1b (`amount_usd/amount_in`). Tarball
+      `market-data-processing-service-code@3799c8def919.tar.gz` uploaded.
+- [x] **Relaunched MDPS 2026 VM with amount_usd fix** (2026-05-24): `mdps-defi-2026-20260524-165353` RUNNING
+      (asia-northeast1-c, e2-standard-8) with `MDPS_TARBALL_SHA=3799c8def919` + `UTL_TARBALL_SHA=e51699c8`.
+- [ ] **T+10 verify mdps-defi-2026-20260524-165353** — confirm RUNNING + non-zero candles for dates ≥2026-01-25, no
+      schema_violation or volume_quote_usd errors.
+- [ ] **Monitor 165353 to completion** — verify final candle counts for all 119 days with dex_swaps data.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
