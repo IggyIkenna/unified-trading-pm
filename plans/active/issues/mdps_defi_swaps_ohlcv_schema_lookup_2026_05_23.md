@@ -137,7 +137,8 @@ failures unchanged, 0 new). Basedpyright 0 errors.
   - `mdps-defi-2024-20260524-091405` → 2024-01-01..2024-12-31 RUNNING ✓
   - `mdps-defi-2025-20260524-091405` → 2025-01-01..2025-12-31 RUNNING ✓
   - `mdps-defi-2026-20260524-091405` → 2026-01-01..2026-05-24 RUNNING ✓
-- **Next**: verify captured rows appear in per-VM shards within ~30 min of VM start.
+- 2026-05-24 ~09:30 UTC — **VERIFIED**: 2025 per-VM shard shows 27 `captured` rows (UNISWAP_V3-ETHEREUM pools),
+  venue=`UNISWAP_V3` (chain suffix stripped ✓), chain=`ETHEREUM` ✓. Zero `SCHEMA_VALIDATION_FAILED`. All 5 VMs running.
 
 ## Plan refs
 

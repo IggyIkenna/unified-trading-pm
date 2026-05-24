@@ -375,10 +375,20 @@ all RUNNING at T+2min verify):
 
 Plan ref: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md` § Fourth schema gap.
 
+### Captured row verification — PASS ✅ (2026-05-24 ~09:30 UTC)
+
+2025 per-VM shard (`mdps-defi-2025-20260524-091405.parquet`) — 27 `captured` rows:
+
+- venue=`UNISWAP_V3` (chain suffix stripped correctly ✓)
+- chain=`ETHEREUM` ✓
+- data_type=`swaps_ohlcv_15s`, `swaps_ohlcv_15m` ✓
+- Zero `SCHEMA_VALIDATION_FAILED` ✓
+
+Schema is now fully correct. 2024+ processing is currently `0/0` because MTDS raw DEX tick data for 2024+ hasn't been
+collected yet (MTDS DeFi backfill VM needs relaunch).
+
 ### Still pending (slot-4)
 
-- **Captured row verification**: after 091405 VMs produce data (~30min), spot-check `swaps_ohlcv_15s` parquets for
-  UNISWAP_V3-ETHEREUM pool shards and verify `captured` rows appear in per-VM shards.
 - MTDS DeFi backfill relaunch (mtds-backfill-defi VM): `resolve_bucket_name env=` bug was fixed at MTDS@22dcada6;
   tarball needs rebuild + relaunch. Issue: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md`.
 - All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN.
