@@ -200,8 +200,11 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `launch-mtds-dex-swaps-backfill-vm.sh` (deployment-service@29bb074). Launched `mtds-dex-swaps-backfill` RUNNING
       (asia-northeast1-c, e2-standard-4) with `UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22` +
       `MTDS_TARBALL_SHA=ef195e57d2cbecd0af7a02e702b0659c185e8dc3`.
-- [ ] **T+10 verify mtds-dex-swaps-backfill (3rd launch)** — confirm RUNNING + correct op + no `tick-data` error +
-      writing to `market-data-tick-defi-prd-central-element-323112`
+- [x] **T+10 verify mtds-dex-swaps-backfill (3rd launch) PASSED** (2026-05-24): VM RUNNING. Confirmed:
+      `--operation collect-dex-swaps --mode batch --asset-group DEFI --start-date 2026-01-25 --end-date 2026-05-23`.
+      Writing to `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/`. No BucketNamingError.
+      2026-01-27: 21,695 rows (BALANCER/CURVE/SUSHISWAP writing; UNISWAP_V3/PANCAKESWAP/AERODROME 0 — subgraph missing).
+      ManifestWriter updating per-VM shard. UTL_TARBALL_SHA=e51699c8025cfebc + MTDS_TARBALL_SHA=ef195e57d2cb confirmed.
 - [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-*` for 2026-01-25+; then
       reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
