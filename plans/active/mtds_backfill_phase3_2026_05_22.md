@@ -196,10 +196,22 @@ IS that plan.
       collect-lending-indices (AAVEV3/Compound). T+10: startup script exit 0, Python PID running, no OOM. In progress as
       of 23:50 UTC. See `plans/active/issues/defi_market_data_staleness_2026_05_24.md` for root cause (no recurring DeFi
       collection schedule).
+- [x] ✅ [CODE] P0. **MTDS-3.2.C-GapFill-BugFix** — **Root cause fix: UTL NotFound exception not caught in
+      `load_pool_metadata_for_date()`** (slot-7 2026-05-25 UTC). All UniV3-schema venues (UNISWAP_V3 × 5 chains,
+      PANCAKESWAP_V3 × 3, AERODROME_V3, CAMELOT_V3, SUSHISWAP_V3 × 3) recorded `attempted_failed` with error
+      `"404 GET https"` during first run. Root cause: `_instruments_metadata.py` only caught
+      `FileNotFoundError`/`OSError` but UTL `StorageClient.download_bytes()` raises
+      `google.api_core.exceptions.NotFound` for missing GCS blobs. Fix: added broad `except Exception` clause detecting
+      404/NotFound/No-such-object patterns → returns `None` so handler falls back to TheGraph subgraph discovery. Test
+      added: `test_load_pool_metadata_returns_none_on_gcs_notfound_exception`. QG: 22 unit tests pass.
+      market-tick-data-service@f9a6527d. Tarball rebuilt 2026-05-24T23:29:12Z. VM `mtds-dex-swaps-backfill` relaunched
+      2026-05-25 UTC (2026-01-25→2026-05-25) with fixed tarball to retry 715 `attempted_failed` UniV3 rows. 2026-05-25
+      slot-7.
 - [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN for 2026-01-24→2026-05-24 per DeFi
       venue. Success criteria: (1) all 3 VMs exit_code=0 + TERMINATED; (2) dex-swaps prd manifest: UNISWAPV2/V3/V4
-      continuous 2026-01-25→2026-05-24; (3) lst-rates prd manifest: LIDO/ETHERFI continuous 2026-01-24→2026-05-24; (4)
-      lending-indices prd manifest: AAVEV3 continuous 2026-01-24→2026-05-24. **Pending VM completion.**
+      continuous 2026-01-25→2026-05-25; (3) lst-rates prd manifest: LIDO/ETHERFI continuous 2026-01-24→2026-05-24; (4)
+      lending-indices prd manifest: AAVEV3 continuous 2026-01-24→2026-05-24. **`mtds-dex-swaps-backfill` relaunched with
+      fix (2026-05-25) — pending completion.**
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
