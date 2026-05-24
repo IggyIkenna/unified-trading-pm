@@ -312,3 +312,51 @@ Source: `plans/active/issues/mtds_defi_dex_swaps_2026_gap_2026_05_23.md`
 write to MDPS processed_candles. The DEX 2026 gap will produce honest SRZ rows which is correct behavior.
 
 — slot-4 / 2026-05-23 audit
+
+---
+
+## 2026-05-24 (session 1) — [slot-4 → slot-1 main] MDPS DeFi chain-column fix + 085204 VMs launched
+
+**Plan refs**: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md` ·
+`plans/epics/mtds_mdps_master.md` (MDPS-3.3.DeFi-V verify gate)
+
+### Root cause 3 fixed — chain column injection ✅
+
+083200 VMs (cb3d11b tarball) still produced 0 captured rows with SCHEMA_VALIDATION_FAILED.
+
+Diagnosis: `_infer_chain()` correctly infers `"ETHEREUM"` from `UNISWAP_V2-ETHEREUM` venue token and sets
+`partition_path=.../chain=ETHEREUM`. But `_inject_schema_contract_columns()` did NOT inject `chain` column into
+`candles_df` before passing to `_utl_write_chunk`. Legacy UNISWAP_V2 subgraph ticks have no explicit `chain` column →
+`CandleOutput.to_dataframe()` drops it → UTL partition/df mismatch → SCHEMA_VALIDATION_FAILED.
+
+Fix: MDPS@6fe0f01 — extend `_inject_schema_contract_columns(chain: str = "")` to backfill column when absent; add
+`chain: str = ""` to `CandleStreamingWriteContext`; both callers updated. QG: 0 type errors, 2 pre-existing test
+failures (unrelated to fix, confirmed by baseline check).
+
+### MDPS DeFi SRZ cleanup — COMPLETE ✅
+
+14,572 SOURCE_RETURNED_ZERO rows deleted from defi tick bucket (task btph0xc3j). All 11 per-VM shards +
+availability_index re-uploaded. Blocks on re-run cleared.
+
+### Tarballs rebuilt + 085204 VMs relaunched ✅
+
+Rebuilt DEFI asset group tarballs (MDPS@6fe0f01 included). 083200 VMs stopped. 5 new sharded VMs launched
+(run-ts=20260524-085204, all RUNNING at T+2min verify):
+
+| VM                             | Range                  | Status  |
+| ------------------------------ | ---------------------- | ------- |
+| mdps-defi-2022-20260524-085204 | 2022-11-01..2022-12-31 | RUNNING |
+| mdps-defi-2023-20260524-085204 | 2023-01-01..2023-12-31 | RUNNING |
+| mdps-defi-2024-20260524-085204 | 2024-01-01..2024-12-31 | RUNNING |
+| mdps-defi-2025-20260524-085204 | 2025-01-01..2025-12-31 | RUNNING |
+| mdps-defi-2026-20260524-085204 | 2026-01-01..2026-05-24 | RUNNING |
+
+### Still pending (slot-4)
+
+- **Captured row verification**: after 085204 VMs produce data (~30min), spot-check `swaps_ohlcv_15s` parquets for
+  UNISWAP_V3-ETHEREUM pool shards and verify `captured` rows appear in per-VM shards.
+- MTDS DeFi backfill relaunch (mtds-backfill-defi VM): `resolve_bucket_name env=` bug was fixed at MTDS@22dcada6;
+  tarball needs rebuild + relaunch. Issue: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md`.
+- All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN.
+
+— slot-4 / 2026-05-24
