@@ -245,7 +245,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [x] ✅ P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher — alerting-service@215fad8 | RecoveryVerifier + 14 unit tests | QG green
-- [ ] P0.11 incident_persister.py — append-only JSONL → GCS
+- [x] ✅ P0.11 incident_persister.py — append-only JSONL → GCS — alerting-service@1191b5c | IncidentPersister + 14 unit tests | QG green
 - [ ] P0.12-P0.14 router.py refactor + ImmediateSev0Override evaluator +
       AUTO_ACTION_SUCCEEDED→RECOVERY_VERIFICATION_STARTED wiring (pair-review with Harsh required)
 - [ ] P0.15-P0.23 Phase 4 DART ack-queue widget + Phase 5 per-service recovery callbacks + Phase 6 smoke / game-day
