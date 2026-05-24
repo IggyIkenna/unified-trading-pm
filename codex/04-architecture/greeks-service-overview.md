@@ -166,6 +166,30 @@ prefix maps to the same PricingLedger sink bucket in both lifecycles. T+10min po
 
 ---
 
+## Boundary vs features-service volatility
+
+features-service `volatility` computes ATM IV, skew, term-structure, and second-order greeks from processed option chain
+candles. Its `greeks_block` validity check depends on a `delta` column in those candles — currently sourced from
+venue-provided marks (often absent for DeFi options, unreliable for illiquid TradFi strikes).
+
+**Authoritative boundary (Phase 3+):** greeks-service is the single source of truth for all greek columns, including
+`option_delta`. features-service MUST consume `option_delta` from the PricingLedger SSOT rather than re-deriving from
+venue marks or running its own BSM. This avoids:
+
+- Greek divergence between greeks-service and features-service (different IV sources, different models)
+- Silent None greeks for DeFi options (Lyra/Aevo/Dopex not yet configured, but design must be forward-compatible)
+- Latency coupling: features-service waiting on venue greeks rather than reading PricingLedger
+
+**Consumer pattern (features-service):** read PricingLedger rows for the relevant `asset_group` + `date`, join on
+`asset_canonical_id` (= `instrument_id`), take `option_delta` from the latest `event_type=MARK_UPDATE` row before the
+features window close. Fall back to `None` if no row exists (emit `empty_confirmed` for that shard's `greeks_block`).
+
+**Status (2026-05-24):** kernel + handler + batch backfill wired in greeks-service. features-service PricingLedger
+reader and greeks_block join are pending (plan Phase 3 CODE P0 — BLOCKED-SCHEMA: requires `underlying_spot` field in
+`MarkUpdateMessage` for TradFi IV fitting before features-service consumption fully closes the gap).
+
+---
+
 ## Cross-references
 
 - `codex/04-architecture/global-ledger-architecture.md` — PricingLedger SSOT this service writes into; greeks-service is
