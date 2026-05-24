@@ -116,8 +116,12 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       formula from the design item. Decimal arithmetic; no float drift. — market-tick-data-service@1762f1aa
       (derived/**init**.py + dividend_yield_compute.py; CorporateActionRecord dataclass + compute_dividend_yield pure
       fn; TTM sum / spot_price formula; None for non-equity)
-- [ ] [CODE] P0. Wire `dividend_yield` into MTDS `MARK_UPDATE` row emission via UAC `LedgerRow.dividend_yield` field
+- [x] ✅ [CODE] P0. Wire `dividend_yield` into MTDS `MARK_UPDATE` row emission via UAC `LedgerRow.dividend_yield` field
       (shipped in `unified-api-contracts@709e9aff` — verify before merge). Equities/ETFs only; crypto paths emit `None`.
+      — market-tick-data-service@71a47f78 (MarkUpdatePublisher + encode_mark_update: dividend_yield field always
+      included in MARK_UPDATE Pub/Sub payload; default=None via NoOpEnricher; non-None for equities/ETFs via
+      MarkUpdateEnricher.get_dividend_yield() hook — hook ready, IS corporate action enricher wires in Phase 1
+      follow-up)
 - [x] ✅ [TEST] P0. Unit tests: SPY 2024-Q4 dividend stream → assert annualised yield matches expected ~1.3% within
       tolerance; AAPL with quarterly cadence; a no-dividend equity (TSLA) emits `None`. Backtest fixture in
       `tests/derived/test_dividend_yield.py`. — market-tick-data-service@1762f1aa
@@ -143,8 +147,11 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       column in IS `lst_rates` parquet stays untouched (SSOT invariant — enforced by integration test). —
       market-tick-data-service@1762f1aa (derived/rebase_rate_compute.py; LstSnapshot dataclass + compute_rebase_rate
       pure fn; elapsed guard + degenerate-rate guard; None for non-positive interval)
-- [ ] [CODE] P0. Wire `rebase_rate` into `PricingLedger.MARK_UPDATE` row emission via UAC `LedgerRow.rebase_rate` field
-      (shipped 2026-05-23 in the same UAC commit as `dividend_yield`). LST/LRT only; non-LST emits `None`.
+- [x] ✅ [CODE] P0. Wire `rebase_rate` into `PricingLedger.MARK_UPDATE` row emission via UAC `LedgerRow.rebase_rate`
+      field (shipped 2026-05-23 in the same UAC commit as `dividend_yield`). LST/LRT only; non-LST emits `None`. —
+      market-tick-data-service@71a47f78 (MarkUpdatePublisher + encode_mark_update: rebase_rate field always included in
+      MARK_UPDATE Pub/Sub payload; default=None via NoOpEnricher; non-None for LST/LRT via
+      MarkUpdateEnricher.get_rebase_rate() hook — hook ready, IS lst_rates enricher wires in Phase 2 follow-up)
 - [x] ✅ [TEST] P0. Unit tests: stETH 24h snapshot pair (known 2024-12-15 → 2024-12-16) → assert delta matches known
       daily rebase (~0.00018 within tolerance); rETH and cbETH equivalents; non-LST asset (USDC) emits `None`.
       Integration test: IS `lst_rates.exchange_rate` cumulative column unchanged after derivation runs. —
