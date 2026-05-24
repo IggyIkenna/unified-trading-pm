@@ -246,8 +246,7 @@ kill-switch) + rollback
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector calls them; endpoints pending per-service)
-- [ ] Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` (template —
-      extend existing plan-hygiene)
+- [x] ✅ Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` — wired into run_hygiene_sweep.sh as hard check; validates owner/cadence/verifier/last_executed on all 22 runbooks
 - [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped)
 
 **Cross-references**:
