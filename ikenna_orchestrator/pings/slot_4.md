@@ -351,9 +351,33 @@ Rebuilt DEFI asset group tarballs (MDPS@6fe0f01 included). 083200 VMs stopped. 5
 | mdps-defi-2025-20260524-085204 | 2025-01-01..2025-12-31 | RUNNING |
 | mdps-defi-2026-20260524-085204 | 2026-01-01..2026-05-24 | RUNNING |
 
+### Fourth MDPS DeFi bug: venue mismatch in partition_path ✅ (2026-05-24 ~09:xx UTC)
+
+085204 VMs still failed: `SCHEMA_VALIDATION_FAILED` — venue mismatch. UTL partition validator strips chain suffix from
+instrument_id's first colon-segment (`UNISWAP_V2-ETHEREUM` → `UNISWAP_V2`) but partition_path declared
+`venue=UNISWAP_V2-ETHEREUM`. Chain is already in separate `chain=ETHEREUM` key — venue segment must be chain-free.
+
+**Fix**: `_strip_chain_from_venue(venue, chain)` helper in `canonical_writer.py`, guarded with
+`asset_group == MarketAssetGroup.DEFI` so CeFi venues like `BINANCE-FUTURES` are untouched. Also merged concurrent
+`category=` → `asset_group=` fix from upstream commit `8d4639f`. MDPS@555ade1. QG: 2 pre-existing failures, 0 new.
+Basedpyright: 0 errors.
+
+Tarballs rebuilt (MDPS@555ade1 confirmed in manifest). 085204 VMs stopped. 5 new VMs relaunched (run-ts=20260524-091405,
+all RUNNING at T+2min verify):
+
+| VM                             | Range                  | Status  |
+| ------------------------------ | ---------------------- | ------- |
+| mdps-defi-2022-20260524-091405 | 2022-11-01..2022-12-31 | RUNNING |
+| mdps-defi-2023-20260524-091405 | 2023-01-01..2023-12-31 | RUNNING |
+| mdps-defi-2024-20260524-091405 | 2024-01-01..2024-12-31 | RUNNING |
+| mdps-defi-2025-20260524-091405 | 2025-01-01..2025-12-31 | RUNNING |
+| mdps-defi-2026-20260524-091405 | 2026-01-01..2026-05-24 | RUNNING |
+
+Plan ref: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md` § Fourth schema gap.
+
 ### Still pending (slot-4)
 
-- **Captured row verification**: after 085204 VMs produce data (~30min), spot-check `swaps_ohlcv_15s` parquets for
+- **Captured row verification**: after 091405 VMs produce data (~30min), spot-check `swaps_ohlcv_15s` parquets for
   UNISWAP_V3-ETHEREUM pool shards and verify `captured` rows appear in per-VM shards.
 - MTDS DeFi backfill relaunch (mtds-backfill-defi VM): `resolve_bucket_name env=` bug was fixed at MTDS@22dcada6;
   tarball needs rebuild + relaunch. Issue: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md`.

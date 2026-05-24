@@ -103,6 +103,22 @@ raised `SCHEMA_VALIDATION_FAILED`.
 **Fix shipped**: MDPS@6fe0f01 — extend `_inject_schema_contract_columns(chain: str = "")` to backfill the column when
 absent; add `chain: str = ""` field to `CandleStreamingWriteContext`; both callers updated.
 
+## Fourth schema gap — found 2026-05-24 (venue mismatch in partition_path)
+
+085204 VMs (6fe0f01 tarball) still produced 0 captured rows — all `SCHEMA_VALIDATION_FAILED`.
+
+**Root cause**: `partition_path` used `venue=UNISWAP_V2-ETHEREUM` (full token with chain suffix). UTL's partition
+consistency validator derives the venue from each row's instrument_id by stripping the chain suffix
+(`UNISWAP_V2-ETHEREUM` → `UNISWAP_V2`). Chain is already captured separately as `chain=ETHEREUM` partition key. Mismatch
+→ `SCHEMA_VALIDATION_FAILED` on every DeFi pool shard.
+
+Also: incoming commit `8d4639f` changed `category=` → `asset_group=` in partition_path — merged into this fix.
+
+**Fix shipped**: MDPS@555ade1 — add `_strip_chain_from_venue(venue, chain)` helper; guard with
+`asset_group == MarketAssetGroup.DEFI` so CeFi venues like `BINANCE-FUTURES` are untouched; both `write_candle_parquet`
+and `open_candle_streaming_writer` updated for both `partition_path` and `row_key["venue"]`. QG green (2 pre-existing
+failures unchanged, 0 new). Basedpyright 0 errors.
+
 ## Status
 
 - 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
@@ -112,12 +128,15 @@ absent; add `chain: str = ""` field to `CandleStreamingWriteContext`; both calle
 - 2026-05-24 ~08:32 UTC — 083200 VMs launched (2024+2025 only) — still failed (chain column bug).
 - 2026-05-24 ~08:44 UTC — MDPS@6fe0f01 chain column injection fix shipped. QG green (0 type errors).
 - 2026-05-24 ~08:47 UTC — Tarballs rebuilt with DEFI asset group (MDPS@6fe0f01 included). 083200 VMs stopped.
-- 2026-05-24 ~08:52 UTC — **5 VMs relaunched** (run-ts=20260524-085204, ALL years):
-  - `mdps-defi-2022-20260524-085204` → 2022-11-01..2022-12-31 RUNNING ✓
-  - `mdps-defi-2023-20260524-085204` → 2023-01-01..2023-12-31 RUNNING ✓
-  - `mdps-defi-2024-20260524-085204` → 2024-01-01..2024-12-31 RUNNING ✓
-  - `mdps-defi-2025-20260524-085204` → 2025-01-01..2025-12-31 RUNNING ✓
-  - `mdps-defi-2026-20260524-085204` → 2026-01-01..2026-05-24 RUNNING ✓
+- 2026-05-24 ~08:52 UTC — **5 VMs relaunched** (run-ts=20260524-085204, ALL years) — failed (venue mismatch bug).
+- 2026-05-24 ~09:08 UTC — MDPS@555ade1 venue mismatch fix shipped. QG green (2 pre-existing, 0 new). 085204 VMs stopped.
+- 2026-05-24 ~09:09 UTC — Tarballs rebuilt (MDPS@555ade1 + asset_group= fix included).
+- 2026-05-24 ~09:14 UTC — **5 VMs relaunched** (run-ts=20260524-091405, ALL years):
+  - `mdps-defi-2022-20260524-091405` → 2022-11-01..2022-12-31 RUNNING ✓
+  - `mdps-defi-2023-20260524-091405` → 2023-01-01..2023-12-31 RUNNING ✓
+  - `mdps-defi-2024-20260524-091405` → 2024-01-01..2024-12-31 RUNNING ✓
+  - `mdps-defi-2025-20260524-091405` → 2025-01-01..2025-12-31 RUNNING ✓
+  - `mdps-defi-2026-20260524-091405` → 2026-01-01..2026-05-24 RUNNING ✓
 - **Next**: verify captured rows appear in per-VM shards within ~30 min of VM start.
 
 ## Plan refs
