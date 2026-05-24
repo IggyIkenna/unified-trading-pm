@@ -79,7 +79,11 @@ before Phase 7 grows the v<8 debt.
       24h old, skipping per-VM shard fallback entirely. setup-data-pipeline-vm.sh reads + exports the env var.
       deployment-service@ba76803. GCS setup script uploaded. Terminated OKX 220853 VM; Binance already TERMINATED.
       Relaunched: `cefi-binance-futures-2024-light-20260524-223425` + `cefi-okx-swap-2024-light-20260524-223425`. Both
-      e2-highmem-8 + MANIFEST_CONSOLIDATED_STALENESS_SEC=86400. 2026-05-24 slot-7.
+      e2-highmem-8 + MANIFEST_CONSOLIDATED_STALENESS_SEC=86400. 2026-05-24 slot-7. **T+10 CONFIRMED 2026-05-24 21:39 UTC
+      (slot-7)**: Both VMs past critical 7-min mark. Binance: 895,122 rows for 2024-01-01, peak_rss=24.4 GB (38% of 64
+      GB). OKX: 1,344,926 rows for 2024-01-01, peak_rss=24.4 GB. Both manifest shards updated (54 + 45 entries).
+      ManifestReader using consolidated index (24 GB) vs per-VM shards (41 GB) — fix confirmed. VMs actively streaming
+      2024 dates. deployment-service@ba76803.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
