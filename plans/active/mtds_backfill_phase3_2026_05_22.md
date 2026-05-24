@@ -57,11 +57,13 @@ before Phase 7 grows the v<8 debt.
       MANIFEST OOM. CeFi consolidated manifest (36 MB compressed, 1682 per-VM shards) expands to ~12-13 GB in pandas
       memory during `read_availability_index` at startup — far exceeds e2-highmem-2 (16 GB). CPU spike to 148% during
       PyArrow parquet parse triggers `PROCESS_CPU_SATURATED` at T+5s; by T+35s memory hits 79.8% (12.7 GB); Linux OOM
-      killer fires at ~T+41s. Disk was fine on both old (4.47 GB free) and new (46 GB free) VMs — previous disk diagnosis
-      was wrong. Fix: bumped MACHINE_TYPE_LIGHT from e2-highmem-2 (16 GB) to e2-highmem-4 (32 GB) for all non-heavy
-      CeFi/TradFi shards (DERIBIT already on 32 GB). deployment-service@170c64e. GCS uploaded. Relaunched:
+      killer fires at ~T+41s. Disk was fine on both old (4.47 GB free) and new (46 GB free) VMs — previous disk
+      diagnosis was wrong. Fix: bumped MACHINE_TYPE_LIGHT from e2-highmem-2 (16 GB) to e2-highmem-4 (32 GB) for all
+      non-heavy CeFi/TradFi shards (DERIBIT already on 32 GB). deployment-service@170c64e. GCS uploaded. Relaunched:
       `cefi-binance-futures-2024-light-20260524-211233` + `cefi-okx-swap-2024-light-20260524-211233`. Both e2-highmem-4,
-      asia-northeast1-c, VM_FORCE=false. T+10 pending. — slot-7 2026-05-24
+      asia-northeast1-c, VM_FORCE=false. **T+10 CONFIRMED 2026-05-24 20:17 UTC**: both VMs survived past T+50s without
+      rc=137; manifest loaded without OOM; actively streaming Tardis data for 2024-01-01. Fix verified. — slot-7
+      2026-05-24
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
