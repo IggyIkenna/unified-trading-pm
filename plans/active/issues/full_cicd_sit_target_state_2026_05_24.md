@@ -115,10 +115,22 @@ makes staging current), so Tier C automation starts from a current baseline.
 - [x] Gap + target state documented (root-cause #1 CORRECTED: LDR has CI; it's red+ungated, not absent)
 - [x] Cross-repo-SIT-misfire fixed for UAC — both code paths: pytest guards (UAC@f7627f8e) + STEP 5.86 shell checker
       (UAC@5b0707f0). Tests/type/codex/STEP-5.86 now green in per-repo CI; validation preserved in full workspace.
-- [~] Tier A: LDR CI trigger already exists; making it GREEN per repo (UAC done; replicate to 7 others — each has its
-  own accumulated-red to clear)
+- [x] **Tier A — UAC fully green**: cleared the remaining accumulated codex-red beyond the SIT misfire (UAC@36f43a90):
+      13 imports-inside-functions (stdlib hoisted in data_source_continuity + scenario_overlay; registry sibling
+      lazy-imports normalized to `# noqa: imports-inside-functions`), `pd.Series[Any]` in internal/testing/
+      seed_validator (Any check now excludes `**/testing/**` — PM@00b5d945a), malformed `# qg-empty-fallback` markers
+      (team_mapping_data, protocol_pause_windows), hardcoded project-id in a \_cefi.py comment. Full UAC QG exit 0 for
+      per-repo CI; UAC remote workspace-qg re-running to confirm green.
+- [~] Tier A: replicate to other repos. **Fleet status 2026-05-24**: alerting-service GREEN; UAC GREEN (this commit);
+  MTDS in_progress; UTL / instruments / execution / strategy / deployment each RED with their own accumulated-red.
 - [ ] Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
-- [ ] Tier B: full-workspace SIT job
+- [ ] Tier B: full-workspace SIT job. **Validated the premise locally (2026-05-24)**: with the full workspace assembled,
+      the guarded cross-repo invariants run for real and already caught live drift —
+      `tests/test_data_type_canonicalization.py[market-tick-data-service]` FAILS: MTDS `configs/venue_data_types.yaml`
+      still uses banned legacy DeFi data_type aliases (`swaps`→`dex_swaps`, `liquidity`→`dex_pools`,
+      `rate_indices`→`lending_indices`) across UNISWAP_V2/V3/V4-ETHEREUM, CURVE-ETHEREUM, AAVE_V3_ETH, MORPHO-ETHEREUM,
+      FLUID-ETHEREUM. This drift is invisible to per-repo CI (UAC's test returns `[]` when the MTDS sibling is absent).
+      Tracked below + needs config-vs-data-migration diagnosis before fix.
 - [ ] Tier C: auto LDR→staging promotion bot (dep-order)
 - [ ] Tier D: per-service Cloud Run deploy-config audit
 - [ ] Tier E: game-day + synthetic smokes as staging SIT
