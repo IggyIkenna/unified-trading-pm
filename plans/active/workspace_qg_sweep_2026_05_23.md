@@ -168,8 +168,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       vm-cross-cutting]
       — batch-live-reconciliation-service@2531e845 | QG exit 0 (177s) | added ruff==0.15.0, pip-audit, bandit to deps
 
-- [ ] [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
+      — greeks-service@2413055b | QG exit 0 (144s) | add tests+setup.sh, remove UAC dep, fix codex violations (manifest, STEP5.34, setup_events)
 
 ---
 
