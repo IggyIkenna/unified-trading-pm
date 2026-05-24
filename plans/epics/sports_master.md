@@ -308,12 +308,13 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 #### Phase 4 — Writegate Phase 2.C unblock + verify (PENDING — migration must complete first)
 
-- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT
-      2026-05-07: BLOCKED-ON Phase 2B GCS migration completion]
+- [x] ✅ [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. Run:
+      instruments_service SPORTS FOOTYSTATS 2024-11-15 --force — 4 prediction rows + 4 odds rows written, 0 errors, NO
+      LookaheadBiasError. Phase 2B migration unblocked this gate. 2026-05-24.
 - [x] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. — sports
       rename Phase 3+4 shipped (2026-05-22) — instruments-service@fc7b306, UTL@94e43e8c
-- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07:
-      BLOCKED-ON sports_master:Phase 3] **DEFERRED** — pending migration complete
+- [x] ✅ [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. Q&A 14 updated: HIGH-2
+      fully shipped; all 4 phases complete. 2026-05-24.
 - [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4 + Phase 2B
       migration completion]
 

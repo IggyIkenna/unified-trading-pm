@@ -207,9 +207,9 @@ OKX only); `ARBITRAGE_PRICE_DISPERSION` uses all 6 for cross-venue funding sprea
 Stream E correction 2026-05-07. TradFi / Sports / Prediction stay batch-only this cycle — but their ML readiness ladders
 progress in parallel so the \_next* archetypes after DeFi launch quickly.
 
-**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated
-to AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests /
-ML / strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
+**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated to
+AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests / ML
+/ strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
 team can seamlessly switch any deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. _Not every byte gets
 migrated_ (waste of API quota when GCS already has it) — only what's needed for the DeFi proof.
 
@@ -298,11 +298,11 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit
 
 This is the deliverable that ties the audit to action. For each high-leverage change area, flag whether the codex SSOT,
-the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this
-plan, before agents start writing code in the affected area.**
+the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this plan,
+before agents start writing code in the affected area.**
 
-| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                              | Resolve via                                                                                                                                                               |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                             | Resolve via                                                                                                                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                                                                              | ⚠ Confirmed — `availability_manifest_v4_…` is the only stale active plan; self-tagged superseded         | Archive the v4 plan via work-stream G; doc already canonical v6 with v4/v5 hive-key fallback                                                                              |
 | Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06`                                                       | ⚠ Confirmed — `writegate_…` declared umbrella; other two are children but not yet `parent:`-tagged       | Re-tag children with `parent: writegate_honest_coverage_endtoend_2026_05_06` (work-stream G); surface only umbrella                                                       |
 | Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                                                                        | ⚠ Doc partially describes target; VM launchers GCP-only in code                                          | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                                                                    |
@@ -383,7 +383,7 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 | Plans missing `name` field                      |    11 |
 | Plans missing `last_updated` (95%)              |   140 |
 | `superseded_by` set but plan still in `active/` |    18 |
-| Filename ↔ `name` field mismatch               |     1 |
+| Filename ↔ `name` field mismatch                |     1 |
 | YAML errors                                     |     2 |
 
 **Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
@@ -393,14 +393,14 @@ from filename + body, populate `locked_by: live-defi-rollout` for any that are m
 
 | Service                   | Active plans touching it |
 | ------------------------- | -----------------------: |
-| instruments-service       |                **35** ⚠ |
-| deployment-service        |                    16 ⚠ |
-| strategy-service          |                    16 ⚠ |
-| deployment-api            |                    16 ⚠ |
-| unified-trading-system-ui |                    12 ⚠ |
-| execution-service         |                    12 ⚠ |
-| deployment-ui             |                    12 ⚠ |
-| market-tick-data-service  |                    10 ⚠ |
+| instruments-service       |                 **35** ⚠ |
+| deployment-service        |                     16 ⚠ |
+| strategy-service          |                     16 ⚠ |
+| deployment-api            |                     16 ⚠ |
+| unified-trading-system-ui |                     12 ⚠ |
+| execution-service         |                     12 ⚠ |
+| deployment-ui             |                     12 ⚠ |
+| market-tick-data-service  |                     10 ⚠ |
 
 Eight services with >5 active plans = real overlap risk. The `instruments-service` 35-plan count is the clearest
 consolidation target post-cutover.
@@ -496,16 +496,18 @@ consolidation target post-cutover.
     for `2025-11-13 → today` would clobber Yahoo-served rows. CLAUDE.md "VIX 15m source layering" SSOT + MTDS `4a2747a`
     are canonical: Barchart preload ends 2025-11-12; post-cutoff is Yahoo Finance rolling 60-day window;
     `2025-11-13 → today−60d` is the honest gap (`empty_confirmed`). Phase 3b dropped.
-14. ✓ **Sports `data_available_at` → `available_at` rename + on-disk migration.** UTL `assert_available_at_present` +
-    every other service uses canonical `available_at`. Sports adapters + `InstrumentsWriteGate.DEFAULT_AS_OF_COLUMNS`
-    rename to `available_at` + one-time GCS column rename in existing sports parquets (per "manifest migration not
-    fallback" rule). Required before writegate Phase 2.C / `LookaheadBiasError` strict-mode flip — otherwise sports
-    pipeline hard-fails on every record_captured call. **Dedicated plan shipped 2026-05-07**:
-    [`plans/active/sports_data_available_at_rename_2026_05_07.plan.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
-    Pre-audit complete (35+ callsites enumerated across UAC / UTL / instruments-service / features-sports). 4-phase DAG:
-    Phase 0 audit (shipped) → Phase 1 migration script (next concrete agent task) → Phase 2 operator-runs-migration
-    (same-region GCE VM, paused FWD/BACKFILL VMs) → Phase 3 atomic 4-repo source rename → Phase 4 writegate Phase 2.C
-    unblock + verify.
+14. ✓ **Sports `data_available_at` → `available_at` rename + on-disk migration — HIGH-2 FULLY SHIPPED 2026-05-24.** UTL
+    `assert_available_at_present` + every other service uses canonical `available_at`. Sports adapters +
+    `InstrumentsWriteGate.DEFAULT_AS_OF_COLUMNS` renamed to `available_at` + one-time GCS column rename in existing
+    sports parquets (per "manifest migration not fallback" rule). **All 4 phases complete:**
+    - Phase 0 (audit): shipped 2026-05-07.
+    - Phase 1 (migration script): shipped 2026-05-07.
+    - Phase 2 (GCS column rename on VM): base bucket migrated 2026-05-22; PRD bucket migrated 2026-05-23 on
+      `instr-backfill-sports` VM — 527,462 files renamed A_renamed, 0 errors. Spot-check 5 dates 2019–2025:
+      `available_at=True data_available_at=False`.
+    - Phase 3 (4-repo source rename): instruments-service@fc7b306, UTL@94e43e8c (2026-05-22).
+    - Phase 4 (smoke-run + LookaheadBiasError gate): FOOTYSTATS 2024-11-15 --force — 4 rows written, NO
+      LookaheadBiasError (2026-05-24). **Writegate Phase 2.C unblocked.**
 15. ✓ **`_create_full_day_empty_output` delete (writegate Phase 2.A) — Option A: audit consumers, delete iff safe.**
     Empty/closed days use `record_empty(capture_status=empty_confirmed)` per existing SSOT — placeholder rows are
     double-SSOT. Downstream services NaN-handle their own way (forward-fill, masking, ML missing-data tolerance).
@@ -779,31 +781,34 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
       path templates + features-calendar adoption). Not on May-23 critical path. *(folded from
       consolidated*operational_validation_2026_04_15)*
 - [x] ✅ [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch —
-      deployment-service@4990d21. CloudRunBackend wired into `_dispatch_services`; lazy cache per job_name;
+      deployment-service@4990d21. CloudRunBackend wired into `_dispatch_services`; lazy cache per job*name;
       cloud_run_job_name field added to all 16 service entries in sports-trigger-tiers.yaml. Previously: (PARTIALLY_DONE
       — local subprocess works, cloud placeholder). Confirmed at deployment-service
       `deployment_service/sports_trigger_periodic.py` + `sports_trigger_scheduler.py` + `sports_trigger_state.py`;
-      cloud-dispatch shim is the named gap. _(folded from consolidated_operational_validation_2026_04_15)_
+      cloud-dispatch shim is the named gap. *(folded from consolidated*operational_validation_2026_04_15)*
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
       `cefi_master` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
       deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
-      BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A sports adapters
-      at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule E2E run
-      when sports_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master` (umbrella
-      for all DEFI work — 46 open items as of 2026-05-23). Operator to schedule when defi_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
-      BLOCKED-ON `tradfi_master`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0; `DATABENTO_API_KEY`
-      credential gate (operator action). _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
-      `predictions_master` (canonical question_group migration in flight as of 2026-05-23). Operator to schedule when ready. _(folded from
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler,
+      feature validation). BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A
+      sports adapters at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule
+      E2E run when sports*master completes. *(folded from consolidated*operational_validation_2026_04_15)*
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON
+      `defi_master` (umbrella for all DEFI work — 46 open items as of 2026-05-23). Operator to schedule when defi*master
+      completes. *(folded from consolidated*operational_validation_2026_04_15)*
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs
+      `DATABENTO_API_KEY`). BLOCKED-ON `tradfi_master`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0;
+      `DATABENTO_API_KEY` credential gate (operator action). _(folded from
       consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
-      preceding per-cluster e2e tests (all deferred-blocked above). _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day).
+      BLOCKED-ON `predictions_master` (canonical question*group migration in flight as of 2026-05-23). Operator to
+      schedule when ready. *(folded from consolidated*operational_validation_2026_04_15)*
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date).
+      BLOCKED-ON the 5 preceding per-cluster e2e tests (all deferred-blocked above). _(folded from
+      consolidated_operational_validation_2026_04_15)_
 
 **Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
 
@@ -879,13 +884,14 @@ per-target upgrade path.
         **shipped UAC@069a223 2026-05-14**
 
 - **Item 18 (2-year batch backtest run)**:
-  - [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
-        May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
+  - [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode
+        end-to-end ≥3 continuous days for the May-23 lead pair (`carry_staked_basis` +
+        `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
         [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md))
         against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
-        from paper_vs_live_workflow_maturity_2026_05_08)_  **DEFERRED 2026-05-23**: requires dedicated 3-day session;
+        from paper_vs_live_workflow_maturity_2026_05_08)_ **DEFERRED 2026-05-23**: requires dedicated 3-day session;
         operator to assign dedicated slot/VM. Blocked-escalated BLK-ffaf42f1.
   - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
         / paper-shippable / backtest-only / stub) for every archetype in
@@ -912,11 +918,11 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
-  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
-        paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
-        codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
-        batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
-        closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
+        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
+        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live
+        since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
+        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped batch-live-reconciliation-service@48f12ce 2026-05-15**
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
@@ -1597,12 +1603,12 @@ a Group F item; ownership routes to the named agent/tab.
       already wired (5 hits). `grep "AlertCode" alerting-service/` now returns hits in all 3 rule files. Gates Group F
       item 22 ("Trading guardrails — alerting-service rules cover live data-freshness + P&L deviation + position
       breaches"). Slot 5 / 2026-05-17.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
-      tuple-typed required_inputs / (c) namespaced names. **Recommendation: (c) namespaced names** — use existing
-      `data_type: str` in InputReq with sports uppercase strings (e.g. `"FIXTURES"`), zero structural change to InputReq.
-      See BLK-6e61d26f for operator confirmation. Owner: operator + Agent 2 (writegate / consumer-migration). Already filed in
-      [`features_and_ml_master`](../epics/features_and_ml_master.md) Phase 1A.3; this todo is the cross-tab visibility
-      marker against May-23 critical path.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) —
+      pick (a) mapping table / (b) tuple-typed required_inputs / (c) namespaced names. **Recommendation: (c) namespaced
+      names** — use existing `data_type: str` in InputReq with sports uppercase strings (e.g. `"FIXTURES"`), zero
+      structural change to InputReq. See BLK-6e61d26f for operator confirmation. Owner: operator + Agent 2 (writegate /
+      consumer-migration). Already filed in [`features_and_ml_master`](../epics/features_and_ml_master.md) Phase 1A.3;
+      this todo is the cross-tab visibility marker against May-23 critical path.
 - [ ] [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
       Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the DeFi side per
       `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end. Owner: Agent 4
