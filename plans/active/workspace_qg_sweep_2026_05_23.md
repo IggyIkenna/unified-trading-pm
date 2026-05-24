@@ -134,8 +134,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       green. [vm: vm-ml]
       — mdps@cb3d11b | QG exit 0 (91s) | socket-blocked conftest, correct DeFi venue name, stale _FakeWriter mock (reason= kwarg)
 
-- [ ] [AGENT] P2. **execution-service QG green** — 20 ruff errors.
+- [x] ✅ [AGENT] P2. **execution-service QG green** — 20 ruff errors.
       `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core]
+      — execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
 
 - [ ] [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
       ruff/pyright surface violations only, NO changes to `engine/strategies/v2/`, `engine/allocator/`, collateral,
