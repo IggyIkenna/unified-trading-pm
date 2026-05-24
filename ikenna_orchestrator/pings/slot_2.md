@@ -1907,3 +1907,27 @@ Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1),
 
 Plan refs: `writegate_honest_coverage_endtoend_2026_05_06.md` (cefi re-scan P1),
 `plans/active/issues/utl_touch_canonical_mtime_copy_blob_silent_fail_2026_05_23.md`
+
+---
+
+## [slot-2] 2026-05-24 — DeFi MDPS VMs relaunched with all 11 fixes
+
+[2026-05-24 ~08:32 UTC] Operator directed tarball rebuild + MDPS DeFi relaunch. All done.
+
+**Tarball rebuild**: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`
+
+- UAC@8cb9036f (includes POOL→pool fix + chain/4h/swap_count/volume_quote_usd fix)
+- UTL@ad99ec7a (includes asset_class→asset_group freshness_monitor fix)
+- MDPS@cb3d11b (includes DefiSwapAdapter chain/swap_count/volume_quote_usd + \_infer_chain fallback)
+
+**VMs launched** (run-ts=20260524-083200):
+
+- `mdps-defi-2024-20260524-083200` → 2024-01-01..2024-12-31 RUNNING
+- `mdps-defi-2025-20260524-083200` → 2025-01-01..2025-12-31 RUNNING
+
+T+10min verification scheduled (08:45 UTC wakeup). When VMs complete:
+
+- Spot-check `swaps_ohlcv_15s` for UNISWAP_V3-ETHEREUM pool shards in 2024-07 + 2025-02.
+- Flip MDPS-3.3.DeFi-V plan item on confirmed capture.
+
+Plan refs: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`
