@@ -124,13 +124,19 @@ makes staging current), so Tier C automation starts from a current baseline.
 - [~] Tier A: replicate to other repos. **Fleet status 2026-05-24**: alerting-service GREEN; UAC GREEN (this commit);
   MTDS in_progress; UTL / instruments / execution / strategy / deployment each RED with their own accumulated-red.
 - [ ] Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
-- [ ] Tier B: full-workspace SIT job. **Validated the premise locally (2026-05-24)**: with the full workspace assembled,
-      the guarded cross-repo invariants run for real and already caught live drift —
-      `tests/test_data_type_canonicalization.py[market-tick-data-service]` FAILS: MTDS `configs/venue_data_types.yaml`
-      still uses banned legacy DeFi data_type aliases (`swaps`→`dex_swaps`, `liquidity`→`dex_pools`,
-      `rate_indices`→`lending_indices`) across UNISWAP_V2/V3/V4-ETHEREUM, CURVE-ETHEREUM, AAVE_V3_ETH, MORPHO-ETHEREUM,
-      FLUID-ETHEREUM. This drift is invisible to per-repo CI (UAC's test returns `[]` when the MTDS sibling is absent).
-      Tracked below + needs config-vs-data-migration diagnosis before fix.
+- [~] Tier B: full-workspace SIT job **BUILT** (system-integration-tests@f881579):
+  `scripts/run_cross_repo_invariants.sh` (asserts full workspace assembled; runs the guarded invariants for real; fails
+  on any failure OR skip) + `.github/workflows/full-workspace-sit.yml` (clones all 31 active repos from manifest
+  topologicalOrder, nightly 03:00 UTC + workflow_dispatch + repository_dispatch[full-workspace-sit] for the Tier C
+  on-promotion hook). Runner **validated locally**: feature-DAG SSOT + cassette↔consumer (pytest + STEP 5.86) PASS with
+  siblings present (proving they no longer skip); data_type canonicalization correctly RED on the MTDS drift. Remaining:
+  confirm the workflow on a live trigger; wire the promotion-gate (Tier C) to read its result. **Validated the premise
+  locally (2026-05-24)**: with the full workspace assembled, the guarded cross-repo invariants run for real and already
+  caught live drift — `tests/test_data_type_canonicalization.py[market-tick-data-service]` FAILS: MTDS
+  `configs/venue_data_types.yaml` still uses banned legacy DeFi data_type aliases (`swaps`→`dex_swaps`,
+  `liquidity`→`dex_pools`, `rate_indices`→`lending_indices`) across UNISWAP_V2/V3/V4-ETHEREUM, CURVE-ETHEREUM,
+  AAVE_V3_ETH, MORPHO-ETHEREUM, FLUID-ETHEREUM. This drift is invisible to per-repo CI (UAC's test returns `[]` when the
+  MTDS sibling is absent). Tracked below + needs config-vs-data-migration diagnosis before fix.
 - [ ] Tier C: auto LDR→staging promotion bot (dep-order)
 - [ ] Tier D: per-service Cloud Run deploy-config audit
 - [ ] Tier E: game-day + synthetic smokes as staging SIT
