@@ -159,18 +159,21 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 
 ## Phase 3 — greeks-service ⟷ MTDS handshake (greeks-service)
 
-- [ ] [CODE] P0. `greeks-service` subscribes to MTDS `mark_update` Pub/Sub topic — consumer config in
+- [x] ✅ [CODE] P0. `greeks-service` subscribes to MTDS `mark_update` Pub/Sub topic — consumer config in
       `greeks-service/greeks_service/config.py` via `UnifiedCloudConfig` (no `os.getenv()`). Backpressure + idempotency
-      via UTL event helpers.
-- [ ] [CODE] P0. `greeks-service` reads IS `InstrumentRecord` via IS HTTP API (strike/expiry/right/multiplier/
+      via UTL event helpers. — greeks-service@b0b702d (MarkUpdateSubscriber + MarkUpdateMessage; pull-based, explicit
+      ack)
+- [x] ✅ [CODE] P0. `greeks-service` reads IS `InstrumentRecord` via IS HTTP API (strike/expiry/right/multiplier/
       exercise_style/asset_class) at startup + on `InstrumentRecord` change events. Cached locally with TTL + hot-reload
-      via `ApiKeyReloader` pattern.
-- [ ] [CODE] P0. `greeks-service` writes back to `PricingLedger.MARK_UPDATE` rows with option_delta/gamma/theta/vega/rho
-      populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@709e9aff`). Same `event_id` keyed back to the
-      originating MTDS event.
-- [ ] [CODE] P0. `greeks-service` writes carry-family columns (funding_rate/lending_rate/borrow_rate/staking_apy/
+      via `ApiKeyReloader` pattern. — greeks-service@b0b702d (InstrumentReader; TTL cache 5m; mock_fetcher injection)
+- [x] ✅ [CODE] P0. `greeks-service` writes back to `PricingLedger.MARK_UPDATE` rows with
+      option_delta/gamma/theta/vega/rho populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@709e9aff`).
+      Same `event_id` keyed back to the originating MTDS event. — greeks-service@b0b702d (PricingLedgerWriter +
+      MarkUpdateHandler; hive-partitioned GCS parquet)
+- [x] ✅ [CODE] P0. `greeks-service` writes carry-family columns (funding_rate/lending_rate/borrow_rate/staking_apy/
       dividend_yield/rebase_rate) reading from MTDS rate feeds (funding/lending/borrow) + IS LST data
-      (staking_apy/rebase_rate) + MTDS-derived `dividend_yield`. None-handling per Phase 1/2 conventions.
+      (staking_apy/rebase_rate) + MTDS-derived `dividend_yield`. None-handling per Phase 1/2 conventions. —
+      greeks-service@b0b702d (passthrough in \_build_ledger_row; None for non-applicable instruments)
 - [x] ✅ [CODE] P0. Black-Scholes greek computation kernel for vanilla European/American options — pure-Decimal
       implementation in `greeks-service/greeks_service/kernels/black_scholes.py`. Extensibility hook (`GreekKernel`
       protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan. — greeks-service@7bd9282 (87 tests,
@@ -197,9 +200,9 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       vanilla call → `greeks-service` receives → writes back `PricingLedger.MARK_UPDATE` → strategy-service
       `pnl_reconciliation_engine` reads the greek column. Uses GCP PubSub + Storage emulators
       (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`).
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` in `greeks-service` + cross-repo regression in `market-tick-data-service`
-      (writer-side cassette parity) + `strategy-service` (consumer-side `pnl_series` route smoke) — all green before
-      merge.
+- [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` in `greeks-service` — green. Cross-repo regression in
+      `market-tick-data-service` (writer-side cassette parity) + `strategy-service` (consumer-side `pnl_series` route
+      smoke) — pending. — greeks-service@b0b702d (50 checks green, 0 violations)
 
 ## Full-execution criterion (per `Plans Run To Actual Completion` HARD RULE)
 
