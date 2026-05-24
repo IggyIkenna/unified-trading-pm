@@ -245,11 +245,13 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       venue+chain), accumulating ~2.5GB/day of unreleased state by day 12. 2026-02-06 had 9 files (normal) but VM was at
       limit. Final captured: 12 dates (2026-01-25→2026-02-05), 224 manifest rows.
 - [x] **Diagnosed + launched fix VM with e2-highmem-8** (2026-05-24 16:26 UTC): `mdps-defi-2026-20260524-182633` RUNNING
-      asia-northeast1-c e2-highmem-8 (64GB RAM) with `MDPS_TARBALL_SHA=3799c8def919` + `UTL_TARBALL_SHA=e51699c8`. Will
-      skip 2026-01-25→2026-02-05 (already in 165353 shard), process 2026-02-06→2026-05-23 (107 remaining days).
-- [ ] **T+10 verify mdps-defi-2026-20260524-182633** — confirm RUNNING, e2-highmem-8, no OOM, processing 2026-02-06
-      dates with non-zero candles.
-- [ ] **Monitor 182633 to completion** — verify all 107 remaining dex_swaps dates captured (2026-02-06→2026-05-23).
+      asia-northeast1-c e2-highmem-8 (64GB RAM) with `MDPS_TARBALL_SHA=3799c8def919` + `UTL_TARBALL_SHA=e51699c8`. Note:
+      per-VM shard isolation means 182633 re-processes 2026-01-25→2026-02-05 (does not skip 165353 shard); both VMs
+      write captured rows for those 12 dates — consolidator unions shards, duplicate rows are idempotent.
+- [x] **T+10 verify mdps-defi-2026-20260524-182633** (2026-05-24 ~17:33 UTC): RUNNING, e2-highmem-8 confirmed.
+      Processing 18/18 succeeded per 18-file date (~8.5s each), no memory backpressure. By 17:33 UTC: passed 2026-02-06
+      (9-file dates), no OOM. PM@067468b71.
+- [ ] **Monitor 182633 to completion** — verify all dex_swaps dates captured (2026-01-25→2026-05-23, 119 total).
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
