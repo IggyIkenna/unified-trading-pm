@@ -229,6 +229,17 @@ stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now 
   parquets in GCS, no manifest row). After all 5 VMs terminate, run:
   `rebuild_manifest_from_canonical_paths('market-data-tick-defi-central-element-323112', service_name='market-data-processing-service', prefix='processed_candles/by_date')`
   to backfill manifest entries from actual GCS parquets.
+- 2026-05-24 (session 2, slot-4 audit) — **101628 VMs RUNNING with tarball MDPS@94ef3c2** (3 commits ahead of 555ade1;
+  includes 4cc1584 CURVE fix + 209b8e8 manifest 429 fix + 94ef3c2 \_infer_chain fallback). VMs:
+  `mdps-defi-{2023..2026}-20260524-101628` all RUNNING + `mdps-defi-2022-20260524-101628` TERMINATED (2022 range is
+  short).
+- 2026-05-24 (session 2, slot-4 audit) — **Captured row verification PASS**:
+  - `mdps-defi-2024-20260524-101628` shard: 954 captured / 318 empty*confirmed, `swaps_ohlcv*\*`, venue=UNISWAP_V3 ✓
+  - `mdps-defi-2025-20260524-101628` shard: 1020 captured / 436 empty*confirmed, `swaps_ohlcv*\*`, venue=UNISWAP_V3 ✓
+  - `mdps-defi-2026-20260524-101628` shard: 1108 captured / 463 empty*confirmed, `swaps_ohlcv*\*`, venue=UNISWAP_V3 ✓
+  - Combined availability*index: 6,745 captured `swaps_ohlcv*\*` rows with chain-stripped venue names
+  - `lending_indices` / `gas_fees`: bypass types (orchestrator has no adapter); 0 captured is expected behavior
+- **RESOLVED**: All 5 MDPS DeFi schema gaps fixed. Venue mismatch fix (555ade1) confirmed in prod data.
 
 ## Plan refs
 
