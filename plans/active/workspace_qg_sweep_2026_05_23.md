@@ -161,9 +161,10 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [ ] [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
 
-- [ ] [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
+- [x] ✅ [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
       `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm:
       vm-cross-cutting]
+      — batch-live-reconciliation-service@9868410 | QG exit 0 (264s) | run_lifecycle added (STEP 5.63), 8 basedpyright errors fixed (Cloud cast + pandas Any), MAX_DURATION=500
 
 - [ ] [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
