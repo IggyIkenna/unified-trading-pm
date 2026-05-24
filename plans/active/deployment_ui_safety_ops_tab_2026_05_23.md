@@ -197,7 +197,8 @@ audit trail).
 - [x] ✅ Phase 4 P0.11 — typed-confirm-string registry (10 templates × ActionType) — alerting-service@e5c8084 | in-sync
       verified
 - [ ] Phase 4 P0.12 — unit tests (every action_type × scope combo) — needs alerting-service tests (BLK filed)
-- [ ] Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
+- [x] ✅ Phase 5 P0.13-P0.15 — Playwright e2e + game-day scenario 01
+      — P0.13 pw:L2 ✓ (4/4) ui@a6f3924c | P0.14 SafeModeActiveBanner+spec ui@6375d547 | P0.15 inject_venue_outage.sh e2e-testing@b3401e5 | P0.15 live run = [HUMAN] STAGING-INFRA-REQUIRED (line 257)
 
 **Cross-references**:
 
