@@ -189,12 +189,16 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       implementation in `greeks-service/greeks_service/kernels/black_scholes.py`. Extensibility hook (`GreekKernel`
       protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan. — greeks-service@7bd9282 (87 tests,
       85.5% coverage, QG green)
-- [ ] [CODE] P0. **CeFi + TradFi options coverage (the TradFi gap)** — greeks-service computes greeks for CeFi
-      (Deribit) + TradFi (CME ES options), NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks only** —
-      OPRA does not distribute greeks, so greeks-service IS the only TradFi greeks source. greeks-service fits an IV per
-      real strike from marks + computes BS greeks. **DeFi options are OUT OF SCOPE** — Lyra/Aevo/Dopex are NOT
+- [x] ✅ PARTIAL [CODE] P0. **CeFi + TradFi options coverage (the TradFi gap)** — greeks-service computes greeks for
+      CeFi (Deribit) + TradFi (CME ES options), NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks
+      only** — OPRA does not distribute greeks, so greeks-service IS the only TradFi greeks source. greeks-service fits
+      an IV per real strike from marks + computes BS greeks. **DeFi options are OUT OF SCOPE** — Lyra/Aevo/Dopex are NOT
       configured venues in our system (verified 2026-05-23). If on-chain options venues are added later, greeks-service
-      extends to them then.
+      extends to them then. — greeks-service@3337231 (implied_vol_from_price bisection IV solver in kernel, 9
+      round-trip/edge-case tests; handler TradFi path BLOCKED-SCHEMA: MarkUpdateMessage.mark_price is the underlying
+      spot — IV fitting requires a separate option_mark_price or underlying_spot field not yet in wire format; see
+      handler comment. CeFi path (Deribit IV direct) is fully wired and tested. REMAINING: add underlying_spot to
+      MarkUpdateMessage schema + wire handler fallback path.)
 - [x] ✅ DEFERRED-BLOCKED [CODE] P0. **Own-greeks vs venue-greeks sanity check (CeFi)** — where venue greeks DO exist
       (Deribit via `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks` — delta/gamma/theta/vega/iv),
       greeks-service computes its OWN greeks AND cross-checks against venue-provided. Divergence beyond ε → emit
