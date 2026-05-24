@@ -175,8 +175,63 @@ Valid usages of "cross-client" in this codebase:
 
 ---
 
+## PricingLedger carry-rate columns — `dividend_yield` and `rebase_rate`
+
+These columns are populated by MTDS on `MARK_UPDATE` rows only. All other ledger families emit `None`.
+
+### `dividend_yield` — annualised continuous dividend yield
+
+**Applicable instruments**: `AssetClass.SPOT_TOKEN` (equity-backed only), `AssetClass.ETF`, `AssetClass.OPTION`
+(underlying equity/ETF — used for BSM greek computation). `None` for crypto, futures, perps, sports, prediction.
+
+**Formula (operator-ACK'd 2026-05-24 — trailing-12-month sum)**:
+
+```
+q = sum(regular_dividends.amount, ex_date in (as_of - 365d, as_of]) / spot_price
+```
+
+Where `regular_dividends` = all `DividendRecord` rows with `dividend_type != SPECIAL` within the trailing 12-month
+window. Computed from IS `DividendRecord` history via IS HTTP API; stored as an annualised continuous rate
+(dimensionless, e.g. `0.0132` = 1.32% p.a.).
+
+**Rationale for TTM-sum over alternatives**:
+
+| Option | Formula | Why rejected |
+| --- | --- | --- |
+| Cadence extrapolation | `latest_div × N / spot` | Single data point; corrupted by special dividends; cadence change = wrong multiplier for up to N months |
+| **TTM sum (chosen)** | `sum(divs[-365d]) / spot` | Market standard; handles irregular cadence; naturally decays on suspension; no frequency inference |
+| Forward estimate | analyst consensus / spot | Requires Bloomberg/FactSet — not in our pipeline; `BLOCKED-CREDENTIALS` until provisioned |
+
+**Edge cases**:
+
+| Case | Handling |
+| --- | --- |
+| `dividend_type = SPECIAL` | Excluded from TTM sum — capital-return event, not recurring income |
+| Spin-off / rights issue | Excluded — use `StockSplitRecord` for price adjustment only; not a `DividendRecord` |
+| Suspended dividends | Yield naturally decays to 0 as 12-month window passes — no special handling |
+| New listing / IPO (<12 months since first dividend) | Annualise from available history: `q = sum(divs_available) / spot × (365 / days_of_history)`. Minimum 30 days; emit `None` if `days_of_history < 30` |
+| No dividends in TTM window | Emit `0.0` (not `None`) — instrument IS equity-class, yield IS zero |
+| Non-equity spot token (crypto) | Emit `None` — not applicable |
+| DRIP / reinvestment scheme | Treat as regular dividend at ex-date spot price — same as cash dividend |
+
+**Data source**: `InstrumentRecord.dividend_records: list[DividendRecord]` from IS HTTP API, field `dividend_type`.
+
+---
+
+### `rebase_rate` — LST/LRT rebase delta
+
+**Applicable instruments**: `AssetClass.SPOT_TOKEN` with `is_rebasing=True` (stETH, rETH, cbETH, mSOL, JitoSOL and
+equivalents). `None` for all others.
+
+Formula spec: Phase 2 DESIGN item — **pending operator-ACK on delta-computation strategy** (per-snapshot vs
+daily-checkpoint; MTDS-derived vs IS-write-time). See `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md`
+§ Phase 2.
+
+---
+
 ## Changelog
 
+- 2026-05-24: added PricingLedger carry-rate columns section — `dividend_yield` annualisation spec (TTM-sum formula, edge-case table) + `rebase_rate` placeholder. Per `plans/active/pricing_ledger_carry_rates_mtds_2026_06_01.md` Phase 1 DESIGN.
 - 2026-05-23: expanded to 37 EventTypes + 17 AssetClasses per
   `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md` Phase 2. Added 11 instruction events (SWAP,
   SUPPLY, WITHDRAW, WRAP, UNWRAP, EARLY_EXERCISE, CASH_OUT, DEPOSIT, WITHDRAWAL_TO_BANK, CUSTODY_MOVE, FX_CONVERSION) +

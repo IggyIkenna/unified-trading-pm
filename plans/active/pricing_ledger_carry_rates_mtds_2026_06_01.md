@@ -102,9 +102,10 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 
 ## Phase 1 — `dividend_yield` derived rate computation (MTDS)
 
-- [ ] [DESIGN] P0. Annualisation formula spec — TTM dividend × frequency vs trailing-12-month sum vs forward-estimate.
+- [x] ✅ [DESIGN] P0. Annualisation formula spec — TTM dividend × frequency vs trailing-12-month sum vs forward-estimate.
       Quant/operator decision item; capture rationale + edge cases (special dividends, spin-offs, suspended dividends).
       Document in `codex/02-data/ledger-event-taxonomy.md` under `dividend_yield` row.
+      **Decision: TTM sum** (`sum(regular_divs[-365d]) / spot`). Rationale + edge-case table in codex. — unified-trading-pm (see Changelog 2026-05-24)
 - [ ] [CODE] P0. Add `dividend_yield` derivation in `market-tick-data-service/market_tick_data_service/derived/` — reads
       IS `CanonicalCorporateAction` via IS HTTP API; computes annualised rate per `instrument_id` using the formula from
       the design item. Decimal arithmetic; no float drift.
