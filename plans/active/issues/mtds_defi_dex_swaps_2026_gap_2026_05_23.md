@@ -185,6 +185,9 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `tick-data` not in `_KIND_ALIASES` or `cloud-providers.yaml`. ALL MTDS DeFi write handlers affected. Fix: added
       `"tick-data": "market-data"` to `_KIND_ALIASES` in UTL `bucket_naming.py`. UTL@e51699c8. Resolves to
       `market-data-tick-defi-prd-central-element-323112` (verified). Pushed to LDR.
+- [x] **Complementary fix — dex_swaps_handler now uses correct kind directly** (2026-05-24): MTDS@ef195e57 changes
+      `kind="tick-data"` → `kind="market-data"` in `dex_swaps_handler.py:334`. UTL alias handles it either way; handler
+      now uses the canonical kind name. QG: 7 pre-existing failures unchanged. Pushed to LDR.
 - [x] **Rebuild tarballs + relaunch with SHA pins** (2026-05-24): rebuilt tarballs (UTL@e51699c8 clean in tarball;
       uv.lock foreign-dirty, --allow-dirty-tarball). Relaunched `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c,
       e2-standard-4) with `UTL_TARBALL_SHA=e51699c8025c17bdbd1ef8e1e5a62fd5bc7a0e65` +
