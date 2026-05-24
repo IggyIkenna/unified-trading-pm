@@ -207,10 +207,12 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       `greeks-compute-` registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` with
       `lifecycle_class=EPHEMERAL_BATCH`. Reads historical MTDS `mark_update` parquets; writes historical
       `PricingLedger.MARK_UPDATE` rows.
-- [ ] [TEST] P0. End-to-end smoke (`tests/integration/test_greeks_handshake.py`): MTDS emits `mark_update` for a known
-      vanilla call → `greeks-service` receives → writes back `PricingLedger.MARK_UPDATE` → strategy-service
+- [x] ✅ [TEST] P0. End-to-end smoke (`tests/integration/test_greeks_handshake.py`): MTDS emits `mark_update` for a
+      known vanilla call → `greeks-service` receives → writes back `PricingLedger.MARK_UPDATE` → strategy-service
       `pnl_reconciliation_engine` reads the greek column. Uses GCP PubSub + Storage emulators
-      (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`).
+      (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). — greeks-service@5b6cf7c
+      (tests/integration/test_greeks_handshake.py: 4 tests — vanilla call (greeks+lineage), perp (funding_rate
+      passthrough), LST (rebase_rate), equity ETF (dividend_yield); 132 total green)
 - [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` in `greeks-service` — green. Cross-repo regression in
       `market-tick-data-service` (writer-side cassette parity) + `strategy-service` (consumer-side `pnl_series` route
       smoke) — pending. — greeks-service@b0b702d (50 checks green, 0 violations)
