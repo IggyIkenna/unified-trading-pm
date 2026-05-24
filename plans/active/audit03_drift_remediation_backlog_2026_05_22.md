@@ -64,8 +64,10 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `# noqa: gs-uri`-exempt display URIs built from an already-resolved bucket (`resolve_bucket_name` wired by
       `strategy_execution_contract_remediation_2026_05_20.md` todo 4a ✅). **This item is folded into that plan
       (best-of-both) — see its AUDIT-03 follow-up todo. Tracked there, not here.**
-- [ ] [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
-      (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule.
+- [x] ✅ [AGENT] P1. **F-37a** — Change `category="defi"` → `asset_group="defi"` in `record_captured()` calls
+      (`hedge_ratio_writer.py:142`, `decision_context_writer.py:155`) per the asset-group vocabulary rule. —
+      strategy-service@90fe9c27 (fix(carry_staked_basis): F-37a category→asset_group + STEP-5.77 mode-seam noqa,
+      backfilled 2026-05-24)
 - [x] ✅ [AGENT] P2. **F-30** — Remove Infura (a removed provider) from the resolvable RPC fallback chain
       (`config/chain_config.yaml` 6 chains + `rpc_fallback.py:179`). — execution-service@42447632a
       (refactor(rpc-fallback): remove infura from all chain fallback lists, backfilled 2026-05-24)
@@ -87,30 +89,38 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 4 — reporting + audit-trail durability
 
-- [ ] [AGENT] P1. **F-03** — Wire a strategy-audit GCS writer (today strategy decisions go to local
-      `events/strategy_decisions.jsonl` only via `DomainEventLogger`; no GCS persist). Acked PRE_CUTOVER.
-- [ ] [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
+- [x] ✅ [AGENT] P1. **F-03** — Wire a strategy-audit GCS writer (today strategy decisions go to local
+      `events/strategy_decisions.jsonl` only via `DomainEventLogger`; no GCS persist). Acked PRE_CUTOVER. —
+      strategy-service@922cc446 (feat(logging): F-03 wire GCS audit writer for strategy decisions, backfilled
+      2026-05-24)
+- [x] ✅ [AGENT] P1. **F-05** — Provision the `audit-records` GCS bucket in terraform with object versioning +
       retention-lock (currently resolved at runtime via `resolve_bucket_name(kind="audit-records")` but never
-      provisioned).
-- [ ] [AGENT] P2. **F-04** — Align the execution-audit path layout (`audit_log.py:67`, flat
+      provisioned). — deployment-service@8b07a46 (infra(terraform): F-05 provision audit-records GCS bucket with
+      versioning + 7yr retention lock, backfilled 2026-05-24)
+- [x] ✅ [AGENT] P2. **F-04** — Align the execution-audit path layout (`audit_log.py:67`, flat
       `audit/{client_id}/{date}/{event_type}/`) with codex's events-stream layout — minor (date/ext already match; only
-      the segment layout differs).
+      the segment layout differs). — execution-service@4fcd873ec (fix(audit_log): F-04 align execution-audit GCS path to
+      codex events-stream layout, backfilled 2026-05-24)
 
 ## Theme 5 — cross-client enforcement + low-sev residuals
 
-- [ ] [AGENT] P1. **F-36 / F-23** — Either add a UAC `model_validator` to `TransferIntent` (belt-and-suspenders,
+- [x] ✅ [AGENT] P1. **F-36 / F-23** — Either add a UAC `model_validator` to `TransferIntent` (belt-and-suspenders,
       satisfies the codex "raising layer" requirement + the required test) OR reconcile the CLAUDE.md/codex "3 raising
       layers" wording to the actual mechanism (single `client_id` by construction + 1 coordinator raise at
-      `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally.
+      `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally. — PM@bc9fbc3c5 (docs(codex):
+      F-36/F-23 reconcile client-funds-isolation to actual code — 2 layers, not 3; CLAUDE.md updated to reflect actual
+      mechanism, backfilled 2026-05-24)
 - [x] ✅ [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
       `errors/defi.py:27`) for exhaustiveness guarantees. — unified-api-contracts@e8094607 (refactor(errors): convert
       DefiErrorCode plain class to StrEnum, backfilled 2026-05-24)
 - [x] ✅ [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
       RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19). — PM@e4e099b6e (MASTER_READINESS codex updated
       2026-05-24; workspace CLAUDE.md + defi-execution-overview.md already correct)
-- [ ] [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
+- [x] ✅ [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
-      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting.
+      `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting. — N/A:
+      `.extra` directories absent from workspace (verified 2026-05-24 — not present in features-service worktree,
+      already removed)
 
 ## Success criteria
 
