@@ -153,8 +153,8 @@ all service repos returns zero hits in non-test Python source.
 - [x] [SCRIPT] P0. engine/backtest/data_loader.py: `data_type == "swaps"`→`"dex_swaps"` — execution-service@c82f34825
 - [x] [SCRIPT] P0. registry/processed_data_dependencies.py: remove stale `"rate_indices": "rate_ohlcv"` alias (canonical
       `"lending_indices": "lending_ohlcv"` already present on line 31) — unified-api-contracts@954ff6d3
-- [ ] [SCRIPT] P0. domain/validation.py `DATA_TYPE_SCHEMAS`: `"swaps"`→`"dex_swaps"`, `"liquidity"`→`"dex_pools"`,
-      `"rate_indices"`→`"lending_indices"` — unified-trading-library
+- [x] [SCRIPT] P0. domain/validation.py `DATA_TYPE_SCHEMAS`: `"swaps"`→`"dex_swaps"`, `"liquidity"`→`"dex_pools"`,
+      `"rate_indices"`→`"lending_indices"` — unified-trading-library@c63bb3ca
 - [ ] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
       `SWAPS="swaps"`→`DEX_SWAPS="dex_swaps"`, `RATE_INDICES="rate_indices"`→`LENDING_INDICES="lending_indices"` —
       unified-trading-system-ui (Python-only; playwright gate does not apply)
