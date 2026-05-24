@@ -73,7 +73,10 @@ re-collects it. (Bonus drift: the trigger body uses the legacy `category` key, n
       (2026-01-25→2026-05-24, DEX swaps inc. Uniswap) - `mtds-lst-rates-20260524-225132` RUNNING (2026-01-24→2026-05-24,
       LST/LRT rates) - `mtds-lending-indices-20260524-225143` RUNNING (2026-01-24→2026-05-24, Aave V3 lending) T+10
       check pending. See `mtds_backfill_phase3_2026_05_22.md` MTDS-3.2.C-GapFill item.
-- [ ] P0: add recurring DeFi collection schedule (operator-aware infra; mirror CeFi daily with `asset_group=defi`)
+- [x] ✅ [INFRA] P0. **DeFi recurring collection schedule deployed (slot-7 2026-05-25 UTC)**:
+      `terraform apply -target=module.defi_collect_job -target=google_cloud_scheduler_job.defi_collect_cron` — 11 Cloud
+      Run Jobs (`uts-prod-mtds-collect-*`) + 11 Cloud Scheduler crons (staggered 00:00–02:05 UTC, ENABLED).
+      deployment-service@terraform. Resolves root cause (no recurring DeFi schedule — only CeFi daily was wired).
 - [ ] P0 verify gap-fill VMs complete + manifest GREEN for 2026-01-24→2026-05-24 per venue
 - [ ] Reconcile with the data_type/partition canonicalization in `mtds_defi_datatype_alias_drift_2026_05_24.md` +
       `category`→`asset_group` on the trigger
