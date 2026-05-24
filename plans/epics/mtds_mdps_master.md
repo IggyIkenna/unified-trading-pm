@@ -617,44 +617,14 @@ AI-days (class: infra)
 
 - **MDPS-3.3.CeFi + CeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: Relaunch CeFi reprocessor VM + verify NaN check; gate:
   MTDS-3.2.A-V GREEN.
-- **MDPS-3.3.DeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 195633 VMs RUNNING for 2024+2025 (SIXTH FIX MDPS@3551f7f +
-  UAC@b7407bef — slot-2 2026-05-23 ~18:56 UTC). 2022/2023/2026 terminated (0 candles expected before 2024-06; 2026 has
-  no DEX data past 2026-01-24 — MTDS gap). SEVENTH FIX: MDPS@305677e adds ORCA-SOLANA/RAYDIUM-SOLANA venue segments to
-  `_DEFI_DEX_VENUE_SEGMENTS` (slot-6 2026-05-23). **MTDS 2026 DEX gap**: CURVE/UNISWAP dex*swaps*handler stopped writing
-  after 2026-01-24 → no Ethereum DEX swap data for 2026-01-25→present; all 2026 date-cells will be
-  `empty_confirmed/SOURCE_RETURNED_ZERO`. Needs MTDS relaunch for 2026. ⚠️ **3 MTDS handler bugs fixed 2026-05-23
-  (slot-4)** (`mtds@69d694b1` + `@e86a6ad8`): (1) `dex_swaps` hardcoded `dex_pool_swaps` partition key — fixed; (2)
-  `gas_fees` null eth*feeHistory silently returned 0 — fallback now triggers; (3) `lending_indices` silently skipped on
-  missing The Graph key — now raises. **SOURCE_RETURNED_ZERO manifest cleanup in progress** (running
-  `scripts/reset_source_returned_zero_manifest.py` across all 5 buckets). **Relaunch VMs AFTER cleanup finishes.**
-  **MTDS DeFi backfill VM launched 2026-05-23 21:15 UTC** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c,
-  e2-standard-4, range 2024-01-01→2026-05-23, tarball sha 498148da includes all 3 fixes). Manifest reset complete:
-  13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket before launch. ⚠️ **EIGHTH FIX — UAC@8e1e7e58 (slot-2
-  2026-05-23)**: `lookup_contract` added lowercase fallback for `instrument_type` — raw parquets write `POOL`
-  (uppercase) but registry keys are `pool` (lowercase). Fix averts `SchemaContractNotFoundError` on every DEX pool shard
-  (`swaps_ohlcv**`candles were silently absent in 195633 batch). 195633 VMs CANNOT benefit (stale tarball). **Operator
-  action after 195633 VMs + backfill-defi VM complete**: rebuild tarballs (picks up UAC@8e1e7e58), relaunch MDPS DeFi
-  2024-2025 to backfill
-  missing`swaps*ohlcv**`candles. Issue:`plans/active/issues/mdps\*defi_swaps_ohlcv_schema_lookup_2026_05_23.md`. ⚠️
-  **NINTH/TENTH/ELEVENTH FIX — UAC@c8c93328 + MDPS@7f1a5b5 + UTL@a56c22c6 (slot-2 2026-05-23 ~22:xx UTC)**: 215530 VMs
-  (relaunched after #8) also failed with SCHEMA_VALIDATION_FAILED on all swaps_ohlcv\*\_ shards — 3 root causes: (1)
-  `DefiSwapAdapter` returned `CandleOutput` without `chain`/`swap_count`/`volume_quote_usd` required by UAC contract →
-  added fields to `CandleOutput` + adapter now populates from tick data `chain` column; (2) `_TIMEFRAMES_DEFI` lacked
-  `4h` → added; (3) `_infer_chain()` returned `""` for 3-part pool IDs → improved fallback to parse from canonical venue
-  form. ⚠️ **TWELFTH FIX — MDPS@6fe0f01 (slot-2 2026-05-24 ~08:44 UTC)**: 083200 VMs failed —
-  `_inject_schema_contract_columns` did not inject `chain` column before UTL validator when adapter returned
-  `chain_arr=None`. ⚠��� **THIRTEENTH FIX — MDPS@555ade1 (slot-2 2026-05-24 ~09:08 UTC)**: 085204 VMs failed —
-  `partition_path` used `venue=UNISWAP_V3-ETHEREUM` (chain-qualified); UTL validator strips to `UNISWAP_V3` → mismatch.
-  ⚠️ **FOURTEENTH FIX — MDPS@4cc1584 (slot-2 2026-05-24 ~08:46 UTC)**: CURVE pool tick paths lack canonical type token →
-  `_infer_instrument_type` returned `"UNKNOWN"` for all CURVE-ETHEREUM shards → `partition_mismatch`. Fixed by reading
-  `instrument_type` from `candles_df` instrument_id as fallback. ⚠️ **FIFTEENTH FIX — MDPS@209b8e8 (slot-2 2026-05-24
-  ~09:46 UTC)**: `except (OSError, ValueError)` in `write_candle_parquet` + streaming writer too narrow —
-  `google.api_core.exceptions.TooManyRequests` (GCS 429) was propagating as shard CRITICAL even when candle parquet was
-  already written. Widened to `except Exception`. ⚠️ **SIXTEENTH FIX — MDPS@94ef3c2 (2026-05-24 ~09:08 UTC)**:
-  `_infer_chain()` returned `""` for pool-address-only blob path keys. Extended with fallback reading chain from first
-  row of `candles_df` instrument_id. **CURRENT STATE (2026-05-24 ~10:44 UTC)\*\*: 100217 batch COMPLETED (2022+2023
-  auto-deleted, clean). 101628 batch RUNNING with MDPS@94ef3c2 (all 16 fixes): 2024 ~41% (~2h left), 2025 ~7% (~18h
-  left), 2026 ~59% (~1h left). Manifest reconciliation pending after all 101628 VMs terminate.
+- **MDPS-3.3.DeFi-V (P0, ✅ GREEN — 2026-05-24)**: All 16 fixes shipped; 101628 VMs TERMINATED; manifest consolidated.
+  **Verified prod state (slot-4 2026-05-24 session 2)**: 334,964 total captured rows in combined availability index;
+  22,717 `swaps_ohlcv_*` rows confirmed — UNISWAP_V3 (19,756), UNISWAP_V2 (2,190), CURVE (771); date range 2024-05-03 →
+  2026-01-24; venue field = chain-stripped (e.g. `UNISWAP_V3` not `UNISWAP_V3-ETHEREUM`) ✓. `lending_indices` +
+  `gas_fees`: bypass types — MDPS orchestrator has no adapter; 0 captured is expected by design. **MTDS 2026 DEX gap**
+  (permanent): CURVE/UNISWAP `dex_swaps` handler stopped writing after 2026-01-24 → all 2026-01-25→present cells are
+  `empty_confirmed/SOURCE_RETURNED_ZERO`. Issue plan archived:
+  `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once
