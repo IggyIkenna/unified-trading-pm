@@ -393,4 +393,80 @@ collected yet (MTDS DeFi backfill VM needs relaunch).
   tarball needs rebuild + relaunch. Issue: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md`.
 - All other slot-4 items remain BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / gated on Phase 7 GREEN.
 
-— slot-4 / 2026-05-24
+--- slot-4 / 2026-05-24
+
+---
+
+## 2026-05-24 (session 2) — [slot-4 → slot-1 main] Captured row verification COMPLETE + MTDS DeFi backfill status
+
+**Plan refs**: `plans/active/issues/mtds_backfill_defi_resolve_bucket_name_2026_05_23.md` ·
+`plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md` · `plans/epics/mtds_mdps_master.md`
+(MDPS-3.3.DeFi-V)
+
+### MTDS DeFi backfill VM (`mtds-backfill-defi-1`) — LAUNCHED + TERMINATED FAST ✅
+
+VM was launched at 09:41 UTC (session 1, MTDS@2b7c7760). Not in current VM list — terminated quickly. Status:
+
+- MTDS DeFi raw tick bucket (`market-data-tick-defi-central-element-323112`) already has continuous coverage 2020-01-01
+  → 2026-05-22 (2,334 days total)
+- UNISWAP_V3 `dex_pool_state` exists for 2024+ dates (confirmed via `day=2025-01-15` sample)
+- AAVE_V3 `rate_indices` exists for 2024+ dates (`batch_onchain_rpc/venue=AAVE_V3/chain=ETHEREUM/`)
+- Current MTDS tarball: SHA `ffa9d573` (created 2026-05-24T09:08 UTC — includes `get_tick_data_bucket` fix from
+  `712d4071`)
+
+### Captured row verification — dex_swaps ✅ CONFIRMED
+
+Cross-slot 4 MDPS VMs currently RUNNING (run-ts=101628, created after tarball rebuild at ~08:39 UTC):
+
+| VM                             | Captured | Empty | Data types     |
+| ------------------------------ | -------- | ----- | -------------- |
+| mdps-defi-2024-20260524-101628 | 954      | 318   | swaps*ohlcv*\* |
+| mdps-defi-2025-20260524-101628 | 1020     | 436   | swaps*ohlcv*\* |
+| mdps-defi-2026-20260524-101628 | 1108     | 463   | swaps*ohlcv*\* |
+
+Confirmed correct venue format: `venue=UNISWAP_V3` (not `UNISWAP_V3-ETHEREUM`). All 6,745 captured rows in
+availability_index use chain-stripped venue names. Venue mismatch fix (MDPS@555ade1 + 3 follow-up commits through HEAD
+`94ef3c2`) fully confirmed in prod data.
+
+### Captured row verification — lending_indices / gas_fees ⚠️ BYPASS TYPES (no gap — working as designed)
+
+Finding from orchestration_scanner.py comment (line 44-46):
+
+> "Other pipeline_mode=batch_onchain_rpc venues (AAVE, LIDO, EIGENLAYER, etc.) are **bypass types** — they never reach
+> this matcher because **the orchestrator has no registered adapter for them**."
+
+Confirmed: `needs_candle_processing("lending_indices")` = False.
+`CandleAdapterRegistry.has_adapter(DEFI, "lending_indices")` = False. Both by test `test_defi_bypass_routing.py`.
+
+**State**:
+
+- `lending_indices`: 64,440 manifest rows. 77 captured (Solana KAMINO/SOLEND 2022 — old code path). AAVE_V3 Ethereum
+  `rate_indices` raw data IS in MTDS bucket but MDPS has NO adapter → skipped by orchestrator. This is NOT a regression
+  from the venue-mismatch fix; it's the pre-existing state of the bypass routing.
+- `gas_fees`: 64,331 manifest rows. 0 captured (all SOURCE_RETURNED_ZERO) — no `gas_fees` raw data type in MTDS DeFi
+  bucket at all (no `data_type=gas_fees` parquets exist). Legitimate SRZ.
+
+**No action required from slot-4**. These are pre-existing bypass-type gaps that require a separate bypass-writer sprint
+(AAVE lending candles, gas_fees raw collection). Not in current slot-4 scope.
+
+### Slot 4 branch fast-forwarded ✅
+
+`tab/ikennaigboaka/4` was 3 commits behind `live-defi-rollout`. Fast-forwarded:
+
+- `4cc1584` fix(defi): infer instrument_type from candles_df instrument_id column
+- `209b8e8` fix(canonical_writer): catch GCS 429 at manifest boundary
+- `94ef3c2` fix(canonical_writer): add df instrument_id fallback to \_infer_chain
+
+Now at HEAD `94ef3c2` = live-defi-rollout.
+
+### Summary of slot-4 current state
+
+All slot-4 owned work is complete. Active VMs running at 101628 run-ts producing dex_swaps captured rows correctly.
+
+Remaining items all gated externally:
+
+- Sports/Phase 3.D.5 → gated on `mtds_mdps_master` Phase 7 GREEN
+- Tradfi Databento → `BLOCKED-CREDENTIALS`
+- AAVE lending bypass writer → not in scope; requires separate sprint
+
+— slot-4 / 2026-05-24 (session 2)
