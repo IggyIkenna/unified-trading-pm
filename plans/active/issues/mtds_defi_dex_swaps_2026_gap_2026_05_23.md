@@ -124,8 +124,21 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `mdps-defi-{2024,2025,2026}-20260524-092158` (2022/2023 already TERMINATED). Launched
       `mdps-defi-{2022-2026}-20260524-095357` with `UTL_TARBALL_SHA=18e2e0724eafc9af14516b72a97f359cfb59aa78` +
       `MDPS_TARBALL_SHA=4cc15847a76eee9b45e9d331ca10c370ecbf6aa1`. All 5 VMs RUNNING asia-northeast1-c e2-standard-8.
-- [ ] **T+10 verify 095357 VMs** — confirm RUNNING + zero partition_mismatch + instrument_type=POOL (not UNKNOWN) for
-      swaps_ohlcv shards at DEX data dates (2024-06-01+)
+- [x] **T+10 verify 095357 VMs + root-caused chain=missing bug + another slot launched 100217** (2026-05-24): 095357 VMs
+      RUNNING at T+1; at DEX data dates (2024-05-03) saw `[schema_violation] column 'chain' missing from dataframe`.
+      Root cause: `_infer_chain` steps 1-3 all fail for pool-address keys (no colons, no hyphens) — returns `""` →
+      `_inject_schema_contract_columns` skips chain injection. Passthrough fix in `live_workers.py` only works when raw
+      tick parquet has a `chain` column; `dex_pool_swaps` parquets don't. Fix: added step 4 to `_infer_chain` — parse
+      chain from `df["instrument_id"].iloc[0]` venue-token hyphen (e.g. `CURVE-ETHEREUM` → `ETHEREUM`). MDPS@94ef3c2.
+      NOTE: concurrent slot launched `mdps-defi-{2022-2026}-20260524-100217` WITHOUT SHA pin (used stale fixed-name
+      tarball `4cc1584`); these also had chain=missing error. Killed all 100217 VMs.
+- [x] **Rebuild tarballs + kill 100217 VMs + relaunch with chain fix** (2026-05-24): rebuilt MDPS tarball
+      `market-data-processing-service-code@94ef3c211d57.tar.gz` uploaded (09:08:51 UTC). Killed all 4 running 100217 VMs
+      (2022 already TERMINATED). Launched `mdps-defi-{2022-2026}-20260524-101628` with
+      `UTL_TARBALL_SHA=18e2e0724eafc9af14516b72a97f359cfb59aa78` +
+      `MDPS_TARBALL_SHA=94ef3c211d573169665a4e2caed44423744c2d3f`. All 5 VMs RUNNING asia-northeast1-c e2-standard-8.
+- [ ] **T+10 verify 101628 VMs** — confirm RUNNING + confirm `chain=ETHEREUM` (not missing) in dex_pool_swaps candle
+      writes at DEX data dates (2024-05-03+); zero schema_violation errors
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2022-2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*` for 2026 once MTDS gap investigated
 
