@@ -217,7 +217,7 @@ audit ack package).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate
+- [x] ✅ Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate — strategy-service@dc9db1d | _validate_risk_config_blocks() wired into _validate_and_cache() + load_config_from_path(); 9 new unit tests; QG 4307 passed 0 failed
 - [ ] Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer
 - [ ] Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC
       AlertCode extension
@@ -258,7 +258,7 @@ audit ack package).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 2 P0.5 strategy_service/config_loader.py wires UAC RiskThresholds validation at strategy load time
+- [x] ✅ Phase 2 P0.5 strategy_service/config_loader.py wires UAC RiskThresholds validation at strategy load time — strategy-service@dc9db1d | QG 4307 passed 0 failed
 - [ ] Phase 3 P0.6-P0.8 drawdown investigation report writer + DART viewer
 - [ ] Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport
 - [ ] Phase 5 P0.13-P0.15 venue API integration in close-all scripts (replace PLACEHOLDER logs with real order
