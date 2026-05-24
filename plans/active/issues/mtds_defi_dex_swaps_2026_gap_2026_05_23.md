@@ -251,7 +251,27 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **T+10 verify mdps-defi-2026-20260524-182633** (2026-05-24 ~17:33 UTC): RUNNING, e2-highmem-8 confirmed.
       Processing 18/18 succeeded per 18-file date (~8.5s each), no memory backpressure. By 17:33 UTC: passed 2026-02-06
       (9-file dates), no OOM. PM@067468b71.
-- [ ] **Monitor 182633 to completion** — verify all dex_swaps dates captured (2026-01-25→2026-05-23, 119 total).
+- [x] **182633 status at 19:10 UTC** (slot-7): Shard shows 1766 rows (2026-02-06 to 2026-05-11, 95 dates). Heartbeat last
+      updated 18:10:32 UTC (60+ min stale). No serial port output after 18:10. VM still RUNNING but likely done/crashed.
+      Will be killed by fixed watchdog on next tick.
+
+**Zombie watchdog fix (slot-7 2026-05-24 ~19:00 UTC)**:
+
+- [x] Root cause: `launch-vm-zombie-watchdog.sh` startup only installed google-cloud packages, not UAC. Watchdog failing
+      with `ModuleNotFoundError: No module named 'unified_api_contracts'` every 5-min tick since 2026-05-15.
+- [x] Additionally: watchdog used system Python 3.12 but UAC now requires `>=3.13,<3.14`. Fix: install Python 3.13 via
+      deadsnakes PPA, create `/opt/watchdog-venv`, install google-cloud + UAC there, run loop with venv python.
+- [x] Additional fix: `vm_zombie_watchdog.py:108` used `_b("instruments-store", "prediction")` but prediction uses flat
+      key `instruments-store-prediction` (like `_TICK_PRED`). Caused test_vm_zombie_watchdog.py collection errors.
+- [x] Fixed `scripts/recovery/` deep UTL import violations (used `.recovery` sub-path instead of top-level facade).
+- [x] deployment-service@0d592c3 + @a638b05 + @6d84b1f pushed to LDR. Old watchdog `110711` killed. 5 zombie VMs killed
+      (153512, 153530, 153711, 153729, 153747 — all had "starting" heartbeat, no manifest shard).
+- [x] New watchdog `vm-zombie-watchdog-20260524-190841` launched. RUNNING. PPA install in progress.
+
+- [ ] **T+10 verify watchdog 190841** — confirm `from unified_api_contracts import VmPrefixSpec` succeeds with venv
+      Python 3.13. First watchdog tick should kill stale 182633 VM (heartbeat >15 min stale).
+- [ ] **Assess 2026 backfill completeness** — 182633 covered 2026-02-06 to 2026-05-11 + 165353 covered 2026-01-25 to
+      2026-02-05. Missing: 2026-01-01 to 2026-01-24 and 2026-05-12 to 2026-05-24. Relaunch if needed.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
