@@ -48,9 +48,11 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
 
 ## Theme 2 — bucket / URL / vocab SSOT hardening
 
-- [ ] [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
+- [x] ✅ [AGENT] P1. **F-21** — Move hardcoded venue API URLs (Hyperliquid:84 / Aster:85 / Pacifica:101 in
       `perp_funding_handler.py`) behind the instruments-service SSOT (`get_rpc_url()` / IS-first). Graph + Tardis are
-      data-provider infra (exempt). QG STEP 5.70 should flag these.
+      data-provider infra (exempt). QG STEP 5.70 should flag these. — market-tick-data-service@f6fd280b
+      (refactor(perp_funding): source HL/Aster/Pacifica URLs from UAC registry CEFI_PERP_VENUE_API_ENDPOINTS, backfilled
+      2026-05-24)
 - [x] ✅ [AGENT] P1. **F-31** — Read SwapRouter02 + QuoterV2 addresses from UAC `registry/dex_router_addresses.py`
       instead of hardcoding them in `venues/uniswap.py:36-37` (note: `protocols/uniswap.py` does not exist — §6.1
       correction). — execution-service@98ae2116d (protocols/uniswap.py + venues/uniswap.py both wired to UAC)
