@@ -151,8 +151,8 @@ all service repos returns zero hits in non-test Python source.
 ## Phase 10 — Remaining stale names found in 2026-05-24 audit [P0]
 
 - [x] [SCRIPT] P0. engine/backtest/data_loader.py: `data_type == "swaps"`→`"dex_swaps"` — execution-service@c82f34825
-- [ ] [SCRIPT] P0. registry/processed_data_dependencies.py: remove stale `"rate_indices": "rate_ohlcv"` alias (canonical
-      `"lending_indices": "lending_ohlcv"` already present on line 31) — unified-api-contracts
+- [x] [SCRIPT] P0. registry/processed_data_dependencies.py: remove stale `"rate_indices": "rate_ohlcv"` alias (canonical
+      `"lending_indices": "lending_ohlcv"` already present on line 31) — unified-api-contracts@954ff6d3
 - [ ] [SCRIPT] P0. domain/validation.py `DATA_TYPE_SCHEMAS`: `"swaps"`→`"dex_swaps"`, `"liquidity"`→`"dex_pools"`,
       `"rate_indices"`→`"lending_indices"` — unified-trading-library
 - [ ] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
