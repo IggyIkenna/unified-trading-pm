@@ -137,8 +137,10 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       (2022 already TERMINATED). Launched `mdps-defi-{2022-2026}-20260524-101628` with
       `UTL_TARBALL_SHA=18e2e0724eafc9af14516b72a97f359cfb59aa78` +
       `MDPS_TARBALL_SHA=94ef3c211d573169665a4e2caed44423744c2d3f`. All 5 VMs RUNNING asia-northeast1-c e2-standard-8.
-- [ ] **T+10 verify 101628 VMs** — confirm RUNNING + confirm `chain=ETHEREUM` (not missing) in dex_pool_swaps candle
-      writes at DEX data dates (2024-05-03+); zero schema_violation errors
+- [x] **T+10 verify 101628 VMs** (2026-05-24): All 5 VMs RUNNING (2022 already TERMINATED — expected, minimal data).
+      2024 VM reached 2024-05-05: `dex_swaps complete: 44/44 succeeded, 12,801 candles` — zero schema_violation or
+      chain=missing errors. Chain fix MDPS@94ef3c2 confirmed working. 429 rate-limit warnings on manifest writes are
+      expected + non-fatal (shard-level isolation handles).
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2022-2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*` for 2026 once MTDS gap investigated
 
