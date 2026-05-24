@@ -148,8 +148,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 ## Layer 3 — Misc services (parallel after Layer 1, P3)
 
-- [ ] [AGENT] P3. **alerting-service QG green** — 3 ruff errors. `cd alerting-service && bash scripts/quality-gates.sh`
+- [x] ✅ [AGENT] P3. **alerting-service QG green** — 3 ruff errors. `cd alerting-service && bash scripts/quality-gates.sh`
       exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
+      — alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
 
 - [ ] [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
       `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
