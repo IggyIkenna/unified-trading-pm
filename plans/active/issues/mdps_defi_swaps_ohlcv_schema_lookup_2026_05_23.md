@@ -265,8 +265,25 @@ launch).
   denser — 340+ pools/day vs 322 in Jan, ~7 min/day observed vs 0.6 min/day in Jan):
   - `2024`: at 2024-06-28 (day 180/366, ~49%) — ~22h remaining → ETA ~11:00 UTC 2026-05-25
   - `2025`: at 2025-02-27 (day 58/365, ~16%) — ~36h remaining → ETA ~01:00 UTC 2026-05-26
-- ⚠️ **Post-VM reconciliation pending**: `rebuild_manifest_from_canonical_paths(...)` blocked until both remaining
-  101628 VMs terminate. ETA ~2026-05-26 01:00 UTC (2025 VM is bottleneck). Will run automatically when VMs complete.
+- 2026-05-24 ~15:38 UTC — **6×2 sub-year fan-out** (operator: "use 6 vm so it take 1/6 time"). Stopped 101628 2024+2025
+  VMs (TERMINATED). Launched 12 VMs (6 × 2024, 6 × 2025) with MDPS@94ef3c2 + UTL@18e2e07 SHA-pinned tarballs. Added
+  `UTL_TARBALL_SHA`/`MDPS_TARBALL_SHA` env-var pass-through to `launch-mdps-backfill-vm.sh`
+  (deployment-service@4e4660e). All 12 VMs RUNNING, confirmed processing at T+5min:
+  - `mdps-backfill-defi-main-20260524-153346` → 2024-11-01..2024-12-31 RUNNING ✓ (3812 instruments loaded)
+  - `mdps-backfill-defi-main-20260524-153429` → 2024-01-01..2024-02-29 RUNNING ✓ (processing 2024-01-24)
+  - `mdps-backfill-defi-main-20260524-153452` → 2024-03-01..2024-04-30 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153512` → 2024-05-01..2024-06-30 RUNNING ✓ (aggregating candles)
+  - `mdps-backfill-defi-main-20260524-153530` → 2024-07-01..2024-08-31 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153545` → 2024-09-01..2024-10-31 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153633` → 2025-01-01..2025-02-28 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153652` → 2025-03-01..2025-04-30 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153711` → 2025-05-01..2025-06-30 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153729` → 2025-07-01..2025-08-31 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153747` → 2025-09-01..2025-10-31 RUNNING ✓
+  - `mdps-backfill-defi-main-20260524-153809` → 2025-11-01..2025-12-31 RUNNING ✓ **ETA**: ~6h (bottleneck = densest
+    shards Nov-Dec 2024/2025 with 3800+ instruments; Q1 shards will complete in ~1h).
+- ⚠️ **Post-VM reconciliation pending**: `rebuild_manifest_from_canonical_paths(...)` blocked until all 12 VMs
+  terminate. ETA ~2026-05-24 22:00 UTC. Will run automatically when all complete.
 
 ## Plan refs
 
