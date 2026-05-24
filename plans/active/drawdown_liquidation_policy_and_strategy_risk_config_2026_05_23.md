@@ -218,7 +218,7 @@ audit ack package).
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [x] ✅ Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate — strategy-service@dc9db1d | _validate_risk_config_blocks() wired into _validate_and_cache() + load_config_from_path(); 9 new unit tests; QG 4307 passed 0 failed
-- [ ] Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer
+- [x] ✅ Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (build_report + should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx) | QG 4315 passed 0 failed
 - [x] ✅ Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC AlertCode extension — strategy-service@9acf34c (P0.9+P0.10 detectors + 40 unit tests) | uac@8cb9036 (P0.11 LiquidationInvestigationReport 16-field schema) | P0.12 already shipped uac@6f601292 | QG 4033 passed 0 failed
 - [x] ✅ Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts — strategy-service@57f620e | venue API integration + 19 tests | QG green
 - [x] ✅ Phase 6 P0.16-P0.18 — synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (TestDrawdownThresholdLadder 9 + TestDrawdownReportBuilt 2 + TestLiquidationSmokeP017 5 + TestLiquidationProximityScenario15 4) | QG green
