@@ -84,6 +84,24 @@ before Phase 7 grows the v<8 debt.
       GB). OKX: 1,344,926 rows for 2024-01-01, peak_rss=24.4 GB. Both manifest shards updated (54 + 45 entries).
       ManifestReader using consolidated index (24 GB) vs per-VM shards (41 GB) — fix confirmed. VMs actively streaming
       2024 dates. deployment-service@ba76803.
+- [x] ✅ [CODE] P0. **MTDS-3.2.A-OOM4-Fix** — **FOURTH OOM ROOT CAUSE FIXED (slot-7 2026-05-24)**:
+      `_CANONICAL_CACHE_TTL` hardcoded at 60s in `unified_trading_library/manifest_writer.py`. After day-1 streaming
+      pins 24.4 GB RSS, the 60s TTL expires during day-1→2 transition. `read_availability_index` re-reads the 172 MB
+      CeFi consolidated index (→ 41.79 GB pandas deep memory). Combined: 24.4 + 41.79 ≈ 66 GB → OOM on 64 GB VM, rc=137
+      at every date boundary. Fix: added `_resolve_canonical_cache_ttl()` in `manifest_writer.py` that reads
+      `MANIFEST_CANONICAL_CACHE_TTL_SEC` or falls back to `MANIFEST_CONSOLIDATED_STALENESS_SEC` (already 86400s on CeFi
+      launchers). `_CANONICAL_CACHE_TTL` resolved at module import time → 86400s on CeFi VMs → canonical index loaded
+      once per session. unified-trading-library@24df5426. Tarball uploaded GCS. QG: basedpyright 0 errors. 2026-05-24
+      slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-FullRelaunch** — **Full CeFi fleet relaunch (slot-7 2026-05-24 23:36 UTC)**: manifest
+      audit shows significant `attempted_failed` cells across ALL years (2020-2026) for all 9 venues — OOM root causes
+      1-4 all now fixed. Relaunched full fleet: `bash launch-cefi-sharded-backfill.sh` (no FORCE needed — all prior VMs
+      TERMINATED). 95 VMs total, MAX_CONCURRENT=15. All use new UTL tarball `24df5426` with
+      `_CANONICAL_CACHE_TTL=86400s` fix + e2-highmem-8 (64 GB) + `VM_FORCE=false` (retries only `attempted_failed`
+      cells). Launch confirmed: 30 VMs RUNNING/STAGING as of 23:48 UTC. Remaining ~65 VMs launching in background via
+      `FORCE=1` (2nd invocation picks up remaining venues as current batch completes via `_batch_guard`). Pre-relaunch
+      capture state: BINANCE-FUTURES 68.6%, BINANCE-SPOT 43.4%, BYBIT 68.2%, COINBASE-SPOT 63.9%, DERIBIT 50.4%,
+      HYPERLIQUID 32.8%, OKX-SPOT 75.7%, OKX-SWAP 61.7%, UPBIT 35.9% (worst-year 2024). 2026-05-24 slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
@@ -165,12 +183,12 @@ IS that plan.
       launched with `DEPLOYMENT_ENV=prod` (writes to `market-data-tick-defi-prd-central-element-323112`): (1)
       `mtds-dex-swaps-backfill` RUNNING — 2026-01-25→2026-05-24, collect-dex-swaps, all DEX venues inc. Uniswap
       V2/V3/V4. T+10 CONFIRMED: per-VM shard `_index/per_vm/mtds-dex-swaps-backfill.parquet` = 99.5KB (writing manifest
-      rows). 2026-05-24. (2) `mtds-lst-rates-20260524-225132` RUNNING — 2026-01-24→2026-05-24, collect-lst-rates
-      (LIDO/ETHERFI/RocketPool/cbETH). T+10: startup script exit 0, Python PID running, no OOM. 2026-05-24. (3)
-      `mtds-lending-indices-20260524-225143` RUNNING — 2026-01-24→2026-05-24, collect-lending-indices (AAVEV3/Compound).
-      T+10: startup script exit 0, Python PID running, no OOM. 2026-05-24. See
-      `plans/active/issues/defi_market_data_staleness_2026_05_24.md` for root cause (no recurring DeFi collection
-      schedule).
+      rows). 2026-05-24. (2) `mtds-lst-rates-20260524-225132` **COMPLETED exit_code=0 (21:56 UTC)** —
+      2026-01-24→2026-05-24, collect-lst-rates (LIDO/ETHERFI/RocketPool/cbETH). T+10: startup script exit 0, Python PID
+      running, no OOM. 2026-05-24. (3) `mtds-lending-indices-20260524-225143` RUNNING — 2026-01-24→2026-05-24,
+      collect-lending-indices (AAVEV3/Compound). T+10: startup script exit 0, Python PID running, no OOM. In progress as
+      of 23:50 UTC. See `plans/active/issues/defi_market_data_staleness_2026_05_24.md` for root cause (no recurring DeFi
+      collection schedule).
 - [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN for 2026-01-24→2026-05-24 per DeFi
       venue. Success criteria: (1) all 3 VMs exit_code=0 + TERMINATED; (2) dex-swaps prd manifest: UNISWAPV2/V3/V4
       continuous 2026-01-25→2026-05-24; (3) lst-rates prd manifest: LIDO/ETHERFI continuous 2026-01-24→2026-05-24; (4)
