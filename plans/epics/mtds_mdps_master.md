@@ -650,10 +650,11 @@ AI-days (class: infra)
   `instrument_type` from `candles_df` instrument_id as fallback. ⚠️ **FIFTEENTH FIX — MDPS@209b8e8 (slot-2 2026-05-24
   ~09:46 UTC)**: `except (OSError, ValueError)` in `write_candle_parquet` + streaming writer too narrow —
   `google.api_core.exceptions.TooManyRequests` (GCS 429) was propagating as shard CRITICAL even when candle parquet was
-  already written. Widened to `except Exception`. **CURRENT STATE (2026-05-24 ~10:02 UTC)\*\*: 5 VMs relaunched
-  (run-ts=20260524-100217) with MDPS@209b8e8 (all 15 fixes). 2022/2023/2024/2025/2026 RUNNING. Verify: dex_swaps bars
-  present for 2024-06+ including CURVE-ETHEREUM pools; gas_fees + lending_indices captured; manifest v8; NaN check
-  passes.
+  already written. Widened to `except Exception`. ⚠️ **SIXTEENTH FIX — MDPS@94ef3c2 (2026-05-24 ~09:08 UTC)**:
+  `_infer_chain()` returned `""` for pool-address-only blob path keys. Extended with fallback reading chain from first
+  row of `candles_df` instrument_id. **CURRENT STATE (2026-05-24 ~10:44 UTC)\*\*: 100217 batch COMPLETED (2022+2023
+  auto-deleted, clean). 101628 batch RUNNING with MDPS@94ef3c2 (all 16 fixes): 2024 ~41% (~2h left), 2025 ~7% (~18h
+  left), 2026 ~59% (~1h left). Manifest reconciliation pending after all 101628 VMs terminate.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once

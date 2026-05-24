@@ -178,6 +178,21 @@ that ran before the 092158 launch used MDPS HEAD = 555ade1 (4cc1584 wasn't commi
 non-pinned `market-data-processing-service-code.tar.gz` still pointed to 555ade1. The 092158 VMs were launched with the
 stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now HEAD) to update the non-pinned latest.
 
+## Sixth schema gap — found 2026-05-24 (\_infer_chain returns "" for pool-address-only blob keys)
+
+The 100217 batch (MDPS@209b8e8) was verified clean on 2022/2023 data — no `_infer_chain` issues surfaced. However,
+another agent identified and fixed a related gap before the 101628 batch launched.
+
+**Root cause**: `_infer_chain()` derives chain from the venue token in the blob path key (e.g. `UNISWAP_V3-ETHEREUM` →
+`ETHEREUM`). When the blob path key is a bare pool address (no venue prefix), `_infer_chain()` returns `""` → chain
+column absent from `partition_path` → validator mismatch on chain partition key.
+
+**Fix shipped**: MDPS@94ef3c2 — `_infer_chain` extended with a fallback that reads chain from the first row of
+`candles_df`'s `instrument_id` column when the blob path key yields `""`. Analogous to 4cc1584 for
+`_infer_instrument_type`. Committed 2026-05-24T09:08 UTC. No 2022/2023 failures observed (pool-address-only keys are
+more prevalent in 2024+ data). The 101628 VMs pick up this fix (tarball MDPS@94ef3c2 built before their 09:16 UTC
+launch).
+
 ## Status
 
 - 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
@@ -239,7 +254,15 @@ stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now 
   - `mdps-defi-2026-20260524-101628` shard: 1108 captured / 463 empty*confirmed, `swaps_ohlcv*\*`, venue=UNISWAP_V3 ✓
   - Combined availability*index: 6,745 captured `swaps_ohlcv*\*` rows with chain-stripped venue names
   - `lending_indices` / `gas_fees`: bypass types (orchestrator has no adapter); 0 captured is expected behavior
-- **RESOLVED**: All 5 MDPS DeFi schema gaps fixed. Venue mismatch fix (555ade1) confirmed in prod data.
+- **RESOLVED**: All 6 MDPS DeFi schema gaps fixed. 101628 VMs running with MDPS@94ef3c2 (all fixes included).
+- 2026-05-24 ~10:44 UTC — **101628 batch progress** (all RUNNING, no SCHEMA_VALIDATION_FAILED, 429 manifest writes as
+  WARNINGs per 209b8e8 fix):
+  - `2024`: processing 2024-05-28 (~41% of year — ~2h remaining)
+  - `2025`: processing 2025-01-27 (~7% of year — ~18h remaining; large pool count per day)
+  - `2026`: processing 2026-03-27 (~59% of year — ~1h remaining)
+  - `2022` / `2023`: COMPLETED (auto-deleted post-exit-code=0). No `_infer_chain` issues in 2022/2023 100217 logs.
+- ⚠️ **Post-VM reconciliation pending**: `rebuild_manifest_from_canonical_paths(...)` blocked until all 3 remaining
+  101628 VMs terminate (~18h for 2025 VM). Will run automatically when VMs complete.
 
 ## Plan refs
 
