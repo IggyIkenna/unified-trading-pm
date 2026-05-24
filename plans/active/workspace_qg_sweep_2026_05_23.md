@@ -140,11 +140,12 @@ These must complete before Layer 1 repos can be reliably type-checked.
       `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core]
       — execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
 
-- [ ] [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
+- [x] ✅ [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
       ruff/pyright surface violations only, NO changes to `engine/strategies/v2/`, `engine/allocator/`, collateral,
       liquidation, or cross-venue transfer code. `cd strategy-service && bash scripts/quality-gates.sh` exits 0. PREREQ:
       UTL QG green. Signal: `🟢 STRATEGY-LOGIC UNFREEZE` in `_agent_pings.md` before touching logic paths. [vm:
       vm-trading-core]
+      — strategy-service@721c71ec | QG exit 0 (107s) | starlette>=1.0.1, ruff fixes (E501×7, F401, N816, import pattern)
 
 ---
 
@@ -161,10 +162,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [ ] [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
 
-- [x] ✅ [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
+- [ ] [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
       `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm:
       vm-cross-cutting]
-      — batch-live-reconciliation-service@9868410 | QG exit 0 (264s) | run_lifecycle added (STEP 5.63), 8 basedpyright errors fixed (Cloud cast + pandas Any), MAX_DURATION=500
 
 - [ ] [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
