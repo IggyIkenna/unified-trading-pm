@@ -267,8 +267,10 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 3 wire emit_recovery_action() into existing service entry points (kill_switch.activate / cancel_all_orders /
-      safe_mode.enter) — pair-review with Harsh
+- [x] ✅ Phase 3 wire emit_recovery_action() into service entry points: - kill_switch.cancel_open_orders() (new central
+      entry point) — execution-service@6c23178fd - safe_mode.enter / safe_mode.exit
+      (PositionBalanceKillSwitchSubscriber) — strategy-service@f2fd5e58 - kill_switch.activate emit was pre-existing
+      (execution-service recovery_event_helper)
 - [ ] Phase 4 per-script integration tests against staging endpoints
 - [ ] Phase 5 DART Safety Ops buttons → wire to /api/safety-ops/manual-action proxy [UI] [BLOCKED-PLAYWRIGHT]
 
