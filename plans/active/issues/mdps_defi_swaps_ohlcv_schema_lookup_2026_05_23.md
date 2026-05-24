@@ -214,6 +214,15 @@ stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now 
   - `mdps-defi-2024-20260524-100217` → 2024-01-01..2024-12-31 RUNNING ✓
   - `mdps-defi-2025-20260524-100217` → 2025-01-01..2025-12-31 RUNNING ✓
   - `mdps-defi-2026-20260524-100217` → 2026-01-01..2026-05-24 RUNNING ✓
+- 2026-05-24 ~10:02 UTC — **Note**: another agent's 095357 VM batch (MDPS@4cc1584, launched ~09:53 UTC) was running
+  concurrently; stopped to avoid duplicate processing. CURVE-ETHEREUM candles from 095357 batch ARE in GCS (correct,
+  4cc1584 fix working). 100217 VMs will re-process same dates when reached (idempotent writes).
+- 2026-05-24 ~10:12 UTC — **T+10 VERIFIED**: 2025 VM at run-ts=100217 RUNNING, log dirs present, processing 2025-01-01
+  dex_swaps (322 UNISWAP_V3-ETHEREUM pools). Zero CRITICAL errors, zero SCHEMA_VALIDATION_FAILED. 429 manifest writes
+  show as WARNING (209b8e8 fix working — VM continues). 331 manifest entries written
+  (swaps_ohlcv_4h/1d/1h/15m/5m/1m/15s), 142+ UNISWAP_V3-ETHEREUM parquets written for 2025-01-01. CURVE-ETHEREUM 15s
+  candles confirmed in GCS at
+  `processed_candles/by_date/day=2025-01-03/timeframe=15s/data_type=dex_swaps/venue=CURVE-ETHEREUM/`.
 
 ## Plan refs
 
