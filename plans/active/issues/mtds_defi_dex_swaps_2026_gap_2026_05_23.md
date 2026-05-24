@@ -298,8 +298,13 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       3026 entries. MTDS@703854ba + UTL@e51699c8 confirmed from GCS log. — slot-7 2026-05-24
 - [x] ✅ **T+10 verify mdps-defi-2026-20260524-195319** — RUNNING. At 19:19 UTC processing day=2026-04-29+. Heartbeat
       sidecar writing to GCS every ~60s. Correct prd bucket confirmed. 9 files/day processed. — slot-7 2026-05-24
-- [ ] **After MTDS 2026-01→01-24 completes: relaunch MDPS for those dates** — once `mtds-dex-swaps-backfill` exits 0,
-      rerun MDPS DeFi 2026-01-01→2026-01-24 with MDPS@6c9045160577 + UTL@e51699c8.
+- [x] ✅ **MTDS dex-swaps-backfill COMPLETED** (2026-05-24 19:24 UTC): exit_code=0. 24 days processed (2026-01-01→2026-01-24).
+      Manifest shard 3171 entries. BALANCER/CURVE/SUSHISWAP data written to prd bucket. VM self-deleted. — slot-7 2026-05-24
+- [x] ✅ **Relaunched MDPS DeFi 2026-01-01→2026-01-24** (slot-7 2026-05-24 ~19:25 UTC):
+      `mdps-defi-2026-01-20260524-202532` RUNNING (asia-northeast1-c, e2-standard-8) with
+      MDPS_TARBALL_SHA=6c9045160577c79e10e6579488b4bc28e29cd17d + UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22.
+      Source bucket: market-data-tick-defi-prd-central-element-323112. T+10 pending.
+- [ ] **T+10 verify mdps-defi-2026-01-20260524-202532** — confirm processing first dates with dex_swaps candles.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 - [ ] **Final 2026 coverage verify** — after all VMs complete: check processed_candles/by_date/day=2026-01-25→2026-05-22
       for non-empty dex_swaps candle rows.
