@@ -110,8 +110,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       Ruff now clean. — deployment-service@1254b3b | ruff ✓ | NOTE: full QG type-check blocked (deployment-api not in
       slot 7 repos; venv install fails). [vm: vm-operator-ops]
 
-- [ ] [AGENT] P1. **deployment-api QG green** — 1 ruff error (auto-fixable).
+- [x] ✅ [AGENT] P1. **deployment-api QG green** — 1 ruff error (auto-fixable).
       `cd deployment-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-operator-ops]
+      — deployment-api@11ccdd9 | QG exit 0 (323s) | fixed I001 ruff, BinaryEventTrigger UTL dispatch, AssetGroup UTL export, _is_legacy_defi_venue_row regex fix, import patterns, MAX_DURATION=700
 
 - [ ] [AGENT] P1. **unified-trading-pm QG green** — 71 ruff errors (largest workspace backlog).
       `cd unified-trading-pm && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
