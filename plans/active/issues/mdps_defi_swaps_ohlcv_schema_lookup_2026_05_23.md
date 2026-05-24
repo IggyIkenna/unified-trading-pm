@@ -87,12 +87,13 @@ shards × 7 timeframes per date, all calling `manifest_writer.flush()` per shard
 
 ### Fixes shipped (2026-05-24 ~09:xx UTC)
 
-| Repo | Commit   | Change                                                                                                    |
-| ---- | -------- | --------------------------------------------------------------------------------------------------------- |
-| MDPS | 6fe0f01  | `canonical_writer.py`: inject inferred chain column into candle DataFrame before validator                |
-| MDPS | 8d4639f  | `canonical_writer.py`: use `asset_group=` not `category=` in partition_path                               |
-| MDPS | 555ade1  | `canonical_writer.py`: strip chain suffix from DeFi venue in partition_path (`_strip_chain_from_venue()`) |
-| UAC  | 954ff6d3 | `registry`: remove stale `rate_indices` alias from processed_data_dependencies                            |
+| Repo | Commit   | Change                                                                                                                                                                                                                       |
+| ---- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MDPS | 6fe0f01  | `canonical_writer.py`: inject inferred chain column into candle DataFrame before validator                                                                                                                                   |
+| MDPS | 8d4639f  | `canonical_writer.py`: use `asset_group=` not `category=` in partition_path                                                                                                                                                  |
+| MDPS | 555ade1  | `canonical_writer.py`: strip chain suffix from DeFi venue in partition_path (`_strip_chain_from_venue()`)                                                                                                                    |
+| UAC  | 954ff6d3 | `registry`: remove stale `rate_indices` alias from processed_data_dependencies                                                                                                                                               |
+| MDPS | 209b8e8  | `canonical_writer.py`: widen `except (OSError, ValueError)` → `except Exception` at manifest write boundary in `write_candle_parquet` + streaming writer; GCS `TooManyRequests` (429) no longer propagates as shard CRITICAL |
 
 **VM 083200 outcome**: both VMs TERMINATED ~15 min after start (07:48 UTC). 2024 VM processed 128 of 366 dates
 (completed Jan 1 – May 7, failed on May 8+ with new-format instrument_ids). 2025 VM processed 4 of 365 dates. The candle
@@ -156,6 +157,27 @@ Also: incoming commit `8d4639f` changed `category=` → `asset_group=` in partit
 and `open_candle_streaming_writer` updated for both `partition_path` and `row_key["venue"]`. QG green (2 pre-existing
 failures unchanged, 0 new). Basedpyright 0 errors.
 
+## Fifth schema gap — found 2026-05-24 (instrument_type=UNKNOWN for CURVE and non-canonical DEX venues)
+
+The 092158 MDPS VMs (555ade1 tarball — missing this fix) produced `partition_mismatch` errors on all `swaps_ohlcv_*`
+shards for CURVE-ETHEREUM pools.
+
+**Root cause**: `_infer_instrument_type` in `canonical_writer.py` extracts the instrument_type from the tick parquet
+blob path key tokens (e.g. `UNISWAP_V3:POOL:0x...` → `pool`). CURVE pool tick parquets use a non-canonical blob path
+structure without a colon-separated type token (e.g. `CURVE-ETHEREUM:DAI-USDC:0xbebc44...`) — `_infer_instrument_type`
+falls through to the `"UNKNOWN"` default. `partition_path` then declares `instrument_type=UNKNOWN` while UTL's validator
+reads `instrument_type=pool` from each row's instrument_id → `partition_mismatch` on all 7 timeframes for every
+CURVE-ETHEREUM pool shard.
+
+**Fix shipped**: MDPS@4cc1584 — `_infer_instrument_type` extended with a fallback that reads the `instrument_type` from
+the first row of `candles_df`'s `instrument_id` column when the blob path key yields `"UNKNOWN"`. QG green (2
+pre-existing failures, 0 new). Basedpyright clean.
+
+**Note on 092158 tarball**: the 4cc1584 SHA-pinned tarball was uploaded to GCS at 08:46:50 UTC but the tarball build
+that ran before the 092158 launch used MDPS HEAD = 555ade1 (4cc1584 wasn't committed yet at that point), so the
+non-pinned `market-data-processing-service-code.tar.gz` still pointed to 555ade1. The 092158 VMs were launched with the
+stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now HEAD) to update the non-pinned latest.
+
 ## Status
 
 - 2026-05-23 ~21:xx UTC — POOL→pool fix shipped at UAC@8e1e7e58. 195633 VMs stale tarball.
@@ -180,6 +202,18 @@ failures unchanged, 0 new). Basedpyright 0 errors.
   flooding `_index/per_vm/*.parquet`). Candle parquets written OK; manifest rows dropped for rate-limited writes. VMs
   terminated after completing. 092158 batch relaunched (ALL years) to cover remaining dates + retry 429-dropped rows.
 - 2026-05-24 ~09:22 UTC — **5 VMs relaunched** (run-ts=20260524-092158, ALL years) — RUNNING (startup, no log dirs yet).
+- 2026-05-24 ~09:46 UTC — Identified: 092158 VMs missing two fixes: (1) MDPS@4cc1584 CURVE instrument_type=UNKNOWN
+  (4cc1584 SHA-pinned tarball in GCS but non-pinned latest still at 555ade1 when 092158 launched); (2) MDPS@209b8e8
+  manifest 429 exception boundary (shipped this session). 092158 VMs (2024/2025/2026) stopped; 2022+2023 already
+  terminated (exit_code=0). Tarballs rebuilt (MDPS@209b8e8 now HEAD); non-pinned latest updated.
+- 2026-05-24 ~09:53 UTC — Tarballs rebuilt (MDPS@209b8e8 + UAC@41ff29d4c8f9 + UTL@18e2e0724eaf included). Non-pinned
+  latest `market-data-processing-service-code.tar.gz` updated to 209b8e8.
+- 2026-05-24 ~10:02 UTC — **5 VMs relaunched** (run-ts=20260524-100217, ALL years) with MDPS@209b8e8 tarball:
+  - `mdps-defi-2022-20260524-100217` → 2022-11-01..2022-12-31 RUNNING ✓
+  - `mdps-defi-2023-20260524-100217` → 2023-01-01..2023-12-31 RUNNING ✓
+  - `mdps-defi-2024-20260524-100217` → 2024-01-01..2024-12-31 RUNNING ✓
+  - `mdps-defi-2025-20260524-100217` → 2025-01-01..2025-12-31 RUNNING ✓
+  - `mdps-defi-2026-20260524-100217` → 2026-01-01..2026-05-24 RUNNING ✓
 
 ## Plan refs
 

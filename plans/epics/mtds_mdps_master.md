@@ -635,16 +635,25 @@ AI-days (class: infra)
   (`swaps_ohlcv**`candles were silently absent in 195633 batch). 195633 VMs CANNOT benefit (stale tarball). **Operator
   action after 195633 VMs + backfill-defi VM complete**: rebuild tarballs (picks up UAC@8e1e7e58), relaunch MDPS DeFi
   2024-2025 to backfill
-  missing`swaps*ohlcv**`candles. Issue:`plans/active/issues/mdps*defi_swaps_ohlcv_schema_lookup_2026_05_23.md`. ⚠️
+  missing`swaps*ohlcv**`candles. Issue:`plans/active/issues/mdps\*defi_swaps_ohlcv_schema_lookup_2026_05_23.md`. ⚠️
   **NINTH/TENTH/ELEVENTH FIX — UAC@c8c93328 + MDPS@7f1a5b5 + UTL@a56c22c6 (slot-2 2026-05-23 ~22:xx UTC)**: 215530 VMs
-  (relaunched after #8) also failed with SCHEMA_VALIDATION_FAILED on all swaps_ohlcv*\_ shards — 3 root causes: (1)
+  (relaunched after #8) also failed with SCHEMA_VALIDATION_FAILED on all swaps_ohlcv\*\_ shards — 3 root causes: (1)
   `DefiSwapAdapter` returned `CandleOutput` without `chain`/`swap_count`/`volume_quote_usd` required by UAC contract →
   added fields to `CandleOutput` + adapter now populates from tick data `chain` column; (2) `_TIMEFRAMES_DEFI` lacked
   `4h` → added; (3) `_infer_chain()` returned `""` for 3-part pool IDs → improved fallback to parse from canonical venue
-  form. 215530 VMs CANNOT benefit (stale tarball). **Operator action (READY NOW)**: rebuild tarballs (picks up all 3 new
-  fixes + 8 prior fixes), relaunch MDPS DeFi 2024-2025 full range to capture swaps*ohlcv*\* candles. Verify: dex_swaps
-  bars present for 2024-06+; gas_fees + lending_indices captured; manifest v8; NaN check passes. Then relaunch
-  mdps-defi-2026-\* MDPS VM.
+  form. ⚠️ **TWELFTH FIX — MDPS@6fe0f01 (slot-2 2026-05-24 ~08:44 UTC)**: 083200 VMs failed —
+  `_inject_schema_contract_columns` did not inject `chain` column before UTL validator when adapter returned
+  `chain_arr=None`. ⚠��� **THIRTEENTH FIX — MDPS@555ade1 (slot-2 2026-05-24 ~09:08 UTC)**: 085204 VMs failed —
+  `partition_path` used `venue=UNISWAP_V3-ETHEREUM` (chain-qualified); UTL validator strips to `UNISWAP_V3` → mismatch.
+  ⚠️ **FOURTEENTH FIX — MDPS@4cc1584 (slot-2 2026-05-24 ~08:46 UTC)**: CURVE pool tick paths lack canonical type token →
+  `_infer_instrument_type` returned `"UNKNOWN"` for all CURVE-ETHEREUM shards → `partition_mismatch`. Fixed by reading
+  `instrument_type` from `candles_df` instrument_id as fallback. ⚠️ **FIFTEENTH FIX — MDPS@209b8e8 (slot-2 2026-05-24
+  ~09:46 UTC)**: `except (OSError, ValueError)` in `write_candle_parquet` + streaming writer too narrow —
+  `google.api_core.exceptions.TooManyRequests` (GCS 429) was propagating as shard CRITICAL even when candle parquet was
+  already written. Widened to `except Exception`. **CURRENT STATE (2026-05-24 ~10:02 UTC)\*\*: 5 VMs relaunched
+  (run-ts=20260524-100217) with MDPS@209b8e8 (all 15 fixes). 2022/2023/2024/2025/2026 RUNNING. Verify: dex_swaps bars
+  present for 2024-06+ including CURVE-ETHEREUM pools; gas_fees + lending_indices captured; manifest v8; NaN check
+  passes.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once
