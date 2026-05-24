@@ -213,9 +213,11 @@ IS that plan.
       both now also catch the UTL NotFound (404) and fall through to their static fallbacks. Fixes
       `LstRatesHandler attempted_failed` on 2026-05-23/24 (instruments-store-defi has no LIDO-ETHEREUM parquets for
       those dates). market-tick-data-service@36c9aac7. 2026-05-25 slot-7.
-- [ ] P0. **MTDS-3.2.C-GapFill-LstRetry** — Relaunch `mtds-lst-rates` VM with fixed code (36c9aac7) for 2026-05-23/24 (2
-      failed dates from first run). Full range relaunch skips already-captured rows via ManifestFreshnessCache.
-      **Pending tarball rebuild + VM launch.**
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-GapFill-LstRetry** — Launched `mtds-lst-rates-20260525-004604` (e2-standard-4,
+      asia-northeast1-c, 2026-01-24→2026-05-25) with fixed tarball `2026-05-24T23:44:16Z` (contains mtds@36c9aac7). VM
+      RUNNING @ 34.84.74.42. ManifestFreshnessCache skips 147 already-captured entries from first run; retries only
+      2026-05-23/24 where `load_evm_lst_contract_addresses_for_date()` failed with UTL NotFound. Writes to
+      `lst-rates-central-element-323112`. 2026-05-25 slot-7.
 - [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN per DeFi venue. Success criteria: (1)
       dex-swaps prd manifest: all UniV3-schema venues continuous 2026-01-25→2026-05-25 (0 attempted_failed); (2)
       lst-rates: LIDO/ETHERFI/etc continuous 2026-01-24→2026-05-25 in `lst-rates-central-element-323112`; (3)
