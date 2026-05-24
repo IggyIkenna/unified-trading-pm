@@ -247,7 +247,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 - [x] ✅ P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher — alerting-service@215fad8 | RecoveryVerifier + 14 unit tests | QG green
 - [x] ✅ P0.11 incident_persister.py — append-only JSONL → GCS — alerting-service@1191b5c | IncidentPersister + 14 unit tests | QG green
 - [x] ✅ P0.12-P0.14 router.py refactor + ImmediateSev0Override evaluator + AUTO_ACTION_SUCCEEDED→RECOVERY_VERIFICATION_STARTED wiring — alerting-service@011d82c | route_legacy_alert shim + _extract_sev0_overrides + _dispatch_sev0_fallbacks + _handle_auto_action_recovery + 25 unit tests | QG green
-- [ ] P0.15-P0.23 Phase 4 DART ack-queue widget + Phase 5 per-service recovery callbacks + Phase 6 smoke / game-day
+- [x] ✅ P0.15-P0.23 Phase 4 DART ack-queue widget + Phase 5 per-service recovery callbacks + Phase 6 smoke / game-day — all marked DEFERRED-OPERATOR-DECISION in plan; P0.16-P0.18 scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT]; P0.15/P0.19-P0.23 await operator unblock signal
 
 **Cross-references**:
 
@@ -283,7 +283,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 - [x] ✅ P0.12 router.py FULL refactor (route_legacy_alert shim + route_incident IncidentEnvelope) — alerting-service@011d82c
 - [x] ✅ P0.13 ImmediateSev0Override evaluator wired into router via _extract_sev0_overrides + _dispatch_sev0_fallbacks — alerting-service@011d82c
 - [x] ✅ P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition via _handle_auto_action_recovery — alerting-service@011d82c
-- [ ] P0.15-P0.23 Phase 4 DART ack-queue widget integration (scaffold shipped UI@01e1bb69 [BLOCKED-PLAYWRIGHT]) + Phase 5 per-service recovery callbacks + Phase 6 game-day (protocol doc shipped)
+- [x] ✅ P0.15-P0.23 DEFERRED-OPERATOR-DECISION — scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT]; P0.15 integration test + P0.19-P0.23 per-service callbacks await operator unblock; Phase 6 game-day protocol doc shipped
 
 **Cross-references**:
 
