@@ -81,13 +81,17 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **Rebuild tarballs + relaunch VMs with all fixes** — killed 222351 VMs; rebuilt UAC tarball (sha=897ba58da637,
       UAC@897ba58d) + MDPS tarball (sha=23d4cf9, MDPS@23d4cf9); launched `mdps-backfill-defi-20260523-232742` (2024) +
       `mdps-backfill-defi-20260523-232808` (2025), both RUNNING asia-northeast1-c e2-standard-8, confirmed RUNNING T+15s
-- [ ] **Secondary bug (partition_mismatch) — venue CURVE vs CURVE-ETHERNET in candle rows**: MTDS tick parquets have
-      `venue='CURVE'` in the data column but are partitioned under `venue=CURVE-ETHEREUM` in GCS. MDPS canonical writer
-      inherits both: output partition uses `CURVE-ETHERNET` (from tick source path), but candle row's `venue` field is
-      `CURVE` (from tick data column). Schema validation rejects → shard-level failure for CURVE pools. UNISWAP_V3 does
-      not have this mismatch. Fix: normalize venue in `DefiSwapAdapter` to use the full chain-suffixed form from the
-      partition path (lookup from `info["venue"]` which comes from instrument_id prefix — check if it already has
-      `-ETHERNET`). DEFERRED until schema/chain fixes confirmed green.
+- [x] **Root-caused 2 more bugs from monitoring 232742/232808 VMs** (2026-05-24): (1) `swap_count` dtype `int32` but
+      schema expects `int64` — fixed: `count_arr = np.zeros(n_candles, dtype=np.int64)` in `swap_adapter.py`. (2) All
+      venues (UNISWAP_V2, UNISWAP_V3, CURVE) have `partition_mismatch`: `venue` column = `UNISWAP_V2` (from tick data
+      `venue` column) but partition path = `venue=UNISWAP_V2-ETHEREUM` (from instrument_id prefix via
+      `_eager_preprocess_and_recover_metadata`). Root cause: `_eager_preprocess_and_recover_metadata` sets
+      `input_venue = instrument_id.split(':')[0]` = `'UNISWAP_V2-ETHEREUM'` from the parquet's `instrument_id` column;
+      adapter was using `info["venue"]` = `'UNISWAP_V2'` (tick data column). Fix: derive `canonical_venue` from
+      `info["instrument_id"].split(':')[0]` in swap_adapter.py. MDPS@561fdbe.
+- [x] **Rebuild tarball + relaunch VMs with venue+dtype fixes** — MDPS tarball rebuilt (MDPS@cb3d11b, includes 561fdbe
+      venue+dtype fix); launched `mdps-backfill-defi-20260524-082217` (2024) + `mdps-backfill-defi-20260524-082231`
+      (2025), both RUNNING asia-northeast1-c e2-standard-8, T+10 RUNNING confirmed 2026-05-24
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2024+2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*`
 
