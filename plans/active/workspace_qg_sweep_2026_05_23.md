@@ -153,8 +153,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
       — alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
 
-- [ ] [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
+- [x] ✅ [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
       `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
+      — client-reporting-api@a82db85 | QG exit 0 (280s) | per-file-ignores for scripts/*.py (C901+E501), scripts/__init__.py for test import, starlette 1.1.0
 
 - [ ] [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
