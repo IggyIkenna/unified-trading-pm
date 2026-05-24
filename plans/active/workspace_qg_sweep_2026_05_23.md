@@ -119,12 +119,13 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 ## Layer 2 — Data pipeline (parallel after Layer 1, P2)
 
-- [ ] [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
+- [x] ✅ [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd market-tick-data-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm:
-      vm-ml]
+      vm-ml] — mtds@1864e395 QG green (97s); fixed 22 import violations, test fixtures, orchestrator None-filter, import pattern fix
 
-- [ ] [AGENT] P2. **features-service QG green** — ruff clean; run full QG to find remaining STEP violations.
+- [x] ✅ [AGENT] P2. **features-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd features-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm: vm-ml]
+      — features@907cca48 QG green (241s); async/await fix in batch/live handlers, socket-blocked conftest, pip-audit PYSEC-2026-161
 
 - [ ] [AGENT] P2. **market-data-processing-service QG green** — ruff clean; run full QG.
       `cd market-data-processing-service && bash scripts/quality-gates.sh` exits 0. PREREQ: market-tick-data-service QG
