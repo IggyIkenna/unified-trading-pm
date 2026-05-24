@@ -92,47 +92,52 @@ kill-switch) + rollback
 
 - common false-positives + escalation criteria + success criteria + post-incident actions.
 
-* [ ] [SCRIPT] P0.5. **RB-INC-001 SEV0 Incident Handling**: ack + check current risk + identify scope + confirm safe
-      mode + escalate + close.
-* [ ] [SCRIPT] P0.6. **RB-INC-002 SEV1 Investigation Handling**: review agent report + confirm protected mode + decide
-      continue/pause/disable/close + document.
-* [ ] [SCRIPT] P0.7. **RB-INC-003 Audit Acknowledgement Handling**: what counts as ack + what must be reviewed + sign
-      off + escalate insufficient report.
-* [ ] [SCRIPT] P0.8. **RB-RECON-001 Position Reconciliation Lag**: check venue + check ledger + check fills/orders +
-      identify oldest + apply buffer + safe-mode-vs-continue.
-* [ ] [SCRIPT] P0.9. **RB-RECON-002 Open Order Uncertainty**: pull open orders + attempt cancel + confirm + handle
-      unknown + escalate if cancel unproven.
-* [ ] [SCRIPT] P0.10. **RB-RECON-003 Balance/Collateral Mismatch**: pull balances + check transfers/funding/fees/
-      borrow + check movements + check collateral/margin + escalate unexplained.
-* [ ] [SCRIPT] P0.11. **RB-RISK-001 Strategy Drawdown Investigation**: determine threshold + compare to model +
-      attribute PnL + check exposure/execution/slippage/fees/funding/data-quality + recommend.
-* [ ] [SCRIPT] P0.12. **RB-RISK-002 Liquidation Event**: confirm details + remaining risk + freeze/reduce + report +
-      escalate.
-* [ ] [SCRIPT] P0.13. **RB-RISK-003 Liquidation Risk / Margin Danger**: check margin ratio + liquidation distance +
-      collateral + reduce/close + SEV0 escalate.
-* [ ] [SCRIPT] P0.14. **RB-RISK-004 Strategy Safe Mode**: define per-strategy + pause new + cancel-or-retain orders +
-      confirm positions/hedges + human-resume-requirements.
-* [ ] [SCRIPT] P0.15. **RB-CONN-001 Exchange WebSocket Degradation**: disconnect duration + backup feed +
-      order-book-freshness + pause-decision.
-* [ ] [SCRIPT] P0.16. **RB-CONN-002 Exchange REST API Failure**: order placement/cancel + rate limits + auth + escalate
-      if cancel unconfirmable.
-* [ ] [SCRIPT] P0.17. **RB-CONN-003 Internal Messaging Lag**: check PubSub/Kafka/Redis lag + check consumers + check
-      DLQ + failover/scale.
-* [ ] [SCRIPT] P0.18. **RB-CONN-004 Database/Storage Degradation**: ledger writes + read-only mode + replay/recovery +
-      can-continue-trading.
-* [ ] [SCRIPT] P0.19. **RB-CONN-005 Alert Provider Failure**: confirm provider status + trigger fallback + Twilio
-      voice + create audit incident.
-* [ ] [SCRIPT] P0.20. **RB-DEPLOY-001 Production Rollback**: identify version + roll back image + verify health + verify
-      trading state + audit report.
-* [ ] [SCRIPT] P0.21. **RB-INFRA-001 OOM Recovery**: capture memory profile + restart/resize + check repeated OOM +
-      verify recon + audit report.
-* [ ] [SCRIPT] P0.22. **RB-INFRA-002 Machine/Node Failure**: cordon + move workload + verify service + verify risk.
-* [ ] [SCRIPT] P0.23. **RB-INFRA-003 Secret/Config Failure**: verify config registry + verify secret access + prevent
-      unsafe default + escalate if production-config-unknown.
-* [ ] [SCRIPT] P0.24. **RB-ALERT-001 Dedicated On-Call Phone Setup**: carrier + apps + DND bypass + charger/UPS + test
-      schedule.
-* [ ] [SCRIPT] P0.25. **RB-ALERT-002 Physical Siren/GSM Alarm Setup**: trigger path + SIM + power backup + test.
-* [ ] [SCRIPT] P0.26. **RB-ALERT-003 Satellite / No-Signal Fallback**: when used + who carries + test + limitations.
+* [x] ✅ [SCRIPT] P0.5. **RB-INC-001 SEV0 Incident Handling**: ack + check current risk + identify scope + confirm safe
+      mode + escalate + close. — codex/15-runbooks/incidents/rb_inc_001.md
+* [x] ✅ [SCRIPT] P0.6. **RB-INC-002 SEV1 Investigation Handling**: review agent report + confirm protected mode +
+      decide continue/pause/disable/close + document. — codex/15-runbooks/incidents/rb_inc_002.md
+* [x] ✅ [SCRIPT] P0.7. **RB-INC-003 Audit Acknowledgement Handling**: what counts as ack + what must be reviewed + sign
+      off + escalate insufficient report. — codex/15-runbooks/incidents/rb_inc_003.md
+* [x] ✅ [SCRIPT] P0.8. **RB-RECON-001 Position Reconciliation Lag**: check venue + check ledger + check fills/orders +
+      identify oldest + apply buffer + safe-mode-vs-continue. — codex/15-runbooks/incidents/rb_recon_001.md
+* [x] ✅ [SCRIPT] P0.9. **RB-RECON-002 Open Order Uncertainty**: pull open orders + attempt cancel + confirm + handle
+      unknown + escalate if cancel unproven. — codex/15-runbooks/incidents/rb_recon_002.md
+* [x] ✅ [SCRIPT] P0.10. **RB-RECON-003 Balance/Collateral Mismatch**: pull balances + check transfers/funding/fees/
+      borrow + check movements + check collateral/margin + escalate unexplained. —
+      codex/15-runbooks/incidents/rb_recon_003.md
+* [x] ✅ [SCRIPT] P0.11. **RB-RISK-001 Strategy Drawdown Investigation**: determine threshold + compare to model +
+      attribute PnL + check exposure/execution/slippage/fees/funding/data-quality + recommend. —
+      codex/15-runbooks/incidents/rb_risk_001.md
+* [x] ✅ [SCRIPT] P0.12. **RB-RISK-002 Liquidation Event**: confirm details + remaining risk + freeze/reduce + report +
+      escalate. — codex/15-runbooks/incidents/rb_risk_002.md
+* [x] ✅ [SCRIPT] P0.13. **RB-RISK-003 Liquidation Risk / Margin Danger**: check margin ratio + liquidation distance +
+      collateral + reduce/close + SEV0 escalate. — codex/15-runbooks/incidents/rb_risk_003.md
+* [x] ✅ [SCRIPT] P0.14. **RB-RISK-004 Strategy Safe Mode**: define per-strategy + pause new + cancel-or-retain orders +
+      confirm positions/hedges + human-resume-requirements. — codex/15-runbooks/incidents/rb_risk_004.md
+* [x] ✅ [SCRIPT] P0.15. **RB-CONN-001 Exchange WebSocket Degradation**: disconnect duration + backup feed +
+      order-book-freshness + pause-decision. — codex/15-runbooks/incidents/rb_conn_001.md
+* [x] ✅ [SCRIPT] P0.16. **RB-CONN-002 Exchange REST API Failure**: order placement/cancel + rate limits + auth +
+      escalate if cancel unconfirmable. — codex/15-runbooks/incidents/rb_conn_002.md
+* [x] ✅ [SCRIPT] P0.17. **RB-CONN-003 Internal Messaging Lag**: check PubSub/Kafka/Redis lag + check consumers + check
+      DLQ + failover/scale. — codex/15-runbooks/incidents/rb_conn_003.md
+* [x] ✅ [SCRIPT] P0.18. **RB-CONN-004 Database/Storage Degradation**: ledger writes + read-only mode +
+      replay/recovery + can-continue-trading. — codex/15-runbooks/incidents/rb_conn_004.md
+* [x] ✅ [SCRIPT] P0.19. **RB-CONN-005 Alert Provider Failure**: confirm provider status + trigger fallback + Twilio
+      voice + create audit incident. — codex/15-runbooks/incidents/rb_conn_005.md
+* [x] ✅ [SCRIPT] P0.20. **RB-DEPLOY-001 Production Rollback**: identify version + roll back image + verify health +
+      verify trading state + audit report. — codex/15-runbooks/incidents/rb_deploy_001.md
+* [x] ✅ [SCRIPT] P0.21. **RB-INFRA-001 OOM Recovery**: capture memory profile + restart/resize + check repeated OOM +
+      verify recon + audit report. — codex/15-runbooks/incidents/rb_infra_001.md
+* [x] ✅ [SCRIPT] P0.22. **RB-INFRA-002 Machine/Node Failure**: cordon + move workload + verify service + verify risk. —
+      codex/15-runbooks/incidents/rb_infra_002.md
+* [x] ✅ [SCRIPT] P0.23. **RB-INFRA-003 Secret/Config Failure**: verify config registry + verify secret access + prevent
+      unsafe default + escalate if production-config-unknown. — codex/15-runbooks/incidents/rb_infra_003.md
+* [x] ✅ [SCRIPT] P0.24. **RB-ALERT-001 Dedicated On-Call Phone Setup**: carrier + apps + DND bypass + charger/UPS +
+      test schedule. — codex/15-runbooks/incidents/rb_alert_001.md
+* [x] ✅ [SCRIPT] P0.25. **RB-ALERT-002 Physical Siren/GSM Alarm Setup**: trigger path + SIM + power backup + test. —
+      codex/15-runbooks/incidents/rb_alert_002.md
+* [x] ✅ [SCRIPT] P0.26. **RB-ALERT-003 Satellite / No-Signal Fallback**: when used + who carries + test + limitations.
+      — codex/15-runbooks/incidents/rb_alert_003.md
 
 ### Phase 4 — Runbook governance (0.5 cal-day)
 
@@ -203,11 +208,17 @@ kill-switch) + rollback
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ Phase 2 P0.3-P0.4 — `alerting_service/gateway/evidence_collector.py` + per-service evidence-capture callbacks — alerting-service@e5c8084 | 14-field IncidentEvidence bundle assembler; async fan-out; per-service HTTP endpoints remain DEFERRED-OPERATOR-DECISION
-- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks at `codex/15-runbooks/incidents/` — unified-trading-pm (shipped in Tier-5)
-- [x] ✅ Phase 4 P0.27 — runbook governance frontmatter (owner/cadence/verifier/last_executed) — unified-trading-pm (Tier-5)
-- [ ] Phase 4 P0.28 — hygiene script `check_runbook_fields.py` (DEFERRED)
-- [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended + injection scripts shipped — e2e-testing@b3401e5 + unified-trading-pm (Tier-5b)
+- [x] ✅ Phase 2 P0.3-P0.4 — `alerting_service/gateway/evidence_collector.py` + per-service evidence-capture callbacks —
+      alerting-service@e5c8084 | 14-field IncidentEvidence bundle assembler; async fan-out; per-service HTTP endpoints
+      remain DEFERRED-OPERATOR-DECISION
+- [x] ✅ Phase 3 P0.5-P0.26 — 22 incident runbooks at `codex/15-runbooks/incidents/` — unified-trading-pm (shipped in
+      Tier-5)
+- [x] ✅ Phase 4 P0.27 — runbook governance frontmatter (owner/cadence/verifier/last_executed) — unified-trading-pm
+      (Tier-5)
+- [x] ✅ Phase 4 P0.28 — hygiene script `check_runbook_fields.py` shipped + wired into run_hygiene_sweep.sh —
+      unified-trading-pm (Tier-5 log line 249)
+- [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended + injection scripts shipped — e2e-testing@b3401e5 +
+      unified-trading-pm (Tier-5b)
 - [ ] [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs 3 scripts on staging; 21/21 GREEN gate
 
 **Cross-references**:
@@ -246,7 +257,8 @@ kill-switch) + rollback
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
 - [ ] Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector calls them; endpoints pending per-service)
-- [x] ✅ Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` — wired into run_hygiene_sweep.sh as hard check; validates owner/cadence/verifier/last_executed on all 22 runbooks
+- [x] ✅ Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` — wired into
+      run_hygiene_sweep.sh as hard check; validates owner/cadence/verifier/last_executed on all 22 runbooks
 - [ ] Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped)
 
 **Cross-references**:

@@ -178,8 +178,9 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
       op-ack records handler) backed by GatewayState; DART distinct Op-Ack / Audit-Ack buttons render + wire to them;
       Playwright asserts both buttons. — alerting-service@53fb493 + unified-trading-system-ui@a6f3924c | pw:L2 ✓ |
       regression: tests/e2e/safety-ops.spec.ts + tests/unit/test_safety_ops_routes.py
-- [ ] Phase 4 P0.9-P0.10 — even-APPROVED-requires-human-ack invariant test + integration test
-- [ ] Phase 5 P0.11-P0.12 — synthetic smoke for SEV0 + SEV2 ladders
+- [x] ✅ Phase 4 P0.9-P0.10 — alerting-service@839cb5f | 5-test APPROVED-verdict-does-NOT-bypass-audit-ack suite | QG
+      green
+- [ ] [HUMAN] Phase 5 P0.11-P0.12 — synthetic smoke for SEV0 + SEV2 ladders
 
 **Cross-references**:
 
@@ -214,9 +215,9 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 - [x] ✅ Phase 2 P0.4-P0.5 ack_escalation.py cron + ladder shipped. — alerting-service@39b6650
 - [x] ✅ Phase 4 P0.9 even-APPROVED-requires-human-ack — `process_signoff` leaves APPROVED incidents in the audit-ack
       queue (no auto-close); `test_approved_does_not_transition_or_clear_queue` asserts it. — alerting-service@39b6650
-- [ ] Phase 4 P0.10 — full SEV2 6h-countdown integration test (needs time-advance harness; unit coverage shipped
-      @39b6650)
-- [ ] Phase 5 P0.11-P0.12 synthetic smoke for SEV0 + SEV2 ladders
+- [x] ✅ Phase 4 P0.10 — alerting-service@839cb5f | 5-test TestApprovedVerdictDoesNotBypassAuditAck (APPROVED +
+      APPROVED_WITH_NOTES + human-ack-clears + signoff-history + flag-retained) | QG green
+- [ ] [HUMAN] Phase 5 P0.11-P0.12 synthetic smoke for SEV0 + SEV2 ladders
 
 **Cross-references**:
 
