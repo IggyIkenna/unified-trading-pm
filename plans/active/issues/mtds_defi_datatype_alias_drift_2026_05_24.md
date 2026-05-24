@@ -51,31 +51,66 @@ graph-adapter `SUPPORTED_DATA_TYPES`. `venue_data_types.yaml` is consumed by `en
   needs a real diagnosis pass first (see below), and the rename touches storage-path semantics so it is **not** a blind
   find-replace.
 
-## Open questions to resolve before fixing (diagnose-before-fix)
+## Diagnosis results — Q1 + Q2 (completed 2026-05-24)
 
-1. **Does `venue_data_types.yaml`'s data_type value drive storage?** Read `engine/orchestrator.py`'s consumption of the
-   YAML: does the `swaps`/`liquidity` string become a `data_type=` GCS partition, or is it remapped to `dex_swaps` by
-   the handler before any write? If remapped, the YAML+adapter names are internal and the fix is config/code hygiene (no
-   data migration). If not remapped, data may already be split across legacy + canonical partitions.
-2. **What is the actual GCS data-state?** Walk a sample of the DeFi DEX/lending buckets for `data_type=swaps` vs
-   `data_type=dex_swaps` (and `liquidity` vs `dex_pools`, `rate_indices` vs `lending_indices`). Code-constant ≠
-   data-state (cf. the v8 schema-version incident). If legacy partitions hold real rows, a migration (rename/repartition
-   under the single-walk discipline window) is required, not just a config edit.
+**Q1 — does `venue_data_types.yaml`'s data_type drive storage? NO.**
 
-## Recommended decision
+- The `venue_data_types.yaml` **file is read by no Python in the workspace** (grepped the filename across all repos —
+  zero hits). The local var `venue_data_types` in `orchestrator.py` is unrelated. The file is declarative/documentation
+  config, additionally enforced by the UAC SIT test as a contract artifact.
+- Runtime "expected data types for a venue" comes from UAC's `get_expected_data_types_for_venue` (imported from
+  `unified_api_contracts.registry`), **not** the MTDS YAML. orchestrator additionally filters to UAC-valid
+  (`[dt for dt in venue_data_types if dt in _uac_valid]`), so legacy aliases would be dropped even if they reached it.
+- DeFi **storage** writes via handler constants: `dex_swaps_handler.py` `_DEX_SWAPS_DATA_TYPE = "dex_swaps"`.
+- **Caveat — the adapter vocabulary IS real and coupled**:
+  `uniswap_v3_adapter.SUPPORTED_DATA_TYPES = {"trades", "swaps", "liquidity"}` and tests call the adapter with
+  `data_types=["swaps"]` (`test_defi_live_tradfi_adapters.py:735`, `test_canonical_parquet_reader.py:630`). So the
+  adapter's `swaps`/ `liquidity` is its own contract — NOT a safe blind rename; it is part of the migration below.
 
-- If (1) shows the handler remaps to canonical before write AND (2) shows no legacy partitions with rows: fix is a
-  same-PR rename of `venue_data_types.yaml` + `uniswap_v3_adapter.SUPPORTED_DATA_TYPES`/return-list to canonical names
-  (keep `_defi_graph_models` GraphQL field names as-is) + a regression note. Owner: MTDS slot.
-- If legacy GCS partitions hold rows: this becomes a data migration — fold into the next scheduled GCS walk per the
-  single-walk discipline; do NOT add an ad-hoc whole-corpus walk.
-- **Foreign-WIP caution**: `market_tick_data_service/engine/orchestrator.py` is currently dirty (another agent's
-  in-flight work, unrelated to data_types per its diff). Coordinate before editing MTDS files.
+**Q2 — GCS data-state (audited central-element-323112, 2026-05-24).** Code-constant ≠ data-state — the data is on a
+THIRD naming layer:
+
+| bucket            | canonical (UAC)   | GCS actual `data_type=` | hive key                 | latest day |
+| ----------------- | ----------------- | ----------------------- | ------------------------ | ---------- |
+| `dex-swaps[-prd]` | `dex_swaps`       | **`dex_pool_swaps`**    | `category=defi` (legacy) | 2026-04-14 |
+| `dex-pools[-prd]` | `dex_pools`       | **`dex_pool_state`**    | `category=defi` (legacy) | 2026-04-\* |
+| `lending-indices` | `lending_indices` | `lending_indices` ✅    | `category=defi` (legacy) | 2026-05-\* |
+
+So: (a) DEX data_type partitions are `dex_pool_swaps` / `dex_pool_state` — in **neither UAC nor current MTDS code**
+(old-writer names); (b) all DeFi data is still under the legacy `category=` hive key, not `asset_group=` (the 2026-04-25
+vocabulary migration never reached this DeFi data); (c) DEX buckets look stale (~2026-04-14) — possible coverage gap. A
+`migrate_defi_canonical` script + `dex_pool_state` references already exist in MTDS
+(`tests/unit/scripts/test_migrate_defi_canonical.py`), so a canonicalization effort is partially scripted.
+
+## What got fixed vs what remains
+
+- **FIXED (declarative config)**: `venue_data_types.yaml` legacy aliases → canonical. A **parallel agent already landed
+  this on `live-defi-rollout`** (also added `perp_funding` to Hyperliquid/Aster); my independent same-rename was
+  redundant and dropped. Tier B SIT invariant `test_data_type_canonicalization[market-tick-data-service]` now 6/6 green
+  (verified locally).
+- **REMAINS — coupled data migration (NOT ad-hoc fixable; single-walk HARD RULE)**:
+  1. Adapter vocabulary: `uniswap_v3_adapter.SUPPORTED_DATA_TYPES` + the `data_types=["swaps"]` call/test sites →
+     canonical, with the downstream write map + tests as one change.
+  2. GCS repartition: `dex_pool_swaps`→`dex_swaps`, `dex_pool_state`→`dex_pools`, and `category=defi`→`asset_group=defi`
+     — **fold into the next scheduled GCS walk** (single-walk discipline forbids an ad-hoc whole-corpus walk). Reconcile
+     with the existing `migrate_defi_canonical` script.
+  3. Coverage: confirm whether DEX collection is stale since ~2026-04-14 or moved buckets.
+
+## Recommended decision (operator)
+
+Route the REMAINS items into **`plans/epics/mtds_mdps_master.md`** (the data-pipeline migration coordinator) as a
+DeFi-data_type-canonicalization phase, sequenced into the next scheduled GCS walk — do NOT spawn an ad-hoc walk. The
+config drift (the CI/CD-visible symptom) is closed; the data migration is the real, larger work.
+
+**Foreign-WIP caution**: `market_tick_data_service/engine/orchestrator.py` is currently dirty (another agent's in-flight
+work, unrelated to data_types per its diff). Coordinate before editing MTDS files.
 
 ## Status
 
 - [x] Surfaced by Tier B full-workspace SIT (UAC test) 2026-05-24; logged in `full_cicd_sit_target_state_2026_05_24.md`
-- [ ] Q1: trace `venue_data_types.yaml` → storage path in `orchestrator.py`
-- [ ] Q2: GCS data-state audit (legacy vs canonical `data_type=` partitions for the 7 affected venues)
-- [ ] Fix per the decision branch (config+adapter rename OR scheduled migration)
-- [ ] Re-run `test_data_type_canonicalization.py[market-tick-data-service]` green in full workspace
+- [x] Q1: `venue_data_types.yaml` is declarative-only (not read at runtime); adapter `swaps`/`liquidity` IS coupled
+- [x] Q2: GCS data-state audited — DEX on `dex_pool_swaps`/`dex_pool_state` + legacy `category=` key; lending canonical
+- [x] Config drift fixed (parallel agent landed the canonical YAML rename; SIT invariant green)
+- [ ] **MIGRATION (operator-routed to mtds_mdps_master)**: adapter vocabulary + GCS repartition + category→asset_group,
+      folded into the next scheduled GCS walk; reconcile with existing `migrate_defi_canonical`
+- [ ] Coverage check: is DEX collection stale since ~2026-04-14?
