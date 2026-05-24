@@ -222,7 +222,13 @@ stale latest tarball, missing the CURVE fix. Tarballs rebuilt (MDPS@209b8e8 now 
   show as WARNING (209b8e8 fix working — VM continues). 331 manifest entries written
   (swaps_ohlcv_4h/1d/1h/15m/5m/1m/15s), 142+ UNISWAP_V3-ETHEREUM parquets written for 2025-01-01. CURVE-ETHEREUM 15s
   candles confirmed in GCS at
-  `processed_candles/by_date/day=2025-01-03/timeframe=15s/data_type=dex_swaps/venue=CURVE-ETHEREUM/`.
+  `processed_candles/by_date/day=2025-01-03/timeframe=15s/data_type=dex_swaps/venue=CURVE-ETHEREUM/`. CURVE parquet
+  spot-check: chain=ETHEREUM ✓, swap_count=1 (not null) ✓, volume_quote_usd=9.7 ✓. Per-VM manifest schema_version=8 ✓.
+  2022 VM completed exit_code=0 ✓. 2025 VM at 2025-01-04.
+- ⚠️ **Manifest reconciliation required post-VM**: GCS 429 causes ~91% of per-VM manifest write failures (candle
+  parquets in GCS, no manifest row). After all 5 VMs terminate, run:
+  `rebuild_manifest_from_canonical_paths('market-data-tick-defi-central-element-323112', service_name='market-data-processing-service', prefix='processed_candles/by_date')`
+  to backfill manifest entries from actual GCS parquets.
 
 ## Plan refs
 
