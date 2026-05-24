@@ -58,10 +58,21 @@ credential IDs broadly do not match real GCP Secret Manager** (`central-element-
       passphrase} PASS, plus bybit/binance/deribit/hyperliquid/aster all PASS against real Secret Manager
 - [x] No other config/code references the old flat ids (workspace grep clean; only display-mangled docstring examples)
 
-## Separate observation (NOT this finding — out of scope; flag only)
+## Wallet `*-wrapped` probe handling — RESOLVED (deployment-service@75fc484)
 
-`credential-probe.sh --archetype carry_staked_basis` still FAILs the **wallet** creds (`csb-*-hot-*-v1-wrapped`,
-`gas-reserve-*-v1-wrapped`) — the archetype config lists them as literal SM-secret ids but they are KMS-wrapped wallet
-keys stored differently (per-mode config uses `pattern:*-wrapped`). So the cutover gate can't hit 100% until wallet
-handling is reconciled too — that's a distinct wallet/custody-provisioning concern, not the credential-id naming drift
-fixed here. Worth a follow-up (wallet-key probe handling + provisioning).
+`credential-probe.sh` treated `<wallet_id>-wrapped` creds as literal SM secrets and FAILed them all. Added
+`probe_wrapped_wallet` with the two-regime model from UAC's wallet configs:
+
+- **pre-cutover** (paper/batch/dev) → resolve to the operator's shared wrapped test PK `defi-wallet-private-key-wrapped`
+  (`test_wallet_provisioning_pre_cutover.json`) — exists → real PASS. The **`carry_staked_basis` batch gate now reads 32
+  PASS / 0 FAIL / 0 SKIP (100%)**.
+- **live** → require each wallet's own provisioned PK (`cutover_wallet_provisioning_mainnet_template.json`
+  `private_key_secret_ref`); FAIL with explicit `WALLET-PK-UNPROVISIONED (HUMAN-ONLY custody task)` — never fakes PASS.
+  Also dropped the helius/coingecko/telegram archetype-config mismatches (UAC@dc15766f).
+
+### Genuinely-remaining (HUMAN-ONLY — operator/custody)
+
+The 15 mainnet wallet PKs (`csb-*`, `apd-*`, `gas-reserve-*`) are **not provisioned** in Secret Manager — only the
+shared pre-cutover test key exists. Going LIVE requires wrapping each wallet's private key under the wallets CMK and
+storing it as `<wallet_id>-wrapped`. **This is a hard-stop human-only action** (CLAUDE.md) — an agent cannot generate
+wallet keys. The live credential gate will correctly stay <100% until the operator provisions these.
