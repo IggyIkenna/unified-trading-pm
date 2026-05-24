@@ -153,9 +153,9 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [ ] [CODE] P0. `greeks-service` writes carry-family columns (funding_rate/lending_rate/borrow_rate/staking_apy/
       dividend_yield/rebase_rate) reading from MTDS rate feeds (funding/lending/borrow) + IS LST data
       (staking_apy/rebase_rate) + MTDS-derived `dividend_yield`. None-handling per Phase 1/2 conventions.
-- [ ] [CODE] P0. Black-Scholes greek computation kernel for vanilla European/American options — pure-Decimal
+- [x] ✅ [CODE] P0. Black-Scholes greek computation kernel for vanilla European/American options — pure-Decimal
       implementation in `greeks-service/greeks_service/kernels/black_scholes.py`. Extensibility hook (`GreekKernel`
-      protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan.
+      protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan. — greeks-service@7bd9282 (87 tests, 85.5% coverage, QG green)
 - [ ] [CODE] P0. **CeFi + TradFi options coverage (the TradFi gap)** — greeks-service computes greeks for CeFi
       (Deribit) + TradFi (CME ES options), NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks only**
       — OPRA does not distribute greeks, so greeks-service IS the only TradFi greeks source. greeks-service fits an IV
