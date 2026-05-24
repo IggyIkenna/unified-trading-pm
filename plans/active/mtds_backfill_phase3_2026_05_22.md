@@ -159,6 +159,22 @@ IS that plan.
       2020-01-01→2026-05-22 ✅; (2) lending-indices 2022-01-01→2026-05-22 ✅ (7364 records/day); (3) dex-pools latest
       2026-05-22 ✅ (4131 records); (4) vault_share_price gap filled ✅ (GCS verified). **Gate for MDPS-3.3.DeFi OPEN.**
       All 4 MDPS DeFi VMs launched (mdps_backfill_phase3_2026_05_22.md). 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-GapFill** — **Launched 3 DeFi raw-tick gap-fill VMs (slot-7 2026-05-24 22:51 UTC)**:
+      Audit found UNISWAPV2/V3/V4 + AAVEV3 + LIDO + ETHERFI stale since 2026-01-23 (4-month gap critical for
+      `arbitrage_price_dispersion` archetype). BALANCER/CURVE/SUSHISWAP/YEARNV3/ETHENA current (2026-05-22). VMs
+      launched with `DEPLOYMENT_ENV=prod` (writes to `market-data-tick-defi-prd-central-element-323112`): (1)
+      `mtds-dex-swaps-backfill` RUNNING — 2026-01-25→2026-05-24, collect-dex-swaps, all DEX venues inc. Uniswap
+      V2/V3/V4. T+10 CONFIRMED: per-VM shard `_index/per_vm/mtds-dex-swaps-backfill.parquet` = 99.5KB (writing manifest
+      rows). 2026-05-24. (2) `mtds-lst-rates-20260524-225132` RUNNING — 2026-01-24→2026-05-24, collect-lst-rates
+      (LIDO/ETHERFI/RocketPool/cbETH). T+10: startup script exit 0, Python PID running, no OOM. 2026-05-24. (3)
+      `mtds-lending-indices-20260524-225143` RUNNING — 2026-01-24→2026-05-24, collect-lending-indices (AAVEV3/Compound).
+      T+10: startup script exit 0, Python PID running, no OOM. 2026-05-24. See
+      `plans/active/issues/defi_market_data_staleness_2026_05_24.md` for root cause (no recurring DeFi collection
+      schedule).
+- [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN for 2026-01-24→2026-05-24 per DeFi
+      venue. Success criteria: (1) all 3 VMs exit_code=0 + TERMINATED; (2) dex-swaps prd manifest: UNISWAPV2/V3/V4
+      continuous 2026-01-25→2026-05-24; (3) lst-rates prd manifest: LIDO/ETHERFI continuous 2026-01-24→2026-05-24; (4)
+      lending-indices prd manifest: AAVEV3 continuous 2026-01-24→2026-05-24. **Pending VM completion.**
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 

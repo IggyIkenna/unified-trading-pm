@@ -66,7 +66,14 @@ re-collects it. (Bonus drift: the trigger body uses the legacy `category` key, n
 - [x] Surfaced 2026-05-24 (latest-day census across DeFi buckets)
 - [x] **Root cause confirmed**: no recurring DeFi collection schedule — `market-tick-daily-trigger` is `category=CEFI`
       only; DeFi has only ever been manual one-off VM backfills
+- [x] **Refined finding (slot-7 2026-05-24)**: UNISWAPV2/V3/V4 stale since 2026-01-23; AAVEV3/LIDO/ETHERFI stale since
+      2026-01-23. BALANCER/CURVE/SUSHISWAP/YEARNV3/ETHENA are current (2026-05-22). Gap is 4 months for Uniswap
+      (critical for `arbitrage_price_dispersion` archetype).
+- [x] **Gap-fill VMs launched (slot-7 2026-05-24 22:51 UTC)**: - `mtds-dex-swaps-backfill` RUNNING
+      (2026-01-25→2026-05-24, DEX swaps inc. Uniswap) - `mtds-lst-rates-20260524-225132` RUNNING (2026-01-24→2026-05-24,
+      LST/LRT rates) - `mtds-lending-indices-20260524-225143` RUNNING (2026-01-24→2026-05-24, Aave V3 lending) T+10
+      check pending. See `mtds_backfill_phase3_2026_05_22.md` MTDS-3.2.C-GapFill item.
 - [ ] P0: add recurring DeFi collection schedule (operator-aware infra; mirror CeFi daily with `asset_group=defi`)
-- [ ] P0 backfill 2026-04-14→present once collection is scheduled
+- [ ] P0 verify gap-fill VMs complete + manifest GREEN for 2026-01-24→2026-05-24 per venue
 - [ ] Reconcile with the data_type/partition canonicalization in `mtds_defi_datatype_alias_drift_2026_05_24.md` +
       `category`→`asset_group` on the trigger
