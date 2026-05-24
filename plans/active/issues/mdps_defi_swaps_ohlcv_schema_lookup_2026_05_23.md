@@ -61,6 +61,43 @@ When operator rebuilds tarballs post-195633 and relaunches, new MDPS VMs pick up
 3. **Verify**: after relaunch, spot-check `swaps_ohlcv_15s` parquets for `UNISWAP_V3-ETHEREUM` pool shards in 2024-07
    and 2025-02 dates.
 
+## Third schema gap — found from 083200 VM (partition_mismatch + GCS 429)
+
+**Root cause 1: `partition_path` built with chain-qualified venue**
+
+`canonical_writer.write_candle_parquet()` built `partition_path` with `venue=UNISWAP_V3-ETHEREUM` (full form), but UTL's
+`instrument_id_validator._split_venue_chain()` strips the chain suffix from the instrument_id's venue token before
+comparing against the partition — getting `base_venue=UNISWAP_V3`. So it compared `UNISWAP_V3` against
+`UNISWAP_V3-ETHEREUM` → `partition_mismatch` on every shard using the new MTDS format (`UNISWAP_V3-ETHEREUM:POOL:0x…`
+instrument_ids). Old-format tick parquets (`UNISWAP_V3:POOL:0x…`) were unaffected (venue=UNISWAP_V3, no chain).
+
+**Root cause 2 (related): `asset_group=` in partition_path**
+
+An adjacent bug: the partition_path used `category=` instead of `asset_group=`. Fixed separately in MDPS@8d4639f.
+
+**Root cause 3 (related): chain column not injected before validator**
+
+MDPS@6fe0f01 fixed `_inject_schema_contract_columns` to add the inferred `chain` to the DataFrame when missing.
+
+**Root cause 4: GCS 429 on per-VM manifest parquet**
+
+The per-VM manifest file (`_index/per_vm/{vm}.parquet`) was hit by hundreds of concurrent writes (8 workers × 300+
+shards × 7 timeframes per date, all calling `manifest_writer.flush()` per shard). GCS rate-limits object mutations to
+~1/sec per object → 429 on every manifest write for failed shards.
+
+### Fixes shipped (2026-05-24 ~09:xx UTC)
+
+| Repo | Commit   | Change                                                                                                    |
+| ---- | -------- | --------------------------------------------------------------------------------------------------------- |
+| MDPS | 6fe0f01  | `canonical_writer.py`: inject inferred chain column into candle DataFrame before validator                |
+| MDPS | 8d4639f  | `canonical_writer.py`: use `asset_group=` not `category=` in partition_path                               |
+| MDPS | 555ade1  | `canonical_writer.py`: strip chain suffix from DeFi venue in partition_path (`_strip_chain_from_venue()`) |
+| UAC  | 954ff6d3 | `registry`: remove stale `rate_indices` alias from processed_data_dependencies                            |
+
+**VM 083200 outcome**: both VMs TERMINATED ~15 min after start (07:48 UTC). 2024 VM processed 128 of 366 dates
+(completed Jan 1 – May 7, failed on May 8+ with new-format instrument_ids). 2025 VM processed 4 of 365 dates. The candle
+parquets for successful dates ARE in GCS. Failed dates will be retried on relaunch.
+
 ## Second schema gap — found from 215530 VM (SCHEMA_VALIDATION_FAILED)
 
 The 215530 MDPS VMs (relaunched after POOL→pool fix) produced zero captured rows with `SCHEMA_VALIDATION_FAILED` on
@@ -139,6 +176,10 @@ failures unchanged, 0 new). Basedpyright 0 errors.
   - `mdps-defi-2026-20260524-091405` → 2026-01-01..2026-05-24 RUNNING ✓
 - 2026-05-24 ~09:30 UTC — **VERIFIED**: 2025 per-VM shard shows 27 `captured` rows (UNISWAP_V3-ETHEREUM pools),
   venue=`UNISWAP_V3` (chain suffix stripped ✓), chain=`ETHEREUM` ✓. Zero `SCHEMA_VALIDATION_FAILED`. All 5 VMs running.
+- 2026-05-24 ~09:22 UTC — 091405 VMs hit GCS 429 on per-VM manifest parquet (8 workers × 322 shards × 7 timeframes
+  flooding `_index/per_vm/*.parquet`). Candle parquets written OK; manifest rows dropped for rate-limited writes. VMs
+  terminated after completing. 092158 batch relaunched (ALL years) to cover remaining dates + retry 429-dropped rows.
+- 2026-05-24 ~09:22 UTC — **5 VMs relaunched** (run-ts=20260524-092158, ALL years) — RUNNING (startup, no log dirs yet).
 
 ## Plan refs
 
