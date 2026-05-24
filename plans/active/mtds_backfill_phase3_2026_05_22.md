@@ -63,7 +63,11 @@ before Phase 7 grows the v<8 debt.
       `cefi-binance-futures-2024-light-20260524-211233` + `cefi-okx-swap-2024-light-20260524-211233`. Both e2-highmem-4,
       asia-northeast1-c, VM_FORCE=false. **T+10 CONFIRMED 2026-05-24 20:17 UTC**: both VMs survived past T+50s without
       rc=137; manifest loaded without OOM; actively streaming Tardis data for 2024-01-01. Fix verified. — slot-7
-      2026-05-24
+      2026-05-24. **SECOND OOM (2026-05-24 slot-7)**: 211233 VMs processed only 2024-01-01, then rc=137 at day boundary.
+      Root cause: Python GC has not freed day-N data before day N+1 streaming buffer allocated; peak RSS 23.7 GB on 32
+      GB → OOM confirmed (Binance DEPLOYMENT_FAILED exit_code=137 at 20:17:34 UTC; OKX manually deleted). Fix: bumped
+      MACHINE_TYPE_LIGHT to e2-highmem-8 (64 GB). deployment-service@4ad475c. Relaunched:
+      `cefi-binance-futures-2024-light-20260524-220853` + `cefi-okx-swap-2024-light-20260524-220853`. 2026-05-24 slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
