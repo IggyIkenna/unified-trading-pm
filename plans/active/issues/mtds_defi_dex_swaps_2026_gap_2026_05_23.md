@@ -112,8 +112,20 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **Killed all stale DeFi VMs + relaunched with SHA-pinned tarballs** (2026-05-24): killed 085204 + 091405 VMs
       (wrong UTL/MDPS tarballs). Launched `mdps-defi-{2022-2026}-20260524-092158` with `UTL_TARBALL_SHA=18e2e072` +
       `MDPS_TARBALL_SHA=555ade19`. All 5 VMs RUNNING as of T+1 check.
-- [ ] **T+10 verify 092158 VMs** — confirm RUNNING + zero partition_mismatch for swaps_ohlcv shards at DEX data dates
-      (2024-06-01+)
+- [x] **T+10 verify 092158 VMs + root-caused instrument_type=UNKNOWN bug** (2026-05-24): 092158 VMs confirmed RUNNING at
+      T+10. Diagnosed new blocking bug: pool-address blob filenames (`0xA5407...`) have no colons →
+      `_infer_instrument_type` returned `"UNKNOWN"` → all dex_pool_swaps candles partitioned under
+      `instrument_type=UNKNOWN`. Root cause: `_infer_instrument_type` only checked (1) `instrument_type` col, (2) key
+      colons. DefiSwapAdapter sets full `CURVE-ETHERNET:POOL:DAI-USDC` in df `instrument_id` col but key = pool addr.
+      Fix: added step 3 fallback — parse type from `df["instrument_id"].iloc[0]` when key lacks colons. MDPS@4cc1584.
+- [x] **Rebuild tarballs + kill 092158 VMs + relaunch with instrument_type fix** (2026-05-24): rebuilt defi tarballs
+      with `--allow-dirty-tarball` (UTL has foreign uncommitted changes; used `--allow-dirty-tarball`; UTL@18e2e072
+      unchanged). MDPS tarball `market-data-processing-service-code@4cc15847a76e.tar.gz` uploaded. Killed
+      `mdps-defi-{2024,2025,2026}-20260524-092158` (2022/2023 already TERMINATED). Launched
+      `mdps-defi-{2022-2026}-20260524-095357` with `UTL_TARBALL_SHA=18e2e0724eafc9af14516b72a97f359cfb59aa78` +
+      `MDPS_TARBALL_SHA=4cc15847a76eee9b45e9d331ca10c370ecbf6aa1`. All 5 VMs RUNNING asia-northeast1-c e2-standard-8.
+- [ ] **T+10 verify 095357 VMs** — confirm RUNNING + zero partition_mismatch + instrument_type=POOL (not UNKNOWN) for
+      swaps_ohlcv shards at DEX data dates (2024-06-01+)
 - [ ] **Post-completion**: verify dex_pool_swaps candles appear in processed_candles/ for 2022-2025; verify dex_swaps
       rows for 2026-01-25+ in MTDS GCS; then relaunch `mdps-defi-2026-*` for 2026 once MTDS gap investigated
 
