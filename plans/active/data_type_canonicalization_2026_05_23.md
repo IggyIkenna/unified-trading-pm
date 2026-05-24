@@ -155,9 +155,9 @@ all service repos returns zero hits in non-test Python source.
       `"lending_indices": "lending_ohlcv"` already present on line 31) — unified-api-contracts@954ff6d3
 - [x] [SCRIPT] P0. domain/validation.py `DATA_TYPE_SCHEMAS`: `"swaps"`→`"dex_swaps"`, `"liquidity"`→`"dex_pools"`,
       `"rate_indices"`→`"lending_indices"` — unified-trading-library@c63bb3ca
-- [ ] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
+- [x] [SCRIPT] P0. schemas/domain/market_data_processing/candle_schema.py `DataType` enum:
       `SWAPS="swaps"`→`DEX_SWAPS="dex_swaps"`, `RATE_INDICES="rate_indices"`→`LENDING_INDICES="lending_indices"` —
-      unified-trading-system-ui (Python-only; playwright gate does not apply)
+      unified-trading-system-ui@79d3915d (Python-only; playwright gate does not apply)
 - [ ] [SCRIPT] P0. schemas/output_schemas.py `RATE_INDEX_SCHEMA`: `name="rate_indices"`→`name="lending_indices"` —
       market-data-processing-service
 - [ ] [SCRIPT] P0. scripts/seed_mock_data.py: `"rate_indices"`→`"lending_indices"` (4+ occurrences) —
