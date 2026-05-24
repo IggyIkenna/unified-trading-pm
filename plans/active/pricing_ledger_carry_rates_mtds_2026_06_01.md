@@ -76,11 +76,13 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [ ] [INFRA] P1. Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for PricingLedger sink
       bucket — DEFERRED until bucket-SSOT canonicalisation (`bucket_name_ssot_canonicalisation_2026_05_10.md`)
       stabilises. Bucket lookup MUST use `resolve_bucket_name()` per QG STEP 5.69.
-- [ ] [CODE] P0. **features-service volatility ⟷ greeks-service boundary** — features-service volatility consumes
+- [x] ✅ [CODE] P0. **features-service volatility ⟷ greeks-service boundary** — features-service volatility consumes
       greeks-service PricingLedger surface/greeks instead of (often-absent) venue greeks. Single authoritative surface
       (greeks-service fits SVI/SABR; features-service consumes for normalised moneyness/skew/term-structure features).
       Removes the venue-greeks-missing gap (DeFi options have no venue greeks). See Phase 3 + codex
-      `greeks-service-overview.md` § "Boundary vs features-service volatility".
+      `greeks-service-overview.md` § "Boundary vs features-service volatility". — features-service@78e171ea:
+      PricingLedgerGreeksReader + greeks_block always-invalid fix + dual-source validity (option_delta || delta); 12 new
+      tests; BLOCKED-SCHEMA TradFi until greeks-service TradFi IV fitting ships
 
 ## Readiness gates (per PLAN_FORMAT.md)
 
