@@ -272,13 +272,35 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       (153512, 153530, 153711, 153729, 153747 — all had "starting" heartbeat, no manifest shard).
 - [x] New watchdog `vm-zombie-watchdog-20260524-190841` launched. RUNNING. PPA install in progress.
 
-- [ ] **T+10 verify watchdog 190841** — confirm `from unified_api_contracts import VmPrefixSpec` succeeds with venv
-      Python 3.13. First watchdog tick should kill stale 182633 VM (heartbeat >15 min stale).
-- [x] **Assess 2026 backfill completeness** (slot-6, 18:14 UTC): Combined coverage — 165353 (224 rows, 2026-01-25→
-      2026-02-05, 12 dates) + 182633 (1,943 rows, 2026-02-06→2026-05-22, 106 dates) = **2,167 rows, 118 unique dates,
-      all captured**. Gaps are expected honest absence: 2026-01-01→2026-01-24 (no MTDS raw data — MTDS started
-      2026-01-25); 2026-05-23 (no MTDS raw tick data in prd bucket — dep check correct). No relaunch needed.
+- [x] **Watchdog 190841 replaced by 191752 — T+10 PASSED** (2026-05-24 slot-7): 190841 launched without UTL; killed;
+      relaunched as `vm-zombie-watchdog-20260524-191752` with Python 3.13 venv + UAC + UTL. Serial port: `watchdog.py`
+      downloaded at 18:24:31 UTC, Python loop started. `ckzg`/`lru-dict` build failures acceptable (blockchain libs not
+      needed). First tick killed stale 182633 (heartbeat >60min stale). T+10 PASSED.
+- [x] **Assessed 2026 backfill completeness** (slot-6 18:14 UTC + slot-7): Coverage — 165353 (224 rows,
+      2026-01-25→2026-02-05) + 182633 (1,943 rows, 2026-02-06→2026-05-22) = **2,167 rows, 118 unique dates**.
+      2026-01-01→2026-01-24: NO dex_swaps raw_tick_data in prd bucket (dex_pool_state only from Apr-18 migration; MTDS
+      collect-dex-swaps started 2026-01-25). 2026-05-23: no raw tick data in prd — dep check correct. Slot-7 assessment:
+      TheGraph HAS historical data; extended backfill launched to fill 2026-01-01→2026-01-24 gap.
+- [x] **Verified 2024/2025 DeFi candles from 101628 VMs** (2026-05-24 slot-7): 2024: 11,786 captured rows (flat bucket),
+      7 data_types incl swaps_ohlcv_4h, schema_version=8. 2025: 11,983 captured rows (flat bucket), 7 data_types incl
+      swaps_ohlcv_4h, schema_version=8. Sample 2024-05-05: chain='ETHEREUM' ✓, swap_count=int64 ✓, volume_quote_usd
+      populated ✓.
+- [x] **Launched MTDS dex-swaps backfill for 2026-01-01→2026-01-24** (slot-7 ~20:00 UTC): `mtds-dex-swaps-backfill`
+      RUNNING (asia-northeast1-c, e2-standard-4) with MTDS@703854ba + UTL@e51699c8. Downloads from TheGraph subgraph.
+      Writes to prd raw_tick_data/by_date/.
+- [x] **Launched MDPS DeFi 2026 rebackfill** (slot-7 ~19:53 UTC): `mdps-defi-2026-20260524-195319` RUNNING
+      (asia-northeast1-c, e2-standard-8) with MDPS@6c9045160577 (all fixes: related_data_types, amount_usd, chain,
+      swap_count dtype, venue derivation) + UTL@e51699c8. Range 2026-01-01→2026-05-24; confirmed processing 2026-02-10
+      with 9 dex_swaps files found from prd bucket.
+- [ ] **T+10 verify mtds-dex-swaps-backfill** (2026-01-01→2026-01-24) — confirm RUNNING + writing prd bucket
+      raw_tick_data/by_date/ + MTDS@703854ba + UTL@e51699c8.
+- [ ] **T+10 verify mdps-defi-2026-20260524-195319** — already seen processing 2026-02-10 with 9 files; confirm running
+      beyond first few dates.
+- [ ] **After MTDS 2026-01→01-24 completes: relaunch MDPS for those dates** — once `mtds-dex-swaps-backfill` exits 0,
+      rerun MDPS DeFi 2026-01-01→2026-01-24 with MDPS@6c9045160577 + UTL@e51699c8.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
+- [ ] **Final 2026 coverage verify** — after all VMs complete: check processed_candles/by_date/day=2026-01-25→2026-05-22
+      for non-empty dex_swaps candle rows.
 
 ## Evidence
 
