@@ -171,8 +171,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 ## Layer 4 — ML + agent (parallel after Layer 2, P3)
 
-- [ ] [AGENT] P3. **ml-service QG green** — 4 ruff errors. `cd ml-service && bash scripts/quality-gates.sh` exits 0.
+- [x] ✅ [AGENT] P3. **ml-service QG green** — 4 ruff errors. `cd ml-service && bash scripts/quality-gates.sh` exits 0.
       PREREQ: features-service QG green. [vm: vm-ml]
+      — utl@ad99ec7a export set_dry_run top-level; ml-service@3402eb2 | QG exit 0 (349s) | ruff clean (I001×3+F541), test isolation set_dry_run(True), import pattern fix
 
 - [x] ✅ [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
       `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
