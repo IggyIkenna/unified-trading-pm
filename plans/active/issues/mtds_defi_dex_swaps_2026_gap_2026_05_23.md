@@ -178,7 +178,18 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       `mtds-dex-swaps-backfill` in `vm_zombie_watchdog.py`. Deployment-service@0ba3844. Rebuilt tarballs
       (MTDS@6be284e702d0 clean). Launched `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c, e2-standard-4,
       2026-01-25→2026-05-23).
-- [ ] **T+10 verify mtds-dex-swaps-backfill** — confirm RUNNING + correct op + writes to correct bucket
+- [x] **T+10 verify mtds-dex-swaps-backfill (first launch)** — RUNNING at T+10. Correct op:
+      `--operation collect-dex-swaps --start-date 2026-01-25`. MTDS sha=6be284e702d0 confirmed. But VM terminated at
+      12:23:06 UTC with 120 payloads failed: `Unknown kind 'tick-data' for cloud 'gcp'`.
+- [x] **Root-caused `tick-data` kind bug + fixed UTL** (2026-05-24): `resolve_bucket_name(kind="tick-data")` —
+      `tick-data` not in `_KIND_ALIASES` or `cloud-providers.yaml`. ALL MTDS DeFi write handlers affected. Fix: added
+      `"tick-data": "market-data"` to `_KIND_ALIASES` in UTL `bucket_naming.py`. UTL@e51699c8. Resolves to
+      `market-data-tick-defi-prd-central-element-323112` (verified). Pushed to LDR.
+- [x] **Rebuild tarballs + relaunch with SHA pins** (2026-05-24): rebuilt tarballs (UTL@e51699c8 clean in tarball;
+      uv.lock foreign-dirty, --allow-dirty-tarball). Relaunched `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c,
+      e2-standard-4) with `UTL_TARBALL_SHA=e51699c8025c17bdbd1ef8e1e5a62fd5bc7a0e65` +
+      `MTDS_TARBALL_SHA=6be284e702d092ae0498e2614c45f1ea91d023f7`.
+- [ ] **T+10 verify mtds-dex-swaps-backfill (relaunch)** — confirm RUNNING + correct op + no `tick-data` error
 - [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-*` for 2026-01-25+; then
       reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
