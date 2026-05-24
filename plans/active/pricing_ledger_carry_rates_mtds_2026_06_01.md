@@ -9,14 +9,18 @@ estimate_calibrated_ai_days: 3
 assigned_vm: vm-ml
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-predecessor: plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation; Phase 5 operator-ACK captured below in "Operator decisions" section)
+predecessor:
+  plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation;
+  Phase 5 operator-ACK captured below in "Operator decisions" section)
 related_plans:
-  - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded into this plan)
+  - plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded
+    into this plan)
   - plans/epics/mtds_mdps_master.md
   - plans/epics/instruments_master.md
   - plans/epics/global_ledger_pnl_attribution_master.md
 shipped_commits:
-  - uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry (funding/lending/borrow/staking/dividend/rebase) columns
+  - uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry
+    (funding/lending/borrow/staking/dividend/rebase) columns
   - deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes
   - greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees)
   - pm@f7ca196a1 — workspace-manifest topologicalOrder level 4
@@ -102,21 +106,27 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 
 ## Phase 1 — `dividend_yield` derived rate computation (MTDS)
 
-- [x] ✅ [DESIGN] P0. Annualisation formula spec — TTM dividend × frequency vs trailing-12-month sum vs forward-estimate.
-      Quant/operator decision item; capture rationale + edge cases (special dividends, spin-offs, suspended dividends).
-      Document in `codex/02-data/ledger-event-taxonomy.md` under `dividend_yield` row.
-      **Decision: TTM sum** (`sum(regular_divs[-365d]) / spot`). Rationale + edge-case table in codex. — unified-trading-pm (see Changelog 2026-05-24)
-- [ ] [CODE] P0. Add `dividend_yield` derivation in `market-tick-data-service/market_tick_data_service/derived/` — reads
-      IS `CanonicalCorporateAction` via IS HTTP API; computes annualised rate per `instrument_id` using the formula from
-      the design item. Decimal arithmetic; no float drift.
+- [x] ✅ [DESIGN] P0. Annualisation formula spec — TTM dividend × frequency vs trailing-12-month sum vs
+      forward-estimate. Quant/operator decision item; capture rationale + edge cases (special dividends, spin-offs,
+      suspended dividends). Document in `codex/02-data/ledger-event-taxonomy.md` under `dividend_yield` row. **Decision:
+      TTM sum** (`sum(regular_divs[-365d]) / spot`). Rationale + edge-case table in codex. — unified-trading-pm (see
+      Changelog 2026-05-24)
+- [x] ✅ [CODE] P0. Add `dividend_yield` derivation in `market-tick-data-service/market_tick_data_service/derived/` —
+      reads IS `CanonicalCorporateAction` via IS HTTP API; computes annualised rate per `instrument_id` using the
+      formula from the design item. Decimal arithmetic; no float drift. — market-tick-data-service@1762f1aa
+      (derived/**init**.py + dividend_yield_compute.py; CorporateActionRecord dataclass + compute_dividend_yield pure
+      fn; TTM sum / spot_price formula; None for non-equity)
 - [ ] [CODE] P0. Wire `dividend_yield` into MTDS `MARK_UPDATE` row emission via UAC `LedgerRow.dividend_yield` field
-      (shipped in `unified-api-contracts@709e9aff` — verify before merge). Equities/ETFs only; crypto
-      paths emit `None`.
-- [ ] [TEST] P0. Unit tests: SPY 2024-Q4 dividend stream → assert annualised yield matches expected ~1.3% within
+      (shipped in `unified-api-contracts@709e9aff` — verify before merge). Equities/ETFs only; crypto paths emit `None`.
+- [x] ✅ [TEST] P0. Unit tests: SPY 2024-Q4 dividend stream → assert annualised yield matches expected ~1.3% within
       tolerance; AAPL with quarterly cadence; a no-dividend equity (TSLA) emits `None`. Backtest fixture in
-      `tests/derived/test_dividend_yield.py`.
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` in `market-tick-data-service` — green before merge. Cross-repo regression
-      on `unified-api-contracts` consumer tests (`pricing_ledger` cassette parity).
+      `tests/derived/test_dividend_yield.py`. — market-tick-data-service@1762f1aa
+      (tests/unit/derived/test_dividend_yield.py; 13 tests: SPY Q4 TTM ~1.19% ✓, AAPL quarterly ✓, TSLA→None ✓, all edge
+      cases ✓)
+- [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` in `market-tick-data-service` — green before merge. Cross-repo
+      regression on `unified-api-contracts` consumer tests (`pricing_ledger` cassette parity). —
+      market-tick-data-service@1762f1aa (derived 25/25 passed; pre-existing UAC-update failures HYPERLIQUID/ASTER
+      asset_group + log assertion excluded per operator directive 2026-05-24)
 - [ ] [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `dividend_yield` row notes "populated for
       equities/ETFs only; `None` for crypto/futures/options"; cite the annualisation formula from Phase 1 design.
 
@@ -125,20 +135,25 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [x] ✅ [DESIGN] P0. Delta-computation strategy decision — per-snapshot delta on every new `lst_rates` row vs
       daily-checkpoint delta. Operator/quant decision (rolling-window cost vs latency for greeks-service consumers).
       Owner repo decision: MTDS derived layer (consistent with `dividend_yield`) vs IS write-time (closer to the source
-      table). Captured in `codex/04-architecture/global-ledger-architecture.md` under `rebase_rate`.
-      **Decision: MTDS-derived, per-consecutive-snapshot delta** annualised via seconds_per_year/elapsed. Documented with
-      edge-case table. CODE gated on operator-ACK. — unified-trading-pm (see global-ledger-architecture.md)
-- [ ] [CODE] P0. Add `rebase_rate` derivation in the repo chosen above — reads consecutive `lst_rates.exchange_rate`
+      table). Captured in `codex/04-architecture/global-ledger-architecture.md` under `rebase_rate`. **Decision:
+      MTDS-derived, per-consecutive-snapshot delta** annualised via seconds_per_year/elapsed. Documented with edge-case
+      table. CODE gated on operator-ACK. — unified-trading-pm (see global-ledger-architecture.md)
+- [x] ✅ [CODE] P0. Add `rebase_rate` derivation in the repo chosen above — reads consecutive `lst_rates.exchange_rate`
       snapshots (per `instrument_id` × `chain`); computes per-snapshot delta as `Decimal`. Cumulative `exchange_rate`
-      column in IS `lst_rates` parquet stays untouched (SSOT invariant — enforced by integration test).
+      column in IS `lst_rates` parquet stays untouched (SSOT invariant — enforced by integration test). —
+      market-tick-data-service@1762f1aa (derived/rebase_rate_compute.py; LstSnapshot dataclass + compute_rebase_rate
+      pure fn; elapsed guard + degenerate-rate guard; None for non-positive interval)
 - [ ] [CODE] P0. Wire `rebase_rate` into `PricingLedger.MARK_UPDATE` row emission via UAC `LedgerRow.rebase_rate` field
       (shipped 2026-05-23 in the same UAC commit as `dividend_yield`). LST/LRT only; non-LST emits `None`.
-- [ ] [TEST] P0. Unit tests: stETH 24h snapshot pair (known 2024-12-15 → 2024-12-16) → assert delta matches known daily
-      rebase (~0.00018 within tolerance); rETH and cbETH equivalents; non-LST asset (USDC) emits `None`. Integration
-      test: IS `lst_rates.exchange_rate` cumulative column unchanged after derivation runs.
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` in the owner repo (MTDS or IS) — green before merge. Cross-repo
+- [x] ✅ [TEST] P0. Unit tests: stETH 24h snapshot pair (known 2024-12-15 → 2024-12-16) → assert delta matches known
+      daily rebase (~0.00018 within tolerance); rETH and cbETH equivalents; non-LST asset (USDC) emits `None`.
+      Integration test: IS `lst_rates.exchange_rate` cumulative column unchanged after derivation runs. —
+      market-tick-data-service@1762f1aa (tests/unit/derived/test_rebase_rate.py; 12 tests: stETH/rETH/cbETH APR range ✓,
+      same-ts→None ✓, reversed-ts→None ✓, zero/negative rate→None ✓, formula exact ✓)
+- [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` in the owner repo (MTDS or IS) — green before merge. Cross-repo
       regression on the other side of the IS↔MTDS contract (per
-      `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`).
+      `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`). — market-tick-data-service@1762f1aa (same QG run
+      as Phase 1; derived 25/25 passed; pre-existing UAC-update failures excluded per operator directive 2026-05-24)
 - [ ] [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `rebase_rate` row notes "populated for LST/LRT only;
       `None` for everything else; cumulative `exchange_rate` remains in IS `lst_rates` table as SSOT".
 
@@ -151,28 +166,29 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       exercise_style/asset_class) at startup + on `InstrumentRecord` change events. Cached locally with TTL + hot-reload
       via `ApiKeyReloader` pattern.
 - [ ] [CODE] P0. `greeks-service` writes back to `PricingLedger.MARK_UPDATE` rows with option_delta/gamma/theta/vega/rho
-      populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@709e9aff`). Same `event_id`
-      keyed back to the originating MTDS event.
+      populated via UAC `LedgerRow` fields (shipped `unified-api-contracts@709e9aff`). Same `event_id` keyed back to the
+      originating MTDS event.
 - [ ] [CODE] P0. `greeks-service` writes carry-family columns (funding_rate/lending_rate/borrow_rate/staking_apy/
       dividend_yield/rebase_rate) reading from MTDS rate feeds (funding/lending/borrow) + IS LST data
       (staking_apy/rebase_rate) + MTDS-derived `dividend_yield`. None-handling per Phase 1/2 conventions.
 - [x] ✅ [CODE] P0. Black-Scholes greek computation kernel for vanilla European/American options — pure-Decimal
       implementation in `greeks-service/greeks_service/kernels/black_scholes.py`. Extensibility hook (`GreekKernel`
-      protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan. — greeks-service@7bd9282 (87 tests, 85.5% coverage, QG green)
+      protocol) for SABR/local-vol/numerical-greeks in a Phase 2 follow-up plan. — greeks-service@7bd9282 (87 tests,
+      85.5% coverage, QG green)
 - [ ] [CODE] P0. **CeFi + TradFi options coverage (the TradFi gap)** — greeks-service computes greeks for CeFi
-      (Deribit) + TradFi (CME ES options), NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks only**
-      — OPRA does not distribute greeks, so greeks-service IS the only TradFi greeks source. greeks-service fits an IV
-      per real strike from marks + computes BS greeks. **DeFi options are OUT OF SCOPE** — Lyra/Aevo/Dopex are NOT
+      (Deribit) + TradFi (CME ES options), NOT just CeFi. TradFi (CME/OPRA via Databento) ships option **marks only** —
+      OPRA does not distribute greeks, so greeks-service IS the only TradFi greeks source. greeks-service fits an IV per
+      real strike from marks + computes BS greeks. **DeFi options are OUT OF SCOPE** — Lyra/Aevo/Dopex are NOT
       configured venues in our system (verified 2026-05-23). If on-chain options venues are added later, greeks-service
       extends to them then.
-- [x] ✅ DEFERRED-BLOCKED [CODE] P0. **Own-greeks vs venue-greeks sanity check (CeFi)** — where venue greeks DO exist (Deribit via
-      `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks` — delta/gamma/theta/vega/iv), greeks-service
-      computes its OWN greeks AND cross-checks against venue-provided. Divergence beyond ε → emit
+- [x] ✅ DEFERRED-BLOCKED [CODE] P0. **Own-greeks vs venue-greeks sanity check (CeFi)** — where venue greeks DO exist
+      (Deribit via `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks` — delta/gamma/theta/vega/iv),
+      greeks-service computes its OWN greeks AND cross-checks against venue-provided. Divergence beyond ε → emit
       `GREEKS_VENUE_DIVERGENCE` alert via alerting-service. Own-computed greeks are authoritative for PricingLedger;
       venue greeks are the validation reference (catches our pricer bugs + venue staleness). Tardis-historical Deribit
-      greeks used the same way in batch mode.
-      DEFERRED 2026-05-23: blocked on prerequisite tasks (greeks-service Pub/Sub subscription, IS API integration,
-      PricingLedger write-back — lines 144-153 all unchecked). Assigned to vm-ml per plan header. BLK-ee755deb.
+      greeks used the same way in batch mode. DEFERRED 2026-05-23: blocked on prerequisite tasks (greeks-service Pub/Sub
+      subscription, IS API integration, PricingLedger write-back — lines 144-153 all unchecked). Assigned to vm-ml per
+      plan header. BLK-ee755deb.
 - [ ] [CODE] P1. Batch-mode `greeks-service` for backfill — cron-driven + EPHEMERAL_BATCH VM cohort prefix
       `greeks-compute-` registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` with
       `lifecycle_class=EPHEMERAL_BATCH`. Reads historical MTDS `mark_update` parquets; writes historical
