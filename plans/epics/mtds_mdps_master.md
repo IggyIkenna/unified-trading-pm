@@ -565,6 +565,13 @@ MTDS adapters preflight + batch-live parity
 
 ## P2 — useful; opportunistic
 
+### GCS partition rename: `dex_pool_state` → `dex_pools` (Phase 9 of data_type_canonicalization)
+
+- [ ] [SCRIPT] P2. **DEFERRED** — Rename on-disk hive partition `data_type=dex_pool_state` → `data_type=dex_pools` so
+      physical GCS path matches UAC canonical name. Bundle into next GCS migration window (single-walk discipline).
+      After rename: remove override mapping in `features-service/onchain/app/core/mtds_output_config.py`. Full spec:
+      [`data_type_canonicalization_2026_05_23.md`](../active/data_type_canonicalization_2026_05_23.md) Phase 9.
+
 ### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 
 **status**: active · **estimate**: 1.5 cal AI-days (class: design) **title**: available_at + lookahead-bias master —
@@ -617,7 +624,7 @@ AI-days (class: infra)
   after 2026-01-24 → no Ethereum DEX swap data for 2026-01-25→present; all 2026 date-cells will be
   `empty_confirmed/SOURCE_RETURNED_ZERO`. Needs MTDS relaunch for 2026. ⚠️ **3 MTDS handler bugs fixed 2026-05-23
   (slot-4)** (`mtds@69d694b1` + `@e86a6ad8`): (1) `dex_swaps` hardcoded `dex_pool_swaps` partition key — fixed; (2)
-  `gas_fees` null eth_feeHistory silently returned 0 — fallback now triggers; (3) `lending_indices` silently skipped on
+  `gas_fees` null eth*feeHistory silently returned 0 — fallback now triggers; (3) `lending_indices` silently skipped on
   missing The Graph key — now raises. **SOURCE_RETURNED_ZERO manifest cleanup in progress** (running
   `scripts/reset_source_returned_zero_manifest.py` across all 5 buckets). **Relaunch VMs AFTER cleanup finishes.**
   **MTDS DeFi backfill VM launched 2026-05-23 21:15 UTC** — `mtds-backfill-defi-20260523` RUNNING (asia-northeast1-c,
@@ -625,9 +632,12 @@ AI-days (class: infra)
   13,826 SOURCE_RETURNED_ZERO rows deleted from DeFi bucket before launch. ⚠️ **EIGHTH FIX — UAC@8e1e7e58 (slot-2
   2026-05-23)**: `lookup_contract` added lowercase fallback for `instrument_type` — raw parquets write `POOL`
   (uppercase) but registry keys are `pool` (lowercase). Fix averts `SchemaContractNotFoundError` on every DEX pool shard
-  (`swaps_ohlcv**`candles were silently absent in 195633 batch). 195633 VMs CANNOT benefit (stale tarball). **Operator action after 195633 VMs + backfill-defi VM complete**: rebuild tarballs (picks up UAC@8e1e7e58), relaunch MDPS DeFi 2024-2025 to backfill missing`swaps*ohlcv*_`candles. Issue:`plans/active/issues/mdps*defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
-  ⚠️ **NINTH/TENTH/ELEVENTH FIX — UAC@c8c93328 + MDPS@7f1a5b5 + UTL@a56c22c6 (slot-2 2026-05-23 ~22:xx UTC)**: 215530
-  VMs (relaunched after #8) also failed with SCHEMA_VALIDATION_FAILED on all swaps_ohlcv*_ shards — 3 root causes: (1)
+  (`swaps_ohlcv**`candles were silently absent in 195633 batch). 195633 VMs CANNOT benefit (stale tarball). **Operator
+  action after 195633 VMs + backfill-defi VM complete**: rebuild tarballs (picks up UAC@8e1e7e58), relaunch MDPS DeFi
+  2024-2025 to backfill
+  missing`swaps*ohlcv**`candles. Issue:`plans/active/issues/mdps*defi_swaps_ohlcv_schema_lookup_2026_05_23.md`. ⚠️
+  **NINTH/TENTH/ELEVENTH FIX — UAC@c8c93328 + MDPS@7f1a5b5 + UTL@a56c22c6 (slot-2 2026-05-23 ~22:xx UTC)**: 215530 VMs
+  (relaunched after #8) also failed with SCHEMA_VALIDATION_FAILED on all swaps_ohlcv*\_ shards — 3 root causes: (1)
   `DefiSwapAdapter` returned `CandleOutput` without `chain`/`swap_count`/`volume_quote_usd` required by UAC contract →
   added fields to `CandleOutput` + adapter now populates from tick data `chain` column; (2) `_TIMEFRAMES_DEFI` lacked
   `4h` → added; (3) `_infer_chain()` returned `""` for 3-part pool IDs → improved fallback to parse from canonical venue

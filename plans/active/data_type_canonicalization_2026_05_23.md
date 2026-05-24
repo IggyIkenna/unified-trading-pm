@@ -138,11 +138,21 @@ all service repos returns zero hits in non-test Python source.
       market-tick-data-service
 - [x] [TEST] P1. Execution test: validate AMM book_type_requirements keys match UAC canonical names — execution-service
 
+## Phase 9 — GCS partition rename: dex_pool_state → dex_pools [P2]
+
+- [ ] [SCRIPT] P2. **DEFERRED** — Rename on-disk GCS hive partition segment `data_type=dex_pool_state` →
+      `data_type=dex_pools` so the physical path matches the UAC canonical name. Must bundle into next scheduled GCS
+      migration window (single-walk discipline — no standalone walk). Pre-migration drain REQUIRED (stop all DeFi MTDS
+      VMs + run manifest consolidator before walk). After rename: remove `dex_pools`→`dex_pool_state` path-override
+      mapping from `features-service/onchain/app/core/mtds_output_config.py` and update features-service parquet path
+      resolution. Successor to archived `gcs_migration_bundle_pipeline_mode_2026_05_08.md`. — market-tick-data-service,
+      features-service, unified-trading-pm
+
 ## Temporary states + their canonical follow-up plans
 
 - `dex_pool_state` on-disk GCS path segment for `dex_pools`: intentional legacy — GCS data is NOT re-keyed per
   single-walk discipline. Feature service mtds_output_config.py maintains the `dex_pools`→`dex_pool_state` path mapping.
-  Named successor: bundle into next Phase 2 GCS migration window per `gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
+  Named successor: Phase 9 above (this plan).
 
 ## Completion evidence (2026-05-23)
 
