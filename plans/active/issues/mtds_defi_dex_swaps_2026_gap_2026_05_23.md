@@ -292,10 +292,12 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       (asia-northeast1-c, e2-standard-8) with MDPS@6c9045160577 (all fixes: related_data_types, amount_usd, chain,
       swap_count dtype, venue derivation) + UTL@e51699c8. Range 2026-01-01→2026-05-24; confirmed processing 2026-02-10
       with 9 dex_swaps files found from prd bucket.
-- [ ] **T+10 verify mtds-dex-swaps-backfill** (2026-01-01→2026-01-24) — confirm RUNNING + writing prd bucket
-      raw_tick_data/by_date/ + MTDS@703854ba + UTL@e51699c8.
-- [ ] **T+10 verify mdps-defi-2026-20260524-195319** — already seen processing 2026-02-10 with 9 files; confirm running
-      beyond first few dates.
+- [x] ✅ **T+10 verify mtds-dex-swaps-backfill** (2026-01-01→2026-01-24) — RUNNING. At 19:06 UTC startup confirmed:
+      `--operation collect-dex-swaps --mode batch --asset-group DEFI --start-date 2026-01-01 --end-date 2026-01-24`. By
+      19:19 UTC: writing prd bucket `raw_tick_data/by_date/day=2026-01-17/` (BALANCER+CURVE+SUSHISWAP). Manifest shard
+      3026 entries. MTDS@703854ba + UTL@e51699c8 confirmed from GCS log. — slot-7 2026-05-24
+- [x] ✅ **T+10 verify mdps-defi-2026-20260524-195319** — RUNNING. At 19:19 UTC processing day=2026-04-29+. Heartbeat
+      sidecar writing to GCS every ~60s. Correct prd bucket confirmed. 9 files/day processed. — slot-7 2026-05-24
 - [ ] **After MTDS 2026-01→01-24 completes: relaunch MDPS for those dates** — once `mtds-dex-swaps-backfill` exits 0,
       rerun MDPS DeFi 2026-01-01→2026-01-24 with MDPS@6c9045160577 + UTL@e51699c8.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
