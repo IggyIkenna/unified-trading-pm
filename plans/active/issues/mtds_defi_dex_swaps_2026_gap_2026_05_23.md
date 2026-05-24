@@ -251,9 +251,13 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 - [x] **T+10 verify mdps-defi-2026-20260524-182633** (2026-05-24 ~17:33 UTC): RUNNING, e2-highmem-8 confirmed.
       Processing 18/18 succeeded per 18-file date (~8.5s each), no memory backpressure. By 17:33 UTC: passed 2026-02-06
       (9-file dates), no OOM. PM@067468b71.
-- [x] **182633 status at 19:10 UTC** (slot-7): Shard shows 1766 rows (2026-02-06 to 2026-05-11, 95 dates). Heartbeat last
-      updated 18:10:32 UTC (60+ min stale). No serial port output after 18:10. VM still RUNNING but likely done/crashed.
-      Will be killed by fixed watchdog on next tick.
+- [x] **182633 status at 19:10 UTC** (slot-7): Shard shows 1766 rows (2026-02-06 to 2026-05-11, 95 dates). Heartbeat
+      last updated 18:10:32 UTC (60+ min stale). No serial port output after 18:10. VM still RUNNING but likely
+      done/crashed. Will be killed by fixed watchdog on next tick.
+- [x] **182633 CONFIRMED COMPLETED** (slot-6, 18:13 UTC): VM STOPPED exit_code=1 (dep check skipped 2026-05-23 +
+      2026-05-24 — no MTDS raw data in prd bucket; correct honest absence). Final shard: **1,943 captured rows,
+      2026-02-06→2026-05-22, 106 unique dates**. slot-7's 18:10 snapshot was intermediate (1,766 rows/95 dates) — VM
+      continued past 2026-05-11 to 2026-05-22 before stopping.
 
 **Zombie watchdog fix (slot-7 2026-05-24 ~19:00 UTC)**:
 
@@ -270,8 +274,10 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
 
 - [ ] **T+10 verify watchdog 190841** — confirm `from unified_api_contracts import VmPrefixSpec` succeeds with venv
       Python 3.13. First watchdog tick should kill stale 182633 VM (heartbeat >15 min stale).
-- [ ] **Assess 2026 backfill completeness** — 182633 covered 2026-02-06 to 2026-05-11 + 165353 covered 2026-01-25 to
-      2026-02-05. Missing: 2026-01-01 to 2026-01-24 and 2026-05-12 to 2026-05-24. Relaunch if needed.
+- [x] **Assess 2026 backfill completeness** (slot-6, 18:14 UTC): Combined coverage — 165353 (224 rows, 2026-01-25→
+      2026-02-05, 12 dates) + 182633 (1,943 rows, 2026-02-06→2026-05-22, 106 dates) = **2,167 rows, 118 unique dates,
+      all captured**. Gaps are expected honest absence: 2026-01-01→2026-01-24 (no MTDS raw data — MTDS started
+      2026-01-25); 2026-05-23 (no MTDS raw tick data in prd bucket — dep check correct). No relaunch needed.
 - [ ] **Verify dex_pool_swaps candles in processed_candles/** for 2022-2025 once 2024+2025 VMs fully confirmed done.
 
 ## Evidence
