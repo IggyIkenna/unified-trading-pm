@@ -261,8 +261,12 @@ launch).
   - `2025`: processing 2025-01-27 (~7% of year — ~18h remaining; large pool count per day)
   - `2026`: processing 2026-03-27 (~59% of year — ~1h remaining)
   - `2022` / `2023`: COMPLETED (auto-deleted post-exit-code=0). No `_infer_chain` issues in 2022/2023 100217 logs.
-- ⚠️ **Post-VM reconciliation pending**: `rebuild_manifest_from_canonical_paths(...)` blocked until all 3 remaining
-  101628 VMs terminate (~18h for 2025 VM). Will run automatically when VMs complete.
+- 2026-05-24 ~12:30 UTC — **2026 VM COMPLETED** (auto-deleted). **Updated ETA for remaining VMs** (later months are
+  denser — 340+ pools/day vs 322 in Jan, ~7 min/day observed vs 0.6 min/day in Jan):
+  - `2024`: at 2024-06-28 (day 180/366, ~49%) — ~22h remaining → ETA ~11:00 UTC 2026-05-25
+  - `2025`: at 2025-02-27 (day 58/365, ~16%) — ~36h remaining → ETA ~01:00 UTC 2026-05-26
+- ⚠️ **Post-VM reconciliation pending**: `rebuild_manifest_from_canonical_paths(...)` blocked until both remaining
+  101628 VMs terminate. ETA ~2026-05-26 01:00 UTC (2025 VM is bottleneck). Will run automatically when VMs complete.
 
 ## Plan refs
 
