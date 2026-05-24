@@ -94,8 +94,9 @@ PARALLEL-safe across themes. This gives every confirmed finding a plan home (rep
       `transfer_coordinator.py:241`). Pick one; the invariant already HOLDS structurally.
 - [ ] [AGENT] P2. **F-35(c)** — Make `DefiErrorCode` a `StrEnum` (currently a plain class, 35 string attrs,
       `errors/defi.py:27`) for exhaustiveness guarantees.
-- [ ] [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
-      RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19).
+- [x] ✅ [DOC] P2. **F-27** — Update the "30 DefiErrorCodes" count in CLAUDE.md + codex to **35** (13 Aave + 7
+      RECURSIVE_LOOP + 8 HL + 2 ORACLE + 5 CCTP added 2026-05-19). — PM@e4e099b6e (MASTER_READINESS codex updated
+      2026-05-24; workspace CLAUDE.md + defi-execution-overview.md already correct)
 - [ ] [AGENT] P3. **F-20 residual** — Delete the dead `.extra/features-onchain-service` +
       `.extra/features-delta-one-service` dependency-checker copies (the LIVE `features-service/onchain` already reads
       `capture_status` correctly — §6.1 REFUTED on live path). Verify nothing deploys `.extra` before deleting.
