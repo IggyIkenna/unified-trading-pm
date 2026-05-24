@@ -246,6 +246,25 @@ if df["price"].min() <= 0 or df["price"].max() > 1_000_000:
 
 ---
 
+## Data Type Catalogs (per asset group)
+
+Per-asset-group canonical references for every data type: methodology, sources, schema fields, shard key, base
+granularity, NEEDS_CANDLE flag, handler class, and status.
+
+| Asset group | Catalog doc                                                                   | Completeness                                      |
+| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
+| DeFi        | [defi-data-types-catalog.md](defi-data-types-catalog.md)                      | ✅ Comprehensive (14 types)                       |
+| TradFi      | [tradfi-data-types-catalog.md](tradfi-data-types-catalog.md)                  | ✅ Comprehensive (9 types)                        |
+| Sports      | [sports-data-types-catalog.md](sports-data-types-catalog.md)                  | ✅ Comprehensive (8 types)                        |
+| Prediction  | [prediction-data-types-catalog.md](prediction-data-types-catalog.md)          | ✅ Comprehensive (3 types)                        |
+| CeFi        | [mtds-data-source-coverage-matrix.md](mtds-data-source-coverage-matrix.md) §2 | 🟡 Partial (coverage axes; no standalone catalog) |
+
+Related: [defi-data-type-taxonomy.md](defi-data-type-taxonomy.md) (cluster validation matrix),
+[defi-venue-protocol-catalogue.md](defi-venue-protocol-catalogue.md) (protocol × chain coverage),
+[contracts-scope-and-layout.md](contracts-scope-and-layout.md) (canonical names + banned aliases).
+
+---
+
 ## Directory Structure
 
 ```
@@ -254,13 +273,15 @@ if df["price"].min() <= 0 or df["price"].max() > 1_000_000:
 ├── bucket-naming-and-config.md     # GCP_PROJECT_ID canonical, bucket prefix + project ID
 ├── schema-governance.md            # Service-owned schemas, validation patterns
 ├── partitioning.md                 # GCS partitioning strategy (YYYY/MM/DD)
+├── contracts-scope-and-layout.md   # UAC scope + canonical data type names + banned aliases
+├── defi-data-types-catalog.md      # DeFi: 14 data types with methodology + schema
+├── tradfi-data-types-catalog.md    # TradFi: 9 data types with methodology + schema
+├── sports-data-types-catalog.md    # Sports: 8 data types with methodology + schema
+├── prediction-data-types-catalog.md # Prediction: 3 data types with methodology + schema
+├── availability-manifest-and-data-status.md  # Manifest v8 schema + coverage semantics
+├── pipeline-coverage-matrix.md     # MTDS/MDPS coverage matrix per (asset_group, data_type)
 ├── subscription-model.md           # Pub/Sub topics, message formats
-├── hive-schema-compatibility.md    # BigQuery external table compatibility
-├── sports-data-sources.md          # Sports API integrations (DraftKings, FanDuel, etc.)
-├── sports-api-testing.md           # Sports API testing, mock data
-├── _common/                        # Common patterns across batch/live
-├── batch/                          # Batch-specific data patterns
-└── live/                           # Live-specific data patterns
+└── ...                             # Additional docs: partitioning, hive-compat, sports-sources
 ```
 
 ---
