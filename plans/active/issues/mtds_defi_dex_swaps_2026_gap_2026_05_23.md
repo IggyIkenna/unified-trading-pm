@@ -192,7 +192,16 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       uv.lock foreign-dirty, --allow-dirty-tarball). Relaunched `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c,
       e2-standard-4) with `UTL_TARBALL_SHA=e51699c8025c17bdbd1ef8e1e5a62fd5bc7a0e65` +
       `MTDS_TARBALL_SHA=6be284e702d092ae0498e2614c45f1ea91d023f7`.
-- [ ] **T+10 verify mtds-dex-swaps-backfill (relaunch)** — confirm RUNNING + correct op + no `tick-data` error
+- [x] **T+10 verify FAILED — UTL SHA mismatch** (2026-05-24): VM startup failed at uv pip install.
+      `UTL_TARBALL_SHA=e51699c8025c17bdbd1ef8e1e5a62fd5bc7a0e65` is NOT the actual GCS tarball SHA
+      (`e51699c8025cfebc90f45a798f662e57878dbe22` — diverge at char 13). VM skipped UTL → uv could not satisfy
+      `unified-trading-library>=0.1.0,<1.0.0`. VM TERMINATED.
+- [x] **Fixed: relaunched with correct UTL SHA + MTDS SHA** (2026-05-24): also added --mtds-sha/--utl-sha CLI flags to
+      `launch-mtds-dex-swaps-backfill-vm.sh` (deployment-service@29bb074). Launched `mtds-dex-swaps-backfill` RUNNING
+      (asia-northeast1-c, e2-standard-4) with `UTL_TARBALL_SHA=e51699c8025cfebc90f45a798f662e57878dbe22` +
+      `MTDS_TARBALL_SHA=ef195e57d2cbecd0af7a02e702b0659c185e8dc3`.
+- [ ] **T+10 verify mtds-dex-swaps-backfill (3rd launch)** — confirm RUNNING + correct op + no `tick-data` error +
+      writing to `market-data-tick-defi-prd-central-element-323112`
 - [ ] **Post-completion**: verify `data_type=dex_swaps/` rows appear in `market-data-tick-defi-*` for 2026-01-25+; then
       reset SOURCE_RETURNED_ZERO manifest entries for 2026 DeFi dex_swaps and relaunch `mdps-defi-2026-*` for 2026. Also
       verify dex_pool_swaps candles in processed_candles/ for 2022-2025 once 2024+2025 VMs complete.
