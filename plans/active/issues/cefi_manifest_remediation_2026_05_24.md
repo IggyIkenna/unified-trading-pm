@@ -74,12 +74,27 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
       Blocked on operator decision per MDPS-3.3.CeFi gate — see bait_sentinel item below.
       — investigation complete 2026-05-24
 
-### P1 — BINANCE-SPOT Tardis probe (15K rows)
+### P1 — BINANCE-SPOT Tardis probe (93K rows total)
 
-- [ ] [SCRIPT] P1. Sample 10 BINANCE-SPOT `VENUE_FETCH_FAILED` rows (book_snapshot_5/trades, scattered years). Check
-      Tardis endpoint for those specific (date, symbol) combos. If data absent → relabel as
-      `empty_confirmed[EXPECTED_NO_SOURCE_DATA]`. If data present → mark for MTDS retry with `VM_FORCE=true` on a
-      targeted date-range VM.
+- [x] ✅ [SCRIPT] P1. Tardis probe complete. Fetched full Tardis Binance symbol list (3,296 instruments with
+      `availableSince` dates). Cross-referenced all 92,950 BINANCE-SPOT `attempted_failed[VENUE_FETCH_FAILED]` rows:
+
+      | Classification         | Count  | Action                                          |
+      | ---------------------- | ------ | ----------------------------------------------- |
+      | PRE_LAUNCH             | 14,812 | Relabeled → `empty_confirmed[EXPECTED_NO_SOURCE_DATA]` |
+      | POST_TARDIS_COVERAGE   |    714 | Relabeled → `empty_confirmed[EXPECTED_NO_SOURCE_DATA]` |
+      | RETRY_CANDIDATE        | 77,424 | Instrument existed at data date → needs VM_FORCE=true retry |
+
+      PRE_LAUNCH instruments: TIA (2,792), SUI (2,430), ARB (2,348), APT (2,038), OP (1,758), INJ (856), FIL (580),
+      NEAR (574), AVAX (530), DOT (460), SOL (446) — dates before instrument was listed on Binance.
+
+      15,526 rows relabeled inline 2026-05-24 — utl-inline@2026-05-24 (180,743,631 bytes)
+
+- [ ] [AGENT] P1. **BLOCKED-OPERATOR-DECISION** — 77,424 BINANCE-SPOT `attempted_failed[VENUE_FETCH_FAILED]` rows are
+      genuine Tardis fetch failures (instruments existed at the data date). These span ALL VM runs (April-May 2026): 77K
+      rows across `book_snapshot_5` (38,726) + `trades` (38,698) across 2019–2026. **Operator decision needed**: (a)
+      retry via VM_FORCE=true CeFi VM targeting BINANCE-SPOT full date range, OR (b) accept as confirmed-absent with
+      `EXPECTED_NO_SOURCE_DATA`. Do NOT auto-launch per MTDS-3.3.CeFi gate.
 
 ### P1 — bait_sentinel retry decision (960K rows)
 
@@ -93,9 +108,10 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
 - ✅ 0 rows with `LegacyBlankErrorReasonError` reason — GREEN 2026-05-24 (674K relabeled to VENUE_FETCH_FAILED)
 - ✅ 0 rows with `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` reason — GREEN 2026-05-24 (452K relabeled to
   VENUE_FETCH_FAILED)
-- ✅ DERIBIT/HYPERLIQUID investigation complete — rows are already correctly typed `VENUE_FETCH_FAILED`; retry decision
-  is operator-gated (see bait_sentinel item)
-- ⬜ BINANCE-SPOT disposition determined (retry or relabel) — P1 Tardis probe pending
+- ✅ DERIBIT/HYPERLIQUID investigation complete — already correctly typed `VENUE_FETCH_FAILED`; retry decision is
+  operator-gated (see bait_sentinel item)
+- ✅ BINANCE-SPOT disposition: 15,526 pre-launch rows relabeled → `EXPECTED_NO_SOURCE_DATA` 2026-05-24; 77,424 retry
+  candidates flagged — **BLOCKED-OPERATOR-DECISION** (BINANCE-SPOT VM_FORCE=true retry)
 - ⬜ bait_sentinel rows: operator-acked decision on retry vs relabel — BLOCKED-OPERATOR-DECISION
 - ✅ 100% schema_version=8 — GREEN 2026-05-24 (34,839,742 rows upgraded)
 
