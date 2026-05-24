@@ -144,23 +144,23 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 
 ### DEFI
 
-| protocol                                           | chains                                      | inst_type      | mtds_ops                                                                 |
-| -------------------------------------------------- | ------------------------------------------- | -------------- | ------------------------------------------------------------------------ |
-| AAVE_V3                                             | ETH, ARB, OPT, POLY, AVAX, BASE, BSC, LINEA | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
-| SPARK                                              | ETH                                         | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
-| COMPOUND_V3                                         | ETH, ARB, BASE, OPT                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
-| MORPHO                                             | ETH, BASE                                   | LENDING        | liquidations, gas_fees (no lending_indices — uses `blue-api.morpho.org`) |
-| FLUID                                              | ETH                                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
-| UNISWAP_V2 / V3 / V4                                | V2:ETH; V3:ETH/ARB/BASE/OPT/POLY; V4:ETH    | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| BALANCER                                           | ETH, ARB, POLY, OPT, AVAX, BASE             | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| CURVE                                              | ETH, OPT, AVAX                              | POOL           | dex_pools, dex_swaps, gas_fees                                           |
+| protocol                                               | chains                                      | inst_type      | mtds_ops                                                                 |
+| ------------------------------------------------------ | ------------------------------------------- | -------------- | ------------------------------------------------------------------------ |
+| AAVE_V3                                                | ETH, ARB, OPT, POLY, AVAX, BASE, BSC, LINEA | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
+| SPARK                                                  | ETH                                         | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
+| COMPOUND_V3                                            | ETH, ARB, BASE, OPT                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
+| MORPHO                                                 | ETH, BASE                                   | LENDING        | liquidations, gas_fees (no lending_indices — uses `blue-api.morpho.org`) |
+| FLUID                                                  | ETH                                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
+| UNISWAP_V2 / V3 / V4                                   | V2:ETH; V3:ETH/ARB/BASE/OPT/POLY; V4:ETH    | POOL           | dex_pools, dex_swaps, gas_fees                                           |
+| BALANCER                                               | ETH, ARB, POLY, OPT, AVAX, BASE             | POOL           | dex_pools, dex_swaps, gas_fees                                           |
+| CURVE                                                  | ETH, OPT, AVAX                              | POOL           | dex_pools, dex_swaps, gas_fees                                           |
 | PANCAKESWAP_V3, SUSHISWAP_V3, AERODROME_V3, CAMELOT_V3 | per-chain                                   | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| GMX                                                | ARB, AVAX                                   | POOL           | dex_pools, dex_swaps, perp_funding, liquidations, gas_fees               |
-| LIDO, ETHERFI, ETHENA                              | ETH                                         | YIELD_BEARING  | lst_rates, oracle_prices, rewards, gas_fees                              |
-| EIGENLAYER                                         | ETH                                         | SPOT_ASSET     | rewards, oracle_prices, gas_fees                                         |
-| DRIFT                                              | SOLANA                                      | PERPETUAL+SPOT | perp_funding, oracle_prices                                              |
-| KAMINO, RAYDIUM, ORCA                              | SOLANA                                      | POOL           | dex_pools, dex_swaps                                                     |
-| MARINADE, JITO                                     | SOLANA                                      | STAKING        | lst_rates, oracle_prices                                                 |
+| GMX                                                    | ARB, AVAX                                   | POOL           | dex_pools, dex_swaps, perp_funding, liquidations, gas_fees               |
+| LIDO, ETHERFI, ETHENA                                  | ETH                                         | YIELD_BEARING  | lst_rates, oracle_prices, rewards, gas_fees                              |
+| EIGENLAYER                                             | ETH                                         | SPOT_ASSET     | rewards, oracle_prices, gas_fees                                         |
+| DRIFT                                                  | SOLANA                                      | PERPETUAL+SPOT | perp_funding, oracle_prices                                              |
+| KAMINO, RAYDIUM, ORCA                                  | SOLANA                                      | POOL           | dex_pools, dex_swaps                                                     |
+| MARINADE, JITO                                         | SOLANA                                      | STAKING        | lst_rates, oracle_prices                                                 |
 
 **Orphan adapters** (present, not in `PROTOCOL_CAPABILITIES`, not wired into orchestrator): `benqi.py`, `euler_v2.py`,
 `ethfi.py`, `radiant.py`, `venus.py`. Either dead or planned future venues.
@@ -226,8 +226,8 @@ BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master.md` item 2.P3.
 | category       | data_types                                                                        | venues                                                                              |
 | -------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | DEX            | dex_swaps, dex_pools                                                              | UNISWAP V2/V3/V4, CURVE, BALANCER, ORCA, RAYDIUM (per chains in §1)                 |
-| Lending        | lending_indices, oracle_prices, rewards, risk_params                              | AAVE_V3, COMPOUND_V3, MORPHO, FLUID, KAMINO                                           |
-| Lending events | liquidation_events, flash_loan_events, position_data                              | AAVE_V3-{ETH,ARB,POLY}, MORPHO-ETH, UNISWAP_V3-ETH                                    |
+| Lending        | lending_indices, oracle_prices, rewards, risk_params                              | AAVE_V3, COMPOUND_V3, MORPHO, FLUID, KAMINO                                         |
+| Lending events | liquidation_events, flash_loan_events, position_data                              | AAVE_V3-{ETH,ARB,POLY}, MORPHO-ETH, UNISWAP_V3-ETH                                  |
 | LST/Yield      | lst_rates, oracle_prices, staking_yields                                          | LIDO, ETHERFI, ETHENA, JITO                                                         |
 | Perp DEX       | perp_funding (+ liquidations, oracle_prices for GMX)                              | HYPERLIQUID, ASTER, GMX-ARB, GMX-AVAX                                               |
 | Gas            | gas_fees                                                                          | ALCHEMY-{ETH, OPT, BSC, POLY, BASE, ARB, AVAX, LINEA, FANTOM, CELO, MANTLE, AURORA} |
@@ -308,7 +308,7 @@ Standard timeframes: `15s, 1m, 5m, 15m, 1h, 4h, 24h`. Sports horizon-bucket time
 
 | data_type                                                                                                                                                                                      | scope      | status                                                               |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------- |
-| `rate_indices`, `oracle_prices`, `utilization`, `rewards`, `risk_params`, `gas_fees`, `lst_rates`, `tvl`                                                                                       | defi       | intentional pass-through (per `defi/__init__.py` docstring)          |
+| `lending_indices`, `oracle_prices`, `utilization`, `rewards`, `risk_params`, `gas_fees`, `lst_rates`, `tvl`                                                                                    | defi       | intentional pass-through (per `defi/__init__.py` docstring)          |
 | `perp_funding`                                                                                                                                                                                 | cefi/defi  | listed in scanner set, **no registered MDPS adapter** — possible gap |
 | `prediction_book_snapshot`, `prediction_market_metadata`                                                                                                                                       | prediction | retired 2026-04-19 (won't appear)                                    |
 | `liquidation_events`, `flash_loan_events`, `staking_yields`, `token_transfers`, `bridge_events`, `governance_events`, `eigenlayer_rewards`, `mev_events`, `position_data`, `vault_share_price` | defi       | pass-through                                                         |

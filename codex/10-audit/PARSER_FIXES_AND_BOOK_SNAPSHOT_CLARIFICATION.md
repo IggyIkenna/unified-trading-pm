@@ -136,8 +136,8 @@ services_with_start_dates = all_keys - metadata_fields
 
 #### DEFI (The Graph / Protocol SDKs)
 
-- No orderbook snapshots (AMM/protocol-specific data types: swaps, rate_indices, oracle_prices, utilization, liquidity,
-  risk_params)
+- No orderbook snapshots (AMM/protocol-specific data types: dex_swaps, lending_indices, oracle_prices, utilization,
+  dex_pools, risk_params)
 
 ---
 
@@ -281,7 +281,7 @@ python scripts/validate-alignment.py --check-drift
 
 - **CEFI**: trades, book_snapshot_5, liquidations, derivative_ticker
 - **TRADFI**: trades, book_snapshot_10, tbbo, ohlcv_1m, ohlcv_15m
-- **DEFI**: swaps, rate_indices, oracle_prices, utilization, liquidity, risk_params
+- **DEFI**: dex_swaps, lending_indices, oracle_prices, utilization, dex_pools, risk_params
 
 ### Services with Full Configs (14)
 
@@ -317,5 +317,5 @@ All 14 services with sharding now have:
 
 ---
 
-**Timestamp**: 2026-02-21 10:35:30 UTC  
-**Status**: ✅ COMPLETE - Parser fixes validated, book snapshot usage clarified, data catalogues confirmed
+**Timestamp**: 2026-02-21 10:35:30 UTC **Status**: ✅ COMPLETE - Parser fixes validated, book snapshot usage clarified,
+data catalogues confirmed
