@@ -95,6 +95,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       — unified-trading-library@4b69f0fa | ruff ✓ clean (prior partial)
       — unified-trading-library@2b1de30f | QG exit 0 (272s) | starlette 1.1.0 (PYSEC-2026-161), PYTEST_WORKERS=4,
         MAX_DURATION=1100, fixed 16 test failures (_events_sink fixture ×2, GCS mock for sports_fixtures hang)
+      — unified-trading-library@34e40794 | noqa qg-deep-import markers on registry/cefi_margin_tiers + incident facade imports (agent_action.py + margin_model.py)
 
 ---
 
