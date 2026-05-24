@@ -175,11 +175,10 @@ physical pager device is researched + purchased).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM credentials push (GCP + AWS) — **OPERATOR ACTION**
-- [ ] Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel in LIVE_ALERT_RULES (pair-review
-      with Harsh)
-- [ ] Phase 4 P0.10-P0.11 — provider_health_probe.py cron + ALERTING_PROVIDER_DEGRADED IncidentEnvelope
-- [ ] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day
+- [ ] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM credentials push (GCP + AWS) — ping doc item #1
+- [x] ✅ Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel — alerting-service@06c48c4
+- [x] ✅ Phase 4 P0.10-P0.11 — provider_health_probe.py cron + ALERTING_PROVIDER_DEGRADED IncidentEnvelope — alerting-service@e5c8084
+- [ ] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day (STAGING-INFRA-REQUIRED)
 
 **Cross-references**:
 
@@ -210,9 +209,9 @@ physical pager device is researched + purchased).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM creds push — **OPERATOR ACTION** per ping doc item #1
-- [ ] Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel in LIVE_ALERT_RULES (pair-review with Harsh; envelope_adapter @e5c8084 unblocks this)
-- [ ] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day (protocol doc shipped)
+- [ ] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM creds push — ping doc item #1
+- [x] ✅ Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel — alerting-service@06c48c4
+- [ ] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day (STAGING-INFRA-REQUIRED)
 
 **Cross-references**:
 
