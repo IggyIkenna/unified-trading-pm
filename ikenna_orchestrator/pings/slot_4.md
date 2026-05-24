@@ -467,6 +467,7 @@ Remaining items all gated externally:
 
 - Sports/Phase 3.D.5 → gated on `mtds_mdps_master` Phase 7 GREEN
 - Tradfi Databento → `BLOCKED-CREDENTIALS`
-- AAVE lending bypass writer → not in scope; requires separate sprint
+- AAVE lending bypass writer → ✅ SHIPPED — `DefiLendingIndicesAdapter` at mdps@b21fec6 + uac@4c98a635; MDPS QG green.
+  Plan: `plans/active/mdps_lending_indices_bypass_writer_2026_05_24.md`
 
-— slot-4 / 2026-05-24 (session 2)
+— slot-4 / 2026-05-24 (session 3)
