@@ -174,7 +174,7 @@ pager closes the residual gap.
 - [x] ✅ Phase 2 P0.4-P0.5 — `alerting_service/notifiers/physical_pager.py` — alerting-service@e5c8084
 - [x] ✅ Phase 3 P0.7-P0.9 — 5 closed-set trigger conditions + router rule — alerting-service@06c48c4
 - [x] ✅ Phase 4 P0.10 — Twilio voice bridge wiring — alerting-service@06c48c4 provider_in_fallback_mode param
-- [ ] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.11-P0.12 — synthetic SEV0-no-ack smoke + post-device-arrival webhook test (awaiting device + staging)
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 5 P0.11-P0.12 — synthetic SEV0-no-ack smoke + post-device-arrival webhook test (awaiting device + staging)
 
 **Cross-references**:
 
