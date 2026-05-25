@@ -235,3 +235,26 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       (`df.with_columns(...)` — polars on a pandas DataFrame). The orchestrator passes pandas, so these error when run.
       `risk_reward` is NOT a bug (declares an explicit ATR-dependency; needs VolatilityCalculator first); `vwap` is NOT
       a bug (works once the orchestrator sets the DatetimeIndex). Provenance: feature-count verification run 2026-05-25.
+
+### Per-family single-config feature counts (measured 2026-05-25; delta_one = corrected 9,895/1,671)
+
+| family | runnable now | output cols | base features | gated parts |
+| --- | --- | --- | --- | --- |
+| delta_one | yes (17 CLI groups) | 9,895 | 1,671 | — |
+| calendar | partial (temporal) | ~406 | ~100 | economic_calendar/yield_curve/sentiment/earnings = FRED/polygon/social APIs |
+| cross_instrument | partial (9/21 groups) | ~166 | ~135 | 6 polymarket + dxy macro (prediction/macro not backfilled); 5 book/flow groups need raw book schema |
+| volatility | GATED | — | — | options/futures chains not backfilled (registry floor ~70 base) |
+| onchain | GATED | — | — | DeFi protocol APIs (registry floor ~71 base) |
+| sports | GATED | — | — | fixtures not backfilled (registry floor ~928 base) |
+| commodity | GATED | — | — | EIA/Yahoo/CFTC vendor APIs |
+
+Measurable-now total (single config): **~10,467 output columns / ~1,906 base features** (delta_one + calendar-temporal +
+cross_instrument-9-groups). Caveat: isolated per-group runs slightly over-count vs the orchestrated pipeline (shared
+columns before cross-group dedup) — calendar/cross_instrument are upper-ish of the same order. Gated families add an
+estimated ~1,069+ base features (volatility 70 + onchain 71 + sports 928 declared floors) once backfill + creds land.
+
+- [ ] 🟠 [DATA-SURFACE] P2. **5 cross_instrument groups need RAW normalized book/trade schema** (book_depth_bands,
+      liquidity_walls, liquidation_clusters, flow_interaction, composite_sr) — they require `asks/bids/mid_price/side/
+      quote_volume/instrument_key`, which the OHLC-resampled processed-candle `DataLoader` does not emit. Same class as
+      the volatility raw-chain surface: a raw-data read path distinct from processed candles. Provenance: per-family
+      feature-count measurement 2026-05-25.
