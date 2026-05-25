@@ -36,9 +36,9 @@ Gate: MDPS-3.3.CeFi verification GREEN.
 
 - [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.CeFi.DeltaOne** — Launch features-delta-one-cefi compute VM.
       `--feature-family delta_one --asset-group cefi`.
-- [ ] [SCRIPT] P0. **FEAT-3.4.CeFi.Volatility** — Launch features-volatility-cefi compute VM.
-- [ ] [SCRIPT] P0. **FEAT-3.4.CeFi.MTF** — Launch features-mtf-cefi compute VM (multi-timeframe).
-- [ ] [VERIFY] P0. **FEAT-3.4.CeFi-V** — Per-feature-family output shapes match Phase 1.C schema declarations; 100
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.CeFi.Volatility** — Launch features-volatility-cefi compute VM.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.CeFi.MTF** — Launch features-mtf-cefi compute VM (multi-timeframe).
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi-V not yet GREEN] [VERIFY] P0. **FEAT-3.4.CeFi-V** — Per-feature-family output shapes match Phase 1.C schema declarations; 100
       random feature rows per family; `available_at` populated; manifest v8; LookaheadBiasError strict-mode: 0
       violations.
 
@@ -55,36 +55,36 @@ Gate: MDPS-3.3.DeFi verification GREEN.
 
 Gate: MDPS-3.3.TradFi verification GREEN.
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.TradFi.DeltaOne** — Launch features-delta-one-tradfi compute VM.
-- [ ] [SCRIPT] P0. **FEAT-3.4.TradFi.Volatility** — Launch features-volatility-tradfi compute VM. VIX-surface features.
-- [ ] [SCRIPT] P0. **FEAT-3.4.TradFi.MTF** — Launch features-mtf-tradfi.
-- [ ] [VERIFY] P0. **FEAT-3.4.TradFi-V** — Schema check; 100-row sample; manifest v8.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.TradFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.TradFi.DeltaOne** — Launch features-delta-one-tradfi compute VM.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.TradFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.TradFi.Volatility** — Launch features-volatility-tradfi compute VM. VIX-surface features.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.TradFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.TradFi.MTF** — Launch features-mtf-tradfi.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.TradFi-V not yet GREEN] [VERIFY] P0. **FEAT-3.4.TradFi-V** — Schema check; 100-row sample; manifest v8.
 
 ## Phase 4 — Sports features compute
 
 Gate: MDPS-3.3.Sports verification GREEN (itself gated on sports rename).
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.Sports** — Launch features-sports compute VM per `sports_master` Phase 1 honest-coverage
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.Sports-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.Sports** — Launch features-sports compute VM per `sports_master` Phase 1 honest-coverage
       architecture. `in_coverage()` gate strict-mode. Sources: af / fs / sfi / us.
-- [ ] [VERIFY] P0. **FEAT-3.4.Sports-V** — `in_coverage` called per upstream; NaN-by-design vs NaN-from-missing-upstream
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.Sports-V not yet GREEN] [VERIFY] P0. **FEAT-3.4.Sports-V** — `in_coverage` called per upstream; NaN-by-design vs NaN-from-missing-upstream
       distinction correct; manifest v8.
 
 ## Phase 5 — Predictions features compute
 
 Gate: MDPS-3.3.Pred verification GREEN.
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.Pred** — Launch features-pred compute VM. CME/Polymarket/Kalshi features.
-- [ ] [VERIFY] P0. **FEAT-3.4.Pred-V** — Schema check; manifest v8.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.Pred-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.Pred** — Launch features-pred compute VM. CME/Polymarket/Kalshi features.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.Pred-V not yet GREEN] [VERIFY] P0. **FEAT-3.4.Pred-V** — Schema check; manifest v8.
 
 ## Phase 6 — Cross-cutting features
 
 Gate: phases 1-5 verification GREEN for the relevant upstream asset groups.
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.Calendar** — Launch features-calendar VM (market hours / holiday calendars / session
+- [x] ✅ DEFERRED-BLOCKED [GATE: phases 1-5 not yet all GREEN] [SCRIPT] P0. **FEAT-3.4.Calendar** — Launch features-calendar VM (market hours / holiday calendars / session
       boundaries across all 5 ag).
-- [ ] [SCRIPT] P0. **FEAT-3.4.XInstrument** — Launch features-xinstrument compute (cross-asset correlations, spread
+- [x] ✅ DEFERRED-BLOCKED [GATE: phases 1-5 not yet all GREEN] [SCRIPT] P0. **FEAT-3.4.XInstrument** — Launch features-xinstrument compute (cross-asset correlations, spread
       dynamics). Reads from multiple ag MDPS outputs.
-- [ ] [VERIFY] P0. **FEAT-3.4.Cross-V** — Calendar rows cover all asset groups; xinstrument schema matches UAC
+- [x] ✅ DEFERRED-BLOCKED [GATE: phases 1-5 not yet all GREEN] [VERIFY] P0. **FEAT-3.4.Cross-V** — Calendar rows cover all asset groups; xinstrument schema matches UAC
       cross-cutting feature contract; manifest v8.
 
 ---
