@@ -378,9 +378,10 @@ Look at the existing system before implementing. Key repo map: events → UTL ·
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
 (`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated) + `deployment-ui` +
 `user-management-ui` · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; port 8026 locally;
-`agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface — `ikenna_orchestrator/` +
-`harsh_orchestrator/` LEDGER.md remain as offline fallback only). SSOT:
-`codex/04-architecture/agent-orchestrator-overview.md`.
+`agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface. `ikenna_orchestrator/`
+LEDGER.md remains as offline fallback only; the `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 →
+`plans/archive/orchestrator_legacy/` (only `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live
+plan-hygiene + orphan-ping crons). SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 **UAC import rule**: `from unified_api_contracts.{domain} import ...` only. Never `canonical.*` or `normalize_utils.*`.
 SSOT: `imports/uac-import-surface-enforcement.mdc`. Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
@@ -879,8 +880,9 @@ SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/per_agent_
 
 ## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
 
-**Main orchestrator bootstrap**: read your side's LEDGER first (`ikenna_orchestrator/LEDGER.md` or
-`harsh_orchestrator/LEDGER.md`). Boot: `git status` + `git fetch` + ledger read + ack state.
+**Main orchestrator bootstrap**: Ikenna reads `ikenna_orchestrator/LEDGER.md` first (offline fallback); the Harsh-side
+LEDGER was retired 2026-05-25 (→ `plans/archive/orchestrator_legacy/`) — use the agent-orchestrator dashboard. Boot:
+`git status` + `git fetch` + ledger/dashboard read + ack state.
 
 **Sizing**: ~250-400 cal AI-days per side per 4-day cycle. **Ikenna**: cross-cutting design (3+ repos),
 trading-judgment, governance, large migrations. **Harsh**: implement-from-spec, run-script-and-verify, single-repo
