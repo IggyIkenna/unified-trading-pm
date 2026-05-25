@@ -109,9 +109,12 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
       FIXED (slot-5 2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball
       rebuilt. 125717 + 151059 VMs terminated. **RUNNING: 7 VMs `mdps-sports-{2020..2026}-20260523-155733`** with
-      UAC@28117482 (odds_horizon_bucket registered) + MDPS@ed0f817 (related_data_types fix). First run to dispatch all 4
+      UAC@28117482 (odds*horizon_bucket registered) + MDPS@ed0f817 (related_data_types fix). First run to dispatch all 4
       adapters. 2024+ dates expected to produce real candles (pre-2024 = old format, empty_confirmed expected). Issue
-      doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`.
+      doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`. **SIXTH BUG (slot-7 2026-05-25)**:
+      215548 VMs produced 315 attempted_failed for
+      `odds_horizon_bucket*\*`with     MalformedTickFieldError. Root cause: SUPER_LIG + other venues publish odds >34h pre-match     (bm_minutes_to_kickoff≈2054 > T-24h+cap=1500) → all rows outside staleness cap → adapter raised instead of     returning empty. Fix: MDPS@a8b28f4 returns`\_make_empty_candle_output()`for the all-outside-cap case →     empty_confirmed instead of attempted_failed. 3 tests added. QG: all passed. Relaunched:     **7 VMs`mdps-sports-{2020..2026}-20260525-014137`\*\*
+      RUNNING. STALL_TIMEOUT_SEC=7200 + MDPS@a8b28f4.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
       row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
       (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
