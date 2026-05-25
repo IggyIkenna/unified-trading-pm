@@ -250,8 +250,9 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       `odds_movement_adapter.py`, `arbitrage_adapter.py`. QG: all 1366+ tests pass. MDPS@1f1adbf. 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch5** — Terminated 5 RUNNING 014137 VMs (2021-2025, on stale MDPS@a8b28f4
       tarball — will hit SEVENTH bug when processing 2024+ dates with fetch_utc odds format). Rebuilt tarball with
-      MDPS@1f1adbf. Relaunched all 7 sports VMs: `mdps-sports-{2020..2026}-20260525-<TS>` with STALL_TIMEOUT_SEC=7200.
-      Source: `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
+      MDPS@1f1adbf (pinned SHA=1f1adbff541e28e0c973d4277d075f18bd0e30ba). Relaunched all 7 sports VMs:
+      `mdps-sports-{2020..2026}-20260525-030136` ALL RUNNING. STALL_TIMEOUT_SEC=7200. Source:
+      `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
 
 ---
 
