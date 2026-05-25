@@ -770,9 +770,9 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
-      `cefi_master` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
-      deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
+      `cefi_master` (28 open items as of 2026-05-25) + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
+      deployment-service `configs/clusters/cefi.yaml`. Operator to schedule E2E run when cefi_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
 - [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler,
       feature validation). BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A
       sports adapters at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule
