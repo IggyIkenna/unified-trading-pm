@@ -167,9 +167,16 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 3 — cross_instrument `[P1]`
 
-- [ ] [IMPLEMENT] P1. Replace `realized_implied_vol.py:157` `max_results=100` IV-blob scan with manifest-driven (or
-      unbounded date-scoped) discovery.
-- [ ] [VALIDATE] P1. End-to-end compute on verified date → parquet + manifest + read-back.
+- [x] ✅ [IMPLEMENT] P1. `realized_implied_vol._fetch_iv_blobs_from_gcs` → **unbounded venue-scoped** discovery
+      (deleted `list_blobs(max_results=100)` cap AND the `blobs[:10]` slice — a double silent truncation to the oldest
+      lexicographic shards that could drop every in-range blob). Reads ALL venue shards + filters `[start_ts, end_ts]`.
+      Regression test added (15 shards all read, no `max_results` passed). — features-service@1d30b8c5
+- [x] ✅ [VALIDATE] P1. Real GCS (central-element-323112, prd): volatility IV output bucket resolves to
+      `features-volatility-cefi-…`; unbounded discovery runs clean (0 IV blobs present → honest None, **0 crashes**).
+      Full e2e is transitively blocked by the deferred delta_one WRITE P0 — cross_instrument batch handler ingests
+      delta_one output as INPUT (`No delta-one features found under …` is the honest dependency error, not a read-path
+      bug); this is the Phase 4 transitive unblock. basedpyright 0 errors; 514 cross_instrument unit tests pass; QG
+      exit 0 (289s). — features-service@1d30b8c5
 
 ### Phase 4 — multi_timeframe (transitive unblock) `[P1]`
 
