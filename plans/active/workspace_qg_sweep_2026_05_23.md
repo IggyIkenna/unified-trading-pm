@@ -199,6 +199,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       greeks-service@2413055b | QG exit 0 (144s) | add tests+setup.sh, remove UAC dep, fix codex violations (manifest,
       STEP5.34, setup_events)
+      — greeks-service@cb7f11a | QG exit 0 (57s) | re-verified; already green, no regressions
 
 ---
 
