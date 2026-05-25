@@ -236,6 +236,22 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       `mdps-sports-{2020..2026}-20260524-215548` RUNNING. Pinned MDPS@6c9045160577 + UTL@e51699c8 SHA tarballs.
       `STALL_TIMEOUT_SEC=7200` in metadata → 2h stall window for empty-date stretches. Source:
       `market-data-tick-sports-prd-central-element-323112`. 2026-05-24 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-SeventhBugFix** — **SEVENTH BUG FIXED (slot-7 2026-05-25)**: Two distinct failures
+      in 2026-27 season odds data: (1) `odds_horizon_bucket` TIMESTAMP_DATE_MISMATCH — epoch-zero timestamps
+      (1970-01-01) generated because `timestamps = np.array([int(h[1] * 60 * 1_000_000) for h in TIER1_HORIZONS])`
+      computed microseconds from Unix epoch (horizon×60μs) not from match date. Fix: added `_derive_match_midnight_us()`
+      helper that reads `kickoff_utc`/`commence_time`/`fetch_utc` from tick data, normalizes to midnight, returns
+      μs-since-epoch. All 8 bucket timestamps = match_midnight + bucket_index×1h → all on correct calendar date. (2)
+      `odds_snapshot`/`odds_movement`/`arbitrage_opportunity` raised `ValueError("No timestamp column found in data")`
+      because raw MTDS sports odds data has `fetch_utc`/`bm_time` ISO string columns, not the numeric
+      `ts_init`/`local_timestamp`/`ts_event`/`timestamp` columns expected by `_get_local_timestamp_column()`. Fix: added
+      `elif "fetch_utc" in tick_data.columns:` + `elif "bm_time" in tick_data.columns:` branches to all 3 adapters
+      (parse ISO → UTC-aware datetime). 4 files modified: `bucket_assignment_adapter.py`, `odds_snapshot_adapter.py`,
+      `odds_movement_adapter.py`, `arbitrage_adapter.py`. QG: all 1366+ tests pass. MDPS@1f1adbf. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch5** — Terminated 5 RUNNING 014137 VMs (2021-2025, on stale MDPS@a8b28f4
+      tarball — will hit SEVENTH bug when processing 2024+ dates with fetch_utc odds format). Rebuilt tarball with
+      MDPS@1f1adbf. Relaunched all 7 sports VMs: `mdps-sports-{2020..2026}-20260525-<TS>` with STALL_TIMEOUT_SEC=7200.
+      Source: `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
 
 ---
 
