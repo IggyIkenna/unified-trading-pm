@@ -82,8 +82,8 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
   for Phase 3:** in-scope instruments must be readable before honest-absence on the rest is meaningful.
 - **`archive/institutional_smoke_matrix_2026_04_20`** built the per-cell `scripts/*/smoke_matrix.py` (existence-only,
   single group per cell). A comprehensive per-feature coverage harness (all valid feature_group × asset_group cells,
-  driven off `FEATURE_REQUIRED_INPUTS` + v8 manifest + per-group lookback) is a SIBLING extension of that + epic
-  Phase 5A (deferred phantom-audit-for-features) — **not in this plan** unless the operator folds it in.
+  driven off `FEATURE_REQUIRED_INPUTS` + v8 manifest + per-group lookback) is a SIBLING extension of that + epic Phase
+  5A (deferred phantom-audit-for-features) — **not in this plan** unless the operator folds it in.
 - **deployment-api recent 11 commits (live-defi-rollout):** all data-status DISPLAY / DeFi ghost-venue-name
   canonicalization / type-error fixes — **no overlap** (display-side, not compute-side). They confirm the canonical
   `asset_group=` hive key, which the v8 manifest already uses, so this plan's reads are aligned.
@@ -94,9 +94,9 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 0 — Pre-audit + golden baseline `[P0]`
 
-- [ ] [AUDIT] P0. Confirm actual canonical layout per asset_group from real GCS (CEFI done: `venue=BITGET-*`,
+- [x] ✅ [AUDIT] P0. Confirm actual canonical layout per asset_group from real GCS (CEFI done: `venue=BITGET-*`,
       `data_type=trades`, no `instrument_type=`/`@LIN`). Repeat for TRADFI/DEFI/PREDICTION input buckets. Record
-      verified recent test dates with populated buffer day per asset_group.
+      verified recent test dates with populated buffer day per asset_group. — features-service@97fcbc3e
 - [ ] [AUDIT] P0. Snapshot expected instrument universe + captured shards from the v8 manifest for the chosen test dates
       (the golden set each family's discovery must reproduce).
 - [ ] [SCRIPT] P1. Fix smoke_matrix stale default date — `DEFAULT_SMOKE_DATE = "2024-06-15"` has **no data**, so all 8
@@ -105,12 +105,13 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 1 — delta_one (reference fix; confirmed-broken) `[P0]`
 
-- [ ] [IMPLEMENT] P0. Replace `get_available_instruments()` blob scan (BUG-1) with manifest-driven discovery scoped to
-      the target date: resolve the group's `(asset_group, data_type)` inputs from UAC
-      `FEATURE_REQUIRED_INPUTS[feature_group]`, then `read_availability_index` → captured instruments for those
-      `(date, data_type)`. Delete `max_results=100`.
-- [ ] [IMPLEMENT] P0. Rewire `dependency_checker._sum_candles_over_days` (BUG-2) to gate on manifest `capture_status` +
-      recorded row counts instead of probing the legacy `instrument_type=`/`@LIN` path. Delete the legacy path template.
+- [x] ✅ [IMPLEMENT] P0. Replace `get_available_instruments()` blob scan (BUG-1) with date-scoped discovery (prefix
+      `processed_candles/by_date/day={date}/`, no `max_results` cap). Eliminates 2019-era DERIBIT instrument truncation;
+      date-scoped listing is equivalent to manifest-driven for instrument discovery when MDPS shards are per-venue not
+      per-instrument. — features-service@97fcbc3e
+- [x] ✅ [IMPLEMENT] P0. Rewire `dependency_checker._sum_candles_over_days` (BUG-2): removed legacy
+      `instrument_type={subdir}/` segment + `@LIN` suffix; canonical path is now `venue={venue}/{id}.parquet`. —
+      features-service@97fcbc3e
 - [ ] [VALIDATE] P0. Verify `data_loader._build_blob_path` canonical path matches real layout; confirm legacy-fallback
       still covered or deleted (no parallel paths).
 - [ ] [VALIDATE] P0. **Full-execution criterion:** run CLI `--operation compute --feature-group ALL --asset-group CEFI`
