@@ -192,7 +192,7 @@ _(No Tier-5 items in this plan's scope.)_
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [ ] No Tier-5 work — Phase 2+ unchanged (yaml registry + alerting rule + fallback tests + smoke).
+- [x] ✅ No Tier-5 work — Phase 2+ unchanged (yaml registry + alerting rule + fallback tests + smoke).
 
 **Cross-references**:
 
