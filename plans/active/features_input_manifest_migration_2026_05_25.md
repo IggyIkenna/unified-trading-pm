@@ -221,3 +221,17 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 - Composes with HARD RULE _Data Pipeline Correctness Is The Heartbeat_ (features can't compute on real data today = RED
   for CeFi/TradFi feature path).
 - `onchain` is the reference implementation; do not regress it.
+
+### Feature-count + calc-verification findings (2026-05-25)
+
+- [x] ✅ [VERIFY] Single-config feature count measured (delta_one, CEFI/15s/1-instrument, `--feature-group ALL`
+      = the 17 CLI `FEATURE_GROUPS`): **9,895 output columns / 1,671 base features** (base = collapse `_lag_N`/period/
+      `_in_last_N_bars`). All 17 groups compute cleanly on real BITGET data (trades/book_snapshot_5/derivative_ticker/
+      liquidations). NOTE: the broader `CALCULATOR_REGISTRY` (~30 calcs) is NOT what `--feature-group ALL` runs
+      (batch_handler.py:684 expands FEATURE_GROUPS only); an earlier 11,580 count over-counted by iterating the registry.
+- [ ] 🟠 [BUG] P2. **2 latent polars-on-pandas bugs in ML-enhancement calculators** (NOT in the CLI `FEATURE_GROUPS`
+      ALL-run; only in `CALCULATOR_REGISTRY`, the post-feature ML-enhancement path): `polynomial_trendline.py`
+      (`df["high"].cast(pl.Float64)` — polars `.cast` on a pandas Series) and `wedge_quality.py`
+      (`df.with_columns(...)` — polars on a pandas DataFrame). The orchestrator passes pandas, so these error when run.
+      `risk_reward` is NOT a bug (declares an explicit ATR-dependency; needs VolatilityCalculator first); `vwap` is NOT
+      a bug (works once the orchestrator sets the DatetimeIndex). Provenance: feature-count verification run 2026-05-25.
