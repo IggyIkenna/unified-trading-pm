@@ -222,7 +222,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 - [x] ✅ [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
       `cd trading-agent-service && bash scripts/quality-gates.sh` exits 0. PREREQ: execution-service QG green. [vm:
-      vm-trading-core] — trading-agent-service already QG green (no changes) | QG exit 0 (162s)
+      vm-trading-core] — trading-agent-service@c6287f4 | QG exit 0 (48s) | fix: Any→object in cutoff_clamp.py
 
 ---
 
