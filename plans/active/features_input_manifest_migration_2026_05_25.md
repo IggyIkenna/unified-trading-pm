@@ -65,6 +65,31 @@ Net: **3 directly broken + 1 transitive** of the core CeFi/TradFi feature path. 
 `(date, data_type)` → check `capture_status` ∈ {`captured`, `empty_confirmed`, `attempted_failed`}. Instrument universe
 for the target date comes from the manifest rows, not a lexicographic blob scan.
 
+## Related work + dedup check (2026-05-25)
+
+Verified against the plans corpus + UAC + recent repo commits before scoping, to avoid duplication:
+
+- **Feature-DAG / required-inputs SSOT already EXISTS — do NOT rebuild.**
+  `unified_api_contracts.canonical.domain.features.FEATURE_REQUIRED_INPUTS` (`required_inputs.py:80`; founding commit
+  `UAC@4a25b07` + onchain/tradfi/36-sports expansions) maps each `feature_group → [InputReq(asset_group, data_type)]`.
+  This plan **consumes** it (resolve which `(asset_group, data_type)` a group needs) — it does not define a new
+  registry. Owned by epic `features_and_ml_master` Phase 1A.
+  - **Gap, NOT this plan:** `InputReq` carries no `lookback_candles`; lookback lives only in per-family
+    `feature_definitions.yaml` `_group.lookback_candles` and is absent for onchain/volatility/sports. Unifying lookback
+    into the SSOT is a `features_and_ml_master` Phase 1A follow-up.
+- **`features_and_ml_master` Phase 3** wires honest-absence RECORDING (`record_expected_unattempted` for out-of-scope
+  instruments) in features batch handlers — it does NOT fix the GCS read bugs. **This read-path fix is a PREREQUISITE
+  for Phase 3:** in-scope instruments must be readable before honest-absence on the rest is meaningful.
+- **`archive/institutional_smoke_matrix_2026_04_20`** built the per-cell `scripts/*/smoke_matrix.py` (existence-only,
+  single group per cell). A comprehensive per-feature coverage harness (all valid feature_group × asset_group cells,
+  driven off `FEATURE_REQUIRED_INPUTS` + v8 manifest + per-group lookback) is a SIBLING extension of that + epic
+  Phase 5A (deferred phantom-audit-for-features) — **not in this plan** unless the operator folds it in.
+- **deployment-api recent 11 commits (live-defi-rollout):** all data-status DISPLAY / DeFi ghost-venue-name
+  canonicalization / type-error fixes — **no overlap** (display-side, not compute-side). They confirm the canonical
+  `asset_group=` hive key, which the v8 manifest already uses, so this plan's reads are aligned.
+
+**Net:** NET-NEW (input-read bug fix). Feature-DAG SSOT dropped as duplicate; coverage harness deferred to a sibling.
+
 ## Phases (DAG; QG gate between each)
 
 ### Phase 0 — Pre-audit + golden baseline `[P0]`
@@ -81,8 +106,9 @@ for the target date comes from the manifest rows, not a lexicographic blob scan.
 ### Phase 1 — delta_one (reference fix; confirmed-broken) `[P0]`
 
 - [ ] [IMPLEMENT] P0. Replace `get_available_instruments()` blob scan (BUG-1) with manifest-driven discovery scoped to
-      the target date (`read_availability_index` → captured instruments for `(date, data_type)`). Delete
-      `max_results=100`.
+      the target date: resolve the group's `(asset_group, data_type)` inputs from UAC
+      `FEATURE_REQUIRED_INPUTS[feature_group]`, then `read_availability_index` → captured instruments for those
+      `(date, data_type)`. Delete `max_results=100`.
 - [ ] [IMPLEMENT] P0. Rewire `dependency_checker._sum_candles_over_days` (BUG-2) to gate on manifest `capture_status` +
       recorded row counts instead of probing the legacy `instrument_type=`/`@LIN` path. Delete the legacy path template.
 - [ ] [VALIDATE] P0. Verify `data_loader._build_blob_path` canonical path matches real layout; confirm legacy-fallback
