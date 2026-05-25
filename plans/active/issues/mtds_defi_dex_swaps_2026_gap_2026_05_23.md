@@ -315,8 +315,9 @@ Ethereum DEX venues after 2026-01-24. Possible causes:
       bucket (only Solana/lending protocols: ORCA/RAYDIUM/MAKER/ETHENA/MORPHO) → no dex candles expected → correct
       honest absence. 2026-01-25→2026-05-22 in prd bucket (165353+182633, 2,167 rows) ✅. Full dex_swaps candle coverage
       confirmed for all dates with upstream Ethereum DEX raw data.
-- [ ] **Final 2026 coverage verify** — after all VMs complete: check processed_candles/by_date/day=2026-01-25→2026-05-22
-      for non-empty dex_swaps candle rows.
+- [x] **Final 2026 coverage verify** (slot-6, 2026-05-25): **118 dates confirmed** in prd bucket
+      `processed_candles/by_date/day=2026-01-25→2026-05-22` with `data_type=dex_swaps`. Range matches 165353+182633
+      manifest shards exactly (2026-01-25→2026-05-22). All VMs TERMINATED. dex_swaps candle coverage complete ✅.
 
 ## Evidence
 
