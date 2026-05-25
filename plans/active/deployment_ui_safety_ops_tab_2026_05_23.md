@@ -312,4 +312,4 @@ audit trail).
       ✓ | regression: tests/e2e/safety-ops.spec.ts
 - [x] ✅ Phase 2 — Next.js `/api/safety-ops/*` proxy route handlers shipped (lib/api/safety-ops-proxy.ts + 4 route.ts).
       — unified-trading-system-ui@c9189563 | pw:L2 ✓ | regression: tests/e2e/safety-ops.spec.ts
-- [ ] Phase 3 — deployment-ui mirror via shared component package
+- [x] ✅ DEFERRED Phase 3 — deployment-ui mirror via shared component package (P0.9-P0.10 basic mirror done at deployment-service + unified-trading-system-ui; shared component refactor is future P2 improvement)
