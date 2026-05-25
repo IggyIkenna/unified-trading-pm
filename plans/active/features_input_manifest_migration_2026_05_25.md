@@ -131,9 +131,15 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Not in
       `feature_writer.py` (UTL/engine write path). Was masked until now because nothing loaded. Owner/plan TBD — likely
       `features_and_ml_master`. Provenance: features_input_manifest_migration e2e run 2026-05-25.
-- [ ] 🟠 [BUG] P1. **35/83 instruments 404 on load** — venue-ID→path encoding: Kraken spot pairs contain `/`
-      (`KRAKEN-SPOT:SPOT_PAIR:TIA/USD`) and Bitfinex are 2-part (`LINKF0:USTF0`); `_build_blob_path` doesn't handle
-      either. BITGET (3-part `venue:type:symbol`) works. Provenance: same e2e run.
+- [x] ✅ [BUG] P1. **Instrument-ID compose fixed** (the 404s were mostly "no data yet"; the real bug was id compose).
+      `_compose_instrument_ids` now always builds canonical `{venue}:{instrument_type}:{symbol}` from the separate
+      manifest columns — matching the MDPS writer (`build_processed_candle_path`, which is MDPS-local so features must
+      mirror it). Kraken `/` and Bitfinex `:`-in-symbol now flow through correctly; malformed rows (empty venue/id, or
+      **empty `instrument_type` — Bitfinex's manifest rows lack it**) are skipped honestly. Validated: discovery returns
+      0 bare/malformed ids. — features-service@cedd31f5
+  - [ ] 🟠 [UPSTREAM] P2. **Bitfinex manifest rows have empty `instrument_type`** → features can't form their canonical
+        id, so they're skipped. Needs the manifest writer to populate `instrument_type` for Bitfinex. Added to issue
+        `cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`.
 - [ ] 🟠 [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
       receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
       legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
