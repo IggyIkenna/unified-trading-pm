@@ -167,12 +167,20 @@ Manifest analysis 2026-05-25 of 581,711 VENUE_FETCH_FAILED rows on canonical ven
   - OKX-FUTURES: 7 VMs (quarterly contracts 2020-2026), RUN_TS=20260525-073000
   - All RUNNING verified T+10min. Total ~135 VMs launched this session.
 - ✅ 100% schema_version=8 — GREEN 2026-05-24 (34,839,742 rows upgraded)
-- [ ] Wrong-format instrument relabeling (292K rows) — BLOCKED-OPERATOR-DECISION on approach
-- [ ] Extended-universe instruments (193K rows) — BLOCKED-OPERATOR-DECISION on scope
+- [x] ✅ [AGENT] Wrong-format instrument relabeling (292K rows) — operator acked "fix to use right format" 2026-05-25.
+      Relabeling script running: all `*-PERP`, blank, bare-ticker, non-KRW UPBIT, BINANCE-SPOT uppercase-hyphenated,
+      USDT-prefixed reversed → `empty_confirmed[EXPECTED_NO_SOURCE_DATA]` inline.
+- [x] ✅ [AGENT] Extended-universe instruments — operator acked "yeah try the real instruments" 2026-05-25. Launched:
+  - UPBIT KRW-ext: 6 VMs (KRW-ADA/APT/ARB/ATOM/AVAX/BNB/BTC/DOT/ETH/FIL/INJ/LINK/LTC/MATIC/NEAR/OP/SOL/SUI/TIA/TRX/XRP,
+    2021-2026), RUN_TS=20260525-073557, all RUNNING T+10min
+  - COINBASE-SPOT USDT-ext: 7 VMs (ADA-USDT/APT-USDT/ARB-USDT/ATOM-USDT/AVAX-USDT/BTC-USDT/DOT-USDT/ETH-USDT/FIL-USDT/
+    INJ-USDT/LINK-USDT/LTC-USDT/MATIC-USDT/NEAR-USDT/OP-USDT/SOL-USDT/SUI-USDT/TIA-USDT/TRX-USDT/XRP-USDT, 2020-2026),
+    RUN_TS=20260525-073604, all RUNNING T+10min
+  - OKX-SPOT ext: 6 VMs (APT-USDT/ARB-USDT/ATOM-USDT/DOT-USDT/FIL-USDT/INJ-USDT/LTC-USDT/MATIC-USDT/NEAR-USDT/
+    OP-USDT/SUI-USDT/TIA-USDT/TRX-USDT, 2021-2026), RUN_TS=20260525-073609, all RUNNING T+10min
 
 ## Temporary states + their canonical follow-up plans
 
-- All canonical + tier-3 + OKX-FUTURES force-retry VMs running: monitor for completion, then re-audit
-- Wrong-format instruments (292K): await operator decision → relabel to `empty_confirmed[EXPECTED_NO_SOURCE_DATA]`
-- Extended-universe instruments (193K): await operator decision on scope expansion
-- Once VMs complete + wrong-format relabeled: MDPS-3.3.CeFi gate re-evaluate
+- All VMs running (~154 total): monitor for completion then re-audit manifest
+- Wrong-format relabeling: running inline 2026-05-25 (backup at `_index/snapshots/pre_wrong_format_relabel_*.parquet`)
+- Once VMs complete + relabeling confirmed: MDPS-3.3.CeFi gate re-evaluate
