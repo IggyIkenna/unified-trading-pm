@@ -12,7 +12,6 @@ estimate_calibration_note: |
   thresholds, immediate-overrides, and freeze-on-recon-risk. Baseline 10 days × 0.4 refactor = 4 cal-days. Existing
   recon logic stays; only the around-the-edges work changes.
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on:
   - incident_gateway_and_state_machine_2026_05_23 # emits IncidentEnvelope when recon age breaches thresholds
@@ -22,6 +21,10 @@ related_plans:
   - incident_gateway_and_state_machine_2026_05_23.md
   - drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md
 ---
+
+## Deferred work — none (all items completed)
+
+> Operator-action items (Phase 6 smoke + game-day) migrated to observability_master epic P3.
 
 # Reconciliation Age Tracking + 15/30-min Escalation + 7 Immediate-SEV0 Overrides
 
@@ -213,8 +216,8 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
       execution-service@d649af364 | ruff clean (pre-existing F601 in foreign instrument_resolver.py unrelated to this
       change)
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 6 P0.15-P0.16 — synthetic smoke injection + game-day scenario
-      (operator action required). Individual items at lines 139/142 already DEFERRED-OPERATOR-DECISION. Operator
-      to schedule dedicated smoke + game-day session. DEFERRED 2026-05-23.
+      (operator action required). Individual items at lines 139/142 already DEFERRED-OPERATOR-DECISION. Operator to
+      schedule dedicated smoke + game-day session. DEFERRED 2026-05-23.
 
 **Cross-references**:
 
@@ -245,8 +248,8 @@ _(No Tier-5 items in this plan's scope.)_
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5 work
-      landed; this plan's Phase 2+ is independent of the Tier-5 follow-ups.
+- [x] ✅ Phase 2-6 unchanged from Tier-1 ship (engines + alerting + immediate-overrides + freeze + smoke). No Tier-5
+      work landed; this plan's Phase 2+ is independent of the Tier-5 follow-ups.
 
 **Cross-references**:
 
