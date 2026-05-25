@@ -70,11 +70,15 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       **NaN check**: 4 random samples (2024-06-15 UNISWAP_V3, 2024-09-01 CURVE, 2025-08-01 UNISWAP_V2, 2025-11-01
       UNISWAP_V3): 0 null OHLCV across all rows ✓. **Field check**: chain='ETHEREUM' ✓, swap_count=int64 ✓,
       volume_quote_usd populated ✓. **Uniswap start**: 2024-06-01 UNISWAP_V3 files=140 ✓; dates before = empty_confirmed
-      (expected) ✓. 2026 status: `mdps-defi-2026-20260524-195319` RUNNING (MDPS@6c9045160577, all fixes).
-      2026-01-01→2026-01-24 pending MTDS backfill (`mtds-dex-swaps-backfill` RUNNING). Partial 2026 data (2026-01-25+)
-      will be written. **NOTE**: 2024+2025 candles are in flat bucket `market-data-tick-defi-central-element-323112`;
-      2026 candles go to prd bucket `market-data-tick-defi-prd-central-element-323112`. Features DeFi compute must read
-      from BOTH buckets or data migration must occur first. Flag for features launch operator decision.
+      (expected) ✓. **2026 UPDATE (slot-7 2026-05-25)**: Chain-split venue fix shipped (MDPS@2e7461f) — scanner now
+      decomposes `BALANCER-ETHEREUM` → `venue=BALANCER/chain=ETHEREUM/` for prd bucket paths. Tarball rebuilt. 2026
+      consolidated manifest: 21,814 captured + 1,840 empty_confirmed + 2,007 attempted_failed. Captured range:
+      2026-01-01→2026-05-22. Venues: UNISWAPV3(6815) + UNISWAPV4(4291) + MORPHO(2802) + BALANCER(2444) + others ✓.
+      2026-01-01→2026-01-24: empty_confirmed (prd bucket lacks MTDS tick data for those dates; `mtds-dex-swaps-backfill`
+      covers 2026-01-25+). 2007 attempted_failed: UNISWAP_V3/SUSHISWAP_V3/PANCAKESWAP_V3 waiting on MTDS backfill.
+      **NOTE**: 2024+2025 candles are in flat bucket `market-data-tick-defi-central-element-323112`; 2026 candles go to
+      prd bucket `market-data-tick-defi-prd-central-element-323112`. Features DeFi compute must read from BOTH buckets
+      or data migration must occur first. Flag for features launch operator decision.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
@@ -250,9 +254,14 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       `odds_movement_adapter.py`, `arbitrage_adapter.py`. QG: all 1366+ tests pass. MDPS@1f1adbf. 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch5** — Terminated 5 RUNNING 014137 VMs (2021-2025, on stale MDPS@a8b28f4
       tarball — will hit SEVENTH bug when processing 2024+ dates with fetch_utc odds format). Rebuilt tarball with
-      MDPS@1f1adbf (pinned SHA=1f1adbff541e28e0c973d4277d075f18bd0e30ba). Relaunched all 7 sports VMs:
-      `mdps-sports-{2020..2026}-20260525-030136` ALL RUNNING. STALL_TIMEOUT_SEC=7200. Source:
-      `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
+      MDPS@1f1adbf (pinned SHA=1f1adbff541e28e0c973d4277d075f18bd0e30ba). Relaunched 6 sports VMs:
+      `mdps-sports-{2020..2025}-20260525-030136` RUNNING. STALL_TIMEOUT_SEC=7200. Source:
+      `market-data-tick-sports-prd-central-element-323112`. **NOTE: 2026 VM was NOT created in 030136 batch (gcloud
+      confirms mdps-sports-2026-20260525-030136 never existed — launch script emitted only 2020-2025).** 2026-05-25
+      slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch6** — Launched missing 2026 VM: `mdps-sports-2026-20260525-041846`
+      RUNNING. Same params as 030136 batch: MDPS_TARBALL_SHA=1f1adbff, STALL_TIMEOUT_SEC=7200, source=prd bucket,
+      SKIP_DEPENDENCY_CHECK=true, 2026-01-01→2026-05-24. T+10min verified RUNNING. 2026-05-25 slot-7.
 
 ---
 
