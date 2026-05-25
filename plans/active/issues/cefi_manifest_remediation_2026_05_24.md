@@ -119,8 +119,9 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
   operator-gated (see bait_sentinel item)
 - ✅ BINANCE-SPOT disposition: 15,526 pre-launch rows relabeled → `EXPECTED_NO_SOURCE_DATA` 2026-05-24; 77,424 retry
   candidates flagged — **BLOCKED-OPERATOR-DECISION** (BINANCE-SPOT VM_FORCE=true retry)
-- ✅ bait_sentinel + BINANCE-SPOT force-retry VMs LAUNCHED 2026-05-25: 62 VMs (7 BINANCE-SPOT ext + 55 canonical),
-  VM_FORCE=true, all RUNNING. Covers ~375K in-scope rows. Remaining: 2020-2021 wave + tier-3 venues (follow-up)
+- ✅ bait_sentinel + BINANCE-SPOT force-retry VMs LAUNCHED + VERIFIED 2026-05-25: 62 VMs (7 BINANCE-SPOT ext + 55
+  canonical), VM_FORCE=true, all 62 RUNNING in asia-northeast1-c verified T+10min. Covers ~375K in-scope rows.
+  Remaining: 2020-2021 wave + tier-3 venues (follow-up)
 - ✅ 100% schema_version=8 — GREEN 2026-05-24 (34,839,742 rows upgraded)
 
 ## Temporary states + their canonical follow-up plans
