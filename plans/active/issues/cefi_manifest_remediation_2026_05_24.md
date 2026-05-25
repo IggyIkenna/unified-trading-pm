@@ -103,12 +103,53 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
       OKX-SPOT/OKX-SWAP/COINBASE-SPOT/DERIBIT/UPBIT, years 2022-2026. RUN_TS=20260525-033344. Covers ~241K in-scope
       bait_sentinel rows for canonical venues.
 
-      **DEFERRED items** (operator decision or follow-up wave):
-      - **2020-2021 bait_sentinel** on non-BINANCE-SPOT venues (~150K rows): will run after current wave completes
-      - **Tier-3 venues** (OKX-FUTURES 105K, BITGET 19K, BITFINEX 10K, KRAKEN 1K): outside canonical launcher scope;
-        need `launch-tier3-cefi-backfill.sh` or separate targeted launch — file as follow-up issue
-      - **Out-of-scope bait_sentinel instruments** on canonical venues (~300K rows from broad May-4 universe):
-        outside operator's instrument filter; leave as `attempted_failed` pending operator explicit scope decision
+      **2026-05-25 WAVE 2 — all deferred items now LAUNCHED (operator acked "fix all"):**
+
+- [x] ✅ [AGENT] P1. 2020-2021 canonical wave: 15 VMs via `launch-cefi-sharded-backfill.sh` ONLY filter, VM_FORCE=true,
+      RUN_TS=20260525-071608. Venues: BINANCE-FUTURES 2020-2021, BYBIT 2021, DERIBIT 2020-2021, COINBASE-SPOT 2020-2021,
+      OKX-SPOT 2021, OKX-SWAP 2021. All 15 RUNNING T+10min verified.
+
+- [x] ✅ [AGENT] P1. Tier-3 venues: `launch-tier3-cefi-backfill.sh --market-tick` VM_FORCE=true. Covers BITFINEX-SPOT
+      (2020-2026, 7 VMs), BITFINEX-FUTURES (2020-2026, 14 VMs), BITGET-SPOT (2024-2026, 3 VMs), BITGET-FUTURES
+      (2024-2026, 6 VMs), KRAKEN-SPOT (2020-2026, 7 VMs), KRAKEN-FUTURES (2020-2026, 14 VMs) — ~51 VMs total, RUN_TS
+      varies (20260525-071613...). Covers bait_sentinel: BITGET-SPOT 9,528 + BITGET-FUTURES 9,521 + BITFINEX-FUTURES
+      7,035 + BITFINEX-SPOT 2,743 + KRAKEN-FUTURES 757 + KRAKEN-SPOT 0 + VENUE_FETCH_FAILED retry: ~461K rows across all
+      6 venues.
+
+- [x] ✅ [AGENT] P1. OKX-FUTURES: 7 targeted VMs via direct gcloud, VM_FORCE=true, RUN_TS=20260525-073000.
+      `cefi-okx-futures-{2020..2026}-heavy-20260525-073000` — e2-highmem-16, instrument_ids extracted from manifest
+      bait_sentinel rows (105,105 quarterly contract rows: 648/882/943/608/455/244/56 instruments per year). All 7
+      RUNNING T+10min verified. NOTE: OKX-FUTURES uses weekly+quarterly contract format; canonical launcher
+      intentionally skips it — direct extraction from manifest was required.
+
+### P1 — Out-of-scope instruments audit (operator decision required)
+
+Manifest analysis 2026-05-25 of 581,711 VENUE_FETCH_FAILED rows on canonical venues:
+
+| Category                                           | Count       | Disposition                               |
+| -------------------------------------------------- | ----------- | ----------------------------------------- |
+| Canonical instruments (retried by force-retry VMs) | 96,176      | ✅ Being retried                          |
+| **Wrong-format instrument IDs (never-succeed)**    | **292,020** | **BLOCKED-OPERATOR-DECISION — relabel?**  |
+| Extended real instruments (beyond canonical 9)     | 193,515     | BLOCKED-OPERATOR-DECISION — expand scope? |
+
+**Wrong-format breakdown** (these will NEVER succeed — instrument IDs don't exist on their venue):
+
+- `*-PERP` format (`BTC-PERP`, `ETH-PERP`, `ADA-PERP`, `SOL-PERP`, `XRP-PERP`, `BNB-PERP`, `DOGE-PERP`, `AVAX-PERP`,
+  `MATIC-PERP`, `ARB-PERP`) on DERIBIT (~65K), BYBIT (~52K), BINANCE-FUTURES (~52K), OKX-SWAP (~12K) — May-4 burst used
+  internal perp format; real IDs are `BTC-PERPETUAL`, `BTCUSDT`, `BTC-USDT-SWAP` respectively
+- Non-KRW pairs on UPBIT (`ADA-USDT`, `APT-USDT`, etc.) — UPBIT is KRW-only (~68K rows)
+- Bare `BTC`, `ETH` (no suffix) on BINANCE-FUTURES, BYBIT, DERIBIT (~10K rows)
+- Recommendation: relabel all 292K → `empty_confirmed[EXPECTED_NO_SOURCE_DATA]`
+
+**Extended-universe breakdown** (real instruments, correct format, just beyond canonical 9):
+
+- COINBASE-SPOT: 74,162 rows — USDT pairs (ADA-USDT, APT-USDT, ARB-USDT, ATOM-USDT, BNB-USDT, DOT-USDT, etc.)
+- BINANCE-SPOT: 73,850 rows — `BTC-USDT` uppercase-hyphenated format (vs canonical `btcusdt` lowercase) — same
+  underlying 22 instruments as ext VMs but different naming convention from May-4 burst
+- OKX-SPOT: 42,083 rows — APT-USDT, ARB-USDT, ATOM-USDT, DOT-USDT, FIL-USDT, INJ-USDT, LTC-USDT, MATIC-USDT, NEAR-USDT,
+  OP-USDT, SUI-USDT, TIA-USDT, TRX-USDT beyond canonical 9
+- Options: (a) launch additional VMs with extended symbol set; (b) relabel to `VENUE_FETCH_FAILED` (leave for retry);
+  (c) leave as-is until MDPS-3.3.CeFi gate confirms data completeness requirements
 
 ## Verification criterion (gate is GREEN when)
 
@@ -119,12 +160,19 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
   operator-gated (see bait_sentinel item)
 - ✅ BINANCE-SPOT disposition: 15,526 pre-launch rows relabeled → `EXPECTED_NO_SOURCE_DATA` 2026-05-24; 77,424 retry
   candidates flagged — **BLOCKED-OPERATOR-DECISION** (BINANCE-SPOT VM_FORCE=true retry)
-- ✅ bait_sentinel + BINANCE-SPOT force-retry VMs LAUNCHED + VERIFIED 2026-05-25: 62 VMs (7 BINANCE-SPOT ext + 55
-  canonical), VM_FORCE=true, all 62 RUNNING in asia-northeast1-c verified T+10min. Covers ~375K in-scope rows.
-  Remaining: 2020-2021 wave + tier-3 venues (follow-up)
+- ✅ bait_sentinel + all force-retry VMs LAUNCHED + VERIFIED 2026-05-25:
+  - Wave 1: 62 VMs (7 BINANCE-SPOT ext + 55 canonical 2022-2026), RUN_TS=20260525-033344/033358
+  - Wave 2: 15 VMs (2020-2021 canonical), RUN_TS=20260525-071608
+  - Tier-3: ~51 VMs (BITFINEX/BITGET/KRAKEN), RUN_TS=20260525-071613+
+  - OKX-FUTURES: 7 VMs (quarterly contracts 2020-2026), RUN_TS=20260525-073000
+  - All RUNNING verified T+10min. Total ~135 VMs launched this session.
 - ✅ 100% schema_version=8 — GREEN 2026-05-24 (34,839,742 rows upgraded)
+- [ ] Wrong-format instrument relabeling (292K rows) — BLOCKED-OPERATOR-DECISION on approach
+- [ ] Extended-universe instruments (193K rows) — BLOCKED-OPERATOR-DECISION on scope
 
 ## Temporary states + their canonical follow-up plans
 
-- Bait sentinel MTDS retry: depends on operator ack on MTDS-3.3.CeFi launch (per epic § BLOCKED-OPERATOR-DECISION)
-- Once gate GREEN: MDPS-3.3.CeFi can be unblocked per epic
+- All canonical + tier-3 + OKX-FUTURES force-retry VMs running: monitor for completion, then re-audit
+- Wrong-format instruments (292K): await operator decision → relabel to `empty_confirmed[EXPECTED_NO_SOURCE_DATA]`
+- Extended-universe instruments (193K): await operator decision on scope expansion
+- Once VMs complete + wrong-format relabeled: MDPS-3.3.CeFi gate re-evaluate
