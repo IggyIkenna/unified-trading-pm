@@ -237,12 +237,20 @@ IS that plan.
       market-tick-data-service@f9a6527d. Tarball rebuilt 2026-05-24T23:29:12Z. VM `mtds-dex-swaps-backfill` relaunched
       2026-05-25 UTC (2026-01-25→2026-05-25) with fixed tarball to retry 715 `attempted_failed` UniV3 rows. 2026-05-25
       slot-7.
-- [x] ✅ [CODE] P0. **MTDS-3.2.C-GapFill-BugFix2** — **Extended UTL NotFound fix to all 3 instruments_metadata exception
+- [x] ✅ [CODE] P0. **MTDS-3.2.C-GapFix-BugFix2** — **Extended UTL NotFound fix to all 3 instruments_metadata exception
       clauses** (slot-7 2026-05-25 UTC). `load_staking_url_for_protocol()` and
       `load_evm_lst_contract_addresses_for_date()` had the same `except (FileNotFoundError, OSError, ValueError)` gap —
       both now also catch the UTL NotFound (404) and fall through to their static fallbacks. Fixes
       `LstRatesHandler attempted_failed` on 2026-05-23/24 (instruments-store-defi has no LIDO-ETHEREUM parquets for
       those dates). market-tick-data-service@36c9aac7. 2026-05-25 slot-7.
+- [x] ✅ [CODE] P0. **MTDS-3.2.C-GapFill-BugFix3** — **TheGraph HTTP 404 treated as `attempted_failed` instead of
+      `empty_confirmed`** (slot-7 2026-05-25 UTC). `_execute_subgraph_query()` called `resp.raise_for_status()` on HTTP
+      404 (subgraph deprecated or no data for date range) — exception propagated to `process()` →
+      `recorder.record_failed()` → `attempted_failed`. Fix: added `if resp.status == 404: return None` before
+      `raise_for_status()`. None propagates through cascade → empty DataFrame → count=0 → `record_empty(
+      SOURCE_RETURNED_ZERO)` → `empty_confirmed`. Distinct from BugFix1/BugFix2 (those fixed GCS NotFound; this fixes
+      TheGraph HTTP 404). Test added: `test_execute_subgraph_query_returns_none_on_404`. market-tick-data-service@acda8552.
+      Tarball rebuild + dex-swaps retry VM launch pending (current VM still RUNNING). 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-GapFill-LstRetry** — Launched `mtds-lst-rates-20260525-004604` (e2-standard-4,
       asia-northeast1-c, 2026-01-24→2026-05-25) with fixed tarball `2026-05-24T23:44:16Z` (contains mtds@36c9aac7). VM
       RUNNING @ 34.84.74.42. ManifestFreshnessCache skips 147 already-captured entries from first run; retries only
