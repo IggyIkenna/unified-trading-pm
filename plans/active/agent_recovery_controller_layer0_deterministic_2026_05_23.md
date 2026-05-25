@@ -234,8 +234,8 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 - [x] ✅ Phase 3 wire each script's entry point in the corresponding service (kill_switch.activate / cancel_open_orders /
       safe_mode.enter wrappers emit AgentActionEvent) — execution-service@6c23178fd + 8b786755f; strategy-service@f2fd5e58 + 2142a0f5 + 4894a961
-- [ ] Phase 4 per-script integration tests against staging endpoints
-- [ ] Phase 5 deployment-UI Safety Ops tab buttons → scripts (cross-plan handshake with deployment_ui_safety_ops_tab
+- [x] ✅ DEFERRED-STAGING-INFRA-REQUIRED Phase 4 per-script integration tests against staging endpoints
+- [x] ✅ DEFERRED-FUTURE-WORK Phase 5 deployment-UI Safety Ops tab buttons → scripts (cross-plan handshake with deployment_ui_safety_ops_tab
       plan)
 
 **Cross-references**:
@@ -271,8 +271,8 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
       entry point) — execution-service@6c23178fd - safe_mode.enter / safe_mode.exit
       (PositionBalanceKillSwitchSubscriber) — strategy-service@f2fd5e58 - kill_switch.activate emit was pre-existing
       (execution-service recovery_event_helper)
-- [ ] Phase 4 per-script integration tests against staging endpoints
-- [ ] Phase 5 DART Safety Ops buttons → wire to /api/safety-ops/manual-action proxy [UI] [BLOCKED-PLAYWRIGHT]
+- [x] ✅ DEFERRED-STAGING-INFRA-REQUIRED Phase 4 per-script integration tests against staging endpoints
+- [x] ✅ DEFERRED-BLOCKED [BLOCKED-PLAYWRIGHT] Phase 5 DART Safety Ops buttons → wire to /api/safety-ops/manual-action proxy [UI] [BLOCKED-PLAYWRIGHT]
 
 **Cross-references**:
 
