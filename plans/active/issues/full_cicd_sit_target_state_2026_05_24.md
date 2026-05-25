@@ -121,8 +121,14 @@ makes staging current), so Tier C automation starts from a current baseline.
       seed_validator (Any check now excludes `**/testing/**` — PM@00b5d945a), malformed `# qg-empty-fallback` markers
       (team_mapping_data, protocol_pause_windows), hardcoded project-id in a \_cefi.py comment. Full UAC QG exit 0 for
       per-repo CI; UAC remote workspace-qg re-running to confirm green.
-- [~] Tier A: replicate to other repos. **Fleet status 2026-05-24**: alerting-service GREEN; UAC GREEN (this commit);
-  MTDS in_progress; UTL / instruments / execution / strategy / deployment each RED with their own accumulated-red.
+- [~] Tier A: replicate to other repos. **Fleet status 2026-05-25**: alerting-service GREEN; deployment-service GREEN;
+  UTL fixes pushed (UTL@b92f8518 — local QG exit 0; CI verifying); UAC bouncing on parallel credential/ledger commits;
+  instruments / execution / strategy / MTDS still RED with their own accumulated-red.
+  - **UTL red was 4 classes (~45 tests), not just SIT-misfire**: (1) model_registry cross-repo SSOT → hermetic
+    `tests/fixtures/cloud-providers.yaml`; (2) UAC `DataFreshnessContract` added required `asset_group` → test
+    constructions updated; (3) reason-classifier precedence test re-scoped; (4) **broken deps**: `starlette>=1.0.1` was
+    unsatisfiable with `fastapi<1.0.0` → reverted + PYSEC-2026-161 tracked. Pattern for downstream repos: expect
+    UAC-contract-drift + cross-repo-SSOT + per-repo accumulated codex-red, not just the SIT skip-guard.
 - [ ] Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
 - [~] Tier B: full-workspace SIT job **BUILT** (system-integration-tests@f881579):
   `scripts/run_cross_repo_invariants.sh` (asserts full workspace assembled; runs the guarded invariants for real; fails
