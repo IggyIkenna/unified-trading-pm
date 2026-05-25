@@ -53,7 +53,8 @@ depeg kill-switch) at risk for the May-23 live DeFi cutover.
       collateral targets (Deribit/Bybit/OKX) map to their required non-rebasing token (wstETH) — the matrix in UAC
       `registry/venue_collateral.py` is the source. DONE: uac@56594ab added DERIBIT/BYBIT/OKX entries with
       venue-specific stETH/wstETH preference (DERIBIT: stETH only; BYBIT: both; OKX: wstETH only).
-- [ ] [SCRIPT] P0. UAC quality-gates Pass 1 GREEN (`cd unified-api-contracts && bash scripts/quality-gates.sh`).
+- [x] ✅ [SCRIPT] P0. UAC quality-gates Pass 1 GREEN (`cd unified-api-contracts && bash scripts/quality-gates.sh`). —
+      uac@02b83705 / 125s / ALL QUALITY GATES PASSED (slot-7 2026-05-25)
 
 ## Phase 2 — execution-service wrap preprocessor (F-28, P0) — gated on Phase 1
 
