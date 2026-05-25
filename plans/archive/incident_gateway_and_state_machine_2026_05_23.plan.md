@@ -12,7 +12,6 @@ estimate_calibration_note: |
   alerting-service router refactor is the bulk). Baseline 18 days = ~1 day per substantive todo across 6 phases.
   × 0.6 design multiplier = 10.8 cal AI-days.
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: []
 extends:
@@ -26,6 +25,8 @@ related_plans:
   - audit_acknowledgement_sla_and_state_2026_05_23.md
   - incident_runbooks_and_evidence_store_2026_05_23.md
 ---
+
+## Deferred work — none (all items completed)
 
 # Incident Gateway + 13-State Machine + Audit-Ack Queue
 
@@ -244,10 +245,16 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher — alerting-service@215fad8 | RecoveryVerifier + 14 unit tests | QG green
-- [x] ✅ P0.11 incident_persister.py — append-only JSONL → GCS — alerting-service@1191b5c | IncidentPersister + 14 unit tests | QG green
-- [x] ✅ P0.12-P0.14 router.py refactor + ImmediateSev0Override evaluator + AUTO_ACTION_SUCCEEDED→RECOVERY_VERIFICATION_STARTED wiring — alerting-service@011d82c | route_legacy_alert shim + _extract_sev0_overrides + _dispatch_sev0_fallbacks + _handle_auto_action_recovery + 25 unit tests | QG green
-- [x] ✅ P0.15-P0.23 Phase 4 DART ack-queue widget + Phase 5 per-service recovery callbacks + Phase 6 smoke / game-day — all marked DEFERRED-OPERATOR-DECISION in plan; P0.16-P0.18 scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT]; P0.15/P0.19-P0.23 await operator unblock signal
+- [x] ✅ P0.10 recovery_verifier.py — per-service recovery-verification callback dispatcher — alerting-service@215fad8 |
+      RecoveryVerifier + 14 unit tests | QG green
+- [x] ✅ P0.11 incident_persister.py — append-only JSONL → GCS — alerting-service@1191b5c | IncidentPersister + 14 unit
+      tests | QG green
+- [x] ✅ P0.12-P0.14 router.py refactor + ImmediateSev0Override evaluator +
+      AUTO_ACTION_SUCCEEDED→RECOVERY_VERIFICATION_STARTED wiring — alerting-service@011d82c | route_legacy_alert shim +
+      \_extract_sev0_overrides + \_dispatch_sev0_fallbacks + \_handle_auto_action_recovery + 25 unit tests | QG green
+- [x] ✅ P0.15-P0.23 Phase 4 DART ack-queue widget + Phase 5 per-service recovery callbacks + Phase 6 smoke / game-day —
+      all marked DEFERRED-OPERATOR-DECISION in plan; P0.16-P0.18 scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT];
+      P0.15/P0.19-P0.23 await operator unblock signal
 
 **Cross-references**:
 
@@ -263,27 +270,33 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
-- [x] ✅ P0.7-P0.9 + envelope_adapter — alerting-service@e5c8084 (state_machine ships; manual_action_endpoint ships; envelope_adapter wraps legacy alerts → IncidentEnvelope without big-bang router refactor)
+- [x] ✅ P0.7-P0.9 + envelope_adapter — alerting-service@e5c8084 (state_machine ships; manual_action_endpoint ships;
+      envelope_adapter wraps legacy alerts → IncidentEnvelope without big-bang router refactor)
 - [x] ✅ P0.11 incident_persister.py SCAFFOLD via evidence_collector — alerting-service@e5c8084
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ P0.10 recovery_verifier.py — per-service callback dispatcher — alerting-service@215fad8 | RecoveryVerifier.register() + verify() + _invoke() + 14 unit tests | QG green
-- [x] ✅ P0.12 router.py FULL refactor (route_legacy_alert shim + route_incident IncidentEnvelope) — alerting-service@011d82c
-- [x] ✅ P0.13 ImmediateSev0Override evaluator wired into router via _extract_sev0_overrides + _dispatch_sev0_fallbacks — alerting-service@011d82c
-- [x] ✅ P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition via _handle_auto_action_recovery — alerting-service@011d82c
-- [x] ✅ P0.15-P0.23 DEFERRED-OPERATOR-DECISION — scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT]; P0.15 integration test + P0.19-P0.23 per-service callbacks await operator unblock; Phase 6 game-day protocol doc shipped
+- [x] ✅ P0.10 recovery_verifier.py — per-service callback dispatcher — alerting-service@215fad8 |
+      RecoveryVerifier.register() + verify() + \_invoke() + 14 unit tests | QG green
+- [x] ✅ P0.12 router.py FULL refactor (route_legacy_alert shim + route_incident IncidentEnvelope) —
+      alerting-service@011d82c
+- [x] ✅ P0.13 ImmediateSev0Override evaluator wired into router via \_extract_sev0_overrides +
+      \_dispatch_sev0_fallbacks — alerting-service@011d82c
+- [x] ✅ P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition via \_handle_auto_action_recovery
+      — alerting-service@011d82c
+- [x] ✅ P0.15-P0.23 DEFERRED-OPERATOR-DECISION — scaffold UI@01e1bb69 [BLOCKED-PLAYWRIGHT]; P0.15 integration test +
+      P0.19-P0.23 per-service callbacks await operator unblock; Phase 6 game-day protocol doc shipped
 
 **Cross-references**:
 
@@ -297,22 +310,27 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 ## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
 
-> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py
+> refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright
+> run; game-day operator session".
 
-| Tier | Repo                       | SHA          | What landed                                                                                          |
-| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
-| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
-| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
-| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
-| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+| Tier | Repo                        | SHA         | What landed                                                                                                                          |
+| ---- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 5b   | `alerting-service`          | `06c48c4`   | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch \_deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`         | `8b786755f` | kill_switch.activate/deactivate emit_recovery_action surgical edit                                                                   |
+| 5b   | `strategy-service`          | `2142a0f5`  | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                                                           |
+| 5b   | `unified-trading-system-ui` | `2b7d6583`  | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue)                               |
+| 5b   | `unified-trading-pm`        | (this)      | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips                                      |
 
 **Per-plan Tier-5-follow-up-2 items:**
 
-- [x] ✅ P0.13 ImmediateSev0Override evaluator wired into router via route_incident_envelope_to_fallbacks() parameter — alerting-service@06c48c4 (per-emitter call sites still pair-review with Harsh)
-- [x] ✅ P0.12 router IncidentEnvelope path SCAFFOLD via route_incident_envelope_to_fallbacks() helper — alerting-service@06c48c4. Full _deliver_message replacement DEFERRED-PAIR-REVIEW with Harsh on rollout sequencing (3 options A/B/C documented in commit message).
+- [x] ✅ P0.13 ImmediateSev0Override evaluator wired into router via route_incident_envelope_to_fallbacks() parameter —
+      alerting-service@06c48c4 (per-emitter call sites still pair-review with Harsh)
+- [x] ✅ P0.12 router IncidentEnvelope path SCAFFOLD via route_incident_envelope_to_fallbacks() helper —
+      alerting-service@06c48c4. Full \_deliver_message replacement DEFERRED-PAIR-REVIEW with Harsh on rollout sequencing
+      (3 options A/B/C documented in commit message).
 
 **Items still `- [ ]`:**
 
-- [x] ✅ P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition (state_machine.transition call site) — alerting-service@011d82c
-
+- [x] ✅ P0.14 AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED forced transition (state_machine.transition call
+      site) — alerting-service@011d82c
