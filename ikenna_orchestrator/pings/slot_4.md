@@ -505,3 +505,34 @@ reflect `DefiLendingIndicesAdapter` shipped at mdps@b21fec6 — pm@605971217.
 No remaining actionable AI-days for slot 4. Slot 4 is complete.
 
 — slot-4 / 2026-05-25 (session 4)
+
+## 2026-05-25 (session 5) — Sports scheduler VM launched + per-fixture items resolved
+
+### Sports backfill VMs — LAUNCHED
+
+**Plan ref**: `plans/epics/sports_master.md` Phase 4
+
+Sports rename + Phase 2B GCS migration fully shipped. No tarballs rebuild needed (instruments-service@0b867b3a uploaded
+2026-05-25T04:24 UTC). VM launched:
+
+- **VM**: `sports-scheduler-20260525-072005` — e2-small, asia-northeast1-c, daemon poll=300s
+- **Status**: RUNNING at launch (T+0 verified)
+- **T+10 pending** — check at ~07:30 UTC:
+  `gcloud compute instances describe sports-scheduler-20260525-072005 --zone=asia-northeast1-c --format='value(status)'`
+- **Log**: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/sports-scheduler-20260525-072005/run.log`
+
+Plan flip: `plans/epics/sports_master.md` Phase 4 OPERATOR item ✅ — pm@30f6b7270
+
+### Per-fixture shard items — resolved
+
+| Item                                        | Resolution                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Item 1 (orchestrator per-fixture iteration) | ✅ RESOLVED — enrichment mode already uses `_read_fixture_ids_from_gcs`; per-fixture endpoint verified |
+| Item 2 (manifest row_key extension)         | ✅ ABANDONED — `fixture_id` NOT a shard atom (master plan decision)                                    |
+| Item 3 (cluster validation)                 | ✅ RESOLVED — writegate v2 enumerators cover expected-universe at (league_id, day) shard level         |
+| Item 4 (manifest migration)                 | ✅ ABANDONED — no row_key change; no migration needed                                                  |
+| Item 5 (post-migration smoke)               | ✅ ABANDONED — no migration                                                                            |
+
+Plan flip: `plans/epics/sports_master.md` per-fixture section ✅ — pm@30f6b7270
+
+— slot-4 / 2026-05-25 (session 5)
