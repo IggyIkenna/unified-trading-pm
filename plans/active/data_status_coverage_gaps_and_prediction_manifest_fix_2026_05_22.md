@@ -148,7 +148,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       Consolidator run evidence: `bwckg12s1.output`. Successor for systemic fix:
       `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (sports). Completed: slot-7 2026-05-22.
 
-- [ ] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
+- [x] ✅ DEFERRED-BACKGROUND [VM-RUNNING: instr-backfill-sports ETA ~1460h — long-running background P1, no May-23 dependency] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
       `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
       3063 missing dates drop to < 200. **Current status (14:05 UTC)**: VM RUNNING since ~08:00 UTC. Shard
       `instr-backfill-sports.parquet` at 2020-06-01→2020-06-09 (589 rows, all `empty_confirmed` — COVID era no
@@ -219,7 +219,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 #### 3.4b — Prediction bucket naming mismatch (P1 deferred)
 
-- [ ] [SCRIPT] P1. **Fix prediction bucket naming mismatch** `**DEFERRED**`: IS writes to
+- [x] ✅ DEFERRED [BUCKET-NAMING-MIGRATION: tracked in bucket_name_ssot_canonicalisation_2026_05_10 Phase 0e] [SCRIPT] P1. **Fix prediction bucket naming mismatch** `**DEFERRED**`: IS writes to
       `instruments-store-prediction-central-element-323112` (old, no env-tier) but Cloud Run consolidator targets
       `instruments-store-pred-prd-central-element-323112` (new). The canonical in the OLD bucket is never auto-merged.
       Fix: update IS `DEPLOYMENT_ENV` env var or `resolve_bucket_name()` to point to the prd bucket, then migrate data +
@@ -240,7 +240,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       (`canonical_question_group` is NOT a `_ROW_KEY_COLUMNS` column — confirmed the hierarchy uses `underlying` for
       group identity, which IS manifest correctly populates.)
 
-- [ ] [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per `canonical_question_group`. The schema
+- [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per `canonical_question_group`. The schema
       definition per group lives in
       `unified_api_contracts.canonical.domain.predictions.canonical_groups.CANONICAL_GROUP_METADATA`. Verify the schema
       link in the UI points to the correct UAC per-group metadata (not one flat schema for all Polymarket — each group
