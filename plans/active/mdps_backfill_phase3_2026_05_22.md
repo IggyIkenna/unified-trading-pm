@@ -143,12 +143,15 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 - [x] ❌ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch7** — ❌ SUPERSEDED BY Relaunch8. Was: relaunch only 2025 with @3dd1191
       (EighthBugFix only). NinthBugFix (65b6a54) is a superset and ALL years need relaunching — 030136 batch completed
       2020-2025 with @1f1adbf, 041846 completed 2026 with @1f1adbf; both pre-NinthBugFix. 2026-05-25 slot-7.
-- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch8** — **ALL 7 sports VMs relaunched with NinthBugFix (slot-7 2026-05-25
-      06:12 UTC)**: Terminated 030136 batch (2023+2025 RUNNING; 2020+2021+2022+2024 already terminated). 2026 VM
-      (041846) already terminated. Launched full fleet: `mdps-sports-{2020..2026}-20260525-061238` RUNNING.
-      MDPS_TARBALL_SHA=65b6a54fccc7a467477c661f3545150979bd165e. STALL_TIMEOUT_SEC=7200. Source:
-      `market-data-tick-sports-prd-central-element-323112`. ManifestFreshnessCache skips already-captured dates; retries
-      all dates where odds_snapshot/odds_movement/odds_horizon_bucket candles were silently dropped. 2026-05-25 slot-7.
+- [x] ❌ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch8** — ❌ ALL 7 CRASHED (slot-7 2026-05-25). Root cause: VMs launched at
+      ~05:12 UTC (BST shown as 06:12) BEFORE canonical UAC tarball was rebuilt at 05:33 UTC. VMs downloaded OLD UAC
+      (without `unified_api_contracts.incident` module) → UTL `recovery/agent_action.py:19` crashed immediately.
+      `mdps-sports-{2020..2026}-20260525-061238` EXIT_STATUS=1, all auto-deleted. See MDPS-3.3.Sports-Relaunch9.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch9** — **ALL 7 sports VMs relaunched (slot-7 2026-05-25 ~06:58 UTC)**:
+      UAC canonical tarball confirmed at @3d05b8e9 (incident module present, uploaded 05:33 UTC). All 7 VMs launched
+      AFTER tarball update → will get fixed UAC. `mdps-sports-{2020..2026}-20260525-065857` RUNNING.
+      MDPS_TARBALL_SHA=65b6a54fccc7a467477c661f3545150979bd165e (NinthBugFix). STALL_TIMEOUT_SEC=7200. Source:
+      `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
@@ -159,7 +162,8 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       doc: `plans/active/issues/mdps_sports_schema_contract_gaps_2026_05_22.md`. **SIXTH BUG (slot-7 2026-05-25)**:
       215548 VMs produced 315 attempted_failed for
       `odds_horizon_bucket*\*`with     MalformedTickFieldError. Root cause: SUPER_LIG + other venues publish odds >34h pre-match     (bm_minutes_to_kickoff≈2054 > T-24h+cap=1500) → all rows outside staleness cap → adapter raised instead of     returning empty. Fix: MDPS@a8b28f4 returns`\_make_empty_candle_output()`for the all-outside-cap case →     empty_confirmed instead of attempted_failed. 3 tests added. QG: all passed. Relaunched:     **7 VMs`mdps-sports-{2020..2026}-20260525-014137`\*\*
-      RUNNING. STALL_TIMEOUT_SEC=7200 + MDPS@a8b28f4.
+      RUNNING. STALL_TIMEOUT_SEC=7200 + MDPS@a8b28f4. **NOW Relaunch9 (065857) RUNNING** — see
+      MDPS-3.3.Sports-Relaunch9.
 - [x] ✅ [CODE] P2. **MDPS-3.3.Sports-SchemaContract** — Fix (1) DONE: canonical_writer.py chain=empty omitted at all 6
       row_key write sites + 1 read site (\_publish_emission_check). MDPS@95f685b + QG GREEN. Tests added: MDPS@bffa042
       (slot-7 2026-05-23 — chain absent for sports, chain present for DeFi). Tarball rebuilt + sports VMs relaunched
