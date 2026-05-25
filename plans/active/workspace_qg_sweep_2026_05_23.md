@@ -193,6 +193,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm:
       vm-cross-cutting] — batch-live-reconciliation-service@2531e845 | QG exit 0 (177s) | added ruff==0.15.0, pip-audit,
       bandit to deps
+      — batch-live-reconciliation-service@e6cf1bf | QG exit 0 (75s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
