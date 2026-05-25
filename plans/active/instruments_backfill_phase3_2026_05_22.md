@@ -71,8 +71,14 @@ instruments forward-fill → MTDS backfill (`mtds_backfill_phase3_2026_05_22.md`
 - [x] ✅ [SCRIPT] P0. **IS-3.1.Sports-Relaunch** — Upgraded `instr-backfill-sports` @ 34.180.105.8 with
       instruments-service@2aabd7b (includes @55d718f sports fix + MARKET_LIFECYCLE writer). Deleted @55d718f VM at
       34.84.104.165 (only 2020-06-01 data, COVID era). Manifest skip ACTIVE, resumes from 2020-06-02. 2026-05-22.
+- [x] ✅ [SCRIPT] P0. **IS-3.1.Sports-OOMFix** — **OOM-LOOP FIXED (slot-7 2026-05-25)**: `instr-backfill-sports`
+      OOM-killed repeatedly on e2-standard-4 (16GB) — sports instruments data loads ~15.3GB anon RSS per 30-day chunk,
+      exceeding the 16GB RAM limit. No manifest shard written (0 data before OOM). Fix: terminated OOM VM + relaunched
+      on e2-highmem-8 (8 vCPU, 64GB RAM) with IS@0b867b3a (current tarball, superset of all prior sports fixes
+      @55d718f/@2aabd7b). `instr-backfill-sports` RUNNING @ 35.221.95.138. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **IS-3.1.Sports-V** — `instruments-store-sports-prd` gains rows; `fixture_id` field populated; sports
-      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @2aabd7b @ 34.180.105.8.
+      rename confirmed absent (no `data_available_at` stragglers). IN-PROGRESS: VM RUNNING @0b867b3a @ 35.221.95.138
+      (e2-highmem-8, 64GB, restarted from 2020-06-01 after OOM-fix).
 
 ## Phase 5 — Predictions instruments forward-fill
 
