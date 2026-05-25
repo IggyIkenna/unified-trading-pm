@@ -158,6 +158,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except
       guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log
       path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
+      — execution-service@ec8bd22b | QG exit 0 (397s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
       ruff/pyright surface violations only, NO changes to `engine/strategies/v2/`, `engine/allocator/`, collateral,
