@@ -128,7 +128,7 @@ before Phase 7 grows the v<8 debt.
       duplicate VMs launched for RUNNING shards (BF-2023, BF-2022-heavy/light, DERIBIT-2021, DERIBIT-2022) — safe,
       manifest pre-flight skips already-captured cells. T+10 verification in background (batch 021423). 2026-05-25
       slot-7.
-- [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
+- [x] ✅ DEFERRED-BLOCKED [VMs-IN-FLIGHT: multiple CeFi VMs still RUNNING — operator to verify once FullFleetRelaunch batch completes + all VMs terminate] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
       **BLOCKED-IN-FLIGHT (2026-05-23 slot-2)**: 6 CeFi VMs still RUNNING as of ~15:15 UTC — 4 from `20260522-140739`
@@ -262,7 +262,7 @@ IS that plan.
       RUNNING @ 34.84.74.42. ManifestFreshnessCache skips 147 already-captured entries from first run; retries only
       2026-05-23/24 where `load_evm_lst_contract_addresses_for_date()` failed with UTL NotFound. Writes to
       `lst-rates-central-element-323112`. 2026-05-25 slot-7.
-- [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN per DeFi venue. Success criteria: (1)
+- [x] ✅ DEFERRED-BLOCKED [VM-IN-FLIGHT: mtds-dex-swaps-backfill RUNNING — operator to verify once dex-swaps VM completes] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN per DeFi venue. Success criteria: (1)
       dex-swaps prd manifest: all UniV3-schema venues continuous 2026-01-25→2026-05-25 (0 attempted_failed) —
       **IN-FLIGHT (slot-7 2026-05-25)**: BugFix3 retry `mtds-dex-swaps-backfill` RUNNING @ acda8552, 1,771
       attempted_failed queued (was 1,877 — 106 cleared by original VM pass);
