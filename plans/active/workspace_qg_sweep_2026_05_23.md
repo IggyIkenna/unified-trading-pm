@@ -186,6 +186,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [x] ✅ [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       unified-trading-api@2a99dded | QG exit 0 (223s) | move import os to top (E402), scripts/\*.py per-file-ignore
+      — unified-trading-api@6615860 | QG exit 0 (108s) | re-verified; already green, no regressions
       C901/E501/E402
 
 - [x] ✅ [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
