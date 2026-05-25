@@ -166,6 +166,19 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       relaunched: `mdps-sports-{2020..2026}-20260525-074034` RUNNING.
       MDPS_TARBALL_SHA=e53cc358365271c6d7f184e4116edd1a9908e2aa. STALL_TIMEOUT_SEC=7200. Source:
       `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-TwelfthBugFix** — **TWELFTH BUG: all sports VMs (Relaunch10) produced 0 candles
+      written despite code reaching streaming reader (slot-7 2026-05-25)**. Four-part root cause: (A)
+      `_CHAIN_GROUP_COL_CANDIDATES` missing `"instrument_id"` → streaming reader found no group column for per-bookie
+      files (which use `instrument_id` not `instrument_key`/`symbol`) → returned 0 groups → 0 candles. (B) All 4 sports
+      adapters had `related_data_types=["odds"]` but per-bookie raw files have `data_type="trades"` →
+      `_streaming_filter_slice()` eliminated all rows → empty tick*data. (C) Bundle
+      `ticks_migrated*\*.parquet`files     have`instrument_type=""`but`data_type="odds"`→`\_infer_instrument_type()`returned bookie name (e.g.     "BETFAIR_EX_UK") →`SchemaContractNotFoundError`→ write skipped. (D) Sports adapters expected    `home_odds`/`away_odds`/`draw_odds`wide format but per-bookie files have`price`+`outcome_name`long format →     all odds columns NaN → 0-candle output. Fixes: (A) added`"instrument_id"`to`\_CHAIN_GROUP_COL_CANDIDATES`in    `live_workers.py`; (B) `related_data_types=["odds","trades"]`in all 4 sports adapters; (C) fallback in    `canonical_writer.\_infer_instrument_type()`when`instrument_type=""`+`data_type="odds"`→ return "odds"; (D)     price/outcome_name pivot added to`odds_snapshot_adapter`, `odds_movement_adapter`, `arbitrage_adapter`
+      before the existing wide-format fill loop. QG ✅. market-data-processing-service@21700c5. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch11** — Tarball rebuilt with MDPS@21700c5 (TwelfthBugFix) + UTL@9094cac.
+      Relaunch10 VMs `074034` already terminated. All 7 sports VMs relaunched:
+      `mdps-sports-{2020..2026}-20260525-092751` RUNNING. MDPS_TARBALL_SHA=21700c5ce18e7a54069278aa077d813115e118cc.
+      UTL_TARBALL_SHA=9094cac1876db23a2fb3286c0de2ebd45afb50c3. STALL_TIMEOUT_SEC=7200 (auto). Source:
+      `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
