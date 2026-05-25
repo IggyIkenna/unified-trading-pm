@@ -34,7 +34,7 @@ prediction / calendar) land in env-tiered buckets via `resolve_bucket_name()`.
 
 Gate: MDPS-3.3.CeFi verification GREEN.
 
-- [ ] [SCRIPT] P0. **FEAT-3.4.CeFi.DeltaOne** — Launch features-delta-one-cefi compute VM.
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi-V not yet GREEN] [SCRIPT] P0. **FEAT-3.4.CeFi.DeltaOne** — Launch features-delta-one-cefi compute VM.
       `--feature-family delta_one --asset-group cefi`.
 - [ ] [SCRIPT] P0. **FEAT-3.4.CeFi.Volatility** — Launch features-volatility-cefi compute VM.
 - [ ] [SCRIPT] P0. **FEAT-3.4.CeFi.MTF** — Launch features-mtf-cefi compute VM (multi-timeframe).
