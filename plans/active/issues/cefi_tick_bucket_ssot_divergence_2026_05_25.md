@@ -51,7 +51,27 @@ of migration state: flat today, `-prd` automatically after Phase 2.6. Smoke-test
 `--asset-group cefi --output-path /tmp/cov.json` and confirming it reads the populated (flat) bucket. No bucket config
 or backfill change — the Phase 2.6 migration itself stays owned by the bucket-SSOT plan.
 
+## Update 2026-05-25 — coverage-reader fix written + smoke-tested (NOT pushed); deeper residual found
+
+Implemented in `instruments-service/scripts/measure_honest_coverage.py` (UNCOMMITTED on disk): replaced the hardcoded
+`-prd` `_MANIFEST_BUCKETS` with `_MANIFEST_BUCKET_CANDIDATES` (both `-prd` + flat per AG) and rewrote `_read_manifest`
+to read whichever candidate has the most rows (the live bucket) — robust to the migration, auto-corrects after Phase
+2.6. Smoke-test (cefi): correctly selected the FLAT index (34.9M rows) over `-prd` (2.6M). `get_write_bucket_name` alone
+was insufficient — it returns flat for ALL AGs, but DeFi's live data is `-prd` (different write path), so a max-rows
+pick is required.
+
+**Deeper residual (NEW — consolidator domain, Ikenna):** even with the right bucket, cefi coverage reads **6.69%** vs
+the **~55%** from per-VM aggregation, because the consolidated `availability_index.parquet` LAGS the `_index/per_vm/`
+shards (audit Gotcha 1). The manifest consolidator (Cloud Run, targets `-prd`) is not folding the flat-bucket per-VM
+shards into the flat-bucket index. Accurate mid-backfill coverage needs the consolidator to fold flat per-VM (or the
+reader to aggregate per-VM directly — but that duplicates the consolidator). This is consolidator/migration-pipeline
+territory, not the coverage reader.
+
+**NOT pushed:** instruments-service local `.venv` is broken (no pandas/basedpyright) + workspace venv lacks basedpyright
+→ cannot run repo QG locally (merge prereq). Change held on disk for QG + push on a working host.
+
 ## Status
 
-Bucket-write behaviour = WORKING-AS-DEFERRED (Phase 2.6 owns the migration). Residual coverage-reader defect = OPEN,
-small, fixable in `measure_honest_coverage.py`. DQ-05 in the audit doc points here.
+Bucket-write behaviour = WORKING-AS-DEFERRED (Phase 2.6 owns the migration). Coverage-reader bucket-selection fix =
+WRITTEN + smoke-tested, HELD (QG blocked by broken venv). Accurate-number = BLOCKED on consolidator-lag residual
+(Ikenna/consolidator). DQ-05 in the audit doc points here.
