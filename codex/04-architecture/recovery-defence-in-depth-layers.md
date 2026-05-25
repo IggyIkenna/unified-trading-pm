@@ -10,9 +10,9 @@ referenced_by:
   - codex/05-infrastructure/disaster-recovery.md
   - codex/05-infrastructure/physical-pager-layer.md
   - codex/15-runbooks/alerting/audit-acknowledgement-flow.md
-  - plans/active/incident_gateway_and_state_machine_2026_05_23.md
+  - plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md
   - plans/active/agent_recovery_controller_layer0_deterministic_2026_05_23.md
-  - plans/active/ai_recovery_audit_signoff_agent_2026_05_23.md
+  - plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md
 ---
 
 # Recovery Defence-In-Depth Layers (5+1)
@@ -125,8 +125,8 @@ deferred-per-operator pending Phase 7 quietness baseline). Per-severity SLA matr
 
 ### Layer 3 — Twilio voice/SMS (permanent fallback)
 
-Owned by `plans/active/independent_fallback_twilio_voice_2026_05_23.md`. Twilio account is dedicated (not shared with
-any other workspace tool). Triggers automatically on:
+Owned by `plans/archive/independent_fallback_twilio_voice_2026_05_23.plan.md` (shipped 2026-05-23). Twilio account is
+dedicated (not shared with any other workspace tool). Triggers automatically on:
 
 - Primary provider health probe failure (router enters fallback_mode).
 - SEV0 incident routing (defence-in-depth — fires alongside PagerDuty + Telegram).

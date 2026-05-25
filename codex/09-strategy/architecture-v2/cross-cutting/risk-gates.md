@@ -1,11 +1,16 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-25
 ---
 
 # Cross-Cutting: Risk Gates (4-Layer Model)
 
 > **What it is:** The risk enforcement layers between a strategy's emitted instruction and the actual venue order. Four
 > distinct gates, each with a specific responsibility and authority to reject/modify.
+
+> **Per-strategy risk config** (drawdown thresholds, expected-drawdown model, response policy): see
+> [`codex/04-architecture/strategy-risk-config-schema.md`](../../../04-architecture/strategy-risk-config-schema.md).
+> Every live strategy MUST declare all 3 blocks. The strategy-service `config_loader.py` enforces at load time.
 
 ## The 4 layers
 

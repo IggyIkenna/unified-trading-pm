@@ -254,6 +254,13 @@ enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL `MissingClusterValidationError`
 INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-service (sports
 family) reads the parquet rows.
 
+**Sports GCS partition key status (verified 2026-05-24)**: GCS tick bucket
+`market-data-tick-sports-central-element-323112` uses `asset_group=sports/` throughout — already canonical. The
+`category=sports/` partition key was NEVER used in this bucket (dry-run across all 2139 days confirmed `found=0`). AWS
+tick bucket `market-data-tick-sports-prd-427895769566` is empty (KeyCount=0). No hive-rekey migration was needed.
+Migration script `market_tick_data_service/scripts/migrate_sports_hive_key.py` (mtds@da09d72c) shipped as a guard/future
+tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_partition_rekey_2026_05_23.plan.md`.
+
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
 
 | `(asset_group, data_type)`                                                                         | Semantic                                          | Notes                                                                                                                                                                          |

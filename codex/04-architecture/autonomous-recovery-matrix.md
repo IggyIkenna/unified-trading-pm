@@ -113,6 +113,23 @@ ERROR DETECTED
 |                          Kill switch on strategy
 |                          CRITICAL PagerDuty + Telegram
 |
++-- LIQUIDATION RISK (pre-detection — 6 triggers, fires BEFORE actual liquidation)
+|   |   (LiquidationRiskPredetector in strategy-service — emits LIQUIDATION_RISK_IMMINENT SEV0)
+|   +-- margin_ratio_breach (closed set per venue — CeFi perp, DeFi lending, DeFi perp)
+|   +-- liquidation_distance_below_threshold
+|   +-- collateral_transfer_fail
+|   +-- ADL_or_insurance_fund_risk_signal
+|   +-- venue_API_cannot_confirm_margin_state
+|   +-- price_gap_exceeds_model_assumptions
+|   --> SEV0 → Layer-0 deleverage + Layer-2 PagerDuty + Layer-3 Twilio voice
+|
++-- LIQUIDATION EVENT (actual liquidation — closed-set predicates per venue family)
+|   |   (LiquidationEventDetector in strategy-service — emits LIQUIDATION_EVENT_DETECTED SEV1)
+|   +-- SEV0 escalation if any of 7 overrides true:
+|       material_liquidation | more_risk_remains | cause_unknown | strategy_still_trading |
+|       margin_collateral_uncertain | cross_account_may_be_affected | internal_state_did_not_predict
+|   --> LiquidationInvestigationReport written to GCS audit-store
+|
 +-- POSITION DRIFT DETECTED (new, from reconciliation work)
 |   |
 |   +-- deviation < 2% --> NORMAL, log only
@@ -124,6 +141,17 @@ ERROR DETECTED
 |       +-- Human reviews in Observe tab, decides to close or wait
 |
 +-- RECONCILIATION FAILURE
+    |
+    +-- Age-band escalation (per codex/04-architecture/reconciliation-age-tracking.md):
+    |   +-- 0-5 min   --> Internal warning only
+    |   +-- 5-15 min  --> Slack/Telegram warning + agent investigation (SEV3)
+    |   +-- >15 min   --> SEV1 (human investigation; RECONCILIATION_AGE_WARN AlertCode)
+    |   +-- >30 min   --> SEV0 + recon-freeze armed (RECONCILIATION_AGE_CRITICAL AlertCode)
+    |
+    +-- 7 immediate-SEV0 overrides (bypass age band — any true → SEV0 + freeze):
+    |   UNKNOWN_NET_EXPOSURE | OPEN_ORDERS_UNCONFIRMABLE | KILL_SWITCH_CANNOT_CONFIRM_CANCEL |
+    |   VENUE_INTERNAL_BALANCE_MISMATCH | POSITION_EXISTS_EXTERNALLY_UNKNOWN_INTERNALLY |
+    |   MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED | MARGIN_COLLATERAL_SAFETY_UNCERTAIN
     |
     +-- Check: can_reconcile? can_execute?
     |

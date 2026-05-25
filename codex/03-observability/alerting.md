@@ -10,8 +10,14 @@ scope: [engineer, admin]
 is self-healing because something broke. Even if recovery succeeds, the operator must know it happened. Different
 severities route to different channels, but nothing is silent.
 
-Alert delivery channels: **Telegram** (primary, all alerts) and **PagerDuty** (critical trading events). Slack is
-deprecated.
+Alert delivery channels: **Telegram** (primary, all alerts), **PagerDuty** (critical trading events), and **Twilio
+voice/SMS** (permanent Layer-3 fallback — survives PagerDuty API outage + phone-on-DND). Slack is deprecated.
+
+> **Incident Gateway (2026-05-23)**: all alerts now flow through the central `alerting-service` Incident Gateway as
+> structured `IncidentEnvelope` events with 13-state lifecycle tracking, dedup-key storm collapse, and 6h audit-ack
+> queue. See `codex/04-architecture/incident-gateway-state-machine.md` for the SSOT. The 5-layer defence-in-depth model
+> (Layer-0 scripts → Layer-1 LLM agent → Layer-2 PagerDuty → Layer-3 Twilio → Layer-4 physical pager) is in
+> `codex/04-architecture/recovery-defence-in-depth-layers.md`.
 
 > **🟡 SLACK DEPRECATION RECONCILIATION (AL-6 PRE_CUTOVER 2026-05-12, slot 8 audit)** — this doc declares Slack
 > deprecated; downstream references still treating Slack as a live channel are tracked for follow-up: (a)
@@ -183,33 +189,44 @@ Event Sources (execution-service, PBMS, strategy-service, etc.)
 Pub/Sub topic: lifecycle-events
   |
   v
-alerting-service (subscriber)
+alerting-service (subscriber + Incident Gateway)
   |
-  |-- Deduplication (60s TTL, same event+details hash)
+  |-- Wrap legacy alert into IncidentEnvelope (envelope_adapter)
+  |-- Incident dedup by stable incident_key (hash over service+component+problem_type+venue+strategy)
+  |-- State machine transition (DETECTED → AUTO_ACTION_STARTED → ... → RESOLVED)
   |-- Route: match event_pattern against routing rules (first match wins)
   |-- Deliver to matched channels:
   |     |
   |     +-- Telegram (HTML format, bot API)
   |     +-- PagerDuty (Events API v2, severity mapped)
+  |     +-- Twilio Voice (Layer-3 fallback — fires on SEV0 + when PagerDuty probe fails)
+  |     +-- Twilio SMS  (Layer-3 fallback — parallel with voice)
   |
+  |-- Persist IncidentEnvelope + AgentActionEvent to GCS audit-store (1yr retention)
   |-- Persist AlertDeliveryRecord to GCS (audit trail)
   |
   v
-Operator sees alert in Telegram / PagerDuty on-call
+Operator sees alert in Telegram / PagerDuty / Twilio voice / DART Safety Ops tab
 ```
 
 ---
 
 ## Configuration
 
-| Parameter             | Default        | Description                        |
-| --------------------- | -------------- | ---------------------------------- |
-| Telegram bot token    | Secret Manager | Primary alert channel              |
-| Telegram chat ID      | Secret Manager | Target chat for alerts             |
-| PagerDuty routing key | Secret Manager | For critical trading events        |
-| Alert dedup TTL       | 60s            | Suppress duplicate events          |
-| OOM kill threshold    | 5              | OOM patterns before VM termination |
-| Startup timeout       | 300s           | Seconds before startup timeout     |
+| Parameter                             | Default        | Description                                    |
+| ------------------------------------- | -------------- | ---------------------------------------------- |
+| Telegram bot token                    | Secret Manager | Primary alert channel                          |
+| Telegram chat ID                      | Secret Manager | Target chat for alerts                         |
+| PagerDuty routing key                 | Secret Manager | For critical trading events                    |
+| `alerting-twilio-account-sid`         | Secret Manager | Twilio Account SID (Layer-3 fallback)          |
+| `alerting-twilio-auth-token`          | Secret Manager | Twilio auth token — NEVER log in URL or stdout |
+| `alerting-twilio-from-number`         | Secret Manager | Twilio caller number                           |
+| `alerting-twilio-to-number-primary`   | Secret Manager | Ikenna mobile (primary)                        |
+| `alerting-twilio-to-number-secondary` | Secret Manager | Harsh mobile (secondary)                       |
+| `alerting-twilio-to-number-founder`   | Secret Manager | Founder escalation number                      |
+| Alert dedup TTL                       | 60s            | Suppress duplicate events                      |
+| OOM kill threshold                    | 5              | OOM patterns before VM termination             |
+| Startup timeout                       | 300s           | Seconds before startup timeout                 |
 
 ---
 
