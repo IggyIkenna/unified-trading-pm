@@ -12,6 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../archive/audit03_drift_remediation_backlog_2026_05_22.plan.md
   - ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md
   - ../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md
   - ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md

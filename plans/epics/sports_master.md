@@ -13,6 +13,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
   - ../active/d2_uac_continuity_2026_05_20.md
+  - ../archive/sports_gcs_partition_rekey_2026_05_23.plan.md
   - ../archive/2026_05/hard_schema_enforcement_2026_05_08.md
   - ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md
   - ../archive/wave3x_residual_ssots_2026_05_08.plan.md

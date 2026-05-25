@@ -15,14 +15,14 @@ related_plans:
   - ../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
   - ../archive/2026_05/alerting_service_live_rules_2026_05_07.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
-  - ../active/incident_gateway_and_state_machine_2026_05_23.md
+  - ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md
   - ../active/agent_recovery_controller_layer0_deterministic_2026_05_23.md
-  - ../active/ai_recovery_audit_signoff_agent_2026_05_23.md
-  - ../active/reconciliation_age_tracking_and_escalation_2026_05_23.md
-  - ../active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md
+  - ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md
+  - ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md
+  - ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md
   - ../active/connectivity_dependency_buffer_policy_2026_05_23.md
   - ../active/audit_acknowledgement_sla_and_state_2026_05_23.md
-  - ../active/independent_fallback_twilio_voice_2026_05_23.md
+  - ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md
   - ../active/physical_pager_research_and_webhook_prototype_2026_05_23.md
   - ../active/incident_runbooks_and_evidence_store_2026_05_23.md
   - ../active/deployment_ui_safety_ops_tab_2026_05_23.md
@@ -70,12 +70,14 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete: AlertCode taxonomy + LIVE_ALERT_RULES + DART Active Alerts panel + 15 per-AlertCode runbooks + Phase 7 quietness baseline VM running. Phase 8 rehearsal + Telegram token rotation + PagerDuty setup BLOCKED-OPERATOR. · **estimate**: 13.2 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete: AlertCode taxonomy + LIVE_ALERT_RULES + DART Active Alerts
+panel + 15 per-AlertCode runbooks + Phase 7 quietness baseline VM running. Phase 8 rehearsal + Telegram token rotation +
+PagerDuty setup BLOCKED-OPERATOR. · **estimate**: 13.2 cal AI-days (class: design)
 
-### [`incident_gateway_and_state_machine_2026_05_23`](../active/incident_gateway_and_state_machine_2026_05_23.md)
+### [`incident_gateway_and_state_machine_2026_05_23`](../archive/incident_gateway_and_state_machine_2026_05_23.plan.md)
 
-**status**: active · **estimate**: 10.8 cal AI-days (class: design) · **NEW 2026-05-23** — 13-state machine (DETECTED →
-… → CLOSED), audit-ack queue, dedup-key, `AUTO_ACTION_SUCCEEDED ≠ RESOLVED` invariant.
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. 13-state machine + dedup + audit_ack_queue +
+recovery_verifier + router refactor + Twilio fallback wired. · **estimate**: 10.8 cal AI-days (class: design)
 
 ### [`agent_recovery_controller_layer0_deterministic_2026_05_23`](../active/agent_recovery_controller_layer0_deterministic_2026_05_23.md)
 
@@ -84,22 +86,23 @@ deterministic recovery scripts (restart/redeploy/resize/failover/pause/cancel/di
 
 - structured AgentActionEvent.
 
-### [`ai_recovery_audit_signoff_agent_2026_05_23`](../active/ai_recovery_audit_signoff_agent_2026_05_23.md)
+### [`ai_recovery_audit_signoff_agent_2026_05_23`](../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md)
 
-**status**: active · **estimate**: 12.0 cal AI-days (class: brand-new) · **NEW 2026-05-23** — agent-orchestrator
-custom-role agent that audits every AgentActionEvent, writes signoff doc, can DISPUTE, acts as Layer-1.5 backup actuator
-when Layer-0 fails.
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped (UAC schema + UTL library + agent template + DISPUTE wiring +
+DART feed + Playwright). Prod-VM launch + staging smoke are OPERATOR actions tracked in P3 below. · **estimate**: 12.0
+cal AI-days (class: brand-new)
 
-### [`reconciliation_age_tracking_and_escalation_2026_05_23`](../active/reconciliation_age_tracking_and_escalation_2026_05_23.md)
+### [`reconciliation_age_tracking_and_escalation_2026_05_23`](../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md)
 
-**status**: active · **estimate**: 4.0 cal AI-days (class: refactor) · **NEW 2026-05-23** — age fields + 12-dimension
-separation + 15-min SEV1 + 30-min SEV0 + 7 immediate-SEV0 overrides + freeze-on-recon-risk.
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. Age fields + 12 dimensions + 3-band escalation + 7
+immediate-SEV0 overrides + ReconFreezeChecker. Smoke + game-day are OPERATOR actions tracked in P3 below. ·
+**estimate**: 4.0 cal AI-days (class: refactor)
 
-### [`drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23`](../active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md)
+### [`drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23`](../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md)
 
-**status**: active · **estimate**: 9.6 cal AI-days (class: design) · **NEW 2026-05-23** — per-strategy 7-threshold
-closed set + expected_drawdown_model + response_policy + drawdown investigation report + idempotent close-all script
-contract + liquidation event + liquidation-risk pre-detection.
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. UAC schemas + config loader validation + drawdown investigation
+report + liquidation detectors + close-all scripts + smoke tests. Smoke + game-day live runs are OPERATOR actions
+tracked in P3 below. · **estimate**: 9.6 cal AI-days (class: design)
 
 ### [`connectivity_dependency_buffer_policy_2026_05_23`](../active/connectivity_dependency_buffer_policy_2026_05_23.md)
 
@@ -112,10 +115,11 @@ contract + liquidation event + liquidation-risk pre-detection.
 **status**: active · **estimate**: 4.8 cal AI-days (class: design) · **NEW 2026-05-23** — 6h default SLA + per- severity
 override + secondary-human + founder fallback + operational-ack-vs-audit-ack distinction.
 
-### [`independent_fallback_twilio_voice_2026_05_23`](../active/independent_fallback_twilio_voice_2026_05_23.md)
+### [`independent_fallback_twilio_voice_2026_05_23`](../archive/independent_fallback_twilio_voice_2026_05_23.plan.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) · **NEW 2026-05-23** — Twilio voice/SMS as independent
-fallback for primary-provider-down + SEV0-no-ack + continuous primary-provider health probe.
+**status**: ✅ ARCHIVED 2026-05-25 — All implementable phases shipped (Twilio notifiers + router fallback + health
+probe). Operator-action items (Twilio account creation + SM creds push + live smoke) tracked in P3 below. ·
+**estimate**: 4.8 cal AI-days (class: infra)
 
 ### [`physical_pager_research_and_webhook_prototype_2026_05_23`](../active/physical_pager_research_and_webhook_prototype_2026_05_23.md)
 
@@ -147,24 +151,88 @@ _(no plans currently assigned at this priority. Post-cutover audits will spawn P
 
 ## P3 — backlog; revisit quarterly
 
-> **MIGRATED FROM:** `alerting_service_live_rules_2026_05_07.md` (archived 2026-05-23) — Phases 1-9 complete.
-> Phase 7 quietness baseline VM ran until ~2026-05-24. Operator soak + rehearsal tasks below.
+> **MIGRATED FROM:** `alerting_service_live_rules_2026_05_07.md` (archived 2026-05-23) — Phases 1-9 complete. Phase 7
+> quietness baseline VM ran until ~2026-05-24. Operator soak + rehearsal tasks below.
 
-- [ ] [OPERATOR] P3. **Rotate Telegram bot token** — CRITICAL: token exposed in Tab L httpx log. Rotate via
-      @BotFather → update Secret Manager `TELEGRAM_BOT_TOKEN` (GCP + AWS) + redeploy alerting-service.
+> **MIGRATED FROM:** `independent_fallback_twilio_voice_2026_05_23.md` (archived 2026-05-25) — code shipped;
+> operator-action items below.
+
+- [ ] [OPERATOR] P3. **Twilio account creation** — create dedicated Twilio account; obtain voice-capable phone number
+      (UK +44 or similar). Cost: ~$1/number + $0.013/min voice. Per SSOT:
+      `codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 3. **MIGRATED FROM:**
+      `independent_fallback_twilio_voice_2026_05_23.md` Phase 1 P0.1.
+- [ ] [OPERATOR] P3. **Push 7 Twilio SM credentials** — `alerting-twilio-account-sid`, `alerting-twilio-auth-token`,
+      `alerting-twilio-from-number`, `alerting-twilio-to-number-primary/secondary/founder` to BOTH GCP
+      `central-element-323112` SM AND AWS `427895769566` SM. CRITICAL: NEVER log auth_token in URL. **MIGRATED FROM:**
+      `independent_fallback_twilio_voice_2026_05_23.md` Phase 1 P0.2-P0.3.
+- [ ] [OPERATOR+AGENT] P3. **Twilio live smoke tests** (requires Phase 1 creds + staging stack) — inject
+      KILL_SWITCH_DEFI_LIQUIDATION_RISK IncidentEnvelope → assert Twilio voice delivers within 90s; monkeypatch
+      PagerDuty 503 → assert fallback_mode + Twilio fires. **MIGRATED FROM:**
+      `independent_fallback_twilio_voice_2026_05_23.md` Phase 5 P0.12-P0.14.
+
+> **MIGRATED FROM:** `ai_recovery_audit_signoff_agent_2026_05_23.md` (archived 2026-05-25) — code shipped;
+> operator-action items below.
+
+- [ ] [OPERATOR] P3. **Launch recovery-audit LLM agent** on long-lived GCE VM (asia-northeast1-c, e2-standard-2). Model
+      = `claude-opus-4-7` (max thinking). Pre-flight: confirm AGENT_ORCHESTRATOR_URL + GH_PAT + AUDIT_STORE_BUCKET in
+      SM. **MIGRATED FROM:** `ai_recovery_audit_signoff_agent_2026_05_23.md` Phase 5 P0.12.
+- [ ] [OPERATOR+AGENT] P3. **Recovery-audit synthetic smoke + DISPUTE game-day** (requires staging infrastructure) —
+      inject AgentActionEvent(action_status=FAILED) → assert Layer-1.5 backup fires within 90s; run scenario
+      02_defi_chain_rpc_outage_solana.md → assert ESCALATE_TO_HUMAN verdict + 1h ack. **MIGRATED FROM:**
+      `ai_recovery_audit_signoff_agent_2026_05_23.md` Phase 5 P0.13-P0.14.
+
+> **MIGRATED FROM:** `reconciliation_age_tracking_and_escalation_2026_05_23.md` (archived 2026-05-25) — code shipped;
+> operator-action items below.
+
+- [ ] [OPERATOR+AGENT] P3. **Reconciliation smoke + game-day** (operator action required) — inject position-recon delta
+      aged 20min → assert SEV1 fires; age to 40min → assert SEV0 + freeze armed + order preflight rejects. Run scenario
+      11_handshake_integration.md → assert age fields populate + recovery fires. **MIGRATED FROM:**
+      `reconciliation_age_tracking_and_escalation_2026_05_23.md` Phase 6 P0.15-P0.16.
+
+> **MIGRATED FROM:** `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md` (archived 2026-05-25) — code
+> shipped; operator-action items below.
+
+- [ ] [OPERATOR+AGENT] P3. **Drawdown + liquidation live smoke tests** — synthetic carry_staked_basis PnL drop to
+      investigation threshold → assert report written + DART shows it; auto-close threshold → assert dry-run plan
+      generated. Inject LIQUIDATION_EVENT_DETECTED → assert LiquidationInvestigationReport written + SEV1;
+      cause-unknown=True → assert SEV0 escalation. Run scenario 15_liquidation_proximity_auto_deleverage.md. **MIGRATED
+      FROM:** `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md` Phase 6 P0.16-P0.18.
+
+- [ ] [OPERATOR] P3. **Rotate Telegram bot token** — CRITICAL: token exposed in Tab L httpx log. Rotate via @BotFather →
+      update Secret Manager `TELEGRAM_BOT_TOKEN` (GCP + AWS) + redeploy alerting-service.
 - [ ] [OPERATOR] P3. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings so CI smoke
       alerts route to ops channel (not the default).
-- [ ] [OPERATOR] P3. **PagerDuty escalation policy** — define in PD console: tier-1 (email) → tier-2 (SMS 5min) →
-      tier-3 (voice 10min). Wire `PAGERDUTY_ROUTING_KEY` Secret Manager key. Slack credential push post-Phase-7 baseline.
-- [ ] [OPERATOR+AGENT] P3. **Alert rehearsal session** — run `inject_synthetic_alert.py` for all 15 alert codes +
-      fill sign-off doc `REHEARSAL_2026_05_23.md`. CRITICAL-severity simulation (position > 10× threshold).
-- [ ] [OPERATOR] P3. **48h FP baseline review** — if FP > 10%/24h post-cutover, file threshold-adjustment task.
-      7-day soak daily review; threshold re-tune if needed.
-- [ ] [AGENT] P3. **Harsh pair-review PR** — alerting-service is Harsh's repo; raise PR for Tab L diff + get
-      Harsh's sign-off before merging to main.
+- [ ] [OPERATOR] P3. **PagerDuty escalation policy** — define in PD console: tier-1 (email) → tier-2 (SMS 5min) → tier-3
+      (voice 10min). Wire `PAGERDUTY_ROUTING_KEY` Secret Manager key. Slack credential push post-Phase-7 baseline.
+- [ ] [OPERATOR+AGENT] P3. **Alert rehearsal session** — run `inject_synthetic_alert.py` for all 15 alert codes + fill
+      sign-off doc `REHEARSAL_2026_05_23.md`. CRITICAL-severity simulation (position > 10× threshold).
+- [ ] [OPERATOR] P3. **48h FP baseline review** — if FP > 10%/24h post-cutover, file threshold-adjustment task. 7-day
+      soak daily review; threshold re-tune if needed.
+- [ ] [AGENT] P3. **Harsh pair-review PR** — alerting-service is Harsh's repo; raise PR for Tab L diff + get Harsh's
+      sign-off before merging to main.
 
 ## Archived plans
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete. Deferred operator tasks migrated to P3 above.
+
+### [`incident_gateway_and_state_machine_2026_05_23`](../archive/incident_gateway_and_state_machine_2026_05_23.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped.
+
+### [`ai_recovery_audit_signoff_agent_2026_05_23`](../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-25 — All implementable phases shipped. Operator-action items in P3.
+
+### [`reconciliation_age_tracking_and_escalation_2026_05_23`](../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. Operator smoke in P3.
+
+### [`drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23`](../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. Operator smoke in P3.
+
+### [`independent_fallback_twilio_voice_2026_05_23`](../archive/independent_fallback_twilio_voice_2026_05_23.plan.md)
+
+**status**: ✅ ARCHIVED 2026-05-25 — Code shipped. Twilio account creation + creds in P3.
