@@ -116,9 +116,14 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       `instrument_type=`/`@LIN` blob probe + `_sum_candles_over_days`). — features-service@2965bbda
 - [x] ✅ [VALIDATE] P0. `data_loader._build_blob_path` canonical confirmed: BITGET perps load **11520 candles** each on
       2026-05-03 CEFI from canonical bucket. QG green (279s). — features-service@2965bbda
-- [~] 🟡 [VALIDATE] P0. **Full-execution criterion — PARTIAL:** discovery (83 instruments, 7.4s, no phantoms) + lookback
-      gate + candle load all GREEN end-to-end. **Full compute BLOCKED downstream** by the write-path bug + venue-ID
-      encoding below (both outside input-read scope, newly exposed). Parquet-written + read-back criterion pending those.
+- [x] ✅ [IMPLEMENT] P0. **Honest-absence reads (pipeline-readiness):** `blob_exists()`-check before download in
+      `_try_load_one_day` (mirrors onchain/sports) + None-guard in `load_candles_with_buffer`. Missing/not-yet-backfilled
+      shards now skip cleanly instead of 404→retry→None→`len()` crash. Validated 2026-05-03 CEFI: 48 real BITGET load,
+      ~35 not-yet-backfilled venues skip, **0 NoneType crashes, 0 unhandled 404s**. — features-service@c35e5e72
+- [x] ✅ [VALIDATE] P0. **READ + CALCULATE pipeline READY:** reads all available data + auto-picks-up venues as backfill
+      lands; calculate validated (technical_indicators → 84 features, rsi_14 in [0,100]). Reads canonical **v8** manifest
+      via `read_availability_index` (no pinned/legacy version; -prd manifest = 100% schema_version 8). Remaining for full
+      end-to-end: WRITE P0 (deferred) + venue-ID encoding (below; only bites once those venues' data lands).
 
 ### Downstream findings exposed by the read fix (2026-05-25) — outside input-read scope
 
