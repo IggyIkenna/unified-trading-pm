@@ -181,6 +181,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       client-reporting-api@a82db85 | QG exit 0 (280s) | per-file-ignores for scripts/\*.py (C901+E501),
       scripts/**init**.py for test import, starlette 1.1.0
+      — client-reporting-api@d6809f4 | QG exit 0 (66s) | regression fix: d7f2c3f lost isinstance guards + introduced Any types + downgraded pyright rules; restored all 3
 
 - [x] ✅ [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
