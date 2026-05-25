@@ -146,11 +146,24 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 2 — volatility `[P0]`
 
-- [ ] [IMPLEMENT] P0. Delete hardcoded `venue=BINANCE-FUTURES` + legacy `instrument_type=`/`@LIN` templates in
-      `core/data_loader.py` (lines ~100/168/231/290). Replace input discovery + path resolution with manifest-driven
-      `(venue, data_type, instrument)` lookup.
-- [ ] [VALIDATE] P0. End-to-end compute on verified date (CEFI/TRADFI) → parquet + `captured` manifest + non-null
-      columns read-back.
+- [x] ✅ [IMPLEMENT] P0. Deleted hardcoded `venue=BINANCE-FUTURES` + legacy `instrument_type=`/`@LIN` templates in
+      `core/data_loader.py`. Bucket → canonical via `resolve_bucket_name` (data_loader + `dependency_checker` +
+      `io/loader.py`, all were on the deprecated legacy bucket). Discovery → manifest-driven (`read_availability_index`
+      `get_available_instruments` + `_check_single_dependency` `capture_status`). Spot/perp venue+symbol resolved
+      date-scoped from v8 manifest (`_resolve_spot_perp` — avoids 2019 DERIBIT phantom + `{underlying}USDT`
+      mis-encoding). `blob_exists`-guarded reads (honest absence). — features-service@4b7e57b1
+- [x] ✅ [VALIDATE] P0. Real GCS (central-element-323112, prd): bucket resolves to `market-data-tick-cefi-prd-…`
+      (canonical), manifest read (2.6M rows), spot perp → `BITGET-FUTURES:BTCUSDT`, **5,760 BTC spot rows loaded,
+      0 NoneType/404 crashes**. `futures_chain` has no captured CEFI data on 2026-05-03 (honest absence, confirmed via
+      manifest — captured data_types: trades/ohlcv_1m/derivative_ticker/book_snapshot_5/liquidations). basedpyright
+      0 errors; 683 volatility unit tests pass. (WRITE P0 `write_daily_partition` deferred per Phase 1 finding —
+      reaching write means read+calc worked.) — features-service@4b7e57b1
+- [ ] 🟠 [IMPLEMENT] P1. **DEFERRED** — volatility `engine/orchestrator.py:263` + `core/orchestration_service.py:166`
+      still scan raw chain files via `raw_tick_data/.../instrument_type={chain_type}/` + `list_blobs` (the
+      `VolatilityFeaturesOrchestrator` engine path — a SEPARATE raw-chain-discovery surface from `VolatilityDataLoader`
+      which reads `processed_candles`). Same legacy `instrument_type=` + raw-list bug class; migrate to manifest-driven
+      raw-chain discovery. Out of Phase-2 scope (processed-candle read path); named here as the successor. Provenance:
+      Phase 2 grep-clean sweep 2026-05-25.
 
 ### Phase 3 — cross_instrument `[P1]`
 
