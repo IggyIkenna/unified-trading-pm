@@ -117,20 +117,24 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 - [x] ✅ [VALIDATE] P0. `data_loader._build_blob_path` canonical confirmed: BITGET perps load **11520 candles** each on
       2026-05-03 CEFI from canonical bucket. QG green (279s). — features-service@2965bbda
 - [x] ✅ [IMPLEMENT] P0. **Honest-absence reads (pipeline-readiness):** `blob_exists()`-check before download in
-      `_try_load_one_day` (mirrors onchain/sports) + None-guard in `load_candles_with_buffer`. Missing/not-yet-backfilled
-      shards now skip cleanly instead of 404→retry→None→`len()` crash. Validated 2026-05-03 CEFI: 48 real BITGET load,
-      ~35 not-yet-backfilled venues skip, **0 NoneType crashes, 0 unhandled 404s**. — features-service@c35e5e72
+      `_try_load_one_day` (mirrors onchain/sports) + None-guard in `load_candles_with_buffer`.
+      Missing/not-yet-backfilled shards now skip cleanly instead of 404→retry→None→`len()` crash. Validated 2026-05-03
+      CEFI: 48 real BITGET load, ~35 not-yet-backfilled venues skip, **0 NoneType crashes, 0 unhandled 404s**. —
+      features-service@c35e5e72
 - [x] ✅ [VALIDATE] P0. **READ + CALCULATE pipeline READY:** reads all available data + auto-picks-up venues as backfill
-      lands; calculate validated (technical_indicators → 84 features, rsi_14 in [0,100]). Reads canonical **v8** manifest
-      via `read_availability_index` (no pinned/legacy version; -prd manifest = 100% schema_version 8). Remaining for full
-      end-to-end: WRITE P0 (deferred) + venue-ID encoding (below; only bites once those venues' data lands).
+      lands; calculate validated (technical_indicators → 84 features, rsi_14 in [0,100]). Reads canonical **v8**
+      manifest via `read_availability_index` (no pinned/legacy version; -prd manifest = 100% schema_version 8).
+      Remaining for full end-to-end: WRITE P0 (deferred) + venue-ID encoding (below; only bites once those venues' data
+      lands).
 
 ### Downstream findings exposed by the read fix (2026-05-25) — outside input-read scope
 
 - [ ] 🔴 [BUG] P0. **`write_daily_partition: string index out of range`** fails for EVERY successfully-loaded instrument
-      (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Not in
-      `feature_writer.py` (UTL/engine write path). Was masked until now because nothing loaded. Owner/plan TBD — likely
-      `features_and_ml_master`. Provenance: features_input_manifest_migration e2e run 2026-05-25.
+      (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Originates in
+      `feature_writer.py` `_write_daily_partitions`→`_write_parquet` (DataSink path templating on the colon-bearing
+      canonical instrument_id is the prime suspect). Was masked until now because nothing loaded. **OWNED BY**
+      `plans/active/features_service_e2e_pipeline_test_2026_05_26.md` Phase 1 (reproduce → root-cause → fix → unit
+      test). Provenance: features_input_manifest_migration e2e run 2026-05-25.
 - [x] ✅ [BUG] P1. **Instrument-ID compose fixed** (the 404s were mostly "no data yet"; the real bug was id compose).
       `_compose_instrument_ids` now always builds canonical `{venue}:{instrument_type}:{symbol}` from the separate
       manifest columns — matching the MDPS writer (`build_processed_candle_path`, which is MDPS-local so features must
@@ -153,11 +157,11 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       date-scoped from v8 manifest (`_resolve_spot_perp` — avoids 2019 DERIBIT phantom + `{underlying}USDT`
       mis-encoding). `blob_exists`-guarded reads (honest absence). — features-service@4b7e57b1
 - [x] ✅ [VALIDATE] P0. Real GCS (central-element-323112, prd): bucket resolves to `market-data-tick-cefi-prd-…`
-      (canonical), manifest read (2.6M rows), spot perp → `BITGET-FUTURES:BTCUSDT`, **5,760 BTC spot rows loaded,
-      0 NoneType/404 crashes**. `futures_chain` has no captured CEFI data on 2026-05-03 (honest absence, confirmed via
-      manifest — captured data_types: trades/ohlcv_1m/derivative_ticker/book_snapshot_5/liquidations). basedpyright
-      0 errors; 683 volatility unit tests pass. (WRITE P0 `write_daily_partition` deferred per Phase 1 finding —
-      reaching write means read+calc worked.) — features-service@4b7e57b1
+      (canonical), manifest read (2.6M rows), spot perp → `BITGET-FUTURES:BTCUSDT`, **5,760 BTC spot rows loaded, 0
+      NoneType/404 crashes**. `futures_chain` has no captured CEFI data on 2026-05-03 (honest absence, confirmed via
+      manifest — captured data_types: trades/ohlcv_1m/derivative_ticker/book_snapshot_5/liquidations). basedpyright 0
+      errors; 683 volatility unit tests pass. (WRITE P0 `write_daily_partition` deferred per Phase 1 finding — reaching
+      write means read+calc worked.) — features-service@4b7e57b1
 - [ ] 🟠 [IMPLEMENT] P1. **DEFERRED** — volatility `engine/orchestrator.py:263` + `core/orchestration_service.py:166`
       still scan raw chain files via `raw_tick_data/.../instrument_type={chain_type}/` + `list_blobs` (the
       `VolatilityFeaturesOrchestrator` engine path — a SEPARATE raw-chain-discovery surface from `VolatilityDataLoader`
@@ -167,21 +171,23 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 3 — cross_instrument `[P1]`
 
-- [x] ✅ [IMPLEMENT] P1. `realized_implied_vol._fetch_iv_blobs_from_gcs` → **unbounded venue-scoped** discovery
-      (deleted `list_blobs(max_results=100)` cap AND the `blobs[:10]` slice — a double silent truncation to the oldest
+- [x] ✅ [IMPLEMENT] P1. `realized_implied_vol._fetch_iv_blobs_from_gcs` → **unbounded venue-scoped** discovery (deleted
+      `list_blobs(max_results=100)` cap AND the `blobs[:10]` slice — a double silent truncation to the oldest
       lexicographic shards that could drop every in-range blob). Reads ALL venue shards + filters `[start_ts, end_ts]`.
       Regression test added (15 shards all read, no `max_results` passed). — features-service@1d30b8c5
 - [x] ✅ [VALIDATE] P1. Real GCS (central-element-323112, prd): volatility IV output bucket resolves to
       `features-volatility-cefi-…`; unbounded discovery runs clean (0 IV blobs present → honest None, **0 crashes**).
       Full e2e is transitively blocked by the deferred delta_one WRITE P0 — cross_instrument batch handler ingests
       delta_one output as INPUT (`No delta-one features found under …` is the honest dependency error, not a read-path
-      bug); this is the Phase 4 transitive unblock. basedpyright 0 errors; 514 cross_instrument unit tests pass; QG
-      exit 0 (289s). — features-service@1d30b8c5
+      bug); this is the Phase 4 transitive unblock. basedpyright 0 errors; 514 cross_instrument unit tests pass; QG exit
+      0 (289s). — features-service@1d30b8c5
 
 ### Phase 4 — multi_timeframe (transitive unblock) `[P1]`
 
 - [ ] [VALIDATE] P1. After Phase 1 writes delta_one features, confirm multi_timeframe reads them and computes. No code
-      change expected; verify only.
+      change expected; verify only. **Now executed by** `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`
+      Phase 3 (reads delta_one `-test` output). Keep this row as the migration-side acceptance marker; flip when the e2e
+      run passes.
 
 ### Phase 5 — shared lift (dedupe; aligns with epic goal) `[P2]`
 
@@ -224,29 +230,30 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Feature-count + calc-verification findings (2026-05-25)
 
-- [x] ✅ [VERIFY] Single-config feature count measured (delta_one, CEFI/15s/1-instrument, `--feature-group ALL`
-      = the 17 CLI `FEATURE_GROUPS`): **9,895 output columns / 1,671 base features** (base = collapse `_lag_N`/period/
+- [x] ✅ [VERIFY] Single-config feature count measured (delta_one, CEFI/15s/1-instrument, `--feature-group ALL` = the 17
+      CLI `FEATURE_GROUPS`): **9,895 output columns / 1,671 base features** (base = collapse `_lag_N`/period/
       `_in_last_N_bars`). All 17 groups compute cleanly on real BITGET data (trades/book_snapshot_5/derivative_ticker/
       liquidations). NOTE: the broader `CALCULATOR_REGISTRY` (~30 calcs) is NOT what `--feature-group ALL` runs
-      (batch_handler.py:684 expands FEATURE_GROUPS only); an earlier 11,580 count over-counted by iterating the registry.
+      (batch_handler.py:684 expands FEATURE_GROUPS only); an earlier 11,580 count over-counted by iterating the
+      registry.
 - [ ] 🟠 [BUG] P2. **2 latent polars-on-pandas bugs in ML-enhancement calculators** (NOT in the CLI `FEATURE_GROUPS`
       ALL-run; only in `CALCULATOR_REGISTRY`, the post-feature ML-enhancement path): `polynomial_trendline.py`
-      (`df["high"].cast(pl.Float64)` — polars `.cast` on a pandas Series) and `wedge_quality.py`
-      (`df.with_columns(...)` — polars on a pandas DataFrame). The orchestrator passes pandas, so these error when run.
-      `risk_reward` is NOT a bug (declares an explicit ATR-dependency; needs VolatilityCalculator first); `vwap` is NOT
-      a bug (works once the orchestrator sets the DatetimeIndex). Provenance: feature-count verification run 2026-05-25.
+      (`df["high"].cast(pl.Float64)` — polars `.cast` on a pandas Series) and `wedge_quality.py` (`df.with_columns(...)`
+      — polars on a pandas DataFrame). The orchestrator passes pandas, so these error when run. `risk_reward` is NOT a
+      bug (declares an explicit ATR-dependency; needs VolatilityCalculator first); `vwap` is NOT a bug (works once the
+      orchestrator sets the DatetimeIndex). Provenance: feature-count verification run 2026-05-25.
 
 ### Per-family single-config feature counts (measured 2026-05-25; delta_one = corrected 9,895/1,671)
 
-| family | runnable now | output cols | base features | gated parts |
-| --- | --- | --- | --- | --- |
-| delta_one | yes (17 CLI groups) | 9,895 | 1,671 | — |
-| calendar | partial (temporal) | ~406 | ~100 | economic_calendar/yield_curve/sentiment/earnings = FRED/polygon/social APIs |
-| cross_instrument | partial (9/21 groups) | ~166 | ~135 | 6 polymarket + dxy macro (prediction/macro not backfilled); 5 book/flow groups need raw book schema |
-| volatility | GATED | — | — | options/futures chains not backfilled (registry floor ~70 base) |
-| onchain | GATED | — | — | DeFi protocol APIs (registry floor ~71 base) |
-| sports | GATED | — | — | fixtures not backfilled (registry floor ~928 base) |
-| commodity | GATED | — | — | EIA/Yahoo/CFTC vendor APIs |
+| family           | runnable now          | output cols | base features | gated parts                                                                                         |
+| ---------------- | --------------------- | ----------- | ------------- | --------------------------------------------------------------------------------------------------- |
+| delta_one        | yes (17 CLI groups)   | 9,895       | 1,671         | —                                                                                                   |
+| calendar         | partial (temporal)    | ~406        | ~100          | economic_calendar/yield_curve/sentiment/earnings = FRED/polygon/social APIs                         |
+| cross_instrument | partial (9/21 groups) | ~166        | ~135          | 6 polymarket + dxy macro (prediction/macro not backfilled); 5 book/flow groups need raw book schema |
+| volatility       | GATED                 | —           | —             | options/futures chains not backfilled (registry floor ~70 base)                                     |
+| onchain          | GATED                 | —           | —             | DeFi protocol APIs (registry floor ~71 base)                                                        |
+| sports           | GATED                 | —           | —             | fixtures not backfilled (registry floor ~928 base)                                                  |
+| commodity        | GATED                 | —           | —             | EIA/Yahoo/CFTC vendor APIs                                                                          |
 
 Measurable-now total (single config): **~10,467 output columns / ~1,906 base features** (delta_one + calendar-temporal +
 cross_instrument-9-groups). Caveat: isolated per-group runs slightly over-count vs the orchestrated pipeline (shared
@@ -254,7 +261,7 @@ columns before cross-group dedup) — calendar/cross_instrument are upper-ish of
 estimated ~1,069+ base features (volatility 70 + onchain 71 + sports 928 declared floors) once backfill + creds land.
 
 - [ ] 🟠 [DATA-SURFACE] P2. **5 cross_instrument groups need RAW normalized book/trade schema** (book_depth_bands,
-      liquidity_walls, liquidation_clusters, flow_interaction, composite_sr) — they require `asks/bids/mid_price/side/
-      quote_volume/instrument_key`, which the OHLC-resampled processed-candle `DataLoader` does not emit. Same class as
-      the volatility raw-chain surface: a raw-data read path distinct from processed candles. Provenance: per-family
-      feature-count measurement 2026-05-25.
+      liquidity_walls, liquidation_clusters, flow_interaction, composite_sr) — they require
+      `asks/bids/mid_price/side/     quote_volume/instrument_key`, which the OHLC-resampled processed-candle
+      `DataLoader` does not emit. Same class as the volatility raw-chain surface: a raw-data read path distinct from
+      processed candles. Provenance: per-family feature-count measurement 2026-05-25.
