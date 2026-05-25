@@ -179,6 +179,27 @@ AWS migration needed.
 **Sports `category=sports/` migration**: active plan at `plans/active/sports_gcs_partition_rekey_2026_05_23.md`
 (parent_epic=sports_master). Blocked pending Sports VM drain (VMs actively running 2026-05-23).
 
+## 2026-05-25 data-quality audit cross-reference (DQ-02 / DQ-04)
+
+The cross-cutting data-quality audit (`audits/data_quality_backfill_status_audit_instructions.md`) re-confirmed two
+findings that belong here, not as parallel issues:
+
+- **DQ-04 (contamination → Bug 4)**: Ikenna's review found the ETH "42 protocols" count inflated by (a) legacy
+  camelCase↔underscore alias dupes (= Bug 3, mostly suppressed) and (b) non-protocol entries: `COINBASE-SPOT` (a CeFi
+  oracle source leaking into the DeFi grid via `oracle-prices-{pid}` — handler-level filter gap), `ALCHEMY`/`ANKR` (RPC
+  providers — though `ANKR` is also the ankrETH LST per Bug 4), `GAS_FEES` (a data_type). Note: `ALCHEMY`/`CHAINLINK`/
+  `PYTH` ARE intentional data-source entries in `expected_coverage._DEFI` (provider-level, comment lines 274-278) — the
+  "inflation" is the missing `data_source_type` taxonomy (**Bug 4**, post-cutover), not scope contamination. The
+  `COINBASE-SPOT`-into-defi-grid leak is the one genuinely-new sub-finding → close the `oracle_prices_handler` filter so
+  CeFi oracle sources don't write defi-grid rows (fold into Bug 4 / a handler fix).
+- **DQ-02 (LST capture)**: the LST venues (LIDO/ROCKETPOOL/COINBASE-cbETH/JITO/MARINADE/ETHERFI/…) ARE correctly scoped
+  in `_DEFI` — not mis-enumerated against Aave. The `lst_rates`/`lending_indices`/`perp_funding` `attempted_failed` rows
+  are OLD (2022→2025-01) **Solana** protocol rows (Jito/Marinade/Kamino/Marginfi/Solend/Drift) carrying
+  `error_reason=legacy_bare_name_migrated_to_protocol_solana_2026_05_14` + `LegacyBlankErrorReasonError` = manifest
+  hygiene (same era as Bug 3) → fix via `reconcile_legacy_blank_to_typed_reason`. The empties elsewhere are legitimate
+  honest-absence (`EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED`). Residual to verify: that LST
+  staking-APR is actually captured for the real LST venues (currently 0 captured for `lst_rates`/`staking_yields`).
+
 ## Temporary states + their canonical follow-up plans
 
 - `"AAVE_V3"` in expected_coverage: stays until Bug 2 handler fix ships + phantom reconciler runs for Bug 3.
