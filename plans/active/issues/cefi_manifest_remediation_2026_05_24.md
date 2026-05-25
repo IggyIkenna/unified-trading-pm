@@ -90,18 +90,25 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
 
       15,526 rows relabeled inline 2026-05-24 — utl-inline@2026-05-24 (180,743,631 bytes)
 
-- [ ] [AGENT] P1. **BLOCKED-OPERATOR-DECISION** — 77,424 BINANCE-SPOT `attempted_failed[VENUE_FETCH_FAILED]` rows are
-      genuine Tardis fetch failures (instruments existed at the data date). These span ALL VM runs (April-May 2026): 77K
-      rows across `book_snapshot_5` (38,726) + `trades` (38,698) across 2019–2026. **Operator decision needed**: (a)
-      retry via VM_FORCE=true CeFi VM targeting BINANCE-SPOT full date range, OR (b) accept as confirmed-absent with
-      `EXPECTED_NO_SOURCE_DATA`. Do NOT auto-launch per MTDS-3.3.CeFi gate.
+- [x] ✅ [AGENT] P1. Operator acked 2026-05-25 ("yeah then fix"). Launched 7 BINANCE-SPOT force-retry VMs:
+      `cefi-binance-spot-{2020..2026}-ext-20260525-033358` — e2-highmem-16, 22 symbols
+      (btcusdt;ethusdt;solusdt;xrpusdt;bnbusdt;dogeusdt;adausdt;avaxusdt;linkusdt;maticusdt;ltcusdt;trxusdt;atomusdt;
+      dotusdt;nearusdt;filusdt;injusdt;opusdt;aptusdt;arbusdt;suiusdt), `VM_FORCE=true`. All 7 RUNNING T+10 verified.
+      Covers 133,684 in-scope rows (75,994 VENUE_FETCH_FAILED + 57,690 bait_sentinel).
 
 ### P1 — bait_sentinel retry decision (960K rows)
 
-- [ ] [AGENT] P1. Decision: relaunch MTDS CeFi VM with `VM_FORCE=true` targeting the 2020-2026 date range for
-      `book_snapshot_5` + `trades` data types that are currently `bait_sentinel_may4_burst_no_parquet`. Per operator
-      constraint MTDS-3.3.CeFi is `BLOCKED-OPERATOR-DECISION` — do NOT auto-launch. Flag findings to operator; get
-      explicit direction on whether to (a) retry via FORCE=true VM or (b) accept as confirmed-absent.
+- [x] ✅ [AGENT] P1. Operator acked 2026-05-25 ("yeah then fix"). Launched canonical CeFi force-retry VMs: 55 VMs via
+      `launch-cefi-sharded-backfill.sh` with `VM_FORCE=true FORCE=1`, covering BINANCE-FUTURES/BYBIT/
+      OKX-SPOT/OKX-SWAP/COINBASE-SPOT/DERIBIT/UPBIT, years 2022-2026. RUN_TS=20260525-033344. Covers ~241K in-scope
+      bait_sentinel rows for canonical venues.
+
+      **DEFERRED items** (operator decision or follow-up wave):
+      - **2020-2021 bait_sentinel** on non-BINANCE-SPOT venues (~150K rows): will run after current wave completes
+      - **Tier-3 venues** (OKX-FUTURES 105K, BITGET 19K, BITFINEX 10K, KRAKEN 1K): outside canonical launcher scope;
+        need `launch-tier3-cefi-backfill.sh` or separate targeted launch — file as follow-up issue
+      - **Out-of-scope bait_sentinel instruments** on canonical venues (~300K rows from broad May-4 universe):
+        outside operator's instrument filter; leave as `attempted_failed` pending operator explicit scope decision
 
 ## Verification criterion (gate is GREEN when)
 
@@ -112,7 +119,8 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
   operator-gated (see bait_sentinel item)
 - ✅ BINANCE-SPOT disposition: 15,526 pre-launch rows relabeled → `EXPECTED_NO_SOURCE_DATA` 2026-05-24; 77,424 retry
   candidates flagged — **BLOCKED-OPERATOR-DECISION** (BINANCE-SPOT VM_FORCE=true retry)
-- ⬜ bait_sentinel rows: operator-acked decision on retry vs relabel — BLOCKED-OPERATOR-DECISION
+- ✅ bait_sentinel + BINANCE-SPOT force-retry VMs LAUNCHED 2026-05-25: 62 VMs (7 BINANCE-SPOT ext + 55 canonical),
+  VM_FORCE=true, all RUNNING. Covers ~375K in-scope rows. Remaining: 2020-2021 wave + tier-3 venues (follow-up)
 - ✅ 100% schema_version=8 — GREEN 2026-05-24 (34,839,742 rows upgraded)
 
 ## Temporary states + their canonical follow-up plans
