@@ -9,9 +9,12 @@ status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-locked_by: live-defi-rollout
 locked_since: 2026-05-23
 ---
+
+## Deferred work — none (all items completed)
+
+> Migration was a no-op — GCS bucket already used asset_group=sports/ throughout (verified dry-run 2026-05-24).
 
 ## Context
 
