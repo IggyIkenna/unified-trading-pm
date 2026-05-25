@@ -161,9 +161,11 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       lowercase fell through to as-is lookup → mismatch. Fix: added 4 sports entries to bridge dict mapping lowercase
       MDPS data_type → uppercase UAC SOURCE_PRIORITY key. market-data-processing-service@e53cc35. QG ✅. 2026-05-25
       slot-7.
-- [ ] [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch10** — Rebuild tarball with MDPS@e53cc35 (TenthBugFix). Terminate Relaunch9
-      VMs `065857` (running but 0 GCS writes due to TenthBugFix). Relaunch all 7 sports years `mdps-sports-{2020..2026}`
-      with MDPS@e53cc35 + STALL_TIMEOUT_SEC=7200. T+10min verify. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch10** — Tarball rebuilt with MDPS@e53cc358 (TenthBugFix). Relaunch9 VMs
+      `065857` terminated (0 GCS writes for all sports candle data types — confirmed by VM logs). All 7 sports VMs
+      relaunched: `mdps-sports-{2020..2026}-20260525-074034` RUNNING.
+      MDPS_TARBALL_SHA=e53cc358365271c6d7f184e4116edd1a9908e2aa. STALL_TIMEOUT_SEC=7200. Source:
+      `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
