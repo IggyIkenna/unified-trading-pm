@@ -471,3 +471,37 @@ Remaining items all gated externally:
   Plan: `plans/active/mdps_lending_indices_bypass_writer_2026_05_24.md`
 
 — slot-4 / 2026-05-24 (session 3)
+
+---
+
+## 2026-05-25 (session 4) — [slot-4 → slot-1 main] Sports/Phase 3.D.5 gate resolved — slot 4 COMPLETE
+
+**Plan refs**: `plans/epics/mtds_mdps_master.md` · `plans/active/mdps_lending_indices_bypass_writer_2026_05_24.md`
+
+### Phase 7 gate cleared + Sports/Phase 3.D.5 analysis
+
+Phase 7 (manifest v8 backfill + label-flip) was ✅ CLEARED 2026-05-22 PM@ec208173d (slot 5). This unblocks the
+previously gated Sports/Phase 3.D.5 items. After investigation:
+
+| Item                                               | Resolution                                                                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 3+4 — Phase 3.D.5 v2 catalog enumerators           | ✅ DONE — writegate plan: Sports@9a1bcd91, CeFi@09361718, TradFi@d50b9453, DeFi@b0e4bcac                          |
+| 1 — Sports per-fixture_id shard granularity (MTDS) | SUPERSEDED — master plan ✓ decision (line 510): `fixture_id` is NOT a shard atom; `(league_id, day)` is canonical |
+
+### stale epic note fixed + pm pushed
+
+`mtds_mdps_master.md` line 623 stale bypass note ("`lending_indices` + `gas_fees`: bypass types...") corrected to
+reflect `DefiLendingIndicesAdapter` shipped at mdps@b21fec6 — pm@605971217.
+
+### Slot 4 status — COMPLETE
+
+| Item                       | Status                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| AAVE lending bypass writer | ✅ SHIPPED — mdps@b21fec6 + uac@4c98a635 (session 3)                                          |
+| Sports/Phase 3.D.5         | ✅ RESOLVED — v2 enumerators done; per-fixture-id shard superseded by master plan decision    |
+| TradFi Databento           | BLOCKED-CREDENTIALS — credential ask filed (this ping); no further action until operator acks |
+| Sports backfill VMs        | BLOCKED-UPSTREAM — sports_master Phase 3+4 rename; not slot-4 scope                           |
+
+No remaining actionable AI-days for slot 4. Slot 4 is complete.
+
+— slot-4 / 2026-05-25 (session 4)
