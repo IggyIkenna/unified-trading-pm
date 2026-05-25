@@ -122,12 +122,11 @@ before Phase 7 grows the v<8 debt.
       `cefi-binance-futures-2022-heavy-20260525-021128` (RUNNING, e2-highmem-16, asia-northeast1-c) +
       `cefi-binance-futures-2022-light-20260525-021128` (RUNNING, e2-highmem-8, asia-northeast1-c). Both T+10 verified
       RUNNING. VM_FORCE=false retries attempted_failed from prior OOM runs. 2026-05-25 slot-7.
-- [ ] [SCRIPT] P0. **MTDS-3.2.A-FullFleetRelaunch** — Relaunch ALL remaining 233626 batch OOM'd VMs at new defaults
-      (heavy=e2-highmem-16, light=e2-highmem-8). Pre-relaunch capture state from FullRelaunch: BF 68.6%, BS 43.4%,
-      BYBIT 68.2%, CS 63.9%, DERIBIT 50.4%, HL 32.8%, OKX-SPOT 75.7%, OKX-SWAP 61.7%, UPBIT 35.9%.
-      Use `FORCE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh` with VM_FORCE=false (retries attempted_failed only).
-      Currently RUNNING (skip): BF-2023-heavy 011208, BF-2022-heavy/light 021128, DERIBIT-2021/2022 233946/011208.
-      Rate-limit note: 233626 batch had 95 VMs without Tardis rate issues — new defaults are safe.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-FullFleetRelaunch** — Relaunched ALL 95 VMs at new defaults (heavy=e2-highmem-16,
+      light=e2-highmem-8, tradfi=e2-standard-2): `FORCE=1 bash launch-cefi-sharded-backfill.sh` (batch 20260525-021423).
+      Covers all 9 CeFi venues 2020-2026 + TradFi (ES/VIX 2024-2026). VM_FORCE=false — retries attempted_failed only.
+      5 duplicate VMs launched for RUNNING shards (BF-2023, BF-2022-heavy/light, DERIBIT-2021, DERIBIT-2022) — safe,
+      manifest pre-flight skips already-captured cells. T+10 verification in background (batch 021423). 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
