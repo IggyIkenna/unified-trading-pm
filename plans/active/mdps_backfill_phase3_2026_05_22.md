@@ -79,6 +79,22 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       **NOTE**: 2024+2025 candles are in flat bucket `market-data-tick-defi-central-element-323112`; 2026 candles go to
       prd bucket `market-data-tick-defi-prd-central-element-323112`. Features DeFi compute must read from BOTH buckets
       or data migration must occur first. Flag for features launch operator decision.
+- [x] ✅ [CODE] P0. **MDPS-3.3.UAC-IncidentFix** — **UAC `unified_api_contracts.incident` module restored (slot-7
+      2026-05-25)**: UTL `recovery/agent_action.py` imports 5 symbols from `unified_api_contracts.incident`
+      (ActionProvenance, ActionStatus, ActionType, AgentActionEvent, RecoveryVerificationResult) — this caused ALL MTDS
+      VMs to crash at startup with `ModuleNotFoundError: No module named 'unified_api_contracts.incident'`. Root cause:
+      incident module (9 files) was deleted from UAC but UTL still imported from it. Reconstructed from pyc bytecode +
+      added `BinaryEventTrigger` to `risk_rule/` package (also missing, imported by UTL `rule_evaluator.py`).
+      UAC@3d05b8e9 pushed to LDR. Tarball rebuilt:
+      `unified-api-contracts-code@3d05b8e956cba88567da90fee1adc8f9f78fc950.tar.gz` +
+      `mtds-code@acda8552ba6121e57842b6fcf7bf50f9d4d01227.tar.gz` uploaded to GCS. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.DeFi-DexSwaps-Relaunch** — **`mtds-dex-swaps-backfill` relaunched (slot-7 2026-05-25
+      ~06:46 UTC)**: Prior VM crashed at startup due to UAC incident module missing (MTDS-3.3.UAC-IncidentFix now
+      resolved). Relaunched with fixed tarball: `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c, e2-standard-4).
+      MTDS_TARBALL_SHA=acda8552ba6121e57842b6fcf7bf50f9d4d01227. Source: 1,771 `attempted_failed` rows from prior crash
+      run should be retried by ManifestFreshnessCache. 2026-05-25 slot-7.
+- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-DexSwaps-V** — T+10min: `mtds-dex-swaps-backfill` RUNNING + ≥1 progress logged. Full
+      verify: 1,771 attempted_failed converted → captured/empty_confirmed; manifest v8. 2026-05-25 slot-7.
 
 ## Phase 3 — TradFi MDPS reprocessor
 
