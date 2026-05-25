@@ -108,16 +108,31 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
 - [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports** — 7 VMs launched: `mdps-sports-{2020..2026}-20260522-161432`.
       `SKIP_DEPENDENCY_CHECK=true MDPS_ASSET_GROUP=SPORTS`. Source: `market-data-tick-sports-central-element-323112`.
       Gate MTDS-3.2.D-V GREEN ✅. 2026-05-22 slot-2.
-- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-EighthBugFix** — **EIGHTH BUG: sports `arbitrage_opportunity` SCHEMA_VALIDATION_FAILED —
-      OHLCV NaN not allowed (slot-7 2026-05-25)**: `get_schema_for_data_type()` in `output_schemas.py` returned non-nullable
-      OHLC schema for ALL sports data types. The `arbitrage_opportunity` adapter fills empty windows (no odds data in a
-      period) with NaN arb-margin used as OHLCV — same pattern as prediction Category D bars. Schema validation rejected
-      these candles ("NOT NULLABLE"), silently skipping uploads + no manifest entry. Fix: added
-      `or (category == "sports" and data_type == "arbitrage_opportunity")` to nullable OHLCV condition. 4 tests added.
-      market-data-processing-service@3dd1191. Tarball rebuilding 2026-05-25 slot-7.
-- [ ] [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch7** — Relaunch `mdps-sports-2025` VM with MDPS@3dd1191 tarball after
-      030136 VMs finish, to capture arbitrage_opportunity NaN-OHLC candles that were silently skipped in 030136 batch.
-      ManifestFreshnessCache will skip already-captured dates. **Gate: 030136 VMs finish.** 2026-05-25 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-EighthBugFix** — **EIGHTH BUG: sports `arbitrage_opportunity`
+      SCHEMA_VALIDATION_FAILED — OHLCV NaN not allowed (slot-7 2026-05-25)**: `get_schema_for_data_type()` in
+      `output_schemas.py` returned non-nullable OHLC schema for ALL sports data types. The `arbitrage_opportunity`
+      adapter fills empty windows (no odds data in a period) with NaN arb-margin used as OHLCV — same pattern as
+      prediction Category D bars. Schema validation rejected these candles ("NOT NULLABLE"), silently skipping uploads +
+      no manifest entry. Fix: added `or (category == "sports" and data_type == "arbitrage_opportunity")` to nullable
+      OHLCV condition. 4 tests added. market-data-processing-service@3dd1191. Tarball rebuilding 2026-05-25 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-NinthBugFix** — **NINTH BUG: sports odds_snapshot / odds_movement /
+      odds_horizon_bucket SCHEMA_VALIDATION_FAILED — OHLCV NaN not allowed (slot-7 2026-05-25)**: EighthBugFix only made
+      `arbitrage_opportunity` nullable. But `odds_snapshot`/`odds_movement`/`odds_horizon_bucket` also produce NaN OHLCV
+      in 15m/1h windows with no posted odds (pre-match gaps, quiet periods). Schema validation silently dropped these
+      candles too. Root cause identical to EighthBugFix — same `category=="sports"` pattern for all 4 adapters. Fix:
+      changed `category=="sports" and data_type=="arbitrage_opportunity"` → `category=="sports"` (covers all 4 sports
+      data types). 4 new tests added in `test_schema_robustness.py`. QG verified via workspace venv (pre-existing
+      `unified_api_contracts.incident` missing module blocks repo QG). market-data-processing-service@65b6a54.
+      2026-05-25 slot-7.
+- [x] ❌ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch7** — ❌ SUPERSEDED BY Relaunch8. Was: relaunch only 2025 with @3dd1191
+      (EighthBugFix only). NinthBugFix (65b6a54) is a superset and ALL years need relaunching — 030136 batch completed
+      2020-2025 with @1f1adbf, 041846 completed 2026 with @1f1adbf; both pre-NinthBugFix. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch8** — **ALL 7 sports VMs relaunched with NinthBugFix (slot-7 2026-05-25
+      06:12 UTC)**: Terminated 030136 batch (2023+2025 RUNNING; 2020+2021+2022+2024 already terminated). 2026 VM
+      (041846) already terminated. Launched full fleet: `mdps-sports-{2020..2026}-20260525-061238` RUNNING.
+      MDPS_TARBALL_SHA=65b6a54fccc7a467477c661f3545150979bd165e. STALL_TIMEOUT_SEC=7200. Source:
+      `market-data-tick-sports-prd-central-element-323112`. ManifestFreshnessCache skips already-captured dates; retries
+      all dates where odds_snapshot/odds_movement/odds_horizon_bucket candles were silently dropped. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
