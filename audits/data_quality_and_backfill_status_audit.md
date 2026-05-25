@@ -111,6 +111,18 @@ all_shards_pct    = captured / total                                            
 - **Manifest status alone hides silent-zero.** Always pair with a parquet read (§2d).
 - **Bucket SSOT:** resolve via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name`; the flat
   no-suffix bucket is canonical prod.
+- **The consolidated `_index/availability_index.parquet` LAGS during an active backfill.** It's only as fresh as the
+  last consolidator run (was 2026-05-23 while the fleet wrote through 05-25). For true mid-flight coverage, aggregate
+  the `_index/per_vm/*.parquet` shards directly (read-only): concat, `to_datetime(written_at)`, then
+  `sort_values('written_at').drop_duplicates(subset=[date,venue,data_type,instrument_type,timeframe], keep='last')`.
+  CeFi read 16% from the stale index vs **55.5%** from per-VM aggregation. Filter
+  `service_name=='market-tick-data-service'` for tick coverage (instruments-service rows = the expected-universe
+  enumeration, ~32M, not captures).
+- **DeFi: read the `-prd` bucket, not the flat `-defi` bucket.** `market-data-tick-defi-central-element-323112` (flat)
+  is stale/secondary (written_at maxed 05-22, ETHEREUM+SOLANA only); `market-data-tick-defi-prd-central-element-323112`
+  is the LIVE bucket (fresh writes, 3.5M rows, all chains incl. L2s). Reading the flat bucket makes
+  Arbitrum/Base/Optimism/ Polygon look 0% when they have data in prd. Confirms the long-standing DeFi multi-bucket
+  gotcha.
 
 ---
 
@@ -124,17 +136,37 @@ all_shards_pct    = captured / total                                            
 | sports      | 100.0%       | 99.79%         | 157,174   | 0                | 326             |
 | prediction  | 100.0%       | 86.19%         | 14,491    | 0                | 2,321           |
 
-CeFi's 1.33M `attempted_failed` (≈ captured) is the gap the current 119-VM CeFi backfill is closing.
+CeFi's 1.33M `attempted_failed` (≈ captured) is the gap the current CeFi backfill is closing.
+
+### 2026-05-25 current snapshot (read from per-VM manifest shards, not the stale consolidated index)
+
+| asset_group | coverage_pct (excl empty)    | source                                  | notes                                                                 |
+| ----------- | ---------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
+| cefi        | **55.5%** (climbing)         | `_index/per_vm/` deduped (2,073 shards) | consolidated `availability_index` was stale at 16% — see gotcha below |
+| defi        | **80.0%** (all_shards 48.8%) | `market-data-tick-defi-**prd**` bucket  | flat `-defi` bucket is stale/secondary                                |
+
+CeFi by venue (good): BINANCE-FUTURES 76.6%, BYBIT 75.1%, OKX-SWAP 68.9%, BINANCE-SPOT 66.8%, UPBIT 64.8%, DERIBIT
+57.1%.
 
 ---
 
 ## 5. Open findings (investigate / confirm — append as discovered)
 
-- **[2026-05-25] TradFi current VMs may not be writing canonical output.** The 8 `mdps-tradfi-*` VMs (launched 05-23,
-  ~49h uptime) show an alive serial console (per-minute gsutil uploads) but NO `processed_candles` objects newer than
-  2026-05-07 across sampled year-partitions (2020/2021/2024) — all from prior runs. Possible silent failure OR
-  consolidation-pending OR run-tagged path. **Confirm via `audit_structural_checks.py --asset-group tradfi --checks 4`
-  (shard staleness) before relying on tradfi.** If broken → file issue doc + relaunch.
+- **[RESOLVED 2026-05-25] TradFi VMs idle — Databento API quota exhausted.** The 8 `mdps-tradfi-*` VMs are RUNNING but
+  idle (no candle output; raw-tick ingestion halted 2026-05-18). Confirmed by operator: Databento API quota is exhausted
+  (`403 auth_account_locked`, ref `IS-3.1.TradFi-Databento`). **Not a code issue — no action until quota resets
+  (operator/billing).** Tradfi backfill = `BLOCKED-CREDENTIALS`. Idle VMs are wasted spend; stop them if quota won't
+  reset soon.
+- **[2026-05-25] DeFi carry-archetype inputs all-failing.** In `defi-prd`: `lst_rates` 0 captured / 90
+  `attempted_failed` and `lending_indices` 0 captured / 105 `attempted_failed`. These are the core inputs for
+  `carry_staked_basis` (Lido/RP LST APRs + Aave/Compound base rates) — currently 100% failing. Also `perp_funding` 0
+  captured / 58 failed. Likely the missing-API-key / SM-error path (cf. MTDS commits on lending_indices API key + lst
+  staking_url NotFound). **Blocks carry_staked_basis until fixed.**
+- **[2026-05-25] CeFi ASTER venue 0% captured** (2,196 attempted_failed, 0 captured) — total adapter failure on the
+  ASTER perp DEX. New perp DEXs also low: PACIFICA-SOLANA 16.6%, LIGHTER-ZKSYNC 17.4%, EXTENDED-STARKNET 20%.
+- **[2026-05-25] CeFi venue-attribution bug — `*F0` instrument symbols logged as venues.** Manifest has venue values
+  like `BTCF0`/`ETHF0`/`AAVEF0` (Bitfinex perpetual symbols) instead of `BITFINEX-FUTURES`; also a blank `''` venue (347
+  captured) and `UNKNOWN` (27%). Venue parser is mis-assigning the instrument symbol to the venue field.
 - **[2026-05-25] Daily honest-coverage cron stale since 2026-05-18.** `gs://central-element-323112-honest-coverage/` has
   no report after 05-18 (likely paused during code-freeze/migration). The fast-path report is stale — recompute with
   `measure_honest_coverage.py` or restart the cron before trusting it.
@@ -148,3 +180,7 @@ them here with date + provenance:
 
 - 2026-05-25 — initial version: existing-script inventory, manual GCS recipe, gotchas, 05-18 baseline, 2 open findings.
   (Harsh request to make this a repeatable audit.)
+- 2026-05-25 — first CeFi+DeFi run. Added: per-VM-shard aggregation method (consolidated index lags mid-backfill), DeFi
+  `-prd`-not-flat bucket rule, current snapshot (CeFi 55.5%, DeFi 80%), and findings — DeFi carry inputs
+  (lst_rates/lending_indices) all-failing, CeFi ASTER 0% + `*F0` venue-attribution bug; resolved tradfi (Databento
+  quota).
