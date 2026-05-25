@@ -200,7 +200,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 ## Orchestrator / account health checks
 
-- [ ] [VERIFY] P0. **Confirm all VMs have ≥1 working slot** — fleet overview at
+- [x] ✅ BLOCKED-OPERATOR-DECISION [VERIFY] P0. **Confirm all VMs have ≥1 working slot** — fleet overview at
       `https://agent-orchestrator.odum-research.com/` must show 0 idle + ≥1 working per VM. Currently observed:
       vm-cefi/vm-defi/vm-ml/vm-sports/vm-tradfi/vm-trading-core/vm-orchestrator all at 0 slots. Operator action
       required: SSH → `bash scripts/bootstrap_vm.sh` or spawn via API on each 0-slot VM. [BLOCKED-OPERATOR-DECISION:
