@@ -1,66 +1,57 @@
 ---
-title: "CeFi tick backfill writes to flat bucket but SSOT canonical is -prd"
+title: "honest-coverage cron reads -prd while CeFi tick data is in flat (Phase 2.6 not yet run)"
 created: 2026-05-25
 author: harsh + Claude Opus 4.7 (1M)
 source:
   - audits/data_quality_backfill_status_audit_instructions.md (DQ-05)
   - instruments-service/scripts/measure_honest_coverage.py
-  - deployment-service/configs/cloud-providers.yaml
+  - plans/active/mtds_backfill_phase3_2026_05_22.md (Deferred work table)
+  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Phase 2.6)
 locked_by: live-defi-rollout
+parent_epic: epics/mtds_mdps_master.md
+status: active
 ---
 
-# CeFi tick backfill ↔ bucket-SSOT divergence
+# honest-coverage cron reads `-prd` while CeFi tick data is still in flat
 
 ## What I found
 
-The bucket-name SSOT resolver returns the **`-prd`** bucket as canonical for CeFi (and defi/tradfi/sports) tick data:
+**CORRECTION (2026-05-25): the flat-bucket write is EXPECTED, not a bug.** Initially flagged this as a
+backfill-writes-to-wrong-bucket divergence; on reading the plans, it is a **known, deferred** item:
 
-```
-resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="cefi")
-  -> market-data-tick-cefi-prd-central-element-323112
-```
+> `mtds_backfill_phase3_2026_05_22.md` § Deferred work: _"Bucket naming: MTDS writes to flat bucket
+> (`market-data-tick-{ag}-{pid}`) instead of prd bucket … UTL `get_write_bucket_name` uses legacy `cloud_constants.py`
+> BUCKET_PREFIXES, not `resolve_bucket_name()`."_ — **Status: DEFERRED** → successor
+> `bucket_name_ssot_canonicalisation_2026_05_10.md` **Phase 2.6 migration** (flat→env-tiered, with a write-pause
+> cutover).
 
-But the **live CeFi backfill fleet (≈170 VMs, 2026-05-24/25) is writing to the FLAT bucket**
-`market-data-tick-cefi-central-element-323112` (no `-prd` segment):
+So the plan of record is: **keep writing to the flat bucket now, migrate everything to env-tiered `-prd` in Phase 2.6.**
+The CeFi backfill writing to flat is intended-for-now. (DeFi reads `-prd` because its on-chain handlers use a different
+write path — `write_defi_rows`/`DefiManifestRecorder` — already on `-prd`; the CeFi Tardis tick path via
+`get_write_bucket_name` is the one still on flat. That explains the cross-AG flat-vs-`-prd` asymmetry.)
 
-- Flat `cefi` `_index/availability_index.parquet` = **172 MB**, fresh `_index/per_vm/*.parquet` (newest write 2026-05-25
-  06:34), CeFi per-VM coverage ≈ **55.5%** and climbing.
-- Canonical `cefi-prd` `_index/availability_index.parquet` = **36 MB**, staler/smaller.
+## The genuinely-new defect (narrowed scope)
 
-So the two buckets have diverged: the backfill populates flat, the SSOT + downstream readers expect `-prd`.
-
-Confirmed downstream impact: `measure_honest_coverage.py` hardcodes the `-prd` bucket (matches the resolver), so the
-daily `honest-coverage-daily` cron measures the **stale `-prd`** data, not the live flat-bucket backfill — explaining
-why the coverage report looked stale/low (DQ-05) even though the backfill is healthy.
-
-(DeFi was the mirror image earlier in the audit: `defi-prd` is the LIVE bucket and the flat `defi` is stale — so the
-flat-vs-`-prd` "which is live" answer is **inconsistent across asset_groups**, which is the core problem.)
+`instruments-service/scripts/measure_honest_coverage.py` hardcodes the `-prd` bucket per asset_group
+(`_MANIFEST_BUCKETS`). For CeFi this reads the (near-empty/stale, 36 MB) `-prd` index while the live backfill writes the
+flat (172 MB, ~55% coverage) bucket — so the daily `honest-coverage-daily` cron **measures the wrong bucket for CeFi**
+and reports stale/low coverage. The reader assumes Phase 2.6 already ran.
 
 ## Why it matters
 
-- **Coverage measurement is wrong for cefi** until reconciled — the cron reads the wrong (stale) bucket, so any
-  cefi coverage %, gap report, or downstream gate keyed off `-prd` undercounts the real backfill.
-- **Data-location correctness** (Data-Pipeline-Correctness HARD RULE): a backfill writing to a non-canonical bucket
-  means the canonical bucket is incomplete; anything reading canonical (features pre-flight, MDPS source, coverage)
-  sees a false gap.
-- Touches the bucket-SSOT canonicalisation + `code_freeze_migrate_backfill_sequencing` migration state — cross-cutting,
-  not a single-script fix.
+The coverage cron is the SSOT for the data-status %/gap surface. Until reconciled, any CeFi coverage number it produces
+is wrong (under-counts the real backfill). Not a data-correctness issue (data is fine, in flat), but a
+**measurement-correctness** one.
 
-## Recommended decision (for Ikenna / operator)
+## Recommended fix (small, in-lane)
 
-Pick one and I'll execute the downstream cleanup:
-
-1. **If `-prd` is canonical** (per resolver): the CeFi backfill launcher/handlers are writing to the legacy flat bucket
-   — fix them to resolve via `resolve_bucket_name` (env-tiered `-prd`), and migrate/consolidate the flat-bucket data
-   already captured into `-prd` (operator-run migration; not me per "launch nothing").
-2. **If flat is intentionally canonical for cefi tick right now** (migration not yet cut over): update the resolver /
-   `cloud-providers.yaml` so cefi tick resolves to flat, and point `measure_honest_coverage.py` there — then the
-   inconsistency vs defi (`-prd` live) needs an explicit per-AG convention note.
-
-Open question to resolve the inconsistency: **why is defi live on `-prd` but cefi live on flat?** That asymmetry is the
-root and should be made uniform (or explicitly documented per-AG).
+Make `measure_honest_coverage.py` read the **same bucket the writers actually use** rather than hardcoding `-prd` — i.e.
+resolve via UTL `get_write_bucket_name(...)` (the function the backfill writers use). That tracks the writers regardless
+of migration state: flat today, `-prd` automatically after Phase 2.6. Smoke-test by running
+`--asset-group cefi --output-path /tmp/cov.json` and confirming it reads the populated (flat) bucket. No bucket config
+or backfill change — the Phase 2.6 migration itself stays owned by the bucket-SSOT plan.
 
 ## Status
 
-PAUSED pending decision. I have NOT touched `measure_honest_coverage.py` or any bucket config. Audit finding DQ-05 in
-`audits/data_quality_backfill_status_audit_instructions.md` references this issue.
+Bucket-write behaviour = WORKING-AS-DEFERRED (Phase 2.6 owns the migration). Residual coverage-reader defect = OPEN,
+small, fixable in `measure_honest_coverage.py`. DQ-05 in the audit doc points here.
