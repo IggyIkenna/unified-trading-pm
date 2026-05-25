@@ -151,6 +151,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       `cd market-data-processing-service && bash scripts/quality-gates.sh` exits 0. PREREQ: market-tick-data-service QG
       green. [vm: vm-ml] — mdps@cb3d11b | QG exit 0 (91s) | socket-blocked conftest, correct DeFi venue name, stale
       \_FakeWriter mock (reason= kwarg)
+      — mdps@21700c5 | QG exit 0 (89s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P2. **execution-service QG green** — 20 ruff errors.
       `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core] —
