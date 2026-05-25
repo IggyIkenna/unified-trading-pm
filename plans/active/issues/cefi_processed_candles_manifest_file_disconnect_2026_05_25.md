@@ -60,3 +60,23 @@ May-23 data-pipeline-correctness gate for CeFi and is the kind of divergence the
 features-service reads correctly for data that exists (BITGET validated). A robustness follow-up: treat
 manifest-`captured`-but-file-404 as honest-absence (skip + warn) instead of erroring (`NoneType has no
 len()`). Tracked in `features_input_manifest_migration_2026_05_25.md`.
+
+## UPDATE — verified 2026-05-25 (corrects the stalled-agent hypothesis)
+
+Verified by reading MDPS code + querying the manifest directly (NOT the stalled agent's guess):
+
+- **MDPS writer is CORRECT.** `market_data_processing_service/io/writer.py:write_candles` → `write_candle_parquet`
+  co-emits the parquet AND the `ManifestWriter` row in one call, `manifest_service_name="market-data-processing-service"`,
+  returns `None` (no row) on empty input. So MDPS does NOT mark `captured` without a file. The earlier
+  "stale MDPS code bypassing emission" lead is **disproved**.
+- **The phantom `captured` rows are written by MTDS, not MDPS.** For 2026-05-02 `data_type=trades` `captured`, ALL rows
+  (BITGET real + KRAKEN/BITFINEX phantom) have `service_name="market-tick-data-service"`. BITGET has processed_candle
+  files; KRAKEN/BITFINEX do not.
+- **OPEN (needs MTDS-side trace — do NOT guess):** why does MTDS write `capture_status="captured"` (with row counts)
+  for KRAKEN/BITFINEX under `processed_candles/` when no processed file exists? Leading hypotheses to confirm:
+  (a) MTDS raw-capture rows and MDPS processed-candle rows share ONE `_index/availability_index.parquet` with conflicting
+  `captured` semantics (raw captured ≠ processed available), so a processed-candle consumer over-trusts MTDS raw rows;
+  (b) backfill genuinely incomplete and MTDS marks `captured` ahead of MDPS processing. Real venue coverage grows by
+  date (2026-04-10 = 5 venues; 2026-05-01/03/04 = BITGET only), consistent with in-progress backfill.
+- **features-service handles it safely now** (honest-absence skip via blob_exists; features@c35e5e72) — reads all real
+  data, skips phantoms without crashing.
