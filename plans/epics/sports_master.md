@@ -315,8 +315,9 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       rename Phase 3+4 shipped (2026-05-22) — instruments-service@fc7b306, UTL@94e43e8c
 - [x] ✅ [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. Q&A 14 updated: HIGH-2
       fully shipped; all 4 phases complete. 2026-05-24.
-- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4 + Phase 2B
-      migration completion]
+- [x] ✅ [OPERATOR] P0. Resume forward-poll + backfill VMs. sports-scheduler-20260525-072005 launched 2026-05-25 (daemon
+      e2-small asia-northeast1-c, poll=300s). Sports rename fully shipped (fc7b306/94e43e8c); Phase 2B GCS migration
+      done (739,594 files); Phase 4 smoke verified 2026-05-24. Backfill VMs resume on next scheduler tick.
 
 ### Sports honest-coverage architecture (`features_sports_honest_coverage`)
 
@@ -831,23 +832,22 @@ manifest rows instead of per-fixture expected universe. Honest-coverage broken f
 FIXTURES_SCHEDULE rows (Phase 4 of source issue documented this dependency). Coordinate with
 `writegate_honest_coverage_endtoend_2026_05_06`.
 
-- [ ] [SCRIPT] P0. Orchestrator refactor: per-fixture-id iteration for FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS
-      / INJURIES. Replace `for league_id in leagues: for date in dates: fetch(league, date)` with
-      `for fixture in     captured_fixtures_today(league_id, date): fetch(fixture.fixture_id)`. Pre-flight: depends on
-      FIXTURES_SCHEDULE rows existing for the (league, date) pair (validate via Phase A.10 preflight from
-      `instruments_master`).
-- [ ] [SCRIPT] P0. Manifest row_key extension: `fixture_id` becomes a first-class shard axis for the 4 per-fixture
-      data_types. v6 ManifestWriter already supports arbitrary row_keys; just wire the column. Per-instrument shard atom
-      per CLAUDE.md "shard-granularity SSOT" — for sports per-fixture data, row_key =
-      `(asset_group, source,     data_type, league_id, fixture_id, day)`.
-- [ ] [SCRIPT] P0. Cluster validation at `record_captured` for bundled fixture-day parquets (per Phase 1A of writegate).
-      Add `FIXTURE_STATS` / `FIXTURE_EVENTS` / `FIXTURE_LINEUPS` / `INJURIES` to UAC `BUNDLED_DATA_TYPES` with
-      `expected_root_clusters = {league_id: count_of_fixtures_today}` extracted via FIXTURES_SCHEDULE join.
-- [ ] [SCRIPT] P0. One-shot manifest migration: existing per-league-per-day rows expanded into per-fixture rows. Script
-      under `instruments-service/scripts/migrate_per_fixture_manifest.py` mirroring existing migration patterns.
-      Idempotent; dry-run + apply.
-- [ ] [VERIFY] P0. Post-migration smoke: random sample of 20 (league, date) pairs across 2018-2026 — sum of per-fixture
-      rows == count of captured fixtures (no orphans, no duplicates).
+- [x] ✅ [SCRIPT] P0. Orchestrator refactor: per-fixture-id iteration for FIXTURE_STATS / FIXTURE_EVENTS /
+      FIXTURE_LINEUPS / INJURIES. **RESOLVED 2026-05-25**: enrichment-only mode already uses
+      `_read_fixture_ids_from_gcs` to iterate per fixture_id; `?id=<fixture_id>` endpoint confirmed (verified 2026-05-23
+      with id=867946). Standard-mode per-fixture iteration superseded — master plan ✓ decision: `(league_id, day)` is
+      canonical shard atom; fixture-level iteration runs within the day shard.
+- [x] ✅ [ABANDONED] P0. Manifest row_key extension: `fixture_id` as first-class shard axis. **SUPERSEDED 2026-05-25**
+      by master plan decision (master_to_live_defi_2026_05_23.md §"Shard atom decisions"): `fixture_id` is NOT a shard
+      atom. `(league_id, day)` already bounds fixtures. No row_key change needed.
+- [x] ✅ [SCRIPT] P0. Cluster validation at `record_captured` for bundled fixture-day parquets. **RESOLVED 2026-05-25**
+      by writegate Phase 3.D.5 v2 enumerators (Sports@9a1bcd91, CeFi@09361718, TradFi@d50b9453, DeFi@b0e4bcac) — v2
+      enumerators implement expected-universe = captured FIXTURES_SCHEDULE rows. Cluster validation shape at
+      `(league_id, day)` shard level is covered by the v2 enumerator contract.
+- [x] ✅ [ABANDONED] P0. One-shot manifest migration: per-league-per-day → per-fixture rows. **SUPERSEDED 2026-05-25**:
+      `fixture_id` not a shard atom; no row_key migration needed. Single-walk discipline also gates any new GCS walk.
+- [x] ✅ [ABANDONED] P0. Post-migration smoke for per-fixture row expansion. **SUPERSEDED 2026-05-25**: no migration
+      (per item 4 above). Item closed.
 - [x] ✅ [AGENT] P1. Open question — does api_football provide a per-fixture endpoint or only bulk? If only bulk, the
       orchestrator's per-fixture iteration becomes a filter on a single bulk fetch (rate-limit budget unchanged). Verify
       via the api_football docs + a smoke probe before committing the refactor shape. **COMPLETED 2026-05-23**:
