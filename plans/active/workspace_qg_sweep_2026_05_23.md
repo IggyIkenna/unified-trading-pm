@@ -84,18 +84,19 @@ SSOT links:
 
 These must complete before Layer 1 repos can be reliably type-checked.
 
-- [x] ✅ [AGENT] P0. **UAC QG green** — `cd unified-api-contracts && bash scripts/quality-gates.sh` exits 0. Fix 1 RUF022
-      `__all__` sort violation. Run `ruff check --fix . && basedpyright unified_api_contracts/ run_timeout 120`. Commit
-      to `live-defi-rollout`. Evidence: exit 0 + `ruff check .` output clean. [vm: vm-cross-cutting]
-      — unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors)
-      — unified-api-contracts@897ba58 | QG exit 0 | +70 orphan allowlist entries (Phase-4 recording-templates/stubs)
-      — unified-api-contracts@e62df97 | QG re-green | RUF022 regression: sort __all__ in risk.py + risk/__init__.py; regen archetype_capability_manifest.json
+- [x] ✅ [AGENT] P0. **UAC QG green** — `cd unified-api-contracts && bash scripts/quality-gates.sh` exits 0. Fix 1
+      RUF022 `__all__` sort violation. Run `ruff check --fix . && basedpyright unified_api_contracts/ run_timeout 120`.
+      Commit to `live-defi-rollout`. Evidence: exit 0 + `ruff check .` output clean. [vm: vm-cross-cutting] —
+      unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors) —
+      unified-api-contracts@897ba58 | QG exit 0 | +70 orphan allowlist entries (Phase-4 recording-templates/stubs) —
+      unified-api-contracts@e62df97 | QG re-green | RUF022 regression: sort **all** in risk.py + risk/**init**.py; regen
+      archetype_capability_manifest.json
 
-- [x] ✅ [AGENT] P0. **UTL QG green** — `cd unified-trading-library && bash scripts/quality-gates.sh` exits 0.
-      — unified-trading-library@4b69f0fa | ruff ✓ clean (prior partial)
-      — unified-trading-library@2b1de30f | QG exit 0 (272s) | starlette 1.1.0 (PYSEC-2026-161), PYTEST_WORKERS=4,
-        MAX_DURATION=1100, fixed 16 test failures (_events_sink fixture ×2, GCS mock for sports_fixtures hang)
-      — unified-trading-library@34e40794 | noqa qg-deep-import markers on registry/cefi_margin_tiers + incident facade imports (agent_action.py + margin_model.py)
+- [x] ✅ [AGENT] P0. **UTL QG green** — `cd unified-trading-library && bash scripts/quality-gates.sh` exits 0. —
+      unified-trading-library@4b69f0fa | ruff ✓ clean (prior partial) — unified-trading-library@2b1de30f | QG exit 0
+      (272s) | starlette 1.1.0 (PYSEC-2026-161), PYTEST_WORKERS=4, MAX_DURATION=1100, fixed 16 test failures
+      (\_events_sink fixture ×2, GCS mock for sports_fixtures hang) — unified-trading-library@34e40794 | noqa
+      qg-deep-import markers on registry/cefi_margin_tiers + incident facade imports (agent_action.py + margin_model.py)
 
 ---
 
@@ -103,25 +104,32 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 - [x] ✅ [AGENT] P1. **instruments-service QG green** — 32 ruff errors to fix.
       `cd instruments-service && bash scripts/quality-gates.sh` exits 0. Use `ruff check --fix .` for auto-fixable, then
-      fix remaining manually. Respect CLAUDE.md no-`# noqa` rule. PREREQ: UTL QG green. [vm: vm-cefi]
-      — instruments-service@20eae24 | QG exit 0 (281s) | fixed 32 ruff errors; CLOUD_MOCK_MODE guard restored; 4 test isolation fixes; 4 codex violations resolved
-      — instruments-service@0b867b3 | QG exit 0 | UNISWAPV4-ETHEREUM venue name fix + test_engine_utils.py covers data_utils/validation_utils (coverage 76.8%→77%+)
-      — instruments-service@c264db5 | QG exit 0 | regression fix: 0b867b3 used deprecated UNISWAPV4-ETHEREUM (not in VenueMapping → None → always-available), reverted to canonical UNISWAP_V4-ETHEREUM (start 2025-01-30); test_is_venue_available_before_launch now passes
+      fix remaining manually. Respect CLAUDE.md no-`# noqa` rule. PREREQ: UTL QG green. [vm: vm-cefi] —
+      instruments-service@20eae24 | QG exit 0 (281s) | fixed 32 ruff errors; CLOUD_MOCK_MODE guard restored; 4 test
+      isolation fixes; 4 codex violations resolved — instruments-service@0b867b3 | QG exit 0 | UNISWAPV4-ETHEREUM venue
+      name fix + test_engine_utils.py covers data_utils/validation_utils (coverage 76.8%→77%+) —
+      instruments-service@c264db5 | QG exit 0 | regression fix: 0b867b3 used deprecated UNISWAPV4-ETHEREUM (not in
+      VenueMapping → None → always-available), reverted to canonical UNISWAP_V4-ETHEREUM (start 2025-01-30);
+      test_is_venue_available_before_launch now passes
 
-- [x] ✅ [AGENT] P1. **deployment-service QG green** — Fixed 4 ruff errors (F401×3
-      datetime.UTC/datetime/LoopDetected unused-imports in _common.py; F841 unused `entry` var in llm_invoke_layer0.py).
-      Ruff now clean. — deployment-service@1254b3b | ruff ✓ | NOTE: full QG type-check blocked (deployment-api not in
-      slot 7 repos; venv install fails). [vm: vm-operator-ops]
-      — deployment-service@88d2626 | QG exit 0 | starlette conflict resolved: utl@0c792abe bumped starlette>=1.0.1 (was <1.0.0) + qg-deep-import noqa; deployment-service uv.lock upgraded starlette 0.52.1→1.1.0
+- [x] ✅ [AGENT] P1. **deployment-service QG green** — Fixed 4 ruff errors (F401×3 datetime.UTC/datetime/LoopDetected
+      unused-imports in \_common.py; F841 unused `entry` var in llm_invoke_layer0.py). Ruff now clean. —
+      deployment-service@1254b3b | ruff ✓ | NOTE: full QG type-check blocked (deployment-api not in slot 7 repos; venv
+      install fails). [vm: vm-operator-ops] — deployment-service@88d2626 | QG exit 0 | starlette conflict resolved:
+      utl@0c792abe bumped starlette>=1.0.1 (was <1.0.0) + qg-deep-import noqa; deployment-service uv.lock upgraded
+      starlette 0.52.1→1.1.0
 
 - [x] ✅ [AGENT] P1. **deployment-api QG green** — 1 ruff error (auto-fixable).
-      `cd deployment-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-operator-ops]
-      — deployment-api@11ccdd9 | QG exit 0 (323s) | fixed I001 ruff, BinaryEventTrigger UTL dispatch, AssetGroup UTL export, _is_legacy_defi_venue_row regex fix, import patterns, MAX_DURATION=700
-      — additional: deployment-api@bbdffba | utl@5247b3fa | DEPRECATED_DEFI_GHOST_VENUE_NAMES→EMPTY_OR_DEPRECATED_DEFI_VENUES (3 files), gcs_delete_object added to UTL __init__ facade
+      `cd deployment-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-operator-ops] —
+      deployment-api@11ccdd9 | QG exit 0 (323s) | fixed I001 ruff, BinaryEventTrigger UTL dispatch, AssetGroup UTL
+      export, \_is_legacy_defi_venue_row regex fix, import patterns, MAX_DURATION=700 — additional:
+      deployment-api@bbdffba | utl@5247b3fa | DEPRECATED_DEFI_GHOST_VENUE_NAMES→EMPTY_OR_DEPRECATED_DEFI_VENUES (3
+      files), gcs_delete_object added to UTL **init** facade
 
 - [x] ✅ [AGENT] P1. **unified-trading-pm QG green** — 71 ruff errors (largest workspace backlog).
-      `cd unified-trading-pm && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
-      — utm@49dc39ad | QG exit 0 | fixed 75 E501 line-too-long (15 files); validate_plan_links.py broken-link detection regression
+      `cd unified-trading-pm && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
+      utm@49dc39ad | QG exit 0 | fixed 75 E501 line-too-long (15 files); validate_plan_links.py broken-link detection
+      regression
 
 ---
 
@@ -129,73 +137,82 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 - [x] ✅ [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd market-tick-data-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm:
-      vm-ml] — mtds@1864e395 QG green (97s); fixed 22 import violations, test fixtures, orchestrator None-filter, import pattern fix
+      vm-ml] — mtds@1864e395 QG green (97s); fixed 22 import violations, test fixtures, orchestrator None-filter, import
+      pattern fix
+      — mtds@0fcad8c | QG exit 0 (84s) | regression fix: UAC 78c5ac1 added scripts/__init__.py (shadows MTDS namespace pkg); HYPERLIQUID/ASTER cefi→defi; UNISWAPV2/V3→UNISWAP_V2/V3 canonical; AssetGroup(ag.upper())→AssetGroup(ag)
 
 - [x] ✅ [AGENT] P2. **features-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd features-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm: vm-ml]
-      — features@907cca48 QG green (241s); async/await fix in batch/live handlers, socket-blocked conftest, pip-audit PYSEC-2026-161
+      — features@907cca48 QG green (241s); async/await fix in batch/live handlers, socket-blocked conftest, pip-audit
+      PYSEC-2026-161
 
 - [x] ✅ [AGENT] P2. **market-data-processing-service QG green** — ruff clean; run full QG.
       `cd market-data-processing-service && bash scripts/quality-gates.sh` exits 0. PREREQ: market-tick-data-service QG
-      green. [vm: vm-ml]
-      — mdps@cb3d11b | QG exit 0 (91s) | socket-blocked conftest, correct DeFi venue name, stale _FakeWriter mock (reason= kwarg)
+      green. [vm: vm-ml] — mdps@cb3d11b | QG exit 0 (91s) | socket-blocked conftest, correct DeFi venue name, stale
+      \_FakeWriter mock (reason= kwarg)
 
 - [x] ✅ [AGENT] P2. **execution-service QG green** — 20 ruff errors.
-      `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core]
-      — execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
+      `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core] —
+      execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except
+      guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log
+      path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
 
 - [x] ✅ [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
       ruff/pyright surface violations only, NO changes to `engine/strategies/v2/`, `engine/allocator/`, collateral,
       liquidation, or cross-venue transfer code. `cd strategy-service && bash scripts/quality-gates.sh` exits 0. PREREQ:
       UTL QG green. Signal: `🟢 STRATEGY-LOGIC UNFREEZE` in `_agent_pings.md` before touching logic paths. [vm:
-      vm-trading-core]
-      — strategy-service@721c71ec | QG exit 0 (107s) | starlette>=1.0.1, ruff fixes (E501×7, F401, N816, import pattern)
+      vm-trading-core] — strategy-service@721c71ec | QG exit 0 (107s) | starlette>=1.0.1, ruff fixes (E501×7, F401,
+      N816, import pattern)
 
 ---
 
 ## Layer 3 — Misc services (parallel after Layer 1, P3)
 
-- [x] ✅ [AGENT] P3. **alerting-service QG green** — 3 ruff errors. `cd alerting-service && bash scripts/quality-gates.sh`
-      exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
-      — alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
+- [x] ✅ [AGENT] P3. **alerting-service QG green** — 3 ruff errors.
+      `cd alerting-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
+      alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
 
 - [x] ✅ [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
-      `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
-      — client-reporting-api@a82db85 | QG exit 0 (280s) | per-file-ignores for scripts/*.py (C901+E501), scripts/__init__.py for test import, starlette 1.1.0
+      `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
+      client-reporting-api@a82db85 | QG exit 0 (280s) | per-file-ignores for scripts/\*.py (C901+E501),
+      scripts/**init**.py for test import, starlette 1.1.0
 
 - [x] ✅ [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
-      `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
-      — unified-trading-api@2a99dded | QG exit 0 (223s) | move import os to top (E402), scripts/*.py per-file-ignore C901/E501/E402
+      `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
+      unified-trading-api@2a99dded | QG exit 0 (223s) | move import os to top (E402), scripts/\*.py per-file-ignore
+      C901/E501/E402
 
 - [x] ✅ [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
       `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm:
-      vm-cross-cutting]
-      — batch-live-reconciliation-service@2531e845 | QG exit 0 (177s) | added ruff==0.15.0, pip-audit, bandit to deps
+      vm-cross-cutting] — batch-live-reconciliation-service@2531e845 | QG exit 0 (177s) | added ruff==0.15.0, pip-audit,
+      bandit to deps
 
 - [x] ✅ [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
-      `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting]
-      — greeks-service@2413055b | QG exit 0 (144s) | add tests+setup.sh, remove UAC dep, fix codex violations (manifest, STEP5.34, setup_events)
+      `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
+      greeks-service@2413055b | QG exit 0 (144s) | add tests+setup.sh, remove UAC dep, fix codex violations (manifest,
+      STEP5.34, setup_events)
 
 ---
 
 ## Layer 4 — ML + agent (parallel after Layer 2, P3)
 
 - [x] ✅ [AGENT] P3. **ml-service QG green** — 4 ruff errors. `cd ml-service && bash scripts/quality-gates.sh` exits 0.
-      PREREQ: features-service QG green. [vm: vm-ml]
-      — ml-service@6519ca8 | QG exit 0 (292s) | ModelRegistry cloud provider guard (local→no bucket), root test conftest env vars, ruff I001×3+F541×1
+      PREREQ: features-service QG green. [vm: vm-ml] — ml-service@6519ca8 | QG exit 0 (292s) | ModelRegistry cloud
+      provider guard (local→no bucket), root test conftest env vars, ruff I001×3+F541×1
 
 - [x] ✅ [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
-      `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
-      — N/A: repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service, archive_date=2026-05-20)
+      `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml] —
+      N/A: repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service,
+      archive_date=2026-05-20)
 
 - [x] ✅ [AGENT] P3. **ml-training-service QG green** — ruff clean; run full QG.
-      `cd ml-training-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml]
-      — N/A: repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service, archive_date=2026-05-20)
+      `cd ml-training-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml] — N/A:
+      repo consolidated into ml-service (workspace-manifest.json status=consolidated-into-ml-service,
+      archive_date=2026-05-20)
 
 - [x] ✅ [AGENT] P3. **trading-agent-service QG green** — ruff clean; run full QG.
       `cd trading-agent-service && bash scripts/quality-gates.sh` exits 0. PREREQ: execution-service QG green. [vm:
-      vm-trading-core]
-      — trading-agent-service already QG green (no changes) | QG exit 0 (162s)
+      vm-trading-core] — trading-agent-service already QG green (no changes) | QG exit 0 (162s)
 
 ---
 
