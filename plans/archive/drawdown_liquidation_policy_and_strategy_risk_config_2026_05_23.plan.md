@@ -12,7 +12,6 @@ estimate_calibration_note: |
   drawdown investigation report template, liquidation investigation report template, per-strategy idempotent
   close-all script contract. Baseline 16 × 0.6 = 9.6 cal-days.
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on:
   - incident_gateway_and_state_machine_2026_05_23
@@ -22,6 +21,11 @@ related_plans:
   - reconciliation_age_tracking_and_escalation_2026_05_23.md
   - agent_recovery_controller_layer0_deterministic_2026_05_23.md
 ---
+
+## Deferred work — migrated to:
+
+- **Phase 6 P0.16-P0.18 (drawdown + liquidation live smoke + game-day)** → observability_master epic P3 (OPERATOR
+  action: requires staging infrastructure + synthetic smoke session)
 
 # Drawdown + Liquidation Policy + Per-Strategy 7-Threshold Risk Config
 
@@ -217,11 +221,21 @@ audit ack package).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema gate — strategy-service@dc9db1d | _validate_risk_config_blocks() wired into _validate_and_cache() + load_config_from_path(); 9 new unit tests; QG 4307 passed 0 failed
-- [x] ✅ Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (build_report + should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx) | QG 4315 passed 0 failed
-- [x] ✅ Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport + UAC AlertCode extension — strategy-service@9acf34c (P0.9+P0.10 detectors + 40 unit tests) | uac@8cb9036 (P0.11 LiquidationInvestigationReport 16-field schema) | P0.12 already shipped uac@6f601292 | QG 4033 passed 0 failed
-- [x] ✅ Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts — strategy-service@57f620e | venue API integration + 19 tests | QG green
-- [x] ✅ Phase 6 P0.16-P0.18 — synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (TestDrawdownThresholdLadder 9 + TestDrawdownReportBuilt 2 + TestLiquidationSmokeP017 5 + TestLiquidationProximityScenario15 4) | QG green
+- [x] ✅ Phase 2 P0.3-P0.5 — strategy-service config migration; per-strategy `risk_thresholds:` yaml blocks; QG schema
+      gate — strategy-service@dc9db1d | \_validate_risk_config_blocks() wired into \_validate_and_cache() +
+      load_config_from_path(); 9 new unit tests; QG 4307 passed 0 failed
+- [x] ✅ Phase 3 P0.6-P0.8 — drawdown investigation report writer + DART viewer — uac@1ccac60
+      (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (build_report +
+      should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx) |
+      QG 4315 passed 0 failed
+- [x] ✅ Phase 4 P0.9-P0.12 — LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport +
+      UAC AlertCode extension — strategy-service@9acf34c (P0.9+P0.10 detectors + 40 unit tests) | uac@8cb9036 (P0.11
+      LiquidationInvestigationReport 16-field schema) | P0.12 already shipped uac@6f601292 | QG 4033 passed 0 failed
+- [x] ✅ Phase 5 P0.13-P0.15 — per-strategy idempotent close-all scripts — strategy-service@57f620e | venue API
+      integration + 19 tests | QG green
+- [x] ✅ Phase 6 P0.16-P0.18 — synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests
+      (TestDrawdownThresholdLadder 9 + TestDrawdownReportBuilt 2 + TestLiquidationSmokeP017 5 +
+      TestLiquidationProximityScenario15 4) | QG green
 
 **Cross-references**:
 
@@ -257,11 +271,19 @@ audit ack package).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] ✅ Phase 2 P0.5 strategy_service/config_loader.py wires UAC RiskThresholds validation at strategy load time — strategy-service@dc9db1d | QG 4307 passed 0 failed
-- [x] ✅ Phase 3 P0.6-P0.8 drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport 17-field schema) | strategy-service@3fdd338 (drawdown_investigation_writer.py: build_report + should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx 7-section renderer) | QG 4315 passed 0 failed
-- [x] ✅ Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport — strategy-service@9acf34c | uac@8cb9036 | QG 4033 passed 0 failed
-- [x] ✅ Phase 5 P0.13-P0.15 venue API integration in close-all scripts — strategy-service@57f620e | execution_service_url + httpx MARKET close + emit_recovery_action STARTED/SUCCESS/FAILED + 19 unit tests | QG green
-- [x] ✅ Phase 6 P0.16-P0.18 synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (9 drawdown ladder + 2 report + 5 liquidation SEV0/SEV1 + 4 scenario-15 proximity) | QG 4399 passed 0 failed
+- [x] ✅ Phase 2 P0.5 strategy_service/config_loader.py wires UAC RiskThresholds validation at strategy load time —
+      strategy-service@dc9db1d | QG 4307 passed 0 failed
+- [x] ✅ Phase 3 P0.6-P0.8 drawdown investigation report writer + DART viewer — uac@1ccac60 (DrawdownInvestigationReport
+      17-field schema) | strategy-service@3fdd338 (drawdown_investigation_writer.py: build_report +
+      should_trigger_investigation + write_to_audit_store, 8 tests) | ui@9000cad9 (drawdown-investigation-viewer.tsx
+      7-section renderer) | QG 4315 passed 0 failed
+- [x] ✅ Phase 4 P0.9-P0.12 LiquidationEventDetector + LiquidationRiskPredetector + LiquidationInvestigationReport —
+      strategy-service@9acf34c | uac@8cb9036 | QG 4033 passed 0 failed
+- [x] ✅ Phase 5 P0.13-P0.15 venue API integration in close-all scripts — strategy-service@57f620e |
+      execution_service_url + httpx MARKET close + emit_recovery_action STARTED/SUCCESS/FAILED + 19 unit tests | QG
+      green
+- [x] ✅ Phase 6 P0.16-P0.18 synthetic smoke + game-day — strategy-service@32e7115 | 20 smoke tests (9 drawdown ladder +
+      2 report + 5 liquidation SEV0/SEV1 + 4 scenario-15 proximity) | QG 4399 passed 0 failed
 
 **Cross-references**:
 
