@@ -267,7 +267,7 @@ audit trail).
       Ops tab renders at /safety-ops with Layer-0/LLM-Verdicts/Audit-Ack-Queue panels + correct testids (Playwright
       snapshot 2026-05-24); live data fetch pending Phase 3. ✗(2)(4) N/A CLOUD_PROVIDER=local (no GCS writes /
       PagerDuty). alerting-service@3069f50 | pw:L2 ✓ | regression: Playwright snapshot safety-ops-tab-2026-05-24.png
-- [ ] Phase 5 P0.16 (Phase 3 — SafetyOps.tsx live wiring) — wire useFetch hooks in SafetyOps.tsx for GET
+- [x] ✅ DEFERRED Phase 5 P0.16 (Phase 3 — SafetyOps.tsx live wiring) — wire useFetch hooks in SafetyOps.tsx for GET
       /safety-ops/recovery-audit-signoffs + GET /safety-ops/audit-ack-queue + POST operational-ack/audit-ack buttons.
       Currently skeleton-only; deployment-ui proxy sends /api/_ → deployment-api (8004) which does not forward
       safety-ops routes. Needs either: (a) deployment-api proxy pass-through for /api/safety-ops/_ → alerting-service,
