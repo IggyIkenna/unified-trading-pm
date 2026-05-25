@@ -161,7 +161,7 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
       22 unit tests | QG green
 - [x] ✅ DEFERRED-OPERATOR-DECISION Phase 4 P0.8-P0.9 — per-dep fallback integration tests + nightly report (DAG
       pre-approved)
-- [ ] [HUMAN] Phase 5 P0.10-P0.11 — synthetic smoke + game-day
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 5 P0.10-P0.11 — synthetic smoke + game-day (operator to schedule when ready; main P0.10/P0.11 items already DEFERRED-OPERATOR-DECISION)
 
 **Cross-references**:
 
