@@ -175,6 +175,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [x] ✅ [AGENT] P3. **alerting-service QG green** — 3 ruff errors.
       `cd alerting-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
+      — uac@ca9b569 + alerting-service@de0dea0 | QG exit 0 (62s) | regression fix: IncidentEnvelope slim schema restored by 3d05b8e missing 20 new fields (event_id, timestamp, severity_hint, etc.); all_passed @property called as method; strategy_family extra field in wrap_legacy_alert
 
 - [x] ✅ [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
       `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
