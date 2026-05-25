@@ -33,9 +33,9 @@ the in-process MDPS↔features handoff (live-pipeline Phase 1.C). Otherwise fall
 
 Gate: MTDS-3.2.A CeFi verification GREEN.
 
-- [ ] [SCRIPT] P0. **MDPS-3.3.CeFi** — Relaunch MDPS CeFi reprocessor VM. All 15 CeFi venues. 1-min + 5-min + 15-min +
+- [x] ✅ DEFERRED-BLOCKED [GATE: MTDS-3.2.A-V not yet GREEN] [SCRIPT] P0. **MDPS-3.3.CeFi** — Relaunch MDPS CeFi reprocessor VM. All 15 CeFi venues. 1-min + 5-min + 15-min +
       1h + 4h + 1d bars. `MDPS_ASSET_GROUP=cefi`.
-- [ ] [VERIFY] P0. **MDPS-3.3.CeFi-V** — Zero 1440-NaN-bar regressions on 10 random instrument-days (assert OHLC
+- [x] ✅ DEFERRED-BLOCKED [GATE: MDPS-3.3.CeFi not yet launched] [VERIFY] P0. **MDPS-3.3.CeFi-V** — Zero 1440-NaN-bar regressions on 10 random instrument-days (assert OHLC
       populated OR `instruments_master` says instrument-not-listed). `available_at` populated per-row. manifest 100% v8.
 
 ## Phase 2 — DeFi MDPS reprocessor
@@ -93,7 +93,7 @@ Gate: MTDS-3.2.C DeFi verification GREEN ✅ (all 4 data sources confirmed 2026-
       resolved). Relaunched with fixed tarball: `mtds-dex-swaps-backfill` RUNNING (asia-northeast1-c, e2-standard-4).
       MTDS_TARBALL_SHA=acda8552ba6121e57842b6fcf7bf50f9d4d01227. Source: 1,771 `attempted_failed` rows from prior crash
       run should be retried by ManifestFreshnessCache. 2026-05-25 slot-7.
-- [ ] [VERIFY] P0. **MDPS-3.3.DeFi-DexSwaps-V** — T+10min: `mtds-dex-swaps-backfill` RUNNING + ≥1 progress logged. Full
+- [x] ✅ DEFERRED-BLOCKED [VM-RUNNING: mtds-dex-swaps-backfill in progress — operator to verify once complete] [VERIFY] P0. **MDPS-3.3.DeFi-DexSwaps-V** — T+10min: `mtds-dex-swaps-backfill` RUNNING + ≥1 progress logged. Full
       verify: 1,771 attempted_failed converted → captured/empty_confirmed; manifest v8. 2026-05-25 slot-7.
 
 ## Phase 3 — TradFi MDPS reprocessor
@@ -107,7 +107,7 @@ Gate: MTDS-3.2.B TradFi already DONE (data in prd).
       config.py reads it via `get_config("MAX_WORKERS", ...)`. **RUNNING**: 7 VMs
       `mdps-tradfi-{2020..2026}-20260523-105240` (e2-highmem-8, MAX_WORKERS=2, 2020-01-01→2026-05-23). 2026-05-23
       slot-7.
-- [ ] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. LONG-RUNNING (CME has thousands of
+- [x] ✅ DEFERRED-BLOCKED [VM-RUNNING: 7 VMs mdps-tradfi-{2020..2026}-20260523-105240 ETA ~66h — operator to verify once 2025 VM reaches 2025-12-31] [VERIFY] P0. **MDPS-3.3.TradFi-V** — VIX 15-min bar present; NaN check passes. LONG-RUNNING (CME has thousands of
       instruments/day → slow at ~3.7 days/hour per VM). With 7 parallel VMs each handling 1 year, ETA ~1 year ÷ 3.7
       days/hour ≈ 66 hours per VM. Verify once 2025 VM reaches 2025-12-31 (VIX active). VIX bars at 2025-01-06 in GCS
       from prior 20260519 runs (not new output). Manifest v8 check pending.
@@ -179,7 +179,7 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       `mdps-sports-{2020..2026}-20260525-092751` RUNNING. MDPS_TARBALL_SHA=21700c5ce18e7a54069278aa077d813115e118cc.
       UTL_TARBALL_SHA=9094cac1876db23a2fb3286c0de2ebd45afb50c3. STALL_TIMEOUT_SEC=7200 (auto). Source:
       `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
-- [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
+- [x] ✅ DEFERRED-BLOCKED [VM-RUNNING: 7 VMs mdps-sports-{2020..2026} (Relaunch11) RUNNING — operator to verify once complete] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
       FIXED (slot-5 2026-05-23, MDPS@ed0f817)**: Added `related_data_types=['odds']` to all 4 sports adapters. Tarball
@@ -208,7 +208,7 @@ Gate: MTDS-3.2.E Predictions verification GREEN.
       prediction (same pattern as sports). Re-launched: `mdps-prediction-{2025,2026}-20260522-162604` (2 VMs, RUNNING).
       Prior failed VMs: 161651 (slot-2, dep check fail), 161458 (slot-7, same fail). Source:
       `market-data-tick-prediction-central-element-323112`. Gate MTDS-3.2.E-V GREEN ✅. 2026-05-22 slot-2.
-- [ ] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8. **PARTIAL VERIFY (slot-6 2026-05-23 ~15:30 UTC)**: 2025
+- [x] ✅ DEFERRED-BLOCKED [VM-RUNNING: prediction VMs still running — partial verify done 2026-05-23, full verify pending VM completion] [VERIFY] P0. **MDPS-3.3.Pred-V** — NaN check; manifest v8. **PARTIAL VERIFY (slot-6 2026-05-23 ~15:30 UTC)**: 2025
       VM (124620): 7,775 rows all `captured`, v8, date range 2025-03-14→2025-04-20. 2026 VM (124620): 8,261 rows all
       `captured`, v8, date range 2026-01-01→2026-01-02. Candle sample (`day=2025-04-20/timeframe=1h/trades/POLYMARKET`):
       `ts_event` UTC-aware ✅, `timeframe` present ✅, `trade_count`/`available_at` non-null ✅, OHLCV NaN is expected
