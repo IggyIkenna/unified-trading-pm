@@ -4908,3 +4908,19 @@ Data-quality audit (DQ-05) surfaced: the live CeFi backfill (~170 VMs) writes to
 
 **[RESOLVED — harsh↔ikenna chat, 2026-05-25]** Ikenna confirmed: canonical = `-prd`; older data already migrated there; the write-path code was never updated to target `-prd` (still legacy flat prefixes); latest flat data needs migration. Cutover (writer→`-prd` + migrate) = gated on backfill completion + code freeze (Phase 2.6) — NOT mid-backfill. Interim coverage-reader fix shipped `instruments-service@91e7316` (reads live bucket now, self-corrects post-2.6). Write-path fix + migration tracked for Phase 2.6 in the issue doc. No open cross-side action.
 
+---
+
+## [harsh → ikenna] 2026-05-25 — ACTION NEEDED: create 1 Secret Manager secret (we're IAM-denied)
+
+Re the Telegram dual-channel split (active thread above ~"split Telegram channels: same bot token, NEW chat_id for live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secret is missing.**
+
+- **Done:** new Telegram group "UTS Live Alerts" created (chat_id `-5296232662`), bot token (`uts_autonomous_alert_bot`) verified valid, test message delivered to the group. The alerting-service code is already wired: `alerting_service/notifiers/router.py` routes `LIVE_ALERT_RULES` runtime alerts (breakers/venue-halted/gas) → `chat_id_ops`; CI/QG/internal → existing `chat_id`; graceful fallback to single chat when `chat_id_ops` empty (hot-reload 300s via `_PagingCredentialsReloader`, secret name `alerting-telegram-chat-id-ops`).
+- **Blocked:** secret `alerting-telegram-chat-id-ops` does not exist (`NOT_FOUND`). Both the worker agent AND operator (`harshkantariya@odum-research.com`) are denied `secretmanager.secrets.create` on `central-element-323112`.
+- **ASK (needs your account / a perms grant):**
+  ```
+  echo -n "-5296232662" | gcloud secrets create alerting-telegram-chat-id-ops \
+    --project=central-element-323112 --replication-policy=automatic --data-file=-
+  ```
+  Then grant the alerting-service runtime SA `roles/secretmanager.secretAccessor` on it (same as the other `alerting-telegram-*` secrets). No deploy/restart needed — notifier picks it up within ~5 min and the important/noisy split goes live.
+- **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py` (`_SM_CHAT_ID_OPS`).
+
