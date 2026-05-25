@@ -102,6 +102,16 @@ before Phase 7 grows the v<8 debt.
       `FORCE=1` (2nd invocation picks up remaining venues as current batch completes via `_batch_guard`). Pre-relaunch
       capture state: BINANCE-FUTURES 68.6%, BINANCE-SPOT 43.4%, BYBIT 68.2%, COINBASE-SPOT 63.9%, DERIBIT 50.4%,
       HYPERLIQUID 32.8%, OKX-SPOT 75.7%, OKX-SWAP 61.7%, UPBIT 35.9% (worst-year 2024). 2026-05-24 slot-7.
+- [x] ✅ [CODE] P0. **MTDS-3.2.A-OOM5-Fix** — **FIFTH OOM ROOT CAUSE FIXED (slot-7 2026-05-25 UTC)**: 2022-2023
+      bull-market Tardis streaming exceeds 64 GB on e2-highmem-8 (confirmed: BINANCE-FUTURES-2023 peak_rss=60.3 GB,
+      DERIBIT-2022 peak_rss=65.7 GB, both rc=137 at ~00:00 UTC). Root cause: 9 concurrent book_snapshot_5 symbol streams
+      for high-volume years saturate 64 GB; GC lag at day-boundary compounds. Fix: bumped `MACHINE_TYPE_HEAVY` default
+      from `e2-highmem-8` (64 GB) to `e2-highmem-16` (128 GB) in `launch-cefi-sharded-backfill.sh`. Lower-volume years
+      (BYBIT-2021 peaked at 24 GB) also benefit from 16 vCPUs vs 8. deployment-service@d08dfc2. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-HeavyRelaunch** — Relaunched two OOM5 VMs on e2-highmem-16 (128 GB):
+      `cefi-binance-futures-2023-heavy-20260525-011208` (RUNNING, asia-northeast1-c) +
+      `cefi-deribit-2022-heavy-20260525-011208` (RUNNING, asia-northeast1-c). `VM_FORCE=false` — retries only
+      `attempted_failed` cells from prior 64 GB OOM runs. deployment-service@d08dfc2. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
@@ -111,7 +121,10 @@ before Phase 7 grows the v<8 debt.
       relaunched via MTDS-3.2.A-DeadVMRelaunch above. Verify once ALL VMs (including the 2 relaunched ones) terminate.
       **flat→prd copy NOT needed** — `_resolve_upstream_bucket` in
       `market_data_processing_service/app/core/dependency_checker.py` returns flat bucket template. The copy script
-      `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded.
+      `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded. **STILL BLOCKED-IN-FLIGHT
+      (2026-05-25 slot-7)**: 4 VMs still RUNNING — bybit-2021-heavy-20260524-233946, deribit-2021-heavy-20260524-233946,
+      binance-futures-2023-heavy-20260525-011208 (OOM5 relaunch), deribit-2022-heavy-20260525-011208 (OOM5 relaunch).
+      Verify once all 4 terminate.
 - [x] ✅ [INFRA] P0. **MTDS-3.2.A-DailyWorkflowFix** — **Fixed broken CeFi daily collection (slot-7 2026-05-25 UTC)**:
       `market-tick-daily` workflow has been failing DAILY since at least 2026-05-20 (5+ FAILED executions). Root cause:
       workflow calls `market-tick-data-handler` (404 NOT_FOUND — this job was renamed/replaced). Fix: (1) updated
@@ -219,10 +232,15 @@ IS that plan.
       2026-05-23/24 where `load_evm_lst_contract_addresses_for_date()` failed with UTL NotFound. Writes to
       `lst-rates-central-element-323112`. 2026-05-25 slot-7.
 - [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN per DeFi venue. Success criteria: (1)
-      dex-swaps prd manifest: all UniV3-schema venues continuous 2026-01-25→2026-05-25 (0 attempted_failed); (2)
-      lst-rates: LIDO/ETHERFI/etc continuous 2026-01-24→2026-05-25 in `lst-rates-central-element-323112`; (3)
-      lending-indices: AAVEV3 continuous 2026-01-24→2026-05-24 in `lending-indices-central-element-323112` (**ALREADY
-      DONE** — VM completed exit_code=0, data verified in GCS). **Pending dex-swaps + lst-rates VMs completion.**
+      dex-swaps prd manifest: all UniV3-schema venues continuous 2026-01-25→2026-05-25 (0 attempted_failed) —
+      **IN-FLIGHT (slot-7 2026-05-25)**: `mtds-dex-swaps-backfill` RUNNING, retry pass active, 1,877 attempted_failed
+      remaining (1,458 captured 2026-01-01→2026-05-22 so far); (2) lst-rates: LIDO/ETHERFI/etc continuous
+      2026-01-24→2026-05-25 in `lst-rates-central-element-323112` — **✅ VERIFIED (slot-7 2026-05-25)**:
+      `mtds-lst-rates-20260525-004604` completed exit_code=0, 186 captured 0 failed 2026-05-06→2026-05-25; combined with
+      historical shard (14,420 captured 2020-01-01→2026-05-08) = continuous 2020-01-01→2026-05-25, 14 venues, 0
+      attempted_failed across all 19 shards; (3) lending-indices: AAVEV3 continuous 2026-01-24→2026-05-24 in
+      `lending-indices-central-element-323112` (**ALREADY DONE** — VM completed exit_code=0, data verified in GCS).
+      **Pending dex-swaps VM completion.**
 
 ## Phase 4 — Sports MTDS backfill (MTDS-3.2.D)
 
