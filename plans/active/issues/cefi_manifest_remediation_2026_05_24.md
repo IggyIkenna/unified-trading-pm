@@ -114,7 +114,7 @@ strategy back-testing. 2.09M legacy rows + 106K fresh failures misrepresent the 
       (2024-2026, 6 VMs), KRAKEN-SPOT (2020-2026, 7 VMs), KRAKEN-FUTURES (2020-2026, 14 VMs) — ~51 VMs total, RUN_TS
       varies (20260525-071613...). Covers bait_sentinel: BITGET-SPOT 9,528 + BITGET-FUTURES 9,521 + BITFINEX-FUTURES
       7,035 + BITFINEX-SPOT 2,743 + KRAKEN-FUTURES 757 + KRAKEN-SPOT 0 + VENUE_FETCH_FAILED retry: ~461K rows across all
-      6 venues.
+      6 venues. T+10min: 51/51 RUNNING verified.
 
 - [x] ✅ [AGENT] P1. OKX-FUTURES: 7 targeted VMs via direct gcloud, VM_FORCE=true, RUN_TS=20260525-073000.
       `cefi-okx-futures-{2020..2026}-heavy-20260525-073000` — e2-highmem-16, instrument_ids extracted from manifest
