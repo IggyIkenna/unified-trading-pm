@@ -152,6 +152,18 @@ Gate: MTDS-3.2.D Sports verification GREEN (itself gated on sports rename).
       AFTER tarball update → will get fixed UAC. `mdps-sports-{2020..2026}-20260525-065857` RUNNING.
       MDPS_TARBALL_SHA=65b6a54fccc7a467477c661f3545150979bd165e (NinthBugFix). STALL_TIMEOUT_SEC=7200. Source:
       `market-data-tick-sports-prd-central-element-323112`. 2026-05-25 slot-7.
+- [x] ✅ [CODE] P0. **MDPS-3.3.Sports-TenthBugFix** — **TENTH BUG: all 4 sports adapters generate 508 candles/date but 0
+      written to GCS (slot-7 2026-05-25)**: `canonical_writer._resolve_primary_source_for_candle()` calls
+      `get_source_priority("sports", "odds_snapshot")` (lowercase) but SOURCE_PRIORITY registers
+      `("sports", "ODDS_SNAPSHOT")` (uppercase). Exact-case lookup fails → KeyError → `Error writing candles to GCS`.
+      All 508 candles/date silently dropped for `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
+      `odds_horizon_bucket`. Root cause: `_MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY` bridge dict had no sports entries so
+      lowercase fell through to as-is lookup → mismatch. Fix: added 4 sports entries to bridge dict mapping lowercase
+      MDPS data_type → uppercase UAC SOURCE_PRIORITY key. market-data-processing-service@e53cc35. QG ✅. 2026-05-25
+      slot-7.
+- [ ] [SCRIPT] P0. **MDPS-3.3.Sports-Relaunch10** — Rebuild tarball with MDPS@e53cc35 (TenthBugFix). Terminate Relaunch9
+      VMs `065857` (running but 0 GCS writes due to TenthBugFix). Relaunch all 7 sports years `mdps-sports-{2020..2026}`
+      with MDPS@e53cc35 + STALL_TIMEOUT_SEC=7200. T+10min verify. 2026-05-25 slot-7.
 - [ ] [VERIFY] P0. **MDPS-3.3.Sports-V** — NaN check; manifest v8; no `data_available_at` in output. History: multiple
       re-launches (100800, 102325, 125717) all produced `empty_confirmed` because in-file `data_type='odds'` didn't
       match adapter names (`odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket`). **ROOT CAUSE
