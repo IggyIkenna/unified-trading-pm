@@ -11,7 +11,6 @@ estimate_calibration_note: |
   Infra class — new Twilio notifier subclass + Secret Manager wiring + provider health probe cron + alerting-service
   fallback-route logic. Baseline 6 × 0.8 infra = 4.8 cal-days.
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on:
   - incident_gateway_and_state_machine_2026_05_23
@@ -22,6 +21,13 @@ related_plans:
   - physical_pager_research_and_webhook_prototype_2026_05_23.md
   - audit_acknowledgement_sla_and_state_2026_05_23.md
 ---
+
+## Deferred work — migrated to:
+
+- **Phase 1 P0.1-P0.3 (Twilio account creation + 7 SM creds push)** → observability_master epic P3
+  (BLOCKED-OPERATOR-ACTION: operator must create Twilio account + push credentials)
+- **Phase 5 P0.12-P0.14 (SEV0 smoke + provider-outage smoke + game-day)** → observability_master epic P3
+  (STAGING-INFRA-REQUIRED: requires Phase 1 creds + staging stack)
 
 # Independent Fallback — Twilio Voice/SMS + Primary Provider Health Probe
 
@@ -175,10 +181,13 @@ physical pager device is researched + purchased).
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM credentials push (GCP + AWS) — ping doc item #1; awaiting operator
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM credentials push (GCP + AWS) — ping
+      doc item #1; awaiting operator
 - [x] ✅ Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel — alerting-service@06c48c4
-- [x] ✅ Phase 4 P0.10-P0.11 — provider_health_probe.py cron + ALERTING_PROVIDER_DEGRADED IncidentEnvelope — alerting-service@e5c8084
-- [x] [STAGING-INFRA-REQUIRED] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day — awaiting Phase 1 creds + staging stack
+- [x] ✅ Phase 4 P0.10-P0.11 — provider_health_probe.py cron + ALERTING_PROVIDER_DEGRADED IncidentEnvelope —
+      alerting-service@e5c8084
+- [x] [STAGING-INFRA-REQUIRED] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day — awaiting
+      Phase 1 creds + staging stack
 
 **Cross-references**:
 
@@ -194,24 +203,27 @@ physical pager device is researched + purchased).
 
 > Follow-up commits after Tier-1-4 ship. Operator directive: "do these then too".
 
-| Tier | Repo                       | SHA          | What landed                                                                                        |
-| ---- | -------------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| 5    | `unified-trading-pm`       | (ping doc)   | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model) |
-| 5    | `alerting-service`         | `e5c8084`    | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter |
-| 5    | `unified-trading-pm`       | (this)       | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc           |
-| 5    | `strategy-service`         | `3b0f7397`   | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
-| 5    | `execution-service`        | `a6fa7c501`  | recovery_event_helper for service-initiated AgentActionEvent emission                               |
-| 5    | `unified-trading-system-ui`| `01e1bb69`   | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]          |
+| Tier | Repo                        | SHA         | What landed                                                                                                                            |
+| ---- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 5    | `unified-trading-pm`        | (ping doc)  | 5 BLOCKED-OPERATOR-ACTION ping in `_agent_pings.md` (Twilio / pager / risk values / PD tier / LLM model)                               |
+| 5    | `alerting-service`          | `e5c8084`   | provider_health_probe + physical_pager (Webhook + GSM-Siren) + evidence_collector + manual_action_endpoint + envelope_adapter          |
+| 5    | `unified-trading-pm`        | (this)      | 22 incident runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + game-day protocol doc                                               |
+| 5    | `strategy-service`          | `3b0f7397`  | 2 archetype configs (carry_staked_basis + arbitrage_price_dispersion) with risk_thresholds + close-all scripts + recovery_event_helper |
+| 5    | `execution-service`         | `a6fa7c501` | recovery_event_helper for service-initiated AgentActionEvent emission                                                                  |
+| 5    | `unified-trading-system-ui` | `01e1bb69`  | DART Safety Ops tab scaffold (3 widgets + Playwright skeleton). [UI] [BLOCKED-PLAYWRIGHT]                                              |
 
 **Per-plan Tier-5 items shipped (this plan's scope):**
 
-- [x] ✅ Phase 4 P0.10-P0.11 — alerting-service@e5c8084 `gateway/provider_health_probe.py` (60s cadence; 2-fail-flip; 3-success-recovery; ALERTING_PROVIDER_DEGRADED emission on on_fallback_change callback)
+- [x] ✅ Phase 4 P0.10-P0.11 — alerting-service@e5c8084 `gateway/provider_health_probe.py` (60s cadence; 2-fail-flip;
+      3-success-recovery; ALERTING_PROVIDER_DEGRADED emission on on_fallback_change callback)
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM creds push — ping doc item #1; awaiting operator
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — Twilio account creation + 7 SM creds push — ping doc item #1;
+      awaiting operator
 - [x] ✅ Phase 3 P0.8-P0.9 — router fallback-mode logic + per-rule TwilioVoice channel — alerting-service@06c48c4
-- [x] [STAGING-INFRA-REQUIRED] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day — awaiting Phase 1 creds + staging stack
+- [x] [STAGING-INFRA-REQUIRED] Phase 5 P0.12-P0.14 — synthetic SEV0 smoke + provider-outage smoke + game-day — awaiting
+      Phase 1 creds + staging stack
 
 **Cross-references**:
 
@@ -225,24 +237,31 @@ physical pager device is researched + purchased).
 
 ## Tier-5 follow-up #2 implementation log (2026-05-23, late session)
 
-> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright run; game-day operator session".
+> Operator directive 2026-05-23 second-round: "can you do these please review and fix Harsh pair-review for: router.py
+> refactor, per-service emit_recovery_action integration, physical_pager registry instantiation from SM; UI Playwright
+> run; game-day operator session".
 
-| Tier | Repo                       | SHA          | What landed                                                                                          |
-| ---- | -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 5b   | `alerting-service`         | `06c48c4`    | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch _deliver_message) + config.py 10 Twilio/pager SM fields |
-| 5b   | `execution-service`        | `8b786755f`  | kill_switch.activate/deactivate emit_recovery_action surgical edit                                    |
-| 5b   | `strategy-service`         | `2142a0f5`   | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                            |
-| 5b   | `unified-trading-system-ui`| `2b7d6583`   | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue) |
-| 5b   | `unified-trading-pm`       | (this)       | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips        |
+| Tier | Repo                        | SHA         | What landed                                                                                                                          |
+| ---- | --------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 5b   | `alerting-service`          | `06c48c4`   | router.py route_incident_envelope_to_fallbacks() (additive — does NOT touch \_deliver_message) + config.py 10 Twilio/pager SM fields |
+| 5b   | `execution-service`         | `8b786755f` | kill_switch.activate/deactivate emit_recovery_action surgical edit                                                                   |
+| 5b   | `strategy-service`          | `2142a0f5`  | kill_switch_bus_subscriber.on_bus_event emit_recovery_action surgical edit                                                           |
+| 5b   | `unified-trading-system-ui` | `2b7d6583`  | tests/e2e/safety-ops.spec.ts seedPersona admin (auth gate fixed; route loading boundary remains issue)                               |
+| 5b   | `unified-trading-pm`        | (this)      | game_day_protocol.md extended with bash-runnable kit + STAGING-INFRA-REQUIRED markers; PM flips                                      |
 
 **Per-plan Tier-5-follow-up-2 items:**
 
-- [x] ✅ Phase 3 P0.8 — router fallback-mode logic codified (provider_in_fallback_mode parameter on route_incident_envelope_to_fallbacks); HIGH severity routes through Twilio voice when probe is degraded — alerting-service@06c48c4
-- [x] ✅ Phase 3 P0.9 — TwilioVoice channel dispatch in route_incident_envelope_to_fallbacks() — alerting-service@06c48c4
-- [x] ✅ Phase 1 P0.7 — config.py 6 Twilio SM fields (account_sid + auth_token + from_number + to_number_primary/secondary/founder) — alerting-service@06c48c4
+- [x] ✅ Phase 3 P0.8 — router fallback-mode logic codified (provider_in_fallback_mode parameter on
+      route_incident_envelope_to_fallbacks); HIGH severity routes through Twilio voice when probe is degraded —
+      alerting-service@06c48c4
+- [x] ✅ Phase 3 P0.9 — TwilioVoice channel dispatch in route_incident_envelope_to_fallbacks() —
+      alerting-service@06c48c4
+- [x] ✅ Phase 1 P0.7 — config.py 6 Twilio SM fields (account_sid + auth_token + from_number +
+      to_number_primary/secondary/founder) — alerting-service@06c48c4
 
 **Items still `- [ ]`:**
 
-- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — **OPERATOR ACTION** Twilio account creation + 7 SM creds push per ping doc item #1; awaiting operator
-- [x] ✅ Phase 4 P0.10 — `_get_paging_credentials` reloader extension for twilio_* SM keys — alerting-service@464441f | 6 Twilio SM keys added to _PagingCredentialsReloader; get_paging_credentials() returns all 9 keys; QG green
-
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — **OPERATOR ACTION** Twilio account creation + 7 SM creds push per
+      ping doc item #1; awaiting operator
+- [x] ✅ Phase 4 P0.10 — `_get_paging_credentials` reloader extension for twilio\_\* SM keys — alerting-service@464441f
+      | 6 Twilio SM keys added to \_PagingCredentialsReloader; get_paging_credentials() returns all 9 keys; QG green
