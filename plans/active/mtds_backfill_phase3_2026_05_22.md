@@ -112,6 +112,22 @@ before Phase 7 grows the v<8 debt.
       `cefi-binance-futures-2023-heavy-20260525-011208` (RUNNING, asia-northeast1-c) +
       `cefi-deribit-2022-heavy-20260525-011208` (RUNNING, asia-northeast1-c). `VM_FORCE=false` — retries only
       `attempted_failed` cells from prior 64 GB OOM runs. deployment-service@d08dfc2. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-OOM5-AllBatch** — **ALL 125 VMs from 233626 batch OOM'd rc=137 (slot-7 2026-05-25)**:
+      audit of full 233626 batch (125 VMs covering BINANCE-FUTURES 2020-2026 heavy+light, BINANCE-SPOT 2020-2026,
+      BYBIT 2021-2025 heavy+light, DERIBIT, COINBASE-SPOT, OKX-SPOT/SWAP, HYPERLIQUID, UPBIT + TradFi) shows rc=137 for
+      ALL checked VMs. Root cause: ALL years hit OOM4 path — consolidated CeFi index (41.79 GB in pandas) + Tardis
+      streaming peak > 64 GB on e2-highmem-8. OOM5 fix (e2-highmem-16 default) applies to ALL years. MTDS-3.2.A-HeavyRelaunch
+      only covered BF-2023 + DERIBIT-2022; 123 others still need relaunch at new defaults. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-BF2022Relaunch** — Relaunched BINANCE-FUTURES-2022 heavy+light missed in 011208 batch:
+      `cefi-binance-futures-2022-heavy-20260525-021128` (RUNNING, e2-highmem-16, asia-northeast1-c) +
+      `cefi-binance-futures-2022-light-20260525-021128` (RUNNING, e2-highmem-8, asia-northeast1-c). Both T+10 verified
+      RUNNING. VM_FORCE=false retries attempted_failed from prior OOM runs. 2026-05-25 slot-7.
+- [ ] [SCRIPT] P0. **MTDS-3.2.A-FullFleetRelaunch** — Relaunch ALL remaining 233626 batch OOM'd VMs at new defaults
+      (heavy=e2-highmem-16, light=e2-highmem-8). Pre-relaunch capture state from FullRelaunch: BF 68.6%, BS 43.4%,
+      BYBIT 68.2%, CS 63.9%, DERIBIT 50.4%, HL 32.8%, OKX-SPOT 75.7%, OKX-SWAP 61.7%, UPBIT 35.9%.
+      Use `FORCE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh` with VM_FORCE=false (retries attempted_failed only).
+      Currently RUNNING (skip): BF-2023-heavy 011208, BF-2022-heavy/light 021128, DERIBIT-2021/2022 233946/011208.
+      Rate-limit note: 233626 batch had 95 VMs without Tardis rate issues — new defaults are safe.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
@@ -124,7 +140,9 @@ before Phase 7 grows the v<8 debt.
       `market-tick-data-service/scripts/copy_cefi_flat_to_prd_20260522.py` can be discarded. **STILL BLOCKED-IN-FLIGHT
       (2026-05-25 slot-7)**: 4 VMs still RUNNING — bybit-2021-heavy-20260524-233946, deribit-2021-heavy-20260524-233946,
       binance-futures-2023-heavy-20260525-011208 (OOM5 relaunch), deribit-2022-heavy-20260525-011208 (OOM5 relaunch).
-      Verify once all 4 terminate.
+      **FURTHER BLOCKED (2026-05-25 slot-7)**: 123 additional VMs from 233626 batch still need relaunch — see
+      MTDS-3.2.A-FullFleetRelaunch above. Verify only after FullFleetRelaunch completes AND all 5 current RUNNING VMs
+      terminate.
 - [x] ✅ [INFRA] P0. **MTDS-3.2.A-DailyWorkflowFix** — **Fixed broken CeFi daily collection (slot-7 2026-05-25 UTC)**:
       `market-tick-daily` workflow has been failing DAILY since at least 2026-05-20 (5+ FAILED executions). Root cause:
       workflow calls `market-tick-data-handler` (404 NOT_FOUND — this job was renamed/replaced). Fix: (1) updated
