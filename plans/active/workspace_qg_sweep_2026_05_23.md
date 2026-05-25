@@ -106,6 +106,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       fix remaining manually. Respect CLAUDE.md no-`# noqa` rule. PREREQ: UTL QG green. [vm: vm-cefi]
       — instruments-service@20eae24 | QG exit 0 (281s) | fixed 32 ruff errors; CLOUD_MOCK_MODE guard restored; 4 test isolation fixes; 4 codex violations resolved
       — instruments-service@0b867b3 | QG exit 0 | UNISWAPV4-ETHEREUM venue name fix + test_engine_utils.py covers data_utils/validation_utils (coverage 76.8%→77%+)
+      — instruments-service@c264db5 | QG exit 0 | regression fix: 0b867b3 used deprecated UNISWAPV4-ETHEREUM (not in VenueMapping → None → always-available), reverted to canonical UNISWAP_V4-ETHEREUM (start 2025-01-30); test_is_venue_available_before_launch now passes
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **deployment-service QG green** — Fixed 4 ruff errors (F401×3
       datetime.UTC/datetime/LoopDetected unused-imports in _common.py; F841 unused `entry` var in llm_invoke_layer0.py).
