@@ -619,12 +619,10 @@ AI-days (class: infra)
   MTDS-3.2.A-V GREEN.
 - **MDPS-3.3.DeFi-V (P0, ✅ GREEN — 2026-05-24)**: All 16 fixes shipped; 101628 VMs TERMINATED; manifest consolidated.
   **Verified prod state (slot-4 2026-05-24 session 2)**: 334,964 total captured rows in combined availability index;
-  22,717 `swaps_ohlcv_*` rows confirmed — UNISWAP_V3 (19,756), UNISWAP_V2 (2,190), CURVE (771); date range 2024-05-03 →
-  2026-01-24; venue field = chain-stripped (e.g. `UNISWAP_V3` not `UNISWAP_V3-ETHEREUM`) ✓. `lending_indices` +
-  `gas_fees`: bypass types — MDPS orchestrator has no adapter; 0 captured is expected by design. **MTDS 2026 DEX gap**
-  (permanent): CURVE/UNISWAP `dex_swaps` handler stopped writing after 2026-01-24 → all 2026-01-25→present cells are
-  `empty_confirmed/SOURCE_RETURNED_ZERO`. Issue plan archived:
-  `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
+  22,717 `swaps_ohlcv_*` rows confirmed — UNISWAP*V3 (19,756), UNISWAP_V2 (2,190), CURVE (771); date range 2024-05-03 →
+  2026-01-24; venue field = chain-stripped (e.g. `UNISWAP_V3` not `UNISWAP_V3-ETHEREUM`) ✓. `lending_indices`: **adapter
+  shipped** (`DefiLendingIndicesAdapter` mdps@b21fec6, uac@4c98a635) — will produce
+  `lending_ohlcv*\*`rows on next backfill run.`gas_fees`: bypass type — no adapter, 0 captured expected by design. **MTDS 2026 DEX gap** (permanent): CURVE/UNISWAP `dex_swaps`handler stopped writing after 2026-01-24 → all 2026-01-25→present cells are`empty_confirmed/SOURCE_RETURNED_ZERO`. Issue plan archived: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once
