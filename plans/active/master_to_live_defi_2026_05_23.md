@@ -110,37 +110,42 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
+_Last regenerated: 2026-05-25 05:12 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
-_Last regenerated: 2026-05-24 07:28 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
-desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
-folded into the appropriate epic._
-
-| Plan                                                                                                                                      | Owner                 | Class     | Checkboxes | % done       | Cal left | Deadline |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------- | ---------- | ------------ | -------- | -------- |
-| [`agent_recovery_controller_layer0_deterministic_2026_05_23`](./agent_recovery_controller_layer0_deterministic_2026_05_23.md)             | master                | brand-new | 31/39      | 79%          | 2.9      | —        |
-| [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)                                           | master                | infra     | —          | —            | 2.5      | —        |
-| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                   | README                | design    | 71/172     | 41%          | 2.1      | —        |
-| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                 | master                | design    | 19/25      | 76%          | 2.0      | —        |
-| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md)                                 | infrastructure_master | infra     | 0/11       | 0%           | 2.0      | —        |
-| [`pricing_ledger_carry_rates_mtds_2026_06_01`](./pricing_ledger_carry_rates_mtds_2026_06_01.md)                                           | **orphan**            | design    | 16/36      | 44%          | 1.7      | —        |
-| [`audit03_drift_remediation_backlog_2026_05_22`](./audit03_drift_remediation_backlog_2026_05_22.md)                                       | **orphan**            | refactor  | 0/20       | 0%           | 1.6      | —        |
-| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                               | master                | design    | 13/17      | 76%          | 1.1      | —        |
-| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                   | master                | design    | 18/22      | 82%          | 0.9      | —        |
-| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                 | master                | brand-new | 35/39      | 90%          | 0.8      | —        |
-| [`audit03_carry_execution_safety_remediation_2026_05_22`](./audit03_carry_execution_safety_remediation_2026_05_22.md)                     | **orphan**            | brand-new | 13/18      | 72%          | 0.7      | —        |
-| [`sports_gcs_partition_rekey_2026_05_23`](./sports_gcs_partition_rekey_2026_05_23.md)                                                     | **orphan**            | infra     | 5/11       | 45%          | 0.7      | —        |
-| [`orchestrator_headless_agent_auth_2026_05_22`](./orchestrator_headless_agent_auth_2026_05_22.md)                                         | orchestrator_master   | infra     | 3/5        | 60%          | 0.5      | —        |
-| [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                     | master                | infra     | —          | —            | 0.4      | —        |
-| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)               | master                | research  | 27/28      | 96%          | 0.2      | —        |
-| [`workspace_qg_sweep_2026_05_23`](./workspace_qg_sweep_2026_05_23.md)                                                                     | execution_master      | refactor  | 21/22      | 95%          | 0.1      | —        |
-| [`ai_recovery_audit_signoff_agent_2026_05_23`](./ai_recovery_audit_signoff_agent_2026_05_23.md)                                           | master                | brand-new | 28/28      | 100%         | 0.0      | —        |
-| [`data_type_canonicalization_2026_05_23`](./data_type_canonicalization_2026_05_23.md)                                                     | **orphan**            | refactor  | 31/31      | 100%         | 0.0      | —        |
-| [`drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23`](./drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md) | defi_master           | design    | 31/31      | 100%         | 0.0      | —        |
-| [`incident_gateway_and_state_machine_2026_05_23`](./incident_gateway_and_state_machine_2026_05_23.md)                                     | master                | design    | 41/41      | 100%         | 0.0      | —        |
-| [`independent_fallback_twilio_voice_2026_05_23`](./independent_fallback_twilio_voice_2026_05_23.md)                                       | master                | infra     | 29/29      | 100%         | 0.0      | —        |
-| [`reconciliation_age_tracking_and_escalation_2026_05_23`](./reconciliation_age_tracking_and_escalation_2026_05_23.md)                     | master                | refactor  | 24/24      | 100%         | 0.0      | —        |
-| **TOTAL** (22 plans)                                                                                                                      | 5 orphans, 0 TBD      | —         | —          | **81% done** | **20**   | —        |
-
+| Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
+|---|---|---|---|---|---|---|
+| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md) | global_ledger_pnl_attribution_master | refactor | 1/27 | 4% | 11.6 | — |
+| [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md) | master | infra | — | — | 2.5 | — |
+| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md) | features_and_ml_master | infra | 0/18 | 0% | 2.4 | — |
+| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 73/172 | 42% | 2.1 | — |
+| [`agent_recovery_controller_layer0_deterministic_2026_05_23`](./agent_recovery_controller_layer0_deterministic_2026_05_23.md) | master | brand-new | 35/39 | 90% | 1.4 | — |
+| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md) | master | design | 22/25 | 88% | 1.0 | — |
+| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md) | master | design | 15/17 | 88% | 0.6 | — |
+| [`orchestrator_headless_agent_auth_2026_05_22`](./orchestrator_headless_agent_auth_2026_05_22.md) | master | infra | 3/5 | 60% | 0.5 | — |
+| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md) | master | design | 20/22 | 91% | 0.4 | — |
+| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md) | master | brand-new | 38/40 | 95% | 0.4 | — |
+| [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md) | master | infra | — | — | 0.4 | — |
+| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md) | mtds_mdps_master | infra | 30/36 | 83% | 0.4 | — |
+| [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md) | infrastructure_master | brand-new | 22/25 | 88% | 0.4 | — |
+| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md) | orchestrator_master | infra | 28/31 | 90% | 0.3 | — |
+| [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md) | mtds_mdps_master | infra | 40/42 | 95% | 0.2 | — |
+| [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md) | instruments_master | infra | 23/26 | 88% | 0.2 | — |
+| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md) | master | research | 27/28 | 96% | 0.2 | — |
+| [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | predictions_master | infra | 23/26 | 88% | 0.1 | — |
+| [`pricing_ledger_carry_rates_mtds_2026_06_01`](./pricing_ledger_carry_rates_mtds_2026_06_01.md) | master | design | 35/36 | 97% | 0.1 | — |
+| [`workspace_qg_sweep_2026_05_23`](./workspace_qg_sweep_2026_05_23.md) | execution_master | refactor | 21/22 | 95% | 0.1 | — |
+| [`data_type_canonicalization_2026_05_23`](./data_type_canonicalization_2026_05_23.md) | master | refactor | 38/39 | 97% | 0.0 | — |
+| [`ai_recovery_audit_signoff_agent_2026_05_23`](./ai_recovery_audit_signoff_agent_2026_05_23.md) | master | brand-new | 28/28 | 100% | 0.0 | — |
+| [`audit03_carry_execution_safety_remediation_2026_05_22`](./audit03_carry_execution_safety_remediation_2026_05_22.md) | master | brand-new | 18/18 | 100% | 0.0 | — |
+| [`audit03_deployment_cron_provisioning_2026_05_22`](./audit03_deployment_cron_provisioning_2026_05_22.md) | infrastructure_master | infra | 11/11 | 100% | 0.0 | — |
+| [`audit03_drift_remediation_backlog_2026_05_22`](./audit03_drift_remediation_backlog_2026_05_22.md) | master | refactor | 20/20 | 100% | 0.0 | — |
+| [`drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23`](./drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md) | defi_master | design | 31/31 | 100% | 0.0 | — |
+| [`incident_gateway_and_state_machine_2026_05_23`](./incident_gateway_and_state_machine_2026_05_23.md) | master | design | 41/41 | 100% | 0.0 | — |
+| [`independent_fallback_twilio_voice_2026_05_23`](./independent_fallback_twilio_voice_2026_05_23.md) | master | infra | 29/29 | 100% | 0.0 | — |
+| [`mdps_lending_indices_bypass_writer_2026_05_24`](./mdps_lending_indices_bypass_writer_2026_05_24.md) | **orphan** | brand-new | 5/5 | 100% | 0.0 | — |
+| [`reconciliation_age_tracking_and_escalation_2026_05_23`](./reconciliation_age_tracking_and_escalation_2026_05_23.md) | master | refactor | 24/24 | 100% | 0.0 | — |
+| [`sports_gcs_partition_rekey_2026_05_23`](./sports_gcs_partition_rekey_2026_05_23.md) | master | infra | 11/11 | 100% | 0.0 | — |
+| **TOTAL** (31 plans) | 1 orphans, 0 TBD | — | — | **82% done** | **25** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
