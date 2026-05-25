@@ -32,12 +32,18 @@ discover (v8 manifest) → READ inputs (GCS) → CALCULATE features → WRITE pa
 
 Today the **READ + CALCULATE** halves are proven on real CeFi data (delta_one/volatility/cross_instrument — see
 `features_input_manifest_migration_2026_05_25.md`), but the pipeline has **never run clean through WRITE**: the first
-instrument that loads hits `write_daily_partition: string index out of range` and writes 0 rows. This plan (a) fixes
-that single WRITE blocker, (b) builds a harness that drives the whole chain on a live date, and (c) validates each
-family end-to-end against real GCS — writing to **`-test` feature buckets** so prod output is never touched.
+instrument that loads hits `write_daily_partition: string index out of range` and writes 0 rows, and only **BITGET** has
+processed_candles on recent dates so the calculators can't be exercised across instruments. This plan (a) **backfills a
+lookback-sized window of real input data** so calculators can be tested properly, (b) fixes the single WRITE blocker,
+(c) builds a harness that drives the whole chain on a live date, and (d) validates each family end-to-end against real
+GCS — writing features to **`-test` buckets** so prod feature output is never touched.
 
 **Execution timing:** built today, **run tomorrow (2026-05-26)**. Items below are sequenced so a single operator session
 can walk Phase 0 → 5 top to bottom.
+
+**Backfill is lookback-driven, not fixed-window (operator 2026-05-25):** each feature's input window is sized from its
+own lookback requirement and stays agent-overridable at calc time — most features need ~1 day of 1m candles, some need
+more, sports/predictions use an event/fixtures window. See Phase 0.5.
 
 **Scope guard — this plan does NOT re-do the read migration.** Read-discovery + dependency-gate fixes are owned by
 `features_input_manifest_migration_2026_05_25.md` (delta_one/volatility/cross_instrument shipped; multi_timeframe is a
@@ -53,7 +59,7 @@ here are filed back into the migration plan, not fixed here.
 | **CLI invocation**       | `python -m features_service.delta_one --operation compute --mode batch --asset-group CEFI --feature-group <group> --start-date <d> --end-date <d>`. `--feature-group ALL` expands the 17 CLI FEATURE_GROUPS (parser.py).                                                                                                                                                                                                                       |
 | **Per-family CLIs**      | `features_service/<family>/cli/main.py` for delta_one, volatility, cross_instrument, multi_timeframe, onchain, sports, calendar, commodity.                                                                                                                                                                                                                                                                                                    |
 | **Existing harness**     | `scripts/<family>/smoke_matrix.py` (8 families) — **existence-only**, single group per cell, and was using a dead default date. Not an e2e read→calc→write→readback driver. This plan adds the missing e2e driver.                                                                                                                                                                                                                             |
-| **Known live test data** | CeFi `processed_candles`, BITGET-FUTURES / BITGET-SPOT, `2026-05-02`/`2026-05-03`, ~5,760–11,520 candle rows/instrument-day. Other CeFi venues + non-CeFi asset_groups are backfill-in-progress (read path skips them honestly).                                                                                                                                                                                                               |
+| **Known live test data** | CeFi `processed_candles`, BITGET-FUTURES / BITGET-SPOT, `2026-05-02`/`2026-05-03`, ~5,760–11,520 candle rows/instrument-day. Other CeFi venues are backfill-in-progress — **Phase 0.5 backfills a lookback-sized window across more liquid venues so calculators can be tested across instruments.**                                                                                                                                           |
 | **Write target**         | `-test` feature buckets via `resolve_bucket_name(..., kind="features...", ...)` / `CLOUD_*` test overrides — never prod feature buckets for a test run.                                                                                                                                                                                                                                                                                        |
 
 **Manifest version: v8 only.** All discovery + read-back go through `read_availability_index()` against the canonical
@@ -63,14 +69,17 @@ here are filed back into the migration plan, not fixed here.
 
 ```
 Phase 0 (env + golden dataset)
-   └─> Phase 1 (WRITE P0 fix)  ──┐
-                                 ├─> Phase 2 (delta_one full e2e on real data, → -test bucket)
-                                 │       └─> Phase 3 (multi_timeframe — reads delta_one -test output)
-                                 ├─> Phase 4 (volatility + cross_instrument full e2e)
-                                 └─> Phase 5 (e2e harness + manifest-emission assertions + QG wiring)
+   ├─> Phase 0.5 (adaptive input backfill — lookback-driven) ──┐
+   └─> Phase 1 (WRITE P0 fix) ─────────────────────────────────┤
+                                                                ├─> Phase 2 (delta_one full e2e → -test bucket)
+                                                                │       └─> Phase 3 (multi_timeframe — reads delta_one -test output)
+                                                                ├─> Phase 4 (volatility + cross_instrument full e2e)
+                                                                └─> Phase 5 (e2e harness + manifest-emission assertions + QG wiring)
 ```
 
-Phases 2 and 4 are PARALLEL once Phase 1 is green. Phase 3 is SEQUENTIAL after Phase 2 (transitive input dependency).
+Phase 0.5 (backfill) and Phase 1 (write fix) are independent → PARALLEL. Phases 2 and 4 are PARALLEL once **both** 0.5
+and 1 are green (they need input data AND a working writer). Phase 3 is SEQUENTIAL after Phase 2 (transitive input
+dependency).
 
 ### Phase 0 — Environment + golden test dataset `[P0]`
 
@@ -82,6 +91,34 @@ Phases 2 and 4 are PARALLEL once Phase 1 is green. Phase 3 is SEQUENTIAL after P
       for Phases 2-4.
 - [ ] [SETUP] P0. Point feature output at `-test` buckets for this run (env overrides / `resolve_bucket_name` test
       kind). Verify a throwaway write+read round-trips to the test bucket before any real feature write.
+
+### Phase 0.5 — Adaptive input backfill (lookback-driven, per-feature) `[P0]`
+
+**Design principle (operator 2026-05-25):** the backfill window is **not fixed** — it is **sized per feature from that
+feature's lookback requirement, and remains agent-overridable at calc time.** For most features 1 day of 1-minute
+candles is enough; some need more; sports/predictions use a different (fixtures/event) window entirely. The harness
+resolves the minimum window each family/feature needs and backfills exactly that, with an explicit knob to extend.
+
+- [ ] [SCRIPT] P0. **Lookback resolver.** For the feature_groups under test, resolve the required input window from the
+      SSOT: per-group `lookback_candles` in each family's `feature_definitions.yaml` + the `(asset_group, data_type)`
+      set from `unified_api_contracts ... FEATURE_REQUIRED_INPUTS`. Output:
+      `{family → {data_types, min_lookback_days,     candle_interval}}`. Default floor = **1 day × 1m candles** when a
+      group declares no/short lookback; max over the group's lookback otherwise. (Note the known SSOT gap: `InputReq`
+      carries no `lookback_candles`, and onchain/ volatility/sports omit it in yaml — fall back to a documented
+      per-family default + log it; unifying lookback into the SSOT stays a `features_and_ml_master` Phase 1A follow-up,
+      cross-ref the migration plan.)
+- [ ] [SCRIPT] P0. **Backfill knob.** The backfill driver takes `--backfill-days N` (and per-family override) so the
+      agent running a calc can bump the window up for features that need more history than the resolver's floor.
+      Resolver output is the default; the flag overrides. No hardcoded global window.
+- [ ] [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
+      resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
+      per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
+      path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
+      `mtds_mdps_master` sequencing — add a `🟢 BACKFILL RUNNING` banner; do not collide with the single-walk migration.
+- [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
+      backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
+      baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
+      candle-lookback) when those families enter the e2e.
 
 ### Phase 1 — Fix the WRITE P0 blocker `[P0]`
 
@@ -140,6 +177,8 @@ Phases 2 and 4 are PARALLEL once Phase 1 is green. Phase 3 is SEQUENTIAL after P
 
 ## Success criteria
 
+- **Backfill present:** the lookback-sized window resolved in Phase 0.5 is `captured` (manifest + files) for the
+  targeted liquid CeFi venues spot+perp, so calculators run on >1 venue's data — not BITGET alone.
 - **B3 (data-pipeline KPI):** for the golden window, ≥ **99.9%** of v8-`captured` CeFi instruments either compute+write
   features OR record a typed honest-absence reason — **zero** silent failures, unhandled 404s, NoneType crashes, or
   write exceptions.
@@ -151,6 +190,10 @@ Phases 2 and 4 are PARALLEL once Phase 1 is green. Phase 3 is SEQUENTIAL after P
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 
+- ✅ The Phase 0.5 backfill runs to completion on real infra (MTDS capture → MDPS processing → `-prd` canonical buckets)
+  for the lookback-resolved window, manifest-verified `captured` + files present for the targeted venues/days.
+  - **What ran:** MTDS + MDPS backfill CLIs/VMs for the resolved window; **Verification:**
+    `read_availability_index(<-prd tick bucket>)` shows `captured` processed_candles rows + `blob_exists` true.
 - ✅ The e2e driver runs to completion on real GCS for the golden window, per family, with parquet + manifest written to
   `-test` buckets and read back with assertions passing.
   - **What ran:**
