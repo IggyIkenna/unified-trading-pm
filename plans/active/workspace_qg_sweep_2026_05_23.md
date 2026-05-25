@@ -166,6 +166,7 @@ These must complete before Layer 1 repos can be reliably type-checked.
       UTL QG green. Signal: `🟢 STRATEGY-LOGIC UNFREEZE` in `_agent_pings.md` before touching logic paths. [vm:
       vm-trading-core] — strategy-service@721c71ec | QG exit 0 (107s) | starlette>=1.0.1, ruff fixes (E501×7, F401,
       N816, import pattern)
+      — strategy-service@d31a89b | QG exit 0 (97s) | regression fix: hash() PYTHONHASHSEED-randomised in xdist workers; replaced with hashlib.md5 in execution alpha smoke test
 
 ---
 
