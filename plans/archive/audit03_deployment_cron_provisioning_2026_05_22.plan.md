@@ -10,10 +10,11 @@ status: active
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
-locked_by: live-defi-rollout
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§2.10 CUT + §6.1 re-verification ledger)
 gate: Cloud Run Jobs (Phase 1) must exist before their schedulers (Phase 2) are applied
 ---
+
+## Deferred work — none (all items completed)
 
 # AUDIT-03 remediation — deployment cron + cutover-gate provisioning
 
