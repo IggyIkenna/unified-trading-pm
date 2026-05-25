@@ -67,11 +67,35 @@ shards into the flat-bucket index. Accurate mid-backfill coverage needs the cons
 reader to aggregate per-VM directly — but that duplicates the consolidator). This is consolidator/migration-pipeline
 territory, not the coverage reader.
 
-**NOT pushed:** instruments-service local `.venv` is broken (no pandas/basedpyright) + workspace venv lacks basedpyright
-→ cannot run repo QG locally (merge prereq). Change held on disk for QG + push on a working host.
+**PUSHED:** coverage-reader fix shipped `instruments-service@91e7316` (venv repaired via `setup.sh`; ruff green;
+`scripts/` is outside the basedpyright `include: ["instruments_service"]` scope so the pandas-strict noise doesn't gate
+it; `scripts/**` is also exempt from the google.cloud QG check).
+
+## Ikenna confirmation (2026-05-25, via operator)
+
+Ikenna (bucket-SSOT owner) confirmed the canonical target + root cause:
+
+> _"needs to be `-prd`; that latest data will need migration. Should exist as I believe it migrated older data there
+> already but didn't update the code."_ … _"not much left they can do without backfill completion + code freeze."_
+
+So:
+
+- **`-prd` is canonical** (not flat). Older data was already migrated to `-prd` (hence the 2.6M-row `-prd` index); the
+  **write-path code was never updated** to target `-prd` (still uses legacy `cloud_constants.py` flat prefixes via
+  `get_write_bucket_name`) — that is the real root.
+- The **cutover** (write-path → `-prd` + migrate the latest flat data) is **gated on backfill completion + code freeze**
+  = the `bucket_name_ssot_canonicalisation` **Phase 2.6** window. NOT a mid-backfill change (flipping the writer now
+  would fragment shards across flat + `-prd` while 170 VMs run).
+- The **coverage-reader fix (91e7316) is the correct interim**: it reads the live bucket (flat today), so coverage is
+  accurate during the backfill, and auto-settles onto `-prd` after the Phase 2.6 migration — no premature writer change.
 
 ## Status
 
-Bucket-write behaviour = WORKING-AS-DEFERRED (Phase 2.6 owns the migration). Coverage-reader bucket-selection fix =
-WRITTEN + smoke-tested, HELD (QG blocked by broken venv). Accurate-number = BLOCKED on consolidator-lag residual
-(Ikenna/consolidator). DQ-05 in the audit doc points here.
+- Bucket-write to flat = WORKING-AS-DEFERRED; **canonical target = `-prd`** (Ikenna-confirmed); write-path code fix +
+  flat→`-prd` data migration = **Phase 2.6** (gated on backfill completion + code freeze).
+- Coverage-reader bucket-selection fix = **SHIPPED** (`instruments-service@91e7316`) — accurate during backfill,
+  self-corrects post-2.6.
+- Accurate consolidated number = still capped by consolidator-lag (consolidator not folding flat per-VM shards) —
+  consolidator/migration-pipeline territory; resolves at Phase 2.6 when data lands on `-prd`.
+
+DQ-05 in the audit doc points here.
