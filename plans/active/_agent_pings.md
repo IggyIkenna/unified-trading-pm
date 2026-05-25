@@ -4898,3 +4898,9 @@ Full triage doc: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`.
 
 **Sweep result**: Hard failures: 0 | Soft warnings: 0. PM@c7a636ad9 + deployment-service@5f4eb6b.
 
+---
+
+## [harsh → ikenna] 2026-05-25 — CeFi tick bucket-SSOT divergence (needs your call)
+
+Data-quality audit (DQ-05) surfaced: the live CeFi backfill (~170 VMs) writes to the **flat** `market-data-tick-cefi-{pid}` bucket (172MB index, fresh per-VM shards, ~55% coverage), but `resolve_bucket_name(kind=tick-data, asset_group=cefi)` returns canonical **`-prd`** (`market-data-tick-cefi-prd-{pid}`, 36MB/stale). The `honest-coverage-daily` cron reads `-prd` → measures stale data. DeFi is the mirror image (`-prd` is live there) — so flat-vs-`-prd` "which is live" is **inconsistent across asset_groups**. This is bucket-SSOT / migration-state (your domain). Issue doc with full evidence + 2 decision options: `plans/active/issues/cefi_tick_bucket_ssot_divergence_2026_05_25.md`. I've PAUSED DQ-05 + touched no bucket config/coverage script pending your decision.
+
