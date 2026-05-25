@@ -105,18 +105,33 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 1 — delta_one (reference fix; confirmed-broken) `[P0]`
 
-- [x] ✅ [IMPLEMENT] P0. Replace `get_available_instruments()` blob scan (BUG-1) with date-scoped discovery (prefix
-      `processed_candles/by_date/day={date}/`, no `max_results` cap). Eliminates 2019-era DERIBIT instrument truncation;
-      date-scoped listing is equivalent to manifest-driven for instrument discovery when MDPS shards are per-venue not
-      per-instrument. — features-service@97fcbc3e
-- [x] ✅ [IMPLEMENT] P0. Rewire `dependency_checker._sum_candles_over_days` (BUG-2): removed legacy
-      `instrument_type={subdir}/` segment + `@LIN` suffix; canonical path is now `venue={venue}/{id}.parquet`. —
-      features-service@97fcbc3e
-- [ ] [VALIDATE] P0. Verify `data_loader._build_blob_path` canonical path matches real layout; confirm legacy-fallback
-      still covered or deleted (no parallel paths).
-- [ ] [VALIDATE] P0. **Full-execution criterion:** run CLI `--operation compute --feature-group ALL --asset-group CEFI`
-      on a verified date end-to-end → ≥1 feature_group parquet written to test bucket + manifest row `captured`; read
-      back parquet, assert non-null feature columns. Repeat TRADFI/DEFI/PREDICTION where input exists.
+- [x] ✅ [IMPLEMENT] P0. **ROOT CAUSE (discovered during impl): features read the DEPRECATED legacy bucket.**
+      `_get_source_bucket` + `LookbackValidator` bucket f-string → `resolve_bucket_name(kind="market-data")` (canonical
+      `-prd`, bucket SSOT). The legacy bucket is un-consolidated (stale manifest, full 2019 history → phantom
+      instruments); canonical is consolidated every minute. — features-service@2965bbda
+- [x] ✅ [IMPLEMENT] P0. `get_available_instruments()` (BUG-1) → **manifest-driven** via
+      `read_availability_index`/`capture_status` (supersedes worker's date-scoped path-probe `97fcbc3e` per operator
+      decision 2026-05-25). — features-service@2965bbda
+- [x] ✅ [IMPLEMENT] P0. `dependency_checker` lookback gate (BUG-2) → **manifest `capture_status`** (deleted legacy
+      `instrument_type=`/`@LIN` blob probe + `_sum_candles_over_days`). — features-service@2965bbda
+- [x] ✅ [VALIDATE] P0. `data_loader._build_blob_path` canonical confirmed: BITGET perps load **11520 candles** each on
+      2026-05-03 CEFI from canonical bucket. QG green (279s). — features-service@2965bbda
+- [~] 🟡 [VALIDATE] P0. **Full-execution criterion — PARTIAL:** discovery (83 instruments, 7.4s, no phantoms) + lookback
+      gate + candle load all GREEN end-to-end. **Full compute BLOCKED downstream** by the write-path bug + venue-ID
+      encoding below (both outside input-read scope, newly exposed). Parquet-written + read-back criterion pending those.
+
+### Downstream findings exposed by the read fix (2026-05-25) — outside input-read scope
+
+- [ ] 🔴 [BUG] P0. **`write_daily_partition: string index out of range`** fails for EVERY successfully-loaded instrument
+      (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Not in
+      `feature_writer.py` (UTL/engine write path). Was masked until now because nothing loaded. Owner/plan TBD — likely
+      `features_and_ml_master`. Provenance: features_input_manifest_migration e2e run 2026-05-25.
+- [ ] 🟠 [BUG] P1. **35/83 instruments 404 on load** — venue-ID→path encoding: Kraken spot pairs contain `/`
+      (`KRAKEN-SPOT:SPOT_PAIR:TIA/USD`) and Bitfinex are 2-part (`LINKF0:USTF0`); `_build_blob_path` doesn't handle
+      either. BITGET (3-part `venue:type:symbol`) works. Provenance: same e2e run.
+- [ ] 🟠 [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
+      receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
+      legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
 
 ### Phase 2 — volatility `[P0]`
 
