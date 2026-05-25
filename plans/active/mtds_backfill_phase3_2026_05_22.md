@@ -113,20 +113,21 @@ before Phase 7 grows the v<8 debt.
       `cefi-deribit-2022-heavy-20260525-011208` (RUNNING, asia-northeast1-c). `VM_FORCE=false` — retries only
       `attempted_failed` cells from prior 64 GB OOM runs. deployment-service@d08dfc2. 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-OOM5-AllBatch** — **ALL 125 VMs from 233626 batch OOM'd rc=137 (slot-7 2026-05-25)**:
-      audit of full 233626 batch (125 VMs covering BINANCE-FUTURES 2020-2026 heavy+light, BINANCE-SPOT 2020-2026,
-      BYBIT 2021-2025 heavy+light, DERIBIT, COINBASE-SPOT, OKX-SPOT/SWAP, HYPERLIQUID, UPBIT + TradFi) shows rc=137 for
-      ALL checked VMs. Root cause: ALL years hit OOM4 path — consolidated CeFi index (41.79 GB in pandas) + Tardis
-      streaming peak > 64 GB on e2-highmem-8. OOM5 fix (e2-highmem-16 default) applies to ALL years. MTDS-3.2.A-HeavyRelaunch
-      only covered BF-2023 + DERIBIT-2022; 123 others still need relaunch at new defaults. 2026-05-25 slot-7.
-- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-BF2022Relaunch** — Relaunched BINANCE-FUTURES-2022 heavy+light missed in 011208 batch:
-      `cefi-binance-futures-2022-heavy-20260525-021128` (RUNNING, e2-highmem-16, asia-northeast1-c) +
+      audit of full 233626 batch (125 VMs covering BINANCE-FUTURES 2020-2026 heavy+light, BINANCE-SPOT 2020-2026, BYBIT
+      2021-2025 heavy+light, DERIBIT, COINBASE-SPOT, OKX-SPOT/SWAP, HYPERLIQUID, UPBIT + TradFi) shows rc=137 for ALL
+      checked VMs. Root cause: ALL years hit OOM4 path — consolidated CeFi index (41.79 GB in pandas) + Tardis streaming
+      peak > 64 GB on e2-highmem-8. OOM5 fix (e2-highmem-16 default) applies to ALL years. MTDS-3.2.A-HeavyRelaunch only
+      covered BF-2023 + DERIBIT-2022; 123 others still need relaunch at new defaults. 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-BF2022Relaunch** — Relaunched BINANCE-FUTURES-2022 heavy+light missed in 011208
+      batch: `cefi-binance-futures-2022-heavy-20260525-021128` (RUNNING, e2-highmem-16, asia-northeast1-c) +
       `cefi-binance-futures-2022-light-20260525-021128` (RUNNING, e2-highmem-8, asia-northeast1-c). Both T+10 verified
       RUNNING. VM_FORCE=false retries attempted_failed from prior OOM runs. 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.A-FullFleetRelaunch** — Relaunched ALL 95 VMs at new defaults (heavy=e2-highmem-16,
       light=e2-highmem-8, tradfi=e2-standard-2): `FORCE=1 bash launch-cefi-sharded-backfill.sh` (batch 20260525-021423).
-      Covers all 9 CeFi venues 2020-2026 + TradFi (ES/VIX 2024-2026). VM_FORCE=false — retries attempted_failed only.
-      5 duplicate VMs launched for RUNNING shards (BF-2023, BF-2022-heavy/light, DERIBIT-2021, DERIBIT-2022) — safe,
-      manifest pre-flight skips already-captured cells. T+10 verification in background (batch 021423). 2026-05-25 slot-7.
+      Covers all 9 CeFi venues 2020-2026 + TradFi (ES/VIX 2024-2026). VM_FORCE=false — retries attempted_failed only. 5
+      duplicate VMs launched for RUNNING shards (BF-2023, BF-2022-heavy/light, DERIBIT-2021, DERIBIT-2022) — safe,
+      manifest pre-flight skips already-captured cells. T+10 verification in background (batch 021423). 2026-05-25
+      slot-7.
 - [ ] [VERIFY] P0. **MTDS-3.2.A-V** — verify `market-data-tick-cefi-central-element-323112` (flat bucket — MDPS reads
       flat, NOT prd; prd copy is NOT required for this gate). Criteria: captured row count / date range continuous; 0
       attempted_failed; 4-pillar sample validation passes; manifest 100% v8. Gate for MDPS-3.3.CeFi launch.
@@ -247,10 +248,15 @@ IS that plan.
       `empty_confirmed`** (slot-7 2026-05-25 UTC). `_execute_subgraph_query()` called `resp.raise_for_status()` on HTTP
       404 (subgraph deprecated or no data for date range) — exception propagated to `process()` →
       `recorder.record_failed()` → `attempted_failed`. Fix: added `if resp.status == 404: return None` before
-      `raise_for_status()`. None propagates through cascade → empty DataFrame → count=0 → `record_empty(
-      SOURCE_RETURNED_ZERO)` → `empty_confirmed`. Distinct from BugFix1/BugFix2 (those fixed GCS NotFound; this fixes
-      TheGraph HTTP 404). Test added: `test_execute_subgraph_query_returns_none_on_404`. market-tick-data-service@acda8552.
-      Tarball rebuild + dex-swaps retry VM launch pending (current VM still RUNNING). 2026-05-25 slot-7.
+      `raise_for_status()`. None propagates through cascade → empty DataFrame → count=0 →
+      `record_empty(     SOURCE_RETURNED_ZERO)` → `empty_confirmed`. Distinct from BugFix1/BugFix2 (those fixed GCS
+      NotFound; this fixes TheGraph HTTP 404). Test added: `test_execute_subgraph_query_returns_none_on_404`.
+      market-tick-data-service@acda8552. Tarball rebuild at acda8552 confirmed `2026-05-25T04:24:42Z`. Original VM
+      terminated with 1,771 attempted_failed (2,758 captured / 265 empty_confirmed of 4,794 total). 2026-05-25 slot-7.
+- [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-GapFill-DexSwapsRetry** — Launched retry `mtds-dex-swaps-backfill` VM (e2-standard-4,
+      asia-northeast1-c, 2026-01-25→2026-05-25) with MTDS@acda8552 (BugFix3 tarball). RUNNING @ 35.200.94.188.
+      ManifestFreshnessCache skips 2,758 already-captured rows; retries 1,771 attempted_failed (TheGraph 404 venues:
+      UNISWAP_V3/SUSHISWAP_V3/PANCAKESWAP_V3/AERODROME_V3/CAMELOT_V3/BALANCER/CURVE/SUSHISWAP). 2026-05-25 slot-7.
 - [x] ✅ [SCRIPT] P0. **MTDS-3.2.C-GapFill-LstRetry** — Launched `mtds-lst-rates-20260525-004604` (e2-standard-4,
       asia-northeast1-c, 2026-01-24→2026-05-25) with fixed tarball `2026-05-24T23:44:16Z` (contains mtds@36c9aac7). VM
       RUNNING @ 34.84.74.42. ManifestFreshnessCache skips 147 already-captured entries from first run; retries only
@@ -258,8 +264,9 @@ IS that plan.
       `lst-rates-central-element-323112`. 2026-05-25 slot-7.
 - [ ] P0. **MTDS-3.2.C-GapFill-V** — Verify gap-fill VMs complete + manifest GREEN per DeFi venue. Success criteria: (1)
       dex-swaps prd manifest: all UniV3-schema venues continuous 2026-01-25→2026-05-25 (0 attempted_failed) —
-      **IN-FLIGHT (slot-7 2026-05-25)**: `mtds-dex-swaps-backfill` RUNNING, retry pass active, 1,877 attempted_failed
-      remaining (1,458 captured 2026-01-01→2026-05-22 so far); (2) lst-rates: LIDO/ETHERFI/etc continuous
+      **IN-FLIGHT (slot-7 2026-05-25)**: BugFix3 retry `mtds-dex-swaps-backfill` RUNNING @ acda8552, 1,771
+      attempted_failed queued (was 1,877 — 106 cleared by original VM pass);
+      UNISWAP_V3(720)+SUSHISWAP_V3(432)+PANCAKESWAP_V3(313)+others; (2) lst-rates: LIDO/ETHERFI/etc continuous
       2026-01-24→2026-05-25 in `lst-rates-central-element-323112` — **✅ VERIFIED (slot-7 2026-05-25)**:
       `mtds-lst-rates-20260525-004604` completed exit_code=0, 186 captured 0 failed 2026-05-06→2026-05-25; combined with
       historical shard (14,420 captured 2020-01-01→2026-05-08) = continuous 2020-01-01→2026-05-25, 14 venues, 0
