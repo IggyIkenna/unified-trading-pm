@@ -131,9 +131,11 @@ enum.
 ## Recommended decision
 
 - [x] Bug 1: FIXED — UAC@3d43382b (2026-05-22)
-- [x] Bug 2: ✅ FULLY FIXED — MTDS@d6862ca2 (2026-05-23). `_DEFAULT_PROTOCOLS = ["aave_v3", ...]` uses underscore, so
-      `protocol.upper() = "AAVE_V3"` (canonical). All 3 handlers verified: no `AAVEV3` (no-underscore) string anywhere
-      in MTDS handlers. Workspace-wide rename + handler-level fix both complete.
+- [x] Bug 2: ✅ FULLY FIXED — MTDS@d6862ca2 (2026-05-23) + MTDS@3e48ac9b (2026-05-26). Prior fix: renamed AAVEV3 →
+      AAVE_V3 across handlers. Residual fix (3e48ac9b): `liquidations_handler.py` manifest
+      `record_captured/empty/failed` called `venue=protocol` (lowercase "aave_v3") instead of `venue=protocol.upper()`,
+      diverging from GCS path and freshness-cache row_key which both used `.upper()`. Now all three manifest recording
+      calls use `protocol.upper()`.
 - [x] Bug 3: ✅ FULLY SUPPRESSED — IS@dbf7bf6 + IS@5a709c4 (2026-05-22). MTDS (dbf7bf6): UNISWAP_V3/V2/AAVE_V3 →
       empty_confirmed. Canonical rows UNISWAP_V3(187k)/UNISWAP_V2(22k)/AAVE_V3(30k) restored. IS DeFi (5a709c4): 31,709
       rows suppressed — AAVE_V3(9252), UNISWAP_V3(7641), COMPOUND_V3(4087), PANCAKESWAP_V3(3141), SUSHISWAP_V3(2962),
