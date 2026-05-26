@@ -101,17 +101,19 @@ feature's lookback requirement, and remains agent-overridable at calc time.** Fo
 candles is enough; some need more; sports/predictions use a different (fixtures/event) window entirely. The harness
 resolves the minimum window each family/feature needs and backfills exactly that, with an explicit knob to extend.
 
-- [ ] [SCRIPT] P0. **Lookback resolver.** For the feature_groups under test, resolve the required input window from the
-      SSOT: per-group `lookback_candles` in each family's `feature_definitions.yaml` + the `(asset_group, data_type)`
-      set from `unified_api_contracts ... FEATURE_REQUIRED_INPUTS`. Output:
+- [x] ✅ [SCRIPT] P0. **Lookback resolver.** For the feature_groups under test, resolve the required input window from
+      the SSOT: per-group `lookback_candles` in each family's `feature_definitions.yaml` + the
+      `(asset_group, data_type)` set from `unified_api_contracts ... FEATURE_REQUIRED_INPUTS`. Output:
       `{family → {data_types, min_lookback_days,     candle_interval}}`. Default floor = **1 day × 1m candles** when a
       group declares no/short lookback; max over the group's lookback otherwise. (Note the known SSOT gap: `InputReq`
       carries no `lookback_candles`, and onchain/ volatility/sports omit it in yaml — fall back to a documented
       per-family default + log it; unifying lookback into the SSOT stays a `features_and_ml_master` Phase 1A follow-up,
-      cross-ref the migration plan.)
-- [ ] [SCRIPT] P0. **Backfill knob.** The backfill driver takes `--backfill-days N` (and per-family override) so the
+      cross-ref the migration plan.) — features-service@8084d93b `scripts/e2e/resolve_lookback.py` + `[5.E2E/7]` QG
+      smoke; dry-run passes
+- [x] ✅ [SCRIPT] P0. **Backfill knob.** The backfill driver takes `--backfill-days N` (and per-family override) so the
       agent running a calc can bump the window up for features that need more history than the resolver's floor.
-      Resolver output is the default; the flag overrides. No hardcoded global window.
+      Resolver output is the default; the flag overrides. No hardcoded global window. — features-service@8084d93b
+      `scripts/e2e/run_backfill.py`; FEATURES_E2E_BACKFILL_RUN=true to execute live
 - [ ] [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
       resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
       per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
