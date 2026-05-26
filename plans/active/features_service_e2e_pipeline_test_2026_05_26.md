@@ -366,7 +366,7 @@ from `-prd`). Status per family:
 | **delta_one** | ✅ **VALIDATED** | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`. |
 | **volatility** | ⚠️ honest-skip | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`. |
 | **cross_instrument** | ❌ real bug | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one. |
-| **multi_timeframe** | ✅ 2 bugs FIXED (validation re-run pending) | (1) `get_input_bucket` ignored its `PROTOCOL_DATA_SOURCE_BUCKET` override → read prod delta_one → 0 instruments. **FIXED** (features@335942d9). (2) `_execute_batch` ran `svc.shutdown()` (tears down global event logging) BEFORE `_emit_group_policies` + `PROCESSING_COMPLETED`/`STOPPED` → `Event logging not initialized` crash AFTER computing all 38 instruments (every run → never completed e2e). **FIXED** (features@a70e89fb — shutdown moved to outer finally). Re-run to confirm parquets land in `features-mtf-cefi-test` was in flight at handoff. |
+| **multi_timeframe** | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta_one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **STILL OPEN (found by the re-run):** (3) `get_output_bucket` ALSO ignores the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1). (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr_*`). (5) `Cannot serialize DataFrame to parquet` for `tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
 
 **e2e-driver (8fa8ebbc) defects found + fixed** (features@62cbe91a, @e6811f31, @335942d9): wrong parquet-assert path
 (`batch/date=…` vs real `day=…/feature_group=…/timeframe=…`); false-PASS honest-skip that masked a captured-but-no-file
@@ -379,8 +379,15 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
   2026-05-26. Decide source (candles vs delta_one) / expose close.
 - [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash.
   Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
-  post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). Validation
-  re-run (parquets to `features-mtf-cefi-test`) in flight at handoff — confirm next session.
+  post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
+  by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
+- [ ] [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the get_input_bucket
+  bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead of `-test`. mtf's
+  writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET_{AG}` the way delta_one's `FeatureWriter._get_sink_bucket` does.
+  Provenance: e2e -test re-run 2026-05-26.
+- [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
+  `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
+  whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test 2026-05-26.
 - [ ] [P2] **volatility: emits no manifest row on no-input** — confirm honest-skip vs `empty_confirmed` expectation.
 
 ### TradFi scope (operator decision 2026-05-26)
