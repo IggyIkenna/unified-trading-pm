@@ -376,10 +376,10 @@ without the cleanup-script output attached.
       (NEW script — Phase 3 below); (b) attach the script's audit-CSV output to the PR description; (c) the audit must
       show ZERO orphan rows (rows whose entity is no longer in the registry but the manifest still has captured/empty
       rows for it). Reviewers reject PRs that don't include this output."
-- [ ] [SCRIPT] P1. **`entity-lifecycle-cleanup.sh` workflow script** under
+- [x] ✅ [SCRIPT] P1. **`entity-lifecycle-cleanup.sh` workflow script** under
       `unified-trading-pm/scripts/lifecycle/entity-lifecycle-cleanup.sh`. Wraps the per-asset-group reconciler runs
       (instruments-service script Phase 3 below) into a single command. Output goes to a deterministic CSV path under
-      `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`.
+      `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`. — PM@(next) 2026-05-27 slot-7.
 - [x] ✅ [SCRIPT] P1. **`reconcile_manifest_after_entity_change.py`** under `instruments-service/scripts/`. `--add`
       mode: walks UAC entity registry post-change; for each entity-day-row that's now newly-expected (per writegate
       Phase 3.D.5 v2 enumerator), writes `record_expected_unattempted` rows into the per-VM shard. `--remove` mode:
