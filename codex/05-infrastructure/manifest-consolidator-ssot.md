@@ -38,23 +38,33 @@
 
 **Architecture**:
 
-- ONE AWS Batch Fargate job definition per bucket → 10 job definitions (`uts-prod-manifest-consolidator-{key}`)
-- ONE EventBridge Scheduler schedule per bucket → 10 schedules in group `uts-prod-consolidator`, all `*/1 * * * *`,
-  ENABLED
-- Shared: 1 Batch compute environment (`uts-prod-manifest-consolidator`, Fargate) + 1 job queue + 1 schedule group
+- ONE AWS Batch Fargate job definition per bucket → currently 10 Group A jobs (Phase C, 2026-05-26); 16 Group B (Phase
+  D) authored in TF at `deployment-service@effdcb2`, pending `tofu apply`.
+- ONE EventBridge **Rule** per bucket (NOT EventBridge Scheduler — ap-northeast-1 does not support Batch as a direct
+  Scheduler target; switched at abdb1fb). Rules use `aws_cloudwatch_event_rule` + `aws_cloudwatch_event_target`.
+  Schedule expression: `rate(1 minute)`, all ENABLED.
+- Shared: 1 Batch compute environment (`uts-prod-manifest-consolidator`, Fargate) + 1 job queue.
 - Image: `{account_id}.dkr.ecr.{region}.amazonaws.com/market-tick-data-service:latest` (ECR; same UTL dep)
 - Entrypoint: `python -m unified_trading_library.manifest_consolidator --bucket {X} --once`
 - `CLOUD_PROVIDER=aws` routes `get_storage_client()` to S3 — no Python changes required
 - IAM: `unified_trading` role extended with `manifest_consolidator` S3 policy
-  (GetObject/PutObject/DeleteObject/ListBucket)
-- Bucket naming: Group A pattern — `unified-trading-{domain}-{category}-{account_id}` (no env suffix)
-- Phase D (16 derived-data buckets): see commented locals block in TF file; apply after Phase C green
+  (GetObject/PutObject/DeleteObject/ListBucket on all 26 buckets post-Phase-D)
+- Bucket naming:
+  - Group A (instruments, market-data) — `unified-trading-{domain}-{category}-{account_id}` (no env suffix)
+  - Group B (features, strategy, execution, ml) — flat, env-split ROLLED BACK per cloud-providers.yaml:
+    `unified-trading-{kind}-{category}-{account_id}` (no env suffix). Re-enable when
+    `bucket_env_split_rollout_2026_06.md` Phase 1 provisions + migrates data.
+- Task timeout: 1800s (bumped from 60s default at effdcb2 — matches GCP-side bump at 03b9d22).
+
+**Phase D status (2026-05-26)**: TF authored (deployment-service@effdcb2), `terraform plan` verified (89 add / 23 change
+/ 17 destroy). Pending `tofu apply` by operator (P1.10 in `plans/active/aws_manifest_consolidator_scope_2026_05_21.md`).
 
 **AWS verification**:
 
 ```bash
-# Confirm 10 schedules ENABLED
-aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules[].State'
+# Confirm rules ENABLED (10 Phase A; 26 after Phase D apply)
+aws events list-rules --name-prefix uts-prod-consolidator --region ap-northeast-1 \
+  --query 'Rules[].{Name:Name,State:State}' --output table
 
 # Spot-check canonical blob freshness (mtime < 90s after first run)
 aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet
@@ -130,16 +140,18 @@ consolidated manifest**:
 | ml-artifacts          | (1)                                              |
 | ml-training-artifacts | (1)                                              |
 
-**Action required** (owner: slot 5, paired with R6 + R-NEW-1):
+**Status 2026-05-26**: AWS Phase D TF authored (deployment-service@effdcb2) covering all 16 buckets in the table above.
+GCP extension TF not yet authored — still pending.
+
+**Action required** (GCP-side, owner: vm-cross-cutting):
 
 1. Verify each missing service actually emits manifest rows (some may write raw parquets without
    `_index/per_vm/<vm>.parquet` shards — in which case no consolidator needed).
-2. For services that DO emit: extend `manifest_consolidator_buckets` locals in the Terraform with the missing entries.
-3. Add per-bucket timeout overrides if shard count is high (see existing `manifest_consolidator_timeouts` for sports +
-   cefi market-data sizing).
+2. For services that DO emit: extend `manifest_consolidator_buckets` locals in the GCP Terraform with the missing
+   entries (same pattern as the AWS Phase D block).
+3. Add per-bucket timeout overrides if shard count is high.
 4. `tofu apply` (or `terraform apply`) + verify the new Cloud Run jobs + crons land.
-5. Re-run A3 v3 — every service has a consolidated manifest OR an explicit `BLOCKED-OPERATOR-DECISION` ack that it
-   doesn't emit (and therefore doesn't need one).
+5. Re-run A3 v3 — every service has a consolidated manifest OR an explicit `BLOCKED-OPERATOR-DECISION` ack.
 
 **Cadence question** (operator decides): should we keep `*/1 * * * *` per service kind × asset_group (currently 10 jobs
 minute-by-minute = 600 invocations/hour), OR consolidate to per-asset-group only (5 jobs that each consolidate every
