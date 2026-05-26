@@ -171,4 +171,25 @@ missing at the `pyproject [tool.*]` layer.
 
 ## Resolution
 
-_(updated as phases land)_
+**Format decisions LOCKED (operator, 2026-05-26):**
+
+- Python tool config → **TOML in `pyproject.toml`** (ruff / basedpyright / pytest / coverage). **Delete every
+  `pyrightconfig.json`** and consolidate basedpyright into `[tool.basedpyright]`, **strict** (`reportUnknown*=error`),
+  with cross-repo `extraPaths` via `[[tool.basedpyright.executionEnvironments]]`.
+- **mypy removed** (basedpyright superset; no plugins were used).
+- **build-backend = hatchling** everywhere (fix the lone `setuptools` repo, alerting-service); no uv_build migration.
+- Frontend → tool-mandated dedicated files (eslint/tsconfig/vitest/playwright) + canonical `.prettierrc.json`.
+- bandit → **pending** (prefer ruff `S` rules over standalone bandit).
+
+**Phase 0 — canonical SSOT created (this commit):** `scripts/pyproject-templates/canonical-tool-sections.toml` +
+`README.md` (the previously-missing pyproject `[tool.*]` template). Coverage `fail_under` documented as a per-type
+**floor** (lib ≥80 / service ≥70), above-floor ratchets preserved.
+
+**Strictness history (operator asked):** `reportUnknown*=none` is a **7-repo drift, not the standard** — 16/23 repos
+are still strict. Relaxed: `unified-trading-pm`, `unified-trading-library`, `deployment-service`, `strategy-service`,
+`client-reporting-api` (5 during the March QG setup) + **`execution-service`, `features-service`** (2026-05-15, during
+`reportAny` cleanup — the "recent relaxation"). Canonical = **strict**; the 7 are a tracked restore backlog (last 2 =
+largest error surface).
+
+**Remaining:** roll the canonical out per repo (Phases 1–4); write the frontend canonical base; restore the 7 relaxed
+repos to strict; decide bandit.

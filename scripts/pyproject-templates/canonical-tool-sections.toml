@@ -1,0 +1,83 @@
+# Canonical pyproject [tool.*] sections — workspace SSOT for Python tooling.
+#
+# Decisions (2026-05-26, tooling_config_standardization_2026_05_26.md):
+#   * ALL Python tool config lives in pyproject.toml (TOML). NO pyrightconfig.json,
+#     NO ruff.toml, NO .coveragerc, NO [tool.mypy] (basedpyright is a superset of
+#     the mypy functionality we use; none of the old mypy blocks used plugins).
+#   * basedpyright is CONSOLIDATED here (delete every repo's pyrightconfig.json).
+#     pyright honours [tool.basedpyright] once the JSON is gone, and QG STEP 5.21
+#     already lints this section — so runtime + gate become consistent + strict.
+#   * Build backend = hatchling (workspace standard; no setuptools).
+#   * Per-repo variables are marked <LIKE_THIS>; per-TYPE floors are noted inline.
+#   * pre-commit stays in .pre-commit-config.yaml (tool-mandated YAML).
+#
+# Rollout: merge these sections into each repo's pyproject.toml, fill the <...>
+# placeholders, delete pyrightconfig.json, then run the repo's quality-gates.sh.
+
+# ── ruff (lint + format) ────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [".cursor", ".venv", ".venv-workspace", "build", "dist", "node_modules"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "G", "C90"]   # security (S / flake8-bandit): pending operator decision — see README
+extend-ignore = ["G003", "G004"]
+ignore = ["E402"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 26
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = ["F401", "E402"]
+"tests/*" = ["F401", "F841", "F811"]
+"tests/conftest.py" = ["E402"]
+
+# ── basedpyright (typecheck) — CONSOLIDATED; delete pyrightconfig.json ──────────
+[tool.basedpyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+include = ["<PACKAGE_DIR>"]   # per-repo: the importable package dir, e.g. "unified_trading_library"
+exclude = ["tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
+# Strict report rules — workspace standard (QG STEP 5.21 asserts these = "error").
+reportAny = "error"
+reportUnknownMemberType = "error"
+reportUnknownVariableType = "error"
+reportUnknownParameterType = "error"
+reportUnknownArgumentType = "error"
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+# Cross-repo import resolution (replaces pyrightconfig.json executionEnvironments).
+# Per-repo: list the sibling workspace repos this repo imports from.
+[[tool.basedpyright.executionEnvironments]]
+root = "."
+pythonVersion = "3.13"
+pythonPlatform = "All"
+extraPaths = [
+    # "../unified-trading-library",
+    # "../unified-api-contracts",
+    # ...per-repo workspace deps
+]
+
+# ── pytest ──────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+markers = [
+    "unit: mark test as unit test",
+    "integration: integration tests requiring real GCP credentials and API keys",
+    "smoke: mark test as smoke test",
+]
+
+# ── coverage ────────────────────────────────────────────────────────────────────
+[tool.coverage.report]
+# FLOOR, not a fixed value: services >= 70, libraries >= 80. Repos may ratchet
+# ABOVE their floor (e.g. UAC 84), never below. Set per repo:
+fail_under = 70   # <- 70 for service repos, 80 for library repos
+# omit = [ ... ]  # per-repo: integration-only / I/O modules (see repo's existing list)
