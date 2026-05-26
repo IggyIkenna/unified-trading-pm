@@ -217,11 +217,13 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 4 — volatility + cross_instrument full e2e `[P1]` (PARALLEL with Phase 2)
 
-- [ ] 🟠 [BUG] P1. **Propagate the WRITE-bucket fix to volatility + cross_instrument** (discovered Phase 1). Their
+- [x] ✅ 🟠 [BUG] P1. **Propagate the WRITE-bucket fix to volatility + cross_instrument** (discovered Phase 1). Their
       FeatureWriter equivalents resolve the output sink the same way delta_one did — if they also rely on
       `get_data_sink(routing_key=...)` with an unset `PROTOCOL_DATA_SINK_BUCKET`, they hit the identical empty-bucket
       `IndexError`. Add a `_get_sink_bucket` with their canonical kinds (`features-volatility`, `features-xinstrument`)
-      before the e2e runs below. Provenance: features-service@ea357010 (delta_one fix).
+      before the e2e runs below. Provenance: features-service@ea357010 (delta_one fix). — features-service@e131f795:
+      volatility FeatureWriter — `_get_sink_bucket` + `bucket` property + updated `data_sink`; test updated; QG green.
+      cross_instrument already uses `resolve_bucket` directly (no DataSink routing), not affected.
 - [ ] [VALIDATE] P1. **volatility** full e2e on the golden window (processed-candle path only — raw options/futures
       chain is gated/not-backfilled per migration plan Phase 2). read → calc → write `-test` → read-back assert. Honest
       absence for un-backfilled chain inputs must skip, not crash.
