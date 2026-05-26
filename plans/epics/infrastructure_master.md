@@ -495,10 +495,11 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 ## P3 — backlog; revisit quarterly
 
-- [ ] [AGENT] P3. **UTL `STANDARD_CATEGORIES` lowercase** (**MIGRATED FROM:**
+- [x] [AGENT] P3. **UTL `STANDARD_CATEGORIES` lowercase** (**MIGRATED FROM:**
       `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4) — UTL `service_cli.py` STANDARD_CATEGORIES should
       include lowercase asset-group choices (`cefi`/`defi`/`tradfi`/`sports`/`prediction`) to match canonical vocabulary
-      per CLAUDE.md. Small UTL change; no urgency for May-23.
+      per CLAUDE.md. Small UTL change; no urgency for May-23. — ✅ **DONE 2026-05-26 slot-7** | UTL@c7294847 | Added
+      lowercase + uppercase variants; uppercase kept for backward compat with launcher scripts.
 - [ ] [AGENT] P3. **`launch-gcs-migration-bundle-vm.sh` GCS script staging** (**MIGRATED FROM:**
       `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
@@ -540,14 +541,14 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 > **[DONE 2026-05-22]** Group D audit: all referenced docs verified to exist and reflect shipped state.
 
-| Doc                                                                     | Owns                                                                                                                                                                                                                     |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `codex/05-infrastructure/vm-tarball-deployment.md`                      | VM tarball deployment; `lifecycle_class` requirements (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE); Pattern A vs B startup; T+10min post-launch verification; singleton-lock pattern |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md`                 | Manifest consolidator runtime — GCP: 20 Phase A Cloud Run jobs (10 env-tiered + 10 legacy flat) + 14 Phase D Group B pending `tofu apply`; AWS: 10 Phase C Batch Fargate EventBridge Rules + 16 Phase D pending; DuckDB merge engine (shipped 2026-05-26). GCE VM DELETED 2026-05-20.                                                                                 |
-| `codex/05-infrastructure/gcs-object-operations.md`                      | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                    |
-| `codex/05-infrastructure/launcher-script-ssot.md`                       | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                            |
-| `codex/02-data/availability-manifest-and-data-status.md`                | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                            |
-| `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69) — ARCHIVED 2026-05-23                                                                                                    |
+| Doc                                                                     | Owns                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/05-infrastructure/vm-tarball-deployment.md`                      | VM tarball deployment; `lifecycle_class` requirements (EPHEMERAL_BATCH / EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE); Pattern A vs B startup; T+10min post-launch verification; singleton-lock pattern                                                              |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`                 | Manifest consolidator runtime — GCP: 20 Phase A Cloud Run jobs (10 env-tiered + 10 legacy flat) + 14 Phase D Group B pending `tofu apply`; AWS: 10 Phase C Batch Fargate EventBridge Rules + 16 Phase D pending; DuckDB merge engine (shipped 2026-05-26). GCE VM DELETED 2026-05-20. |
+| `codex/05-infrastructure/gcs-object-operations.md`                      | GCS object ops canonical pattern (`unified_trading_library.cloud_interface.gcs_copy_object`; 250× faster than gsutil)                                                                                                                                                                 |
+| `codex/05-infrastructure/launcher-script-ssot.md`                       | VM launcher conventions; prefix→bucket registry; `VM_PREFIX_TO_BUCKET` + `VmPrefixSpec` shape                                                                                                                                                                                         |
+| `codex/02-data/availability-manifest-and-data-status.md`                | Manifest schema v8 + 4-state `capture_status` + per-asset-group bucket layout                                                                                                                                                                                                         |
+| `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` | Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-strings; QG STEP 5.69) — ARCHIVED 2026-05-23                                                                                                                                                                 |
 
 ## Cross-references
 
