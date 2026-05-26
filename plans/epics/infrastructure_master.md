@@ -526,10 +526,13 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 - [ ] [OPERATOR] P2. **Per-service `buildspec.aws.yaml` parity test** — run CodeBuild parity test for all services that
       have `buildspec.aws.yaml`. BLOCKED-OPERATOR: requires AWS IAM perms for CodeBuild + ECR in account `427895769566`.
       Ping operator for creds.
-- [ ] [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in `instruments-service/scripts/`,
-      `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and route to S3 vs GCS appropriately.
-      **IN PROGRESS slot-7 2026-05-26**: MTDS `reconcile_market_tick_manifest.py` done — MTDS@04dea99b. IS
-      `reconcile_phantom_manifest_rows_all.py` in progress. features-service pending.
+- [x] ✅ [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in
+      `instruments-service/scripts/`, `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and
+      route to S3 vs GCS appropriately. All 3 repos done: MTDS@04dea99b (already had it), IS@d6b8f42e (coverage boosted
+      to 77.03% first, then `reconcile_phantom_manifest_rows_all.py` `--cloud` committed), features-service@e47ca213
+      (`features_sports_reconcile_available_at.py` UTL storage client + resolve_bucket_name + --cloud flag). QG green
+      all 3. - [x] ✅ [AGENT] P2-sub. **Fix IS coverage to ≥77%** — boosted from 74.47% to 77.03% via 39 new tests
+      (understat ×19, sports_fixtures_daily_repoll ×11, urdi_reference_provider ×9) — IS@d6b8f42e.
 - [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
       handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
 - [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining
