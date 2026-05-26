@@ -8,7 +8,11 @@
 > we need them split per service for some sort of bandwidth issues though I doubt it; and in any case should cover all
 > services not just MTDS and IS. Kill deprecated and the associated scripts and update SSOT docs."
 
-## Runtime — Cloud Run + Cloud Scheduler (CANONICAL)
+## Runtime — GCP: Cloud Run + Cloud Scheduler (CANONICAL)
+
+## Runtime — AWS: Batch Fargate + EventBridge Scheduler (shipped 2026-05-26)
+
+### GCP
 
 **Terraform**:
 [deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf](../../../deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf)
@@ -27,13 +31,42 @@
 - Tolerates one missed cycle — `read_availability_index` reader falls back to per-VM-shard merge when canonical blob is
   older than `MANIFEST_CONSOLIDATED_STALENESS_SEC` (default 120s).
 
+### AWS
+
+**Terraform**:
+[deployment-service/terraform/aws/manifest_consolidator_scheduler.tf](../../../deployment-service/terraform/aws/manifest_consolidator_scheduler.tf)
+
+**Architecture**:
+
+- ONE AWS Batch Fargate job definition per bucket → 10 job definitions (`uts-prod-manifest-consolidator-{key}`)
+- ONE EventBridge Scheduler schedule per bucket → 10 schedules in group `uts-prod-consolidator`, all `*/1 * * * *`,
+  ENABLED
+- Shared: 1 Batch compute environment (`uts-prod-manifest-consolidator`, Fargate) + 1 job queue + 1 schedule group
+- Image: `{account_id}.dkr.ecr.{region}.amazonaws.com/market-tick-data-service:latest` (ECR; same UTL dep)
+- Entrypoint: `python -m unified_trading_library.manifest_consolidator --bucket {X} --once`
+- `CLOUD_PROVIDER=aws` routes `get_storage_client()` to S3 — no Python changes required
+- IAM: `unified_trading` role extended with `manifest_consolidator` S3 policy
+  (GetObject/PutObject/DeleteObject/ListBucket)
+- Bucket naming: Group A pattern — `unified-trading-{domain}-{category}-{account_id}` (no env suffix)
+- Phase D (16 derived-data buckets): see commented locals block in TF file; apply after Phase C green
+
+**AWS verification**:
+
+```bash
+# Confirm 10 schedules ENABLED
+aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules[].State'
+
+# Spot-check canonical blob freshness (mtime < 90s after first run)
+aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet
+```
+
 ## Deprecated paths (do NOT use)
 
-| Removed 2026-05-20                                                 | Was                                  | Why                                                                                                                                 |
-| ------------------------------------------------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| GCE VM `manifest-consolidator-20260511-190513`                     | Long-lived poller (since 2026-05-11) | Redundant — Cloud Run does the same work via Cloud Scheduler                                                                        |
-| `deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh` | Launcher for the legacy VM           | Deleted; no replacement needed (Cloud Run is auto-provisioned via Terraform)                                                        |
-| `_register "manifest-consolidator"` in `launch-ec2-vm.sh`          | AWS EC2 launcher entry               | Stubbed with DEPRECATED comment; AWS-side consolidation (if needed) requires a new Lambda+EventBridge plan (not currently in scope) |
+| Removed 2026-05-20                                                 | Was                                  | Why                                                                                                                                |
+| ------------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| GCE VM `manifest-consolidator-20260511-190513`                     | Long-lived poller (since 2026-05-11) | Redundant — Cloud Run does the same work via Cloud Scheduler                                                                       |
+| `deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh` | Launcher for the legacy VM           | Deleted; no replacement needed (Cloud Run is auto-provisioned via Terraform)                                                       |
+| `_register "manifest-consolidator"` in `launch-ec2-vm.sh`          | AWS EC2 launcher entry               | Stubbed with DEPRECATED comment; replaced by AWS Batch + EventBridge (shipped 2026-05-26 via `manifest_consolidator_scheduler.tf`) |
 
 If a tab agent finds a NEW reference to either deprecated path, **flag as review-blocking + delete** — there is no
 scenario in which the legacy VM should be relaunched.

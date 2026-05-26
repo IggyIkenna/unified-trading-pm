@@ -1,144 +1,86 @@
 ---
-title: AWS manifest consolidator — scope + Terraform plan
+title: AWS manifest consolidator — Batch + EventBridge (10 buckets + 16 extension)
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: blocked
+status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 3.1
-created: 2026-05-21
-parent: aws_migration_defi_first_2026_05_07
-gates:
-  - aws_migration_defi_first_2026_05_07:Phase-5-cross-cloud-rsync
-  - aws_migration_defi_first_2026_05_07:Phase-6-ECS-Fargate
 estimate_calibrated_ai_days: 2.5
-blocked_by: |
-  Phase 5 cross-cloud data rsync + Phase 6 ECS Fargate deployment must land first.
-  Without Phase 6 VMs writing manifest shards to S3, there is nothing to consolidate.
+created: 2026-05-21
 ---
 
-> **GATE**: Execute ONLY after Phase 5 (cross-cloud rsync) + Phase 6 (ECS Fargate writing v8 manifest shards to S3) are
-> green in `aws_migration_defi_first_2026_05_07.md`. Pre-authoring the Terraform now is safe; `tofu apply` must wait for
-> the gate.
+Gate cleared: `aws_migration_defi_first_2026_05_07` archived 2026-05-26 (Phase 5+6 complete).
 
-# AWS Manifest Consolidator — Scope + Plan
+# AWS Manifest Consolidator — AWS Batch + EventBridge
 
-Port of the GCP Cloud Run manifest consolidator stack to AWS. The GCP side runs 10 Cloud Run Jobs triggered by Cloud
-Scheduler every minute. The AWS equivalent uses the existing `container-job/aws` (AWS Batch + Fargate) and
-`scheduler/aws` (EventBridge Scheduler) Terraform modules already present in `deployment-service/terraform/modules/`.
+Port of the GCP Cloud Run manifest consolidator to AWS. GCP runs 10 Cloud Run Jobs + Cloud Scheduler crons at
+`*/1 * * * *`. AWS equivalent uses the existing `container-job/aws` (AWS Batch Fargate) and `scheduler/aws` (EventBridge
+Scheduler) Terraform modules in `deployment-service/terraform/modules/`.
 
-## Why this is simpler than it looks
+UTL's `manifest_consolidator` is already cloud-agnostic: `CLOUD_PROVIDER=aws` routes `get_storage_client()` to S3. No
+Python changes needed.
 
-Three things are already done:
+## Full-Execution Criterion
 
-1. **UTL consolidator is cloud-agnostic.** `unified_trading_library.manifest_consolidator` calls
-   `cloud_interface.get_storage_client()` which routes to S3 when `CLOUD_PROVIDER=aws`. No Python changes needed.
+Phase C: `aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules[].State'` returns 10
+`"ENABLED"`. Spot-check:
+`aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet` mtime < 90s after first
+run. Phase D: same scheduler command returns 26 `"ENABLED"`.
 
-2. **Terraform modules already exist.** `deployment-service/terraform/modules/container-job/aws/` (AWS Batch + Fargate)
-   and `deployment-service/terraform/modules/scheduler/aws/` (EventBridge Scheduler) are the direct AWS counterparts of
-   the GCP modules used by the existing GCP consolidator.
+---
 
-3. **Bucket list is known.** Same 10 buckets as GCP (substituting account ID for project ID), plus the 16 coverage-gap
-   buckets identified in the GCP codex once they're wired server-side (features, strategy-store, execution-store,
-   ml-artifacts).
+### Phase A — Terraform authoring (0.8 cal-AI-days)
 
-## Scope
+- [x] ✅ [SCRIPT] P0.1. Write `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` with: 10-bucket
+      `locals.manifest_consolidator_buckets_aws` map (Group A naming:
+      `unified-trading-{instruments,market-data}-{cefi,tradfi,defi,sports,prediction}-{account_id}`); shared Batch
+      Fargate compute environment + job queue `uts-prod-manifest-consolidator`; `for_each` module calls per bucket:
+      `container-job/aws` (job def) + `scheduler/aws` (EventBridge `*/1 * * * *`); `CLOUD_PROVIDER=aws` +
+      `MANIFEST_BUCKET` env vars; ECR image for market-tick-data-service. — deployment-service@pending |
+      `terraform validate` ✓
+- [x] ✅ [SCRIPT] P0.2. Add IAM policy `manifest_consolidator` (S3 GetObject/PutObject/DeleteObject/ListBucket on all 10
+      bucket ARNs + `/*` prefixes). Attach to existing `aws_iam_role.unified_trading`. — inline in
+      manifest_consolidator_scheduler.tf
+- [x] ✅ [SCRIPT] P0.3. Add EventBridge scheduler IAM role with `batch:SubmitJob` permission on the job queue +
+      `uts-prod-manifest-consolidator-*` job definitions. Wire to all schedule module calls. — inline in
+      manifest_consolidator_scheduler.tf
 
-### Phase A — Terraform (target: pre-apply, can author now)
+### Phase B — tofu plan (0.3 cal-AI-days)
 
-Create `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf`:
+- [x] ✅ [SCRIPT] P0.4. `terraform validate` in `deployment-service/terraform/aws/` — exits 0. `tofu plan` (requires
+      operator AWS creds) is Phase C P0.5 gate. — `terraform validate` ✓ 2026-05-26
 
-```hcl
-locals {
-  manifest_consolidator_buckets_aws = {
-    "instruments-cefi"       = "instruments-store-cefi-${var.aws_account_id}"
-    "instruments-tradfi"     = "instruments-store-tradfi-${var.aws_account_id}"
-    "instruments-defi"       = "instruments-store-defi-${var.aws_account_id}"
-    "instruments-sports"     = "instruments-store-sports-${var.aws_account_id}"
-    "instruments-prediction" = "instruments-store-prediction-${var.aws_account_id}"
-    "market-data-cefi"       = "market-data-tick-cefi-${var.aws_account_id}"
-    "market-data-tradfi"     = "market-data-tick-tradfi-${var.aws_account_id}"
-    "market-data-defi"       = "market-data-tick-defi-${var.aws_account_id}"
-    "market-data-sports"     = "market-data-tick-sports-${var.aws_account_id}"
-    "market-data-prediction" = "market-data-tick-prediction-${var.aws_account_id}"
-  }
-}
-```
+### Phase C — tofu apply + verify (0.7 cal-AI-days)
 
-Wire each entry to:
+- [ ] [HUMAN] P0.5. `tofu apply` — operator runs with AWS credentials (`AWS_PROFILE=unified-trading` or equivalent).
+      Confirm plan matches Phase B output before confirming apply.
+- [ ] [HUMAN] P0.6. Verify 10 schedules ENABLED:
+      `aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules[].State'` → 10 `"ENABLED"`.
+- [ ] [HUMAN] P0.7. Spot-check consolidation running:
+      `aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet` — mtime within
+      90s. If first-run seed needed, run consolidator once manually per bucket.
 
-- `module "manifest_consolidator_job"` using `source = "../modules/container-job/aws"` (AWS Batch + Fargate)
-- `module "manifest_consolidator_cron"` using `source = "../modules/scheduler/aws"` (EventBridge `*/1 * * * *`)
-- Container image: the same `market-tick-data-service` ECR image (UTL is a dep)
-- Env var: `CLOUD_PROVIDER=aws` (routes `get_storage_client()` to S3)
-- IAM execution role: `unified_trading_fargate_role` with S3 `GetObject` + `PutObject` + `ListBucket` on
-  `arn:aws:s3:::${bucket}/_index/*` prefix per bucket
+### Phase D — Coverage gap extension (16 more buckets) (0.7 cal-AI-days)
 
-### Phase B — IAM (can author now, apply at gate)
+- [ ] [SCRIPT] P1.8. Extend `manifest_consolidator_buckets_aws_extended` locals in the TF file with 16 Group B
+      derived-data buckets (features-delta-one × 3, features-volatility × 2, features-onchain, features-sports,
+      features-calendar, strategy × 2, execution × 3, ml-artifacts, ml-training-artifacts). Add to IAM policy + schedule
+      module calls.
+- [ ] [SCRIPT] P1.9. `tofu plan` Phase D — verify 16 additional job definitions + schedules in plan output.
+- [ ] [HUMAN] P1.10. `tofu apply` Phase D + verify 26 schedules ENABLED.
 
-New IAM policy document for the consolidator execution role, attached to the Fargate task role:
+---
 
-```hcl
-data "aws_iam_policy_document" "manifest_consolidator" {
-  statement {
-    sid    = "ManifestConsolidatorS3"
-    effect = "Allow"
-    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
-    resources = concat(
-      [for b in local.manifest_consolidator_buckets_aws : "arn:aws:s3:::${b}"],
-      [for b in local.manifest_consolidator_buckets_aws : "arn:aws:s3:::${b}/_index/*"],
-    )
-  }
-}
-```
+## Codex SSOT updates
 
-### Phase C — Verification (after `tofu apply`)
-
-```bash
-# List active jobs (expect 10)
-aws batch list-jobs --job-queue uts-prod-manifest-consolidator --status SUCCEEDED --max-results 10
-
-# Confirm EventBridge crons enabled (expect 10 ENABLED schedules)
-aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules[].State'
-
-# Spot-check canonical blob freshness (expect mtime < 90s ago)
-aws s3 ls s3://market-data-tick-defi-427895769566/_index/availability_index.parquet
-```
-
-### Phase D — Coverage gap extension (after Phase C green)
-
-Extend `manifest_consolidator_buckets_aws` with the 16 missing service buckets (features, strategy-store,
-execution-store, ml-artifacts) that match the GCP coverage gap in the consolidator codex. Same IAM additions apply.
-
-## Estimate
-
-| Phase                              | Work                                                                                                                 | Cal-AI-days |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------- |
-| A — Terraform authoring            | Write `manifest_consolidator_scheduler.tf`, wire container-job/aws + scheduler/aws modules, set `CLOUD_PROVIDER=aws` | 0.8         |
-| B — IAM policy                     | Write + attach Fargate task role policy                                                                              | 0.3         |
-| C — Apply + verify                 | `tofu apply` + smoke-test 10 buckets + mtime check                                                                   | 0.7         |
-| D — Coverage gap (16 more buckets) | Extend locals + apply + verify                                                                                       | 0.7         |
-| **Total**                          |                                                                                                                      | **2.5**     |
-
-## Decision: file sub-plan (not BLOCKED-OPERATOR-DECISION)
-
-The AWS consolidator IS needed once Phase 6 ECS Fargate VMs run on AWS. Without it, S3 manifest shards accumulate
-indefinitely (identical to the GCP VM-only state before Cloud Run was wired). The operator decision from 2026-05-20
-codex update applies: "consolidation is canonical; the legacy VM is deprecated."
-
-AWS runs the same UTL, same manifest shards, same canonical index blob pattern — the consolidator is a pre-condition for
-correct `read_availability_index` on AWS-side readers.
-
-**Pre-author now, gate on Phase 5 + 6.** This plan is filed BLOCKED; Terraform authoring (Phase A + B) can proceed in
-the same slot that executes Phase 5 rsync.
+- UPDATE: `codex/05-infrastructure/manifest-consolidator-ssot.md` — add AWS section (Batch + EventBridge topology,
+  bucket map, IAM pattern). Remove "not currently in scope" language from deprecated AWS path note.
 
 ## Composes with
 
-- [`codex/05-infrastructure/manifest-consolidator-ssot.md`](../../codex/05-infrastructure/manifest-consolidator-ssot.md)
-  — canonical spec; AWS port must satisfy the same operational invariants.
-- [`aws_migration_defi_first_2026_05_07.md`](./aws_migration_defi_first_2026_05_07.md) — parent; Phase 5 + 6 are the
-  gate.
-- `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` — the output artefact (create in Phase A).
-- `deployment-service/terraform/modules/container-job/aws/` + `scheduler/aws/` — existing modules to wire.
+- `codex/05-infrastructure/manifest-consolidator-ssot.md` — canonical operational invariants (AWS port must match).
+- `deployment-service/terraform/modules/container-job/aws/` + `scheduler/aws/` — existing modules being wired.
+- `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` — GCP reference implementation.
