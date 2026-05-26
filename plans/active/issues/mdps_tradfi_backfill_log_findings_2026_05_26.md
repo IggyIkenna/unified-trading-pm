@@ -38,6 +38,82 @@ are the MDPS backfill VMs stopped 2026-05-26 (services killed, VMs kept running 
   non-nullable schema. (Do NOT relax the schema to nullable — that would propagate NaN downstream. Forward-fill is the
   correct fix; non-nullable is the right contract.)
 
+#### ✅ RESOLVED (CODE) 2026-05-26 — `market-data-processing-service@b67cddd` (local; push pending golden-day)
+
+**Locked design (operator decision 2026-05-26)** — the "session-grid" model. Per-slot decision, applied centrally by
+`BaseCandleAdapter._finalize_session_grid` at the `process_to_candles` boundary (so **batch == live**):
+
+| Slot | Signal | Action |
+|---|---|---|
+| Real trade | source candle present | **Keep** real OHLCV (a trade proves the market was open — never dropped even if `market_state` mislabels it CLOSED) |
+| Open, no trade, after first trade | `market_state != CLOSED` & `idx >= first_trade` | **Forward-fill** `o=h=l=c=prev_close`, `volume=0`, `staleness_seconds` set (last-known price — **zero look-ahead, no backfill**) |
+| CLOSED, no trade | `market_state == CLOSED` (weekend/holiday/outside-hours via `MarketStateDetector` + `exchange_calendars`) | **Drop** (untradeable → honest absence, NOT a NaN row) |
+| Pre-first-trade, no trade | `idx < first_trade` | **Drop** (no prior observation to carry forward — e.g. far-OTM option that lists intraday) |
+| Whole window, zero trades | — | Zero-row output → `record_empty_for_shard` (Path A) |
+
+**Why this and not the alternatives** (operator-confirmed):
+
+- **No backfill anywhere.** Backfill (filling pre-first-trade bars) is what creates the "made millions in backtest, live
+  sucks" divergence. Forward-fill only reads the past, identical to what a live trader knows → batch == live.
+- **`market_state='closed'` ≠ "illiquid no-trade".** The calendar detector already distinguishes them; we forward-fill
+  the open-but-illiquid case and drop only the genuinely-closed case.
+- **Session-only (variable-length) grid, not a fixed 1440/96/… grid.** Matches ta-lib/backtrader (a 20-bar SMA spans the
+  weekend; it never averages closed bars). features-service already filters `market_state` post-read, so it was already
+  discarding closed bars — we now do it honestly at the source instead of shipping NaN.
+- **Net:** **no NaN OHLC is ever emitted** → the non-nullable schema passes without being relaxed. Resolves all 1.15M
+  rejects at the source.
+
+**Shipped (local commit, unit-validated — 1380 unit tests pass):**
+
+- `app/adapters/base_adapter.py` — `_finalize_session_grid()` (the shared transform; generic field-masking via
+  `dataclasses.fields`).
+- `app/adapters/cefi/trades_adapter.py` + `app/adapters/tradfi/ohlcv_passthrough.py` — wired at `process_to_candles`
+  return.
+- `schemas/output_schemas.py` — note linking the non-nullable contract to the finalizer.
+- `tests/unit/test_tradfi_adapters.py` — 4 new session-grid regression tests (drop-pre-first-trade, ffill-open-no-trade,
+  no-NaN, drop-closed) + 3 updated to the session-grid contract.
+
+**Validation gate (not yet done):** full `quality-gates.sh` + reprocess golden day **CME 2025-01-15** to a `-test`
+bucket; confirm SCHEMA_VALIDATION_FAILED + NaN-OHLC are gone before pushing to LDR + flipping this item.
+
+**Adapter coverage (audited 2026-05-26):** `_finalize_session_grid` wired into the 3 single-instrument OHLC adapters
+that feed the non-nullable trades/ohlcv schema: `CefiTradesAdapter` (cefi/trades, b67cddd), `TradfiOhlcvPassthroughAdapter`
+(tradfi/ohlcv_1m|15m|24h, b67cddd), `TradfiTradesAdapter` (tradfi/trades — CME futures, **7cb5fab**; this was the
+primary `data_type=trades` reject source and was missed by b67cddd). Chain adapters (`futures_chain`, `options_chain`)
+deliberately NOT wired — they retain the fixed-strike Category-D carry-forward grid (see codex contradiction **B1** below).
+
+- [ ] [P2] **DEFERRED — defi/swap_adapter (dex_swaps) latent same-pattern.** `defi/swap_adapter.py:175` uses the same
+  `_fill_empty_candles(fill_method="nan")` fixed grid → if the DeFi candle output schema is non-nullable OHLC it will hit
+  the identical SCHEMA_VALIDATION_FAILED reject the moment a DeFi backfill runs at scale (not yet observed — the analysed
+  VMs were tradfi-only). DeFi is 24/7 + single-pool, so the session-grid model fits (drop pre-first-swap, ffill open
+  no-swap = last AMM price, PIT-safe). **Before wiring:** confirm the defi dex_swaps candle schema OHLC nullability +
+  that ffill-between-swaps is the desired pool-price semantic. Provenance: adapter audit during Finding-1 completeness
+  pass 2026-05-26. (Sports odds adapters also use `fill_method="nan"` but write the odds schema, not OHLC — not affected.)
+
+## Codex contradictions surfaced (operator decision — 2026-05-26 codex audit)
+
+The codex audit (read-only) found the session-grid model is consistent with the workspace "no NaN placeholders" spine
+(the 2026-05-05 1440-NaN pattern is uniformly banned). Two points need an operator call before the codex docs are
+rewritten:
+
+- **B1 — options/futures fixed-strike grid.** `codex/02-data/honest-absence-downstream-handling.md` (L627-639,
+  operator-flagged "volatility-smile constraint") states vol-surface ML training needs a **fixed-width grid per day**
+  with a carry-forward bar for **every active-catalog strike** — including far-OTM strikes that never trade intraday.
+  Session-grid's "drop pre-first-trade bars" would drop exactly those. **Resolution applied:** the finalizer is wired
+  ONLY into single-instrument adapters, NOT the chain adapters — so options/futures chains keep their fixed-strike
+  Category-D grid. Operator: confirm this per-data-type split is what you want (chains = fixed-strike; single-instrument
+  series = session-grid).
+- **B2 — marker column.** Codex docs describe a `zero_activity=True` boolean + `data_freshness=ZERO_ACTIVITY_BAR` on
+  carried-forward bars; the shipped finalizer uses `staleness_seconds` (>0 on ffilled bars) + `trade_count=0`. **Verified
+  in code:** `zero_activity` is NOT a `CandleOutput` field and NO downstream consumer reads it (grep clean) — so this is
+  codex-doc drift, not a live breakage. The docs should be reconciled to `staleness_seconds`/`trade_count==0` (the real
+  markers). Operator: OK to standardise on `staleness_seconds`? (cheap downstream filter = `trade_count==0 & staleness>0`.)
+
+Codex edit priority (pending B1/B2 ack): (1) `06-coding-standards/validation-and-errors.md` §1 Path D; (2)
+`02-data/honest-absence-downstream-handling.md` (zero-activity-bar shape L603-657 → SUPERSEDED banner + session-grid);
+(3) `02-data/availability-manifest-and-data-status.md` Cat-D rows; (4) `05-infrastructure/live-pipeline-architecture.md`
+metric naming; (5) `15-runbooks/features-service-launch-verify.md` (expect variable session-length, fixed-1440 = regression).
+
 ### 🔴 FINDING 2 — `empty_confirmed` manifest writes throttled by GCS HTTP 429 (158,747)
 
 `WARNING MDPS canonical_writer: empty_confirmed manifest write failed for <instrument> day=… tf=…: 429 POST https://storage.googleapis.com/upload/storage/v1/b/market-data-tick-tradfi-central-element-323112/o?uploadType=multipart`
