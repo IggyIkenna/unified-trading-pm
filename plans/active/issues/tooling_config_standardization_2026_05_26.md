@@ -53,7 +53,19 @@ repo with only a version-floor drift checker. That absence is the root cause of 
 | P8 | ruff `target-version` absent | e2e-testing, system-integration-tests |
 | P9 | `[tool.ruff.lint.mccabe]` absent | agent-orchestrator, batch-live-recon, ibkr |
 | P10 | pytest + coverage config absent | agent-orchestrator, ibkr-gateway-infra |
-| P11 | typecheck config duplication: 21 repos carry **both** `[tool.basedpyright]` (pyproject) **and** `pyrightconfig.json` (basedpyright honors the JSON, ignores the pyproject section → silent drift); agent-orch = pyproject-only; e2e = json-only | workspace-wide |
+| P11 | typecheck config **conflict** (not just duplication) — see callout below | workspace-wide |
+
+> **basedpyright config reality (P11 — found by reading the configs, not just presence):** the duplication is NOT
+> benign. The two files have **diverged** in every repo: `pyrightconfig.json` (which basedpyright actually runs at
+> runtime) sets `reportUnknownMemberType/VariableType/ParameterType/ArgumentType = none`, while `[tool.basedpyright]` +
+> the CLAUDE.md rule + **QG STEP 5.21** all declare them `= error`. STEP 5.21 lints the *pyproject* section (strict on
+> paper) but basedpyright runs from `pyrightconfig.json` (softer) → the workspace **believes** it's strict while the
+> effective type check is softer. AND `pyrightconfig.json` carries `executionEnvironments` + `extraPaths` (e.g.
+> `../unified-cloud-interface`, `../unified-internal-contracts`) for **cross-repo import resolution** that
+> `[tool.basedpyright]` cannot express — so basedpyright **CANNOT move into TOML**. ⇒ Canonical rule: **ruff / pytest /
+> coverage → TOML in pyproject; basedpyright → stays in `pyrightconfig.json` (functional SSOT)**. Remove/sync the
+> `[tool.basedpyright]` block, point STEP 5.21 at the JSON, and **operator decides canonical strictness**:
+> `reportUnknown* = error` (true strict — likely a large error surface to fix) vs `= none` (codify current reality).
 
 ### Frontend toolchain (2 repos: `deployment-ui`, `unified-trading-system-ui`)
 
