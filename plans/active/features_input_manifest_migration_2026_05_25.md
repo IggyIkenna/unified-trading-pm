@@ -201,11 +201,13 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 6 — Codex SSOT + governance `[P1]`
 
-- [ ] [DOC] P1. Update `codex/02-data/availability-manifest-and-data-status.md` §"Expected-universe pre-flight chain":
-      add the **features→MDPS** manifest-read contract row (currently only MTDS+MDPS are operationalized; features
-      pre-flight is only a scope gate). Document features reading MDPS `capture_status`.
-- [ ] [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` to state features input discovery is
-      manifest-driven (v8), not path-probe.
+- [x] ✅ [DOC] P1. Update `codex/02-data/availability-manifest-and-data-status.md` §"Expected-universe pre-flight
+      chain": add the **features→MDPS** manifest-read contract row (currently only MTDS+MDPS are operationalized;
+      features pre-flight is only a scope gate). Document features reading MDPS `capture_status`. — PM@310d4420c:
+      updated features row in pre-flight chain table + implementation refs.
+- [x] ✅ [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` to state features input discovery is
+      manifest-driven (v8), not path-probe. — PM@310d4420c: added "Features input discovery — manifest-driven (v8)"
+      section with pattern, motivation, refs.
 
 ## Success criteria
 
