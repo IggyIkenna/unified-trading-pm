@@ -141,6 +141,19 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 2 — delta_one full e2e (reference path) `[P0]`
 
+- [ ] 🔴 [BUG] P0. **Two-resolver bucket divergence (discovered 2026-05-26, blocks clean `-test` isolation).** The
+      parquet write resolves its bucket via `FeatureWriter._get_sink_bucket` (honours `PROTOCOL_DATA_SINK_BUCKET_{AG}`
+      env), but the **manifest emission** in `delta_one/engine/orchestrator.py` uses `config.get_output_bucket` →
+      `resolve_bucket(kind="features-delta-one")` (pure SSOT, **ignores the env override**). Consequence: redirecting
+      the e2e write to a `-test` bucket via env sent the parquet to `-test` but wrote the **manifest row to the
+      canonical prod bucket** → a phantom `captured` row (instrument's parquet absent there). Verified + cleaned up
+      (deleted the stray `_index` I created in `features-delta-one-cefi-central-element-323112`, restored to empty).
+      Also latent in **prod**: if any deployed VM ever sets `PROTOCOL_DATA_SINK_BUCKET_CEFI`, data and manifest diverge.
+      **Fix: route BOTH the parquet write and the manifest emission through ONE resolver** (recommend the orchestrator's
+      manifest emission honour the same `_get_sink_bucket`/env, OR `_get_sink_bucket` delegate to `get_output_bucket` —
+      pick per test-isolation decision below). Secondary: the emitted manifest row has **empty `venue`/`instrument_id`**
+      (does not identify the shard) — separate manifest-quality finding to chase. Provenance: e2e Phase 2 dry-run
+      2026-05-26.
 - [ ] [VALIDATE] P0. Run `--operation compute --mode batch --asset-group CEFI --feature-group ALL` on the golden window
       for the captured BITGET universe. Assert: every captured instrument either writes features OR skips with a typed
       honest-absence reason; **zero** unhandled 404 / NoneType / write exceptions; "N/N completed" matches the captured
