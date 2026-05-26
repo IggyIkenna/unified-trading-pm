@@ -302,3 +302,50 @@ Hotspots: `strategy-service` (13,220 basedpyright — by far the largest), `e2e-
 (6/20). Caveat: basedpyright run on `include` dirs against each repo's local `.venv`; full-QG `extraPaths` resolution may
 shift counts slightly. ruff `?`-free; two repos initially showed `?` for basedpyright (scan grep matched plural
 `errors,` not singular `1 error,`) — both re-measured = 1.
+
+### A/B: basedpyright count under canonical-strict vs pre-rollout per-repo settings (2026-05-26)
+
+To quantify how much of the ~33.7k was the strict bump vs real pre-existing surface, each repo's `[tool.basedpyright]`
+`report*` keys were reverted to **exactly its pre-rollout values** — the `pyrightconfig.json` where one existed (it took
+runtime precedence), else the old pyproject block. The jsons were **heterogeneous** (execution/strategy/deployment-service
+relaxed nearly all type-correctness rules to `none`; instruments/mtds/uac were ~fully strict). `include`/`exclude`/
+`executionEnvironments` kept. ruff unchanged (only `report*` keys touched). `unified-trading-pm` reverted to its old
+`typeCheckingMode = "standard"`; `unified-trading-system-ui` had no prior Python config → left strict.
+
+| Repo | strict (canonical) | reverted (pre-rollout json) | Δ |
+| --- | ---: | ---: | ---: |
+| agent-orchestrator | 391 | 0 | −391 |
+| alerting-service | 2125 | 2125 | 0 |
+| batch-live-reconciliation-service | 340 | 340 | 0 |
+| client-reporting-api | 330 | 33 | −297 |
+| deployment-api | 247 | 247 | 0 |
+| deployment-service | 1640 | 0 | −1640 |
+| e2e-testing | 5765 | 5785 | +20 |
+| execution-service | 1852 | 36 | −1816 |
+| features-service | 1877 | 38 | −1839 |
+| ibkr-gateway-infra | 6 | 6 | 0 |
+| instruments-service | 1386 | 1371 | −15 |
+| market-data-processing-service | 23 | 23 | 0 |
+| market-tick-data-service | 229 | 468 | +239 |
+| ml-inference-service | 1429 | 1046 | −383 |
+| ml-service | 132 | 132 | 0 |
+| ml-training-service | 9 | 9 | 0 |
+| strategy-service | 13220 | 237 | −12983 |
+| system-integration-tests | 357 | 372 | +15 |
+| trading-agent-service | 1 | 1 | 0 |
+| unified-api-contracts | 1 | 8 | +7 |
+| unified-trading-api | 89 | 89 | 0 |
+| unified-trading-library | 1017 | 2 | −1015 |
+| unified-trading-pm | 1172 | 191 | −981 |
+| unified-trading-system-ui | 20 | 20 | 0 |
+| **TOTAL** | **~33,658** | **~12,579** | **−21,079** |
+
+**Read:** ~63% of the strict total was the `reportAny`/`reportUnknown*`→error bump on the repos whose jsons had relaxed
+those (strategy −12,983, execution −1,816, features −1,839, deployment-service −1,640, UTL −1,015). **The remaining
+~12,579 is the genuine pre-existing type-error surface that was live all along** under the old per-repo settings.
+A few repos went slightly UP after revert (mtds +239, uac +7, sys-int +15, e2e +20) because the canonical suppressed
+`reportUnusedImport/Variable/PrivateUsage = none` (ruff owns those) while those repos' jsons did not — reverting
+re-enables strict-default unused/private checks. **Current workspace state = pre-rollout per-repo strictness restored
+(local, uncommitted); ruff/format/pytest/coverage/bandit canonical retained; `pyrightconfig.json` still deleted (config
+now lives in pyproject).** Operator decision pending: keep canonical-strict (33.7k to burn down) vs codify pre-rollout
+per-repo strictness (12.6k) vs a middle policy.
