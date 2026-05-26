@@ -789,12 +789,12 @@ for instruments/shards that legitimately should not be processed.
 
 #### Per-layer pre-flight pattern
 
-| Layer               | Pre-flight check                                                                                    | On skip → writes                                                             | Reason code                         |
-| ------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------- |
-| **MTDS**            | Read instruments-service manifest; if shard is `empty_confirmed` or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
-| **MDPS**            | Read MTDS manifest via `DependencyChecker`; if MTDS shard absent or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
-| **features**        | At `_get_instruments()` call: compare full catalog vs runtime `subscription_list` scope gate        | `record_expected_unattempted(..., reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` | `EXPECTED_OUTSIDE_PROCESSING_SCOPE` |
-| **features/sports** | Sports classifier: check fixture existence for fixture-pinned sources (SFI, footystats, open_meteo) | `record_empty(reason=EXPECTED_NO_FIXTURE)` via legacy_reason_classifier      | `EXPECTED_NO_FIXTURE`               |
+| Layer               | Pre-flight check                                                                                                                                                                                                | On skip → writes                                                             | Reason code                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------- |
+| **MTDS**            | Read instruments-service manifest; if shard is `empty_confirmed` or `expected_unattempted` → skip                                                                                                               | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
+| **MDPS**            | Read MTDS manifest via `DependencyChecker`; if MTDS shard absent or `expected_unattempted` → skip                                                                                                               | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
+| **features**        | Reads MDPS `processed_candles` manifest via `read_availability_index(bucket)` + `capture_status == "captured"` filter for instrument universe; out-of-scope instruments from runtime `subscription_list` → skip | `record_expected_unattempted(..., reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` | `EXPECTED_OUTSIDE_PROCESSING_SCOPE` |
+| **features/sports** | Sports classifier: check fixture existence for fixture-pinned sources (SFI, footystats, open_meteo)                                                                                                             | `record_empty(reason=EXPECTED_NO_FIXTURE)` via legacy_reason_classifier      | `EXPECTED_NO_FIXTURE`               |
 
 #### Three new EmptyConfirmedReason values added (2026-05-12–13)
 
@@ -822,8 +822,11 @@ When MDPS reads MTDS's capture_status:
 - MTDS pre-flight: `market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py` (Phase 1)
 - MDPS dep-skip: `market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py`
   `DependencyChecker` + `record_expected_unattempted_for_shard` (mdps@3f70cf6, Phase 2)
-- Features scope gate: `features-service/features_service/{delta_one,volatility,sports}/batch_handler.py`
-  (features-service@4a26ae04 / @a58480fb, Phase 3.1-3.N)
+- Features scope gate + instrument discovery:
+  `features-service/features_service/{delta_one,volatility,cross_instrument}/app/core/data_loader.py`
+  `get_available_instruments()` → `read_availability_index(bucket)` + `capture_status == "captured"` filter
+  (features-service@2965bbda / @cedd31f5 / @4b7e57b1, migration 2026-05-25). Out-of-scope instruments →
+  `record_expected_unattempted(reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` in batch_handler.
 - Sports classifier fixture-pin: `unified_trading_library/legacy_reason_classifier.py:_classify_sports` (utl@79c72bad,
   Phase 3/sports)
 - Plan: `plans/active/expected_unattempted_propagation_chain_2026_05_12.md`

@@ -62,8 +62,8 @@ Bucket: `market-data-tick-{category}-central-element-323112`
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=trades/.parquet`                         | `(cefi, perpetual, trades)`                               | Tardis-native columns (exchange, symbol, price, amount) |
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=book_snapshot_5/`                        | `(cefi, perpetual, book_snapshot_5)`                      | L1 + L5 bid/ask                                         |
 | CeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=derivative_ticker/`                      | `(cefi, perpetual, derivative_ticker)`                    | funding_rate, mark_price, index_price                   |
-| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=UNISWAP_V3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_swaps/`                     | `(defi, pool, dex_pool_swaps)`                            | Pool swaps from The Graph                               |
-| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=AAVE_V3/chain=ETHEREUM/instrument_type=a_token/data_type=lending_indices/`                    | `(defi, a_token, lending_indices)`                        | Reserve state                                           |
+| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=UNISWAP_V3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_swaps/`                    | `(defi, pool, dex_pool_swaps)`                            | Pool swaps from The Graph                               |
+| DeFi       | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=AAVE_V3/chain=ETHEREUM/instrument_type=a_token/data_type=lending_indices/`                   | `(defi, a_token, lending_indices)`                        | Reserve state                                           |
 | TradFi     | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=XNAS/instrument_type=equity/data_type=ohlcv_1m/`                                             | `(tradfi, equity, ohlcv_1m)` (pass-through)               | Databento-native                                        |
 | TradFi     | `raw_tick_data/by_date/day=YYYY-MM-DD/venue=XCBO/instrument_type=future/data_type=trades/`                                               | `(tradfi, future, trades)`                                | Databento per-leg (bundled symbology)                   |
 | Sports     | `raw_tick_data/by_date/day=YYYY-MM-DD/data_source=ODDS_API/venue=BET365/league_id=PREMIER_LEAGUE/instrument_type=odds/data_type=trades/` | `(sports, odds, trades)` (per Phase 2.2)                  | Bookmaker = `venue`, provider = `data_source`           |
@@ -122,6 +122,34 @@ Bucket: `features-{feature_group}-{category}-central-element-323112`
 | features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)                | CeFi, TradFi, DeFi    |
 | features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments       | CeFi, TradFi          |
 | features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures              | TradFi only           |
+
+### Features input discovery — manifest-driven (v8), NOT path-probe
+
+**Codified 2026-05-25** — features input discovery reads the MDPS `processed_candles` v8 availability manifest, NOT
+lexicographic GCS path probing. This applies to `features-delta-one`, `features-volatility`,
+`features-cross-instrument`, and `features-multi-timeframe`.
+
+Pattern:
+
+```python
+bucket = resolve_bucket_name(cloud="gcp", kind="market-data", asset_group=asset_group)
+index: pd.DataFrame = read_availability_index(bucket)
+captured = index[(index["capture_status"] == "captured") & (index["data_type"] == "processed_candles")]
+instruments = captured[captured["date"] == target_date]["instrument_id"].tolist()
+```
+
+**Why this matters**: path-probe (`list_blobs(max_results=100)`) returned 2019-era DERIBIT instruments
+lexicographically, silently giving the wrong instrument universe for any date ≥ 2020. The v8 manifest is date-scoped and
+layout-agnostic — immune to MDPS path evolution. Hardcoded legacy paths
+(`instrument_type={subdir}/venue=BINANCE-FUTURES/{id}@LIN.parquet`) no longer match canonical MDPS output.
+
+Implementation refs:
+
+- `features-service/features_service/delta_one/app/core/data_loader.py` — `get_available_instruments()`
+  (features-service@2965bbda)
+- `features-service/features_service/volatility/core/data_loader.py` (features-service@4b7e57b1)
+- `features-service/features_service/cross_instrument/` — reads delta_one output manifest (features-service@1d30b8c5)
+- Migration plan: `plans/active/features_input_manifest_migration_2026_05_25.md`
 
 Writer: identical pattern — `StreamingParquetWriter(strict=True)` + `ManifestWriter.write_with_zero_fill`, with
 `feature_group` populated as a shard column.
