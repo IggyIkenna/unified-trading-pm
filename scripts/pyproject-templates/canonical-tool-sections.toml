@@ -25,7 +25,11 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "G", "C90"]   # security (S / flake8-bandit): pending operator decision — see README
+# Rich union — the de-facto standard (the most-complete set, used by 6 repos as of
+# the 2026-05-26 audit). E/F/W (pyflakes+pycodestyle), I (isort), N (pep8-naming),
+# UP (pyupgrade), B (bugbear), C4 (comprehensions), SIM (simplify), RUF (ruff),
+# G (logging-format), C90 (mccabe complexity). Security (S / flake8-bandit): pending.
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G", "C90"]
 extend-ignore = ["G003", "G004"]
 ignore = ["E402"]
 
