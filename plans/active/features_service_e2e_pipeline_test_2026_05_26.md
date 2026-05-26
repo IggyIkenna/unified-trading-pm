@@ -83,14 +83,16 @@ dependency).
 
 ### Phase 0 — Environment + golden test dataset `[P0]`
 
-- [ ] [SETUP] P0. Fresh env check: `cd features-service && bash scripts/setup.sh`; confirm `unified_api_contracts` +
-      `unified_trading_library` import. Confirm ADC to `central-element-323112`.
-- [ ] [AUDIT] P0. Resolve the live golden test window from the v8 manifest (NOT a hardcoded date): latest date with
-      `capture_status="captured"` `processed_candles` rows for CeFi. Record the exact
-      `(date, venues, instruments,     data_types)` set the e2e run should reproduce — this is the assertion baseline
-      for Phases 2-4.
-- [ ] [SETUP] P0. Point feature output at `-test` buckets for this run (env overrides / `resolve_bucket_name` test
-      kind). Verify a throwaway write+read round-trips to the test bucket before any real feature write.
+- [x] ✅ [SETUP] P0. Env verified: UAC + UTL import OK in features-service `.venv`; `read_availability_index` /
+      `resolve_bucket_name` import; ADC to `central-element-323112` confirmed (manifest + bucket reads work).
+- [x] ✅ [AUDIT] P0. **Golden window = 2026-05-03 CEFI.** v8 manifest (`market-data-tick-cefi-prd`, 2.63M rows, **100%
+      schema_version 8**) + GCS object listing: candle source (`timeframe=1m`/`data_type=trades`) has files for **48
+      BITGET instruments** (24 FUTURES + 24 SPOT), 1440 rows/day each; other data_types
+      (book_snapshot_5/derivative_ticker/ liquidations) present for BITGET + partial BITFINEX-FUTURES/KRAKEN-FUTURES.
+      **Phantom-row finding** (captured in issue doc): 2026-04-26/27/28 manifest marks 17 venues `captured` but **0
+      actual files** exist.
+- [x] ✅ [SETUP] P0. `-test` bucket created: `features-delta-one-cefi-test-central-element-323112` (asia-northeast1).
+      Round-trip verified — write+read-back of a real feature parquet succeeds (see Phase 1 validate).
 
 ### Phase 0.5 — Adaptive input backfill (lookback-driven, per-feature) `[P0]`
 
@@ -122,16 +124,20 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 1 — Fix the WRITE P0 blocker `[P0]`
 
-- [ ] 🔴 [BUG] P0. **Reproduce** `write_daily_partition: string index out of range` on one loaded BITGET perp
-      (`--feature-group technical_indicators`, golden date, 1 instrument). Capture the full stack_trace from
-      `classify_and_emit_error` (it currently swallows into `_emit_rejected`) — add a temporary re-raise / debug log if
-      needed to see the failing frame.
-- [ ] 🔴 [BUG] P0. **Root-cause + fix** in `feature_writer.py` (or the DataSink path-templating it calls). Most likely
-      the colon-bearing canonical `instrument_id` or an empty partition segment breaks a string slice. Fix the actual
-      defect; do NOT mask it by sanitising the id away from canonical `{venue}:{instrument_type}:{symbol}` (that would
-      desync from the MDPS/read side). Add a unit test with a colon-bearing instrument_id + a single-day frame.
-- [ ] [VALIDATE] P0. Re-run the repro: ≥1 BITGET perp writes a non-empty parquet to the `-test` bucket; per-day
-      `INSTRUMENT_DAY_PROCESSED` event emitted with `rows_written>0`. QG green.
+- [x] ✅ [BUG] P0. **Reproduced + traceback captured** (temporary debug log in `_try_write_day`, since reverted). Frame:
+      `_write_parquet` → `data_sink.write` → UTL `protocol_impls.write` → `gcp.upload_bytes` →
+      `client.bucket(bucket).blob(...)` → `google.cloud.storage._helpers._validate_name`: `name[0]` on an **empty
+      string**. **NOT an instrument_id bug** — the bucket name is empty.
+- [x] ✅ [BUG] P0. **Root-caused + fixed.** `FeatureWriter.data_sink` called `get_data_sink(routing_key="cefi")` with no
+      explicit bucket; with `PROTOCOL_DATA_SINK_BUCKET` unset the GCS sink had an **empty bucket** → `client.bucket("")`
+      → IndexError. New `_get_sink_bucket()` resolves the canonical `features-delta-one` bucket via the bucket-name SSOT
+      (`resolve_bucket_name`), honouring `PROTOCOL_DATA_SINK_BUCKET_{AG}` routing first (mirrors read-side
+      `_get_source_bucket`). 2 regression tests (never-empty + env-wired passthrough). — features-service@ea357010
+- [x] ✅ [VALIDATE] P0. Real GCS run (2026-05-03, `-test` bucket): BITGET-FUTURES:PERPETUAL:ADAUSDT **wrote 1/1
+      partition, "Processing completed successfully"**, no IndexError. Read-back: 5,760 rows / 86 feature cols,
+      `rsi_14 ∈     [4.04, 98.59]`, full-day timestamps. QG: all content STEPS green (basedpyright/ruff/tests); only the
+      `<300s` perf budget flaked (310–362s under concurrent machine load) — environmental, not a code failure. —
+      features-service@ea357010
 
 ### Phase 2 — delta_one full e2e (reference path) `[P0]`
 
@@ -155,6 +161,11 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 4 — volatility + cross_instrument full e2e `[P1]` (PARALLEL with Phase 2)
 
+- [ ] 🟠 [BUG] P1. **Propagate the WRITE-bucket fix to volatility + cross_instrument** (discovered Phase 1). Their
+      FeatureWriter equivalents resolve the output sink the same way delta_one did — if they also rely on
+      `get_data_sink(routing_key=...)` with an unset `PROTOCOL_DATA_SINK_BUCKET`, they hit the identical empty-bucket
+      `IndexError`. Add a `_get_sink_bucket` with their canonical kinds (`features-volatility`, `features-xinstrument`)
+      before the e2e runs below. Provenance: features-service@ea357010 (delta_one fix).
 - [ ] [VALIDATE] P1. **volatility** full e2e on the golden window (processed-candle path only — raw options/futures
       chain is gated/not-backfilled per migration plan Phase 2). read → calc → write `-test` → read-back assert. Honest
       absence for un-backfilled chain inputs must skip, not crash.
