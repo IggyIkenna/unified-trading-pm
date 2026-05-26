@@ -356,6 +356,39 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - Grep guard already in the migration plan (no `instrument_type=`/`@LIN`, no `max_results` on discovery) protects the
   read half; this plan's QG smoke protects the write + read-back half.
 
+## Phase 5 e2e validation results — real GCS run on `-test` (2026-05-26)
+
+Ran `scripts/e2e/run_pipeline_e2e.py` per family on `-test` buckets (CEFI, date 2026-05-03; candle input read-only
+from `-prd`). Status per family:
+
+| family | result | evidence / bug |
+|---|---|---|
+| **delta_one** | ✅ **VALIDATED** | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`. |
+| **volatility** | ⚠️ honest-skip | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`. |
+| **cross_instrument** | ❌ real bug | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one. |
+| **multi_timeframe** | ❌ 2 bugs (1 fixed) | (1) `get_input_bucket` ignored its `PROTOCOL_DATA_SOURCE_BUCKET` override → read prod delta_one → 0 instruments. **FIXED** (features@335942d9). (2) Then crashes `Event logging not initialized. Call setup_events() first.` — batch compute path never inits event logging. **OPEN** — implies the mtf batch path was never run end-to-end. |
+
+**e2e-driver (8fa8ebbc) defects found + fixed** (features@62cbe91a, @e6811f31, @335942d9): wrong parquet-assert path
+(`batch/date=…` vs real `day=…/feature_group=…/timeframe=…`); false-PASS honest-skip that masked a captured-but-no-file
+disconnect; inline-f-string bucket names that targeted nonexistent buckets (cross-instrument/multi-timeframe instead of
+the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; cross_instrument missing delta_one
+`-test` source routing. Created the 2 missing `-test` buckets (`features-xinstrument-cefi-test`,
+`features-mtf-cefi-test`, asia-northeast1).
+
+- [ ] [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** Provenance: e2e -test
+  2026-05-26. Decide source (candles vs delta_one) / expose close.
+- [ ] [P1] **multi_timeframe: `setup_events()` not called in batch compute path** → `Event logging not initialized`
+  crash. Provenance: e2e -test 2026-05-26 (after the get_input_bucket fix).
+- [ ] [P2] **volatility: emits no manifest row on no-input** — confirm honest-skip vs `empty_confirmed` expectation.
+
+### TradFi scope (operator decision 2026-05-26)
+
+**SPY + its options are in scope; spot cash equities + commodities are OUT for now.** This refines the earlier
+"CME-only" call: the bare-ticker equity `instrument_type=UNKNOWN` partition rejects (AAPL/ABT/…) are an **expected
+known-gap**, not a bug. Open clarification for when tradfi features are tackled: "SPY + its options" = cash SPY ETF
+(NYSE Arca) + SPY/SPX options (OPRA/CBOE) **or** CME E-mini S&P (ES) futures + ES options (the golden-day CME data holds
+ES options clusters, not cash SPY) — confirm venue/source before id-canonicalization work.
+
 ## Notes / cross-refs
 
 - Read-path fixes + the downstream findings (Bitfinex empty `instrument_type`, MTDS dual-write, the CeFi manifest↔file
