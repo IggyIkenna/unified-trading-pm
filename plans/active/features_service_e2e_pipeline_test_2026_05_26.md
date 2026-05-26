@@ -22,6 +22,10 @@ related_plans:
   - plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md
 ---
 
+> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do
+> NOT auto-assign / auto-fix / push to LDR** any item here. See `plans/active/_agent_pings.md`. Banner removed by
+> harsh-side when released.
+
 ## Goal
 
 Stand up a **repeatable, real-data end-to-end test** of the full features-service pipeline for every family:

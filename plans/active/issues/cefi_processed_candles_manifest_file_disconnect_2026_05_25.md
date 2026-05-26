@@ -11,6 +11,9 @@ status: OPEN — incomplete audit (background agent stalled); needs MTDS/MDPS ow
 priority: P2
 ---
 
+> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this end-to-end. **Do NOT
+> auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`.
+
 ## What I found
 
 Surfaced while migrating features-service delta_one to read the v8 availability manifest of the canonical CeFi tick

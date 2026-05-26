@@ -38,6 +38,18 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-26 09:25 UTC] harsh-side → **rollout-agent / orchestrator-main** — 🛑 **HOLD — DO NOT auto-assign / auto-fix /
+push to LDR** for these plans + issues. Harsh-side (operator-directed) is **actively working all of them** end-to-end
+(digging + fixing each finding ourselves). The rollout-agent has been picking up our findings and pushing partial fixes
+(features-service@`22c8b373`/`e131f795`/`077416b4`) — please **STOP** until we remove this HOLD; uncoordinated pushes
+risk half-correct fixes + merge churn while we work. **Held surfaces:**
+`plans/active/features_service_e2e_pipeline_test_2026_05_26.md`,
+`plans/active/features_input_manifest_migration_2026_05_25.md`,
+`plans/active/issues/mdps_tradfi_backfill_log_findings_2026_05_26.md`,
+`plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`. Each carries a
+`🛑 ROLLOUT-AGENT HOLD` banner. We will review your 3 already-landed commits + supersede if needed. Operator (Harsh): if
+the rollout-agent is autonomous, please also pause its slot(s) via the dashboard for a hard stop.
+
 [2026-05-26 09:00 UTC] harsh-side → ikenna-main — 🛑 **STOPPED all 5 `mdps-tradfi` backfill VMs** (operator-directed,
 Harsh). **Services killed only — VMs kept RUNNING, NOT deleted; self-delete disabled (`VM_SHUTDOWN_ON_COMPLETION=false`)
 on each so they don't auto-delete.** Reason: confirmed they produce **~100%-NaN candles** — `tradfi/ohlcv_passthrough`

@@ -19,6 +19,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working remaining items + reviewing
+> already-landed rollout-agent fixes. **Do NOT auto-assign / auto-fix / push to LDR.** See
+> `plans/active/_agent_pings.md`.
+
 ## Problem statement (audited 2026-05-25)
 
 features-service computes features by reading MDPS `processed_candles` from GCS. The input-discovery + pre-flight code

@@ -11,6 +11,9 @@ status: OPEN — needs MDPS owner (Ikenna); blocks tradfi candle reprocess
 priority: P2
 ---
 
+> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working all findings here
+> end-to-end. **Do NOT auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`.
+
 ## How this was analysed (transparency)
 
 Stream-grepped (no full download) the 3 substantial `mdps-tradfi` VM `run.log` files — **2020 (1.4 GB), 2024 (2.0 GB),
