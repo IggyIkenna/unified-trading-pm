@@ -141,6 +141,9 @@ completed. Sports Phase 3+4 DONE (instruments-service@fc7b306 + UTL@94e43e8c + f
 - ✅ [FIX] P1. deployment-api STEP 5.79: pin node:20-slim to @sha256:3d0f054... in Dockerfile + Dockerfile.dashboard;
   fix STEP 5.79 alias detection bug in base-service.sh (false-positive on `asia-northeast1-docker` hostname) —
   deployment-api@36987d2 | PM@de940512a
+- ✅ [FIX] P1. deployment-api STEP 5.61/5.63: wire fastapi_uei_lifespan into lifespan.py; add run_lifecycle to
+  data_status_rollup_worker.py main(); update base-service.sh STEP 5.61 to accept fastapi_uei_lifespan —
+  deployment-api@0cd1c78 | PM@(this commit)
 
 ---
 

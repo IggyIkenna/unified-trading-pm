@@ -1410,12 +1410,13 @@ if [ "${SKIP_SERVICE_LIFECYCLE_STEPS:-false}" = "true" ]; then
     log_success "STEP 5.61: skipped (SKIP_SERVICE_LIFECYCLE_STEPS — not a deployable service)"
     log_success "STEP 5.62: skipped (SKIP_SERVICE_LIFECYCLE_STEPS — not a deployable service)"
 else
-    # 5.6.1 — ServiceBootstrap usage (replaces lifecycle event grep)
-    # STARTED/STOPPED/FAILED lifecycle events are emitted by UTL ServiceBootstrap.run().
-    # Services MUST use ServiceBootstrap — we check for it instead of grepping for individual events.
+    # 5.6.1 — ServiceBootstrap / fastapi_uei_lifespan usage (replaces lifecycle event grep)
+    # STARTED/STOPPED/FAILED lifecycle events are emitted by UTL ServiceBootstrap.run() for CLI
+    # services, or by fastapi_uei_lifespan for HTTP services. Either satisfies this check.
     _HAS_BOOTSTRAP=$(rg 'ServiceBootstrap\(' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
-    if [ "$_HAS_BOOTSTRAP" = "yes" ]; then
-        log_success "STEP 5.61: ServiceBootstrap used (lifecycle events handled by UTL)"
+    _HAS_HTTP_LIFECYCLE=$(rg 'fastapi_uei_lifespan\(' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
+    if [ "$_HAS_BOOTSTRAP" = "yes" ] || [ "$_HAS_HTTP_LIFECYCLE" = "yes" ]; then
+        log_success "STEP 5.61: ServiceBootstrap/fastapi_uei_lifespan used (lifecycle events handled by UTL)"
     else
         log_fail "STEP 5.61: ServiceBootstrap not found — services MUST use ServiceBootstrap from UTL for lifecycle events"
         V=$(( V + 1 ))
