@@ -272,6 +272,19 @@ resolves the minimum window each family/feature needs and backfills exactly that
       groups needing raw normalized book/trade schema (book_depth_bands, liquidity_walls, liquidation_clusters,
       flow_interaction, composite_sr) will honestly skip — that is the tracked P2 data-surface gap in the migration
       plan, not a failure here. Read-back assert the groups that do compute.
+  - **[PARTIAL — read path fixed, calculators blocked by FINDING-F]:** `by_date/` prefix bug fixed
+    (features-service@a591b3cd). `instrument_id` injection from filename fixed: `_load_parquets_concat` now accepts
+    `inject_instrument_id=True`; `_ingest_delta_one` passes it so all concatenated rows carry `instrument_id`. 5 unit
+    tests added (`tests/cross_instrument/unit/test_batch_handler.py`). QG green. — features-service@846915f5.
+  - **[FINDING-F] P1 BLOCKER — all cross_instrument calculators need raw OHLCV (`close`, `high`, `low`, `volume`) but
+    delta_one outputs only derived features (candlestick_patterns, momentum, oscillators, etc.) without passing through
+    raw prices.** Confirmed by reading prod test bucket sample parquet: `has_close=False`. All 6 calculators
+    (`regime_detection`, `cross_venue_spreads`, `realized_implied_vol`, `cross_asset_correlation`, and the polymarket
+    set) raise `Missing required columns: {close}` at validation. **Resolution options:** (a) delta_one service adds
+    `close` as a passthrough column in its output (small change, preserves architecture); (b) cross_instrument reads raw
+    OHLCV from MTDS directly for the price-dependent calculators (bigger change, breaks single-input-bucket design).
+    Operator decision needed. This is Ikenna territory (cross-repo architecture). Cross-link to `features_and_ml_master`
+    Phase 1A. **BLOCKED-OPERATOR-DECISION.**
 
 ### Phase 5 — e2e harness + governance `[P1]`
 
