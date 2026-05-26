@@ -10,7 +10,7 @@
 
 ## Runtime — GCP: Cloud Run + Cloud Scheduler (CANONICAL)
 
-## Runtime — AWS: Batch Fargate + EventBridge Scheduler (shipped 2026-05-26)
+## Runtime — AWS: Batch Fargate + EventBridge Rules (shipped 2026-05-26)
 
 ### GCP
 
