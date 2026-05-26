@@ -55,9 +55,56 @@ repo with only a version-floor drift checker. That absence is the root cause of 
 | P10 | pytest + coverage config absent | agent-orchestrator, ibkr-gateway-infra |
 | P11 | typecheck config duplication: 21 repos carry **both** `[tool.basedpyright]` (pyproject) **and** `pyrightconfig.json` (basedpyright honors the JSON, ignores the pyproject section → silent drift); agent-orch = pyproject-only; e2e = json-only | workspace-wide |
 
-**Frontend (deployment-ui vs unified-trading-system-ui):** version drift (prettier 3.1.1 vs 3.6.2; eslint 9.0 vs 9.39;
-ts 5.3 vs 5.7; vitest 4.1.0 vs 4.1.1); `deployment-ui` has **no `.prettierrc` file** + no husky/lint-staged; different
-build systems (Vite vs Next.js). No canonical frontend-config template in PM (only `ui.pre-commit-config.yaml`).
+### Frontend toolchain (2 repos: `deployment-ui`, `unified-trading-system-ui`)
+
+| Tool | Purpose | py-equiv | deployment-ui | unified-trading-system-ui |
+| --- | --- | --- | --- | --- |
+| Prettier | format | ruff format | ^3.1.1 (⚠ no `.prettierrc`) | ^3.6.2 (`.prettierrc.json`) |
+| ESLint (flat v9) | lint | ruff (lint) | ^9.0.0 | ^9.39.4 |
+| TypeScript / `tsc` | typecheck | basedpyright | ^5.3.0 | 5.7.3 |
+| Vitest | unit tests | pytest | ^4.1.0 | ^4.1.1 |
+| Playwright | E2E / smoke | — | ^1.58.2 | ^1.58.2 |
+| build/dev | bundler/dev server | — | **Vite ^8.0.0** | **Next.js** (+turbo) |
+| TailwindCSS | styling | — | — | ^4.2.0 |
+| husky + lint-staged | git pre-commit hooks | pre-commit | — | ^9.1.7 / ^16.4.0 |
+| eslint-config-prettier | eslint↔prettier conflict | — | — | ^10.1.1 |
+
+Config files: `eslint.config.{js,mjs}` + `tsconfig.json` + `vitest.config.ts` + `playwright.config.ts` in both;
+`.prettierrc.json` only in `unified-trading-system-ui`. **Frontend deviations:** version drift on every shared tool;
+different build systems (Vite vs Next.js); `deployment-ui` under-tooled (no `.prettierrc`, no husky/lint-staged, no
+tailwind); **no canonical frontend-config template in PM** (only `scripts/pre-commit-templates/ui.pre-commit-config.yaml`
++ `scripts/workflow-templates-ui/` CI — no shared prettier/eslint/tsconfig/vitest base). `agent-orchestrator` has a
+Vite dashboard but **no `package.json`** → frontend tooling entirely unenrolled. UI rules SSOT: `.claude/rules/ui.md`
+(tsc `--noEmit`, ESLint zero-warnings, Vitest `pool:"forks"` + `CI=true`, Playwright `smoketest`, Prettier `--write`).
+
+### Per-repo current-state matrix — intentional variation vs drift (CHECK-FIRST)
+
+> **Not every difference is drift.** Repo TYPE (library / service / ui / scripts-only) and independently-ratcheted
+> thresholds are intentional. The canonical config must enforce per-type **floors** (lib coverage ≥80, service ≥70 per
+> the workspace rules) and **preserve above-floor ratchets** — it must NOT flatten everyone to one number. Every
+> below-floor / unset repo (⚠) must be confirmed (drift-to-fix vs intentional exemption) before rollout.
+
+| Repo | QG type | coverage `fail_under` | basedpyright | note |
+| --- | --- | --- | --- | --- |
+| unified-api-contracts | library | 84 | strict | ✅ lib ≥80 |
+| unified-trading-library | library | 80 | strict | ✅ lib ≥80 |
+| batch-live-reconciliation-service / ml-training-service | service | 80 | strict | ratcheted ↑ (keep) |
+| alerting-service | service | 78 | strict | ratcheted ↑ |
+| instruments-service / market-data-processing-service | service | 77 | strict | ratcheted ↑ |
+| strategy-service | service | 74 | strict | ratcheted ↑ |
+| market-tick-data-service | service | 71 | strict | ratcheted ↑ |
+| client-reporting-api, deployment-api, deployment-service, execution-service, ml-inference, ml-service, trading-agent, unified-trading-api | service | 70 | strict | ✅ at service floor |
+| **ibkr-gateway-infra** | service | **51** | strict | ⚠ below 70 floor — confirm |
+| **system-integration-tests** | service | **15** | strict | ⚠ test harness — confirm exemption |
+| **features-service** | service | **0** | strict | ⚠ coverage disabled (1097 py) — confirm |
+| **e2e-testing** | service | **0** | strict | ⚠ test harness — likely intentional |
+| **unified-trading-pm** | service | (none) | **standard** | scripts-only — strictness/coverage likely intentional |
+| **agent-orchestrator** | (none) | (none) | **unset** | newest repo — not enrolled |
+| **deployment-ui** | (none) | (none) | strict | ~0 py (vestigial pyrightconfig) |
+| **unified-trading-system-ui** | (none) | (none) | **none** | 252 py ungoverned |
+
+**Intentional (keep):** per-type coverage floors, above-floor ratchets, `pm=standard` (scripts-only). **Drift /
+to-confirm:** the ⚠ rows + every P1–P11 deviation.
 
 ## Why it matters
 
@@ -101,7 +148,10 @@ missing at the `pyproject [tool.*]` layer.
 
 ## Phased plan
 
-- **Phase 0** — write canonical `[tool.*]` pyproject template + frontend template in PM (this is the missing SSOT).
+- **Phase 0 (CHECK-FIRST)** — classify every repo by type (library/service/ui/scripts), record each repo's intentional
+  above-floor coverage ratchet + strictness, and confirm the ⚠ below-floor/unset repos (drift vs exemption). THEN write
+  canonical **per-type** `[tool.*]` pyproject templates + a frontend template in PM (coverage = per-type **floor**, not
+  a fixed value) — the missing SSOT.
 - **Phase 1** — quick decided fixes: alerting LL→120 + build-backend, ruff `==0.15` + `target-version`, mypy removal.
 - **Phase 2** — agent-orchestrator full enrollment (py + ui).
 - **Phase 3** — basedpyright/pyrightconfig dedup + `ruff.format`/mccabe/pytest/coverage section backfill across repos.
