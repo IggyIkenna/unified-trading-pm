@@ -260,3 +260,45 @@ Minor per-repo config deviations allowed + documented below.
 **Convention adopted (max-complexity):** canonical floor is 26; repos with a STRICTER existing ratchet (7) keep it (never loosen); `deployment-service` keeps its looser 55 as a documented carve-out.
 
 **Next (operator runs later — NOT done here):** run each repo's `quality-gates.sh`/`ruff`/`basedpyright` to surface + fix the strict-mode type errors now unmasked (esp. the 7-repo strict-relaxed backlog: execution-service, features-service, strategy-service, deployment-service, client-reporting-api, unified-trading-library, unified-trading-pm). All edits remain local + uncommitted.
+
+### Violation baseline under new strict tooling (measured 2026-05-26)
+
+Measured per-repo against the repo's own `.venv` with the new config: `ruff check <include-dirs>` and
+`basedpyright <include-dirs>` (no test run — QG/tests already green per operator). These are the strict-mode backlog now
+unmasked by `reportAny`/`reportUnknown* = "error"` + the rich ruff union. **Counts are the work to burn down, NOT
+regressions** — the old configs hid them (pyrightconfig `reportUnknown*=none` + minimal ruff selects).
+
+| Repo | ruff | basedpyright |
+| --- | ---: | ---: |
+| agent-orchestrator | 0 | 391 |
+| alerting-service | 0 | 2125 |
+| batch-live-reconciliation-service | 2 | 340 |
+| client-reporting-api | 0 | 330 |
+| deployment-api | 8 | 247 |
+| deployment-service | 32 | 1640 |
+| e2e-testing | 106 | 5765 |
+| execution-service | 473 | 1852 |
+| features-service | 1 | 1877 |
+| ibkr-gateway-infra | 0 | 6 |
+| instruments-service | 4 | 1386 |
+| market-data-processing-service | 130 | 23 |
+| market-tick-data-service | 19 | 229 |
+| ml-inference-service | 0 | 1429 |
+| ml-service | 158 | 132 |
+| ml-training-service | 152 | 9 |
+| strategy-service | 0 | 13220 |
+| system-integration-tests | 71 | 357 |
+| trading-agent-service | 22 | 1 |
+| unified-api-contracts | 10 | 1 |
+| unified-trading-api | 1 | 89 |
+| unified-trading-library | 508 | 1017 |
+| unified-trading-pm | 208 | 1172 |
+| unified-trading-system-ui | 6 | 20 |
+| **TOTAL** | **~1,911** | **~33,658** |
+
+Hotspots: `strategy-service` (13,220 basedpyright — by far the largest), `e2e-testing` (5,765, scripts-heavy/untyped),
+`alerting-service` (2,125), `features-service` (1,877), `execution-service` (1,852 bp + 473 ruff). Cleanest:
+`ibkr-gateway-infra` (0/6), `trading-agent-service` (22/1), `unified-api-contracts` (10/1), `unified-trading-system-ui`
+(6/20). Caveat: basedpyright run on `include` dirs against each repo's local `.venv`; full-QG `extraPaths` resolution may
+shift counts slightly. ruff `?`-free; two repos initially showed `?` for basedpyright (scan grep matched plural
+`errors,` not singular `1 error,`) — both re-measured = 1.
