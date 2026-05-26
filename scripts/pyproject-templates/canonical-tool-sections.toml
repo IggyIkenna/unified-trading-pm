@@ -43,14 +43,33 @@ pythonVersion = "3.13"
 typeCheckingMode = "strict"
 include = ["<PACKAGE_DIR>"]   # per-repo: the importable package dir, e.g. "unified_trading_library"
 exclude = ["tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
-# Strict report rules — workspace standard (QG STEP 5.21 asserts these = "error").
+# ── Type-correctness rules → "error" (strict). The reportUnknown*/reportMissing*
+#    family is the set that was relaxed to "none" in the deleted pyrightconfig.json;
+#    restored to error per the canonical decision. QG STEP 5.21 asserts these = error.
 reportAny = "error"
 reportUnknownMemberType = "error"
 reportUnknownVariableType = "error"
 reportUnknownParameterType = "error"
 reportUnknownArgumentType = "error"
+reportUnknownLambdaType = "error"
+reportMissingParameterType = "error"
 reportMissingImports = "error"
+reportArgumentType = "error"
+reportReturnType = "error"
+reportAssignmentType = "error"
+reportCallIssue = "error"
+reportGeneralTypeIssues = "error"
+reportIndexIssue = "error"
+reportOptionalMemberAccess = "error"
+reportAttributeAccessIssue = "error"
+reportIncompatibleVariableOverride = "error"
+reportIncompatibleMethodOverride = "error"
+# ── Owned by ruff (avoid double-reporting) / pragmatic softenings.
 reportMissingTypeStubs = false
+reportUnusedImport = "none"     # ruff F401 owns this
+reportUnusedVariable = "none"   # ruff F841 owns this
+reportUnusedFunction = "none"
+reportPrivateUsage = "none"
 
 # Cross-repo import resolution (replaces pyrightconfig.json executionEnvironments).
 # Per-repo: list the sibling workspace repos this repo imports from.
