@@ -528,6 +528,8 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       Ping operator for creds.
 - [ ] [AGENT] P2. **Reconciler scripts `--cloud` flag** — audit + reconciler scripts in `instruments-service/scripts/`,
       `mtds/scripts/`, `features-service/scripts/` must accept `--cloud aws|gcp` and route to S3 vs GCS appropriately.
+      **IN PROGRESS slot-7 2026-05-26**: MTDS `reconcile_market_tick_manifest.py` done — MTDS@04dea99b. IS
+      `reconcile_phantom_manifest_rows_all.py` in progress. features-service pending.
 - [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
       handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
 - [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining
