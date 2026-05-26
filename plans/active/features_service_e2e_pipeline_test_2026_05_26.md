@@ -252,9 +252,9 @@ resolves the minimum window each family/feature needs and backfills exactly that
   - **[FINDING-D] P2 `tf_session_context` / `tf_confluence_signals` serialize error:** sink write fails with "Cannot
     serialize DataFrame to parquet" — likely a dtype issue in those calculators' output. Does not block Phase 3
     validation (read path proven); will need investigation in Phase 4/5 when full write path is exercised.
-  - **[FINDING-E] P2 `1d` vs `24h` mismatch:** `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` uses `@1d` for specs but
-    delta_one writes timeframe=`24h` directories. MTF spec `momentum@1d` will never find data. Needs a rename in config
-    or an alias in `_load_spec` path construction. **DEFERRED** — add to migration plan Phase 4 VALIDATE.
+  - **[FINDING-E] ✅ P2 `1d` vs `24h` mismatch FIXED:** `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` uses `@1d` for specs
+    but delta_one writes timeframe=`24h` directories. Added `_TIMEFRAME_PATH_ALIASES = {"1d": "24h"}` in `_load_spec` —
+    path lookup uses `24h`, column suffix stays `_1d`. Regression test added. QG green. — features-service@c71e4244.
 
 ### Phase 4 — volatility + cross_instrument full e2e `[P1]` (PARALLEL with Phase 2)
 
