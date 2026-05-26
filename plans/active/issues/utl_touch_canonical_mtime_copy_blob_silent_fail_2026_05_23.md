@@ -5,7 +5,9 @@ source:
   - plans/active/mdps_backfill_phase3_2026_05_22.md
   - unified-trading-library/unified_trading_library/manifest_consolidator.py
 priority: P2
-status: active
+status: resolved
+resolved_at: 2026-05-23
+resolved_by: unified-trading-library@0ea6989c
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
