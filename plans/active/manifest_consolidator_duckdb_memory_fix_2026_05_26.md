@@ -105,22 +105,37 @@ schema_version AND NULL written_at**. Root cause (verified, not a merge bug):
 - Confirmed faithful: unioning the all-8.0 canonical with an int64-versioned shard yields 0 NULLs (no DuckDB coercion
   artifact); `pd.concat` would produce identical NaNs. 2095/2099 shards carry `schema_version` (int64); only these 4
   omit it.
-- **Not contamination**: the frozen canonical is already 93% instruments-service enumeration cells (32.3M/34.9M),
-  data_types are market-data (`derivative_ticker`/`book_snapshot_5`/`ohlcv_1m`/…). This is the honest-absence
-  expected-universe enumeration by design.
+- **Not contamination — it's the coverage denominator (VERIFIED 2026-05-26).** The `market-data-tick-cefi` manifest has
+  TWO legitimate writers: (1) **MTDS** writes the numerator (`captured` rows for cells it actually fetched); (2)
+  **instruments-service** writes the denominator — `expected_unattempted` / `empty_confirmed(EXPECTED_*)` rows for the
+  full venue × instrument × data_type × date cross-product, because only it knows the instrument universe + lifecycle
+  (`available_from`/`available_to`/`expiry`).
+  `coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. So 93%
+  instruments-service just means "early in the backfill — most expected cells aren't captured yet." It's manifest
+  METADATA, not market data, so it doesn't violate "MTDS owns market data". The `slot4-cefi-c*` shards ARE the output of
+  `instruments-service/scripts/enumerate_expected_universe.py` (`_BUCKETS["cefi"] = market-data-tick-cefi-{PROJECT_ID}`,
+  run 2026-05-23 via `MANIFEST_PER_VM_SHARDS` + `VM_NAME=slot4-cefi-cN`). Codex SSOT:
+  `availability-manifest-and-data-status.md` § "expected-universe enumerator (v1/v2)".
+- **The exact write-path gap.** `enumerate_expected_universe.py::_write_absent_rows` (~L1157) builds
+  `new_df = pd.DataFrame(new_rows_records)` from a ~14-field row and writes it via a **direct `new_df.to_parquet(...)`**
+  (~L1338). It only reindexes to the FULL manifest schema when an existing `manifest_df` is passed (~L1328); the cefi
+  run shipped without that, so the shard omits `schema_version` + `written_at` (+16 more). It bypasses the UTL
+  `ManifestWriter`/`record_expected_empty` stamping that would set them.
 - Impact: coverage counts (capture_status) are UNAFFECTED and correct. But the refresh regresses the
   `cefi_manifest_remediation_2026_05_24` v8 stamp on the enumeration rows, and this **recurs every time consolidation
   resumes** (the re-enabled cron does the same merge) until the enumerator is fixed.
 
 New todos from this finding:
 
-- [ ] [CODE] P1. instruments-service cefi ENUMERATOR shard writer must stamp the full v8 manifest schema (esp.
-      `schema_version=8` + `written_at`) — the `slot4-cefi-c*-20260523` shards prove the enumeration path emits a
-      reduced 14-col shard. Harsh / instruments-service lane. Until fixed, no consolidation (one-shot or cron) can hold
-      100% v8.
-- [ ] [DECISION] P0. **AWAITING OPERATOR**: upload the faithful refresh now (restore cefi visibility; reversible via
-      pre-write snapshot; accept surfaced NULL-version rows) **vs** hold the upload until the enumerator emits
-      full-schema shards, then consolidate clean.
+- [ ] [CODE] P1. Fix `instruments-service/scripts/enumerate_expected_universe.py::_write_absent_rows`: stamp
+      `schema_version` (= canonical version, not hard-coded), `written_at` (= now UTC), and the full manifest column set
+      on every enumerated row — OR route the write through UTL `ManifestWriter`/`record_expected_empty` instead of the
+      raw `to_parquet`. Currently it only aligns to the full schema when `manifest_df` is provided. Harsh /
+      instruments-service lane. Until fixed, no consolidation (one-shot or cron) can hold 100% v8. **Re-run the cefi
+      enumeration after the fix so the slot4-cefi-c\* shards carry the full schema.**
+- [ ] [DECISION] P0. **AWAITING OPERATOR** (tomorrow): upload the faithful refresh now (restore cefi visibility;
+      reversible via pre-write snapshot; accept surfaced NULL-version rows) **vs** hold the upload until the enumerator
+      is fixed + re-run, then consolidate clean. (Seed parquet ready: `/data/cefi_consolidate/consolidated.parquet`.)
 
 ### Phase 1 — Memory-bounded DuckDB merge in UTL ✅ SHIPPED (`unified-trading-library@7a72049`, live-defi-rollout)
 

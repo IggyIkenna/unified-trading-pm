@@ -89,7 +89,18 @@ temp files and bounds working memory via `memory_limit`.
 **schema_version preservation (ties to invariant #5)**: `union_by_name` keeps each source row's `schema_version` — the
 merge never downgrades. A NULL `schema_version` in the consolidated output means the SOURCE shard omitted the column
 (observed: the cefi instruments-service enumeration shards `slot4-cefi-c*-20260523`, a reduced 14-col schema also
-missing `written_at`) — an enumerator-writer gap to fix upstream, NOT a consolidator downgrade.
+missing `written_at`) — an enumerator-writer gap to fix upstream, NOT a consolidator downgrade. Specifically
+`instruments-service/scripts/enumerate_expected_universe.py::_write_absent_rows` writes its rows via a raw
+`pd.DataFrame.to_parquet` and only reindexes to the full manifest schema when an existing `manifest_df` is passed.
+
+**Two-writer model (why instruments-service appears in a market-data manifest)**: a market-data bucket's manifest is
+co-authored — **MTDS** writes the coverage NUMERATOR (`captured` rows for cells it fetched), **instruments-service**'s
+expected-universe enumerator writes the DENOMINATOR (`expected_unattempted` / `empty_confirmed(EXPECTED_*)` for the full
+venue × instrument × data_type × date cross-product, since only it knows the instrument lifecycle).
+`coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. instruments-service
+dominating the row count just means the backfill is early (most expected cells not yet captured) — it is manifest
+metadata, not data, so it does not violate "MTDS owns market data". SSOT:
+`codex/02-data/availability-manifest-and-data-status.md` § "expected-universe enumerator".
 
 ## Deprecated paths (do NOT use)
 
