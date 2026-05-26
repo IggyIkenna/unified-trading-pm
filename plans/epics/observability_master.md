@@ -12,7 +12,7 @@ last_updated: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
-  - ../active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
+  - ../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
   - ../archive/2026_05/alerting_service_live_rules_2026_05_07.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md
