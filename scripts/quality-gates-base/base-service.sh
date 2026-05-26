@@ -2256,6 +2256,30 @@ else
     log_success "STEP 5.90: skipped (checker absent or SOURCE_DIR not set)"
 fi
 
+# ── STEP 5.91: entity-registry CI gate ───────────────────────────────────────
+#
+# Any commit that adds/removes values from entity-registry constants
+# (DATA_TYPES_BY_ASSET_GROUP / VENUES_BY_ASSET_GROUP / PROTOCOL_LAUNCH_DATES /
+# LST_TOKEN_GENESIS / PREDICTION_GROUPS / *_LAUNCH_DATES / *_GENESIS_DATES)
+# MUST include a CSV path under unified-trading-pm/audits/entity_lifecycle/
+# in the commit body OR an [entity-skip-cleanup] tag with operator reason.
+#
+# SSOT: plans/epics/infrastructure_master.md "Manifest cleanup HARD RULE" section.
+# Script: scripts/lifecycle/entity-lifecycle-cleanup.sh
+_ENTITY_REGISTRY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_entity_registry_cleanup.py"
+if [ -f "$_ENTITY_REGISTRY_CHECKER" ] && [ -n "${REPO_ROOT:-}" ] && [ -d "${REPO_ROOT}" ]; then
+    if python3 "$_ENTITY_REGISTRY_CHECKER" "$REPO_ROOT" >/tmp/entity_registry_qg.log 2>&1; then
+        cat /tmp/entity_registry_qg.log
+        log_success "STEP 5.91: Entity-registry cleanup evidence check passed"
+    else
+        log_fail "STEP 5.91: Entity-registry change without cleanup evidence — see instructions:"
+        cat /tmp/entity_registry_qg.log
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.91: skipped (checker absent or REPO_ROOT not set)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

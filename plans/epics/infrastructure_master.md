@@ -379,7 +379,7 @@ without the cleanup-script output attached.
 - [x] ✅ [SCRIPT] P1. **`entity-lifecycle-cleanup.sh` workflow script** under
       `unified-trading-pm/scripts/lifecycle/entity-lifecycle-cleanup.sh`. Wraps the per-asset-group reconciler runs
       (instruments-service script Phase 3 below) into a single command. Output goes to a deterministic CSV path under
-      `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`. — PM@(next) 2026-05-27 slot-7.
+      `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`. — PM@fb7205eff 2026-05-27 slot-7.
 - [x] ✅ [SCRIPT] P1. **`reconcile_manifest_after_entity_change.py`** under `instruments-service/scripts/`. `--add`
       mode: walks UAC entity registry post-change; for each entity-day-row that's now newly-expected (per writegate
       Phase 3.D.5 v2 enumerator), writes `record_expected_unattempted` rows into the per-VM shard. `--remove` mode:
@@ -394,11 +394,13 @@ without the cleanup-script output attached.
 - [ ] [HUMAN+AGENT] P1. **Retroactive bulk reconciler run for stragglers** identified by the audit above. Operator
       decision per orphan: tombstone (most common) vs re-fetch (when the entity was removed by accident and the data is
       still useful) vs delete (when both removal + manifest were wrong).
-- [ ] [SCRIPT] P1. **PM `quality-gates.sh` STEP 5.65 — entity-registry CI gate.** AST-walk: any commit that touches
+- [x] ✅ [SCRIPT] P1. **PM `quality-gates.sh` STEP 5.91 — entity-registry CI gate.** Any commit that touches
       `DATA_TYPES_BY_ASSET_GROUP` / `VENUES_BY_ASSET_GROUP` / `PROTOCOL_LAUNCH_DATES` / `LST_TOKEN_GENESIS` /
-      `PREDICTION_GROUPS` / `*_LAUNCH_DATES` registries MUST also include a CSV path under
+      `PREDICTION_GROUPS` / `*_LAUNCH_DATES` / `*_GENESIS_DATES` registries MUST also include a CSV path under
       `unified-trading-pm/audits/entity_lifecycle/` referenced in the commit body OR an `[entity-skip-cleanup]` tag with
-      operator-explained reason. Fails CI otherwise.
+      operator-explained reason. Fails CI otherwise. Note: shipped as STEP 5.91 (STEP 5.65 is already taken by
+      removed-symbol AST-walk). — PM@(this) + check_entity_registry_cleanup.py + base-service.sh. QG green. 2026-05-27
+      slot-7.
 
 ### Hard schema enforcement at write boundary (NEW sub-plan reference)
 
