@@ -399,7 +399,7 @@ without the cleanup-script output attached.
       `PREDICTION_GROUPS` / `*_LAUNCH_DATES` / `*_GENESIS_DATES` registries MUST also include a CSV path under
       `unified-trading-pm/audits/entity_lifecycle/` referenced in the commit body OR an `[entity-skip-cleanup]` tag with
       operator-explained reason. Fails CI otherwise. Note: shipped as STEP 5.91 (STEP 5.65 is already taken by
-      removed-symbol AST-walk). — PM@(this) + check_entity_registry_cleanup.py + base-service.sh. QG green. 2026-05-27
+      removed-symbol AST-walk). — PM@4cc92ac20 + check_entity_registry_cleanup.py + base-service.sh. QG green. 2026-05-27
       slot-7.
 
 ### Hard schema enforcement at write boundary (NEW sub-plan reference)
