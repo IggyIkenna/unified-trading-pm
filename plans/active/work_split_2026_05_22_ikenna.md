@@ -138,6 +138,9 @@ completed. Sports Phase 3+4 DONE (instruments-service@fc7b306 + UTL@94e43e8c + f
 - ✅ [FIX] P1. deployment-api STEP 5.77: annotate L2-mode-seam exceptions — deployment-api@644b349
 - ✅ [FIX] P1. deployment-api STEP 5.90: wire compute_honest_coverage into execution data-status —
   deployment-api@644b349
+- ✅ [FIX] P1. deployment-api STEP 5.79: pin node:20-slim to @sha256:3d0f054... in Dockerfile + Dockerfile.dashboard;
+  fix STEP 5.79 alias detection bug in base-service.sh (false-positive on `asia-northeast1-docker` hostname) —
+  deployment-api@36987d2 | PM@de940512a
 
 ---
 
