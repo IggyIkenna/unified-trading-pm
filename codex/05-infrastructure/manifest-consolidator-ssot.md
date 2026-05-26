@@ -19,10 +19,12 @@
 
 **Architecture**:
 
-- ONE Cloud Run Job per (service_kind, asset_group) pair → currently 10 jobs:
-  - 5 `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}`
-  - 5 `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}`
-- ONE Cloud Scheduler cron per job → 10 crons, all `*/1 * * * * (UTC)`, all ENABLED.
+- ONE Cloud Run Job per (service_kind, asset_group) pair → currently 20 Phase A jobs (10 env-tiered + 10 legacy flat);
+  Phase D (14 Group B buckets) authored in TF at `deployment-service@e8e72e7`, pending `tofu apply`:
+  - 5 `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}` (env-tiered)
+  - 5 `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}` (env-tiered)
+  - 10 `*-legacy` (flat no-env variants for MDPS/IS scripts still using non-env-tiered names)
+- ONE Cloud Scheduler cron per job → 20 crons, all `*/1 * * * * (UTC)`, all ENABLED.
 - Image: `market-tick-data-service:latest` (UTL installed as dep).
 - Entrypoint: `python -m unified_trading_library.manifest_consolidator --bucket {X} --once`.
 - Service accounts: scheduler invoker = `t1_batch_sa`; container runtime = `unified_trading_sa` (storage.objectAdmin on
