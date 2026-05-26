@@ -202,6 +202,12 @@ resolves the minimum window each family/feature needs and backfills exactly that
     `volume`/`trade_count`/`market_state` as honest staleness flags; (c) keep the **stored** candle honest (NaN+flags),
     fill only at compute. **Operator decides routing.** Provenance: e2e Phase 2 + raw-candle + MDPS-code inspection
     2026-05-26.
+  - **(A0-action) 2026-05-26: STOPPED all 5 `mdps-tradfi` backfill VMs** (operator-directed) — services killed, **VMs
+    kept RUNNING (not deleted), self-delete disabled** (`VM_SHUTDOWN_ON_COMPLETION=false`) so logs survive for
+    error-review. They were actively writing NaN candles. VMs: `mdps-tradfi-{2020,2022-08,2024,2025,2025-04}`. CeFi MDPS
+    not running (only MTDS raw-download, left alone). Ikenna pinged (`plans/active/_agent_pings.md`): do NOT relaunch
+    tradfi MDPS until the forward-fill fix lands; then reprocess full tradfi corpus. Anomaly to investigate: a `1m` file
+    with 139,680 rows (expected 1440).
   - **(A1) timeframe/liquidity is a knob on top of A0.** Coarser timeframe reduces (not eliminates) NaN-close density —
     ADA-SPOT momentum NaN cols 100→12 at 1m, ADX cleared; but `close` is still 68.6% NaN at 1m so PPO stays dead until
     A0 is fixed. Liquid BTC has clean closes → was always fine.

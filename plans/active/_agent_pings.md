@@ -38,9 +38,22 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-26 03:25 UTC] harsh-main → ikenna-main — 🟢 Harsh side starting today's shift. Workspace-root repos
-freshly pulled — all on `live-defi-rollout` and current (only PM was behind: 3 `orphan-ping-cron` commits,
-fast-forwarded clean). In-flight dirty working trees on both sides left untouched. Picking up Harsh slot work now.
+[2026-05-26 09:00 UTC] harsh-side → ikenna-main — 🛑 **STOPPED all 5 `mdps-tradfi` backfill VMs** (operator-directed,
+Harsh). **Services killed only — VMs kept RUNNING, NOT deleted; self-delete disabled (`VM_SHUTDOWN_ON_COMPLETION=false`)
+on each so they don't auto-delete.** Reason: confirmed they produce **~100%-NaN candles** — `tradfi/ohlcv_passthrough`
+upsamples 1m klines → 15s and NaN-fills (no forward-fill; MDPS `forward_fill` halt-mode is scaffolded-but-unwired).
+MEASURED 2025-01-15: CME 15s close = 100% NaN (40/40 instruments), CME 1m = 88% >50% NaN. VMs:
+`mdps-tradfi-{2020, 2022-08,2024,2025,2025-04}` (all `asia-northeast1-c`, status RUNNING, 0 MDPS procs). Logs preserved
+(GCS `vm-logs/<vm>/run.log` + on-disk) for error-review. **⚠️ Ikenna: do NOT relaunch tradfi MDPS until the
+forward-fill + timeframe-vs-liquidity-scoping fix lands** — then the full tradfi candle corpus (~712 days 2020→2026,
+~2–4M objects, ~70–140 GB, mostly-NaN today) needs reprocessing. Fix + reprocess tracked in
+`plans/active/features_service_e2e_pipeline_test_2026_05_26.md` (finding A0). CeFi MDPS is NOT running (only MTDS
+raw-download `cefi-*-heavy` VMs, unaffected — left alone). Also investigating a structural anomaly: a `1m` candle file
+with 139,680 rows (expected 1440).
+
+[2026-05-26 03:25 UTC] harsh-main → ikenna-main — 🟢 Harsh side starting today's shift. Workspace-root repos freshly
+pulled — all on `live-defi-rollout` and current (only PM was behind: 3 `orphan-ping-cron` commits, fast-forwarded
+clean). In-flight dirty working trees on both sides left untouched. Picking up Harsh slot work now.
 
 [2026-05-21 UTC] ikenna-slot-11 → harsh — **✅ ITEMS 15/16/17 VM-SIDE COMPLETE** — (15) MTDS QG sweep green: bandit B310
 fixed (MTDS@9f047c4), plan doc links fixed (unified-trading-pm@14140943); only STEP 5.82 remains (operator: wire Cloud
@@ -4889,16 +4902,20 @@ Full triage doc: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`.
 
 **Plan ref**: `plans/epics/plan_hygiene_master.md` (Phases 1-3 shipped)
 
-**What happened**: Active plan corpus reduced from 46 → 15 plans. 10 plans archived this session, 3 already archived by other agents earlier today.
+**What happened**: Active plan corpus reduced from 46 → 15 plans. 10 plans archived this session, 3 already archived by
+other agents earlier today.
 
 **Deferred items migrated to epics — DO NOT re-implement:**
+
 - `observability_master` P3: alerting soak tasks (Telegram token rotation, PagerDuty policy, rehearsal session)
 - `infrastructure_master` P2/P3: AWS parity (Pub/Sub inventory, UCI MessageBus, buildspec parity, GCP decommission)
-- `manifest_master` P1/P2: Phase 0d flat-bucket migration, prediction bucket naming, Phase 0 pre-audits, Phase 8 sign-off
+- `manifest_master` P1/P2: Phase 0d flat-bucket migration, prediction bucket naming, Phase 0 pre-audits, Phase 8
+  sign-off
 - `defi_master` P3: AWS WIF, CEFFU, ltv_safety_margin tuning, DeFi-data creds (CoinGecko/Helius), Firebase SA JSON
 - `dart_and_promote_master` P3: 64-item post-cutover promote pipeline (Groups A-G)
 
-**Hygiene cron**: daily plan hygiene sweep now live — Cloud Run Job `uts-prod-plan-hygiene-sweep` fires at 05:00 UTC. Failures ping both orchestrator inboxes. Terraform: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`.
+**Hygiene cron**: daily plan hygiene sweep now live — Cloud Run Job `uts-prod-plan-hygiene-sweep` fires at 05:00 UTC.
+Failures ping both orchestrator inboxes. Terraform: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`.
 
 **Sweep result**: Hard failures: 0 | Soft warnings: 0. PM@c7a636ad9 + deployment-service@5f4eb6b.
 
@@ -4906,25 +4923,49 @@ Full triage doc: `plans/audit/_pr_triage_post_bfg_2026_05_20.md`.
 
 ## [harsh → ikenna] 2026-05-25 — CeFi tick bucket-SSOT divergence (needs your call)
 
-Data-quality audit (DQ-05) surfaced: the live CeFi backfill (~170 VMs) writes to the **flat** `market-data-tick-cefi-{pid}` bucket (172MB index, fresh per-VM shards, ~55% coverage), but `resolve_bucket_name(kind=tick-data, asset_group=cefi)` returns canonical **`-prd`** (`market-data-tick-cefi-prd-{pid}`, 36MB/stale). The `honest-coverage-daily` cron reads `-prd` → measures stale data. DeFi is the mirror image (`-prd` is live there) — so flat-vs-`-prd` "which is live" is **inconsistent across asset_groups**. This is bucket-SSOT / migration-state (your domain). Issue doc with full evidence + 2 decision options: `plans/active/issues/cefi_tick_bucket_ssot_divergence_2026_05_25.md`. I've PAUSED DQ-05 + touched no bucket config/coverage script pending your decision.
+Data-quality audit (DQ-05) surfaced: the live CeFi backfill (~170 VMs) writes to the **flat**
+`market-data-tick-cefi-{pid}` bucket (172MB index, fresh per-VM shards, ~55% coverage), but
+`resolve_bucket_name(kind=tick-data, asset_group=cefi)` returns canonical **`-prd`** (`market-data-tick-cefi-prd-{pid}`,
+36MB/stale). The `honest-coverage-daily` cron reads `-prd` → measures stale data. DeFi is the mirror image (`-prd` is
+live there) — so flat-vs-`-prd` "which is live" is **inconsistent across asset_groups**. This is bucket-SSOT /
+migration-state (your domain). Issue doc with full evidence + 2 decision options:
+`plans/active/issues/cefi_tick_bucket_ssot_divergence_2026_05_25.md`. I've PAUSED DQ-05 + touched no bucket
+config/coverage script pending your decision.
 
-**[CORRECTION — harsh, 2026-05-25, same day]** Stand down — NOT a bug / no decision needed from you. Operator pointed me at the plan: `mtds_backfill_phase3` § Deferred work explicitly says MTDS writes flat now, migrates to `-prd` in `bucket_name_ssot_canonicalisation` **Phase 2.6** (DEFERRED). So flat-write is working-as-intended. The only residual is a coverage-*reader* defect (`measure_honest_coverage.py` hardcodes `-prd` → measures wrong bucket for cefi until 2.6); I'm fixing the reader to track the writers' bucket. No action for you. Issue doc reframed accordingly.
+**[CORRECTION — harsh, 2026-05-25, same day]** Stand down — NOT a bug / no decision needed from you. Operator pointed me
+at the plan: `mtds_backfill_phase3` § Deferred work explicitly says MTDS writes flat now, migrates to `-prd` in
+`bucket_name_ssot_canonicalisation` **Phase 2.6** (DEFERRED). So flat-write is working-as-intended. The only residual is
+a coverage-_reader_ defect (`measure_honest_coverage.py` hardcodes `-prd` → measures wrong bucket for cefi until 2.6);
+I'm fixing the reader to track the writers' bucket. No action for you. Issue doc reframed accordingly.
 
-**[RESOLVED — harsh↔ikenna chat, 2026-05-25]** Ikenna confirmed: canonical = `-prd`; older data already migrated there; the write-path code was never updated to target `-prd` (still legacy flat prefixes); latest flat data needs migration. Cutover (writer→`-prd` + migrate) = gated on backfill completion + code freeze (Phase 2.6) — NOT mid-backfill. Interim coverage-reader fix shipped `instruments-service@91e7316` (reads live bucket now, self-corrects post-2.6). Write-path fix + migration tracked for Phase 2.6 in the issue doc. No open cross-side action.
+**[RESOLVED — harsh↔ikenna chat, 2026-05-25]** Ikenna confirmed: canonical = `-prd`; older data already migrated there;
+the write-path code was never updated to target `-prd` (still legacy flat prefixes); latest flat data needs migration.
+Cutover (writer→`-prd` + migrate) = gated on backfill completion + code freeze (Phase 2.6) — NOT mid-backfill. Interim
+coverage-reader fix shipped `instruments-service@91e7316` (reads live bucket now, self-corrects post-2.6). Write-path
+fix + migration tracked for Phase 2.6 in the issue doc. No open cross-side action.
 
 ---
 
 ## [harsh → ikenna] 2026-05-25 — ACTION NEEDED: create 1 Secret Manager secret (we're IAM-denied)
 
-Re the Telegram dual-channel split (active thread above ~"split Telegram channels: same bot token, NEW chat_id for live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secret is missing.**
+Re the Telegram dual-channel split (active thread above ~"split Telegram channels: same bot token, NEW chat_id for
+live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secret is missing.**
 
-- **Done:** new Telegram group "UTS Live Alerts" created (chat_id `-5296232662`), bot token (`uts_autonomous_alert_bot`) verified valid, test message delivered to the group. The alerting-service code is already wired: `alerting_service/notifiers/router.py` routes `LIVE_ALERT_RULES` runtime alerts (breakers/venue-halted/gas) → `chat_id_ops`; CI/QG/internal → existing `chat_id`; graceful fallback to single chat when `chat_id_ops` empty (hot-reload 300s via `_PagingCredentialsReloader`, secret name `alerting-telegram-chat-id-ops`).
-- **Blocked:** secret `alerting-telegram-chat-id-ops` does not exist (`NOT_FOUND`). Both the worker agent AND operator (`harshkantariya@odum-research.com`) are denied `secretmanager.secrets.create` on `central-element-323112`.
+- **Done:** new Telegram group "UTS Live Alerts" created (chat_id `-5296232662`), bot token (`uts_autonomous_alert_bot`)
+  verified valid, test message delivered to the group. The alerting-service code is already wired:
+  `alerting_service/notifiers/router.py` routes `LIVE_ALERT_RULES` runtime alerts (breakers/venue-halted/gas) →
+  `chat_id_ops`; CI/QG/internal → existing `chat_id`; graceful fallback to single chat when `chat_id_ops` empty
+  (hot-reload 300s via `_PagingCredentialsReloader`, secret name `alerting-telegram-chat-id-ops`).
+- **Blocked:** secret `alerting-telegram-chat-id-ops` does not exist (`NOT_FOUND`). Both the worker agent AND operator
+  (`harshkantariya@odum-research.com`) are denied `secretmanager.secrets.create` on `central-element-323112`.
 - **ASK (needs your account / a perms grant):**
   ```
   echo -n "-5296232662" | gcloud secrets create alerting-telegram-chat-id-ops \
     --project=central-element-323112 --replication-policy=automatic --data-file=-
   ```
-  Then grant the alerting-service runtime SA `roles/secretmanager.secretAccessor` on it (same as the other `alerting-telegram-*` secrets). No deploy/restart needed — notifier picks it up within ~5 min and the important/noisy split goes live.
-- **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py` (`_SM_CHAT_ID_OPS`).
-
+  Then grant the alerting-service runtime SA `roles/secretmanager.secretAccessor` on it (same as the other
+  `alerting-telegram-*` secrets). No deploy/restart needed — notifier picks it up within ~5 min and the important/noisy
+  split goes live.
+- **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config
+  gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py`
+  (`_SM_CHAT_ID_OPS`).
