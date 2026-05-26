@@ -182,6 +182,18 @@ resolves the minimum window each family/feature needs and backfills exactly that
     klines** (Databento/Yahoo/Barchart) and fills the ~3-of-4 empty 15s sub-bars with NaN to satisfy the candle-count
     contract (5760 rows for 15s) → **15s-from-1m is ~75% NaN by construction**. Processed candle has NO `is_halted`
     column for trades — no-trade signal is NaN OHLC + `trade_count`/`volume`.
+  - **(A0-evidence) MEASURED on real tradfi parquets (2025-01-15, 40 instruments each — NOT guesswork):** CME 15s
+    (data_type=trades) close %NaN = **100/100/100** (min/median/max), **40/40 instruments >50% NaN → all
+    WriteGate-rejected**; CME 1m (ohlcv_1m) = 4/**99**/100, **35/40 (88%) >50% NaN**, only 2/40 clean. Structural
+    anomaly: a `1m` file with **139,680 rows** (expected 1440) at 99.9% NaN. Sizing: tradfi processed_candles = **712
+    day-partitions (2020→2026), ~5,644 obj/populated-day, ≈2–4M objects / ~70–140 GB — overwhelmingly NaN today**.
+    Implication: reprocess regenerates a corpus that is mostly-broken now, not just "some NaN".
+  - **(A0-universe) Forward-fill is necessary but NOT sufficient.** CME is dominated by illiquid options strikes (e.g.
+    `E1AG5_C5980` traded 3×/day). Forward-filling gives a flat synthetic series → ta-lib stops NaN-ing, but computing
+    15s indicators on an instrument trading a few×/day is ~100% synthetic. The fix MUST also include
+    **timeframe-vs-liquidity / instrument-universe scoping** (don't generate fine-grained candles where trade frequency
+    doesn't support them; liquid front-month futures + equities, not every deep-OTM strike) — else we forward-fill
+    millions of meaningless flat bars.
   - **(A0-fix) Multi-part, spans MDPS + features (CROSS-CUTTING — MTDS/MDPS = Ikenna territory; canonical-candle change
     affects ALL consumers; coordinate via `mtds_mdps_master` + data-pipeline-correctness):** (a) **don't compute
     features finer than the source supports** (1m-sourced venue → compute at 1m, not 15s; per-venue source-granularity
