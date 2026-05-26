@@ -14,13 +14,14 @@ locked_since: 2026-05-26
 >
 > **READ THIS FIRST. This is bigger than the tooling rollout below. NEEDS AN OWNER + FIX IN THE COMING DAYS.**
 >
-> **TL;DR:** The shared `quality-gates.sh` type-check step **only fails on basedpyright WARNINGS — never on ERRORS.**
-> A bug in `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (the body EVERY service repo sources) masks
-> basedpyright's exit code, so a repo can carry **hundreds of type ERRORS and still go QG-green.**
-> **~6,504 basedpyright errors are currently live + UNENFORCED across the workspace.** "QG green" has meant "zero
-> warnings", NOT "zero type errors".
+> **TL;DR:** The shared `quality-gates.sh` type-check step **only fails on basedpyright WARNINGS — never on ERRORS.** A
+> bug in `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (the body EVERY service repo sources) masks
+> basedpyright's exit code, so a repo can carry **hundreds of type ERRORS and still go QG-green.** **~6,504 basedpyright
+> errors are currently live + UNENFORCED across the workspace.** "QG green" has meant "zero warnings", NOT "zero type
+> errors".
 >
 > ### Root cause (`base-service.sh` ~L463–475)
+>
 > ```sh
 > run_timeout ... "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
 > BP_PID=$!
@@ -30,33 +31,37 @@ locked_since: 2026-05-26
 > WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:")  # ← only WARNINGS counted
 > if [ "$WARN_COUNT" -gt 0 ]; then ... exit 1; fi          # ← the ONLY working failure path
 > ```
+>
 > basedpyright signals errors via **exit code 1** (warnings do NOT change the exit code). `|| true` forces
 > `PYRIGHT_EXIT=0`, killing the error check; only the supplementary warning-grep still works. Net result: **errors (more
 > severe) pass; warnings (less severe) block** — an accident of the script, NOT a severity decision. (basedpyright
 > severity order is error > warning > info; errors are the severe class.)
 >
 > ### Proven end-to-end on `deployment-api`
+>
 > A full live `bash scripts/quality-gates.sh` run printed **`✅ ALL QUALITY GATES PASSED (387s)`** while the identical
-> binary/config/venv reports **`247 errors, 0 warnings`**. Reproducing the exact gate logic standalone:
-> basedpyright exited `1`, `wait $BP_PID || true; PYRIGHT_EXIT=$?` → `0`, verdict → **`PASS (despite 247 errors)`**.
+> binary/config/venv reports **`247 errors, 0 warnings`**. Reproducing the exact gate logic standalone: basedpyright
+> exited `1`, `wait $BP_PID || true; PYRIGHT_EXIT=$?` → `0`, verdict → **`PASS (despite 247 errors)`**.
 >
 > ### CROSS-CHECK in ~1 min (read-only, any repo — independent verification welcomed/requested)
+>
 > ```bash
 > cd <repo>; SRC=<package_dir>; _o=/tmp/bp.$$
 > .venv/bin/basedpyright "$SRC/" > "$_o" 2>&1 &
 > wait $! || true; echo "exit-gate-sees=$?  errors=$(grep -c ' error:' $_o)  warnings=$(grep -c ' warning:' $_o)"; tail -1 "$_o"
 > ```
+>
 > Expected: `exit-gate-sees=0` with `errors>0` → the gate's `if PYRIGHT_EXIT -ne 0` never fires. Also just read
 > `base-service.sh` L463–475: there is **no `" error:"` count in the pass/fail logic at all.**
 >
 > ### The fix (one line; edit the SSOT template, then `scripts/propagation/rollout-quality-gates-unified.py`)
+>
 > Drop the `|| true` so the exit code propagates: `wait $BP_PID; PYRIGHT_EXIT=$?` — AND/OR count `" error:"` lines the
-> same way warnings are counted and fail if `>0`.
-> **⚠️ Applying this flips ~6,504 currently-invisible errors into HARD QG failures workspace-wide.** Do NOT flip it
-> blind — sequence a per-repo burn-down (or a temporary scoped allowlist) first. Per-repo error surface is in the
-> "Violation baseline" + "A/B basedpyright" tables below (fresh venvs, each repo's own pre-rollout settings,
-> `.venv/bin/basedpyright` = QG-faithful). Totals: **~6,504 errors / 101 warnings**; only 2 repos currently fail the
-> warning gate (market-data-processing-service = 1w, ml-inference-service = 100w).
+> same way warnings are counted and fail if `>0`. **⚠️ Applying this flips ~6,504 currently-invisible errors into HARD
+> QG failures workspace-wide.** Do NOT flip it blind — sequence a per-repo burn-down (or a temporary scoped allowlist)
+> first. Per-repo error surface is in the "Violation baseline" + "A/B basedpyright" tables below (fresh venvs, each
+> repo's own pre-rollout settings, `.venv/bin/basedpyright` = QG-faithful). Totals: **~6,504 errors / 101 warnings**;
+> only 2 repos currently fail the warning gate (market-data-processing-service = 1w, ml-inference-service = 100w).
 >
 > **Scope:** shared `base-service.sh` → applies to every repo that sources it (verified concretely on deployment-api;
 > logically workspace-wide). **Status: UNFIXED.** **Owner: TBD.** **Verified: slot-Harsh session 2026-05-26.**
@@ -237,7 +242,8 @@ the `pyproject [tool.*]` layer.
 (full `[tool.*]`: ruff + basedpyright-strict + pytest + coverage run+report + bandit). Frontend =
 `unified-trading-system-ui/tooling-templates/{.prettierrc.json, tsconfig.base.json, README.md}` (lives in the UI repo —
 the SSOT for frontend tooling, not PM; prettier canonical + strict tsconfig base + eslint shared-layer conventions +
-devDep version pins; framework base Next-vs-Vite is the documented per-repo split). Coverage `fail_under` = per-type **floor** (lib ≥80 / service ≥70), above-floor ratchets preserved.
+devDep version pins; framework base Next-vs-Vite is the documented per-repo split). Coverage `fail_under` = per-type
+**floor** (lib ≥80 / service ≥70), above-floor ratchets preserved.
 
 **Strictness history (operator asked):** `reportUnknown*=none` is a **7-repo drift, not the standard** — 16/23 repos are
 still strict. Relaxed: `unified-trading-pm`, `unified-trading-library`, `deployment-service`, `strategy-service`,
@@ -265,52 +271,67 @@ Canonical ruff `select` corrected to the rich union `E F W I N UP B C4 SIM RUF G
 `.pre-commit-config.yaml` · `[build-system].build-backend = "hatchling.build"`. (ruff `S` rule deferred; bandit stays.)
 Minor per-repo config deviations allowed + documented below.
 
-| # | Repo | Status | Tooling changes | Deviations (+ reason) |
-| --- | --- | --- | --- | --- |
-| 1 | ibkr-gateway-infra | config migrated (local, uncommitted) | `pyproject [tool.*]` → canonical: ruff +exclude/+format/+mccabe/+per-file-ignores, select → rich union (+G +C90); `[tool.basedpyright]` → full explicit strict set, ported `venvPath`/`venv` from JSON; added `[tool.pytest.ini_options]`, `[tool.coverage.run]` (source+branch), `[tool.bandit]` (skips=[]). Deleted `pyrightconfig.json`. build-backend already hatchling. `config.py` + formatted files left untouched. | `fail_under = 51` kept — gateway special-case (QG `MIN_COVERAGE=51`), documented in `pyproject_workspace_audit_2026_05_15`. `repo_arch_tier="infrastructure"` kept. Strict surfaces a pre-existing unresolved `get_ibkr_credentials` (stale `.venv`/UTL drift) → error-backlog, NOT fixed here. |
-| 2 | unified-trading-system-ui | reviewed + gaps added (local, uncommitted) | **Frontend configs already canonical** — this repo was the SOURCE the frontend canonical was extracted from (`.prettierrc.json`, `eslint.config.mjs`, `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, `.pre-commit-config.yaml`, all 8 devDep pins verified identical to canonical). Gaps added: (a) `package.json` → `smoketest` script = `playwright test --config playwright.static.config.ts` (closes P (no `npm run smoketest` per `.claude/rules/ui.md`); static config runs `static-smoke`/`tier0-app-route-coverage`/`tier0-behavior-audit` specs). (b) **NEW `pyproject.toml`** added for the 7 `scripts/*.py` (P1) — canonical `[tool.ruff]`+format+lint(rich union)+mccabe+per-file-ignores, `[tool.basedpyright]` strict (`include=["scripts"]`), `[tool.pytest.ini_options]`, `[tool.coverage.run]`+`[tool.coverage.report]`, `[tool.bandit]`. | UI repo deviations (documented in the `pyproject.toml` header): no `[build-system]` (config-only, scripts not a buildable package); basedpyright `include=["scripts"]` only; `coverage fail_under = 0` (no Python test suite — frontend coverage gated via vitest/base-ui.sh); vendored `context/` (245 `.py`) excluded from every tool. `tooling-templates/` dir (earlier template artifact) flagged for removal — env blocks `rm`; remove manually. |
+| #   | Repo                      | Status                                     | Tooling changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Deviations (+ reason)                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --- | ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ibkr-gateway-infra        | config migrated (local, uncommitted)       | `pyproject [tool.*]` → canonical: ruff +exclude/+format/+mccabe/+per-file-ignores, select → rich union (+G +C90); `[tool.basedpyright]` → full explicit strict set, ported `venvPath`/`venv` from JSON; added `[tool.pytest.ini_options]`, `[tool.coverage.run]` (source+branch), `[tool.bandit]` (skips=[]). Deleted `pyrightconfig.json`. build-backend already hatchling. `config.py` + formatted files left untouched.                                                                                                                                                                                                                                                                                                                                                                                                                                               | `fail_under = 51` kept — gateway special-case (QG `MIN_COVERAGE=51`), documented in `pyproject_workspace_audit_2026_05_15`. `repo_arch_tier="infrastructure"` kept. Strict surfaces a pre-existing unresolved `get_ibkr_credentials` (stale `.venv`/UTL drift) → error-backlog, NOT fixed here.                                                                                                                                                       |
+| 2   | unified-trading-system-ui | reviewed + gaps added (local, uncommitted) | **Frontend configs already canonical** — this repo was the SOURCE the frontend canonical was extracted from (`.prettierrc.json`, `eslint.config.mjs`, `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, `.pre-commit-config.yaml`, all 8 devDep pins verified identical to canonical). Gaps added: (a) `package.json` → `smoketest` script = `playwright test --config playwright.static.config.ts` (closes P (no `npm run smoketest` per `.claude/rules/ui.md`); static config runs `static-smoke`/`tier0-app-route-coverage`/`tier0-behavior-audit` specs). (b) **NEW `pyproject.toml`** added for the 7 `scripts/*.py` (P1) — canonical `[tool.ruff]`+format+lint(rich union)+mccabe+per-file-ignores, `[tool.basedpyright]` strict (`include=["scripts"]`), `[tool.pytest.ini_options]`, `[tool.coverage.run]`+`[tool.coverage.report]`, `[tool.bandit]`. | UI repo deviations (documented in the `pyproject.toml` header): no `[build-system]` (config-only, scripts not a buildable package); basedpyright `include=["scripts"]` only; `coverage fail_under = 0` (no Python test suite — frontend coverage gated via vitest/base-ui.sh); vendored `context/` (245 `.py`) excluded from every tool. `tooling-templates/` dir (earlier template artifact) flagged for removal — env blocks `rm`; remove manually. |
 
 ### Workspace-wide rollout — COMPLETE 2026-05-26 (local, uncommitted)
 
-**Pre-rollout cleanup:** reverted 108 provably formatting-only `.py` files workspace-wide (test: `ruff format(HEAD) == ruff format(working)` → no false positives; 10 alerting-service files with substantive diffs correctly skipped). Backup at `/tmp/fmt_revert_backup.*`.
+**Pre-rollout cleanup:** reverted 108 provably formatting-only `.py` files workspace-wide (test:
+`ruff format(HEAD) == ruff format(working)` → no false positives; 10 alerting-service files with substantive diffs
+correctly skipped). Backup at `/tmp/fmt_revert_backup.*`.
 
-**All 24 repos now carry the full canonical `[tool.*]` set** (`ruff` + `format` + `lint`+mccabe+per-file-ignores · `basedpyright` strict + `executionEnvironments` · `pytest` · `coverage.run`+`report` · `bandit`). **Every `pyrightconfig.json` deleted workspace-wide (0 remain).** Done via parallel Sonnet sub-agents, 1 repo each, config-only (no tool runs, no commits).
+**All 24 repos now carry the full canonical `[tool.*]` set** (`ruff` + `format` + `lint`+mccabe+per-file-ignores ·
+`basedpyright` strict + `executionEnvironments` · `pytest` · `coverage.run`+`report` · `bandit`). **Every
+`pyrightconfig.json` deleted workspace-wide (0 remain).** Done via parallel Sonnet sub-agents, 1 repo each, config-only
+(no tool runs, no commits).
 
-| Repo | fail_under | pyrightconfig extraPaths ported | Notable deviation (reason) |
-| --- | --- | --- | --- |
-| ibkr-gateway-infra | 51 (gateway special-case) | exec-env added (1: utl) | venvPath/venv kept |
-| unified-trading-library | 80 (lib floor) | 3 | removed `[tool.mypy]` |
-| unified-api-contracts | 84 (ratchet kept) | 0 | `reportPrivateUsage="warning"` kept (external consumers import normalize_utils) |
-| alerting-service | 78 (kept) | 5 | **setuptools→hatchling** (+`[tool.hatch.build.targets.wheel]`); max-complexity 7→26, line-length 100→120; dropped pytest addopts |
-| batch-live-reconciliation-service | 80 (kept) | 5 | — |
-| client-reporting-api | 70 | 4 | max-complexity 7 kept (stricter); strict restored (was relaxed-backlog) |
-| deployment-api | 70 | 3 | merged `B008` ignore |
-| deployment-service | 70 | 4 | max-complexity 55 kept (looser — many complex files w/ per-file C901); strict restored |
-| execution-service | 70 | 14 | `stubPath="stubs"` kept; strict restored (largest backlog) |
-| features-service | 0→70 (ratcheted up) | 4 | per-family test layout preserved; strict restored |
-| instruments-service | 77 (kept) | 5 | E501 kept in ignore |
-| market-data-processing-service | 77 (kept) | 6 | ruff `external` noqa list kept; debt-bypass excludes kept |
-| market-tick-data-service | 71 (kept) | 0 | bandit skips B608/B104/B108/B310 kept; market_interface excluded |
-| ml-inference-service | 70 | 7 | max-complexity 7 kept (stricter) |
-| ml-service | 70 | 2 | max-complexity 7→26 |
-| ml-training-service | 80 (kept) | 7 | max-complexity 7 kept (stricter) |
-| strategy-service | 74 (kept) | 6 | C901 in ignore (Phase-5 deferral) so 26 ceiling is no-op; strict restored |
-| trading-agent-service | 70 | 5 | max-complexity 7 kept (stricter); dropped non-canonical pytest python_functions/addopts |
-| unified-trading-api | 70 | 0 | `reportCallInDefaultInitializer="none"` kept; max-complexity 10→26 |
-| agent-orchestrator | 70 | n/a (no pyrightconfig) | package dir = `server`; Vite `dashboard/` excluded; E501 kept |
-| e2e-testing | 0 (scripts-only) | 0 | **no build-system** (config-only); include=`["scripts"]` |
-| system-integration-tests | 0 (tests-only) | 6 | **no build-system**; include=`["tests","scripts","system_integration_tests"]` |
-| unified-trading-pm | 0 (scripts-only) | 2 | **no build-system**; include=`["scripts"]` |
-| unified-trading-system-ui | n/a (added pyproject for `scripts/`) | n/a | **no build-system**; coverage floor 0; vendored `context/` excluded |
+| Repo                              | fail_under                           | pyrightconfig extraPaths ported | Notable deviation (reason)                                                                                                       |
+| --------------------------------- | ------------------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| ibkr-gateway-infra                | 51 (gateway special-case)            | exec-env added (1: utl)         | venvPath/venv kept                                                                                                               |
+| unified-trading-library           | 80 (lib floor)                       | 3                               | removed `[tool.mypy]`                                                                                                            |
+| unified-api-contracts             | 84 (ratchet kept)                    | 0                               | `reportPrivateUsage="warning"` kept (external consumers import normalize_utils)                                                  |
+| alerting-service                  | 78 (kept)                            | 5                               | **setuptools→hatchling** (+`[tool.hatch.build.targets.wheel]`); max-complexity 7→26, line-length 100→120; dropped pytest addopts |
+| batch-live-reconciliation-service | 80 (kept)                            | 5                               | —                                                                                                                                |
+| client-reporting-api              | 70                                   | 4                               | max-complexity 7 kept (stricter); strict restored (was relaxed-backlog)                                                          |
+| deployment-api                    | 70                                   | 3                               | merged `B008` ignore                                                                                                             |
+| deployment-service                | 70                                   | 4                               | max-complexity 55 kept (looser — many complex files w/ per-file C901); strict restored                                           |
+| execution-service                 | 70                                   | 14                              | `stubPath="stubs"` kept; strict restored (largest backlog)                                                                       |
+| features-service                  | 0→70 (ratcheted up)                  | 4                               | per-family test layout preserved; strict restored                                                                                |
+| instruments-service               | 77 (kept)                            | 5                               | E501 kept in ignore                                                                                                              |
+| market-data-processing-service    | 77 (kept)                            | 6                               | ruff `external` noqa list kept; debt-bypass excludes kept                                                                        |
+| market-tick-data-service          | 71 (kept)                            | 0                               | bandit skips B608/B104/B108/B310 kept; market_interface excluded                                                                 |
+| ml-inference-service              | 70                                   | 7                               | max-complexity 7 kept (stricter)                                                                                                 |
+| ml-service                        | 70                                   | 2                               | max-complexity 7→26                                                                                                              |
+| ml-training-service               | 80 (kept)                            | 7                               | max-complexity 7 kept (stricter)                                                                                                 |
+| strategy-service                  | 74 (kept)                            | 6                               | C901 in ignore (Phase-5 deferral) so 26 ceiling is no-op; strict restored                                                        |
+| trading-agent-service             | 70                                   | 5                               | max-complexity 7 kept (stricter); dropped non-canonical pytest python_functions/addopts                                          |
+| unified-trading-api               | 70                                   | 0                               | `reportCallInDefaultInitializer="none"` kept; max-complexity 10→26                                                               |
+| agent-orchestrator                | 70                                   | n/a (no pyrightconfig)          | package dir = `server`; Vite `dashboard/` excluded; E501 kept                                                                    |
+| e2e-testing                       | 0 (scripts-only)                     | 0                               | **no build-system** (config-only); include=`["scripts"]`                                                                         |
+| system-integration-tests          | 0 (tests-only)                       | 6                               | **no build-system**; include=`["tests","scripts","system_integration_tests"]`                                                    |
+| unified-trading-pm                | 0 (scripts-only)                     | 2                               | **no build-system**; include=`["scripts"]`                                                                                       |
+| unified-trading-system-ui         | n/a (added pyproject for `scripts/`) | n/a                             | **no build-system**; coverage floor 0; vendored `context/` excluded                                                              |
 
 **Frontend (2 repos):**
-- `unified-trading-system-ui` — already canonical (the reference); added `smoketest` script + scripts-scoped `pyproject.toml`.
-- `deployment-ui` (Vite) — added `.prettierrc.json` (verbatim from UI), bumped shared pins (prettier/eslint/eslint-config-prettier/typescript/vitest/@playwright/test), added husky ^9.1.7 + lint-staged ^16.4.0 + `prepare:husky` + lint-staged block + `.husky/pre-commit`, `eslintConfigPrettier` confirmed last, deleted vestigial `pyrightconfig.json` (0 Python files). Vite-specific eslint/tsconfig untouched (intentional framework deviation).
+
+- `unified-trading-system-ui` — already canonical (the reference); added `smoketest` script + scripts-scoped
+  `pyproject.toml`.
+- `deployment-ui` (Vite) — added `.prettierrc.json` (verbatim from UI), bumped shared pins
+  (prettier/eslint/eslint-config-prettier/typescript/vitest/@playwright/test), added husky ^9.1.7 + lint-staged
+  ^16.4.0 + `prepare:husky` + lint-staged block + `.husky/pre-commit`, `eslintConfigPrettier` confirmed last, deleted
+  vestigial `pyrightconfig.json` (0 Python files). Vite-specific eslint/tsconfig untouched (intentional framework
+  deviation).
 - `user-management-ui` — NOT checked out in this workspace; pending if/when present.
 
-**Convention adopted (max-complexity):** canonical floor is 26; repos with a STRICTER existing ratchet (7) keep it (never loosen); `deployment-service` keeps its looser 55 as a documented carve-out.
+**Convention adopted (max-complexity):** canonical floor is 26; repos with a STRICTER existing ratchet (7) keep it
+(never loosen); `deployment-service` keeps its looser 55 as a documented carve-out.
 
-**Next (operator runs later — NOT done here):** run each repo's `quality-gates.sh`/`ruff`/`basedpyright` to surface + fix the strict-mode type errors now unmasked (esp. the 7-repo strict-relaxed backlog: execution-service, features-service, strategy-service, deployment-service, client-reporting-api, unified-trading-library, unified-trading-pm). All edits remain local + uncommitted.
+**Next (operator runs later — NOT done here):** run each repo's `quality-gates.sh`/`ruff`/`basedpyright` to surface +
+fix the strict-mode type errors now unmasked (esp. the 7-repo strict-relaxed backlog: execution-service,
+features-service, strategy-service, deployment-service, client-reporting-api, unified-trading-library,
+unified-trading-pm). All edits remain local + uncommitted.
 
 ### Violation baseline under new strict tooling (measured 2026-05-26)
 
@@ -319,84 +340,96 @@ Measured per-repo against the repo's own `.venv` with the new config: `ruff chec
 unmasked by `reportAny`/`reportUnknown* = "error"` + the rich ruff union. **Counts are the work to burn down, NOT
 regressions** — the old configs hid them (pyrightconfig `reportUnknown*=none` + minimal ruff selects).
 
-| Repo | ruff | basedpyright |
-| --- | ---: | ---: |
-| agent-orchestrator | 0 | 391 |
-| alerting-service | 0 | 2125 |
-| batch-live-reconciliation-service | 2 | 340 |
-| client-reporting-api | 0 | 330 |
-| deployment-api | 8 | 247 |
-| deployment-service | 32 | 1640 |
-| e2e-testing | 106 | 5765 |
-| execution-service | 473 | 1852 |
-| features-service | 1 | 1877 |
-| ibkr-gateway-infra | 0 | 6 |
-| instruments-service | 4 | 1386 |
-| market-data-processing-service | 130 | 23 |
-| market-tick-data-service | 19 | 229 |
-| ml-inference-service | 0 | 1429 |
-| ml-service | 158 | 132 |
-| ml-training-service | 152 | 9 |
-| strategy-service | 0 | 13220 |
-| system-integration-tests | 71 | 357 |
-| trading-agent-service | 22 | 1 |
-| unified-api-contracts | 10 | 1 |
-| unified-trading-api | 1 | 89 |
-| unified-trading-library | 508 | 1017 |
-| unified-trading-pm | 208 | 1172 |
-| unified-trading-system-ui | 6 | 20 |
-| **TOTAL** | **~1,911** | **~33,658** |
+| Repo                              |       ruff | basedpyright |
+| --------------------------------- | ---------: | -----------: |
+| agent-orchestrator                |          0 |          391 |
+| alerting-service                  |          0 |         2125 |
+| batch-live-reconciliation-service |          2 |          340 |
+| client-reporting-api              |          0 |          330 |
+| deployment-api                    |          8 |          247 |
+| deployment-service                |         32 |         1640 |
+| e2e-testing                       |        106 |         5765 |
+| execution-service                 |        473 |         1852 |
+| features-service                  |          1 |         1877 |
+| ibkr-gateway-infra                |          0 |            6 |
+| instruments-service               |          4 |         1386 |
+| market-data-processing-service    |        130 |           23 |
+| market-tick-data-service          |         19 |          229 |
+| ml-inference-service              |          0 |         1429 |
+| ml-service                        |        158 |          132 |
+| ml-training-service               |        152 |            9 |
+| strategy-service                  |          0 |        13220 |
+| system-integration-tests          |         71 |          357 |
+| trading-agent-service             |         22 |            1 |
+| unified-api-contracts             |         10 |            1 |
+| unified-trading-api               |          1 |           89 |
+| unified-trading-library           |        508 |         1017 |
+| unified-trading-pm                |        208 |         1172 |
+| unified-trading-system-ui         |          6 |           20 |
+| **TOTAL**                         | **~1,911** |  **~33,658** |
 
 Hotspots: `strategy-service` (13,220 basedpyright — by far the largest), `e2e-testing` (5,765, scripts-heavy/untyped),
 `alerting-service` (2,125), `features-service` (1,877), `execution-service` (1,852 bp + 473 ruff). Cleanest:
 `ibkr-gateway-infra` (0/6), `trading-agent-service` (22/1), `unified-api-contracts` (10/1), `unified-trading-system-ui`
-(6/20). Caveat: basedpyright run on `include` dirs against each repo's local `.venv`; full-QG `extraPaths` resolution may
-shift counts slightly. ruff `?`-free; two repos initially showed `?` for basedpyright (scan grep matched plural
+(6/20). Caveat: basedpyright run on `include` dirs against each repo's local `.venv`; full-QG `extraPaths` resolution
+may shift counts slightly. ruff `?`-free; two repos initially showed `?` for basedpyright (scan grep matched plural
 `errors,` not singular `1 error,`) — both re-measured = 1.
 
 ### A/B: basedpyright count under canonical-strict vs pre-rollout per-repo settings (2026-05-26)
 
 To quantify how much of the ~33.7k was the strict bump vs real pre-existing surface, each repo's `[tool.basedpyright]`
 `report*` keys were reverted to **exactly its pre-rollout values** — the `pyrightconfig.json` where one existed (it took
-runtime precedence), else the old pyproject block. The jsons were **heterogeneous** (execution/strategy/deployment-service
-relaxed nearly all type-correctness rules to `none`; instruments/mtds/uac were ~fully strict). `include`/`exclude`/
-`executionEnvironments` kept. ruff unchanged (only `report*` keys touched). `unified-trading-pm` reverted to its old
-`typeCheckingMode = "standard"`; `unified-trading-system-ui` had no prior Python config → left strict.
+runtime precedence), else the old pyproject block. The jsons were **heterogeneous**
+(execution/strategy/deployment-service relaxed nearly all type-correctness rules to `none`; instruments/mtds/uac were
+~fully strict). `include`/`exclude`/ `executionEnvironments` kept. ruff unchanged (only `report*` keys touched).
+`unified-trading-pm` reverted to its old `typeCheckingMode = "standard"`; `unified-trading-system-ui` had no prior
+Python config → left strict.
 
-| Repo | strict (canonical) | reverted (pre-rollout json) | Δ |
-| --- | ---: | ---: | ---: |
-| agent-orchestrator | 391 | 0 | −391 |
-| alerting-service | 2125 | 2125 | 0 |
-| batch-live-reconciliation-service | 340 | 340 | 0 |
-| client-reporting-api | 330 | 33 | −297 |
-| deployment-api | 247 | 247 | 0 |
-| deployment-service | 1640 | 0 | −1640 |
-| e2e-testing | 5765 | 5785 | +20 |
-| execution-service | 1852 | 36 | −1816 |
-| features-service | 1877 | 38 | −1839 |
-| ibkr-gateway-infra | 6 | 6 | 0 |
-| instruments-service | 1386 | 1371 | −15 |
-| market-data-processing-service | 23 | 23 | 0 |
-| market-tick-data-service | 229 | 468 | +239 |
-| ml-inference-service | 1429 | 1046 | −383 |
-| ml-service | 132 | 132 | 0 |
-| ml-training-service | 9 | 9 | 0 |
-| strategy-service | 13220 | 237 | −12983 |
-| system-integration-tests | 357 | 372 | +15 |
-| trading-agent-service | 1 | 1 | 0 |
-| unified-api-contracts | 1 | 8 | +7 |
-| unified-trading-api | 89 | 89 | 0 |
-| unified-trading-library | 1017 | 2 | −1015 |
-| unified-trading-pm | 1172 | 191 | −981 |
-| unified-trading-system-ui | 20 | 20 | 0 |
-| **TOTAL** | **~33,658** | **~12,579** | **−21,079** |
+| Repo                              | strict (canonical) | reverted (pre-rollout json) |           Δ |
+| --------------------------------- | -----------------: | --------------------------: | ----------: |
+| agent-orchestrator                |                391 |                           0 |        −391 |
+| alerting-service                  |               2125 |                        2125 |           0 |
+| batch-live-reconciliation-service |                340 |                         340 |           0 |
+| client-reporting-api              |                330 |                          33 |        −297 |
+| deployment-api                    |                247 |                         247 |           0 |
+| deployment-service                |               1640 |                           0 |       −1640 |
+| e2e-testing                       |               5765 |                        5785 |         +20 |
+| execution-service                 |               1852 |                          36 |       −1816 |
+| features-service                  |               1877 |                          38 |       −1839 |
+| ibkr-gateway-infra                |                  6 |                           6 |           0 |
+| instruments-service               |               1386 |                        1371 |         −15 |
+| market-data-processing-service    |                 23 |                          23 |           0 |
+| market-tick-data-service          |                229 |                         468 |        +239 |
+| ml-inference-service              |               1429 |                        1046 |        −383 |
+| ml-service                        |                132 |                         132 |           0 |
+| ml-training-service               |                  9 |                           9 |           0 |
+| strategy-service                  |              13220 |                         237 |      −12983 |
+| system-integration-tests          |                357 |                         372 |         +15 |
+| trading-agent-service             |                  1 |                           1 |           0 |
+| unified-api-contracts             |                  1 |                           8 |          +7 |
+| unified-trading-api               |                 89 |                          89 |           0 |
+| unified-trading-library           |               1017 |                           2 |       −1015 |
+| unified-trading-pm                |               1172 |                         191 |        −981 |
+| unified-trading-system-ui         |                 20 |                          20 |           0 |
+| **TOTAL**                         |        **~33,658** |                 **~12,579** | **−21,079** |
 
 **Read:** ~63% of the strict total was the `reportAny`/`reportUnknown*`→error bump on the repos whose jsons had relaxed
 those (strategy −12,983, execution −1,816, features −1,839, deployment-service −1,640, UTL −1,015). **The remaining
-~12,579 is the genuine pre-existing type-error surface that was live all along** under the old per-repo settings.
-A few repos went slightly UP after revert (mtds +239, uac +7, sys-int +15, e2e +20) because the canonical suppressed
+~12,579 is the genuine pre-existing type-error surface that was live all along** under the old per-repo settings. A few
+repos went slightly UP after revert (mtds +239, uac +7, sys-int +15, e2e +20) because the canonical suppressed
 `reportUnusedImport/Variable/PrivateUsage = none` (ruff owns those) while those repos' jsons did not — reverting
 re-enables strict-default unused/private checks. **Current workspace state = pre-rollout per-repo strictness restored
 (local, uncommitted); ruff/format/pytest/coverage/bandit canonical retained; `pyrightconfig.json` still deleted (config
 now lives in pyproject).** Operator decision pending: keep canonical-strict (33.7k to burn down) vs codify pre-rollout
 per-repo strictness (12.6k) vs a middle policy.
+
+## Phase 1 — Tracking (slot 7)
+
+- [x] ✅ [CHORE] P1. alerting-service: line-length 100→120 + hatchling build-backend — alerting-service@1431ef1
+- [x] ✅ [CHORE] P1. mdps: remove mypy dep (basedpyright superset) — mdps@0ce344e
+- [x] ✅ [CHORE] P1. UTL: remove mypy dep — UTL@d258af48
+- [x] ✅ [CHORE] P1. ml-service: remove mypy dep (ml-training-service archived; fix applied to live repo) —
+      ml-service@4bc33f3
+- [x] ✅ [CHORE] P1. e2e-testing: target-version=py313 (already in LDR HEAD via 1431ef1 rollout; no delta)
+- [x] ✅ [FIX] P1. system-integration-tests: target-version=py313 (LDR HEAD); sports arb pipeline imports
+      unified_sports_execution_interface → execution_service.sports_execution — SIT@9bad68c
