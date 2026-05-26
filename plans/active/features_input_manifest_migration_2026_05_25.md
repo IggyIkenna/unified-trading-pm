@@ -129,12 +129,14 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Downstream findings exposed by the read fix (2026-05-25) — outside input-read scope
 
-- [ ] 🔴 [BUG] P0. **`write_daily_partition: string index out of range`** fails for EVERY successfully-loaded instrument
-      (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Originates in
-      `feature_writer.py` `_write_daily_partitions`→`_write_parquet` (DataSink path templating on the colon-bearing
+- [x] ✅ 🔴 [BUG] P0. **`write_daily_partition: string index out of range`** fails for EVERY successfully-loaded
+      instrument (all BITGET perps), blocking all feature writes → "0/83 completed" despite candles loading. Originates
+      in `feature_writer.py` `_write_daily_partitions`→`_write_parquet` (DataSink path templating on the colon-bearing
       canonical instrument_id is the prime suspect). Was masked until now because nothing loaded. **OWNED BY**
       `plans/active/features_service_e2e_pipeline_test_2026_05_26.md` Phase 1 (reproduce → root-cause → fix → unit
-      test). Provenance: features_input_manifest_migration e2e run 2026-05-25.
+      test). Provenance: features_input_manifest_migration e2e run 2026-05-25. — features-service@ea357010 (Harsh):
+      root-cause = empty bucket, not instrument_id. Fixed via `_get_sink_bucket` + `resolve_bucket_name`. Validated:
+      ADAUSDT write+read-back clean on 2026-05-03.
 - [x] ✅ [BUG] P1. **Instrument-ID compose fixed** (the 404s were mostly "no data yet"; the real bug was id compose).
       `_compose_instrument_ids` now always builds canonical `{venue}:{instrument_type}:{symbol}` from the separate
       manifest columns — matching the MDPS writer (`build_processed_candle_path`, which is MDPS-local so features must
