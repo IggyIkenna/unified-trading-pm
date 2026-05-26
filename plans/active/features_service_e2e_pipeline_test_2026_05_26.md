@@ -167,20 +167,26 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - [x] ✅ [VALIDATE] P0. **Manifest emission assertion PASS.** Each successful write co-emits a v8 manifest row to the
       `-test` bucket `_index` (`capture_status="captured"`, `service_name="features-service"`); prod bucket stays empty.
       Verified via the divergence fix above.
-- [ ] 🔴 [FINDING-A] P1. **Illiquid instruments at 15s → NaN-heavy indicators → honestly rejected
-      (calculator-correctness finding).** ADA (esp. ADA-SPOT) shards rejected by the WriteGate: ATR
-      (`volatility_realized`), ADX/+DI/-DI/DX/PPO (`momentum`), swing_high/low (`market_structure`), volume-profile
-      POC/VAH/VAL (`volume_analysis`), vwap_acceleration (`vwap`) come out **100% NaN**. Root cause hypothesis: at 15s,
-      illiquid instruments have many flat/zero-volume bars → zero true-range → ATR-derived + swing + volume-profile
-      indicators degrade to NaN; BTC (liquid) is clean. The WriteGate is doing its job (no garbage written).
-      **Decision:** (a) compute these at a coarser default timeframe (1m/5m) where flat bars are rare, and/or (b) make
-      the calculators handle flat/zero-TR bars (ATR=0 → ADX neutral, not NaN). Verify by a 1m re-run of ADA. Provenance:
-      e2e Phase 2 2026-05-26.
-- [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` came out all-NaN for all 4
-      instruments → group marked FAILED → the batch handler **aborted before the remaining 9 of 17 feature groups ran**.
-      A degenerate single group should not block the rest. Make the CLI batch path **group-isolated** (continue on group
-      failure, report per-group status) — mirrors the shard-level-failure-isolation HARD RULE. Provenance: e2e Phase 2
-      2026-05-26.
+- [x] ✅ [FINDING-A] P1. **VERIFIED + SPLIT via 1m re-run (operator-directed).** Two distinct causes behind the all-NaN
+      rejections — confirmed by re-running ADA at 1m:
+  - **(A1) timeframe/liquidity-driven — NOT a bug.** ATR (`volatility_realized`) + ADX/+DI/-DI/DX (`momentum`): ADA-SPOT
+    momentum NaN columns dropped **100 → 12** going 15s→1m, ADX/DI **cleared**. At 15s illiquid instruments have
+    flat/zero-true-range bars → these degrade; coarser timeframe fixes it; liquid BTC was always clean. Takeaway: these
+    indicators have a **minimum sensible timeframe per liquidity** — choose timeframe accordingly (not a code fix).
+    volume-profile + vwap_acceleration are the same class.
+  - **(A2) REAL calculator bugs — independent of timeframe AND liquidity.** Two spinoff todos below.
+- [ ] 🔴 [BUG] P1. **`market_structure` swing_high/swing_low = 100% NaN at every timeframe + every liquidity.** All-NaN
+      at 15s AND 1m, and for **liquid BTC** as well as ADA → swing-point detection is broken, not a data artifact. 16
+      columns (swing_high/low value+distance + lags) always NaN → group always fails. File:
+      `delta_one/app/calculators/market_structure.py`. Provenance: e2e Phase 2 1m re-run 2026-05-26.
+- [ ] 🔴 [BUG] P1. **`ppo`/`ppo_signal`/`ppo_histogram` = 100% NaN even at 1m** (1440 bars; PPO needs only ~26-bar EMA
+      warmup, so 100% NaN is a calc bug not warmup). Blocks the `momentum` shard even after ADX clears at 1m. File:
+      `delta_one/app/calculators/` (momentum/oscillator PPO). Provenance: e2e Phase 2 1m re-run 2026-05-26.
+- [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` all-NaN → group marked
+      FAILED → the batch handler **aborted before the remaining 9 of 17 feature groups ran**. A degenerate single group
+      should not block the rest. Make the CLI batch path **group-isolated** (continue on group failure, report per-group
+      status) — mirrors the shard-level-failure-isolation HARD RULE. **PAUSED per operator 2026-05-26** (fix not
+      started). Provenance: e2e Phase 2 2026-05-26.
 
 ### Phase 3 — multi_timeframe (transitive on delta_one output) `[P1]`
 
