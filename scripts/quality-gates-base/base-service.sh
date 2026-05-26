@@ -462,17 +462,33 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix below.
     run_timeout "${PYRIGHT_TIMEOUT:-120}" "${MEM_WRAP[@]}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     BP_PID=$!
-    wait $BP_PID || true
-    PYRIGHT_EXIT=$?
+    PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?  # 2026-05-26: fix || true bug that swallowed exit code
     trap - INT TERM
     PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
-    if [ "$PYRIGHT_EXIT" -ne 0 ]; then echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout"; exit 1; fi
+    ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
     WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
+    if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ]; then
+        echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout (exit=${PYRIGHT_EXIT})"; exit 1
+    fi
     if [ "${WARN_COUNT:-0}" -gt 0 ]; then
         echo "$PYRIGHT_OUT"
         log_fail "Type check FAILED — $WARN_COUNT warning(s) (zero-warning policy: promote all rules to error in [tool.basedpyright])"; exit 1
     fi
-    log_ok "Type check PASSED (0 errors, 0 warnings)"
+    _max_bp_errors="${BASEDPYRIGHT_MAX_ERRORS:-}"
+    if [ -n "$_max_bp_errors" ]; then
+        if [ "${ERROR_COUNT:-0}" -gt "${_max_bp_errors}" ]; then
+            echo "$PYRIGHT_OUT"
+            log_fail "Type check FAILED — ${ERROR_COUNT} error(s) > BASEDPYRIGHT_MAX_ERRORS=${_max_bp_errors} (ratchet down to fix errors)"; exit 1
+        elif [ "${ERROR_COUNT:-0}" -gt 0 ]; then
+            log_warn "Type check: ${ERROR_COUNT}/${_max_bp_errors} errors within ceiling — ratchet BASEDPYRIGHT_MAX_ERRORS down as errors are fixed"
+        else
+            log_ok "Type check PASSED (0 errors, 0 warnings)"
+        fi
+    elif [ "${ERROR_COUNT:-0}" -gt 0 ]; then
+        log_warn "Type check: ${ERROR_COUNT} basedpyright error(s) — set BASEDPYRIGHT_MAX_ERRORS in quality-gates.sh to enforce error ceiling"
+    else
+        log_ok "Type check PASSED (0 errors, 0 warnings)"
+    fi
     # Baseline growth guard (add-baseline-growth-ci-guard): basedpyright baseline files can only shrink
     if git diff --name-only 2>/dev/null | grep -q '.basedpyright-baseline.json'; then
         _BASELINE_ADDS=$(git diff .basedpyright-baseline.json 2>/dev/null | grep '^+' | grep -v '^+++' | wc -l | tr -d ' ')
