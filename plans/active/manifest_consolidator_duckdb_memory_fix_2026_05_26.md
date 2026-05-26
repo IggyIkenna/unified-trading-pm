@@ -1,13 +1,15 @@
 ---
 title: "Manifest consolidator — memory-bounded DuckDB rewrite (cefi flat OOM fix)"
 created: 2026-05-26
-author: harsh + Claude Opus 4.7 (1M)
 status: active
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-26
 ---
 
 # Manifest consolidator — memory-bounded DuckDB rewrite
