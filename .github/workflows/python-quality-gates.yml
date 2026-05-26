@@ -197,6 +197,19 @@ jobs:
         run: |
           export PATH="$(pwd)/.venv/bin:$PATH"
           set -o pipefail
+          # cloud-providers.yaml SSOT for tests: deployment-service (canonical) is absent in
+          # per-repo CI, so unified_trading_library.cloud_interface.bucket_naming can't locate
+          # the workspace root via its sibling-deployment-service probe → any test that resolves
+          # a bucket raises BucketNamingError ("SSOT not found"). PM (always cloned to
+          # ../unified-trading-pm above) ships a HARDCODED test SSOT derived from the canonical
+          # (env templates pre-substituted with test values, so it resolves with NO GCP_PROJECT_ID
+          # / DEPLOYMENT_ENV_SHORT set). Point the documented env override at it so EVERY repo's
+          # tests resolve buckets without a per-repo fixture. Only set when present + unset.
+          if [ -z "${UNIFIED_TRADING_CLOUD_PROVIDERS_YAML:-}" ]; then
+            _cp_yaml="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/unified-trading-pm/scripts/quality-gates-base/ci-test-cloud-providers.yaml"
+            [ -f "$_cp_yaml" ] && export UNIFIED_TRADING_CLOUD_PROVIDERS_YAML="$_cp_yaml" \
+              && echo "ci: UNIFIED_TRADING_CLOUD_PROVIDERS_YAML -> $_cp_yaml (PM CI test SSOT)"
+          fi
           bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
 
       - name: Record CI status (branch-aware lifecycle)
