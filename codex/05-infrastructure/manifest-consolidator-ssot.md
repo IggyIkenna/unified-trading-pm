@@ -140,18 +140,19 @@ consolidated manifest**:
 | ml-artifacts          | (1)                                              |
 | ml-training-artifacts | (1)                                              |
 
-**Status 2026-05-26**: AWS Phase D TF authored (deployment-service@effdcb2) covering all 16 buckets in the table above.
-GCP extension TF not yet authored — still pending.
+**Status 2026-05-26**:
 
-**Action required** (GCP-side, owner: vm-cross-cutting):
+- **AWS Phase D**: TF authored (deployment-service@effdcb2), `terraform plan` verified. Pending `tofu apply` by operator
+  (P1.10 in `plans/active/aws_manifest_consolidator_scope_2026_05_21.md`).
+- **GCP Phase D**: TF authored (deployment-service@e8e72e7) — 14 buckets (strategy consolidated to 1 flat per D6 Phase
+  4; AWS has 16 because strategy-cefi/tradfi/defi per-AG buckets still exist on AWS side). Pending `tofu apply` by
+  operator.
 
-1. Verify each missing service actually emits manifest rows (some may write raw parquets without
-   `_index/per_vm/<vm>.parquet` shards — in which case no consolidator needed).
-2. For services that DO emit: extend `manifest_consolidator_buckets` locals in the GCP Terraform with the missing
-   entries (same pattern as the AWS Phase D block).
-3. Add per-bucket timeout overrides if shard count is high.
-4. `tofu apply` (or `terraform apply`) + verify the new Cloud Run jobs + crons land.
-5. Re-run A3 v3 — every service has a consolidated manifest OR an explicit `BLOCKED-OPERATOR-DECISION` ack.
+**Action required** (both clouds, owner: vm-cross-cutting):
+
+1. `tofu apply` GCP + verify 14 new Cloud Run jobs + crons land (`gcloud run jobs list --filter name~consolidator`).
+2. `tofu apply` AWS + verify 26 rules ENABLED (`aws events list-rules --name-prefix uts-prod-consolidator`).
+3. Re-run A3 v3 — every service has a consolidated manifest OR an explicit `BLOCKED-OPERATOR-DECISION` ack.
 
 **Cadence question** (operator decides): should we keep `*/1 * * * *` per service kind × asset_group (currently 10 jobs
 minute-by-minute = 600 invocations/hour), OR consolidate to per-asset-group only (5 jobs that each consolidate every
