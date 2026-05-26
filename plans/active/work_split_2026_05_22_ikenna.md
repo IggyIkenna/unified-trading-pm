@@ -123,13 +123,21 @@ MTDS-3.2.B done 2026-05-17). Phase 1 CeFi / Phase 2 DeFi / Phase 5 Pred: gated o
 
 **Ping**: `ikenna_orchestrator/pings/slot_7.md`
 
-**Wave 1 (pending)**: `strategy_repo_consolidation_2026_05_19.md` Phase 11a + `ml_repo_consolidation_2026_05_19.md`
-Phase 11b — terraform destroy 5 archived stacks + shared TF cleanup + grafana.
+**Wave 1 (✅ DONE)**: Phase 11a (deployment-service@09c45f4 — terraform destroy, prior session) + Phase 11b already
+completed. Sports Phase 3+4 DONE (instruments-service@fc7b306 + UTL@94e43e8c + features-service@9847b350,
+2026-05-22/24).
 
-**Wave 2**: `features_backfill_phase3_2026_05_22.md` (gated on MDPS per-AG verify GREEN) — CeFi/DeFi/TradFi feature
-compute. Then `promote_workflow_may23_cli_path_2026_05_10.md` — `preflight-cutover.sh` + `run-paper.sh`/`run-live.sh`
-updates + testnet venue constructors (Bybit/Binance/OKX/Hyperliquid/Aster missing testnet mode) + Solana devnet for LST
-archetypes.
+**Wave 2 (ROLLOUT-AGENT HOLD)**: `features_backfill_phase3_2026_05_22.md` — operator hold, do not touch.
+`promote_workflow_may23_cli_path_2026_05_10.md` — gated on features_backfill.
+
+**vm-cross-cutting dispatch (2026-05-26, overnight autonomous run)**:
+
+- ✅ [FIX] P0. basedpyright `|| true` exit-code swallow in base-service.sh — PM@fd4d1ef4c (CRITICAL infrastructure fix)
+- ✅ [FIX] P1. deployment-service BASEDPYRIGHT_MAX_ERRORS=1297 ratchet baseline — deployment-service@25dd325
+- ✅ [FIX] P1. deployment-service QG: resolve 149 ruff errors + STEP 5.21 + coverage ≥70% — deployment-service@e7fea4e
+- ✅ [FIX] P1. deployment-api STEP 5.77: annotate L2-mode-seam exceptions — deployment-api@644b349
+- ✅ [FIX] P1. deployment-api STEP 5.90: wire compute_honest_coverage into execution data-status —
+  deployment-api@644b349
 
 ---
 

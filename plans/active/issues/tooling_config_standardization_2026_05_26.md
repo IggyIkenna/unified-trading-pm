@@ -64,7 +64,11 @@ locked_since: 2026-05-26
 > only 2 repos currently fail the warning gate (market-data-processing-service = 1w, ml-inference-service = 100w).
 >
 > **Scope:** shared `base-service.sh` → applies to every repo that sources it (verified concretely on deployment-api;
-> logically workspace-wide). **Status: UNFIXED.** **Owner: TBD.** **Verified: slot-Harsh session 2026-05-26.**
+> logically workspace-wide). **Status: ✅ FIXED 2026-05-26 slot-7.** Fix:
+> `PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?` + `BASEDPYRIGHT_MAX_ERRORS` ratchet. PM@fd4d1ef4c |
+> deployment-service@25dd325 (first adopter, ceiling=1297). Per-repo enrollment: set
+> `BASEDPYRIGHT_MAX_ERRORS=<current_count>` in each repo's `quality-gates.sh` before the ceiling is enforced. **Owner:
+> slot-7 / vm-cross-cutting.** **Verified: slot-Harsh session 2026-05-26.**
 
 ## What I found
 
