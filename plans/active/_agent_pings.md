@@ -4981,6 +4981,10 @@ live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secr
 - **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config
   gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py`
   (`_SM_CHAT_ID_OPS`).
+- **✅ [2026-05-26 ikenna-slot-7 ACK]**: Secret `alerting-telegram-chat-id-ops` created (version [1], value `-5296232662`,
+  project `central-element-323112`, replication=automatic). IAM: `roles/secretmanager.secretAccessor` granted to
+  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (same SA used by alerting-service Cloud Run jobs
+  per `audit03_cron_provisioning.tf`). Hot-reload picks it up within ~5 min. Dual-channel split is LIVE.
 
 ---
 
