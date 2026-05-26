@@ -507,15 +507,21 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 > **MIGRATED FROM:** `aws_migration_defi_first_2026_05_07.md` (archived 2026-05-23) — DeFi S3/Athena/Glue migration
 > complete; remaining items are AWS parity extensions + post-cutover cross-asset-group work.
 
-- [ ] [AGENT] P2. **GCP Pub/Sub topic inventory** — inventory all Pub/Sub topics + subscriptions; document UCI
+- [x] [AGENT] P2. **GCP Pub/Sub topic inventory** — inventory all Pub/Sub topics + subscriptions; document UCI
       `MessageBus` abstraction gap (deploy-service currently GCP-only; AWS SNS equivalent not wired). Gate: confirm
-      whether AWS SNS mirroring is needed before post-cutover backfill VMs launch.
-- [ ] [AGENT] P2. **UCI `MessageBus` abstraction** — once inventory done, create `MessageBus` interface in UTL that
+      whether AWS SNS mirroring is needed before post-cutover backfill VMs launch. — **DONE 2026-05-26 slot-7** |
+      PM@b32702f60 | Findings: 23 TF-managed event-bus topics + 38 legacy/unmanaged. AWS SNS NOT required before
+      backfill VMs launch (AWS VMs write S3 only; event bus is GCP-services only). MessageBus abstraction needed only
+      when services migrate to AWS ECS (post-cutover). Cleanup: 2 duplicate hyperliquid topics + 1 typo topic. Full
+      inventory: `codex/05-infrastructure/pubsub-topic-inventory.md`.
+- [ ] [AGENT] P2. **UCI `MessageBus` abstraction** — once inventory done (✅), create `MessageBus` interface in UTL that
       wraps GCP Pub/Sub + AWS SNS behind a single emit API driven by `CLOUD_PROVIDER` env. Required for service repos to
-      push events to both clouds in dual-cloud mode.
-- [ ] [AGENT] P2. **`defi-validation` key in `cloud-providers.yaml`** — GCP has `defi-validation` bucket in
+      push events to both clouds in dual-cloud mode. **DEFERRED — gated on services migrating to AWS ECS
+      (post-cutover)**. Implementation path documented in `codex/05-infrastructure/pubsub-topic-inventory.md`.
+- [x] [AGENT] P2. **`defi-validation` key in `cloud-providers.yaml`** — GCP has `defi-validation` bucket in
       `configs/cloud-providers.yaml`; AWS does not. Add corresponding S3 bucket key so `resolve_bucket_name()` works on
-      AWS. Small config + QG STEP 5.69 impact.
+      AWS. — **ALREADY DONE**: `deployment-service/configs/cloud-providers.yaml` line 332-333 already has
+      `defi-validation: "unified-trading-defi-validation-${AWS_ACCOUNT_ID}"` (verified 2026-05-26 slot-7).
 - [ ] [OPERATOR] P2. **Per-service `buildspec.aws.yaml` parity test** — run CodeBuild parity test for all services that
       have `buildspec.aws.yaml`. BLOCKED-OPERATOR: requires AWS IAM perms for CodeBuild + ECR in account `427895769566`.
       Ping operator for creds.
