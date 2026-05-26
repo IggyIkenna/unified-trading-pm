@@ -179,11 +179,13 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
-- **Manifest consolidator runtime**: Cloud Run + Cloud Scheduler (10 jobs, `*/1 * * * *`). Terraform:
-  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`. Legacy GCE VM launcher DELETED 2026-05-20 (was
-  `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. AWS-side consolidation NOT in scope. SSOT:
-  `codex/05-infrastructure/manifest-consolidator-ssot.md`. Operator-directed consolidation to per-asset-group jobs (5
-  instead of 10) + extension to all 16 services without consolidator (R-NEW-1) tracked under slot 5.
+- **Manifest consolidator runtime**: GCP: Cloud Run Jobs + Cloud Scheduler (20 Phase A jobs — 10 env-tiered + 10 legacy
+  flat, all `*/1 * * * *`; Phase D 14 Group B jobs TF authored pending `tofu apply`). AWS: Batch Fargate + EventBridge
+  Rules (10 Phase C live, Phase D 16 Group B TF authored pending `tofu apply`). Terraform:
+  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (GCP) +
+  `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` (AWS). Legacy GCE VM launcher DELETED 2026-05-20
+  (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. SSOT:
+  `codex/05-infrastructure/manifest-consolidator-ssot.md`.
 - **VM tarball**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
