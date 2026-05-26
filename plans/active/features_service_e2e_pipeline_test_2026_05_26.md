@@ -167,21 +167,29 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - [x] ✅ [VALIDATE] P0. **Manifest emission assertion PASS.** Each successful write co-emits a v8 manifest row to the
       `-test` bucket `_index` (`capture_status="captured"`, `service_name="features-service"`); prod bucket stays empty.
       Verified via the divergence fix above.
-- [x] ✅ [FINDING-A] P1. **VERIFIED + SPLIT via 1m re-run (operator-directed).** Two distinct causes behind the all-NaN
-      rejections — confirmed by re-running ADA at 1m:
-  - **(A1) timeframe/liquidity-driven — NOT a bug.** ATR (`volatility_realized`) + ADX/+DI/-DI/DX (`momentum`): ADA-SPOT
-    momentum NaN columns dropped **100 → 12** going 15s→1m, ADX/DI **cleared**. At 15s illiquid instruments have
-    flat/zero-true-range bars → these degrade; coarser timeframe fixes it; liquid BTC was always clean. Takeaway: these
-    indicators have a **minimum sensible timeframe per liquidity** — choose timeframe accordingly (not a code fix).
-    volume-profile + vwap_acceleration are the same class.
-  - **(A2) REAL calculator bugs — independent of timeframe AND liquidity.** Two spinoff todos below.
-- [ ] 🔴 [BUG] P1. **`market_structure` swing_high/swing_low = 100% NaN at every timeframe + every liquidity.** All-NaN
-      at 15s AND 1m, and for **liquid BTC** as well as ADA → swing-point detection is broken, not a data artifact. 16
-      columns (swing_high/low value+distance + lags) always NaN → group always fails. File:
-      `delta_one/app/calculators/market_structure.py`. Provenance: e2e Phase 2 1m re-run 2026-05-26.
-- [ ] 🔴 [BUG] P1. **`ppo`/`ppo_signal`/`ppo_histogram` = 100% NaN even at 1m** (1440 bars; PPO needs only ~26-bar EMA
-      warmup, so 100% NaN is a calc bug not warmup). Blocks the `momentum` shard even after ADX clears at 1m. File:
-      `delta_one/app/calculators/` (momentum/oscillator PPO). Provenance: e2e Phase 2 1m re-run 2026-05-26.
+- [x] ✅ [FINDING-A] P1. **ROOT-CAUSED via 1m re-run + raw-candle inspection (corrects the earlier "split").** The
+      dominant cause of almost all NaN rejections is a single upstream data-construction issue (A0); only swing is an
+      independent calc bug (A2).
+  - **(A0) HEADLINE — no-trade bars are left as NaN OHLC instead of forward-filled.** Direct inspection of
+    `BITGET-SPOT:SPOT_PAIR:ADAUSDT` 1m (2026-05-03): **`close` is 68.6% NaN** (988/1440 bars; 23% zero-volume + gaps).
+    ta-lib propagates NaN (any NaN in the lookback window → NaN output — correct, deliberate). So on illiquid
+    instruments ATR/ADX/**PPO**/volume-profile/vwap-accel all NaN out. Proven: `talib.PPO(close)` = **0/1440** non-NaN;
+    `talib.PPO(close.ffill())` = **1414/1440** ✅. **Fix is at the DATA layer, not the indicators** — forward-fill OHLC
+    on no-trade bars (`o=h=l=c=prev_close, volume=0`, the standard exchange/kline convention) + keep
+    `volume`/`bars_since_trade` as staleness features so ML can tell filled vs real bars. Decide: fix in MDPS candle
+    construction (preferred — fixes every downstream consumer) vs. a `ffill` on the features data-loader (local).
+    Provenance: e2e Phase 2 + raw-candle inspection 2026-05-26.
+  - **(A1) timeframe/liquidity is a knob on top of A0.** Coarser timeframe reduces (not eliminates) NaN-close density —
+    ADA-SPOT momentum NaN cols 100→12 at 1m, ADX cleared; but `close` is still 68.6% NaN at 1m so PPO stays dead until
+    A0 is fixed. Liquid BTC has clean closes → was always fine.
+- [ ] 🔴 [BUG] P1. **`market_structure` swing_high/swing_low = 100% NaN even for LIQUID BTC** — the ONE independent calc
+      bug (not the A0 data issue). `_detect_swing_booleans` ANDs four **fixed absolute thresholds**
+      (`SWING_MIN_VOLATILITY`, `SWING_MA_THRESHOLD×vol`, `SWING_PREV_BREACH_THRESHOLD`) mis-scaled for 15s/1m → the AND
+      never fires → zero swings. Make thresholds **scale-relative** (ATR-/%-of-price-relative, like mature pivot/ZigZag
+      detectors). File: `delta_one/app/calculators/market_structure.py:83-104`. Provenance: e2e Phase 2 1m re-run
+      2026-05-26.
+  - NOTE: PPO was previously mis-filed here as a standalone bug — **corrected**: PPO is the A0 data issue (clean for
+    BTC, fixed by `ffill(close)`), not a calculator bug.
 - [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` all-NaN → group marked
       FAILED → the batch handler **aborted before the remaining 9 of 17 feature groups ran**. A degenerate single group
       should not block the rest. Make the CLI batch path **group-isolated** (continue on group failure, report per-group
