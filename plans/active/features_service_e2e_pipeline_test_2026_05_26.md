@@ -174,11 +174,22 @@ resolves the minimum window each family/feature needs and backfills exactly that
     `BITGET-SPOT:SPOT_PAIR:ADAUSDT` 1m (2026-05-03): **`close` is 68.6% NaN** (988/1440 bars; 23% zero-volume + gaps).
     ta-lib propagates NaN (any NaN in the lookback window → NaN output — correct, deliberate). So on illiquid
     instruments ATR/ADX/**PPO**/volume-profile/vwap-accel all NaN out. Proven: `talib.PPO(close)` = **0/1440** non-NaN;
-    `talib.PPO(close.ffill())` = **1414/1440** ✅. **Fix is at the DATA layer, not the indicators** — forward-fill OHLC
-    on no-trade bars (`o=h=l=c=prev_close, volume=0`, the standard exchange/kline convention) + keep
-    `volume`/`bars_since_trade` as staleness features so ML can tell filled vs real bars. Decide: fix in MDPS candle
-    construction (preferred — fixes every downstream consumer) vs. a `ffill` on the features data-loader (local).
-    Provenance: e2e Phase 2 + raw-candle inspection 2026-05-26.
+    `talib.PPO(close.ffill())` = **1414/1440** ✅. **Fix is at the DATA layer, not the indicators.**
+  - **(A0-mech) WHY MDPS emits NaN (confirmed in MDPS code 2026-05-26):** (1) `halt_handling_mode` config has a
+    `forward_fill` option but it is **scaffolded-only — consumed nowhere, no ffill logic in the candle aggregator**
+    (default `nan_with_flag`). (2) BOTH candle paths NaN-fill empty intervals by design ("continuous grid + honest
+    absence" contract): `cefi/trades_adapter.py` → NaN on no-trade bars; `tradfi/ohlcv_passthrough.py` → ingests **1m
+    klines** (Databento/Yahoo/Barchart) and fills the ~3-of-4 empty 15s sub-bars with NaN to satisfy the candle-count
+    contract (5760 rows for 15s) → **15s-from-1m is ~75% NaN by construction**. Processed candle has NO `is_halted`
+    column for trades — no-trade signal is NaN OHLC + `trade_count`/`volume`.
+  - **(A0-fix) Multi-part, spans MDPS + features (CROSS-CUTTING — MTDS/MDPS = Ikenna territory; canonical-candle change
+    affects ALL consumers; coordinate via `mtds_mdps_master` + data-pipeline-correctness):** (a) **don't compute
+    features finer than the source supports** (1m-sourced venue → compute at 1m, not 15s; per-venue source-granularity
+    awareness); (b) **forward-fill price for indicator continuity** at the compute boundary
+    (`o=h=l=c=prev_close, volume=0`) — implement MDPS `forward_fill` for real OR ffill in the features loader — keeping
+    `volume`/`trade_count`/`market_state` as honest staleness flags; (c) keep the **stored** candle honest (NaN+flags),
+    fill only at compute. **Operator decides routing.** Provenance: e2e Phase 2 + raw-candle + MDPS-code inspection
+    2026-05-26.
   - **(A1) timeframe/liquidity is a knob on top of A0.** Coarser timeframe reduces (not eliminates) NaN-close density —
     ADA-SPOT momentum NaN cols 100→12 at 1m, ADX cleared; but `close` is still 68.6% NaN at 1m so PPO stays dead until
     A0 is fixed. Liquid BTC has clean closes → was always fine.
