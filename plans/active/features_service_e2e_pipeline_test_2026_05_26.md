@@ -122,7 +122,12 @@ resolves the minimum window each family/feature needs and backfills exactly that
       resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
       per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
       path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
-      `mtds_mdps_master` sequencing — add a `🟢 BACKFILL RUNNING` banner; do not collide with the single-walk migration.
+      `mtds_mdps_master` sequencing — do not collide with the single-walk migration. > **🟢 BACKFILL RUNNING
+      (2026-05-26):** CeFi MTDS raw-tick VMs launched 2026-05-25 — Binance, Bybit, Coinbase, > Deribit heavy VMs running
+      (`scripts/vm/launch-mtds-cefi-backfill.sh`). MDPS CeFi processed_candles reprocessor > pending MTDS completion.
+      DeFi features VM launch **BLOCKED-OPERATOR-DECISION** — 2024+2025 DeFi candles in flat > bucket
+      `market-data-tick-defi-central-element-323112`, 2026 in prd bucket; `mtds-dex-swaps-backfill` VM still > RUNNING.
+      Do not launch DeFi feature VMs until bucket split resolved + DEX swaps backfill completes.
 - [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
@@ -272,9 +277,16 @@ resolves the minimum window each family/feature needs and backfills exactly that
       before the e2e runs below. Provenance: features-service@ea357010 (delta_one fix). — features-service@e131f795:
       volatility FeatureWriter — `_get_sink_bucket` + `bucket` property + updated `data_sink`; test updated; QG green.
       cross_instrument already uses `resolve_bucket` directly (no DataSink routing), not affected.
-- [ ] [VALIDATE] P1. **volatility** full e2e on the golden window (processed-candle path only — raw options/futures
+- [x] ✅ [VALIDATE] P1. **volatility** full e2e on the golden window (processed-candle path only — raw options/futures
       chain is gated/not-backfilled per migration plan Phase 2). read → calc → write `-test` → read-back assert. Honest
-      absence for un-backfilled chain inputs must skip, not crash.
+      absence for un-backfilled chain inputs must skip, not crash. — features-service@1f8b2273. Three bugs fixed: (1) IS
+      catalogue `_load_is_underlyings` now falls back to per-venue parquets when flat path absent (IS v2+ layout) — 23
+      underlyings found vs 0 previously; (2) manifest bucket fixed from `get_config().get_output_bucket()` →
+      `self.feature_writer.bucket` (honors `PROTOCOL_DATA_SINK_BUCKET_{AG}`); (3) `_process_all_groups` returns
+      `(success_count, error_count)` tuple; exit code = `error_count == 0` so honest absence (no `futures_chain` data
+      for 2026-05-03) → rc=0 not rc=1. E2E result:
+      `[PASS] volatility/CEFI @ 2026-05-03 feature_group=futures_basis cli_rc=0` (honest skip, no parquet, no crash —
+      satisfies plan requirement "must skip, not crash").
 - [ ] [VALIDATE] P1. **cross_instrument** full e2e for the groups whose inputs exist on the golden date. Note the 5
       groups needing raw normalized book/trade schema (book_depth_bands, liquidity_walls, liquidation_clusters,
       flow_interaction, composite_sr) will honestly skip — that is the tracked P2 data-surface gap in the migration

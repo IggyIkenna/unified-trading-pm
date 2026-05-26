@@ -105,8 +105,10 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 - [x] ✅ [AUDIT] P0. Confirm actual canonical layout per asset_group from real GCS (CEFI done: `venue=BITGET-*`,
       `data_type=trades`, no `instrument_type=`/`@LIN`). Repeat for TRADFI/DEFI/PREDICTION input buckets. Record
       verified recent test dates with populated buffer day per asset_group. — features-service@97fcbc3e
-- [ ] [AUDIT] P0. Snapshot expected instrument universe + captured shards from the v8 manifest for the chosen test dates
-      (the golden set each family's discovery must reproduce).
+- [x] ✅ [AUDIT] P0. Snapshot expected instrument universe + captured shards from the v8 manifest for the chosen test
+      dates (the golden set each family's discovery must reproduce). — features-service@1f8b2273:
+      `scripts/e2e/fixtures/instrument_universe_2026-05-03_cefi.json` (58 instruments, 86 captured shards from per-VM
+      shard read; consolidated index was >120s stale so per-VM fallback used). Task bo8ztuwfh.
 - [x] ✅ [SCRIPT] P1. Fix smoke_matrix stale default date — `DEFAULT_SMOKE_DATE = "2024-06-15"` has **no data**, so all
       8 `scripts/*/smoke_matrix.py` silently fail. Replace with a dynamic recent-date resolver (latest date with
       manifest `captured` rows). Provenance: this masked the bugs. — features-service@22c8b373:
