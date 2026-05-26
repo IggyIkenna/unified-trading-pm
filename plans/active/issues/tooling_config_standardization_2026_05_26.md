@@ -10,6 +10,57 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-26
 ---
 
+> # 🚨🚨 CRITICAL FINDING — QUALITY-GATES DOES NOT ENFORCE basedpyright ERRORS (found 2026-05-26) 🚨🚨
+>
+> **READ THIS FIRST. This is bigger than the tooling rollout below. NEEDS AN OWNER + FIX IN THE COMING DAYS.**
+>
+> **TL;DR:** The shared `quality-gates.sh` type-check step **only fails on basedpyright WARNINGS — never on ERRORS.**
+> A bug in `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (the body EVERY service repo sources) masks
+> basedpyright's exit code, so a repo can carry **hundreds of type ERRORS and still go QG-green.**
+> **~6,504 basedpyright errors are currently live + UNENFORCED across the workspace.** "QG green" has meant "zero
+> warnings", NOT "zero type errors".
+>
+> ### Root cause (`base-service.sh` ~L463–475)
+> ```sh
+> run_timeout ... "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
+> BP_PID=$!
+> wait $BP_PID || true     # ← `|| true` SWALLOWS basedpyright's non-zero (error) exit
+> PYRIGHT_EXIT=$?           # ← therefore ALWAYS 0
+> if [ "$PYRIGHT_EXIT" -ne 0 ]; then ... exit 1; fi   # ← DEAD CHECK — never fires
+> WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:")  # ← only WARNINGS counted
+> if [ "$WARN_COUNT" -gt 0 ]; then ... exit 1; fi          # ← the ONLY working failure path
+> ```
+> basedpyright signals errors via **exit code 1** (warnings do NOT change the exit code). `|| true` forces
+> `PYRIGHT_EXIT=0`, killing the error check; only the supplementary warning-grep still works. Net result: **errors (more
+> severe) pass; warnings (less severe) block** — an accident of the script, NOT a severity decision. (basedpyright
+> severity order is error > warning > info; errors are the severe class.)
+>
+> ### Proven end-to-end on `deployment-api`
+> A full live `bash scripts/quality-gates.sh` run printed **`✅ ALL QUALITY GATES PASSED (387s)`** while the identical
+> binary/config/venv reports **`247 errors, 0 warnings`**. Reproducing the exact gate logic standalone:
+> basedpyright exited `1`, `wait $BP_PID || true; PYRIGHT_EXIT=$?` → `0`, verdict → **`PASS (despite 247 errors)`**.
+>
+> ### CROSS-CHECK in ~1 min (read-only, any repo — independent verification welcomed/requested)
+> ```bash
+> cd <repo>; SRC=<package_dir>; _o=/tmp/bp.$$
+> .venv/bin/basedpyright "$SRC/" > "$_o" 2>&1 &
+> wait $! || true; echo "exit-gate-sees=$?  errors=$(grep -c ' error:' $_o)  warnings=$(grep -c ' warning:' $_o)"; tail -1 "$_o"
+> ```
+> Expected: `exit-gate-sees=0` with `errors>0` → the gate's `if PYRIGHT_EXIT -ne 0` never fires. Also just read
+> `base-service.sh` L463–475: there is **no `" error:"` count in the pass/fail logic at all.**
+>
+> ### The fix (one line; edit the SSOT template, then `scripts/propagation/rollout-quality-gates-unified.py`)
+> Drop the `|| true` so the exit code propagates: `wait $BP_PID; PYRIGHT_EXIT=$?` — AND/OR count `" error:"` lines the
+> same way warnings are counted and fail if `>0`.
+> **⚠️ Applying this flips ~6,504 currently-invisible errors into HARD QG failures workspace-wide.** Do NOT flip it
+> blind — sequence a per-repo burn-down (or a temporary scoped allowlist) first. Per-repo error surface is in the
+> "Violation baseline" + "A/B basedpyright" tables below (fresh venvs, each repo's own pre-rollout settings,
+> `.venv/bin/basedpyright` = QG-faithful). Totals: **~6,504 errors / 101 warnings**; only 2 repos currently fail the
+> warning gate (market-data-processing-service = 1w, ml-inference-service = 100w).
+>
+> **Scope:** shared `base-service.sh` → applies to every repo that sources it (verified concretely on deployment-api;
+> logically workspace-wide). **Status: UNFIXED.** **Owner: TBD.** **Verified: slot-Harsh session 2026-05-26.**
+
 ## What I found
 
 ### Tools in use
