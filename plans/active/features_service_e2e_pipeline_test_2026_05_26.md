@@ -141,19 +141,22 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 2 — delta_one full e2e (reference path) `[P0]`
 
-- [ ] 🔴 [BUG] P0. **Two-resolver bucket divergence (discovered 2026-05-26, blocks clean `-test` isolation).** The
-      parquet write resolves its bucket via `FeatureWriter._get_sink_bucket` (honours `PROTOCOL_DATA_SINK_BUCKET_{AG}`
-      env), but the **manifest emission** in `delta_one/engine/orchestrator.py` uses `config.get_output_bucket` →
-      `resolve_bucket(kind="features-delta-one")` (pure SSOT, **ignores the env override**). Consequence: redirecting
-      the e2e write to a `-test` bucket via env sent the parquet to `-test` but wrote the **manifest row to the
-      canonical prod bucket** → a phantom `captured` row (instrument's parquet absent there). Verified + cleaned up
-      (deleted the stray `_index` I created in `features-delta-one-cefi-central-element-323112`, restored to empty).
-      Also latent in **prod**: if any deployed VM ever sets `PROTOCOL_DATA_SINK_BUCKET_CEFI`, data and manifest diverge.
-      **Fix: route BOTH the parquet write and the manifest emission through ONE resolver** (recommend the orchestrator's
-      manifest emission honour the same `_get_sink_bucket`/env, OR `_get_sink_bucket` delegate to `get_output_bucket` —
-      pick per test-isolation decision below). Secondary: the emitted manifest row has **empty `venue`/`instrument_id`**
-      (does not identify the shard) — separate manifest-quality finding to chase. Provenance: e2e Phase 2 dry-run
-      2026-05-26.
+- [x] ✅ [BUG] P0. **Two-resolver bucket divergence FIXED (onchain-aligned).** The parquet write used `_get_sink_bucket`
+      (env-aware) while the manifest emission in `delta_one/engine/orchestrator.py` used `config.get_output_bucket`
+      (pure SSOT, ignored the env override) → `-test` redirect sent the parquet to test but the manifest row to the
+      canonical bucket (phantom row; also latent in prod if any VM sets `PROTOCOL_DATA_SINK_BUCKET_{AG}`). Fixed: a
+      single `FeatureWriter.bucket` property is now the one value BOTH the DataSink and
+      `ManifestWriter(catalogue_bucket=self.feature_writer.bucket)` use (mirrors features-onchain). Verified on real GCS
+      (2026-05-03 CEFI): parquet AND manifest `_index` both land in the `-test` bucket; prod bucket = 0 objects.
+      Regression test added. — features-service@31414a39. (Secondary: the aggregate manifest row has empty
+      `venue`/`instrument_id` — by design here, delta_one emits a per-`(feature_group, timeframe)` aggregate row, not
+      per-instrument; noted, not a bug.)
+- [x] ✅ [INFRA] P0. **Manifest-staleness "blocker" resolved by config, not code.** With the CeFi consolidator
+      intentionally PAUSED (ikenna@, in-flight migration), the lookback pre-flight's default 120s freshness threshold
+      forced a slow per-VM shard rebuild → OOM under load. Fix = set `MANIFEST_CONSOLIDATED_STALENESS_SEC` (the exact
+      env the production CeFi launchers already set to 86400) so the reader trusts the readable consolidated index for
+      static historical dates. Run dropped from OOM-killed → ~6s. **The e2e driver (Phase 5) must export this env**;
+      consolidator stays paused (owned elsewhere). Provenance: e2e Phase 2 2026-05-26.
 - [ ] [VALIDATE] P0. Run `--operation compute --mode batch --asset-group CEFI --feature-group ALL` on the golden window
       for the captured BITGET universe. Assert: every captured instrument either writes features OR skips with a typed
       honest-absence reason; **zero** unhandled 404 / NoneType / write exceptions; "N/N completed" matches the captured
