@@ -4981,3 +4981,41 @@ live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secr
 - **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config
   gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py`
   (`_SM_CHAT_ID_OPS`).
+
+---
+
+## [harsh → ikenna] 2026-05-26 — FYI/REVIEW: UTL manifest consolidator merge rewritten to DuckDB (Tier-0, your migration-pipeline territory)
+
+Per operator direction, I shipped a **memory-bounded DuckDB merge** for `manifest_consolidator.py` →
+`unified-trading-library@7a72049` (live-defi-rollout). Flagging because it's UTL Tier-0 + your migration-pipeline lane
+(`cefi_tick_bucket_ssot_divergence_2026_05_25.md`). The file had **no in-flight foreign edits** when I touched it;
+quickmerge NOT used (LDR direct push, no CI).
+
+**Why:** the pandas concat/sort/dedup OOM'd the 16 GiB cefi market-data consolidator Cloud Run job once the flat
+manifest hit 132M input rows (→75.5M; pandas peaks 50-70 GB → SIGKILL). That's why
+`uts-prod-manifest-consolidator-market-data-cefi(-legacy)-cron` are PAUSED.
+
+**What changed (semantics preserved — dedup key + last-write-wins identical to `_merge_shard_frames`):**
+
+- Incremental cycle = **anti-join** (stream unchanged canonical, re-dedup only contested keys → O(changed) memory). Full
+  / new **`--force`** flag = window dedup (for one-off seeds).
+- `memory_limit` = `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` (default 8GB, set below container → catchable OOM not SIGKILL).
+  Joins spill; window doesn't (1.5.x) — bulk shard rewrites need a `--force` seed.
+- Validated on the **real 75.5M-row cefi canonical**: incremental ~10.5 GB peak in a 16 GiB cgroup, 0 dup keys, exact
+  key-set parity vs full re-merge incl. NULL-key path. **No Cloud Run memory bump needed.** 19 consolidator + 486
+  manifest tests green; ruff + basedpyright clean. Invariant #5 honored (preserves source `schema_version`, never
+  downgrades). Codex updated: `manifest-consolidator-ssot.md` § "Merge engine".
+
+**Finding that touches your v8 remediation (needs a call):** a faithful cefi consolidation is 75.5M rows but **74% have
+NULL `schema_version`** — traced to **4 enumeration shards `slot4-cefi-c{1..4}-20260523.parquet`** (instruments-service,
+72M rows, all empty_confirmed/expected_unattempted) written with a **reduced 14-col schema** that omits
+`schema_version` + `written_at`. Not contamination (canonical is already 93% instruments enumeration by design), not a
+merge bug (pandas `concat` NaNs the same), but it **regresses the `cefi_manifest_remediation_2026_05_24` v8 stamp on
+enumeration rows and recurs every consolidation** until the instruments-service enumerator stamps the full v8 schema.
+I've taken the enumerator fix as a todo in `plans/active/manifest_consolidator_duckdb_memory_fix_2026_05_26.md`
+(Harsh/instruments-service lane).
+
+**Operator-gated (Phase 2):** seed the cefi flat canonical (75.5M, via `--force` on a big-RAM host, OR upload the
+validated local `/data/cefi_consolidate/consolidated.parquet`) + un-pause the 2 crons — gated on the
+seed-now-vs-fix-enumerator-first decision. No action needed from you unless you want to weigh in on that decision or
+review the Tier-0 diff.

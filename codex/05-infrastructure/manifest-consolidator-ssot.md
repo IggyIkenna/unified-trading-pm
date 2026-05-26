@@ -60,6 +60,37 @@ aws scheduler list-schedules --group-name uts-prod-consolidator | jq '.Schedules
 aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet
 ```
 
+## Merge engine — memory-bounded DuckDB (shipped 2026-05-26, `unified-trading-library@7a72049`)
+
+The merge is **DuckDB, not pandas**. The pandas concat/sort/dedup OOM'd the 16 GiB Cloud Run job once the cefi flat
+manifest reached 132M input rows (→ 75.5M deduped; pandas peaks 50-70 GB → SIGKILL). DuckDB streams parquet from local
+temp files and bounds working memory via `memory_limit`.
+[`manifest_consolidator.py`](../../../unified-trading-library/unified_trading_library/manifest_consolidator.py)
+`_duckdb_consolidate_and_write`.
+
+- **Incremental cycle (steady state)** — anti-join. `read_parquet('canonical')` is streamed and ANTI/SEMI-joined against
+  the changed shards' dedup keys, so only contested keys are re-windowed: O(changed-shards) memory, fits 16 GiB at any
+  canonical size.
+- **Full / `--force` rebuild** — window dedup over canonical + all shards, then a deterministic
+  `ORDER BY date, venue, data_type`. `--force` ignores the incremental mtime cutoff (one-off seed after backfill /
+  schema change; for large buckets pair with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host).
+- **`memory_limit`** = env `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` (default **8GB**), set BELOW the container so an oversized
+  rebuild raises a catchable `OutOfMemoryException` instead of a kernel SIGKILL crash-loop. Anti/semi joins spill to
+  `temp_directory`; the **window does NOT spill (DuckDB 1.5.x)** — so a bulk shard rewrite landing as one huge "changed"
+  shard must be seeded via `--force` on a big-RAM host, not handled by the per-minute cron. Peak ≈ `memory_limit` + ~2.5
+  GB Python/IO (+~1.7 GB tmpfs on Cloud Run gen2).
+- **Dedup key** — base (`date, venue, data_type, service_name`) + optional dims present in the union schema,
+  last-write-wins by `attempted_at` → `written_at` DESC NULLS LAST (mirrors the old pandas stable-sort + `keep="last"`).
+  NULL-safe key match (coalesce-to-sentinel) for enumerator shards that omit key columns like `timeframe`/`underlying`.
+- **Validated** against the real 75.5M-row cefi canonical in a hard 16 GiB cgroup: incremental ~10.5 GB peak at the 8GB
+  default, 0 duplicate keys, exact key-set parity vs a full re-merge incl. the NULL-key path. **No Cloud Run memory bump
+  needed.**
+
+**schema_version preservation (ties to invariant #5)**: `union_by_name` keeps each source row's `schema_version` — the
+merge never downgrades. A NULL `schema_version` in the consolidated output means the SOURCE shard omitted the column
+(observed: the cefi instruments-service enumeration shards `slot4-cefi-c*-20260523`, a reduced 14-col schema also
+missing `written_at`) — an enumerator-writer gap to fix upstream, NOT a consolidator downgrade.
+
 ## Deprecated paths (do NOT use)
 
 | Removed 2026-05-20                                                 | Was                                  | Why                                                                                                                                |
@@ -124,7 +155,9 @@ one container invocation. Owner: slot 5 to design + apply.
    Manual `gcloud run jobs execute` invocations during operator interventions are safe (CAS on canonical blob prevents
    double-write).
 5. **Per_vm shards are the source of truth for in-flight writes**. The consolidator MUST merge them into canonical
-   without downgrading `schema_version` (preserve source version). A4 v2 verifies this.
+   without downgrading `schema_version` (preserve source version). A4 v2 verifies this. The DuckDB merge (§ "Merge
+   engine") preserves source version via `union_by_name`; a NULL version in the output traces to a source shard that
+   OMITS the column (enumerator-writer gap), not a consolidator downgrade.
 
 ## Composes with
 
