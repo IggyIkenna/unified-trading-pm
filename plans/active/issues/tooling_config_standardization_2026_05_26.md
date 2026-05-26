@@ -436,3 +436,8 @@ per-repo strictness (12.6k) vs a middle policy.
 - [x] ✅ [FIX] P1. deployment-service: resolve 149 ruff lint errors introduced by 45d51d0 pyproject standardization; fix
       STEP 5.21 (remove 5 reportUnknown\*="none" lines); add 4 unit test files to push coverage ≥70%; ruff auto-fix
       **all**/**slots** sort + stale noqa removals — deployment-service@e7fea4e
+- [x] ✅ [FIX] P0. **basedpyright `|| true` bug**: fix `base-service.sh` L465 — replace
+      `wait $BP_PID || true; PYRIGHT_EXIT=$?` with `PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?` so basedpyright
+      exit code propagates correctly; add `BASEDPYRIGHT_MAX_ERRORS` ratchet (opt-in per-repo error ceiling, analogous to
+      CODEX_MAX_VIOLATIONS); set `BASEDPYRIGHT_MAX_ERRORS=1297` in deployment-service as first adopter; QG re-verified
+      GREEN after fix — PM@fd4d1ef4c | deployment-service@25dd325 (backfilled 2026-05-26)
