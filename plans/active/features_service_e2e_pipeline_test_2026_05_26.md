@@ -288,15 +288,18 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ### Phase 5 — e2e harness + governance `[P1]`
 
-- [ ] [SCRIPT] P1. Add a reusable driver `scripts/e2e/run_pipeline_e2e.py` (or extend per-family `smoke_matrix.py`)
+- [x] ✅ [SCRIPT] P1. Add a reusable driver `scripts/e2e/run_pipeline_e2e.py` (or extend per-family `smoke_matrix.py`)
       that, for a given `(asset_group, family, date)`, runs discover→read→calc→write(`-test`)→read-back and asserts the
       Phase 2 checks. Live-date resolver (no hardcoded date). One command per family; exit non-zero on any unhandled
-      error.
-- [ ] [SCRIPT] P1. Wire the e2e driver into features-service `quality-gates.sh` as a smoke step (mock/`-test` bucket,
+      error. — features-service@8fa8ebbc. Supports delta_one/volatility/cross_instrument/multi_timeframe; --dry-run
+      always passes (import + arg-parse); FEATURES_E2E_SMOKE_RUN=true for real GCS.
+- [x] ✅ [SCRIPT] P1. Wire the e2e driver into features-service `quality-gates.sh` as a smoke step (mock/`-test` bucket,
       one family one date) so the chain can't silently regress. Per the "peripheral scripts under primary-consumer QG"
-      HARD RULE.
-- [ ] [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` (+ availability-manifest doc if touched) to
-      record the features WRITE-side manifest-emission contract proven in Phase 2.
+      HARD RULE. — features-service@8fa8ebbc. Step [5.E2E/6] in QG; dry-run passes (exit 0 confirmed).
+- [x] ✅ [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` (+ availability-manifest doc if touched) to
+      record the features WRITE-side manifest-emission contract proven in Phase 2. — PM@688b01683. Layer 3 table
+      corrected (multi_timeframe reads delta_one bucket; cross_instrument instrument_id from filename); manifest
+      emission contract added (v8 row co-emitted to same bucket as parquet; single .bucket property).
 
 ## Success criteria
 
