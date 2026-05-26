@@ -249,9 +249,10 @@ resolves the minimum window each family/feature needs and backfills exactly that
     data correctness; pipeline runs to completion before this error. **DEFERRED** — add to `[FINDING-B]` fix scope when
     group-level isolation is implemented (the ordering issue will be natural to fix alongside the group isolation
     refactor).
-  - **[FINDING-D] P2 `tf_session_context` / `tf_confluence_signals` serialize error:** sink write fails with "Cannot
-    serialize DataFrame to parquet" — likely a dtype issue in those calculators' output. Does not block Phase 3
-    validation (read path proven); will need investigation in Phase 4/5 when full write path is exercised.
+  - **[FINDING-D] ✅ P2 `tf_session_context` serialize error FIXED:** `map_elements` on `pl.Struct` column silently
+    produced `pl.Object` dtype in some Polars builds → "Cannot serialize DataFrame to parquet". Replaced with vectorized
+    `pl.when` chain for `hours_to_next_4h_close`. Parquet round-trip serialize tests added for both `tf_session_context`
+    and `tf_confluence_signals`. QG green. — features-service@dde23953.
   - **[FINDING-E] ✅ P2 `1d` vs `24h` mismatch FIXED:** `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` uses `@1d` for specs
     but delta_one writes timeframe=`24h` directories. Added `_TIMEFRAME_PATH_ALIASES = {"1d": "24h"}` in `_load_spec` —
     path lookup uses `24h`, column suffix stays `_1d`. Regression test added. QG green. — features-service@c71e4244.
