@@ -55,15 +55,13 @@ def _get_staged_diff(repo_root: Path) -> str:
 
 
 def _diff_touches_registry(diff: str) -> bool:
-    for sym in _REGISTRY_SYMBOLS:
-        if sym in diff:
-            return True
     for line in diff.splitlines():
-        if (
-            line.startswith(("+", "-"))
-            and not line.startswith(("+++", "---"))
-            and (_LAUNCH_DATES_PAT.search(line) or _GENESIS_DATES_PAT.search(line))
-        ):
+        if not line.startswith(("+", "-")) or line.startswith(("+++", "---")):
+            continue
+        for sym in _REGISTRY_SYMBOLS:
+            if sym in line:
+                return True
+        if _LAUNCH_DATES_PAT.search(line) or _GENESIS_DATES_PAT.search(line):
             return True
     return False
 
