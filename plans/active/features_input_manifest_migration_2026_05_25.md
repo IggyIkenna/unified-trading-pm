@@ -99,9 +99,11 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       verified recent test dates with populated buffer day per asset_group. — features-service@97fcbc3e
 - [ ] [AUDIT] P0. Snapshot expected instrument universe + captured shards from the v8 manifest for the chosen test dates
       (the golden set each family's discovery must reproduce).
-- [ ] [SCRIPT] P1. Fix smoke_matrix stale default date — `DEFAULT_SMOKE_DATE = "2024-06-15"` has **no data**, so all 8
-      `scripts/*/smoke_matrix.py` silently fail. Replace with a dynamic recent-date resolver (latest date with manifest
-      `captured` rows). Provenance: this masked the bugs.
+- [x] ✅ [SCRIPT] P1. Fix smoke_matrix stale default date — `DEFAULT_SMOKE_DATE = "2024-06-15"` has **no data**, so all
+      8 `scripts/*/smoke_matrix.py` silently fail. Replace with a dynamic recent-date resolver (latest date with
+      manifest `captured` rows). Provenance: this masked the bugs. — features-service@22c8b373:
+      `resolve_latest_captured_date()` in `features_service.common`; all 8 smoke_matrix.py updated; QG green
+      (broad-except documented in BE_EXCLUDE_GLOBS).
 
 ### Phase 1 — delta_one (reference fix; confirmed-broken) `[P0]`
 
