@@ -1998,7 +1998,9 @@ while IFS= read -r -d '' _df_579; do
         _img_579=$(echo "$_line_579" | sed 's/^[[:space:]]*FROM[[:space:]]*//' | sed 's/[[:space:]]*--platform=[^[:space:]]*//' | awk '{print $1}')
         [[ "$_img_579" == "scratch" ]] && continue
         # Register multi-stage aliases (FROM x AS alias → alias is a local ref, not a registry image)
-        _alias_579=$(echo "$_line_579" | grep -oi '[[:space:]]AS[[:space:]]*[a-z0-9_-]*' | awk '{print $NF}' || true)
+        # Anchor to end-of-line ($) so " as" prefix in registry hostnames (e.g. asia-northeast1-docker)
+        # doesn't produce spurious matches with case-insensitive -i flag.
+        _alias_579=$(echo "$_line_579" | grep -oi ' AS [a-z0-9_-]*$' | awk '{print $NF}' || true)
         [[ -n "$_alias_579" ]] && _stage_aliases_579+=("$_alias_579")
         # Skip if image is a known local stage alias
         _is_alias_579=0
