@@ -72,11 +72,14 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
 
 ### Phase D — Coverage gap extension (16 more buckets) (0.7 cal-AI-days)
 
-- [ ] [SCRIPT] P1.8. Extend `manifest_consolidator_buckets_aws_extended` locals in the TF file with 16 Group B
-      derived-data buckets (features-delta-one × 3, features-volatility × 2, features-onchain, features-sports,
-      features-calendar, strategy × 2, execution × 3, ml-artifacts, ml-training-artifacts). Add to IAM policy + schedule
-      module calls.
-- [ ] [SCRIPT] P1.9. `tofu plan` Phase D — verify 16 additional job definitions + schedules in plan output.
+- [x] ✅ [SCRIPT] P1.8. Extend `manifest_consolidator_buckets_aws_extended` locals in the TF file with 16 Group B
+      derived-data buckets (features-delta-one × 3, features-volatility × 2, features-onchain ×2, features-sports,
+      features-calendar, strategy × 3, execution × 3, ml-training-artifacts). Flat naming — env-split rolled back per
+      cloud-providers.yaml. IAM policy extended. Phase A timeout bumped 60s→1800s to match GCP side. —
+      deployment-service@effdcb2 | terraform validate ✓
+- [x] ✅ [SCRIPT] P1.9. `tofu plan` Phase D — `Plan: 89 to add, 23 to change, 17 to destroy` — Phase D module calls
+      (manifest_consolidator_job_extended + manifest_consolidator_schedule_extended) present in plan output. —
+      deployment-service@effdcb2 | terraform plan ✓ 2026-05-26
 - [ ] [HUMAN] P1.10. `tofu apply` Phase D + verify 26 schedules ENABLED.
 
 ---
