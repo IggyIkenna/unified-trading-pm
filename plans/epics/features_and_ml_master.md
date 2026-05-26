@@ -811,7 +811,7 @@ _4 active plans declare `parent_epic: features_and_ml_master` in their frontmatt
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
 
 **status**: 🟠 ACTIVE — QG sweep for features-service + ml-service + ml-inference-service + ml-training-service. All
 ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: MTDS QG green. [vm: vm-ml]

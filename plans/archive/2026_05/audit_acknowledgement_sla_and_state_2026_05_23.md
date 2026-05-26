@@ -180,7 +180,8 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
       regression: tests/e2e/safety-ops.spec.ts + tests/unit/test_safety_ops_routes.py
 - [x] ✅ Phase 4 P0.9-P0.10 — alerting-service@839cb5f | 5-test APPROVED-verdict-does-NOT-bypass-audit-ack suite | QG
       green
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 5 P0.11-P0.12 — synthetic smoke for SEV0 + SEV2 ladders (operator to schedule when ready; P0.11/P0.12 main items marked DEFERRED-OPERATOR-DECISION)
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 5 P0.11-P0.12 — synthetic smoke for SEV0 + SEV2 ladders (operator to
+      schedule when ready; P0.11/P0.12 main items marked DEFERRED-OPERATOR-DECISION)
 
 **Cross-references**:
 
@@ -217,7 +218,8 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
       queue (no auto-close); `test_approved_does_not_transition_or_clear_queue` asserts it. — alerting-service@39b6650
 - [x] ✅ Phase 4 P0.10 — alerting-service@839cb5f | 5-test TestApprovedVerdictDoesNotBypassAuditAck (APPROVED +
       APPROVED_WITH_NOTES + human-ack-clears + signoff-history + flag-retained) | QG green
-- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 5 P0.11-P0.12 synthetic smoke for SEV0 + SEV2 ladders (operator to schedule when ready)
+- [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] Phase 5 P0.11-P0.12 synthetic smoke for SEV0 + SEV2 ladders (operator to
+      schedule when ready)
 
 **Cross-references**:
 

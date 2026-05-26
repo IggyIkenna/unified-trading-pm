@@ -16,16 +16,16 @@ related_plans:
   - ../archive/2026_05/alerting_service_live_rules_2026_05_07.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
   - ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md
-  - ../active/agent_recovery_controller_layer0_deterministic_2026_05_23.md
+  - ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md
   - ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md
   - ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md
   - ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md
-  - ../active/connectivity_dependency_buffer_policy_2026_05_23.md
-  - ../active/audit_acknowledgement_sla_and_state_2026_05_23.md
+  - ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md
+  - ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md
   - ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md
-  - ../active/physical_pager_research_and_webhook_prototype_2026_05_23.md
-  - ../active/incident_runbooks_and_evidence_store_2026_05_23.md
-  - ../active/deployment_ui_safety_ops_tab_2026_05_23.md
+  - ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md
+  - ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md
+  - ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md
 ---
 
 # Observability Master
@@ -79,10 +79,11 @@ PagerDuty setup BLOCKED-OPERATOR. · **estimate**: 13.2 cal AI-days (class: desi
 **status**: ✅ ARCHIVED 2026-05-25 — All phases shipped. 13-state machine + dedup + audit_ack_queue +
 recovery_verifier + router refactor + Twilio fallback wired. · **estimate**: 10.8 cal AI-days (class: design)
 
-### [`agent_recovery_controller_layer0_deterministic_2026_05_23`](../active/agent_recovery_controller_layer0_deterministic_2026_05_23.md)
+### [`agent_recovery_controller_layer0_deterministic_2026_05_23`](../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md)
 
-**status**: active · **estimate**: 14.0 cal AI-days (class: brand-new) · **NEW 2026-05-23** — 10 closed-set
-deterministic recovery scripts (restart/redeploy/resize/failover/pause/cancel/disable-venue/safe-mode/readonly-recon)
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 14.0 cal AI-days (class: brand-new) · **NEW
+2026-05-23** — 10 closed-set deterministic recovery scripts
+(restart/redeploy/resize/failover/pause/cancel/disable-venue/safe-mode/readonly-recon)
 
 - structured AgentActionEvent.
 
@@ -104,16 +105,18 @@ immediate-SEV0 overrides + ReconFreezeChecker. Smoke + game-day are OPERATOR act
 report + liquidation detectors + close-all scripts + smoke tests. Smoke + game-day live runs are OPERATOR actions
 tracked in P3 below. · **estimate**: 9.6 cal AI-days (class: design)
 
-### [`connectivity_dependency_buffer_policy_2026_05_23`](../active/connectivity_dependency_buffer_policy_2026_05_23.md)
+### [`connectivity_dependency_buffer_policy_2026_05_23`](../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: design) · **NEW 2026-05-23** — 5-class dependency taxonomy
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 4.8 cal AI-days (class: design) · **NEW
+2026-05-23** — 5-class dependency taxonomy
 
 - per-dependency YAML policy + expected_time + buffer escalation rule.
 
-### [`audit_acknowledgement_sla_and_state_2026_05_23`](../active/audit_acknowledgement_sla_and_state_2026_05_23.md)
+### [`audit_acknowledgement_sla_and_state_2026_05_23`](../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: design) · **NEW 2026-05-23** — 6h default SLA + per- severity
-override + secondary-human + founder fallback + operational-ack-vs-audit-ack distinction.
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 4.8 cal AI-days (class: design) · **NEW
+2026-05-23** — 6h default SLA + per- severity override + secondary-human + founder fallback +
+operational-ack-vs-audit-ack distinction.
 
 ### [`independent_fallback_twilio_voice_2026_05_23`](../archive/independent_fallback_twilio_voice_2026_05_23.plan.md)
 
@@ -121,22 +124,22 @@ override + secondary-human + founder fallback + operational-ack-vs-audit-ack dis
 probe). Operator-action items (Twilio account creation + SM creds push + live smoke) tracked in P3 below. ·
 **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`physical_pager_research_and_webhook_prototype_2026_05_23`](../active/physical_pager_research_and_webhook_prototype_2026_05_23.md)
+### [`physical_pager_research_and_webhook_prototype_2026_05_23`](../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research) · **NEW 2026-05-23** — comparison matrix (4-6
-candidates) + webhook prototype + Twilio voice bridge as permanent fallback.
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 4.8 cal AI-days (class: research) · **NEW
+2026-05-23** — comparison matrix (4-6 candidates) + webhook prototype + Twilio voice bridge as permanent fallback.
 
-### [`incident_runbooks_and_evidence_store_2026_05_23`](../active/incident_runbooks_and_evidence_store_2026_05_23.md)
+### [`incident_runbooks_and_evidence_store_2026_05_23`](../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md)
 
-**status**: active · **estimate**: 8.4 cal AI-days (class: design) · **NEW 2026-05-23** — 22 incident-level runbooks
-(RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + evidence store schema + config_hash + code_version + runbook_version
-linked per incident.
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 8.4 cal AI-days (class: design) · **NEW
+2026-05-23** — 22 incident-level runbooks (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT) + evidence store schema +
+config_hash + code_version + runbook_version linked per incident.
 
-### [`deployment_ui_safety_ops_tab_2026_05_23`](../active/deployment_ui_safety_ops_tab_2026_05_23.md)
+### [`deployment_ui_safety_ops_tab_2026_05_23`](../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md)
 
-**status**: active · **estimate**: 8.0 cal AI-days (class: brand-new) · **NEW 2026-05-23** — Safety Ops tab in
-deployment-ui/DART surfacing every Layer-0 + Layer-1 action as manual buttons with typed-confirm pattern; manual actions
-also flow through the incident state machine.
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. · **estimate**: 8.0 cal AI-days (class: brand-new) · **NEW
+2026-05-23** — Safety Ops tab in deployment-ui/DART surfacing every Layer-0 + Layer-1 action as manual buttons with
+typed-confirm pattern; manual actions also flow through the incident state machine.
 
 ## P1 — important; post-current-gate
 

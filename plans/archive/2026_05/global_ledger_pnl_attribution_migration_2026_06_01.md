@@ -1,14 +1,13 @@
 ---
 title: Global Ledger + PnL Attribution — Migration Sub-Plan
-name: global_ledger_pnl_attribution_migration_2026_06_01
 parent_epic: global_ledger_pnl_attribution_master
 priority: P0
-status: archived
-archived: 2026-05-23
+status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 30
 estimate_calibrated_ai_days: 12
-assigned_vm: vm-trading-core
+assigned_vm: vm-execution
+locked_since: 2026-05-23
 predecessor: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 related_plans:
   - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
@@ -22,6 +21,24 @@ Codex SSOTs:
   - codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md
   - codex/04-architecture/client-funds-isolation.md
 ---
+
+## Deferred work — migrated to:
+
+- Phase 7 execution-service InstructionLedger writer refactor (all DEFERRED-BLOCKED items) →
+  `plans/epics/global_ledger_pnl_attribution_master.md` P0 block — gated on operator decisions from discovery plan
+  (late-arriving-data + TreasuryLedger split + PricingLedger spec) (**MIGRATED FROM:**
+  global_ledger_pnl_attribution_migration_2026_06_01)
+- Phase 8 strategy-service PassiveLedger synthesiser (all DEFERRED-BLOCKED items) →
+  `plans/epics/global_ledger_pnl_attribution_master.md` P0 block (**MIGRATED FROM:**
+  global_ledger_pnl_attribution_migration_2026_06_01)
+- Phase 9 DART / client-reporting-api / alerting-service reader refactor (all DEFERRED-BLOCKED items) →
+  `plans/epics/global_ledger_pnl_attribution_master.md` P0 block (**MIGRATED FROM:**
+  global_ledger_pnl_attribution_migration_2026_06_01)
+
+> NOTE: This plan was a STUB — no implementation shipped here. All implementation items were DEFERRED-BLOCKED on
+> operator decisions in the discovery plan. The active work for this plan has been superseded by
+> `pricing_ledger_carry_rates_mtds_2026_06_01.md` (now also archived) which carries the greeks-service bootstrap and
+> MTDS carry-rate derivation that shipped 2026-05-23/24.
 
 # Global Ledger + PnL Attribution — Migration Sub-Plan
 
@@ -54,10 +71,10 @@ Codex SSOTs:
 
 ## Pre-Migration Gates (BLOCKER — resolve in discovery plan first)
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION Phase 3 decision: late-arriving-data discipline (BLOCKED-OPERATOR-DECISION).
-- [x] ✅ DEFERRED-OPERATOR-DECISION Phase 4 decision: TreasuryLedger split (BLOCKED-OPERATOR-DECISION).
-- [x] ✅ DEFERRED-OPERATOR-DECISION Phase 5 decision: PricingLedger row spec (greeks computation home — operator
-      decision on MTDS vs strategy-service).
+- [x] ✅ DEFERRED-BLOCKED [BLOCKED-OPERATOR-DECISION] Phase 3 decision: late-arriving-data discipline.
+- [x] ✅ DEFERRED-BLOCKED [BLOCKED-OPERATOR-DECISION] Phase 4 decision: TreasuryLedger split.
+- [x] ✅ DEFERRED-BLOCKED [BLOCKED-OPERATOR-DECISION] Phase 5 decision: PricingLedger row spec (greeks computation home
+      — operator decision on MTDS vs strategy-service).
 - [x] ✅ IS Gap 1: `exercise_style` field added to `InstrumentRecord` — uac@6dcaa89e (American option code path
       unblocked).
 
@@ -67,25 +84,30 @@ Codex SSOTs:
 
 > **Gate**: Discovery plan Phases 3-6 resolved. IS Gap 1 (`exercise_style`) fixed (instruments_master Phase B.2).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Wire `LedgerRow` construction in
-      `execution_service/attribution_builder.py` `build_attribution_rows()` (currently returns empty list). Populate all
-      32 fields from `CanonicalFill` + instrument metadata (IS lookup) + chain metadata (for on-chain fills).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Route emission through `_resolve_policy_output_data_type` +
-      `_publish_emission_check`. Partition: `ledger_type=instruction/asset_group={ag}/date={date}/client_id={cid}/`.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Add `client_id` to every `log_event` payload in the execution path.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Multi-asset event `row_id` suffix: `<event_id>.0`, `<event_id>.1`, … for
-      DeFi swaps.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. `asset_class` discriminator: wire ATOKEN / DEBT_TOKEN / LST / LRT /
-      VAULT_SHARE from IS `InstrumentRecord.asset_class` (or IS adapter metadata).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Gas → `gas_paid_native` / `gas_currency` extraction for on-chain fills.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. `combo_id` / `combo_price` from broker exec-report parsing for atomic
-      spread fills.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. `trade_id` / `leg_id` threaded from strategy directive through execution
-      path.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [TEST] P0. Unit tests: round-trip `LedgerRow` construction from sample
-      `CanonicalFill` fixtures for each asset_group × event_type. Assert `client_id` present,
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved (Phases 3/4/5 BLOCKED-OPERATOR-DECISION)]
+      [CODE] P0. Wire `LedgerRow` construction in `execution_service/attribution_builder.py` `build_attribution_rows()`
+      (currently returns empty list). Populate all 32 fields from `CanonicalFill` + instrument metadata (IS lookup) +
+      chain metadata (for on-chain fills).
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P0. Route emission through
+      `_resolve_policy_output_data_type` + `_publish_emission_check`. Partition:
+      `ledger_type=instruction/asset_group={ag}/date={date}/client_id={cid}/`.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P0. Add `client_id` to every
+      `log_event` payload in the execution path.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P0. Multi-asset event `row_id` suffix:
+      `<event_id>.0`, `<event_id>.1`, … for DeFi swaps.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P0. `asset_class` discriminator: wire
+      ATOKEN / DEBT_TOKEN / LST / LRT / VAULT_SHARE from IS `InstrumentRecord.asset_class` (or IS adapter metadata).
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P0. Gas → `gas_paid_native` /
+      `gas_currency` extraction for on-chain fills.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P1. `combo_id` / `combo_price` from
+      broker exec-report parsing for atomic spread fills.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [CODE] P1. `trade_id` / `leg_id` threaded
+      from strategy directive through execution path.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [TEST] P0. Unit tests: round-trip `LedgerRow`
+      construction from sample `CanonicalFill` fixtures for each asset_group × event_type. Assert `client_id` present,
       `CrossClientTransferForbiddenError` cannot trigger.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. `bash scripts/quality-gates.sh` in execution-service — green before merge.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Pre-Migration decisions not yet resolved] [QG] P0. `bash scripts/quality-gates.sh` in
+      execution-service — green before merge.
 
 ---
 
@@ -94,22 +116,26 @@ Codex SSOTs:
 > **Gate**: Phase 7 InstructionLedger emission GREEN; MTDS `funding_rate` / `lending_indices` / `lst_rates` backfill
 > VERIFIED GREEN; IS `CanonicalCorporateAction` available for dividends.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Create `strategy_service/position/v2/passive_ledger_synthesiser.py`. Runs
-      in TWO modes (batch = replay from InstructionLedger history; live = listen + reconcile vs synthesised).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Implement per-EventType synthesis rules per Phase 4 analysis: -
-      FUNDING_ACCRUAL: `position.qty × funding_rate × sign` at 8h CeFi / block DeFi cadence. - STAKING_REWARD:
-      `balance × (index_now/index_prev - 1)` from `lst_rates`. - LENDING_INTEREST:
-      `balance × (liquidity_index_now/prev - 1)` from `lending_indices`. - DIVIDEND: `share_qty × dividend_per_share`
-      from IS `CanonicalCorporateAction`. - SETTLEMENT / EXPIRY: from IS `expiry_date` + MTDS mark at expiry time.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Set `parent_event_id` = originating InstructionLedger `event_id` on every
-      PassiveLedger row.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Set `accrual_period_start_utc` / `accrual_period_end_utc` per
-      per-event-type convention (see `LedgerRow` class docstring).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. Drift detection: synthesiser-expected vs on-chain listener-observed
-      within ε → emit `PASSIVE_LEDGER_DIVERGENCE` alert via alerting-service.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. American option exception: if `exercise_style=AMERICAN` (IS Gap 1 fixed),
-      early-exercise → InstructionLedger TRADE(EXERCISE); expiry-without-action → PassiveLedger EXPIRY.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. `bash scripts/quality-gates.sh` in strategy-service — green before merge.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN + Pre-Migration decisions pending] [CODE] P0. Create
+      `strategy_service/position/v2/passive_ledger_synthesiser.py`. Runs in TWO modes (batch = replay from
+      InstructionLedger history; live = listen + reconcile vs synthesised).
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN + Pre-Migration decisions pending] [CODE] P0. Implement
+      per-EventType synthesis rules per Phase 4 analysis: - FUNDING_ACCRUAL: `position.qty × funding_rate × sign` at 8h
+      CeFi / block DeFi cadence. - STAKING_REWARD: `balance × (index_now/index_prev - 1)` from `lst_rates`. -
+      LENDING_INTEREST: `balance × (liquidity_index_now/prev - 1)` from `lending_indices`. - DIVIDEND:
+      `share_qty × dividend_per_share` from IS `CanonicalCorporateAction`. - SETTLEMENT / EXPIRY: from IS
+      `expiry_date` + MTDS mark at expiry time.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN] [CODE] P0. Set `parent_event_id` = originating InstructionLedger
+      `event_id` on every PassiveLedger row.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN] [CODE] P0. Set `accrual_period_start_utc` /
+      `accrual_period_end_utc` per per-event-type convention (see `LedgerRow` class docstring).
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN] [CODE] P0. Drift detection: synthesiser-expected vs on-chain
+      listener-observed within ε → emit `PASSIVE_LEDGER_DIVERGENCE` alert via alerting-service.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN] [CODE] P1. American option exception: if
+      `exercise_style=AMERICAN` (IS Gap 1 fixed), early-exercise → InstructionLedger TRADE(EXERCISE);
+      expiry-without-action → PassiveLedger EXPIRY.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phase 7 not yet GREEN] [QG] P0. `bash scripts/quality-gates.sh` in strategy-service —
+      green before merge.
 
 ---
 
@@ -117,31 +143,20 @@ Codex SSOTs:
 
 > **Gate**: Phases 7-8 verified GREEN; per-client joined view available in GCS.
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. **client-reporting-api**: replace hardcoded `realised_pnl = "0.00"` with
-      join from InstructionLedger + PassiveLedger per `client_id`. Expose via `/api/pnl/{client_id}` time-series
-      endpoint.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. **strategy-service unrealized_pnl**: bridge MarkPrice from PricingLedger
-      into PnL engine. Replace always-zero path with `InstructionLedger_position ⨝ PricingLedger_mark_update` join.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P0. **fees deduction**: wire `fees_in_quote` from InstructionLedger into
-      realized PnL computation.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. **DART**: replace service-internal PnL state reads with canonical ledger
-      API joins.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [CODE] P1. **alerting-service RiskView**: consume PassiveLedger LIQUIDATION rows for
-      liquidation alerts.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [QG] P0. `bash scripts/quality-gates.sh` in all 3 services — green before merge.
-
----
-
-## Deferred work — migrated to: `global_ledger_pnl_attribution_master`
-
-All items DEFERRED-OPERATOR-DECISION (stub plan; gated on discovery plan Phase 3/4/5 operator [ack]; start window: 2026-06-01 post-cutover):
-
-- **Pre-Migration Phase 3 decision (P0, BLOCKED-OPERATOR-DECISION)**: Late-arriving-data discipline — operator must decide reconciliation model.
-- **Pre-Migration Phase 4 decision (P0, BLOCKED-OPERATOR-DECISION)**: TreasuryLedger split — operator must decide routing.
-- **Pre-Migration Phase 5 decision (P0, BLOCKED-OPERATOR-DECISION)**: PricingLedger row spec — greeks computation home (MTDS vs strategy-service).
-- **Phase 7 — execution-service InstructionLedger writer refactor (P0, DEFERRED-OPERATOR-DECISION)**: Wire `LedgerRow` construction; route via `_resolve_policy_output_data_type`; add `client_id` to log events; multi-asset `row_id` suffix; `asset_class` discriminator; gas extraction; combo_id/leg_id; unit tests; QG green.
-- **Phase 8 — strategy-service PassiveLedger synthesiser (P0, DEFERRED-OPERATOR-DECISION)**: Create `passive_ledger_synthesiser.py`; implement per-EventType synthesis rules (FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST/DIVIDEND/SETTLEMENT/EXPIRY); `parent_event_id`; `accrual_period_start/end_utc`; drift detection; American option exception; QG green.
-- **Phase 9 — DART/client-reporting-api/alerting-service reader refactor (P0, DEFERRED-OPERATOR-DECISION)**: client-reporting-api `realised_pnl` join from InstructionLedger + PassiveLedger; strategy-service `unrealized_pnl` bridge from PricingLedger; fees deduction from InstructionLedger; DART canonical ledger API joins; alerting-service LIQUIDATION rows; QG green for all 3 services.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [CODE] P0. **client-reporting-api**: replace hardcoded
+      `realised_pnl = "0.00"` with join from InstructionLedger + PassiveLedger per `client_id`. Expose via
+      `/api/pnl/{client_id}` time-series endpoint.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [CODE] P0. **strategy-service unrealized_pnl**: bridge
+      MarkPrice from PricingLedger into PnL engine. Replace always-zero path with
+      `InstructionLedger_position ⨝ PricingLedger_mark_update` join.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [CODE] P0. **fees deduction**: wire `fees_in_quote` from
+      InstructionLedger into realized PnL computation.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [CODE] P1. **DART**: replace service-internal PnL state reads
+      with canonical ledger API joins.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [CODE] P1. **alerting-service RiskView**: consume
+      PassiveLedger LIQUIDATION rows for liquidation alerts.
+- [x] ✅ DEFERRED-BLOCKED [GATE: Phases 7-8 not yet GREEN] [QG] P0. `bash scripts/quality-gates.sh` in all 3 services —
+      green before merge.
 
 ---
 

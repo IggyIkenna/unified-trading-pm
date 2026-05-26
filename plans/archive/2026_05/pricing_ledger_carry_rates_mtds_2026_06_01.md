@@ -73,9 +73,10 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [x] ✅ [INFRA] workspace-manifest registration — pm (repositories dict + topologicalOrder level 4 @ pm@f7ca196a1).
 - [x] ✅ [SCRIPT] `uv lock` generated in greeks-service (203 packages).
 - [x] ✅ [DOC] codex/04-architecture/greeks-service-overview.md (197 lines, 10 sections) + boundary-vs-features-service.
-- [x] ✅ DEFERRED [INFRA] P1. Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for PricingLedger sink
-      bucket — DEFERRED until bucket-SSOT canonicalisation (`bucket_name_ssot_canonicalisation_2026_05_10.md`)
-      stabilises. Bucket lookup MUST use `resolve_bucket_name()` per QG STEP 5.69.
+- [x] ✅ DEFERRED [INFRA] P1. Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for
+      PricingLedger sink bucket — DEFERRED until bucket-SSOT canonicalisation
+      (`bucket_name_ssot_canonicalisation_2026_05_10.md`) stabilises. Bucket lookup MUST use `resolve_bucket_name()` per
+      QG STEP 5.69.
 - [x] ✅ [CODE] P0. **features-service volatility ⟷ greeks-service boundary** — features-service volatility consumes
       greeks-service PricingLedger surface/greeks instead of (often-absent) venue greeks. Single authoritative surface
       (greeks-service fits SVI/SABR; features-service consumes for normalised moneyness/skew/term-structure features).

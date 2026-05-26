@@ -8,7 +8,7 @@ assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-status: archived
+status: active
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
@@ -17,6 +17,15 @@ related_plans:
   - plans/epics/orchestrator_master.md
   - plans/active/multi_backend_fleet_connectivity_2026_05_22.md
 ---
+
+## Deferred work — migrated to:
+
+- Deploy headless auth fix to fleet (DEFERRED-OPERATOR-DECISION: "we'll do that later") →
+  `plans/epics/orchestrator_master.md` P2 block — operator to schedule fleet redeploy + verify UI-spawned worker on VM
+  authenticates (**MIGRATED FROM:** orchestrator_headless_agent_auth_2026_05_22)
+- Usage scraping re-engineering (DEFERRED-NEEDS-DEDICATED-SESSION: `server/usage_tracker.py` broken in claude 2.1.145) →
+  `plans/epics/orchestrator_master.md` P2 block — needs dedicated session to re-engineer TUI scrape for 2.1.145 or drop
+  for manual/backend-driven usage (**MIGRATED FROM:** orchestrator_headless_agent_auth_2026_05_22)
 
 # Orchestrator headless agent auth (claude 2.1.145)
 
@@ -98,15 +107,17 @@ directly**.
       `spawn()`), thread the account's `oauth_token_env_file` through `spawn_agent_endpoint`, and apply the same
       `_ensure_claude_config_dir` logic. Then main/review/backup are headless token-auth'd like workers. **Operator
       decision: do this — headless for both main + worker now.** — agent-orchestrator@`b133cdf` (this slot).
-- [x] ✅ [AGENT] P1. **Deploy to the fleet.** Reset all 10 VMs to `main@1a98cca` +
-      `sudo systemctl restart orchestrator`. All VMs confirmed `DONE`. — agent-orchestrator@`1a98cca` (this slot).
-- [x] ✅ [AGENT] P1. **Usage scraping re-engineered for 2.1.145.** `usage_tracker._do_one_capture` now sets
-      `CLAUDE_CONFIG_DIR` to a pre-seeded "usage-probe" config dir (via `_ensure_usage_claude_config_dir()`) when
-      `env_file` is set, bypassing the 2.1.145 onboarding wizard for pexpect-spawned TUI sessions. —
-      agent-orchestrator@`1a98cca` (this slot).
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Deploy to the fleet** (deferred by operator — "we'll do that later").
+      The fix is on `agent-orchestrator` LDR; ride LDR→main + redeploy to the 10 worker VMs + central. Each VM already
+      has its accounts' `~/.claude-accounts/<id>.env` (synced from buckets). Verify a UI-spawned worker on a VM
+      authenticates.
+- [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [AGENT] P1. **Usage scraping is separately broken**
+      (`server/usage_tracker.py`). It drives the interactive `/usage` TUI; in 2.1.145 there's no non-interactive usage
+      command and `claude -p '/usage'` returns only a stub. Needs re-engineering the TUI scrape for 2.1.145, OR dropping
+      it for manual/backend-driven usage. Not auth-related.
 - [x] ✅ [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
       these verified findings (the CLAUDE_CONFIG_DIR + onboarding-seed recipe; that the env token is `-p`-only WITHOUT
-      the seed). The existing doc predates the 2.1.145 findings. — PM@5ef456095 slot-7 2026-05-23.
+      the seed). The existing doc predates the 2.1.145 findings. — PM@`f785f13` (this slot).
 
 ---
 
@@ -182,12 +193,3 @@ tmux capture-pane -t orch-slot-99 -p | tail   # → authenticated, replied SPAWN
 - Token SSOT buckets: `gs://central-element-323112-orchestrator-creds/accounts/`,
   `s3://uts-orchestrator-creds-427895769566/accounts/`.
 - Codex SSOT (update pending): `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
-
-## Deferred work — migrated to:
-
-- **Remote Control (RC) via `.credentials.json`**: browser-login capture/sync + per-account config dirs for RC-capable
-  agents. **MIGRATED FROM:** this plan. Home: `plans/epics/orchestrator_master.md` P3 — "RC-capable agents:
-  `.credentials.json` capture/sync pipeline + per-account CLAUDE_CONFIG_DIR wiring; unblocks `claude.ai/code` Remote
-  Control URL for live session drop-in."
-- All other items shipped 2026-05-23 (headless token-auth for main+worker+review agents; fleet deployed; usage scraping
-  re-engineered).

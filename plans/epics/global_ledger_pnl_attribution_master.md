@@ -62,17 +62,26 @@ first)._
 
 #### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL. Operator [ack] pending on Phase 3/5/6; codex SSOT docs deferred post-cutover. · **estimate**: 3.6 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL. Operator [ack] pending on Phase 3/5/6; codex SSOT docs
+deferred post-cutover. · **estimate**: 3.6 cal AI-days (class: design)
 
 ### P1 — Implementation (gated on P0 operator [ack])
 
 #### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; all 27 items DEFERRED-OPERATOR-DECISION (gated on discovery plan Phase 3/4/5 operator [ack]; start window 2026-06-01).
+**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; all 27 items DEFERRED-OPERATOR-DECISION (gated on discovery plan Phase
+3/4/5 operator [ack]; start window 2026-06-01).
 
 ### P2 — Continuous-verification + reconciliation
 
-_(none yet — defined post-migration ship)_
+- [ ] [CODE] P2. **Own-greeks vs venue-greeks sanity check — CeFi (Deribit)** (**MIGRATED FROM:**
+      `pricing_ledger_carry_rates_mtds_2026_06_01`): Where venue greeks exist (Deribit via
+      `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks`), `greeks-service` computes own greeks AND
+      cross-checks against venue-provided. Divergence beyond ε → emit `GREEKS_VENUE_DIVERGENCE` alert via
+      alerting-service. Own-computed greeks are authoritative for PricingLedger; venue greeks are the validation
+      reference. Tardis-historical Deribit greeks used same way in batch mode. Gate: greeks-service Pub/Sub
+      subscription + IS API integration + PricingLedger write-back (Phase 3 items — now all shipped at
+      `greeks-service@b0b702d`). (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
 
 ### P3 — Post-cutover enrichments
 
@@ -82,23 +91,35 @@ _(none yet — defined post-migration ship)_
 
 ### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL; UAC schemas shipped; operator [ack] pending on Phase 3/5/6.
+**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL; UAC schemas shipped; operator [ack] pending on Phase
+3/5/6.
 
 **Deferred (migrated):**
-- **Operator [ack] pending (Phase 3/5/6)**: Late-arriving-data handling + greeks home + TreasuryLedger split decisions. Gate for migration sub-plan start.
-- **Codex SSOT docs (DEFERRED-POST-CUTOVER)**: `global-ledger-architecture.md` + `ledger-event-taxonomy.md` + `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo access.
+
+- **Operator [ack] pending (Phase 3/5/6)**: Late-arriving-data handling + greeks home + TreasuryLedger split decisions.
+  Gate for migration sub-plan start.
+- **Codex SSOT docs (DEFERRED-POST-CUTOVER)**: `global-ledger-architecture.md` + `ledger-event-taxonomy.md` +
+  `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo access.
 
 ### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; 0/27 items implemented (all DEFERRED-OPERATOR-DECISION, start window 2026-06-01 post-cutover).
+**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; 0/27 items implemented (all DEFERRED-OPERATOR-DECISION, start window
+2026-06-01 post-cutover).
 
 **Deferred (migrated):**
-- **Pre-migration gate — Phase 3 operator [ack]**: Late-arriving-data handling decision (operator [ack] pending from discovery plan).
-- **Pre-migration gate — Phase 4 operator [ack]**: Greeks home (where greeks rows live in ledger) decision (operator [ack] pending from discovery plan).
-- **Pre-migration gate — Phase 5 operator [ack]**: TreasuryLedger split decision (operator [ack] pending from discovery plan).
-- **Phase 7 — execution-service InstructionLedger writer refactor**: `attribution_builder.build_attribution_rows` → emit via writegate path. DEFERRED-POST-CUTOVER (gate: Phase 3/4/5 ack).
-- **Phase 8 — strategy-service PassiveLedger synthesiser**: Per-event divergence check path. DEFERRED-POST-CUTOVER (gate: Phase 3/4/5 ack).
-- **Phase 9 — DART / client-reporting-api / alerting-service reader refactor**: Consumes PnL + PnLAttribution. DEFERRED-POST-CUTOVER (gate: Phase 7/8).
+
+- **Pre-migration gate — Phase 3 operator [ack]**: Late-arriving-data handling decision (operator [ack] pending from
+  discovery plan).
+- **Pre-migration gate — Phase 4 operator [ack]**: Greeks home (where greeks rows live in ledger) decision (operator
+  [ack] pending from discovery plan).
+- **Pre-migration gate — Phase 5 operator [ack]**: TreasuryLedger split decision (operator [ack] pending from discovery
+  plan).
+- **Phase 7 — execution-service InstructionLedger writer refactor**: `attribution_builder.build_attribution_rows` → emit
+  via writegate path. DEFERRED-POST-CUTOVER (gate: Phase 3/4/5 ack).
+- **Phase 8 — strategy-service PassiveLedger synthesiser**: Per-event divergence check path. DEFERRED-POST-CUTOVER
+  (gate: Phase 3/4/5 ack).
+- **Phase 9 — DART / client-reporting-api / alerting-service reader refactor**: Consumes PnL + PnLAttribution.
+  DEFERRED-POST-CUTOVER (gate: Phase 7/8).
 
 ## VM assignment notes
 

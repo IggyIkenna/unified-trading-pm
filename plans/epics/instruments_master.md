@@ -362,7 +362,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — instruments-service cluster
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — instruments-service cluster
 
 **status**: 🟠 ACTIVE — QG sweep for instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0.
 PREREQ: UTL QG green (vm-cross-cutting). See plan for full dep-chain. [vm: vm-cefi]
@@ -401,4 +401,7 @@ DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
 - **IS-3.1.Sports-V verification (P0, DEFERRED-OPERATOR-DECISION)**: Gate: `instr-backfill-sports` completes; track in
   `predictions_master`.
 - **IS-3.1.TradFi-Databento (P0, BLOCKED-CREDENTIALS)**: Gate: operator reactivates Databento account.
+- **IS-3.1.Pred-Kalshi (P0, BLOCKED-CREDENTIALS)**: Kalshi account registration + API key required to backfill Kalshi
+  prediction markets. Polymarket writes OK; Kalshi adapter dormant until credentials land. (**MIGRATED FROM:**
+  `instruments_backfill_phase3_2026_05_22`)
 - **IS bucket canonicalisation (P2)**: Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.

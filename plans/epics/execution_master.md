@@ -27,7 +27,7 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — execution-service cluster
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — execution-service cluster
 
 **status**: 🟠 ACTIVE — QG sweep for execution-service (20 ruff errors) + trading-agent-service (ruff clean). Run
 `bash scripts/quality-gates.sh` exit 0 in each. PREREQ: UTL QG green. [vm: vm-trading-core]

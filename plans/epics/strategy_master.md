@@ -77,7 +77,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — strategy-service cluster
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — strategy-service cluster
 
 **status**: 🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors, **SURFACE ONLY — LOGIC FREEZE in effect**). Only
 ruff/pyright surface fixes. No changes to `engine/strategies/v2/`, `engine/allocator/`, collateral, liquidation,

@@ -12,7 +12,7 @@ last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
-  - ../active/workspace_qg_sweep_2026_05_23.md
+  - ../archive/2026_05/workspace_qg_sweep_2026_05_23.md
   - ../archive/2026_05/aws_migration_defi_first_2026_05_07.md
   - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
   - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
@@ -432,13 +432,13 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md)
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md)
 
-**status**: 🟠 ACTIVE — Workspace-wide QG green sweep. All 20 Python repos to `bash scripts/quality-gates.sh` exit 0.
-Dep-chain: UAC → UTL → IS/deployment-service → MTDS/features/strategy/execution → ML/misc. Fan-out across
-vm-cross-cutting (root + misc), vm-cefi (instruments-service), vm-ml (data pipeline), vm-trading-core (trading
-machinery), vm-operator-ops (deployment-service/api). Pre-flight ruff counts recorded in plan body. · **estimate**: 1.2
-cal AI-days (class: refactor, 0.4× multiplier)
+**status**: ✅ ARCHIVED 2026-05-26 — All items completed. Workspace-wide QG green sweep. All 20 Python repos to
+`bash scripts/quality-gates.sh` exit 0. Dep-chain: UAC → UTL → IS/deployment-service → MTDS/features/strategy/execution
+→ ML/misc. Fan-out across vm-cross-cutting (root + misc), vm-cefi (instruments-service), vm-ml (data pipeline),
+vm-trading-core (trading machinery), vm-operator-ops (deployment-service/api). Pre-flight ruff counts recorded in plan
+body. · **estimate**: 1.2 cal AI-days (class: refactor, 0.4× multiplier)
 
 ### [`audit03_deployment_cron_provisioning_2026_05_22`](../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md)
 

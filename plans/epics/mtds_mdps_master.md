@@ -533,7 +533,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../active/workspace_qg_sweep_2026_05_23.md) — MTDS/MDPS cluster
+### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — MTDS/MDPS cluster
 
 **status**: 🟠 ACTIVE — QG sweep for market-tick-data-service + market-data-processing-service. Both ruff clean; run
 full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: instruments-service QG green. [vm: vm-ml]
@@ -570,7 +570,22 @@ MTDS adapters preflight + batch-live parity
 - [ ] [SCRIPT] P2. **DEFERRED** — Rename on-disk hive partition `data_type=dex_pool_state` → `data_type=dex_pools` so
       physical GCS path matches UAC canonical name. Bundle into next GCS migration window (single-walk discipline).
       After rename: remove override mapping in `features-service/onchain/app/core/mtds_output_config.py`. Full spec:
-      [`data_type_canonicalization_2026_05_23.md`](../active/data_type_canonicalization_2026_05_23.md) Phase 9.
+      [`data_type_canonicalization_2026_05_23.md`](../archive/data_type_canonicalization_2026_05_23.plan.md) Phase 9.
+
+### greeks-service TradFi IV fitting — MarkUpdateMessage schema gap (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
+
+- [ ] [CODE] P2. **DEFERRED-BLOCKED-SCHEMA** — `MarkUpdateMessage` lacks `underlying_spot` field needed for TradFi
+      options IV fitting in `greeks-service`. Handler comment:
+      `BLOCKED-SCHEMA: MarkUpdateMessage.mark_price is the underlying spot — IV fitting requires a separate option_mark_price or underlying_spot field`.
+      Add `underlying_spot: Decimal | None` to the wire format; wire handler fallback path in `greeks-service`. CeFi
+      path (Deribit IV direct) is fully wired. (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
+
+### greeks-service cloud-providers.yaml PricingLedger sink bucket (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
+
+- [ ] [INFRA] P2. **DEFERRED** — Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for
+      PricingLedger sink bucket. Gated on `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (IS bucket
+      resolver migration) stabilising. Bucket lookup MUST use `resolve_bucket_name()` per QG STEP 5.69. (**MIGRATED
+      FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
 
 ### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 

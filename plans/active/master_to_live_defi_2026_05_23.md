@@ -111,38 +111,19 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-26 11:14 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-26 11:37 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
-| Plan                                                                                                                                        | Owner                                | Class     | Checkboxes | % done       | Cal left | Deadline |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------- | ---------- | ------------ | -------- | -------- |
-| [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)                                             | master                               | infra     | —          | —            | 2.5      | —        |
-| [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md)                                       | master                               | brand-new | 18/25      | 72%          | 1.7      | —        |
-| [`features_input_manifest_migration_2026_05_25`](./features_input_manifest_migration_2026_05_25.md)                                         | master                               | refactor  | 19/25      | 76%          | 0.9      | —        |
-| [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                       | master                               | infra     | —          | —            | 0.4      | —        |
-| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md)                                                           | features_and_ml_master               | infra     | 15/18      | 83%          | 0.4      | —        |
-| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                     | README                               | design    | 168/172    | 98%          | 0.1      | —        |
-| [`agent_recovery_controller_layer0_deterministic_2026_05_23`](./agent_recovery_controller_layer0_deterministic_2026_05_23.md)               | master                               | brand-new | 39/39      | 100%         | 0.0      | —        |
-| [`audit03_carry_execution_safety_remediation_2026_05_22`](./audit03_carry_execution_safety_remediation_2026_05_22.md)                       | master                               | brand-new | 18/18      | 100%         | 0.0      | —        |
-| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                     | master                               | design    | 22/22      | 100%         | 0.0      | —        |
-| [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                | brand-new | 25/25      | 100%         | 0.0      | —        |
-| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                                 | master                               | design    | 17/17      | 100%         | 0.0      | —        |
-| [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                               | infra     | 26/26      | 100%         | 0.0      | —        |
-| [`data_type_canonicalization_2026_05_23`](./data_type_canonicalization_2026_05_23.md)                                                       | master                               | refactor  | 39/39      | 100%         | 0.0      | —        |
-| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                   | master                               | brand-new | 40/40      | 100%         | 0.0      | —        |
-| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master | refactor  | 27/27      | 100%         | 0.0      | —        |
-| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                   | master                               | design    | 25/25      | 100%         | 0.0      | —        |
-| [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | instruments_master                   | infra     | 26/26      | 100%         | 0.0      | —        |
-| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 46/46      | 100%         | 0.0      | —        |
-| [`mdps_lending_indices_bypass_writer_2026_05_24`](./mdps_lending_indices_bypass_writer_2026_05_24.md)                                       | master                               | brand-new | 5/5        | 100%         | 0.0      | —        |
-| [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 42/42      | 100%         | 0.0      | —        |
-| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                               | infra     | 31/31      | 100%         | 0.0      | —        |
-| [`orchestrator_headless_agent_auth_2026_05_22`](./orchestrator_headless_agent_auth_2026_05_22.md)                                           | master                               | infra     | 5/5        | 100%         | 0.0      | —        |
-| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)                 | master                               | research  | 28/28      | 100%         | 0.0      | —        |
-| [`pricing_ledger_carry_rates_mtds_2026_06_01`](./pricing_ledger_carry_rates_mtds_2026_06_01.md)                                             | master                               | design    | 36/36      | 100%         | 0.0      | —        |
-| [`workspace_qg_sweep_2026_05_23`](./workspace_qg_sweep_2026_05_23.md)                                                                       | execution_master                     | refactor  | 22/22      | 100%         | 0.0      | —        |
-| **TOTAL** (25 plans)                                                                                                                        | 0 orphans, 0 TBD                     | —         | —          | **94% done** | **6**    | —        |
+| Plan                                                                                                  | Owner                  | Class     | Checkboxes | % done       | Cal left | Deadline |
+| ----------------------------------------------------------------------------------------------------- | ---------------------- | --------- | ---------- | ------------ | -------- | -------- |
+| [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)       | master                 | infra     | —          | —            | 2.5      | —        |
+| [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) | master                 | brand-new | 18/25      | 72%          | 1.7      | —        |
+| [`features_input_manifest_migration_2026_05_25`](./features_input_manifest_migration_2026_05_25.md)   | master                 | refactor  | 19/25      | 76%          | 0.9      | —        |
+| [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                 | master                 | infra     | —          | —            | 0.4      | —        |
+| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md)                     | features_and_ml_master | infra     | 15/18      | 83%          | 0.4      | —        |
+| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                               | README                 | design    | 168/172    | 98%          | 0.1      | —        |
+| **TOTAL** (6 plans)                                                                                   | 0 orphans, 0 TBD       | —         | —          | **68% done** | **6**    | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
