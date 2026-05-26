@@ -433,3 +433,6 @@ per-repo strictness (12.6k) vs a middle policy.
 - [x] ✅ [CHORE] P1. e2e-testing: target-version=py313 (already in LDR HEAD via 1431ef1 rollout; no delta)
 - [x] ✅ [FIX] P1. system-integration-tests: target-version=py313 (LDR HEAD); sports arb pipeline imports
       unified_sports_execution_interface → execution_service.sports_execution — SIT@9bad68c
+- [x] ✅ [FIX] P1. deployment-service: resolve 149 ruff lint errors introduced by 45d51d0 pyproject standardization; fix
+      STEP 5.21 (remove 5 reportUnknown\*="none" lines); add 4 unit test files to push coverage ≥70%; ruff auto-fix
+      **all**/**slots** sort + stale noqa removals — deployment-service@e7fea4e
