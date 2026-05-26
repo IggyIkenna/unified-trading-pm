@@ -129,12 +129,11 @@ schema_version AND NULL written_at**. Root cause (verified, not a merge bug):
 
 New todos from this finding:
 
-- [ ] [CODE] P1. Fix `instruments-service/scripts/enumerate_expected_universe.py::_write_absent_rows`: stamp
-      `schema_version` (= canonical version, not hard-coded), `written_at` (= now UTC), and the full manifest column set
-      on every enumerated row — OR route the write through UTL `ManifestWriter`/`record_expected_empty` instead of the
-      raw `to_parquet`. Currently it only aligns to the full schema when `manifest_df` is provided. Harsh /
-      instruments-service lane. Until fixed, no consolidation (one-shot or cron) can hold 100% v8. **Re-run the cefi
-      enumeration after the fix so the slot4-cefi-c\* shards carry the full schema.**
+- [x] ✅ [CODE] P1. Fix `instruments-service/scripts/enumerate_expected_universe.py::_write_absent_rows`: stamp
+      `schema_version` (= canonical version, not hard-coded), `written_at` (= now UTC). Added `MANIFEST_SCHEMA_VERSION`
+      import from UTL; injected both fields into record dict before DataFrame construction — works for v1 (manifest_df
+      provided) and v2 (manifest_df=None) paths. IS@9f831578 QG green. **Re-run the cefi enumeration so slot4-cefi-c\*
+      shards carry full schema.**
 - [ ] [DECISION] P0. **AWAITING OPERATOR** (tomorrow): upload the faithful refresh now (restore cefi visibility;
       reversible via pre-write snapshot; accept surfaced NULL-version rows) **vs** hold the upload until the enumerator
       is fixed + re-run, then consolidate clean. (Seed parquet ready: `/data/cefi_consolidate/consolidated.parquet`.)
