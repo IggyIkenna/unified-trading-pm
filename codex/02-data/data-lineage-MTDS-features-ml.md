@@ -112,16 +112,16 @@ SSOT: `plans/active/issues/mdps_defi_multi_bucket_arch_gap_2026_05_22.md` (resol
 
 Bucket: `features-{feature_group}-{category}-central-element-323112`
 
-| Service                   | feature_groups (examples)                      | Upstream dependency                   | Applicable categories |
-| ------------------------- | ---------------------------------------------- | ------------------------------------- | --------------------- |
-| features-delta-one        | `price_return`, `momentum`, `microstructure`   | MTDS ticks + MDPS candles             | CeFi, TradFi          |
-| features-volatility       | `realized_vol`, `garch`, `iv_surface`          | MDPS candles + CeFi options           | CeFi, TradFi          |
-| features-onchain          | `pool_state`, `lending_state`, `oracle_price`  | MTDS DeFi ticks                       | DeFi only             |
-| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv` | MTDS sports + instruments-service ref | Sports only           |
-| features-calendar         | `session_flags`, `macro_events`, `holiday`     | calendar tables                       | CeFi, TradFi          |
-| features-multi-timeframe  | `mtf_trend`, `mtf_alignment`                   | MDPS candles (all tfs)                | CeFi, TradFi, DeFi    |
-| features-cross-instrument | `basis`, `spread`, `lead_lag`                  | MDPS candles across instruments       | CeFi, TradFi          |
-| features-commodity        | `commodity_basis`, `backwardation`             | TradFi commodity futures              | TradFi only           |
+| Service                   | feature_groups (examples)                                 | Upstream dependency                                                                                | Applicable categories |
+| ------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------- |
+| features-delta-one        | `technical_indicators`, `momentum`, `volatility_realized` | MTDS ticks + MDPS `processed_candles`                                                              | CeFi, TradFi          |
+| features-volatility       | `realized_vol`, `garch`, `iv_surface`                     | MDPS candles + CeFi options                                                                        | CeFi, TradFi          |
+| features-onchain          | `pool_state`, `lending_state`, `oracle_price`             | MTDS DeFi ticks                                                                                    | DeFi only             |
+| features-sports           | `pregame_xg`, `pregame_clv`, `ht_xg`, `ht_clv`            | MTDS sports + instruments-service ref                                                              | Sports only           |
+| features-calendar         | `session_flags`, `macro_events`, `holiday`                | calendar tables                                                                                    | CeFi, TradFi          |
+| features-multi-timeframe  | `tf_momentum_alignment`, `tf_confluence_signals`          | **delta_one output bucket** (reads `day={D}/feature_group={G}/timeframe={T}/{INSTR}.parquet`)      | CeFi, TradFi          |
+| features-cross-instrument | `cross_asset_correlation`, `regime_detection`             | **delta_one output bucket** (same layout; calculators need `instrument_id` injected from filename) | CeFi, TradFi          |
+| features-commodity        | `commodity_basis`, `backwardation`                        | TradFi commodity futures                                                                           | TradFi only           |
 
 ### Features input discovery — manifest-driven (v8), NOT path-probe
 
@@ -151,11 +151,38 @@ Implementation refs:
 - `features-service/features_service/cross_instrument/` — reads delta_one output manifest (features-service@1d30b8c5)
 - Migration plan: `plans/active/features_input_manifest_migration_2026_05_25.md`
 
-Writer: identical pattern — `StreamingParquetWriter(strict=True)` + `ManifestWriter.write_with_zero_fill`, with
-`feature_group` populated as a shard column.
+### Features output path (canonical — proven in Phase 2 e2e, 2026-05-26)
 
-Path:
-`features/by_date/day=YYYY-MM-DD/category={cat}/feature_group={group}/timeframe={tf}/venue={venue}/instrument_type={type}/.parquet`
+Output bucket per family: resolved via
+`resolve_bucket_name(cloud="gcp", kind="features-{slug}", asset_group=asset_group)` where `slug` is `delta-one` /
+`volatility` / `cross-instrument` / `multi-timeframe` etc. `IS_TEST_RUN=true` routes to `-test-` sibling buckets.
+`PROTOCOL_DATA_SINK_BUCKET_{AG}` env (delta_one) or bucket property (other families) overrides the sink for E2E test
+runs without touching prod.
+
+Canonical output path (features-delta-one, batch mode): `batch/date={date}/{feature_group}/{instrument_id}.parquet`
+
+Cross-instrument output path: `{run_tag}/date={date}/{feature_group}/features.parquet`
+
+**Manifest emission contract (proven 2026-05-26 e2e Phase 2):** every successful write co-emits a v8 manifest row to the
+same output bucket's `_index/availability_index.parquet`. The manifest row carries:
+
+- `capture_status="captured"` (or `"empty_confirmed"` if write-gate rejected)
+- `service_name="features-service"`
+- `feature_group` + `feature_family` + `timeframe` shard dimensions
+- `pipeline_mode=PipelineMode.BATCH_*`
+- `available_at` = write timestamp
+
+This is enforced by the `ManifestWriter.write()` call in each family's batch_handler. The parquet and manifest row MUST
+land in the **same bucket** — divergence (parquet in test, manifest in prod) is a phantom-row bug caught by
+`features-service@31414a39` (delta_one) and equivalent fixes in each family.
+
+Writer: `ManifestWriter(service_name="features-service", catalogue_bucket=self.feature_writer.bucket)` where `.bucket`
+is the single resolved property shared between the data sink and manifest writer.
+
+Migration refs:
+
+- Write-side manifest divergence fix: `features-service@31414a39` (delta_one)
+- E2E validation plan: `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`
 
 ## Layer 4 — ml-training-service
 
