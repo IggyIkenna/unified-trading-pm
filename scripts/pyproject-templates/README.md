@@ -14,11 +14,11 @@ Audit + decisions: `plans/active/issues/tooling_config_standardization_2026_05_2
 | ruff (lint+format) | `pyproject.toml` `[tool.ruff]` | line-length 120, target py313, double-quote |
 | basedpyright | `pyproject.toml` `[tool.basedpyright]` | **strict**; `pyrightconfig.json` is DELETED workspace-wide |
 | pytest | `pyproject.toml` `[tool.pytest.ini_options]` | — |
-| coverage | `pyproject.toml` `[tool.coverage.report]` | `fail_under` is a per-type **floor** |
+| coverage | `pyproject.toml` `[tool.coverage.run]` + `[tool.coverage.report]` | **both required**; `fail_under` is a per-type **floor** |
 | pre-commit | `.pre-commit-config.yaml` (YAML) | tool-mandated; see `../pre-commit-templates/` |
 | build backend | `[build-system]` = **hatchling** | no setuptools, no per-repo backend drift |
 | mypy | — | **removed** (basedpyright superset; no mypy plugins were used) |
-| bandit | — | **pending**: prefer ruff `S` (flake8-bandit) rules over standalone bandit |
+| bandit | `pyproject.toml` `[tool.bandit]` | **every repo** (`skips` per-repo, each with a reason); ruff `S` deferred to future |
 
 **Frontend (UI repos):** tool-mandated dedicated files — `eslint.config.mjs`,
 `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, and a canonical

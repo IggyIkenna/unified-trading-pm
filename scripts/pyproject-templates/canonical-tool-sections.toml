@@ -98,9 +98,19 @@ markers = [
     "smoke: mark test as smoke test",
 ]
 
-# ── coverage ────────────────────────────────────────────────────────────────────
+# ── coverage (run + report — BOTH required in every repo) ────────────────────────
+[tool.coverage.run]
+source = ["<PACKAGE_DIR>"]
+branch = true
+# omit = [ ... ]  # per-repo: integration-only / I/O modules
+
 [tool.coverage.report]
 # FLOOR, not a fixed value: services >= 70, libraries >= 80. Repos may ratchet
 # ABOVE their floor (e.g. UAC 84), never below. Set per repo:
 fail_under = 70   # <- 70 for service repos, 80 for library repos
-# omit = [ ... ]  # per-repo: integration-only / I/O modules (see repo's existing list)
+# omit = [ ... ]  # per-repo (usually mirrors [tool.coverage.run].omit)
+
+# ── bandit (security SAST — every repo) ──────────────────────────────────────────
+# Workspace keeps bandit (not ruff `S` rules) for now; ruff `S` may be added later.
+[tool.bandit]
+skips = []   # per-repo: add bandit check IDs WITH a comment explaining why (e.g. "B608: ...")

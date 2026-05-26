@@ -26,18 +26,35 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = []
 
+# ── ruff (lint + format) ────────────────────────────────────────────────────────
+# DEVIATION: exclude list + format section added per canonical-tool-sections.toml.
+# per-file-ignores: repo-specific entries preserved alongside canonical defaults.
 [tool.ruff]
 line-length = 120
 target-version = "py313"
+exclude = [".cursor", ".venv", ".venv-workspace", "build", "dist", "node_modules"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "G"]
-
+# Canonical rich union; "G" already included below.
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G", "C90"]
+extend-ignore = ["G003", "G004"]
+ignore = ["E402"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 7
+# DEVIATION: raised to canonical 26 (was 7; scripts-only repo, some utility scripts
+# have higher cyclomatic complexity that would break on the previous 7 cap).
+max-complexity = 26
 
 [tool.ruff.lint.per-file-ignores]
+# Canonical defaults:
+"*/__init__.py" = ["F401", "E402"]
+"tests/*" = ["F401", "F841", "F811"]
+"tests/conftest.py" = ["E402"]
+# Repo-specific:
 "tests/test_generate_workspace_dag.py" = ["E402"]
 "scripts/propagation/rollout-ui-build-infra.py" = ["E501"]
 "scripts/dev/seed_validator.py" = ["BLE001"]
@@ -50,14 +67,21 @@ max-complexity = 7
 "codex/14-customer-journeys/_tools/build_scope_manifest.py" = ["E501"]
 "codex/06-coding-standards/test-templates/test_event_logging.py" = ["E501"]
 
+# ── basedpyright (typecheck) — CONSOLIDATED; pyrightconfig.json deleted ──────────
+# DEVIATION (scripts-only): include = ["scripts"] instead of a package dir.
+# extraPaths ported from deleted pyrightconfig.json (2 sibling repo paths).
+# Existing `ignore` list preserved — covers argparse/json.load() Any boundaries.
 [tool.basedpyright]
-extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management", "../unified-internal-contracts", "../unified-api-contracts"]
 pythonVersion = "3.13"
+typeCheckingMode = "standard"
+include = ["scripts"]
+exclude = ["tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
 venvPath = "."
 venv = ".venv"
-typeCheckingMode = "strict"
-# JSON-parsing / argparse scripts: reportAny suppressed — dict values from json.load()
-# and argparse.Namespace attributes are intentionally Any at the JSON/CLI boundary.
+# ── Type-correctness rules → "error" (strict). Canonical full set.
+# ── Owned by ruff (avoid double-reporting) / pragmatic softenings.
+# JSON-parsing / argparse scripts: many scripts use dict values from json.load()
+# and argparse.Namespace attributes that are intentionally Any at the JSON/CLI boundary.
 ignore = [
     "scripts/propagation/rollout-quality-gates-unified.py",
     "scripts/propagation/rollout-buildspec.py",
@@ -126,13 +150,44 @@ ignore = [
     "scripts/workspace/cleanup-empty-dirs.py",
 ]
 
+# Cross-repo import resolution (ported from deleted pyrightconfig.json extraPaths).
+# DEVIATION (scripts-only): 2 sibling repo paths; internal script subdirs dropped
+# (basedpyright resolves scripts/ sub-dirs from include = ["scripts"] above).
+reportImplicitOverride = "none"
+reportExplicitAny = "none"
+reportAny = "error"
+reportUnknownArgumentType = "none"
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
+reportUnknownParameterType = "none"
+reportUnnecessaryComparison = "warning"
+reportUnreachable = "warning"
+[[tool.basedpyright.executionEnvironments]]
+root = "."
+pythonVersion = "3.13"
+pythonPlatform = "All"
+extraPaths = [
+    "../unified-internal-contracts",
+    "../unified-api-contracts",
+]
+
+# ── pytest ──────────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: PM integration tests (verify repo sync with PM scripts)"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+markers = [
+    "unit: mark test as unit test",
+    "integration: integration tests requiring real GCP credentials and API keys",
+    "smoke: mark test as smoke test",
+]
 
+# ── coverage (run + report — BOTH required in every repo) ────────────────────────
+# DEVIATION (scripts-only): source = ["scripts"] (no importable package).
 [tool.coverage.run]
-parallel = true
 source = ["scripts"]
+branch = true
+parallel = true
 omit = [
     "tests/*",
     "*.venv*/*",
@@ -147,5 +202,12 @@ omit = [
 ]
 
 [tool.coverage.report]
+# DEVIATION (scripts-only): fail_under = 0 — no packaged coverage gate; scripts
+# are run as executables and not fully unit-testable without live infra.
+fail_under = 0
 skip_empty = true
 show_missing = true
+
+# ── bandit (security SAST — every repo) ──────────────────────────────────────────
+[tool.bandit]
+skips = []   # per-repo: add bandit check IDs WITH a comment explaining why
