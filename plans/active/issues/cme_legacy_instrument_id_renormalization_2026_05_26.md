@@ -1,9 +1,9 @@
 ---
 title: "CME legacy 2-segment instrument_id not re-normalized in MDPS — partition_mismatch / 'malformed instrument_id'"
 created: 2026-05-26
-author: harsh-main
 source:
-  - "market-data-tick-tradfi-central-element-323112/_index/per_vm/mdps-tradfi-2020-20260523-125440.parquet (attempted_failed error_reason)"
+  - "market-data-tick-tradfi-central-element-323112/_index/per_vm/mdps-tradfi-2020-20260523-125440.parquet
+    (attempted_failed error_reason)"
   - plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md
 priority: P2
 status: solved
@@ -31,8 +31,8 @@ The `mdps-tradfi-2020` backfill VM writes `attempted_failed` manifest rows whose
 Diagnosis chain:
 
 1. **Canonical contract** (`unified_trading_library/io/instrument_id_validator.py`): a valid `instrument_id` is
-   `VENUE:INSTRUMENT_TYPE:SYMBOL` — exactly **3** colon-segments (`_split_instrument_id` → `split(":", 2)`,
-   `len == 3`). `CME:ESH0` is **2** segments → "malformed"; the partition even carries `instrument_type=UNKNOWN`.
+   `VENUE:INSTRUMENT_TYPE:SYMBOL` — exactly **3** colon-segments (`_split_instrument_id` → `split(":", 2)`, `len == 3`).
+   `CME:ESH0` is **2** segments → "malformed"; the partition even carries `instrument_type=UNKNOWN`.
 2. **The current classifier is correct.** Live-tested
    `market_tick_data_service.market_interface.adapters.tradfi.databento_classifier.classify_databento_symbol`:
    `ESH0 → FUTURE/ES`, `E2AG0 C3370 → OPTION/ES`, `ESM6 → FUTURE`, `GCZ4 C2000 → OPTION`. So today's MTDS code would
@@ -56,14 +56,14 @@ un-reclassified-legacy-data problem.
 
 ## Recommended decision
 
-**Fix C — Re-normalize `instrument_id` at the processing boundary** (preferred; no raw re-fetch):
-when MDPS reads a row whose `instrument_id` is malformed (≠ 3 segments) or `instrument_type` is `UNKNOWN`, re-derive
-the canonical id from the raw `symbol` via the classifier + `build_instrument_id`, and re-stamp `instrument_type`.
+**Fix C — Re-normalize `instrument_id` at the processing boundary** (preferred; no raw re-fetch): when MDPS reads a row
+whose `instrument_id` is malformed (≠ 3 segments) or `instrument_type` is `UNKNOWN`, re-derive the canonical id from the
+raw `symbol` via the classifier + `build_instrument_id`, and re-stamp `instrument_type`.
 
 Open design points (resolved during implementation):
 
-- The classifier lives in **MTDS**; MDPS does not depend on MTDS. The shared re-normalization helper must live in a
-  lib both import (UTL or UAC), or the classifier relocates there.
+- The classifier lives in **MTDS**; MDPS does not depend on MTDS. The shared re-normalization helper must live in a lib
+  both import (UTL or UAC), or the classifier relocates there.
 - Requires the raw `symbol` (e.g. `ESH0`) to still be present on the row MDPS processes — confirm before implementing.
 
 Compose with the sibling issue's **Fix A/B** (nullable-OHLC trades schema + `combo`/`UNKNOWN`/`futures_chain` contracts)
@@ -75,9 +75,9 @@ so a single follow-up reprocess of the affected CME range clears both `schema_vi
 `_renormalize_legacy_tradfi_instrument_ids` in `app/core/canonical_writer.py`, called at the top of
 `write_candle_parquet` before instrument_type inference + partition_path build. For tradfi rows whose id is 2-segment,
 it extracts the symbol embedded in the malformed id, classifies it via `classify_databento_symbol` (MTDS; MDPS depends
-on MTDS), and rebuilds the canonical id via `build_instrument_id(venue, type, underlying, expiry_date=, strike=,
-option_right=)` — mirroring `DatabentoAdapter` exactly. No re-fetch needed (the symbol is recoverable from the id), so
-the Databento quota exhaustion is moot.
+on MTDS), and rebuilds the canonical id via
+`build_instrument_id(venue, type, underlying, expiry_date=, strike=, option_right=)` — mirroring `DatabentoAdapter`
+exactly. No re-fetch needed (the symbol is recoverable from the id), so the Databento quota exhaustion is moot.
 
 **Key correctness point:** the canonical id is NOT `CME:future:ESH0` — `build_instrument_id` encodes
 underlying+expiry(+strike+right), so distinct contracts stay distinct:

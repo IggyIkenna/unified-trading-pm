@@ -1,13 +1,14 @@
 ---
 title: MDPS DeFi dex_swaps → swaps_ohlcv schema lookup fails — instrument_type case mismatch (POOL vs pool)
 created: 2026-05-23
-author: slot-2-ikenna
 source:
   - market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py
   - unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py
   - vm-logs/mdps-defi-2024-20260523-195633/run.log
   - vm-logs/mdps-defi-2025-20260523-195633/run.log
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

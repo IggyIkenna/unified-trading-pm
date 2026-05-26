@@ -1,11 +1,12 @@
 ---
 title: "Full CI/CD + SIT target state — close the gaps that let staging drift ~1 month undetected"
 created: 2026-05-24
-author: ikenna (slot 1)
 source:
   - "staging staleness audit + UAC pilot PR #48 (2026-05-24)"
   - "plans/active/issues/staging_resync_post_cutover_2026_05_24.md"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found (the structural gap)

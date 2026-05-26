@@ -111,36 +111,38 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-25 06:56 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-26 11:14 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
 | Plan                                                                                                                                        | Owner                                | Class     | Checkboxes | % done       | Cal left | Deadline |
 | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------- | ---------- | ------------ | -------- | -------- |
-| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master | refactor  | 1/27       | 4%           | 11.6     | —        |
 | [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md)                                             | master                               | infra     | —          | —            | 2.5      | —        |
-| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md)                                                           | features_and_ml_master               | infra     | 0/18       | 0%           | 2.4      | —        |
-| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                     | README                               | design    | 73/172     | 42%          | 2.1      | —        |
-| [`agent_recovery_controller_layer0_deterministic_2026_05_23`](./agent_recovery_controller_layer0_deterministic_2026_05_23.md)               | master                               | brand-new | 35/39      | 90%          | 1.4      | —        |
-| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                   | master                               | design    | 22/25      | 88%          | 1.0      | —        |
-| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                                 | master                               | design    | 15/17      | 88%          | 0.6      | —        |
-| [`orchestrator_headless_agent_auth_2026_05_22`](./orchestrator_headless_agent_auth_2026_05_22.md)                                           | master                               | infra     | 3/5        | 60%          | 0.5      | —        |
-| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                     | master                               | design    | 20/22      | 91%          | 0.4      | —        |
-| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                   | master                               | brand-new | 38/40      | 95%          | 0.4      | —        |
+| [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md)                                       | master                               | brand-new | 18/25      | 72%          | 1.7      | —        |
+| [`features_input_manifest_migration_2026_05_25`](./features_input_manifest_migration_2026_05_25.md)                                         | master                               | refactor  | 19/25      | 76%          | 0.9      | —        |
 | [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md)                                                                       | master                               | infra     | —          | —            | 0.4      | —        |
-| [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                | brand-new | 22/25      | 88%          | 0.4      | —        |
-| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 38/44      | 86%          | 0.3      | —        |
-| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                               | infra     | 28/31      | 90%          | 0.3      | —        |
-| [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 40/42      | 95%          | 0.2      | —        |
-| [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | instruments_master                   | infra     | 23/26      | 88%          | 0.2      | —        |
-| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)                 | master                               | research  | 27/28      | 96%          | 0.2      | —        |
-| [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                               | infra     | 23/26      | 88%          | 0.1      | —        |
-| [`pricing_ledger_carry_rates_mtds_2026_06_01`](./pricing_ledger_carry_rates_mtds_2026_06_01.md)                                             | master                               | design    | 35/36      | 97%          | 0.1      | —        |
-| [`workspace_qg_sweep_2026_05_23`](./workspace_qg_sweep_2026_05_23.md)                                                                       | execution_master                     | refactor  | 21/22      | 95%          | 0.1      | —        |
-| [`data_type_canonicalization_2026_05_23`](./data_type_canonicalization_2026_05_23.md)                                                       | master                               | refactor  | 38/39      | 97%          | 0.0      | —        |
+| [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md)                                                           | features_and_ml_master               | infra     | 15/18      | 83%          | 0.4      | —        |
+| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                     | README                               | design    | 168/172    | 98%          | 0.1      | —        |
+| [`agent_recovery_controller_layer0_deterministic_2026_05_23`](./agent_recovery_controller_layer0_deterministic_2026_05_23.md)               | master                               | brand-new | 39/39      | 100%         | 0.0      | —        |
 | [`audit03_carry_execution_safety_remediation_2026_05_22`](./audit03_carry_execution_safety_remediation_2026_05_22.md)                       | master                               | brand-new | 18/18      | 100%         | 0.0      | —        |
+| [`audit_acknowledgement_sla_and_state_2026_05_23`](./audit_acknowledgement_sla_and_state_2026_05_23.md)                                     | master                               | design    | 22/22      | 100%         | 0.0      | —        |
+| [`aws_cloud_toggle_and_backfill_parity_2026_05_22`](./aws_cloud_toggle_and_backfill_parity_2026_05_22.md)                                   | infrastructure_master                | brand-new | 25/25      | 100%         | 0.0      | —        |
+| [`connectivity_dependency_buffer_policy_2026_05_23`](./connectivity_dependency_buffer_policy_2026_05_23.md)                                 | master                               | design    | 17/17      | 100%         | 0.0      | —        |
+| [`data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22`](./data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md) | master                               | infra     | 26/26      | 100%         | 0.0      | —        |
+| [`data_type_canonicalization_2026_05_23`](./data_type_canonicalization_2026_05_23.md)                                                       | master                               | refactor  | 39/39      | 100%         | 0.0      | —        |
+| [`deployment_ui_safety_ops_tab_2026_05_23`](./deployment_ui_safety_ops_tab_2026_05_23.md)                                                   | master                               | brand-new | 40/40      | 100%         | 0.0      | —        |
+| [`global_ledger_pnl_attribution_migration_2026_06_01`](./global_ledger_pnl_attribution_migration_2026_06_01.md)                             | global_ledger_pnl_attribution_master | refactor  | 27/27      | 100%         | 0.0      | —        |
+| [`incident_runbooks_and_evidence_store_2026_05_23`](./incident_runbooks_and_evidence_store_2026_05_23.md)                                   | master                               | design    | 25/25      | 100%         | 0.0      | —        |
+| [`instruments_backfill_phase3_2026_05_22`](./instruments_backfill_phase3_2026_05_22.md)                                                     | instruments_master                   | infra     | 26/26      | 100%         | 0.0      | —        |
+| [`mdps_backfill_phase3_2026_05_22`](./mdps_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 46/46      | 100%         | 0.0      | —        |
 | [`mdps_lending_indices_bypass_writer_2026_05_24`](./mdps_lending_indices_bypass_writer_2026_05_24.md)                                       | master                               | brand-new | 5/5        | 100%         | 0.0      | —        |
-| **TOTAL** (23 plans)                                                                                                                        | 0 orphans, 0 TBD                     | —         | —          | **72% done** | **25**   | —        |
+| [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md)                                                                   | master                               | infra     | 42/42      | 100%         | 0.0      | —        |
+| [`multi_backend_fleet_connectivity_2026_05_22`](./multi_backend_fleet_connectivity_2026_05_22.md)                                           | master                               | infra     | 31/31      | 100%         | 0.0      | —        |
+| [`orchestrator_headless_agent_auth_2026_05_22`](./orchestrator_headless_agent_auth_2026_05_22.md)                                           | master                               | infra     | 5/5        | 100%         | 0.0      | —        |
+| [`physical_pager_research_and_webhook_prototype_2026_05_23`](./physical_pager_research_and_webhook_prototype_2026_05_23.md)                 | master                               | research  | 28/28      | 100%         | 0.0      | —        |
+| [`pricing_ledger_carry_rates_mtds_2026_06_01`](./pricing_ledger_carry_rates_mtds_2026_06_01.md)                                             | master                               | design    | 36/36      | 100%         | 0.0      | —        |
+| [`workspace_qg_sweep_2026_05_23`](./workspace_qg_sweep_2026_05_23.md)                                                                       | execution_master                     | refactor  | 22/22      | 100%         | 0.0      | —        |
+| **TOTAL** (25 plans)                                                                                                                        | 0 orphans, 0 TBD                     | —         | —          | **94% done** | **6**    | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
@@ -770,9 +772,10 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
-- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
-      `cefi_master` (28 open items as of 2026-05-25) + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
-      deployment-service `configs/clusters/cefi.yaml`. Operator to schedule E2E run when cefi_master completes. _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation).
+      BLOCKED-ON `cefi_master` (28 open items as of 2026-05-25) + writegate Tier 2C cefi adapters (shipped at
+      MDPS@b9f9328); cefi cluster YAML exists at deployment-service `configs/clusters/cefi.yaml`. Operator to schedule
+      E2E run when cefi*master completes. *(folded from consolidated*operational_validation_2026_04_15)*
 - [x] ✅ DEFERRED-BLOCKED [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler,
       feature validation). BLOCKED-ON `sports_master` (73 open items as of 2026-05-23). Code shipped: writegate Tier 2A
       sports adapters at MDPS@5b52d0b; trigger scheduler at deployment-service `sports_trigger_*`. Operator to schedule
@@ -793,15 +796,18 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 
 **Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
 
-- [x] ✅ DEFERRED-BLOCKED [HUMAN-ACTION-REQUIRED: operator-driven backfill rerun to regenerate parquet without data_types column] [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet without `data_types`
-      column. instruments-service production code grep for `data_types` returns 0 hits; references remain only in legacy
-      ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is GCS cleanup of legacy
-      parquets that still carry the column — operator-driven backfill rerun. _(folded from
+- [x] ✅ DEFERRED-BLOCKED [HUMAN-ACTION-REQUIRED: operator-driven backfill rerun to regenerate parquet without
+      data_types column] [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet
+      without `data_types` column. instruments-service production code grep for `data_types` returns 0 hits; references
+      remain only in legacy ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is
+      GCS cleanup of legacy parquets that still carry the column — operator-driven backfill rerun. _(folded from
       consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [GATE: rdt-p4-gcs-cleanup not yet done] [AGENT] P1. `rdt-p4-workspace-qg`: Run `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup
-      above to validate the column removal. _(folded from consolidated_operational_validation_2026_04_15)_
-- [x] ✅ DEFERRED-BLOCKED [GATE: cluster e2e tests + all qg items not yet done] [AGENT] P1. `mtb-p6e-final-qg-sweep`: Full QG sweep across all 6 affected repos. Final QG gate; depends on every
-      preceding "qg" item plus the cluster e2e tests being passable on a representative day's data. _(folded from
+- [x] ✅ DEFERRED-BLOCKED [GATE: rdt-p4-gcs-cleanup not yet done] [AGENT] P1. `rdt-p4-workspace-qg`: Run
+      `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup above to validate the column removal.
+      _(folded from consolidated_operational_validation_2026_04_15)_
+- [x] ✅ DEFERRED-BLOCKED [GATE: cluster e2e tests + all qg items not yet done] [AGENT] P1. `mtb-p6e-final-qg-sweep`:
+      Full QG sweep across all 6 affected repos. Final QG gate; depends on every preceding "qg" item plus the cluster
+      e2e tests being passable on a representative day's data. _(folded from
       consolidated_operational_validation_2026_04_15)_
 
 #### Folded paper-vs-live workflow maturity (from `paper_vs_live_workflow_maturity_2026_05_08.md` question doc)
@@ -1435,10 +1441,12 @@ A new tab/section monitoring **live** trading services. Today deployment-ui is b
 monitoring not covered.
 
 - [x] ✅ DEFERRED-FUTURE-WORK [UI] `/ops/live-deployments` route in deployment-ui
-- [x] ✅ DEFERRED-FUTURE-WORK [UI] Live-services panel — running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds
+- [x] ✅ DEFERRED-FUTURE-WORK [UI] Live-services panel — running services in live mode, last STARTED, last
+      DATA_BROADCAST, staleness in seconds
 - [x] ✅ DEFERRED-FUTURE-WORK [UI] Live alert pane consuming alerting-service feed
 - [x] ✅ DEFERRED-FUTURE-WORK [UI] Per-service live log tail (deployment-api `/api/vm/events`)
-- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/05-infrastructure/live-deployment-monitoring.md` (currently missing)
+- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/05-infrastructure/live-deployment-monitoring.md` (currently
+      missing)
 
 ### C · UTS-UI ↔ DART terminal — research, backtest, **manual-trade**
 
@@ -1447,7 +1455,8 @@ strategy-backtest, execution-backtest launch surfaces, and **the DART manual-tra
 place trades manually through the same backend as automation, monitor before flipping to auto).
 
 - [x] ✅ DEFERRED-FUTURE-WORK [DECIDE] research-service repo vs fold into deployment-api (default: fold-in)
-- [x] ✅ DEFERRED-FUTURE-WORK [UI] `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests` tabs
+- [x] ✅ DEFERRED-FUTURE-WORK [UI] `/research/ml-experiments`, `/research/strategy-backtests`,
+      `/research/execution-backtests` tabs
 - [x] ✅ DEFERRED-FUTURE-WORK [UI] **DART terminal — DeFi archetype visualization + manual trade entry**
   - [ ] Render archetype state (positions, funding, LST yields, hedge basis) in real-time
   - [ ] Manual trade entry → goes through execution-service same path as automation (NOT a side door)
@@ -1456,8 +1465,8 @@ place trades manually through the same backend as automation, monitor before fli
 - [x] ✅ DEFERRED-FUTURE-WORK [API] All tabs wired to deployment-api (work-stream A)
 - [x] ✅ DEFERRED-FUTURE-WORK [UI] Borrow VmDeployments.tsx tracker pattern from deployment-ui
 - [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/04-architecture/research-service-and-dart-integration.md`
-- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Extend `codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` with the DART
-      manual-trade lane
+- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Extend `codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`
+      with the DART manual-trade lane
 
 ### D · Cloud-agnostic full-parity proof (data + batch + ML + live + monitoring on AWS)
 
@@ -1466,51 +1475,52 @@ migration is gated by cost.
 
 **D.1 — Data migration to AWS (sized to DeFi only, NOT full corpus)**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Cost analysis: GCS storage + egress for DeFi-relevant data → AWS S3 storage + ingress estimate; report in
-      `unified-trading-pm/docs/aws-migration-cost-2026-05.md`
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Selective copy of DeFi-relevant manifests + parquet (instruments / MTDS / MDPS / features-onchain) to S3,
-      preserving hive layout. **Skip TradFi / Sports / Prediction data — wasteful re-fetch.**
-- [x] ✅ DEFERRED-FUTURE-WORK [API] Update deployment-api data-status endpoints to be cloud-agnostic — read from GCS or S3 based on
-      `CLOUD_PROVIDER`
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Cost analysis: GCS storage + egress for DeFi-relevant data → AWS S3 storage +
+      ingress estimate; report in `unified-trading-pm/docs/aws-migration-cost-2026-05.md`
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Selective copy of DeFi-relevant manifests + parquet (instruments / MTDS / MDPS /
+      features-onchain) to S3, preserving hive layout. **Skip TradFi / Sports / Prediction data — wasteful re-fetch.**
+- [x] ✅ DEFERRED-FUTURE-WORK [API] Update deployment-api data-status endpoints to be cloud-agnostic — read from GCS or
+      S3 based on `CLOUD_PROVIDER`
 
 **D.2 — Batch deployment side proof (AWS)**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] AWS EC2 launcher equivalents alongside `gcloud` launchers — minimum: instruments / MTDS /
-      features-onchain in AWS mode
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run a backfill on AWS with `--force` for a small DeFi window — proves the deployment-side batch path
-      works on AWS, not just dataset migration
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Cloud Build dual-provider trigger taking deps tarball + code-from-GitHub (CodeBuild already partial via
-      `_code_builds_aws.py`)
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] AWS EC2 launcher equivalents alongside `gcloud` launchers — minimum: instruments
+      / MTDS / features-onchain in AWS mode
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run a backfill on AWS with `--force` for a small DeFi window — proves the
+      deployment-side batch path works on AWS, not just dataset migration
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Cloud Build dual-provider trigger taking deps tarball + code-from-GitHub
+      (CodeBuild already partial via `_code_builds_aws.py`)
 
 **D.3 — Backtest + ML on AWS**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run a strategy backtest example on AWS via deployment-api `/api/strategy/backtest/launch` (work-stream A)
-      — proves end-to-end batch surface
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run an ML training example on AWS via deployment-api `/api/ml/experiment/launch` — proves ML side
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run a strategy backtest example on AWS via deployment-api
+      `/api/strategy/backtest/launch` (work-stream A) — proves end-to-end batch surface
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run an ML training example on AWS via deployment-api `/api/ml/experiment/launch`
+      — proves ML side
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Run an execution backtest example on AWS — proves execution-side batch
 
 **D.4 — Live deployment + monitoring on AWS**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] One live archetype instance running on AWS (carry_staked_basis on smaller capital) — proves live trading
-      works on AWS-as-deployment-target
-- [x] ✅ DEFERRED-FUTURE-WORK [UI] Live Deployment UI tab (work-stream B) reads from both GCS and S3 event streams, surfaces both live
-      deployments
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Seamless-switch test: pause GCP-live archetype, resume on AWS-live, verify position state preserved via
-      custody / position-balance-monitor
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] One live archetype instance running on AWS (carry_staked_basis on smaller
+      capital) — proves live trading works on AWS-as-deployment-target
+- [x] ✅ DEFERRED-FUTURE-WORK [UI] Live Deployment UI tab (work-stream B) reads from both GCS and S3 event streams,
+      surfaces both live deployments
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Seamless-switch test: pause GCP-live archetype, resume on AWS-live, verify
+      position state preserved via custody / position-balance-monitor
 
 **D.5 — Build lineage tab**
 
 - [x] ✅ DEFERRED-FUTURE-WORK [API] `/api/builds/history` (work-stream A) returns combined GCP + AWS records
-- [x] ✅ DEFERRED-FUTURE-WORK [UI] Build-history tab in deployment-ui — branch / commit / image tag / target cloud / deployer / triggered-by
-      (tarball vs Claude build vs CI)
+- [x] ✅ DEFERRED-FUTURE-WORK [UI] Build-history tab in deployment-ui — branch / commit / image tag / target cloud /
+      deployer / triggered-by (tarball vs Claude build vs CI)
 
 **D.6 — Codex updates**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Augment `codex/04-architecture/cloud-agnostic-migration.md` with VM-launcher parity appendix + the
-      data-migration cost-gate principle
+- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Augment `codex/04-architecture/cloud-agnostic-migration.md` with VM-launcher parity
+      appendix + the data-migration cost-gate principle
 - [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/05-infrastructure/cloud-agnostic-build-lineage.md`
-- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/04-architecture/seamless-cloud-switch.md` — preserved-state semantics when migrating a
-      live deployment between clouds
+- [x] ✅ DEFERRED-FUTURE-WORK [DOC] Codex SSOT at `codex/04-architecture/seamless-cloud-switch.md` — preserved-state
+      semantics when migrating a live deployment between clouds
 
 ### E · Live-mode services (REVISED post-2026-05-06 audit — 1 new plan, 4 extensions)
 
@@ -1520,13 +1530,14 @@ gap.
 - [x] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
       `live-defi-rollout`. References checklist Groups F + G. (verified 2026-05-07:
       plans/active/alerting_service_live_rules_2026_05_07.md exists)
-- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
-      **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor +
-      child-venue attribution already shipped per plan body).
-- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **risk-and-exposure
-      intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live closure).
-- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **pnl-attribution
-      `--operation compute --mode live` todo** alongside the existing batch CLI.
+- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos
+      for **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill
+      attributor + child-venue attribution already shipped per plan body).
+- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit
+      **risk-and-exposure intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live
+      closure).
+- [x] ✅ DEFERRED-FUTURE-WORK [EXTEND] `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit
+      **pnl-attribution `--operation compute --mode live` todo** alongside the existing batch CLI.
 - [x] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
       items**. **DONE 2026-05-07**: source plan archived; its 11 unchecked todos (incl. batch-vs-live cluster E2E)
       folded into master Group F — see "Folded operational-validation todos" subsection above.
@@ -1545,8 +1556,8 @@ gap.
     manifest PK = fitted model artifact; data manifest job_id = shard atom key for experiment outputs; both written by
     same training run; separate consumers; JSON-index vs parquet reality per ML-6 LIFT). Updated last_reviewed.
     2026-05-23.
-- [x] ✅ DEFERRED-FUTURE-WORK [DOC] `codex/04-architecture/live-strategy-config-hot-reload.md` — strategy config hot-reload end-to-end for live
-      mode
+- [x] ✅ DEFERRED-FUTURE-WORK [DOC] `codex/04-architecture/live-strategy-config-hot-reload.md` — strategy config
+      hot-reload end-to-end for live mode
 - [x] [DOC] CEFFU integration content folded into single custody SSOT
       [`codex/04-architecture/custody-providers.md § 2.4 CeffuCustodyProvider — PLANNED`](../../codex/04-architecture/custody-providers.md).
       **STUB shipped 2026-05-07 (Agent 5 deep-audit follow-up)** as standalone `ceffu-custody-integration.md`; **folded
@@ -1591,11 +1602,11 @@ a Group F item; ownership routes to the named agent/tab.
       structural change to InputReq. See BLK-6e61d26f for operator confirmation. Owner: operator + Agent 2 (writegate /
       consumer-migration). Already filed in [`features_and_ml_master`](../epics/features_and_ml_master.md) Phase 1A.3;
       this todo is the cross-tab visibility marker against May-23 critical path.
-- [x] ✅ DEFERRED-FUTURE-WORK [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
-      Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the DeFi side per
-      `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end. Owner: Agent 4
-      (DeFi launch tab covers cross-venue execution). Verify each connector points at the correct testnet endpoint +
-      runs through a smoke order via testnet credentials.
+- [x] ✅ DEFERRED-FUTURE-WORK [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit
+      / Deribit / OKX). Gates Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the
+      DeFi side per `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end.
+      Owner: Agent 4 (DeFi launch tab covers cross-venue execution). Verify each connector points at the correct testnet
+      endpoint + runs through a smoke order via testnet credentials.
 
 ### G · Plan hygiene sweep (Day 1 quick-win, surfaced by 2026-05-06 audit)
 
@@ -1639,18 +1650,18 @@ self-superseded artefacts.
 
 **Frontmatter backfill (one-shot script):**
 
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (re-derive count at script
-      time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the surface is now
-      `~28 active/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups Tab 8) — most missing
-      `last_updated` rows are in `archive/` and `ai/`)
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive count at script time;
-      original 2026-05-06 audit said 142 plans across active+ai+archive)
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it (re-derive count at script
-      time; original 2026-05-06 audit said 31 plans active-only; verify each is actually mid-flight first; otherwise
-      leave unset)
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Add YAML frontmatter to 5 plans that have none (`_sports_phantom_fixtures_recovery_handover_2026_05_06`,
-      `dashboard_services_grid_collapse_2026_04_21`, `defi-strategy-ui-verification`, `tiered_help_chatbot_2026_03_22`,
-      `universe_ssot_fix_2026_04_20`)
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime
+      (re-derive count at script time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the
+      surface is now `~28 active/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups Tab 8) — most
+      missing `last_updated` rows are in `archive/` and `ai/`)
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive
+      count at script time; original 2026-05-06 audit said 142 plans across active+ai+archive)
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it
+      (re-derive count at script time; original 2026-05-06 audit said 31 plans active-only; verify each is actually
+      mid-flight first; otherwise leave unset)
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Add YAML frontmatter to 5 plans that have none
+      (`_sports_phantom_fixtures_recovery_handover_2026_05_06`, `dashboard_services_grid_collapse_2026_04_21`,
+      `defi-strategy-ui-verification`, `tiered_help_chatbot_2026_03_22`, `universe_ssot_fix_2026_04_20`)
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Fix the 1 filename↔name mismatch (`path_to_100m_finalization_2026_04_20`)
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Fix the 2 YAML errors
 
@@ -1660,9 +1671,10 @@ self-superseded artefacts.
 - [x] [SCRIPT] Add `parent: defi_e2e_pipeline_2026_04_30` to defi_pipeline_extension / leveraged_leg_controller /
       carry_staked_basis where appropriate
       `[AUDIT 2026-05-07: STALE — defi_e2e_pipeline_2026_04_30, defi_pipeline_extension_2026_05_01, leveraged_leg_controller_2026_05_01, carry_staked_basis_structure_axis_2026_05_04 all archived 2026-05-07 Stage 7 consolidation; defi_master is the umbrella. parent: tagging no longer applicable.]`
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery + recon plans
-- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25` under
-      `venue_axis_asset_group_vocabulary_2026_04_25`
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery +
+      recon plans
+- [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25`
+      under `venue_axis_asset_group_vocabulary_2026_04_25`
 
 ---
 
@@ -1836,22 +1848,24 @@ Agent 5):
       `infrastructure_master` is the SSOT umbrella (folds in `shard_granularity_propagation` +
       `data_status_multi_axis` + `deployment_service_build_infrastructure_repair`). Multi-axis correction shipped per
       deployment-service@`456acb9`; 4-state capture_status SSOT codified PM@`28e975b0`.
-- [x] ✅ DEFERRED-FUTURE-WORK Close TradFi MVP residuals (cluster-validation wiring at `record_captured`). **PARTIAL 2026-05-07** — Tier 2E
-      tradfi adapters complete (MDPS@`e9520a0`); ES.OPT 11-cluster validation gate wired (MTDS@`260325c`); 35,033 tradfi
-      EXPECTED_HOLIDAY/WEEKEND rows landed (PM@`79e47874`). **REMAINING**: market-hours + holiday SSOT integration
-      across 12 affected repos (databento.py adapter, ml-training-service data_filters.py + mock_feature_generator.py,
-      strategy base class config), 5 mdps-tradfi VMs draining ETA 2026-05-08.
-- [x] ✅ DEFERRED-FUTURE-WORK Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate). **PARTIAL
-      2026-05-07** — Pyth Hermes (Solana) + Chainlink EVM multi-chain oracle adapters shipped per `mtds-s3-5` +
-      `mtds-s3-6`. **🚨 RISK 1 (HIGH/HIGH)**: Lending-indices silent-zero cascade on AAVE V3 ETHEREUM — VM
+- [x] ✅ DEFERRED-FUTURE-WORK Close TradFi MVP residuals (cluster-validation wiring at `record_captured`). **PARTIAL
+      2026-05-07** — Tier 2E tradfi adapters complete (MDPS@`e9520a0`); ES.OPT 11-cluster validation gate wired
+      (MTDS@`260325c`); 35,033 tradfi EXPECTED_HOLIDAY/WEEKEND rows landed (PM@`79e47874`). **REMAINING**:
+      market-hours + holiday SSOT integration across 12 affected repos (databento.py adapter, ml-training-service
+      data_filters.py + mock_feature_generator.py, strategy base class config), 5 mdps-tradfi VMs draining ETA
+      2026-05-08.
+- [x] ✅ DEFERRED-FUTURE-WORK Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates
+      write-gate). **PARTIAL 2026-05-07** — Pyth Hermes (Solana) + Chainlink EVM multi-chain oracle adapters shipped per
+      `mtds-s3-5` + `mtds-s3-6`. **🚨 RISK 1 (HIGH/HIGH)**: Lending-indices silent-zero cascade on AAVE V3 ETHEREUM — VM
       `mtds-lending-indices-20260507-140418` ran + diagnosed 3 bugs (AAVE V3 ETH 0/343 captured / COMPOUND V3
       multi-chain subgraph schema error / instruments-store-defi metadata 404 for early-2022 dates); **MUST FIX BY
       2026-05-12** else carry_staked_basis batch e2e fails Week 2. Owner: Agent 4 / defi_master Fork 1.
-- [x] ✅ DEFERRED-FUTURE-WORK Close sports phantom recovery — frees VM-quota for DeFi + AWS work. **PARTIAL 2026-05-07** — Phase 1 + Phase 3
-      pre-req shipped (instruments-service@`9f0e3f9` `dedup_phantom_after_recovery.py`; chain-runner architecture
-      @`cbb50fa`/`e900769`/`7ce509e`); 4 sports recovery VMs in flight (af / fs / sfi / us) ETA 2026-05-08; LEAGUES
-      daily-dump killed (instruments-service@`93efebf`); ODDS source confirmed footystats (codex doc updated). **POST
-      2026-05-08 VM DRAIN**: run `dedup_phantom_after_recovery.py --apply` then `data_available_at` rename Phase 2.
+- [x] ✅ DEFERRED-FUTURE-WORK Close sports phantom recovery — frees VM-quota for DeFi + AWS work. **PARTIAL 2026-05-07**
+      — Phase 1 + Phase 3 pre-req shipped (instruments-service@`9f0e3f9` `dedup_phantom_after_recovery.py`; chain-runner
+      architecture @`cbb50fa`/`e900769`/`7ce509e`); 4 sports recovery VMs in flight (af / fs / sfi / us) ETA 2026-05-08;
+      LEAGUES daily-dump killed (instruments-service@`93efebf`); ODDS source confirmed footystats (codex doc updated).
+      **POST 2026-05-08 VM DRAIN**: run `dedup_phantom_after_recovery.py --apply` then `data_available_at` rename
+      Phase 2.
 - [x] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
       PBMS / R&E / pnl-attribution extend `defi_master` Fork 1 (folds `defi_e2e_pipeline_2026_04_30` per Stage 7
       consolidation); batch-live-recon extends `consolidated_operational_validation_2026_04_15`). **DONE 2026-05-07** —
@@ -1865,84 +1879,88 @@ Agent 5):
       1 UAC types shipped (UAC@`a70b3f6`). Phase 2+3 routes shipped: deployment-api@cade1e1 (backfill/launch) +
       deployment-api@a038145 (vm events) + deployment-api@f407c54 (ml/strategy/execution launch). All handlers + QG
       complete. (audit-backfilled 2026-05-19)
-- [x] ✅ DEFERRED-FUTURE-WORK Decide research-service repo question (work-stream C). **PENDING** — fold into deployment-api default; no decision
-      logged. Owner: operator + Agent 4.
+- [x] ✅ DEFERRED-FUTURE-WORK Decide research-service repo question (work-stream C). **PENDING** — fold into
+      deployment-api default; no decision logged. Owner: operator + Agent 4.
 - [x] AWS migration cost analysis (work-stream D.1) → user signs off scope. **DONE 2026-05-07** — research artefact
       shipped at `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`, then archived 2026-05-08 per
       codex_refactor F.4 to `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` with per-resource cost
       snapshot extracted to `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; recommendation
       SUPERSEDED by dual-cloud decision per `aws_migration_defi_first_2026_05_07.md` Phase 0 (≥$40k credit confirmed; no
       service / region / account locks). Phase 2 dual-bucket setup is Agent 4 Day 4.
-- [x] ✅ DEFERRED-FUTURE-WORK Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone (parallel — tier 2 ladder).
-      **BLOCKED ON VM DRAIN** — sports + tradfi VMs draining 2026-05-08; cefi VMs draining 2026-05-08/09 per cefi_master
-      audit. Post-drain: ML smoke + backtest grid actionable for each.
-- [x] ✅ DEFERRED-FUTURE-WORK Hyperliquid + Aster perp DEX integration: instrument registry + market-data live (these don't have CEFFU
-      equivalents — direct on-chain). **PARTIAL 2026-05-07** — Lighter zkSync + Pacifica Solana DEX onboarding shipped
-      (MTDS@`10aa715` + `51fecd5` + UAC@`e890022` for ohlcv_1m); Hyperliquid + Aster live execution wiring pending.
-      Owner: Agent 4 (defi_master Fork 1 hedging-leg).
-- [x] ✅ DEFERRED-FUTURE-WORK **Lending-indices silent-zero fix + re-launch** (Day 1 = today, 2026-05-08). **NEW 2026-05-07 deep-audit** — Risk
-      1: AAVE V3 ETHEREUM 0/343 captured silently on `mtds-lending-indices-20260507-140418`; root-cause + commit fix +
-      re-launch VM. Gates carry_staked_basis batch e2e (Week 2). Owner: Agent 4 (defi_master Fork 1).
-- [x] ✅ DEFERRED-FUTURE-WORK **4-service QG sweep** (strategy / execution / R&E / features-onchain; Days 2-5). **NEW 2026-05-07 deep-audit** —
-      Risk 2: 37 unchecked defi_master items + 9 execution-service connectors untested on testnet. Parallelize across 3
-      agents Days 2-3; testnet smoke Day 4-5. EOD May 12 gate: all 4 services pass + 9 connectors validated. Owner:
-      Agent 4 (DeFi launch tab).
-- [x] ✅ DEFERRED-FUTURE-WORK **PBM + R&E + pnl-attr live-mode owner assignment** (Day 3). **NEW 2026-05-07 deep-audit** — Risk 3: defi_master
-      Fork 1 folded `defi_e2e_pipeline` but did NOT explicitly scope "live-mode wiring" as separate todos — they sit as
-      free-floating audit findings. Assign owner + add explicit todos in defi_master Fork 1 by 2026-05-10 else slips
-      into Week 3 or ships half-baked post-cutover.
+- [x] ✅ DEFERRED-FUTURE-WORK Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone
+      (parallel — tier 2 ladder). **BLOCKED ON VM DRAIN** — sports + tradfi VMs draining 2026-05-08; cefi VMs draining
+      2026-05-08/09 per cefi_master audit. Post-drain: ML smoke + backtest grid actionable for each.
+- [x] ✅ DEFERRED-FUTURE-WORK Hyperliquid + Aster perp DEX integration: instrument registry + market-data live (these
+      don't have CEFFU equivalents — direct on-chain). **PARTIAL 2026-05-07** — Lighter zkSync + Pacifica Solana DEX
+      onboarding shipped (MTDS@`10aa715` + `51fecd5` + UAC@`e890022` for ohlcv_1m); Hyperliquid + Aster live execution
+      wiring pending. Owner: Agent 4 (defi_master Fork 1 hedging-leg).
+- [x] ✅ DEFERRED-FUTURE-WORK **Lending-indices silent-zero fix + re-launch** (Day 1 = today, 2026-05-08). **NEW
+      2026-05-07 deep-audit** — Risk 1: AAVE V3 ETHEREUM 0/343 captured silently on
+      `mtds-lending-indices-20260507-140418`; root-cause + commit fix + re-launch VM. Gates carry_staked_basis batch e2e
+      (Week 2). Owner: Agent 4 (defi_master Fork 1).
+- [x] ✅ DEFERRED-FUTURE-WORK **4-service QG sweep** (strategy / execution / R&E / features-onchain; Days 2-5). **NEW
+      2026-05-07 deep-audit** — Risk 2: 37 unchecked defi_master items + 9 execution-service connectors untested on
+      testnet. Parallelize across 3 agents Days 2-3; testnet smoke Day 4-5. EOD May 12 gate: all 4 services pass + 9
+      connectors validated. Owner: Agent 4 (DeFi launch tab).
+- [x] ✅ DEFERRED-FUTURE-WORK **PBM + R&E + pnl-attr live-mode owner assignment** (Day 3). **NEW 2026-05-07 deep-audit**
+      — Risk 3: defi_master Fork 1 folded `defi_e2e_pipeline` but did NOT explicitly scope "live-mode wiring" as
+      separate todos — they sit as free-floating audit findings. Assign owner + add explicit todos in defi_master Fork 1
+      by 2026-05-10 else slips into Week 3 or ships half-baked post-cutover.
 
 ### Week 2 (May 13–19) · live wiring + cloud parity + Groups F/G
 
 > **Refreshed 2026-05-07 evening (deep-audit Item 3)** — each Week 2 bullet now has its blocker chain explicit. Items at
 > HIGH risk of slipping into Week 3 are flagged 🚨.
 
-- [x] ✅ DEFERRED-FUTURE-WORK `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills (Group F item 17).
-      **Blockers**: 4-service QG (strategy / execution / R&E / features-onchain — none yet passing), execution-service
-      Aave/Uniswap/Lido testnet validation (NOT yet started), vault-share-price + lst-rates MTDS VMs (NOT yet launched).
-      Lending-indices silent-zero fix is the gate.
-- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` runs end-to-end in batch — cross-venue funding spread across 6 perp venues.
-      **Blockers**: funding_oi calculator backfill VMs in flight 2026-05-05; cross-venue funding spread feature;
-      4-service QG; Hyperliquid + Aster live execution wiring (Lighter + Pacifica shipped, but Hyperliquid + Aster
-      pending).
-- [x] ✅ DEFERRED-FUTURE-WORK 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨 **VM-shape
-      sizing**: benchmark report `gs://central-element-323112-benchmark-reports/benchmark_report/` shows c2-standard-8
-      within budget for `mtds_read` (~8s P95) + `strategy` (~6.5s P95). `features`/`mdps_compute`/
-      `matching_engine`/`ml_inference` stages failed in benchmark (blocked on Phase 3.D per-reader threading). Sized VM:
-      c2-standard-8 minimum (upgrade to c3-highcpu-44 if features/mdps blocked stages cause OOM post-fix). **Budget
-      assertion**: `UTL.synthetic.check_budget()` at f942dc54. **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py`
-      exists yet — P0 follow-up filed in work-stream F § Deep-audit P0 follow-ups. Owner: Agent 4. Existing
+- [x] ✅ DEFERRED-FUTURE-WORK `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills
+      (Group F item 17). **Blockers**: 4-service QG (strategy / execution / R&E / features-onchain — none yet passing),
+      execution-service Aave/Uniswap/Lido testnet validation (NOT yet started), vault-share-price + lst-rates MTDS VMs
+      (NOT yet launched). Lending-indices silent-zero fix is the gate.
+- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` runs end-to-end in batch — cross-venue funding spread across
+      6 perp venues. **Blockers**: funding_oi calculator backfill VMs in flight 2026-05-05; cross-venue funding spread
+      feature; 4-service QG; Hyperliquid + Aster live execution wiring (Lighter + Pacifica shipped, but Hyperliquid +
+      Aster pending).
+- [x] ✅ DEFERRED-FUTURE-WORK 2-year P&L variance batch run completed across config grid for both archetypes (Group F
+      item 18). 🚨 **VM-shape sizing**: benchmark report
+      `gs://central-element-323112-benchmark-reports/benchmark_report/` shows c2-standard-8 within budget for
+      `mtds_read` (~8s P95) + `strategy` (~6.5s P95). `features`/`mdps_compute`/ `matching_engine`/`ml_inference` stages
+      failed in benchmark (blocked on Phase 3.D per-reader threading). Sized VM: c2-standard-8 minimum (upgrade to
+      c3-highcpu-44 if features/mdps blocked stages cause OOM post-fix). **Budget assertion**:
+      `UTL.synthetic.check_budget()` at f942dc54. **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py` exists yet —
+      P0 follow-up filed in work-stream F § Deep-audit P0 follow-ups. Owner: Agent 4. Existing
       `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` are tracing/simulation, NOT config-grid sweeps.
-- [x] ✅ DEFERRED-FUTURE-WORK Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT YET validated** —
-      master plan assumes testnet wiring exists; deep audit found 0 testnet branch paths in execution-service. Owner:
-      Agent 4 (CeFi side) + Agent 4 (DeFi side). Tenderly fork fixtures shipped DeFi-side per
+- [x] ✅ DEFERRED-FUTURE-WORK Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT
+      YET validated** — master plan assumes testnet wiring exists; deep audit found 0 testnet branch paths in
+      execution-service. Owner: Agent 4 (CeFi side) + Agent 4 (DeFi side). Tenderly fork fixtures shipped DeFi-side per
       `execution-service/tests/integration/conftest.py`; CeFi side fully unvalidated.
   - DeFi: Aave / Uniswap / Lido (carry_staked_basis); Hyperliquid + Aster (ARBITRAGE_PRICE_DISPERSION on-chain leg)
   - CeFi: Bybit perp + Deribit options/perp + Binance perp + OKX perp (the four CeFi venues)
-- [x] ✅ DEFERRED-FUTURE-WORK Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated. 🚨 **OWNER UNASSIGNED** —
-      Risk 3 from deep audit. defi_master Fork 1 folded `defi_e2e_pipeline` but live-mode wiring sits as free-floating
-      audit findings. PBM Pub/Sub + R&E intent-subscriber + pnl-attribution `--mode live` CLI all pending.
-- [x] ✅ DEFERRED-FUTURE-WORK Alerting-service: live rules fired on synthetic violations. **Blocked**: alerting Phase 2 (Agent 1 tab) — consumer
-      wiring (`grep AlertCode alerting-service/` returns 0 hits as of 2026-05-07 evening). UAC AlertCode taxonomy
-      shipped UAC@`d00326d`; rules engine integration is the gap.
+- [x] ✅ DEFERRED-FUTURE-WORK Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated. 🚨
+      **OWNER UNASSIGNED** — Risk 3 from deep audit. defi_master Fork 1 folded `defi_e2e_pipeline` but live-mode wiring
+      sits as free-floating audit findings. PBM Pub/Sub + R&E intent-subscriber + pnl-attribution `--mode live` CLI all
+      pending.
+- [x] ✅ DEFERRED-FUTURE-WORK Alerting-service: live rules fired on synthetic violations. **Blocked**: alerting Phase 2
+      (Agent 1 tab) — consumer wiring (`grep AlertCode alerting-service/` returns 0 hits as of 2026-05-07 evening). UAC
+      AlertCode taxonomy shipped UAC@`d00326d`; rules engine integration is the gap.
 - [x] ✅ DEFERRED-FUTURE-WORK Live Deployment UI tab shipped (work-stream B). **Blockers**: codex SSOT
       `codex/05-infrastructure/live-deployment-monitoring.md` (still missing), deployment-api `/api/vm/events` endpoint
       (work-stream A Phase 2), deployment-ui `/ops/live-deployments` route. Owner: Harsh Day 4-5 + Agent 4.
-- [x] ✅ DEFERRED-FUTURE-WORK **AWS data migration completed** (DeFi-only, work-stream D.1) — 🟢 **DEFERRED PAST MAY-23** per operator direction
-      2026-05-13. AWS runs AFTER GCP backfills + manifest quality verified (don't double cloud load before data quality
-      is green). May-23 ships GCP-only; AWS dual-cloud parity becomes post-cutover stabilisation goal (target
-      2026-06-04). See `aws_migration_defi_first_2026_05_07.md` Phase 5 gate on master Gate 4.
-- [x] ✅ DEFERRED-FUTURE-WORK **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2). 🟢 **DEFERRED PAST MAY-23** — same
-      operator direction. Post-Gate-4.
-- [x] ✅ DEFERRED-FUTURE-WORK **AWS backtest + ML examples** run via deployment-api (work-stream D.3). 🟢 **DEFERRED PAST MAY-23** — same
-      operator direction. Post-Gate-4.
-- [x] ✅ DEFERRED-FUTURE-WORK DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C). **Blocked**:
-      research-service repo decision (Week 1 above); UTS-UI `/research/ml-experiments` +
+- [x] ✅ DEFERRED-FUTURE-WORK **AWS data migration completed** (DeFi-only, work-stream D.1) — 🟢 **DEFERRED PAST
+      MAY-23** per operator direction 2026-05-13. AWS runs AFTER GCP backfills + manifest quality verified (don't double
+      cloud load before data quality is green). May-23 ships GCP-only; AWS dual-cloud parity becomes post-cutover
+      stabilisation goal (target 2026-06-04). See `aws_migration_defi_first_2026_05_07.md` Phase 5 gate on master
+      Gate 4.
+- [x] ✅ DEFERRED-FUTURE-WORK **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2). 🟢
+      **DEFERRED PAST MAY-23** — same operator direction. Post-Gate-4.
+- [x] ✅ DEFERRED-FUTURE-WORK **AWS backtest + ML examples** run via deployment-api (work-stream D.3). 🟢 **DEFERRED
+      PAST MAY-23** — same operator direction. Post-Gate-4.
+- [x] ✅ DEFERRED-FUTURE-WORK DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C).
+      **Blocked**: research-service repo decision (Week 1 above); UTS-UI `/research/ml-experiments` +
       `/research/strategy-backtests` + `/research/execution-backtests` tabs; work-stream A endpoints.
-- [x] ✅ DEFERRED-FUTURE-WORK Treasury: Copper integration validated; CEFFU manual handoff documented. 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** per
-      operator direction 2026-05-13. Copper + CEFFU are the client's institutional onboarding workstreams
-      (post-cutover); they do NOT gate May-23. May-23 ships on `CLOUD_KMS_ENCRYPTED` custody (verified shipped:
-      execution-service@`d45d24b4` provider + 10 GCP CMKs in `wallets-prod` / `wallets-staging` keyrings, 90d
+- [x] ✅ DEFERRED-FUTURE-WORK Treasury: Copper integration validated; CEFFU manual handoff documented. 🟢 **CLIENT-SIDE
+      — NOT OUR BLOCKER** per operator direction 2026-05-13. Copper + CEFFU are the client's institutional onboarding
+      workstreams (post-cutover); they do NOT gate May-23. May-23 ships on `CLOUD_KMS_ENCRYPTED` custody (verified
+      shipped: execution-service@`d45d24b4` provider + 10 GCP CMKs in `wallets-prod` / `wallets-staging` keyrings, 90d
       auto-rotation). Post-cutover successor: `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` Group H
       absorbs Copper/CEFFU institutional integration alongside Slack/PagerDuty onboarding.
 
@@ -1950,13 +1968,16 @@ Agent 5):
 
 - [x] ✅ DEFERRED-FUTURE-WORK Real wallet funded testnet → mainnet
 - [x] ✅ DEFERRED-FUTURE-WORK DART manual-trade window: 3 days operator-monitored on `carry_staked_basis`
-- [x] ✅ DEFERRED-FUTURE-WORK Automation flip on `carry_staked_basis` → 7-day continuous run begins (extends past May 23 into May 30)
-- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` enters DART manual-trade window (lags carry_staked_basis by ~2 days)
-- [x] ✅ DEFERRED-FUTURE-WORK **AWS live archetype** running in parallel — one carry_staked_basis instance on smaller capital deployed to AWS
-      (work-stream D.4)
+- [x] ✅ DEFERRED-FUTURE-WORK Automation flip on `carry_staked_basis` → 7-day continuous run begins (extends past May 23
+      into May 30)
+- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` enters DART manual-trade window (lags carry_staked_basis by
+      ~2 days)
+- [x] ✅ DEFERRED-FUTURE-WORK **AWS live archetype** running in parallel — one carry_staked_basis instance on smaller
+      capital deployed to AWS (work-stream D.4)
 - [x] ✅ DEFERRED-FUTURE-WORK **Seamless-switch test** between GCP-live ↔ AWS-live (work-stream D.4)
 - [x] ✅ DEFERRED-FUTURE-WORK Build-history tab in deployment-ui shipped (work-stream D.5)
-- [x] ✅ DEFERRED-FUTURE-WORK Batch-vs-live reconciliation matches within tolerance per archetype config (Group F item 21)
+- [x] ✅ DEFERRED-FUTURE-WORK Batch-vs-live reconciliation matches within tolerance per archetype config (Group F
+      item 21)
 
 ---
 
@@ -1968,7 +1989,8 @@ Agent 5):
 - [x] Referenced from `CLAUDE.md` so every agent session loads it
 - [x] ✅ Per-service yamls at `codex/10-audit/repos/<service>.yaml` extended with the 7-group / 23-item structure for
       tier-1 services
-- [x] ✅ DEFERRED-FUTURE-WORK Update cadence: Tier-1 readiness rollup refreshed by EOD daily; critical-path DAG checked at start of each week
+- [x] ✅ DEFERRED-FUTURE-WORK Update cadence: Tier-1 readiness rollup refreshed by EOD daily; critical-path DAG checked
+      at start of each week
 - No duplication: sub-plans in `plans/active/` remain authoritative; this plan only references and orchestrates
 
 ---
@@ -1977,19 +1999,22 @@ Agent 5):
 
 **DeFi live (the headline goal)**
 
-- [x] ✅ DEFERRED-FUTURE-WORK `carry_staked_basis` cycle on real wallet (testnet → mainnet) via DART manual-trade lane → backend execution →
-      automation flip → ≥7-day continuous run; P&L matches batch sim within configured bps tolerance per Group F item 21
-- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` running across ≥3 perp venues with cross-venue funding spread captured
+- [x] ✅ DEFERRED-FUTURE-WORK `carry_staked_basis` cycle on real wallet (testnet → mainnet) via DART manual-trade lane →
+      backend execution → automation flip → ≥7-day continuous run; P&L matches batch sim within configured bps tolerance
+      per Group F item 21
+- [x] ✅ DEFERRED-FUTURE-WORK `ARBITRAGE_PRICE_DISPERSION` running across ≥3 perp venues with cross-venue funding spread
+      captured
 
 **Perp venue coverage**
 
-- [x] ✅ DEFERRED-FUTURE-WORK All 6 venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster — one trade each verified via deployment-UI
+- [x] ✅ DEFERRED-FUTURE-WORK All 6 venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster — one trade each
+      verified via deployment-UI
 
 **Observability + guardrails**
 
 - [x] ✅ DEFERRED-FUTURE-WORK Tail VM event logs from deployment-UI without SSH for 24h on a live forward-poll VM
-- [x] ✅ DEFERRED-FUTURE-WORK Live alerting fires on synthetic data-freshness, P&L deviation, and position-breach violations injected via test
-      fixtures
+- [x] ✅ DEFERRED-FUTURE-WORK Live alerting fires on synthetic data-freshness, P&L deviation, and position-breach
+      violations injected via test fixtures
 - [x] ✅ DEFERRED-FUTURE-WORK Kill switch fires on synthetic risk-breach trigger
 
 **Cloud parity (work-stream D)**
@@ -1999,12 +2024,13 @@ Agent 5):
 - [x] ✅ DEFERRED-FUTURE-WORK AWS batch backfill `--force` produces parquet end-to-end
 - [x] ✅ DEFERRED-FUTURE-WORK AWS strategy backtest + ML training + execution backtest examples run via deployment-api
 - [x] ✅ DEFERRED-FUTURE-WORK AWS live carry_staked_basis instance running on smaller capital
-- [x] ✅ DEFERRED-FUTURE-WORK Seamless-switch (GCP-live → AWS-live → back) preserves position state via custody / position-balance-monitor
+- [x] ✅ DEFERRED-FUTURE-WORK Seamless-switch (GCP-live → AWS-live → back) preserves position state via custody /
+      position-balance-monitor
 
 **Readiness rollup**
 
-- [x] ✅ DEFERRED-FUTURE-WORK All Tier-1 services pass 23/23 readiness checklist (or have explicit n/a justified) — verified per
-      `codex/10-audit/repos/<service>.yaml`
+- [x] ✅ DEFERRED-FUTURE-WORK All Tier-1 services pass 23/23 readiness checklist (or have explicit n/a justified) —
+      verified per `codex/10-audit/repos/<service>.yaml`
 - [x] ✅ DEFERRED-FUTURE-WORK All 9 drift-audit rows resolved (none remaining `⚠`)
 - [x] ✅ DEFERRED-FUTURE-WORK `codex/00-SSOT-INDEX.md` updated to reference all new SSOT docs (work-streams D.6 + F)
 - [x] `CLAUDE.md` cross-references this master plan in a new "Master Plan" section (verified 2026-05-07:

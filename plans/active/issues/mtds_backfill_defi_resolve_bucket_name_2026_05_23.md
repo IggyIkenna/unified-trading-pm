@@ -1,11 +1,12 @@
 ---
 title: mtds-backfill-defi-20260523 VM broken — resolve_bucket_name() unexpected 'env' kwarg on every chunk
 created: 2026-05-23
-author: slot-2-ikenna
 source:
   - vm-logs/mtds-backfill-defi-20260523/run.log
   - market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

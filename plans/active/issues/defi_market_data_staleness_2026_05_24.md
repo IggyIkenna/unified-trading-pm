@@ -1,10 +1,11 @@
 ---
 title: "DeFi market-data collection appears stalled ~1 month — all DEX/lending/LST buckets latest ≈ April"
 created: 2026-05-24
-author: ikenna (slot 1)
 source:
   - "GCS data-state audit while diagnosing mtds_defi_datatype_alias_drift_2026_05_24.md"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

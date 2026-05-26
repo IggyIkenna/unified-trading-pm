@@ -13,6 +13,10 @@ estimate_calibration_note: |
   (`_read_manifest_rows` → `read_availability_index` → capture_status) to 3 more
   families + deletes drifted hardcoded path templates. Net-new surface is small
   (one shared UTL helper); the bulk is delete-and-rewire across known callsites.
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## Problem statement (audited 2026-05-25)

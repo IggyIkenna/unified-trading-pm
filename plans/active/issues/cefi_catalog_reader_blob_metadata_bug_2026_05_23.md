@@ -1,13 +1,14 @@
 ---
 title: CeFi backfill VMs silently capturing 0 records — BlobMetadata.endswith() crash in CeFiCatalogReader
 created: 2026-05-23
-author: slot-3-ikenna
 source:
   - market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py
   - market-tick-data-service@09361718 # introducing commit (Phase 3.D.5 v2 enumerator)
   - plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
   - plans/active/aws_migration_defi_first_2026_05_07.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

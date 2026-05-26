@@ -1,6 +1,5 @@
 ---
 title: Data Type Canonicalization — Cross-Service Alignment
-slug: data_type_canonicalization_2026_05_23
 created: 2026-05-23
 last_updated: 2026-05-23
 parent_epic: mtds_mdps_master
@@ -9,6 +8,9 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
 status: active
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Data Type Canonicalization — Cross-Service Alignment
@@ -140,7 +142,8 @@ all service repos returns zero hits in non-test Python source.
 
 ## Phase 9 — GCS partition rename: dex_pool_state → dex_pools [P2]
 
-- [x] ✅ DEFERRED [GCS-MIGRATION-WINDOW: must bundle with next scheduled GCS migration window per single-walk discipline] [SCRIPT] P2. **DEFERRED** — Rename on-disk GCS hive partition segment `data_type=dex_pool_state` →
+- [x] ✅ DEFERRED [GCS-MIGRATION-WINDOW: must bundle with next scheduled GCS migration window per single-walk
+      discipline] [SCRIPT] P2. **DEFERRED** — Rename on-disk GCS hive partition segment `data_type=dex_pool_state` →
       `data_type=dex_pools` so the physical path matches the UAC canonical name. Must bundle into next scheduled GCS
       migration window (single-walk discipline — no standalone walk). Pre-migration drain REQUIRED (stop all DeFi MTDS
       VMs + run manifest consolidator before walk). After rename: remove `dex_pools`→`dex_pool_state` path-override

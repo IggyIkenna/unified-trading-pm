@@ -1,7 +1,6 @@
 ---
 title: "MDPS prediction schema contract: missing columns in candle DataFrame"
 created: 2026-05-23
-author: slot-7
 source:
   - "batch 111916 prediction VMs: mdps-prediction-{2025,2026}-20260523-111916"
   - "logs: StreamingParquetWriter pre-write validation failed: [schema_violation] column 'chain' missing from dataframe;
@@ -10,6 +9,8 @@ source:
     'timeframe' missing from dataframe"
 locked_by: live-defi-rollout
 parent_epic: plans/epics/mtds_mdps_master.md
+priority: P2
+status: active
 ---
 
 ## What I found

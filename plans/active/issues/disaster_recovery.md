@@ -1,6 +1,5 @@
 ---
 title: "Trading Incident Alerting, Auto-Recovery, Human Escalation + Audit Operating Model"
-type: issue-doc
 parent_epic: observability_master
 status: resolved-into-active-plans
 created: 2026-05-20
@@ -8,6 +7,7 @@ resolved: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
+priority: P2
 ---
 
 > **🟢 RESOLVED-INTO-PLANS 2026-05-23**. This operator-supplied target operating model (sections §1-22) is the source

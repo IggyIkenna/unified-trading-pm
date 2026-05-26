@@ -1,7 +1,6 @@
 ---
 title: MTDS DeFi DEX swap data stops after 2026-01-24 — no Ethereum DEX candles for 2026
 created: 2026-05-23
-author: slot-6
 source:
   - GCS audit during MDPS DeFi backfill verification (2026-05-23)
   - mdps_backfill_phase3_2026_05_22.md (now archived)

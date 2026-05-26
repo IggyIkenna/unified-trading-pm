@@ -1,7 +1,6 @@
 ---
 title: "honest-coverage cron reads -prd while CeFi tick data is in flat (Phase 2.6 not yet run)"
 created: 2026-05-25
-author: harsh + Claude Opus 4.7 (1M)
 source:
   - audits/data_quality_backfill_status_audit_instructions.md (DQ-05)
   - instruments-service/scripts/measure_honest_coverage.py
@@ -10,6 +9,7 @@ source:
 locked_by: live-defi-rollout
 parent_epic: epics/mtds_mdps_master.md
 status: active
+priority: P2
 ---
 
 # honest-coverage cron reads `-prd` while CeFi tick data is still in flat

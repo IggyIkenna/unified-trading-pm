@@ -5,6 +5,10 @@ assigned_vm: vm-ml
 estimate_class: brand-new
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.8
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # MDPS DeFi Lending Indices Adapter

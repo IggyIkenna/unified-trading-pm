@@ -1,7 +1,6 @@
 ---
 title: "CeFi manifest remediation — legacy markers + fresh failures 2026-05-24"
 created: 2026-05-24
-author: slot-2
 source:
   - plans/epics/mtds_mdps_master.md (MTDS-3.2.A-V findings)
 parent_epic: mtds_mdps_master
@@ -9,6 +8,10 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.64
 assigned_vm: vm-ml
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # CeFi manifest remediation — 2026-05-24

@@ -1,13 +1,15 @@
 ---
 title: "MTDS DeFi Handler Bugs + SOURCE_RETURNED_ZERO Manifest Cleanup"
 created: 2026-05-23
-author: ikenna-slot-4
 source:
   - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
   - plans/epics/mtds_mdps_master.md
   - plans/epics/defi_master.md
 status: resolved
 resolved_at: 2026-05-23
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found

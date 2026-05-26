@@ -1,11 +1,15 @@
 ---
 title: "Orchestrator: workers halt on rate-limit instead of rotating to next account"
 created: 2026-05-23
-author: slot-1-ikenna
 source:
   - plans/active/workspace_qg_sweep_2026_05_23.md
   - agent-orchestrator/agents/worker.md
   - agent-orchestrator/server/server.py
+parent_epic: orchestrator_master
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found

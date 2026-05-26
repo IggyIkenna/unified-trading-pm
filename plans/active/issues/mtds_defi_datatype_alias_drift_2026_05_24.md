@@ -1,11 +1,12 @@
 ---
 title: "MTDS DeFi data_type alias drift — venue_data_types.yaml + graph adapters still on banned legacy names"
 created: 2026-05-24
-author: ikenna (slot 1)
 source:
   - "Tier B full-workspace SIT validation (full_cicd_sit_target_state_2026_05_24.md)"
   - "UAC tests/test_data_type_canonicalization.py[market-tick-data-service] FAIL in full workspace"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

@@ -3,12 +3,12 @@ title:
   "MDPS tradfi backfill — VM run.log analysis: 4 distinct bugs (non-nullable-OHLC schema reject, 429 empty_confirmed
   writes, instrument_type=UNKNOWN partition mismatch, +cosmetic)"
 created: 2026-05-26
-author: harsh-side (Claude) — features e2e investigation
 source:
   - plans/active/features_service_e2e_pipeline_test_2026_05_26.md (finding A0)
   - VM run.logs gs://deployment-scripts-central-element-323112/vm-logs/mdps-tradfi-{2020,2024,2025}/run.log
 locked_by: live-defi-rollout
 status: OPEN — needs MDPS owner (Ikenna); blocks tradfi candle reprocess
+priority: P2
 ---
 
 ## How this was analysed (transparency)

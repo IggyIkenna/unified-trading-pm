@@ -1,11 +1,12 @@
 ---
 title: "Staging resync — LDR→staging promotion stalled ~1 month (post-cutover unfreeze)"
 created: 2026-05-24
-author: ikenna (slot 1)
 source:
   - "staging branch staleness audit 2026-05-24"
   - "UAC pilot PR IggyIkenna/unified-api-contracts#48"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
