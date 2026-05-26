@@ -188,10 +188,10 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 4 — multi_timeframe (transitive unblock) `[P1]`
 
-- [ ] [VALIDATE] P1. After Phase 1 writes delta_one features, confirm multi_timeframe reads them and computes. No code
-      change expected; verify only. **Now executed by** `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`
-      Phase 3 (reads delta_one `-test` output). Keep this row as the migration-side acceptance marker; flip when the e2e
-      run passes.
+- [x] ✅ [VALIDATE] P1. After Phase 1 writes delta_one features, confirm multi_timeframe reads them and computes. No
+      code change expected; verify only. **Executed by** `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`
+      Phase 3 (reads delta_one `-test` output). MTF reads delta_one features end-to-end: 3 bugs fixed + instrument_id
+      injection — features-service@4f1653fb + @53ef2e88. — features-service@4f1653fb
 
 ### Phase 5 — shared lift (dedupe; aligns with epic goal) `[P2]`
 
