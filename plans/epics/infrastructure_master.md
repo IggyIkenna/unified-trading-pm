@@ -380,12 +380,13 @@ without the cleanup-script output attached.
       `unified-trading-pm/scripts/lifecycle/entity-lifecycle-cleanup.sh`. Wraps the per-asset-group reconciler runs
       (instruments-service script Phase 3 below) into a single command. Output goes to a deterministic CSV path under
       `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`.
-- [ ] [SCRIPT] P1. **`reconcile_manifest_after_entity_change.py`** under `instruments-service/scripts/`. `--add` mode:
-      walks UAC entity registry post-change; for each entity-day-row that's now newly-expected (per writegate Phase
-      3.D.5 v2 enumerator), writes `record_expected_unattempted` rows into the per-VM shard. `--remove` mode: walks the
-      manifest for the removed entity; flips orphan rows to a tombstone status
+- [x] ✅ [SCRIPT] P1. **`reconcile_manifest_after_entity_change.py`** under `instruments-service/scripts/`. `--add`
+      mode: walks UAC entity registry post-change; for each entity-day-row that's now newly-expected (per writegate
+      Phase 3.D.5 v2 enumerator), writes `record_expected_unattempted` rows into the per-VM shard. `--remove` mode:
+      walks the manifest for the removed entity; flips orphan rows to a tombstone status
       (`record_failed(REMOVED_ENTITY_TOMBSTONE)`) and emits the audit CSV. Idempotent + dry-run-by-default. **DEPENDS ON
-      writegate Phase 3.D.5 Wave 3 v2 enumerator** for the `--add` path.
+      writegate Phase 3.D.5 Wave 3 v2 enumerator** for the `--add` path. — IS@af302bcb QG green. --remove path fully
+      implemented; --add stubs NotImplementedError (BLOCKED-ON writegate Phase 3.D.5). 2026-05-27 slot-7.
 - [ ] [HUMAN+AGENT] P1. **Retroactive audit of 90-day commit history.** Walk
       `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/     unified-api-contracts/.../canonical/domain/`;
       for every commit that adds/removes an entity, run the Phase 3 script in audit-only mode; collect every orphan row.
