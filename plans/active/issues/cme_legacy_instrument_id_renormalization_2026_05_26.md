@@ -6,7 +6,7 @@ source:
   - "market-data-tick-tradfi-central-element-323112/_index/per_vm/mdps-tradfi-2020-20260523-125440.parquet (attempted_failed error_reason)"
   - plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md
 priority: P2
-status: active
+status: solved
 locked_by: live-defi-rollout
 locked_since: 2026-05-26
 ---
@@ -71,4 +71,33 @@ so a single follow-up reprocess of the affected CME range clears both `schema_vi
 
 ## Resolution
 
-_(updated when solved)_
+**SOLVED (code) — `market-data-processing-service@fa39207`** (2026-05-26). Implemented **Fix C**:
+`_renormalize_legacy_tradfi_instrument_ids` in `app/core/canonical_writer.py`, called at the top of
+`write_candle_parquet` before instrument_type inference + partition_path build. For tradfi rows whose id is 2-segment,
+it extracts the symbol embedded in the malformed id, classifies it via `classify_databento_symbol` (MTDS; MDPS depends
+on MTDS), and rebuilds the canonical id via `build_instrument_id(venue, type, underlying, expiry_date=, strike=,
+option_right=)` — mirroring `DatabentoAdapter` exactly. No re-fetch needed (the symbol is recoverable from the id), so
+the Databento quota exhaustion is moot.
+
+**Key correctness point:** the canonical id is NOT `CME:future:ESH0` — `build_instrument_id` encodes
+underlying+expiry(+strike+right), so distinct contracts stay distinct:
+
+- `CME:ESH0` → `CME:FUTURE:ES-20200320`
+- `CME:E2AG0 C3370` → `CME:OPTION:ES-20200221-3370-C`
+- `CME:ESM6` → `CME:FUTURE:ES-20260619`
+
+Gated to tradfi; no-op for non-tradfi, already-canonical (≥3-segment), and unclassifiable symbols (shard isolation —
+left unchanged to fail loud rather than be silently coerced).
+
+**Verified:** lint ✓ + basedpyright ✓ (MDPS `quality-gates.sh` steps 0–2 green); 2 regression tests added to
+`tests/unit/test_streaming_write_per_tf.py` — both pass (`uv run --with pytest-timeout pytest -k renormalize`).
+
+**Follow-ups (this issue is code-solved, not operationally-closed):**
+
+1. **Reprocess** the affected legacy CME range (re-run the `mdps-tradfi` backfill) so the existing `attempted_failed`
+   rows are re-attempted with canonical ids — the fix only takes effect on reprocess.
+2. Land the sibling **Fix A/B** (nullable-OHLC trades schema + `combo`/`UNKNOWN`/`futures_chain` contracts) from
+   [`mdps_tradfi_schema_contract_gaps_2026_05_22.md`](mdps_tradfi_schema_contract_gaps_2026_05_22.md) before the
+   reprocess, so a single pass clears both `partition_mismatch` and `schema_violation`.
+3. **Env gap:** MDPS `quality-gates.sh` TESTS step needs `pytest-timeout` in the provisioned env (pre-existing; not
+   introduced here) — tests were run via `uv run --with pytest-timeout`.
