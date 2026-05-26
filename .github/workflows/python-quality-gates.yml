@@ -21,7 +21,7 @@ on:
         default: ""
     secrets:
       GH_PAT:
-        required: true
+        required: false
       GCP_PROJECT_ID:
         required: false
       SLACK_WEBHOOK_URL:
