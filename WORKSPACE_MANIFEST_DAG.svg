@@ -286,9 +286,9 @@
   <circle cx="772" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="691" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="792" y="1247" width="132" height="38" class="svc" />
-  <rect x="792" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="792" y="1247" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="858" y="1265" text-anchor="middle" class="label">strategy-service</text>
-  <circle cx="914" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="914" cy="1255" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="858" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="934" y="1247" width="167" height="38" class="svc" />
   <rect x="934" y="1247" width="4" height="38" fill="#84cc16" rx="2" />
