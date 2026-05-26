@@ -193,12 +193,13 @@ resolves the minimum window each family/feature needs and backfills exactly that
   - **(A1) timeframe/liquidity is a knob on top of A0.** Coarser timeframe reduces (not eliminates) NaN-close density —
     ADA-SPOT momentum NaN cols 100→12 at 1m, ADX cleared; but `close` is still 68.6% NaN at 1m so PPO stays dead until
     A0 is fixed. Liquid BTC has clean closes → was always fine.
-- [ ] 🔴 [BUG] P1. **`market_structure` swing_high/swing_low = 100% NaN even for LIQUID BTC** — the ONE independent calc
-      bug (not the A0 data issue). `_detect_swing_booleans` ANDs four **fixed absolute thresholds**
+- [x] ✅ 🔴 [BUG] P1. **`market_structure` swing_high/swing_low = 100% NaN even for LIQUID BTC** — the ONE independent
+      calc bug (not the A0 data issue). `_detect_swing_booleans` ANDs four **fixed absolute thresholds**
       (`SWING_MIN_VOLATILITY`, `SWING_MA_THRESHOLD×vol`, `SWING_PREV_BREACH_THRESHOLD`) mis-scaled for 15s/1m → the AND
       never fires → zero swings. Make thresholds **scale-relative** (ATR-/%-of-price-relative, like mature pivot/ZigZag
       detectors). File: `delta_one/app/calculators/market_structure.py:83-104`. Provenance: e2e Phase 2 1m re-run
-      2026-05-26.
+      2026-05-26. — features-service@077416b4: ATR-relative thresholds in market_structure.\_detect_swing_booleans +
+      swing_outcome_targets.\_detect_swing_points/\_compute_swing_bools; QG green.
   - NOTE: PPO was previously mis-filed here as a standalone bug — **corrected**: PPO is the A0 data issue (clean for
     BTC, fixed by `ffill(close)`), not a calculator bug.
 - [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` all-NaN → group marked
