@@ -82,9 +82,12 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       ops (download L440 + upload L527) in `setup-data-pipeline-vm.sh` with `timeout 180 … || true`, so a deadlocked
       gsutil can't block boot. (Root cause: a hung `gsutil -m` never returns to hit `|| true` → startup script blocks
       forever → bybit/hyperliquid/kraken 0-data for 48h+.)
-- [ ] [AGENT] P1. **Boot-hang follow-up**: sweep the same `gsutil -m cp` wheel-cache pattern in the AWS + duplicated
-      launchers (`vm_mtds_backfill.sh`, `vm_instruments_backfill.sh`, `vm_instruments_reference.sh`, `launch-*-aws.sh`)
-      — apply the same timeout guard (or the `gcs_copy_object` REST helper). Then relaunch the 3 hung CeFi VMs.
+- [x] ✅ **Boot-hang follow-up (GCP siblings)** — deployment-service@8ff86cd. Same timeout guard applied to
+      `vm_mtds_backfill.sh`, `vm_instruments_backfill.sh`, `vm_instruments_reference.sh` (identical unguarded
+      `gsutil -m cp` wheel pattern). All GCP wheel-cache hangs now bounded.
+- [ ] [AGENT] P1. **Boot-hang remaining**: (a) sweep the AWS launchers (`launch-*-aws.sh`, `aws s3 cp` wheel pattern —
+      verify whether the AWS CLI hangs equivalently); (b) relaunch the 3 hung CeFi VMs (bybit/hyperliquid/kraken) on the
+      fixed launcher.
 - [x] ✅ **vm-zombie-watchdog pip fix** — deployment-service@fcb8a4f. Added `pip install --upgrade pip` before the UTL
       install in `launch-vm-zombie-watchdog.sh` (proven: upgraded pip pulls prebuilt cp313 ckzg/lru-dict wheels, no
       compiler/source-build → no more `ModuleNotFoundError`). Code shipped; **relaunch still pending** (next todo).
