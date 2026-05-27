@@ -427,6 +427,22 @@ real blockers.**
   cross-day issue. Diagnose why only 15s + 1h are produced. Provenance: backfill experiment 2026-05-27.
 - [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance: backfill 2026-05-27.
 
+## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
+
+Mapped fix locations (sub-agent code audit, features-service):
+
+**P6.A — delta_one emits ONLY base 15s (+ internal 1h for 2 groups), not the full 7 TFs → starves mtf.**
+- `--output-timeframes` defaults `None` and is **never used** — dead-ends at `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler" comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
+- Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`) sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF indicators NaN-starved even with a loop.
+- [ ] [P1] **Fix: add the output-timeframe loop** in `_process_feature_group` (resolve `None`→`config.DEFAULT_TIMEFRAMES`; invoke `TimeframeResampler` base 15s→{5m,15m,1h,4h,24h}; write each `timeframe=` partition).
+- [ ] [P1] **Fix: size buffer off the highest output TF** (`buffer_manager.calculate_buffer_days`) so 4h/24h read enough cross-day candle history.
+
+**P6.B — mtf writes to PROD not -test (sink override ignored).**
+- `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
+- [ ] [P1] **Fix: honor sink override** — `orchestrator.py:199` pass `routing_key=asset_group.lower()` (lazy/per-run sink); make `get_output_bucket` consult `get_data_sink(routing_key=ag)` (fallback `resolve_bucket`) like delta_one's `feature_writer._get_sink_bucket`; feed the same bucket to `ManifestWriter` (:263).
+
+cross_instrument `close` (FINDING-F) + volatility `empty_confirmed` remain HELD (operator decide later).
+
 ## Notes / cross-refs
 
 - Read-path fixes + the downstream findings (Bitfinex empty `instrument_type`, MTDS dual-write, the CeFi manifest↔file
