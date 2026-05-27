@@ -106,5 +106,5 @@ UAC is green/merged.
   - Cloud Build STEP 5.10 fix: `scripts/collect_responses.py` uses `importlib.import_module` instead of static `from google.cloud import` (UAC@7dfe274f) → Cloud Build run d5fa191a SUCCESS
   - Staging force-reset to LDR HEAD (no version divergence — both at 0.1.20); PR #48 was already merged
   - UAC also has workspace-qg ghost 283776088 (added to GH Support ticket)
-- [ ] UAC staging → main (quickmerge — pending local QG pass)
+- [x] UAC staging → main — PR #49 merged 2026-05-27T13:16Z (UAC@7dfe274f → main)
 - [ ] Cascade L2→L8 in dep order
