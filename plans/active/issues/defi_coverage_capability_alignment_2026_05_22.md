@@ -285,23 +285,84 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       glued `VELODROMEV2` (glued = canonical). The comment direction is backwards for these two venues. Low-risk
       doc/comment fix; verify no consumer treats `VELODROME_V2`/`TRADER_JOE_V2` (underscore) as canonical before
       adjusting. **NICE-TO-HAVE** — no data impact (the canonicalizer + writer already treat glued as canonical).
-- [ ] [SCRIPT] P1. **B5.3 — GCS re-key (SCHEDULED MIGRATION WINDOW — single-walk-discipline gate)**: re-key
-      `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/` across instruments-store-defi (+ MTDS-defi,
-      features-onchain). This is a partition-key change = whole-corpus walk = review-blocking ad-hoc per single-walk
-      discipline → MUST run as an operator-scheduled migration window (operator-acked 2026-05-26). Use
-      `gcs_copy_object`/`gcs_delete_object` (workers=32), idempotent, dry-run first. Verify row-parity per (venue,date)
-      before deleting old.
-- [ ] [SCRIPT] P1. **B5.4 — Manifest reconcile**: confirm manifest venue is canonical for ALL families (AAVE_V3
-      verified; audit COMPOUND_V3/UNISWAP_V\*/etc.). Where manifest still carries glued venue, write corrector shard →
-      canonical.
-- [ ] [SCRIPT] P0. **B5.5 — Delete old glued GCS keys** (after B5.3 parity verified) + assert no consumer reads glued.
-- [ ] [UI] P2. **B5.6 — deployment-ui/api**: verify pool-breakdown resolves canonical path post-migration (the
-      `_is_legacy_defi_venue_row` regex already handles `_?V\d+$`); remove any hardcoded glued venue strings; `pw:L2`.
-- [ ] [VERIFY] P0. **B5.7**: re-drill `AAVE_V3-ARBITRUM · 2026-05-03` in deployment-ui → pool data renders. Sample 3
-      other venue families.
+- [x] ✅ [SCRIPT] P1. **B5.3 — GCS re-key (SCHEDULED MIGRATION WINDOW)** — **DONE 2026-05-27** —
+      instruments-service@445756d3 (`scripts/migration_rekey_defi_glued_venues.py`, QG-green: ruff+basedpyright+import-patterns
+      all exit 0). Re-keyed `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/` across both buckets via
+      `gcs_copy_object`/`gcs_describe_object`/`gcs_delete_object` (workers=32), copy→parity-verify(size)→delete,
+      idempotent, `--dry-run` default + `--execute`. Canonical authority = `canonicalize_defi_venue_combined`.
+      **Execute tallies (0 errors)**: instruments-store-defi = **32,760 objects across 27 glued venue-chains**
+      (AAVEV3×8 chains, COMPOUNDV3×4, UNISWAPV3×5, UNISWAPV2/V4, AERODROMEV3, CAMELOTV3, PANCAKESWAPV3×3, SUSHISWAPV3×3
+      — all copied+verified+deleted); market-data-tick-defi = **2,251 objects across 4 glued venue-chains**
+      (AAVEV3/UNISWAPV2/UNISWAPV3/UNISWAPV4-ETHEREUM). **Grand total 35,011 objects, 0 errors.** Correctly NO-OP'd:
+      VELODROMEV2/TRADER_JOEV2 (canonical-glued), BALANCER/CURVE/GMX/JITO/LIDO/etc (no version), protocol-only MTDS
+      venues, and PANCAKESWAPV3-ZKSYNC / LIGHTER-ZKSYNC (ZKSYNC ∉ KNOWN_CHAINS → passthrough — see B5.9 finding).
+- [x] ✅ [SCRIPT] P1. **B5.4 — Manifest reconcile** — **DONE (audited; no corrector needed) — FINDING 2026-05-27**.
+      Read `_index/availability_index.parquet` in both buckets, grouped by venue, tested every venue with
+      `canonicalize_defi_venue_combined`. **IS manifest (68,885 rows): 0 glued combined-venue rows** — fully canonical
+      (Bug-2 fix landed); AAVE_V3=9,511, UNISWAP_V3=7,853, UNISWAP_V2=2,189, UNISWAP_V4=459, COMPOUND_V3=4,199 all
+      canonical, all `captured`. **MTDS manifest (1.75M rows): 875,920 glued combined-venue rows EXIST but are
+      99.6% `empty_confirmed` (872,800) + 0.4% `attempted_failed` (3,120) — ZERO `captured`.** They are benign honest-absence
+      markers, NOT phantom coverage; the real MTDS DeFi coverage flows via protocol-only `AAVE_V3`/`UNISWAP_V3` rows
+      (chain in a separate column) + the now-canonical IS combined rows. **No corrector shard written**: (a) the
+      consolidator dedup key includes `venue` (`_BASE_DEDUP_COLS=(date,venue,data_type,service_name)` in UTL
+      `manifest_consolidator.py`), so a canonical-venue corrector creates a NEW partition and CANNOT supersede the glued
+      row (would leave it orphaned) — the only valid suppression is in-place same-venue, which the existing
+      `reconcile_defi_ghost_venue_all_buckets_20260522.py` ghost-venue taxonomy already covers; (b) converting
+      empty_confirmed glued rows to empty_confirmed canonical rows improves no data-correctness signal and risks row
+      doubling. **B5.4 is GREEN for data-correctness**: no glued venue row in either manifest falsely claims captured
+      coverage. (The MTDS combined-vs-protocol-only venue duality is a pre-existing convention quirk, not introduced by
+      Bug 5 — captured in B5.9.)
+- [x] ✅ [SCRIPT] P0. **B5.5 — Delete old glued GCS keys** — **DONE 2026-05-27** — folded into B5.3 execute
+      (copy→verify→delete per object, never delete before verified copy). **Post-execute verification (re-ran
+      `--dry-run` on BOTH buckets)**: instruments-store-defi walked 70,151 objects → **0 glued venues remain**;
+      market-data-tick-defi walked 321,176 objects → **0 glued venues remain**. Object counts unchanged pre/post
+      (re-key, no duplication/loss). Spot-checked 3 canonical parquets readable post-migration: IS
+      `day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, glued deleted), IS
+      `UNISWAP_V3-ETHEREUM` (317 rows), MTDS `AAVE_V3-ETHEREUM` (2,916 rows). No consumer reads glued (see B5.6).
+- [x] ✅ [VERIFY] P2. **B5.6 — deployment-api pool-breakdown resolves canonical path; no hardcoded glued strings** —
+      **DONE 2026-05-27 (no code change required)**. The pool-breakdown lives in **deployment-api** (not
+      deployment-service/ui), endpoint `GET /api/data-status/pools/breakdown` →
+      `deployment_api/services/data_status_drilldown.py::build_pool_breakdown` → `_list_defi_objects_with_aliases`.
+      Verified: (1) `_defi_venue_chain_aliases` tries the **canonical** `venue_chain` FIRST (line ~2080
+      `out=[venue_chain, protocol_only]`), with bidirectional `_V\d+` regex (strips AND inserts underscore) — so it
+      resolves canonical paths post-migration AND remains robust; (2) `rg` for glued literals
+      (AAVEV3/UNISWAPV3/COMPOUNDV3/…) across `deployment_api/` source = **0 hits** (only comments + the bidirectional
+      regex); since B5.5 left 0 glued keys, canonical-first ordering always wins. No `pw:L2` needed — this is a
+      backend/deployment-api change, no `deployment-ui`/`user-management-ui`/`unified-trading-system-ui` source touched.
+- [x] ✅ [VERIFY] P0. **B5.7 — re-drill** — **DONE 2026-05-27**. (1) **Pool-breakdown consumer is FUNCTIONAL**:
+      `GET /pools/breakdown?day=2026-05-20&venue=ETHENA&chain=ETHEREUM` → `status:"resolved"`, 1 pool
+      (`ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`, vault_share_price=captured). (2) **Original symptom
+      `AAVE_V3-ARBITRUM · 2026-05-03` → `no_data` is STRUCTURALLY CORRECT, not a path bug**: pool-breakdown reads the
+      **MTDS** bucket (`raw_tick_data` DEX/pool data); AAVE_V3 is a **lending** protocol with no MTDS DEX pools, and
+      MTDS has **zero** AAVE_V3 objects for 2026-05-03 (the re-keyed AAVE_V3-ETHEREUM MTDS data spans 2024-05-02..2026-01-23).
+      The AAVE_V3-ARBITRUM **reference** data the operator expected lives in the **IS** bucket and is now at the canonical
+      path `instrument_availability/by_date/day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, verified
+      readable, glued key deleted) — read by the IS-backed venue/shard drilldown, not pool-breakdown. (3) Sampled other
+      families: UNISWAP_V3-ETHEREUM IS parquet (317 rows, canonical), AAVE_V3-ETHEREUM MTDS parquet (2,916 rows,
+      canonical). **Glued-venue canonicalization is complete + verified end-to-end.** Residual: migrated MTDS
+      `pipeline_mode=batch_onchain_rpc/…ticks_migrated_*.parquet` files lack `instrument_type=/data_type=` partitions so
+      pool-breakdown can't surface them where they exist — pre-existing consumer gap, orthogonal to glued venues → B5.10.
+- [ ] [CODE] P3. **B5.9 — MTDS combined-vs-protocol-only venue duality** (provenance: B5.4 finding 2026-05-27). MTDS
+      manifest + GCS carry BOTH combined `AAVEV3-ARBITRUM`/`AAVE_V3-ETHEREUM` AND protocol-only `AAVE_V3` (chain in a
+      separate column) venue forms for the same protocol; IS uses only the combined form. The 875,920 MTDS combined-glued
+      manifest rows are all `empty_confirmed`/`attempted_failed` (benign). Decide the SSOT MTDS DeFi venue convention
+      (combined vs protocol-only+chain-col) and reconcile so MTDS matches IS. **NICE-TO-HAVE** — no current data-correctness
+      impact (no captured glued rows). Also: `PANCAKESWAPV3-ZKSYNC` / `LIGHTER-ZKSYNC` glued IS partitions did NOT re-key
+      because `ZKSYNC ∉ KNOWN_CHAINS` in UAC — either add ZKSYNC to `KNOWN_CHAINS` (if a supported DeFi chain) or confirm
+      these are out-of-universe; same for `EXTENDED-STARKNET`/`PACIFICA-SOLANA` (CeFi-ish venues in the defi bucket).
+- [ ] [CODE] P3. **B5.10 — pool-breakdown can't read migrated `pipeline_mode`/flat parquets** (provenance: B5.7
+      2026-05-27). `build_pool_breakdown`/`_list_defi_objects_with_aliases` build prefixes
+      `day={day}/{hive_key}=defi/venue=…` with NO `pipeline_mode=` segment, and `_list_pool_entities_for_venue` requires
+      both `instrument_type=` AND `data_type=` path tokens (skips objects lacking them). The migrated DeFi parquets at
+      `raw_tick_data/by_date/day=…/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=…/ticks_migrated_*.parquet`
+      have neither → invisible to pool-breakdown even where they exist. deployment-api consumer change. **NICE-TO-HAVE** —
+      pre-existing, orthogonal to glued-venue canonicalization; affects pool-breakdown completeness for migrated-tick DeFi
+      venues only.
 
 ## Temporary states + their canonical follow-up plans
 
 - `"AAVE_V3"` in expected_coverage: stays until Bug 2 handler fix ships + phantom reconciler runs for Bug 3.
-- Bug 5 GCS re-key is a scheduled migration window (single-walk-discipline gate); glued parquet paths remain readable
-  until B5.3 completes + B5.5 deletes them.
+- ~~Bug 5 GCS re-key is a scheduled migration window; glued parquet paths remain readable until B5.3 completes + B5.5
+  deletes them.~~ **RESOLVED 2026-05-27** — B5.3/B5.5 executed: 35,011 glued objects re-keyed to canonical + old keys
+  deleted across both DeFi buckets, 0 errors, 0 glued remaining (verified). Migration script
+  instruments-service@445756d3 `scripts/migration_rekey_defi_glued_venues.py` (idempotent — safe to re-run).
