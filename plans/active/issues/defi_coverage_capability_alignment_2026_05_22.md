@@ -202,6 +202,63 @@ findings that belong here, not as parallel issues:
   honest-absence (`EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED`). Residual to verify: that LST
   staking-APR is actually captured for the real LST venues (currently 0 captured for `lst_rates`/`staking_yields`).
 
+## Bug 5 (OPEN — surfaced 2026-05-26 via deployment-ui pool-breakdown): IS parquet PATH still glued while manifest venue is canonical
+
+**Provenance**: operator drilled `Pool breakdown · AAVE_V3-ARBITRUM · 2026-05-03` in deployment-ui → "No pool data".
+
+**Precise divergence** (instruments-store-defi, verified 2026-05-26):
+
+- **Manifest is canonical**: `availability_index` has `venue=AAVE_V3`, `chain=ARBITRUM`, `capture_status=captured`, 8
+  rows for 2026-05-03. ✅ (Bug 2 fix canonicalised the `manifest.record_captured(venue=manifest_venue)` call.)
+- **Parquet PATH is still glued**: the actual reference data is at
+  `instrument_availability/by_date/day=2026-05-03/venue=AAVEV3-ARBITRUM/instruments.parquet` (no underscore). There is
+  **no** canonical `venue=AAVE_V3-ARBITRUM/` (combined) nor `venue=AAVE_V3/chain=ARBITRUM/` (split) parquet for this
+  date.
+- **Root cause**: `instruments-service/instruments_service/engine/orchestrator.py:3155` builds the parquet path from
+  `venue_str` (raw glued protocol-chain) while the manifest call (line 3149) uses `manifest_venue` (canonical,
+  underscore). Bug 2 canonicalised the manifest venue but NOT the parquet partition key → they diverged. deployment-ui
+  pool-breakdown reads the canonical manifest venue → derives canonical path → misses the glued-path parquet → "No pool
+  data".
+
+**Scope — ALL version-suffixed DeFi venues** (operator 2026-05-26: "AAVE_V3-ARBITRUM is canonical … same with other
+venues for defi"). Glued GCS keys needing underscore insertion before the version: `AAVEV3→AAVE_V3`,
+`COMPOUNDV3→COMPOUND_V3`, `CAMELOTV3→CAMELOT_V3`, `AERODROMEV3→AERODROME_V3`, `PANCAKESWAPV3→PANCAKESWAP_V3`,
+`SUSHISWAPV3→SUSHISWAP_V3`, `UNISWAPV2/V3/V4→UNISWAP_V2/V3/V4`, `VELODROMEV2→VELODROME_V2`,
+`TRADER_JOEV2→TRADER_JOE_V2`, `MORPHOVAULTS→MORPHO_VAULTS`. (BALANCER/CURVE/GMX/JITO/LIDO/etc. have no version → already
+canonical.) Scale: **9,663 glued objects for AAVEV3 alone** in instruments-store-defi; × ~10 venue families ×
+(instruments + MTDS-defi + features-onchain buckets).
+
+**Operator directive (2026-05-26)**: migrate to canonical + DELETE the old glued keys in **gcs, manifest, deployment-ui,
+UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN paths can remain").
+
+### Phased migration (HARD-ORDERED — writer fix MUST precede GCS re-key or it regenerates glued paths)
+
+- [ ] [CODE] P1. **B5.1 — IS writer parquet-path canonicalization (ROOT CAUSE)**: at `orchestrator.py:3155` (and the
+      `get_data_sink(prefix="instrument_availability/by_date")` partition derivation at ~1840/2250), build the `venue=`
+      partition from the canonical venue (`to_canonical_venue()` / `manifest_venue`), NOT raw `venue_str`. Pre-audit ALL
+      parquet-path construction sites in IS for the same glued/canonical divergence. QG + unit test that path venue ==
+      manifest venue.
+- [ ] [CODE] P2. **B5.2 — UAC alias cleanup**: finish `LEGACY_DEFI_VENUE_ALIASES` — fix targets that still point at
+      glued forms (`VELODROME_V2→VELODROMEV2-…`, `TRADER_JOE_V2→TRADER_JOEV2-…`, `MORPHO_VAULTS→MORPHOVAULTS-…`). Decide
+      alias-retention policy (operator wants old removed → keep aliases only as a read-time back-compat shim during
+      migration, drop after). 3 stray glued refs: `chain_env.py:190`, `_defi_coverage.py:31`, `defi_venues.py:285`.
+- [ ] [SCRIPT] P1. **B5.3 — GCS re-key (SCHEDULED MIGRATION WINDOW — single-walk-discipline gate)**: re-key
+      `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/` across instruments-store-defi (+ MTDS-defi,
+      features-onchain). This is a partition-key change = whole-corpus walk = review-blocking ad-hoc per single-walk
+      discipline → MUST run as an operator-scheduled migration window (operator-acked 2026-05-26). Use
+      `gcs_copy_object`/`gcs_delete_object` (workers=32), idempotent, dry-run first. Verify row-parity per (venue,date)
+      before deleting old.
+- [ ] [SCRIPT] P1. **B5.4 — Manifest reconcile**: confirm manifest venue is canonical for ALL families (AAVE_V3
+      verified; audit COMPOUND_V3/UNISWAP_V\*/etc.). Where manifest still carries glued venue, write corrector shard →
+      canonical.
+- [ ] [SCRIPT] P0. **B5.5 — Delete old glued GCS keys** (after B5.3 parity verified) + assert no consumer reads glued.
+- [ ] [UI] P2. **B5.6 — deployment-ui/api**: verify pool-breakdown resolves canonical path post-migration (the
+      `_is_legacy_defi_venue_row` regex already handles `_?V\d+$`); remove any hardcoded glued venue strings; `pw:L2`.
+- [ ] [VERIFY] P0. **B5.7**: re-drill `AAVE_V3-ARBITRUM · 2026-05-03` in deployment-ui → pool data renders. Sample 3
+      other venue families.
+
 ## Temporary states + their canonical follow-up plans
 
 - `"AAVE_V3"` in expected_coverage: stays until Bug 2 handler fix ships + phantom reconciler runs for Bug 3.
+- Bug 5 GCS re-key is a scheduled migration window (single-walk-discipline gate); glued parquet paths remain readable
+  until B5.3 completes + B5.5 deletes them.
