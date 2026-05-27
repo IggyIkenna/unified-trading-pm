@@ -20,13 +20,19 @@ last_reviewed: 2026-05-13
 > Compound V3). **Authoritative current-state**: [`defi-data-pipeline.md`](./defi-data-pipeline.md) (code-grounded) +
 > audit findings
 > [`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27`](../../plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
-> Full catalog reconciliation (add the 13 missing types, fix sources) is a tracked gap item there.
+> **Reconciliation applied 2026-05-27**: missing types added in § "Additional data types"; `oracle_prices` /
+> `lending_indices` / `perp_funding` sources corrected; remaining **code-registry bugs** (D14
+> dex_pools-vs-dex_pool_state data_type, governance handler dup, live-venues-without-capability) are
+> deferred-until-pipeline-done and tracked in the findings + issue docs.
 
 ## Overview
 
-MTDS collects DeFi market data in 14 distinct data types across lending, DEX, staking, bridging, governance, and MEV
-domains. Each data type maps to one or more MTDS CLI operations (`--operation collect-<type>`), one or more venues, and
-a canonical GCS path under the DeFi tick-data bucket.
+MTDS collects DeFi market data in **~24** distinct data_types across lending, DEX, staking, restaking, bridging,
+governance, oracle, and MEV domains (14 detailed below + § "Additional data types"). Each data type maps to one or more
+MTDS CLI operations (`--operation collect-<type>`), one or more venues, and a canonical GCS path. **Note**: raw on-chain
+snapshot types (`lst_rates`, `lending_indices`, `dex_pools`, `oracle_prices`, `perp_funding`, `vault_share_price`) write
+to **dedicated buckets** (`lst-rates-*`, `lending-indices-*`, `dex-pools-*`, …), not all under one defi tick bucket —
+see [`defi-data-pipeline.md`](./defi-data-pipeline.md) §2.
 
 ### GCS Path Convention
 
@@ -78,29 +84,31 @@ Captures AMM swap transactions. One row per swap event.
 
 ### 2. dex_pool_state (canonical; was `pool_state`)
 
-| Field               | Value                                                                       |
-| ------------------- | --------------------------------------------------------------------------- |
-| **CLI operation**   | (legacy evm_defi_handler / dex_pools_handler)                               |
-| **Sources**         | The Graph: Uniswap V2/V3/V4, Curve poolHourDatas / pairHourDatas            |
-| **Shard key**       | venue × chain × date                                                        |
-| **Instrument type** | `spot_asset`                                                                |
-| **Status**          | Production                                                                  |
-| **Schema fields**   | symbol, ts_event, venue, chain, pool_address, tvl_usd, volume_24h, fee_tier |
+| Field               | Value                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **CLI operation**   | (legacy evm_defi_handler / dex_pools_handler)                                                                                                          |
+| **Sources**         | The Graph: uniswap_v3, pancakeswap_v3, sushiswap_v3, aerodrome_v3, camelot_v3, balancer, curve, sushiswap, gmx                                         |
+| **Shard key**       | venue × chain × date                                                                                                                                   |
+| **Instrument type** | `spot_asset`                                                                                                                                           |
+| **Status**          | Production                                                                                                                                             |
+| **Actual columns**  | protocol, chain, pool_id, token_a, token_b, fee_rate_bps, date, volume_usd, tvl_usd, fees_usd, tx_count, price_a, price_b, liquidity, sqrt_price, tick |
 
-Hourly pool TVL and volume snapshots. One row per pool per hour.
+Hourly/daily pool snapshots. ⚠ **D14 code-bug (2026-05-27)**: `dex_pools_handler.py` records the manifest under
+`_DEX_POOLS_DATA_TYPE = "dex_pools"` (L62) but writes the parquet with `data_type="dex_pool_state"` (L569) — the hive
+partition key is `dex_pool_state`; the manifest/data data_type names diverge. Deferred-until-pipeline-done.
 
 ---
 
 ### 3. lending_indices (canonical; was `lending_metrics`)
 
-| Field               | Value                                                                                                |
-| ------------------- | ---------------------------------------------------------------------------------------------------- |
-| **CLI operation**   | `collect-lending-indices` (lending_indices_handler)                                                  |
-| **Sources**         | The Graph: Aave V3, Morpho; Morpho REST API                                                          |
-| **Shard key**       | venue × chain × date                                                                                 |
-| **Instrument type** | `lending`                                                                                            |
-| **Status**          | Production                                                                                           |
-| **Schema fields**   | symbol, ts_event, venue, chain, supply_apy, borrow_apy, utilization_rate, total_supply, total_borrow |
+| Field               | Value                                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-lending-indices` (lending_indices_handler)                                                                                                                                               |
+| **Sources**         | The Graph: Aave V3, **Spark, Compound V3** (`collect-lending-indices`); Morpho via blue-api.morpho.org + Solana (Kamino/Marginfi/Solend) via DeFiLlama (`collect-evm-defi`/`collect-solana-defi`) |
+| **Shard key**       | venue × chain × date                                                                                                                                                                              |
+| **Instrument type** | `lending`                                                                                                                                                                                         |
+| **Status**          | Production                                                                                                                                                                                        |
+| **Schema fields**   | symbol, ts_event, venue, chain, supply_apy, borrow_apy, utilization_rate, total_supply, total_borrow                                                                                              |
 
 Daily lending rate indices. One row per market (token) per day.
 
@@ -108,14 +116,14 @@ Daily lending rate indices. One row per market (token) per day.
 
 ### 4. perp_funding (canonical; was `funding_rates`)
 
-| Field               | Value                                                         |
-| ------------------- | ------------------------------------------------------------- |
-| **CLI operation**   | `collect-perp-funding` (perp_funding_handler)                 |
-| **Sources**         | Hyperliquid, GMX, Synthetix on-chain funding rate methods     |
-| **Shard key**       | venue × chain × date                                          |
-| **Instrument type** | `perpetual`                                                   |
-| **Status**          | Production                                                    |
-| **Schema fields**   | symbol, ts_event, venue, chain, funding_rate, annualized_rate |
+| Field               | Value                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-perp-funding` (perp_funding_handler)                                                                             |
+| **Sources**         | Hyperliquid REST, Aster REST, GMX (The Graph), Pacifica REST, Lighter (Tardis CSV), Drift (Data API + S3). NOT Synthetix. |
+| **Shard key**       | venue × chain × date                                                                                                      |
+| **Instrument type** | `perpetual`                                                                                                               |
+| **Status**          | Production                                                                                                                |
+| **Schema fields**   | symbol, ts_event, venue, chain, funding_rate, annualized_rate                                                             |
 
 Perpetual funding rates. One row per market per funding interval.
 
@@ -258,14 +266,14 @@ block value in ETH (wei → ETH conversion applied). No API key required (public
 
 ### 13. oracle_prices
 
-| Field               | Value                                                                |
-| ------------------- | -------------------------------------------------------------------- |
-| **CLI operation**   | `collect-oracle-prices` (oracle_prices_handler)                      |
-| **Sources**         | Aave V3 price oracle (Chainlink), Lido/EtherFi/Ethena exchange rates |
-| **Shard key**       | venue × chain × date                                                 |
-| **Instrument type** | `spot_asset`                                                         |
-| **Status**          | Production                                                           |
-| **Schema fields**   | symbol, ts_event, venue, chain, price_usd                            |
+| Field               | Value                                                                                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-oracle-prices` (oracle_prices_handler)                                                                                                                                                |
+| **Sources**         | **Chainlink** `latestRoundData()` via Alchemy RPC (EVM: ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON) + **Pyth Hermes REST** (Solana: SOL/BTC/ETH/JitoSOL/mSOL/bSOL/INF) — Pyth unbanned 2026-05-06 |
+| **Shard key**       | venue × chain × date                                                                                                                                                                           |
+| **Instrument type** | `spot_asset`                                                                                                                                                                                   |
+| **Status**          | Production                                                                                                                                                                                     |
+| **Schema fields**   | symbol, ts_event, venue, chain, price_usd                                                                                                                                                      |
 
 On-chain oracle price snapshots from Chainlink-backed oracles.
 
@@ -285,6 +293,27 @@ On-chain oracle price snapshots from Chainlink-backed oracles.
 Daily aggregate gas stats per EVM chain. One row per chain per day.
 
 ---
+
+## Additional data types (2026-05-27 reconciliation)
+
+These data_types are emitted by code but were absent from the 14 documented above (verified against MTDS handlers + UAC,
+2026-05-27). Compact form; promote to full sections as needed.
+
+| data_type                                                                       | CLI operation                  | Handler                         | Source(s)                                                                                | Key columns / notes                                                                                                                                                                                       | Status                          |
+| ------------------------------------------------------------------------------- | ------------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `lst_rates`                                                                     | `collect-lst-rates`            | `LstRatesHandler`               | Alchemy `eth_call` @ historical block (EVM); Marinade/Jito REST (Solana)                 | timestamp, token, exchange_rate, apy, quote_asset, protocol, chain, block_number, method, contract. **Distinct from `staking_yields`** (which is APY from protocol REST; this is on-chain exchange rate). | Production                      |
+| `vault_share_price`                                                             | `collect-vault-share-price`    | `VaultSharePriceHandler`        | Alchemy `eth_call` `convertToAssets()` (ERC-4626)                                        | timestamp, vault_address, vault_symbol, protocol, chain, block_number, share_price, underlying_symbol/decimals                                                                                            | Production                      |
+| `liquidations`                                                                  | `collect-liquidations`         | `LiquidationsHandler`           | The Graph (Aave V3 `liquidationCalls`, Compound V3)                                      | collateral/principal symbol+amount, liquidator, user                                                                                                                                                      | Production                      |
+| `risk_params`                                                                   | (derived in `_LENDING_DATA`)   | lending handlers                | The Graph (Aave reserve config)                                                          | ltv, liquidation_threshold, reserve_factor — declared in UAC `_LENDING_DATA`; no standalone handler                                                                                                       | Partial                         |
+| `utilization`                                                                   | (derived from lending capture) | `LendingIndicesHandler`         | extracted from `lending_indices` (no separate fetch)                                     | utilization_rate                                                                                                                                                                                          | Production                      |
+| `rewards`                                                                       | (PROTOCOL_CAPABILITIES)        | —                               | declared for LIDO/ETHERFI/EIGENLAYER in UAC; no dedicated MTDS handler                   | reward_rate                                                                                                                                                                                               | Declared, no handler            |
+| `eigenlayer_rewards`                                                            | `collect-eigenlayer-rewards`   | `EigenlayerRewardsHandler`      | Ethereum on-chain (RewardsCoordinator + Season-1 distributors)                           | venue=EIGENLAYER/ETHEREUM, instrument_type=staking                                                                                                                                                        | Production                      |
+| `native_staking_rates`                                                          | `collect-native-staking-rates` | `NativeStakingHandler`          | Solana RPC `getInflationRate`/`getEpochInfo`; Helius (per-validator) BLOCKED-CREDENTIALS | epoch, validator_vote_account, commission_pct, base_apy, mev_apy, total_apy                                                                                                                               | Partial (per-validator blocked) |
+| `aggregator_route`                                                              | `collect-aggregator-routes`    | `AggregatorRouteHandler`        | Jupiter v6 (Sol, public); 1inch/0x (EVM, need keys); ParaSwap (EVM)                      | token_in/out, amount_in/out, route_kind, route_json, source, quote_block_number                                                                                                                           | Partial (1inch/0x need creds)   |
+| `protocol_outages`                                                              | `detect-protocol-outages`      | `ProtocolOutageDetectorHandler` | The Graph (Aave V2 reserve-freeze, Compound V2 pause)                                    | ProtocolPauseWindow objects                                                                                                                                                                               | Production                      |
+| `governance_proposals`                                                          | (NOT registered in CLI)        | `GovernanceProposalsHandler`    | on-chain + Snapshot                                                                      | UAC `GovernanceProposal`; **scaffold for Phase-4B sim harness — not wired in `cli/main.py`** (cf. `governance_events`, which IS the active handler)                                                       | Scaffold (unregistered)         |
+| `dex_pool_swaps`                                                                | (UAC schema only)              | —                               | —                                                                                        | UAC declares a `(defi, pool, dex_pool_swaps)` schema; code uses `dex_swaps` + `dex_pool_state` instead                                                                                                    | Schema-only                     |
+| `restaking_rewards` / `cross_chain_restaking_routes` / `restaking_operator_set` | —                              | —                               | SOLAYER/PICASSO/CAMBRIAN PROTOCOL_CAPABILITIES                                           | declared in UAC but **no MTDS collection + venues absent from `ALL_DEFI_VENUES`** (see findings D-new)                                                                                                    | Declared, not collected         |
 
 ## Protocol Coverage Matrix
 

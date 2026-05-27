@@ -54,15 +54,43 @@ verdict (`codex-stale` = doc wrong, fix doc; `code-bug` = code wrong, fix code a
 **2 for-decision** items (D8, D13). No `code-bug` is currently breaking the running pipeline (D3 matches intended
 bypass; D7/D10 affect MEV/venue scope, not the dex_swaps backfill).
 
+## Update 2026-05-27 (same-day) — reconciliation applied + 2 new code findings
+
+**Codex-doc fixes shipped this session** (code-authoritative, safe):
+
+- **D1, D6, D12** — `defi-data-types-catalog.md` reconciled: canonical names + staleness banner (D1); § "Additional data
+  types" added covering the ~12 previously-undocumented types (lst*rates, vault_share_price, liquidations, risk_params,
+  utilization, rewards, eigenlayer_rewards, native_staking_rates, aggregator_route, protocol_outages,
+  governance_proposals, dex_pool_swaps, restaking*\*) (D6); `oracle_prices` (+Pyth), `lending_indices` (+Spark/Compound
+  V3), `perp_funding` (real venues, not Synthetix) sources corrected + dedicated-bucket note (D12).
+- **D9, D11** — `defi-venue-protocol-catalogue.md` gained a "Registry inconsistencies + pending venues" section (the
+  catalogue was already ~90% complete; only ~8 edge venues were missing, and they're in broken registry states).
+
+**New code findings (deferred-until-pipeline-done):**
+
+- **D14 — `dex_pools` vs `dex_pool_state` data_type divergence.** `dex_pools_handler.py` records the manifest under
+  `_DEX_POOLS_DATA_TYPE = "dex_pools"` (L62) but writes the parquet with `data_type="dex_pool_state"` (L569). Manifest
+  and data disagree on the data_type name. **code-bug** — pick one canonical name.
+- **D15 — HYPERLIQUID + ASTER phase mismatch.** Both `DEFI_VENUE_PHASE=pipeline` in `defi_venues.py` but
+  `perp_funding_handler` actively collects them. **code-bug** — reconcile phase (or confirm cefi-axis classification).
+- **D10 generalized** — not just RADIANT: EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND are all
+  `DEFI_VENUE_PHASE=live` + in `MTDS_DEFI_VENUES` with **no `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS`** backing; and
+  SOLAYER/PICASSO/CAMBRIAN are the inverse (capability declared, venue not registered).
+
 ## Gap items (ready to paste / tracked in the active issue plan)
 
 - [x] [DOC] P2. D1 — catalog data_type names renamed to canonical + staleness banner — `pm@<this commit>` — parent_epic:
       defi_master
-- [ ] [DOC] P2. D6/D12 — reconcile `defi-data-types-catalog.md`: add the ~8–13 missing data_types + fix
-      `oracle_prices`/`lending_indices` sources — parent_epic: defi_master
-- [ ] [DOC] P2. D9/D11 — update `defi-venue-protocol-catalogue.md`: add
-      EULER_V2/BENQI/VENUS/MARGINFI/SOLEND/SOLAYER/PICASSO/CAMBRIAN; flag TRADER_JOE/VELODROME/GMX-AVALANCHE
-      empty/deprecated — parent_epic: defi_master
+- [x] [DOC] P2. D6/D12 — reconciled `defi-data-types-catalog.md`: § "Additional data types" added (~12 types) +
+      `oracle_prices`/`lending_indices`/`perp_funding` sources fixed + dedicated-bucket note — this session —
+      parent_epic: defi_master
+- [x] [DOC] P2. D9/D11 — `defi-venue-protocol-catalogue.md` gained "Registry inconsistencies + pending venues" section
+      (catalogue was ~90% complete; the ~8 missing venues are in broken registry states, documented there) — this
+      session — parent_epic: defi_master
+- [ ] [CODE] P3. **DEFERRED-UNTIL-PIPELINE-DONE** D14 — `dex_pools_handler`: align manifest data_type (`dex_pools`) with
+      written data_type (`dex_pool_state`) — pick one canonical — parent_epic: defi_master
+- [ ] [CODE] P3. **DEFERRED-UNTIL-PIPELINE-DONE** D15 — reconcile HYPERLIQUID/ASTER `DEFI_VENUE_PHASE` (pipeline) with
+      active `perp_funding` collection (live) — parent_epic: defi_master
 - [ ] [CODE] P2. **DEFERRED-UNTIL-PIPELINE-DONE** D3 — UAC `needs_candle_processing("lending_indices")=False` + delete
       dead `DefiLendingIndicesAdapter` + fix `app/adapters/__init__.py` comment — parent_epic: defi_master
 - [ ] [CODE] P3. **DEFERRED + FOR-DECISION** D7 — remove `bloxroute` relay URLs from `mev_events_handler.py` if covered
@@ -70,8 +98,10 @@ bypass; D7/D10 affect MEV/venue scope, not the dex_swaps backfill).
       defi_master
 - [ ] [CODE] P3. **DEFERRED + FOR-DECISION** D8 — Starknet `infura_compatible` template: keep+rename/document or remove;
       drop the `gas_fee_handler.py:78` infura comment — parent_epic: defi_master
-- [ ] [CODE] P2. **DEFERRED-UNTIL-PIPELINE-DONE** D10 — RADIANT: add `PROTOCOL_CAPABILITIES`+`SUBGRAPH_IDS` or downgrade
-      from `DEFI_VENUE_PHASE=live` — parent_epic: defi_master
+- [ ] [CODE] P2. **DEFERRED-UNTIL-PIPELINE-DONE** D10 (generalized) — 6 venues `live` with no capability backing
+      (EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND) + 3 inverse (SOLAYER/PICASSO/CAMBRIAN: capability, no
+      venue): add `PROTOCOL_CAPABILITIES`+`SUBGRAPH_IDS` / register venue, or downgrade from `live` — parent_epic:
+      defi_master
 - [ ] [CODE] P3. **DEFERRED + FOR-DECISION** D13 — consolidate `governance_events` vs `governance_proposals` handlers to
       a single path — parent_epic: defi_master
 

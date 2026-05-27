@@ -62,19 +62,27 @@ Codex-doc (safe now):
 - [x] [DOC] P2. D1 — `defi-data-types-catalog.md` renamed to canonical data_type names
       (`dex_swaps`/`dex_pool_state`/`lending_indices`/`perp_funding`) + instrument-type map + staleness banner. ✅ this
       session.
-- [ ] [DOC] P2. D6/D12 — full `defi-data-types-catalog.md` reconciliation: add the ~8–13 missing data_types
-      (`lst_rates`, `vault_share_price`, `liquidations`, `risk_params`, `rewards`, `eigenlayer_rewards`,
-      `native_staking_rates`, `aggregator_route`, `restaking_rewards`, `governance_proposals`, …) + fix `oracle_prices`
-      (add Pyth) / `lending_indices` (add Spark + Compound V3) sources.
-- [ ] [DOC] P2. D9/D11 — update `defi-venue-protocol-catalogue.md`: add EULER_V2 / BENQI / VENUS / MARGINFI / SOLEND /
-      SOLAYER / PICASSO / CAMBRIAN; flag TRADER_JOE / VELODROME / GMX-AVALANCHE as empty/deprecated.
+- [x] [DOC] P2. D6/D12 — `defi-data-types-catalog.md` reconciled: § "Additional data types" added (~12 types:
+      `lst_rates`, `vault_share_price`, `liquidations`, `risk_params`, `utilization`, `rewards`, `eigenlayer_rewards`,
+      `native_staking_rates`, `aggregator_route`, `protocol_outages`, `governance_proposals`, `dex_pool_swaps`,
+      `restaking_*`) + `oracle_prices` (+Pyth) / `lending_indices` (+Spark/Compound V3) / `perp_funding` sources fixed +
+      dedicated-bucket note + banner resolved. ✅ this session.
+- [x] [DOC] P2. D9/D11 — `defi-venue-protocol-catalogue.md` gained "Registry inconsistencies + pending venues" section
+      (EULER_V2/VENUS/BENQI/RADIANT/MARGINFI/SOLEND live-without-capability; SOLAYER/PICASSO/CAMBRIAN
+      capability-without-venue; HYPERLIQUID/ASTER phase mismatch). Catalogue was ~90% complete; the gaps are
+      code-registry states, documented + cross-linked. ✅ this session.
 
 Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-verify current state first):
 
 - [ ] [CODE] P2. D3 — set `needs_candle_processing("lending_indices")=False` (UAC) + delete dead
       `DefiLendingIndicesAdapter` + fix `app/adapters/__init__.py` comment; QG green.
-- [ ] [CODE] P2. D10 — RADIANT: add `PROTOCOL_CAPABILITIES`+`SUBGRAPH_IDS` OR downgrade from `DEFI_VENUE_PHASE=live` (a
-      live venue with no capability/subgraph backing cannot fetch). Confirm intent with operator/Ikenna.
+- [ ] [CODE] P2. D10 (generalized) — 6 venues `DEFI_VENUE_PHASE=live` with no `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS`
+      (EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND) + 3 inverse (SOLAYER/PICASSO/CAMBRIAN: capability
+      declared, venue not in `ALL_DEFI_VENUES`): add backing OR downgrade/register. Confirm intent with operator/Ikenna.
+- [ ] [CODE] P3. D14 — `dex_pools_handler.py`: manifest records `data_type="dex_pools"` (L62) but parquet writes
+      `data_type="dex_pool_state"` (L569). Pick one canonical name so manifest + data agree.
+- [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
+      them; reconcile the phase label (→ live, or confirm cefi-axis classification).
 - [ ] [CODE] P3. **FOR-DECISION** D7 — `bloxroute` relay URLs in `mev_events_handler.py:42-43`: operator call on whether
       the removed-providers rule covers MEV-Boost relays; delete stale `mev_events_handler.py.bak` regardless.
 - [ ] [CODE] P3. **FOR-DECISION** D8 — Starknet `infura_compatible` template (`_defi_chain_data.py:734`): keep+rename or
