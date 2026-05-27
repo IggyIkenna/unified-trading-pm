@@ -205,9 +205,12 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 5 — shared lift (dedupe; aligns with epic goal) `[P2]`
 
-- [ ] [REFACTOR] P2. Extract the manifest-driven discovery + dependency-gate into a shared UTL `FeatureBatchHandler` /
-      `DataLoader` base (epic `features_and_ml_master` item 2 calls out this duplicated glue). Single code path; delete
-      per-family copies.
+- [x] ✅ [REFACTOR] P2. Extract the manifest-driven discovery + dependency-gate into a shared UTL `FeatureBatchHandler`
+      / `DataLoader` base (epic `features_and_ml_master` item 2 calls out this duplicated glue). Single code path;
+      delete per-family copies. — UTL@20234248 + features-service@06edd586: created shared helpers in UTL
+      feature_service_base (read_manifest_rows, get_captured_instruments, compose_instrument_ids,
+      check_dependency_via_manifest) and migrated delta_one, volatility, onchain families to use them. QGs pass (UTL
+      coverage 79.25%, features-service passes).
 
 ### Phase 6 — Codex SSOT + governance `[P1]`
 
