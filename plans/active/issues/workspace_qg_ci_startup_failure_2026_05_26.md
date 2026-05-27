@@ -20,6 +20,7 @@ is a **GitHub server-side infrastructure issue**, not fixable by changing workfl
 - batch-live-reconciliation-service
 - execution-service
 - instruments-service
+- **unified-api-contracts** (ghost: 283776088 — confirmed 2026-05-27T12:58Z on staging push; was missing from original list)
 
 **Repos working normally** (success/failure/queued — no startup_failure):
 
