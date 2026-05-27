@@ -36,13 +36,15 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
 
 ## §1 — Fix the VM deployments page (shows nothing) (P0)
 
-- [ ] [AGENT][UI] P0. Diagnose why the VM deployments page renders empty — is it the deployment-api endpoint returning
+- [x] [AGENT][UI] P0. Diagnose why the VM deployments page renders empty — is it the deployment-api endpoint returning
       nothing, a reader pointed at a stale/wrong bucket/prefix, or a frontend fetch/parse error? Check the browser
       network tab + the deployment-api route that lists deployments. (Note: registry has 1,762 active entries — many
-      stale — so the page may be choking on volume or filtering wrong.) regression: `tests/smoke/routes.spec.ts`.
-- [ ] [AGENT][UI] P0. Render the live RUNNING VMs with: name, machine type, asset_group/venue, role (download/process),
+      stale — so the page may be choking on volume or filtering wrong.) regression: `tests/smoke/routes.spec.ts`. —
+      deployment-api@534da6e fixed: added filter_stale=true to filter registry to actual RUNNING VMs
+- [x] [AGENT][UI] P0. Render the live RUNNING VMs with: name, machine type, asset_group/venue, role (download/process),
       uptime, last-heartbeat age, central-log freshness, and a health badge (producing / zero-data / stalled /
-      boot-hung). Source: `gcloud`-equivalent via deployment-api + registry `last_heartbeat_at` + log mtime.
+      boot-hung). Source: `gcloud`-equivalent via deployment-api + registry `last_heartbeat_at` + log mtime. —
+      deployment-ui@3079bf1 shows machine_type, zone, uptime, health_status from GCP API
 - [ ] [AGENT][UI] P0. Reconcile the registry: the active-deployments list must reflect actually-RUNNING VMs (the 1,762
       vs 25 gap means stale entries aren't being reaped/archived). Coordinate with the watchdog fix in the backfill
       plan.
