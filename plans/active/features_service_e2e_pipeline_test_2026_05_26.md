@@ -375,11 +375,16 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
 `-test` source routing. Created the 2 missing `-test` buckets (`features-xinstrument-cefi-test`,
 `features-mtf-cefi-test`, asia-northeast1).
 
-- [ ] [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** Provenance: e2e -test
-  2026-05-26. **DECISION 2026-05-27 (operator): Option A — delta_one passes `close` (OHLCV) through as passthrough
-  column(s) in its output; cross_instrument stays single-input.** TF-aligned (delta_one now computes per-TF). In flight
-  via a dedicated agent. Both delta_one + cross_instrument live in features-service so the change is contained; the
-  output-schema delta is a contract note to cross-link for Ikenna.
+- [x] ✅ [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** **DONE (Option A)**
+  features@44fc11d1: new `delta_one/engine/ohlcv_passthrough.py` `attach_ohlcv_passthrough()` left-joins TF-aligned
+  candle OHLCV (`open/high/low/close/volume`) onto the feature frame as the final step of `_compute_features_from_candles`
+  (collision-safe, forward-fills gaps). `regime_detection`/`cross_asset_correlation`/`realized_implied_vol`
+  `validate_input()` now PASS; 1497 tests (6 new). **Contract note for Ikenna:** `FEATURES_SCHEMA` unchanged (still
+  enforces only timestamp/timestamp_out/instrument_id); delta_one parquets now carry additive OHLCV cols;
+  `OHLCV_PASSTHROUGH_COLUMNS` in `ohlcv_passthrough.py` is the canonical reference. Real-parquet confirmation folded into
+  the post-MDPS-agent -test reconciliation (avoiding collision with the in-flight backfill agent's 05-03 writes).
+  Follow-ups: (a) `orchestrator.py` now **exactly 900 lines** (codex cap, zero headroom — trim soon); (b) 2 pre-existing
+  basedpyright errors in cross_instrument (0 new introduced) — separate look.
 - [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash.
   Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
   post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
