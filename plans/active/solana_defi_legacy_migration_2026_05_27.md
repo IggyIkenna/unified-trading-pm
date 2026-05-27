@@ -56,11 +56,14 @@ source:
 
 ## Gates (HARD-ORDERED — do not delete legacy before history migrated)
 
-- [ ] [SCRIPT] P1. **Gate 0 — per-venue schema sample** (Kamino/Solend lending; Kamino/Orca/Raydium pools) to design
-      contracts. (in progress 2026-05-27)
-- [ ] [CODE] P1. **Gate 1 — UAC SchemaContracts**: add `solana_lending` / `solana_amm_pool` / `solana_vault` contracts
-      to `unified_api_contracts/internal/schemas/` + register in `CONTRACT_REGISTRY` (`("defi", <it>, "lending_indices"/
-      "dex_pools")`). Preserve all Solana fields. `cd unified-api-contracts && quality-gates.sh` green + cassette parity.
+- [x] ✅ [SCRIPT] P1. **Gate 0 — per-venue schema sample** — DONE 2026-05-27. Kamino+Solend lending = identical 9-col
+      APY-snapshot; Kamino dex_pools = vault metadata (10c); Orca (16c) + Raydium (12c) = AMM pool metrics. Confirmed
+      3 distinct shapes.
+- [x] ✅ [CODE] P1. **Gate 1 — UAC SchemaContracts** — DONE — UAC@7e9f4ad9. Added `DEFI_SOLANA_LENDING_LENDING_INDICES`
+      / `DEFI_SOLANA_VAULT_DEX_POOLS` / `DEFI_SOLANA_AMM_POOL_DEX_POOLS` to `contracts.py` + registered in
+      `CONTRACT_REGISTRY` under `("defi", solana_lending|solana_vault|solana_amm_pool, lending_indices|dex_pools)`. All
+      Solana fields preserved (venue-specific AMM cols nullable+optional). ruff + basedpyright 0; cassette parity 447
+      passed.
 - [ ] [SCRIPT] P1. **Gate 2 — history migration**: read legacy `defi-prd/{lending_indices,dex_pools}/<venue>/SOLANA/
       date=*` parquets → map to new canonical schema (incl. `timestamp` dtype fix + `instrument_id`/`venue`/`ts_event`
       derivation) → write to `lending-indices-*` / `dex-pools-*` canonical buckets under
