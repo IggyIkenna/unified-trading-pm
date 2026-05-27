@@ -1,276 +1,243 @@
-# DeFi Data Pipeline — collection → processing → features (end-to-end)
+---
+scope: [engineer, admin]
+status: active
+last_reviewed: 2026-05-27
+purpose: code-grounded current-state of the DeFi data pipeline + a Code↔Codex drift register
+---
 
-> **Purpose.** A single reference for the DeFi data path: what raw data we pull from each venue, how it's processed,
-> what features we compute, and **why each venue is in the universe** (liquidity vs unique data). Grounded in code as of
-> 2026-05-27. Companion to [`defi-execution-overview`](../04-architecture/defi-execution-overview.md) (execution side)
-> and [`availability-manifest-and-data-status`](availability-manifest-and-data-status.md).
+# DeFi Data Pipeline — code-grounded current state + Code↔Codex drift register
+
+> **What this doc is.** A **code-verified** walkthrough of the DeFi data path (collection → processing → features) as it
+> actually runs, plus a **drift register** (§1) flagging where the existing codex SSOTs disagree with the code. Built by
+> re-reading the Python on **2026-05-27** while the end-to-end backfill is still running, so treat **code + GCS as the
+> source of truth in-progress** and the older codex docs as the prior intent. Where they diverge, §1 says which is right
+> and who fixes it.
 >
-> **Audience.** Data-pipeline owner + anyone reasoning about DeFi coverage / features.
+> **This doc does NOT replace** the detailed SSOTs — it cross-links and reconciles them:
+> [`data-lineage-MTDS-features-ml`](data-lineage-MTDS-features-ml.md) (pipeline spine),
+> [`defi-data-types-catalog`](defi-data-types-catalog.md) + [`defi-data-type-taxonomy`](defi-data-type-taxonomy.md)
+> (data types), [`defi-venue-protocol-catalogue`](defi-venue-protocol-catalogue.md) (venues),
+> [`pipeline-coverage-matrix`](pipeline-coverage-matrix.md) +
+> [`mtds-data-source-coverage-matrix`](mtds-data-source-coverage-matrix.md) (coverage),
+> [`instrument-pipeline-defi`](instrument-pipeline-defi.md) (instruments).
+>
+> **Code-change rule (operator 2026-05-27):** the pipeline is mid-run; do **not** change service code off this audit
+> until the run completes. Code-side fixes below are tagged `DEFERRED-UNTIL-PIPELINE-DONE`. Codex-doc fixes are safe
+> now.
 
 ---
 
-## 0. The four stages (one diagram)
+## 1. Code ↔ Codex drift register (verified 2026-05-27)
 
-```
-instruments-service        MTDS                       MDPS                         features-service
-(reference data)    →     (raw capture)        →     (processing)          →      (feature calc)
-                                                                                    ├─ onchain family
- pool/token/market         dex_swaps, lending_         processed_candles            └─ delta_one (DEFI route)
- metadata, decimals,       indices, lst_rates,         (OHLCV bars from
- fee tiers, venue×chain     oracle_prices, dex_pool_    swaps/rates/liquidity)      → strategy-service
- universe, available_from   state, vault_share_price,                                  (archetype signals)
-                            perp_funding, ...           + BYPASS types passed
-                                                        straight to features
-```
+Each row: what a codex SSOT claims, what the code/GCS actually does (with citation), the verdict, and the fix side.
+Actionable items tracked in
+[`issues/defi_code_codex_drift_2026_05_27`](../../plans/active/issues/defi_code_codex_drift_2026_05_27.md).
 
-**Directional contract (enforced at manifest/preflight):**
+| #      | Area                             | Codex SSOT says                                                                                                                              | Code / GCS reality (2026-05-27)                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verdict                                                        | Fix                                                                                                                                                                              |
+| ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | data_type **names**              | `defi-data-types-catalog.md` headings + instrument-type map use `swap_events` / `pool_state` / `lending_metrics` / `funding_rates`           | Code writes `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` (handler constants `_*_DATA_TYPE`); catalog names appear only as one-way migration aliases (`migrate_defi_canonical.py:128`), never as live `data_type=` values.                                                                                                                                                                                                                                  | **codex stale**                                                | codex-fix (safe now): update catalog headings + instrument-type map to canonical names                                                                                           |
+| **D2** | bypass-type **storage bucket**   | `data-lineage` lists separate buckets `lst-rates-*` / `lending-indices-*` / `dex-pools-*` (✅ correct)                                       | Confirmed: `get_write_bucket_name("lst-rates"/"lending-indices"/"dex-pools"/"oracle-prices"/"perp-funding")` → dedicated buckets (handlers L285–366). The prefixes `lst_rates/` `lending_indices/` `dex_pools/` **inside** `market-data-tick-defi-prd` are **LEGACY** (data stops 2026-04-14; code no longer writes there).                                                                                                                                                       | **codex right; this doc's earlier §2 was wrong; + stale data** | doc-fix (done this rev); legacy-prefix cleanup `DEFERRED-UNTIL-PIPELINE-DONE`                                                                                                    |
+| **D3** | MDPS **processed scope** + a bug | `data-lineage` (L89): MDPS processes 5 {`dex_swaps`,`book_snapshot_5`,`fx_rates`,`market_state`,`liquidity`}; `lending_indices` = **bypass** | Runtime = same 5 (only `dex_swaps` actually materialises DeFi candles in prd — GCS shows `processed_candles/.../data_type=dex_swaps` only). **BUT** UAC `needs_candle_processing("lending_indices")=True` AND `DefiLendingIndicesAdapter` is decorator-registered — skipped only because it is **not imported** in top-level `app/adapters/__init__.py` (so `has_adapter`=False). Intent is bypass (features read lending raw — D4), so the `True` gate + adapter are wrong/dead. | **codex right on outcome; CODE has a latent bug**              | code-fix `DEFERRED-UNTIL-PIPELINE-DONE`: set `needs_candle_processing("lending_indices")=False` + delete dead `DefiLendingIndicesAdapter` + fix misleading `__init__.py` comment |
+| **D4** | features-onchain **read source** | `data-lineage` + `dependency_checker.py` docstring: bypass types read raw from MTDS                                                          | Confirmed: `onchain/app/core/data_loader.py` `load_rate_indices` (L433) / `load_oracle_prices` (L470) read `raw_tick_data/.../data_type=…` from the dedicated buckets; never `processed_candles/`. (Aave live path uses DefiLlama directly.)                                                                                                                                                                                                                                      | **aligned**                                                    | none                                                                                                                                                                             |
+| **D5** | bucket-name **convention**       | `data-lineage` per-layer paths use legacy `market-data-tick-{category}-…` (doc carries a 🟡 staleness banner)                                | Canonical = `resolve_bucket_name(cloud=,kind=,asset_group=,env=)` → env-tiered `market-data-tick-defi-prd-…`.                                                                                                                                                                                                                                                                                                                                                                     | **codex stale (self-acknowledged)**                            | codex-fix: per-layer path rewrite (tracked ML-14)                                                                                                                                |
 
-- MTDS reads instruments-service `InstrumentRecord` parquets to know **what** to fetch and **which endpoint URL**
-  (`source_archive_url_template`) — no hardcoded venue URLs in MTDS (QG-enforced).
-- MDPS reads MTDS raw parquets. Some data_types have **no MDPS adapter** and are consumed directly by features (the
-  "bypass" set, §4.3).
-- features-onchain reads MDPS `processed_candles/` **and** the MTDS raw bucket directly (for bypass types).
-- instruments-service depends on nothing downstream.
-
-**Repos / CLIs:**
-
-| Stage       | Repo                                    | CLI                                                                              |
-| ----------- | --------------------------------------- | -------------------------------------------------------------------------------- |
-| Reference   | `instruments-service`                   | `instruments process --DEFI --mode batch`                                        |
-| Raw capture | `market-tick-data-service` (MTDS)       | `market_tick_data_service --operation collect-* --asset-group DEFI --mode batch` |
-| Processing  | `market-data-processing-service` (MDPS) | `market-data-processing process --DEFI --mode batch --operation timer-candles`   |
-| Features    | `features-service`                      | `features_service.onchain` / `features_service.delta_one --asset-group DEFI`     |
+**Net:** the codex SSOTs are directionally correct on architecture (bypass model, separate buckets, 5-type MDPS scope);
+the drift is (a) **stale naming** in the data-types catalog (D1), and (b) one **real latent code bug** — a
+`lending_indices` candle adapter exists and UAC says to run it, but a missing import silently disables it (D3), which
+happens to match the codex's "bypass" outcome by accident. D3's code fix waits for the running pipeline.
 
 ---
 
-## 1. GCS bucket layout (verified 2026-05-27)
+## 2. GCS bucket layout (corrected, verified 2026-05-27)
 
-Canonical DeFi bucket: `market-data-tick-defi-prd-central-element-323112` (flat predecessor
-`market-data-tick-defi-central-element-323112` is being consolidated into `-prd`; see
-[`features_backfill_phase3`](../../plans/active/features_backfill_phase3_2026_05_22.md) for the candle-split state).
+DeFi raw data is **split across several dedicated buckets by data_type**, not all in one. Canonical names resolve via
+`resolve_bucket_name(...)` / `get_write_bucket_name(kind)` against `deployment-service/configs/cloud-providers.yaml`.
+
+| data_type                                          | Bucket (`kind=`)                                 | Canonical GCS bucket (prod)                        |
+| -------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| `dex_swaps`, `vault_share_price`, `dex_pool_state` | `market-data` / `market_data` (asset_group=defi) | `market-data-tick-defi-prd-central-element-323112` |
+| `lst_rates`                                        | `lst-rates`                                      | `lst-rates-central-element-323112`                 |
+| `lending_indices`                                  | `lending-indices`                                | `lending-indices-central-element-323112`           |
+| `dex_pools`                                        | `dex-pools`                                      | `dex-pools-prd-central-element-323112`             |
+| `oracle_prices`                                    | `oracle-prices`                                  | `oracle-prices-central-element-323112`             |
+| `perp_funding`                                     | `perp-funding`                                   | `perp-funding-central-element-323112`              |
+
+Inside `market-data-tick-defi-prd-…`:
 
 ```
-market-data-tick-defi-prd-.../
-├── raw_tick_data/by_date/day=YYYY-MM-DD/asset_group=defi/venue=<V>/chain=<C>/instrument_type=<T>/data_type=<D>/*.parquet
-│        data_type ∈ { dex_swaps, dex_pool_state, dex_pool_swaps, oracle_prices, rate_indices,
-│                       rewards, risk_params, utilization, vault_share_price, eigenlayer_rewards, ... }
-├── lst_rates/              ← LST exchange-rate snapshots (own top-level prefix)
-├── lending_indices/        ← Aave/Compound/Morpho rate snapshots (own top-level prefix)
-├── dex_pools/              ← pool reference/metadata snapshots
-├── processed_candles/by_date/day=YYYY-MM-DD/   ← MDPS output (the candle path)
-├── _index/  _manifests/  _vm_staging/  backfill-logs/  configs/
+raw_tick_data/by_date/day=YYYY-MM-DD/asset_group=defi/venue=<V>/chain=<C>/instrument_type=<T>/data_type=<D>/*.parquet
+        D ∈ { dex_swaps, dex_pool_state, dex_pool_swaps, oracle_prices, rate_indices, rewards,
+              risk_params, utilization, vault_share_price, eigenlayer_rewards, ... }
+processed_candles/by_date/day=YYYY-MM-DD/timeframe={15s|1m|5m|15m|1h|4h|24h}/data_type=dex_swaps/...   ← MDPS output
+        (verified: only data_type=dex_swaps materialises for DeFi)
+_index/  _manifests/  _vm_staging/  backfill-logs/  configs/
+⚠ lst_rates/  lending_indices/  dex_pools/   ← LEGACY prefixes, stale 2026-04-14 (D2); canonical data is in the dedicated buckets above
 ```
 
-The current backfill (`mtds-dex-swaps-backfill`, `collect-dex-swaps`, 2023-01-01→2026-05-25) writes `dex_swaps` +
+The running backfill (`mtds-dex-swaps-backfill`, `collect-dex-swaps`, 2023-01-01→2026-05-25) writes `dex_swaps` +
 `vault_share_price` into `raw_tick_data/by_date/...` in `-prd`.
 
 ---
 
-## 2. Stage 1 — instruments-service (reference data, NOT market data)
+## 3. Stage 1 — instruments-service (reference data, NOT market data)
 
-IS produces `InstrumentRecord` parquets — the **universe** and **per-instrument metadata** MTDS needs. The "stamped
+IS produces `InstrumentRecord` parquets — the **universe** + per-instrument metadata MTDS needs. The "stamped
 instruments" line in MTDS logs (`loaded N stamped instruments for venue=BALANCER-ETHEREUM`) is IS output being read.
 
-**`InstrumentRecord` fields:** `instrument_type`, `instrument_key`, `source_archive_url_template` (the IS→MTDS fetch-URL
-contract), `available_from_datetime` / `available_to_datetime`, token decimals, fee tier, TVL snapshots.
-
-**Universe enumeration** (`instruments_service/engine/orchestrator.py`):
-
-- Static: `_STATIC_DEFI_VENUES` (LIDO/ETHERFI/ETHENA/EIGENLAYER-ETHEREUM), `_SOLANA_DEFI_VENUES`
-  (DRIFT/KAMINO/RAYDIUM/ORCA/MARINADE/JITO/PACIFICA-SOLANA), `_L2_DEX_PERP_VENUES` (LIGHTER-ZKSYNC, EXTENDED-STARKNET).
-- Dynamic: `_build_defi_venues()` = `protocol × get_supported_chains_for_protocol()` (Uniswap V2/V3/V4, Aave V3, Morpho,
-  Balancer, PancakeSwap V3, Sushiswap V3, Aerodrome, Camelot, Velodrome, Trader Joe, GMX).
-- **Relevance filter** (`filter_defi_instruments_by_relevance()`): DEX pools need **both** tokens in `MAJOR_ASSETS`;
-  lending markets need only the base token in `MAJOR_ASSETS`.
-- **Monotonicity** (`_enforce_defi_monotonicity()`): per-venue high-water mark — a run returning fewer instruments than
-  the HWM is blocked (prevents silent universe shrink).
-
-**IS does NOT produce** `lst_rates` or `lending_indices` time-series — those are raw captures MTDS fetches using the IS
-`source_archive_url_template` (e.g. Lido APR endpoint). IS is reference data only.
+- **`InstrumentRecord` fields:** `instrument_type`, `instrument_key`, `source_archive_url_template` (the IS→MTDS
+  fetch-URL contract — no hardcoded venue URLs in MTDS, QG-enforced), `available_from/to_datetime`, decimals, fee tier,
+  TVL snapshots.
+- **Enumeration** (`instruments_service/engine/orchestrator.py`): static `_STATIC_DEFI_VENUES` / `_SOLANA_DEFI_VENUES` /
+  `_L2_DEX_PERP_VENUES` + dynamic `_build_defi_venues()` (`protocol × supported_chains`). **Relevance filter:** DEX
+  pools need both tokens in `MAJOR_ASSETS`; lending markets need only the base token. **Monotonicity:** per-venue
+  high-water mark blocks a run returning fewer instruments (no silent universe shrink).
+- **IS does NOT produce** `lst_rates` / `lending_indices` time-series — those are MTDS raw captures fetched via the IS
+  `source_archive_url_template`. IS is reference data only.
 
 ---
 
-## 3. Stage 2 — MTDS raw capture: what we pull, from where
+## 4. Stage 2 — MTDS raw capture: what we pull, from where
 
-### 3.1 CLI operations → data_types
+### 4.1 CLI operations → data_types → source
 
-| `--operation`                                                                                                                     | data_type(s)                                                | Source                                                                             |
-| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `collect-dex-swaps`                                                                                                               | `dex_swaps`                                                 | The Graph subgraphs (UniV3 / Balancer / Messari schemas)                           |
-| `collect-dex-pools`                                                                                                               | `dex_pool_state`                                            | The Graph subgraphs                                                                |
-| `collect-lending-indices` / `collect-evm-defi`                                                                                    | `lending_indices` (+ `utilization`, `risk_params` derived)  | The Graph (Aave native / Messari / Compound custom); DeFiLlama (Solana)            |
-| `collect-lst-rates`                                                                                                               | `lst_rates`                                                 | EVM: direct `eth_call` at historical block via Alchemy. Solana: Marinade/Jito REST |
-| `collect-oracle-prices`                                                                                                           | `oracle_prices`                                             | Chainlink `latestRoundData()` (EVM) + Pyth Hermes REST (Solana)                    |
-| `collect-solana-defi`                                                                                                             | `dex_pools`, `lending_indices`, `lst_rates`, `perp_funding` | Orca/Raydium/Phoenix/Kamino REST, DeFiLlama, Drift S3+API                          |
-| `collect-eigenlayer-rewards`                                                                                                      | `eigenlayer_rewards`                                        | EigenLayer                                                                         |
-| `collect-vault-share-price`                                                                                                       | `vault_share_price`                                         | ERC-4626 `convertToAssets`                                                         |
-| `collect-perp-funding`                                                                                                            | `perp_funding`                                              | Drift / GMX / Hyperliquid                                                          |
-| `collect-liquidations` / `-events`, `-flash-loan-events`, `-bridge-events`, `-mev-events`, `-gas-fees`, `-aggregator-routes`, ... | as named                                                    | per-protocol                                                                       |
+| `--operation`                                                                                                                           | data_type(s)                                                | Source                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `collect-dex-swaps`                                                                                                                     | `dex_swaps`                                                 | The Graph subgraphs (UniV3 / Balancer / Messari fallback chain)           |
+| `collect-dex-pools`                                                                                                                     | `dex_pool_state`                                            | The Graph subgraphs                                                       |
+| `collect-lending-indices` / `collect-evm-defi`                                                                                          | `lending_indices` (+ `utilization`, `risk_params` derived)  | The Graph (Aave native / Messari / Compound custom); DeFiLlama (Solana)   |
+| `collect-lst-rates`                                                                                                                     | `lst_rates`                                                 | EVM: `eth_call` at historical block (Alchemy). Solana: Marinade/Jito REST |
+| `collect-oracle-prices`                                                                                                                 | `oracle_prices`                                             | Chainlink `latestRoundData()` (EVM) + Pyth Hermes REST (Solana)           |
+| `collect-solana-defi`                                                                                                                   | `dex_pools`, `lending_indices`, `lst_rates`, `perp_funding` | Orca/Raydium/Phoenix/Kamino REST, DeFiLlama, Drift S3+API                 |
+| `collect-vault-share-price`                                                                                                             | `vault_share_price`                                         | ERC-4626 `convertToAssets`                                                |
+| `collect-perp-funding`                                                                                                                  | `perp_funding`                                              | Drift / GMX / Hyperliquid                                                 |
+| `collect-eigenlayer-rewards`, `-liquidations`, `-flash-loan-events`, `-bridge-events`, `-mev-events`, `-gas-fees`, `-aggregator-routes` | as named                                                    | per-protocol                                                              |
 
-### 3.2 Per-data_type content + source (the important ones)
+> Canonical `data_type=` strings are `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` (handler
+> constants). The catalog's `swap_events` / `pool_state` / `lending_metrics` / `funding_rates` are **stale** (D1).
 
-| data_type               | What it is                                                                                                                                                                         | Key columns                                                                                                                                                                                                    | Source                                                                                |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **`dex_swaps`**         | individual swap events on a DEX pool                                                                                                                                               | `swap_id, timestamp, pool_id, token_a/b (or token_in/out), amount0/1 (or amount_in/out), amount_usd, fee_rate_bps, tick, sender`                                                                               | The Graph (schema fallback: univ3 → pancake → univ3_minimal → messari → sushi_custom) |
-| **`dex_pool_state`**    | daily/hourly pool snapshot                                                                                                                                                         | `pool_id, token_a/b, fee_rate_bps, tvl_usd, volume_usd, fees_usd, tx_count, price_a/b, liquidity, sqrt_price, tick`                                                                                            | The Graph                                                                             |
-| **`lending_indices`**   | per-asset lending market rate snapshot                                                                                                                                             | `protocol, chain, symbol, liquidity_index, variable_borrow_index, supply_rate, borrow_rate, utilization_rate, total_supply, total_debt, reserve_factor, IRM slopes (slope1/2, optimal_utilization, base_rate)` | The Graph (Aave native / Messari / Compound custom); DeFiLlama for Solana             |
-| **`lst_rates`**         | LST/LRT exchange rate (share→underlying)                                                                                                                                           | `timestamp, token, exchange_rate, apy, quote_asset, protocol, chain, block_number, method, contract, is_rebasing, rebase_rate`                                                                                 | EVM `eth_call` at noon-UTC historical block; Solana REST                              |
-| **`oracle_prices`**     | reference price feed                                                                                                                                                               | `feed, base/quote_asset, price, confidence, publish_time, updated_at, round_id, block_number, source, chain`                                                                                                   | Chainlink (EVM, on-chain `latestRoundData`) + Pyth Hermes (Solana)                    |
-| **`perp_funding`**      | DeFi-perp funding/mark                                                                                                                                                             | `protocol, symbol, funding_rate (24h/7d/30d), oracle_px, mark_px, open_interest, oi_long/short`                                                                                                                | Drift S3+API (Solana), GMX (Arb/Avax), Hyperliquid                                    |
-| **`vault_share_price`** | ERC-4626 vault price-per-share                                                                                                                                                     | `vault_address, share_price, timestamp`                                                                                                                                                                        | ERC-4626 `convertToAssets`                                                            |
-| `rate_indices`          | feature-facing projection of lending state (Aave `getReserveData` / `getUserAccountData`); carries `utilization_rate`, `ltv`, `liquidation_threshold`, `health_factor`, IRM params | —                                                                                                                                                                                                              | derived from lending capture                                                          |
-| `liquidations`          | liquidation events                                                                                                                                                                 | `collateral/principal_symbol+amount, liquidator, user`                                                                                                                                                         | The Graph                                                                             |
-| `eigenlayer_rewards`    | restaking rewards                                                                                                                                                                  | —                                                                                                                                                                                                              | EigenLayer                                                                            |
+### 4.2 Per-data_type content (key types)
 
-**Schema fallback pattern** (all subgraph handlers): on `SubgraphSchemaError` ("Type X has no field …" — the
-`messari schema failed, trying next fallback` log line) the handler advances through an ordered list of schema variants;
-all exhausted → `record_failed`. This is why one venue (e.g. Curve) tries multiple subgraph schemas.
+| data_type           | What it is                           | Key columns                                                                                                                                                  | Source                                                    |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `dex_swaps`         | individual swap events               | `swap_id, timestamp, pool_id, token_a/b (or token_in/out), amount0/1 (or amount_in/out), amount_usd, fee_rate_bps, tick, sender`                             | The Graph (fallback: univ3→pancake→minimal→messari→sushi) |
+| `dex_pool_state`    | daily/hourly pool snapshot           | `pool_id, token_a/b, fee_rate_bps, tvl_usd, volume_usd, fees_usd, tx_count, price_a/b, liquidity, sqrt_price, tick`                                          | The Graph                                                 |
+| `lending_indices`   | per-asset lending market snapshot    | `protocol, chain, symbol, liquidity_index, variable_borrow_index, supply_rate, borrow_rate, utilization_rate, total_supply/debt, reserve_factor, IRM slopes` | The Graph (Aave/Messari/Compound); DeFiLlama (Sol)        |
+| `lst_rates`         | LST exchange rate (share→underlying) | `timestamp, token, exchange_rate, apy, quote_asset, protocol, chain, block_number, method, contract, is_rebasing, rebase_rate`                               | EVM `eth_call` @ noon-UTC block; Solana REST              |
+| `oracle_prices`     | reference price feed                 | `feed, base/quote_asset, price, confidence, publish_time, updated_at, round_id, block_number, source, chain`                                                 | Chainlink (EVM on-chain) + Pyth Hermes (Solana)           |
+| `perp_funding`      | DeFi-perp funding/mark               | `protocol, symbol, funding_rate(24h/7d/30d), oracle_px, mark_px, open_interest, oi_long/short`                                                               | Drift S3+API, GMX, Hyperliquid                            |
+| `vault_share_price` | ERC-4626 price-per-share             | `vault_address, share_price, timestamp`                                                                                                                      | ERC-4626 `convertToAssets`                                |
 
-### 3.3 EVM vs Solana
+**Schema fallback pattern** (all subgraph handlers): on `SubgraphSchemaError` ("Type X has no field …") advance through
+an ordered schema list; all exhausted → `record_failed`. (The `messari schema failed, trying next fallback` log line.)
 
-- **EVM** — all via The Graph (GraphQL) or Alchemy `eth_call` at a historical block (block resolved from timestamp).
-  Subgraph IDs centralised in UAC `SUBGRAPH_IDS`. Chains: Ethereum, Arbitrum, Base, Optimism, Polygon, Avalanche, BSC,
-  Linea. (ankrETH rate is inverted: `1e18 / raw`.)
-- **Solana** — no subgraphs; per-protocol REST/SDK. Pyth via Hermes REST (archive from 2023-10-01). Drift historical via
-  S3 (to 2025-01-08) then live API. DeFiLlama is the unified fallback for Solana lending (Kamino/Solend/Marginfi;
-  marginfi is TVL-only, `supply_apy=0`).
+**EVM vs Solana:** EVM = The Graph + Alchemy `eth_call` at historical block (subgraph IDs in UAC `SUBGRAPH_IDS`); Solana
+= per-protocol REST/SDK, Pyth via Hermes (archive from 2023-10-01), Drift via S3 (to 2025-01-08) then live, DeFiLlama
+fallback for Solana lending.
 
 ---
 
-## 4. The venue universe — same-kind data vs unique data (the "why each venue" question)
+## 5. Venue universe — same-kind data vs unique data (the "why each venue" question)
 
-This is the core distinction. Venues fall into **two buckets**: those that give the **same kind of data** (DEX
-swaps/pools — chosen for liquidity / cross-venue dispersion), and those included specifically for **unique data** a
-strategy needs (lending rates, LST APRs, oracle prices, vault shares, perp funding, restaking rewards).
+Two buckets. Full detail: [`defi-venue-protocol-catalogue`](defi-venue-protocol-catalogue.md) +
+[`defi-data-type-taxonomy`](defi-data-type-taxonomy.md).
 
-SSOT: `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi*.py` +
-`registry/defi_venues.py`.
+### 5.1 Same-kind data (DEX swaps + pools) — chosen for **liquidity / price dispersion**
 
-### 4.1 Same-kind data (DEX swaps + pools) — chosen for liquidity & price dispersion
+Feed `arbitrage_price_dispersion`. All provide `dex_swaps` + `dex_pool_state`; value is breadth, not unique fields.
 
-These feed the **`arbitrage_price_dispersion`** archetype. They all provide `dex_swaps` + `dex_pool_state` — the value
-is **breadth of liquidity across venues/chains**, not unique fields.
+- EVM: Uniswap V2/V3/V4, Balancer (6 chains), Curve (ETH/OPT/AVAX), PancakeSwap V3, SushiSwap V3/(V2), Aerodrome V3
+  (Base), Camelot V3 (ARB, Algebra fork), Velodrome V2 (OPT), Trader Joe V2 (AVAX, currently empty).
+- Solana: Raydium, Orca, Phoenix, Kamino, Drift (CLOB-style).
 
-| Venue                                        | Chains                                    | Notes                                                     |
-| -------------------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
-| Uniswap V2 / V3 / V4                         | V3: ETH, ARB, BASE, OPT, POLY (V2/V4 ETH) | deepest liquidity; V3 adds tick/sqrt_price/liquidity      |
-| Balancer                                     | ETH, ARB, POLY, OPT, AVAX, BASE           | multi-token weighted pools                                |
-| Curve                                        | ETH, OPT, AVAX                            | stableswap (ARB/POLY subgraphs deprecated → api.curve.fi) |
-| PancakeSwap V3                               | BSC, ETH, BASE                            | UniV3 fork                                                |
-| SushiSwap V3 / (V2 legacy)                   | ETH/BASE/AVAX; V2 on ARB                  | mixed schemas                                             |
-| Aerodrome V3                                 | BASE                                      | UniV3-style                                               |
-| Camelot V3                                   | ARB                                       | Algebra fork (feeZtO/feeOtZ)                              |
-| Velodrome V2                                 | OPT                                       | Messari schema                                            |
-| Trader Joe V2                                | AVAX                                      | currently empty                                           |
-| Solana DEXes: Raydium, Orca, Phoenix, Kamino | SOLANA                                    | REST APIs; Drift is CLOB-style                            |
+### 5.2 Unique data — venue is the **only source of one signal**
 
-### 4.2 Unique data — venue included because it's the only source of that signal
+| Role               | Venues                                                                                                                             | Unique data                                                                                                                         | Archetype                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Lending            | Aave V3, Compound V3, Spark, Morpho, Fluid (+Euler/Radiant/Venus/Benqi)                                                            | `lending_indices` (supply/borrow rate, utilization, IRM slopes), `liquidations`, `risk_params` (LTV, liq threshold, reserve factor) | `carry_staked_basis` borrow leg + HF   |
+| LST/staking (ETH)  | Lido (stETH/wstETH), RocketPool, Coinbase (cbETH), EtherFi (weETH), Ethena (sUSDe), Mantle, Swell, Stader, StakeWise, Puffer, Ankr | `lst_rates` (exchange_rate, is_rebasing, apy)                                                                                       | `carry_staked_basis` staking yield     |
+| LST/staking (SOL)  | Marinade (mSOL), Jito (jitoSOL), SolBlaze (bSOL), Sanctum                                                                          | `lst_rates` (SOL-family)                                                                                                            | `carry_staked_basis` (Solana)          |
+| Oracles            | **Pyth (Solana only)**, **Chainlink (all EVM)**                                                                                    | `oracle_prices` (price + confidence + publish_time)                                                                                 | price feed; deviation/staleness gating |
+| DeFi perps         | GMX (Arb/Avax), Drift (Solana), Hyperliquid (own L1), Aster                                                                        | `perp_funding` (+ liquidations)                                                                                                     | `carry_staked_basis` hedge leg         |
+| Restaking / vaults | EigenLayer, Solayer, Picasso, Cambrian; ERC-4626 vaults (EtherFi, Yearn V3, Morpho Vaults, Pendle)                                 | `rewards` / `restaking_rewards`, `vault_share_price`                                                                                | second-layer AVS yield, vault APY      |
+| Cost / infra       | Alchemy (synthetic), Flashbots, Across/Stargate                                                                                    | `gas_fees`, `mev_events`, `bridge_events`                                                                                           | execution cost / MEV / bridging        |
 
-| Role                    | Venues                                                                                                                                           | Unique data they provide                                                                                                                    | Used by                                         |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| **Lending**             | Aave V3, Compound V3, Spark, Morpho, Fluid (+Euler/Radiant/Venus/Benqi declared)                                                                 | `lending_indices` (supply/borrow rate, utilization, IRM slopes), `liquidations`, `risk_params` (LTV, liquidation_threshold, reserve_factor) | `carry_staked_basis` borrow leg + HF            |
-| **LST / staking (ETH)** | Lido (stETH/wstETH), RocketPool (rETH), Coinbase (cbETH), EtherFi (weETH), Ethena (sUSDe), Mantle (mETH), Swell, Stader, StakeWise, Puffer, Ankr | `lst_rates` (exchange_rate, is_rebasing, apy)                                                                                               | `carry_staked_basis` staking yield              |
-| **LST / staking (SOL)** | Marinade (mSOL), Jito (jitoSOL), SolBlaze (bSOL), Sanctum                                                                                        | `lst_rates` for SOL-family                                                                                                                  | `carry_staked_basis` (Solana side)              |
-| **Oracles**             | **Pyth (Solana only)**, **Chainlink (all EVM)**                                                                                                  | `oracle_prices` (price + confidence + publish_time)                                                                                         | price feed; oracle-deviation / staleness gating |
-| **DeFi perps**          | GMX (Arb/Avax), Drift (Solana), Hyperliquid (own L1), Aster                                                                                      | `perp_funding` (+ liquidations)                                                                                                             | `carry_staked_basis` hedge leg                  |
-| **Restaking / vaults**  | EigenLayer, Solayer, Picasso, Cambrian; ERC-4626 vaults (EtherFi, Yearn V3, Morpho Vaults, Pendle)                                               | `rewards` / `restaking_rewards`, `vault_share_price`                                                                                        | second-layer AVS yield, vault APY               |
-| **Cost / infra**        | Alchemy (synthetic), Flashbots, Across/Stargate                                                                                                  | `gas_fees`, `mev_events`, `bridge_events`                                                                                                   | execution cost / MEV / cross-chain              |
-
-**One-line mental model:** _DEX venues are interchangeable liquidity sources (more = better price dispersion); lending /
-LST / oracle / perp / restaking venues are each in the universe because they're the canonical source of one specific
-signal the archetype math needs._
-
-### 4.3 RPC tiers & chains
-
-`CHAIN_RPC_TEMPLATES` (`_defi_chain_data.py`) tiers chains: Tier-1 strategy-critical (Ethereum, Arbitrum, Base, Optimism
-— Alchemy, low reorg depth), Tier-2 (BSC, Polygon, Avalanche, Gnosis), Tier-3 zkEVMs/OP-stack, Tier-4 alt-L1s (public
-RPC). Plus `SOLANA_RPC_TEMPLATES` (Alchemy/Helius), `HYPERLIQUID_RPC_TEMPLATES`, and MEV-resistant submission URLs
-(`PROTECTED_RPC_URLS`: Flashbots Protect, MEV Blocker).
+**Mental model:** _DEX venues are interchangeable liquidity sources (more = better dispersion); lending / LST / oracle /
+perp / restaking venues are each in the universe because they are the canonical source of one specific signal the
+archetype math needs._
 
 ---
 
-## 5. Stage 3 — MDPS processing: raw → processed_candles
+## 6. Stage 3 — MDPS processing: raw → processed_candles
 
-MDPS turns a subset of raw types into OHLCV `processed_candles`. Six DeFi adapters
-(`market-data-processing-service/.../app/adapters/defi/`):
+MDPS turns a subset of raw types into OHLCV `processed_candles` (co-located in the MTDS bucket under
+`processed_candles/by_date/day=.../timeframe=.../data_type=.../`). **Runtime-active DeFi adapters (5)** — registered in
+top-level `app/adapters/__init__.py` and gated `True` by UAC `needs_candle_processing`:
 
-| Adapter                     | Input raw type                    | How OHLCV is built                                                                                                                                                                                                                                                                                     |
-| --------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DefiSwapAdapter`           | `dex_swaps`, `dex_pool_swaps`     | **real OHLCV** — per-swap price derived (cascade: `amount_usd/amount_in` → `amount1/amount0` → `(sqrtPriceX96/2^96)^2`), grouped by interval → first/max/min/last + summed volume. **Sparse: no swap in window = no row** (not forward-filled). Extra cols: `chain`, `swap_count`, `volume_quote_usd`. |
-| `DefiLendingIndicesAdapter` | `lending_indices`, `rate_indices` | rate is a **state**, so O=H=L=C=rate, LOCF-filled across the day; volume proxy = `total_atoken_supply`. Base granularity **15m** (no sub-15m). Extra: `borrow_rate`, `utilization_ratio`, `liquidity_index`.                                                                                           |
-| `DefiLiquidityAdapter`      | `dex_pool_state` (V2/V3/V4)       | `mid_price = (token0_price + 1/token1_price)/2` LOCF; volume = `tvl_usd`; `depth_bid/ask = reserve0/1`.                                                                                                                                                                                                |
-| `DefiMarketStateAdapter`    | `market_state`                    | O=H=L=C=`liquidity`; `spread_bps = utilization×10000`.                                                                                                                                                                                                                                                 |
-| `DefiFxRateAdapter`         | CeFi spot candle closes           | derives `fx_rate_eth_usd / btc_usd / sol_usd` (USD conversion helper).                                                                                                                                                                                                                                 |
-| `DefiBookSnapshotAdapter`   | on-chain CLOB L2 (Hyperliquid)    | delegates to CeFi book adapter.                                                                                                                                                                                                                                                                        |
+| Adapter                   | Input raw type                | How OHLCV is built                                                                                                                                                                                                                                  |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DefiSwapAdapter`         | `dex_swaps`, `dex_pool_swaps` | **real OHLCV** — per-swap price (cascade `amount_usd/amount_in` → `amount1/amount0` → `(sqrtPriceX96/2^96)^2`); group by interval → first/max/min/last + summed volume. **Sparse: no swap = no row.** Extra: `chain, swap_count, volume_quote_usd`. |
+| `DefiLiquidityAdapter`    | `dex_pool_state`              | `mid_price=(token0_price+1/token1_price)/2` LOCF; volume=`tvl_usd`; `depth_bid/ask=reserve0/1`.                                                                                                                                                     |
+| `DefiMarketStateAdapter`  | `market_state`                | O=H=L=C=`liquidity`; `spread_bps=utilization×1e4`.                                                                                                                                                                                                  |
+| `DefiFxRateAdapter`       | CeFi spot candle closes       | derives `fx_rate_eth_usd / btc_usd / sol_usd`.                                                                                                                                                                                                      |
+| `DefiBookSnapshotAdapter` | on-chain CLOB L2 (HL)         | delegates to CeFi book adapter.                                                                                                                                                                                                                     |
 
-**Common bar mechanics** (`base_adapter.py`): 200µs synthetic delay (anti-lookahead), end-of-period candle convention,
-timeframes `15s/1m/5m/15m/1h/4h/24h`, DeFi treated as 24/7. Empty paths: zero rows → `empty_confirmed`;
-ticks-outside-day → `UpstreamTimestampBiasError`. Output schema = `PROCESSED_CANDLE_SCHEMA`
-(`timestamp, venue, symbol, instrument_id, open/high/low/close, volume` + nullable extras). Output:
-`processed_candles/by_date/day={date}/`.
+> **⚠ Verified reality (D3):** in prod, **only `dex_swaps` actually materialises DeFi processed_candles** (GCS: every
+> `processed_candles/.../data_type=` partition is `dex_swaps`). The other 4 adapters are registered but have no DeFi
+> source data driving them currently. A 6th adapter, **`DefiLendingIndicesAdapter`** (`lending_indices`), exists and is
+> decorator-registered but is **dead code** — it's not imported in the top-level `app/adapters/__init__.py`, so it never
+> registers at runtime; meanwhile UAC `needs_candle_processing("lending_indices")` wrongly returns `True`. Intended
+> behaviour is **bypass** (features read `lending_indices` raw — §7). Fix is `DEFERRED-UNTIL-PIPELINE-DONE`.
 
-**Bypass types (no MDPS adapter — features read them straight from MTDS):** `liquidations`, `oracle_prices`,
-`dex_pools`, `lst_rates`, `vault_share_price`, `perp_funding`, `gas_fees`, `rewards`, `risk_params`,
-`liquidation_events`, `flash_loan_events`, `eigenlayer_rewards`, `utilization`, `staking_yields`, etc.
+**Common bar mechanics** (`base_adapter.py`): 200µs synthetic delay (anti-lookahead), end-of-period convention,
+timeframes `15s/1m/5m/15m/1h/4h/24h`, DeFi treated 24/7. Empty paths: zero rows → `empty_confirmed`; ticks-outside-day →
+`UpstreamTimestampBiasError`.
+
+**Bypass types (no MDPS candle — features read raw from the dedicated bucket):** `lending_indices`, `lst_rates`,
+`oracle_prices`, `dex_pools`/`dex_pool_state`, `vault_share_price`, `perp_funding`, `liquidations`, `rewards`,
+`risk_params`, `utilization`, `eigenlayer_rewards`, etc. SSOT for this list: `dependency_checker.py` docstring +
+[`data-lineage-MTDS-features-ml`](data-lineage-MTDS-features-ml.md) §"DeFi MDPS scope".
 
 ---
 
-## 6. Stage 4 — feature calculation
+## 7. Stage 4 — feature calculation
 
-Two feature paths run on DeFi data.
+### 7.1 `onchain` family — `features_service/onchain/` (reads raw MTDS, bypass)
 
-### 6.1 `onchain` family (DeFi-specific) — `features_service/onchain/`
+`OnChainOrchestrationService`; definitions in `onchain/schemas/feature_definitions.yaml`. Every loader reads
+`raw_tick_data/.../data_type=…` from the dedicated buckets (D4) — never processed_candles.
 
-Driven by `OnChainOrchestrationService`; definitions in `onchain/schemas/feature_definitions.yaml` (~74 declared
-columns). Key groups:
+| Group                                           | Inputs                                              | What it computes                                                                                                |
+| ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `lending_rates`                                 | `rate_indices`/`lending_indices` (+ DeFiLlama live) | normalise supply/borrow/util; **synthesise supply APY** (`borrow×util×(1−reserve_factor)`); `rate_spread`       |
+| `lst_yields`                                    | `lst_rates`                                         | **`staking_apy_bps = ((rate[t]/rate[t-1])^365 − 1)×1e4`**; `staking_apy_total = base + eigen + seasonal − dust` |
+| `perp_funding_rates`                            | `perp_funding`                                      | `funding_rate_apy_bps = annualise_funding_rate_bps(raw, venue)` (MVP: Hyperliquid ETH-PERP)                     |
+| `utilization` / `risk_params` / `health_factor` | `rate_indices`                                      | `aave_utilization`, `aave_ltv`, `aave_liquidation_threshold`, `aave_health_factor`                              |
+| `rate_impact` (live)                            | DeFiLlama                                           | projected APY after a $500k position (two-slope IRM); `rate_impact_*_bps`                                       |
+| `regime`                                        | mixed                                               | `oracle_deviation_flag` (\|oracle−dex\|/dex > 1%), `tvl_regime_bucket`, util/gas/HF buckets                     |
 
-| Group                                                 | Inputs                            | What it computes                                                                                                                                       |
-| ----------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lending_rates`                                       | `rate_indices` (+ DeFiLlama live) | normalises supply/borrow/util across protocols; **synthesises supply APY** (`borrow_apy × util × (1−reserve_factor)`); `rate_spread = borrow − supply` |
-| `lst_yields`                                          | `lst_rates`                       | **`staking_apy_bps = ((rate[t]/rate[t-1])^365 − 1)×1e4`** (day-over-day annualised). `staking_apy_total_bps = base + eigen + seasonal − dust`          |
-| `lst_native_rates`                                    | `lst_rates`                       | raw same-day exchange rate (no prior-day join) — `carry_staked_basis` Phase 6B                                                                         |
-| `perp_funding_rates`                                  | `perp_funding`                    | `funding_rate_apy_bps = annualise_funding_rate_bps(raw, venue)` (MVP: Hyperliquid ETH-PERP)                                                            |
-| `utilization`                                         | `rate_indices`                    | `aave_utilization` (passthrough; fallback `liquidity_rate/variable_borrow_rate`)                                                                       |
-| `risk_params`                                         | `rate_indices`                    | `aave_ltv`, `aave_liquidation_threshold`                                                                                                               |
-| `health_factor`                                       | `rate_indices`                    | `aave_health_factor`, collateral/debt ETH                                                                                                              |
-| `rate_impact` (live)                                  | DeFiLlama                         | projected APY after injecting a $500k position (two-slope IRM); `rate_impact_*_bps`                                                                    |
-| `rewards`                                             | `rate_indices`                    | `weekly_rewards = reward_rate×7`                                                                                                                       |
-| `flash_loan_availability`                             | `rate_indices` (Morpho)           | `morpho_flash_loan_liquidity`                                                                                                                          |
-| `macro_tvl` / `macro_sentiment` / `fear_greed` (live) | DeFiLlama, Alternative.me         | TVL, stablecoin dominance, F&G index                                                                                                                   |
-| `regime`                                              | mixed                             | `oracle_deviation_flag` (\|oracle−dex\|/dex > 1%), `tvl_regime_bucket`, util/gas/HF buckets                                                            |
+App-layer calculators (live/current-day): `ChainlinkPegDeviationCalculator`,
+`ConcentratedLiquidityIlRealisedCalculator`, `VaultSharePriceApyCalculator`, `PoolInvariantDriftCalculator`.
 
-App-layer calculators (live/current-day): `ChainlinkPegDeviationCalculator` (`peg_deviation_bps` rolling 1h on
-wstETH/cbETH/weETH; `oracle_staleness_seconds`), `ConcentratedLiquidityIlRealisedCalculator` (V3 IL vs fees),
-`VaultSharePriceApyCalculator` (`vault_share_price_apy_bps` annualised), `PoolInvariantDriftCalculator` (Curve
-StableSwap Newton-D drift / Balancer weighted-geomean drift).
+> **Batch gap:** `utilization`, `rate_impact`, `macro_*`, `onchain_perps` are batch-skipped for historical dates
+> (live-only sources — DeFiLlama Yields API has no historical archive — plus an MTDS backfill schema gap). They run in
+> live mode. Verify before relying on these in a batch run.
 
-> **Batch gap (track):** `utilization`, `rate_impact`, `macro_*`, `onchain_perps` are **batch-skipped for historical
-> dates** (live-only sources — DeFiLlama Yields API has no historical archive; plus an MTDS backfill schema gap). They
-> run normally in live mode. Verify before relying on these columns in a batch feature run.
+### 7.2 `delta_one` applied to DeFi (asset_group=DEFI)
 
-### 6.2 `delta_one` family applied to DeFi (asset_group=DEFI)
+`DEFI_DATA_TYPE_OVERRIDES` (`delta_one/engine/orchestrator.py`) remap inputs: **`oracle_prices`** →
+`technical_indicators` / `moving_averages` / `oscillators` / `volatility_realized` / `momentum` / `returns` /
+`market_structure` / `candlestick_patterns` / `targets`; **`dex_swaps`** → `volume_analysis` / `vwap` /
+`microstructure`; **`derivative_ticker`** (Hyperliquid) → `funding_oi` / `liquidations`. So DeFi price features come off
+the **Chainlink/Pyth oracle series**, flow features off **swap events**.
 
-`delta_one` runs on DeFi via `DEFI_DATA_TYPE_OVERRIDES` (`delta_one/engine/orchestrator.py`): price-series indicators
-remap their input from CeFi `trades` to DeFi sources —
+### 7.3 Output
 
-- **`oracle_prices`** → `technical_indicators` (RSI/MACD/ADX/Bollinger/ATR/Stoch/Ichimoku), `moving_averages`,
-  `oscillators`, `volatility_realized` (Parkinson/Garman-Klass/Yang-Zhang), `momentum`, `returns`, `market_structure`,
-  `candlestick_patterns`, `targets`.
-- **`dex_swaps`** → `volume_analysis`, `vwap`, `microstructure` (per-swap volume as order flow).
-- **`derivative_ticker`** (Hyperliquid) → `funding_oi`, `liquidations`.
-
-So DeFi price features are computed off the **Chainlink/Pyth oracle series**, and DeFi flow features off **swap
-events**.
-
-### 6.3 Output schema
-
-UIC contract: `OnchainFeatureRecord` (`unified-api-contracts/.../internal/domain/features_onchain/onchain_feature.py`) —
+UIC `OnchainFeatureRecord` (`unified-api-contracts/.../internal/domain/features_onchain/onchain_feature.py`):
 `timestamp, instrument_key ("DEFI:PROTOCOL:TOKEN:CHAIN"), lending_rate, borrowing_rate, utilization_ratio, staking_yield, reward_apy, tvl, available_liquidity, ltv, liquidation_threshold, market_state, is_halted, is_auction`.
-Per-group wide rows differ (e.g. `lst_yields`: `token, exchange_rate, prev_rate, staking_apy_bps, …`).
 
 ---
 
-## 7. Archetype data lineage (how it all composes)
+## 8. Archetype data lineage
 
 **`carry_staked_basis`** (recursive LST stake + perp short hedge):
 
@@ -284,23 +251,28 @@ lending_indices/rate_indices ──► onchain.{lending_rates,utilization,risk_p
 **`arbitrage_price_dispersion`** (cross-venue price spread):
 
 ```
-dex_swaps (many venues) ──► MDPS DefiSwapAdapter ──► dex_ohlcv ──► delta_one (vwap/volume/microstructure)
+dex_swaps (many venues) ──► MDPS DefiSwapAdapter ──► dex_swaps candles ──► delta_one (vwap/volume/microstructure)
 oracle_prices ──► delta_one price indicators + onchain.regime.oracle_deviation_flag (risk gate)
 dex_pool_state ──► onchain pool-invariant-drift / concentrated-liquidity-IL  (LP health)
 ```
 
 ---
 
-## 8. Pointers
+## 9. Pointers
 
-- Venue/capability SSOT: `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi*.py`,
-  `registry/defi_venues.py`, `registry/defi_venue_capabilities.py` (per-venue per-data_type coverage start dates).
-- Canonical schemas: `unified_api_contracts/internal/domain/defi/parquet_records.py`,
-  `internal/schemas/_defi_v2_contracts.py`, `internal/market_data/defi.py`.
-- Error taxonomy (35 `DefiErrorCode`): `canonical/crosscutting/errors/defi.py`.
-- MTDS handlers: `market-tick-data-service/market_tick_data_service/cli/handlers/*defi*.py`,
-  `.../adapters/defi/base_defi_adapter.py`, `configs/venue_data_types.yaml`.
-- MDPS adapters: `market-data-processing-service/.../app/adapters/defi/`.
-- Features: `features-service/features_service/onchain/` (engine + app/calculators + schemas/feature_definitions.yaml),
-  `features_service/delta_one/engine/orchestrator.py`.
-- Execution side: [`defi-execution-overview`](../04-architecture/defi-execution-overview.md).
+- Drift action items:
+  [`issues/defi_code_codex_drift_2026_05_27`](../../plans/active/issues/defi_code_codex_drift_2026_05_27.md)
+- Pipeline spine: [`data-lineage-MTDS-features-ml`](data-lineage-MTDS-features-ml.md)
+- Data types: [`defi-data-types-catalog`](defi-data-types-catalog.md),
+  [`defi-data-type-taxonomy`](defi-data-type-taxonomy.md)
+- Venues: [`defi-venue-protocol-catalogue`](defi-venue-protocol-catalogue.md)
+- Coverage: [`pipeline-coverage-matrix`](pipeline-coverage-matrix.md),
+  [`mtds-data-source-coverage-matrix`](mtds-data-source-coverage-matrix.md)
+- Instruments: [`instrument-pipeline-defi`](instrument-pipeline-defi.md)
+- Buckets SSOT: `deployment-service/configs/cloud-providers.yaml` +
+  `unified_trading_library.cloud_interface.bucket_naming`
+- Execution side: [`defi-execution-overview`](../04-architecture/defi-execution-overview.md)
+- Code refs: MTDS handlers `market-tick-data-service/.../cli/handlers/*_handler.py`; MDPS
+  `market-data-processing-service/.../app/adapters/defi/` + `cli/handlers/process_handler.py`; UAC
+  `registry/market_data_categories.py::needs_candle_processing` + `registry/capability_declarations/_defi*.py`; features
+  `features-service/features_service/onchain/`.
