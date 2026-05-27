@@ -1,0 +1,81 @@
+---
+name: deployment_ui_vm_and_venue_coverage_visibility
+title: "Deployment-UI: fix VM deployments page + history tab, add venue key-status & coverage visibility — 2026-05-27"
+parent_epic: deployment_and_user_management_master
+assigned_vm: vm-operator-ops
+status: active
+priority: P0
+created: 2026-05-27
+author: harsh (claude opus 4.7)
+estimate_class: brand-new
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 5
+locked_by: harsh-fleet-audit
+related:
+  - issues/running_vm_fleet_status_2026_05_27.md
+  - cefi_venue_backfill_coverage_remediation_2026_05_27.md
+---
+
+# Deployment-UI: VM + venue-coverage visibility
+
+**Why**: the 25-VM fleet audit had to be done entirely by hand because the deployment-ui surfaces that should show this
+are broken/empty. Operator 2026-05-27: "the vm deployments page … does not show anything, plus the history tab is also
+broken … fix those first so it's better to see the details properly", and add a venue API-key + coverage view ("not the
+actual keys but the name and their status and what we have captured and what it will uncover in terms of remaining
+downloading").
+
+**Target repo**: `deployment-ui` (+ `deployment-api` for any new read endpoints). **Backend data already exists**:
+deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`), VM serial/run logs, per-venue manifest
+`_index/availability_index.parquet`, Secret Manager (key names + a status probe).
+
+> **HARD RULE — UI Verification Contract** (per parent epic): every todo below is `[AGENT][UI]`, and CANNOT be ticked ✅
+> without `pw:L2 ✓` (`npx playwright test --project=chromium tests/smoke/` exits 0) + a named regression spec. Evidence
+> format on tick: `— repo@sha | pw:L2 ✓ | regression: tests/path/spec.ts`.
+
+---
+
+## §1 — Fix the VM deployments page (shows nothing) (P0)
+
+- [ ] [AGENT][UI] P0. Diagnose why the VM deployments page renders empty — is it the deployment-api endpoint returning
+      nothing, a reader pointed at a stale/wrong bucket/prefix, or a frontend fetch/parse error? Check the browser
+      network tab + the deployment-api route that lists deployments. (Note: registry has 1,762 active entries — many
+      stale — so the page may be choking on volume or filtering wrong.) regression: `tests/smoke/routes.spec.ts`.
+- [ ] [AGENT][UI] P0. Render the live RUNNING VMs with: name, machine type, asset_group/venue, role (download/process),
+      uptime, last-heartbeat age, central-log freshness, and a health badge (producing / zero-data / stalled /
+      boot-hung). Source: `gcloud`-equivalent via deployment-api + registry `last_heartbeat_at` + log mtime.
+- [ ] [AGENT][UI] P0. Reconcile the registry: the active-deployments list must reflect actually-RUNNING VMs (the 1,762
+      vs 25 gap means stale entries aren't being reaped/archived). Coordinate with the watchdog fix in the backfill
+      plan.
+
+## §2 — Fix the broken History tab (P0)
+
+- [ ] [AGENT][UI] P0. Diagnose + fix the History tab (currently broken). Identify the failing endpoint/query (likely
+      `deployments/archive/<day>/` reads) and the frontend error. regression: `tests/smoke/routes.spec.ts`.
+- [ ] [AGENT][UI] P1. History tab shows completed/failed/reaped deployments with outcome (COMPLETED/FAILED/reaped),
+      duration, rows captured, and a link to the archived run.log / serial-console (`gs://vm-logs-archive-{pid}/…`).
+
+## §3 — Venue API-key status panel (names + status, never the key) (P1)
+
+- [ ] [AGENT][UI] P1. Add a per-venue credential-status view: secret NAME (`tardis-api-key`, …) + STATUS (active /
+      EXPIRED / missing / unentitled) — NEVER the key value. Status from a lightweight backend probe (e.g. Tardis
+      `api-key-info` → `[]`/expired ⇒ flag). Today this would show `tardis-api-key: EXPIRED` — the single fact blocking
+      all CeFi paid history.
+- [ ] [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
+      key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
+      `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3.
+
+## §4 — Coverage / remaining-to-download view (P1)
+
+- [ ] [AGENT][UI] P1. Per venue × asset_group × year: show captured vs expected vs **remaining-to-download**, and the
+      reason a cell is empty (genuine `expected_unattempted` vs `pending_paid_key` vs `attempted_failed`). Critical: a
+      401-blocked cell must read "downloadable once key active", NOT "complete/empty" (mirrors the honest-absence-vs-
+      blocked-credentials rule). Source: `_index/availability_index.parquet` per bucket.
+- [ ] [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
+      (venue, date) cells would be filled by a relaunch now vs after key renewal — so launches are decided with eyes
+      open.
+
+## §5 — Verification
+
+- [ ] [AGENT][UI] P0. `npm run dev`, wait 8–10s, read terminal for errors; manually load VM page + History tab + venue
+      panel in browser; confirm golden path + empty/edge states. Then
+      `npx playwright test --project=chromium     tests/smoke/` green before any ✅ tick (per epic HARD RULE).
