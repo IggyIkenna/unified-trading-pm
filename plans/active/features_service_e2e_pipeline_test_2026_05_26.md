@@ -376,7 +376,10 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
 `features-mtf-cefi-test`, asia-northeast1).
 
 - [ ] [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** Provenance: e2e -test
-  2026-05-26. Decide source (candles vs delta_one) / expose close.
+  2026-05-26. **DECISION 2026-05-27 (operator): Option A — delta_one passes `close` (OHLCV) through as passthrough
+  column(s) in its output; cross_instrument stays single-input.** TF-aligned (delta_one now computes per-TF). In flight
+  via a dedicated agent. Both delta_one + cross_instrument live in features-service so the change is contained; the
+  output-schema delta is a contract note to cross-link for Ikenna.
 - [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash.
   Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
   post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
@@ -391,7 +394,11 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
 - [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
   `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
   whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test 2026-05-26.
-- [ ] [P2] **volatility: emits no manifest row on no-input** — confirm honest-skip vs `empty_confirmed` expectation.
+- [ ] [P2] **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
+  guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed for
+  this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" → dependency gap,
+  a different status. (Future-without-spot is the contradiction; spot-without-future is the real absence.) Folded into
+  the per-service status-calibration audit: `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`.
 
 ### TradFi scope (operator decision 2026-05-26)
 
@@ -451,7 +458,10 @@ Mapped fix locations (sub-agent code audit, features-service):
 - `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
 - [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket` (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken files in delta_one; full QG to run once they land.)
 
-cross_instrument `close` (FINDING-F) + volatility `empty_confirmed` remain HELD (operator decide later).
+cross_instrument `close` (FINDING-F): **DECIDED 2026-05-27 → Option A (delta_one close passthrough)** — agent in flight.
+volatility `empty_confirmed`: re-scoped into the per-service status-calibration audit
+(`plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`) — do NOT reflexively confirm-empty; gate it
+behind genuine-absence confirmation.
 
 ## Notes / cross-refs
 

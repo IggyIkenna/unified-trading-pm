@@ -97,17 +97,20 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
     review-blocking; must bundle into a scheduled migration window).
   - **Where the rewrite lands**: MDPS canonical_writer partition keys vs features reader. Name the SSOT files.
   - **Recommendation framing**: "no-brainer / needs-design / blocked-on-migration-window" — leave the call to operator.
-- [ ] [BUG][P1] **1.0b 4h/24h STILL not landing — reclassify root cause (NOT pure data-availability).** Verified
-  2026-05-27: all-TF run (bskyporh3) exited 1 and wrote only `15s/1m/5m/15m/1h` to
-  `gs://features-delta-one-cefi-test-central-element-323112/day=2026-05-03/` — **no 4h, no 24h**. Earlier belief ("24h
-  blocked because only 3 CeFi candle-days exist") is partly wrong: MDPS `processed_candles` has **457 day-partitions back
-  to 2019** (sparse — gap 2026-04-14→2026-05-01, then 05-01..05-04 contiguous). Therefore **4h** (needs ≈14 4h-bars ≈
-  2.3 days; 3 contiguous days exist) *should* compute but FAILS → code/buffer-days bug, not data. **24h** (needs 14
-  contiguous daily bars) genuinely lacks contiguous recent history → real upstream backfill gap. Action: capture the
-  delta_one subprocess stderr for the failing 4h leg; the read-once long-lookback refactor (1.1) should pull enough
-  base-candle history to let 4h land — make **"4h parquet lands in -test for 05-03"** an explicit 1.1 acceptance
-  criterion; keep 24h tracked as a contiguous-candle backfill ask.
-- [ ] [BUG][P1] **1.1a Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF choice.**
+- [x] ✅ [BUG][P1] **1.0b 4h/24h not landing — RESOLVED as upstream MDPS data gap (NOT a features-service code bug).**
+  Final root cause (confirmed by the 1.1a agent 2026-05-27 @ac83bfad after the smart-clustering fix): CeFi **1h candles
+  are MISSING for 2026-04-14→04-30** in `market-data-tick-cefi`; only 05-01→05-04 is contiguous. The 1h-base cluster that
+  feeds 4h/24h needs ~14 contiguous days of 1h lookback → can't be satisfied. The features code is **correct**: it now
+  fast-fails ("No base candles at 1h") instead of futilely loading 26 MB of 15s. **This is the canonical "data is
+  supposed to be there but isn't accessible yet" case → must NOT be written as `empty_confirmed`; it is a dependency/
+  backfill gap (see [[capture_status_calibration]]).** UNBLOCK = MDPS backfills CeFi 1h candles for 2026-04-14→04-30
+  (tracked as a dependency on MDPS, below). Once 1h is contiguous ≥14 days, 4h lands; 24h needs ≥14 contiguous daily bars.
+- [x] ✅ [BUG][P1] **1.1a Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF choice.**
+  — **FIXED** features@ac83bfad (smart TF clustering): `_build_tf_clusters` + `_process_tf_cluster` — Cluster A base=15s
+  resamples `{15s,1m,5m,15m}` (cheap near-base); Cluster B base=1h reads 1h directly + resamples to `{4h,24h}`. Benchmark
+  (24h/75-day lookback): **26 MB → 1.1 MB per instrument (22×)**. Methods all ≤50L (shared `_run_feature_group_lifecycle`),
+  files <900, basedpyright 0, 1491 tests pass. Optimises **bytes read**, not GET count. (Original spec below for provenance.)
+- [ ] [SPEC][P1] **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF choice.**
   Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the **widest buffer
   across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a deep lookback (tens–
   hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs reading MDPS's already-
