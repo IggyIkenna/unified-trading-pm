@@ -63,10 +63,10 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
 - [ ] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
       re-copied to the canonical `log-archive/` prefix (operator-confirm before delete — it currently holds the
       2026-05-27 fleet backup).
-- [ ] [AGENT] P1. **Pre-kill hook**: any VM-delete path (operator teardown, `vm_zombie_watchdog.py` reaper,
+- [x] [AGENT] P1. **Pre-kill hook**: any VM-delete path (operator teardown, `vm_zombie_watchdog.py` reaper,
       `VM_SHUTDOWN_ON_COMPLETION` self-delete) MUST call `backup-vm-logs.sh --vm <name>` (or inline equivalent) BEFORE
       `instances delete`, so a reaped/zombie VM's serial console is always captured. Wire into the watchdog + the
-      self-delete block in `vm-exec-with-gcs-tee.sh`.
+      self-delete block in `vm-exec-with-gcs-tee.sh`. — deployment-service@4b8a0c3 ✅
 - [ ] [AGENT] P1. **Durable retention**: decide + implement how the live `vm-logs/` stream survives the 14-day TTL —
       either (a) a daily
       `gcloud storage rsync gs://deployment-scripts-{pid}/vm-logs/ gs://deployment-scripts-{pid}/log-archive/rolling/`
