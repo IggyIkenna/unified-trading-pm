@@ -299,7 +299,8 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       — all copied+verified+deleted); market-data-tick-defi = **2,251 objects across 4 glued venue-chains**
       (AAVEV3/UNISWAPV2/UNISWAPV3/UNISWAPV4-ETHEREUM). **Grand total 35,011 objects, 0 errors.** Correctly NO-OP'd:
       VELODROMEV2/TRADER_JOEV2 (canonical-glued), BALANCER/CURVE/GMX/JITO/LIDO/etc (no version), protocol-only MTDS
-      venues, and PANCAKESWAPV3-ZKSYNC / LIGHTER-ZKSYNC (ZKSYNC ∉ KNOWN_CHAINS → passthrough — see B5.9 finding).
+      venues, and PANCAKESWAPV3-ZKSYNC / LIGHTER-ZKSYNC (ZKSYNC ∉ KNOWN_CHAINS at the time → passthrough; RESOLVED in B5.9
+      2026-05-27 — ZKSYNC added to KNOWN_CHAINS @ac5d2340 + the 446 PANCAKESWAPV3-ZKSYNC objects re-keyed).
 - [x] ✅ [SCRIPT] P1. **B5.4 — Manifest reconcile** — **DONE (audited; no corrector needed) — FINDING 2026-05-27**.
       Read `_index/availability_index.parquet` in both buckets, grouped by venue, tested every venue with
       `canonicalize_defi_venue_combined`. **IS manifest (68,885 rows): 0 glued combined-venue rows** — fully canonical
@@ -346,14 +347,36 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       canonical). **Glued-venue canonicalization is complete + verified end-to-end.** Residual: migrated MTDS
       `pipeline_mode=batch_onchain_rpc/…ticks_migrated_*.parquet` files lack `instrument_type=/data_type=` partitions so
       pool-breakdown can't surface them where they exist — pre-existing consumer gap, orthogonal to glued venues → B5.10.
-- [ ] [CODE] P3. **B5.9 — MTDS combined-vs-protocol-only venue duality** (provenance: B5.4 finding 2026-05-27). MTDS
-      manifest + GCS carry BOTH combined `AAVEV3-ARBITRUM`/`AAVE_V3-ETHEREUM` AND protocol-only `AAVE_V3` (chain in a
-      separate column) venue forms for the same protocol; IS uses only the combined form. The 875,920 MTDS combined-glued
-      manifest rows are all `empty_confirmed`/`attempted_failed` (benign). Decide the SSOT MTDS DeFi venue convention
-      (combined vs protocol-only+chain-col) and reconcile so MTDS matches IS. **NICE-TO-HAVE** — no current data-correctness
-      impact (no captured glued rows). Also: `PANCAKESWAPV3-ZKSYNC` / `LIGHTER-ZKSYNC` glued IS partitions did NOT re-key
-      because `ZKSYNC ∉ KNOWN_CHAINS` in UAC — either add ZKSYNC to `KNOWN_CHAINS` (if a supported DeFi chain) or confirm
-      these are out-of-universe; same for `EXTENDED-STARKNET`/`PACIFICA-SOLANA` (CeFi-ish venues in the defi bucket).
+- [x] ✅ [CODE] P1. **B5.9 — ZKSYNC re-key (operator approved 2026-05-27)** — **DONE 2026-05-27** —
+      unified-api-contracts@ac5d2340 (QG-green exit 0; canonicalizer unit test 7→9 cases). Added `ZKSYNC` to UAC
+      `KNOWN_CHAINS` via a new `_EXTRA_VENUE_PARTITION_CHAINS` frozenset (chain-TOKEN recognition set — NO fake
+      subgraph/static-protocol mapping, so `get_protocol_chains`/`build_defi_venues` untouched and no expected-coverage
+      matrix expands). **KNOWN_CHAINS consumer pre-audit (4 sites)**: all are parse/recognition gates
+      (`if chain in KNOWN_CHAINS:` → split protocol/chain) — `mtds/scripts/rebuild_mtds_manifest.py:183`,
+      `instruments-service/scripts/migrate_defi_legacy_venue_chain.py:98`, IS `orchestrator.py:3142` + `:7353`. NONE iterate
+      KNOWN_CHAINS to build a coverage product. `expected_coverage.py` does NOT import KNOWN_CHAINS/`get_all_defi_chains` —
+      its matrix is `EXPECTED_COVERAGE_BY_ASSET_GROUP`, keyed by explicit venue tokens (already independently lists
+      `AAVE_V3-ZKSYNC`/`LIGHTER-ZKSYNC`). **No phantom MISSING_EXPECTED cells created.** Canonicalizer now:
+      `PANCAKESWAPV3-ZKSYNC → PANCAKESWAP_V3-ZKSYNC`; `LIGHTER-ZKSYNC → LIGHTER-ZKSYNC` (chain now PARSES, LIGHTER ∉
+      `PROTOCOL_CAPABILITIES` → unknown-protocol passthrough → unchanged). **Re-key (instruments-service@445756d3
+      `migration_rekey_defi_glued_venues.py`, --execute, 0 errors)**: IS bucket = **446 `PANCAKESWAPV3-ZKSYNC` →
+      `PANCAKESWAP_V3-ZKSYNC`** (copied+verified+deleted); `LIGHTER-ZKSYNC` NO-OP (654 objects untouched); MTDS walked
+      321,176 objects → **0 glued ZKSYNC venues**. **Post-verify**: 0 glued `PANCAKESWAPV3-ZKSYNC` remain, 446 canonical
+      `PANCAKESWAP_V3-ZKSYNC` present, 654 `LIGHTER-ZKSYNC` unchanged; canonical parquet readable. **Manifest**: IS `_index`
+      has 0 rows for all 3 ZKSYNC venues + 0 glued combined venues overall (canonical/benign-empty). **⚠️ SUPERSEDED PRIOR
+      DECISION**: `instruments-service/scripts/purge_pancakeswapv3_zksync.py` (2026-05-06) said "delete + scrub, NOT add
+      ZKSYNC to KNOWN_CHAINS" (446 low-quality rows). That purge never ran on the IS parquet partitions (446 objects still
+      present, now re-keyed). Operator 2026-05-27 explicitly approved B5.9, superseding the 2026-05-06 decision → stale-comment
+      cleanup in B5.9b.
+- [ ] [CODE] P3. **B5.9b — stale purge-script comment + MTDS combined-vs-protocol-only duality** (provenance: B5.4 +
+      B5.9 findings 2026-05-27). (1) `instruments-service/scripts/purge_pancakeswapv3_zksync.py` header comment
+      ("Cleanest fix is delete + scrub UAC entries, NOT add ZKSYNC to KNOWN_CHAINS", 2026-05-06) is now stale — superseded by
+      B5.9 (operator-approved 2026-05-27). Update or retire the script. (2) MTDS manifest + GCS carry BOTH combined
+      `AAVEV3-ARBITRUM`/`AAVE_V3-ETHEREUM` AND protocol-only `AAVE_V3` (chain in a separate column) for the same protocol; IS
+      uses only the combined form. The 875,920 MTDS combined-glued manifest rows are all `empty_confirmed`/`attempted_failed`
+      (benign). Decide the SSOT MTDS DeFi venue convention + reconcile so MTDS matches IS. (3) `EXTENDED-STARKNET` /
+      `PACIFICA-SOLANA` (CeFi-ish venues in the defi bucket) — confirm in/out of DeFi universe. **NICE-TO-HAVE** — no current
+      data-correctness impact (no captured glued rows).
 - [ ] [CODE] P3. **B5.10 — pool-breakdown can't read migrated `pipeline_mode`/flat parquets** (provenance: B5.7
       2026-05-27). `build_pool_breakdown`/`_list_defi_objects_with_aliases` build prefixes
       `day={day}/{hive_key}=defi/venue=…` with NO `pipeline_mode=` segment, and `_list_pool_entities_for_venue` requires

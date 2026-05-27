@@ -448,19 +448,24 @@ body. · **estimate**: 1.2 cal AI-days (class: refactor, 0.4× multiplier)
 on GCP; F-43 Solana devnet paper path; F-44 ManualTradeGateDialog Playwright e2e. BLRS dry-run succeeded;
 strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra)
 
-### [`defi_coverage_capability_alignment_2026_05_22`](../active/issues/defi_coverage_capability_alignment_2026_05_22.md) — Bug 5 DeFi venue GCS re-key chain
+### [`defi_coverage_capability_alignment_2026_05_22`](../archive/issues/defi_coverage_capability_alignment_2026_05_22.md) — Bug 5 DeFi venue GCS re-key chain
 
-**status**: 🔵 OPEN — lifted into this epic 2026-05-27 (Bug 5 work was invisible to the P-blocks → orphaned-work risk).
-Root-cause code shipped (B5.1 IS writer parquet-path canonicalisation UAC@fdc9206b + IS@a57ae01c; B5.2 no-op). Remaining
-is the operator-window-gated migration chain (HARD-ORDERED, single-walk-discipline gate): **B5.3** GCS re-key
-glued→underscore venue keys (SCHEDULED MIGRATION WINDOW) → **B5.4** manifest reconcile ALL version-suffixed families
-(only AAVE_V3 verified) → **B5.5 (P0)** delete old glued keys after parity → **B5.6 [UI]** verify deployment-ui
-pool-breakdown post-migration (+`pw:L2`) → **B5.7 (P0 VERIFY)** re-drill `AAVE_V3-ARBITRUM·2026-05-03`. **B5.8 (P3)**
-stale-comment cleanup. Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Bug 4
-(POST-CUTOVER)**: add a `data_source_type` taxonomy enum so LST venue `ANKR` (ankrETH) vs RPC-provider `ANKR` (and
-`ALCHEMY`/`CHAINLINK`/`GAS_FEES` grid contaminants, DQ-04) are distinguishable — fold the `oracle_prices_handler`
-`COINBASE-SPOT`-into-defi-grid filter fix in here. Migrated from the issue doc (which named itself as Bug 4's tracker).
-Full phased todos were in the (now archived) issue doc.
+**status**: 🟢 MIGRATION CHAIN DONE (B5.1-B5.9) — residual B5.9b + Bug 4 post-cutover. Root-cause code shipped (B5.1 IS
+writer parquet-path canonicalisation UAC@fdc9206b + IS@a57ae01c; B5.2 no-op). Migration chain (HARD-ORDERED,
+single-walk-discipline gate) **COMPLETE 2026-05-27**: **B5.3** GCS re-key glued→underscore (35,011 objects, 0 errors) →
+**B5.4** manifest reconcile (audited GREEN, no corrector needed) → **B5.5** delete old glued keys (0 glued remain both
+buckets) → **B5.6 [UI]** deployment-api pool-breakdown resolves canonical (no code change) → **B5.7 (VERIFY)** re-drill
+done. **B5.8 (P3)** stale-comment cleanup. **B5.9 — ZKSYNC re-key (operator approved 2026-05-27) DONE**:
+unified-api-contracts@ac5d2340 added `ZKSYNC` to `KNOWN_CHAINS` (chain-token recognition set, no expected-coverage
+expansion, consumer pre-audit clean) + re-keyed **446 `PANCAKESWAPV3-ZKSYNC` → `PANCAKESWAP_V3-ZKSYNC`** (instruments-service@445756d3,
+0 errors); `LIGHTER-ZKSYNC` correct no-op (654 untouched); MTDS 0 glued ZKSYNC. **⚠️ Superseded the 2026-05-06
+`purge_pancakeswapv3_zksync.py` "do not add ZKSYNC" decision** (purge never ran on the IS partitions). Also Bug 2 residual
+(`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Open residuals (NICE-TO-HAVE, P3)**: **B5.9b**
+stale purge-script comment + MTDS combined-vs-protocol-only venue duality + `EXTENDED-STARKNET`/`PACIFICA-SOLANA` universe
+confirm; **B5.10** pool-breakdown can't read migrated `pipeline_mode`/flat parquets. **Bug 4 (POST-CUTOVER)**: add a
+`data_source_type` taxonomy enum so LST venue `ANKR` (ankrETH) vs RPC-provider `ANKR` (and `ALCHEMY`/`CHAINLINK`/`GAS_FEES`
+grid contaminants, DQ-04) are distinguishable — fold the `oracle_prices_handler` `COINBASE-SPOT`-into-defi-grid filter fix
+in here. Full phased todos in the (now archived) issue doc.
 
 ## P1 — important; post-current-gate
 
