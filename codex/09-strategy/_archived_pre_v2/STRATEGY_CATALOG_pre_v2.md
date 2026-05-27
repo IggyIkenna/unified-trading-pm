@@ -1,6 +1,7 @@
-> **[SUPERSEDED]** This is the pre-v2 (category-organised) strategy catalogue, preserved from the strategy-docs-vs-system
-> audit (PM main@03a37b6a1). Current canonical design: [`../architecture-v2/`](../architecture-v2/README.md). Do not use
-> this document for implementation decisions — it is retained for historical reference only.
+> **[SUPERSEDED]** This is the pre-v2 (category-organised) strategy catalogue, preserved from the
+> strategy-docs-vs-system audit (PM main@03a37b6a1). Current canonical design:
+> [`../architecture-v2/`](../architecture-v2/README.md). Do not use this document for implementation decisions — it is
+> retained for historical reference only.
 
 # 09 — Strategy Documentation
 

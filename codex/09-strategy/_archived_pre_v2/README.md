@@ -41,11 +41,11 @@ doc go?"
 
 ### Top-level docs
 
-| Archived path                                | v2 replacement                                                                                     |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `strategy-registry.md`                       | UAC `StrategyInstanceDefinition` + `StrategyInstanceIdentity` (machine-readable registry)          |
-| `STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` | [`../architecture-v2/MIGRATION.md`](../architecture-v2/MIGRATION.md)                               |
-| `execution-modes.md`                         | `../../04-architecture/backtest-groups.md` + `../architecture-v2/cross-cutting/benchmark-fills.md` |
+| Archived path                                | v2 replacement                                                                                                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strategy-registry.md`                       | UAC `StrategyInstanceDefinition` + `StrategyInstanceIdentity` (machine-readable registry)                                                                                        |
+| `STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` | [`../architecture-v2/MIGRATION.md`](../architecture-v2/MIGRATION.md)                                                                                                             |
+| `execution-modes.md`                         | `../../04-architecture/backtest-groups.md` + `../architecture-v2/cross-cutting/benchmark-fills.md`                                                                               |
 | `STRATEGY_CATALOG_pre_v2.md`                 | [`../README.md`](../README.md) (v2 index) + [`../architecture-v2/README.md`](../architecture-v2/README.md) — pre-v2 65+-strategy catalogue (preserved from main@03a37b6a1 audit) |
 
 ## Rules for this directory
