@@ -10,6 +10,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — Fix A shipped in UAC `internal/schemas/contracts.py`
+> (TRADFI_FUTURE_TRADES / COMBO_TRADES + registry); Fix B superseded by the session-grid model (mdps_tradfi_backfill_log
+> @b67cddd). Reprocess tracked by mtds_mdps_master MDPS-3.3.TradFi-V.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 `mdps-backfill-tradfi-20260522-051203` VM logs (launched 2026-05-22 05:12 UTC) emit `No SchemaContract registered`

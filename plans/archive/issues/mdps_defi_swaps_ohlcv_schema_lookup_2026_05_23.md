@@ -11,6 +11,13 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — 6 schema gaps fixed + verified (UAC@8e1e7e58; MDPS
+> 6fe0f01/555ade1/4cc1584/94ef3c2); already referenced as archived in `plans/epics/mtds_mdps_master.md` DeFi-V (line
+> ~640).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 MDPS DeFi backfill VMs (195633 batch) are logging repeated CRITICAL errors for every `dex_pool_swaps` pool shard:

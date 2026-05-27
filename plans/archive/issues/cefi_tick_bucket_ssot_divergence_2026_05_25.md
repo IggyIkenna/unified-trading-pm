@@ -12,6 +12,13 @@ status: active
 priority: P2
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — coverage-reader hardcode fixed (`measure_honest_coverage.py`
+> `_MANIFEST_BUCKET_CANDIDATES` @91e7316); write-path cutover + consolidator-lag tracked in `manifest_master.md` Phase
+> 0d + `manifest_consolidator_duckdb_memory_fix_2026_05_26.md`.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 # honest-coverage cron reads `-prd` while CeFi tick data is still in flat
 
 ## What I found

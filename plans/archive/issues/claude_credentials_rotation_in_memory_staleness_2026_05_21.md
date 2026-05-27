@@ -17,6 +17,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — acute cascade resolved via env-var auth (agent-orch@5d78133);
+> remaining legacy `harsh-primary` path tracked in `plans/epics/orchestrator_master.md` Phase 4b-cleanup + Phase 5
+> (blocked on human setup-token).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## 1. Symptoms (what the operator + agents see)
 
 1. **VS Code Claude extension** intermittently shows a `/login` screen during chat. Operator confirmed 2026-05-21 "many

@@ -10,6 +10,12 @@ locked_since: 2026-05-23
 priority: P2
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — all 11 spawned plans shipped + archived under
+> `plans/epics/observability_master.md`; operator-action residuals migrated to that epic's P3 block.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 > **🟢 RESOLVED-INTO-PLANS 2026-05-23**. This operator-supplied target operating model (sections §1-22) is the source
 > for the disaster-recovery gap audit at
 > [`../../audit/results/observability_disaster_recovery_audit_2026_05_23.md`](../../audit/results/observability_disaster_recovery_audit_2026_05_23.md).

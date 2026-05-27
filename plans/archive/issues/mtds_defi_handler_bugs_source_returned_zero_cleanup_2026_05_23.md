@@ -12,6 +12,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED (frontmatter status:resolved 2026-05-23) — 3 handler bugs fixed
+> MTDS@69d694b1 + e86a6ad8; successor DeFi VM relaunch tracked in `plans/epics/mtds_mdps_master.md` MDPS-3.3.DeFi-V.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 Three MTDS DeFi handler bugs caused ~100% of `gas_fees`, ~0% of `lending_indices`, and all `dex_swaps` rows to land as

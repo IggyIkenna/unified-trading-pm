@@ -9,6 +9,12 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — `tick_data_handler.py:94` `get_tick_data_bucket` fix
+> MTDS@712d4071; broken VM replaced.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 `mtds-backfill-defi-20260523` (RUNNING, asia-northeast1-c, 2024-01-01→2026-05-23, tarball sha 498148da) is looping on

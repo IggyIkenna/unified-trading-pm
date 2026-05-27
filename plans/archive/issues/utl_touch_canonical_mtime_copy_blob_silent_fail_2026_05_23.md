@@ -12,6 +12,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED (frontmatter status:resolved) — tier-2 re-upload fallback
+> shipped UTL@0ea6989c (`manifest_consolidator.py` `_touch_canonical_mtime`).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 `_touch_canonical_mtime` (UTL `manifest_consolidator.py:572`) is intended to refresh the GCS blob `Updated` timestamp on

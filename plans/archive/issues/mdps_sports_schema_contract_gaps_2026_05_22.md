@@ -8,6 +8,13 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — code root-causes fixed (MDPS@21700c5 + 65b6a54 + e53cc35); v8
+> re-migration + VM relaunch tracked in `plans/epics/mtds_mdps_master.md` Phase 7 + `plans/epics/sports_master.md`
+> reprocess block.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 All 7 MDPS sports reprocessor VMs (`mdps-sports-{2020..2026}-20260522-161432`) exited with status 0 but produced **zero

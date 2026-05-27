@@ -8,6 +8,13 @@ blocked_on: bucket_name_ssot_phase2.6
 parent_epic: infrastructure_master
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — residuals tracked in `plans/epics/manifest_master.md` (L2
+> probe templates, L3 get_bucket_name consumers, Phase 0d flat→env-tiered, workspace-grep audit); parent plan
+> bucket_name_ssot_canonicalisation already archived.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 # bucket_name_ssot residual drift — 2026-05-20 audit (slot 1, task R-006)
 
 > **Source**: workspace-wide grep audit run 2026-05-20. Commands:

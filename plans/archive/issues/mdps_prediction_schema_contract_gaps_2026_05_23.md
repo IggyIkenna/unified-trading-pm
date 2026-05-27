@@ -13,6 +13,13 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — schema enrichment shipped via
+> `_inject_schema_contract_columns()` in MDPS `canonical_writer.py`; residual tarball-rebuild/VM-relaunch tracked by
+> `plans/epics/mtds_mdps_master.md` MDPS-3.3.Pred-V.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 All 4 prediction MDPS VMs (batch 20260523-111916) failed because `StreamingParquetWriter` pre-write validation rejected

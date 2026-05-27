@@ -11,6 +11,12 @@ priority: P1
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — backfill completed (2024→2026-01-24); post-2026-01-24
+> permanent honest-absence documented in `plans/epics/mtds_mdps_master.md` MDPS-3.3.DeFi-V (line ~640).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 GCS audit of `market-data-tick-defi-prd-central-element-323112` on 2026-05-23:

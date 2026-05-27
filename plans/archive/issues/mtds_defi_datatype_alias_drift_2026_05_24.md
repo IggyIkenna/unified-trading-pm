@@ -9,6 +9,13 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — config drift fixed (`venue_data_types.yaml` canonical
+> dex_swaps/dex_pools/lending_indices); GCS repartition + category→asset_group tracked in
+> `plans/epics/mtds_mdps_master.md` (Phase 9 data_type_canonicalization, line ~568).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 Running the full-workspace cross-repo invariants (Tier B premise) surfaced live drift that **per-repo CI cannot see**.

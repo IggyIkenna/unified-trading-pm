@@ -9,6 +9,13 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — SM-id drift fixed on live-defi-rollout (UAC@4e3fc932
+> `credentials_per_archetype.yaml` real SM ids; deployment-service@c0537bf per-client okx probe). Only residual is
+> human-only wallet-PK provisioning (out of issue scope).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 Fixing the failing UAC test `test_batch_mode_includes_read_scope_venue_keys` (it asserted `bybit-read-api-key`, but SM

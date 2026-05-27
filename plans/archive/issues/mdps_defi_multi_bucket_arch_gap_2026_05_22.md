@@ -10,6 +10,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — Option A (features-onchain raw bypass) confirmed;
+> `codex/02-data/defi-data-pipeline.md §7.1` documents the model; 3 unnecessary MDPS VMs deleted. Doc itself says 'close
+> this issue'.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 MDPS DeFi (`MDPS_ASSET_GROUP=DEFI`) can only process data from ONE source bucket

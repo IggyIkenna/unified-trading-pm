@@ -11,6 +11,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-26
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED (frontmatter status:solved) —
+> `_renormalize_legacy_tradfi_instrument_ids()` shipped MDPS@fa39207 + 2 regression tests; legacy CME-range reprocess
+> tracked by `plans/epics/mtds_mdps_master.md` MDPS-3.3.TradFi-V.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 > **Related (sibling facet, same failing rows):**
 > [`mdps_tradfi_schema_contract_gaps_2026_05_22.md`](mdps_tradfi_schema_contract_gaps_2026_05_22.md) covers the
 > **NaN-OHLC / missing-SchemaContract** facet. This issue covers the **malformed `instrument_id`** facet. The same CME

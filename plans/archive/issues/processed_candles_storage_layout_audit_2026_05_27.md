@@ -7,6 +7,13 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — audit (explicitly 'not a decision'); Task 1.1 in-memory
+> resample shipped features@2b20c795; storage-consolidation candidates recorded in
+> `plans/active/features_calc_efficiency_and_correctness_2026_05_27.md` (needs-design + blocked-on-migration-window).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 ### 1. Per-timeframe object cardinality + byte size
@@ -20,7 +27,7 @@ Measured from live GCS (2026-05-27) against cefi bucket `market-data-tick-cefi-c
 #### CeFi (BITGET-FUTURES, 2026-05-03, `data_type=trades`, BTCUSDT sample)
 
 | timeframe | rows/file | bytes/file (typical) | files/instrument/year |
-|-----------|-----------|----------------------|-----------------------|
+| --------- | --------- | -------------------- | --------------------- |
 | 24h       | 1         | ~11.8 KB             | 365                   |
 | 4h        | 6         | ~12.4 KB             | 365                   |
 | 1h        | 24        | ~14.2 KB             | 365                   |
@@ -30,18 +37,19 @@ Measured from live GCS (2026-05-27) against cefi bucket `market-data-tick-cefi-c
 | 15s       | 5760      | ~350 KB              | 365                   |
 
 Notes:
+
 - 24h ≈ 11.8 KB (not 6.6 KB as the plan pre-grounded — the grounded number was from an older, sparser layout; current
   MDPS writer includes more columns). Row count confirmed at exactly 1.
-- 4h ≈ 12.4 KB / 6 rows, 1h ≈ 14.2 KB / 24 rows — these are near-identical to 24h in bytes but have 6× / 24× more
-  rows because of header/footer overhead per parquet file; marginal storage gain from consolidation at this tier.
+- 4h ≈ 12.4 KB / 6 rows, 1h ≈ 14.2 KB / 24 rows — these are near-identical to 24h in bytes but have 6× / 24× more rows
+  because of header/footer overhead per parquet file; marginal storage gain from consolidation at this tier.
 - 15s ≈ 350 KB / 5760 rows — already fine-grained and the largest daily file; no consolidation benefit.
 
 #### DeFi (UNISWAP_V2-ETHEREUM, 2026-01-24, `data_type=dex_swaps`)
 
-| timeframe | bytes/file (sample) | rows (est.) |
-|-----------|---------------------|-------------|
+| timeframe | bytes/file (sample) | rows (est.)           |
+| --------- | ------------------- | --------------------- |
 | 15s       | ~14–50 KB           | varies (sparse pools) |
-| 24h       | ~12 KB (est.)       | 1           |
+| 24h       | ~12 KB (est.)       | 1                     |
 
 DeFi pool files are sparse (not all 5760 15s slots have swaps) so 15s file sizes vary widely (11 KB–50 KB in sample).
 All 7 timeframes present for recent days (2026-01-24 is the last day in defi bucket as of 2026-05-27). The defi bucket
@@ -54,12 +62,13 @@ separately measured but expected to be in the same 12–20 KB range for 24h/1h, 
 day-partitions going back further (equities have older history than crypto).
 
 **Key confirmed facts:**
+
 - 24h = 1 row/file, ~12 KB; reading 1 year of daily candles = 365 GCS GET requests, ~4.3 MB total data
 - 4h = 6 rows/file, ~12 KB; reading 1 year = 365 GCS GET requests
 - 15s = 5760 rows/file, ~350 KB; reading 1 year = 365 GCS GET requests
 
-The read-count per year is the same (365) across ALL timeframes — the cost difference is **request latency**, not
-bytes (GCS GET ~30–100ms each; 365 GETs = 10–37 seconds of pure latency for one year / one instrument).
+The read-count per year is the same (365) across ALL timeframes — the cost difference is **request latency**, not bytes
+(GCS GET ~30–100ms each; 365 GETs = 10–37 seconds of pure latency for one year / one instrument).
 
 ### 2. Read-amplification map
 
@@ -68,10 +77,12 @@ Baseline: `_process_feature_group` loop in `batch_handler.py:882-895` (commit 7b
 `data_loader.load_candles_with_buffer()` → `_collect_daily_frames()` → one GET per day in the lookback window.
 
 For a delta_one CEFI backfill with `output_timeframes = [15s,1m,5m,15m,1h,4h,24h]`:
+
 - **Base timeframe read** (e.g. `15s`): 1 GET × (buffer_days + 1) days per instrument
 - **6 additional TF reads**: 6 GETs × (buffer_days + 1) days per instrument
 
 For a 30-day backfill with a 30-day buffer window, per instrument:
+
 - Today: `7 TFs × 60 days = 420 GETs/instrument` (7BD77525 baseline)
 - Minimum: `1 TF × 60 days = 60 GETs/instrument` → 7× improvement possible
 
@@ -90,9 +101,9 @@ parallelism: current = 70 min, optimal = 10 min. Even with concurrency this is t
 - **Write-path blast radius:**
   - MDPS writer: `market_data_processing_service/app/core/candle_write_mixin.py` +
     `market_data_processing_service/app/core/output_path_helpers.py::build_processed_candle_path` — the
-    `processed_prefix` currently encodes `day=YYYY-MM-DD`. Changing to yearly requires a new prefix template and a
-    new write mode (append or overwrite). This is **non-trivial**: live MDPS writes one day at a time; a yearly file
-    must be appended-to each day or rewritten, which removes write-idempotency.
+    `processed_prefix` currently encodes `day=YYYY-MM-DD`. Changing to yearly requires a new prefix template and a new
+    write mode (append or overwrite). This is **non-trivial**: live MDPS writes one day at a time; a yearly file must be
+    appended-to each day or rewritten, which removes write-idempotency.
   - Manifest shard-granularity SSOT: currently shard = `(date, instrument)`. A yearly file changes the shard atom to
     `(year, instrument)`, requiring downstream manifest consumers (features-service `dependency_checker.py`,
     `LookbackValidator`, `read_availability_index`) to be updated.
@@ -125,33 +136,37 @@ parallelism: current = 70 min, optimal = 10 min. Even with concurrency this is t
 ### 4. Where the rewrite lands (SSOT files)
 
 **MDPS writer (canonical partition-key construction):**
-- `market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py::build_processed_candle_path` — line 53-75.
-  The `processed_prefix` argument carries `processed_candles/by_date/day={D}/timeframe={T}/data_type={DT}`. Any
-  partition-key change requires changing the caller that builds `processed_prefix`.
+
+- `market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py::build_processed_candle_path`
+  — line 53-75. The `processed_prefix` argument carries
+  `processed_candles/by_date/day={D}/timeframe={T}/data_type={DT}`. Any partition-key change requires changing the
+  caller that builds `processed_prefix`.
 - `market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py` — calls
   `build_processed_candle_path`; this is where the write-mode (create vs append) would need to change for yearly files.
 
 **Features-service reader:**
-- `features-service/features_service/delta_one/app/core/data_loader.py::_collect_daily_frames` — lines 300-335.
-  This iterates `current_date += timedelta(days=1)` and calls `_resolve_blob_paths` per day. For consolidated files,
-  this loop would become a single read per year/month.
-- `features-service/features_service/delta_one/app/core/data_loader.py::_build_blob_path` — lines 513-552. Builds
-  the canonical path `processed_candles/by_date/day={D}/timeframe={T}/data_type={DT}/venue={V}/{instrument_id}.parquet`.
+
+- `features-service/features_service/delta_one/app/core/data_loader.py::_collect_daily_frames` — lines 300-335. This
+  iterates `current_date += timedelta(days=1)` and calls `_resolve_blob_paths` per day. For consolidated files, this
+  loop would become a single read per year/month.
+- `features-service/features_service/delta_one/app/core/data_loader.py::_build_blob_path` — lines 513-552. Builds the
+  canonical path `processed_candles/by_date/day={D}/timeframe={T}/data_type={DT}/venue={V}/{instrument_id}.parquet`.
   This must be updated for any new partition scheme.
 
 **Manifest shard SSOT:**
+
 - `codex/02-data/availability-manifest-and-data-status.md` — declares shard atom as `(date, instrument)`. Any partition
   change requires a codex update here.
 - `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` — the single-walk-discipline HARD RULE document.
 
 ### 5. Recommendation framing (for operator)
 
-| Candidate           | Tag                                       | Rationale                                                                                   |
-|--------------------|-------------------------------------------|---------------------------------------------------------------------------------------------|
-| 24h → yearly        | `needs-design + blocked-on-migration-window` | Biggest gain (365× read reduction), but MDPS write semantics + manifest shard must change. |
-| 4h/1h/5m/15m → monthly | `needs-design + blocked-on-migration-window` | Good gain (30× for monthly lookbacks), same blast radius as above.                      |
-| 15s/1m → keep per-day | `no-brainer`                              | Already fine; no benefit from consolidation.                                                |
-| In-memory resample in features-service | `no-brainer` | Read base TF (15s or 1m) once; OHLC-resample to {5m,15m,1h,4h,24h} in-memory. Eliminates 6/7 reads **today** with zero MDPS changes. This is Task 1.1 of the plan. |
+| Candidate                              | Tag                                          | Rationale                                                                                                                                                          |
+| -------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 24h → yearly                           | `needs-design + blocked-on-migration-window` | Biggest gain (365× read reduction), but MDPS write semantics + manifest shard must change.                                                                         |
+| 4h/1h/5m/15m → monthly                 | `needs-design + blocked-on-migration-window` | Good gain (30× for monthly lookbacks), same blast radius as above.                                                                                                 |
+| 15s/1m → keep per-day                  | `no-brainer`                                 | Already fine; no benefit from consolidation.                                                                                                                       |
+| In-memory resample in features-service | `no-brainer`                                 | Read base TF (15s or 1m) once; OHLC-resample to {5m,15m,1h,4h,24h} in-memory. Eliminates 6/7 reads **today** with zero MDPS changes. This is Task 1.1 of the plan. |
 
 **Operator call needed:** The in-memory-resample path (Task 1.1) is a pure features-service change and is the fastest
 path to fixing the 7× read problem. Storage consolidation (a, b) is the correct long-term fix but requires a migration

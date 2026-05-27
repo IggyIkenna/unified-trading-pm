@@ -14,6 +14,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — CAPTURED — all P0/P1 todos ✅; ongoing VM-completion re-audit tracked by
+> `plans/epics/mtds_mdps_master.md` MTDS-3.2.A-V.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 # CeFi manifest remediation — 2026-05-24
 
 ## What I found

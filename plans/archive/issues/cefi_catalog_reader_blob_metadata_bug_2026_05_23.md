@@ -11,6 +11,12 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — blob→str fix at MTDS `cefi_catalog_reader.py:108`; all
+> operator cleanup actions ticked (17 VMs deleted, bait sentinels flipped, source shard quarantined).
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 **17 CeFi backfill VMs** launched in two waves on 2026-05-23 (~14:21 UTC and ~16:15 UTC) recorded "0 venues ok, 0

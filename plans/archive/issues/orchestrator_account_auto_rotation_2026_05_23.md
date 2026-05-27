@@ -12,6 +12,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — account auto-rotation shipped agent-orchestrator@a03f874
+> (`_pick_next_account` / `_spawn_with_account_bg` + rotation events). Only residual was a manual simulation test.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
+> `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 `worker.md` line 304-305 states:
