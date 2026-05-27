@@ -118,26 +118,42 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
 - [ ] [P2] **1.5 Idempotent skip + column pruning + predicate pushdown.** Skip already-written partitions; read only the
   columns + date-range each calculator needs.
 - [ ] [P3] **1.6 Parallelism tune.** I/O-bound → MAX_WORKERS≈16 across instruments × timeframes; measure RAM (85%→halve).
+- [ ] [P3][PERF] **1.7 De-fragment lagged-feature insertion** (`app/calculators/base.py:478`) — surfaced by Phase-2
+  suites as a pandas `PerformanceWarning`: per-lag `features[lagged_name] = features[feature].shift(lag)` does N
+  `frame.insert`s → highly-fragmented frame (slow compute, high RAM). Fix: build all lagged columns then
+  `pd.concat(axis=1)` once. Compute-side (not I/O) but real for the wide ~964-col surface.
 
 ### Phase 2 — Feature-function correctness verification `[P1]`
 
 Principle: trust ta-lib's math; verify OUR wiring + the custom features. Scale to ~thousands via a registry; reserve
 hand-written goldens for custom families.
 
-- [ ] [P1] **2.1 Feature registry (declarative SSOT).** Each feature declares: input columns, timeframe, period/config,
+- [x] ✅ [P1] **2.1 Feature registry (declarative SSOT).** Each feature declares: input columns, timeframe, period/config,
   output name, dtype, valid range, and ta-lib-backed-vs-custom. Audit registry-vs-reality: declared input == column
   actually consumed; output name == what's written; period config == applied. (The "right dimension / right
-  input/output" check.)
-- [ ] [P1] **2.2 ta-lib-equality tests** for every ta-lib-backed feature: assert our output == direct ta-lib(input) on a
-  fixture. Catches wrong-column / wrong-period / wrong-output wiring cheaply across the masses.
-- [ ] [P1] **2.3 No-lookahead audit (PIT) — all features.** Shift input by +1 bar; assert feature at t is unchanged by
-  t+1 data. The deadliest trading bug; auto-applied from the registry.
-- [ ] [P1] **2.4 Registry-driven invariants — all features.** Auto-generate range (RSI∈[0,100], ADX≥0, *_ratio∈[0,1]),
-  NaN-policy, dtype checks across every feature.
-- [ ] [P1] **2.5 Custom-feature golden + edge fixtures.** Hand-built fixtures for swing high/low, market-structure,
+  input/output" check.) — **DONE** features@9bcbe3c4: `app/features/registry.py` 44 `FeatureSpec` across 5 groups +
+  `CUSTOM_GROUPS` + `build_full_registry()`/`get_talib_backed_specs()`/`get_custom_specs()`; `test_feature_registry.py`
+  15 integrity assertions (new spec auto-fails on invariant violation). basedpyright 0/0/0.
+- [x] ✅ [P1] **2.2 ta-lib-equality tests** for every ta-lib-backed feature: assert our output == direct ta-lib(input) on a
+  fixture. Catches wrong-column / wrong-period / wrong-output wiring cheaply across the masses. — **DONE**
+  `test_talib_equality.py` parametrized over 14 talib-backed specs (SMA×5/EMA×2/RSI×4/ATR/WMA), rtol=1e-4, NaN-boundary
+  ±3 bars. All pass.
+- [x] ✅ [P1] **2.3 No-lookahead audit (PIT) — all features.** Shift input by +1 bar; assert feature at t is unchanged by
+  t+1 data. The deadliest trading bug; auto-applied from the registry. — **DONE** `test_no_lookahead_pit.py`
+  N=300+1-future-bar, compares at bar 299, fails loud "LOOKAHEAD BIAS DETECTED". **No lookahead bug found (clean bill).**
+- [x] ✅ [P1] **2.4 Registry-driven invariants — all features.** Auto-generate range (RSI∈[0,100], ADX≥0, *_ratio∈[0,1]),
+  NaN-policy, dtype checks across every feature. — **DONE** `test_registry_invariants.py` auto-parametrized range/NaN/dtype
+  + specific guards (RSI[0,100], ADX≥0, BB-pos[0,1], swing flags binary, wedge quality[0,1]).
+- [x] ✅ [P1] **2.5 Custom-feature golden + edge fixtures.** Hand-built fixtures for swing high/low, market-structure,
   wedge-convergence, `tf_*` alignments: known price series with hand-marked expected pivots/labels + edge cases
   (insufficient bars, all-NaN, constant, single bar, gaps/no-trade, plateaus, monotonic, boundary bars). These are the
-  real risk (no library to lean on; one swing bug already found 2026-05-26).
+  real risk (no library to lean on; one swing bug already found 2026-05-26). — **DONE** `test_custom_feature_goldens.py`
+  swing goldens + WedgeDetector convergence math + 6 edge cases + ATR-bug regression for the 2026-05-26 fix. **Suite
+  total: 129 passed, 46 skipped (external-data groups), basedpyright 0/0/0.** Verified by orchestrator (not just agent
+  self-report).
+- [ ] [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) — surfaced
+  by the 2.3 lookahead suite as a pandas `FutureWarning`: **will raise in a future pandas**. Clean ≤5-min fix:
+  `day_vwap = day_vwap.ffill()` / `week_vwap = week_vwap.ffill()`. (Not in Phase-1 agent's scope — orchestrator-owned.)
 - [ ] [P2] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
   values, absurd variance/outliers ("computes but wrong").
 - [ ] [P3] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
