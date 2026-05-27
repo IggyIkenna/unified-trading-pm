@@ -135,7 +135,10 @@ enum.
       AAVE_V3 across handlers. Residual fix (3e48ac9b): `liquidations_handler.py` manifest
       `record_captured/empty/failed` called `venue=protocol` (lowercase "aave_v3") instead of `venue=protocol.upper()`,
       diverging from GCS path and freshness-cache row_key which both used `.upper()`. Now all three manifest recording
-      calls use `protocol.upper()`.
+      calls use `protocol.upper()`. **2nd residual (MTDS@c60eb053, 2026-05-27)**: the sibling
+      `liquidation_events_handler.py` had the SAME lowercase-venue bug at `record_captured/empty/failed` +
+      `_build_row_key` (3e48ac9b only fixed `liquidations_handler`). Now uppercased too. Any historical lowercase
+      `liquidation_events` rows are covered by the Bug 5 B5.4 manifest reconcile.
 - [x] Bug 3: ✅ FULLY SUPPRESSED — IS@dbf7bf6 + IS@5a709c4 (2026-05-22). MTDS (dbf7bf6): UNISWAP_V3/V2/AAVE_V3 →
       empty_confirmed. Canonical rows UNISWAP_V3(187k)/UNISWAP_V2(22k)/AAVE_V3(30k) restored. IS DeFi (5a709c4): 31,709
       rows suppressed — AAVE_V3(9252), UNISWAP_V3(7641), COMPOUND_V3(4087), PANCAKESWAP_V3(3141), SUSHISWAP_V3(2962),
@@ -204,6 +207,11 @@ findings that belong here, not as parallel issues:
 
 ## Bug 5 (OPEN — surfaced 2026-05-26 via deployment-ui pool-breakdown): IS parquet PATH still glued while manifest venue is canonical
 
+> **📌 Epic-tracked 2026-05-27**: Bug 5 (B5.3→B5.7 migration chain) is now referenced under
+> [`infrastructure_master.md`](../../epics/infrastructure_master.md) P0 block (its declared `parent_epic`). Previously
+> it lived only here → invisible to the epic's P-blocks (orphaned-work risk). The chain stays operator-window-gated
+> (single-walk-discipline). B5.1/B5.2 root-cause code already shipped.
+
 **Provenance**: operator drilled `Pool breakdown · AAVE_V3-ARBITRUM · 2026-05-03` in deployment-ui → "No pool data".
 
 **Precise divergence** (instruments-store-defi, verified 2026-05-26):
@@ -233,8 +241,9 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
 
 ### Phased migration (HARD-ORDERED — writer fix MUST precede GCS re-key or it regenerates glued paths)
 
-- [x] ✅ [CODE] P1. **B5.1 — IS writer parquet-path canonicalization (ROOT CAUSE)** — **DONE** — unified-api-contracts@fdc9206b
-      + instruments-service@a57ae01c (both QG-green exit 0). Authoritative canonicalizer added to UAC:
+- [x] ✅ [CODE] P1. **B5.1 — IS writer parquet-path canonicalization (ROOT CAUSE)** — **DONE** —
+      unified-api-contracts@fdc9206b + instruments-service@a57ae01c (both QG-green exit 0). Authoritative canonicalizer
+      added to UAC:
       `unified_api_contracts.registry.capability_declarations._defi.canonicalize_defi_venue_combined(raw: str) -> str`
       (next to `parse_defi_venue`; exported in `__all__`; 7-case unit test in
       `tests/internal/test_canonicalize_defi_venue_combined.py`). It splits on the last known-chain suffix
@@ -243,9 +252,9 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       unknown protocol / non-DeFi (no known chain) → passthrough. `orchestrator.py:_write_venue` now calls it (replacing
       the prior `parse_defi_venue`-based attempt, which did NOT canonicalise the glued protocol). Rewrites `venue_str`
       only when result differs AND not a sports-ref venue (existing `_sports_ref_prefixes` guard kept). This makes the
-      parquet partition (line ~3094), the `venue=` arg (~3096), the manifest split (~3132–3144), and the else-branch path
-      (~3178) all use the canonical combined form consistently. Pre-audit: `_write_venue` is the SOLE DeFi parquet-write
-      site; `_write_futures_contracts` (~3225) is TradFi-only (CME/ICE → passthrough). Tests: UAC 7/7, IS
+      parquet partition (line ~3094), the `venue=` arg (~3096), the manifest split (~3132–3144), and the else-branch
+      path (~3178) all use the canonical combined form consistently. Pre-audit: `_write_venue` is the SOLE DeFi
+      parquet-write site; `_write_futures_contracts` (~3225) is TradFi-only (CME/ICE → passthrough). Tests: UAC 7/7, IS
       `TestWriteVenueCanonicalPartition` 4/4. **NOTE (slot-master):** slot-1's `unified-api-contracts` worktree on
       `tab/ikennaigboaka/1` was 143 behind / 83 ahead of `origin/live-defi-rollout` (stale `semver-rollout[bot]`
       ghost-venue lineage `5b61be50`); rebase hit a foreign CODE conflict (`scenario_overlay.py`, `registry/__init__.py`
@@ -254,28 +263,28 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       commits + 4 foreign stashes are LEFT INTACT for slot-master reconciliation (all other slots' UAC worktrees are
       already at LDR HEAD ca992033 — only slot-1 is stale).
 - [x] ✅ [CODE] P2. **B5.2 — UAC alias cleanup** — **DONE (no change required) — FINDING**: `LEGACY_DEFI_VENUE_ALIASES`
-      targets `VELODROME_V2→VELODROMEV2-OPTIMISM`, `TRADER_JOE_V2→TRADER_JOEV2-AVALANCHE`, `MORPHO_VAULTS→MORPHOVAULTS-…`
-      are **already consistent with the authoritative canonicalizer** and were LEFT AS-IS. Rationale: (1) `VELODROMEV2`
-      and `TRADER_JOEV2` ARE the canonical `venue_prefix` in `PROTOCOL_CAPABILITIES` (glued, no underscore) — confirmed
-      via `build_defi_venues()` (`VELODROMEV2-OPTIMISM` / `TRADER_JOEV2-AVALANCHE` are the built canonical venues), so
-      glued IS canonical for these two and `canonicalize_defi_venue_combined` is a no-op on them; changing the alias
-      target would CREATE divergence from the writer-path canonicalizer. (2) `MORPHOVAULTS` is NOT in
-      `PROTOCOL_CAPABILITIES` at all (neither glued nor underscore) and is NOT in `build_defi_venues()`; it is the
-      manifest/legacy form listed in `DEPRECATED_DEFI_GHOST_VENUE_NAMES` ("superseded by MORPHO_VAULTS"), and
-      `canonicalize_defi_venue_combined("MORPHOVAULTS-ETHEREUM")` passes it through unchanged (unknown protocol) — so the
-      writer never produces `MORPHO_VAULTS-…`, and re-targeting the alias to a venue absent from the built universe would
-      break alias resolution. Aliases retained as read-time back-compat shim per operator directive (do NOT remove during
-      migration). The plan's "3 stray glued refs" line refs (`chain_env.py:190`, `_defi_coverage.py:31`,
-      `defi_venues.py:285`) are stale line numbers — those lines are AAVE_V3 deployment dates / ghost-name comments, not
-      glued-bug sites. **NOTE:** `_defi_coverage.py` `DEPRECATED_DEFI_GHOST_VENUE_NAMES` comments `VELODROMEV2 # superseded
-      by VELODROME_V2`, which contradicts `PROTOCOL_CAPABILITIES` (where glued `VELODROMEV2` is canonical). This is a stale
-      comment — see new todo B5.8.
+      targets `VELODROME_V2→VELODROMEV2-OPTIMISM`, `TRADER_JOE_V2→TRADER_JOEV2-AVALANCHE`,
+      `MORPHO_VAULTS→MORPHOVAULTS-…` are **already consistent with the authoritative canonicalizer** and were LEFT
+      AS-IS. Rationale: (1) `VELODROMEV2` and `TRADER_JOEV2` ARE the canonical `venue_prefix` in `PROTOCOL_CAPABILITIES`
+      (glued, no underscore) — confirmed via `build_defi_venues()` (`VELODROMEV2-OPTIMISM` / `TRADER_JOEV2-AVALANCHE`
+      are the built canonical venues), so glued IS canonical for these two and `canonicalize_defi_venue_combined` is a
+      no-op on them; changing the alias target would CREATE divergence from the writer-path canonicalizer. (2)
+      `MORPHOVAULTS` is NOT in `PROTOCOL_CAPABILITIES` at all (neither glued nor underscore) and is NOT in
+      `build_defi_venues()`; it is the manifest/legacy form listed in `DEPRECATED_DEFI_GHOST_VENUE_NAMES` ("superseded
+      by MORPHO_VAULTS"), and `canonicalize_defi_venue_combined("MORPHOVAULTS-ETHEREUM")` passes it through unchanged
+      (unknown protocol) — so the writer never produces `MORPHO_VAULTS-…`, and re-targeting the alias to a venue absent
+      from the built universe would break alias resolution. Aliases retained as read-time back-compat shim per operator
+      directive (do NOT remove during migration). The plan's "3 stray glued refs" line refs (`chain_env.py:190`,
+      `_defi_coverage.py:31`, `defi_venues.py:285`) are stale line numbers — those lines are AAVE_V3 deployment dates /
+      ghost-name comments, not glued-bug sites. **NOTE:** `_defi_coverage.py` `DEPRECATED_DEFI_GHOST_VENUE_NAMES`
+      comments `VELODROMEV2 # superseded     by VELODROME_V2`, which contradicts `PROTOCOL_CAPABILITIES` (where glued
+      `VELODROMEV2` is canonical). This is a stale comment — see new todo B5.8.
 - [ ] [CODE] P3. **B5.8 — reconcile stale VELODROMEV2/TRADER_JOEV2 ghost-name comments** (provenance: B5.2 finding
-      2026-05-27). `DEPRECATED_DEFI_GHOST_VENUE_NAMES` in `_defi_coverage.py` comments `VELODROMEV2 # superseded by
-      VELODROME_V2`, but the authoritative `PROTOCOL_CAPABILITIES.venue_prefix` is glued `VELODROMEV2` (glued = canonical).
-      The comment direction is backwards for these two venues. Low-risk doc/comment fix; verify no consumer treats
-      `VELODROME_V2`/`TRADER_JOE_V2` (underscore) as canonical before adjusting. **NICE-TO-HAVE** — no data impact (the
-      canonicalizer + writer already treat glued as canonical).
+      2026-05-27). `DEPRECATED_DEFI_GHOST_VENUE_NAMES` in `_defi_coverage.py` comments
+      `VELODROMEV2 # superseded by     VELODROME_V2`, but the authoritative `PROTOCOL_CAPABILITIES.venue_prefix` is
+      glued `VELODROMEV2` (glued = canonical). The comment direction is backwards for these two venues. Low-risk
+      doc/comment fix; verify no consumer treats `VELODROME_V2`/`TRADER_JOE_V2` (underscore) as canonical before
+      adjusting. **NICE-TO-HAVE** — no data impact (the canonicalizer + writer already treat glued as canonical).
 - [ ] [SCRIPT] P1. **B5.3 — GCS re-key (SCHEDULED MIGRATION WINDOW — single-walk-discipline gate)**: re-key
       `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/` across instruments-store-defi (+ MTDS-defi,
       features-onchain). This is a partition-key change = whole-corpus walk = review-blocking ad-hoc per single-walk

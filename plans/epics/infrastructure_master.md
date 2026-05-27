@@ -188,12 +188,11 @@ reconcilers + `mtds-s4-10` rescan complete.
       write plumb) [AUDIT 2026-05-07: VERIFIED —
       `features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258` has
       `timeframe=` write plumb; ready to flip]
-- [x] ✅ [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`.
-      — strategy@`2545b0be` / execution@`f821db863` (tests pushed to LDR 2026-05-27);
-      ml-training@`78ab138` / ml-inference (tests committed locally — repos archived on GitHub, cannot push).
-      Writer wiring confirmed: ml-training@`f7369f2` / ml-inference@`69d6313` / strategy@`90e00bb` /
-      execution@`0b664d99` Phase 1B job_id writers; 3 tests per service pass (12 total).
-      [ARCHIVED-REPO NOTE: ml-training-service + ml-inference-service are GitHub-archived (read-only).
+- [x] ✅ [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`. —
+      strategy@`2545b0be` / execution@`f821db863` (tests pushed to LDR 2026-05-27); ml-training@`78ab138` / ml-inference
+      (tests committed locally — repos archived on GitHub, cannot push). Writer wiring confirmed: ml-training@`f7369f2`
+      / ml-inference@`69d6313` / strategy@`90e00bb` / execution@`0b664d99` Phase 1B job_id writers; 3 tests per service
+      pass (12 total). [ARCHIVED-REPO NOTE: ml-training-service + ml-inference-service are GitHub-archived (read-only).
       Tests exist in slot-7 worktree but remote push blocked. Tests for active repos fully verified.]
 - [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
       applicable). [AUDIT 2026-05-07: FRESH — actionable; deferred per CLAUDE.md DEFI canonicalisation closeout
@@ -399,8 +398,8 @@ without the cleanup-script output attached.
       `PREDICTION_GROUPS` / `*_LAUNCH_DATES` / `*_GENESIS_DATES` registries MUST also include a CSV path under
       `unified-trading-pm/audits/entity_lifecycle/` referenced in the commit body OR an `[entity-skip-cleanup]` tag with
       operator-explained reason. Fails CI otherwise. Note: shipped as STEP 5.91 (STEP 5.65 is already taken by
-      removed-symbol AST-walk). — PM@4cc92ac20 + check_entity_registry_cleanup.py + base-service.sh. QG green. 2026-05-27
-      slot-7.
+      removed-symbol AST-walk). — PM@4cc92ac20 + check_entity_registry_cleanup.py + base-service.sh. QG green.
+      2026-05-27 slot-7.
 
 ### Hard schema enforcement at write boundary (NEW sub-plan reference)
 
@@ -448,6 +447,17 @@ body. · **estimate**: 1.2 cal AI-days (class: refactor, 0.4× multiplier)
 **status**: ✅ ARCHIVED 2026-05-23 — All 11 todos done. F-39/40/41/42 Cloud Run Jobs + Cloud Scheduler crons provisioned
 on GCP; F-43 Solana devnet paper path; F-44 ManualTradeGateDialog Playwright e2e. BLRS dry-run succeeded;
 strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra)
+
+### [`defi_coverage_capability_alignment_2026_05_22`](../active/issues/defi_coverage_capability_alignment_2026_05_22.md) — Bug 5 DeFi venue GCS re-key chain
+
+**status**: 🔵 OPEN — lifted into this epic 2026-05-27 (Bug 5 work was invisible to the P-blocks → orphaned-work risk).
+Root-cause code shipped (B5.1 IS writer parquet-path canonicalisation UAC@fdc9206b + IS@a57ae01c; B5.2 no-op). Remaining
+is the operator-window-gated migration chain (HARD-ORDERED, single-walk-discipline gate): **B5.3** GCS re-key
+glued→underscore venue keys (SCHEDULED MIGRATION WINDOW) → **B5.4** manifest reconcile ALL version-suffixed families
+(only AAVE_V3 verified) → **B5.5 (P0)** delete old glued keys after parity → **B5.6 [UI]** verify deployment-ui
+pool-breakdown post-migration (+`pw:L2`) → **B5.7 (P0 VERIFY)** re-drill `AAVE_V3-ARBITRUM·2026-05-03`. **B5.8 (P3)**
+stale-comment cleanup. Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. Full phased
+todos in the issue doc.
 
 ## P1 — important; post-current-gate
 

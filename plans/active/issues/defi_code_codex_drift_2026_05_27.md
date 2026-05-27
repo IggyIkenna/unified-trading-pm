@@ -27,7 +27,7 @@ dup).
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------- |
 | D1  | `defi-data-types-catalog.md` uses stale names `swap_events`/`pool_state`/`lending_metrics`/`funding_rates`; code writes `dex_swaps`/`dex_pool_state`/`lending_indices`/`perp_funding`                                                                     | codex-doc    | **actionable now**               |
 | D2  | Legacy stale prefixes `lst_rates/`,`lending_indices/`,`dex_pools/` inside `market-data-tick-defi-prd` (stop 2026-04-14); canonical data is in dedicated buckets `lst-rates-*`/`lending-indices-*`/`dex-pools-*`                                           | data cleanup | **DEFERRED-UNTIL-PIPELINE-DONE** |
-| D3  | `DefiLendingIndicesAdapter` exists + decorator-registered + UAC `needs_candle_processing("lending_indices")=True`, but it's **not imported** in top-level `app/adapters/__init__.py` → silently never runs. Intent is bypass (features read lending raw). | code bug     | **DEFERRED-UNTIL-PIPELINE-DONE** |
+| D3  | `DefiLendingIndicesAdapter` exists + decorator-registered + UAC `needs_candle_processing("lending_indices")=True`, but it's **not imported** in top-level `app/adapters/__init__.py` → silently never runs. Intent is bypass (features read lending raw). | code bug     | **✅ RESOLVED 2026-05-27**       |
 | D4  | features-onchain reads bypass types raw from MTDS                                                                                                                                                                                                         | —            | aligned (no action)              |
 | D5  | `data-lineage` per-layer paths use legacy `{category}` bucket patterns                                                                                                                                                                                    | codex-doc    | tracked ML-14 (rewrite)          |
 
@@ -74,13 +74,19 @@ Codex-doc (safe now):
 
 Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-verify current state first):
 
-- [ ] [CODE] P2. D3 — set `needs_candle_processing("lending_indices")=False` (UAC) + delete dead
-      `DefiLendingIndicesAdapter` + fix `app/adapters/__init__.py` comment; QG green.
+- [x] ✅ [CODE] P2. D3 — `needs_candle_processing("lending_indices")=False` (UAC@96db70a6, reverts drift 4c98a635) +
+      dead `DefiLendingIndicesAdapter` deleted + `app/adapters/__init__.py` comment fixed + bypass test moved to
+      `BYPASS_TYPES` (MDPS@5c2b612) + epic DeFi-V note corrected (PM@e5742c656). All three sources now agree:
+      lending_indices is bypass. QG green (ruff + basedpyright + `test_defi_bypass_routing` 41/41). — 2026-05-27.
 - [ ] [CODE] P2. D10 (generalized) — 6 venues `DEFI_VENUE_PHASE=live` with no `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS`
       (EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND) + 3 inverse (SOLAYER/PICASSO/CAMBRIAN: capability
       declared, venue not in `ALL_DEFI_VENUES`): add backing OR downgrade/register. Confirm intent with operator/Ikenna.
-- [ ] [CODE] P3. D14 — `dex_pools_handler.py`: manifest records `data_type="dex_pools"` (L62) but parquet writes
-      `data_type="dex_pool_state"` (L569). Pick one canonical name so manifest + data agree.
+- [ ] [CODE] P3. D14 — `dex_pools_handler.py`: manifest records canonical `data_type="dex_pools"` (L62) but parquet
+      writes `data_type="dex_pool_state"` (L569) → manifest≠data divergence. Canonical is `dex_pools`. The write-flip
+      CANNOT be done standalone — it would split forward-writes (`dex_pools/`) from historical (`dex_pool_state/`),
+      violating single-walk discipline. **Bundled into the deferred GCS rename**: `plans/epics/mtds_mdps_master.md`
+      Phase 9 (`dex_pool_state`→`dex_pools`), which now lists the `write_defi_rows(data_type=...)` handler flip
+      alongside the on-disk hive rename so they land together. (diagnosed 2026-05-27)
 - [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
       them; reconcile the phase label (→ live, or confirm cefi-axis classification).
 - [ ] [CODE] P3. **FOR-DECISION** D7 — `bloxroute` relay URLs in `mev_events_handler.py:42-43`: operator call on whether

@@ -571,6 +571,13 @@ MTDS adapters preflight + batch-live parity
       physical GCS path matches UAC canonical name. Bundle into next GCS migration window (single-walk discipline).
       After rename: remove override mapping in `features-service/onchain/app/core/mtds_output_config.py`. Full spec:
       [`data_type_canonicalization_2026_05_23.md`](../archive/data_type_canonicalization_2026_05_23.plan.md) Phase 9.
+- [ ] [CODE] P2. **DEFERRED — bundle with the rename above (D14)** — flip the MTDS writer to the canonical name in the
+      SAME window: `market-tick-data-service/.../cli/handlers/dex_pools_handler.py:569`
+      `write_defi_rows(..., data_type="dex_pool_state")` → `data_type="dex_pools"`. Today the manifest already records
+      canonical `dex_pools` (`_DEX_POOLS_DATA_TYPE`, L62) while the parquet path uses `dex_pool_state` → manifest≠data
+      divergence. Flipping the writer standalone (before the historical rename) would split forward-writes from
+      historical, so it MUST land together with the GCS rename. Source: issue `defi_code_codex_drift_2026_05_27` D14
+      (diagnosed 2026-05-27).
 
 ### greeks-service TradFi IV fitting — MarkUpdateMessage schema gap (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
 
@@ -638,7 +645,11 @@ AI-days (class: infra)
   2026-01-24; venue field = chain-stripped (e.g. `UNISWAP_V3` not `UNISWAP_V3-ETHEREUM`) ✓. `lending_indices`: **bypass
   type** — periodic supply/borrow-index snapshot consumed raw by features-onchain (aave_lending_rates /
   aave_utilization); `needs_candle_processing("lending_indices") is False`, no candle adapter, 0
-  `lending_ohlcv**`expected by design (same as`oracle_prices`/`lst_rates`). Dead `DefiLendingIndicesAdapter`deleted mdps@5c2b612.`gas_fees`: bypass type — no adapter, 0 captured expected by design. **MTDS 2026 DEX gap** (permanent): CURVE/UNISWAP `dex_swaps`handler stopped writing after 2026-01-24 → all 2026-01-25→present cells are`empty_confirmed/SOURCE_RETURNED_ZERO`. Issue plan archived: `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
+  `lending_ohlcv**`expected by design (same as`oracle_prices`/`lst_rates`). Dead `DefiLendingIndicesAdapter`deleted
+  mdps@5c2b612.`gas_fees`: bypass type — no adapter, 0 captured expected by design. **MTDS 2026 DEX gap** (permanent):
+  CURVE/UNISWAP `dex_swaps`handler stopped writing after 2026-01-24 → all 2026-01-25→present cells
+  are`empty_confirmed/SOURCE_RETURNED_ZERO`. Issue plan archived:
+  `plans/active/issues/mdps_defi_swaps_ohlcv_schema_lookup_2026_05_23.md`.
 - **MDPS-3.3.TradFi-V (P0, BLOCKED-OPERATOR-DECISION)**: 7 year VMs + 64 monthly VMs RUNNING (~66h ETA). Verify VIX
   bars + manifest v8 once 2025 VM completes.
 - **MDPS-3.3.Sports-V + Pred-V (P0, BLOCKED-OPERATOR-DECISION)**: VMs still RUNNING. Verify NaN check + manifest v8 once
