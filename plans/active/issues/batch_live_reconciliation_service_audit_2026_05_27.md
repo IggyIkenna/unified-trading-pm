@@ -319,12 +319,20 @@ leave). The strategy-service surface is the more complete one and is real today;
 - G2 ✅ DONE (BLRS@07222f6) `stage1` `latency_delta_ms` now a real median |batch−live| `metadata.inference_duration_ms`
   over matched keys + `latency_samples` gate (no-data ≠ pass); 2 unit tests; QG green. [→§7.1-5]
 - G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. [→§7.1-6]
-- G4 (P2) `SOAK_MODE` unbuilt (implement via config, not env). [→§7.1-2]
-- G5 (P2) `threshold_distribution` calibration analyzer unbuilt + codex module-name wrong. [→§7.1-3]
+- G4 (P2) `soak_mode` unbuilt. **Re-triage 2026-05-27: cross-repo.** The BLRS config flag alone is inert — the actual
+  CRITICAL→PagerDuty suppression lives in alerting-service's `recon_drift_event_handler`. BLRS is staging-only (F-21
+  gated) so this is low-urgency. Producer-side flag + alerting-side suppression should land together → grouped with the
+  alerting-service recon work (G12-adjacent). [→§7.1-2]
+- G5 (P2) `threshold_distribution` calibration analyzer unbuilt. **Re-triage 2026-05-27:** the **bps** distribution is
+  self-doable now (the bps gate is live; stage3 emits `alpha_pnl_gap_bps_{archetype}`). The **drawdown_pct + fill_rate**
+  distributions depend on D3 (those gates aren't built → routed to Ikenna). Plan: build the bps analyzer now, extend for
+  drawdown/fill once D3 lands. [→§7.1-3, §7.2 D3]
 - G6 (P1/❓) drawdown_pct + fill_rate_min green gates unimplemented (no `stage4_risk_recon`). [→§7.2 D3]
 - G7 (❓) Live recon machinery codex assigns to BLRS lives in 3 other repos; BLRS is T+1-only. [→§7.2 D1, §9.1]
 - G8 (❓) PBMS merged into strategy-service/position 2026-05-20; BLRS makes no position-query call. [→§7.2 D2, §9.2]
-- G9 (P3) `AUTO_PAUSE_LIVE` routing enum defined but never used.
+- G9 ✅ RESOLVED (no-op) `AUTO_PAUSE_LIVE` is a **documented routing action** in the codex failure-routing closed set
+  (`reconciliation-resolution.md`: alert / auto-pause-live / auto-demote-to-paper) — intentionally defined ahead of
+  wiring, not dead code. Keep as-is. (Enum members don't trip unused-symbol lints.)
 - G10 (P3) UI→resolution-API wiring (`unified-trading-system-ui` use-reports.ts hooks) unverified.
 - G11 (P2/❓) Two `/reconciliation/resolve` APIs (BLRS mock + strategy-service real) — path collision. [→§7.2 D4, §5.5]
 - G12 (**P0/cross-repo — bigger than BLRS**) **`RECON_FREEZE_ARMED` is never published by any service.** Both
