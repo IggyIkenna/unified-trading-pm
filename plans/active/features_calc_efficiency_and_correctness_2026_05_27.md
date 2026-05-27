@@ -53,6 +53,24 @@ the timeframe-coverage loop). This plan is the I/O *efficiency* + feature-*corre
 - 2026-05-26 correctness signal so far is shallow: "0 all-NaN" existence checks + one swing bug. No ta-lib-equality
   tests, no per-feature invariants, no lookahead audit, no dimension/label/config consistency check.
 
+### GCS processed-candles storage layout — grounded against real bucket 2026-05-27
+
+Inspected `gs://market-data-tick-cefi-central-element-323112/processed_candles/` directly:
+
+- **Layout**: `processed_candles/by_date/day=YYYY-MM-DD/timeframe={tf}/data_type={dt}/venue={v}/{instrument}.parquet`.
+- **Span**: 457 `day=` partitions, 2019-03-30 → 2026-05-04 (sparse — backfilled in chunks; not contiguous).
+- **All 7 timeframes are physically materialised per day** (`15s,1m,5m,15m,1h,4h,24h`). So MDPS already pre-resamples
+  and persists each TF — features-service re-reads the already-resampled candle objects per TF (it does NOT resample
+  itself). This is the corpus that the operator's "we precalculate multiple timeframes" refers to.
+- **Tiny-file problem is real and measured**:
+  - `24h` (daily) parquet = **6.6 KB, ~1 row per file**. Reading one instrument's daily series for a year = **365
+    separate GET objects** (~2.4 MB total) — request latency dominates by 100–1000×.
+  - `15s` parquet = ~152 KB/day/instrument (high-freq, fine as-is per-day).
+- **Operator's consolidation hypothesis (to AUDIT, not implement)**: low-frequency timeframes should be stored in
+  coarser objects — e.g. `24h` as a **yearly** file per instrument (1 GET for a whole year), `4h`/`1h` as **monthly**
+  files. This is a cross-cutting **MDPS-writer** change (these objects are written by market-data-processing-service,
+  not features-service), so it is an audit deliverable → follow-up plan, NOT an in-place edit on this plan's clock.
+
 ## Phased DAG (QG gate between phases)
 
 ### Phase 1 — I/O efficiency `[P1]`
@@ -60,6 +78,20 @@ the timeframe-coverage loop). This plan is the I/O *efficiency* + feature-*corre
 Principle: minimise reads + writes; compute is cheap. Measure each change against the 7×-read baseline (delta_one CEFI
 2026-05-03 wall-clock).
 
+- [ ] [AUDIT] [P1] **1.0 Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** Operator-directed:
+  before any layout redesign, ground in how data is *actually* processed + saved in `processed_candles/`. Deliverable is
+  an audit doc (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
+  - **Per-timeframe object cardinality + size** across asset_groups (cefi/defi/tradfi): rows-per-file, bytes-per-file,
+    objects-per-instrument-per-year. Confirm/extend the grounded numbers (24h ≈ 6.6 KB/1-row; 15s ≈ 152 KB/day).
+  - **Read-amplification map**: for each feature family + timeframe, how many candle GETs a typical multi-day backfill
+    issues today vs the theoretical minimum.
+  - **Consolidation candidates (cost/benefit, NOT a decision)**: (a) `24h`/daily → **yearly** file per instrument with
+    adjusted-close + daily volume etc.; (b) `4h`/`1h`/`5m`/`15m` → **monthly** file per instrument; (c) leave `15s`/`1m`
+    per-day. For each: read-count delta, write-path blast radius (MDPS writer, manifest shard granularity, WriteGate,
+    downstream readers), and the single-walk-discipline constraint (HARD RULE — any whole-corpus GCS rewalk is
+    review-blocking; must bundle into a scheduled migration window).
+  - **Where the rewrite lands**: MDPS canonical_writer partition keys vs features reader. Name the SSOT files.
+  - **Recommendation framing**: "no-brainer / needs-design / blocked-on-migration-window" — leave the call to operator.
 - [ ] [P1] **1.1 Read base candles once → resample candles in-memory to all output timeframes.** Replace the per-TF
   candle re-read in the Phase-6.A loop with: read 15s/1m for the lookback window once, OHLC-resample to
   {5m,15m,1h,4h,24h} in memory (exact aggregation), compute features per TF. Target: 7 reads → 1. (`data_loader.py` +
