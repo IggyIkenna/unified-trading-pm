@@ -12,7 +12,9 @@ source:
   - unified-trading-pm/codex/04-architecture/separation-of-concerns.md
   - unified-trading-pm/codex/04-architecture/data-flow-map.md
 locked_by: live-defi-rollout
-status: AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (2026-05-27, codex corrected); awaiting D2/D3/D4 in § 7.2
+status:
+  AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (codex corrected); D2/D3/D4/G12 → routed to ikenna-main 2026-05-27; G2/G4/G5
+  self-completing
 ---
 
 # Batch-Live Reconciliation Service (BLRS) — Audit
@@ -366,21 +368,26 @@ leave). The strategy-service surface is the more complete one and is real today;
   - `incident-gateway-state-machine.md` — removed the BLRS recovery-callback row + correction note.
   - (rejected (B): centralising live recon into BLRS — large refactor against the 2026-05-20 PBMS→strategy-service
     merge, not worth it pre-May-23.)
-- **D2 — Canonical position baseline: query strategy-service/position vs ratify event archives.** PBMS is no longer a
-  repo (merged into strategy-service/position 2026-05-20), so codex's "PBMS query API" now means
+    > **ROUTING 2026-05-27**: per operator, the heavy cross-cutting decisions below (D2, D3, D4) + the G12 safety gap
+    > are **routed to ikenna-main** (`plans/active/_agent_pings.md` 2026-05-27 entry). G12 has its own issue doc
+    > (`recon_freeze_armed_never_published_2026_05_27.md`). The bounded BLRS code gaps (G2/G4/G5) are being
+    > self-completed.
+
+- **D2 — Canonical position baseline: query strategy-service/position vs ratify event archives. → ROUTED TO IKENNA.**
+  PBMS is no longer a repo (merged into strategy-service/position 2026-05-20), so codex's "PBMS query API" now means
   `position/api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`. Either:
   - **(A)** BLRS calls the strategy-service/position query API for the canonical position baseline (codex-intent, real
     endpoints exist today, stronger correctness — a T+1 audit grounded on the canonical ledger).
   - **(B)** Ratify GCS event-archive reads as sufficient for a T+1 audit and amend the codex consumer matrix + the stale
     standalone-PBMS reference. _Lower effort; weaker canonical guarantee._
-- **D4 — (new) Two `/reconciliation/resolve` APIs.** BLRS (mock) and strategy-service/position (real) both serve
-  `POST /reconciliation/resolve` (§ 5.5). Options: (A) BLRS drops its resolution API and the UI uses
+- **D4 — (new) Two `/reconciliation/resolve` APIs. → ROUTED TO IKENNA.** BLRS (mock) and strategy-service/position
+  (real) both serve `POST /reconciliation/resolve` (§ 5.5). Options: (A) BLRS drops its resolution API and the UI uses
   strategy-service/position for live + a distinct BLRS path (e.g. `/t1-recon/breaks`) for batch; (B) namespace BLRS's
   routes under a `/t1/` prefix; (C) leave both (accept the collision, document which UI hook calls which). Recommend (A)
   or (B) before any UI wiring lands.
-- **D3 — Are the drawdown_pct + fill_rate_min green gates in May-23 scope?** UAC `RECON_GREEN_THRESHOLDS` defines all
-  three gates; only bps/slippage is wired. Build the drawdown + fill-rate gates now (needs a risk-recon step), or
-  formally defer to post-cutover with a named successor.
+- **D3 — Are the drawdown_pct + fill_rate_min green gates in May-23 scope? → ROUTED TO IKENNA.** UAC
+  `RECON_GREEN_THRESHOLDS` defines all three gates; only bps/slippage is wired. Build the drawdown + fill-rate gates now
+  (needs a risk-recon step), or formally defer to post-cutover with a named successor.
 
 ---
 

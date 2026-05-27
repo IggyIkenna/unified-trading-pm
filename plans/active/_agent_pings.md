@@ -4981,10 +4981,10 @@ live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secr
 - **Verified:** nothing was persisted/pushed by the test work (git clean, chat_id not in any repo file). Pure config
   gap. Plan-of-record: this split-Telegram-channels thread + `alerting-service/alerting_service/config_reloaders.py`
   (`_SM_CHAT_ID_OPS`).
-- **✅ [2026-05-26 ikenna-slot-7 ACK]**: Secret `alerting-telegram-chat-id-ops` created (version [1], value `-5296232662`,
-  project `central-element-323112`, replication=automatic). IAM: `roles/secretmanager.secretAccessor` granted to
-  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (same SA used by alerting-service Cloud Run jobs
-  per `audit03_cron_provisioning.tf`). Hot-reload picks it up within ~5 min. Dual-channel split is LIVE.
+- **✅ [2026-05-26 ikenna-slot-7 ACK]**: Secret `alerting-telegram-chat-id-ops` created (version [1], value
+  `-5296232662`, project `central-element-323112`, replication=automatic). IAM: `roles/secretmanager.secretAccessor`
+  granted to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (same SA used by alerting-service Cloud
+  Run jobs per `audit03_cron_provisioning.tf`). Hot-reload picks it up within ~5 min. Dual-channel split is LIVE.
 
 ---
 
@@ -5051,9 +5051,9 @@ code-gap items D10/D15 in `plans/active/issues/defi_code_codex_drift_2026_05_27.
 
 **Operator asked me to flag this to your main agent.** Deep audit of all 25 running VMs (logs read + backed up, nothing
 killed). **Primary doc to review:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` (exact per-VM numbers +
-root causes). Remediation plan with full todo breakdown: `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md`
-(see esp. **§6 deep-log-scan addendum**). Also new: `deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md`,
-`canonical_vm_log_archival_2026_05_27.md`.
+root causes). Remediation plan with full todo breakdown:
+`plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` (see esp. **§6 deep-log-scan addendum**). Also
+new: `deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md`, `canonical_vm_log_archival_2026_05_27.md`.
 
 **Already shipped by me (live-defi-rollout):** deployment-service@`fcb8a4f`+`8ff86cd` (watchdog pip-upgrade fix → ends
 the 562× crash-loop; `timeout`-guarded the wheel-cache `gsutil -m` boot-hang across `setup-data-pipeline-vm.sh` +
@@ -5083,3 +5083,39 @@ kill-decision pending (fleet intentionally kept alive; watchdog + 3 hung-VM rela
 reap the kept VMs). No ack needed from you on those — just flagging.
 
 Persists until ack. Ping me back here or on the plan.
+
+---
+
+## [harsh → ikenna-main] 2026-05-27 — BLRS audit: 4 cross-cutting recon decisions need your call
+
+Operator (Harsh) asked me to route the **heavy / cross-repo** decisions from the batch-live-reconciliation-service audit
+to you. Full context + evidence: `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md` (§ 7.2 + §
+9). I've already shipped the trivial codex fixes + **D1 (decided=A: BLRS is T+1-batch-only; live recon belongs to
+strategy-service/position + execution-service + alerting-service — codex corrected, on LDR @45f5213bf)**. The remaining
+4 are in your areas (cross-repo design / trading-safety):
+
+1. **G12 — `RECON_FREEZE_ARMED` is never published (P0-safety).** The recon→order-block chain is built on both ends
+   (execution-service `recon_freeze.py` subscriber + alerting-service `reconciliation_rules.py` detection) but **no code
+   publishes the arm event** → critical recon-age + the 7 immediate-SEV0 overrides alert-only, never halt trading. Only
+   `position_drift_monitor`'s kill-switch gives a partial drift-based reflex. Full writeup + recommended fix (publish
+   from alerting-service): `plans/active/issues/recon_freeze_armed_never_published_2026_05_27.md`. **Act on this
+   first.**
+
+2. **D2 — BLRS position baseline.** Codex `reconciliation-resolution.md` says BLRS diffs against the canonical positions
+   ledger (PBMS, now merged into `strategy-service/position`); code reads GCS event archives + makes no position-query
+   call. (A) wire BLRS to strategy-service/position query API (`/reconciliation/snapshots/history`, `/pnl-series`) —
+   more correct, couples a T+1 batch job to a live API; (B) ratify event-archive reads + amend codex. My lean: (A),
+   reading a snapshot rather than live to avoid batch↔live-API coupling. Your call.
+
+3. **D4 — two colliding `POST /reconciliation/resolve` APIs.** BLRS (mock, `break_id`) vs strategy-service/position
+   (real DB-backed, `deviation_id`) both serve that path + both emit `RECONCILIATION_BREAK_RESOLVED`. UI consumer can't
+   tell them apart. (A) BLRS moves its batch-break routes under `/t1-recon/`; (B) namespace under `/t1/`; (C) leave +
+   document. Recommend (A)/(B) before any UI wiring (blocks G1/G10). Detail in audit § 5.5.
+
+4. **D3 — drawdown_pct + fill_rate_min green gates: in May-23 scope?** UAC `RECON_GREEN_THRESHOLDS` defines bps +
+   drawdown
+   - fill_rate; BLRS only wires the bps gate (no `stage4_risk_recon`). Build the other two gates now, or defer
+     post-cutover with a named successor? Risk-gate scope call on the critical path.
+
+Meanwhile I'm self-completing the bounded BLRS code gaps (soak_mode, stage1 latency stub, calibration analyzer).
+Persists until ack — reply here or on the audit doc.

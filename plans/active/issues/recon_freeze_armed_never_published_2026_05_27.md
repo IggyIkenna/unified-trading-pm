@@ -1,0 +1,70 @@
+---
+title: RECON_FREEZE_ARMED is never published — reconciliation→order-block safety chain is dormant
+created: 2026-05-27
+author: Harsh (Claude Opus 4.7)
+source:
+  - execution-service/execution_service/preflight/recon_freeze.py
+  - alerting-service/alerting_service/rules/reconciliation_rules.py
+  - unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md
+  - unified-trading-pm/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md
+locked_by: live-defi-rollout
+severity: P0-safety (live-trading critical path)
+routed_to: ikenna-main (cross-repo trading-safety decision)
+---
+
+# RECON_FREEZE_ARMED never published — recon→order-block chain is dormant
+
+> Surfaced during the BLRS audit (G12). Not BLRS-owned — this is an alerting-service ↔ execution-service gap.
+
+## What I found
+
+The reconciliation-freeze safety chain is fully built on both ends but **has no trigger**:
+
+- **Subscriber side (built):** `execution-service/execution_service/preflight/recon_freeze.py` — `ReconFreezeChecker`
+  with `arm()` / `assert_not_frozen()` / `lift()`. Every order submission calls `assert_not_frozen()` and is rejected
+  with `ReconFreezeError` for any `(strategy, venue, symbol)` in the in-memory freeze set. Lift is HUMAN-ONLY. Shipped
+  execution-service@d649af364.
+- **Detection side (built):** `alerting-service/alerting_service/rules/reconciliation_rules.py` — `evaluate_recon_age()`
+  (3-band ladder: 5/15/30 min) + `evaluate_immediate_sev0()` (7 overrides). Shipped alerting-service@9c47947.
+- **The missing link:** codex `reconciliation-age-tracking.md` § "Reconciliation Freeze" states that on
+  `recon_age_critical_seconds` breach OR any immediate-SEV0, **alerting-service publishes `RECON_FREEZE_ARMED` to PubSub
+  topic `reconciliation-freeze`**. **No code anywhere publishes that event.** Verified via `rg "RECON_FREEZE_ARMED"`
+  across alerting-service (and the workspace) — only the subscriber + the codex/docs reference it; there is no
+  publisher.
+
+Result: critical recon-age and the 7 immediate-SEV0 overrides currently route to **PagerDuty/Telegram alerts only**. The
+freeze set is never populated, so `assert_not_frozen()` never blocks an order on reconciliation grounds.
+
+## Why it matters
+
+This is the documented mechanism that **halts new trading when reconciliation risk is live** (e.g.
+`UNKNOWN_NET_EXPOSURE`, `OPEN_ORDERS_UNCONFIRMABLE`, `VENUE_INTERNAL_BALANCE_MISMATCH`). With no publisher, an operator
+seeing a SEV0 recon incident has alerts but the system keeps accepting orders for the affected (strategy, venue, symbol)
+until a human manually intervenes. On the May-23 live path this is a real safety hole.
+
+Partial mitigation that DOES exist: `strategy-service/position/core/position_drift_monitor.py` independently fires
+`KILL_SWITCH_ACTIVATED` (STOP_NEW_ONLY) on CRITICAL equity/delta drift — so there is _a_ live reflex, but it is
+drift-based, not the recon-age / 7-SEV0-override freeze the codex specifies, and it does not cover the immediate-SEV0
+conditions (e.g. open-orders-unconfirmable, balance-movement-unexplained).
+
+## Recommended decision
+
+Wire the publisher in **alerting-service**: when `evaluate_recon_age()` returns CRITICAL OR `evaluate_immediate_sev0()`
+returns any True override, publish `RECON_FREEZE_ARMED` to the `reconciliation-freeze` PubSub topic with the affected
+`(strategy_id, venue, instrument)` scope, so the existing execution-service subscriber arms within 5s. Add the symmetric
+`RECON_FREEZE_LIFTED` publish on operator unfreeze. Then add the per-incident synthetic test the codex already names
+("assert recon-freeze armed within 5s of SEV0 fire").
+
+Open sub-questions for Ikenna:
+
+1. Scope granularity of the freeze (per `(strategy, venue, symbol)` vs per-venue vs per-account) for each of the 7
+   immediate-SEV0 overrides — some (e.g. `UNKNOWN_NET_EXPOSURE`, `ACCOUNT_LEVEL_AGGREGATE`) are account-wide, not
+   symbol-scoped.
+2. Is this in May-23 scope, or does `position_drift_monitor`'s kill-switch cover enough for cutover with the full
+   recon-freeze publisher landing post-cutover? (Recommend: in-scope — the 7 SEV0 overrides are not covered by the drift
+   kill-switch.)
+
+## Owner / next step
+
+Routed to **ikenna-main** via `plans/active/_agent_pings.md` (cross-repo alerting-service + execution-service +
+trading-safety governance). Tracked as G12 in the BLRS audit.
