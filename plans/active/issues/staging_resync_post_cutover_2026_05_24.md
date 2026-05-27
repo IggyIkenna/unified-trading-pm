@@ -112,11 +112,13 @@ UAC is green/merged.
 - [x] Cascade L2→L8 in dep order — 2026-05-27:
   - L2 UTL: already in sync (main == LDR HEAD c7294847); no PR needed
   - L3 instruments-service: staging force-reset to LDR HEAD; PR #387 merged 2026-05-27T14:20Z
-  - L4 strategy-service: staging force-reset to LDR HEAD; PR #59 merged 2026-05-27T14:20Z
+  - L4 strategy-service: staging force-reset to LDR HEAD; PR #59 merged 2026-05-27T14:20Z; cloudbuild.yaml clone-deps
+    UTL branch fix (LDR→main) PR #60 merged; Cloud Build 7dc2caa7 SUCCESS
   - L4 MTDS: Cloud Build 0025aa60 SUCCESS; staging force-reset to LDR HEAD 7e01464f; PR #107 queued auto-merge
-  - L4 execution-service: cloudbuild.yaml pull-base-image fix (wrong Artifact Registry repo `unified-trading-services` →
-    `unified-trading-library`); staging force-reset to LDR HEAD bb7309c79; PR #187 queued auto-merge; Cloud Build will
-    re-run on main post-merge
+  - L4 execution-service: 4 Cloud Build fixes cascaded via PRs #187→#188→#189→#190→#191: (1) pull-base-image wrong AR
+    repo fix; (2) clone-deps step for UAC+UTL+PM sibling repos; (3) UTL branch main not live-defi-rollout; (4)
+    WORKSPACE_ROOT CLOUD_BUILD guard; (5) -v /workspace:/workspace:ro mount in quality-gates docker run (mirrors
+    strategy-service pattern) Build 5b30bf85 QUEUED (workspace volume fix)
   - alerting-service: main already 170 commits ahead of staging; no cascade needed
   - deployment-service: main already 652 commits ahead of staging; no cascade needed; Cloud Build triggers on main but
     has pre-existing Day-1 (2026-01-27) Cloud Run startup failure for deployment-dashboard revision — separate issue,
