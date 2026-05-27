@@ -103,7 +103,9 @@ changes. Both mechanisms require GitHub server-side intervention. **GitHub Suppo
 
 ## Recommended decision
 
-### Option A: GitHub Support (fastest, safest)
+### Option A: GitHub Support (fastest, safest) ← FILED 2026-05-27
+
+**Ticket**: https://support.github.com/ticket/personal/0/4422570
 
 Contact GitHub Support at https://support.github.com:
 
