@@ -97,24 +97,27 @@ Execution-service routes per `decompose(mode)`:
 
 ## Reconciliation
 
-> **DEFERRED — DESIGN-ONLY 2026-05-12 (per slot 8 audit PB-5)**: 3-way reconciliation (batch ↔ paper ↔ live) is the
-> _target_ shape per `pvl-p21a`. Today the live `batch-live-reconciliation-service` stage DAG ships **5 logical stages**
-> (`stage0_config_pull` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
-> `stage3_execution_recon` + `stage4_agent_analysis` + `stage5_results_writer`) and **per-stage thresholds only**
-> (`MLThresholds` / `StrategyThresholds` / `ExecutionThresholds` / `DataPipelineThresholds` in
-> `models/deviation_thresholds.py` — no per-pair batch/paper/live constants and no `paper_live_recon.py` /
-> `batch_paper_recon.py` stage). Successor plan: `pvl-p21a` (3-way recon design) + `master_to_live_defi_2026_05_23.md`
-> Group F-21.
+> **SHIPPED 2026-05-27 (was DESIGN-ONLY DEFERRED 2026-05-12 per slot 8 audit PB-5; un-deferred per BLRS audit
+> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: 3-way reconciliation (batch ↔ paper
+> ↔ live) is **implemented today**. The `batch-live-reconciliation-service` stage DAG ships `stage0_config_pull` +
+> `stage0_manifest_reason_check` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
+> `stage3_execution_recon` + **`stage3b_paper_live_recon`** + **`stage3c_batch_paper_recon`** +
+> `stage4_agent_analysis` + `stage5_results_writer`, with **per-pair thresholds** (`PaperLiveThresholds` 2× tighter,
+> `BatchPaperThresholds` wider) in `models/deviation_thresholds.py`. Successor plan `pvl-p21a` remains open only for
+> per-archetype tolerance bands (see `master_to_live_defi_2026_05_23.md` Group F-21).
 
-The target 3-way reconciliation (batch ↔ paper ↔ live) will extend `batch-live-reconciliation-service` per `pvl-p21a`:
+The 3-way reconciliation (batch ↔ paper ↔ live) in `batch-live-reconciliation-service`:
 
-- **Batch-vs-live**: will match within slippage + commission tolerance over a window. The original recon target (ships
-  today).
-- **Paper-vs-live**: will match more tightly (same data, similar API conditions). Useful pre-cutover signal (DEFERRED).
-- **Batch-vs-paper**: will match within matching-engine fidelity tolerance. Validates simulator faithfulness (DEFERRED).
+- **Batch-vs-live** (`stage3_execution_recon`): matches within slippage + commission tolerance over a window. The
+  original recon target.
+- **Paper-vs-live** (`stage3b_paper_live_recon`): matches more tightly (same data, similar API conditions) — 2× tighter
+  thresholds; breaches route `AUTO_DEMOTE_TO_PAPER`. Pre-cutover wiring signal.
+- **Batch-vs-paper** (`stage3c_batch_paper_recon`): matches within matching-engine fidelity tolerance; breaches route
+  `ALERT` only. Validates simulator faithfulness.
 
-Once shipped, per-pair tolerance thresholds will be codified in `models/deviation_thresholds.py`. Closed-set
-failure-routing policy will be: alert / auto-pause-live / auto-demote-to-paper.
+Per-pair tolerance thresholds are codified in `models/deviation_thresholds.py`. Failure-routing actions in use today:
+`ALERT` + `AUTO_DEMOTE_TO_PAPER` (`AUTO_PAUSE_LIVE` is defined but not yet wired). **Per-archetype** tolerance bands
+remain the open `pvl-p21a` extension.
 
 ## Composes with
 

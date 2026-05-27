@@ -63,13 +63,21 @@ Both sides emit rows partitioned by `pipeline_mode` (batch / paper / live) per
 Per slot 8 audit PB-6 (corrected from "5-stage" in stale SSOT-INDEX):
 
 1. **`stage0_config_pull`** — pulls the immutable config snapshot the recon will assert against.
-2. **`stage0_data_pipeline_recon`** — input-data parity (manifest row counts + parquet schema + sample reads match
+2. **`stage0_manifest_reason_check`** — batch vs live manifest `capture_status` / `error_reason` agreement.
+3. **`stage0_data_pipeline_recon`** — input-data parity (manifest row counts + parquet schema + sample reads match
    between batch + live).
-3. **`stage1_ml_recon`** — ML prediction parity (`MLThresholds` deviation bands per feature × prediction).
-4. **`stage2_strategy_recon`** — signal emission parity (`StrategyThresholds` band on signal magnitude + direction).
-5. **`stage3_execution_recon`** — fill-level parity (`ExecutionThresholds` band on slippage / commission / notional;
-   this is where the `live − simulated` execution-alpha lives).
-6. **`stage4_agent_analysis`** + **`stage5_results_writer`** — narrative + report write.
+4. **`stage1_ml_recon`** — ML prediction parity (`MLThresholds` deviation bands per feature × prediction).
+5. **`stage2_strategy_recon`** — signal emission parity (`StrategyThresholds` band on signal magnitude + direction).
+6. **`stage3_execution_recon`** — batch-vs-live fill-level parity (`ExecutionThresholds` band on slippage / commission /
+   notional; this is where the `live − simulated` execution-alpha lives).
+7. **`stage3b_paper_live_recon`** — paper-vs-live parity (`PaperLiveThresholds`, 2× tighter); breach →
+   `AUTO_DEMOTE_TO_PAPER`.
+8. **`stage3c_batch_paper_recon`** — batch-vs-paper parity (`BatchPaperThresholds`, wider); breach → `ALERT`.
+9. **`stage4_agent_analysis`** + **`stage5_results_writer`** — narrative + report write.
+
+> **3-way recon shipped 2026-05-27** (was marked DEFERRED; un-deferred per BLRS audit
+> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`). Only **per-archetype** tolerance bands
+> remain open (`pvl-p21a`).
 
 ### Output shape — alpha decomposition
 
@@ -87,10 +95,9 @@ Sum of the four = total live-vs-batch P&L diff over the recon window.
 
 ### Tolerance bands
 
-**Per-stage today** (per `models/deviation_thresholds.py`). **Per-archetype tolerance bands** (e.g. tighter for
-`carry_staked_basis` than for high-vol scalping archetypes) are a deferred extension — see
-[`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) § "Reconciliation" DEFERRED banner + master plan
-F-21 / sub-item `pvl-p21a` (3-way recon design, including per-pair + per-archetype bands).
+**Per-stage + per-pair today** (per `models/deviation_thresholds.py` — `ExecutionThresholds` / `PaperLiveThresholds` /
+`BatchPaperThresholds`). **Per-archetype tolerance bands** (e.g. tighter for `carry_staked_basis` than for high-vol
+scalping archetypes) remain a deferred extension — see master plan F-21 / sub-item `pvl-p21a`.
 
 ### Failure-routing policy (closed set)
 
@@ -102,8 +109,9 @@ F-21 / sub-item `pvl-p21a` (3-way recon design, including per-pair + per-archety
   - **`auto-demote-to-paper`** — strategy mode-flips from `LIVE_VENUE` to `SIMULATION` per
     [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md); operator must explicitly re-promote.
 
-Per-stage routing (which breach maps to which action) is part of the deferred per-archetype work — today the live DAG
-ships `alert` only, per `models/deviation_thresholds.py` per-stage threshold semantics.
+Routing in use today: `alert` (most stages, incl. `stage3c`) + `auto-demote-to-paper` (`stage3b` paper-vs-live P&L /
+fill-rate / slippage breaches). `auto-pause-live` is defined but not yet wired. Per-archetype routing refinement is the
+open `pvl-p21a` work.
 
 ### Recon report bucket
 
@@ -125,9 +133,10 @@ to the batch-live-reconciliation-service maintainer).
 
 - [`batch-live-architecture.md`](batch-live-architecture.md) — defines the `batch = live` invariant that recon enforces.
 - [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — describes the 4-mode seam this recon validates
-  (today batch ↔ live; deferred batch ↔ paper ↔ live 3-way per `pvl-p21a`).
-- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the canonical positions baseline
-  both sides read from.
+  (batch ↔ live ↔ paper 3-way, shipped 2026-05-27).
+- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — the canonical positions ledger (PBMS,
+  merged into `strategy-service/position` on 2026-05-20). NOTE: whether BLRS reads that ledger's query API as its
+  baseline (vs the GCS event archives it reads today) is open decision **D2** in the BLRS audit.
 
 ## Resolution Schema
 

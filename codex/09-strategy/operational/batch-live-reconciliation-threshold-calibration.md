@@ -118,7 +118,8 @@ Each morning, run:
 
 ```bash
 cd batch-live-reconciliation-service
-python3 -m batch_live_recon.analysis.threshold_distribution \
+# NOTE: analysis.threshold_distribution module not yet built (BLRS audit 2026-05-27, G5). Correct package path below.
+python3 -m batch_live_reconciliation_service.analysis.threshold_distribution \
     --archetype carry_staked_basis \
     --start-date $(date -v-3d +%Y-%m-%d) \
     --end-date $(date +%Y-%m-%d)
@@ -168,15 +169,17 @@ After computing new values:
 ## Alert suppression during soak
 
 During the 7-day soak window, `CRITICAL` → PagerDuty alerts are **suppressed** to avoid on-call noise while calibrating.
-`WARNING` → Telegram alerts remain active (informational). Suppression implemented via:
+`WARNING` → Telegram alerts remain active (informational). Suppression MUST be a typed config field on `ReconConfig`
+(not `os.getenv` — the workspace bans environment reads in service code):
 
 ```python
-# batch-live-reconciliation-service/engine/orchestrator.py
-SOAK_MODE = os.getenv("BLR_SOAK_MODE", "false").lower() == "true"
+# batch-live-reconciliation-service/batch_live_reconciliation_service/config.py
+class ReconConfig(UnifiedCloudConfig):
+    soak_mode: bool = False  # suppress CRITICAL→PagerDuty during 7-day soak; WARNING→Telegram stays on
 ```
 
-Set `BLR_SOAK_MODE=true` in the paper-VM launcher env block during the 7-day soak window. After Day 7 calibration is
-complete, re-launch with `BLR_SOAK_MODE=false` (default).
+> **NOT YET BUILT** (BLRS audit 2026-05-27, G4): `soak_mode` is not implemented in `ReconConfig` or the orchestrator.
+> When built, set it via the config layer for the soak window, then back to `false` (default) after Day-7 calibration.
 
 ---
 
