@@ -316,7 +316,8 @@ leave). The strategy-service surface is the more complete one and is real today;
 ## 6. Gaps / undecided / incomplete (tracked)
 
 - G1 (P1) Resolution API mock-backed; not reading Stage-5 summaries; in-memory resolution store. [→§7.1-4]
-- G2 (P2) `stage1` `latency_delta_ms` hardcoded `0.0`. [→§7.1-5]
+- G2 ✅ DONE (BLRS@07222f6) `stage1` `latency_delta_ms` now a real median |batch−live| `metadata.inference_duration_ms`
+  over matched keys + `latency_samples` gate (no-data ≠ pass); 2 unit tests; QG green. [→§7.1-5]
 - G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. [→§7.1-6]
 - G4 (P2) `SOAK_MODE` unbuilt (implement via config, not env). [→§7.1-2]
 - G5 (P2) `threshold_distribution` calibration analyzer unbuilt + codex module-name wrong. [→§7.1-3]
