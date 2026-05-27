@@ -89,6 +89,18 @@ content without the main-registration validation path).
 **No code-level fix possible**: The callee validation cache is a GitHub server-side artifact that persists regardless of
 file renames, deletions, or content changes in the caller.
 
+**Option C tried and ruled out (2026-05-27T12:03 UTC):**
+
+Tested `workspace-qg-v3.yml` — a fresh file NEVER on main, no ghost, no registration. Pushed to LDR as commit `3bb7a78`.
+Result: push triggered ghost 283775571 (run 26509913630) → startup_failure. workspace-qg-v3.yml itself did not trigger
+at all (no push trigger in file; workflow_dispatch requires file on default branch → 404).
+
+Confirms: the ghost fires on EVERY push to live-defi-rollout regardless of which file changed. The ghost's trigger
+conditions (push + workflow_dispatch) are baked into GitHub's server-side registration and cannot be changed from LDR.
+
+**Final conclusion**: callee cache is global (not per-registration), AND ghost fires on every push regardless of file
+changes. Both mechanisms require GitHub server-side intervention. **GitHub Support (Option A) is the only fix.**
+
 ## Recommended decision
 
 ### Option A: GitHub Support (fastest, safest)
