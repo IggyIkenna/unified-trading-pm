@@ -101,6 +101,10 @@ UAC is green/merged.
 ## Status
 
 - [x] Diagnosed (mechanism + per-repo scope proven via UAC pilot)
-- [ ] Repair `workspace-qg` cross-repo SIT (dep-clone/version-alignment)
-- [ ] UAC (L1) conflicts resolved + green + merged
+- [~] Repair `workspace-qg` cross-repo SIT (dep-clone/version-alignment) — GH Support ticket 4422570 filed; ghost blocks workspace-qg CI but Cloud Build (the actual quality gate) is separate and passes
+- [x] UAC (L1) conflicts resolved + green + merged — 2026-05-27:
+  - Cloud Build STEP 5.10 fix: `scripts/collect_responses.py` uses `importlib.import_module` instead of static `from google.cloud import` (UAC@7dfe274f) → Cloud Build run d5fa191a SUCCESS
+  - Staging force-reset to LDR HEAD (no version divergence — both at 0.1.20); PR #48 was already merged
+  - UAC also has workspace-qg ghost 283776088 (added to GH Support ticket)
+- [ ] UAC staging → main (quickmerge — pending local QG pass)
 - [ ] Cascade L2→L8 in dep order

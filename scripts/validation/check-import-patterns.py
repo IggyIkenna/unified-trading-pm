@@ -74,8 +74,7 @@ class ImportViolation:
 
     def __str__(self) -> str:
         return (
-            f"{self.file_path}:{self.line_no}: "
-            f"Deep import from {self.package}.{self.module_path}"
+            f"{self.file_path}:{self.line_no}: Deep import from {self.package}.{self.module_path}"
         )
 
 
@@ -114,8 +113,7 @@ class ImportChecker:
         if not import_match:
             return None
         return ImportViolation(
-            str(file_path), line_no, line.rstrip(),
-            package, module_path, import_match.group(3)
+            str(file_path), line_no, line.rstrip(), package, module_path, import_match.group(3)
         )
 
     def check_file(self, file_path: Path) -> list[ImportViolation]:
