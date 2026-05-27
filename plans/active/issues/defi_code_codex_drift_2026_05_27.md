@@ -89,10 +89,17 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       alongside the on-disk hive rename so they land together. (diagnosed 2026-05-27)
 - [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
       them; reconcile the phase label (→ live, or confirm cefi-axis classification).
-- [ ] [CODE] P3. **FOR-DECISION** D7 — `bloxroute` relay URLs in `mev_events_handler.py:42-43`: operator call on whether
-      the removed-providers rule covers MEV-Boost relays; delete stale `mev_events_handler.py.bak` regardless.
-- [ ] [CODE] P3. **FOR-DECISION** D8 — Starknet `infura_compatible` template (`_defi_chain_data.py:734`): keep+rename or
-      remove; drop the `gas_fee_handler.py:78` infura comment.
-- [ ] [CODE] P3. **FOR-DECISION** D13 — consolidate `governance_events` vs `governance_proposals` handlers to one path.
+- [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D7 — usage audit found **nil active downstream consumption**
+      of bloxroute/`mev_events` relay data: bloxroute already removed as the mempool feed (`sandwich_theoretical.py` is
+      a theoretical-only tracer, not a live engine). Remove the 2 bloxroute URLs from `mev_events_handler.py:42-43`
+      `MEV_BOOST_RELAYS` (keep Flashbots/agnostic/ultra_sound) + delete `mev_events_handler.py.bak`. No Ikenna; codex
+      docs already mark Bloxroute "removed".
+- [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D8 — **infura already decommissioned workspace-wide
+      2026-05-22** (execution `chain_config.yaml:14`); remaining refs are stale. Remove the Starknet `infura_compatible`
+      template (`_defi_chain_data.py:734`) + the `gas_fee_handler.py:78` comment. No Ikenna; codex docs already mark
+      Infura "removed/banned".
+- [x] [CODE] P3. **DECIDED 2026-05-27 → KEEP** D13 — `governance_proposals` is an intentional unregistered scaffold for
+      the Phase-4B simulation harness (not wired in `cli/main.py`), so it is NOT an active parallel path vs
+      `governance_events`. No change; documented in the catalog § "Additional data types".
 - [ ] [INFRA] P3. D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in
       `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative.
