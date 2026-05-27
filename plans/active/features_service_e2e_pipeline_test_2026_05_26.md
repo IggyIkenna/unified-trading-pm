@@ -398,6 +398,35 @@ known-gap**, not a bug. Open clarification for when tradfi features are tackled:
 (NYSE Arca) + SPY/SPX options (OPRA/CBOE) **or** CME E-mini S&P (ES) futures + ES options (the golden-day CME data holds
 ES options clusters, not cash SPY) — confirm venue/source before id-canonicalization work.
 
+## Multi-day backfill experiment + derived-family root cause (2026-05-27)
+
+Operator-directed: seed multi-day delta_one into `-test` (Phase 0.5) then re-validate mtf + cross_instrument, to separate
+real bugs from single-day-input NaN noise. **Result: the backfill ruled OUT day-count as the cause and pinpointed the
+real blockers.**
+
+- Backfilled delta_one for **2026-05-01 + 05-02** (CeFi candle coverage starts 05-01; nothing earlier) → `-test` now has
+  3 days (05-01: 40 parquets, 05-02: 38, 05-03: 59). **Re-ran mtf + cross_instrument @ 05-03 — neither improved.**
+- **ROOT CAUSE (mtf): delta_one only emits `15s` + partial-`1h` timeframes, not the full 7** it's configured for
+  (`DEFAULT_TIMEFRAMES=[15s,1m,5m,15m,1h,4h,24h]`). mtf's `source_feature_group_timeframes` explicitly needs
+  `momentum@4h`, `momentum@1d`, `volatility_realized@4h/1d`, `market_structure@4h/1d` → all **missing** → mtf alignment
+  features all-NaN → WriteGate rejects everything. Two contributing reasons: (a) **4h (6 bars/day) + 24h (1 bar/day)
+  need cross-day candle history** for ≥14-period indicators — delta_one's per-day batch computes each day in isolation
+  (no candle lookback window found in `data_loader.py`), so higher-TF features are structurally NaN on a single day;
+  (b) **5m/15m are also absent** despite ample single-day bars (288/96) — a SEPARATE unexplained gap (delta_one only
+  produced 15s + 1h, not 5m/15m either). Day-count backfill cannot fix a timeframe-coverage gap.
+- **cross_instrument**: unchanged — `Missing required columns: {'close'}` (the held FINDING-F / Option A-B design call;
+  the resolver itself flags it: *"Full e2e blocked by FINDING-F (needs raw close from delta_one passthrough)"*).
+- **delta_one for 05-01/05-02 wrote parquets but NO manifest row** (another manifest↔file disconnect instance) + only
+  the `technical_indicators` group (vs 05-03's 8) — thinner output those days; tracked.
+
+- [ ] [P1] **delta_one does not emit higher timeframes (4h/24h) — needs multi-day candle lookback in batch.** Each
+  per-day batch computes in isolation; 4h/24h indicators need ≥14 bars = multiple days of candles. This starves the
+  entire multi-timeframe pipeline (mtf). Connects to Phase 0.5 adaptive-lookback (the lookback is for delta_one's OWN
+  higher-TF candle reads, not just downstream feature history). Provenance: backfill experiment 2026-05-27.
+- [ ] [P1] **delta_one also omits 5m/15m features** despite sufficient single-day bars — separate gap from the 4h/24h
+  cross-day issue. Diagnose why only 15s + 1h are produced. Provenance: backfill experiment 2026-05-27.
+- [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance: backfill 2026-05-27.
+
 ## Notes / cross-refs
 
 - Read-path fixes + the downstream findings (Bitfinex empty `instrument_type`, MTDS dual-write, the CeFi manifest↔file
