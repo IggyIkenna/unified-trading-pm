@@ -82,7 +82,7 @@ Captures AMM swap transactions. One row per swap event.
 
 ---
 
-### 2. dex_pool_state (canonical; was `pool_state`)
+### 2. dex_pools (canonical registry name; on-disk today as `dex_pool_state` pending D14 rename; was `pool_state`)
 
 | Field               | Value                                                                                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -93,9 +93,13 @@ Captures AMM swap transactions. One row per swap event.
 | **Status**          | Production                                                                                                                                             |
 | **Actual columns**  | protocol, chain, pool_id, token_a, token_b, fee_rate_bps, date, volume_usd, tvl_usd, fees_usd, tx_count, price_a, price_b, liquidity, sqrt_price, tick |
 
-Hourly/daily pool snapshots. ⚠ **D14 code-bug (2026-05-27)**: `dex_pools_handler.py` records the manifest under
-`_DEX_POOLS_DATA_TYPE = "dex_pools"` (L62) but writes the parquet with `data_type="dex_pool_state"` (L569) — the hive
-partition key is `dex_pool_state`; the manifest/data data_type names diverge. Deferred-until-pipeline-done.
+Hourly/daily pool snapshots. ⚠ **D14 (2026-05-27, resolved-by-ikenna):** **canonical is `dex_pools`** — UAC
+`needs_candle_processing` keys it `dex_pools` (= bypass/False) and the handler manifest const is
+`_DEX_POOLS_DATA_TYPE = "dex_pools"` (L62). But `dex_pools_handler.py` writes the parquet with
+`data_type="dex_pool_state"` (L569), so the on-disk hive partition today is `dex_pool_state` (manifest≠data divergence).
+The write-flip to `dex_pools` **cannot be standalone** — it would split forward-writes from historical (violating
+single-walk discipline) — so it is **bundled into [`mtds_mdps_master`](../../plans/epics/mtds_mdps_master.md) Phase 9**
+(GCS hive rename `dex_pool_state`→`dex_pools` + the handler write-flip, together). Deferred-until-pipeline-done.
 
 ---
 
