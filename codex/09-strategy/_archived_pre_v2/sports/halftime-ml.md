@@ -215,6 +215,14 @@ Links to SSOT -- do not duplicate:
 | execution-service | New client venue routing rules              | No (hot-reload) |
 | ml-service        | Client may use custom model variant         | No (hot-reload) |
 
+## Config Files
+
+| Config File               | Sport    | Leagues               | Models                             |
+| ------------------------- | -------- | --------------------- | ---------------------------------- |
+| `halftime_ml_soccer.yaml` | Football | EPL, Champions League | fss_soccer_pregame/halftime_xgb_v2 |
+| `halftime_ml_nba.yaml`    | NBA      | Per-config            | Sport-specific models              |
+| `halftime_ml_nfl.yaml`    | NFL      | Per-config            | Sport-specific models              |
+
 ## UI Visualisation
 
 ### Standard views (already in plans)
