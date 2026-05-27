@@ -434,8 +434,15 @@ Mapped fix locations (sub-agent code audit, features-service):
 **P6.A — delta_one emits ONLY base 15s (+ internal 1h for 2 groups), not the full 7 TFs → starves mtf.**
 - `--output-timeframes` defaults `None` and is **never used** — dead-ends at `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler" comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
 - Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`) sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF indicators NaN-starved even with a loop.
-- [ ] [P1] **Fix: add the output-timeframe loop** in `_process_feature_group` (resolve `None`→`config.DEFAULT_TIMEFRAMES`; invoke `TimeframeResampler` base 15s→{5m,15m,1h,4h,24h}; write each `timeframe=` partition).
-- [ ] [P1] **Fix: size buffer off the highest output TF** (`buffer_manager.calculate_buffer_days`) so 4h/24h read enough cross-day candle history.
+- [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525. Loops resolved output
+  timeframes (None→`config.supported_timeframes`), per-TF reads NATIVE candles + recomputes (NOT feature-value
+  resampling), per-TF buffer. Validated: -test now emits 15s/1m/5m/15m/1h (was 15s + partial-1h); 4h pending run
+  completion; 24h data-limited (needs ≥14 candle-days, only 3 exist).
+- [x] ✅ **Fix: per-TF buffer** — same commit; `_calculate_buffer_days(timeframe=out_tf)` sizes the lookback off each
+  output TF (was sized off base 15s).
+- [ ] [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
+  timeout (bumped 600s→2400s).** Optimize to read-base-once + resample-candles-in-memory. Tracked as Phase 1.1 in
+  `features_calc_efficiency_and_correctness_2026_05_27.md`.
 
 **P6.B — mtf writes to PROD not -test (sink override ignored).**
 - `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
