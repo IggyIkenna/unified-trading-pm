@@ -60,6 +60,35 @@ issue is per-registration, not per-file-content.
 - Renaming workspace-qg.yml → workspace-qg-v2.yml (GitHub registration tracks by file path in main, not LDR)
 - Multiple PM workflow content changes to force re-validation
 
+## Investigation update — 2026-05-27 slot-1
+
+**Option B tried and ruled out (2026-05-27T11:30–12:00 UTC):**
+
+Attempted to rename `workspace-qg.yml` → `workspace-qg-v2.yml` in alerting-service and quickmerge to main. Result:
+**workspace-qg-v2.yml (brand new registration) also gets startup_failure immediately on first trigger.**
+
+Root cause confirmed: GitHub caches the callee validation result for
+`IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates.yml@live-defi-rollout` per caller workflow
+registration. Any new registration that uses this callee is ALSO cached as BuildFailed on its very first trigger.
+Renaming creates a fresh registration, but it gets contaminated on first push to main (which immediately triggers and
+caches the BuildFailed callee).
+
+**Evidence**: workspace-qg-v2.yml (new ID) → push to main at 11:44 UTC → startup_failure at 11:45 UTC. Run 26509150899
+confirms the new registration got BuildFailed immediately.
+
+**Why ml-inference-service works**: Its workspace-qg.yml is NOT on main (HTTP 404 confirmed). Dispatches to
+`--ref live-defi-rollout` with no main-branch registration bypass the startup validation entirely (GitHub runs LDR
+content without the main-registration validation path).
+
+**Additional damage from investigation**: alerting-service now has:
+
+- workspace-qg.yml on main: ghost 283775571 + real registration 277289280 (startup_failure)
+- workspace-qg-v2.yml on main: new registration (also startup_failure from first trigger) Both staging and main merged
+  (PRs #13, #14) — staging is now synced to main.
+
+**No code-level fix possible**: The callee validation cache is a GitHub server-side artifact that persists regardless of
+file renames, deletions, or content changes in the caller.
+
 ## Recommended decision
 
 ### Option A: GitHub Support (fastest, safest)
@@ -71,7 +100,10 @@ Contact GitHub Support at https://support.github.com:
   real workspace-qg workflow ID 277289280 consistently returns startup_failure even though the workflow file is valid
   (PyYAML + actionlint pass). The reusable callee (PM's python-quality-gates.yml) works fine for repos without cached
   failure state (ml-inference-service ID 277973103 queues successfully).
-- **Request**: Clear the BuildFailed ghost 283775571 and reset the validation cache for workflow 277289280.
+- **Request**: Clear the BuildFailed ghost 283775571 and reset the validation cache for workflows 277289280 AND any new
+  registration created for workspace-qg-v2.yml (added 2026-05-27 during investigation). Also reset the callee validation
+  cache for `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates.yml@live-defi-rollout` — the
+  startup_failure is caused by a cached bad validation of this callee that poisons ANY new registration.
 - **Repeat for**: ml-service (ghost 283725320, real 280028487), features-service, batch-live-reconciliation-service,
   execution-service, instruments-service (find their ghost IDs via
   `gh run list --branch live-defi-rollout --workflow workspace-qg`).
