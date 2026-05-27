@@ -151,9 +151,9 @@ hand-written goldens for custom families.
   swing goldens + WedgeDetector convergence math + 6 edge cases + ATR-bug regression for the 2026-05-26 fix. **Suite
   total: 129 passed, 46 skipped (external-data groups), basedpyright 0/0/0.** Verified by orchestrator (not just agent
   self-report).
-- [ ] [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) — surfaced
-  by the 2.3 lookahead suite as a pandas `FutureWarning`: **will raise in a future pandas**. Clean ≤5-min fix:
-  `day_vwap = day_vwap.ffill()` / `week_vwap = week_vwap.ffill()`. (Not in Phase-1 agent's scope — orchestrator-owned.)
+- [x] ✅ [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) —
+  surfaced by the 2.3 lookahead suite as a pandas `FutureWarning` (would raise in a future pandas). — **FIXED**
+  features@c686b9af: both anchored day/week VWAP now use `.ffill()`. basedpyright 0/0/0 + ruff clean.
 - [ ] [P2] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
   values, absurd variance/outliers ("computes but wrong").
 - [ ] [P3] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
