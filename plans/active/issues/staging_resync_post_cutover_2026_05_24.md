@@ -101,10 +101,23 @@ UAC is green/merged.
 ## Status
 
 - [x] Diagnosed (mechanism + per-repo scope proven via UAC pilot)
-- [~] Repair `workspace-qg` cross-repo SIT (dep-clone/version-alignment) — GH Support ticket 4422570 filed; ghost blocks workspace-qg CI but Cloud Build (the actual quality gate) is separate and passes
+- [~] Repair `workspace-qg` cross-repo SIT (dep-clone/version-alignment) — GH Support ticket 4422570 filed; ghost blocks
+  workspace-qg CI but Cloud Build (the actual quality gate) is separate and passes
 - [x] UAC (L1) conflicts resolved + green + merged — 2026-05-27:
-  - Cloud Build STEP 5.10 fix: `scripts/collect_responses.py` uses `importlib.import_module` instead of static `from google.cloud import` (UAC@7dfe274f) → Cloud Build run d5fa191a SUCCESS
+  - Cloud Build STEP 5.10 fix: `scripts/collect_responses.py` uses `importlib.import_module` instead of static
+    `from google.cloud import` (UAC@7dfe274f) → Cloud Build run d5fa191a SUCCESS
   - Staging force-reset to LDR HEAD (no version divergence — both at 0.1.20); PR #48 was already merged
   - UAC also has workspace-qg ghost 283776088 (added to GH Support ticket)
 - [x] UAC staging → main — PR #49 merged 2026-05-27T13:16Z (UAC@7dfe274f → main)
-- [ ] Cascade L2→L8 in dep order
+- [x] Cascade L2→L8 in dep order — 2026-05-27:
+  - L2 UTL: already in sync (main == LDR HEAD c7294847); no PR needed
+  - L3 instruments-service: staging force-reset to LDR HEAD; PR #387 merged 2026-05-27T14:20Z
+  - L4 strategy-service: staging force-reset to LDR HEAD; PR #59 merged 2026-05-27T14:20Z
+  - L4 MTDS: Cloud Build 0025aa60 SUCCESS; staging force-reset to LDR HEAD 7e01464f; PR #107 queued auto-merge
+  - L4 execution-service: cloudbuild.yaml pull-base-image fix (wrong Artifact Registry repo `unified-trading-services` →
+    `unified-trading-library`); staging force-reset to LDR HEAD bb7309c79; PR #187 queued auto-merge; Cloud Build will
+    re-run on main post-merge
+  - alerting-service: main already 170 commits ahead of staging; no cascade needed
+  - deployment-service: main already 652 commits ahead of staging; no cascade needed; Cloud Build triggers on main but
+    has pre-existing Day-1 (2026-01-27) Cloud Run startup failure for deployment-dashboard revision — separate issue,
+    not staging-sync related
