@@ -48,18 +48,30 @@ Gate: MDPS-3.3.CeFi verification GREEN.
 
 Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 
-> **🔴 BLOCKED-OPERATOR-DECISION (2026-05-26):** Two blockers prevent DeFi features VM launch:
+> **🟢 BUCKET-SPLIT RESOLVED (operator 2026-05-27) — ✅ #1 decided, 🟡 #2 still gating:**
 >
-> 1. **Bucket split**: 2024+2025 DeFi candles in flat bucket `market-data-tick-defi-central-element-323112`; 2026
->    candles in prd bucket `market-data-tick-defi-prd-central-element-323112`. Features-delta-one-defi would need to
->    read from BOTH buckets or data must be migrated first. **Operator decision needed.**
-> 2. **mtds-dex-swaps-backfill VM still RUNNING** — do not launch compute VMs until DEX swaps backfill completes
->    (collision risk with in-flight writes). Do not launch FEAT-3.4.DeFi.\* VMs until operator acks both blockers.
+> 1. **✅ Bucket split — DECIDED: features run on prd, no full-history dependency.** Verified split (2026-05-27): it is
+>    **candle-only** and a clean chronological cutover at **2026-01-24/25** — `processed_candles` flat
+>    `market-data-tick-defi-central-element-323112` covers **2024-05-03 → 2026-01-24 (323 days)**; prd
+>    `market-data-tick-defi-prd-central-element-323112` covers **2026-01-25 → 2026-05-22 (118 days)**; **zero overlap**.
+>    `dex_swaps`/`vault_share_price` (onchain inputs) are **already prd-only** (flat has none — the running backfill
+>    consolidates them into prd), so only the candle path is split. **Operator decision: features compute proceeds on prd
+>    sample data now — we do NOT need full 2024-25 history for this pass.** The 323-day flat→prd `processed_candles` copy
+>    is **deferred (non-blocking)** to the post-backfill fleet-drain window per the pre-migration drain HARD RULE
+>    (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.0 Stage 0 — all GCP+AWS VMs stopped + manifest
+>    consolidated + snapshot first); when run it is a bounded candle-only copy via `gcs_copy_object` (no API re-fetch).
+> 2. **🟡 mtds-dex-swaps-backfill VM still RUNNING** (2026-05-27: forward walk at data day=2026-03-25 of
+>    2023-01-01→2026-05-25, writing dex_swaps+vault_share_price to prd; ~2 months of dates left, likely completes today).
+>    **Prod** FEAT-3.4.DeFi.\* compute VMs writing to prd still wait for this to finish (collision risk with in-flight
+>    writes). The `-test`-bucket e2e pipeline work (`features_service_e2e_pipeline_test_2026_05_26`, owned by another
+>    agent) is unaffected and proceeds now.
 
 - [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
-      delta / DEX pool utilisation / oracle deviation signals. **BLOCKED-OPERATOR-DECISION** (see banner above).
-- [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM. **BLOCKED-OPERATOR-DECISION**
-      (see banner above).
+      delta / DEX pool utilisation / oracle deviation signals. **GATED on dex-swaps backfill completion** (banner #2);
+      bucket-split decision resolved (banner #1 — runs on prd).
+- [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd `processed_candles`,
+      118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **GATED on dex-swaps backfill completion**
+      (banner #2); bucket-split decision resolved (banner #1).
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
 
 ## Phase 3 — TradFi features compute
