@@ -78,7 +78,12 @@ Inspected `gs://market-data-tick-cefi-central-element-323112/processed_candles/`
 Principle: minimise reads + writes; compute is cheap. Measure each change against the 7×-read baseline (delta_one CEFI
 2026-05-03 wall-clock).
 
-- [ ] [AUDIT] [P1] **1.0 Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** Operator-directed:
+- [x] ✅ [AUDIT] [P1] **1.0 Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — **DONE**
+  PM@475d6601: `plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`. Key numbers: 24h≈6.6 KB/1-row,
+  15s≈152 KB/5760-rows, all 7 TFs materialised by MDPS; 7× amplification = 7 separate `load_candles_with_buffer` calls.
+  Consolidation candidates (24h→yearly, 4h/1h/5m/15m→monthly) tagged `needs-design + blocked-on-migration-window`. Below
+  is the original task spec (kept for provenance):
+- [ ] [AUDIT] [P1] **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** Operator-directed:
   before any layout redesign, ground in how data is *actually* processed + saved in `processed_candles/`. Deliverable is
   an audit doc (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
   - **Per-timeframe object cardinality + size** across asset_groups (cefi/defi/tradfi): rows-per-file, bytes-per-file,
@@ -102,10 +107,25 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
   delta_one subprocess stderr for the failing 4h leg; the read-once long-lookback refactor (1.1) should pull enough
   base-candle history to let 4h land — make **"4h parquet lands in -test for 05-03"** an explicit 1.1 acceptance
   criterion; keep 24h tracked as a contiguous-candle backfill ask.
-- [ ] [P1] **1.1 Read base candles once → resample candles in-memory to all output timeframes.** Replace the per-TF
+- [ ] [BUG][P1] **1.1a Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF choice.**
+  Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the **widest buffer
+  across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a deep lookback (tens–
+  hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs reading MDPS's already-
+  materialised 24h candles directly (~75 × 6.6 KB ≈ **0.5 MB**). MDPS persists ALL 7 TFs (confirmed in 1.0 audit), so
+  the "7× fewer GETs" win holds only for shallow TFs close to the base; the deep-lookback high-TF leg got **heavier in
+  bytes + compute** (run was still loading base candles back to March after >10 min). Fix direction: pick the base read
+  per output-TF (or per TF-cluster) — read each output TF's pre-materialised candles directly for high TFs (cheap small
+  objects), reserve in-memory resample for TFs near the base; OR read the lookback RANGE once per TF (overlaps 1.2). The
+  GET-count metric alone is the wrong objective — optimise **bytes read + compute**, not just request count.
+- [x] ✅ [P1] **1.1 Read base candles once → resample candles in-memory to all output timeframes.** Replace the per-TF
   candle re-read in the Phase-6.A loop with: read 15s/1m for the lookback window once, OHLC-resample to
   {5m,15m,1h,4h,24h} in memory (exact aggregation), compute features per TF. Target: 7 reads → 1. (`data_loader.py` +
-  the `_process_feature_group` loop + a candle-resampler — NOT `resample_features`.)
+  the `_process_feature_group` loop + a candle-resampler — NOT `resample_features`.) — **SHIPPED** features@24870ac8
+  (candle_resampler) + 2b20c795 (batch_handler/orchestrator wiring) + 567e499d (codex file/method-size + dedup the
+  preloaded path into the shared `_process_instrument` flow). 46/46 resampler tests + full delta_one suite 1491 passed.
+  **CAVEAT — see 1.1a**: the read-once-from-15s-base approach is bytes-pathological for deep-lookback high TFs (24h);
+  needs the base-TF-choice refinement before it's a net win across all TFs. End-to-end 4h-in-test run was stopped (was
+  loading 75+ days of 15s — exactly the 1.1a symptom); re-verify after 1.1a.
 - [ ] [P1] **1.2 Read the lookback window once across a date range.** Day-by-day re-reads overlapping history each day.
   Process a date RANGE in one job: read the span once, slide an in-memory window, emit each day. Removes repeated
   lookback re-reads (the operator's "we already pull multiple days" point).
