@@ -138,13 +138,17 @@ ALL 5 must be True for `RECOVERY_CONFIRMED`. ANY False → `RECOVERY_UNCERTAIN` 
 
 Per-service callbacks register at gateway startup:
 
-| Service                           | Callback covers                                                                  |
-| --------------------------------- | -------------------------------------------------------------------------------- |
-| execution-service                 | orders match venue REST, positions match venue, fills reconciled, no kill_switch |
-| strategy-service                  | strategy_state_restored, target-tracking-enabled, no safe-mode                   |
-| batch-live-reconciliation-service | oldest_unreconciled_age < configured threshold across 12 dimensions              |
-| mtds / mdps                       | market_data_fresh (last tick within staleness window)                            |
-| risk-and-exposure-service         | margin/HF inside healthy band, no liquidation risk                               |
+| Service                                            | Callback covers                                                                                                              |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| execution-service                                  | orders match venue REST, positions match venue, fills reconciled, no kill_switch                                             |
+| strategy-service (incl. `position/` — merged PBMS) | strategy_state_restored, target-tracking-enabled, no safe-mode; holds the live recon age fields (`unreconciled_age_seconds`) |
+| mtds / mdps                                        | market_data_fresh (last tick within staleness window)                                                                        |
+| risk-and-exposure-service                          | margin/HF inside healthy band, no liquidation risk                                                                           |
+
+> **CORRECTION (BLRS audit D1, 2026-05-27)**: a prior row attributed a "`oldest_unreconciled_age` < threshold across 12
+> dimensions" callback to `batch-live-reconciliation-service`. BLRS is a T+1 batch auditor and registers **no** recovery
+> callback. No per-dimension recon-age recovery gate is wired today; if added it belongs with the live-recon owner
+> (`strategy-service/position`). See `reconciliation-age-tracking.md` § "Recovery-verification callback".
 
 ## Provenance taxonomy
 

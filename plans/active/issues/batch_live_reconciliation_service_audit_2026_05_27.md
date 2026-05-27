@@ -12,7 +12,7 @@ source:
   - unified-trading-pm/codex/04-architecture/separation-of-concerns.md
   - unified-trading-pm/codex/04-architecture/data-flow-map.md
 locked_by: live-defi-rollout
-status: AUDIT COMPLETE (pass 2, deeper dig done — see § 9) — awaiting operator decisions D1/D2/D3/D4 in § 7.2
+status: AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (2026-05-27, codex corrected); awaiting D2/D3/D4 in § 7.2
 ---
 
 # Batch-Live Reconciliation Service (BLRS) — Audit
@@ -356,15 +356,16 @@ leave). The strategy-service surface is the more complete one and is real today;
 
 ### 7.2 ❓ Needs operator input (material — see § "Decisions for you" in chat)
 
-- **D1 — Ownership of live continuous reconciliation (the big one).** Now that pass-2 shows live recon is **already
-  built** across strategy-service/`position/` + execution-service + alerting-service (§ 9.1), this is mostly a
-  doc-correctness call:
-  - **(A) — RECOMMENDED.** BLRS stays T+1-batch-only. Correct `reconciliation-age-tracking.md` to attribute the live
-    12-dim recon to strategy-service/position (deviation lifecycle + age fields), execution-service (recon-freeze), and
-    alerting-service (recovery*verifier + age bands). \_Zero new code; matches reality.*
-  - **(B)** BLRS absorbs/centralises live recon (build the loop + recovery callback here, migrate from the 3 repos).
-    _Large refactor against the 2026-05-20 PBMS→strategy-service merge; only worth it if you want one "reconciliation"
-    service. I do not recommend this so close to the May-23 gate._
+- **D1 — Ownership of live continuous reconciliation — ✅ DECIDED 2026-05-27 = (A).** Operator chose (A): BLRS stays
+  **T+1-batch-only**; the codex is corrected to attribute live recon to the three repos that actually implement it. Zero
+  code. **Done:**
+  - `reconciliation-age-tracking.md` — ownership-correction banner + new "Component ownership" table; recovery-callback
+    - continuous-verification sections rewritten (recovery_verifier is alerting-service's generic 5-bool aggregator, no
+      recon-age gate / no BLRS registration; age fields produced by strategy-service/position; `check_oldest_age.py`
+      never existed); `last_reviewed`→2026-05-27.
+  - `incident-gateway-state-machine.md` — removed the BLRS recovery-callback row + correction note.
+  - (rejected (B): centralising live recon into BLRS — large refactor against the 2026-05-20 PBMS→strategy-service
+    merge, not worth it pre-May-23.)
 - **D2 — Canonical position baseline: query strategy-service/position vs ratify event archives.** PBMS is no longer a
   repo (merged into strategy-service/position 2026-05-20), so codex's "PBMS query API" now means
   `position/api/routes/{pnl_series,positions_health}` + `/reconciliation/snapshots/history`. Either:

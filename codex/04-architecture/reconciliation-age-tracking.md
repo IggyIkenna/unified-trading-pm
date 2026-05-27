@@ -1,12 +1,19 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-27
 authoritative_for: [reconciliation-age, recon-dimensions, recon-escalation, recon-freeze]
 referenced_by:
   - codex/04-architecture/autonomous-recovery-matrix.md
   - codex/04-architecture/incident-gateway-state-machine.md
   - plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md
 ---
+
+> **OWNERSHIP CORRECTED 2026-05-27 (BLRS audit D1, decision A —
+> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: earlier revisions of this doc
+> attributed live continuous reconciliation (the recovery-verification callback + a daily `check_oldest_age.py`) to
+> `batch-live-reconciliation-service`. **That is wrong.** BLRS is a **T+1 batch auditor only** — it does NOT perform
+> live reconciliation, owns no recovery callback, and ships no age script. Live reconciliation is implemented by the
+> three repos in § "Component ownership" below.
 
 # Reconciliation Age Tracking, 12 Dimensions, and Escalation Ladder
 
@@ -19,6 +26,23 @@ referenced_by:
 Every reconciliation breach is **age-tracked**, **dimensioned**, and **escalated by elapsed time**. Ages are persisted
 at row-write-time (never computed at query time — same rule as `available_at` in the manifest). Auto-unfreeze does NOT
 exist — unfreeze is HUMAN-ONLY even when recon age recovers below threshold.
+
+---
+
+## Component ownership (who implements what)
+
+Live reconciliation is **distributed**, not owned by a single service. `batch-live-reconciliation-service` is NOT in
+this list — it is a separate T+1 batch auditor (see `reconciliation-resolution.md`).
+
+| Concern                                                                        | Owner repo / module                                                                                                                                                                          | Status                                                                                         |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Live venue↔internal position/balance recon + age fields + deviation lifecycle | `strategy-service/strategy_service/position/` (merged PBMS): `core/reconciliation_engine.py`, `core/fee_reconciliation_engine.py`, `core/position_drift_monitor.py`, `v2/recon_freshness.py` | Built; only `POSITIONS` + `FEES` of the 12 dimensions are populated today (other 10 spec-only) |
+| Live venue accrual / funding recon                                             | `execution-service`: `services/yield_recon_engine.py`, `services/funding_recon_engine.py`, `services/account_history_client.py`                                                              | Built                                                                                          |
+| Escalation ladder + 7 immediate-SEV0 overrides                                 | `alerting-service`: `rules/reconciliation_rules.py` (`evaluate_recon_age`, `evaluate_immediate_sev0`)                                                                                        | Built                                                                                          |
+| `RECON_FREEZE_ARMED` publisher                                                 | `alerting-service` (per § "Reconciliation Freeze")                                                                                                                                           | ⚠️ **NOT WIRED** — no code publishes the event; freeze chain is dormant (BLRS audit G12)       |
+| Recon-freeze order-block subscriber                                            | `execution-service`: `preflight/recon_freeze.py` (`ReconFreezeChecker`)                                                                                                                      | Built (but never armed — see above)                                                            |
+| Recovery-verification aggregator                                               | `alerting-service`: `gateway/recovery_verifier.py`                                                                                                                                           | Built; generic 5-boolean DR gate (see § "Recovery-verification callback")                      |
+| T+1 batch audit (batch↔live↔paper)                                           | `batch-live-reconciliation-service`                                                                                                                                                          | Separate concern; NOT live recon                                                               |
 
 ---
 
@@ -103,12 +127,18 @@ Uses `ImmediateSev0Override` StrEnum (UAC `unified_api_contracts/canonical/cross
 
 ## Reconciliation Freeze
 
-When `recon_age_critical_seconds` breaches OR any immediate-SEV0 fires, alerting-service publishes `RECON_FREEZE_ARMED`
-event to PubSub topic `reconciliation-freeze`.
+When `recon_age_critical_seconds` breaches OR any immediate-SEV0 fires, alerting-service is to publish
+`RECON_FREEZE_ARMED` to PubSub topic `reconciliation-freeze`.
+
+> ⚠️ **NOT WIRED (BLRS audit G12, 2026-05-27)**: no code in alerting-service (or anywhere) actually publishes
+> `RECON_FREEZE_ARMED`. Critical recon-age + the 7 immediate-SEV0 overrides currently route to PagerDuty/Telegram
+> **alerts only** — they never arm the freeze, so the order-block below never engages. The independent
+> `position_drift_monitor` (strategy-service/position) does fire `KILL_SWITCH_ACTIVATED` on CRITICAL drift, so there is
+> a live reflex, but the recon-freeze chain is dormant. Tracked as its own issue.
 
 `execution-service/execution_service/preflight/recon_freeze.py` (`ReconFreezeChecker`) subscribes and updates its
-in-memory freeze set within 5s. New order submissions for (strategy, venue, symbol) tuples in the freeze set are
-rejected with `ReconFreezeError` (shipped execution-service@d649af364).
+in-memory freeze set within 5s (once a publisher exists). New order submissions for (strategy, venue, symbol) tuples in
+the freeze set are rejected with `ReconFreezeError` (shipped execution-service@d649af364).
 
 **Unfreeze is HUMAN-ONLY**: operator clicks "Unfreeze" in DART after acknowledging the incident and verifying the recon
 delta resolved. Emits `RECON_FREEZE_LIFTED` event. No auto-unfreeze — even if `oldest_unreconciled_age` drops below
@@ -118,17 +148,30 @@ threshold, trading does NOT automatically resume.
 
 ## Recovery-verification callback
 
-`batch-live-reconciliation-service` registers a callback with the Incident Gateway (`recovery_verifier.py`):
-`oldest_unreconciled_age_seconds < configured threshold` across all 12 dimensions. This is the `reconciliation_age` gate
-within `RecoveryVerificationResult` — one of the 5 booleans needed for `RECOVERY_CONFIRMED` (see
-`codex/04-architecture/incident-gateway-state-machine.md`).
+The recovery verifier is `alerting-service/alerting_service/gateway/recovery_verifier.py` — a per-service callback
+aggregator that produces a 5-boolean `RecoveryVerificationResult` (`health_checks_passed`, `positions_reconciled`,
+`orders_reconciled`, `market_data_fresh`, `strategy_state_restored`); all 5 must be True for `RECOVERY_CONFIRMED` (see
+`codex/04-architecture/incident-gateway-state-machine.md`). The recon-relevant booleans are `positions_reconciled` +
+`orders_reconciled`.
+
+> **CORRECTION (BLRS audit D1, 2026-05-27)**: there is **no** `reconciliation_age`-specific gate in the result today,
+> and **no** service (BLRS or otherwise) registers a "12-dimension `oldest_unreconciled_age` < threshold" callback. The
+> verifier neither references nor depends on `batch-live-reconciliation-service`. If a per-dimension recon-age recovery
+> gate is wanted, it should be registered by the **live-recon owner** (`strategy-service/position`, which holds the age
+> fields), not BLRS.
 
 ---
 
 ## Continuous verification
 
-- Daily: `python3 batch-live-reconciliation-service/scripts/check_oldest_age.py` → max(age) < 30min in healthy state.
-- Per-incident: assert recon-freeze armed within 5s of SEV0 fire (synthetic test runs nightly).
+- Live age/freshness signal is produced by **strategy-service/position**: `unreconciled_age_seconds` is written at
+  row-creation time on reconciliation rows (`core/reconciliation_engine.py`, `core/fee_reconciliation_engine.py`) and
+  surfaced via the `v2/recon_freshness.py` feed (consumed by risk-service pre-flight).
+- A standalone daily "max(age) < 30min" check script is **NOT YET BUILT** (the previously-referenced
+  `batch-live-reconciliation-service/scripts/check_oldest_age.py` never existed; BLRS audit G7). If added, it belongs
+  with the live-recon owner (`strategy-service/position`), not BLRS.
+- Per-incident: assert recon-freeze armed within 5s of SEV0 fire — blocked until the `RECON_FREEZE_ARMED` publisher is
+  wired (see § "Reconciliation Freeze" ⚠️ / BLRS audit G12).
 
 ---
 
