@@ -366,7 +366,7 @@ from `-prd`). Status per family:
 | **delta_one** | ✅ **VALIDATED** | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`. |
 | **volatility** | ⚠️ honest-skip | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`. |
 | **cross_instrument** | ❌ real bug | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one. |
-| **multi_timeframe** | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta_one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **STILL OPEN (found by the re-run):** (3) `get_output_bucket` ALSO ignores the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1). (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr_*`). (5) `Cannot serialize DataFrame to parquet` for `tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
+| **multi_timeframe** | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta_one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **FIXED:** (3) `get_output_bucket`/sink ALSO ignored the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1) — features@72b8a81d (`_resolve_sink_bucket` + `_ensure_sink_for`, parquet + manifest share one bucket). **STILL OPEN (found by the re-run):** (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr_*`). (5) `Cannot serialize DataFrame to parquet` for `tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
 
 **e2e-driver (8fa8ebbc) defects found + fixed** (features@62cbe91a, @e6811f31, @335942d9): wrong parquet-assert path
 (`batch/date=…` vs real `day=…/feature_group=…/timeframe=…`); false-PASS honest-skip that masked a captured-but-no-file
@@ -381,10 +381,13 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
   Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
   post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
   by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
-- [ ] [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the get_input_bucket
+- [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the get_input_bucket
   bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead of `-test`. mtf's
   writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET_{AG}` the way delta_one's `FeatureWriter._get_sink_bucket` does.
-  Provenance: e2e -test re-run 2026-05-26.
+  Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added `_resolve_sink_bucket` +
+  `_ensure_sink_for` (rebinds auto-created sink per asset_group via `get_data_sink(bucket=..., routing_key=ag)`;
+  run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest share one bucket.
+  basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
   `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
   whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test 2026-05-26.
@@ -446,7 +449,7 @@ Mapped fix locations (sub-agent code audit, features-service):
 
 **P6.B — mtf writes to PROD not -test (sink override ignored).**
 - `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
-- [ ] [P1] **Fix: honor sink override** — `orchestrator.py:199` pass `routing_key=asset_group.lower()` (lazy/per-run sink); make `get_output_bucket` consult `get_data_sink(routing_key=ag)` (fallback `resolve_bucket`) like delta_one's `feature_writer._get_sink_bucket`; feed the same bucket to `ManifestWriter` (:263).
+- [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket` (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken files in delta_one; full QG to run once they land.)
 
 cross_instrument `close` (FINDING-F) + volatility `empty_confirmed` remain HELD (operator decide later).
 
