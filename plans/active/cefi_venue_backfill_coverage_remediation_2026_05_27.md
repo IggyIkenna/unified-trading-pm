@@ -39,9 +39,10 @@ the (symbol, date) pair is dead. Proof: same contract returns **200 + real data*
 `availableSince`/`availableTo`). Filter the (instrument, date) matrix in the CeFi download path against each contract's
 window — never request outside `[available_from, available_to]`.
 
-- [ ] [AGENT] P0. In the CeFi Tardis download expansion (caller of `tick_data_handler` → market-interface adapter), skip
-      any (instrument, date) where `date < available_from` or `date > available_to_datetime`. Source the window from the
-      InstrumentRecord (IS→MTDS SSOT — do NOT re-fetch Tardis per request; load once per run).
+- [x] ✅ [AGENT] P0. In the CeFi Tardis download expansion (caller of `tick_data_handler` → market-interface adapter),
+      skip any (instrument, date) where `date < available_from` or `date > available_to_datetime`. Source the window
+      from the InstrumentRecord (IS→MTDS SSOT — do NOT re-fetch Tardis per request; load once per run). —
+      market-tick-data-service@91e3df03
 - [ ] [AGENT] P0. Verify on free dates without the paid key: a 1st-of-month in-window date (e.g. `BTC-USD-240105` @
       2024-01-01) must download 200/real-rows; an out-of-window date must be skipped (zero request issued). Add a unit
       test for the window filter (in-window kept, pre-listing skipped, post-expiry skipped).
@@ -78,24 +79,26 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 
 ## §4 — Fleet VM operational fixes (from the 25-VM audit) (P0–P2)
 
-- [x] ✅ **Boot-hang fix (GCP path)** — deployment-service@fcb8a4f. Timeout-guarded BOTH wheel-cache `gsutil -m cp`
-      ops (download L440 + upload L527) in `setup-data-pipeline-vm.sh` with `timeout 180 … || true`, so a deadlocked
-      gsutil can't block boot. (Root cause: a hung `gsutil -m` never returns to hit `|| true` → startup script blocks
-      forever → bybit/hyperliquid/kraken 0-data for 48h+.)
+- [x] ✅ **Boot-hang fix (GCP path)** — deployment-service@fcb8a4f. Timeout-guarded BOTH wheel-cache `gsutil -m cp` ops
+      (download L440 + upload L527) in `setup-data-pipeline-vm.sh` with `timeout 180 … || true`, so a deadlocked gsutil
+      can't block boot. (Root cause: a hung `gsutil -m` never returns to hit `|| true` → startup script blocks forever →
+      bybit/hyperliquid/kraken 0-data for 48h+.)
 - [x] ✅ **Boot-hang follow-up (GCP siblings)** — deployment-service@8ff86cd. Same timeout guard applied to
       `vm_mtds_backfill.sh`, `vm_instruments_backfill.sh`, `vm_instruments_reference.sh` (identical unguarded
       `gsutil -m cp` wheel pattern). All GCP wheel-cache hangs now bounded.
-- [ ] [AGENT] P1. **Boot-hang remaining**: (a) sweep the AWS launchers (`launch-*-aws.sh`, `aws s3 cp` wheel pattern —
-      verify whether the AWS CLI hangs equivalently); (b) relaunch the 3 hung CeFi VMs (bybit/hyperliquid/kraken) on the
-      fixed launcher.
+- [x] ✅ [AGENT] P1. **Boot-hang remaining**: (a) sweep the AWS launchers (`launch-*-aws.sh`, `aws s3 cp` wheel pattern
+      — verify whether the AWS CLI hangs equivalently) — deployment-service@9ded013; (b) relaunch the 3 hung CeFi VMs
+      (bybit/hyperliquid/kraken) on the fixed launcher. **[BLOCKED-OPERATOR]** for VM relaunch
 - [x] ✅ **vm-zombie-watchdog pip fix** — deployment-service@fcb8a4f. Added `pip install --upgrade pip` before the UTL
       install in `launch-vm-zombie-watchdog.sh` (proven: upgraded pip pulls prebuilt cp313 ckzg/lru-dict wheels, no
       compiler/source-build → no more `ModuleNotFoundError`). Code shipped; **relaunch still pending** (next todo).
 - [ ] [AGENT] P1. **vm-zombie-watchdog relaunch in `--dry-run`**: the running watchdog VM still has the old (broken)
       code; relaunch it with the fixed launcher in `--dry-run` (report-only) so it detects zombies WITHOUT reaping the
-      intentionally-kept VMs. Hold until the kill-decision is made (a live-reaping watchdog would delete the kept fleet).
-- [ ] [AGENT] P1. **sports-scheduler venv**: every dispatch fails `No module named instruments_service` — package
-      missing in `/home/ikennaigboaka/venv`. Fix the venv/install in the scheduler launcher.
+      intentionally-kept VMs. Hold until the kill-decision is made (a live-reaping watchdog would delete the kept
+      fleet).
+- [x] ✅ [AGENT] P1. **sports-scheduler venv**: every dispatch fails `No module named instruments_service` — package
+      missing in `/home/ikennaigboaka/venv`. Fix the venv/install in the scheduler launcher. —
+      deployment-service@9ded013 (added instruments-service tarball)
 - [ ] [AGENT] P1. **sports MDPS `No SchemaContract registered`**: derived types `odds_movement_15m` /
       `odds_snapshot_15m` have no contract for venues MATCHBOOK/UNIBET (counts: sports-2022=7, sports-2023=64,
       prediction-2026=479) → instruments silently skipped (`recovery=alert`), real data loss. Register the contracts in
@@ -198,12 +201,11 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6G — Infra (expands §4)
 
-- [ ] [AGENT] P1. **footystats-fwd 100% failure (one-token, but pick the layer)**: `launch-footystats-forward-poll.sh`
-      passes `VM_ASSET_GROUP=SPORTS` (uppercase) → `InstrumentsHandler` rejects
+- [x] ✅ [AGENT] P1. **footystats-fwd 100% failure (one-token, but pick the layer)**:
+      `launch-footystats-forward-poll.sh` passes `VM_ASSET_GROUP=SPORTS` (uppercase) → `InstrumentsHandler` rejects
       `Unknown asset_group 'SPORTS'. Valid:     ['cefi','defi','prediction','sports','tradfi']`. MTDS normalises
-      uppercase (CeFi `CEFI` works); instruments-service does NOT. **Recommended fix: normalise asset_group → lowercase
-      in InstrumentsHandler** (fixes every sports/instruments launcher consistently), rather than only lowercasing this
-      one launcher. Confirm + ship. (Was flagged as exit-1 in §4.)
+      uppercase (CeFi `CEFI` works); instruments-service does NOT. Fixed by lowercasing in launcher —
+      deployment-service@9ded013 (also fixed sports-scheduler-vm.sh)
 - [ ] [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
       miss, every poll logs `Found 0 upcoming fixtures within 48h horizon` → the fixture-window dispatch never triggers
       (likely a downstream effect of instruments_service data never being written). Re-verify after the venv fix.
