@@ -4,7 +4,7 @@ type: audit-instructions
 epic: defi_master
 assigned_vm: vm-defi
 tier: L0
-last_updated: 2026-05-22
+last_updated: 2026-05-27
 ---
 
 # DeFi Master — Audit Instructions
@@ -58,11 +58,40 @@ archetypes. Key code surfaces:
       rows with correct `schema_version`, `asset_group=defi`, and non-null `available_at`. Check: manifest divergence A3
       shows zero `MISSING_EXPECTED` for defi + these data_types
 
-- [ ] (h) **No removed providers**: no imports of Elysium, Arkham, Bloxroute, or Infura anywhere. Grep:
-      `rg "elysium|arkham|bloxroute|infura" --ignore-case unified-api-contracts/ execution-service/`
+- [ ] (h) **No removed providers**: no imports/URLs of Elysium, Arkham, Bloxroute, or Infura anywhere. Grep MUST include
+      `market-tick-data-service/` and `unified-trading-pm/codex/` (the prior scope omitted MTDS — that is how a live
+      `bloxroute` relay URL survived in `mev_events_handler.py`, found 2026-05-27). Grep:
+      `rg "elysium|arkham|bloxroute|infura" --ignore-case -g '!*.venv*' unified-api-contracts/ execution-service/ market-tick-data-service/ unified-trading-pm/codex/`
+      (Allowed false-positive: the **client** "Elysium Capital" in `client_registry.py` is a customer name, not the MEV
+      provider — distinguish before flagging.)
 
 - [ ] (i) **Pyth oracle scope**: Pyth used for Solana on-chain only; other chains use Chainlink. Read:
       `codex/04-architecture/defi-execution-overview.md` and verify code matches
+
+### Code ↔ Codex drift (added 2026-05-27)
+
+Verify the data-pipeline codex SSOTs (`codex/02-data/defi-*.md`, `data-lineage-MTDS-features-ml.md`) match code. Method:
+grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` / `code-bug`. Reference run + format:
+[`defi-data-pipeline.md`](../../../codex/02-data/defi-data-pipeline.md) §1 drift register.
+
+- [ ] (j) **data_type names**: handler constants `_*_DATA_TYPE` in MTDS `cli/handlers/*.py` match the `data_type=` names
+      documented in `codex/02-data/defi-data-types-catalog.md`. Canonical = `dex_swaps` / `dex_pool_state` /
+      `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` (NOT `swap_events` / `pool_state` /
+      `lending_metrics` / `funding_rates`). Grep: `rg "_DATA_TYPE\s*=" market-tick-data-service/*/cli/handlers/`
+- [ ] (k) **data_type completeness**: every `collect-*` DeFi operation in MTDS `cli/main.py` is documented in the
+      catalog. Any operation not in the catalog = `codex-stale`. (2026-05-27: code emits ~22, catalog had 14.)
+- [ ] (l) **storage bucket per data_type**: each handler's `get_write_bucket_name(kind)` / `resolve_bucket_name(kind=)`
+      matches the bucket the codex claims — dedicated `lst-rates-*` / `lending-indices-*` / `dex-pools-*` /
+      `oracle-prices-*` / `perp-funding-*`, vs `market-data-tick-defi-*` for `dex_swaps` / `vault_share_price` /
+      `dex_pool_state`. No live writes to legacy in-bucket prefixes (`market-data-tick-defi-*/lst_rates/` etc.).
+- [ ] (m) **MDPS processed-vs-bypass scope**: the DeFi adapters imported in MDPS `app/adapters/__init__.py` + UAC
+      `needs_candle_processing()` agree with the bypass list in `data-lineage-MTDS-features-ml.md`. Flag any adapter
+      registered-by-decorator but **not imported** in the top-level `__init__.py` (dead — e.g.
+      `DefiLendingIndicesAdapter` 2026-05-27), and any `needs_candle_processing=True` for a bypass type.
+- [ ] (n) **venue/capability consistency**: every venue in `registry/defi_venues.py` (`ALL_DEFI_VENUES`,
+      `DEFI_VENUE_PHASE=live`) has a matching `PROTOCOL_CAPABILITIES` + `SUBGRAPH_IDS` entry — no live venue without
+      capability backing (e.g. RADIANT 2026-05-27) — and `defi-venue-protocol-catalogue.md` lists the same venues, with
+      `EMPTY_OR_DEPRECATED_DEFI_VENUES` flagged.
 
 ### E2E Batch, Paper, and Live Verification
 
@@ -82,7 +111,7 @@ archetypes. Key code surfaces:
 
 ## Success Criteria
 
-- All 9 checklist items GREEN
+- All checklist items GREEN (incl. code↔codex drift items j–n)
 - `a6_batch_live_adapter_parity.py` shows 100% parity for `asset_group=defi` rows
 - Manifest divergence A3: zero `MISSING_EXPECTED` for defi asset_group
 - QG exits 0 for all DeFi-touching services (execution-service, strategy-service)
@@ -101,6 +130,6 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                                                                       | Status                                |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n) |

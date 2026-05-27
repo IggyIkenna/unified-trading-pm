@@ -29,7 +29,10 @@ purpose: code-grounded current-state of the DeFi data pipeline + a Code↔Codex 
 
 ## 1. Code ↔ Codex drift register (verified 2026-05-27)
 
-Each row: what a codex SSOT claims, what the code/GCS actually does (with citation), the verdict, and the fix side.
+Each row: what a codex SSOT claims, what the code/GCS actually does (with citation), the verdict, and the fix side. The
+**5 rows below are the architectural highlights**; the full audit (13 findings D1–D13, incl. catalog completeness, venue
+drift, banned `bloxroute` relay, RADIANT-unbacked-live, governance handler dup) is in the audit record
+[`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27`](../../plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
 Actionable items tracked in
 [`issues/defi_code_codex_drift_2026_05_27`](../../plans/active/issues/defi_code_codex_drift_2026_05_27.md).
 

@@ -10,6 +10,18 @@ last_reviewed: 2026-05-13
 > (codex audit IN-7 + IN-15 + IN-19 refresh — asset_group canonical hive vocab + 3-doc consolidation cross-link +
 > currency stamp added). Prior: 2026-04-24 (defi_data_types_completeness_2026_04_24).
 
+> **🟡 PARTIAL STALENESS (code↔codex audit 2026-05-27).** This catalog drifted from code. Verified against handlers +
+> UAC on 2026-05-27: (1) the canonical `data_type=` strings are **`dex_swaps`** (was `swap_events`),
+> **`dex_pool_state`** (was `pool_state`), **`lending_indices`** (was `lending_metrics`), **`perp_funding`** (was
+> `funding_rates`) — renamed in this rev. (2) Code emits **~22** DeFi data_types; this catalog documents 14 —
+> **missing** `lst_rates`, `vault_share_price`, `liquidations`, `risk_params`, `rewards`, `eigenlayer_rewards`,
+> `native_staking_rates`, `aggregator_route`, `restaking_rewards`, `governance_proposals`, etc. (3) Some source/venue
+> entries are stale (e.g. `oracle_prices` also uses Pyth Hermes on Solana; `lending_indices` also covers Spark +
+> Compound V3). **Authoritative current-state**: [`defi-data-pipeline.md`](./defi-data-pipeline.md) (code-grounded) +
+> audit findings
+> [`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27`](../../plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
+> Full catalog reconciliation (add the 13 missing types, fix sources) is a tracked gap item there.
+
 ## Overview
 
 MTDS collects DeFi market data in 14 distinct data types across lending, DEX, staking, bridging, governance, and MEV
@@ -38,18 +50,18 @@ per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...
 
 ### Instrument Type Mapping
 
-| instrument_type | Data types                                                                                                            |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `spot_asset`    | swap_events, pool_state, bridge_events, mev_events, token_transfers, governance_events, staking_yields (Lido/EtherFi) |
-| `lending`       | lending_metrics, liquidation_events, flash_loan_events, position_data                                                 |
-| `staking`       | staking_yields                                                                                                        |
-| `perpetual`     | funding_rates                                                                                                         |
+| instrument_type | Data types                                                                                                                  |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `spot_asset`    | dex_swaps, dex_pool_state, bridge_events, mev_events, token_transfers, governance_events, staking_yields, vault_share_price |
+| `lending`       | lending_indices, liquidations, liquidation_events, flash_loan_events, position_data, risk_params                            |
+| `staking`       | staking_yields, lst_rates, rewards, eigenlayer_rewards, native_staking_rates                                                |
+| `perpetual`     | perp_funding                                                                                                                |
 
 ---
 
 ## Data Type Catalog
 
-### 1. swap_events
+### 1. dex_swaps (canonical; was `swap_events`)
 
 | Field               | Value                                                                             |
 | ------------------- | --------------------------------------------------------------------------------- |
@@ -64,7 +76,7 @@ Captures AMM swap transactions. One row per swap event.
 
 ---
 
-### 2. pool_state
+### 2. dex_pool_state (canonical; was `pool_state`)
 
 | Field               | Value                                                                       |
 | ------------------- | --------------------------------------------------------------------------- |
@@ -79,7 +91,7 @@ Hourly pool TVL and volume snapshots. One row per pool per hour.
 
 ---
 
-### 3. lending_metrics
+### 3. lending_indices (canonical; was `lending_metrics`)
 
 | Field               | Value                                                                                                |
 | ------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -94,7 +106,7 @@ Daily lending rate indices. One row per market (token) per day.
 
 ---
 
-### 4. funding_rates
+### 4. perp_funding (canonical; was `funding_rates`)
 
 | Field               | Value                                                         |
 | ------------------- | ------------------------------------------------------------- |
@@ -119,7 +131,7 @@ Perpetual funding rates. One row per market per funding interval.
 | **Instrument type** | `lending`                                                                                                      |
 | **Status**          | Production (2026-04-24)                                                                                        |
 | **Schema fields**   | symbol, ts_event, venue, chain, collateral_asset, debt_asset, collateral_amount, debt_amount, liquidator, user |
-| **Protocols**       | AAVE_V3 (ETHEREUM, ARBITRUM, POLYGON), MORPHO (ETHEREUM)                                                        |
+| **Protocols**       | AAVE_V3 (ETHEREUM, ARBITRUM, POLYGON), MORPHO (ETHEREUM)                                                       |
 
 On-chain liquidation call events. One row per liquidation transaction. Distinct from `liquidations` (GMX-style
 position-level data) — this is the on-chain event log.
@@ -136,7 +148,7 @@ position-level data) — this is the on-chain event log.
 | **Instrument type** | `lending`                                                                   |
 | **Status**          | Production (2026-04-24)                                                     |
 | **Schema fields**   | symbol, ts_event, venue, chain, asset, amount, premium, initiator, borrower |
-| **Protocols**       | AAVE_V3 (all supported chains via `get_supported_chains_for_protocol`)       |
+| **Protocols**       | AAVE_V3 (all supported chains via `get_supported_chains_for_protocol`)      |
 
 Aave V3 FlashLoan events. Captures flash loans including amount, premium (fee), initiator, and receiver address.
 
@@ -168,7 +180,7 @@ Daily staking yield snapshots from liquid staking protocols. One row per venue p
 | **Instrument type** | `lending`                                                                                             |
 | **Status**          | Production (2026-04-24)                                                                               |
 | **Schema fields**   | symbol, ts_event, venue, chain, user, supplied_usd, borrowed_usd, health_factor                       |
-| **Protocols**       | AAVE_V3 (all supported chains), UNISWAP_V3-ETHEREUM                                                     |
+| **Protocols**       | AAVE_V3 (all supported chains), UNISWAP_V3-ETHEREUM                                                   |
 
 Daily snapshot of top user positions. Captures collateral, debt, and health factor for at-risk lending positions.
 Uniswap positions use `liquidity` field mapped to `supplied_usd`.
@@ -278,10 +290,10 @@ Daily aggregate gas stats per EVM chain. One row per chain per day.
 
 | Protocol         | Chain(s)                           | Data Types                                                            |
 | ---------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| UNISWAP_V2        | ETHEREUM                           | swap_events, pool_state                                               |
-| UNISWAP_V3        | ETHEREUM, ARBITRUM, BASE, OPTIMISM | swap_events, pool_state, position_data                                |
-| UNISWAP_V4        | ETHEREUM                           | swap_events, pool_state                                               |
-| AAVE_V3           | ETHEREUM, ARBITRUM, POLYGON        | lending_metrics, liquidation_events, flash_loan_events, position_data |
+| UNISWAP_V2       | ETHEREUM                           | swap_events, pool_state                                               |
+| UNISWAP_V3       | ETHEREUM, ARBITRUM, BASE, OPTIMISM | swap_events, pool_state, position_data                                |
+| UNISWAP_V4       | ETHEREUM                           | swap_events, pool_state                                               |
+| AAVE_V3          | ETHEREUM, ARBITRUM, POLYGON        | lending_metrics, liquidation_events, flash_loan_events, position_data |
 | MORPHO           | ETHEREUM                           | lending_metrics, liquidation_events                                   |
 | LIDO             | ETHEREUM                           | oracle_prices, staking_yields                                         |
 | ETHERFI          | ETHEREUM                           | oracle_prices, staking_yields                                         |

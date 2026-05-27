@@ -16,9 +16,12 @@ priority: P2
 ## What I found
 
 Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against
-the codex SSOTs. Full register: [`codex/02-data/defi-data-pipeline.md`](../../../codex/02-data/defi-data-pipeline.md)
-§1. Five drift points; two are actionable now (codex-doc), one is a real latent code bug (deferred), one is data cleanup
-(deferred), one already self-bannered.
+the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-result format):**
+[`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md`](../../audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
+In-codex summary: [`codex/02-data/defi-data-pipeline.md`](../../../codex/02-data/defi-data-pipeline.md) §1. This issue
+doc is the **actionable tracker** — todos below. The first pass surfaced 5 architectural drifts (D1–D5); a broadening
+pass added D6–D13 (catalog completeness, venue drift, banned `bloxroute` relay, RADIANT unbacked, infura, governance
+dup).
 
 | #   | Drift                                                                                                                                                                                                                                                     | Side         | Status                           |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------- |
@@ -54,9 +57,28 @@ the codex SSOTs. Full register: [`codex/02-data/defi-data-pipeline.md`](../../..
 
 ## Todos
 
-- [ ] [DOC] P2. D1 — update `defi-data-types-catalog.md` to canonical data_type names
-      (`dex_swaps`/`dex_pool_state`/`lending_indices`/`perp_funding`); reconcile instrument-type map.
-- [ ] [CODE] P2. **DEFERRED-UNTIL-PIPELINE-DONE** D3 — set `needs_candle_processing("lending_indices")=False` (UAC) +
-      delete dead `DefiLendingIndicesAdapter` + fix `app/adapters/__init__.py` comment; QG green.
-- [ ] [INFRA] P3. **DEFERRED-UNTIL-PIPELINE-DONE** D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/`
-      prefixes in `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative.
+Codex-doc (safe now):
+
+- [x] [DOC] P2. D1 — `defi-data-types-catalog.md` renamed to canonical data_type names
+      (`dex_swaps`/`dex_pool_state`/`lending_indices`/`perp_funding`) + instrument-type map + staleness banner. ✅ this
+      session.
+- [ ] [DOC] P2. D6/D12 — full `defi-data-types-catalog.md` reconciliation: add the ~8–13 missing data_types
+      (`lst_rates`, `vault_share_price`, `liquidations`, `risk_params`, `rewards`, `eigenlayer_rewards`,
+      `native_staking_rates`, `aggregator_route`, `restaking_rewards`, `governance_proposals`, …) + fix `oracle_prices`
+      (add Pyth) / `lending_indices` (add Spark + Compound V3) sources.
+- [ ] [DOC] P2. D9/D11 — update `defi-venue-protocol-catalogue.md`: add EULER_V2 / BENQI / VENUS / MARGINFI / SOLEND /
+      SOLAYER / PICASSO / CAMBRIAN; flag TRADER_JOE / VELODROME / GMX-AVALANCHE as empty/deprecated.
+
+Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-verify current state first):
+
+- [ ] [CODE] P2. D3 — set `needs_candle_processing("lending_indices")=False` (UAC) + delete dead
+      `DefiLendingIndicesAdapter` + fix `app/adapters/__init__.py` comment; QG green.
+- [ ] [CODE] P2. D10 — RADIANT: add `PROTOCOL_CAPABILITIES`+`SUBGRAPH_IDS` OR downgrade from `DEFI_VENUE_PHASE=live` (a
+      live venue with no capability/subgraph backing cannot fetch). Confirm intent with operator/Ikenna.
+- [ ] [CODE] P3. **FOR-DECISION** D7 — `bloxroute` relay URLs in `mev_events_handler.py:42-43`: operator call on whether
+      the removed-providers rule covers MEV-Boost relays; delete stale `mev_events_handler.py.bak` regardless.
+- [ ] [CODE] P3. **FOR-DECISION** D8 — Starknet `infura_compatible` template (`_defi_chain_data.py:734`): keep+rename or
+      remove; drop the `gas_fee_handler.py:78` infura comment.
+- [ ] [CODE] P3. **FOR-DECISION** D13 — consolidate `governance_events` vs `governance_proposals` handlers to one path.
+- [ ] [INFRA] P3. D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in
+      `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative.
