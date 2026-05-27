@@ -92,6 +92,16 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
     review-blocking; must bundle into a scheduled migration window).
   - **Where the rewrite lands**: MDPS canonical_writer partition keys vs features reader. Name the SSOT files.
   - **Recommendation framing**: "no-brainer / needs-design / blocked-on-migration-window" — leave the call to operator.
+- [ ] [BUG][P1] **1.0b 4h/24h STILL not landing — reclassify root cause (NOT pure data-availability).** Verified
+  2026-05-27: all-TF run (bskyporh3) exited 1 and wrote only `15s/1m/5m/15m/1h` to
+  `gs://features-delta-one-cefi-test-central-element-323112/day=2026-05-03/` — **no 4h, no 24h**. Earlier belief ("24h
+  blocked because only 3 CeFi candle-days exist") is partly wrong: MDPS `processed_candles` has **457 day-partitions back
+  to 2019** (sparse — gap 2026-04-14→2026-05-01, then 05-01..05-04 contiguous). Therefore **4h** (needs ≈14 4h-bars ≈
+  2.3 days; 3 contiguous days exist) *should* compute but FAILS → code/buffer-days bug, not data. **24h** (needs 14
+  contiguous daily bars) genuinely lacks contiguous recent history → real upstream backfill gap. Action: capture the
+  delta_one subprocess stderr for the failing 4h leg; the read-once long-lookback refactor (1.1) should pull enough
+  base-candle history to let 4h land — make **"4h parquet lands in -test for 05-03"** an explicit 1.1 acceptance
+  criterion; keep 24h tracked as a contiguous-candle backfill ask.
 - [ ] [P1] **1.1 Read base candles once → resample candles in-memory to all output timeframes.** Replace the per-TF
   candle re-read in the Phase-6.A loop with: read 15s/1m for the lookback window once, OHLC-resample to
   {5m,15m,1h,4h,24h} in memory (exact aggregation), compute features per TF. Target: 7 reads → 1. (`data_loader.py` +
