@@ -55,10 +55,11 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
 - [x] [SCRIPT] P0. Backup script committed: `deployment-service/scripts/vm/backup-vm-logs.sh` — snapshots all RUNNING
       (or named) VMs' `run.log` (server-side GCS→GCS copy) + serial console to
       `gs://deployment-scripts-{pid}/log-archive/snapshot_<ts>/`; read-only on source. (Created + corrected 2026-05-27.)
-- [ ] [AGENT] P1. **Formalise the archive path into a helper** (don't leave it as an inline string): add e.g.
+- [x] [AGENT] P1. **Formalise the archive path into a helper** (don't leave it as an inline string): add e.g.
       `vm_log_archive_uri(vm, ts)` next to `_resolve_default_bucket()` in `deployment_service/deployments_registry.py`,
       and have `backup-vm-logs.sh` + any consumer derive from it. Add a unit test pinning the
-      `deployment-scripts-{pid}/log-archive/...` shape (mirroring the existing `vm-logs/` test).
+      `deployment-scripts-{pid}/log-archive/...` shape (mirroring the existing `vm-logs/` test). —
+      deployment-service@e9e69b2 ✅
 - [ ] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
       re-copied to the canonical `log-archive/` prefix (operator-confirm before delete — it currently holds the
       2026-05-27 fleet backup).
