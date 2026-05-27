@@ -67,12 +67,13 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       `VM_SHUTDOWN_ON_COMPLETION` self-delete) MUST call `backup-vm-logs.sh --vm <name>` (or inline equivalent) BEFORE
       `instances delete`, so a reaped/zombie VM's serial console is always captured. Wire into the watchdog + the
       self-delete block in `vm-exec-with-gcs-tee.sh`. — deployment-service@4b8a0c3 ✅
-- [ ] [AGENT] P1. **Durable retention**: decide + implement how the live `vm-logs/` stream survives the 14-day TTL —
+- [x] [AGENT] P1. **Durable retention**: decide + implement how the live `vm-logs/` stream survives the 14-day TTL —
       either (a) a daily
       `gcloud storage rsync gs://deployment-scripts-{pid}/vm-logs/ gs://deployment-scripts-{pid}/log-archive/rolling/`
       cron (Cloud Scheduler + Cloud Run, mirroring the manifest-consolidator pattern), or (b) lengthen the TTL on the
       `vm-logs/` prefix. Prefer (a) — keeps the hot prefix small + the archive immutable. (If durability demands a
-      physically separate bucket, mint it via a helper, not an inline string — see the formalise-helper todo.)
+      physically separate bucket, mint it via a helper, not an inline string — see the formalise-helper todo.) —
+      deployment-service@3cd0b1d ✅ (implemented option a)
 - [ ] [AGENT] P2. **Periodic serial capture for long-lived VMs**: one-shot serial capture misses early boot output once
       the ring buffer wraps. For LONG_LIVED_LIVE / SCHEDULED_RECURRING VMs, capture serial on a schedule (or on
       state-change) into the archive.
