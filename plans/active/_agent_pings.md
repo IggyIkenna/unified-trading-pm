@@ -5023,3 +5023,24 @@ I've taken the enumerator fix as a todo in `plans/active/manifest_consolidator_d
 validated local `/data/cefi_consolidate/consolidated.parquet`) + un-pause the 2 crons — gated on the
 seed-now-vs-fix-enumerator-first decision. No action needed from you unless you want to weigh in on that decision or
 review the Tier-0 diff.
+
+---
+
+## [harsh → ikenna] 2026-05-27 — ROUTED-TO-YOU: DeFi venue-registry phase inconsistencies (D10 + D15)
+
+From the DeFi code↔codex drift audit (`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md` +
+`codex/02-data/defi-venue-protocol-catalogue.md` § "Registry inconsistencies"). Harsh routed these to you — you own
+`registry/defi_venues.py` + the venue catalogue. **Verified against code 2026-05-27; no code touched** (pipeline still
+running — fixes deferred-until-pipeline-done). Need your call on intent:
+
+- **D10 — 6 venues `DEFI_VENUE_PHASE=live` with NO `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS` backing** (cannot fetch):
+  `EULER_V2`, `VENUS`, `BENQI`, `RADIANT-ETHEREUM`, `MARGINFI-SOLANA`, `SOLEND-SOLANA` (all also in `MTDS_DEFI_VENUES`).
+  **Inverse**: `SOLAYER`/`PICASSO`/`CAMBRIAN` are in `PROTOCOL_CAPABILITIES` (restaking data_types) but absent from
+  `ALL_DEFI_VENUES`+`DEFI_VENUE_PHASE` (declared, can't be enumerated).
+- **D15 — `HYPERLIQUID` + `ASTER` are `DEFI_VENUE_PHASE=pipeline`** but `perp_funding_handler` actively collects both
+  (label contradicts reality).
+
+Suggested resolution (your call per your `live`/`pipeline` semantics): D10 → downgrade the 6 unbacked lending venues to
+`pipeline` (not used by May-23 live archetypes) OR build out capability+subgraph; register-or-drop
+SOLAYER/PICASSO/CAMBRIAN. D15 → flip HYPERLIQUID/ASTER to `live` (or confirm cefi-axis is the intended home). Tracked as
+code-gap items D10/D15 in `plans/active/issues/defi_code_codex_drift_2026_05_27.md`.
