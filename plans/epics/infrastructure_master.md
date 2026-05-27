@@ -456,8 +456,11 @@ is the operator-window-gated migration chain (HARD-ORDERED, single-walk-discipli
 glued→underscore venue keys (SCHEDULED MIGRATION WINDOW) → **B5.4** manifest reconcile ALL version-suffixed families
 (only AAVE_V3 verified) → **B5.5 (P0)** delete old glued keys after parity → **B5.6 [UI]** verify deployment-ui
 pool-breakdown post-migration (+`pw:L2`) → **B5.7 (P0 VERIFY)** re-drill `AAVE_V3-ARBITRUM·2026-05-03`. **B5.8 (P3)**
-stale-comment cleanup. Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. Full phased
-todos in the issue doc.
+stale-comment cleanup. Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Bug 4
+(POST-CUTOVER)**: add a `data_source_type` taxonomy enum so LST venue `ANKR` (ankrETH) vs RPC-provider `ANKR` (and
+`ALCHEMY`/`CHAINLINK`/`GAS_FEES` grid contaminants, DQ-04) are distinguishable — fold the `oracle_prices_handler`
+`COINBASE-SPOT`-into-defi-grid filter fix in here. Migrated from the issue doc (which named itself as Bug 4's tracker).
+Full phased todos were in the (now archived) issue doc.
 
 ## P1 — important; post-current-gate
 

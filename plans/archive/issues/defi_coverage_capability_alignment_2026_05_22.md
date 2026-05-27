@@ -11,6 +11,10 @@ priority: P2
 status: active
 ---
 
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Bugs 1/2/3 shipped (Bug 2 incl. `liquidation_events_handler` casing MTDS@c60eb053); B5.1/B5.2 root-cause code shipped (UAC@fdc9206b + IS@a57ae01c). Bug 5 migration chain (B5.3-B5.7) + Bug 4 (post-cutover `data_source_type` taxonomy) lifted into `plans/epics/infrastructure_master.md` P0 block. All content is done or epic-tracked.
+>
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: root cause shipped + residuals captured in named epic plans). Lock `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+
 ## What I found
 
 ### Bug 1 (FIXED 2026-05-22): All DEX/lending entries in `_DEFI` were phantom

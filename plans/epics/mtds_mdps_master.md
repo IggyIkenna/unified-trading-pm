@@ -578,6 +578,11 @@ MTDS adapters preflight + batch-live parity
       divergence. Flipping the writer standalone (before the historical rename) would split forward-writes from
       historical, so it MUST land together with the GCS rename. Source: issue `defi_code_codex_drift_2026_05_27` D14
       (diagnosed 2026-05-27).
+- [ ] [SCRIPT] P2. **DEFERRED — bundle with the rename above** — convert the DeFi GCS hive key `category=defi` →
+      `asset_group=defi` in the SAME single-walk window (the `data_type=` rename above does NOT touch the `category=`
+      segment). The recurring collection trigger already emits canonical `asset_group` (operation-named scheduler,
+      deployment-service@7b1490f), so this is the on-disk historical-data side only. **MIGRATED FROM:**
+      `defi_market_data_staleness_2026_05_24` residual #2 (trigger-side category→asset_group already resolved).
 
 ### greeks-service TradFi IV fitting — MarkUpdateMessage schema gap (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
 
@@ -639,6 +644,11 @@ AI-days (class: infra)
 
 - **MDPS-3.3.CeFi + CeFi-V (P0, BLOCKED-OPERATOR-DECISION)**: Relaunch CeFi reprocessor VM + verify NaN check; gate:
   MTDS-3.2.A-V GREEN.
+- **DeFi gap-fill backfill verify (P0, IN-PROGRESS — MIGRATED FROM `defi_market_data_staleness_2026_05_24` residual #1)**:
+  the recurring DeFi collection schedule is deployed (deployment-service@7b1490f, root cause fixed); the one-off gap-fill
+  VMs backfilling 2024→2026-05 must complete + manifest GREEN per venue. As of 2026-05-27 `mtds-dex-swaps-backfill` was
+  still RUNNING (forward walk ~2026-03-25); lst-rates / lending-indices VMs done. Verify completion + per-venue manifest
+  GREEN, then close. (See also `features_backfill_phase3_2026_05_22.md`.)
 - **MDPS-3.3.DeFi-V (P0, ✅ GREEN — 2026-05-24)**: All 16 fixes shipped; 101628 VMs TERMINATED; manifest consolidated.
   **Verified prod state (slot-4 2026-05-24 session 2)**: 334,964 total captured rows in combined availability index;
   22,717 `swaps_ohlcv_*` rows confirmed — UNISWAP*V3 (19,756), UNISWAP*V2 (2,190), CURVE (771); date range 2024-05-03 →
