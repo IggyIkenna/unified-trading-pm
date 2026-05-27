@@ -151,10 +151,12 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       columns + date-range each calculator needs.
 - [ ] [P3] **1.6 Parallelism tune.** I/O-bound → MAX_WORKERS≈16 across instruments × timeframes; measure RAM
       (85%→halve).
-- [ ] [P3][PERF] **1.7 De-fragment lagged-feature insertion** (`app/calculators/base.py:478`) — surfaced by Phase-2
+- [x] ✅ [P3][PERF] **1.7 De-fragment lagged-feature insertion** (`app/calculators/base.py:478`) — surfaced by Phase-2
       suites as a pandas `PerformanceWarning`: per-lag `features[lagged_name] = features[feature].shift(lag)` does N
       `frame.insert`s → highly-fragmented frame (slow compute, high RAM). Fix: build all lagged columns then
-      `pd.concat(axis=1)` once. Compute-side (not I/O) but real for the wide ~964-col surface.
+      `pd.concat(axis=1)` once. Compute-side (not I/O) but real for the wide ~964-col surface. — **DONE**
+      features@ff00cae6: builds all lagged columns in list first, then concatenates once. Cleaner + faster for wide
+      DataFrames.
 
 ### Phase 2 — Feature-function correctness verification `[P1]`
 
