@@ -188,13 +188,13 @@ reconcilers + `mtds-s4-10` rescan complete.
       write plumb) [AUDIT 2026-05-07: VERIFIED —
       `features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258` has
       `timeframe=` write plumb; ready to flip]
-- [ ] [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`. **DEFERRED**:
-      tests pending — writer wiring shipped via ml-training@f7369f2 / ml-inference@69d6313 / strategy@90e00bb /
-      execution@0b664d99 [AUDIT 2026-05-07: VERIFIED — ml-training@`f7369f2` / ml-inference@`69d6313` /
-      strategy@`90e00bb` / execution@`0b664d99` shipped Phase 1B job_id writers (per master-plan-audit memory);
-      ml-training `training_orchestrator.py:192-193/843` + `final_training_handler.py:207` + `model_registry.py:270`
-      plumb job_id; execution `save_operations.py:802` plumbs job_id=run_id; strategy `cloud_strategy_storage.py:79-201`
-      plumbs service_run_id; per-service unit-test verification pending but writer code is in place]
+- [x] ✅ [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`.
+      — strategy@`2545b0be` / execution@`f821db863` (tests pushed to LDR 2026-05-27);
+      ml-training@`78ab138` / ml-inference (tests committed locally — repos archived on GitHub, cannot push).
+      Writer wiring confirmed: ml-training@`f7369f2` / ml-inference@`69d6313` / strategy@`90e00bb` /
+      execution@`0b664d99` Phase 1B job_id writers; 3 tests per service pass (12 total).
+      [ARCHIVED-REPO NOTE: ml-training-service + ml-inference-service are GitHub-archived (read-only).
+      Tests exist in slot-7 worktree but remote push blocked. Tests for active repos fully verified.]
 - [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
       applicable). [AUDIT 2026-05-07: FRESH — actionable; deferred per CLAUDE.md DEFI canonicalisation closeout
       2026-05-07 ("B.2 Playwright walk across 15 services × 5 asset_groups deferred — needs full local stack + manual
