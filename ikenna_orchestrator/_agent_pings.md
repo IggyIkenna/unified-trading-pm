@@ -3319,3 +3319,29 @@ writes at the canonical split buckets with the new `SOLANA_LENDING`/`SOLANA_VAUL
 re-enable the recurring schedule; QG green.
 
 **vm-ml worker — chain Gate 5 after Gate 4 GREEN** (full runbook in plan body under "Gate 5 runbook"). [NOT-ACKED]
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-28T14:15:22Z — ⚠️ 2 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /tmp/unified-trading-pm/plans/active/_agent_pings.md | ## [harsh → ikenna] 2026-05-25 — ACTION NEEDED: create 1 Secret Manager secret (we're IAM-denied)
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [2026-05-28 UPDATE] Gate 5 now IN SCOPE — keys verified, scope is bounded refactor
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+1. **File a plan** in `plans/active/<slug>_2026_05_28.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline,
+   OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
+Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
+Phase -1 (workspace-discipline prereq).
