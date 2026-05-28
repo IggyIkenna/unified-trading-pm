@@ -178,6 +178,24 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       re-applied features@c513265a (now safe). The check tool's auto-fix is still naive — should still get a
       verify-before-rewrite guard or symbol allowlist as a follow-up (tracked separately if needed). Verified: 4 files
       pass basedpyright 0/0/0; volatility smoke + delta_one tests pass; top-level imports resolve.
+- [ ] [SIZE][P1] **1.7f Codex-compliance file/method size violations from agent work (introduced 2026-05-27/28).**
+      Found 2026-05-28 by full QG run. `batch_handler.py` grew to **1058 lines** (cap 900) after the Phase-1 agents
+      added the timeframe loop (@7bd77525) + read-once (@2b20c795) + smart clustering (@ac83bfad) + range-once
+      (@2937ea91). Oversized inside that file: `BatchHandler` class = 948L (cap 900),
+      `_process_feature_group` = 61L (cap 50), `_process_tf_clusters_date_range` = 67L (cap 50),
+      `_load_range_candles_with_buffer` = 53L (cap 50). Plus `base.py:445 _add_lagged_features` = 58L (cap 50)
+      from @ff00cae6. Suggested fix: extract a `delta_one/cli/handlers/_tf_cluster_helper.py` module for the
+      cluster orchestration; pull `_load_range_candles_with_buffer` into a private helper class. Carefully — these
+      methods carry the read-once/clustering semantics from the recent perf work; refactor must preserve behaviour
+      (run full QG after to confirm tests stay green).
+- [ ] [CONFIG][P2] **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") —
+      violates workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
+      (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in
+      e8c8693d (2026-05-26) when consolidating basedpyright config into pyproject.toml; comment said "kept at
+      pre-rollout per-repo strictness". Workspace CLAUDE.md mandates strict-mode (all = "error" or omitted).
+      Removing the 5 suppressions could surface dozens-hundreds of new errors — too risky to flip blindly. Path:
+      remove ONE suppression at a time, fix the resulting errors, then next. Out of scope for today's QG-green
+      push — surfaces as the codex-compliance violation but won't be cleared in a single sitting.
 - [ ] [BUG][P1] **1.7c test_orchestration_flow MagicMock leak — `get_settings().base_timeframe` not mocked.** Surfaced
       after 1.7b fix unblocked the calculator pipeline. Phase-1 read-once work introduced `get_settings().base_timeframe`
       lookups; the e2e test in `tests/delta_one/e2e/test_end_to_end.py:60` mocks `get_settings()` but doesn't return a
