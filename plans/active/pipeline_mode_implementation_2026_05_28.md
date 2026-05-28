@@ -86,12 +86,12 @@ impact, no walk needed now.
 
 ## Phase 3 — Existing-row backfill (P0)
 
-- [ ] [AGENT] P0. Write one-shot script `unified-trading-pm/scripts/manifest/backfill_pipeline_mode.py` that mutates
+- [x] ✅ [AGENT] P0. Write one-shot script `unified-trading-pm/scripts/migration/backfill_pipeline_mode.py` that mutates
       existing manifest rows: derive `pipeline_mode` from Phase 0 (d) table on
-      `(asset_group, venue,     service_name, written_at)`. Per CLAUDE.md "GCS object ops in migration scripts", use
-      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_describe_object` — NEVER subprocess gsutil for
-      per-object ops. Idempotent (skip rows where pipeline_mode is already set, even if to a stale value — flag with
-      `--force` for operator-blessed overwrite).
+      `(asset_group, venue, data_type)` via `derive_pipeline_mode_for_row()`. Per CLAUDE.md "GCS object ops in
+      migration scripts", uses `StorageClient.download_bytes / upload_file` — NEVER subprocess gsutil. Idempotent
+      (skip rows where pipeline_mode already set; `--force` for operator overwrite). `--dry-run` default, `--verify`
+      mode for count-only. — unified-trading-pm@9cf186cd
 - [ ] [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
       prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`.
 - [ ] [AGENT] P0. Verify post-backfill:
