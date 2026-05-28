@@ -194,7 +194,13 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       Removing the 5 suppressions could surface dozens-hundreds of new errors — too risky to flip blindly. Path:
       remove ONE suppression at a time, fix the resulting errors, then next. Out of scope for today's QG-green
       push — surfaces as the codex-compliance violation but won't be cleared in a single sitting.
-- [ ] [BUG][P1] **1.7c test_orchestration_flow MagicMock leak — `get_settings().base_timeframe` not mocked.** Surfaced
+- [x] ✅ [BUG][P1] **1.7c test_orchestration_flow MagicMock leak.** — **FIXED** features@e13ad554. Root cause refined:
+      not the `get_settings().base_timeframe` leak (that's at atexit, separate cross_instrument flush). The actual
+      runtime fail was `OrchestrationService.process_feature_group` constructing `ManifestWriter(catalogue_bucket=
+      self.feature_writer.bucket)` — with `spec=FeatureWriter` the `.bucket` attr is a MagicMock, so `ManifestWriter.
+      write()` issues a real GCS POST and the MagicMock leaks into the URL via `bucket.__radd__()` → 404. Fix: extend
+      the test's `with patch(...)` to also patch `ManifestWriter`. 3/3 deterministic pass post-fix; isolation no longer
+      relies on whole-suite mock state. Surfaced
       after 1.7b fix unblocked the calculator pipeline. Phase-1 read-once work introduced `get_settings().base_timeframe`
       lookups; the e2e test in `tests/delta_one/e2e/test_end_to_end.py:60` mocks `get_settings()` but doesn't return a
       real string for `base_timeframe` → "Could not convert MagicMock... did not recognize Python value type when
