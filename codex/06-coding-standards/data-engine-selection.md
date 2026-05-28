@@ -117,6 +117,34 @@ allocations per instrument. On the 7-day backfill VM (32 GB), even after wiring 
 (orchestration_service.py:132+, MDPS@dcd7416), RSS held at 25.1 GB per-day floor — arenas don't reclaim from
 `gc.collect()`. The service-side fix (pick pure Polars end-to-end) lives in the architectural audit plan Phase 2.
 
+### Decision evidence — MDPS engine benchmark 2026-05-28
+
+A 4-path benchmark on 9 real BINANCE-FUTURES perp trades parquets locked the engine pick for MDPS as **pure Polars**.
+Polars 1.40.1 vs pandas 3.0.3 + pyarrow 24.0.0 + Python 3.13.9, each path in its own subprocess, 9 instruments
+processed in single process per path so cross-instrument arena retention is measurable. Full doc:
+[`plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md`](../../plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md);
+raw code + JSON: [`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/`](../../plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/).
+
+| Path | Total wall | Mean RSS / instr | Final RSS retention |
+|---|---|---|---|
+| **A — pure polars `scan_parquet` (lazy)** | **0.5 s** | **344 MB** | **318 MB** |
+| B — pandas + pyarrow dtype_backend | 2.6 s | 1185 MB | 1570 MB |
+| C — current MDPS (Polars→Pandas→Polars) | 1.4 s | 1861 MB | 2471 MB |
+| D — polars `read_parquet` eager | 0.3 s | 625 MB | 801 MB |
+
+Pure-Polars beat the current shape 3× on wall, 5× on peak per instrument, 7.8× on cumulative retention. Pandas+
+PyArrow was 1.9× *slower* than the current mixed shape — so "use pandas to fix arena retention" is also a wall-clock
+regression. Both polars and pandas+pyarrow have unresolved memory leaks at the parquet-read boundary
+([polars#22871](https://github.com/pola-rs/polars/issues/22871),
+[polars#23109](https://github.com/pola-rs/polars/issues/23109),
+[pandas#59969](https://github.com/pandas-dev/pandas/issues/59969),
+[arrow#44472](https://github.com/apache/arrow/issues/44472)) — the workaround is subprocess-per-batch, which composes
+with the Layer 3 execution-model decision rather than competing with it.
+
+**Lock-in**: services with the MDPS pipeline shape (read parquet → aggregate per timeframe → write parquet, in a
+long-running multi-shard VM) MUST pick pure Polars. Pandas + PyArrow is reserved for I/O-only services where no
+aggregation occurs in-process.
+
 ## How to migrate an existing service off the mixed-engine pattern
 
 1. **Inventory every parquet read/write callsite.** Tabulate `(file:line, engine, why this engine was chosen)`. The
