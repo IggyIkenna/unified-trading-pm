@@ -142,16 +142,20 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    2026-05-21 slot-11**: green (0 fixes needed) **alerting-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed)
    **batch-live-reconciliation-service VERIFIED 2026-05-21 slot-11**: green (0 fixes needed) **deployment-api VERIFIED
    2026-05-21 slot-11**: green (0 fixes needed) **trading-agent-service VERIFIED 2026-05-21 slot-11**: green (0 fixes
-   needed) **position-balance-monitor-service FIXED 2026-05-21 slot-11**: QG green locally @7c5f8b7 — pip-audit ignores
-   PYSEC-2024-277/PYSEC-2025-183; PUSH-BLOCKED (repo archived on GitHub — operator must unarchive to merge to LDR)
-   **pnl-attribution-service FIXED 2026-05-21 slot-11**: QG green locally @db18812 — pip-audit ignores + session-scoped
-   setup_events fixture in conftest.py; PUSH-BLOCKED (repo archived on GitHub) **risk-and-exposure-service FIXED
-   2026-05-21 slot-11**: QG green locally @d350070 — corrected 8 wrong RiskMetrics field names in risk_metrics.py
-   log_event call (concentration_pct→concentration, drawdown_pct→drawdown, etc.); PUSH-BLOCKED (repo archived on GitHub)
-   **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external, no quality-gates.sh — out of scope for this
-   sweep **deployment-service SKIPPED 2026-05-21 slot-11**: locked by slot-10; not verified this sweep **SWEEP COMPLETE
-   2026-05-21 slot-11**: all in-scope service repos verified or locally-fixed; 3 archived repos
-   (position-balance-monitor, pnl-attribution, risk-and-exposure) require operator unarchive before LDR merge
+   needed) **position-balance-monitor-service OBSOLETE 2026-05-28**: merged into strategy-service; the local QG fix
+   `@7c5f8b7` (pip-audit ignores PYSEC-2024-277/PYSEC-2025-183) is out of scope — re-apply against strategy-service if
+   the same issue still exists there. **pnl-attribution-service OBSOLETE 2026-05-28**: merged into strategy-service;
+   the local QG fix `@db18812` (pip-audit ignores + session-scoped setup_events fixture in conftest.py) is out of
+   scope. **risk-and-exposure-service OBSOLETE 2026-05-28**: merged into strategy-service; the local QG fix `@d350070`
+   (8 RiskMetrics field name corrections in `risk_metrics.py::log_event` — concentration_pct→concentration,
+   drawdown_pct→drawdown, etc.) **may still need to land in strategy-service** — verify whether the consolidated copy
+   has the field names right; port if not. **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external,
+   no quality-gates.sh — out of scope for this sweep **deployment-service SKIPPED 2026-05-21 slot-11**: locked by
+   slot-10; not verified this sweep **SWEEP COMPLETE 2026-05-21 slot-11**: all in-scope service repos verified or
+   locally-fixed. ~~3 archived repos require operator unarchive before LDR merge~~ — **resolved 2026-05-28**:
+   position-balance-monitor + pnl-attribution + risk-and-exposure all merged into strategy-service; no unarchive
+   needed. **Follow-up**: confirm the risk_metrics.py field-name fix is also in strategy-service's consolidated copy;
+   if not, re-apply there.
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
@@ -197,7 +201,7 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     GATED on Phase 6 + Phase 7A complete. Phase 7b triage CSV from Ikenna → re-invoke with --start/--end per-asset-group
     when gates clear.
 
-14. 🟡 **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — BLOCKED (operator action required). PR #8 (LDR → staging) open at
+14. 🟡 **HUMAN-HARSH-CI-CD-PROMOTION-PIPELINE** — PR #8 (LDR → staging) open at
     https://github.com/IggyIkenna/deployment-ui/pull/8. Six pre-existing CI blockers found and fixed: (a) GitHub
     cross-repo private-repo reusable workflow restriction — fixed by creating local copy
     deployment-ui/.github/workflows/ui-quality-gates.yml (within-repo calls work for private repos); (b)
@@ -205,11 +209,15 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     notify-telegram.yml had duplicate `inputs:` key — merged into single block; (d) notify-failure job in
     ui/infra-quality-gates.yml had relative `./` path (invalid cross-repo) — removed; (e) GH_PAT: required: true caused
     GitHub to reject the reusable workflow call — changed to required: false; (f) top-level `concurrency` block in local
-    reusable workflow causes "workflow file issue" — removed. **BLOCKER**: unified-trading-pm is a private repo. GH_PAT
-    is required to clone it for quality-gates.sh. deployment-ui does NOT have GH_PAT in its GitHub Actions secrets.
-    Without GH_PAT, CI fails at "Clone PM" step. **OPERATOR ACTION**: Add GH_PAT (PAT with repo-read scope) to
-    deployment-ui GitHub Actions secrets. Once GH_PAT is added, re-run CI → merge PR #8 → staging → semver-agent
-    promotes to main. Est: 5 min operator.
+    reusable workflow causes "workflow file issue" — removed. ~~**BLOCKER**: unified-trading-pm is a private repo.
+    GH_PAT is required to clone it for quality-gates.sh. deployment-ui does NOT have GH_PAT in its GitHub Actions
+    secrets~~. **CORRECTED 2026-05-28** — GH_PAT IS already in GCP Secret Manager and the workspace pattern is to
+    fetch it from there via the UTL / `unified-trading-api` (UTA) helper at workflow runtime, NOT via GitHub Actions
+    secrets. Remediation: update deployment-ui's `ui-quality-gates.yml` to GCP-auth (via Workload Identity Federation
+    or service-account JSON) + `gcloud secrets versions access` → set `GH_PAT` in the job env → re-run CI → merge PR
+    #8 → staging → semver-agent promotes to main. Reference patterns: any GCP-bound CI workflow in `unified-trading-pm/
+    scripts/workflow-templates/` or an existing service repo with the same auth+SM-read step. Est: 30 min (workflow
+    edit + WIF binding verification).
 
 15. **HUMAN-HARSH-LIVE-PIPELINE-VALIDATION** — Phase 12-13 of coordinator: live-mode adapter behavior matches batch-mode
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:
