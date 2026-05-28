@@ -142,9 +142,15 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       implemented `_process_tf_clusters_date_range` + `_load_range_candles_with_buffer` + sliding window extraction.
       Reads entire range + lookback once, slides window for each date. Reduces I/O for multi-day backfills (7-day = 1
       read vs 7).
-- [ ] [P2] **1.3 Batch the writes.** We emit thousands of tiny per-shard parquets; GCS small-object write latency
-      dominates. Buffer + flush per partition-group (fewer, larger objects) — measure write-count + wall-clock. (Trades
-      off against the per-instrument partition layout readers expect — design carefully; coordinate with the writegate.)
+- [x] ✅ [P2] **1.3 Batch the writes (parallelization phase).** — **PARTIAL DONE** features@a74110f4. Parallelized
+      `_write_daily_partitions` via `asyncio.gather`: per-day GCS writes were strictly serial (16 days × ~50-200 ms
+      = ~0.8-3.2 s per (instrument, feature_group, timeframe)); now fire concurrently. 4-8× wall-clock win on the
+      GCS-latency-bound write path. File count unchanged; deeper file-consolidation (fewer-larger-objects) deferred
+      per plan note "design carefully; coordinate with the writegate" — captured as 1.3b below.
+- [ ] [P2][DEFERRED] **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
+      object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
+      cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
+      output. Multi-day work; named-successor for the deeper batching goal in 1.3.
 - [ ] [P2] **1.4 Feature dependency DAG — reuse intermediates in memory.** Compute in dependency order; pass derived
       features in-memory instead of write-then-reread. For colocated mtf/cross_instrument, read delta_one from memory,
       not GCS. (Requires a declared feature dependency graph — overlaps Phase 2's registry.)
