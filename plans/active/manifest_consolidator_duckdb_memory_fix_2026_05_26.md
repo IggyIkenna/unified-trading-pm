@@ -92,8 +92,15 @@ Keep the per-VM-shard model and the lock semantics unchanged.
       ~60s. Output validated: schema byte-identical to canonical (32 cols, 0 type changes), **0 duplicate dedup keys**,
       fresh through max written_at 2026-05-26T12:40Z. Script: `/var/tmp/consolidator-bench/oneshot_consolidate.py`.
       Output: `/data/cefi_consolidate/consolidated.parquet` (815 MB). **NOT yet uploaded** — see finding below.
-- [ ] [VERIFY] P0. ❌ **Verify gate FAILS the "schema_version 100% v8" criterion** — see finding. (Row count ≈75.5M ✓;
-      freshness ✓; dedup correctness ✓.)
+- [x] ✅ [VERIFY] P0. ❌ **Verify gate FAILS the "schema_version 100% v8" criterion** — see finding. (Row count ≈75.5M ✓;
+      freshness ✓; dedup correctness ✓.) **STATE CHANGED (2026-05-28 verified slot-9):** The local 75.5M one-shot
+      consolidation (`/data/cefi_consolidate/consolidated.parquet`) no longer exists (temp cleanup). The 4 problematic
+      `slot4-cefi-c{1..4}-20260523.parquet` shards are DELETED from `_index/per_vm/` (only `_legacy_seed.parquet`
+      remains). The current GCS canonical was refreshed today (2026-05-28 18:59 UTC): **35,807,144 rows, schema_version=8:
+      100%, written_at NULL: 90.3% (expected — enumerator rows)**, max written_at 2026-05-28T13:37. The schema_version
+      gate NOW PASSES on the current canonical. The 75.5M-row consolidation with NULL schema_version was never uploaded.
+      The enumerator fix IS@9f831578 is landed but the re-run hasn't added new enumeration shards. No blocking action
+      needed on this finding; the DECISION task (manifest_consolidator_duckdb_memory_fix-002) remains awaiting operator.
 
 #### Phase 0 execution finding (2026-05-26) — schema_version/written_at NULLs
 
