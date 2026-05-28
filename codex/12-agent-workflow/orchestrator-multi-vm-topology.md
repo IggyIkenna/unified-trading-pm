@@ -27,7 +27,7 @@ last_reviewed: 2026-05-28
 > Auto-refresh works on each VM after one-time /login. 4 accounts per VM, primary round-robin across VMs so 8 VMs each 2
 > share an account. Things should be backed up to GCS/S3 such that on VM restarts we get the info we need."
 
-## Target topology
+## Target topology (refreshed 2026-05-28 to match centralized-router reality)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -36,21 +36,47 @@ last_reviewed: 2026-05-28
 │                                                                                  │
 │  [Landing] = cross-VM overview cards + cross-VM alerts panel                     │
 │   ├── Click VM card →  /vm/<vm_id>  → single-VM view (slots+backlog+activity)   │
+└──────────────────────────────────────────┬──────────────────────────────────────┘
+                                           │ HTTPS + operator JWT
+                                           │ ALL calls go to ONE host:
+                                           │ api.agent-orchestrator.odum-research.com
+                                           ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  Central API VM = Planning VM (EC2 13.113.200.22, AWS ap-northeast-1)            │
+│  nginx :443 (Let's Encrypt) → orchestrator backend :8765                          │
+│                                                                                  │
+│  Acts as:                                                                        │
+│   - Auth boundary: operator JWT validated here; never leaves this perimeter     │
+│   - Server-side fan-out: /api/fleet/summary calls each VM in parallel + merges  │
+│   - Per-VM proxy: /api/vms/<id>/<path> → forwards to <id>'s private_url over     │
+│     the VPC, mints a fresh internal service token for the upstream Authorization │
+│   - Planning slots: Slot 1 Ikenna + Slot 2 Harsh interactive (Opus 4.7)          │
+└──────────────────────────────────────────┬──────────────────────────────────────┘
+                                           │ HTTP private VPC (vpc-6ee70e08)
+                                           │ Bearer <internal-service-token>
+                                           ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  10 epic VMs (AWS EC2 ap-northeast-1, same VPC + subnet as central)              │
+│  vm-defi / vm-cefi / vm-tradfi / vm-sports / vm-prediction /                     │
+│  vm-ml / vm-trading-core / vm-operator-ops / vm-cross-cutting / vm-orchestrator │
+│                                                                                  │
+│  Each VM:                                                                        │
+│   - orchestrator backend on 0.0.0.0:8026 (no nginx, no per-VM TLS)              │
+│   - private_url = 172.31.x.x:8026 (what the central calls)                       │
+│   - Public IP (currently dynamic; EIPs ship under Phase 11 deferred)             │
+│   - Slot 1: main (Opus 4.7 1M)                                                  │
+│   - Slot 2: review (Sonnet 4.6)                                                 │
+│   - Slot 3-?: workers (Sonnet 4.6); count tunable per VM env                    │
+│   - Per-account env files synced from creds bucket via CredsEnvPoller            │
+│   - Owns: <epic> master plan per orchestrator_vm_registry.yaml                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
-       │ /api/vms/list                                          │ /api/* per VM
-       ▼                                                        ▼
-┌──────────────────────────────┐                       ┌──────────────────────────────┐
-│  planning-vm                 │                       │  vm-defi / vm-cefi / vm-N   │
-│  api-planning.<domain>       │                       │  api-<id>.<domain>          │
-│                              │                       │                              │
-│  Slot 1: Ikenna interactive  │                       │  Slot 1: main (Opus 1M)     │
-│  Slot 2: Harsh interactive   │                       │  Slot 2: review (Sonnet)    │
-│  (no centralised workers)    │                       │  Slot 3-18: workers         │
-│                              │                       │  4 accounts (1 primary +    │
-│  4 accounts (shared visi)    │                       │   3 failover)               │
-│                              │                       │  Owns: <epic> master plan   │
-└──────────────────────────────┘                       └──────────────────────────────┘
 ```
+
+The browser never reaches an epic VM directly — every `/api/...` call from the
+dashboard has its baseUrl rewritten to `<central>/api/vms/<id>` (or stays at the
+central origin for fleet-wide endpoints), so per-VM control travels through the
+central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` +
+`server/server.py::proxy_to_vm`.
 
 ## Per-VM agent shape (epic VMs)
 
@@ -60,13 +86,23 @@ last_reviewed: 2026-05-28
 | **2**    | **review agent**      | Sonnet 4.6            | Reviews each worker commit against the master plan + ensures FF merge of slot branches into LDR. Knows which commits are from which agents (slot branch = `tab/<operator>/<N>`). Auto-pull cron every 5 min keeps worktrees in sync with LDR (except when locally dirty). |
 | **3-18** | **workers**           | Sonnet 4.6 (default)  | Pick up backlog tasks for the VM's master plan. Min 8 spawned, up to 16 based on rate-limit + CPU bound (1 CPU per agent minimum).                                                                                                                                        |
 
-## Planning VM shape
+## Central API / Planning VM shape (one VM serves both roles since 2026-05-22)
 
 | Slot                     | Role               | Model    | Purpose                                                                                                       |
 | ------------------------ | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
 | **1**                    | Ikenna interactive | Opus 4.7 | Human session for plan curation, audit work, architectural decisions.                                         |
 | **2**                    | Harsh interactive  | Opus 4.7 | Human session. Both Ikenna+Harsh can see each other's chats via shared /api/agents/by-role/main/history view. |
-| (no centralised workers) |                    |          | Planning VM doesn't execute code; it produces master plans that get delegated to epic VMs.                    |
+| (no spawned workers)     |                    |          | The planning VM doesn't execute backlog tasks; it produces master plans that get delegated to epic VMs.       |
+
+In addition to the two planning slots above, the same VM runs the **central API**
+that the dashboard talks to (nginx :443 → app :8765). That central API:
+
+- Validates the operator JWT (auth perimeter)
+- Serves fleet-wide endpoints directly: `/api/fleet/summary`, `/api/auth/login`,
+  `/api/backends`, `/api/accounts`, etc.
+- Proxies per-VM endpoints (`/api/vms/<id>/<path>`) over the private VPC,
+  minting a fresh internal service token for the upstream Authorization header
+  so the operator JWT never reaches an epic VM
 
 ## Plan → VM assignment
 
@@ -104,20 +140,21 @@ matches a Host directive in `~/.ssh/config` for direct VSCode SSH (operator-pref
 
 ## Per-VM backend (independent)
 
-Each VM runs its own orchestrator backend (FastAPI + uvicorn + systemd, same shape as today). New:
+Each VM runs its own orchestrator backend (FastAPI + uvicorn + systemd, same shape across the fleet). The central VM
+fronts them as documented in § "Target topology" above; epic VMs are not browser-reachable.
 
-- **Local dev port**: `8026` (standard across all dev machines — `http://localhost:8026`). CLAUDE.md § "System-First
-  Architecture" references this as the authoritative port for local interactive sessions.
-- **FQDN per VM**: `api-<vm-id>.agent-orchestrator.odum-research.com` (e.g. `api-defi.*`, `api-cefi.*`,
-  `api-planning.*`). DNS A record per VM, or wildcard `*.agent-orchestrator.odum-research.com`.
-- **Public URL env var**: `ORCHESTRATOR_PUBLIC_URL` = this VM's fqdn so Telegram alerts + spawn-event links point at the
-  right backend.
-- **VM identity**: `ORCHESTRATOR_VM_ID` env var (e.g. `vm-defi`); included in every agent event so dashboard aggregation
-  can group by VM.
-- **Backlog source**: each VM points `ORCHESTRATOR_BACKLOG` at its own backlog.yaml; that file is auto-generated from
-  the master plan's todo items (see "Backlog auto-generation" below).
-- **State.db per VM**: each VM has its own sqlite state + activity log (NO cross-VM shared store — operator-decided
-  per-VM-backend choice).
+- **Listen port** — fleet VMs: `0.0.0.0:8026` (no nginx, no per-VM TLS); central VM: `127.0.0.1:8765` behind nginx :443
+  with Let's Encrypt at `api.agent-orchestrator.odum-research.com`. Local dev = `:8026` on the operator's box.
+- **VM identity** — `ORCHESTRATOR_VM_ID` env var (e.g. `vm-defi`); included in every agent event so dashboard
+  aggregation can group by VM.
+- **Public URL** — fleet VMs declare their public IP in `data/config/backends.json` `url`; private IP in `private_url`
+  (used by the central proxy when `ORCHESTRATOR_USE_PRIVATE_URLS=true`). Per-VM FQDNs (`api-<vm-id>.agent-orchestrator
+  .odum-research.com`) are deferred (Phase 11) — operator runs `allocate-orchestrator-eips.sh` + adds DNS A records when
+  IP-stability + direct-curl ergonomics warrant the operator time (recipe:
+  [`../05-infrastructure/agent-orchestrator-dns-cutover.md`](../05-infrastructure/agent-orchestrator-dns-cutover.md)).
+- **Backlog source** — each VM auto-derives its own backlog.yaml from `plans/active/*.md` (see Phase 6 section below);
+  not pointed at by env var.
+- **State.db per VM** — each VM has its own sqlite state + activity log (NO cross-VM shared store).
 
 ### Backlog auto-generation per VM (Phase 6 — shipped 2026-05-28)
 
@@ -180,12 +217,13 @@ Clicking a VM card → `/vm/<vm_id>` = single-VM view (slots panel + backlog pan
 
 ### Aggregation API
 
-New endpoint **on each backend**: `GET /api/vm/summary` returns:
+Per-VM endpoint: `GET /api/vm/summary` returns a `VmSummary` (current shape in
+`server/models.py::VmSummary`):
 
 ```json
 {
   "vm_id": "vm-defi",
-  "fqdn": "api-defi.agent-orchestrator.odum-research.com",
+  "fqdn": "172.31.2.75:8026",
   "role": "epic",
   "master_plans": ["defi_master.md", "manifest_master.md"],
   "slots_total": 12,
@@ -197,15 +235,21 @@ New endpoint **on each backend**: `GET /api/vm/summary` returns:
   "backlog_queued": 44,
   "backlog_done": 11,
   "backlog_dispatched": 1,
-  "primary_account": "ikenna@odum-research.com",
+  "primary_account": "sub-a-ikenna",
   "primary_account_pct": 74,
-  "last_activity_at": "2026-05-21T12:34:56Z",
-  "alerts": [{ "severity": "warn", "kind": "oauth_expiring", "detail": "iggy2london@gmail.com expires in 45m" }]
+  "last_activity_at": "2026-05-28T07:59:20Z",
+  "alerts": [{ "severity": "warn", "kind": "slots_stale", "detail": "2 slots stale" }]
 }
 ```
 
-Dashboard SPA fetches `/api/vm/summary` from EACH known VM's fqdn in parallel (URLs from the registry). ~200ms total
-assuming 8 VMs respond in <100ms each. Falls back to "VM unreachable" card if any fail.
+Dashboard fan-out (centralized model — refreshed 2026-05-22): the dashboard
+calls `GET /api/fleet/summary` on the **central API** which fans out
+**server-side** to each VM's `/api/vm/summary` in parallel via the proxy
+machinery (`server/server.py::fleet_summary` → httpx). Browser sees one
+request, central makes 10 internal calls in parallel, merges, returns. ~200ms
+total. Falls back per VM with a "VM unreachable" card when an individual
+backend doesn't respond. The earlier model (browser fetches per-VM FQDNs)
+was superseded by the central-proxy model 2026-05-22.
 
 ## Persistence + VM provisioning
 

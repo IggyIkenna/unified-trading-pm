@@ -310,10 +310,12 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 - **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
   / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
   route through unchanged.
-- **Auth**: one JWT secret (`ORCHESTRATOR_JWT_SECRET` env var) shared fleet-wide; one login → one token valid on every
-  (incl. proxied) call. `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later). GCS-based hot-reload
-  (`ORCHESTRATOR_JWT_SECRET_GCS`) is code-complete but VMs' ADC lacks `storage.objectViewer` on the creds bucket — P3
-  deferred; SSOT until then is the `ORCHESTRATOR_JWT_SECRET` env var distributed to all VMs.
+- **Auth**: one JWT secret (`ORCHESTRATOR_JWT_SECRET` env var) shared fleet-wide; one login → one operator token. The
+  central API validates the operator JWT at its perimeter, then **mints a fresh internal service token** from the same
+  shared secret and forwards THAT to the upstream VM as the proxied `Authorization` header
+  (`server/server.py::proxy_to_vm` line 2767-2769; `auth.get_internal_service_token()`). Operator credentials therefore
+  never leave the central API box; an upstream VM compromise can't impersonate the operator. `JWT_ALGORITHM` env-driven
+  (HS256 now; RS256/ES256 seam for later).
 - **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
   `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
 - **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
@@ -321,8 +323,8 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 
 **Registry/worker drift resolved**: the earlier `orchestrator_vm_registry.yaml` per-VM-FQDN model (browser→each-VM) is
 **superseded** by this centralized model — workers do NOT get per-VM FQDNs; the central API reaches them by private IP.
-`worker.md`'s outbound-POST mental model is the correct one. Plan:
-`plans/active/multi_backend_fleet_connectivity_2026_05_22.md`.
+`worker.md`'s outbound-POST mental model is the correct one. Plan shipped under archived
+`plans/archive/2026_05/multi_backend_fleet_connectivity_2026_05_22.md`.
 
 Cross-side coordination:
 
