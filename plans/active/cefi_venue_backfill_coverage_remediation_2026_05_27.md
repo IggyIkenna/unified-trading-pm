@@ -56,14 +56,14 @@ window — never request outside `[available_from, available_to]`.
 **Operator 2026-05-27**: "if the issue is of 401, we should not mark that one as honest-absence — that will make the
 data look corrupt." A 401 is NOT a confirmed absence; it is "downloadable, blocked on a credential."
 
-- [ ] [AGENT] P0. Out-of-window (Tardis `code 140` / contract not listed on date) → `expected_unattempted` (genuine
+- [x] ✅ DONE [AGENT] P0. Out-of-window (Tardis `code 140` / contract not listed on date) → `expected_unattempted` (genuine
       honest absence). This is correct to record.
 - [x] ✅ DONE [AGENT] P0. Paid-date + missing/expired key (HTTP 401) → MUST NOT be `empty_confirmed` or
       `expected_unattempted`. Record as a distinct **pending/blocked** state (`attempted_failed` with a typed
       `blocked_credentials` reason, or a new `PENDING_PAID_KEY` marker) so the manifest + UI show it as "to-download
       once key active", not as empty/complete. Audit existing CeFi manifest rows for any 401-era dates wrongly stamped
       `empty_confirmed` and re-flag them.
-- [ ] [AGENT] P1. Add/confirm the typed reason in UAC `EmptyConfirmedReason` is NOT used for 401; if no suitable
+- [x] ✅ DONE [AGENT] P1. Add/confirm the typed reason in UAC `EmptyConfirmedReason` is NOT used for 401; if no suitable
       non-absence status exists, propose one (do not overload an `EXPECTED_*` reason for a credential block).
 
 ## §3 — Per-venue free-vs-paid coverage map (P1)
