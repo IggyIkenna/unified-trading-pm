@@ -330,25 +330,36 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
   (5 total) + the 2 in candle_generator now call `.to_polars()`. `_inject_passthrough_columns` polarised
   (with_columns + pl.lit). `_emit_instrument_processed_event` polarised (get_column().is_not_null().sum()).
   pd.concat→pl.concat, sort_values→sort, .empty→.is_empty(). — market-data-processing-service@6e61cfe
-- [ ] [P2] **3.4 Update `orchestration_writer.py`** — deferred to Stage 5 / follow-up. The `_write_candles`
-  boundary collapse plus the four streaming-write call-site conversions (in `_streaming_write_per_tf`) do the
-  job for the hot path; `orchestration_writer.py` is a metadata-extraction mixin with no candles_df reads
-  on the production write surface. Re-audit when canonical_writer flips to polars.
-- [ ] [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead
-  of `df.to_parquet(...)` (pandas). **DEFERRED to Stage 3.x follow-up:** the test-only consumer
-  (`OrchestrationCoordinator` is dead in prod; only `tests/unit/test_orchestration_coordinator.py` uses it)
-  was bridged via boundary conversion in `orchestration_coordinator.process_batch`. Flipping
-  `storage_dispatch_worker.write` to polars in the same commit is a small/clean follow-up.
-- [ ] [P1] **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at `_process_all_timeframes` adapter
-  call. Wait — actually keep this for now since adapter signature still requires pandas. Re-evaluate after Stage
-  4 + the eventual adapter-contract plan.
+- [x] ✅ [P2] **3.4 Update `orchestration_writer.py`** — **AUDIT, NO-OP CONFIRMED.** Walked every `candles_df`
+  reader in `CandleOrchestrationWriter` (`_log_timestamp_mismatch_details`, `_resolve_venue`,
+  `_resolve_output_path`, `_validate_alignment_and_schema`). All of them are called downstream of the Stage 3
+  boundary conversion in `candle_write_mixin._write_candles` — they see pandas frames by construction. No
+  code change needed; closed as audited.
+- [x] ✅ [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead
+  of `df.to_parquet(...)` (pandas). — market-data-processing-service@5e50b7d. Also polarised
+  `ParquetSchemaWorker.validate` (accepts `pl.DataFrame | pd.DataFrame`, collapses internally for the UTL
+  `ParquetSchemaEnforcer` chain), and removed the polars→pandas boundary in
+  `OrchestrationCoordinator.process_batch` (downstream now accepts polars natively). Test harness updated.
+  `OrchestrationCoordinator` (the (B) "thin coordinator" architecture) is still test-only in prod —
+  only `tests/unit/test_orchestration_coordinator.py` constructs it — but the worker surfaces it
+  composes are now plan-conformant should that cutover ever resume.
+- [ ] [BLOCKED-ON-STAGE-4] [P1] **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at
+  `_process_all_timeframes` adapter call. The plan's own self-note says "keep this for now since adapter
+  signature still requires pandas; re-evaluate after Stage 4 + the eventual adapter-contract plan." The
+  adapter base-class signature change touches all 18 adapter implementations and is the entry point of a
+  separate follow-up plan; cannot ship in isolation under Stage 3.
 - [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — 10 tests updated
   (test_candle_generator, test_orchestration_coordinator, test_league_passthrough,
-  test_per_instrument_pipeline). Pre-existing failure count unchanged (3); 1404 pass.
-  — market-data-processing-service@6e61cfe
-- [ ] [P2] **3.8 Benchmark re-run** — should see additional improvement on the output side. Deferred until
-  Stage 3.5 + Stage 4 land; meaningful improvement comes from removing the pandas pipeline (Stage 4) more
-  than from this single-arena #3 collapse.
+  test_per_instrument_pipeline, test_storage_dispatch_worker). Pre-existing failure count unchanged (3);
+  1404 pass. — market-data-processing-service@6e61cfe + @5e50b7d
+- [ ] [BLOCKED-ON-STAGE-4] [P2] **3.8 Benchmark re-run** — should see additional improvement on the output side.
+  The existing harness (`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py`)
+  runs SYNTHETIC re-implementations of 4 engine paths (A/B/C/D), not the actual MDPS code. Re-running it
+  after Stage 3 alone would only re-prove the engine-choice direction (path A wins) without measuring the
+  Stage 3 work. Meaningful measurement comes from either (a) Stage 4 landing first so the bulk of the
+  per-day RSS floor moves, then re-running the harness, OR (b) a real production canary on a 7-day backfill
+  VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"). Recommend route (b) — the
+  benchmark is best held until Stage 4 lands.
 
 ## Phase 4 — Stage 4 implementation (aggregation calculators)
 

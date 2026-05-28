@@ -277,7 +277,7 @@ findings surface.**
       `mdps_long_running_state_inventory_2026_05_28.md` § "Recommended next step".
 
 - [~] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**:
-      **Stages 1 + 2 + 3 shipped ✅** — Stages 3.x follow-up + 4 + 5 outstanding.
+      **Stages 1 + 2 + 3 + 3.5 shipped ✅** — Stage 4 + 5 outstanding (3.6 + 3.8 self-block on Stage 4).
       - Stage 1 — MDPS@591120b 2026-05-28: `_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via
         `.filter(pl.col(...).is_in(...))`; boundary conversion to pandas at `_eager_preprocess_and_recover_metadata`
         entry.
@@ -297,11 +297,17 @@ findings surface.**
         `candle_write_mixin._write_candles` (and at 4 streaming-write call sites for the chain-bundle path) —
         canonical_writer.write_candle_parquet keeps pandas (plan's lower-risk hedge). 10 unit tests updated to polars
         fixtures; 0 basedpyright regressions; 0 new test failures.
+      - Stage 3.5 — MDPS@5e50b7d 2026-05-28: `StorageDispatchWorker.write` signature flipped to `pl.DataFrame`
+        + `df.write_parquet` (polars native); `ParquetSchemaWorker.validate` accepts polars OR pandas
+        (collapses internally for UTL `ParquetSchemaEnforcer`); `OrchestrationCoordinator.process_batch`
+        boundary conversion removed since downstream workers now accept polars natively. 3.4 audit confirmed
+        `orchestration_writer.py` helpers all sit downstream of the `_write_candles` seam — no code change.
 
-      Stage 3.x follow-ups + Stages 4 + 5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
-      finish the chain (3.4: orchestration_writer audit; 3.5: storage_dispatch_worker `df.write_parquet`; Stage 4:
-      aggregation calculators; Stage 5: long-tail + hidden-pandas-fallback cleanup). Findings doc:
-      `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
+      Stage 4 + 5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
+      finish the chain (Stage 4: aggregation calculators — `fast_candle_aggregation.py` 36 pandas-ops +
+      `timeframe_candles.py` 48 pandas-ops; Stage 5: long-tail + hidden-pandas-fallback cleanup). Items 3.6
+      (remove the Stage-1 boundary `.to_pandas()`) + 3.8 (benchmark re-run) self-block on Stage 4 landing.
+      Findings doc: `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
 
 - [ ] (E6) **Structured memory events**: add `SHARD_STARTED`, `SHARD_COMPLETED`, `MANIFEST_LOAD_BYTES`,
       `INSTRUMENTS_LOAD_ROWS`, promote `📉 date-boundary GC` to a structured `DATE_BOUNDARY_GC` event, add
