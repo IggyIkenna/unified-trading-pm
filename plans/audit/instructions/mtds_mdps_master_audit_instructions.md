@@ -282,6 +282,12 @@ findings surface.**
       - Stage 1 — MDPS@591120b 2026-05-28: `_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via
         `.filter(pl.col(...).is_in(...))`; boundary conversion to pandas at `_eager_preprocess_and_recover_metadata`
         entry.
+      - Stage 1.3 — MDPS@ceb7a12 2026-05-28: `_iter_chain_symbol_dfs` yields `pl.DataFrame` (dropped
+        `.collect().to_pandas()`); `.to_pandas()` now in `_process_chain_bundle_streaming` at adapter boundary.
+        Test assertions updated (n_unique/[0] polars equivalents).
+      - Stage 1.4 — MDPS@c24b17c 2026-05-28: `GCSDataSource.read_tick_data` + `LiveDataSource.read_tick_data`
+        + abstract base `DataSource.read_tick_data` return `pl.DataFrame`. Pandas fallback via
+        `pl.from_pandas(pd.read_parquet(...))` keeps polars contract. test_data_source.py updated.
       - Stage 2a — MDPS@f364539 2026-05-28: `cefi/trades_adapter._compute_grouped_stats_polars` no longer does
         `core.to_pandas().set_index(...)` table-level roundtrip; per-column polars→numpy→pd.Series construction with
         shared `pd.Index`.
