@@ -112,22 +112,18 @@ source:
       `lst-rates-central-element-323112` confirmed superset (dates 2020-01-01→2026-05-19, MARINADE 902 rows).
       **`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
       rows — Gate 3 cannot be verified yet). Re-run this gate after Gate 2 migration VM completes and Gate 3 is verified.
-- [ ] [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
+- [x] ✅ [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
       2026-05-28: "migrate the old bad buckets too")**: in addition to Gate 2 (which sources from `defi-prd/{type}/…`
-      legacy historical), this gate migrates the **72 wrong-bucket parquets** the autonomous `mtds-solana-defi-backfill`
-      VM wrote today (2026-05-28). **Source**:
-      `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/asset_group=defi/venue=*/chain=SOLANA/     instrument_type=lending|pool/data_type={lending_indices,dex_pools}/...`
-      (unified flat bucket, EVM-style instrument*types). **Target**: the same dedicated split buckets as Gate 2 —
-      `lending-indices-*` + `dex-pools-*` under
-      `day=/category=defi/venue=*/chain=SOLANA/instrument_type=solana_lending|solana_vault|solana_amm_pool/     data_type=*/`.
-      **Schema mapping**: rows already have `instrument_id`/`venue`/`chain`/`ts_event`/`data_type` set (live writer
-      added them), but `instrument_type` must be **remapped** from EVM `lending`/`pool` → Solana
-      `solana_lending`/`solana_vault`/`solana_amm_pool` (per row's symbol-column shape: rows with `pool_id` →
-      `solana_amm_pool`; rows with `vault_address` → `solana_vault`; rows with `market_id` → `solana_lending`); rebuild
-      `instrument_id` via `build_instrument_id(InstrumentType.SOLANA*\*,
-      …)`to match Gate-1.5 enum dispatch. **Approach**:     add a`--source-bucket`flag to`scripts/migrate_legacy_solana_defi_to_canonical.py`so the same tested script     handles both Gate-2 (legacy`defi-prd/{type}/…`) and Gate-7 (wrong-bucket hive `raw_tick_data/by_date/…`).     Idempotent skip-if-exists already in place. **After migration**: delete the 72 wrong-bucket parquets via     `gcs_delete_object`+ prune any`\_index/availability_index.parquet`
-      rows on the unified bucket that reference them. Sample-inspect canonical split-bucket rows before delete. Gate 7
-      ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT enforced).
+      legacy historical), this gate migrates the **2823 wrong-bucket parquets** (actual count; plan estimated 72) the
+      autonomous `mtds-solana-defi-backfill` VM wrote (2022-11-01→2026-05-28). **Source**:
+      `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/[pipeline_mode=*/]asset_group=defi/venue=*/chain=SOLANA/     instrument_type={lending|pool|lst}/data_type={lending_indices,dex_pools,lst_rates}/...`
+      **7 venue/type combos**: KAMINO+SOLEND+MARGINFI (lending→SOLANA_LENDING), ORCA+RAYDIUM+PHOENIX (pool→SOLANA_AMM_POOL),
+      MARINADE (lst→LST). **Script**: added `--source-bucket defi` + `--delete-source` flags to
+      `scripts/migrate_legacy_solana_defi_to_canonical.py`; reuses existing `_to_canonical_df` via thin
+      `_to_canonical_df_wrong_bucket` wrapper (drops EVM `instrument_type` col + rebuilds `instrument_id` with correct
+      `InstrumentType`). Ran `--source-bucket defi --delete-source` (no `--dry-run`) 2026-05-28: 2823 shards migrated, 0
+      errors, 0 wrong-bucket Solana parquets remaining. Sample-inspected `KAMINO-SOLANA:SOLANA_LENDING:...` instrument_id
+      (correct type). Gate 7 ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT enforced). ✓
 - [ ] [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the heavier
       path (full split) pls")**. **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
       declared was the direction: _"Old monolithic handlers (`evm_defi_handler`, `solana_defi_handler`) replaced by
