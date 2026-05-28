@@ -1,7 +1,7 @@
 ---
 name: mdps_long_running_efficiency_SUMMARY_2026_05_28
 type: audit-findings-summary
-audit_instructions: mdps_long_running_efficiency_audit_instructions.md
+audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
 author: claude opus 4.7 (slot main)
