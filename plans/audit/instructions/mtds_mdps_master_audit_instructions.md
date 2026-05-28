@@ -256,9 +256,12 @@ findings surface.**
       pre-count call should accept `instrument_ids=` so the log line and tracker total reflect the actual scope.
       Findings doc: `mdps_long_running_axes_e_g_h_2026_05_28.md` § Axis E. — MDPS@a5e1dac 2026-05-28
 
-- [ ] (E2) **Manifest reuse across the per-timeframe re-check**: at `orchestration_service.py:166-211`, the second
+- [x] ✅ (E2) **Manifest reuse across the per-timeframe re-check**: at `orchestration_service.py:166-211`, the second
       `check_shard_freshness` call re-reads the 526 MB manifest. Either pass the already-loaded DataFrame or skip the
-      re-read entirely. Findings doc: `mdps_long_running_manifest_io_2026_05_28.md` § "The double freshness check".
+      re-read entirely. Findings doc: `mdps_long_running_manifest_io_2026_05_28.md` § "The double freshness check". —
+      MDPS@569040a 2026-05-28 (option B3: single merged-axis check, missing/stale partitioned locally for log parity;
+      tests in `tests/unit/test_process_category_single_freshness_check.py` pin call_count==1 across fresh/stale/missing
+      paths)
 
 - [ ] (E3) **Canonical instrument_id parser**: replace the substring matcher in
       `orchestration_scanner.py:_collect_matching_parquet_blobs` with the structured parser specified in
