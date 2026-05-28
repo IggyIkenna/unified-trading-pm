@@ -135,9 +135,16 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       (sym,date) cells absent from GCS with no `empty_confirmed`/`attempted_failed`. Fix: in the in-flight-failure
       handler, classify + record — empty-CSV → `SOURCE_RETURNED_ZERO`/`expected_unattempted`; connection-timeout →
       `attempted_failed`. (Tardis-stream adapter.)
-- [ ] [AGENT] P0. **dex-swaps silent-zero venues**: `pancakeswap_v3_BSC: 0` and `curve_OPTIMISM: 0` every collection
+- [x] ✅ DONE [AGENT] P0. **dex-swaps silent-zero venues**: `pancakeswap_v3_BSC: 0` and `curve_OPTIMISM: 0` every collection
       cycle, no `record_empty`/`ADAPTER_FETCH_FAILED` → manifest likely shows `captured` 0-row instead of
       `empty_confirmed`. Diagnose (subgraph returns nothing?) + record honest absence.
+      Diagnosis: (1) `_PANCAKESWAP_BSC_SWAPS_QUERY` included `sqrtPriceX96` (not in parser) → schema error on BSC
+      → all cascades exhausted → silent zero. Fix: removed `sqrtPriceX96` from BSC query.
+      (2) When ALL cascade queries return None (GraphQL schema errors), handler was recording `SOURCE_RETURNED_ZERO`
+      (misleading). Fix: `_execute_subgraph_query` now raises `_SubgraphNotFoundError` on HTTP 404 (caught in
+      `_query_and_parse` → `pd.DataFrame()` → `record_empty(SOURCE_RETURNED_ZERO)` = correct for deprecated subgraph);
+      when all cascade schemas return None due to GraphQL errors, `_query_and_parse` raises `RuntimeError` → `process()`
+      catches → `record_failed(ADAPTER_FETCH_FAILED)` = honest. — market-tick-data-service@ed5fdcf
 - [ ] [AGENT] P0. **us-backfill silent-zero**: Understat 2019 = 100% `404` on `getMatch/*` + `getLeagueData/*/2019`,
       XG_SHOTS 0 rows, yet ManifestWriter records `captured` (~5 new/date) with 0 rows — entire 2019 season stamped
       captured-but-empty. Should be `attempted_failed`/`empty_confirmed`. (Also: us-backfill stalled at 2019-10-03, log
