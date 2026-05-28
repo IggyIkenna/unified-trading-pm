@@ -158,6 +158,22 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       `pd.concat(axis=1)` once. Compute-side (not I/O) but real for the wide ~964-col surface. — **DONE**
       features@ff00cae6: builds all lagged columns in list first, then concatenates once. Cleaner + faster for wide
       DataFrames.
+- [x] ✅ [BUG][P0] **1.7b Regression from 1.7 — _add_lags concat created duplicate columns → 126 calculator tests RED on
+      live-defi-rollout.** ff00cae6 replaced `lagged_features[lagged_name] = ...` (overwrite-on-collision) with
+      `pd.concat([features, *lagged_columns], axis=1)` (append, never overwrite). When OHLCV passthrough (@44fc11d1)
+      or any other path produces a column whose name collides with a lagged column, concat creates duplicate labels →
+      `features_df[col]` returns a DataFrame (not Series) → `.std()` returns a Series → `if std > 0:` in
+      `_check_extreme_outliers` raises `ValueError: truth value of a Series is ambiguous`. Found by full QG run
+      2026-05-28. **FIXED** features@4c20160a: dedupe post-concat with `keep="last"` — restores pre-defrag overwrite
+      semantics, preserves the perf win. Verified: 7 formerly-failing test files → 96 passed, 1 separate failure
+      (1.7c below). basedpyright 0/0/0 + ruff clean.
+- [ ] [BUG][P1] **1.7c test_orchestration_flow MagicMock leak — `get_settings().base_timeframe` not mocked.** Surfaced
+      after 1.7b fix unblocked the calculator pipeline. Phase-1 read-once work introduced `get_settings().base_timeframe`
+      lookups; the e2e test in `tests/delta_one/e2e/test_end_to_end.py:60` mocks `get_settings()` but doesn't return a
+      real string for `base_timeframe` → "Could not convert MagicMock... did not recognize Python value type when
+      inferring an Arrow data type" → orchestration silently fails → `write_features_batch.called` is False. Fix: update
+      the conftest / test fixture to return a real string from `mock_settings.base_timeframe`. Test-only; no runtime
+      bug. Provenance: full QG run 2026-05-28.
 
 ### Phase 2 — Feature-function correctness verification `[P1]`
 
