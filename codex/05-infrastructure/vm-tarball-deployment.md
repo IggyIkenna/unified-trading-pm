@@ -118,6 +118,33 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    caught and moved back to `asia-northeast1-b`.
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
+10. **Per-shard cleanup discipline for multi-shard VMs** (HARD RULE, codified 2026-05-28). An `EPHEMERAL_BATCH` VM
+    does **not** mean "one shard per VM". It means the VM is short-lived (self-deletes on completion) — but inside its
+    Python process, the service CLI may iterate many shards (a date range, a venue list, a data_type list) before exit.
+    A 16-day narrow-scope backfill on one `EPHEMERAL_BATCH` VM processes 16 (or more) atomic shards in one process; an
+    asset-group-wide sharded backfill VM processes thousands. Every service that runs on a multi-shard VM MUST wire a
+    per-shard cleanup hook in its orchestrator that fires on **every exit path** of per-shard work (success, skip,
+    raised exception). Without this, per-shard state (caches, lazy reference DataFrames, manifest buffers) compounds
+    shard-over-shard and the VM swap-deadlocks long before its work completes.
+
+    The implementation contract for the per-shard cleanup hook lives in
+    [`codex/06-coding-standards/service-orchestration-patterns.md`](../06-coding-standards/service-orchestration-patterns.md)
+    § 15 "Batch Service Lifecycle: Setup, Work, Cleanup". The contract is enforced at code-review time, not VM-launch
+    time — the launcher cannot tell whether the service it runs has its cleanup hook wired. **Reference incident**:
+    2026-05-28 MDPS 7-day backfill on `e2-standard-8` — the `_cleanup_after_day` hook existed but was only wired into
+    the early-exit branch; day 1 completed, day 2 OOM'd at the date-boundary because the day-1 candle/sampling caches
+    were still pinned. 25 GB per-day floor measured empirically. Plan:
+    [`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+    § "Finding A" + § "Finding C".
+
+    **Granularity note (composes with `cli-convention.md` § "Instrument Identity and CLI Granularity")**: the atomic
+    shard is `(asset_group, venue, instrument_type, data_type, symbol, date)`. A multi-shard VM may iterate any subset
+    of those axes inside its process. The cleanup hook attaches at whichever axis the service's per-shard orchestrator
+    wraps — typically per (date, asset_group) for daily backfills, per (date, asset_group, data_type) for finer-grain
+    services. The single-shard drilldown case (one date × one instrument × one data_type) MUST still call cleanup on
+    exit; the cleanup path being silently dead in the most-restricted invocation is exactly how the MDPS incident
+    landed.
+
 Violating any of these means you're doing something off-pattern — document why in the launcher script header.
 
 ---

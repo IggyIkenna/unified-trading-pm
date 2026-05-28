@@ -615,3 +615,128 @@ no "legacy" package kept around for compatibility.
 **Why this matters:** The MTDS refactor found that `engine/` had better error handling but `app/core/` had better type
 safety. Cherry-picking from both into a clean orchestrator produced a result better than either original — and 97%
 smaller (34,765L to 850L).
+
+---
+
+## 15. Batch Service Lifecycle: Setup, Work, Cleanup (HARD RULE — codified 2026-05-28)
+
+Every batch service that holds per-shard state — caches, lazy-loaded reference data, manifest read buffers, GCS clients,
+data-sink buffers, polars/pyarrow arenas, anything else allocated to serve one (date, asset_group, venue, data_type,
+instrument) tuple — MUST run an explicit cleanup hook on **every exit path** of its per-shard work. Success, freshness-
+skip, missing-deps, missing-bucket, raised exception — every one.
+
+This applies to the finest granularity the service exposes. If the CLI lets the operator drill down to one date × one
+asset_group × one data_type × one instrument, the cleanup hook MUST fire even for that single-shard run. There is no
+exit path where skipping cleanup is correct.
+
+### Why
+
+When the cleanup hook lives but is wired only into one early-exit branch (the "no work to do" path), the success path —
+"loaded the data, did the work, wrote the outputs" — silently retains every cache it built up. In a long-running multi-
+shard VM (the actual deployment shape; see [`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) §
+"Per-shard cleanup contract"), that residue compounds shard-over-shard until the box swap-deadlocks.
+
+A single `gc.collect()` at the outer process boundary cannot reach this state. The caches sit on service objects
+(`candle_processing_service`, `sampling_service`, equivalents) whose references survive the orchestrator's local-scope
+`del` — they may be module-level singletons, or held by per-asset_group sink registries, or pinned by a long-running
+ResourceProfiler subscriber. Reference-counting GC won't reclaim them; cycle GC won't either. The only thing that
+guarantees release is an explicit per-shard cleanup that the service itself wires in.
+
+### The anti-pattern (the 2026-05-28 incident shape)
+
+```python
+class CandleOrchestrationBase:
+    def _cleanup_after_day(self, date: str) -> None:
+        """Cleanup in-memory data after processing a day."""
+        # clears candle_processing_service.cache + sampling_service.cache + gc.collect()
+        ...
+
+class CandleOrchestrationService(...):
+    def _load_tradable_context(self, ...):
+        ...
+        if tradable_instruments.empty:
+            self._cleanup_after_day(date_str)   # ← only call site
+            return None, None
+
+    def process_category(self, ...):
+        # ... does the actual work ...
+        return results                           # ← cleanup hook NEVER fires here
+```
+
+The cleanup method exists. The cleanup method even calls `gc.collect()` and logs RSS. But it's only invoked from the
+no-work-to-do branch. The success path leaks. **The pathology is the wiring, not the hook.**
+
+### The correct pattern
+
+```python
+def process_category(self, ...):
+    results: list[ProcessingResult] = []
+    try:
+        # ... all per-shard work, every early-exit `return results` stays inside the try ...
+        return results
+    finally:
+        # Idempotent + cheap when there's nothing to free. Runs on success,
+        # freshness-skip, missing-deps, missing-bucket, raised exception.
+        try:
+            self._cleanup_after_day(date_str)
+        except (ValueError, TypeError, KeyError, AttributeError, RuntimeError) as cleanup_exc:
+            logger.warning("Error during _cleanup_after_day for %s: %s", date_str, cleanup_exc)
+```
+
+The `try/finally` around the per-shard body guarantees the cleanup hook fires on every return path. The inner
+`try/except` around the cleanup call keeps a cleanup failure from masking a real exception from the work itself.
+
+### What "per-shard state" includes
+
+Audit checklist for `_cleanup_after_<shard>()` implementations:
+
+| Cache / state                                              | How it leaks                                                  | Cleanup primitive                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| Per-service candle / aggregation caches                    | Module-level singleton; orchestrator's `del` doesn't reach    | `service.clear_cache_for_date(date)`           |
+| Per-asset_group `DataSink` registry on the orchestrator    | Held in `self._data_sinks: dict[str, DataSink]`               | `self._data_sinks.clear()` or per-key `del`    |
+| Lazy-loaded reference DataFrame (e.g. instruments universe) | Held in `self._instruments_df` (or equivalent)                | `self._instruments_df = None`                  |
+| Manifest read buffer (decompressed parquet → pandas)       | Local in caller; should drop on scope exit but often pinned   | Force drop, then `gc.collect()`                |
+| Polars / PyArrow arenas                                    | Not reclaimed by `gc.collect()` or `del`                      | See `data-engine-selection.md` (separate plan) |
+| ResourceProfiler sample buffer                             | If the profiler retains samples per shard, it grows unbounded | Bounded ring buffer; profiler-side concern     |
+
+The first four are in the service's control. The last two (Polars arenas, profiler buffers) need engine-/framework-level
+discipline; see the architecture audit
+[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md).
+
+### Granularity
+
+The cleanup hook fires at whichever shard boundary the service's `process_category` (or equivalent) wraps. For MDPS,
+that's per (date, asset_group). For services that loop per-(date, asset_group, data_type) inside the orchestrator, the
+cleanup hook should fire at the innermost loop boundary where per-shard state is built up.
+
+**Single-shard drilldown runs MUST still call cleanup.** A `--start-date 2026-04-15 --end-date 2026-04-15
+--asset-group cefi --data-types trades --venues BINANCE-FUTURES --instrument-ids BTCUSDT` invocation processes exactly
+one shard, then exits the Python process. The cleanup hook should still fire — both to validate the cleanup path is
+exercised by all real callers (no silent dead branch) and so that any post-exit teardown the hook does (writing a final
+manifest snapshot, flushing a metrics buffer) happens.
+
+### Reference implementation
+
+- [`orchestration_base.py:79`](../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_base.py#L79)
+  — `_cleanup_after_day(date)` — clears per-service caches + `gc.collect()` + logs RSS.
+- [`orchestration_service.py:132+`](../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py#L132)
+  — `process_category(...)` wraps its body in `try/finally` so the cleanup fires on every exit path (landed at
+  MDPS@dcd7416).
+
+### Reference incidents
+
+- **2026-05-28** — MDPS 7-day backfill on `e2-standard-8` (32 GB). The `_cleanup_after_day` hook existed but was only
+  wired into the early-exit branch. Day 1 completed cleanly (28/28 outputs). Day 2 OOM'd at the date-boundary because
+  the day-1 candle/sampling caches were still pinned. Empirical RSS at end of day 1: 25.1 GB (after a `del orchestrator
+  + gc.collect()` at the process_handler boundary, which only reclaimed 87 MB). Plan:
+  [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+  § "Finding A".
+
+### Composes with
+
+- [`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup contract" — the VM-
+  lifecycle side of this rule. Long-running multi-shard VMs depend on the per-shard cleanup hook firing.
+- [`cli-convention.md`](cli-convention.md) § "Instrument Identity and CLI Granularity" — defines what counts as a single
+  shard, which determines where the cleanup hook attaches.
+- `data-engine-selection.md` (codified 2026-05-28) — Polars/PyArrow arenas are NOT reclaimed by this rule's primitives;
+  picking one engine end-to-end is the only mitigation for arena retention.

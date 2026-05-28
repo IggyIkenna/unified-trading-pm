@@ -105,6 +105,118 @@ For live services, support runtime adjustment:
 | ~~ml-training-service~~  | ~~`--mode` used for operation (train/evaluate)~~          | **DONE + REPO ARCHIVED** — ml-training-service + ml-inference-service consolidated into `ml-service` (2026-05-20). `ml-service --operation train | infer | evaluate | grid-search | pipeline` is canonical. |
 | UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                                                                                                                |
 
+### Instrument Identity and CLI Granularity (HARD RULE — codified 2026-05-28)
+
+Every batch service that accepts an `--instrument-ids` (or `--instruments`) flag MUST treat the canonical
+instrument_id form as a structured value, not as an opaque substring. The CLI is the contract — operators rely on it
+to scope work down to the smallest atomic unit they care about. Substring matching against blob paths breaks that
+contract silently.
+
+#### Canonical instrument_id form
+
+```
+VENUE:INSTRUMENT_TYPE:SYMBOL
+```
+
+Three colon-separated fields, no other punctuation. Examples (use these in plans + runbooks + tests):
+
+| Asset group | Canonical id                                  | Notes                                                                       |
+| ----------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| CeFi perp   | `BINANCE-FUTURES:PERPETUAL:BTCUSDT`           | Venue suffix `-FUTURES` distinguishes from `BINANCE-SPOT`                   |
+| CeFi spot   | `COINBASE-SPOT:SPOT:BTC-USD`                  | Symbol may contain `-`; only the **first two** colons are separators        |
+| CeFi option | `DERIBIT:OPTION:BTC-31MAY24-50000-C`          | Symbol may contain `-`                                                      |
+| DeFi pool   | `UNISWAP-V3-ETHEREUM:DEX_POOL:USDC_WETH_500`  | Chain-qualified venue per `_blob_matches_chain_split_venue` shape           |
+| TradFi      | `CME:FUTURE:ES-20240315`                      | Symbol carries expiry                                                       |
+| Sports      | `SFI:FIXTURE:PREMIER_LEAGUE_2024_MCI_LIV`     | Sports uses `sports_reference/` shape; instrument_type is `FIXTURE`         |
+
+#### Which axes derive from instrument_id, and which are independent
+
+| Axis              | Derivable from instrument_id? | How                                                                                                |
+| ----------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `venue`           | ✅ Yes                        | First `:`-separated field                                                                          |
+| `instrument_type` | ✅ Yes                        | Second `:`-separated field                                                                         |
+| `symbol`          | ✅ Yes                        | Third+ field (may contain `-`)                                                                     |
+| `asset_group`     | ✅ Yes (via lookup)           | `VENUES_BY_ASSET_GROUP` reverse lookup in `unified_api_contracts.canonical.venue_taxonomy`         |
+| `data_type`       | ❌ No                         | A single instrument has multiple data_types (e.g. `trades` + `book_snapshot_5` + `funding_rate`). MUST be passed independently via `--data-types`. |
+| `date`            | ❌ No                         | Time axis; MUST come from `--start-date` / `--end-date` or `--shard-key day` segment.              |
+
+This is the contract: **`--instrument-ids <canonical_form>` + `--data-types <type>` + `--start-date / --end-date`** is
+sufficient to scope a run to one or more atomic shards. Operators MUST NOT have to also pass `--venues` or
+`--asset-group` redundantly — those are derived from the canonical form.
+
+#### The atomic shard
+
+Composing the canonical form with the time axis + data_type gives the same 6-tuple the
+[`--shard-key`](#--shard-key-for-surgical-per-shard-recovery-2026-05-07) section formalises:
+
+```
+(asset_group, venue, instrument_type, data_type, symbol, date)
+```
+
+Both representations are equivalent. `--shard-key` is the pipe-delimited single-string form (good for one-shot
+deploy-missing buttons); `--instrument-ids` + `--data-types` + `--start-date` is the multi-shard form (good for narrow-
+scope backfills covering several instruments / data_types / dates). Services should accept both surfaces and produce
+the same atomic-shard set internally.
+
+#### Parsing rule (the implementation contract)
+
+Every service implementing `--instrument-ids` MUST parse the canonical form into its three components and filter blob
+paths on each axis independently:
+
+```python
+def filter_blob_by_canonical_instrument_ids(
+    blob_path: str,
+    instrument_ids: list[str],
+) -> bool:
+    """Return True iff blob_path matches any of the canonical instrument_ids."""
+    for iid in instrument_ids:
+        parts = iid.split(":", 2)   # split on first two colons only — symbol may contain ":"
+        if len(parts) != 3:
+            continue                # fall through to bare-symbol fallback (legacy)
+        venue, instrument_type, symbol = parts
+        if (
+            f"venue={venue}/" in blob_path
+            and f"instrument_type={instrument_type.lower()}/" in blob_path
+            and f"/{symbol}.parquet" in blob_path
+        ):
+            return True
+    return False
+```
+
+#### Banned anti-patterns
+
+- **Substring matching against the bare canonical form.** `BINANCE-FUTURES:PERPETUAL:BTCUSDT` is **not** a substring of
+  any real blob path because the path uses `=` not `:` as the partition separator (`venue=BINANCE-FUTURES/...`). A
+  substring filter against the canonical form returns ZERO blobs — the operator gets no work done and no error. This
+  is what the MDPS scanner did pre-2026-05-28; the fix is documented at `orchestration_scanner.py:441-457`.
+- **Bare-symbol substring across venues.** `instrument_ids=["BTCUSDT"]` substring-matches against every
+  `*BTCUSDT*.parquet` across every venue, every instrument_type, every chain. The operator who passes "BTCUSDT" most
+  likely meant ONE specific instrument; the service silently returns ALL of them. May be supported as a deprecated
+  legacy convenience with a deprecation log, but MUST NOT be the documented happy path.
+- **Mixing `--asset-group` + `--venues` + `--instrument-ids` redundantly.** If the canonical form is passed, the
+  service derives venue and asset_group from it. Operator-passed `--venues` / `--asset-group` should validate-against
+  the derivation (and fail loudly on mismatch), not silently override.
+
+#### Reference incident
+
+**2026-05-28** — MDPS narrow-scope smoke. The operator passed
+`MDPS_INSTRUMENT_IDS="BINANCE-FUTURES:PERPETUAL:BTCUSDT BINANCE-FUTURES:PERPETUAL:ETHUSDT
+BYBIT:PERPETUAL:BTCUSDT BYBIT:PERPETUAL:ETHUSDT"` (the documented canonical form) and `MDPS_VENUES="BINANCE-FUTURES
+BYBIT"`. The scanner did substring matching, the canonical form matched zero blobs, the venue-prefix shortcut
+applied, and the scanner returned ~200 blobs (every instrument in those two venues) instead of 4. Memory hit 70 GB.
+Operator-side post-mortem:
+[`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+§ "Finding B".
+
+#### Composes with
+
+- [`--shard-key` for surgical per-shard recovery](#--shard-key-for-surgical-per-shard-recovery-2026-05-07) — the
+  single-string pipe-delimited form of the same 6-tuple.
+- [`02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) — the UI-side drill-down hierarchy that
+  emits these forms.
+- [`service-orchestration-patterns.md`](service-orchestration-patterns.md) § 15 "Batch Service Lifecycle: Setup, Work,
+  Cleanup" — a single-instrument drilldown invocation MUST still call the per-shard cleanup hook on exit.
+
 ### `--feature-family` for the consolidated features-service (2026-05-08)
 
 The pre-2026-05-08 layout had 8 separate `features-*-service` repos, each with its own `python -m features_<X>_service`
