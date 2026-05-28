@@ -120,8 +120,9 @@ UAC is green/merged.
     manifest_writer patch path to cloud_interface.get_storage_client (local import, not module attr). Build 9b75e1ba
     FAILURE (16 tests), new build QUEUED after PR #194. ci-timeout-boost: Cloud Build QG fix (PYTHONDONTWRITEBYTECODE=,
     MAX_DURATION=7200, rm sibling repos, pip publish-wheel, $SHORT_SHA tag) — build 61489362 SUCCESS
-    2026-05-28T15:34:52Z (execution-service@1f35b4fd8). Quickmerge pending (UTL dirty — 5 foreign test files modified;
-    will merge when UTL clean).
+    2026-05-28T15:34:52Z (execution-service@1f35b4fd8). PR #200 (ci-timeout-boost→staging) opened 2026-05-28
+    [operator-authorized: UTL committed as-is (172 foreign files, Harsh WIP) + pushed to LDR@63c4b9a0]. Awaiting staging
+    CI + semver-agent cascade to main.
   - L7 unified-trading-system-ui: staging 178 commits behind LDR/main; cascade BLOCKED — GitHub Actions billing issue
     ("account is locked due to a billing issue"); operator must resolve billing before UI CI can run
   - alerting-service: main already 170 commits ahead of staging; no cascade needed
