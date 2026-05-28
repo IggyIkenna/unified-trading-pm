@@ -285,10 +285,22 @@ hand-written goldens for custom families.
 - [x] ✅ [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) —
       surfaced by the 2.3 lookahead suite as a pandas `FutureWarning` (would raise in a future pandas). — **FIXED**
       features@c686b9af: both anchored day/week VWAP now use `.ffill()`. basedpyright 0/0/0 + ruff clean.
-- [ ] [P2][DEFERRED] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
-      values, absurd variance/outliers ("computes but wrong").
-- [ ] [P3][DEFERRED] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
-      **Operator 2026-05-28**: 2.6 + 2.7 deferred — pick up later via orchestrator dispatch when scheduled.
+- [x] ✅ [P2] **2.6 Real-data distribution sanity** — **DONE** features@a20aecfa. New
+      `tests/delta_one/unit/test_distribution_sanity.py` parametrized over the full 47-spec registry, 3 checks per
+      spec (all-zero post-warmup / stuck-at-constant / absurd-outliers). Auto-skips bool/int8 flag dtypes AND
+      "binary flag in disguise" specs (`valid_range == (0.0, 1.0)` regardless of declared dtype — caught
+      market_structure breakout/reversion flags that fire only on rare events above BREAKOUT_THRESHOLD=0.5).
+      107 passed, 34 legitimate skips. Synthetic 500-bar OHLCV; 250-bar warmup drop.
+- [x] ✅ [P3] **2.7 Cross-timeframe sanity** — **DONE** features@0573e554. New
+      `tests/delta_one/unit/test_cross_timeframe_sanity.py` runs every calculator at 5 TFs (1min/5min/15min/1h/4h)
+      against the same synthetic underlying (aggregated from a 30-day 1m base via standard OHLC rules so higher
+      TFs are genuinely different signal). Four structural invariants per (calculator, TF): frame-alignment
+      (index in == index out), row-count integrity, OHLCV-passthrough preservation (post-FINDING-F), TF-discrimination
+      (same calculator at two TFs must produce different output on at least one non-flag float; "one TF has data,
+      other all-NaN" also counts as discrimination = different warmup behaviour). 487 passed, 91 skipped, 0 failed.
+      Calibration discoveries (test ran first, then I corrected the synthetic, NOT the calculators): synthetic must
+      be OHLC-valid by construction (else base class auto-repair surfaces as spurious passthrough mismatches at 4h);
+      event-driven calculators with mostly-constant columns on smooth synthetic get an honest skip.
 
 ## Success criteria
 
