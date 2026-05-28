@@ -1,0 +1,362 @@
+{
+  "A": {
+    "path_id": "A",
+    "label": "pure_polars_lazy",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.9",
+    "pid": 1050146,
+    "rss_after_warmup_mb": 150.21875,
+    "rss_final_mb": 468.41796875,
+    "rss_retention_mb": 318.19921875,
+    "total_wall_s": 0.4741693239993765,
+    "n_instruments": 9,
+    "per_instrument": [
+      {
+        "file": "binance-futures-perp-ADAUSDT.parquet",
+        "file_size_mb": 4.248044967651367,
+        "wall_clock_s": 0.026185388000158127,
+        "peak_rss_mb": 177.046875,
+        "rss_after_mb": 177.046875
+      },
+      {
+        "file": "binance-futures-perp-AVAXUSDT.parquet",
+        "file_size_mb": 3.6023406982421875,
+        "wall_clock_s": 0.023669196998525877,
+        "peak_rss_mb": 188.40234375,
+        "rss_after_mb": 188.40234375
+      },
+      {
+        "file": "binance-futures-perp-BNBUSDT.parquet",
+        "file_size_mb": 6.789412498474121,
+        "wall_clock_s": 0.02973225100140553,
+        "peak_rss_mb": 203.71875,
+        "rss_after_mb": 203.71875
+      },
+      {
+        "file": "binance-futures-perp-BTCUSDT.parquet",
+        "file_size_mb": 30.254006385803223,
+        "wall_clock_s": 0.09245812600420322,
+        "peak_rss_mb": 329.69921875,
+        "rss_after_mb": 329.69921875
+      },
+      {
+        "file": "binance-futures-perp-DOGEUSDT.parquet",
+        "file_size_mb": 9.314635276794434,
+        "wall_clock_s": 0.03203619200212415,
+        "peak_rss_mb": 330.89453125,
+        "rss_after_mb": 330.89453125
+      },
+      {
+        "file": "binance-futures-perp-ETHUSDT.parquet",
+        "file_size_mb": 46.812477111816406,
+        "wall_clock_s": 0.13515146499412367,
+        "peak_rss_mb": 466.33203125,
+        "rss_after_mb": 466.33203125
+      },
+      {
+        "file": "binance-futures-perp-LINKUSDT.parquet",
+        "file_size_mb": 2.9468822479248047,
+        "wall_clock_s": 0.018864803001633845,
+        "peak_rss_mb": 466.453125,
+        "rss_after_mb": 466.453125
+      },
+      {
+        "file": "binance-futures-perp-SOLUSDT.parquet",
+        "file_size_mb": 14.736821174621582,
+        "wall_clock_s": 0.04155454900319455,
+        "peak_rss_mb": 468.1484375,
+        "rss_after_mb": 468.1484375
+      },
+      {
+        "file": "binance-futures-perp-XRPUSDT.parquet",
+        "file_size_mb": 9.337129592895508,
+        "wall_clock_s": 0.029840260998753365,
+        "peak_rss_mb": 468.41796875,
+        "rss_after_mb": 468.41796875
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      177.046875,
+      188.40234375,
+      203.71875,
+      329.69921875,
+      330.89453125,
+      466.33203125,
+      466.453125,
+      468.1484375,
+      468.41796875
+    ]
+  },
+  "B": {
+    "path_id": "B",
+    "label": "pandas_pyarrow",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.9",
+    "pid": 1050268,
+    "rss_after_warmup_mb": 268.75390625,
+    "rss_final_mb": 1838.4375,
+    "rss_retention_mb": 1569.68359375,
+    "total_wall_s": 2.603359228996851,
+    "n_instruments": 9,
+    "per_instrument": [
+      {
+        "file": "binance-futures-perp-ADAUSDT.parquet",
+        "file_size_mb": 4.248044967651367,
+        "wall_clock_s": 0.09599349700147286,
+        "peak_rss_mb": 316.0078125,
+        "rss_after_mb": 316.0078125
+      },
+      {
+        "file": "binance-futures-perp-AVAXUSDT.parquet",
+        "file_size_mb": 3.6023406982421875,
+        "wall_clock_s": 0.09281534500041744,
+        "peak_rss_mb": 362.375,
+        "rss_after_mb": 362.375
+      },
+      {
+        "file": "binance-futures-perp-BNBUSDT.parquet",
+        "file_size_mb": 6.789412498474121,
+        "wall_clock_s": 0.1468271619960433,
+        "peak_rss_mb": 474.1796875,
+        "rss_after_mb": 474.1796875
+      },
+      {
+        "file": "binance-futures-perp-BTCUSDT.parquet",
+        "file_size_mb": 30.254006385803223,
+        "wall_clock_s": 0.57726554099645,
+        "peak_rss_mb": 1091.19140625,
+        "rss_after_mb": 1082.7578125
+      },
+      {
+        "file": "binance-futures-perp-DOGEUSDT.parquet",
+        "file_size_mb": 9.314635276794434,
+        "wall_clock_s": 0.16393519299890613,
+        "peak_rss_mb": 1145.49609375,
+        "rss_after_mb": 1145.49609375
+      },
+      {
+        "file": "binance-futures-perp-ETHUSDT.parquet",
+        "file_size_mb": 46.812477111816406,
+        "wall_clock_s": 0.965420141001232,
+        "peak_rss_mb": 1811.76953125,
+        "rss_after_mb": 1794.3671875
+      },
+      {
+        "file": "binance-futures-perp-LINKUSDT.parquet",
+        "file_size_mb": 2.9468822479248047,
+        "wall_clock_s": 0.0674846659967443,
+        "peak_rss_mb": 1796.5625,
+        "rss_after_mb": 1796.5625
+      },
+      {
+        "file": "binance-futures-perp-SOLUSDT.parquet",
+        "file_size_mb": 14.736821174621582,
+        "wall_clock_s": 0.24684603700006846,
+        "peak_rss_mb": 1832.55859375,
+        "rss_after_mb": 1832.55859375
+      },
+      {
+        "file": "binance-futures-perp-XRPUSDT.parquet",
+        "file_size_mb": 9.337129592895508,
+        "wall_clock_s": 0.15429255399794783,
+        "peak_rss_mb": 1838.4375,
+        "rss_after_mb": 1838.4375
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      316.0078125,
+      362.375,
+      474.1796875,
+      1082.7578125,
+      1145.49609375,
+      1794.3671875,
+      1796.5625,
+      1832.55859375,
+      1838.4375
+    ]
+  },
+  "C": {
+    "path_id": "C",
+    "label": "current_mdps_mixed",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.9",
+    "pid": 1050395,
+    "rss_after_warmup_mb": 354.1171875,
+    "rss_final_mb": 2824.828125,
+    "rss_retention_mb": 2470.7109375,
+    "total_wall_s": 1.3802220489960746,
+    "n_instruments": 9,
+    "per_instrument": [
+      {
+        "file": "binance-futures-perp-ADAUSDT.parquet",
+        "file_size_mb": 4.248044967651367,
+        "wall_clock_s": 0.04707546099962201,
+        "peak_rss_mb": 436.22265625,
+        "rss_after_mb": 436.22265625
+      },
+      {
+        "file": "binance-futures-perp-AVAXUSDT.parquet",
+        "file_size_mb": 3.6023406982421875,
+        "wall_clock_s": 0.04273117800039472,
+        "peak_rss_mb": 493.390625,
+        "rss_after_mb": 493.390625
+      },
+      {
+        "file": "binance-futures-perp-BNBUSDT.parquet",
+        "file_size_mb": 6.789412498474121,
+        "wall_clock_s": 0.07668694099993445,
+        "peak_rss_mb": 716.546875,
+        "rss_after_mb": 716.546875
+      },
+      {
+        "file": "binance-futures-perp-BTCUSDT.parquet",
+        "file_size_mb": 30.254006385803223,
+        "wall_clock_s": 0.2893052939980407,
+        "peak_rss_mb": 1744.1484375,
+        "rss_after_mb": 1744.1484375
+      },
+      {
+        "file": "binance-futures-perp-DOGEUSDT.parquet",
+        "file_size_mb": 9.314635276794434,
+        "wall_clock_s": 0.0773929820061312,
+        "peak_rss_mb": 1828.6875,
+        "rss_after_mb": 1828.6875
+      },
+      {
+        "file": "binance-futures-perp-ETHUSDT.parquet",
+        "file_size_mb": 46.812477111816406,
+        "wall_clock_s": 0.46353423799882876,
+        "peak_rss_mb": 2961.328125,
+        "rss_after_mb": 2961.328125
+      },
+      {
+        "file": "binance-futures-perp-LINKUSDT.parquet",
+        "file_size_mb": 2.9468822479248047,
+        "wall_clock_s": 0.05002474300272297,
+        "peak_rss_mb": 2961.328125,
+        "rss_after_mb": 2709.44921875
+      },
+      {
+        "file": "binance-futures-perp-SOLUSDT.parquet",
+        "file_size_mb": 14.736821174621582,
+        "wall_clock_s": 0.11579622700082837,
+        "peak_rss_mb": 2778.74609375,
+        "rss_after_mb": 2778.74609375
+      },
+      {
+        "file": "binance-futures-perp-XRPUSDT.parquet",
+        "file_size_mb": 9.337129592895508,
+        "wall_clock_s": 0.08744807799666887,
+        "peak_rss_mb": 2824.828125,
+        "rss_after_mb": 2824.828125
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      436.22265625,
+      493.390625,
+      716.546875,
+      1744.1484375,
+      1828.6875,
+      2961.328125,
+      2709.44921875,
+      2778.74609375,
+      2824.828125
+    ]
+  },
+  "D": {
+    "path_id": "D",
+    "label": "polars_eager",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.9",
+    "pid": 1050869,
+    "rss_after_warmup_mb": 130.12109375,
+    "rss_final_mb": 930.66796875,
+    "rss_retention_mb": 800.546875,
+    "total_wall_s": 0.3029570389990113,
+    "n_instruments": 9,
+    "per_instrument": [
+      {
+        "file": "binance-futures-perp-ADAUSDT.parquet",
+        "file_size_mb": 4.248044967651367,
+        "wall_clock_s": 0.01747146199340932,
+        "peak_rss_mb": 175.09375,
+        "rss_after_mb": 175.09375
+      },
+      {
+        "file": "binance-futures-perp-AVAXUSDT.parquet",
+        "file_size_mb": 3.6023406982421875,
+        "wall_clock_s": 0.016137389997311402,
+        "peak_rss_mb": 215.34375,
+        "rss_after_mb": 215.34375
+      },
+      {
+        "file": "binance-futures-perp-BNBUSDT.parquet",
+        "file_size_mb": 6.789412498474121,
+        "wall_clock_s": 0.0214386240040767,
+        "peak_rss_mb": 310.23828125,
+        "rss_after_mb": 310.23828125
+      },
+      {
+        "file": "binance-futures-perp-BTCUSDT.parquet",
+        "file_size_mb": 30.254006385803223,
+        "wall_clock_s": 0.05572392700560158,
+        "peak_rss_mb": 601.9921875,
+        "rss_after_mb": 601.9921875
+      },
+      {
+        "file": "binance-futures-perp-DOGEUSDT.parquet",
+        "file_size_mb": 9.314635276794434,
+        "wall_clock_s": 0.018100312001479324,
+        "peak_rss_mb": 605.8984375,
+        "rss_after_mb": 605.8984375
+      },
+      {
+        "file": "binance-futures-perp-ETHUSDT.parquet",
+        "file_size_mb": 46.812477111816406,
+        "wall_clock_s": 0.08153842300089309,
+        "peak_rss_mb": 926.55078125,
+        "rss_after_mb": 926.55078125
+      },
+      {
+        "file": "binance-futures-perp-LINKUSDT.parquet",
+        "file_size_mb": 2.9468822479248047,
+        "wall_clock_s": 0.013181837995944079,
+        "peak_rss_mb": 926.8515625,
+        "rss_after_mb": 926.8515625
+      },
+      {
+        "file": "binance-futures-perp-SOLUSDT.parquet",
+        "file_size_mb": 14.736821174621582,
+        "wall_clock_s": 0.02263240499451058,
+        "peak_rss_mb": 930.09375,
+        "rss_after_mb": 930.09375
+      },
+      {
+        "file": "binance-futures-perp-XRPUSDT.parquet",
+        "file_size_mb": 9.337129592895508,
+        "wall_clock_s": 0.014625010000600014,
+        "peak_rss_mb": 930.66796875,
+        "rss_after_mb": 930.66796875
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      175.09375,
+      215.34375,
+      310.23828125,
+      601.9921875,
+      605.8984375,
+      926.55078125,
+      926.8515625,
+      930.09375,
+      930.66796875
+    ]
+  }
+}
