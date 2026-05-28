@@ -1,0 +1,170 @@
+{
+  "A": {
+    "path_id": "A",
+    "label": "pure_polars_lazy",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.13",
+    "pid": 363343,
+    "rss_after_warmup_mb": 104.29296875,
+    "rss_final_mb": 171.203125,
+    "rss_retention_mb": 66.91015625,
+    "total_wall_s": 0.10613824508618563,
+    "n_instruments": 3,
+    "per_instrument": [
+      {
+        "file": "ADAUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.027395791956223547,
+        "peak_rss_mb": 116.953125,
+        "rss_after_mb": 116.953125
+      },
+      {
+        "file": "BTCUSDT.parquet",
+        "file_size_mb": 1.4428367614746094,
+        "wall_clock_s": 0.04183175996877253,
+        "peak_rss_mb": 170.41015625,
+        "rss_after_mb": 170.41015625
+      },
+      {
+        "file": "ETHUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.022002676036208868,
+        "peak_rss_mb": 171.203125,
+        "rss_after_mb": 171.203125
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      116.953125,
+      170.41015625,
+      171.203125
+    ]
+  },
+  "B": {
+    "path_id": "B",
+    "label": "pandas_pyarrow",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.13",
+    "pid": 363494,
+    "rss_after_warmup_mb": 133.05078125,
+    "rss_final_mb": 180.3359375,
+    "rss_retention_mb": 47.28515625,
+    "total_wall_s": 0.23737824510317296,
+    "n_instruments": 3,
+    "per_instrument": [
+      {
+        "file": "ADAUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.04965850990265608,
+        "peak_rss_mb": 133.46484375,
+        "rss_after_mb": 133.46484375
+      },
+      {
+        "file": "BTCUSDT.parquet",
+        "file_size_mb": 1.4428367614746094,
+        "wall_clock_s": 0.10013615607749671,
+        "peak_rss_mb": 179.62890625,
+        "rss_after_mb": 179.62890625
+      },
+      {
+        "file": "ETHUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.05058523407205939,
+        "peak_rss_mb": 180.3359375,
+        "rss_after_mb": 180.3359375
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      133.46484375,
+      179.62890625,
+      180.3359375
+    ]
+  },
+  "C": {
+    "path_id": "C",
+    "label": "current_mdps_mixed",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.13",
+    "pid": 363647,
+    "rss_after_warmup_mb": 165.08984375,
+    "rss_final_mb": 222.8671875,
+    "rss_retention_mb": 57.77734375,
+    "total_wall_s": 0.12356985500082374,
+    "n_instruments": 3,
+    "per_instrument": [
+      {
+        "file": "ADAUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.020344597985967994,
+        "peak_rss_mb": 169.703125,
+        "rss_after_mb": 169.703125
+      },
+      {
+        "file": "BTCUSDT.parquet",
+        "file_size_mb": 1.4428367614746094,
+        "wall_clock_s": 0.0418286049971357,
+        "peak_rss_mb": 218.5390625,
+        "rss_after_mb": 218.5390625
+      },
+      {
+        "file": "ETHUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.022585841943509877,
+        "peak_rss_mb": 222.8671875,
+        "rss_after_mb": 222.8671875
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      169.703125,
+      218.5390625,
+      222.8671875
+    ]
+  },
+  "D": {
+    "path_id": "D",
+    "label": "polars_eager",
+    "polars": "1.40.1",
+    "pandas": "3.0.3",
+    "pyarrow": "24.0.0",
+    "python": "3.13.13",
+    "pid": 363731,
+    "rss_after_warmup_mb": 74.984375,
+    "rss_final_mb": 110.734375,
+    "rss_retention_mb": 35.75,
+    "total_wall_s": 0.05556217592675239,
+    "n_instruments": 3,
+    "per_instrument": [
+      {
+        "file": "ADAUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.012120153987780213,
+        "peak_rss_mb": 78.8984375,
+        "rss_after_mb": 78.8984375
+      },
+      {
+        "file": "BTCUSDT.parquet",
+        "file_size_mb": 1.4428367614746094,
+        "wall_clock_s": 0.017527197021991014,
+        "peak_rss_mb": 106.5703125,
+        "rss_after_mb": 106.5703125
+      },
+      {
+        "file": "ETHUSDT.parquet",
+        "file_size_mb": 0.3155517578125,
+        "wall_clock_s": 0.012245446909219027,
+        "peak_rss_mb": 110.734375,
+        "rss_after_mb": 110.734375
+      }
+    ],
+    "cumulative_rss_after_each_mb": [
+      78.8984375,
+      106.5703125,
+      110.734375
+    ]
+  }
+}
