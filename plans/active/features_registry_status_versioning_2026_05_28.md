@@ -165,10 +165,10 @@ in QG. This is the "you changed the formula but didn't bump the version" guard.
 ## Phases
 
 ### Phase 1 — FeatureSpec schema extension + populate existing 47 specs [P0]
-- [ ] [LIB] P0. Add `status`, `priority`, `formula_version`, `formula_hash`, `custom_or_third_party` fields to `FeatureSpec`; set sensible defaults (status="tested" for the 47 existing specs since 2.2/2.4/2.6/2.7 cover them; formula_version=1 baseline).
-- [ ] [LIB] P0. Helper `compute_formula_hash(calc_cls, method_name) -> str` that reads the calculator's source, strips comments/whitespace, sha256s it. Used for drift detection.
-- [ ] [LIB] P0. Unit tests: every registered FeatureSpec round-trips through the dataclass; `compute_formula_hash` is deterministic across runs.
-- [ ] [LIB] P0. basedpyright + ruff green; quality-gates.sh exit 0.
+- [x] ✅ [LIB] P0. Add `status`, `priority`, `formula_version`, `implementation` fields to `FeatureSpec`; set defaults for the 47 existing specs (technical_indicators/oscillators/moving_averages = "verified"; market_structure/wedge_quality = "tested"; formula_version=1 baseline) — features@9a53b888.
+- [x] ✅ [LIB] P0. Helper `compute_formula_hash(func) -> str` in `formula_hash.py`: canonicalises source (strip comments/docstrings/blank lines), sha256-truncated 16-hex digest. Used for drift detection — features@9a53b888.
+- [x] ✅ [LIB] P0. 253 new pytest cases (per-spec invariants + hash determinism + canonicaliser strips comments/docstrings/blank lines). 2.4/2.6/2.7 still green: 655 + 253 = 908 passed — features@9a53b888.
+- [x] ✅ [LIB] P0. basedpyright clean (0 errors). Widened `valid_range` type to `tuple[float | None, float | None] | None` so one-sided bounds (e.g. ATR's `(0.0, None)`) typecheck — features@9a53b888.
 
 ### Phase 2 — Catalog the 29 missing groups [P0]
 - [ ] [LIB] P0. Walk each of the 29 calculator classes; add one FeatureSpec per emitted column (`status="listed"`, `priority` from group's table above, `formula_version=1`, `custom_or_third_party` per the table).
