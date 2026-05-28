@@ -39,21 +39,22 @@ impact, no walk needed now.
 
 ## Phase 0 — Pre-audit (P0)
 
-- [ ] [AGENT] P0. Audit every `pipeline_mode` reference workspace-wide. Tabulate: (a) every manifest writer call-site
+- [x] ✅ [AGENT] P0. Audit every `pipeline_mode` reference workspace-wide. Tabulate: (a) every manifest writer call-site
       (MTDS, instruments-service, features-service, strategy-service, execution-service); (b) every reader/consumer
       (batch-live-reconciliation, data-status drilldown, instrument-catalogue); (c) function-arg threading; (d) any
       current `GROUP BY pipeline_mode` consumers. Output: `pipeline_mode_audit_2026_05_28.md` linked from this plan as a
-      sub-doc. Workspace grep: `rg -n 'pipeline_mode' --glob '!*.venv*' --glob '!node_modules'`.
-- [ ] [AGENT] P0. Read the archived `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md` for the
+      sub-doc. Workspace grep: `rg -n 'pipeline_mode' --glob '!*.venv*' --glob '!node_modules'`. —
+      unified-trading-pm@3447596a
+- [x] ✅ [AGENT] P0. Read the archived `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md` for the
       canonical enum set + reconciliation pattern. Confirm closed-set membership against asset_group × venue × source
       matrix. Proposed members: `batch_tardis`, `batch_databento`, `batch_ccxt`, `batch_yahoo`, `batch_polygon`
       (predictions L2 chain, not TradFi vendor — see CLAUDE.md "Removed providers" note), `batch_odds_api`,
       `batch_polymarket`, `batch_kalshi`, `batch_onchain_rpc`, `live_websocket`, `live_polling`. Adjust if audit
-      surfaces gaps.
-- [ ] [AGENT] P0. Define the **(asset_group, venue, service_name, written_at) → pipeline_mode** derivation table used
+      surfaces gaps. — unified-trading-pm@3447596a, verified 27 batch + 1 live in UAC
+- [x] ✅ [AGENT] P0. Define the **(asset_group, venue, service_name, written_at) → pipeline_mode** derivation table used
       for backfilling existing ~38M+ rows. Source the mapping from `unified_api_contracts/registry/venue_mapping.py` +
       MTDS adapter registry. Include a "best guess" path for legacy rows where service_name is sparse — document the
-      fallback rule explicitly.
+      fallback rule explicitly. — unified-trading-pm@3447596a, table in audit doc
 
 ## Phase 1 — UAC schema (P0)
 
