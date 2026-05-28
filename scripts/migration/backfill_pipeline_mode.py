@@ -26,6 +26,9 @@ Usage::
     # Force-overwrite rows that have a pipeline_mode value (operator-blessed):
     python backfill_pipeline_mode.py --apply --force --bucket my-bucket --asset-group cefi
 
+    # Also backfill per-VM shards under _index/per_vm/:
+    python backfill_pipeline_mode.py --apply --per-vm --bucket my-bucket --asset-group cefi
+
 Plan: pipeline_mode_implementation_2026_05_28.md Phase 3.1.
 SSOT: derive_pipeline_mode_for_row() in unified_trading_library.pipeline_mode_resolver.
 """
@@ -59,6 +62,7 @@ from unified_trading_library.pipeline_mode_resolver import derive_pipeline_mode_
 
 # ── Constants ──────────────────────────────────────────────────────────────
 _INDEX_BLOB = "_index/availability_index.parquet"
+_PER_VM_PREFIX = "_index/per_vm/"
 
 _BUCKET_TEMPLATES: list[tuple[str, str]] = [
     # (bucket_prefix, asset_group) — suffix with -{project_id} at runtime.
@@ -114,26 +118,107 @@ def _is_valid_pipeline_mode(val: object) -> bool:
         return False
 
 
-def backfill_bucket(
+def _backfill_df_vectorized(
+    df: pd.DataFrame,
+    asset_group: str,
+    *,
+    force: bool = False,
+) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Derive and fill pipeline_mode using vectorized group-by derivation.
+
+    Returns (updated_df, counts) where counts has: skipped, filled, failed,
+    not_derivable. total is len(df).
+
+    Vectorization: calls derive_pipeline_mode_for_row once per unique
+    (venue, data_type) combo instead of once per row — critical for manifests
+    with tens of millions of rows.
+    """
+    counts: dict[str, int] = {"skipped": 0, "filled": 0, "failed": 0, "not_derivable": 0}
+
+    if "pipeline_mode" not in df.columns:
+        df = df.copy()
+        df["pipeline_mode"] = None
+
+    # Identify rows needing backfill.
+    null_mask = df["pipeline_mode"].apply(_is_pipeline_mode_null)
+    if force:
+        fill_mask = pd.Series([True] * len(df), index=df.index)
+    else:
+        fill_mask = null_mask
+    counts["skipped"] = int((~fill_mask).sum())
+
+    rows_to_fill = df[fill_mask]
+    if rows_to_fill.empty:
+        return df, counts
+
+    # Build lookup key per unique (venue, data_type) combo.
+    venue_col = rows_to_fill["venue"].fillna("").astype(str) if "venue" in rows_to_fill.columns else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
+    data_type_col = rows_to_fill["data_type"].fillna("").astype(str) if "data_type" in rows_to_fill.columns else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
+    _SEP = "|||SPLIT|||"
+    key_series = venue_col + _SEP + data_type_col
+
+    unique_keys = key_series.unique()
+    logger.info("Deriving pipeline_mode for %d unique (venue, data_type) combos (out of %d rows)", len(unique_keys), len(rows_to_fill))
+
+    key_to_pm: dict[str, str | None] = {}
+    for k in unique_keys:
+        venue, data_type = str(k).split(_SEP, 1)
+        try:
+            derived = derive_pipeline_mode_for_row(venue, asset_group, data_type)
+            key_to_pm[k] = derived.value if derived is not None else None
+        except Exception as exc:
+            logger.warning("Derivation error for venue=%r data_type=%r: %s", venue, data_type, exc)
+            key_to_pm[k] = None
+
+    # Map derived values back to rows.
+    derived_values = key_series.map(key_to_pm)
+
+    # Count outcomes before assignment.
+    filled_mask = fill_mask & derived_values.notna()
+    not_derivable_mask = fill_mask & derived_values.isna()
+    counts["filled"] = int(filled_mask.sum())
+    counts["not_derivable"] = int(not_derivable_mask.sum())
+    # failed: keys that errored → mapped to None → counted in not_derivable above
+
+    if counts["filled"] > 0:
+        df = df.copy()
+        df.loc[filled_mask, "pipeline_mode"] = derived_values[filled_mask]
+
+    if counts["not_derivable"] > 0:
+        logger.debug("%d rows cannot derive pipeline_mode — leaving NULL", counts["not_derivable"])
+
+    return df, counts
+
+
+def _list_per_vm_blobs(storage: object, bucket: str) -> list[str]:
+    """Return blob paths for all per-VM shard parquets under _index/per_vm/."""
+    try:
+        blobs = storage.list_blobs(bucket, prefix=_PER_VM_PREFIX)  # type: ignore[attr-defined]
+        return [b.name for b in blobs if b.name.endswith(".parquet")]
+    except Exception as exc:
+        logger.warning("Could not list per-VM shards in %s: %s", bucket, exc)
+        return []
+
+
+def backfill_blob(
+    storage: object,
     bucket: str,
+    blob_path: str,
     asset_group: str,
     *,
     dry_run: bool = True,
     force: bool = False,
     verify_only: bool = False,
 ) -> dict[str, int]:
-    """Backfill pipeline_mode on a single availability_index.parquet.
+    """Backfill pipeline_mode on a single parquet blob.
 
     Returns a dict with counts: total, skipped, filled, failed, not_derivable.
     """
-    logger.info("Reading manifest for bucket=%s asset_group=%s", bucket, asset_group)
-    storage = get_storage_client()
-
-    if not storage.blob_exists(bucket, _INDEX_BLOB):
-        logger.warning("No manifest found at %s/%s — skipping", bucket, _INDEX_BLOB)
+    if not storage.blob_exists(bucket, blob_path):  # type: ignore[attr-defined]
+        logger.warning("Blob not found: %s/%s — skipping", bucket, blob_path)
         return {"total": 0, "skipped": 0, "filled": 0, "failed": 0, "not_derivable": 0}
 
-    raw = storage.download_bytes(bucket, _INDEX_BLOB)
+    raw = storage.download_bytes(bucket, blob_path)  # type: ignore[attr-defined]
     df = pd.read_parquet(io.BytesIO(raw))
 
     if "pipeline_mode" not in df.columns:
@@ -145,47 +230,16 @@ def backfill_bucket(
     if verify_only:
         null_count = df["pipeline_mode"].apply(_is_pipeline_mode_null).sum()
         counts["not_derivable"] = int(null_count)
-        logger.info("VERIFY %s: %d/%d rows have NULL pipeline_mode", bucket, null_count, total)
+        logger.info("VERIFY %s/%s: %d/%d rows have NULL pipeline_mode", bucket, blob_path, null_count, total)
         return counts
 
-    rows_modified = 0
-    for idx, row in df.iterrows():
-        existing = row.get("pipeline_mode")
-        if not force and not _is_pipeline_mode_null(existing):
-            counts["skipped"] += 1
-            continue
-
-        venue = str(row.get("venue", "") or "")
-        data_type = str(row.get("data_type", "") or "")
-        try:
-            derived = derive_pipeline_mode_for_row(
-                venue,
-                asset_group,
-                data_type,
-                pipeline_mode_col=None if _is_pipeline_mode_null(existing) else str(existing),
-            )
-        except Exception as exc:
-            logger.warning("Row %s: derivation error (%s) — skipping", idx, exc)
-            counts["failed"] += 1
-            continue
-
-        if derived is None:
-            logger.debug(
-                "Row %s (venue=%r, data_type=%r): cannot derive pipeline_mode — leaving NULL",
-                idx,
-                venue,
-                data_type,
-            )
-            counts["not_derivable"] += 1
-            continue
-
-        df.at[idx, "pipeline_mode"] = derived.value
-        counts["filled"] += 1
-        rows_modified += 1
+    df, fill_counts = _backfill_df_vectorized(df, asset_group, force=force)
+    counts.update(fill_counts)
 
     logger.info(
-        "Bucket %s: total=%d skipped=%d filled=%d failed=%d not_derivable=%d",
+        "Blob %s/%s: total=%d skipped=%d filled=%d failed=%d not_derivable=%d",
         bucket,
+        blob_path,
         total,
         counts["skipped"],
         counts["filled"],
@@ -193,30 +247,72 @@ def backfill_bucket(
         counts["not_derivable"],
     )
 
-    if rows_modified == 0:
-        logger.info("No rows modified — skipping write")
+    if counts["filled"] == 0:
+        logger.info("No rows modified — skipping write for %s/%s", bucket, blob_path)
         return counts
 
     if dry_run:
-        logger.info("DRY RUN — not writing %d modified rows to %s/%s", rows_modified, bucket, _INDEX_BLOB)
+        logger.info("DRY RUN — not writing %d modified rows to %s/%s", counts["filled"], bucket, blob_path)
         return counts
 
     # Write back.
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        prefix=f"backfill_pm_{bucket}_",
+        prefix=f"backfill_pm_{bucket.replace('-', '_')}_",
         suffix=".parquet",
         delete=False,
     ) as tf:
         tmp_path = Path(tf.name)
     try:
         df.to_parquet(tmp_path, index=False)
-        storage.upload_file(bucket, _INDEX_BLOB, str(tmp_path))
-        logger.info("Wrote %d rows to %s/%s", len(df), bucket, _INDEX_BLOB)
+        storage.upload_file(bucket, blob_path, str(tmp_path))  # type: ignore[attr-defined]
+        logger.info("Wrote %d rows to %s/%s", len(df), bucket, blob_path)
     finally:
         tmp_path.unlink(missing_ok=True)
 
     return counts
+
+
+def backfill_bucket(
+    bucket: str,
+    asset_group: str,
+    *,
+    dry_run: bool = True,
+    force: bool = False,
+    verify_only: bool = False,
+    per_vm: bool = False,
+) -> dict[str, int]:
+    """Backfill pipeline_mode on all manifest parquets in a bucket.
+
+    Processes the main availability_index.parquet and, if per_vm=True,
+    all shards under _index/per_vm/.
+
+    Returns a dict with counts: total, skipped, filled, failed, not_derivable.
+    """
+    logger.info("Processing bucket=%s asset_group=%s per_vm=%s", bucket, asset_group, per_vm)
+    storage = get_storage_client()
+
+    blobs_to_process = [_INDEX_BLOB]
+    if per_vm:
+        pv_blobs = _list_per_vm_blobs(storage, bucket)
+        logger.info("Found %d per-VM shard(s) in %s", len(pv_blobs), bucket)
+        blobs_to_process.extend(pv_blobs)
+
+    grand: dict[str, int] = {"total": 0, "skipped": 0, "filled": 0, "failed": 0, "not_derivable": 0}
+    for blob_path in blobs_to_process:
+        result = backfill_blob(
+            storage,
+            bucket,
+            blob_path,
+            asset_group,
+            dry_run=dry_run,
+            force=force,
+            verify_only=verify_only,
+        )
+        for k in grand:
+            grand[k] += result.get(k, 0)
+
+    return grand
 
 
 def main() -> int:
@@ -230,6 +326,7 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", default=False, help="Apply changes (default: dry-run)")
     parser.add_argument("--force", action="store_true", default=False, help="Overwrite rows with existing values")
     parser.add_argument("--verify", action="store_true", default=False, help="Count NULL rows only, no changes")
+    parser.add_argument("--per-vm", action="store_true", default=False, help="Also process per-VM shards under _index/per_vm/")
     args = parser.parse_args()
 
     if args.all_buckets and not args.project_id:
@@ -256,6 +353,7 @@ def main() -> int:
                 dry_run=dry_run,
                 force=args.force,
                 verify_only=args.verify,
+                per_vm=args.per_vm,
             )
             for k in grand_total:
                 grand_total[k] += result.get(k, 0)
