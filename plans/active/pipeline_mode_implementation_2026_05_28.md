@@ -126,11 +126,10 @@ impact, no walk needed now.
 - [x] ✅ [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
       `PipelineMode` enum, the derivation table, the reconciliation pattern, and the deferred-partition note. Cross-link
       from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`.
-      — unified-trading-pm@(this commit)
-- [ ] [AGENT] P2. Once Phase 3 backfill verifies clean, EDIT
-      `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I item 3 to mark as
-      `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md` and remove the "BLOCKED-OPERATOR-DECISION"
-      framing.
+      — unified-trading-pm@58115ffc
+- [x] ✅ [AGENT] P2. EDIT `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I pipeline_mode
+      item marked `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md`. Phase 3.2-3.4 execution
+      noted as pending operator action. — unified-trading-pm@40b05ad2
 
 ## Out of scope (explicit)
 
