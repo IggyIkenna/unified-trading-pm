@@ -148,22 +148,70 @@ availability_index.parquet → `ManifestReader` fallback → loads all shards �
 watchdog crash-looping and the manifest-consolidator infra possibly degraded in the same window, the mitigation env
 (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`) may not have been sufficient.
 
-- [ ] [INFRA] P1. Audit manifest-consolidator state during 2026-05-24 → 2026-05-28 watchdog-down window. For each of the
-      20 Phase A Cloud Run Jobs (`uts-{env}-manifest-consolidator-*`) + 16 Group B Phase D jobs, pull execution history
-      (success/fail counts, last successful run, stale-output timestamp) and overlay against the 9 cefi-heavy zombie
-      launch times (2026-05-24 23:41 UTC → 2026-05-25 07:30 UTC). If consolidator was crash-looping in that window,
-      freshness of `availability_index.parquet` per bucket → confirms the OOM-fallback theory. Cross-link any
-      consolidator outage to its own remediation plan.
-- [ ] [INFRA] P1. Harden OOM mitigation for cefi-heavy backfills. Today the path is "trust
-      `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` + ManifestReader fallback". When the consolidator infra ALSO breaks,
-      the fallback OOMs at startup. Options: (a) make ManifestReader fail fast (raise typed error) instead of silently
-      loading-all-shards when staleness budget exceeded, so the VM exits non-zero quickly instead of OOM-killing after
-      multi-minute load; (b) gate the bootstrap on a `_index/availability_index.parquet` mtime preflight check — if
-      stale beyond budget, exit 78 (config error) with a typed message rather than even attempting Python startup; (c)
-      raise the heavy machine type baseline once measured. Pick one + ship; do not bundle all three.
-- [ ] [INFRA] P0. Make `VM_SHUTDOWN_ON_COMPLETION=true` fire on rc≠0 as well as rc==0. Current behavior (per
-      `vm-exec-with-gcs-tee.sh:253`) only self-deletes on graceful exit, so any uncaught Python crash / OOM / signal-15
-      leaves the VM RUNNING as a zombie until the watchdog reaps it. With the watchdog itself fragile (this whole issue
-      doc), that's a single point of failure. Change semantics: shutdown on ANY terminal exit — log rc to GCS first
-      (write `EXIT_STATUS` file before shutdown so forensics survive), then `shutdown -h now`. Eliminates the
-      "zombie-because-watchdog-also-broken" failure mode that produced the 9 cefi-heavy 2024 zombies on 2026-05-24/25.
+- [x] ✅ [INFRA] P1. Audit manifest-consolidator state during 2026-05-24 → 2026-05-28 watchdog-down window. **Done
+      2026-05-28** — see audit findings below. **OOM-fallback hypothesis NOT supported.** During the cefi-heavy launch
+      window (2026-05-24 22:00 → 2026-05-25 09:00 UTC), the env-tiered `uts-prod-manifest-consolidator-market-data-cefi`
+      job had **0 errors** in Cloud Logging (`severity>=ERROR`); the LEGACY job `…-market-data-cefi-legacy` had 18
+      errors in the same window (writes to the flat bucket `market-data-tick-cefi-central-element-323112`, NOT the
+      env-tiered PRD bucket the heavy backfills wrote to). Current `availability_index.parquet` in
+      `market-data-tick-cefi-prd-central-element-323112/_index/` is fresh (mtime 2026-05-28 20:42 UTC — minutes ago).
+      Conclusion: PRD consolidator was healthy during the window; `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` mitigation
+      was NOT defeated by stale index → the 9 zombies died for a different reason in early bootstrap. Root cause
+      downgraded from "OOM on stale-fallback" to "early-bootstrap crash (apt/tarball/pip) before vm-exec-with-gcs-tee.sh
+      launched" — no serial console preserved, so the exact apt/pip line is unknown. Audit-only finding for legacy
+      consolidator (39 errors over 5 days = 0.5% failure rate, not breaking any flow we use today) → tracked in
+      [legacy-flat-cefi-consolidator-failure-rate-2026-05-28](TBD if action needed).
+- [ ] [INFRA] P1. Harden OOM mitigation for cefi-heavy backfills. **Downgraded urgency 2026-05-28**: the audit above
+      showed OOM-on-stale-fallback was NOT the actual cause of the 9 cefi-heavy 2024 zombies, so this is now
+      defense-in-depth rather than incident response. Options stand: (a) make `ManifestReader` fail fast (raise typed
+      error) instead of silently loading-all-shards when staleness budget exceeded, so the VM exits non-zero quickly
+      instead of OOM-killing after multi-minute load; (b) gate the bootstrap on a `_index/availability_index.parquet`
+      mtime preflight check — if stale beyond budget, exit 78 (config error) with a typed message rather than even
+      attempting Python startup; (c) raise the heavy machine type baseline once measured. Pick one + ship; do not bundle
+      all three. **Recommend (a)** — cleanest semantically (fail-fast inside the SSOT module instead of an out-of-band
+      shell preflight that drifts from the Python policy). Owner: any MTDS slot picking this up. Lives in
+      `market-tick-data-service` not deployment-service.
+- [x] ✅ [INFRA] P0. Make VM self-delete fire on rc≠0 too. **Done 2026-05-28** — shipped `deployment-service@334784c`.
+      Real gap was not in `vm-exec-with-gcs-tee.sh:277` (which already fires on rc≠0 unconditionally on
+      `VM_SHUTDOWN_ON_COMPLETION=true`) but in `setup-data-pipeline-vm.sh` which uses `set -euo pipefail` with no EXIT
+      trap — any apt/tarball/pip failure in early bootstrap exits the script before `_launch_with_tee` runs, so the
+      wrapper-level self-delete never gets a chance. Fix: register an EXIT trap at the top of
+      `setup-data-pipeline-vm.sh` that on non-zero exit uploads the setup log + `SETUP_EXIT_STATUS` to
+      `gs://CODE_BUCKET/vm-logs/<vm>/` for forensics, then schedules
+      `gcloud compute instances delete --delete-disks=all` (gated on `VM_SHUTDOWN_ON_COMPLETION=true` to preserve
+      long-lived live VMs). Disarm the trap inside `_launch_with_tee` after successful `nohup`-launch — from that point
+      on, the wrapper owns lifecycle and a later non-zero exit of the setup script must NOT delete the running pipeline.
+      Defense in depth: the zombie-watchdog still catches anything this trap misses (e.g. SIGKILL of the setup script
+      itself, network-namespace loss).
+
+## Audit findings (2026-05-28 — manifest-consolidator window 2026-05-23 → 2026-05-28)
+
+Cloud Logging `severity>=ERROR` count per Cloud Run Job, 5-day window:
+
+| Job                                                            | Errors | Notes                                                        |
+| -------------------------------------------------------------- | -----: | ------------------------------------------------------------ |
+| `uts-prod-manifest-consolidator-market-data-cefi-legacy`       |     39 | flat bucket — NOT used by env-tiered cefi-heavy backfills    |
+| `uts-prod-manifest-consolidator-instruments-tradfi-legacy`     |      5 | flat instruments bucket                                      |
+| `uts-prod-manifest-consolidator-market-data-defi-legacy`       |      4 | flat defi bucket                                             |
+| `uts-prod-manifest-consolidator-instruments-prediction-legacy` |      4 | flat instruments-prediction                                  |
+| `uts-prod-manifest-consolidator-instruments-prediction`        |      4 | env-tiered instruments-prediction                            |
+| `uts-prod-manifest-consolidator-market-data-prediction`        |      3 | env-tiered                                                   |
+| `uts-prod-manifest-consolidator-instruments-tradfi`            |      3 | env-tiered                                                   |
+| `uts-prod-manifest-consolidator-instruments-cefi`              |      3 | env-tiered                                                   |
+| `uts-prod-manifest-consolidator-market-data-tradfi`            |      2 | env-tiered                                                   |
+| `uts-prod-manifest-consolidator-market-data-sports-legacy`     |      2 | flat                                                         |
+| `uts-prod-manifest-consolidator-instruments-defi-legacy`       |      2 | flat                                                         |
+| `uts-prod-manifest-consolidator-instruments-defi`              |      2 | env-tiered                                                   |
+| `uts-prod-manifest-consolidator-market-data-prediction-legacy` |      1 | flat                                                         |
+| `uts-prod-manifest-consolidator-market-data-defi`              |      1 | env-tiered                                                   |
+| **`uts-prod-manifest-consolidator-market-data-cefi`**          |  **0** | **env-tiered cefi — where the 9 dead heavy backfills wrote** |
+
+Cefi-heavy launch window (2026-05-24 22:00 → 2026-05-25 09:00 UTC) tight-band slice: env-tiered cefi 0 errors / legacy
+cefi 18 errors. `availability_index.parquet` mtime in `gs://market-data-tick-cefi-prd-central-element-323112/_index/`:
+fresh (current update 2026-05-28 20:42 UTC, well within consolidator's 1-min cadence). Conclusion: the env-tiered
+consolidator path was healthy; `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` mitigation was not defeated by index
+staleness. The 9 zombies died upstream of the Python pipeline entirely — in `setup-data-pipeline-vm.sh` bootstrap.
+
+The 39 legacy-cefi errors are not in any May-23 critical path (legacy flat bucket isn't read by the carry/dispersion
+strategies) but should be diagnosed at some point for hygiene. Not filing as a separate issue doc yet — likely
+investigation will fold into a broader legacy-bucket retirement plan once env-tiered cutover is verified end-to-end.
