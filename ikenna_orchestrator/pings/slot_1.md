@@ -35,7 +35,10 @@ PYTHONDONTWRITEBYTECODE=1 consume ~40-45 min, leaving no budget for function-siz
 `gcloud beta builds log 0b59eced-b800-4d62-89d9-d1917a164026 --project=central-element-323112 --stream` — check which
 step failed.
 
-**Ack**: append `[2026-05-28 HH:MM UTC] DONE — execution-service Cloud Build SUCCESS at <SHA>` here when done.
+**Ack**: [2026-05-28 15:35 UTC] DONE — execution-service Cloud Build SUCCESS at 1f35b4fd8 (build 61489362,
+feat/ci-timeout-boost). All 4 fixes shipped: PYTHONDONTWRITEBYTECODE=, MAX_DURATION=7200, Dockerfile rm sibling repos,
+pip publish-wheel + allowFailure, $SHORT_SHA tag. QG passed in ~20 min (tests: 4.5 min). Quickmerge PENDING — UTL dirty
+(5 foreign test files, not mine). Will auto-proceed when UTL clean.
 
 ---
 
