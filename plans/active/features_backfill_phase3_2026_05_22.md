@@ -48,7 +48,7 @@ Gate: MDPS-3.3.CeFi verification GREEN.
 
 Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 
-> **🟢 BUCKET-SPLIT RESOLVED (operator 2026-05-27) — ✅ #1 decided, 🟡 #2 still gating:**
+> **🟢 BOTH GATES GREEN (2026-05-28 verified harsh-main) — Phase 2 unblocked, awaiting launch decision:**
 >
 > 1. **✅ Bucket split — DECIDED: features run on prd, no full-history dependency.** Verified split (2026-05-27): it is
 >    **candle-only** and a clean chronological cutover at **2026-01-24/25** — `processed_candles` flat
@@ -60,18 +60,25 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 >    is **deferred (non-blocking)** to the post-backfill fleet-drain window per the pre-migration drain HARD RULE
 >    (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.0 Stage 0 — all GCP+AWS VMs stopped + manifest
 >    consolidated + snapshot first); when run it is a bounded candle-only copy via `gcs_copy_object` (no API re-fetch).
-> 2. **🟡 mtds-dex-swaps-backfill VM still RUNNING** (2026-05-27: forward walk at data day=2026-03-25 of
->    2023-01-01→2026-05-25, writing dex_swaps+vault_share_price to prd; ~2 months of dates left, likely completes today).
->    **Prod** FEAT-3.4.DeFi.\* compute VMs writing to prd still wait for this to finish (collision risk with in-flight
->    writes). The `-test`-bucket e2e pipeline work (`features_service_e2e_pipeline_test_2026_05_26`, owned by another
->    agent) is unaffected and proceeds now.
+> 2. **✅ mtds-dex-swaps-backfill COMPLETED 2026-05-27 10:10:30Z (exit_code=0)** — verified 2026-05-28 by harsh-main
+>    background subagent (`aeb00f1502e7967f5`). Deployment registry:
+>    `gs://deployment-scripts-central-element-323112/deployments/archive/2026-05-27/80552415-519d-48c6-b7b2-4fd3db009f3c.json`
+>    (`status: completed`, `last_event: DEPLOYMENT_COMPLETED`). VM self-deleted after completion
+>    (`VM_SHUTDOWN_ON_COMPLETION=true`). Per-chain freshness (target_date 2026-05-25, 3 days behind 2026-05-28): ETH /
+>    ARBITRUM / BASE / POLYGON / OPTIMISM / AVALANCHE all GREEN; BSC pancakeswap_v3 = 0 rows (separate gap, not blocking
+>    onchain features-compute). Final batch summary in run log: `Batch complete: 1241 results collected` across 23
+>    venue×chain shards. **Collision risk cleared** — no active dex-swaps writer; FEAT-3.4.DeFi.\* launches are safe.
+>
+> **⚠️ LAUNCH DECISION OWNED BY IKENNA-MAIN** (`features_and_ml_master` plan owner). harsh-main verified the gate but
+> has NOT launched. Cross-side ping filed 2026-05-28 in `plans/active/_agent_pings.md`. The 3 P0 items below are
+> launch-and-verify (~1-2 hrs end-to-end); harsh-main can execute if delegated.
 
 - [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
-      delta / DEX pool utilisation / oracle deviation signals. **GATED on dex-swaps backfill completion** (banner #2);
+      delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps backfill COMPLETED 2026-05-27);
       bucket-split decision resolved (banner #1 — runs on prd).
 - [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd `processed_candles`,
-      118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **GATED on dex-swaps backfill completion**
-      (banner #2); bucket-split decision resolved (banner #1).
+      118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28** (banner #2 —
+      dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
 
 ## Phase 3 — TradFi features compute

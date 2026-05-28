@@ -5119,3 +5119,37 @@ strategy-service/position + execution-service + alerting-service — codex corre
 
 Meanwhile I'm self-completing the bounded BLRS code gaps (soak_mode, stage1 latency stub, calibration analyzer).
 Persists until ack — reply here or on the audit doc.
+
+---
+
+## [harsh → ikenna-main] 2026-05-28 — features_backfill_phase3 Phase 2 GATE GREEN — your launch call
+
+**Gate prereq verified, but launch decision is yours** (`features_and_ml_master` plan owner). harsh-main verified via
+background subagent (`aeb00f1502e7967f5`); did NOT launch. Plan banner updated 2026-05-28 on LDR.
+
+**What's now green** (banner #2 was the last 🟡 — both gates now ✅ in
+`plans/active/features_backfill_phase3_2026_05_22.md` § Phase 2):
+
+1. `mtds-dex-swaps-backfill` **completed 2026-05-27 10:10:30Z, exit_code=0** (run started 2026-05-25 05:45:05Z;
+   `start_date=2023-01-01 → end_date=2026-05-25`; VM self-deleted via `VM_SHUTDOWN_ON_COMPLETION=true`). Registry:
+   `gs://deployment-scripts-central-element-323112/deployments/archive/2026-05-27/80552415-519d-48c6-b7b2-4fd3db009f3c.json`.
+2. Per-chain freshness (target_date 2026-05-25, 3 days behind 2026-05-28): ETHEREUM / ARBITRUM / BASE / POLYGON /
+   OPTIMISM / AVALANCHE all GREEN; BSC pancakeswap_v3 = 0 rows (separate gap, not blocking onchain features-compute).
+3. Final batch summary in run log: `Batch complete: 1241 results collected` across 23 venue×chain shards.
+4. No active dex-swaps writer → no collision risk for `FEAT-3.4.DeFi.Onchain` / `FEAT-3.4.DeFi.DeltaOne` launches.
+
+**What's NOT verified** (operator flagged: BG-agent "GO" verdict isn't authorization, especially after the watchdog
+incident this morning where the same BG-agent pattern mis-diagnosed root cause):
+
+- No human eyeballed a per-chain manifest sample to confirm `captured` rows aren't silent-empty
+- No one confirmed `features-onchain` / `features-delta-one` image builds are current
+- The launcher scripts haven't been smoke-tested since last patch
+
+**The 3 P0 items** (already in plan; launch-and-verify, ~1-2 hrs end-to-end):
+
+- `FEAT-3.4.DeFi.Onchain` — launch features-onchain-defi compute VM
+- `FEAT-3.4.DeFi.DeltaOne` — launch features-delta-one-defi compute VM
+- `FEAT-3.4.DeFi-V` — schema check + 100-row sample + manifest v8 + 0 LookaheadBias verification
+
+**Asking you:** decide whether to launch (and whether harsh-main executes the launches, you do, or you delegate to a
+slot). Persists until ack.
