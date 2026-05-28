@@ -387,12 +387,20 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### In-flight (MONITOR + verify on completion — no relaunch unless they exit non-zero)
 
-- [ ] [VERIFY] [AGENT-AUTO] P0. **`mdps-backfill-defi-20260528-071130`** — MDPS reprocess over 2024-05-06→2026-01-17
-      closing the ~40,240 `SCHEMA_VALIDATION_FAILED` rows (UNISWAP_V3-ETHEREUM 28,634 + 11 companions). Verify on
+- [~] [IN-PROGRESS] [VERIFY] [AGENT-AUTO] P0. **`mdps-backfill-defi-20260528-071130`** — MDPS reprocess over 2024-05-06→2026-01-17
+      closing the ~40,240 `SCHEMA_VALIDATION_FAILED` rows (UNISWAP_V3-ETHERNET 28,634 + 11 companions). Verify on
       completion: MTDS DeFi manifest `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to <100; same
       for UNISWAP_V2-ETHEREUM (3,444), AAVEV3-OPTIMISM (2,820), EIGENLAYER (1,311), CURVE-ETHEREUM (1,281), MAKER
       (1,113), FRAX (1,032), COMPOUND_V3-BASE (300), DRIFT-SOLANA (200), KAMINO/JITO/MARGINFI (~75 each). MDPS fix
       already on LDR: `market-data-processing-service@7f1a5b5` + `@3799c8d`.
+      **STATUS 2026-05-28 21:30 UTC**: VM still RUNNING (asia-northeast1-c). Per-VM shard:
+      35,701 entries (captured=10,596 via `venue=UNISWAP_V3`, empty_confirmed=24,878, attempted_failed=269).
+      VM currently processing 2024-09-27 (145/620 dates, ~23% of date range). Note: successful captures write
+      `venue=UNISWAP_V3` (not chain-qualified), so consolidated manifest's `UNISWAP_V3-ETHEREUM` legacy entries won't
+      auto-drop — residual 132 `UNISWAP_V3-ETHEREUM` failures (2024-06-11→2024-09-27) represent truly un-fixable
+      schema cases. Plan's "<100 UNISWAP_V3-ETHEREUM" criterion needs revision: post-VM the right check is
+      `venue=UNISWAP_V3` captured count for 2024-05-06→2026-01-17 ≥ expected. Estimated completion: ~48h from
+      2026-05-28 21:30 UTC.
 - [x] ✅ [VERIFY] [AGENT-AUTO] P0. **`mtds-solana-defi-backfill`** — `collect-solana-defi` for
       MARGINFI/SOLEND/KAMINO/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX/JITO over 2025-01-17→2026-05-28 (~498 dates). ETA
       ~58min from launch (~13:07 UTC). Verify on completion: MTDS DeFi manifest last_captured moves from 2025-01-17 to
