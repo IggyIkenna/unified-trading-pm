@@ -172,10 +172,10 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6B — Per-venue parsing / routing bugs
 
-- [ ] [AGENT] P1. **Upbit Tardis CSV type mismatch**:
+- [x] ✅ [AGENT] P1. **Upbit Tardis CSV type mismatch**:
       `ArrowInvalid: CSV conversion error to int64: invalid value '745.5'` / `'0.01'` (cols #6, #18) — Upbit emits
       floats in columns the Arrow schema types int64 → those symbol-shards silently dropped. Fix the Upbit Tardis schema
-      (int64→float for affected cols). [data-loss]
+      (int64→float for affected cols). [data-loss] — market-tick-data-service@4db7956
 - [ ] [AGENT] P1. **Coinbase `ContentLengthError: Not enough data to satisfy content length header`** on large
       book_snapshot_5 (e.g. LINK-USD 2020-01-02) — aiohttp stream cut mid-response → 0-row shard (7/8 partitions). Add
       retry on truncated stream. [degraded→data-loss]
