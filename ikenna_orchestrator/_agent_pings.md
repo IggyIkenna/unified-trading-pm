@@ -3276,3 +3276,27 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+
+## [2026-05-28] HANDOFF → vm-ml: Solana DeFi legacy migration (Gates 2-full / 3 / 4 / 6)
+
+**plan**: `plans/active/solana_defi_legacy_migration_2026_05_27.md` (parent_epic=mtds_mdps_master, assigned_vm=vm-ml).
+
+Operator closed laptop. Migration script + UAC contracts + enum extensions are on `live-defi-rollout`:
+- UAC@7e9f4ad9 — DEFI_SOLANA_LENDING/VAULT/AMM_POOL SchemaContracts
+- UAC@90b2bb9d — InstrumentType enum + builder dispatch
+- MTDS@c38d1ca3 — `scripts/migrate_legacy_solana_defi_to_canonical.py`
+
+**Pre-handoff state**: 2,107 lending-kamino shards migrated via local tmux (verified read-back; idempotent — these print
+"skip (exists)" on vm-ml resume). ~5,995 remaining (lending solend, kamino vault, orca pool, raydium pool).
+
+**vm-ml worker action** (full runbooks in the plan body under "Dispatch-ready handoff (2026-05-28)"):
+1. Gate 2: tmux + log to `gs://deployment-scripts-central-element-323112/migration-logs/solana_defi/`. ETA ~4-5h.
+2. Gate 3: force-fire `manifest-consolidator-lending-indices` + `manifest-consolidator-dex-pools` Cloud Run jobs; verify
+   ~2,398 lending + ~3,597 dex_pools SOLANA captured rows by `instrument_type`.
+3. Gate 4: `gcloud storage rm --recursive` the 3 legacy prefixes from `market-data-tick-defi-prd` + prune defi-prd
+   `_index/availability_index.parquet` rows.
+4. Gate 6: tick D2 in `defi_code_codex_drift_2026_05_27` + flip gates 2/3/4/6 in the plan; `docs(plans):` commit.
+
+Gate 5 (net-new Solana go-forward collectors) is **NOT** in this handoff — separate multi-day adapter dev.
+
+[NOT-ACKED]

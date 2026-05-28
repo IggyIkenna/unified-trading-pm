@@ -100,7 +100,94 @@ source:
 - The DeFi EVM GCS re-key (venue glued→underscore, `dex_pool_state`→`dex_pools`, `category`→`asset_group`) — tracked in
   `plans/epics/mtds_mdps_master.md` Phase 9 + `defi_coverage_capability_alignment` (archived).
 
+## Dispatch-ready handoff (2026-05-28, vm-ml autonomous)
+
+> **🟢 HANDOFF ACTIVE 2026-05-28**: operator closing laptop; Gates 2-full / 3 / 4 / 6 handed off to **vm-ml** (this
+> plan's `assigned_vm`). Migration script + UAC contracts + enum extensions are on `live-defi-rollout`. A vm-ml worker
+> can clone-and-run autonomously per the runbooks below. Gate 5 separately scoped (multi-day adapter dev — not in this
+> handoff).
+
+### Gate 2 runbook (vm-ml — tmux on the VM, log to GCS)
+
+```bash
+# 1. Ensure latest LDR
+cd ~/code && for r in unified-api-contracts market-tick-data-service unified-trading-pm; do
+  (cd "$r" && git fetch origin live-defi-rollout && git checkout origin/live-defi-rollout); done
+# 2. Run in tmux + tee to GCS log
+cd ~/code/market-tick-data-service
+TS=$(date -u +%Y%m%dT%H%M%SZ)
+LOCAL_LOG=/tmp/solana_defi_${TS}.log
+GCS_LOG=gs://deployment-scripts-central-element-323112/migration-logs/solana_defi/${TS}.log
+tmux new -d -s solana-mig "
+  export GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp PYTHONUNBUFFERED=1
+  .venv/bin/python scripts/migrate_legacy_solana_defi_to_canonical.py --log-level INFO 2>&1 | tee ${LOCAL_LOG}
+  ec=\$?
+  gcloud storage cp ${LOCAL_LOG} ${GCS_LOG} || true
+  echo MIGRATION_EXIT=\$ec | gcloud storage cp - ${GCS_LOG}.exit || true
+"
+tmux ls | grep solana-mig    # verify alive within 60s
+```
+
+**ETA ~4–5h** (lending kamino + solend ~60+60min; kamino vault ~60min; orca pool ~120min — long pole; raydium ~30min).
+Idempotent: `blob_exists` skip — interrupted runs resume. **Local pre-handoff run already migrated 2,107 shards**
+(lending kamino, dates ~2023-01-01→2023-04) which will print as "skip (exists)" early in the vm-ml resume run.
+Completion signal: `done. shards processed = ...` line + `MIGRATION_EXIT=0` file on GCS.
+
+### Gate 3 runbook (after Gate 2 emits `done. shards processed = ...`)
+
+```bash
+# Force-fire the manifest consolidator on the 2 dedicated buckets (or wait ~5min for the cron):
+gcloud run jobs execute manifest-consolidator-lending-indices --region=asia-northeast1 --wait || true
+gcloud run jobs execute manifest-consolidator-dex-pools --region=asia-northeast1 --wait || true
+# Verify per-subset SOLANA captured rows landed:
+cd ~/code/market-tick-data-service && .venv/bin/python <<'PY'
+import io, pyarrow.parquet as pq
+from unified_trading_library import get_storage_client
+s = get_storage_client(project_id='central-element-323112')
+for buc in ('lending-indices-central-element-323112','dex-pools-central-element-323112'):
+    b = s.download_bytes(buc, '_index/availability_index.parquet')
+    df = pq.read_table(io.BytesIO(b)).to_pandas()
+    sol = df[df['chain']=='SOLANA'] if 'chain' in df.columns else df.iloc[0:0]
+    by_it = sol['instrument_type'].value_counts().to_dict() if len(sol) and 'instrument_type' in sol.columns else {}
+    print(buc, '— SOLANA rows:', len(sol), '| by instrument_type:', by_it)
+PY
+# Expected: lending-indices ~2,398 SOLANA rows (solana_lending); dex-pools ~3,597 SOLANA (~1,199 solana_vault + ~2,398 solana_amm_pool).
+```
+
+### Gate 4 runbook (after Gate 3 verified)
+
+```bash
+# Delete legacy top-level prefixes from defi-prd (no duplicate source of truth)
+LEG=gs://market-data-tick-defi-prd-central-element-323112
+for p in lst_rates lending_indices dex_pools; do
+  echo "deleting $LEG/$p/ ..."
+  gcloud storage rm --recursive "$LEG/$p/"
+done
+# Prune stale manifest rows in defi-prd/_index referring to those data_types:
+cd ~/code/market-tick-data-service && .venv/bin/python <<'PY'
+import io, pyarrow.parquet as pq, pandas as pd
+from unified_trading_library import get_storage_client
+s = get_storage_client(project_id='central-element-323112')
+buc='market-data-tick-defi-prd-central-element-323112'
+b = s.download_bytes(buc, '_index/availability_index.parquet')
+df = pq.read_table(io.BytesIO(b)).to_pandas()
+mask = df['data_type'].isin(['lst_rates','lending_indices','dex_pools']) if 'data_type' in df.columns else pd.Series([False]*len(df))
+print('pruning legacy rows:', int(mask.sum()))
+df_keep = df[~mask]
+buf=io.BytesIO(); df_keep.to_parquet(buf, index=False, engine='pyarrow'); buf.seek(0)
+s.upload_bytes(buc, '_index/availability_index.parquet', buf.read())
+print('kept:', len(df_keep))
+PY
+```
+
+### Gate 6 (after Gates 3+4 GREEN)
+
+Edit `plans/active/issues/defi_code_codex_drift_2026_05_27.md` D2 row + todo → `[x] ✅ RESOLVED 2026-05-28` citing
+UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3 + the GCS migration log URI. Flip Gates 2/3/4/6 in this plan. Commit + push
+via the standard `docs(plans):` flow.
+
 ## Status log
 
-- 2026-05-27: Audit complete; operator authorized distinct-instrument_type model + full-chain execution. Gate 0 in
-  progress.
+- 2026-05-27: Audit complete; operator authorized distinct-instrument_type model + full-chain execution.
+- 2026-05-28: Gates 0/1/1.5/2-script shipped from operator laptop (UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3); 2,107
+  shards migrated via local tmux smoke; operator closing laptop → full Gate-2 run + Gates 3/4/6 handed off to vm-ml.
