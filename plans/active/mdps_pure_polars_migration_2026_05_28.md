@@ -390,6 +390,39 @@ read MDPS-emitted candle parquets are completely unaffected by this migration.
   needs its own plan.
 - **Don't use `.to_pandas()` and `.to_polars()` repeatedly** — the codex `data-engine-selection.md` bans this. The
   ONE boundary conversion in Stage 1 is documented + bounded.
+- **Don't let pandas hide in fallback / exception paths** (operator-stated 2026-05-28 — codified here). Stage 1
+  introduced ONE such fallback: `live_workers.py:_read_tick_data` exception branch returns
+  `pl.from_pandas(pd.read_parquet(...))` so the public return contract stays `pl.DataFrame` even when polars read
+  fails. **This is acceptable in Stage 1 only.** By end of migration, EVERY `pd.read_parquet` /
+  `pl.from_pandas` / `.to_pandas()` callsite in MDPS hot path MUST be eliminated. Pandas stays only for:
+  (a) CSV sample debug writes (`orchestration_base.py:132`, `orchestration_state.py:145`); (b) anything where
+  polars can't yet do the work natively AND we document why. Otherwise, navigating between two engines becomes
+  cognitive debt and reintroduces the arena-retention problem at random.
+
+### Hidden pandas usage tracker — all callsites to eliminate by end of migration
+
+Every `pd.read_parquet`, `pd.DataFrame(...)`, `pl.from_pandas(...)`, `.to_pandas()`, `.to_parquet(...)` in the MDPS
+source. Tracked here so they don't slip during stage-by-stage migration.
+
+| File:line | What | Why it exists today | Replacement target | Stage |
+|---|---|---|---|---|
+| `live_workers.py:479` | `pl.from_pandas(pd.read_parquet(...))` fallback | Stage 1 fallback to keep `_read_tick_data` return contract `pl.DataFrame` even if polars read fails | Try `pl.read_parquet(..., use_pyarrow=True)` first (dispatches to pyarrow internally, returns polars). If still fails → propagate the error rather than fallback. | Stage 5 |
+| `data_source.py:185` | `pd.read_parquet(buf)` fallback after polars failure | Pre-existing fallback in `DataSource.read_tick_data` | Same as above; potentially delete the entire `DataSource.read_tick_data` if live-mode handler doesn't actually need it | Stage 5 |
+| `mock_data_provider.py:139, 143, 146` | `pd.read_parquet` + `pd.concat` for mock data assembly | Mock-only path used in unit tests | Convert to polars-native or document why mock stays pandas (mocks aren't perf-critical, but the engine-discipline principle applies) | Stage 5 |
+| `prediction/trades_adapter.py:184` | `pd.read_parquet(...)` for reading instruments-service lifecycle data | Reads alongside adapter logic | Convert to `pl.read_parquet` + downstream polars; if adapter consumes pandas internally, convert at the consumer boundary | Stage 2 (adapter-internal) or Stage 5 |
+| `live_aggregator.py:320` | `pd.read_parquet(...)` for live-mode replay | Live-mode buffer initialisation | Convert to polars | Stage 5 |
+| `canonical_writer.py:1328, 2121` | `pd.read_parquet(tmp_path)` for re-reading just-written parquet (cluster validation) | Re-read to validate cluster shape | Convert to `pl.read_parquet` or use the in-memory polars frame already on hand to validate (avoid re-read entirely) | Stage 3 |
+| `cloud_data_provider.py:140, 225, 242` | `pd.read_parquet` + `pd.concat` for instruments DataFrame | Loads the 4128-instrument reference frame each date | Convert to `pl.read_parquet` + `pl.concat`; this is a known per-shard cost from the manifest_io audit | Stage 5 |
+| `storage_dispatch_worker.py:51` | `df.to_parquet(buf, index=False, compression="zstd")` | Pandas write | `df.write_parquet(buf, compression="zstd")` (polars) | Stage 3 |
+| `orchestration_base.py:132` | `sample_df.to_csv(...)` | Debug CSV sample | **Acceptable to keep pandas** — debug-only, not in hot path. Document in plan. | EXEMPT |
+| `orchestration_state.py:145` | `sample_df.to_csv(...)` (duplicate of above) | Debug CSV sample | **Acceptable to keep pandas** — same as above. | EXEMPT |
+| `fast_candle_aggregation.py` ~20 callsites | `pd.DataFrame()` + `pl.from_pandas` + `.to_pandas()` | Aggregation rollup engine | Pure polars rewrite | Stage 4 |
+| `timeframe_candles.py` ~20 callsites | `pd.DataFrame()` constructors + pandas operations | Per-timeframe candle generation | Pure polars rewrite | Stage 4 |
+| All 18 adapters' `process_to_candles(tick_data: pd.DataFrame)` | Adapter input is pandas | Adapter contract | Deferred to a separate plan post-Stage 5; converting all 18 adapter signatures is a bigger surface than this plan | Future plan |
+
+Use this table as the "are we done?" checklist. Migration completion = every non-EXEMPT row converted. Plan close-
+out includes a final grep to assert: `rg "pd\.read_parquet|pl\.from_pandas|\.to_pandas\(\)|\.to_parquet\("
+market_data_processing_service/ --type py` returns ONLY the EXEMPT entries above.
 
 ## Composes with
 
