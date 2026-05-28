@@ -120,9 +120,43 @@ modest VM** so the bug returns audibly if the fix is incomplete — not silently
 
 The audit's § 3 conclusion ("not per-instrument DataFrame retention") was based on static read of `live_workers.py:447-470` showing the polars frame is `del`'d before the pandas frame is returned. That's correct for the immediate scope but misses cross-iteration retention. Empirical evidence from Phase 3.2: day 1 completes (4 instruments × 7 TFs = 28 outputs land), then day 2 transition hangs — symptom signature of cumulative memory pressure on the 32 GB box, distinct from the intra-day fan-out the scanner fix addressed.
 
-- [ ] [AUDIT][P1] **2.2a** Re-inspect the date loop at `process_handler.py:642-661` (`while cur <= end_dt: _process_candles_for_one_date(...)`). Each iteration creates a fresh `CandleOrchestrationService` inside `_process_candles_for_one_date`, but the *previous* orchestrator's lazy clients (`storage_client`, `data_sink`, instruments cache) may stay referenced via the outer caller. Confirm by static read OR instrument with a tracemalloc snapshot at date-boundary.
-- [ ] [P1] **2.2b** Add a `del orchestrator + gc.collect()` at the end of `_process_candles_for_one_date` (or at the top of the next iteration). Minimum-viable; revisit only if 3.2 re-verify still hangs.
-- [ ] [P1] **2.2c** Re-run Phase 3.2 on `e2-standard-8` after 2.2b lands. Pass: 7 days × 4 instruments × 7 TFs = 196 outputs in test bucket; no day-boundary hangs; wall-clock under ~25 min.
+- [x] [AUDIT][P1] **2.2a** Re-inspected the date loop at `process_handler.py:642-661`. Per-iteration construction of `CandleOrchestrationService` in `_process_one_category` (line 379) is correct in shape — when the function returns the local goes out of scope. The issue is reference-cycle retention via the orchestrator's mixin caches (`storage_client`, `data_sink`, `_data_sinks` dict, lazy instruments DataFrame) that Python's reference-counting GC doesn't reclaim until a cycle-collection pass runs.
+- [x] [P1] **2.2b** Shipped `del orchestrator` at end of `_process_one_category` + `del tracker + gc.collect()` at end of `_process_candles_for_one_date` with an RSS log line — `market-data-processing-service@0254531`.
+- [~] [P1] **2.2c** Phase 3.2 re-run on `e2-standard-8`, VM `mdps-backfill-cefi-20260528-172303`. **Fix fires correctly but is structurally insufficient**:
+
+  ```
+  ✅ trades complete: 4/4 succeeded in 133.6s (30,460 candles)
+  🏁 cefi processing complete: 4/4 succeeded, 0 errors in 176.7s
+  📉 date-boundary GC for 2026-04-15: RSS 25216 MB → 25129 MB (freed 87 MB)
+  Processing candles for 2026-04-16
+  Listed 18 files from market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2026-04-16/ for data_type=trades
+  [vm-exec] command exited rc=137   ← OOM
+  ```
+
+  Key data points:
+  - Day 1 still completed (4/4 instruments, 30,460 candles, 133.6s).
+  - `BatchOrchestrationMixin: memory backpressure engaged at 85.9%` fired during day 1 — the orchestrator's own backpressure layer gates new submissions when memory hits the warning threshold. This is working as designed.
+  - **Post-day RSS held at 25.1 GB after my `del orchestrator + gc.collect()`** — only 87 MB / 25.2 GB reclaimed (~0.3%). Most of the day-1 footprint is NOT reachable from the orchestrator's reference graph at the moment we `del` it. `gc.collect()` cannot free it because Python's GC works on reference cycles among Python objects — it doesn't reclaim:
+    - Polars memory arenas (Polars uses its own allocator; freed bytes stay in the arena, not returned to OS)
+    - PyArrow / pandas buffer pools (same pattern as Polars)
+    - C-allocator heap fragmentation (glibc malloc rarely returns mmap'd regions to OS without an explicit `malloc_trim(0)`)
+    - Possible module-level caches in the data_sink / event sink / ResourceProfiler
+  - Day 2 attempted at ~25 GB baseline; needed ~27 GB peak again; total ~52 GB ⇒ OOM-killed at 32 GB cap.
+
+  **Conclusion**: cross-date `del + gc.collect()` is correct discipline but cannot reach the underlying retention. The 25 GB per-day floor is the operational reality on the current MDPS codepath; Phase 2.2 lowers it by ~87 MB, not the ~20 GB that would be required to fit a second day on 32 GB.
+
+## Phase 3 retro + four practical paths to the unblock
+
+The plan's original goal — "land the smallest viable fix so a small-sample CeFi 1h-candle backfill (16 days × 2 venues × ~4 instruments, trades-only) runs on a modest VM in under an hour" — needs an explicit decision on what "modest" means in light of the 25 GB per-day floor that Phase 2.2 surfaced. Per-day completion is solid; the gap is the multi-day in-process loop.
+
+The four paths surfaced 2026-05-28 EOD:
+
+- [ ] [P1][DECISION] **3.X-A Per-day VM fan-out.** Launch 16 × 1-day VMs (each scope = single date) in parallel via the same launcher. Each VM starts fresh at the ~5 GB baseline, peaks ~27 GB during processing, auto-shuts down. Verified by 3.1 + 3.2-attempt-2-day-1 to complete cleanly. Wall-clock ~10 min total (parallel). Cost ≈ $0.15 (16 × ~$0.01). **Does not** fix the underlying multi-day retention — that stays as an open issue, but the features-side unblock ships today.
+- [ ] [P1][DECISION] **3.X-B One more in-process tactic: `malloc_trim(0)` + Polars arena drop.** Add a `ctypes.CDLL("libc.so.6").malloc_trim(0)` call after `gc.collect()` at the date-boundary to return freed heap to the OS, plus an attempt to shrink Polars / PyArrow arenas. ~20 min code + ~25 min re-verify. **Confidence: low-medium** — if the retention is in C-extension arenas (Polars), `malloc_trim` won't help. Worth a single shot before moving on.
+- [ ] [P1][DECISION] **3.X-C `e2-highmem-8` (64 GB).** Same code, bigger box. ~$0.30/hr × ~1h = $0.30. Could still OOM if the per-day floor compounds — would need a 3-day pilot first to confirm whether the floor is `25 GB × N` or `25 GB + ε × N`. Masks the bug rather than fixing it.
+- [ ] [P1][DECISION] **3.X-D Subprocess-per-date.** Re-architect `process_candles_handler` to `subprocess.run([sys.executable, "-m", ...])` per date instead of looping in-process. Bottom-shelf cleanup — kernel reclaims the entire process address space at exit. ~1-2h of code work + verification. **The actual structural fix**; superset of 3.X-A but in a single VM.
+
+Decision belongs to the operator. Whichever wins also updates Phase 3.3 + Phase 4 accordingly.
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
