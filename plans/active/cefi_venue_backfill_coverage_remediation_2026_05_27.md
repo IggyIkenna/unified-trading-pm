@@ -111,8 +111,12 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       prediction-2026=479) → instruments silently skipped (`recovery=alert`), real data loss. Register the contracts in
       `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (+ `VENUE_CONTRACT_OVERRIDES`).
       → Handled as part of §6E P1 — see below.
-- [ ] [AGENT] P1. **sports-2025 `MalformedTickField`**: 372/window, `bm_minutes_to_kickoff`/`h2h_columns` dropping ALL
+- [x] ✅ [AGENT] P1. **sports-2025 `MalformedTickField`**: 372/window, `bm_minutes_to_kickoff`/`h2h_columns` dropping ALL
       rows → 19h of zero output at 146% CPU. Diagnose the malformed field + fix the adapter; reprocess y2025.
+      Root cause: bookmakers that only publish spreads/totals (no h2h market_key rows) triggered MalformedTickFieldError
+      instead of empty_confirmed. Fixed in process_to_candles(): pre-check for raw MTDS data with no h2h rows → return
+      _make_empty_candle_output() (honest absence) before reaching the MalformedTickFieldError raise. Same fix closes
+      §6E. 5 new tests, 1372 total pass. — market-data-processing-service@bb7c829
 - [ ] [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
       cap RSS for deribit book_snapshot_5 before relaunch.
 - [ ] [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
@@ -203,11 +207,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       LIVESCOREBET, SKYBET, SPORT888, BETSSON, BETVICTOR; (3) `arbitrage_opportunity_15m` — UNIBET. (Prior plan named
       only #1 on MATCHBOOK/UNIBET.)
       → uac@af328e5 — registered ("sports","odds","{dt}_{1m|15m|1h}") for all 3 derived types + 9 new UAC tests
-- [ ] [AGENT] P1. **MalformedTickFieldError is ALL years (2022/2023/2025), not just 2025** —
+- [x] ✅ [AGENT] P1. **MalformedTickFieldError is ALL years (2022/2023/2025), not just 2025** —
       `bm_minutes_to_kickoff_or_h2h_columns`, `recovery=fail_fast`, root cause logged as
       `No h2h data found in MTDS raw data` immediately prior → entire instrument dropped (100s–1000s/year across
       BETONLINEAG, MATCHBOOK, UNIBET, CORAL, CASUMO, PINNACLE, LIVESCOREBET, betfair_ex_uk). Diagnose the h2h-absence
       path: emit honest-absence instead of fail_fast-drop, OR fix the upstream h2h field mapping. [large]
+      → Fixed in §4 above (mdps@bb7c829). Applies to ALL years (2022/2023/2025). REPROCESS needed to clear
+      stale attempted_failed rows — operator must relaunch sports MDPS VMs for all 3 years.
 
 ### §6F — Prediction
 
