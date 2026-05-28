@@ -76,11 +76,13 @@ impact, no walk needed now.
       pipeline_mode — pass-through), strategy/execution (per service tier). Also adds
       `derive_pipeline_mode_for_row(venue, asset_group, data_type)` for backfill derivation. Both exported from UTL
       top-level. 30 unit tests (all pass). — unified-trading-library@7bd14c43
-- [ ] [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep — every
-      site identified in Phase 0 (a). NO inline string literals.
-- [ ] [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer omits
+- [x] ✅ [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep — every
+      site identified in Phase 0 (a). NO inline string literals. Confirmed: all callsites use PipelineMode.X enum
+      values or service-local helpers that return enum values. No raw string literals found in any production source dir.
+- [x] ✅ [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer omits
       `pipeline_mode=`; no inline string literals for pipeline_mode outside `resolve_pipeline_mode` + UAC enum. Land as
-      a new STEP 5.7x in `unified-trading-pm/scripts/quality-gates-base/*.sh`.
+      a new STEP 5.7x in `unified-trading-pm/scripts/quality-gates-base/*.sh`. — STEP 5.85 added in
+      base-service.sh; unified-trading-pm@28698c85
 
 ## Phase 3 — Existing-row backfill (P0)
 
