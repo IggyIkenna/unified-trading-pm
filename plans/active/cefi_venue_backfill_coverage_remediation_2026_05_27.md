@@ -266,7 +266,7 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       UAC capability matrix (which `(venue, data_type)` combos are real) so absent-and-inapplicable → not-enumerated,
       not `attempted_failed`. Generalises §6A honest-absence. (These phantoms dominated the false "gap" counts.) —
       market-tick-data-service@3fa29d70
-- [ ] [AGENT] P1. **`instrument_type` case drift double-counts coverage.** Manifest holds both `PERPETUAL` and
+- [x] ✅ DONE [AGENT] P1. **`instrument_type` case drift double-counts coverage.** Manifest holds both `PERPETUAL` and
       `perpetual` as `captured` for the same DERIBIT cell — breaks any `GROUP BY instrument_type` and inflates counts.
       Normalise instrument_type casing at the write/enumerate boundary + reconcile existing rows.
 - [ ] [AGENT] P2. **Loose unpartitioned `*.parquet` at `raw_tick_data/by_date/` root.** Files like `BTCUSDT.parquet`,
