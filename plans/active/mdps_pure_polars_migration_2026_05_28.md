@@ -336,22 +336,30 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
   boundary conversion in `candle_write_mixin._write_candles` — they see pandas frames by construction. No
   code change needed; closed as audited.
 - [x] ✅ [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead
-  of `df.to_parquet(...)` (pandas). — market-data-processing-service@5e50b7d. Also polarised
-  `ParquetSchemaWorker.validate` (accepts `pl.DataFrame | pd.DataFrame`, collapses internally for the UTL
-  `ParquetSchemaEnforcer` chain), and removed the polars→pandas boundary in
-  `OrchestrationCoordinator.process_batch` (downstream now accepts polars natively). Test harness updated.
-  `OrchestrationCoordinator` (the (B) "thin coordinator" architecture) is still test-only in prod —
-  only `tests/unit/test_orchestration_coordinator.py` constructs it — but the worker surfaces it
-  composes are now plan-conformant should that cutover ever resume.
+  of `df.to_parquet(...)` (pandas). — market-data-processing-service@5e50b7d (polarise) → @febcb3b (delete).
+  Stage 3.5 first polarised `StorageDispatchWorker.write` + `ParquetSchemaWorker.validate` + removed the
+  polars→pandas boundary in `OrchestrationCoordinator.process_batch`. Then per workspace rule "Delete
+  deprecated code. No parallel code paths" (universal.md), the entire (B) thin-coordinator scaffold was
+  removed — `OrchestrationCoordinator` + `CandleGeneratorWorker` + `ParquetSchemaWorker` +
+  `StorageDispatchWorker` plus their four unit-test files. All four were unreachable from any production
+  entry point (instantiation grep: 1 hit, in their own tests). The (B) scaffold was a toy — it deliberately
+  omitted every workspace HARD RULE the production write chain enforces (manifest emission, honest absence,
+  UAC SchemaContract, emission policy, cluster validation, chain-bundle streaming, Category D zero-activity,
+  VIX gap, multi-timeframe iteration with fast aggregation, etc.). 1269 lines removed, 20 added.
+  `OrchestrationWorkersMixin` (the production composition shim used by `CandleOrchestrationWriter`) trimmed
+  + kept; production MRO intact (`OrchestrationWorkersMixin → BatchOrchestrationMixin →
+  LiveOrchestrationMixin → CandleWriteMixin → object`).
 - [ ] [BLOCKED-ON-STAGE-4] [P1] **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at
   `_process_all_timeframes` adapter call. The plan's own self-note says "keep this for now since adapter
   signature still requires pandas; re-evaluate after Stage 4 + the eventual adapter-contract plan." The
   adapter base-class signature change touches all 18 adapter implementations and is the entry point of a
   separate follow-up plan; cannot ship in isolation under Stage 3.
-- [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — 10 tests updated
-  (test_candle_generator, test_orchestration_coordinator, test_league_passthrough,
-  test_per_instrument_pipeline, test_storage_dispatch_worker). Pre-existing failure count unchanged (3);
-  1404 pass. — market-data-processing-service@6e61cfe + @5e50b7d
+- [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — Initial pass updated
+  10 tests (test_league_passthrough, test_per_instrument_pipeline, plus tests for the four (B)-scaffold
+  classes). The (B) test files were subsequently deleted with the (B) deletion at @febcb3b, so the
+  net result is the remaining production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`)
+  use polars fixtures; 1365 pass; 3 pre-existing failures unchanged. —
+  market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
 - [ ] [BLOCKED-ON-STAGE-4] [P2] **3.8 Benchmark re-run** — should see additional improvement on the output side.
   The existing harness (`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py`)
   runs SYNTHETIC re-implementations of 4 engine paths (A/B/C/D), not the actual MDPS code. Re-running it

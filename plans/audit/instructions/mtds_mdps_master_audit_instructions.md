@@ -302,6 +302,14 @@ findings surface.**
         (collapses internally for UTL `ParquetSchemaEnforcer`); `OrchestrationCoordinator.process_batch`
         boundary conversion removed since downstream workers now accept polars natively. 3.4 audit confirmed
         `orchestration_writer.py` helpers all sit downstream of the `_write_candles` seam — no code change.
+      - Stage 3.5 cleanup — MDPS@febcb3b 2026-05-28: per workspace rule "Delete deprecated code. No parallel
+        code paths" (universal.md), removed the abandoned (B) thin-coordinator scaffold:
+        `OrchestrationCoordinator` + `CandleGeneratorWorker` + `ParquetSchemaWorker` + `StorageDispatchWorker`
+        plus their four unit-test files. None were reachable from any production entry point. The (B) scaffold
+        deliberately omitted every workspace HARD RULE the production write chain enforces (manifest emission,
+        honest absence, UAC SchemaContract, emission policy, cluster validation, chain-bundle streaming,
+        Category D, VIX gap, etc.). 1269 lines removed, 20 added. `OrchestrationWorkersMixin` (production
+        composition shim used by `CandleOrchestrationWriter`) trimmed + kept.
 
       Stage 4 + 5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
       finish the chain (Stage 4: aggregation calculators — `fast_candle_aggregation.py` 36 pandas-ops +
