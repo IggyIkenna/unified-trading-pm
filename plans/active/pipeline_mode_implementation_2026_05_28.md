@@ -62,8 +62,10 @@ impact, no walk needed now.
       `unified_api_contracts.canonical.crosscutting` (sibling location to `EmptyConfirmedReason`). Closed set per
       Phase 0. Add the enum + its members to the public facade (`from unified_api_contracts import PipelineMode`). —
       already done, UAC has 27 batch + 1 live values
-- [ ] [AGENT] P0. Make the column **NOT NULL going forward** in the manifest schema (existing rows allowed NULL until
-      Phase 3 backfill completes; flip post-backfill). — deferred to Phase 3 after backfill
+- [x] ✅ [AGENT] P0. Make the column **NOT NULL going forward** in the manifest schema (existing rows allowed NULL until
+      Phase 3 backfill completes; flip post-backfill).
+      — UAC@f21a326 (PIPELINE_MODE_COLUMN + PIPELINE_MODE_NOT_NULL_SINCE constants in manifest_schema.py)
+        UTL@9fb350e3 (_coerce_pipeline_mode raises on None; _record_status signature: PipelineMode required)
 - [x] ✅ [AGENT] P0. UAC contract test: every captured row carries a valid (non-null, in-enum) `pipeline_mode`. Test
       runs in `unified-api-contracts/tests/`. — unified-api-contracts@9be72c15
 
