@@ -263,10 +263,13 @@ findings surface.**
       tests in `tests/unit/test_process_category_single_freshness_check.py` pin call_count==1 across fresh/stale/missing
       paths)
 
-- [ ] (E3) **Canonical instrument_id parser**: replace the substring matcher in
+- [x] ✅ (E3) **Canonical instrument_id parser**: replace the substring matcher in
       `orchestration_scanner.py:_collect_matching_parquet_blobs` with the structured parser specified in
       `codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity". Add regression tests
       that pin canonical-form behaviour. Findings doc: `mdps_long_running_cli_granularity_2026_05_28.md`.
+      — MDPS@9ea08c8 2026-05-28 — added `parse_canonical_instrument_id()` + `blob_matches_canonical_instrument_id()`
+      + `blob_matches_any_instrument_id()` in `path_parsing.py`; wired into `_collect_matching_parquet_blobs`
+      (formerly substring-only). 4 new regression tests + 38/38 scanner+scheduling unit tests green.
 
 - [ ] (E4) **Extend `_cleanup_after_day` to clear all state-inventory attrs** flagged in the audit (per-asset_group
       `_data_sinks`, instruments DataFrame, manifest read buffer if cached). Call
