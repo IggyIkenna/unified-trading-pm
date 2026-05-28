@@ -123,9 +123,10 @@ impact, no walk needed now.
 
 ## Phase 6 — Codex SSOT updates
 
-- [ ] [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
+- [x] ✅ [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
       `PipelineMode` enum, the derivation table, the reconciliation pattern, and the deferred-partition note. Cross-link
       from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`.
+      — unified-trading-pm@(this commit)
 - [ ] [AGENT] P2. Once Phase 3 backfill verifies clean, EDIT
       `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I item 3 to mark as
       `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md` and remove the "BLOCKED-OPERATOR-DECISION"
