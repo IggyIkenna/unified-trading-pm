@@ -78,9 +78,12 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
       bucket-split decision resolved (banner #1 — runs on prd). — VM `features-onchain-defi-20260528-183920` launched 2026-05-28, zone asia-northeast1-c,
       e2-standard-8, VM_SHUTDOWN_ON_COMPLETION=true; CMD: `python -m features_service --feature-family onchain --operation compute --mode batch
       --start-date 2020-01-01 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL`.
-- [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd `processed_candles`,
+- [x] ✅ DONE [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd `processed_candles`,
       118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28** (banner #2 —
-      dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
+      dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1). — VM
+      `features-delta-one-defi-20260528-184312` launched 2026-05-28, zone asia-northeast1-c, e2-standard-8,
+      VM_SHUTDOWN_ON_COMPLETION=true; CMD: `python -m features_service --feature-family delta_one --operation compute
+      --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL`.
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
 
 ## Phase 3 — TradFi features compute
