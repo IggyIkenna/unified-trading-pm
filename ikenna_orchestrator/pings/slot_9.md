@@ -24,3 +24,14 @@ Working on cefi_venue_backfill_coverage_remediation_2026_05_27.md §6I item 3. T
 on every manifest row and absent as on-disk partition. Code passes values (BATCH_TARDIS, BATCH_DATABENTO, etc.) but
 they're not persisted. Options: (1) REMOVE entirely (~50+ files, cleaner per "no technical debt"), or (2) IMPLEMENT
 properly (adds partition dimension). Recommend REMOVE. Need operator decision to proceed.
+
+[2026-05-28 06:05 UTC] [slot 9 → main] — PROGRESS: §6I manifest/migration defects
+
+Completed from cefi_venue_backfill_coverage_remediation_2026_05_27.md §6I:
+
+- ✅ Item 3: Chain dimension-modeling bug fixed — market-tick-data-service@2e91d74f
+- ✅ Item 4: Phantom expected rows for inapplicable venue × data_type fixed — market-tick-data-service@3fa29d70
+- ⏸️ Item 2: pipeline_mode decision — awaiting operator direction (see above)
+
+Items 1 (env-tiered bucket cutover), 5 (instrument_type case drift), 6 (loose parquet files) still pending. Continuing
+investigation on item 1 (dual-write issue) while awaiting pipeline_mode decision.
