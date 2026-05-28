@@ -17,3 +17,10 @@ spawn prompt).
   quality-gates.sh). utl@f63eb8e2 + pm@424b4319 pushed to live-defi-rollout.
 - IS: was already green (CODEX_MAX_VIOLATIONS=4 within tolerance), no changes needed. Plan-of-record:
   work_split_2026_05_20_ikenna.md § Slot 9.
+
+[2026-05-28 05:58 UTC] [slot 9 → main] — BLOCKED-OPERATOR-DECISION: pipeline_mode removal vs implementation
+
+Working on cefi_venue_backfill_coverage_remediation_2026_05_27.md §6I item 3. The `pipeline_mode` column is empty/NULL
+on every manifest row and absent as on-disk partition. Code passes values (BATCH_TARDIS, BATCH_DATABENTO, etc.) but
+they're not persisted. Options: (1) REMOVE entirely (~50+ files, cleaner per "no technical debt"), or (2) IMPLEMENT
+properly (adds partition dimension). Recommend REMOVE. Need operator decision to proceed.
