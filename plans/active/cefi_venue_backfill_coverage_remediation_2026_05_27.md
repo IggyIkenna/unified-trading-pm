@@ -269,10 +269,11 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 - [x] ✅ DONE [AGENT] P1. **`instrument_type` case drift double-counts coverage.** Manifest holds both `PERPETUAL` and
       `perpetual` as `captured` for the same DERIBIT cell — breaks any `GROUP BY instrument_type` and inflates counts.
       Normalise instrument_type casing at the write/enumerate boundary + reconcile existing rows.
-- [ ] [AGENT] P2. **Loose unpartitioned `*.parquet` at `raw_tick_data/by_date/` root.** Files like `BTCUSDT.parquet`,
+- [x] ✅ DONE [AGENT] P2. **Loose unpartitioned `*.parquet` at `raw_tick_data/by_date/` root.** Files like `BTCUSDT.parquet`,
       `BTC-PERPETUAL.parquet`, `KRW-LINK.parquet` sit directly under `by_date/` alongside the `day=…/` hive partitions —
       drift artifacts outside any day/venue/data_type partition (invisible to partition-pruned reads). Reconcile into
       the correct partition or delete. Mirrors the 2026-05-04 phantom-audit drift axes.
+      → `scripts/cleanup_loose_root_parquets.py` (mtds@56fed3b) — dry-run + apply; supports --cefi-buckets.
 - [x] ✅ DONE [AGENT] P0. **One-off sweep of existing phantom manifest rows** (added 2026-05-28 after post-fix diff).
       Slot 9's enumerator fixes (mtds@2e91d74f + @3fa29d70) are **preventive only** — they stop NEW backfill VMs
       emitting phantom rows but don't sweep the ~355K stale phantoms already in the live manifest (chain phantoms:
