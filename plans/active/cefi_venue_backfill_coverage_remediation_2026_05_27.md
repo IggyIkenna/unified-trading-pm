@@ -58,7 +58,7 @@ data look corrupt." A 401 is NOT a confirmed absence; it is "downloadable, block
 
 - [ ] [AGENT] P0. Out-of-window (Tardis `code 140` / contract not listed on date) → `expected_unattempted` (genuine
       honest absence). This is correct to record.
-- [ ] [AGENT] P0. Paid-date + missing/expired key (HTTP 401) → MUST NOT be `empty_confirmed` or `expected_unattempted`.
+- [x] ✅ DONE [AGENT] P0. Paid-date + missing/expired key (HTTP 401) → MUST NOT be `empty_confirmed` or `expected_unattempted`.
       Record as a distinct **pending/blocked** state (`attempted_failed` with a typed `blocked_credentials` reason, or a
       new `PENDING_PAID_KEY` marker) so the manifest + UI show it as "to-download once key active", not as
       empty/complete. Audit existing CeFi manifest rows for any 401-era dates wrongly stamped `empty_confirmed` and
