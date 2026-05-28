@@ -106,7 +106,10 @@ impact, no walk needed now.
       sports=0/182k, prediction=0/375k, instruments-store-{cefi,defi,tradfi,sports,prediction}=0. All main manifests
       clean. Defi per-VM shard exempt: active VM `mdps-backfill-defi-20260528-071130` writing rows without
       pipeline_mode (pre-Phase-2 deployment); re-run backfill once VM completes to reach absolute zero.
-- [ ] [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
+- [x] ✅ [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
+      Updated manifest_schema.py PIPELINE_MODE_COLUMN docstring + section comment to "always NOT NULL (Phase 3 backfill
+      complete 2026-05-28)". Updated UTL manifest_writer.py _coerce_pipeline_mode docstring + AvailabilityRecord comment.
+      5 UAC contract tests pass; 345 UTL tests pass. — unified-api-contracts@228270e; unified-trading-library@9d974416
 
 ## Phase 4 — Consumer migration (P1)
 
