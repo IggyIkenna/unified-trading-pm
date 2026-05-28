@@ -132,10 +132,18 @@ modest VM** so the bug returns audibly if the fix is incomplete — not silently
   filter discipline** — every batch service whose pipeline matches MDPS's shape (list raw → filter
   → load → process → write) MUST apply scope filters at the LIST stage, not the WRITE stage.
   Reference this plan + the 2026-05-28 incident. (If no codex doc fits, write a stub.)
-- [ ] [P2] **4.2 Remove the now-stale workspace mitigations** in the sharded launcher
-  (`e2-highmem-8` + `max-workers=2` for TradFi) — once the fix lands, `e2-standard-8` +
-  `max-workers=4` should be back on the table. Land that revert in `launch-mdps-sharded-backfill.sh`
-  with a comment pointing at this plan as the fix-source.
+- [ ] [P2] **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the
+  sharded launcher.** **Refinement** (discovered 2026-05-28 during Phase 3 prep): the TradFi
+  `e2-highmem-8 + max-workers=2` mitigation in `launch-mdps-sharded-backfill.sh:174,184` targets a
+  *different* root cause than the scanner over-queueing fixed in Phase 2.1 — namely per-file Polars
+  memory from legacy `ticks.parquet` bundles with 4000+ symbols loaded as one DataFrame (incidents
+  2026-05-06 + 2026-05-07 per the script's own header comment). The scanner fix does NOT shrink any
+  individual file's footprint, so reverting the TradFi mitigation would re-OOM. CeFi/DeFi/Sports/
+  Prediction were already on `e2-standard-8 + default workers` — nothing to revert for them.
+  Replacement action: update the comment block in the launcher header to attribute the TradFi-
+  specific mitigation to the *bundle-reader* issue (separate from filter-pushdown), and reference
+  the bundle-reader streaming refactor as the unblock for that mitigation (out of scope for this
+  plan). Leave the mitigation code untouched until the bundle reader is lazified.
 
 ## DO NOT (anti-patterns the next agent should avoid)
 
