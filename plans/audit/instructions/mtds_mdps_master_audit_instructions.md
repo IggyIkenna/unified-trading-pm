@@ -276,9 +276,14 @@ findings surface.**
       `pyarrow.default_memory_pool().release_unused()` at the end so the PyArrow arena hand-off happens. Findings doc:
       `mdps_long_running_state_inventory_2026_05_28.md` § "Recommended next step".
 
-- [ ] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**: eliminate the `.to_pandas()`
-      at `live_workers.py:449-479`; downstream consumers receive Polars frames; conversion buffers eliminated.
-      Findings doc: `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
+- [~] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**: Stage 1 partial ✅ — MDPS@591120b
+      2026-05-28 (`_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via
+      `.filter(pl.col(...).is_in(...))`; boundary conversion to pandas explicit + commented before
+      `_eager_preprocess_and_recover_metadata`). Stages 2-5 per
+      [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
+      finish the chain. Original goal: eliminate the `.to_pandas()` at `live_workers.py:449-479`; downstream consumers
+      receive Polars frames; conversion buffers eliminated. Findings doc:
+      `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
 
 - [ ] (E6) **Structured memory events**: add `SHARD_STARTED`, `SHARD_COMPLETED`, `MANIFEST_LOAD_BYTES`,
       `INSTRUMENTS_LOAD_ROWS`, promote `📉 date-boundary GC` to a structured `DATE_BOUNDARY_GC` event, add
