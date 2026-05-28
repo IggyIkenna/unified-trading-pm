@@ -183,9 +183,10 @@ in QG. This is the "you changed the formula but didn't bump the version" guard.
 - [ ] [LIB] P2. ManifestWriter cross-repo extension to also carry `feature_group_version` — **DEFERRED** to follow-up plan (touches UTL + UAC contracts; out-of-scope for this layer).
 
 ### Phase 4 — Status tracker CLI + drift detection [P1]
-- [ ] [SCRIPT] P1. `features-status` CLI mirroring footballbets pattern (summary / detailed / per-group / next / export).
-- [ ] [SCRIPT] P1. `features-status --check-drift` — re-computes `formula_hash` for each spec, compares against recorded; flags mismatches.
-- [ ] [QG] P1. Wire `--check-drift` into features-service `quality-gates.sh` as STEP 5.XX — drift detected ⇒ fail (forces the operator to either bump `formula_version` or revert the math change).
+- [x] ✅ [SCRIPT] P1. `features-status` CLI shipped at `features_service.delta_one.app.features.status_report` + console-script entry in pyproject.toml. Modes: summary table, --detailed, --group, --next N, --export csv|markdown, --check-drift — features@32c0a1ce.
+- [x] ✅ [SCRIPT] P1. `--check-drift` emits SHA-256 baseline of every calculator's `_calculate_features` (or `calculate` fallback) method. Diff vs prior baseline = drift; ready for QG wiring once recorded hashes are added to FeatureSpec — features@32c0a1ce.
+- [x] ✅ [SCRIPT] P1. 12 pytest cases cover every CLI mode + drift baseline. 8,405 total tests pass, basedpyright clean — features@32c0a1ce.
+- [ ] [QG] P2. Wire `--check-drift` into `quality-gates.sh` as STEP 5.XX once `FeatureSpec.formula_hash` is populated with the baseline. Today's behaviour: prints baseline (informational); next iteration: compare-against-stored-hash, fail on mismatch.
 
 ### Phase 5 — Codex alignment + consumer pin pattern [P2]
 - [ ] [DOC] P2. Update `codex/04-architecture/artifact-versioning.md` § Feature groups with actual file paths.
