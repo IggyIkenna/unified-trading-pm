@@ -99,26 +99,13 @@ should attach to the read path. Deliverable: short audit doc at
 
 ## Phase 2 — FIX (only after Phase 1 names the cause)
 
-Principle: **minimum-viable change**. Don't refactor more than needed. If the audit confirms
-filter-pushdown:
+Principle: **minimum-viable change**. Don't refactor more than needed.
 
-- [ ] [P1] **2.1 Push the 3 filters down to the read layer.** Before issuing the `raw_tick_data/`
-  list/read, filter the candidate set by `instrument_ids` / `venues` / `data_types`. Result: a
-  narrow scope reads only what it will write. Keep the write-time filter as defence-in-depth, but
-  it should now match zero rows because the read was already filtered.
-- [ ] [P1] **2.2 Free per-instrument memory between iterations.** After writing all 7 TFs for one
-  instrument, `del raw_df` (or polars equivalent) + clear any orchestrator-level caches keyed by
-  the just-processed instrument. **Do NOT add `gc.collect()` in a hot loop unprovoked** — measure
-  first; only add it if 2.1 alone doesn't return RSS to baseline between instruments.
-- [ ] [P2] **2.3 Optional: streaming-per-instrument orchestrator mode.** If the orchestrator
-  currently fans out reads for all instruments upfront and only the writes are serial, restructure
-  to streaming: for each instrument → load → aggregate (all 7 TFs) → write → release → next. This
-  is the architectural fix, larger scope — only do it if 2.1 + 2.2 don't get RSS under 4 GB on the
-  canary VM. (Performance principle: streaming may run slightly slower per-instrument than the
-  fan-out, but it's the right shape for a 4128-instrument corpus on a 32-GB box.)
+- [x] [P1] **2.1 Push the 3 filters down to the read layer.** ✅ Done — `market-data-processing-service@e47205d`. Refined per audit: the *read-time* plumbing was already wired through to `CandleOrchestrationScanner._collect_matching_parquet_blobs`, but the venue-prefix shortcut silently dropped `instrument_ids` whenever the prefix matched. Fix splits the gate so `instrument_ids` is always applied as its own step (`orchestration_scanner.py:441-457` + identical pattern for the sports/prediction fallback at lines 380-398). Regression tests in `tests/unit/test_orchestration_scanner.py` (6 new, 28 sibling tests still green): pre-fix returned 8 blobs for the 4-symbol scope, post-fix returns 4; pre-fix returned 3 for `venues=None + instrument_ids` (filter ignored), post-fix returns 2.
+- [~] [P1] **2.2 Free per-instrument memory between iterations.** SKIPPED — audit § 3 confirms there is no per-instrument retention leak. The polars frame is `del`'d at `live_workers.py:470`; the pandas frame is scoped to one instrument's `_process_all_timeframes()` call. Bloat was upstream (scanner over-queueing). Revisit only if Phase 3.1 RSS cap fails with the scanner fix in place.
+- [~] [P2] **2.3 Optional: streaming-per-instrument orchestrator mode.** SKIPPED — same reasoning. The orchestrator IS already streaming-per-instrument (ThreadPoolExecutor with one future per blob, max_workers=N concurrent). The previous symptom was N × *over-queued blobs*, not N × *too-large frames*. Once the scanner returns the operator-requested file list, the existing concurrency model is correctly shaped.
 
-If Phase 1 names a different cause: apply that fix with the same minimum-viable principle and
-keep this plan's other phases.
+If Phase 3 verification surprises us with residual memory growth, revisit 2.2 and 2.3 with concrete evidence.
 
 ## Phase 3 — VERIFY (no re-OOMing the dev machine)
 
