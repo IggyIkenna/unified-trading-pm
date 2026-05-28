@@ -245,13 +245,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) +
       cross-pinged ikenna-main 2026-05-28 for scope decision (workspace-wide migration vs env-aware shim vs targeted
       cefi-only patch). SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`.
-- [ ] [DELEGATED] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
-      buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/`. **Operator-decided 2026-05-28:
-      IMPLEMENT** (vs REMOVE). Tracked in
-      [`pipeline_mode_implementation_2026_05_28.md`](pipeline_mode_implementation_2026_05_28.md) +
-      [`issues/pipeline_mode_implementation_decision_2026_05_28.md`](issues/pipeline_mode_implementation_decision_2026_05_28.md).
-      Slot 10 dispatched 2026-05-28. Tick this checkbox when Phase 3 backfill completes (success criterion in the new
-      plan).
+- [x] ✅ [DELEGATED] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
+      buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/`. **Resolved by**
+      [`pipeline_mode_implementation_2026_05_28.md`](pipeline_mode_implementation_2026_05_28.md):
+      UTL resolver + 30 tests (library@7bd14c43), BLRS stage0 fix (blrs@cf50965), QG STEP 5.85,
+      backfill script (pm@9cf186cd), codex doc (pm@58115ffc). **Phase 3.2-3.4** (run backfill +
+      verify + NOT NULL constraint) require operator execution — script ready at
+      `scripts/migration/backfill_pipeline_mode.py --apply --all --project-id <PROJECT_ID>`.
 - [x] ✅ [AGENT] P0. **Chain dimension-modeling bug → manifest massively UNDER-reports derivatives coverage.** On disk,
       option/future chains live at
       `instrument_type=options_chain|futures_chain / data_type=trades / underlying=… /     ticks.parquet` (verified
