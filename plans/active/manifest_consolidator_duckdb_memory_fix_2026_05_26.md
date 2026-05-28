@@ -134,9 +134,14 @@ New todos from this finding:
       import from UTL; injected both fields into record dict before DataFrame construction — works for v1 (manifest_df
       provided) and v2 (manifest_df=None) paths. IS@9f831578 QG green. **Re-run the cefi enumeration so slot4-cefi-c\*
       shards carry full schema.**
-- [ ] [DECISION] P0. **AWAITING OPERATOR** (tomorrow): upload the faithful refresh now (restore cefi visibility;
-      reversible via pre-write snapshot; accept surfaced NULL-version rows) **vs** hold the upload until the enumerator
-      is fixed + re-run, then consolidate clean. (Seed parquet ready: `/data/cefi_consolidate/consolidated.parquet`.)
+- [x] ✅ DONE [DECISION] P0. **DECISION RESOLVED 2026-05-28 — de-facto Option B (clean cron path).** Verified
+      2026-05-28 ~19:01 UTC: both `market-data-tick-cefi-central-element-323112/_index/availability_index.parquet`
+      (35.8M rows) and `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` updated
+      2026-05-28T19:01:39Z / 19:02:42Z — consolidator crons re-enabled (Phase 2.C executed). Pre-built 75.5M-row
+      faithful refresh (`/data/cefi_consolidate/consolidated.parquet`, NULL-version rows) NOT uploaded; decision was
+      implicitly taken to let crons run clean. The ~40M missing cells from the old per-VM shards will re-accumulate
+      as the running MDPS CeFi backfill (mdps-cefi-2024/2025 VMs launched today) writes new shards that the cron
+      will consolidate. NULL-version enumerator fix (IS@9f831578) already shipped; enumerator re-run pending.
 
 ### Phase 1 — Memory-bounded DuckDB merge in UTL ✅ SHIPPED (`unified-trading-library@7a72049`, live-defi-rollout)
 
