@@ -3300,3 +3300,22 @@ Operator closed laptop. Migration script + UAC contracts + enum extensions are o
 Gate 5 (net-new Solana go-forward collectors) is **NOT** in this handoff — separate multi-day adapter dev.
 
 [NOT-ACKED]
+
+## [2026-05-28 UPDATE] Gate 5 now IN SCOPE — keys verified, scope is bounded refactor
+
+Earlier I marked Gate 5 (Solana go-forward collectors) as "NOT in this handoff (multi-day adapter dev)." Wrong call —
+verified 2026-05-28 that:
+- GCP Secret Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`.
+- `dependency_health_policies.yaml` registers `helius_solana_rpc` + `solana_rpc_primary` (Helius backup).
+- UAC has `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url`.
+- KMNO/RAY/ORCA venues in `capability_declarations/_defi.py` already declare `mtds_operations=["collect-solana-defi"]`.
+- `solana_defi_handler.py` IS on disk + registered as `"collect-solana-defi": SolanaDefiHandler` (`cli/main.py:436`).
+- Backfill script wires it (`scripts/full-defi-backfill.sh:66`).
+
+Doc/code drift: `docs/DEFI_DOWNLOAD_STRATEGY.md:365` says the monolithic handler was "removed and replaced by
+per-data-type handlers" — file still there + excluded from QG (`scripts/quality-gates.sh:25`). So Gate 5 is a **bounded
+refactor** (~1-2 cal AI-days), NOT multi-day net-new: modernize-in-place or finish the per-data-type split; point its
+writes at the canonical split buckets with the new `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types;
+re-enable the recurring schedule; QG green.
+
+**vm-ml worker — chain Gate 5 after Gate 4 GREEN** (full runbook in plan body under "Gate 5 runbook"). [NOT-ACKED]

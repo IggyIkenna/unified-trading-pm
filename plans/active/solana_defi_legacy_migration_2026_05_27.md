@@ -85,10 +85,25 @@ source:
 - [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
       (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
       rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
-- [ ] [CODE] P1. **Gate 5 — go-forward collectors**: wire Solana collectors (Kamino/Solend lending; Kamino/Orca/
-      Raydium pools) to write canonically (close the post-2026-04-14 collection gap). Composes with D10 venue-capability
-      backing. Adapter scaffold + `classify_venue_error` + manifest emission per writegate; integration tests
-      `@requires_credentials` if RPC/subgraph keys needed (then `BLOCKED-CREDENTIALS` ping, not deferral).
+- [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP
+      Secret Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`;
+      `dependency_health_policies.yaml` (lines 139/151/157) registers `helius_solana_rpc` + `solana_rpc_primary`
+      (Helius as backup); UAC has `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url`; KMNO/RAY/ORCA in
+      `capability_declarations/_defi.py` declare `mtds_operations=["collect-solana-defi"]`. **Existing handler**:
+      `market-tick-data-service/.../cli/handlers/solana_defi_handler.py` is on disk + registered
+      `"collect-solana-defi": SolanaDefiHandler` (`cli/main.py:436`); backfill script wires it
+      (`scripts/full-defi-backfill.sh:66`). **Doc/code drift**: `docs/DEFI_DOWNLOAD_STRATEGY.md:365` claims the
+      monolithic handler was "removed and replaced by per-data-type handlers" — file still there, excluded from a QG
+      check (`scripts/quality-gates.sh:25`). **Real scope = bounded refactor (~1–2 cal AI-days)**:
+      (1) read the current `solana_defi_handler.py` + decide modernize-in-place vs. complete the per-data-type split per
+          the strategy doc;
+      (2) update its writes to the new canonical split-bucket paths with the new
+          `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types (Gate 1/1.5 contracts: UAC@7e9f4ad9 +
+          UAC@90b2bb9d);
+      (3) re-enable the recurring schedule (collection STOPPED since 2026-04-14);
+      (4) QG green the handler + integration smoke against Helius (creds available).
+      Composes with D10 venue-capability check + the archived `defi_market_data_staleness` recurring-schedule fix.
+      **Can be picked up by the vm-ml worker after Gates 2-4 complete** (added to handoff dispatch).
 - [ ] [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was its
       last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +
       `defi-data-pipeline.md` with the Solana instrument_types.
@@ -180,11 +195,32 @@ print('kept:', len(df_keep))
 PY
 ```
 
-### Gate 6 (after Gates 3+4 GREEN)
+### Gate 5 runbook (vm-ml — can chain after Gate 4; keys are SORTED, scope is bounded refactor)
+
+```bash
+# 1. Read the existing handler + decide modernize vs split per docs/DEFI_DOWNLOAD_STRATEGY.md
+cd ~/code/market-tick-data-service
+sed -n '1,80p' market_tick_data_service/cli/handlers/solana_defi_handler.py
+sed -n '350,420p' docs/DEFI_DOWNLOAD_STRATEGY.md
+# 2. The handler must write canonical SPLIT-bucket paths with the new instrument_types
+#    (matches Gates 1/1.5 + the just-migrated history layout):
+#       lending  → instrument_type=solana_lending  → lending-indices-central-element-323112
+#       Kamino vault → instrument_type=solana_vault     → dex-pools-central-element-323112
+#       Orca/Raydium AMM → instrument_type=solana_amm_pool → dex-pools-central-element-323112
+#    Use get_write_bucket_name("lending-indices") / ("dex-pools") and build_instrument_id with
+#    InstrumentType.SOLANA_LENDING / SOLANA_VAULT / SOLANA_AMM_POOL.
+# 3. Smoke against Helius (creds in Secret Manager: helius-api-key + solana-paper-keypair-private-key):
+#    one-day live capture per (venue, data_type) → confirm rows land in canonical buckets, manifest captures.
+# 4. Re-enable the recurring DeFi schedule for Solana (collection stopped 2026-04-14). Composes with the
+#    deployment-service/terraform/gcp/defi_collection_scheduler.tf scheduler.
+# 5. QG green MTDS (handler is currently excluded from a QG check at scripts/quality-gates.sh:25 — bring it back in).
+```
+
+### Gate 6 (after Gates 3+4+5 GREEN)
 
 Edit `plans/active/issues/defi_code_codex_drift_2026_05_27.md` D2 row + todo → `[x] ✅ RESOLVED 2026-05-28` citing
-UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3 + the GCS migration log URI. Flip Gates 2/3/4/6 in this plan. Commit + push
-via the standard `docs(plans):` flow.
+UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3 + the MTDS Gate-5 sha + the GCS migration log URI. Flip all gates in this
+plan. Commit + push via the standard `docs(plans):` flow.
 
 ## Status log
 
