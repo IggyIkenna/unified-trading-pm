@@ -145,10 +145,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `_query_and_parse` → `pd.DataFrame()` → `record_empty(SOURCE_RETURNED_ZERO)` = correct for deprecated subgraph);
       when all cascade schemas return None due to GraphQL errors, `_query_and_parse` raises `RuntimeError` → `process()`
       catches → `record_failed(ADAPTER_FETCH_FAILED)` = honest. — market-tick-data-service@ed5fdcf
-- [ ] [AGENT] P0. **us-backfill silent-zero**: Understat 2019 = 100% `404` on `getMatch/*` + `getLeagueData/*/2019`,
+- [x] [AGENT] P0. **us-backfill silent-zero**: Understat 2019 = 100% `404` on `getMatch/*` + `getLeagueData/*/2019`,
       XG_SHOTS 0 rows, yet ManifestWriter records `captured` (~5 new/date) with 0 rows — entire 2019 season stamped
       captured-but-empty. Should be `attempted_failed`/`empty_confirmed`. (Also: us-backfill stalled at 2019-10-03, log
       silent ~3.3d, likely a ManifestReader hang at `consolidated blob age > 120s` fallback — separate diagnose.)
+      ✅ Fixed in instruments-service@c654ccf — `_fetch_error_count` tracks per-league HTTP errors; orchestrator
+      now emits `record_failed(HTTP_NOT_FOUND)` instead of `record_empty(EXPECTED_NO_FIXTURE)` when errors occurred.
 
 ### §6B — Per-venue parsing / routing bugs
 
