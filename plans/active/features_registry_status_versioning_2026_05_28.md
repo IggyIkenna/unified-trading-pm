@@ -176,10 +176,11 @@ in QG. This is the "you changed the formula but didn't bump the version" guard.
 - [x] ✅ [LIB] P0. Coverage delta: registered groups 5 → 34, total specs 47 → 1,382 (top groups: round_numbers 314 / momentum 241 / volatility_realized 160 / candlestick_patterns 86 / targets 82). All 8,385 tests pass, basedpyright clean — features@e4e085d1.
 
 ### Phase 3 — Parquet schema + writer + manifest version wiring [P1]
-- [ ] [UAC] P1. Add `*_formula_version: int8` columns to `DeltaOneFeatureRecord`; UAC minor bump.
-- [ ] [LIB] P1. `feature_writer.write_daily_partition()` stamps per-column versions from registry; raises `UnregisteredFeatureColumnError` on a column with no spec.
-- [ ] [LIB] P1. ManifestWriter row key gains `formula_versions: dict[str, int]`. Test against real GCS parquet.
-- [ ] [LIB] P1. Backfill helper: legacy rows pre-this-change get `formula_version=0` (un-versioned sentinel) at read-time, not on a corpus walk (HARD rule: no whole-corpus GCS walks post-Phase-2.2).
+- [x] ✅ [LIB] P1. Per-group `feature_group_version: Int32` sidecar column added to every parquet via `_stamp_version_columns`. File-level parquet metadata via `_build_parquet_metadata` carries `feature_group_version` + `feature_column_versions` (JSON dict) + `feature_group` keys — features@0fe3160d.
+- [x] ✅ [LIB] P1. Registry helpers `compute_group_version` + `compute_column_versions` resolve per-group ints from `max(spec.formula_version)` matching codex artifact-versioning.md Rule 4 (consumer PIN by `technical_indicators@v2`) — features@0fe3160d.
+- [x] ✅ [LIB] P1. Sentinel `feature_group_version=0` reserved for un-versioned legacy rows. Writer stamps sentinel + warns (rather than raises) on unregistered groups so existing batch handlers don't brick during rollout — features@0fe3160d.
+- [x] ✅ [LIB] P1. 8 new pytest cases: per-row sidecar add, unregistered-group sentinel + warning, metadata build, parquet round-trip via PyArrow for 3 groups. 8,393 total tests pass, basedpyright clean — features@0fe3160d.
+- [ ] [LIB] P2. ManifestWriter cross-repo extension to also carry `feature_group_version` — **DEFERRED** to follow-up plan (touches UTL + UAC contracts; out-of-scope for this layer).
 
 ### Phase 4 — Status tracker CLI + drift detection [P1]
 - [ ] [SCRIPT] P1. `features-status` CLI mirroring footballbets pattern (summary / detailed / per-group / next / export).
