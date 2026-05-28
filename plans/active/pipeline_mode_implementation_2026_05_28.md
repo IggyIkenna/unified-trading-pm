@@ -58,13 +58,14 @@ impact, no walk needed now.
 
 ## Phase 1 — UAC schema (P0)
 
-- [ ] [AGENT] P0. Promote `pipeline_mode` to a typed `PipelineMode` `StrEnum` in
+- [x] ✅ [AGENT] P0. Promote `pipeline_mode` to a typed `PipelineMode` `StrEnum` in
       `unified_api_contracts.canonical.crosscutting` (sibling location to `EmptyConfirmedReason`). Closed set per
-      Phase 0. Add the enum + its members to the public facade (`from unified_api_contracts import PipelineMode`).
+      Phase 0. Add the enum + its members to the public facade (`from unified_api_contracts import PipelineMode`). —
+      already done, UAC has 27 batch + 1 live values
 - [ ] [AGENT] P0. Make the column **NOT NULL going forward** in the manifest schema (existing rows allowed NULL until
-      Phase 3 backfill completes; flip post-backfill).
-- [ ] [AGENT] P0. UAC contract test: every captured row carries a valid (non-null, in-enum) `pipeline_mode`. Test runs
-      in `unified-api-contracts/tests/`.
+      Phase 3 backfill completes; flip post-backfill). — deferred to Phase 3 after backfill
+- [x] ✅ [AGENT] P0. UAC contract test: every captured row carries a valid (non-null, in-enum) `pipeline_mode`. Test
+      runs in `unified-api-contracts/tests/`. — unified-api-contracts@9be72c15
 
 ## Phase 2 — Writer wiring (P0)
 
