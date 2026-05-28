@@ -178,16 +178,14 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       re-applied features@c513265a (now safe). The check tool's auto-fix is still naive — should still get a
       verify-before-rewrite guard or symbol allowlist as a follow-up (tracked separately if needed). Verified: 4 files
       pass basedpyright 0/0/0; volatility smoke + delta_one tests pass; top-level imports resolve.
-- [ ] [SIZE][P1] **1.7f Codex-compliance file/method size violations from agent work (introduced 2026-05-27/28).**
-      Found 2026-05-28 by full QG run. `batch_handler.py` grew to **1058 lines** (cap 900) after the Phase-1 agents
-      added the timeframe loop (@7bd77525) + read-once (@2b20c795) + smart clustering (@ac83bfad) + range-once
-      (@2937ea91). Oversized inside that file: `BatchHandler` class = 948L (cap 900),
-      `_process_feature_group` = 61L (cap 50), `_process_tf_clusters_date_range` = 67L (cap 50),
-      `_load_range_candles_with_buffer` = 53L (cap 50). Plus `base.py:445 _add_lagged_features` = 58L (cap 50)
-      from @ff00cae6. Suggested fix: extract a `delta_one/cli/handlers/_tf_cluster_helper.py` module for the
-      cluster orchestration; pull `_load_range_candles_with_buffer` into a private helper class. Carefully — these
-      methods carry the read-once/clustering semantics from the recent perf work; refactor must preserve behaviour
-      (run full QG after to confirm tests stay green).
+- [x] ✅ [SIZE][P1] **1.7f Codex-compliance file/method size violations from agent work.** — **FIXED**
+      features@e5ef31d4 + @2d9aa221. Extracted the 8 TF-clustering + range-once methods into a new
+      `delta_one/cli/handlers/_tf_cluster_helper.py` module (~401 lines) as a `_TfClusterMixin`; BatchHandler
+      now inherits from it via MRO. Split the 3 oversized cluster methods into smaller helpers
+      (`_process_clusters_single_date` / `_process_one_date_for_cluster` / `_load_one_instrument_range`).
+      Also refactored `base.py _add_lagged_features` 58L → 27L by extracting `_select_lag_candidates`. Result:
+      `batch_handler.py` 1058 → 737L, all methods ≤48L, basedpyright 0/0/0, ruff clean. Full QG: codex-compliance
+      3 violations → 1 (the remaining one is 1.7e, deferred). Runtime semantics unchanged; smoke tests pass.
 - [ ] [CONFIG][P2] **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") —
       violates workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
       (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in
