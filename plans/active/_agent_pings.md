@@ -4960,6 +4960,8 @@ fix + migration tracked for Phase 2.6 in the issue doc. No open cross-side actio
 
 ## [harsh → ikenna] 2026-05-25 — ACTION NEEDED: create 1 Secret Manager secret (we're IAM-denied)
 
+**Plan ref**: plans/epics/observability_master.md § Telegram dual-channel split (live-ops alerts).
+
 Re the Telegram dual-channel split (active thread above ~"split Telegram channels: same bot token, NEW chat_id for
 live-ops vs existing for CI/QG"). **Operator + code side are DONE; only the secret is missing.**
 
@@ -5158,9 +5160,11 @@ slot). Persists until ack.
 
 ## [harsh → ikenna-main] 2026-05-28 — BIG FINDING: bucket-name SSOT is unused workspace-wide; `get_bucket_name` legacy helper covers everything
 
-**Filed issue doc:** [`plans/active/issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) (full evidence + 4 closed-set options).
-**Triggered by:** investigating `cefi_venue_backfill_coverage_remediation_2026_05_27.md` § 6I.A
-(*"a live writer is still resolving the legacy bucket name"*) — turns out it's **every writer**, by design.
+**Filed issue doc:**
+[`plans/active/issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md)
+(full evidence + 4 closed-set options). **Triggered by:** investigating
+`cefi_venue_backfill_coverage_remediation_2026_05_27.md` § 6I.A (_"a live writer is still resolving the legacy bucket
+name"_) — turns out it's **every writer**, by design.
 
 **Short version of the finding:**
 
@@ -5170,21 +5174,23 @@ slot). Persists until ack.
   (`market-data-tick-cefi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`) but nothing imports it.
 - Every consumer instead uses `unified_trading_library.core.cloud_constants.get_bucket_name(domain, asset_group)` which
   returns `{prefix}-{category}-{project_id}` — the **legacy no-env shape**. MTDS `config/service_config.py:4` documents
-  this explicitly: *"Bucket names: UTL cloud_constants.get_bucket_name(\"market-data-tick\", category) constructs
-  market-data-tick-{category}-{gcp_project_id} automatically."*
+  this explicitly: _"Bucket names: UTL cloud_constants.get_bucket_name(\"market-data-tick\", category) constructs
+  market-data-tick-{category}-{gcp_project_id} automatically."_
 - UTL `instrument_lifecycle_loader._BUCKETS` (line 43) hardcodes `"cefi": "market-data-tick-cefi-{pid}"` — no env
-  placeholder at all. Same in `emission_publisher.py:301`, `streaming_shard_finalizer.py:31`,
-  `core/config.py:278`, `core/cloud_data_provider.py:430`, `cloud_constants.py:130`.
+  placeholder at all. Same in `emission_publisher.py:301`, `streaming_shard_finalizer.py:31`, `core/config.py:278`,
+  `core/cloud_data_provider.py:430`, `cloud_constants.py:130`.
 - QG STEP 5.69 greps for inline `f"gs://..."` URI construction — it doesn't catch the legacy helper's
   function-call-returns-legacy-shape pattern, so the drift is invisible to the ratchet.
 - **GCS evidence matches**: cefi canonical PRD stale at 2026-05-07 vs cefi legacy fresh at 2026-05-24 = every writer
   routes to legacy. This applies to defi / tradfi / sports / prediction too (same architecture, same helper).
 
-**Why I'm pinging instead of fixing:** the closed-set options range from "small env-aware shim on legacy helper" (~4-8 hrs)
-to "workspace-wide migration to `resolve_bucket_name`" (multi-day, re-opens `bucket_name_ssot_canonicalisation_2026_05_10`,
-needs pre-migration drain per HARD RULE). Likely **B** as bridge + **A** as the canonical follow-up, but you own MTDS /
-data-pipeline migration and probably know whether the Phase 2.6 migration stalled or was de-scoped — please decide scope
-+ ack which option, and whether you want me to pick it up or route to a slot. **§ 6I.A in
-`cefi_venue_backfill_coverage_remediation` now marked `[BLOCKED-DEPENDENCY]` pointing at the issue doc.**
+**Why I'm pinging instead of fixing:** the closed-set options range from "small env-aware shim on legacy helper" (~4-8
+hrs) to "workspace-wide migration to `resolve_bucket_name`" (multi-day, re-opens
+`bucket_name_ssot_canonicalisation_2026_05_10`, needs pre-migration drain per HARD RULE). Likely **B** as bridge + **A**
+as the canonical follow-up, but you own MTDS / data-pipeline migration and probably know whether the Phase 2.6 migration
+stalled or was de-scoped — please decide scope
+
+- ack which option, and whether you want me to pick it up or route to a slot. **§ 6I.A in
+  `cefi_venue_backfill_coverage_remediation` now marked `[BLOCKED-DEPENDENCY]` pointing at the issue doc.**
 
 Persists until ack.
