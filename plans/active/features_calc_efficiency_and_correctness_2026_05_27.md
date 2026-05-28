@@ -167,6 +167,19 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       2026-05-28. **FIXED** features@4c20160a: dedupe post-concat with `keep="last"` — restores pre-defrag overwrite
       semantics, preserves the perf win. Verified: 7 formerly-failing test files → 96 passed, 1 separate failure
       (1.7c below). basedpyright 0/0/0 + ruff clean.
+- [ ] [TOOLING-BUG][P2] **1.7d `.cursor/scripts/check-import-patterns.py --fix` is unsafe — rewrites deep imports
+      without verifying top-level re-export.** Discovered 2026-05-28: QG's import-pattern gate flagged 4 `from
+      unified_trading_library.feature_service_base import (compose_instrument_ids, DependencyError, DependencyFailure,
+      DependencyReport, DependencyStatus, ...)` in `delta_one/app/core/data_loader.py`, `onchain/app/core/dependency_checker.py`,
+      `volatility/core/data_loader.py`, `volatility/core/dependency_checker.py` (all from Rollout-Agent commit
+      06edd586). Running `--fix` rewrote to top-level `from unified_trading_library import (...)` — but those symbols
+      are NOT re-exported at UTL top level → `ImportError: cannot import name 'compose_instrument_ids' from
+      'unified_trading_library'` at module load → **237 tests RED** (volatility module + delta_one collection errors).
+      Reverted (features@a4bec8ec restores deep imports). The check tool needs to either (a) verify the symbol exists
+      at top level before suggesting/applying the rewrite, OR (b) allowlist `unified_trading_library.feature_service_base`
+      as a legitimate submodule (alternative: add the missing re-exports to UTL `__init__.py`). Current state:
+      features-service tests/lint/typecheck all GREEN but QG import-pattern gate still RED because the original deep
+      imports remain (correctly) in place.
 - [ ] [BUG][P1] **1.7c test_orchestration_flow MagicMock leak — `get_settings().base_timeframe` not mocked.** Surfaced
       after 1.7b fix unblocked the calculator pipeline. Phase-1 read-once work introduced `get_settings().base_timeframe`
       lookups; the e2e test in `tests/delta_one/e2e/test_end_to_end.py:60` mocks `get_settings()` but doesn't return a
