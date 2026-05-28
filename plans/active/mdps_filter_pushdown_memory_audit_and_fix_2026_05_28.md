@@ -145,18 +145,69 @@ The audit's § 3 conclusion ("not per-instrument DataFrame retention") was based
 
   **Conclusion**: cross-date `del + gc.collect()` is correct discipline but cannot reach the underlying retention. The 25 GB per-day floor is the operational reality on the current MDPS codepath; Phase 2.2 lowers it by ~87 MB, not the ~20 GB that would be required to fit a second day on 32 GB.
 
-## Phase 3 retro + four practical paths to the unblock
+## Operator-driven findings + decision (2026-05-28 EOD)
 
-The plan's original goal — "land the smallest viable fix so a small-sample CeFi 1h-candle backfill (16 days × 2 venues × ~4 instruments, trades-only) runs on a modest VM in under an hour" — needs an explicit decision on what "modest" means in light of the 25 GB per-day floor that Phase 2.2 surfaced. Per-day completion is solid; the gap is the multi-day in-process loop.
+After Phase 3.2 attempt-2 surfaced the 25 GB per-day floor, operator (Harsh) raised four concerns and chose a near-term path. Capturing them here so subsequent agents have the full reasoning context, not a half-baked picture from the audit.
 
-The four paths surfaced 2026-05-28 EOD:
+### Finding A — `_cleanup_after_day` exists but isn't wired into the success path
 
-- [ ] [P1][DECISION] **3.X-A Per-day VM fan-out.** Launch 16 × 1-day VMs (each scope = single date) in parallel via the same launcher. Each VM starts fresh at the ~5 GB baseline, peaks ~27 GB during processing, auto-shuts down. Verified by 3.1 + 3.2-attempt-2-day-1 to complete cleanly. Wall-clock ~10 min total (parallel). Cost ≈ $0.15 (16 × ~$0.01). **Does not** fix the underlying multi-day retention — that stays as an open issue, but the features-side unblock ships today.
-- [ ] [P1][DECISION] **3.X-B One more in-process tactic: `malloc_trim(0)` + Polars arena drop.** Add a `ctypes.CDLL("libc.so.6").malloc_trim(0)` call after `gc.collect()` at the date-boundary to return freed heap to the OS, plus an attempt to shrink Polars / PyArrow arenas. ~20 min code + ~25 min re-verify. **Confidence: low-medium** — if the retention is in C-extension arenas (Polars), `malloc_trim` won't help. Worth a single shot before moving on.
-- [ ] [P1][DECISION] **3.X-C `e2-highmem-8` (64 GB).** Same code, bigger box. ~$0.30/hr × ~1h = $0.30. Could still OOM if the per-day floor compounds — would need a 3-day pilot first to confirm whether the floor is `25 GB × N` or `25 GB + ε × N`. Masks the bug rather than fixing it.
-- [ ] [P1][DECISION] **3.X-D Subprocess-per-date.** Re-architect `process_candles_handler` to `subprocess.run([sys.executable, "-m", ...])` per date instead of looping in-process. Bottom-shelf cleanup — kernel reclaims the entire process address space at exit. ~1-2h of code work + verification. **The actual structural fix**; superset of 3.X-A but in a single VM.
+The MDPS authors built [`_cleanup_after_day`](../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_base.py#L79) — clears `candle_processing_service.cache` + `sampling_service.cache` for the current date, then `gc.collect()`s. It's invoked from exactly **one** place: [`orchestration_service.py:489`](../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py#L489) — the early-exit branch of `_load_tradable_context` when `tradable_instruments.empty`. The normal "instruments exist, do work, succeed" path never calls it.
 
-Decision belongs to the operator. Whichever wins also updates Phase 3.3 + Phase 4 accordingly.
+This is the most likely owner of the 25 GB residue Phase 2.2's `del orchestrator + gc.collect()` couldn't reach — `del`ing the orchestrator doesn't clear the per-service caches it constructed inside, because the service objects (`candle_processing_service`, `sampling_service`) may be module-level singletons or otherwise held outside the orchestrator's reference graph.
+
+**Immediate fix**: wire `_cleanup_after_day(date_str)` into the normal success path of `process_category` (and any other terminal path of per-day work). Should run even on single-day single-instrument single-data_type drilldown runs — there is no path through the orchestrator where skipping cleanup is correct.
+
+### Finding B — CLI granularity claims aren't matched by the filter logic
+
+Operator: "instrument_id is the last thing and it covers everything — which venue, which asset_group, which data_type." That is the *intent* of the canonical instrument_id form (`VENUE:INSTRUMENT_TYPE:SYMBOL`). But the current implementation breaks the contract:
+
+- `MDPS_INSTRUMENT_IDS` env var → bridged to `--instrument-ids` argv → reaches `_collect_matching_parquet_blobs` → matched as **substring against the blob path**.
+- Blob path: `…/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=trades/BTCUSDT.parquet`.
+- The canonical form `BINANCE-FUTURES:PERPETUAL:BTCUSDT` is **not** a substring of that path. So if you pass the *correct* canonical form, the scanner returns **zero** blobs.
+- The only thing that works today is the bare-symbol substring (`BTCUSDT`) which matches `BTCUSDT.parquet`. That's what the canary used.
+- And bare-symbol substring is **ambiguous** — `BTCUSDT` matches across all venues, all instrument_types, and any other instrument whose symbol contains the substring (e.g., a hypothetical `1000BTCUSDT.parquet` or `BTCUSDT-PERP.parquet`).
+
+So the CLI surface lies about its granularity. To actually pin to one cell — single date × single venue × single instrument_type × single data_type × single symbol — the operator has to pass `--data-types` + `--venues` + `--instrument-ids` all together AND know the substring semantics.
+
+The right shape: parse the canonical instrument_id form, derive `venue` + `instrument_type` + `symbol` from each entry, and filter the blob path on each derived axis. Then `--instrument-ids BINANCE-FUTURES:PERPETUAL:BTCUSDT` alone is sufficient (with `--data-types`, since data_type IS an independent axis — the same instrument has trades + book_snapshot_5 + derivative_ticker, all valid).
+
+### Finding C — orchestrator design assumes one-VM-per-shard (legacy fan-out)
+
+The orchestrator carries heavy per-instance state (lazy GCS client, per-asset_group `_data_sinks` dict, instruments DataFrame, manifest read buffer). That's appropriate if each VM processes ONE shard (one day × one venue × one asset_group × one data_type) — startup cost amortises across a tight scope, and process-exit reclaims everything.
+
+The original MDPS design assumed thousands or tens of thousands of small VMs. That assumption was abandoned for cost reasons (each VM has ~$0.01 minimum + setup time per launch), so the workspace pivoted to long-running VMs that process many shards. But the orchestrator code wasn't refactored when the deployment model changed. The current symptoms (25 GB per-day floor, cross-date retention, repeated 526 MB manifest reads) are all consequences of running a fan-out-shaped codebase as a long-running multi-shard worker.
+
+The Phase 2.2 + `_cleanup_after_day` wiring is a tactical patch. The structural fix is a re-architecture for long-running multi-shard execution — covered in the new architectural plan
+[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](mdps_long_running_multi_shard_architecture_audit_2026_05_28.md)
+(created in this session).
+
+### Finding D — Polars/Pandas churn
+
+`_read_tick_data` ([live_workers.py:449-479](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L449-L479)) opens the raw parquet with `pl.read_parquet(low_memory=True)`, converts to pandas via `.to_pandas()`, `del`s the polars frame, returns pandas. Then `_process_all_timeframes` ([live_workers.py:671+](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L671)) consumes the pandas frame and (per the `POLARS AGGREGATED:` log lines we saw) re-enters polars for the per-timeframe aggregation. So the data shape is:
+
+```
+GCS bytes
+  → polars (read_parquet)
+    → pandas (.to_pandas())
+      → polars again (for aggregation)
+        → pandas (for write?)
+          → GCS bytes
+```
+
+Each conversion allocates a fresh buffer; the `del` of the polars frame doesn't release the polars arena back to the OS. This is the same anti-pattern the codex's existing concurrency / single-writer guidance was trying to avoid. There is no reason to involve both libraries — either pick polars end-to-end (it can do everything pandas does for this workload, and it's already the chosen aggregation engine), or pick pandas end-to-end with `engine="pyarrow"` for the read.
+
+Pure-polars is the more obvious target since the aggregation is already polars and the codebase has explicit `POLARS AGGREGATED` log lines suggesting that was the original direction. Eliminating the intermediate pandas would also let `low_memory=True` actually buy us something — currently it's negated by the immediate `.to_pandas()` copy.
+
+This is also covered in the new architectural plan.
+
+## Operator decision: ship `_cleanup_after_day` wiring + 16-day unblock + architectural plan
+
+Per operator 2026-05-28 EOD, the sequence is:
+
+- [ ] [P0] **3.X-1** Wire `_cleanup_after_day(date_str)` into the success path of `process_category` (and any other terminal path where per-day work completes — including single-day-single-instrument drilldowns). Smallest viable cleanup landing.
+- [ ] [P0] **3.X-2** Rebuild MDPS tarball, re-run Phase 3.2 (7-day) on `e2-standard-8`. Pass criterion: RSS reclaim at each date boundary measurable in the `📉 date-boundary GC` log line; no day-2 OOM.
+- [ ] [P0] **3.X-3** Launch the 16-day narrow-scope backfill on `e2-standard-8`. Outputs go to the test bucket so downstream agents (features-service, etc.) can re-run their per-shard work against the canary data.
+- [ ] [P1] **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to land architecture here — that's a multi-week refactor, not a "smallest viable fix".
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
