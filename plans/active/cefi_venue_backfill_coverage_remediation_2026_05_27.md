@@ -129,12 +129,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6A — Silent honest-absence violations (data-correctness — HIGHEST; generalises operator's 401 concern)
 
-- [ ] [AGENT] P0. **In-flight shard failures dropped with NO manifest marker.** OKX 2022/2024/2025:
+- [x] ✅ DONE [AGENT] P0. **In-flight shard failures dropped with NO manifest marker.** OKX 2022/2024/2025:
       `ConnectionTimeoutError` (book_snapshot_5) and `ArrowInvalid: Empty CSV file` (trades) produce
       `WARNING in-flight key=<venue>/<sym>/<date>/<dt>     failed: …` but NO `record_empty()` → ~27+ (sampled) phantom
       (sym,date) cells absent from GCS with no `empty_confirmed`/`attempted_failed`. Fix: in the in-flight-failure
       handler, classify + record — empty-CSV → `SOURCE_RETURNED_ZERO`/`expected_unattempted`; connection-timeout →
-      `attempted_failed`. (Tardis-stream adapter.)
+      `attempted_failed`. (Tardis-stream adapter.) — market-tick-data-service@774db33
 - [x] ✅ DONE [AGENT] P0. **dex-swaps silent-zero venues**: `pancakeswap_v3_BSC: 0` and `curve_OPTIMISM: 0` every collection
       cycle, no `record_empty`/`ADAPTER_FETCH_FAILED` → manifest likely shows `captured` 0-row instead of
       `empty_confirmed`. Diagnose (subgraph returns nothing?) + record honest absence.
