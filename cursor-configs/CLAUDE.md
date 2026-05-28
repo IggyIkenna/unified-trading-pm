@@ -210,6 +210,18 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
   API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
+- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every
+  account in `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own
+  `oauth_token_env_file` (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via
+  `claude setup-token`. **Never copy `~/.claude/.credentials.json` between machines**. The legacy
+  `.credentials.<id>.json` swap path + the `swap_claude_account.sh` flow are removed; the runtime refuses
+  to spawn a worker / agent / `/usage` probe for an account with no env file. To onboard a new account:
+  (1) run `claude setup-token` on a browser machine, (2) write `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset
+  ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the creds bucket
+  (`gs://central-element-323112-orchestrator-creds/accounts/` and
+  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` +
+  `setup_token_expires_at` to `accounts.json`. SSOT:
+  `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
