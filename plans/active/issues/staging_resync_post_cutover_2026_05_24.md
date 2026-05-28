@@ -115,11 +115,10 @@ UAC is green/merged.
   - L4 strategy-service: staging force-reset to LDR HEAD; PR #59 merged 2026-05-27T14:20Z; cloudbuild.yaml clone-deps
     UTL branch fix (LDR→main) PR #60 merged; Cloud Build 7dc2caa7 SUCCESS
   - L4 MTDS: Cloud Build 0025aa60 SUCCESS; staging force-reset to LDR HEAD 7e01464f; PR #107 queued auto-merge
-  - L4 execution-service: 5 Cloud Build fixes cascaded via PRs #187→#192: (1) pull-base-image wrong AR repo fix; (2)
-    clone-deps step for UAC+UTL+PM sibling repos; (3) UTL branch main not live-defi-rollout; (4) WORKSPACE_ROOT
-    CLOUD_BUILD guard; (5) -v /workspace:/workspace:ro mount in quality-gates docker run; (6) PR #192: remove tests/
-    from .dockerignore (pytest workers crashed — tests/ absent from container, matching strategy-service pattern). Build
-    cb1853ec WORKING (2026-05-28 — tests now present in image, quality-gates running)
+  - L4 execution-service: PRs #187→#193 cascaded; PR #193 merged 2026-05-28: (7) clone deployment-service in
+    clone-deps + set UNIFIED_TRADING_CLOUD_PROVIDERS_YAML (BucketNamingError — 7 tests); (8) skip subprocess tests under
+    CLOUD_BUILD=true (docker-in-docker stdout hang — 5 tests); (9) patch manifest_writer.get_storage_client in
+    test_write_to_gcs. Build 9b75e1ba QUEUED (2026-05-28T05:13Z)
   - L7 unified-trading-system-ui: staging 178 commits behind LDR/main; cascade BLOCKED — GitHub Actions billing issue
     ("account is locked due to a billing issue"); operator must resolve billing before UI CI can run
   - alerting-service: main already 170 commits ahead of staging; no cascade needed
