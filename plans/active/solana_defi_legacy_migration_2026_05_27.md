@@ -64,12 +64,22 @@ source:
       `CONTRACT_REGISTRY` under `("defi", solana_lending|solana_vault|solana_amm_pool, lending_indices|dex_pools)`. All
       Solana fields preserved (venue-specific AMM cols nullable+optional). ruff + basedpyright 0; cassette parity 447
       passed.
-- [ ] [SCRIPT] P1. **Gate 2 — history migration**: read legacy `defi-prd/{lending_indices,dex_pools}/<venue>/SOLANA/
-      date=*` parquets → map to new canonical schema (incl. `timestamp` dtype fix + `instrument_id`/`venue`/`ts_event`
-      derivation) → write to `lending-indices-*` / `dex-pools-*` canonical buckets under
-      `day=/category=defi/venue=<V>/chain=SOLANA/instrument_type=<solana_*>/data_type=...` via
-      `unified_trading_library.cloud_interface.gcs_copy_object`-style writes + `record_captured` manifest emission. NO
-      data loss. (~2,402 lending + ~3,606 pool legacy objects; 2023-01-01→2026-04-14.)
+- [x] ✅ [CODE] P1. **Gate 1.5 — InstrumentType enum + builder dispatch** — DONE — UAC@90b2bb9d. Added
+      `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` to `InstrumentType` enum + `SUPPORTED_INSTRUMENT_TYPES` allow-list
+      + `_DEFI_TYPES` (so `build_instrument_id` produces `VENUE-CHAIN:TYPE:SYMBOL`; e.g.
+      `KAMINO-SOLANA:SOLANA_LENDING:<market_id>`). Cassette parity 447 passed.
+- [~] [SCRIPT] P1. **Gate 2 — history migration** — SCRIPT SHIPPED + SMOKE VERIFIED, FULL RUN PENDING.
+      `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` (MTDS@c38d1ca3) reads legacy
+      `defi-prd/{lending_indices,dex_pools}/<venue>/SOLANA/date=*` → writes canonical flat
+      `day=/category=defi/venue=/chain=SOLANA/instrument_type=<solana_*>/data_type=*` to `lending-indices-*` /
+      `dex-pools-*` (matches EVM canonical layout). Schema map: drops legacy `timestamp` (write-time);
+      `ts_event` = midnight UTC of date partition; `instrument_id` via `build_instrument_id`. **Smoke** (2026-05-28,
+      1 date × 5 subsets): 14,807 rows migrated; sample parquet read-back clean (instrument_id format verified,
+      ts_event correct, all legacy fields preserved); re-run idempotent (5/5 "skip (exists)"). **Remaining**: full
+      ~5,995 shards across ~1199 distinct dates (~8–12h sequential at ~3–7s/shard). Best run with `--max-dates` chunks
+      or backgrounded on a VM. CLI: `--dry-run` / `--only-protocol` / `--only-data-type` / `--max-dates` for control.
+      Manifest emission deferred to Gate 3 consolidator (no explicit per-shard emit in the migration script — the
+      consolidator discovers newly-written files).
 - [ ] [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
       venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets.
 - [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
