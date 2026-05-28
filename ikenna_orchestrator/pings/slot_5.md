@@ -302,6 +302,11 @@ DIVERGENT_EMPTY triage CSV produced.
 
 **Ack**: append `[2026-05-22 HH:MM UTC] slot-5 Phase 6+7 DONE at <sha>` here when both phases GREEN.
 
+**UPDATE 2026-05-15**: Databento account is ALSO locked (`403 auth_account_locked`). Tested key
+`databento-api-key-1` from Secret Manager — valid key, but account suspended (likely unpaid bill).
+Status upgraded to: 🔴 BLOCKED-CREDENTIALS (account-locked) + 🟡 BLOCKED-OPERATOR-DECISION.
+To unblock: resolve billing at app.databento.com → account (and all 20 Secret Manager keys) will resume.
+
 ---
 
 ## [slot-5 → slot-1-main] 2026-05-22 ~04:22 UTC — Phase 6 GREEN + Phase 7 GREEN
