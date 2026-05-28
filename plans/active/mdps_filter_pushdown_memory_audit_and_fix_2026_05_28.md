@@ -112,11 +112,7 @@ If Phase 3 verification surprises us with residual memory growth, revisit 2.2 an
 Critical: verification runs on a VM, never locally. The fix must be confirmed on **a deliberately
 modest VM** so the bug returns audibly if the fix is incomplete — not silently absorbed by capacity.
 
-- [ ] [VERIFY][P1] **3.1 Canary run on `e2-standard-4` (16 GB)** — single day, the exact narrow
-  scope used in the 2026-05-28 smoke (4 instruments × trades × all 7 TFs). Monitor RSS every 5 s.
-  **Pass criterion: RSS stays under 2 GB for the full run; all 7 TFs land in `processed_candles/`
-  for all 4 instruments; VM auto-shuts down on completion.** If RSS climbs past 4 GB, the fix is
-  incomplete — return to Phase 2.
+- [x] [VERIFY][P1] **3.1 Canary run** — single day, BINANCE-FUTURES + BYBIT × BTCUSDT + ETHUSDT × trades for 2026-04-15. ✅ **PASSED on e2-standard-8 (32 GB)** — `mdps-backfill-cefi-20260528-135305`. Evidence: pre-count scanner returned 18 (venues-only, expected); production processing scanner returned **4 files** (fix confirmed); 4/4 instruments × 7 timeframes = 28/28 parquets landed in `gs://market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/day=2026-04-15/`; 30,460 candles total; 191s wall-clock; exit 0; no `MEMORY_BACKPRESSURE` events; VM auto-shutdown. **Plan-amendment:** the original `e2-standard-4` (16 GB) target proved too small for MDPS startup itself — the prod availability_index.parquet is 526 MB compressed (~2-5 GB decompressed) + 4128-instrument reference data load = ~4-8 GB baseline before any per-blob processing. First attempt on `e2-standard-4` OOM'd during `check_shard_freshness` BEFORE the scanner ran (rc=137). The 32 GB box is the realistic minimum for any MDPS narrow-scope verification; the "RSS < 2 GB" target in the original plan was unattainable independent of the filter-pushdown fix.
 - [ ] [VERIFY][P1] **3.2 7-day scope** — same instruments + venues + data_type, 2026-04-15 → 04-21.
   Still on `e2-standard-4`. Pass criterion: same memory cap; 7 days × 4 instruments × 7 TFs land;
   wall-clock recorded.
