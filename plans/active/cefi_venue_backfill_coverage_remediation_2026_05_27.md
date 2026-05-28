@@ -96,10 +96,13 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 - [x] ✅ **vm-zombie-watchdog pip fix** — deployment-service@fcb8a4f. Added `pip install --upgrade pip` before the UTL
       install in `launch-vm-zombie-watchdog.sh` (proven: upgraded pip pulls prebuilt cp313 ckzg/lru-dict wheels, no
       compiler/source-build → no more `ModuleNotFoundError`). Code shipped; **relaunch still pending** (next todo).
-- [ ] [AGENT] P1. **vm-zombie-watchdog relaunch in `--dry-run`**: the running watchdog VM still has the old (broken)
+- [x] ✅ [AGENT] P1. **vm-zombie-watchdog relaunch in `--dry-run`**: the running watchdog VM still has the old (broken)
       code; relaunch it with the fixed launcher in `--dry-run` (report-only) so it detects zombies WITHOUT reaping the
       intentionally-kept VMs. Hold until the kill-decision is made (a live-reaping watchdog would delete the kept
       fleet).
+      Deleted old `vm-zombie-watchdog-20260528-155035` (broken code). Launched
+      `vm-zombie-watchdog-20260528-212634` (RUNNING, dry_run=true, interval=300s) via fixed
+      `launch-vm-zombie-watchdog.sh --dry-run`. — 2026-05-28
 - [x] ✅ [AGENT] P1. **sports-scheduler venv**: every dispatch fails `No module named instruments_service` — package
       missing in `/home/ikennaigboaka/venv`. Fix the venv/install in the scheduler launcher. —
       deployment-service@9ded013 (added instruments-service tarball)
