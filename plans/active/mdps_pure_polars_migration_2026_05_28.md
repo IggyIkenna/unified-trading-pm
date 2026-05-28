@@ -276,8 +276,8 @@ green.
 
 The audit + benchmark are done. This phase ships the actual code.
 
-- [ ] [P0] **1.1 `_read_tick_data` returns polars** ([live_workers.py:449-479](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L449-L479)).
-  Drop the `.to_pandas()`. Return `pl.DataFrame` eagerly. Update docstring. Verify no caller breaks.
+- [x] ✅ [P0] **1.1 `_read_tick_data` returns polars** ([live_workers.py:449-479](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L449-L479)).
+  Drop the `.to_pandas()`. Return `pl.DataFrame` eagerly. Update docstring. Verify no caller breaks. — market-data-processing-service@591120b; regression test in `tests/unit/test_read_tick_data_polars_return.py`.
 - [ ] [P0] **1.2 `_process_all_timeframes` accepts polars** ([live_workers.py:671+](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L671)).
   Update signature to `tick_data: pl.DataFrame`. Add a single documented `.to_pandas()` at the
   `adapter.process_to_candles(tick_data=tick_data_pd, ...)` call site (one conversion per timeframe loop iteration
