@@ -278,6 +278,24 @@ Model: Sonnet 4.6 high
 the workspace root; Cursor opens .tabs/13, then claude-code-chat boots the worker. The reporter cron does NOT depend on
 tmux either way.)
 
+### Local laptop vs fleet VM auth (post Phase 4b-cleanup 2026-05-28)
+
+The fleet VMs and Harsh's laptop authenticate `claude` **differently**:
+
+- **Fleet VMs** spawn workers via `tmux_spawn.spawn(env_file=…)` which sources a per-account setup-token env file
+  (`~/.claude-accounts/<account_id>.env`) before `exec claude`. The legacy `~/.claude/.credentials.json` swap path was
+  removed in Phase 4b-cleanup; spawns hard-fail if the account has no `oauth_token_env_file` in `accounts.json`.
+  SSOT: [`./claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md).
+
+- **Harsh's laptop** is a single-operator host. Pattern B / Pattern C above launch `claude` directly without sourcing
+  an env file, so `claude` reads `~/.claude/.credentials.json` from a normal interactive `claude /login` Harsh ran
+  once on the laptop. There's no setup-token requirement for the laptop because there's no per-account isolation to
+  enforce — Harsh's laptop = Harsh's personal claude subscription.
+
+If Harsh ever needs to swap which subscription his local sessions consume (e.g. drain his Max quota during a
+particularly heavy day and switch to a different account), the procedure is `claude /logout` then `claude /login`
+interactively with the target account — NOT setup-tokens. Setup tokens are a fleet-VM concept.
+
 ---
 
 ## Step 7 — verify "no work lost" from epiphany backend
@@ -395,6 +413,7 @@ ssh agent-orchestrator-vm "TOKEN=\$(cat /home/ubuntu/unified-trading-system-repo
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-20 | Initial doc — covers shared-backend migration, slot range 13-20, FF-pull + git-status-report crons                                                                                      |
 | 2026-05-21 | Step 3: drop `--start-slot` (not implemented — use `--add-slot` loop). Step 4: per-slot tokens pre-issued on VM at `.tabs/harsh-slot-tokens/`, exp 2026-06-20; added `scp` copy recipe. |
+| 2026-05-28 | Step 6: added "Local laptop vs fleet VM auth" subsection — clarifies that setup-tokens are a fleet concept, Harsh's laptop continues using `~/.claude/.credentials.json` from interactive `claude /login`. |
 
 Future updates land here as the shared setup evolves (e.g. new cron, new agent.md spec, new dashboard panel that
 requires opt-in).

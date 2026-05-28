@@ -30,16 +30,15 @@ Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-ope
 
 ## Tech stack
 
-| Layer        | Technology                                                                                                                                |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend      | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                               |
-| Frontend     | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                          |
-| Auth         | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                                  |
-| Workers      | 10 epic EC2 VMs (AWS ap-northeast-1), 8 slots each = 80 worker slots; 1 central API VM (`13.113.200.22`, 2 planning slots).               |
-| State        | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)                                                              |
-| Cloud backup | S3 / GCS — current fleet uses `s3://uts-orchestrator-creds-…` + `s3://uts-orchestrator-events-…`; GCS path retained for cloud-agnostic re-spin |
-| Deps         | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                             |
-| QG           | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                            |
+| Layer    | Technology                                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                 |
+| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                            |
+| Auth     | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                    |
+| Workers  | 10 epic EC2 VMs (AWS ap-northeast-1), 8 slots each = 80 worker slots; 1 central API VM (`13.113.200.22`, 2 planning slots). |
+| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.            |
+| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                               |
+| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                              |
 
 ---
 
@@ -91,24 +90,36 @@ callback (state.json mtime + DB/backlog checks) — `agent-orchestrator@8e5a7e2`
 
 ---
 
-## Secret model — GCP Secret Manager
+## Secrets + buckets (refreshed 2026-05-28)
 
-| Secret                    | Contents                       | Bound to                            |
-| ------------------------- | ------------------------------ | ----------------------------------- |
-| `ORCHASTRATOR_JWT_SECRET` | 32-byte random signing key     | Cloud Run service account (per env) |
-| `ORCHESTRATOR_GCS_BUCKET` | env var (not SM) — bucket name | set via `--set-env-vars` at deploy  |
+Three categories of secret / cloud-state surface. AWS is the primary cloud (per § "Fleet topology"); the GCP-side
+equivalents are kept in sync for cloud-agnostic re-spin.
 
-Secrets bound via `gcloud run services update --update-secrets=...`. Staging and prod use separate secrets. Local dev:
-set in `.env.local` (gitignored).
+| Surface                                    | AWS path                                                                   | GCP path                                                  | Used for                                                                                |
+| ------------------------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Per-VM env (JWT, Telegram, …)              | AWS Secrets Manager `ORCHESTRATOR_ENV_LOCAL`                               | GCP Secret Manager `ORCHESTRATOR_ENV_LOCAL`               | `bootstrap_vm.sh` writes `.env.local` on first boot                                     |
+| Per-account setup-token env files          | `s3://uts-orchestrator-creds-<account>/accounts/<id>.env`                  | `gs://central-element-323112-orchestrator-creds/accounts/<id>.env` | `CredsEnvPoller` syncs to local `~/.claude-accounts/` every 5 min                       |
+| VM lifecycle events (STARTED/STOPPED/FAILED) | `s3://uts-orchestrator-events-<account>/orchestrator/<role>/<vm>/STARTED` | `gs://<project>-events/orchestrator/<role>/<vm>/STARTED`  | `bootstrap_vm.sh` emits STARTED; STOPPED/FAILED deferred to SSH-spawn work              |
+| State snapshot (state.json + SQLite)       | not currently configured on AWS fleet                                      | `gs://agent-orchestrator-state-prod/` (controlled by `ORCHESTRATOR_GCS_BUCKET` env) | `SnapshotLoop` in `server/gcs_sync.py` — 30-min auto + shutdown                         |
+
+Local dev: all of the above are no-ops when the corresponding env var is unset; state.json persists to local disk
+and creds env files are operator-managed manually.
+
+> **Known gap (carried as deferred 2026-05-28)**: `server/gcs_sync.py` is GCS-only — there is no S3 equivalent for
+> the state snapshot. AWS fleet VMs that don't set `ORCHESTRATOR_GCS_BUCKET` (with GCS ADC configured) keep state
+> only on local disk. This is fine in steady state (SQLite + state.json are reconstructable from backlog.yaml +
+> SQLite-row state) but the AWS↔S3 path would close the disaster-recovery loop. Listed for future work; not a
+> blocker for current operations.
 
 ---
 
 ## Auth flip rationale
 
 `server/auth.py::validate_credentials` is currently permissive (`ALLOW_ANONYMOUS=True`) — by operator decision at
-launch, trading permissive auth for faster iteration. Strict auth flip is Phase 3 of the Cloud Run deployment plan:
+launch, trading permissive auth for faster iteration. Strict auth flip recipe (whenever the project is ready):
 
-- Create `ORCHASTRATOR_JWT_SECRET` in Secret Manager
+- Provision `ORCHESTRATOR_JWT_SECRET` (HS256 32-byte random) in AWS Secrets Manager (or GCP Secret Manager for the
+  GCP-path re-spin)
 - Replace `validate_credentials` with argon2-hashed user list (schema from `scripts/manage_users.py`)
 - Flip `auth.ALLOW_ANONYMOUS=False`
 - Smoke test: 3-curl sequence (valid creds → 200, wrong password → 401, anonymous → 401)
@@ -117,16 +128,15 @@ launch, trading permissive auth for faster iteration. Strict auth flip is Phase 
 
 ---
 
-## GCS state mirror
+## State persistence
 
-Phase 5 (prod cutover) moves `data/state/state.json` from laptop disk to `gs://agent-orchestrator-state-prod/`
-(asia-northeast1, 30-day version retention — workspace GCS SSOT per CLAUDE.md). Until P5:
+Runtime state lives in SQLite at `data/state/state.db`. Periodic snapshots (`state.json` mirror + SQLite hot-copy)
+fire from `SnapshotLoop` in `server/gcs_sync.py` — environment-controlled cadence (default 30 min auto + shutdown;
+override via `ORCHESTRATOR_SNAPSHOT_INTERVAL_SECONDS`). Snapshots are uploaded to GCS when
+`ORCHESTRATOR_GCS_BUCKET` is set; otherwise local-only.
 
-- State persists on Harsh's laptop disk
-- `SnapshotLoop` in `server/gcs_sync.py` runs every 30 min; uploads to GCS if `ORCHESTRATOR_GCS_BUCKET` is set
-
-**Off-laptop continuity**: set `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` on prod Cloud Run → state
-survives a laptop outage. This is P5's primary reliability guarantee.
+See the "Secrets + buckets" table above for the current cloud bucket layout + the AWS↔S3 known-gap on state
+snapshots.
 
 ---
 
@@ -157,11 +167,12 @@ scripts/dev.sh          # live mode
 scripts/dev.sh --mock   # demo mode
 ```
 
-Note: Cloud Run uses `PORT=8080` internally (set in Dockerfile). Local dev uses 8026 per the workspace port registry.
-The Vite dev server for the dashboard is always on `:5173` locally.
+Note: the central API VM listens on `127.0.0.1:8765` behind nginx (TLS terminated at :443). Fleet VMs listen on
+`0.0.0.0:8026` directly (no nginx, no per-VM TLS — the central API proxies to them over the private VPC). Local dev
+uses :8026 per the workspace port registry. Vite dev server is always `:5173` locally.
 
 **Quality gates**: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). No standard `quality-gates.sh`
-integration — operator tooling exemption per the deployment plan.
+integration — operator tooling exemption.
 
 ---
 
@@ -170,26 +181,32 @@ integration — operator tooling exemption per the deployment plan.
 Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook. Shipped at
 `agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
 
-**Wired on Cloud Run staging 2026-05-21** (`@07e42e2`): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` +
-`AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` mounted on `agent-orchestrator-staging`. async→sync httpx conversion applied
-(asyncio.run in sync FastAPI endpoint suppressed all calls; smoke test confirmed on revision `00011-mtg` with 350-460ms
-latency).
+`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is loaded from the per-VM `.env.local` (provisioned via the
+`ORCHESTRATOR_ENV_LOCAL` secret). `_post()` no-ops when the webhook URL is empty so local dev / mock runs don't
+require Slack credentials. async→sync httpx conversion was applied 2026-05-21 to fix an asyncio.run-in-sync-endpoint
+bug that was silently suppressing all calls.
 
 **SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event table, payload shape, retry logic,
 secret inventory, V2 out-of-scope).
 
 ---
 
-## Deployment script
+## Deployment scripts
 
-`deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` (created at P1 of the Cloud Run deployment plan).
-Shape mirrors `deploy-ui.sh`:
+Two paths today (AWS is primary; GCP retained for cloud-agnostic re-spin):
 
-- Rejects missing `--env` flag
-- Supports `--env=prod|uat`
-- Reads `config/docker-build.env.{production,uat}` for build env vars
+| Target          | Script                                                            | Cloud |
+| --------------- | ----------------------------------------------------------------- | ----- |
+| Epic VM launch  | `deployment-service/scripts/vm/launch-epic-vm-aws.sh`             | AWS   |
+| Epic VM launch  | `deployment-service/scripts/vm/launch-epic-vm.sh`                 | GCP   |
+| Per-VM bootstrap | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware) | both  |
+| Central API VM systemd unit | `agent-orchestrator/scripts/install-orchestrator-service.sh` | AWS (EC2 13.113.200.22) |
 
-Registered in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers".
+Historical Cloud Run deploy script `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` is retained
+in the repo (referenced in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers") for re-spin
+optionality; the Cloud Run shape is **not currently deployed** — see
+[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) § "Cloud
+Run service shape (HISTORICAL)".
 
 ---
 
