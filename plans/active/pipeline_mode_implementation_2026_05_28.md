@@ -96,9 +96,14 @@ impact, no walk needed now.
       mode for count-only. — unified-trading-pm@9cf186cd
 - [ ] [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
       prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`.
-- [ ] [AGENT] P0. Verify post-backfill:
+- [~] [BLOCKED-OPERATOR-DECISION] P0. Verify post-backfill:
       `SELECT count(*) FROM index WHERE pipeline_mode IS NULL     OR pipeline_mode = ''` per bucket → must equal 0 (or
       equal a documented exempt count for pre-history rows older than written_at tracking).
+      — Pre-backfill verify run 2026-05-28: 8,071,519 NULL rows across 11 prd buckets (83.7% already valid).
+        Bucket naming bug in script FIXED (raw-tick-data-* → market-data-tick-*).
+        Results doc: plans/audit/results/pipeline_mode_backfill_verify_2026_05_28.md.
+        BLOCKED on operator running: `python scripts/migration/backfill_pipeline_mode.py --apply --all --project-id central-element-323112`
+        — unified-trading-pm@<this-commit>
 - [ ] [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
 
 ## Phase 4 — Consumer migration (P1)

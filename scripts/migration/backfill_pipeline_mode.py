@@ -62,21 +62,34 @@ _INDEX_BLOB = "_index/availability_index.parquet"
 
 _BUCKET_TEMPLATES: list[tuple[str, str]] = [
     # (bucket_prefix, asset_group) — suffix with -{project_id} at runtime.
-    ("raw-tick-data-cefi", "cefi"),
-    ("raw-tick-data-defi", "defi"),
-    ("raw-tick-data-tradfi", "tradfi"),
-    ("raw-tick-data-sports", "sports"),
-    ("raw-tick-data-prediction", "prediction"),
+    # Production env-tiered buckets (with -prd- infix).
+    ("market-data-tick-cefi-prd", "cefi"),
+    ("market-data-tick-defi-prd", "defi"),
+    ("market-data-tick-tradfi-prd", "tradfi"),
+    ("market-data-tick-sports-prd", "sports"),
+    ("market-data-tick-pred-prd", "prediction"),
+    ("instruments-store-cefi-prd", "cefi"),
+    ("instruments-store-defi-prd", "defi"),
+    ("instruments-store-tradfi-prd", "tradfi"),
+    ("instruments-store-sports-prd", "sports"),
+    ("instruments-store-pred-prd", "prediction"),
+    # Legacy (no env suffix) — also need backfill for any residual nulls.
+    ("market-data-tick-cefi", "cefi"),
+    ("market-data-tick-defi", "defi"),
+    ("market-data-tick-tradfi", "tradfi"),
+    ("market-data-tick-sports", "sports"),
+    ("market-data-tick-prediction", "prediction"),
     ("instruments-store-cefi", "cefi"),
     ("instruments-store-defi", "defi"),
     ("instruments-store-tradfi", "tradfi"),
     ("instruments-store-sports", "sports"),
     ("instruments-store-prediction", "prediction"),
-    ("features-delta-one", "cefi"),
-    ("features-defi", "defi"),
-    ("features-tradfi", "tradfi"),
-    ("features-sports", "sports"),
-    ("features-prediction", "prediction"),
+    # features — NO_INDEX as of 2026-05-28; will skip gracefully.
+    ("features-delta-one-cefi-prd", "cefi"),
+    ("features-delta-one-defi-prd", "defi"),
+    ("features-delta-one-tradfi-prd", "tradfi"),
+    ("features-delta-one-sports-prd", "sports"),
+    ("features-delta-one-prediction", "prediction"),
 ]
 
 
