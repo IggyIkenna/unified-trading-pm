@@ -246,14 +246,14 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `batch_tardis|batch_databento|…|live_websocket` discriminator was never implemented. Either implement it
       end-to-end (writer path + manifest) OR remove it from the manifest schema and any batch↔live reconciliation that
       does `GROUP BY pipeline_mode` (it currently groups by an always-empty column). Decide + ship one way.
-- [ ] [AGENT] P0. **Chain dimension-modeling bug → manifest massively UNDER-reports derivatives coverage.** On disk,
+- [x] ✅ [AGENT] P0. **Chain dimension-modeling bug → manifest massively UNDER-reports derivatives coverage.** On disk,
       option/future chains live at
       `instrument_type=options_chain|futures_chain / data_type=trades / underlying=… /     ticks.parquet` (verified
       present for DERIBIT @ 2023-06-15). But the enumerator ALSO emits phantom rows keyed
       `data_type=options_chain|futures_chain, instrument_type=''` marked `attempted_failed`. A naive coverage rollup on
       `data_type` then reports chains at ~0–2% captured when the data is actually present. Fix the enumerator to stop
       emitting `data_type=<chain>` rows and credit the `instrument_type=<chain>` rows. (This is why the first-pass
-      coverage scan reported futures_chain 1.8% / options_chain 0.3% — false.)
+      coverage scan reported futures_chain 1.8% / options_chain 0.3% — false.) — market-tick-data-service@2e91d74f
 - [ ] [AGENT] P1. **Phantom `expected` rows for inapplicable venue × data_type.** e.g. `KRAKEN-SPOT` enumerated with
       `options_chain / futures_chain / derivative_ticker / liquidations` as expected+`attempted_failed`, though a SPOT
       venue has none of those products (confirmed genuinely absent on disk — correctly so). Gate the enumerator on the
