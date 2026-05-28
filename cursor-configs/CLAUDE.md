@@ -222,6 +222,16 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` +
   `setup_token_expires_at` to `accounts.json`. SSOT:
   `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- **Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)**: tasks in
+  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in
+  `plans/active/*.md` by `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new
+  tasks** — write the todo in the relevant active plan file using the canonical format
+  (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next `PlanRegenLoop` tick (≤6h, or POST
+  `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is content-based (dedup by
+  raw todo line), so flipping or editing a todo in the plan won't reset the backlog state. Hand-edits
+  are still legitimate for *tuning* derived tasks (priority, repos, target_slot, est_hours,
+  collision_group) once they've been auto-created. SSOT:
+  `agent-orchestrator/server/regen_backlog_from_plan.py` + `unified-trading-pm/plans/PLAN_FORMAT.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
