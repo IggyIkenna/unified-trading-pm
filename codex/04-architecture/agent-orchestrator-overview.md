@@ -30,36 +30,48 @@ Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-ope
 
 ## Tech stack
 
-| Layer      | Technology                                                                                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend    | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                       |
-| Frontend   | React + TypeScript + Vite (dashboard served by Firebase Hosting post-P2)                                                                          |
-| Auth       | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                                          |
-| Workers    | 10 epic GCE VMs (asia-northeast1-c), 8 slots each = 80 worker slots; 1 planning VM (34.146.53.106, 2 slots). See `orchestrator_vm_registry.yaml`. |
-| State      | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)                                                                      |
-| GCS backup | `gs://agent-orchestrator-state-prod/` — set via `ORCHESTRATOR_GCS_BUCKET` env                                                                     |
-| Deps       | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                     |
-| QG         | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                    |
+| Layer        | Technology                                                                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend      | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                               |
+| Frontend     | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                          |
+| Auth         | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                                  |
+| Workers      | 10 epic EC2 VMs (AWS ap-northeast-1), 8 slots each = 80 worker slots; 1 central API VM (`13.113.200.22`, 2 planning slots).               |
+| State        | SQLite (runtime) + `data/state/state.json` snapshot (30-min auto + shutdown)                                                              |
+| Cloud backup | S3 / GCS — current fleet uses `s3://uts-orchestrator-creds-…` + `s3://uts-orchestrator-events-…`; GCS path retained for cloud-agnostic re-spin |
+| Deps         | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                             |
+| QG           | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                            |
 
 ---
 
-## Deployment shape
+## Deployment shape (refreshed 2026-05-28)
 
-Mirrors `unified-trading-system-ui` (DART): Firebase Hosting in front of Cloud Run, single GCP project
-`central-element-323112`, two env tiers (staging/prod as separate Cloud Run services).
+Current production shape — Firebase Hosting SPA + central API VM + private-VPC proxy to fleet:
 
 ```
-Firebase Hosting  →  Cloud Run: agent-orchestrator-{staging|prod}  →  GCS state bucket
-       |                           (europe-west4)
-agent-orchestrator.staging.odum-research.com
-agent-orchestrator.odum-research.com
+                        Firebase Hosting
+                        agent-orchestrator.odum-research.com   (dashboard SPA)
+                                │ HTTPS
+                                ▼
+                        api.agent-orchestrator.odum-research.com   (HTTPS, nginx :443)
+                        Central API VM (EC2 13.113.200.22, ap-northeast-1)
+                        nginx → orchestrator backend :8765
+                                │ private VPC (172.31.x.x)
+                                │ ORCHESTRATOR_USE_PRIVATE_URLS=true
+                                ▼
+                        ┌──────────────────────────────────────────┐
+                        │  10 epic EC2 VMs, all :8026              │
+                        │  vm-defi / vm-cefi / vm-tradfi / ...     │
+                        │  (orchestrator backend per VM)           │
+                        └──────────────────────────────────────────┘
 ```
 
-Both domains are live (DNS + SSL provisioned 2026-05-19; see
-`plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` Phase 2).
+The browser **never** reaches the epic VMs directly — only the central API has a public TLS endpoint. Per-VM ports
+(:8026) are open to 0.0.0.0/0 in the security group as a fallback, but day-to-day traffic flows through the central
+proxy. See § "Connectivity model — centralized API router" below.
 
-**Prior deployment** (active until P5 prod cutover): laptop nginx + Let's Encrypt at `orch.epiphanytechnologies.com` —
-1-day fallback after prod cutover, then decommissioned.
+Historical Cloud Run shape (`agent-orchestrator-{staging|prod}.run.app`, europe-west4) is documented in
+[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) §
+"Cloud Run service shape (HISTORICAL)" — not running, kept as cloud-agnostic fallback reference.
 
 **Local dev** (port 8026): see § "Local dev" below.
 
@@ -120,12 +132,11 @@ survives a laptop outage. This is P5's primary reliability guarantee.
 
 ## Dashboard URLs
 
-| Environment     | URL                                                  | Notes                               |
-| --------------- | ---------------------------------------------------- | ----------------------------------- |
-| Production      | https://agent-orchestrator.odum-research.com         | P5 target — pending prod cutover    |
-| Staging (UAT)   | https://agent-orchestrator.staging.odum-research.com | P1-P4 target                        |
-| Local dev       | http://localhost:5173 (Vite dashboard)               | see § "Local dev"                   |
-| Legacy fallback | https://orch.epiphanytechnologies.com                | active until P5+1 day, then removed |
+| Environment     | URL                                                  | Notes                                                                |
+| --------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
+| Production SPA  | https://agent-orchestrator.odum-research.com         | Firebase Hosting; talks to central API below                         |
+| Central API     | https://api.agent-orchestrator.odum-research.com     | EC2 VM `13.113.200.22`, nginx → app :8765 (verified live 2026-05-28) |
+| Local dev       | http://localhost:5173 (Vite) + http://localhost:8026 (backend) | see § "Local dev"                                          |
 
 ---
 
@@ -249,29 +260,26 @@ Five mitigations added to close gaps in the multi-agent loop. All live on the Ik
 Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
 the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
-## Fleet topology (as of 2026-05-22)
+## Fleet topology (refreshed 2026-05-28)
 
-**1 planning VM + 10 epic GCE VMs**, all on GCP `asia-northeast1-c`, all running orchestrator v0.6.0+.
+Current state: **1 central API VM + 10 epic VMs, all on AWS EC2 `ap-northeast-1`**, all running orchestrator
+v0.6.0+. The GCP fleet that was commissioned 2026-05-21 was decommissioned during the 2026-05-22→23 AWS migration;
+no GCP VMs are running today.
 
-| VM id            | IP             | Role     | Slots | Epics / workstreams        |
-| ---------------- | -------------- | -------- | ----- | -------------------------- |
-| planning-vm      | 34.146.53.106  | planning | 2     | Cross-cutting + governance |
-| vm-cefi          | 35.200.75.132  | epic     | 8     | CeFi adapters              |
-| vm-cross-cutting | 34.104.133.72  | epic     | 8     | Cross-cutting infra        |
-| vm-defi          | 35.200.55.185  | epic     | 8     | DeFi adapters              |
-| vm-ml            | 35.200.66.186  | epic     | 8     | ML / features              |
-| vm-operator-ops  | 34.85.27.215   | epic     | 8     | Operator ops               |
-| vm-orchestrator  | 35.194.106.13  | epic     | 8     | Orchestrator self          |
-| vm-prediction    | 136.110.98.16  | epic     | 8     | Predictions                |
-| vm-sports        | 34.146.32.46   | epic     | 8     | Sports                     |
-| vm-tradfi        | 35.200.59.184  | epic     | 8     | TradFi                     |
-| vm-trading-core  | 35.200.121.156 | epic     | 8     | Trading core               |
+Current per-VM addresses + slot counts: see
+[`../05-infrastructure/agent-orchestrator-worker-topology.md`](../05-infrastructure/agent-orchestrator-worker-topology.md)
+§ "Current fleet — AWS EC2 ap-northeast-1" — that doc is the authoritative IP / instance-id table and the only
+place these numbers should live (avoid duplicating here so the two don't drift). Live runtime backends + account
+mapping live in `agent-orchestrator/data/config/backends.json`.
 
-Total worker capacity: 2 + 80 = **82 slots**. VM registry SSOT: `orchestrator_vm_registry.yaml`. Fleet commissioned
-2026-05-21; T+10min health verification PASSED 2026-05-22 (all `/health` = ok + GCS STARTED events).
+Total worker capacity: 2 (central / planning slots) + 80 (10 × 8) = **82 slots**. Registry SSOT:
+`unified-trading-pm/orchestrator_vm_registry.yaml`.
 
-**Cloud provider**: GCP (current). AWS support planned — `CLOUD_PROVIDER=aws|gcp` toggle in launcher +
-`bootstrap_vm.sh`. AWS preferred long-term (existing credits). See `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
+**Cloud-agnostic posture**: AWS is the current and only running cloud. The bootstrap (`bootstrap_vm.sh`),
+launchers (`launch-epic-vm-aws.sh` / `launch-epic-vm.sh`), and secrets / event-bus code all support a
+`CLOUD_PROVIDER=aws|gcp` toggle — the GCP path is fully maintained so the fleet can be re-spun on GCE if AWS ever
+becomes unavailable or pricing changes the calculus, but **there is no plan to switch back**. New work targets AWS
+by default.
 
 ## Connectivity model — centralized API router (2026-05-22)
 
