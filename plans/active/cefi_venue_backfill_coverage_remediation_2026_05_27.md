@@ -254,11 +254,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `data_type` then reports chains at ~0–2% captured when the data is actually present. Fix the enumerator to stop
       emitting `data_type=<chain>` rows and credit the `instrument_type=<chain>` rows. (This is why the first-pass
       coverage scan reported futures_chain 1.8% / options_chain 0.3% — false.) — market-tick-data-service@2e91d74f
-- [ ] [AGENT] P1. **Phantom `expected` rows for inapplicable venue × data_type.** e.g. `KRAKEN-SPOT` enumerated with
+- [x] ✅ [AGENT] P1. **Phantom `expected` rows for inapplicable venue × data_type.** e.g. `KRAKEN-SPOT` enumerated with
       `options_chain / futures_chain / derivative_ticker / liquidations` as expected+`attempted_failed`, though a SPOT
       venue has none of those products (confirmed genuinely absent on disk — correctly so). Gate the enumerator on the
       UAC capability matrix (which `(venue, data_type)` combos are real) so absent-and-inapplicable → not-enumerated,
-      not `attempted_failed`. Generalises §6A honest-absence. (These phantoms dominated the false "gap" counts.)
+      not `attempted_failed`. Generalises §6A honest-absence. (These phantoms dominated the false "gap" counts.) —
+      market-tick-data-service@3fa29d70
 - [ ] [AGENT] P1. **`instrument_type` case drift double-counts coverage.** Manifest holds both `PERPETUAL` and
       `perpetual` as `captured` for the same DERIBIT cell — breaks any `GROUP BY instrument_type` and inflates counts.
       Normalise instrument_type casing at the write/enumerate boundary + reconcile existing rows.
