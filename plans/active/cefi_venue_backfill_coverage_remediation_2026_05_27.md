@@ -234,12 +234,17 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 > renewal). Fix + re-consolidate before §3's coverage map is published. Likely applies to all asset_groups, not just
 > cefi.
 
-- [ ] [AGENT] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env bucket.**
+- [ ] [BLOCKED-DEPENDENCY] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env bucket.**
       Latest `captured` date in canonical `market-data-tick-cefi-prd-central-element-323112` = **2026-05-07**, but in
       legacy `market-data-tick-cefi-central-element-323112` = **2026-05-24** (17 days fresher) → a live writer is still
-      resolving the legacy bucket name. Find the launcher/config not going through
-      `resolve_bucket_name(..., env=DEPLOYMENT_ENV_SHORT)` (QG STEP 5.69 surface) and repoint it; then reconcile the
-      legacy-only data into the canonical bucket. SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`.
+      resolving the legacy bucket name. **2026-05-28 (harsh-main investigation):** the framing here understates scope —
+      `resolve_bucket_name(...)` has **0 callsites workspace-wide**; every consumer (MTDS / MDPS / UTL
+      `instrument_lifecycle_loader._BUCKETS` / multiple scripts) uses the legacy `cloud_constants.get_bucket_name`
+      helper that returns `{prefix}-{category}-{project_id}` with no env at all. This isn't a single-writer fix; it's a
+      workspace-wide architectural drift blocking the same migration this item points at. Escalated to
+      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md)
+      + cross-pinged ikenna-main 2026-05-28 for scope decision (workspace-wide migration vs env-aware shim vs targeted
+      cefi-only patch). SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`.
 - [ ] [AGENT] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
       buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/` (path is
       `asset_group/venue/instrument_type/data_type` — no `pipeline_mode=`). The
