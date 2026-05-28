@@ -1,3 +1,44 @@
+## [slot-1-main] 2026-05-28 — execution-service Cloud Build monitoring + merge
+
+**Plan refs**: `plans/active/staging_resync_post_cutover_2026_05_24.md` (execution-service L4 Cloud Build gate)
+
+**Context**: All prior builds TIMEOUT'd at 60 min. Root cause: 5895 unit tests with --cov + 6 xdist workers +
+PYTHONDONTWRITEBYTECODE=1 consume ~40-45 min, leaving no budget for function-size/pip-audit codex steps. Fixed in commit
+`08567c3c5` on branch `feat/ci-timeout-boost`.
+
+**Fixes applied** (all in `execution-service/feat/ci-timeout-boost`):
+
+- `cloudbuild.yaml` timeout: 3600s → 7200s
+- `cloudbuild.yaml` docker run: `-e PYTHONDONTWRITEBYTECODE=` (enables .pyc sharing between xdist workers)
+- `scripts/quality-gates.sh` MAX_DURATION: 1200 → 4800 (80 min)
+- `scripts/quality-gates.sh` FUNCTION_SIZE_EXTRA_EXCLUDES: already on main
+
+**Build to monitor** (QUEUED as of 2026-05-28 ~13:15 UTC):
+
+- ID: `0b59eced-b800-4d62-89d9-d1917a164026`
+- Project: `central-element-323112`
+- Check:
+  `gcloud builds describe 0b59eced-b800-4d62-89d9-d1917a164026 --project=central-element-323112 --format=json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status')); [print(s['id'],s.get('status','?')) for s in d.get('steps',[])]"`
+- Expected duration: 75-90 min (build at ~10-15 min + tests ~30-45 min + codex ~20 min)
+- Log URL:
+  https://console.cloud.google.com/cloud-build/builds;region=asia-northeast1/0b59eced-b800-4d62-89d9-d1917a164026?project=1060025368044
+
+**If SUCCESS**:
+
+1. Check unified-trading-library dirty dep is clean: `git -C .tabs/1/unified-trading-library status`
+2. If clean: promote feat/ci-timeout-boost → main via quickmerge:
+   `cd .tabs/1/execution-service && git checkout ci-timeout-boost && bash scripts/quickmerge.sh "fix(ci): raise Cloud Build timeout + MAX_DURATION + enable .pyc cache for xdist" --agent --files 'cloudbuild.yaml scripts/quality-gates.sh'`
+3. Flip plan checkbox in `staging_resync_post_cutover_2026_05_24.md` for execution-service L4 Cloud Build SUCCESS
+4. Append ack line below
+
+**If FAILURE**: investigate via
+`gcloud beta builds log 0b59eced-b800-4d62-89d9-d1917a164026 --project=central-element-323112 --stream` — check which
+step failed.
+
+**Ack**: append `[2026-05-28 HH:MM UTC] DONE — execution-service Cloud Build SUCCESS at <SHA>` here when done.
+
+---
+
 ## [slot-1-main] 2026-05-22 — P0 bucket fix + strategy/execution manifest emission
 
 **Plan refs**: `gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md` +
