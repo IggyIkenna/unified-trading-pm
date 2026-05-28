@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-21
+last_reviewed: 2026-05-28
 ---
 
 # Orchestrator Multi-VM Topology (SSOT)
@@ -119,24 +119,32 @@ Each VM runs its own orchestrator backend (FastAPI + uvicorn + systemd, same sha
 - **State.db per VM**: each VM has its own sqlite state + activity log (NO cross-VM shared store — operator-decided
   per-VM-backend choice).
 
-### Backlog auto-generation per VM
+### Backlog auto-generation per VM (Phase 6 — shipped 2026-05-28)
 
-Currently `backlog.yaml` is hand-edited. With master plans assigned to VMs, backlog derives from the plan's `- [ ]`
-items so that:
+`backlog.yaml` is **derived from plans, not hand-edited**. Source of truth is `- [ ]` checkbox lines in
+`plans/active/*.md`; regen turns them into BacklogTask rows. The HARD RULE is in CLAUDE.md
+("Agent-orchestrator backlog is plan-driven"): operators may field-tune derived tasks (priority / repos / target_slot
+/ collision_group) but should not hand-add new tasks — write the todo in the plan file.
 
-1. Operator + Harsh + main agent edit the master plan (single source)
-2. Backlog regenerates on next plan-reload poll
-3. New `- [ ]` items appear as queued tasks; flipped `- [x]` items mark `done`
+**Module**: `agent-orchestrator/server/regen_backlog_from_plan.py` (not in the PM repo — it runs inside the orchestrator
+process so SQLite + in-process state stay in sync after the YAML write).
 
-**Script**: `unified-trading-pm/scripts/orchestrator/regen_backlog_from_plan.py`:
+- Walks `plans/active/*.md` (non-recursive; skips `INDEX.md`, `_*.md`, subdirectories like `issues/`).
+- Parses unchecked `- [ ]` lines, ignoring YAML frontmatter, fenced code blocks, and `~~struck~~` lines.
+- Extracts `P<0-3>` tag and maps to `BacklogTask.priority` (P0→10, P1→20, P2→50, P3→80, none→100).
+- Title strips the redundant `[CATEGORY] P<N>.` prefix for clean dashboard display; brief keeps the raw line.
+- **Content-based idempotency** (fixed 2026-05-28): dedup by `BacklogTask.brief == raw todo line`. Re-running the regen
+  is a no-op for already-derived todos; editing a todo's wording creates a new task (old one keeps its dispatch state);
+  flipping to `- [x]` simply removes the todo from regen's view, leaving the existing BacklogTask intact.
 
-- Reads the VM's assigned master plans
-- Parses `- [ ] [TIER] PNN. <title>` lines per `plans/PLAN_FORMAT.md`
-- Emits `backlog.yaml` with `target_slot`, `tier`, `priority` derived from plan items
-- Idempotent — preserves task statuses already done in the VM's state.db
+**Background poll**: `PlanRegenLoop` daemon thread in the same module. Fires once 60s after server startup, then every
+`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (default 21600 = 6h, 0 disables). After each tick, a callback refreshes
+`_state["backlog"]` and re-syncs SQLite via `bootstrap.sync_backlog_to_db`.
 
-Trade-off: hand-authored ad-hoc backlog entries need to be ALSO in a plan to survive regen. Acceptable — plans are the
-durable artifact.
+**Manual trigger**: `POST /api/backlog/regen` (authed) for operator-initiated immediate refresh.
+
+Trade-off: hand-authored ad-hoc backlog entries (added via the dashboard's "Add task" or direct YAML edits) co-exist
+with derived ones but won't survive a clean re-derivation. Plans are the durable artifact; treat backlog.yaml as cache.
 
 ## Dashboard aggregation
 
@@ -272,13 +280,16 @@ When a VM restarts:
 ```
 Audit row → planning VM (Ikenna or Harsh) → active plan edit/create
             → frontmatter parent_epic: <slug>
-            → commit LDR
+            → commit + push to LDR
             → registry regen + populator regen
-            → target VM's main agent polls every 60s
-            → main agent re-reads epic + new active plan
-            → regen_backlog_from_plan.py expands `- [ ]` items into VM backlog
-            → /api/backlog/reload
-            → workers pick up new tasks on next /boot
+            → target VM's PlanRegenLoop tick (≤6h; or operator POST
+              /api/backlog/regen for immediate)
+            → regen_backlog_from_plan.regen() appends new `- [ ]` items as
+              BacklogTask rows + content-dedupes already-derived ones
+            → on_regen callback re-syncs SQLite + _state["backlog"]
+            → workers pick up new tasks on their next /boot or /done
+              (dispatch.pick_next_task filters by status='queued', prereqs,
+              repo collision, affinity)
 ```
 
 No VM restart. No operator manual intervention beyond the plan edit.

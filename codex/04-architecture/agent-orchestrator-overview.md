@@ -4,7 +4,7 @@ created: 2026-05-19
 author: ikenna-claude-subagent
 scope: infrastructure
 status: active
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-28
 ---
 
 # agent-orchestrator — architecture overview
@@ -199,6 +199,38 @@ Registered in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run la
 Consequence: Do NOT add `--asset-group` flags, backtest modes, or emit STARTED/STOPPED events to this service. Do NOT
 add it to the trading-pipeline DAG (instruments-service → MTDS → features → strategy → execution). It is purely an
 operator coordination surface.
+
+---
+
+## Backlog auto-generation from plans (Phase 6 — shipped 2026-05-28)
+
+`data/config/backlog.yaml` is **derived from `plans/active/*.md` `- [ ]` checkboxes**, not hand-edited. Source module:
+`server/regen_backlog_from_plan.py`. Background `PlanRegenLoop` fires 60s after server boot, then every 6h
+(`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS`, 0 disables). Manual immediate trigger: `POST /api/backlog/regen`.
+
+Idempotency is content-based (dedup by `BacklogTask.brief == raw todo line`); editing a todo's wording creates a new
+task, flipping to `- [x]` simply stops the regen from seeing it (existing BacklogTask state in SQLite is preserved
+via `dispatched_to`, `done_sha`, etc.). Hand-tuning derived tasks' `priority` / `repos` / `target_slot` /
+`collision_group` post-regen is supported; the dedup key is the brief, not the tuning fields.
+
+CLAUDE.md HARD RULE "Agent-orchestrator backlog is plan-driven" (added 2026-05-28) is the workspace contract. SSOTs:
+[`../12-agent-workflow/orchestrator-multi-vm-topology.md`](../12-agent-workflow/orchestrator-multi-vm-topology.md) §
+"Backlog auto-generation per VM"; `server/regen_backlog_from_plan.py` + `tests/test_regen_backlog_from_plan.py`
+(29-test suite).
+
+---
+
+## Auth — long-lived setup-tokens (Phase 4b-cleanup, shipped 2026-05-28)
+
+Every account in `data/config/accounts.json` authenticates via an `oauth_token_env_file`
+(`~/.claude-accounts/<id>.env`, containing `CLAUDE_CODE_OAUTH_TOKEN=<sk-ant-oat01-...>` + `unset
+ANTHROPIC_API_KEY`). Spawn paths (workers, agents, `/usage` probes) all source the env file before `exec claude`
+and refuse with HTTP 400 when the env file is missing. Legacy `.credentials.json` swap path + `oauth_refresh`
+module + `gcs_creds_poller` are gone; only `creds_env_poller` (5-min cross-cloud bucket sync) remains.
+
+SSOTs: [`../12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../12-agent-workflow/claude-cli-multi-account-headless-auth.md)
+(the auth model) + [`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md)
+§ B (rate-limit failover — slot respawn with new env file, not mid-session token swap).
 
 ---
 

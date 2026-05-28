@@ -89,20 +89,24 @@ the same config dir can serve multiple accounts, or use separate dirs per (slot,
 
 The orchestrator wires this via two layers:
 
-**tmux_spawn.py** (`_ensure_claude_config_dir()` + `_ONBOARDING_SEED`):
+**tmux_spawn.py** (`_ensure_claude_config_dir()` + `ONBOARDING_SEED`):
 
 - Derives `CLAUDE_CONFIG_DIR=<base>/<session>` where base = `ORCHESTRATOR_CLAUDE_CONFIG_BASE` env (default
   `~/.claude-configs`).
-- Creates the dir and writes `.claude.json` from `_ONBOARDING_SEED` on first call per session.
-- Both `spawn()` (worker path) and `spawn_named()` (main/review/backup agent path) accept `env_file: str | None`.
-- Commits: workers `1717768` (2026-05-22), main/review/backup agents `76c966e` (2026-05-23).
+- Creates the dir and writes `.claude.json` from `ONBOARDING_SEED` on first call per session.
+- Both `spawn()` (worker path) and `spawn_named()` (main/review/backup agent path) **require** `env_file: str` (Phase
+  4b-cleanup 2026-05-28 — the legacy `env_file=None` fallback that allowed claude to inherit
+  `~/.claude/.credentials.json` is gone; every spawn must source a per-account setup-token env file).
+- Commits: workers `1717768` (2026-05-22), main/review/backup agents `76c966e` (2026-05-23), env_file-required
+  enforcement `87becbb` (2026-05-28).
 
 **server.py** (`spawn_agent_endpoint`):
 
-- `SpawnAgentRequest.account_id: str | None` — new field (2026-05-23).
+- `SpawnAgentRequest.account_id: str | None` — field signature, but the runtime now refuses (HTTP 400) when
+  `account_id` is missing OR the resolved account in `accounts.json` has no `oauth_token_env_file` (Phase 4b-cleanup).
 - When set, resolves `oauth_token_env_file` from `data/config/accounts.json` via `load_accounts()` and passes it as
   `env_file` to `spawn_named()`.
-- Pattern mirrors the worker spawn path at `~line 1808` (`tmux_spawn.spawn(env_file=…)`).
+- Pattern mirrors the worker spawn path (`tmux_spawn.spawn(env_file=…)`).
 
 ### Quick verification recipe
 
@@ -145,8 +149,13 @@ file.
 ~/.claude-accounts/                  # chmod 700
 ├── sub-a-ikenna.env                 # chmod 600
 ├── sub-b-iggy2london.env            # chmod 600
-└── sub-c-harsh.env                  # chmod 600
+├── sub-c-ikenna-odum.env            # chmod 600
+└── harsh-primary.env                # chmod 600
 ```
+
+(Current roster verified 2026-05-28: 4 accounts, all with setup-tokens minted, all distributed to both
+`gs://central-element-323112-orchestrator-creds/accounts/` AND
+`s3://uts-orchestrator-creds-427895769566/accounts/`.)
 
 Each env file:
 
@@ -183,9 +192,11 @@ The same token can be deployed across N machines simultaneously. **They all shar
 with the same token doesn't multiply throughput; the 5h / weekly bars are per-account, not per-machine. Throughput
 multiplication comes from having N DISTINCT subscriptions, each with its own token, distributed across the VMs.
 
-Distribution: operator uploads the env files to GCS (via `unified-trading-pm/scripts/orchestrator/push_creds_to_gcs.sh`
-after refactor in Phase 4b); every VM pulls via the `GCSCredsPoller` daemon (5-min poll) into its local
-`~/.claude-accounts/`.
+Distribution: operator uploads the env files to both creds buckets (GCS and S3); every VM pulls via the
+`CredsEnvPoller` daemon in `agent-orchestrator/server/creds_env_poller.py` (5-min poll, env var
+`ORCHESTRATOR_CREDS_GCS_BUCKET` / `ORCHESTRATOR_CREDS_S3_BUCKET` selects cloud) into its local `~/.claude-accounts/`.
+The legacy `GCSCredsPoller` (which synced `.credentials.<id>.json` short-lived token blobs) was deleted in Phase
+4b-cleanup 2026-05-28.
 
 ## Verifying a token is valid + active
 
@@ -253,11 +264,12 @@ To revoke a specific token (e.g. compromised VM, decommissioned machine):
 
 - Tokens last **~1 year** from generation
 - Set a calendar reminder for 30 days before expiry per account
-- Renewal: re-run `claude setup-token` on a machine with browser → copy new token → `push_creds_to_gcs.sh` propagates to
-  all VMs within 5 min
-- The orchestrator dashboard's `OAuthBadge` shows `expires <date>` for each account; yellow at 30-day-out, red at
-  7-day-out (per Phase 4c)
-- Telegram `notify_oauth_token_expiring` fires at 30-day-out + crit at 7-day-out
+- Renewal: re-run `claude setup-token` on a machine with browser → copy new token → push to both creds buckets;
+  `CredsEnvPoller` on every VM picks up the new env file within 5 min
+- The orchestrator dashboard's `SetupTokenBadge` shows `expires <date>` for each account; yellow at 30-day-out, red at
+  7-day-out (per Phase 4c). The historic `OAuthBadge` (which read 8h-refresh `.credentials.json` expiry) was removed in
+  Phase 4b-cleanup 2026-05-28 — setup-token expiry is the only auth-clock now.
+- Slack / Telegram `notify_setup_token_expiring` fires at 30-day-out + crit at 7-day-out.
 
 ## Interactive spawn authentication — CLAUDE_CONFIG_DIR + onboarding seed (2.1.145+)
 
@@ -348,8 +360,7 @@ plan.
 - `plans/active/issues/claude_credentials_rotation_in_memory_staleness_2026_05_21.md` — root-cause doc for the
   2026-05-21 cascade that motivated this SSOT
 - `plans/active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` — SUPERSEDED by this SSOT (long-lived
-  tokens eliminate the file-contention problem that plan tried to solve)
-- `unified-trading-pm/scripts/orchestrator/push_creds_to_gcs.sh` — operator helper for laptop-to-GCS distribution (will
-  be refactored Phase 4b to ship env-file payloads)
-- CLAUDE.md HARD RULE (to add Phase 4b): "Claude auth on VMs uses long-lived `setup-token` via `CLAUDE_CODE_OAUTH_TOKEN`
-  env var. Do NOT copy `.credentials.json` between machines."
+  tokens eliminate the file-contention problem that plan tried to solve); Phase 4b-cleanup completed 2026-05-28
+- CLAUDE.md HARD RULE "Agent-orchestrator auth — setup-tokens only" — landed 2026-05-28 (Phase 4b-cleanup). Mirrors the
+  contract documented here: every account in `accounts.json` MUST declare `oauth_token_env_file`; runtime spawns refuse
+  accounts without one; never copy `.credentials.json` between machines.
