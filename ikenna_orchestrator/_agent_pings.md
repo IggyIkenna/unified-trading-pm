@@ -3374,3 +3374,28 @@ Updates 2026-05-28 (post operator directive "migrate the old bad buckets too"):
 
 vm-ml worker: pick up Gates 2 / 5 / 7 in that order (Gate 5 unblocks resume-cron; Gate 7 cleans the leak's debris).
 [NOT-ACKED]
+
+---
+
+## [orphan-ping-cron → _agent_pings.md] 2026-05-28T15:36:37Z — ⚠️ 1 orphan ping(s) detected (no plan/issue/audit reference)
+
+Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
+
+```
+ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [2026-05-28 SCHEDULER PAUSED + GATE-7 EXPANDED] Bad-bucket Solana data to migrate, not just delete
+
+```
+
+**Action required**: the agent who posted each orphan ping must either:
+1. **File a plan** in `plans/active/<slug>_2026_05_28.md` (or extend an existing plan in `plans/active/issues/` /
+   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
+2. **Edit the orphan ping** to add the new plan path inline,
+   OR
+3. **Remove the ping** if it's resolved / no longer actionable.
+
+Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
+
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
+Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
+so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
+Phase -1 (workspace-discipline prereq).
