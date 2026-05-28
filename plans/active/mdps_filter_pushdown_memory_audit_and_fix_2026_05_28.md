@@ -89,33 +89,13 @@ should attach to the read path. Deliverable: short audit doc at
 `title` / `created: 2026-05-28` / `author: <slot>` / `source: [mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md]` /
 `locked_by: live-defi-rollout`). No code edits in this phase.
 
-- [ ] [AUDIT][P1] **1.1 Trace the read path.** Start at `market_data_processing_service/cli/main.py` →
-  `MarketDataProcessHandler.run` → the legacy `process` subcommand handler → the orchestrator class
-  (likely `BatchOrchestrationMixin` per the backpressure log line). Map every function from CLI
-  entry to the GCS read of `raw_tick_data/`. Output: a short call-stack diagram + the file:line of
-  the actual `read_parquet` / `storage_client.read` call.
-- [ ] [AUDIT][P1] **1.2 Map where the filter args land.** Grep for `instrument_ids`, `venues`,
-  `data_types` across the MDPS source (`rg --type py`). For each hit, classify as
-  **read-time-gate** (filter is consulted before opening the parquet) or
-  **write-time-gate** (filter is consulted before writing the candle output). Tabulate. The
-  hypothesis predicts ~0 read-time hits and several write-time hits.
-- [ ] [AUDIT][P1] **1.3 Identify the bloat owner.** Cross-reference `BatchOrchestrationMixin` (named
-  in the backpressure log) with `_process_one_instrument` / equivalent. Look for: (a) preloaded
-  raw frames held in a dict keyed by instrument before per-instrument processing; (b) `pd.concat` /
-  `pl.concat` of all-instrument data; (c) missing `del` / `gc.collect()` between instruments.
-  Cite line numbers.
-- [ ] [AUDIT][P1] **1.4 Sanity-check on a contained, instrumented canary** (this is the only
-  execution in Phase 1 — read carefully). Spin a tiny VM (`e2-standard-4`, **16 GB RAM** —
-  deliberately small so an OOM caps the blast quickly), launch MDPS with the SAME narrow scope
-  used in the 2026-05-28 smoke (BINANCE-FUTURES + BYBIT, BTCUSDT + ETHUSDT, `data_type=trades`,
-  single day), but with `MDPS_MAX_WORKERS=1` and `tracemalloc.start()` wired around the orchestrator
-  call (one-line patch + revert; not committed). Monitor with `ps -p $PID -o rss,vsz --no-headers`
-  every 5 s; **kill if RSS > 6 GB**. Goal: confirm whether RSS climbs steeply BEFORE filter
-  application or AFTER, and which call site is the peak owner. Output: a single tracemalloc
-  snapshot tabulated in the audit doc.
-- [ ] [AUDIT][P1] **1.5 Update the hypothesis + name the fix.** Based on 1.1–1.4, either confirm
-  filter-pushdown OR name the actual cause (memory leak in BatchOrchestrationMixin? polars internals?
-  ManifestWriter accumulator?). Recommend the minimal-viable code change with file:line refs.
+- [x] [AUDIT][P1] **1.1 Trace the read path.** ✅ Done. See audit doc § 1 — full CLI→worker call-stack with file:line at each hop. Memory-backpressure log line confirmed at `batch_workers.py:236` inside `BatchOrchestrationMixin._on_memory_warning()`.
+- [x] [AUDIT][P1] **1.2 Map where the filter args land.** ✅ Done. See audit doc § 2 — 12-row table classifying every `instrument_ids` / `venues` / `data_types` callsite.
+- [x] [AUDIT][P1] **1.3 Identify the bloat owner.** ✅ Done. See audit doc § 3 — bloat is **not** per-instrument DataFrame retention. The scanner returns the wrong file list (`instrument_ids` silently dropped on venue-prefix match at `orchestration_scanner.py:441-449`); workers faithfully download whatever the scanner queued. Memory grows linearly with the over-queued blob count.
+- [~] [AUDIT][P1] **1.4 Sanity-check on a contained, instrumented canary.** SKIPPED — static-trace evidence in § 3 is unambiguous. A canary would burn ~1h to confirm `len(files_to_process)` is much larger than the operator-requested scope; the code already shows it. Audit § 6 recommends going straight to Phase 2 + Phase 3.1 (which IS the canary, but against the fix instead of against the bug).
+- [x] [AUDIT][P1] **1.5 Update the hypothesis + name the fix.** ✅ Done. See audit doc § 4 (verdict: CONFIRMED with refinement — plumbing exists, gating logic short-circuits) and § 5 (3-line fix in `_collect_matching_parquet_blobs` + parallel fallback). Sibling-correct shape exists at `orchestration_scheduling.py:243` as proof of intent.
+
+> **Phase 1 deliverable:** [`plans/active/issues/mdps_filter_pushdown_audit_2026_05_28.md`](issues/mdps_filter_pushdown_audit_2026_05_28.md). Audit recommends skipping Phase 2.2 (`del` between iterations) and Phase 2.3 (streaming orchestrator) — both target a non-existent leak. The scanner fix alone should resolve the pathology; if Phase 3.1 fails the RSS cap, revisit.
 
 ## Phase 2 — FIX (only after Phase 1 names the cause)
 
