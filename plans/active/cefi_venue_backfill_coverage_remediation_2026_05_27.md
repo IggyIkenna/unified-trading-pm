@@ -43,7 +43,7 @@ window — never request outside `[available_from, available_to]`.
       skip any (instrument, date) where `date < available_from` or `date > available_to_datetime`. Source the window
       from the InstrumentRecord (IS→MTDS SSOT — do NOT re-fetch Tardis per request; load once per run). —
       market-tick-data-service@91e3df03
-- [ ] [AGENT] P0. Verify on free dates without the paid key: a 1st-of-month in-window date (e.g. `BTC-USD-240105` @
+- [x] ✅ DONE [AGENT] P0. Verify on free dates without the paid key: a 1st-of-month in-window date (e.g. `BTC-USD-240105` @
       2024-01-01) must download 200/real-rows; an out-of-window date must be skipped (zero request issued). Add a unit
       test for the window filter (in-window kept, pre-listing skipped, post-expiry skipped).
 - [ ] [AGENT] P1. Confirm instruments-service actually populates `available_to_datetime` for ALL okx-futures dated
@@ -58,11 +58,11 @@ data look corrupt." A 401 is NOT a confirmed absence; it is "downloadable, block
 
 - [ ] [AGENT] P0. Out-of-window (Tardis `code 140` / contract not listed on date) → `expected_unattempted` (genuine
       honest absence). This is correct to record.
-- [x] ✅ DONE [AGENT] P0. Paid-date + missing/expired key (HTTP 401) → MUST NOT be `empty_confirmed` or `expected_unattempted`.
-      Record as a distinct **pending/blocked** state (`attempted_failed` with a typed `blocked_credentials` reason, or a
-      new `PENDING_PAID_KEY` marker) so the manifest + UI show it as "to-download once key active", not as
-      empty/complete. Audit existing CeFi manifest rows for any 401-era dates wrongly stamped `empty_confirmed` and
-      re-flag them.
+- [x] ✅ DONE [AGENT] P0. Paid-date + missing/expired key (HTTP 401) → MUST NOT be `empty_confirmed` or
+      `expected_unattempted`. Record as a distinct **pending/blocked** state (`attempted_failed` with a typed
+      `blocked_credentials` reason, or a new `PENDING_PAID_KEY` marker) so the manifest + UI show it as "to-download
+      once key active", not as empty/complete. Audit existing CeFi manifest rows for any 401-era dates wrongly stamped
+      `empty_confirmed` and re-flag them.
 - [ ] [AGENT] P1. Add/confirm the typed reason in UAC `EmptyConfirmedReason` is NOT used for 401; if no suitable
       non-absence status exists, propose one (do not overload an `EXPECTED_*` reason for a credential block).
 
@@ -70,9 +70,9 @@ data look corrupt." A 401 is NOT a confirmed absence; it is "downloadable, block
 
 So we don't hammer paid endpoints while keyless, and can schedule VMs by what's actually fetchable now vs post-renewal.
 
-- [x] ✅ DONE [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs what needs
-      the paid key: Tardis free = 1st-of-month days + most-recent rolling window; paid = all other historical dates.
-      Persist as a small SSOT (e.g. UAC registry or a config the launcher reads) keyed by venue.
+- [x] ✅ DONE [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs
+      what needs the paid key: Tardis free = 1st-of-month days + most-recent rolling window; paid = all other historical
+      dates. Persist as a small SSOT (e.g. UAC registry or a config the launcher reads) keyed by venue.
 - [ ] [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
       free-fetchable date set (or skip launch entirely) instead of spinning at 100% CPU on 401s. Surfaces in the UI plan
       (see deployment_ui plan §venue-key-status).
@@ -273,13 +273,14 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `BTC-PERPETUAL.parquet`, `KRW-LINK.parquet` sit directly under `by_date/` alongside the `day=…/` hive partitions —
       drift artifacts outside any day/venue/data_type partition (invisible to partition-pruned reads). Reconcile into
       the correct partition or delete. Mirrors the 2026-05-04 phantom-audit drift axes.
-- [x] ✅ DONE [AGENT] P0. **One-off sweep of existing phantom manifest rows** (added 2026-05-28 after post-fix diff). Slot 9's
-      enumerator fixes (mtds@2e91d74f + @3fa29d70) are **preventive only** — they stop NEW backfill VMs emitting phantom
-      rows but don't sweep the ~355K stale phantoms already in the live manifest (chain phantoms: 176,270 LEGACY +
-      168,485 PRD; spot×derivative phantoms: 199,160 LEGACY + 79,852 PRD; counts from 2026-05-28 06:30Z re-download).
-      Consolidator only aggregates per-VM shards — it doesn't re-enumerate, so re-consolidation alone changes nothing.
-      Write a one-shot sweep job (or add a `--sweep-phantoms` mode to the consolidator) that DELETES rows matching slot
-      9's filter predicates: (a) `data_type IN ('options_chain','futures_chain') AND instrument_type IS NULL/''`, (b)
+- [x] ✅ DONE [AGENT] P0. **One-off sweep of existing phantom manifest rows** (added 2026-05-28 after post-fix diff).
+      Slot 9's enumerator fixes (mtds@2e91d74f + @3fa29d70) are **preventive only** — they stop NEW backfill VMs
+      emitting phantom rows but don't sweep the ~355K stale phantoms already in the live manifest (chain phantoms:
+      176,270 LEGACY + 168,485 PRD; spot×derivative phantoms: 199,160 LEGACY + 79,852 PRD; counts from 2026-05-28 06:30Z
+      re-download). Consolidator only aggregates per-VM shards — it doesn't re-enumerate, so re-consolidation alone
+      changes nothing. Write a one-shot sweep job (or add a `--sweep-phantoms` mode to the consolidator) that DELETES
+      rows matching slot 9's filter predicates: (a)
+      `data_type IN ('options_chain','futures_chain') AND instrument_type IS NULL/''`, (b)
       `(venue, data_type) NOT IN VENUE_DATA_TYPE_CAPABILITIES`. Run on both `market-data-tick-cefi-{prd-,}` indexes.
       Until this lands the live manifest under-reports coverage and any spend decision must use the client-side
       corrected view, not the published index.
