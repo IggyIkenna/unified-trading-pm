@@ -80,10 +80,11 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
 2026-05-03 wall-clock).
 
 - [x] ✅ [AUDIT] [P1] **1.0 Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — **DONE**
-      PM@475d6601: `plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`. Key numbers: 24h≈6.6
-      KB/1-row, 15s≈152 KB/5760-rows, all 7 TFs materialised by MDPS; 7× amplification = 7 separate
-      `load_candles_with_buffer` calls. Consolidation candidates (24h→yearly, 4h/1h/5m/15m→monthly) tagged
-      `needs-design + blocked-on-migration-window`. Below is the original task spec (kept for provenance):
+      PM@475d6601, doc lives at `plans/archive/issues/processed_candles_storage_layout_audit_2026_05_27.md` (operator-
+      authorized archival via `[unlock-plan]` since shipped/captured per issue-doc lifecycle). Key numbers: 24h=1
+      row/11.8KB, 4h=6 rows/12.4KB, 1h=24/14.2KB, 15s=5760/350KB; 7× amplification = 7 `load_candles_with_buffer`
+      calls; consolidation candidates (24h→yearly, 4h/1h→monthly) tagged `needs-design + blocked-on-migration-window`.
+      Below is the original task spec (kept for provenance):
 - [ ] [AUDIT] [P1] **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).**
       Operator-directed: before any layout redesign, ground in how data is _actually_ processed + saved in
       `processed_candles/`. Deliverable is an audit doc

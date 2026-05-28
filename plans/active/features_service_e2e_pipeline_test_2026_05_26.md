@@ -434,12 +434,16 @@ real blockers.**
 - **delta_one for 05-01/05-02 wrote parquets but NO manifest row** (another manifest↔file disconnect instance) + only
   the `technical_indicators` group (vs 05-03's 8) — thinner output those days; tracked.
 
-- [ ] [P1] **delta_one does not emit higher timeframes (4h/24h) — needs multi-day candle lookback in batch.** Each
-  per-day batch computes in isolation; 4h/24h indicators need ≥14 bars = multiple days of candles. This starves the
-  entire multi-timeframe pipeline (mtf). Connects to Phase 0.5 adaptive-lookback (the lookback is for delta_one's OWN
-  higher-TF candle reads, not just downstream feature history). Provenance: backfill experiment 2026-05-27.
-- [ ] [P1] **delta_one also omits 5m/15m features** despite sufficient single-day bars — separate gap from the 4h/24h
-  cross-day issue. Diagnose why only 15s + 1h are produced. Provenance: backfill experiment 2026-05-27.
+- [x] ✅ [P1] **delta_one does not emit higher timeframes (4h/24h)** — **RESOLVED (root cause reclassified): upstream
+  MDPS data gap, NOT a features-service code bug.** CeFi 1h candles missing 2026-04-14→04-30; only 05-01..05-04
+  contiguous → 14-day 1h-base lookback for 4h/24h cannot be satisfied. delta_one now correctly fast-fails ("No base
+  candles at 1h") instead of silently NaN-starving — features@ac83bfad (smart TF clustering, task 1.1a). **Unblock =
+  MDPS backfill CeFi 1h candles 04-14→04-30** (tracked as MDPS dependency; `mdps@975fd46` added
+  `MDPS_OUTPUT_BUCKET_{CAT}` test-isolation override needed for the backfill). Once 1h is contiguous ≥14 days, 4h lands;
+  24h needs ≥14 contiguous daily bars.
+- [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
+  read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
+  15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
 - [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance: backfill 2026-05-27.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
@@ -449,15 +453,14 @@ Mapped fix locations (sub-agent code audit, features-service):
 **P6.A — delta_one emits ONLY base 15s (+ internal 1h for 2 groups), not the full 7 TFs → starves mtf.**
 - `--output-timeframes` defaults `None` and is **never used** — dead-ends at `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler" comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
 - Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`) sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF indicators NaN-starved even with a loop.
-- [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525. Loops resolved output
-  timeframes (None→`config.supported_timeframes`), per-TF reads NATIVE candles + recomputes (NOT feature-value
-  resampling), per-TF buffer. Validated: -test now emits 15s/1m/5m/15m/1h (was 15s + partial-1h); 4h pending run
-  completion; 24h data-limited (needs ≥14 candle-days, only 3 exist).
+- [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525 + @2b20c795 (read-once)
+  + @ac83bfad (smart clustering). Validated 2026-05-28: -test emits 15s/1m/5m/15m/1h. 4h/24h reclassified to upstream
+  MDPS data gap (CeFi 1h missing 2026-04-14→04-30); delta_one fast-fails correctly.
 - [x] ✅ **Fix: per-TF buffer** — same commit; `_calculate_buffer_days(timeframe=out_tf)` sizes the lookback off each
   output TF (was sized off base 15s).
-- [ ] [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
-  timeout (bumped 600s→2400s).** Optimize to read-base-once + resample-candles-in-memory. Tracked as Phase 1.1 in
-  `features_calc_efficiency_and_correctness_2026_05_27.md`.
+- [x] ✅ [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
+  timeout (bumped 600s→2400s).** — **FIXED** features@2b20c795 (Task 1.1 read base candles once + resample in-memory)
+  + features@ac83bfad (Task 1.1a smart TF clustering for the base-candle read). 7× → ~1 base read per cluster.
 
 **P6.B — mtf writes to PROD not -test (sink override ignored).**
 - `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
