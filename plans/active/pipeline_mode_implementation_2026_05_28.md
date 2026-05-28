@@ -92,11 +92,20 @@ impact, no walk needed now.
       migration scripts", uses `StorageClient.download_bytes / upload_file` — NEVER subprocess gsutil. Idempotent
       (skip rows where pipeline_mode already set; `--force` for operator overwrite). `--dry-run` default, `--verify`
       mode for count-only. — unified-trading-pm@9cf186cd
-- [ ] [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
+- [x] ✅ [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
       prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`.
-- [ ] [AGENT] P0. Verify post-backfill:
+      Script updated with vectorized derivation (group-by unique (venue,data_type) instead of row-by-row; 35M cefi rows
+      fill in <1s). Added --per-vm flag for `_index/per_vm/*.parquet` shards.
+      Filled 43.5M+ rows across 10 buckets + 14 per-VM shards. Exempt: defi per-VM shard
+      `mdps-backfill-defi-20260528-071130.parquet` has active VM writing pre-Phase-2 rows (live race; document exempt
+      count ≤200 rows until VM completes). — unified-trading-pm@80dcf4197
+- [x] ✅ [AGENT] P0. Verify post-backfill:
       `SELECT count(*) FROM index WHERE pipeline_mode IS NULL     OR pipeline_mode = ''` per bucket → must equal 0 (or
       equal a documented exempt count for pre-history rows older than written_at tracking).
+      Result (2026-05-28): cefi=0/36.2M, defi=0/1.79M main (per-VM shard has live race — exempt), tradfi=0/374k,
+      sports=0/182k, prediction=0/375k, instruments-store-{cefi,defi,tradfi,sports,prediction}=0. All main manifests
+      clean. Defi per-VM shard exempt: active VM `mdps-backfill-defi-20260528-071130` writing rows without
+      pipeline_mode (pre-Phase-2 deployment); re-run backfill once VM completes to reach absolute zero.
 - [ ] [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
 
 ## Phase 4 — Consumer migration (P1)
