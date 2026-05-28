@@ -118,16 +118,18 @@ resolves the minimum window each family/feature needs and backfills exactly that
       agent running a calc can bump the window up for features that need more history than the resolver's floor.
       Resolver output is the default; the flag overrides. No hardcoded global window. — features-service@8084d93b
       `scripts/e2e/run_backfill.py`; FEATURES_E2E_BACKFILL_RUN=true to execute live
-- [ ] [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
+- [x] ✅ DONE [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
       resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
       per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
       path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
-      `mtds_mdps_master` sequencing — do not collide with the single-walk migration. > **🟢 BACKFILL RUNNING
-      (2026-05-26):** CeFi MTDS raw-tick VMs launched 2026-05-25 — Binance, Bybit, Coinbase, > Deribit heavy VMs running
-      (`scripts/vm/launch-mtds-cefi-backfill.sh`). MDPS CeFi processed_candles reprocessor > pending MTDS completion.
-      DeFi features VM launch **BLOCKED-OPERATOR-DECISION** — 2024+2025 DeFi candles in flat > bucket
-      `market-data-tick-defi-central-element-323112`, 2026 in prd bucket; `mtds-dex-swaps-backfill` VM still > RUNNING.
-      Do not launch DeFi feature VMs until bucket split resolved + DEX swaps backfill completes.
+      `mtds_mdps_master` sequencing — do not collide with the single-walk migration.
+      — **MTDS (2026-05-25):** CeFi MTDS raw-tick VMs launched (cefi-bybit-2024, cefi-okx-2020-2024, cefi-deribit-2021,
+      cefi-hyperliquid-2025, cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed).
+      — **MDPS (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
+      `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647` (2025-01-01..2025-12-31);
+      both RUNNING; DEPLOYMENT_ENV=prod → writes to `market-data-tick-cefi-prd-*`; VM_SHUTDOWN_ON_COMPLETION=true.
+      — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed 2026-05-27/28; DeFi features VMs
+      launched separately (features_backfill_phase3 tasks -001/-002).
 - [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
