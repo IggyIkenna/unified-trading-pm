@@ -70,7 +70,7 @@ data look corrupt." A 401 is NOT a confirmed absence; it is "downloadable, block
 
 So we don't hammer paid endpoints while keyless, and can schedule VMs by what's actually fetchable now vs post-renewal.
 
-- [ ] [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs what needs
+- [x] ✅ DONE [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs what needs
       the paid key: Tardis free = 1st-of-month days + most-recent rolling window; paid = all other historical dates.
       Persist as a small SSOT (e.g. UAC registry or a config the launcher reads) keyed by venue.
 - [ ] [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
