@@ -18,6 +18,23 @@ locked_since: 2026-05-28
 
 # MDPS architectural audit — long-running multi-shard execution
 
+## Codex audit (run 2026-05-28 before starting Phase 0)
+
+Operator asked: "do my four findings contradict anything in codex?" Sub-agent audited
+`codex/04-architecture/`, `codex/05-infrastructure/`, `codex/06-coding-standards/`,
+`codex/02-data/`. Verdicts per finding:
+
+| Finding | Codex verdict | Codex docs touched | What this means for this plan |
+|---|---|---|---|
+| **A** — `_cleanup_after_day` not wired into success path | **SILENT** | `06-coding-standards/service-orchestration-patterns.md` (Patterns 1-14, no cleanup phase), `04-architecture/batch-live-architecture.md` (§1 says "setup → work → cleanup" implicitly but never names a cleanup entry-point) | No codex contract violated. The tactical fix in the sibling plan + the Phase 6 codex doc this plan ships are additive. |
+| **B** — canonical instrument_id should suffice for CLI granularity | **SILENT** | `06-coding-standards/cli-convention.md` (mentions `--instrument-ids` but never defines the canonical form, which axes are derivable, what counts as the atomic shard), `05-infrastructure/vm-tarball-deployment.md` (shows `VM_INSTRUMENT_IDS` examples but no parsing rule) | No codex contract violated. Phase 3 of this plan defines the canonical parser + axis derivation rules + ships them to codex as a new doc. |
+| **C** — orchestrator state assumes one-VM-per-shard | **PARTIAL CONTRADICTION** | `05-infrastructure/vm-tarball-deployment.md` § "LifecycleClass" defines `EPHEMERAL_BATCH` (short-lived, self-delete on completion) as the MDPS designation; the operator's "long-running multi-shard worker" doesn't fit `EPHEMERAL_BATCH` cleanly. `04-architecture/batch-live-architecture.md` is silent on per-instance state retention contracts for each lifecycle class. | Either MDPS gets a different LifecycleClass (or a new one) OR the existing `EPHEMERAL_BATCH` contract gets explicit per-shard cleanup requirements. Phase 1 of this plan must reconcile this — picking the execution model and the LifecycleClass go together. |
+| **D** — Polars/Pandas conversion churn | **SILENT** | `06-coding-standards/dependency-management.md` lists both polars + pandas as valid deps but says nothing about engine choice, conversion anti-patterns, or `engine="pyarrow"`. No `data-engine-selection.md` exists. | No codex contract violated. Phase 2 of this plan picks the engine + ships the new coding-standards doc. |
+
+**Net**: 0 of 4 findings violate any explicit codex SSOT. 3 of 4 are gaps codex never addressed. 1 (Finding C) is a real reconciliation: the `EPHEMERAL_BATCH` LifecycleClass designation doesn't match how MDPS is actually being run. That reconciliation belongs in Phase 1 (execution model decision) of this plan, not in the tactical sibling plan.
+
+The codex audit also produced a precise list of edits per finding — see Phase 6 below, which now uses the audit's exact target paths.
+
 ## Why this plan exists
 
 The 2026-05-28 filter-pushdown plan
@@ -148,16 +165,33 @@ decisions first; don't start implementation against an unconfirmed shape.
 - [ ] [P2] **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
   ("the manifest is now 1.2 GB") are caught before they OOM a small box.
 
-## Phase 6 — Codex updates
+## Phase 6 — Codex updates (targets from the 2026-05-28 codex audit)
 
-- [ ] [P2] **6.1** Update or replace
-  [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md)
-  to reflect the chosen execution model.
-- [ ] [P2] **6.2** If the data-engine decision in Phase 2 lands at "pure Polars", add a codex coding-standard
-  doc to enforce it across the workspace (other batch services have the same Polars/Pandas mixing pattern; this
-  rule generalises).
-- [ ] [P2] **6.3** Document the canonical instrument_id parser spec from Phase 3.1 in
-  `codex/02-data/` (alongside the existing schema-placement guidance).
+The codex audit above named the exact docs that need to land. Phase 6 is the close-out for each finding.
+
+- [ ] [P2] **6.1 (Finding A — cleanup discipline)** Add a new §15 to
+  [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md):
+  "Batch Service Lifecycle: Setup, Work, Cleanup". Body: every batch service with per-date state (caches, GCS
+  clients, manifest buffers) MUST call a `_cleanup_after_date(date)` hook on every per-date exit path, including
+  success. Reference implementation: `orchestration_base.py::_cleanup_after_day()`. Reference incident: sibling
+  plan Phase 3.2 attempt-2 (25 GB per-day floor before the wiring fix).
+- [ ] [P2] **6.2 (Finding B — instrument_id contract)** Add a new section to
+  [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md):
+  "Instrument Identity and CLI Granularity". Body: canonical form `VENUE:INSTRUMENT_TYPE:SYMBOL`; venue +
+  instrument_type ARE derivable; data_type is INDEPENDENT (requires `--data-types`); atomic shard is
+  `(asset_group, venue, instrument_type, data_type, symbol, date)`; bare-symbol substring matching is a
+  deprecated convenience.
+- [ ] [P2] **6.3 (Finding C — VM lifecycle reconciliation)** Extend
+  [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md)
+  § "The invariants" with a new invariant: "Services running as `EPHEMERAL_BATCH` may amortise startup cost
+  across one shard. Services running multi-shard inside one VM lifecycle (the actual MDPS deployment shape)
+  MUST call `_cleanup_after_shard()` at every shard boundary." Either extend `EPHEMERAL_BATCH` semantics or add
+  a new LifecycleClass `LONG_RUNNING_MULTI_SHARD_BATCH` — decision belongs to Phase 1.1 of this plan.
+- [ ] [P2] **6.4 (Finding D — data engine)** Add a new doc at
+  `codex/06-coding-standards/data-engine-selection.md`. Body: pick one engine end-to-end; Polars→Pandas→Polars
+  is a banned anti-pattern; for parquet I/O + aggregation prefer pure Polars; for I/O only use
+  `pd.read_parquet(engine="pyarrow")`; `low_memory=True` only matters when no intermediate `.to_pandas()` is
+  inserted.
 
 ## Out of scope
 
