@@ -101,8 +101,9 @@ impact, no walk needed now.
 
 - [x] ✅ [AGENT] P1. Update `batch-live-reconciliation-service` to actually use `GROUP BY pipeline_mode` (currently
       grouping on an empty column → no-op). Add reconciliation tests that fail when `pipeline_mode IS NULL` appears in
-      input data. Fixed stage0 _get_sides() to use _is_batch_mode() / _is_live_mode() predicates; updated all 15 tests
-      to use real PipelineMode string values (batch_tardis, live_websocket). — batch-live-reconciliation-service@cf50965
+      input data. Fixed stage0 \_get_sides() to use \_is_batch_mode() / \_is_live_mode() predicates; updated all 15
+      tests to use real PipelineMode string values (batch_tardis, live_websocket). —
+      batch-live-reconciliation-service@cf50965
 - [ ] [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
       chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
       tick.

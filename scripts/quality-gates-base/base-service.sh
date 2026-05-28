@@ -2206,6 +2206,33 @@ else
     log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
 fi
 
+# ── STEP 5.85: no inline string literal pipeline_mode values in service source ─
+#
+# Inline string literals like pipeline_mode="batch_tardis" in record_*() call-sites
+# bypass the PipelineMode enum type-check and can silently produce stale / typo'd
+# values. All service-code pipeline_mode= kwargs MUST use PipelineMode.<MEMBER>
+# or a call to resolve_pipeline_mode() — not a raw string literal.
+#
+# Test files are excluded (readers + test helpers legitimately filter by string).
+#
+# Escape hatch: add '# QG-allow: pipeline-mode-string-literal' on the line.
+#
+# Plan: pipeline_mode_implementation_2026_05_28.md Phase 2.3.
+# SSOT: resolve_pipeline_mode() in unified_trading_library.pipeline_mode_resolver.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
+    _PM_STR_HITS=$(grep -rn 'pipeline_mode\s*=\s*["'"'"']' "$SOURCE_DIR" \
+        --include="*.py" | grep -v '# QG-allow: pipeline-mode-string-literal' || true)
+    if [ -n "$_PM_STR_HITS" ]; then
+        log_fail "STEP 5.85: no-inline-pipeline-mode-string-literal — raw string literal pipeline_mode= value in service source. Use PipelineMode.<MEMBER> or resolve_pipeline_mode():"
+        echo "$_PM_STR_HITS"
+        V=$(( V + 1 ))
+    else
+        log_success "STEP 5.85: no-inline-pipeline-mode-string-literal — no raw string pipeline_mode values in service source"
+    fi
+else
+    log_success "STEP 5.85: no-inline-pipeline-mode-string-literal — skipped (SOURCE_DIR not set)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
