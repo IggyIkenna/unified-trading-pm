@@ -317,24 +317,38 @@ Gated on Stage 1 being green + benchmark-verified.
 
 Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature change in this stage.**
 
-- [ ] [P1] **3.1 Add `CandleOutput.to_polars()` method in UAC** at
+- [x] ✅ [P1] **3.1 Add `CandleOutput.to_polars()` method in UAC** at
   `unified-api-contracts/.../adapter_models.py:81`. ~20 lines, mirrors the existing `to_dataframe()`. UAC release
-  bump.
-- [ ] [P1] **3.2 Change `canonical_writer.write_candle_parquet` signature** to accept `pl.DataFrame`. Replace
-  pandas write with `df.write_parquet()`. Cluster validation re-read at lines 1328, 2121: switch to polars
-  `pl.read_parquet()` (preferred) or keep pandas (lower risk).
-- [ ] [P1] **3.3 Update `_process_all_timeframes`** at `live_workers.py:915, 944` to call `.to_polars()` instead
-  of `.to_dataframe()`. Remove the pandas mutation at line 100 (`candles_df[col] = mode_val.iloc[0]`) or replace
-  with polars equivalent.
-- [ ] [P1] **3.4 Update `orchestration_writer.py`** to accept polars from the caller; pass through to
-  canonical_writer unchanged.
-- [ ] [P1] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead of
-  `df.to_parquet(...)` (pandas).
+  bump. — unified-api-contracts@3814249 (CandleOutput.to_polars() + test coverage + polars dep)
+- [x] ✅ [P1] **3.2 Change `canonical_writer.write_candle_parquet` signature** — boundary moved UP one layer
+  instead. `candle_write_mixin._write_candles` now accepts `pl.DataFrame` and converts to pandas once at the
+  top before the canonical_writer/UTL chain. write_candle_parquet keeps pandas (plan's "lower-risk" hedge);
+  arena #3 (numpy→pandas) is still eliminated because the conversion happens AFTER the polars-internal flow
+  in live_workers / candle_generator. cluster-validation re-read at 1328/2121 stays pandas (Stage 5
+  candidate). — market-data-processing-service@6e61cfe
+- [x] ✅ [P1] **3.3 Update `_process_all_timeframes`** + every other `to_dataframe()` site in live_workers
+  (5 total) + the 2 in candle_generator now call `.to_polars()`. `_inject_passthrough_columns` polarised
+  (with_columns + pl.lit). `_emit_instrument_processed_event` polarised (get_column().is_not_null().sum()).
+  pd.concat→pl.concat, sort_values→sort, .empty→.is_empty(). — market-data-processing-service@6e61cfe
+- [ ] [P2] **3.4 Update `orchestration_writer.py`** — deferred to Stage 5 / follow-up. The `_write_candles`
+  boundary collapse plus the four streaming-write call-site conversions (in `_streaming_write_per_tf`) do the
+  job for the hot path; `orchestration_writer.py` is a metadata-extraction mixin with no candles_df reads
+  on the production write surface. Re-audit when canonical_writer flips to polars.
+- [ ] [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead
+  of `df.to_parquet(...)` (pandas). **DEFERRED to Stage 3.x follow-up:** the test-only consumer
+  (`OrchestrationCoordinator` is dead in prod; only `tests/unit/test_orchestration_coordinator.py` uses it)
+  was bridged via boundary conversion in `orchestration_coordinator.process_batch`. Flipping
+  `storage_dispatch_worker.write` to polars in the same commit is a small/clean follow-up.
 - [ ] [P1] **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at `_process_all_timeframes` adapter
   call. Wait — actually keep this for now since adapter signature still requires pandas. Re-evaluate after Stage
   4 + the eventual adapter-contract plan.
-- [ ] [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures.
-- [ ] [P1] **3.8 Benchmark re-run** — should see additional improvement on the output side.
+- [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — 10 tests updated
+  (test_candle_generator, test_orchestration_coordinator, test_league_passthrough,
+  test_per_instrument_pipeline). Pre-existing failure count unchanged (3); 1404 pass.
+  — market-data-processing-service@6e61cfe
+- [ ] [P2] **3.8 Benchmark re-run** — should see additional improvement on the output side. Deferred until
+  Stage 3.5 + Stage 4 land; meaningful improvement comes from removing the pandas pipeline (Stage 4) more
+  than from this single-arena #3 collapse.
 
 ## Phase 4 — Stage 4 implementation (aggregation calculators)
 

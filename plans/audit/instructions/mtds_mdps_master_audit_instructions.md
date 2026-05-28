@@ -277,7 +277,7 @@ findings surface.**
       `mdps_long_running_state_inventory_2026_05_28.md` § "Recommended next step".
 
 - [~] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**:
-      **Stages 1 + 2 shipped ✅** — Stages 3-5 outstanding.
+      **Stages 1 + 2 + 3 shipped ✅** — Stages 3.x follow-up + 4 + 5 outstanding.
       - Stage 1 — MDPS@591120b 2026-05-28: `_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via
         `.filter(pl.col(...).is_in(...))`; boundary conversion to pandas at `_eager_preprocess_and_recover_metadata`
         entry.
@@ -288,12 +288,20 @@ findings surface.**
         `pl.read_parquet` for lifecycle data load.
       - Stage 2 audit: only 2 of 18 adapters touched (cefi/trades + prediction/trades — both done); other 16 adapters
         use pure pandas internally with no polars round trips, so they're untouched in this stage.
+      - Stage 3a — unified-api-contracts@3814249 2026-05-28: `CandleOutput.to_polars()` added in UAC (mirrors
+        `to_dataframe()`); polars dep added; unit tests for empty + populated cases.
+      - Stage 3b — MDPS@6e61cfe 2026-05-28: all 5 `to_dataframe()` sites in live_workers + 2 in candle_generator
+        switched to `to_polars()`; `_inject_passthrough_columns` polarised (`with_columns(pl.lit(...).alias(col))`);
+        `_emit_instrument_processed_event` polarised (`get_column().is_not_null().sum()`); `pd.concat`→`pl.concat`,
+        `sort_values`→`sort`, `.empty`→`.is_empty()`. The polars→pandas boundary now sits at a single seam in
+        `candle_write_mixin._write_candles` (and at 4 streaming-write call sites for the chain-bundle path) —
+        canonical_writer.write_candle_parquet keeps pandas (plan's lower-risk hedge). 10 unit tests updated to polars
+        fixtures; 0 basedpyright regressions; 0 new test failures.
 
-      Stages 3-5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
-      finish the chain (Stage 3: `CandleOutput.to_polars()` + `canonical_writer` accepts polars; Stage 4: aggregation
-      calculators; Stage 5: long-tail + hidden-pandas-fallback cleanup). Original goal: eliminate the `.to_pandas()`
-      at `live_workers.py:449-479`; downstream consumers receive Polars frames; conversion buffers eliminated.
-      Findings doc: `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
+      Stage 3.x follow-ups + Stages 4 + 5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
+      finish the chain (3.4: orchestration_writer audit; 3.5: storage_dispatch_worker `df.write_parquet`; Stage 4:
+      aggregation calculators; Stage 5: long-tail + hidden-pandas-fallback cleanup). Findings doc:
+      `mdps_long_running_engine_mixing_2026_05_28.md` § "Feasibility prototype recommendation".
 
 - [ ] (E6) **Structured memory events**: add `SHARD_STARTED`, `SHARD_COMPLETED`, `MANIFEST_LOAD_BYTES`,
       `INSTRUMENTS_LOAD_ROWS`, promote `📉 date-boundary GC` to a structured `DATE_BOUNDARY_GC` event, add
