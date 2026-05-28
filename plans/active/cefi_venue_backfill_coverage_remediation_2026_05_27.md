@@ -123,8 +123,12 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       forward-poll failure.
 - [ ] [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
       GCE still RUNNING): ensure `VM_SHUTDOWN_ON_COMPLETION` actually deletes the instance, not just exits the process.
-- [ ] [AGENT] P1. **tradfi reprocess**: the 5 tradfi MDPS VMs (deleted 2026-05-27) ran the pre-2026-05-26 OHLCV adapter
+- [x] ✅ [AGENT] P1. **tradfi reprocess**: the 5 tradfi MDPS VMs (deleted 2026-05-27) ran the pre-2026-05-26 OHLCV adapter
       that emitted 1.15M `SCHEMA_VALIDATION_FAILED` NaN rows. Reprocess fresh on the fixed session-grid adapter.
+      Launched 4 VMs on fixed MDPS code (tarball 2026-05-28 19:51 GMT, includes session-grid fix @b67cddd):
+      `mdps-backfill-tradfi-20260528-213704` (2020), `mdps-backfill-tradfi-20260528-213727` (2022-08→12),
+      `mdps-backfill-tradfi-20260528-213737` (2024), `mdps-backfill-tradfi-20260528-213750` (2025).
+      All RUNNING in asia-northeast1-c. ETA ~24h each. — 2026-05-28
 - [ ] [HUMAN] P0. **Renew Tardis API key** (single key `tardis-api-key` = EXPIRED, `code 11`; 3 secret names all
       identical+expired). Blocks ALL paid historical CeFi backfill. After renewal → relaunch backfills.
 
