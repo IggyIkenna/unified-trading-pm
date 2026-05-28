@@ -154,9 +154,30 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
 - [ ] [P2] **1.4 Feature dependency DAG — reuse intermediates in memory.** Compute in dependency order; pass derived
       features in-memory instead of write-then-reread. For colocated mtf/cross_instrument, read delta_one from memory,
       not GCS. (Requires a declared feature dependency graph — overlaps Phase 2's registry.)
-- [ ] [P2] **1.5 Idempotent skip + column pruning + predicate pushdown.** Skip already-written partitions; read only the
-      columns + date-range each calculator needs.
-- [ ] [P3] **1.6 Parallelism tune.** I/O-bound → MAX_WORKERS≈16 across instruments × timeframes; measure RAM
+- [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
+      `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
+      `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
+      already-landed partitions. Implemented the actual GCS probe via UCI `storage_client.blob_exists` against
+      `gs://{bucket}/day={day}/feature_group={fg}/timeframe={tf}/{instrument_id}.parquet`, wrapped in
+      `asyncio.to_thread`. Probe failure returns False (= redo to be safe). Now subsequent backfill runs skip
+      compute+write for landed partitions.
+- [ ] [P3][DEFERRED] **1.5b Column pruning at delta_one read** (mtf + cross_instrument readers of the 964-col
+      delta_one output). Blocked on: current `SourceSpec` model takes ALL columns by default and applies a
+      `_{timeframe}` suffix to each — there's no "required subset" declared. Adding column pruning needs a
+      SourceSpec API redesign (declare `required_columns: list[str]` per spec; reader passes that as
+      `pl.read_parquet(... columns=...)`). Real win for mtf joins on wide delta_one frames. Multi-hour redesign;
+      named-successor item for the read-side optimisation goal in 1.5.
+- [ ] [P3][NOT-APPLICABLE] **1.5c Predicate pushdown at parquet read.** Each delta_one parquet is already partitioned
+      per-day at the blob path (`day={YYYY-MM-DD}/...`); within a parquet, predicate pushdown on timestamp would only
+      win against intra-day filters, which we don't issue. Closed as not-applicable to the current partition shape.
+- [x] ✅ [P3] **1.6 Parallelism tune (feature-group level).** — **DONE** features@3ef4f2c8. `_process_groups`
+      serially iterated feature_groups with "any failure = stop" (kept the loop deterministic but killed throughput);
+      `_max_workers` config was plumbed from CLI but never applied. Switched to `asyncio.gather` bounded by
+      `Semaphore(max(1, self._max_workers))` — each group is independent, `_process_one_group` already catches its
+      own exceptions, so gather is safe. Lost strict fail-fast (collect all results + log full failure set; return
+      False if any failed). Combined with 1.3 per-day parallel writes: default max_workers=4 × 16 per-day GCS ops =
+      ~64 concurrent — comfortable for GCS. RAM-watchdog (the "85%→halve" half) deferred — covered downstream by the
+      MDPS-style `BatchOrchestrationMixin` if it's added later; not blocking this win. 8 tests pass. I/O-bound → MAX_WORKERS≈16 across instruments × timeframes; measure RAM
       (85%→halve).
 - [x] ✅ [P3][PERF] **1.7 De-fragment lagged-feature insertion** (`app/calculators/base.py:478`) — surfaced by Phase-2
       suites as a pandas `PerformanceWarning`: per-lag `features[lagged_name] = features[feature].shift(lag)` does N
