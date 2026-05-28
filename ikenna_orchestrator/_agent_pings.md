@@ -3343,9 +3343,9 @@ lending_indices/lst_rates/dex_pools, EVERYWHERE.**
 The autonomous `mtds-solana-defi-backfill` VM (launched ~13:06 UTC via legacy `solana_defi_handler.py`) is writing to
 the **wrong target**
 `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/…/instrument_type=lending|pool/…` (unified-flat
-bucket + EVM-style instrument_types). Conflicts with SSOT (per `cloud-providers.yaml` + `get_write_bucket_name` + Gates
-1/1.5 contracts). Also predictably failed for Kamino: _"row is missing required symbol column 'pool_id' (declared by
-SchemaContract for defi/pool/dex_pools)"_ — exactly the `SOLANA_VAULT` mismatch.
+bucket + EVM-style instrument*types). Conflicts with SSOT (per `cloud-providers.yaml` + `get_write_bucket_name` + Gates
+1/1.5 contracts). Also predictably failed for Kamino: *"row is missing required symbol column 'pool*id' (declared by
+SchemaContract for defi/pool/dex_pools)"* — exactly the `SOLANA_VAULT` mismatch.
 
 **Action 2026-05-28**: stopping the VM (NOT deleting; reversible). Plan body updated with:
 
@@ -3360,16 +3360,21 @@ refactor) ships.** Gate 2 (historical legacy → canonical split bucket migratio
 
 ## [2026-05-28 SCHEDULER PAUSED + GATE-7 EXPANDED] Bad-bucket Solana data to migrate, not just delete
 
+**Plan ref**: plans/active/solana_defi_legacy_migration_2026_05_27.md § AGENT-AUTO dispatch (Solana bad-bucket migration
+is part of the Gate-7 Solana DeFi go-forward scope).
+
 Updates 2026-05-28 (post operator directive "migrate the old bad buckets too"):
+
 1. Cloud Scheduler `uts-prod-mtds-collect-solana-defi-cron` is **PAUSED** (was firing daily 02:05 UTC → wrong-bucket
    writes via legacy `SolanaDefiHandler`). Resume command embedded in plan body Gate 5 section. Per-data-type EVM crons
    unaffected.
-2. **Gate 7 expanded**: migrate the 72 wrong-bucket parquets (`market-data-tick-defi-central-element-323112/raw_tick_data
-   /by_date/…/chain=SOLANA/instrument_type=lending|pool/…`) into the dedicated split buckets with `instrument_type=`
-   remap (EVM `lending`/`pool` → `solana_lending`/`solana_vault`/`solana_amm_pool` based on row's symbol-column shape) +
-   `instrument_id` rebuilt via Gate-1.5 `InstrumentType.SOLANA_*`. Implementation: add `--source-bucket` flag to the
-   existing `scripts/migrate_legacy_solana_defi_to_canonical.py` so one script handles both Gate-2 (legacy `defi-prd`
-   tree) and Gate-7 (wrong-bucket hive tree). Idempotent.
+2. **Gate 7 expanded**: migrate the 72 wrong-bucket parquets
+   (`market-data-tick-defi-central-element-323112/raw_tick_data /by_date/…/chain=SOLANA/instrument_type=lending|pool/…`)
+   into the dedicated split buckets with `instrument_type=` remap (EVM `lending`/`pool` →
+   `solana_lending`/`solana_vault`/`solana_amm_pool` based on row's symbol-column shape) + `instrument_id` rebuilt via
+   Gate-1.5 `InstrumentType.SOLANA_*`. Implementation: add `--source-bucket` flag to the existing
+   `scripts/migrate_legacy_solana_defi_to_canonical.py` so one script handles both Gate-2 (legacy `defi-prd` tree) and
+   Gate-7 (wrong-bucket hive tree). Idempotent.
 3. End-state SSOT-enforcement: **zero Solana DeFi data outside the dedicated split buckets** post Gates 2 + 7.
 
 vm-ml worker: pick up Gates 2 / 5 / 7 in that order (Gate 5 unblocks resume-cron; Gate 7 cleans the leak's debris).
@@ -3387,15 +3392,14 @@ ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [2026-
 ```
 
 **Action required**: the agent who posted each orphan ping must either:
+
 1. **File a plan** in `plans/active/<slug>_2026_05_28.md` (or extend an existing plan in `plans/active/issues/` /
    `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
+2. **Edit the orphan ping** to add the new plan path inline, OR
 3. **Remove the ping** if it's resolved / no longer actionable.
 
 Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
 
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on Ikenna's machine (every 4h) +
+AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don't collide). Reference:
+`plans/active/mtds_mdps_master.md` Phase -1 (workspace-discipline prereq).
