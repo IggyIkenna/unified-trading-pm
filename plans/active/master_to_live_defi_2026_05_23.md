@@ -110,23 +110,24 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-28 05:46 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-28 08:34 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
 | [`deployment_ui_vm_and_venue_coverage_visibility_2026_05_27`](./deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md) | master | brand-new | 2/10 | 20% | 4.0 | — |
-| [`features_calc_efficiency_and_correctness_2026_05_27`](./features_calc_efficiency_and_correctness_2026_05_27.md) | master | brand-new | 12/20 | 60% | 4.0 | — |
 | [`cefi_venue_backfill_coverage_remediation_2026_05_27`](./cefi_venue_backfill_coverage_remediation_2026_05_27.md) | master | infra | 9/51 | 18% | 4.0 | — |
+| [`features_calc_efficiency_and_correctness_2026_05_27`](./features_calc_efficiency_and_correctness_2026_05_27.md) | master | brand-new | 19/28 | 68% | 3.2 | — |
 | [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 3/7 | 43% | 2.3 | — |
 | [`canonical_vm_log_archival_2026_05_27`](./canonical_vm_log_archival_2026_05_27.md) | master | infra | 4/9 | 44% | 1.3 | — |
 | [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) | master | brand-new | 30/37 | 81% | 1.1 | — |
 | [`manifest_consolidator_duckdb_memory_fix_2026_05_26`](./manifest_consolidator_duckdb_memory_fix_2026_05_26.md) | master | infra | 8/14 | 57% | 1.0 | — |
+| [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28`](./mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md) | **orphan** | infra | 5/10 | 50% | 0.8 | — |
 | [`features_input_manifest_migration_2026_05_25`](./features_input_manifest_migration_2026_05_25.md) | master | refactor | 21/25 | 84% | 0.6 | — |
 | [`aws_manifest_consolidator_scope_2026_05_21`](./aws_manifest_consolidator_scope_2026_05_21.md) | master | infra | 8/10 | 80% | 0.5 | — |
 | [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md) | master | infra | — | — | 0.4 | — |
 | [`features_backfill_phase3_2026_05_22`](./features_backfill_phase3_2026_05_22.md) | features_and_ml_master | infra | 15/18 | 83% | 0.4 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 168/172 | 98% | 0.1 | — |
-| **TOTAL** (12 plans) | 0 orphans, 0 TBD | — | — | **58% done** | **20** | — |
+| **TOTAL** (13 plans) | 1 orphans, 0 TBD | — | — | **60% done** | **20** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
