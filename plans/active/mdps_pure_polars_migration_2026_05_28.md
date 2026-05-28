@@ -293,8 +293,8 @@ The audit + benchmark are done. This phase ships the actual code.
   polars instead. Add a regression test that asserts `_read_tick_data` returns `pl.DataFrame`. — Done across
   Stages 1.1-1.4: test_read_tick_data_polars_return.py (1.1), test_chain_streaming.py pl assertions (1.3),
   test_data_source.py pl assertions (1.4). 1368 tests pass; no pd.DataFrame mocks remain for _read_tick_data.
-- [ ] [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling
-  tests, process_handler tests, plus any worker tests + per-adapter tests. All must pass.
+- [x] ✅ [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling
+  tests, process_handler tests, plus any worker tests + per-adapter tests. All must pass. — 1368 passed, 1 skipped
 - [ ] [P0] **1.7 Run basedpyright on touched files.** No new errors introduced. Pre-existing errors documented but
   not fixed in scope.
 - [ ] [P0] **1.8 Re-run the engine benchmark** against the migrated MDPS source. Goal: per-instrument peak should
