@@ -252,9 +252,9 @@ calls. Adapter-side caches were the suspicion before the 2026-05-28 audit; findi
 This is the running list. Tick items as the corresponding finding ships a fix. **Add new items at the bottom as new
 findings surface.**
 
-- [ ] (E1) **Pre-count scanner passes `instrument_ids`**: at `process_handler.py:383-388`, the `list_instrument_files`
+- [x] ✅ (E1) **Pre-count scanner passes `instrument_ids`**: at `process_handler.py:383-388`, the `list_instrument_files`
       pre-count call should accept `instrument_ids=` so the log line and tracker total reflect the actual scope.
-      Findings doc: `mdps_long_running_axes_e_g_h_2026_05_28.md` § Axis E.
+      Findings doc: `mdps_long_running_axes_e_g_h_2026_05_28.md` § Axis E. — MDPS@a5e1dac 2026-05-28
 
 - [ ] (E2) **Manifest reuse across the per-timeframe re-check**: at `orchestration_service.py:166-211`, the second
       `check_shard_freshness` call re-reads the 526 MB manifest. Either pass the already-loaded DataFrame or skip the
