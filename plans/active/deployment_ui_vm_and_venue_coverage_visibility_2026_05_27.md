@@ -60,8 +60,12 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       `/deployments` endpoint was fine but had no UI surface. Fix: restored History tab trigger + TabsContent rendering
       `<DeploymentHistory>` component; updated grid-cols (6→7/7→8/8→9). Regression spec added.
       — deployment-ui@3829ff8 | pw:L2 BLOCKED-ENVIRONMENT (libatk/libgbm absent on EC2) | unit: 724 passed | regression: tests/smoke/routes.spec.ts
-- [ ] [AGENT][UI] P1. History tab shows completed/failed/reaped deployments with outcome (COMPLETED/FAILED/reaped),
+- [x] ✅ [AGENT][UI] P1. History tab shows completed/failed/reaped deployments with outcome (COMPLETED/FAILED/reaped),
       duration, rows captured, and a link to the archived run.log / serial-console (`gs://vm-logs-archive-{pid}/…`).
+      Implemented dedicated `renderArchiveTable` with columns: Outcome badge (COMPLETED/FAILED/reaped + rc), Duration
+      (started_at→completed_at), Rows Captured (rows_out), GCS console log link (gs://→console.cloud.google.com URL),
+      Completed timestamp. Helper fns: formatDuration, getOutcomeVariant, getOutcomeLabel, logUriToConsoleUrl.
+      — deployment-ui@767f262 | pw:L2 BLOCKED-INFRA: libatk-1.0.so.0 missing in slot env | regression: tests/smoke/vm_deployments_archive_history.spec.ts
 
 ## §3 — Venue API-key status panel (names + status, never the key) (P1)
 
