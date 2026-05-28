@@ -80,20 +80,30 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
       Implementation set = `{custom, ta_lib, pandas_std, numpy_std}`.
 
 - [ ] (k) **Formula version stamped on every parquet write path**:
-      `feature_writer._write_parquet` MUST call `_stamp_version_columns(df, feature_group)`
-      AND pass `metadata=self._build_parquet_metadata(...)` to `df.write_parquet(...)`.
-      Both batch and live writer paths.
-      Find: `rg "_stamp_version_columns|_build_parquet_metadata" features_service/delta_one/app/core/feature_writer.py`
-      Verify: both helpers invoked from `_write_parquet`; no other write path bypasses them.
+      `feature_writer._write_parquet` MUST (1) call `_resolve_group_version` for the
+      group, (2) include `"feature_group_version": str(version)` in the `partition`
+      dict it passes to `data_sink.write(...)`, AND (3) pass
+      `metadata=self._build_parquet_metadata(df, feature_group, version)` to
+      `df.write_parquet(...)`. There must be NO per-row `feature_group_version`
+      column on the DataFrame (operator directive 2026-05-28 — millions-of-files
+      cost). Both batch and live writer paths.
+      Find: `rg "_resolve_group_version|_build_parquet_metadata|feature_group_version" features_service/delta_one/app/core/feature_writer.py`
+      Verify: helpers invoked from `_write_parquet`; `feature_group_version` is a
+      partition dict key (not a `with_columns(...)` call); no `_stamp_version_columns`
+      helper exists.
 
-- [ ] (l) **Sidecar column + file-level metadata round-trip on real GCS parquets**:
-      sample a recent parquet from `gs://features-delta-one-{ag}-{pid}/` and verify it
-      carries the version stamp. Drift = legacy un-stamped writes sneaking back in.
-      Run: `python -c "import pyarrow.parquet as pq; pf = pq.ParquetFile('<gs path>'); print({k.decode(): v.decode() for k,v in (pf.metadata.metadata or {}).items() if not k.startswith(b'ARROW')})"`
-      Verify: keys present: `feature_group_version`, `feature_column_versions`,
-      `feature_group`. Sidecar column `feature_group_version: int32` exists. Per-row
-      value matches file-level int. Legacy sentinel `0` only appears on pre-2026-05-28
-      writes.
+- [ ] (l) **Path partition + file-level metadata round-trip on real GCS parquets**:
+      sample a recent parquet from `gs://features-delta-one-{ag}-{pid}/` and verify
+      the version is stamped in BOTH the path AND the file-level metadata, and that
+      they AGREE. Drift = path/metadata mismatch (writer bug), or legacy un-stamped
+      writes sneaking back in.
+      Run: `python -c "import re, pyarrow.parquet as pq; path='<gs path>'; pf = pq.ParquetFile(path); meta = {k.decode(): v.decode() for k,v in (pf.metadata.metadata or {}).items() if not k.startswith(b'ARROW')}; path_v = re.search(r'feature_group_version=(\d+)/', path).group(1); print('path:', path_v, 'meta:', meta.get('feature_group_version')); assert path_v == meta['feature_group_version'], 'PATH/METADATA MISMATCH'; print('metadata:', meta)"`
+      Verify: (a) GCS path contains `feature_group_version={N}/` segment between
+      `feature_group=...` and `timeframe=...`; (b) file-level metadata has 3 keys:
+      `feature_group_version`, `feature_column_versions`, `feature_group`; (c) path
+      version int == metadata version int; (d) no `feature_group_version` COLUMN on
+      the parquet's schema; (e) sentinel `0` only appears on groups without
+      registered specs (currently should be empty — Phase 2 covered all 34).
 
 - [ ] (m) **2.4 / 2.6 / 2.7 parametrize on `status ∈ {verified, tested}` only**: the
       Phase 2 mass-catalogue (1,329 "listed" specs) MUST NOT false-fail these gates.

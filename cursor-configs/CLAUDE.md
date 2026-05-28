@@ -117,8 +117,11 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Service CLIs: `--operation` (what) `--mode` (batch/live) `--asset-group` (domain). SSOT:
   `codex/06-coding-standards/cli-convention.md`.
 - **Feature formula versioning** (delta_one): every parquet in
-  `features-delta-one-{ag}-{pid}` carries `feature_group_version` (sidecar Int32 column + file-level
-  parquet metadata `feature_group_version` / `feature_column_versions` JSON / `feature_group`).
+  `features-delta-one-{ag}-{pid}` carries `feature_group_version` as a (1) HIVE PARTITION KEY
+  in the GCS path (`.../feature_group=X/feature_group_version={N}/timeframe=Y/day=Z/instr.parquet`)
+  + (2) file-level parquet footer metadata (`feature_group_version` / `feature_column_versions` JSON
+  / `feature_group`). NO per-row column (path-partitioning beats per-row at millions-of-files scale —
+  selective reads list paths instead of scanning every file).
   Group version resolves as `max(spec.formula_version for spec in get_specs_by_group(group))`.
   Registry SSOT: `features_service/delta_one/app/features/registry.py` (1,382 specs / 34 groups).
   CLI: `features-status [--detailed|--group X|--next N|--export csv|markdown|--check-drift]`.

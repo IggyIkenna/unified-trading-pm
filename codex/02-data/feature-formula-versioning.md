@@ -31,28 +31,59 @@ consumed by a shadow model that's being evaluated for promotion.
 | `features_service/delta_one/app/features/status_report.py` | Operator CLI (`features-status`) — summary / detailed / `--check-drift`. |
 | `features_service/delta_one/app/core/feature_writer.py` | Stamps the version into every parquet at write time. |
 
-## Per-row vs per-file vs file-level metadata
+## Where the version lives: GCS path partition + file-level metadata
 
 Every parquet emitted by `feature_writer._write_parquet` carries the version
-in **two places**:
+in **two places**, both small:
 
-1. **Per-row sidecar column** `feature_group_version: Int32` — constant per
-   file. Any reader sees the version without parsing parquet metadata.
-2. **File-level parquet key-value metadata** —
-   - `feature_group_version` (single int, equal to the sidecar column)
+1. **GCS hive partition key** — the canonical pin surface. The version is a
+   directory level in the path:
+
+   ```
+   gs://features-delta-one-{ag}-{pid}/
+     feature_group=technical_indicators/
+       feature_group_version=2/            ← partition key
+         timeframe=1h/
+           day=2024-01-15/
+             BTC-USDT.parquet
+   ```
+
+   Consumers pinning `@v2` list only `feature_group_version=2/` paths — no
+   parquet bytes opened on the v1 corpus. BigQuery external tables, DuckDB,
+   Polars `scan_parquet` with hive_partitioning, Spark, all auto-discover the
+   key and expose it as a queryable column for free.
+
+2. **File-level parquet key-value metadata** — three keys in the parquet
+   footer (one entry per file, ~tens of bytes, regardless of row count):
+
+   - `feature_group_version` (single int, mirrors the path partition value)
    - `feature_column_versions` (JSON `{column_name: int_version}` for every
      registered output column in the file)
-   - `feature_group` (the group name itself)
+   - `feature_group` (the group name; survives if the file is moved out of
+     its partition)
+
+   Kept primarily for **drift detection / forensic visibility**: any stray
+   file (copied out of its partition, served via a non-hive reader, audit
+   sample) still self-describes. The audit checklist item (l) verifies path
+   ↔ metadata agreement — a mismatch flags a writer bug.
 
 Read via PyArrow:
 
 ```python
 import pyarrow.parquet as pq
-pf = pq.ParquetFile("gs://features-delta-one-defi-PID/feature_group=technical_indicators/.../instr.parquet")
+pf = pq.ParquetFile("gs://features-delta-one-defi-PID/feature_group=technical_indicators/feature_group_version=2/.../instr.parquet")
 meta = pf.metadata.metadata  # dict[bytes, bytes]
 print(meta[b"feature_group_version"])      # b'2'
 print(meta[b"feature_column_versions"])    # b'{"rsi_14": 2, "macd": 1, ...}'
+print(meta[b"feature_group"])              # b'technical_indicators'
 ```
+
+**There is NO per-row column.** The initial Phase 3 implementation added a
+constant `feature_group_version: Int32` sidecar column on every row;
+operator directive 2026-05-28 reverted that: "we will have millions of files
+and many rows, can't we assign this column into the gcs path itself?" — yes,
+path-partitioning lets selective reads list only matching paths instead of
+opening every parquet to filter on a column.
 
 ## Group version resolution
 
@@ -100,13 +131,23 @@ When you change the math in a calculator's `_calculate_features` method
 
 ## The 0 sentinel
 
-`feature_group_version=0` is reserved for **un-versioned legacy rows**
-written before this Phase landed. Strategies opting into the
-versioning contract MUST require `>=1`. The writer stamps `0` (with a
-warning) when called on a group with no registered FeatureSpecs — today
-that's impossible (Phase 2 catalogued all 34 groups), but the sentinel
-+ warning are the safe fallback for any future group added without a
-spec.
+`feature_group_version=0` is reserved for groups with **no registered
+FeatureSpecs**. The writer falls back to the 0 partition + logs a warning
+rather than raising — refusing to write would brick existing batch
+handlers. The sentinel appears visibly in the GCS path
+(`feature_group_version=0/`) so the gap is operationally obvious without
+parsing per-file metadata.
+
+Today every group in `CALCULATOR_REGISTRY` has at least one spec (Phase 2
+catalogued all 34), so the sentinel SHOULD only appear:
+- on un-migrated parquets written **before** this Phase landed (those live
+  at the pre-correction path with no `feature_group_version=` segment at
+  all — readers handle that as "legacy / unknown"),
+- transiently if a new calculator class is added without its registry
+  entry yet (audit item (i) catches this; lifetime should be minutes,
+  not days).
+
+Strategies opting into the versioning contract MUST require `>=1`.
 
 ## Drift detection
 
