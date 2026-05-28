@@ -2,17 +2,7 @@
 title:
   Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination
   supervision
-status: archived
-archived: 2026-05-28
-archived_by: harsh-claude-opus
-archived_reason: |
-  Narrative operator-coordination doc from 2026-05-20 (8 days old, 0 todos).
-  The "human-vs-agent work split" concept it documents is now operationalised
-  via the daily work_split_<date>_<operator>.md files + the live agent-
-  orchestrator dashboard. Archived during the orchestrator_master closure
-  sweep — the plan declared parent_epic: orchestrator_master but contains
-  no orchestrator-implementation work (purely operator coordination
-  narrative).
+status: active
 created: 2026-05-20
 updated: 2026-05-20 # split principles + Phase 7/14 sub-splits + supervision-checkpoint wiring
 co-operators: [harsh]
@@ -33,11 +23,6 @@ estimate_calibrated_ai_days: 0.4
 ---
 
 # Human-work backlog — slots 1 (Ikenna) + 2 (Harsh) — 2026-05-20 r2
-
-> **ARCHIVED 2026-05-28** — Narrative operator-coordination doc; the human-vs-agent split it describes is now
-> operationalised via daily `work_split_<date>_<operator>.md` files + the live agent-orchestrator dashboard. Archived
-> during the orchestrator_master epic closure sweep; the plan declared `parent_epic: orchestrator_master` but contained
-> no orchestrator-implementation work. Git history preserved for recovery.
 
 > **Operator 2026-05-20 r2**: "deeper human actions around credentials and exactly how strategy archetype works need to
 > be ikenna. things like backfilling after migration and getting deployment UI fully audited for data status and
