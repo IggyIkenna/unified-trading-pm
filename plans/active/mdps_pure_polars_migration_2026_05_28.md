@@ -301,7 +301,8 @@ The audit + benchmark are done. This phase ships the actual code.
   match Path D (~625 MB) or better. — Rerun with synthetic data (prod parquets unavailable on worker VM); D=99 MB
   vs C=204 MB mean peak (51% lower). Original baseline D=625 MB vs C=1861 MB (66% lower on real data). Relative
   ordering consistent: D < A < B < C. See results_synthetic_stage1_2026_05_28.md.
-- [ ] [P0] **1.9 Commit + push to `live-defi-rollout`** with the standard `Commit + Push + Flip` discipline.
+- [x] ✅ [P0] **1.9 Commit + push to `live-defi-rollout`** with the standard `Commit + Push + Flip` discipline.
+  — MDPS: Stage 1.3@ceb7a12, Stage 1.4@c24b17c; Plan: checkboxes 1.3-1.8 all pushed @81f03d2f
 - [ ] [P0] **1.10 Flip the Efficiency Checklist E5 item** in
       `unified-trading-pm/plans/audit/instructions/mtds_mdps_master_audit_instructions.md` from `- [ ]` to
       `- [x] ✅ — MDPS@<sha>`.
