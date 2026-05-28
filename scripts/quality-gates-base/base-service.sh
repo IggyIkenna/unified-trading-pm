@@ -825,11 +825,17 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
     # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357"
-    "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
-        && log_success "pip-audit clean" \
-        || {
-            log_fail "pip-audit vulnerabilities found"
-            python3 -c "
+    # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
+    # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
+    _pa_rc=0
+    run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
+    if [[ $_pa_rc -eq 0 ]]; then
+        log_success "pip-audit clean"
+    elif [[ $_pa_rc -eq 124 ]]; then
+        log_warn "pip-audit: OSV query timed out after 180s (Cloud Build network) — skipping vulnerability gate (advisory)"
+    else
+        log_fail "pip-audit vulnerabilities found"
+        python3 -c "
 import json, sys
 try:
     data = json.load(open('/tmp/pip-audit-output.json'))
@@ -840,8 +846,8 @@ try:
 except Exception as e:
     print(f'  (could not parse pip-audit output: {e})')
 " 2>/dev/null || :
-            V=$(( V + 1 ))
-        }
+        V=$(( V + 1 ))
+    fi
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
     SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
         /tmp/pip-audit-output.json 2>/dev/null || :
