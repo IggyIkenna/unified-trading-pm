@@ -130,8 +130,11 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 
 ## §5 — Relaunch gate
 
-- [ ] [AGENT] P1. After §1+§4 code fixes land AND the key is renewed: relaunch CeFi backfills (expiry-window-aware,
-      coverage-aware) and verify real rows flow for a sample paid historical date per venue.
+- [~] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. After §1+§4 code fixes land AND the key is renewed: relaunch CeFi
+      backfills (expiry-window-aware, coverage-aware) and verify real rows flow for a sample paid historical date per
+      venue. **BLOCKED 2026-05-28**: §1 fixes landed (mtds@91e3df03); §4 P0/P1 code fixes landed; but Tardis API key
+      is EXPIRED (`code 11`, §4 P0 `[HUMAN]` renewal not done). All paid CeFi backfill blocked until operator renews
+      key at `tardis-api-key` in GCP Secret Manager.
 
 ## §6 — Deep log-scan addendum (2026-05-27, all 25 VMs, head+mid+tail byte-range sampling)
 
