@@ -116,6 +116,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
 - Service CLIs: `--operation` (what) `--mode` (batch/live) `--asset-group` (domain). SSOT:
   `codex/06-coding-standards/cli-convention.md`.
+- **Feature formula versioning** (delta_one): every parquet in
+  `features-delta-one-{ag}-{pid}` carries `feature_group_version` (sidecar Int32 column + file-level
+  parquet metadata `feature_group_version` / `feature_column_versions` JSON / `feature_group`).
+  Group version resolves as `max(spec.formula_version for spec in get_specs_by_group(group))`.
+  Registry SSOT: `features_service/delta_one/app/features/registry.py` (1,382 specs / 34 groups).
+  CLI: `features-status [--detailed|--group X|--next N|--export csv|markdown|--check-drift]`.
+  Bump formula_version on MATH change only (NOT config — RSI_14 vs RSI_18 is config). SSOT:
+  `codex/02-data/feature-formula-versioning.md`.
 
 ### Manifest + honest absence
 

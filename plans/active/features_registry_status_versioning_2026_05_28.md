@@ -189,10 +189,10 @@ in QG. This is the "you changed the formula but didn't bump the version" guard.
 - [ ] [QG] P2. Wire `--check-drift` into `quality-gates.sh` as STEP 5.XX once `FeatureSpec.formula_hash` is populated with the baseline. Today's behaviour: prints baseline (informational); next iteration: compare-against-stored-hash, fail on mismatch.
 
 ### Phase 5 — Codex alignment + consumer pin pattern [P2]
-- [ ] [DOC] P2. Update `codex/04-architecture/artifact-versioning.md` § Feature groups with actual file paths.
-- [ ] [DOC] P2. New codex doc `codex/02-data/feature-formula-versioning.md` covering per-column version column, drift detection, consumer pin.
-- [ ] [DOC] P2. Strategy / ML config example: `feature_group_refs: [delta_one@v1, market_structure@v2]` pattern.
-- [ ] [CLAUDE.md] P2. One-line pointer in `cursor-configs/CLAUDE.md` under "Service architecture" section.
+- [x] ✅ [DOC] P2. Updated `codex/04-architecture/artifact-versioning.md` § Feature groups row to cite the registry.py SSOT path + per-group `max(spec.formula_version)` resolution + link to the new implementation doc.
+- [x] ✅ [DOC] P2. New codex doc `codex/02-data/feature-formula-versioning.md` (~190 lines) covering: 4-file architecture, per-row sidecar + file-level parquet metadata, group version resolution, bump procedure, 0 sentinel, drift detection, status field semantics, consumer pin pattern, composition with other codex docs.
+- [x] ✅ [DOC] P2. Consumer pin example (`feature_group_refs: [delta_one/technical_indicators@v2, delta_one/market_structure@v1, ...]`) documented in the new codex doc § "Consumer pin pattern (target — not yet shipped on strategy side)".
+- [x] ✅ [CLAUDE.md] P2. Added 5-line block under "Service architecture" — registry SSOT path / CLI / bump-rule / sentinel / codex SSOT pointer.
 
 ## Success Criteria
 

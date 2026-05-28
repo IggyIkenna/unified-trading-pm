@@ -40,7 +40,7 @@ Every artifact listed below is versioned, content-hashed, and consumer-opt-in:
 
 | Artifact                         | Owner                                                          | Versioned by                                |
 | -------------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
-| Feature groups                   | features-service (onchain family), features-ohlc-service, etc. | content hash + monotonic v                  |
+| Feature groups                   | features-service (delta_one + onchain family + others) — registry SSOT `features_service/delta_one/app/features/registry.py`. Implementation details: [`feature-formula-versioning.md`](../02-data/feature-formula-versioning.md) | content hash + monotonic v (per-group: `max(spec.formula_version)`) |
 | ML models                        | ml-training-service                                            | content hash + monotonic v                  |
 | Execution policies (rule tables) | execution-service                                              | content hash + monotonic v                  |
 | Cost models                      | execution-service                                              | content hash + monotonic v                  |
