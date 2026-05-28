@@ -104,9 +104,14 @@ source:
   (no explicit per-shard emit in the migration script — the consolidator discovers newly-written files).
 - [ ] [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
       venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets.
-- [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
+- [~] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
       (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
       rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
+      **`lst_rates/` DONE 2026-05-28**: deleted 1,200 date-prefix parquets (MARINADE 2023-01-01→2026-04-14); pruned
+      64,373 stale manifest rows from defi-prd `_index/availability_index.parquet` (1,633,780→1,569,407 rows). Canonical
+      `lst-rates-central-element-323112` confirmed superset (dates 2020-01-01→2026-05-19, MARINADE 902 rows).
+      **`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
+      rows — Gate 3 cannot be verified yet). Re-run this gate after Gate 2 migration VM completes and Gate 3 is verified.
 - [ ] [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
       2026-05-28: "migrate the old bad buckets too")**: in addition to Gate 2 (which sources from `defi-prd/{type}/…`
       legacy historical), this gate migrates the **72 wrong-bucket parquets** the autonomous `mtds-solana-defi-backfill`
