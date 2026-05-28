@@ -99,10 +99,11 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 - [x] ✅ [AGENT] P1. **sports-scheduler venv**: every dispatch fails `No module named instruments_service` — package
       missing in `/home/ikennaigboaka/venv`. Fix the venv/install in the scheduler launcher. —
       deployment-service@9ded013 (added instruments-service tarball)
-- [ ] [AGENT] P1. **sports MDPS `No SchemaContract registered`**: derived types `odds_movement_15m` /
+- [x] ✅ DONE [AGENT] P1. **sports MDPS `No SchemaContract registered`**: derived types `odds_movement_15m` /
       `odds_snapshot_15m` have no contract for venues MATCHBOOK/UNIBET (counts: sports-2022=7, sports-2023=64,
       prediction-2026=479) → instruments silently skipped (`recovery=alert`), real data loss. Register the contracts in
       `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (+ `VENUE_CONTRACT_OVERRIDES`).
+      → Handled as part of §6E P1 — see below.
 - [ ] [AGENT] P1. **sports-2025 `MalformedTickField`**: 372/window, `bm_minutes_to_kickoff`/`h2h_columns` dropping ALL
       rows → 19h of zero output at 146% CPU. Diagnose the malformed field + fix the adapter; reprocess y2025.
 - [ ] [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
@@ -179,12 +180,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6E — Sports schema contracts (expands §4 — it's THREE data_types, ALL years)
 
-- [ ] [AGENT] P1. **Register 3 missing derived data_types** in
+- [x] ✅ DONE [AGENT] P1. **Register 3 missing derived data_types** in
       `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (+ `VENUE_CONTRACT_OVERRIDES`) — confirmed
       across 2022/2023/2025, `recovery=alert` silent-skips: (1) `odds_movement_15m` — MATCHBOOK, UNIBET, LADBROKES_UK,
       LIVESCOREBET, BETFAIR_EX_EU, BETFAIR_EX_UK; (2) `odds_horizon_bucket_15m` — CORAL, DRAFTKINGS, FANDUEL,
       LIVESCOREBET, SKYBET, SPORT888, BETSSON, BETVICTOR; (3) `arbitrage_opportunity_15m` — UNIBET. (Prior plan named
       only #1 on MATCHBOOK/UNIBET.)
+      → uac@af328e5 — registered ("sports","odds","{dt}_{1m|15m|1h}") for all 3 derived types + 9 new UAC tests
 - [ ] [AGENT] P1. **MalformedTickFieldError is ALL years (2022/2023/2025), not just 2025** —
       `bm_minutes_to_kickoff_or_h2h_columns`, `recovery=fail_fast`, root cause logged as
       `No h2h data found in MTDS raw data` immediately prior → entire instrument dropped (100s–1000s/year across
@@ -193,11 +195,14 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6F — Prediction
 
-- [ ] [AGENT] P0. **prediction-2026 = 100% loss for Jan–May 2026**: all 4200+ Polymarket CLOB instruments failed
+- [x] ✅ DONE [AGENT] P0. **prediction-2026 = 100% loss for Jan–May 2026**: all 4200+ Polymarket CLOB instruments failed
       `No SchemaContract registered … data_type='ohlcv_15s' venue='POLYMARKET'` with `instrument_type='UNKNOWN'`
       (✅0/❌4200 before the network wedge). Two fixes: (a) register the `ohlcv_15s`/POLYMARKET contract; (b) fix the
       instrument-type resolution returning `UNKNOWN` (an instrument-resolution gap, not just a missing contract).
       (prediction-2025 has the SAME contract miss but survives because other data_types succeed.)
+      → (a) uac@af328e5 — registered ("prediction","UNKNOWN","ohlcv_{tf}") fallback for all PREDICTION_TRADES timeframes
+      → (b) mdps@792ae5e — PredictionTradesAdapter.preprocess() + get_zero_activity_pairs() now use 3-segment
+        "POLYMARKET:PREDICTION_MARKET:{cid}" keys so _infer_instrument_type returns "PREDICTION_MARKET" not condition_id
 
 ### §6G — Infra (expands §4)
 
