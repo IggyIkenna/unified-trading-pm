@@ -151,9 +151,18 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
       cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
       output. Multi-day work; named-successor for the deeper batching goal in 1.3.
-- [ ] [P2] **1.4 Feature dependency DAG — reuse intermediates in memory.** Compute in dependency order; pass derived
-      features in-memory instead of write-then-reread. For colocated mtf/cross_instrument, read delta_one from memory,
-      not GCS. (Requires a declared feature dependency graph — overlaps Phase 2's registry.)
+- [ ] [P2][DEFERRED] **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
+      successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest scope
+      assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
+      (candlestick_patterns / momentum / moving_averages / oscillators / technical_indicators / volatility_realized /
+      volume_analysis / vwap) reads raw OHLCV from candles only. The real "in-memory reuse" win is **cross-layer**:
+      delta_one → mtf and delta_one → cross_instrument currently re-download the 964-col delta_one parquet from GCS
+      (mtf `engine/orchestrator.py:419` + cross_instrument `cli/handlers/batch_handler.py:150-151`). Eliminating that
+      round-trip requires running delta_one + mtf + cross_instrument in a **single process with shared dataframe
+      handoff** — operationally significant (today these are separate services, possibly on separate VMs). Multi-day
+      design + implementation + rollout; not appropriate as a P2 ad-hoc fix. Phase 2's registry (`app/features/
+      registry.py`) is per-column declarative — extending to a feature-group-level dependency graph is the natural
+      foundation when the colocated-orchestrator design lands.
 - [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
       `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
       `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
