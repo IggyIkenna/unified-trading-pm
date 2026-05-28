@@ -231,11 +231,14 @@ resolves the minimum window each family/feature needs and backfills exactly that
       swing_outcome_targets.\_detect_swing_points/\_compute_swing_bools; QG green.
   - NOTE: PPO was previously mis-filed here as a standalone bug — **corrected**: PPO is the A0 data issue (clean for
     BTC, fixed by `ffill(close)`), not a calculator bug.
-- [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` all-NaN → group marked
-      FAILED → the batch handler **aborted before the remaining 9 of 17 feature groups ran**. A degenerate single group
-      should not block the rest. Make the CLI batch path **group-isolated** (continue on group failure, report per-group
-      status) — mirrors the shard-level-failure-isolation HARD RULE. **PAUSED per operator 2026-05-26** (fix not
-      started). Provenance: e2e Phase 2 2026-05-26.
+- [x] ✅ 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** — **FIXED** features@b594294b (1.6 +
+      this commit). `_process_one_group` now writes a `record_failed` manifest row on every failure path
+      (orchestrator returned False / emission policy rejected / exception), via the new
+      `_failed_group_manifest.py` helper (`ManifestWriter.record_failed` with
+      `row_key={date, feature_group, feature_family}` + `PipelineMode.BATCH_DATABENTO`). `_process_groups`
+      return semantic changed: True if ANY group succeeded; False only if EVERY group failed. Partial-success
+      log lists succeeded + failed groups explicitly for observability. Mirrors the shard-level-failure-isolation
+      HARD RULE. Operator-acked direction 2026-05-28: detect + report per-group success/failure in manifest.
 
 ### Phase 3 — multi_timeframe (transitive on delta_one output) `[P1]`
 

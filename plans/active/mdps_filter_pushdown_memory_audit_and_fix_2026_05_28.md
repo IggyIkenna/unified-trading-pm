@@ -17,6 +17,12 @@ related:
 
 # MDPS filter-pushdown + memory pathology — audit, fix, verify
 
+> **Operator direction 2026-05-28**: a **larger MDPS service refactor** is queued and will start in some time; a
+> **14-day backfill run is in flight right now**, so the actual 4h/24h-unblocking data is arriving via that path.
+> The plan below stays open as the structural-fix tracker (it's the right diagnosis), but the features-side
+> unblock no longer depends on the per-day OOM tactic decisions (3.X-A/B/C/D below) — the bigger refactor will
+> subsume them. Treat 3.X-* as informational once the 14-day data lands.
+
 ## Goal
 
 Diagnose + fix the MDPS memory-pathology that makes narrow-scope backfills consume 70 GB+ of RAM

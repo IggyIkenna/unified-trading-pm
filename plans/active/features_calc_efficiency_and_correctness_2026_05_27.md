@@ -151,6 +151,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
       cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
       output. Multi-day work; named-successor for the deeper batching goal in 1.3.
+      **Operator 2026-05-28**: needs deeper investigation — dig in before scheduling a migration window.
 - [ ] [P2][DEFERRED] **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
       successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest scope
       assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
@@ -163,6 +164,9 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       design + implementation + rollout; not appropriate as a P2 ad-hoc fix. Phase 2's registry (`app/features/
       registry.py`) is per-column declarative — extending to a feature-group-level dependency graph is the natural
       foundation when the colocated-orchestrator design lands.
+      **Operator direction 2026-05-28**: priority order is (1) features-service end-to-end correct, then (2)
+      function correctness, then (3) colocation/parallelism optimisations to eliminate IO waste. This is a (3)
+      item — don't pull forward; revisit after end-to-end + correctness ship.
 - [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
       `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
       `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
@@ -176,6 +180,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       SourceSpec API redesign (declare `required_columns: list[str]` per spec; reader passes that as
       `pl.read_parquet(... columns=...)`). Real win for mtf joins on wide delta_one frames. Multi-hour redesign;
       named-successor item for the read-side optimisation goal in 1.5.
+      **Operator 2026-05-28**: deferred — revisit later alongside other optimisations after end-to-end + correctness.
 - [ ] [P3][NOT-APPLICABLE] **1.5c Predicate pushdown at parquet read.** Each delta_one parquet is already partitioned
       per-day at the blob path (`day={YYYY-MM-DD}/...`); within a parquet, predicate pushdown on timestamp would only
       win against intra-day filters, which we don't issue. Closed as not-applicable to the current partition shape.
@@ -230,6 +235,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       Removing the 5 suppressions could surface dozens-hundreds of new errors — too risky to flip blindly. Path:
       remove ONE suppression at a time, fix the resulting errors, then next. Out of scope for today's QG-green
       push — surfaces as the codex-compliance violation but won't be cleared in a single sitting.
+      **Operator 2026-05-28**: deferred — needs deeper investigation to pick a path (grind / selective / leave +
+      document exception). Revisit later.
 - [x] ✅ [BUG][P1] **1.7c test_orchestration_flow MagicMock leak.** — **FIXED** features@e13ad554. Root cause refined:
       not the `get_settings().base_timeframe` leak (that's at atexit, separate cross_instrument flush). The actual
       runtime fail was `OrchestrationService.process_feature_group` constructing `ManifestWriter(catalogue_bucket=
@@ -278,9 +285,10 @@ hand-written goldens for custom families.
 - [x] ✅ [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) —
       surfaced by the 2.3 lookahead suite as a pandas `FutureWarning` (would raise in a future pandas). — **FIXED**
       features@c686b9af: both anchored day/week VWAP now use `.ffill()`. basedpyright 0/0/0 + ruff clean.
-- [ ] [P2] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
+- [ ] [P2][DEFERRED] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
       values, absurd variance/outliers ("computes but wrong").
-- [ ] [P3] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
+- [ ] [P3][DEFERRED] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
+      **Operator 2026-05-28**: 2.6 + 2.7 deferred — pick up later via orchestrator dispatch when scheduled.
 
 ## Success criteria
 
