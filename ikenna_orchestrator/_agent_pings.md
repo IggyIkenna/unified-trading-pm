@@ -3357,3 +3357,20 @@ SchemaContract for defi/pool/dex_pools)"_ — exactly the `SOLANA_VAULT` mismatc
 **Do NOT relaunch `mtds-solana-defi-backfill` or any descendant of the legacy monolithic handler until Gate 5 (handler
 refactor) ships.** Gate 2 (historical legacy → canonical split bucket migration via
 `scripts/migrate_legacy_solana_defi_to_canonical.py`) is the FIRST priority + uses the correct SSOT paths. [NOT-ACKED]
+
+## [2026-05-28 SCHEDULER PAUSED + GATE-7 EXPANDED] Bad-bucket Solana data to migrate, not just delete
+
+Updates 2026-05-28 (post operator directive "migrate the old bad buckets too"):
+1. Cloud Scheduler `uts-prod-mtds-collect-solana-defi-cron` is **PAUSED** (was firing daily 02:05 UTC → wrong-bucket
+   writes via legacy `SolanaDefiHandler`). Resume command embedded in plan body Gate 5 section. Per-data-type EVM crons
+   unaffected.
+2. **Gate 7 expanded**: migrate the 72 wrong-bucket parquets (`market-data-tick-defi-central-element-323112/raw_tick_data
+   /by_date/…/chain=SOLANA/instrument_type=lending|pool/…`) into the dedicated split buckets with `instrument_type=`
+   remap (EVM `lending`/`pool` → `solana_lending`/`solana_vault`/`solana_amm_pool` based on row's symbol-column shape) +
+   `instrument_id` rebuilt via Gate-1.5 `InstrumentType.SOLANA_*`. Implementation: add `--source-bucket` flag to the
+   existing `scripts/migrate_legacy_solana_defi_to_canonical.py` so one script handles both Gate-2 (legacy `defi-prd`
+   tree) and Gate-7 (wrong-bucket hive tree). Idempotent.
+3. End-state SSOT-enforcement: **zero Solana DeFi data outside the dedicated split buckets** post Gates 2 + 7.
+
+vm-ml worker: pick up Gates 2 / 5 / 7 in that order (Gate 5 unblocks resume-cron; Gate 7 cleans the leak's debris).
+[NOT-ACKED]

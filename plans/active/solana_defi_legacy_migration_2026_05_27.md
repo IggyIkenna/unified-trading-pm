@@ -28,6 +28,16 @@ source:
 > `dex_pools_handler.py` all already do this for EVM). Solana write-path drift surfaced 2026-05-28: legacy monolithic
 > `solana_defi_handler.py` writes to `market-data-tick-defi-central-element-323112/raw_tick_data/by_date/…/instrument_type=lending|pool/…`
 > (wrong bucket + wrong instrument_type + flat-not-env-tier) — see new Gate-5 + Gate-7 below.
+>
+> **🛑 LEAK STOPPED 2026-05-28**: Cloud Scheduler `uts-prod-mtds-collect-solana-defi-cron` (was firing daily 02:05 UTC,
+> wrong-bucket writes via legacy monolithic `SolanaDefiHandler`) **PAUSED** via
+> `gcloud scheduler jobs pause uts-prod-mtds-collect-solana-defi-cron --location=asia-northeast1`. The autonomously-
+> launched `mtds-solana-defi-backfill` VM self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`) after writing **72
+> wrong-bucket Solana parquets** (Gate-7 scope). Until Gate 5 ships the SSOT-correct handler refactor, **no go-forward
+> Solana DeFi collection happens** (acceptable: stop wrong-bucket leak > continue wrong-bucket collection per operator
+> directive). Resume the cron post-Gate-5: `gcloud scheduler jobs resume uts-prod-mtds-collect-solana-defi-cron
+> --location=asia-northeast1`. The per-data-type crons (`collect-lending-indices-cron`, `collect-dex-pools-cron`,
+> `collect-lst-rates-cron`) are NOT affected — they only cover EVM venues and already write correctly to split buckets.
 
 > **Provenance**: started from `defi_code_codex_drift_2026_05_27` **D2** ("delete legacy
 > `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in `market-data-tick-defi-prd`; canonical is the dedicated split
@@ -95,16 +105,25 @@ source:
 - [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
       (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
       rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
-- [ ] [SCRIPT] P0. **Gate 7 — clean up wrong-bucket Solana writes (NEW 2026-05-28)**: the autonomous
-      `mtds-solana-defi-backfill` VM (launched ~13:06 UTC, **STOPPED 2026-05-28** per SSOT-enforcement directive) wrote
-      Solana DeFi rows for dates ≥2025-07-22 to the **WRONG** target
+- [ ] [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
+      2026-05-28: "migrate the old bad buckets too")**: in addition to Gate 2 (which sources from `defi-prd/{type}/…`
+      legacy historical), this gate migrates the **72 wrong-bucket parquets** the autonomous
+      `mtds-solana-defi-backfill` VM wrote today (2026-05-28). **Source**:
       `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/asset_group=defi/venue=*/chain=SOLANA/
-      instrument_type=lending|pool/data_type={lending_indices,dex_pools}/...` (unified flat bucket + EVM-style
-      instrument_types). After Gate 5 lands the corrected handler, either (a) MIGRATE these wrong-bucket writes into
-      the canonical split buckets with the new `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types
-      (mirror the Gate-2 script's pattern) or (b) DELETE them and re-run Gate-5 collector to rewrite to the canonical
-      paths. Then delete the legacy-target writes the consolidator may have indexed in the wrong bucket's _index.
-      Sample-inspect for completeness before deletion.
+      instrument_type=lending|pool/data_type={lending_indices,dex_pools}/...` (unified flat bucket, EVM-style
+      instrument_types). **Target**: the same dedicated split buckets as Gate 2 — `lending-indices-*` + `dex-pools-*`
+      under `day=/category=defi/venue=*/chain=SOLANA/instrument_type=solana_lending|solana_vault|solana_amm_pool/
+      data_type=*/`. **Schema mapping**: rows already have `instrument_id`/`venue`/`chain`/`ts_event`/`data_type` set
+      (live writer added them), but `instrument_type` must be **remapped** from EVM `lending`/`pool` → Solana
+      `solana_lending`/`solana_vault`/`solana_amm_pool` (per row's symbol-column shape: rows with `pool_id` →
+      `solana_amm_pool`; rows with `vault_address` → `solana_vault`; rows with `market_id` → `solana_lending`); rebuild
+      `instrument_id` via `build_instrument_id(InstrumentType.SOLANA_*, …)` to match Gate-1.5 enum dispatch. **Approach**:
+      add a `--source-bucket` flag to `scripts/migrate_legacy_solana_defi_to_canonical.py` so the same tested script
+      handles both Gate-2 (legacy `defi-prd/{type}/…`) and Gate-7 (wrong-bucket hive `raw_tick_data/by_date/…`).
+      Idempotent skip-if-exists already in place. **After migration**: delete the 72 wrong-bucket parquets via
+      `gcs_delete_object` + prune any `_index/availability_index.parquet` rows on the unified bucket that reference
+      them. Sample-inspect canonical split-bucket rows before delete. Gate 7 ends in: **zero Solana DeFi data outside
+      the dedicated split buckets** (SSOT enforced).
 - [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **SSOT MANDATE: refactor MUST write dedicated split buckets +
       SOLANA_* instrument_types — NOT the unified bucket.** **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP Secret
       Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`;
