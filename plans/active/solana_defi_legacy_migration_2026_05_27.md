@@ -19,19 +19,19 @@ source:
 # Solana DeFi legacy→canonical migration
 
 > **Provenance**: started from `defi_code_codex_drift_2026_05_27` **D2** ("delete legacy
-> `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in `market-data-tick-defi-prd`; canonical is the dedicated
-> split buckets"). Verification on 2026-05-27 showed it is **not** a clean delete — the legacy prefixes hold **unique
-> Solana DeFi history** the EVM-only canonical buckets never received. This plan tracks the full migrate-then-delete
-> chain so it survives a mid-way stop.
+> `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in `market-data-tick-defi-prd`; canonical is the dedicated split
+> buckets"). Verification on 2026-05-27 showed it is **not** a clean delete — the legacy prefixes hold **unique Solana
+> DeFi history** the EVM-only canonical buckets never received. This plan tracks the full migrate-then-delete chain so
+> it survives a mid-way stop.
 
 ## What the audit found (2026-05-27, verified against prod GCS)
 
 - **Bucket model**: split/dedicated per-data-type buckets are canonical — MTDS handlers write via
-  `get_write_bucket_name("lending-indices"|"lst-rates"|"dex-pools")`. The `market-data-tick-defi-prd/{type}/`
-  top-level prefixes (old `date=` layout) are the legacy pre-split copies.
+  `get_write_bucket_name("lending-indices"|"lst-rates"|"dex-pools")`. The `market-data-tick-defi-prd/{type}/` top-level
+  prefixes (old `date=` layout) are the legacy pre-split copies.
 - **Per-date coverage**: 0 legacy-only dates for all three (canonical date ranges ⊇ legacy 2023-01-01→2026-04-14).
-- **`lst_rates`**: legacy venue = `MARINADE` only; canonical `lst-rates-central-element-323112` has MARINADE + 14
-  others → **redundant, safe to delete, no migration**.
+- **`lst_rates`**: legacy venue = `MARINADE` only; canonical `lst-rates-central-element-323112` has MARINADE + 14 others
+  → **redundant, safe to delete, no migration**.
 - **`lending_indices`**: legacy = `KAMINO-SOLANA`, `SOLEND-SOLANA`; canonical = Aave/Compound/Spark (**EVM only**) →
   **legacy Solana lending is UNIQUE**.
 - **`dex_pools`**: legacy = `KAMINO`/`ORCA`/`RAYDIUM`-SOLANA; canonical = Aerodrome/Balancer/Curve/GMX/Pancake/Sushi/
@@ -39,8 +39,8 @@ source:
 - **Schema drift** (legacy ≠ EVM canonical contracts):
   - Solana lending: `apy, supply_apy, reward_apy, tvl_usd, market_id` (APY-snapshot) ≠ UAC `lending`/`lending_position`
     (`borrow_rate/supply_rate` or `supply_index/borrow_index`).
-  - Solana dex_pools (Kamino): `vault_address, vault_type, token_*_mint/symbol, status` (vault metadata) ≠ UAC
-    `pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
+  - Solana dex*pools (Kamino): `vault_address, vault_type, token*\*\_mint/symbol,
+    status`(vault metadata) ≠ UAC`pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
   - `timestamp` dtype drift (legacy int64 vs canonical string / ts[ns,UTC]).
 - **Live collection gap**: legacy Solana collection **stopped 2026-04-14**; canonical buckets never received Solana →
   Solana DeFi is currently NOT collected anywhere going forward. (Composes with `defi_code_codex_drift` D10 — SOLEND/
@@ -57,133 +57,126 @@ source:
 ## Gates (HARD-ORDERED — do not delete legacy before history migrated)
 
 - [x] ✅ [SCRIPT] P1. **Gate 0 — per-venue schema sample** — DONE 2026-05-27. Kamino+Solend lending = identical 9-col
-      APY-snapshot; Kamino dex_pools = vault metadata (10c); Orca (16c) + Raydium (12c) = AMM pool metrics. Confirmed
-      3 distinct shapes.
+      APY-snapshot; Kamino dex_pools = vault metadata (10c); Orca (16c) + Raydium (12c) = AMM pool metrics. Confirmed 3
+      distinct shapes.
 - [x] ✅ [CODE] P1. **Gate 1 — UAC SchemaContracts** — DONE — UAC@7e9f4ad9. Added `DEFI_SOLANA_LENDING_LENDING_INDICES`
       / `DEFI_SOLANA_VAULT_DEX_POOLS` / `DEFI_SOLANA_AMM_POOL_DEX_POOLS` to `contracts.py` + registered in
       `CONTRACT_REGISTRY` under `("defi", solana_lending|solana_vault|solana_amm_pool, lending_indices|dex_pools)`. All
       Solana fields preserved (venue-specific AMM cols nullable+optional). ruff + basedpyright 0; cassette parity 447
       passed.
 - [x] ✅ [CODE] P1. **Gate 1.5 — InstrumentType enum + builder dispatch** — DONE — UAC@90b2bb9d. Added
-      `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` to `InstrumentType` enum + `SUPPORTED_INSTRUMENT_TYPES` allow-list
-      + `_DEFI_TYPES` (so `build_instrument_id` produces `VENUE-CHAIN:TYPE:SYMBOL`; e.g.
+      `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` to `InstrumentType` enum + `SUPPORTED_INSTRUMENT_TYPES`
+      allow-list + `_DEFI_TYPES` (so `build_instrument_id` produces `VENUE-CHAIN:TYPE:SYMBOL`; e.g.
       `KAMINO-SOLANA:SOLANA_LENDING:<market_id>`). Cassette parity 447 passed.
 - [~] [SCRIPT] P1. **Gate 2 — history migration** — SCRIPT SHIPPED + SMOKE VERIFIED, FULL RUN PENDING.
-      `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` (MTDS@c38d1ca3) reads legacy
-      `defi-prd/{lending_indices,dex_pools}/<venue>/SOLANA/date=*` → writes canonical flat
-      `day=/category=defi/venue=/chain=SOLANA/instrument_type=<solana_*>/data_type=*` to `lending-indices-*` /
-      `dex-pools-*` (matches EVM canonical layout). Schema map: drops legacy `timestamp` (write-time);
-      `ts_event` = midnight UTC of date partition; `instrument_id` via `build_instrument_id`. **Smoke** (2026-05-28,
-      1 date × 5 subsets): 14,807 rows migrated; sample parquet read-back clean (instrument_id format verified,
-      ts_event correct, all legacy fields preserved); re-run idempotent (5/5 "skip (exists)"). **Remaining**: full
-      ~5,995 shards across ~1199 distinct dates (~8–12h sequential at ~3–7s/shard). Best run with `--max-dates` chunks
-      or backgrounded on a VM. CLI: `--dry-run` / `--only-protocol` / `--only-data-type` / `--max-dates` for control.
-      Manifest emission deferred to Gate 3 consolidator (no explicit per-shard emit in the migration script — the
-      consolidator discovers newly-written files).
+  `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` (MTDS@c38d1ca3) reads legacy
+  `defi-prd/{lending_indices,dex_pools}/<venue>/SOLANA/date=*` → writes canonical flat
+  `day=/category=defi/venue=/chain=SOLANA/instrument_type=<solana_*>/data_type=*` to `lending-indices-*` / `dex-pools-*`
+  (matches EVM canonical layout). Schema map: drops legacy `timestamp` (write-time); `ts_event` = midnight UTC of date
+  partition; `instrument_id` via `build_instrument_id`. **Smoke** (2026-05-28, 1 date × 5 subsets): 14,807 rows
+  migrated; sample parquet read-back clean (instrument_id format verified, ts_event correct, all legacy fields
+  preserved); re-run idempotent (5/5 "skip (exists)"). **Remaining**: full ~5,995 shards across ~1199 distinct dates
+  (~8–12h sequential at ~3–7s/shard). Best run with `--max-dates` chunks or backgrounded on a VM. CLI: `--dry-run` /
+  `--only-protocol` / `--only-data-type` / `--max-dates` for control. Manifest emission deferred to Gate 3 consolidator
+  (no explicit per-shard emit in the migration script — the consolidator discovers newly-written files).
 - [ ] [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
       venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets.
 - [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
       (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
       rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
-- [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP
-      Secret Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`;
-      `dependency_health_policies.yaml` (lines 139/151/157) registers `helius_solana_rpc` + `solana_rpc_primary`
-      (Helius as backup); UAC has `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url`; KMNO/RAY/ORCA in
+- [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP Secret
+      Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`;
+      `dependency_health_policies.yaml` (lines 139/151/157) registers `helius_solana_rpc` + `solana_rpc_primary` (Helius
+      as backup); UAC has `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url`; KMNO/RAY/ORCA in
       `capability_declarations/_defi.py` declare `mtds_operations=["collect-solana-defi"]`. **Existing handler**:
       `market-tick-data-service/.../cli/handlers/solana_defi_handler.py` is on disk + registered
       `"collect-solana-defi": SolanaDefiHandler` (`cli/main.py:436`); backfill script wires it
       (`scripts/full-defi-backfill.sh:66`). **Doc/code drift**: `docs/DEFI_DOWNLOAD_STRATEGY.md:365` claims the
       monolithic handler was "removed and replaced by per-data-type handlers" — file still there, excluded from a QG
-      check (`scripts/quality-gates.sh:25`). **Real scope = bounded refactor (~1–2 cal AI-days)**:
-      (1) read the current `solana_defi_handler.py` + decide modernize-in-place vs. complete the per-data-type split per
-          the strategy doc;
+      check (`scripts/quality-gates.sh:25`). **Real scope = bounded refactor (~1–2 cal AI-days)**: (1) read the current
+      `solana_defi_handler.py` + decide modernize-in-place vs. complete the per-data-type split per the strategy doc;
       (2) update its writes to the new canonical split-bucket paths with the new
-          `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types (Gate 1/1.5 contracts: UAC@7e9f4ad9 +
-          UAC@90b2bb9d);
-      (3) re-enable the recurring schedule (collection STOPPED since 2026-04-14);
-      (4) QG green the handler + integration smoke against Helius (creds available).
-      Composes with D10 venue-capability check + the archived `defi_market_data_staleness` recurring-schedule fix.
-      **Can be picked up by the vm-ml worker after Gates 2-4 complete** (added to handoff dispatch).
+      `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types (Gate 1/1.5 contracts: UAC@7e9f4ad9 +
+      UAC@90b2bb9d); (3) re-enable the recurring schedule (collection STOPPED since 2026-04-14); (4) QG green the
+      handler + integration smoke against Helius (creds available). Composes with D10 venue-capability check + the
+      archived `defi_market_data_staleness` recurring-schedule fix. **Can be picked up by the vm-ml worker after Gates
+      2-4 complete** (added to handoff dispatch).
 - [ ] [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was its
       last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +
       `defi-data-pipeline.md` with the Solana instrument_types.
 
 ## Backfill launch findings 2026-05-28 (slot-1 four-VM dispatch)
 
-> Slot-1 dispatch 2026-05-28 launched four Solana DeFi backfill VMs for `2025-01-17 → 2026-05-28`. All four
-> hit T+10min RUNNING then self-deleted on `VM_SHUTDOWN_ON_COMPLETION=true`. Three surfaced bugs that
-> bound the venue-keyed gap from being closed in this pass. Each is a `- [ ]` plan todo here; do NOT
-> defer without operator [ack].
+> Slot-1 dispatch 2026-05-28 launched four Solana DeFi backfill VMs for `2025-01-17 → 2026-05-28`. All four hit T+10min
+> RUNNING then self-deleted on `VM_SHUTDOWN_ON_COMPLETION=true`. Three surfaced bugs that bound the venue-keyed gap from
+> being closed in this pass. Each is a `- [ ]` plan todo here; do NOT defer without operator [ack].
 
 ### VMs launched + outcome
 
-| VM (deleted by self-shutdown) | Launcher | Range | Outcome (run.log final line) |
-| --- | --- | --- | --- |
-| `mtds-solana-drift-backfill` | `launch-mtds-solana-drift-backfill-vm.sh` | 2025-01-17 → 2026-05-28 | 497 results, **0 records** — every date past Drift V1 S3 archive end (2025-01-08) |
-| `mtds-gas-fees-solana` | `launch-mtds-solana-gas-backfill-vm.sh` | 2025-01-17 → 2026-05-28 | 497 results, **0 records** — every chain-id row logged `"Unknown chain_id 99999, skipping"` |
-| `marinade-backfill-20260528-140422` | `launch-marinade-solana-backfill-vm.sh` | 2025-01-17 → 2026-05-28 | 497 results, jitoSOL written for `2026-05-27` only; remaining dates `"all expected sentinels already captured"` (sentinel-bypass — collector treats live snapshot as sufficient for history) |
-| `mtds-solana-defi-backfill` (NEW) | `launch-mtds-solana-defi-backfill-vm.sh` (created this pass, deployment-service@4d9e6ce) | 2025-01-17 → 2026-05-28 | **PROGRESS** — writes per-day rows for MARGINFI/SOLEND/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX (~14k rows/day, mostly Orca). JITO and Kamino-vault each have a discrete bug (below). |
+| VM (deleted by self-shutdown)       | Launcher                                                                                 | Range                   | Outcome (run.log final line)                                                                                                                                                                 |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mtds-solana-drift-backfill`        | `launch-mtds-solana-drift-backfill-vm.sh`                                                | 2025-01-17 → 2026-05-28 | 497 results, **0 records** — every date past Drift V1 S3 archive end (2025-01-08)                                                                                                            |
+| `mtds-gas-fees-solana`              | `launch-mtds-solana-gas-backfill-vm.sh`                                                  | 2025-01-17 → 2026-05-28 | 497 results, **0 records** — every chain-id row logged `"Unknown chain_id 99999, skipping"`                                                                                                  |
+| `marinade-backfill-20260528-140422` | `launch-marinade-solana-backfill-vm.sh`                                                  | 2025-01-17 → 2026-05-28 | 497 results, jitoSOL written for `2026-05-27` only; remaining dates `"all expected sentinels already captured"` (sentinel-bypass — collector treats live snapshot as sufficient for history) |
+| `mtds-solana-defi-backfill` (NEW)   | `launch-mtds-solana-defi-backfill-vm.sh` (created this pass, deployment-service@4d9e6ce) | 2025-01-17 → 2026-05-28 | **PROGRESS** — writes per-day rows for MARGINFI/SOLEND/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX (~14k rows/day, mostly Orca). JITO and Kamino-vault each have a discrete bug (below).             |
 
 ### Discovered bugs (each gets a fix-or-ack todo)
 
-- [ ] [MTDS] P1. **Drift S3 backfill: archive end 2025-01-08 is hardcoded; entire post-2025-01-08 history must come
-      from Drift Data API (or Drift V2 archive) not S3 V1.** `solana_defi_handler.py:172`
-      (`_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`) makes every requested date emit
-      `EXPECTED_PAST_SOURCE_COVERAGE_END` — honest but useless for closing the venue-keyed Drift gap from
-      2025-01-17 onward. Fix path: either (a) wire a Drift V2 historical source (drift-historical-data S3 V2 bucket
-      `drift-historical-data-v2`), or (b) replay the Drift Data API `/stats/markets` + funding endpoints per-day
-      via the existing snapshot path, or (c) operator ack that 2025-01-17 → today Drift coverage is
-      `BLOCKED-OPERATOR-DECISION` until V2 source is signed up. Provenance: slot-1 2026-05-28 run.log
-      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`.
+- [ ] [MTDS] P1. **Drift S3 backfill: archive end 2025-01-08 is hardcoded; entire post-2025-01-08 history must come from
+      Drift Data API (or Drift V2 archive) not S3 V1.** `solana_defi_handler.py:172`
+      (`_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`) makes every requested date emit `EXPECTED_PAST_SOURCE_COVERAGE_END` —
+      honest but useless for closing the venue-keyed Drift gap from 2025-01-17 onward. Fix path: either (a) wire a Drift
+      V2 historical source (drift-historical-data S3 V2 bucket `drift-historical-data-v2`), or (b) replay the Drift Data
+      API `/stats/markets` + funding endpoints per-day via the existing snapshot path, or (c) operator ack that
+      2025-01-17 → today Drift coverage is `BLOCKED-OPERATOR-DECISION` until V2 source is signed up. Provenance: slot-1
+      2026-05-28 run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`.
 - [ ] [MTDS] P1. **Solana gas-fees chain_id=99999 is not registered in the gas-fee chain map → entire
       `mtds-gas-fees-solana` backfill silent no-op.** Launcher passes `--gas-fee-chains 99999` (per
-      `setup-data-pipeline-vm.sh:1004`), but the gas-fees handler logs
-      `"Unknown chain_id 99999, skipping"` for every date. Solana doesn't have an EVM-style numeric chain_id —
-      the correct value is the canonical chain key from UAC `registry/data_source_continuity.py` (likely
-      `"SOLANA"` or the registry's Solana sentinel, NOT 99999). Fix: replace `--gas-fee-chains 99999` with the
-      correct Solana chain key in `setup-data-pipeline-vm.sh` `solana-gas-backfill` block; OR add a numeric→str
-      mapping in the gas-fees handler. Provenance: slot-1 2026-05-28 run.log
-      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`.
-- [ ] [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check
-      — only the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through
-      `collect-lst-rates` which uses an LST-rates handler keyed on sentinel-cluster completion at the latest
-      date; with the latest date captured, every prior date short-circuits. Net: the VM wrote jitoSOL +
-      12 EVM LSTs for 2026-05-27 only, NOT 2025-01-17 → 2026-05-26 for Marinade. Marinade mSOL APY is also
-      emitted via `solana_defi_handler._collect_marinade` (handler list `["drift","kamino",...,"marinade",...]`)
-      — re-launching the new `launch-mtds-solana-defi-backfill-vm.sh` with `--protocols marinade` SHOULD close
-      this without needing to fix the lst-rates sentinel logic, **assuming** Marinade APY endpoint
-      `api.marinade.finance/msol/apy/365d` is daily-replayable (collector currently reads "latest" only —
-      needs a `target_date_str` parameter analog to marginfi TVL filter). Provenance: slot-1 2026-05-28 run.log
+      `setup-data-pipeline-vm.sh:1004`), but the gas-fees handler logs `"Unknown chain_id 99999, skipping"` for every
+      date. Solana doesn't have an EVM-style numeric chain_id — the correct value is the canonical chain key from UAC
+      `registry/data_source_continuity.py` (likely `"SOLANA"` or the registry's Solana sentinel, NOT 99999). Fix:
+      replace `--gas-fee-chains 99999` with the correct Solana chain key in `setup-data-pipeline-vm.sh`
+      `solana-gas-backfill` block; OR add a numeric→str mapping in the gas-fees handler. Provenance: slot-1 2026-05-28
+      run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`.
+- [ ] [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
+      the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through `collect-lst-rates`
+      which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with the latest date
+      captured, every prior date short-circuits. Net: the VM wrote jitoSOL + 12 EVM LSTs for 2026-05-27 only, NOT
+      2025-01-17 → 2026-05-26 for Marinade. Marinade mSOL APY is also emitted via
+      `solana_defi_handler._collect_marinade` (handler list `["drift","kamino",...,"marinade",...]`) — re-launching the
+      new `launch-mtds-solana-defi-backfill-vm.sh` with `--protocols marinade` SHOULD close this without needing to fix
+      the lst-rates sentinel logic, **assuming** Marinade APY endpoint `api.marinade.finance/msol/apy/365d` is
+      daily-replayable (collector currently reads "latest" only — needs a `target_date_str` parameter analog to marginfi
+      TVL filter). Provenance: slot-1 2026-05-28 run.log
       `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`.
-- [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema
-      error every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but
-      the `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
+- [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
+      every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
+      `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
       `_collect_kamino` (alias `vault_address` → `pool_id` for the dex_pools contract; keep `vault_address` as a
       secondary field) OR widen the SchemaContract. Provenance: slot-1 2026-05-28 run.log
-      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-defi-backfill/run.log`
-      (one warning per processed date). Composes with Gate 1 schema-contracts work above — if a
-      `solana_vault` instrument_type lands as planned, the Kamino vault rows route there instead and this
-      becomes moot. Capture so it doesn't slip.
-- [ ] [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"`
-      every date in the new VM run.** `solana_defi_handler._collect_jito` hits `kobe.mainnet.jito.network/api/v1/
-      stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0 (or absent), so the handler
-      gives up and returns empty. Possible causes: (a) Jito's Stakenet API moved / endpoint deprecated, (b)
-      field renamed in their response, (c) we need an auth header now. Fix: read the actual response body once,
-      confirm field names, update collector OR switch to an on-chain RPC read against the Jito stake pool
+      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-defi-backfill/run.log` (one warning per
+      processed date). Composes with Gate 1 schema-contracts work above — if a `solana_vault` instrument_type lands as
+      planned, the Kamino vault rows route there instead and this becomes moot. Capture so it doesn't slip.
+- [ ] [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
+      date in the new VM run.** `solana_defi_handler._collect_jito` hits
+      `kobe.mainnet.jito.network/api/v1/     stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
+      (or absent), so the handler gives up and returns empty. Possible causes: (a) Jito's Stakenet API moved / endpoint
+      deprecated, (b) field renamed in their response, (c) we need an auth header now. Fix: read the actual response
+      body once, confirm field names, update collector OR switch to an on-chain RPC read against the Jito stake pool
       program. Provenance: same run.log as above.
 - [ ] [MTDS] P3. **GCS object-mutation 429s on per-VM manifest shard at the start of every backfill VM** — both
-      `mtds-solana-drift-backfill` and the new `mtds-solana-defi-backfill` get
-      `429 rateLimitExceeded ... per-VM shard` on the first few flushes. Non-blocking (manifest writes are
-      best-effort) but it means the first ~10-30s of manifest rows are missing from the per-VM shard. Fix:
-      add an exponential backoff inside `DefiManifestRecorder` flush, or batch the early flushes. Already
-      a known pattern — track here so the next manifest-consolidator pass dedup-merges correctly.
+      `mtds-solana-drift-backfill` and the new `mtds-solana-defi-backfill` get `429 rateLimitExceeded ... per-VM shard`
+      on the first few flushes. Non-blocking (manifest writes are best-effort) but it means the first ~10-30s of
+      manifest rows are missing from the per-VM shard. Fix: add an exponential backoff inside `DefiManifestRecorder`
+      flush, or batch the early flushes. Already a known pattern — track here so the next manifest-consolidator pass
+      dedup-merges correctly.
 
 ### Next slot-1 actions (sequenced)
 
-1. Re-launch `launch-mtds-solana-defi-backfill-vm.sh` will continue progressing on the LDR codepath; let it
-   finish (498 dates × ~14k rows/day × 6 venues = the bulk of the venue-keyed gap).
-2. File the 4 P1 fixes as MTDS handler PRs (Drift V2 source, gas-fee chain registry, Marinade per-date,
-   Kamino pool_id alias). Each is a 1-2h fix.
+1. Re-launch `launch-mtds-solana-defi-backfill-vm.sh` will continue progressing on the LDR codepath; let it finish (498
+   dates × ~14k rows/day × 6 venues = the bulk of the venue-keyed gap).
+2. File the 4 P1 fixes as MTDS handler PRs (Drift V2 source, gas-fee chain registry, Marinade per-date, Kamino pool_id
+   alias). Each is a 1-2h fix.
 3. Re-launch the affected VMs after the fixes land + setup-data-pipeline-vm.sh is re-uploaded to GCS.
 
 ## Not in scope (separately tracked)
@@ -305,3 +298,73 @@ plan. Commit + push via the standard `docs(plans):` flow.
 - 2026-05-27: Audit complete; operator authorized distinct-instrument_type model + full-chain execution.
 - 2026-05-28: Gates 0/1/1.5/2-script shipped from operator laptop (UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3); 2,107
   shards migrated via local tmux smoke; operator closing laptop → full Gate-2 run + Gates 3/4/6 handed off to vm-ml.
+
+## AGENT-AUTO dispatch — remaining work (operator off-laptop 2026-05-28T13:18Z)
+
+> Any orchestrator agent: pick up any unticked `- [AGENT-AUTO]` item below. Self-contained specs; in-flight VMs
+> identified for monitoring. Don't double-launch — pre-check `gcloud compute instances list --filter="status=RUNNING"`.
+> Cite repo@sha + VM name when flipping.
+
+### In-flight (MONITOR + verify on completion — no relaunch unless they exit non-zero)
+
+- [ ] [VERIFY] [AGENT-AUTO] P0. **`mdps-backfill-defi-20260528-071130`** — MDPS reprocess over 2024-05-06→2026-01-17
+      closing the ~40,240 `SCHEMA_VALIDATION_FAILED` rows (UNISWAP_V3-ETHEREUM 28,634 + 11 companions). Verify on
+      completion: MTDS DeFi manifest `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to <100; same
+      for UNISWAP_V2-ETHEREUM (3,444), AAVEV3-OPTIMISM (2,820), EIGENLAYER (1,311), CURVE-ETHEREUM (1,281), MAKER
+      (1,113), FRAX (1,032), COMPOUND_V3-BASE (300), DRIFT-SOLANA (200), KAMINO/JITO/MARGINFI (~75 each). MDPS fix
+      already on LDR: `market-data-processing-service@7f1a5b5` + `@3799c8d`.
+- [ ] [VERIFY] [AGENT-AUTO] P0. **`mtds-solana-defi-backfill`** — `collect-solana-defi` for
+      MARGINFI/SOLEND/KAMINO/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX/JITO over 2025-01-17→2026-05-28 (~498 dates). ETA
+      ~58min from launch (~13:07 UTC). Verify on completion: MTDS DeFi manifest last_captured moves from 2025-01-17 to
+      ~2026-05-28 for MARGINFI/SOLEND/KAMINO/RAYDIUM/ORCA. Note: Kamino vault-strategies path WILL fail per Bug-K below
+      — retry after fix.
+
+### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
+
+- [ ] [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** —
+      `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:172` hardcodes
+      `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)` → every date 2025-01-09→today emits
+      `EXPECTED_PAST_SOURCE_COVERAGE_END`. Switch to V2 Drift S3 source OR Drift Data API per-day replay (per CLAUDE.md
+      `External Data Is Always Available` — paid tier credentials if needed; file ping not defer). After fix: relaunch
+      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end <today>`. QG + commit MTDS → LDR.
+- [ ] [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** —
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1004` passes `--gas-fee-chains 99999`; Solana doesn't
+      have EVM-style numeric chain_id. Replace with canonical key from UAC `registry/data_source_continuity.py`
+      (`SOLANA` string or whatever the handler expects — read `gas_fees_handler` to confirm). After fix: relaunch
+      `launch-mtds-solana-gas-backfill-vm.sh --start 2025-01-17 --end <today>`. QG + commit deployment-service → LDR.
+- [ ] [CODE] [AGENT-AUTO] P1. **Bug-M (Marinade date-filter)** — `collect-lst-rates` handler uses sentinel-cluster
+      latest-only; needs `target_date_str` analog like `_collect_marginfi_tvl`. Extend handler to accept per-date
+      backfill. After fix: relaunch `launch-marinade-solana-backfill-vm.sh 2025-01-17 <today>`. QG + commit MTDS → LDR.
+- [ ] [CODE] [AGENT-AUTO] P1. **Bug-K (Kamino pool_id mismatch)** — `_collect_kamino` vault-strategies emits
+      `vault_address`; `dex_pools` SchemaContract requires `pool_id`. Rename/map at adapter boundary (preserve
+      `vault_address` as additional dimension if needed). After fix: re-run a scoped
+      `collect-solana-defi --solana-protocols kamino` over the same date range to backfill Kamino rows the in-flight T4
+      VM dropped. QG + commit MTDS → LDR.
+
+### Lower-priority bugs (capture-then-fix; no immediate backfill blocker)
+
+- [ ] [CODE] [AGENT-AUTO] P2. **Bug-J (JITO Stakenet API `pool_token_supply=0`)** — every fetch returns 0 → "cannot
+      compute exchange rate". Likely API drift / auth change. Investigate Stakenet API status, file CREDENTIAL APPROVAL
+      REQUEST ping in `ikenna_orchestrator/pings/slot_1.md` if it's an auth/tier issue (don't defer silently). Re-run
+      JITO scope after fix.
+- [ ] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** — surfaced
+      in `mtds-lending-indices-20260528` run. Subgraph schema drift; adapter needs the new field name OR fallback. Fix
+      in MTDS Aave lending-indices adapter. Re-run lending-indices backfill after fix.
+- [ ] [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — every backfill VM hits 429
+      on first manifest-shard upload. Add exponential backoff/jitter in UTL `ManifestWriter._write_per_vm_shard`. QG +
+      commit UTL → LDR.
+
+### Pre-existing (carry-over, lower urgency)
+
+- [ ] [CODE] [AGENT-AUTO] P3. **PACIFICA** is CeFi perp (not Solana DeFi) — coverage routes via CeFi perp pipeline
+      (`unified_api_contracts/registry/cefi_perp_venue_endpoints.py`). Verify PACIFICA has current MTDS coverage via the
+      CeFi path; if stale, file in CeFi backfill plan.
+
+### Done-when
+
+1. All 4 P1 bugs (D/G/M/K) shipped to LDR with QG-green commits.
+2. Affected backfills re-run; MTDS DeFi manifest shows:
+   - UNISWAP_V3-ETHEREUM `attempted_failed` < 100 (was 28,634).
+   - DRIFT/MARGINFI/SOLEND/KAMINO/MARINADE/RAYDIUM/ORCA last_captured ≥ 2026-05-20.
+3. Findings flipped with repo@sha + VM names.
+4. Operator (slot-1 main) pinged on completion via `ikenna_orchestrator/pings/slot_1.md`.
