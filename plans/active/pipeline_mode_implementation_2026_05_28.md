@@ -69,11 +69,13 @@ impact, no walk needed now.
 
 ## Phase 2 — Writer wiring (P0)
 
-- [ ] [AGENT] P0. Add UTL helper
+- [x] ✅ [AGENT] P0. Add UTL helper
       `unified_trading_library.events.resolve_pipeline_mode(service: str, mode: str, venue: str | None) → PipelineMode`
       as the SSOT for pipeline_mode resolution. Helper covers: MTDS batch (Tardis / Databento / onchain RPC), MTDS live
       (websocket / polling), instruments-service (per-venue), features-service (derives from upstream input manifest's
-      pipeline_mode — pass-through), strategy/execution (per service tier).
+      pipeline_mode — pass-through), strategy/execution (per service tier). Also adds
+      `derive_pipeline_mode_for_row(venue, asset_group, data_type)` for backfill derivation. Both exported from UTL
+      top-level. 30 unit tests (all pass). — unified-trading-library@7bd14c43
 - [ ] [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep — every
       site identified in Phase 0 (a). NO inline string literals.
 - [ ] [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer omits
@@ -97,9 +99,10 @@ impact, no walk needed now.
 
 ## Phase 4 — Consumer migration (P1)
 
-- [ ] [AGENT] P1. Update `batch-live-reconciliation-service` to actually use `GROUP BY pipeline_mode` (currently
+- [x] ✅ [AGENT] P1. Update `batch-live-reconciliation-service` to actually use `GROUP BY pipeline_mode` (currently
       grouping on an empty column → no-op). Add reconciliation tests that fail when `pipeline_mode IS NULL` appears in
-      input data.
+      input data. Fixed stage0 _get_sides() to use _is_batch_mode() / _is_live_mode() predicates; updated all 15 tests
+      to use real PipelineMode string values (batch_tardis, live_websocket). — batch-live-reconciliation-service@cf50965
 - [ ] [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
       chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
       tick.
