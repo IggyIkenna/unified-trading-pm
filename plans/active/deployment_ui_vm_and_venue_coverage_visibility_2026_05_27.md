@@ -51,8 +51,12 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
 
 ## §2 — Fix the broken History tab (P0)
 
-- [ ] [AGENT][UI] P0. Diagnose + fix the History tab (currently broken). Identify the failing endpoint/query (likely
+- [x] ✅ DONE [AGENT][UI] P0. Diagnose + fix the History tab (currently broken). Identify the failing endpoint/query (likely
       `deployments/archive/<day>/` reads) and the frontend error. regression: `tests/smoke/routes.spec.ts`.
+      Diagnosis: History tab was removed from App.tsx TabsList when Monitor multi-subtab was introduced; the
+      `/deployments` endpoint was fine but had no UI surface. Fix: restored History tab trigger + TabsContent rendering
+      `<DeploymentHistory>` component; updated grid-cols (6→7/7→8/8→9). Regression spec added.
+      — deployment-ui@3829ff8 | pw:L2 BLOCKED-ENVIRONMENT (libatk/libgbm absent on EC2) | unit: 724 passed | regression: tests/smoke/routes.spec.ts
 - [ ] [AGENT][UI] P1. History tab shows completed/failed/reaped deployments with outcome (COMPLETED/FAILED/reaped),
       duration, rows captured, and a link to the archived run.log / serial-console (`gs://vm-logs-archive-{pid}/…`).
 
