@@ -55,13 +55,13 @@ consumption) therefore focuses on the universe-discovery path, not on handler �
 
 ### Dim 1 — IS adapter coverage per asset_group (upstream read by strategy-service)
 
-| asset_group | IS adapters available                              | strategy-service consumption                                                           | Violation type                                                            |
-| ----------- | -------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| asset_group | IS adapters available                              | strategy-service consumption                                                           | Violation type                                                              |
+| ----------- | -------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | DeFi        | IS writes instrument_availability per (venue, day) | `discover_instruments()` reads `instruments-store-defi` parquet — **DeFi only**        | ⚠ Partial: only AAVE_V3/COMPOUND_V3/MORPHO venues supported in `venue_map` |
-| CeFi        | IS writes per-venue CeFi catalogues                | **NOT READ** — CEFI instruments hardcoded in `cli/resolvers.py` INSTRUMENT_SHORTCUTS   | ❌ Hardcoded universe bypasses IS                                         |
-| TradFi      | IS writes TradFi catalogues                        | **NOT READ** — TradFi instruments hardcoded (SPY/ES/NQ etc.) in resolvers + catalog.py | ❌ Hardcoded universe bypasses IS                                         |
-| Sports      | IS writes sports adapters                          | N/A — strategy-service does not trade sports (no sports strategies)                    | out of scope                                                              |
-| Prediction  | IS writes prediction adapters                      | N/A — strategy-service does not trade predictions                                      | out of scope                                                              |
+| CeFi        | IS writes per-venue CeFi catalogues                | **NOT READ** — CEFI instruments hardcoded in `cli/resolvers.py` INSTRUMENT_SHORTCUTS   | ❌ Hardcoded universe bypasses IS                                           |
+| TradFi      | IS writes TradFi catalogues                        | **NOT READ** — TradFi instruments hardcoded (SPY/ES/NQ etc.) in resolvers + catalog.py | ❌ Hardcoded universe bypasses IS                                           |
+| Sports      | IS writes sports adapters                          | N/A — strategy-service does not trade sports (no sports strategies)                    | out of scope                                                                |
+| Prediction  | IS writes prediction adapters                      | N/A — strategy-service does not trade predictions                                      | out of scope                                                                |
 
 **Pre-audit grep evidence:**
 

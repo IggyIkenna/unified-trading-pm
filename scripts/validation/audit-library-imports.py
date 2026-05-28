@@ -100,20 +100,7 @@ class ImportAuditor(ast.NodeVisitor):
             # Check for split library imports
             if node.module in self.SPLIT_LIBRARIES or node.module.startswith(
                 tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES)
-            ):
-                names = [alias.name for alias in node.names]
-                self.imports.append(
-                    ImportInfo(
-                        module=node.module,
-                        names=names,
-                        is_fallback=self.in_try_block,
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                    )
-                )
-
-            # Check for UCS imports
-            elif node.module == "unified_trading_services" or node.module.startswith("unified_trading_services."):
+            ) or node.module == "unified_trading_services" or node.module.startswith("unified_trading_services."):
                 names = [alias.name for alias in node.names]
                 self.imports.append(
                     ImportInfo(
@@ -132,17 +119,7 @@ class ImportAuditor(ast.NodeVisitor):
         for alias in node.names:
             if alias.name in self.SPLIT_LIBRARIES or alias.name.startswith(
                 tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES)
-            ):
-                self.imports.append(
-                    ImportInfo(
-                        module=alias.name,
-                        names=[],
-                        is_fallback=self.in_try_block,
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                    )
-                )
-            elif alias.name == "unified_trading_services" or alias.name.startswith("unified_trading_services."):
+            ) or alias.name == "unified_trading_services" or alias.name.startswith("unified_trading_services."):
                 self.imports.append(
                     ImportInfo(
                         module=alias.name,
@@ -176,7 +153,7 @@ class ImportAuditor(ast.NodeVisitor):
 def scan_file(file_path: Path) -> tuple[list[ImportInfo], list[dict[str, str]]]:
     """Scan a single Python file for imports."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content, filename=str(file_path))

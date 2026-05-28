@@ -32,7 +32,7 @@ from typing import cast
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from check_coverage_targets import (  # noqa: E402 — local module on sys.path
+from check_coverage_targets import (
     _compute_surface_result,
     _load_local_surfaces,
     _load_targets,

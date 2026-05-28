@@ -108,8 +108,8 @@ All 18 items DEFERRED-OPERATOR-DECISION (compute VMs need operator launch author
 
 - **FEAT-3.4.CeFi VMs (DeltaOne, Volatility, MTF, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
   features_and_ml_master § post-cutover compute launch. Gate: operator VM launch authorization.
-- **FEAT-3.4.DeFi VMs (Onchain, DeltaOne, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
-  features_and_ml_master § post-cutover compute launch.
+- **FEAT-3.4.DeFi VMs (Onchain, DeltaOne, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: features_and_ml_master §
+  post-cutover compute launch.
 - **FEAT-3.4.TradFi VMs (DeltaOne, Volatility, MTF, +V) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
   features_and_ml_master § post-cutover compute launch.
 - **FEAT-3.4.Sports VMs (P0, DEFERRED-OPERATOR-DECISION)**: Gate: sports_master Phase 3+4 + operator authorization.

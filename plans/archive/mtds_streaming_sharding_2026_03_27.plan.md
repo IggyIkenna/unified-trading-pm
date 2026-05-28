@@ -41,13 +41,13 @@ venues (Binance trades = multi-GB per day) will OOM if loaded entirely into memo
 
 ### Data volume estimates (single day)
 
-| Venue           | Data type    | Approx size | Instruments |
-| --------------- | ------------ | ----------- | ----------- |
-| BINANCE-SPOT    | trades       | 2-5 GB      | 48          |
-| BINANCE-FUTURES | trades       | 3-8 GB      | 33          |
-| DERIBIT         | trades       | 500 MB-1 GB | 2,117       |
-| CME             | trades       | 200-500 MB  | 304         |
-| NYSE            | trades       | 1-3 GB      | 212         |
+| Venue            | Data type    | Approx size | Instruments |
+| ---------------- | ------------ | ----------- | ----------- |
+| BINANCE-SPOT     | trades       | 2-5 GB      | 48          |
+| BINANCE-FUTURES  | trades       | 3-8 GB      | 33          |
+| DERIBIT          | trades       | 500 MB-1 GB | 2,117       |
+| CME              | trades       | 200-500 MB  | 304         |
+| NYSE             | trades       | 1-3 GB      | 212         |
 | AAVE_V3-ETHEREUM | rate_indices | 10 MB       | 51          |
 
 ### Storage pattern (confirmed from git history ~Feb 9 2026)

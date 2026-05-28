@@ -168,25 +168,25 @@ INSTRUMENTS-SERVICE → MTDS → MDPS → FEATURES → STRATEGY → EXECUTION
 
 | Strategy               | Instruments Needed                                               | MTDS Data                                            | MDPS Features                             | On-Chain Features                                  |
 | ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- | -------------------------------------------------- |
-| AAVE_LENDING           | AAVE_V3-\*:A_TOKEN:AUSDT, AUSDC, ADAI, AWETH, AWBTC               | Aave oracle prices, liquidity indices                | aave_supply_apy, aave_utilization         | aave_liquidity_index                               |
+| AAVE_LENDING           | AAVE_V3-\*:A_TOKEN:AUSDT, AUSDC, ADAI, AWETH, AWBTC              | Aave oracle prices, liquidity indices                | aave_supply_apy, aave_utilization         | aave_liquidity_index                               |
 | STAKED_BASIS           | ETHERFI-ETHEREUM:LST:WEETH, HYPERLIQUID:PERP:ETH-USDC            | weETH oracle rate, HyperLiquid funding               | weeth_eth_rate, funding_rate              | lst_staking_apy, weekly_rewards                    |
-| BASIS_TRADE            | WALLET:SPOT*ASSET:ETH, UNISWAP_V3-*:POOL:\_, 5x PERP venues       | Spot prices all coins, perp funding rates all venues | eth*price, funding_rate*{COIN}\_{VENUE}   | N/A                                                |
-| RECURSIVE_STAKED_BASIS | Same as STAKED_BASIS + MORPHO/AAVE_V3 flash loan pools            | Same + Aave borrow rates                             | Same + aave_borrow_apy_eth, health_factor | Same                                               |
+| BASIS_TRADE            | WALLET:SPOT*ASSET:ETH, UNISWAP_V3-*:POOL:\_, 5x PERP venues      | Spot prices all coins, perp funding rates all venues | eth*price, funding_rate*{COIN}\_{VENUE}   | N/A                                                |
+| RECURSIVE_STAKED_BASIS | Same as STAKED_BASIS + MORPHO/AAVE_V3 flash loan pools           | Same + Aave borrow rates                             | Same + aave_borrow_apy_eth, health_factor | Same                                               |
 | **REWARD SELLING**     | **EIGEN on Binance (EIGEN/USDT), ETHFI on Binance (ETHFI/USDT)** | **EIGEN/USDT spot price, ETHFI/USDT spot price**     | **eigen_price_usdt, ethfi_price_usdt**    | **eigen_claimable_amount, ethfi_claimable_amount** |
 | **LIDO STAKING**       | **LIDO-ETHEREUM:LST:STETH, LIDO-ETHEREUM:LST:WSTETH**            | **stETH oracle rate, wstETH rate**                   | **steth_eth_rate, wsteth_eth_rate**       | **lido_staking_apy**                               |
 
 ### Gap Analysis (What's Missing)
 
-| Layer                | What Exists                                                                        | What's Missing                                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Layer                | What Exists                                                                         | What's Missing                                                                                                             |
+| -------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | **Instruments**      | AAVE_V3 aTokens, ETHERFI weETH, LIDO stETH/wstETH, HyperLiquid perps, Uniswap pools | **EIGEN/USDT spot pair (Binance)**, **ETHFI/USDT spot pair (Binance)**, **EIGEN/ETH pair**, **ETHFI/ETH pair**             |
-| **MTDS**             | Aave oracle, weETH rate, perp funding                                              | **EIGEN spot price feed**, **ETHFI spot price feed**, **stETH/ETH rate feed** (may exist via Lido adapter)                 |
-| **MDPS**             | aave_supply_apy, weeth_eth_rate, funding_rate                                      | **eigen_price_usdt**, **ethfi_price_usdt**, **steth_eth_rate** normalised candles                                          |
-| **Features-Onchain** | weekly_rewards (raw), lst_staking_apy                                              | **eigen_claimable_amount** (from RewardsCoordinator), **ethfi_claimable_amount**, **lido_staking_apy** as separate feature |
-| **Strategy**         | Staking yield tracked, `SEASONAL_WEEKLY` settlement type                           | **CLAIM_REWARD instruction**, **SELL_REWARD instruction**, **Lido vs EtherFi config switch**                               |
-| **Execution**        | EigenLayer connector exists, EtherFi connector exists                              | **CLAIM_REWARD handler** (calls RewardsCoordinator.claim()), **SELL_REWARD handler** (swap EIGEN/ETHFI→base)               |
-| **P&L**              | Staking yield attributed                                                           | **Restaking P&L** (EIGEN value), **Seasonal P&L** (airdrop value), **M2M of unclaimed rewards**                            |
-| **Position**         | Staking positions tracked                                                          | **Pending reward balances** (unclaimed EIGEN/ETHFI)                                                                        |
+| **MTDS**             | Aave oracle, weETH rate, perp funding                                               | **EIGEN spot price feed**, **ETHFI spot price feed**, **stETH/ETH rate feed** (may exist via Lido adapter)                 |
+| **MDPS**             | aave_supply_apy, weeth_eth_rate, funding_rate                                       | **eigen_price_usdt**, **ethfi_price_usdt**, **steth_eth_rate** normalised candles                                          |
+| **Features-Onchain** | weekly_rewards (raw), lst_staking_apy                                               | **eigen_claimable_amount** (from RewardsCoordinator), **ethfi_claimable_amount**, **lido_staking_apy** as separate feature |
+| **Strategy**         | Staking yield tracked, `SEASONAL_WEEKLY` settlement type                            | **CLAIM_REWARD instruction**, **SELL_REWARD instruction**, **Lido vs EtherFi config switch**                               |
+| **Execution**        | EigenLayer connector exists, EtherFi connector exists                               | **CLAIM_REWARD handler** (calls RewardsCoordinator.claim()), **SELL_REWARD handler** (swap EIGEN/ETHFI→base)               |
+| **P&L**              | Staking yield attributed                                                            | **Restaking P&L** (EIGEN value), **Seasonal P&L** (airdrop value), **M2M of unclaimed rewards**                            |
+| **Position**         | Staking positions tracked                                                           | **Pending reward balances** (unclaimed EIGEN/ETHFI)                                                                        |
 
 ## Execution DAG
 

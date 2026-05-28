@@ -108,9 +108,7 @@ def find_insert_position(content: str) -> int:
         for i, line in enumerate(lines):
             if "ruff-pre-commit" in line:
                 in_ruff = True
-            elif in_ruff and re.match(r"^\s{0,2}- repo:", line):
-                return i
-            elif in_ruff and line.strip() and not line.startswith((" ", "\t")):
+            elif (in_ruff and re.match(r"^\s{0,2}- repo:", line)) or (in_ruff and line.strip() and not line.startswith((" ", "\t"))):
                 return i
         return len(lines)
     # No ruff: insert as first repos entry (before first "- repo:")

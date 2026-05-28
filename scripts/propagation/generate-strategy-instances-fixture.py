@@ -447,7 +447,7 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
         lines.append(f'      business: "{biz_gate}",')
         lines.append(f'      status: "{readiness_status}",')
         lines.append(
-            ("      estimated_launch: null," if readiness_status == "LIVE" else '      estimated_launch: "Q3 2026",')
+            "      estimated_launch: null," if readiness_status == "LIVE" else '      estimated_launch: "Q3 2026",'
         )
         lines.append("      blockers: [],")
         lines.append("    },")

@@ -129,17 +129,17 @@ repo with only a version-floor drift checker. That absence is the root cause of 
 
 ### Frontend toolchain (2 repos: `deployment-ui`, `unified-trading-system-ui`)
 
-| Tool                   | Purpose                  | py-equiv     | deployment-ui               | unified-trading-system-ui   |
-| ---------------------- | ------------------------ | ------------ | --------------------------- | --------------------------- |
-| Prettier               | format                   | ruff format  | ^3.1.1 (⚠ no `.prettierrc`) | ^3.6.2 (`.prettierrc.json`) |
-| ESLint (flat v9)       | lint                     | ruff (lint)  | ^9.0.0                      | ^9.39.4                     |
-| TypeScript / `tsc`     | typecheck                | basedpyright | ^5.3.0                      | 5.7.3                       |
-| Vitest                 | unit tests               | pytest       | ^4.1.0                      | ^4.1.1                      |
-| Playwright             | E2E / smoke              | —            | ^1.58.2                     | ^1.58.2                     |
-| build/dev              | bundler/dev server       | —            | **Vite ^8.0.0**             | **Next.js** (+turbo)        |
-| TailwindCSS            | styling                  | —            | —                           | ^4.2.0                      |
-| husky + lint-staged    | git pre-commit hooks     | pre-commit   | —                           | ^9.1.7 / ^16.4.0            |
-| eslint-config-prettier | eslint↔prettier conflict | —            | —                           | ^10.1.1                     |
+| Tool                   | Purpose                   | py-equiv     | deployment-ui                | unified-trading-system-ui   |
+| ---------------------- | ------------------------- | ------------ | ---------------------------- | --------------------------- |
+| Prettier               | format                    | ruff format  | ^3.1.1 (⚠ no `.prettierrc`) | ^3.6.2 (`.prettierrc.json`) |
+| ESLint (flat v9)       | lint                      | ruff (lint)  | ^9.0.0                       | ^9.39.4                     |
+| TypeScript / `tsc`     | typecheck                 | basedpyright | ^5.3.0                       | 5.7.3                       |
+| Vitest                 | unit tests                | pytest       | ^4.1.0                       | ^4.1.1                      |
+| Playwright             | E2E / smoke               | —            | ^1.58.2                      | ^1.58.2                     |
+| build/dev              | bundler/dev server        | —            | **Vite ^8.0.0**              | **Next.js** (+turbo)        |
+| TailwindCSS            | styling                   | —            | —                            | ^4.2.0                      |
+| husky + lint-staged    | git pre-commit hooks      | pre-commit   | —                            | ^9.1.7 / ^16.4.0            |
+| eslint-config-prettier | eslint↔prettier conflict | —            | —                            | ^10.1.1                     |
 
 Config files: `eslint.config.{js,mjs}` + `tsconfig.json` + `vitest.config.ts` + `playwright.config.ts` in both;
 `.prettierrc.json` only in `unified-trading-system-ui`. **Frontend deviations:** version drift on every shared tool;
@@ -168,10 +168,10 @@ tailwind); **no canonical frontend-config template in PM** (only
 | strategy-service                                                                                                                          | service | 74                    | strict       | ratcheted ↑                                           |
 | market-tick-data-service                                                                                                                  | service | 71                    | strict       | ratcheted ↑                                           |
 | client-reporting-api, deployment-api, deployment-service, execution-service, ml-inference, ml-service, trading-agent, unified-trading-api | service | 70                    | strict       | ✅ at service floor                                   |
-| **ibkr-gateway-infra**                                                                                                                    | service | **51**                | strict       | ⚠ below 70 floor — confirm                            |
-| **system-integration-tests**                                                                                                              | service | **15**                | strict       | ⚠ test harness — confirm exemption                    |
-| **features-service**                                                                                                                      | service | **0**                 | strict       | ⚠ coverage disabled (1097 py) — confirm               |
-| **e2e-testing**                                                                                                                           | service | **0**                 | strict       | ⚠ test harness — likely intentional                   |
+| **ibkr-gateway-infra**                                                                                                                    | service | **51**                | strict       | ⚠ below 70 floor — confirm                           |
+| **system-integration-tests**                                                                                                              | service | **15**                | strict       | ⚠ test harness — confirm exemption                   |
+| **features-service**                                                                                                                      | service | **0**                 | strict       | ⚠ coverage disabled (1097 py) — confirm              |
+| **e2e-testing**                                                                                                                           | service | **0**                 | strict       | ⚠ test harness — likely intentional                  |
 | **unified-trading-pm**                                                                                                                    | service | (none)                | **standard** | scripts-only — strictness/coverage likely intentional |
 | **agent-orchestrator**                                                                                                                    | (none)  | (none)                | **unset**    | newest repo — not enrolled                            |
 | **deployment-ui**                                                                                                                         | (none)  | (none)                | strict       | ~0 py (vestigial pyrightconfig)                       |

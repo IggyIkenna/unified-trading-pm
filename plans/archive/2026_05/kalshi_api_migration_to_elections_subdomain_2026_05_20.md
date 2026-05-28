@@ -68,14 +68,20 @@ Codex SSOTs: `codex/02-data/contracts-scope-and-layout.md`
 
 All Phase 2-4 items DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provisioned):
 
-- **Phase 2 — Schema diff (P1, BLOCKED-CREDENTIALS)**: Diff new response shapes vs `KalshiMarket`/`KalshiSeries`/`KalshiEvent` schemas against new `api.elections.kalshi.com` host. Requires live Kalshi API key.
-- **Phase 2 — Schema update (P1, BLOCKED-CREDENTIALS)**: If schemas drift, update schemas + normalizers + bump UAC version. Gated on diff above.
-- **Phase 3 — Provision credentials (P1, BLOCKED-CREDENTIALS)**: Provision `kalshi-api-key` + `kalshi-private-key-pem` to GCP Secret Manager per `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+- **Phase 2 — Schema diff (P1, BLOCKED-CREDENTIALS)**: Diff new response shapes vs
+  `KalshiMarket`/`KalshiSeries`/`KalshiEvent` schemas against new `api.elections.kalshi.com` host. Requires live Kalshi
+  API key.
+- **Phase 2 — Schema update (P1, BLOCKED-CREDENTIALS)**: If schemas drift, update schemas + normalizers + bump UAC
+  version. Gated on diff above.
+- **Phase 3 — Provision credentials (P1, BLOCKED-CREDENTIALS)**: Provision `kalshi-api-key` + `kalshi-private-key-pem`
+  to GCP Secret Manager per `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
 - **Phase 3 — Integration test (P1, BLOCKED-CREDENTIALS)**: Authenticate against new host + fetch sample market.
 - **Phase 3 — MTDS verify (P1, BLOCKED-CREDENTIALS)**: Verify MTDS Kalshi adapter end-to-end fetch.
 - **Phase 3 — Execution verify (P1, BLOCKED-CREDENTIALS)**: Verify execution-service Kalshi paper-order flow.
-- **Phase 4 — Canary regression (P2, BLOCKED-CREDENTIALS)**: Dispatch UAC `weekly-validation.yml` + verify Kalshi cassettes pass after cassette refresh.
-- **Phase 4 — predictions_master regression check (P2, BLOCKED-CREDENTIALS)**: Add to predictions_master: Kalshi URL must point at elections subdomain as regression check.
+- **Phase 4 — Canary regression (P2, BLOCKED-CREDENTIALS)**: Dispatch UAC `weekly-validation.yml` + verify Kalshi
+  cassettes pass after cassette refresh.
+- **Phase 4 — predictions_master regression check (P2, BLOCKED-CREDENTIALS)**: Add to predictions_master: Kalshi URL
+  must point at elections subdomain as regression check.
 
 ## Temporary states + canonical follow-up plans
 

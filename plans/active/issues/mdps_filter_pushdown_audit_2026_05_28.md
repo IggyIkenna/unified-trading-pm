@@ -24,17 +24,17 @@ Phase 2.
   [`orchestration_scanner.py:441-449`](../../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py#L441-L449)
   **silently drops `instrument_ids`** whenever a blob's path contains a matching `venue=` segment (the common case for
   properly-partitioned data).
-- Result: `--venues V1 V2 --instrument-ids I1 I2 I3 I4` enumerates *every instrument under V1 + V2*, not just I1-I4.
-  And with no `--venues` set at all (the full-scope VM case), **both** filters are skipped — every parquet for the day
-  is queued.
-- The 70 GB bloat is **not** a per-instrument DataFrame retention leak. It is the scanner returning 100–1000× more
-  blobs than the operator asked for, all of which get dispatched to the ThreadPoolExecutor and downloaded by workers.
-  Memory grows roughly linearly with the queued-blob count.
+- Result: `--venues V1 V2 --instrument-ids I1 I2 I3 I4` enumerates _every instrument under V1 + V2_, not just I1-I4. And
+  with no `--venues` set at all (the full-scope VM case), **both** filters are skipped — every parquet for the day is
+  queued.
+- The 70 GB bloat is **not** a per-instrument DataFrame retention leak. It is the scanner returning 100–1000× more blobs
+  than the operator asked for, all of which get dispatched to the ThreadPoolExecutor and downloaded by workers. Memory
+  grows roughly linearly with the queued-blob count.
 - A sibling listing helper —
   [`orchestration_scheduling.py:243`](../../../../market-data-processing-service/market_data_processing_service/app/core/orchestration_scheduling.py#L243)
   in `OrchestrationSchedulingMixin._list_files_in_bucket()` — calls `filter_blob_by_criteria` **unconditionally**, with
-  a comment explicitly citing the 2026-05-05 incident the same shape caused. That is the correct shape; the scanner
-  path simply never inherited the fix.
+  a comment explicitly citing the 2026-05-05 incident the same shape caused. That is the correct shape; the scanner path
+  simply never inherited the fix.
 - Fix is a 3-line replacement in `_collect_matching_parquet_blobs` (see § 5).
 
 ## 1 — Read-path call stack
@@ -60,30 +60,30 @@ cli/main.py:237-274                MarketDataProcessHandler.run()
 
 The `BatchOrchestrationMixin: memory backpressure engaged at 75.2%` log line is at
 [`batch_workers.py:236`](../../../../market-data-processing-service/market_data_processing_service/app/core/batch_workers.py#L236)
-inside `BatchOrchestrationMixin._on_memory_warning()`. The mixin only gates *new submissions* — in-flight downloads
+inside `BatchOrchestrationMixin._on_memory_warning()`. The mixin only gates _new submissions_ — in-flight downloads
 continue to completion, which is why memory keeps climbing for ~2 minutes after the backpressure log fires before the
 OOM-killer would fire.
 
 ## 2 — Filter args lifecycle (read-time vs write-time)
 
-| Arg              | File:line                                | Classification                                       | Note |
-|------------------|------------------------------------------|------------------------------------------------------|------|
-| `instrument_ids` | `cli/handlers/process_handler.py:404`    | wiring (CLI → orchestrator)                          | `args.instrument_ids` cast and forwarded |
-| `instrument_ids` | `orchestration_service.py:238, 585, 635` | wiring (forwarded to scanner)                        | No filtering done at these hops |
-| `instrument_ids` | `orchestration_scanner.py:376`           | **read-time-gate (intended)**                        | Passed to `_collect_matching_parquet_blobs` |
-| `instrument_ids` | `orchestration_scanner.py:448`           | **read-time-gate — BUG: only fires on venue-mismatch** | See §3 |
-| `instrument_ids` | `orchestration_scanner.py:385`           | **read-time-gate — same bug in fallback branch**     | Identical pattern, same problem |
-| `instrument_ids` | `orchestration_scheduling.py:243`        | **read-time-gate (correct)**                         | `filter_blob_by_criteria` called unconditionally. Comment cites 2026-05-05 incident. |
-| `instrument_ids` | `data_source.py:131-132, 223-224`        | read-time-gate (correct, separate code path)         | `MockDataSource` / non-prod path; not used by `process` subcommand |
-| `instrument_ids` | `orchestration_writer.py:268, 314`       | **write-time-gate** (VIX-specific)                   | Per-row check inside writer for a single special-case data_type |
-| `venues`         | `orchestration_scanner.py:441-447`       | read-time-gate (correct path, but see §3)            | Prefix match works as intended |
-| `venues`         | `orchestration_scheduling.py:243`        | read-time-gate (correct)                             | Same `filter_blob_by_criteria` call as above |
-| `data_types`     | `orchestration_service.py:231-247`       | read-time-gate (loop-level)                          | Orchestrator iterates only requested data_types; never invokes scanner for others |
-| `data_types`     | `orchestration_scanner.py:439`           | read-time-gate (per-blob partition match)            | `_blob_matches_data_type_partition()` — correct |
+| Arg              | File:line                                | Classification                                         | Note                                                                                 |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `instrument_ids` | `cli/handlers/process_handler.py:404`    | wiring (CLI → orchestrator)                            | `args.instrument_ids` cast and forwarded                                             |
+| `instrument_ids` | `orchestration_service.py:238, 585, 635` | wiring (forwarded to scanner)                          | No filtering done at these hops                                                      |
+| `instrument_ids` | `orchestration_scanner.py:376`           | **read-time-gate (intended)**                          | Passed to `_collect_matching_parquet_blobs`                                          |
+| `instrument_ids` | `orchestration_scanner.py:448`           | **read-time-gate — BUG: only fires on venue-mismatch** | See §3                                                                               |
+| `instrument_ids` | `orchestration_scanner.py:385`           | **read-time-gate — same bug in fallback branch**       | Identical pattern, same problem                                                      |
+| `instrument_ids` | `orchestration_scheduling.py:243`        | **read-time-gate (correct)**                           | `filter_blob_by_criteria` called unconditionally. Comment cites 2026-05-05 incident. |
+| `instrument_ids` | `data_source.py:131-132, 223-224`        | read-time-gate (correct, separate code path)           | `MockDataSource` / non-prod path; not used by `process` subcommand                   |
+| `instrument_ids` | `orchestration_writer.py:268, 314`       | **write-time-gate** (VIX-specific)                     | Per-row check inside writer for a single special-case data_type                      |
+| `venues`         | `orchestration_scanner.py:441-447`       | read-time-gate (correct path, but see §3)              | Prefix match works as intended                                                       |
+| `venues`         | `orchestration_scheduling.py:243`        | read-time-gate (correct)                               | Same `filter_blob_by_criteria` call as above                                         |
+| `data_types`     | `orchestration_service.py:231-247`       | read-time-gate (loop-level)                            | Orchestrator iterates only requested data_types; never invokes scanner for others    |
+| `data_types`     | `orchestration_scanner.py:439`           | read-time-gate (per-blob partition match)              | `_blob_matches_data_type_partition()` — correct                                      |
 
-Hypothesis predicted "~0 read-time hits and several write-time hits for the three filters." Reality is more nuanced:
-the *intent* is read-time gating, the *plumbing* is in place, but the gating logic for `instrument_ids` is functionally
-a no-op on the production path.
+Hypothesis predicted "~0 read-time hits and several write-time hits for the three filters." Reality is more nuanced: the
+_intent_ is read-time gating, the _plumbing_ is in place, but the gating logic for `instrument_ids` is functionally a
+no-op on the production path.
 
 ## 3 — The bloat owner: scanner logic-bug in `_collect_matching_parquet_blobs`
 
@@ -101,18 +101,18 @@ files.append(blob_name)
 
 Logical truth table for the `continue` gate:
 
-| `venues` set | `blob_has_venue` | `instrument_ids` checked? | Blob included? |
-|--------------|------------------|---------------------------|----------------|
-| No           | n/a              | **No**                    | **Yes (all blobs)** |
-| Yes          | Yes              | **No**                    | **Yes (all instruments in matching venues)** |
-| Yes          | No               | Yes (via `filter_blob_by_criteria`) | Only if it matches |
+| `venues` set | `blob_has_venue` | `instrument_ids` checked?           | Blob included?                               |
+| ------------ | ---------------- | ----------------------------------- | -------------------------------------------- |
+| No           | n/a              | **No**                              | **Yes (all blobs)**                          |
+| Yes          | Yes              | **No**                              | **Yes (all instruments in matching venues)** |
+| Yes          | No               | Yes (via `filter_blob_by_criteria`) | Only if it matches                           |
 
 So `instrument_ids` is **never consulted on the primary path**. It only acts as a rescue filter for blobs whose path
 doesn't carry a `venue=` segment.
 
 `filter_blob_by_criteria` itself is correct
 ([`path_parsing.py:118-146`](../../../../market-data-processing-service/market_data_processing_service/app/utils/path_parsing.py#L118-L146)):
-it checks BOTH venues AND instrument_ids when each is provided. The bug is purely in *when* the scanner calls it.
+it checks BOTH venues AND instrument_ids when each is provided. The bug is purely in _when_ the scanner calls it.
 
 The 2026-05-28 smoke ran with `--venues BINANCE-FUTURES BYBIT --instrument-ids <4 symbols>`. Every BINANCE-FUTURES or
 BYBIT trades parquet for the day matched the venue prefix, so `blob_has_venue=True` and the four-symbol filter was
@@ -133,30 +133,30 @@ if not filter_blob_by_criteria(blob.name, venues, instrument_ids):
 files.append(blob.name)
 ```
 
-…with an in-line comment citing the 2026-05-05 incident (a related bug where data_type filtering was missed). The
-fix is to bring `orchestration_scanner.py` to parity with this shape.
+…with an in-line comment citing the 2026-05-05 incident (a related bug where data_type filtering was missed). The fix is
+to bring `orchestration_scanner.py` to parity with this shape.
 
-### What is *not* the cause
+### What is _not_ the cause
 
 - **Not** per-instrument DataFrame retention. The polars frame is `del`'d at `live_workers.py:470` after the polars→
   pandas conversion. The pandas frame is held only for the duration of `_process_all_timeframes()` — a per-instrument
   window, not a cumulative one.
 - **Not** an unbounded ManifestWriter / accumulator. Manifest writes are streamed; no per-instrument residue.
 - **Not** `pl.concat` / `pd.concat` of all-instrument data. The two `concat` calls in `live_workers.py:958, 1018`
-  concatenate timeframe-slices *within* one instrument, not across.
+  concatenate timeframe-slices _within_ one instrument, not across.
 
-The bloat owner is upstream of the worker entirely: the scanner returns the wrong file list, so the workers
-faithfully process hundreds of instruments the operator never asked for.
+The bloat owner is upstream of the worker entirely: the scanner returns the wrong file list, so the workers faithfully
+process hundreds of instruments the operator never asked for.
 
 ## 4 — Hypothesis verdict
 
 **CONFIRMED.** The plan's hypothesis (filter-pushdown) is correct in shape — the read-time scope filter is the missing
-piece. The implementation detail that diverges from the plan's prose is that the *plumbing* for read-time filtering is
-already there; the bug is that the *gate* short-circuits past it. So the fix is even smaller than the plan
-anticipated.
+piece. The implementation detail that diverges from the plan's prose is that the _plumbing_ for read-time filtering is
+already there; the bug is that the _gate_ short-circuits past it. So the fix is even smaller than the plan anticipated.
 
 This makes Phase 1.4 (the canary VM with `tracemalloc`) unnecessary. The cause is statically provable: the scanner
-returns the wrong file list, and the worker downloads what the scanner returned. A canary would just confirm `len(files_to_process)` is much larger than the operator-requested scope — which we already know by reading the code.
+returns the wrong file list, and the worker downloads what the scanner returned. A canary would just confirm
+`len(files_to_process)` is much larger than the operator-requested scope — which we already know by reading the code.
 
 ## 5 — Minimum-viable fix
 
@@ -165,6 +165,7 @@ returns the wrong file list, and the worker downloads what the scanner returned.
 **Lines 441-449 (inside `_collect_matching_parquet_blobs`):**
 
 Before:
+
 ```python
 if venues:
     blob_has_venue = any(f"venue={v}" in blob_name for v in venues)
@@ -176,6 +177,7 @@ files.append(blob_name)
 ```
 
 After:
+
 ```python
 if not filter_blob_by_criteria(blob_name, venues, instrument_ids):
     continue
@@ -185,6 +187,7 @@ files.append(blob_name)
 **And the parallel fallback at lines 380-396 (`_list_instrument_files`):**
 
 Before:
+
 ```python
 if venues:
     blob_has_venue = any(f"venue={v}" in blob_name for v in venues)
@@ -194,6 +197,7 @@ files.append(blob_name)
 ```
 
 After (same shape):
+
 ```python
 if not filter_blob_by_criteria(blob_name, venues, instrument_ids):
     continue
@@ -210,8 +214,8 @@ restructure) from the parent plan are **not needed** — the bug is upstream of 
 ## 6 — Recommendation: skip Phase 1.4, proceed straight to Phase 2 + Phase 3
 
 The plan's Phase 1.4 canary VM was a hedge against the hypothesis being wrong. The static trace is unambiguous (every
-code path enumerated, the bug is two-line, the sibling-correct path exists at `orchestration_scheduling.py:243` as
-proof of intent). A canary would burn ~1 hour of VM time + operator attention to confirm what the code already shows.
+code path enumerated, the bug is two-line, the sibling-correct path exists at `orchestration_scheduling.py:243` as proof
+of intent). A canary would burn ~1 hour of VM time + operator attention to confirm what the code already shows.
 
 Proposed sequence:
 
@@ -225,17 +229,17 @@ Proposed sequence:
 4. **Phase 4** (P2): codex SSOT update + revert the sharded-launcher mitigations.
 
 Phase 2.2 (per-iteration `del`) and Phase 2.3 (streaming orchestrator) should NOT ship — they are P2/P3 against a
-non-existent leak. If Phase 3.1 unexpectedly fails the RSS cap *with* the scanner fix in place, then revisit.
+non-existent leak. If Phase 3.1 unexpectedly fails the RSS cap _with_ the scanner fix in place, then revisit.
 
 ## Side findings (do not chase from this audit)
 
 - **`_collect_matching_parquet_blobs` returns `(files, all_parquet)`** but `all_parquet` is only used in the fallback
-  branch (when `_data_type_requires_partition(data_type)` is False, line 380). Once the scanner fix lands, that
-  fallback may be reachable for fewer cases — worth a tiny follow-up to confirm sports/prediction data still lists
-  correctly. Not blocking.
+  branch (when `_data_type_requires_partition(data_type)` is False, line 380). Once the scanner fix lands, that fallback
+  may be reachable for fewer cases — worth a tiny follow-up to confirm sports/prediction data still lists correctly. Not
+  blocking.
 - **`_blob_matches_chain_split_venue`** handles the DeFi `venue=BASE/chain=CHAIN/` partition shape. Make sure the new
-  `filter_blob_by_criteria`-only path doesn't regress that — `filter_blob_by_criteria` uses
-  `_resolve_venue_from_blob` (`path_parsing.py:50-115`) which should already cover it. A targeted unit test for
+  `filter_blob_by_criteria`-only path doesn't regress that — `filter_blob_by_criteria` uses `_resolve_venue_from_blob`
+  (`path_parsing.py:50-115`) which should already cover it. A targeted unit test for
   `(venues=["UNISWAP-V3-ETHEREUM"], blob containing "venue=UNISWAP-V3/chain=ETHEREUM/")` would lock it in.
 - **Backpressure mixin is well-engineered** (`_on_memory_warning` + `_unpause_if_safe`). Once the scanner fix lands and
   the queue is correctly scoped, backpressure should rarely engage. If it does on small scopes after the fix, the

@@ -16,37 +16,30 @@ related:
 
 # Game-Day Protocol — 3+ Scenarios End-to-End Acceptance
 
-> **Purpose**: prove the 5+1 defence-in-depth recovery stack works end-to-end
-> by running at least 3 of the 17 scratch scenarios in
-> `plans/active/scratch_scenarios_day1/` against the staging stack with all
-> Layer-0..5 components live. **Pre-cutover gate**: this protocol MUST be
-> GREEN before any new strategy promotes to `live_full`.
+> **Purpose**: prove the 5+1 defence-in-depth recovery stack works end-to-end by running at least 3 of the 17 scratch
+> scenarios in `plans/active/scratch_scenarios_day1/` against the staging stack with all Layer-0..5 components live.
+> **Pre-cutover gate**: this protocol MUST be GREEN before any new strategy promotes to `live_full`.
 >
-> Plan-of-record: `plans/active/incident_gateway_and_state_machine_2026_05_23.md`
-> Phase 6 + cross-cutting acceptance for the observability_master epic.
+> Plan-of-record: `plans/active/incident_gateway_and_state_machine_2026_05_23.md` Phase 6 + cross-cutting acceptance for
+> the observability_master epic.
 >
-> Audit-instructions Section O.10 enumerates the 7 per-scenario asserts that
-> MUST all pass for the audit to flip GREEN.
+> Audit-instructions Section O.10 enumerates the 7 per-scenario asserts that MUST all pass for the audit to flip GREEN.
 
 ## When to run
 
 - **Pre-cutover** (single mandatory pass) — before May-23 live DeFi cutover.
 - **Quarterly** — verify the stack still works as the codebase evolves.
-- **After any change** to Layer-0 scripts / Incident Gateway / LLM agent /
-  notifiers / DART Safety Ops tab.
+- **After any change** to Layer-0 scripts / Incident Gateway / LLM agent / notifiers / DART Safety Ops tab.
 
 ## Pre-flight (operator action — 30 minutes)
 
-1. Confirm Tier-1 UAC schemas + Tier-2 alerting gateway + Tier-3 Layer-0
-   scripts + Tier-4 LLM agent are deployed to staging (see commit log in
-   `plans/active/incident_gateway_and_state_machine_2026_05_23.md`
-   "Tier-1-4 implementation log").
-2. Confirm Twilio account creds + (optional) physical pager creds are in
-   the STAGING SM project (separate from prod).
-3. Confirm 2 dummy strategies with risk_thresholds configured + paper
-   positions on staging venues.
-4. Confirm the `recovery-audit-signoff` LLM agent is running on the staging
-   `recovery-audit-staging-*` VM (per `agent-orchestrator/agents/recovery-audit.md`).
+1. Confirm Tier-1 UAC schemas + Tier-2 alerting gateway + Tier-3 Layer-0 scripts + Tier-4 LLM agent are deployed to
+   staging (see commit log in `plans/active/incident_gateway_and_state_machine_2026_05_23.md` "Tier-1-4 implementation
+   log").
+2. Confirm Twilio account creds + (optional) physical pager creds are in the STAGING SM project (separate from prod).
+3. Confirm 2 dummy strategies with risk_thresholds configured + paper positions on staging venues.
+4. Confirm the `recovery-audit-signoff` LLM agent is running on the staging `recovery-audit-staging-*` VM (per
+   `agent-orchestrator/agents/recovery-audit.md`).
 5. Open DART Safety Ops tab in browser; confirm 3 sections render.
 6. Open PagerDuty mobile app + ensure operator phone is on charging.
 7. Operator + secondary on-call on Zoom call so both observe firing.
@@ -58,25 +51,28 @@ Per audit-instructions Section O.10:
 ### Scenario 1: `01_cefi_venue_circuit_breaker_trip` (Layer-0 disable/cancel/pause)
 
 **What it tests**: circuit breaker auto-trips when a venue WebSocket disconnects
-+ REST returns 503 mid-trading. Validates `disable_venue` + `cancel_open_orders`
-+ `pause_strategy` Layer-0 scripts.
+
+- REST returns 503 mid-trading. Validates `disable_venue` + `cancel_open_orders`
+- `pause_strategy` Layer-0 scripts.
 
 Steps:
+
 1. Pre-fill staging positions on Binance perp BTC-USDT.
 2. Run `e2e-testing/scripts/defi/scenarios/inject_venue_outage.sh --venue binance --duration 300s`.
 3. Observe via DART Safety Ops tab: incident appears with severity=CRITICAL.
-4. Watch incident transition DETECTED → AUTO_ACTION_STARTED → AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED → RECOVERY_CONFIRMED → AUDIT_REPORT_GENERATED.
+4. Watch incident transition DETECTED → AUTO_ACTION_STARTED → AUTO_ACTION_SUCCEEDED → RECOVERY_VERIFICATION_STARTED →
+   RECOVERY_CONFIRMED → AUDIT_REPORT_GENERATED.
 5. Verify LLM signoff doc appears in DART LLM Audit Verdicts panel within 90s of AUDIT_REPORT_GENERATED.
 6. Verify ack-queue shows the incident with 5min countdown (CRITICAL SLA).
 7. Operator clicks Audit Ack → incident closes.
 
 ### Scenario 2: `15_liquidation_proximity_auto_deleverage` (Risk pre-detector + close-all)
 
-**What it tests**: liquidation-risk pre-detector fires before liquidation +
-auto-deleverage runs + DrawdownInvestigationReport generated. Validates
-`enter_safe_mode` + per-strategy close-all script.
+**What it tests**: liquidation-risk pre-detector fires before liquidation + auto-deleverage runs +
+DrawdownInvestigationReport generated. Validates `enter_safe_mode` + per-strategy close-all script.
 
 Steps:
+
 1. Pre-fill staging position with HF ≈ 1.3 (close to threshold).
 2. Run `e2e-testing/scripts/defi/scenarios/inject_oracle_price_drop.sh --asset weETH --pct 0.05`.
 3. Verify LiquidationRiskPredetector fires SEV0 within 10s.
@@ -87,10 +83,11 @@ Steps:
 
 ### Scenario 3: `04_defi_oracle_deviation_30sigma` (Provider-outage + Twilio fallback)
 
-**What it tests**: alerting provider goes down DURING a SEV0; router enters
-fallback_mode; Twilio voice fires + reaches operator within 90s.
+**What it tests**: alerting provider goes down DURING a SEV0; router enters fallback_mode; Twilio voice fires + reaches
+operator within 90s.
 
 Steps:
+
 1. Synthetically kill the PagerDuty probe in staging.
 2. Run `e2e-testing/scripts/defi/scenarios/inject_oracle_deviation.sh --magnitude 30sigma`.
 3. Verify within 60s: provider_health_probe emits `ALERTING_PROVIDER_DEGRADED`.
@@ -103,10 +100,9 @@ Steps:
 Per audit-instructions Section O.10.d, every scenario MUST satisfy:
 
 - [ ] (1) **Layer-0 acts within expected time** — script exits 0 within 60s of trigger.
-- [ ] (2) **AgentActionEvent rows persist** — JSONL row written to GCS audit store at
-      `incidents/{date}/{key}/actions/`.
-- [ ] (3) **LLM signoff lands non-DISPUTE** within 90s (or DISPUTE_AUTOMATED_ACTION if the
-      automated action was intentionally wrong — that's a separate pass case).
+- [ ] (2) **AgentActionEvent rows persist** — JSONL row written to GCS audit store at `incidents/{date}/{key}/actions/`.
+- [ ] (3) **LLM signoff lands non-DISPUTE** within 90s (or DISPUTE_AUTOMATED_ACTION if the automated action was
+      intentionally wrong — that's a separate pass case).
 - [ ] (4) **Layer-2/3 cascade fires if SEV0** — PagerDuty page (or Twilio if fallback_mode).
 - [ ] (5) **Ack-queue countdown active** with correct SLA per severity.
 - [ ] (6) **Safety Ops tab shows the incident** with manual override buttons enabled.
@@ -114,8 +110,8 @@ Per audit-instructions Section O.10.d, every scenario MUST satisfy:
 
 ## Acceptance criterion
 
-All 3 scenarios × 7 asserts = **21/21 GREEN** OR documented failure with named
-remediation plan in `plans/active/`. Anything less = audit RED.
+All 3 scenarios × 7 asserts = **21/21 GREEN** OR documented failure with named remediation plan in `plans/active/`.
+Anything less = audit RED.
 
 ## Verification artifacts
 
@@ -131,6 +127,7 @@ Stored in `plans/audit/results/game_day_<yyyy_mm_dd>.md`.
 ## Failure-handling
 
 If any assert fails:
+
 1. STOP the cutover preparation.
 2. File a remediation plan at `plans/active/<failure>_remediation_<date>.md`.
 3. Dispatch the plan to the appropriate epic (observability_master / strategy_master / etc).
@@ -151,13 +148,13 @@ _never — run pre-cutover_
 
 ## Bash-runnable game-day kit (operator-facing)
 
-> **⚠️ STAGING-INFRA-REQUIRED**: this section needs the live staging stack to
-> be running (alerting-service + execution-service + strategy-service +
-> recovery-audit-signoff agent + dev:mock UI dev server on 3100). A
-> single-host session WITHOUT staging infrastructure cannot complete the
-> end-to-end gate — it can only run the unit + Playwright legs.
+> **⚠️ STAGING-INFRA-REQUIRED**: this section needs the live staging stack to be running (alerting-service +
+> execution-service + strategy-service + recovery-audit-signoff agent + dev:mock UI dev server on 3100). A single-host
+> session WITHOUT staging infrastructure cannot complete the end-to-end gate — it can only run the unit + Playwright
+> legs.
 >
 > Operator runs each block from a fresh tmux pane while watching:
+>
 > - DART Safety Ops tab (`/safety-ops` after admin auth)
 > - PagerDuty mobile app (acks)
 > - Twilio voice call ring on configured number
@@ -318,15 +315,14 @@ echo "Result template written to: $RESULT_FILE"
 
 ### Why a single-agent session can't ship this gate alone
 
-| Requirement                                | Available in single-agent session? |
-| ------------------------------------------ | --- |
-| Staging GCE VMs (alerting-service + execution + strategy + recovery-audit-signoff) running | ❌ — needs operator-driven deploy |
-| Synthetic-injection scripts under `e2e-testing/scripts/defi/scenarios/` | ❌ — need separate authoring + staging-stack wiring (out of observability epic scope) |
-| Twilio account + paid voice minutes (for live calls) | ❌ — operator-only per ping doc item #1 |
-| Operator phone receiving Twilio calls + acking via mobile | ❌ — physical operator |
-| Secondary on-call observing in parallel | ❌ — second human |
+| Requirement                                                                                | Available in single-agent session?                                                    |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Staging GCE VMs (alerting-service + execution + strategy + recovery-audit-signoff) running | ❌ — needs operator-driven deploy                                                     |
+| Synthetic-injection scripts under `e2e-testing/scripts/defi/scenarios/`                    | ❌ — need separate authoring + staging-stack wiring (out of observability epic scope) |
+| Twilio account + paid voice minutes (for live calls)                                       | ❌ — operator-only per ping doc item #1                                               |
+| Operator phone receiving Twilio calls + acking via mobile                                  | ❌ — physical operator                                                                |
+| Secondary on-call observing in parallel                                                    | ❌ — second human                                                                     |
 
-Therefore: this gate is **operator-driven**. The agent provides the protocol +
-the bash-runnable kit + the result-recorder template; the operator runs it.
-The agent flips the audit checkbox to GREEN ONLY after the operator posts the
-`plans/audit/results/game_day_<date>.md` result with 21/21 + signs the row.
+Therefore: this gate is **operator-driven**. The agent provides the protocol + the bash-runnable kit + the
+result-recorder template; the operator runs it. The agent flips the audit checkbox to GREEN ONLY after the operator
+posts the `plans/audit/results/game_day_<date>.md` result with 21/21 + signs the row.

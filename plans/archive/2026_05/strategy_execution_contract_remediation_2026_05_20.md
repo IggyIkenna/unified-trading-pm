@@ -464,7 +464,7 @@ instructions
 
 ## Deferred work — migrated to:
 
-- **4c. Per-AG → unified bucket migration (P0, BLOCKED-OPERATOR-DECISION)**: CeFi bucket has 237 files (~19MB) of V2
-  dev backtest runs (2025-01-01 dates); all prod per-AG buckets are 0-byte. Operator must choose: (a) abandon old dev
-  data (no client_id mapping) + delete bucket, OR (b) write migration script for old format → new partitioned format.
+- **4c. Per-AG → unified bucket migration (P0, BLOCKED-OPERATOR-DECISION)**: CeFi bucket has 237 files (~19MB) of V2 dev
+  backtest runs (2025-01-01 dates); all prod per-AG buckets are 0-byte. Operator must choose: (a) abandon old dev data
+  (no client_id mapping) + delete bucket, OR (b) write migration script for old format → new partitioned format.
   **Migrated to**: `plans/epics/strategy_master.md` § P0 operator-decision backlog. Ping filed slot-6 2026-05-23.

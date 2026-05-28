@@ -40,7 +40,6 @@ SCRIPT_DIR = Path(__file__).resolve().parent.parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-# ruff: noqa: E402
 from gcs_migration_bundle_2026_05_08 import (  # type: ignore[import-not-found]
     CRC32CMismatchError,
     CrossAssetRescanResult,
@@ -86,7 +85,7 @@ def test_plan_legacy_path_prefix_rewritten_to_canonical() -> None:
 
 
 def test_plan_instrument_type_casing_normalized() -> None:
-    src = (  # noqa: E501 — fixture path; collapsing reduces readability of the canonical hive shape
+    src = (
         "raw_tick_data/by_date/day=2024-01-01/asset_group=cefi/"
         "venue=binance/data_type=trades/instrument_type=PERPETUAL/foo.parquet"
     )

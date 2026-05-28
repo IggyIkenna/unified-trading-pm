@@ -8,9 +8,14 @@ priority: P2
 status: active
 ---
 
-> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Root cause FIXED — recurring DeFi collection schedule deployed (deployment-service@7b1490f, operation-named; legacy `category=CEFI`-only trigger retired). Two residuals captured in `plans/epics/mtds_mdps_master.md`: (1) DeFi gap-fill backfill verify (dex_swaps VM completion + per-venue manifest GREEN) in the DeFi-V P0 backlog; (2) `category=defi`→`asset_group=defi` GCS hive-key conversion in Phase 9 (bundled with the data_type rename).
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Root cause FIXED — recurring DeFi collection schedule deployed
+> (deployment-service@7b1490f, operation-named; legacy `category=CEFI`-only trigger retired). Two residuals captured in
+> `plans/epics/mtds_mdps_master.md`: (1) DeFi gap-fill backfill verify (dex_swaps VM completion + per-venue manifest
+> GREEN) in the DeFi-V P0 backlog; (2) `category=defi`→`asset_group=defi` GCS hive-key conversion in Phase 9 (bundled
+> with the data_type rename).
 >
-> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: root cause shipped + residuals captured in named epic plans). Lock `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: root cause shipped + residuals captured in named epic
+> plans). Lock `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
 
 ## What I found
 

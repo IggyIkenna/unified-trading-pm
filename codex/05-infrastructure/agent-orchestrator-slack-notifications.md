@@ -19,24 +19,23 @@ Slash-webhook push notifications from the agent-orchestrator Cloud Run service t
 
 Both `server/notifications/slack.py` and `server/notifications/telegram.py` expose the same set; `slack.py` is sync
 (suppress on failure), `telegram.py` is async (suppress on failure). The three notifications that were OAuth-refresh
-specific (`notify_oauth_token_expiring`, `notify_oauth_refresh_succeeded`, `notify_oauth_refresh_failed`) were
-removed in Phase 4b-cleanup 2026-05-28 — see
-[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md)
-§ C.
+specific (`notify_oauth_token_expiring`, `notify_oauth_refresh_succeeded`, `notify_oauth_refresh_failed`) were removed
+in Phase 4b-cleanup 2026-05-28 — see
+[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § C.
 
-| Function                           | Wired in                                                       | Trigger                                                              |
-| ---------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `notify_slot_blocked`              | `server/server.py::blocked_slot`                               | POST /api/slots/{id}/blocked (operator answer needed)                |
-| `notify_slot_stale`                | `server/health.py` working-stale path                          | HealthMonitor: working slot silent >25 min                           |
-| `notify_slot_failed`               | `server/health.py` idle-stale path                             | HealthMonitor: idle worker process dead                              |
-| `notify_spawn_failure`             | `server/server.py::spawn_slot` exception arm                   | `tmux_spawn.spawn` raised — readwrite/systemd/tmux config issue      |
-| `notify_agent_stuck_respawned`     | `server/worker_liveness.py` auto-respawn happy path            | Stuck-agent detection fired + tmux respawn succeeded                 |
-| `notify_agent_stuck_escalation`    | `server/worker_liveness.py` auto-respawn failure path          | Respawn attempted but new tmux session never registered              |
-| `notify_account_rotated`           | `server/server.py::rotate_all_slots_off_account`               | Slot respawned with a fresh sibling account (rate-limit failover)    |
-| `notify_all_accounts_exhausted`    | `server/server.py::_pick_next_account` (no healthy sibling)    | All accounts past 95% on at least one quota dimension                |
-| `notify_setup_token_expiring`     | `server/usage_poller.py::_check_setup_token_expiry`            | Long-lived setup-token within 30-day (warn) or 7-day (crit) of expiry |
-| `notify_git_staleness_red`         | `server/health.py` git-status badge integration                | Slot's worktree red >15 min AND no auto-pull within 5 min            |
-| `notify_orchestrator_restart_loop` | Telegram-only; called from a systemd OnFailure script wrapper  | systemd restarted orchestrator >N times in a short window            |
+| Function                           | Wired in                                                      | Trigger                                                               |
+| ---------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `notify_slot_blocked`              | `server/server.py::blocked_slot`                              | POST /api/slots/{id}/blocked (operator answer needed)                 |
+| `notify_slot_stale`                | `server/health.py` working-stale path                         | HealthMonitor: working slot silent >25 min                            |
+| `notify_slot_failed`               | `server/health.py` idle-stale path                            | HealthMonitor: idle worker process dead                               |
+| `notify_spawn_failure`             | `server/server.py::spawn_slot` exception arm                  | `tmux_spawn.spawn` raised — readwrite/systemd/tmux config issue       |
+| `notify_agent_stuck_respawned`     | `server/worker_liveness.py` auto-respawn happy path           | Stuck-agent detection fired + tmux respawn succeeded                  |
+| `notify_agent_stuck_escalation`    | `server/worker_liveness.py` auto-respawn failure path         | Respawn attempted but new tmux session never registered               |
+| `notify_account_rotated`           | `server/server.py::rotate_all_slots_off_account`              | Slot respawned with a fresh sibling account (rate-limit failover)     |
+| `notify_all_accounts_exhausted`    | `server/server.py::_pick_next_account` (no healthy sibling)   | All accounts past 95% on at least one quota dimension                 |
+| `notify_setup_token_expiring`      | `server/usage_poller.py::_check_setup_token_expiry`           | Long-lived setup-token within 30-day (warn) or 7-day (crit) of expiry |
+| `notify_git_staleness_red`         | `server/health.py` git-status badge integration               | Slot's worktree red >15 min AND no auto-pull within 5 min             |
+| `notify_orchestrator_restart_loop` | Telegram-only; called from a systemd OnFailure script wrapper | systemd restarted orchestrator >N times in a short window             |
 
 ### Payload shape (Block Kit)
 
@@ -111,8 +110,8 @@ in local dev; unit tests patch `_WEBHOOK_URL` directly.
 
 ## Unit tests
 
-`tests/test_slack_notifications.py` covers retry, 4xx abort, no-op on empty webhook, Block Kit shape, and dashboard
-link presence/absence. The test count has grown beyond the original V1 trio as additional functions landed; run
+`tests/test_slack_notifications.py` covers retry, 4xx abort, no-op on empty webhook, Block Kit shape, and dashboard link
+presence/absence. The test count has grown beyond the original V1 trio as additional functions landed; run
 `python -m pytest tests/test_slack_notifications.py -v` from agent-orchestrator root to see the current set.
 
 ---

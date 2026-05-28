@@ -18,13 +18,13 @@ related:
 
 # RB-RISK-001 — Strategy Drawdown Investigation
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
-PnL drawdown threshold breach (warning / investigation / human_escalation / auto_pause / auto_reduce / auto_close_all / liquidation_risk).
+PnL drawdown threshold breach (warning / investigation / human_escalation / auto_pause / auto_reduce / auto_close_all /
+liquidation_risk).
 
 Category: **Risk** · Runbook ID: **RB-RISK-001**.
 

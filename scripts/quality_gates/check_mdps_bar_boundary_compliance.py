@@ -119,7 +119,7 @@ _NOQA_MARKER = "# noqa: bar-boundary-truncation"
 
 
 class _Violation:
-    __slots__ = ("file_path", "line", "col", "snippet", "reason")
+    __slots__ = ("col", "file_path", "line", "reason", "snippet")
 
     def __init__(
         self,

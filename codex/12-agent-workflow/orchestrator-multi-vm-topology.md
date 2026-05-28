@@ -72,11 +72,9 @@ last_reviewed: 2026-05-28
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The browser never reaches an epic VM directly — every `/api/...` call from the
-dashboard has its baseUrl rewritten to `<central>/api/vms/<id>` (or stays at the
-central origin for fleet-wide endpoints), so per-VM control travels through the
-central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` +
-`server/server.py::proxy_to_vm`.
+The browser never reaches an epic VM directly — every `/api/...` call from the dashboard has its baseUrl rewritten to
+`<central>/api/vms/<id>` (or stays at the central origin for fleet-wide endpoints), so per-VM control travels through
+the central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` + `server/server.py::proxy_to_vm`.
 
 ## Per-VM agent shape (epic VMs)
 
@@ -88,21 +86,19 @@ central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` +
 
 ## Central API / Planning VM shape (one VM serves both roles since 2026-05-22)
 
-| Slot                     | Role               | Model    | Purpose                                                                                                       |
-| ------------------------ | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
-| **1**                    | Ikenna interactive | Opus 4.7 | Human session for plan curation, audit work, architectural decisions.                                         |
-| **2**                    | Harsh interactive  | Opus 4.7 | Human session. Both Ikenna+Harsh can see each other's chats via shared /api/agents/by-role/main/history view. |
-| (no spawned workers)     |                    |          | The planning VM doesn't execute backlog tasks; it produces master plans that get delegated to epic VMs.       |
+| Slot                 | Role               | Model    | Purpose                                                                                                       |
+| -------------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
+| **1**                | Ikenna interactive | Opus 4.7 | Human session for plan curation, audit work, architectural decisions.                                         |
+| **2**                | Harsh interactive  | Opus 4.7 | Human session. Both Ikenna+Harsh can see each other's chats via shared /api/agents/by-role/main/history view. |
+| (no spawned workers) |                    |          | The planning VM doesn't execute backlog tasks; it produces master plans that get delegated to epic VMs.       |
 
-In addition to the two planning slots above, the same VM runs the **central API**
-that the dashboard talks to (nginx :443 → app :8765). That central API:
+In addition to the two planning slots above, the same VM runs the **central API** that the dashboard talks to (nginx
+:443 → app :8765). That central API:
 
 - Validates the operator JWT (auth perimeter)
-- Serves fleet-wide endpoints directly: `/api/fleet/summary`, `/api/auth/login`,
-  `/api/backends`, `/api/accounts`, etc.
-- Proxies per-VM endpoints (`/api/vms/<id>/<path>`) over the private VPC,
-  minting a fresh internal service token for the upstream Authorization header
-  so the operator JWT never reaches an epic VM
+- Serves fleet-wide endpoints directly: `/api/fleet/summary`, `/api/auth/login`, `/api/backends`, `/api/accounts`, etc.
+- Proxies per-VM endpoints (`/api/vms/<id>/<path>`) over the private VPC, minting a fresh internal service token for the
+  upstream Authorization header so the operator JWT never reaches an epic VM
 
 ## Plan → VM assignment
 
@@ -148,9 +144,10 @@ fronts them as documented in § "Target topology" above; epic VMs are not browse
 - **VM identity** — `ORCHESTRATOR_VM_ID` env var (e.g. `vm-defi`); included in every agent event so dashboard
   aggregation can group by VM.
 - **Public URL** — fleet VMs declare their public IP in `data/config/backends.json` `url`; private IP in `private_url`
-  (used by the central proxy when `ORCHESTRATOR_USE_PRIVATE_URLS=true`). Per-VM FQDNs (`api-<vm-id>.agent-orchestrator
-  .odum-research.com`) are deferred (Phase 11) — operator runs `allocate-orchestrator-eips.sh` + adds DNS A records when
-  IP-stability + direct-curl ergonomics warrant the operator time (recipe:
+  (used by the central proxy when `ORCHESTRATOR_USE_PRIVATE_URLS=true`). Per-VM FQDNs
+  (`api-<vm-id>.agent-orchestrator .odum-research.com`) are deferred (Phase 11) — operator runs
+  `allocate-orchestrator-eips.sh` + adds DNS A records when IP-stability + direct-curl ergonomics warrant the operator
+  time (recipe:
   [`../05-infrastructure/agent-orchestrator-dns-cutover.md`](../05-infrastructure/agent-orchestrator-dns-cutover.md)).
 - **Backlog source** — each VM auto-derives its own backlog.yaml from `plans/active/*.md` (see Phase 6 section below);
   not pointed at by env var.
@@ -159,9 +156,9 @@ fronts them as documented in § "Target topology" above; epic VMs are not browse
 ### Backlog auto-generation per VM (Phase 6 — shipped 2026-05-28)
 
 `backlog.yaml` is **derived from plans, not hand-edited**. Source of truth is `- [ ]` checkbox lines in
-`plans/active/*.md`; regen turns them into BacklogTask rows. The HARD RULE is in CLAUDE.md
-("Agent-orchestrator backlog is plan-driven"): operators may field-tune derived tasks (priority / repos / target_slot
-/ collision_group) but should not hand-add new tasks — write the todo in the plan file.
+`plans/active/*.md`; regen turns them into BacklogTask rows. The HARD RULE is in CLAUDE.md ("Agent-orchestrator backlog
+is plan-driven"): operators may field-tune derived tasks (priority / repos / target_slot / collision_group) but should
+not hand-add new tasks — write the todo in the plan file.
 
 **Module**: `agent-orchestrator/server/regen_backlog_from_plan.py` (not in the PM repo — it runs inside the orchestrator
 process so SQLite + in-process state stay in sync after the YAML write).
@@ -217,8 +214,7 @@ Clicking a VM card → `/vm/<vm_id>` = single-VM view (slots panel + backlog pan
 
 ### Aggregation API
 
-Per-VM endpoint: `GET /api/vm/summary` returns a `VmSummary` (current shape in
-`server/models.py::VmSummary`):
+Per-VM endpoint: `GET /api/vm/summary` returns a `VmSummary` (current shape in `server/models.py::VmSummary`):
 
 ```json
 {
@@ -242,14 +238,11 @@ Per-VM endpoint: `GET /api/vm/summary` returns a `VmSummary` (current shape in
 }
 ```
 
-Dashboard fan-out (centralized model — refreshed 2026-05-22): the dashboard
-calls `GET /api/fleet/summary` on the **central API** which fans out
-**server-side** to each VM's `/api/vm/summary` in parallel via the proxy
-machinery (`server/server.py::fleet_summary` → httpx). Browser sees one
-request, central makes 10 internal calls in parallel, merges, returns. ~200ms
-total. Falls back per VM with a "VM unreachable" card when an individual
-backend doesn't respond. The earlier model (browser fetches per-VM FQDNs)
-was superseded by the central-proxy model 2026-05-22.
+Dashboard fan-out (centralized model — refreshed 2026-05-22): the dashboard calls `GET /api/fleet/summary` on the
+**central API** which fans out **server-side** to each VM's `/api/vm/summary` in parallel via the proxy machinery
+(`server/server.py::fleet_summary` → httpx). Browser sees one request, central makes 10 internal calls in parallel,
+merges, returns. ~200ms total. Falls back per VM with a "VM unreachable" card when an individual backend doesn't
+respond. The earlier model (browser fetches per-VM FQDNs) was superseded by the central-proxy model 2026-05-22.
 
 ## Persistence + VM provisioning
 

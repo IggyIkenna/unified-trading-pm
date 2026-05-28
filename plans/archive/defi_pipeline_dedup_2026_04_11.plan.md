@@ -184,13 +184,13 @@ Phase 2: MTDS        Phase 3: MDPS        [PARALLEL]
 
 | Protocol Class | Venue               | MTDS Operation                           | Data Types                   |
 | -------------- | ------------------- | ---------------------------------------- | ---------------------------- |
-| Lending        | AAVE_V3-ETHEREUM     | collect-lending-indices                  | lending_indices, risk_params |
-| DEX            | UNISWAP_V3-ETHEREUM  | collect-dex-swaps, collect-dex-pools     | swaps, dex_pools             |
+| Lending        | AAVE_V3-ETHEREUM    | collect-lending-indices                  | lending_indices, risk_params |
+| DEX            | UNISWAP_V3-ETHEREUM | collect-dex-swaps, collect-dex-pools     | swaps, dex_pools             |
 | Yield          | LIDO-ETHEREUM       | collect-lst-rates, collect-oracle-prices | lst_rates, oracle_prices     |
 | Perps          | HYPERLIQUID         | collect-perp-funding                     | perp_funding                 |
 | Solana         | DRIFT-SOLANA        | collect-perp-funding                     | perp_funding                 |
 | Gas            | (cross-chain)       | collect-gas-fees                         | gas_fees                     |
-| Liquidations   | AAVE_V3-ETHEREUM     | collect-liquidations                     | liquidations                 |
+| Liquidations   | AAVE_V3-ETHEREUM    | collect-liquidations                     | liquidations                 |
 | Rewards        | EIGENLAYER-ETHEREUM | collect-eigenlayer-rewards               | rewards                      |
 
 ### Success Criteria

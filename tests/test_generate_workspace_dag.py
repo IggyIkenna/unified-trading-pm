@@ -15,7 +15,7 @@ import pytest
 # scripts/manifest/ is on extraPaths for basedpyright; add at runtime for pytest too
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts" / "manifest"))
 
-from generate_workspace_dag import (  # noqa: E402, I001
+from generate_workspace_dag import (  # noqa: I001
     JsonDict,
     LayoutEntry,
     RepoEntry,

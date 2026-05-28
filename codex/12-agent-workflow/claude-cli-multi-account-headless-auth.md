@@ -102,8 +102,8 @@ The orchestrator wires this via two layers:
 
 **server.py** (`spawn_agent_endpoint`):
 
-- `SpawnAgentRequest.account_id: str | None` — field signature, but the runtime now refuses (HTTP 400) when
-  `account_id` is missing OR the resolved account in `accounts.json` has no `oauth_token_env_file` (Phase 4b-cleanup).
+- `SpawnAgentRequest.account_id: str | None` — field signature, but the runtime now refuses (HTTP 400) when `account_id`
+  is missing OR the resolved account in `accounts.json` has no `oauth_token_env_file` (Phase 4b-cleanup).
 - When set, resolves `oauth_token_env_file` from `data/config/accounts.json` via `load_accounts()` and passes it as
   `env_file` to `spawn_named()`.
 - Pattern mirrors the worker spawn path (`tmux_spawn.spawn(env_file=…)`).
@@ -154,8 +154,7 @@ file.
 ```
 
 (Current roster verified 2026-05-28: 4 accounts, all with setup-tokens minted, all distributed to both
-`gs://central-element-323112-orchestrator-creds/accounts/` AND
-`s3://uts-orchestrator-creds-427895769566/accounts/`.)
+`gs://central-element-323112-orchestrator-creds/accounts/` AND `s3://uts-orchestrator-creds-427895769566/accounts/`.)
 
 Each env file:
 
@@ -192,11 +191,10 @@ The same token can be deployed across N machines simultaneously. **They all shar
 with the same token doesn't multiply throughput; the 5h / weekly bars are per-account, not per-machine. Throughput
 multiplication comes from having N DISTINCT subscriptions, each with its own token, distributed across the VMs.
 
-Distribution: operator uploads the env files to both creds buckets (GCS and S3); every VM pulls via the
-`CredsEnvPoller` daemon in `agent-orchestrator/server/creds_env_poller.py` (5-min poll, env var
-`ORCHESTRATOR_CREDS_GCS_BUCKET` / `ORCHESTRATOR_CREDS_S3_BUCKET` selects cloud) into its local `~/.claude-accounts/`.
-The legacy `GCSCredsPoller` (which synced `.credentials.<id>.json` short-lived token blobs) was deleted in Phase
-4b-cleanup 2026-05-28.
+Distribution: operator uploads the env files to both creds buckets (GCS and S3); every VM pulls via the `CredsEnvPoller`
+daemon in `agent-orchestrator/server/creds_env_poller.py` (5-min poll, env var `ORCHESTRATOR_CREDS_GCS_BUCKET` /
+`ORCHESTRATOR_CREDS_S3_BUCKET` selects cloud) into its local `~/.claude-accounts/`. The legacy `GCSCredsPoller` (which
+synced `.credentials.<id>.json` short-lived token blobs) was deleted in Phase 4b-cleanup 2026-05-28.
 
 ## Verifying a token is valid + active
 

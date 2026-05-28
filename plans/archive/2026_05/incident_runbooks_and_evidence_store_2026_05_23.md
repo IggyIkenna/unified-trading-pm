@@ -219,7 +219,8 @@ kill-switch) + rollback
       unified-trading-pm (Tier-5 log line 249)
 - [x] ✅ Phase 5 P0.29 — game_day_protocol.md extended + injection scripts shipped — e2e-testing@b3401e5 +
       unified-trading-pm (Tier-5b)
-- [x] ✅ DEFERRED-OPERATOR-DECISION [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs 3 scripts on staging; 21/21 GREEN gate (operator to schedule when staging infra ready)
+- [x] ✅ DEFERRED-OPERATOR-DECISION [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs 3 scripts on
+      staging; 21/21 GREEN gate (operator to schedule when staging infra ready)
 
 **Cross-references**:
 
@@ -261,7 +262,8 @@ kill-switch) + rollback
       incidents/{date}/{key}/evidence/<type>.json; 9 unit tests total
 - [x] ✅ Phase 4 P0.28 — hygiene script `unified-trading-pm/scripts/plan-hygiene/check_runbook_fields.py` — wired into
       run_hygiene_sweep.sh as hard check; validates owner/cadence/verifier/last_executed on all 22 runbooks
-- [x] ✅ DEFERRED-OPERATOR-DECISION Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol doc shipped; P0.29 done, P0.30 live run STAGING-INFRA-REQUIRED)
+- [x] ✅ DEFERRED-OPERATOR-DECISION Phase 5 P0.29-P0.30 — synthetic smoke + per-runbook walkthrough (game-day protocol
+      doc shipped; P0.29 done, P0.30 live run STAGING-INFRA-REQUIRED)
 
 **Cross-references**:
 
@@ -298,7 +300,8 @@ kill-switch) + rollback
       (UAC-validated synthetic incident + cascade print + 7-assert checklist):
       `e2e-testing/scripts/defi/scenarios/inject_venue_outage.sh` (01) / `inject_oracle_price_drop.sh` (15) /
       `inject_oracle_deviation.sh` (04, DISPUTE→SAFE_MODE). — e2e-testing@b3401e5
-- [x] ✅ DEFERRED-OPERATOR-DECISION [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs the 3 scripts with `--staging` on the staging
-      stack; 21/21 GREEN gate (asserts 2/4/6/7 need live infra); result lands at plans/audit/results/game*day*<date>.md. Operator to schedule when staging infra ready.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [STAGING-INFRA-REQUIRED] Phase 5 P0.30 (live run) — operator runs the 3 scripts with
+      `--staging` on the staging stack; 21/21 GREEN gate (asserts 2/4/6/7 need live infra); result lands at
+      plans/audit/results/game*day*<date>.md. Operator to schedule when staging infra ready.
 - [x] ✅ Phase 2 per-service /evidence/{incident_key} HTTP endpoints (collector ships in alerting-service@e5c8084;
       endpoints pending per-service)

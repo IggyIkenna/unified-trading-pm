@@ -107,10 +107,9 @@ For live services, support runtime adjustment:
 
 ### Instrument Identity and CLI Granularity (HARD RULE — codified 2026-05-28)
 
-Every batch service that accepts an `--instrument-ids` (or `--instruments`) flag MUST treat the canonical
-instrument_id form as a structured value, not as an opaque substring. The CLI is the contract — operators rely on it
-to scope work down to the smallest atomic unit they care about. Substring matching against blob paths breaks that
-contract silently.
+Every batch service that accepts an `--instrument-ids` (or `--instruments`) flag MUST treat the canonical instrument_id
+form as a structured value, not as an opaque substring. The CLI is the contract — operators rely on it to scope work
+down to the smallest atomic unit they care about. Substring matching against blob paths breaks that contract silently.
 
 #### Canonical instrument_id form
 
@@ -120,25 +119,25 @@ VENUE:INSTRUMENT_TYPE:SYMBOL
 
 Three colon-separated fields, no other punctuation. Examples (use these in plans + runbooks + tests):
 
-| Asset group | Canonical id                                  | Notes                                                                       |
-| ----------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| CeFi perp   | `BINANCE-FUTURES:PERPETUAL:BTCUSDT`           | Venue suffix `-FUTURES` distinguishes from `BINANCE-SPOT`                   |
-| CeFi spot   | `COINBASE-SPOT:SPOT:BTC-USD`                  | Symbol may contain `-`; only the **first two** colons are separators        |
-| CeFi option | `DERIBIT:OPTION:BTC-31MAY24-50000-C`          | Symbol may contain `-`                                                      |
-| DeFi pool   | `UNISWAP-V3-ETHEREUM:DEX_POOL:USDC_WETH_500`  | Chain-qualified venue per `_blob_matches_chain_split_venue` shape           |
-| TradFi      | `CME:FUTURE:ES-20240315`                      | Symbol carries expiry                                                       |
-| Sports      | `SFI:FIXTURE:PREMIER_LEAGUE_2024_MCI_LIV`     | Sports uses `sports_reference/` shape; instrument_type is `FIXTURE`         |
+| Asset group | Canonical id                                 | Notes                                                                |
+| ----------- | -------------------------------------------- | -------------------------------------------------------------------- |
+| CeFi perp   | `BINANCE-FUTURES:PERPETUAL:BTCUSDT`          | Venue suffix `-FUTURES` distinguishes from `BINANCE-SPOT`            |
+| CeFi spot   | `COINBASE-SPOT:SPOT:BTC-USD`                 | Symbol may contain `-`; only the **first two** colons are separators |
+| CeFi option | `DERIBIT:OPTION:BTC-31MAY24-50000-C`         | Symbol may contain `-`                                               |
+| DeFi pool   | `UNISWAP-V3-ETHEREUM:DEX_POOL:USDC_WETH_500` | Chain-qualified venue per `_blob_matches_chain_split_venue` shape    |
+| TradFi      | `CME:FUTURE:ES-20240315`                     | Symbol carries expiry                                                |
+| Sports      | `SFI:FIXTURE:PREMIER_LEAGUE_2024_MCI_LIV`    | Sports uses `sports_reference/` shape; instrument_type is `FIXTURE`  |
 
 #### Which axes derive from instrument_id, and which are independent
 
-| Axis              | Derivable from instrument_id? | How                                                                                                |
-| ----------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
-| `venue`           | ✅ Yes                        | First `:`-separated field                                                                          |
-| `instrument_type` | ✅ Yes                        | Second `:`-separated field                                                                         |
-| `symbol`          | ✅ Yes                        | Third+ field (may contain `-`)                                                                     |
-| `asset_group`     | ✅ Yes (via lookup)           | `VENUES_BY_ASSET_GROUP` reverse lookup in `unified_api_contracts.canonical.venue_taxonomy`         |
+| Axis              | Derivable from instrument_id? | How                                                                                                                                                |
+| ----------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `venue`           | ✅ Yes                        | First `:`-separated field                                                                                                                          |
+| `instrument_type` | ✅ Yes                        | Second `:`-separated field                                                                                                                         |
+| `symbol`          | ✅ Yes                        | Third+ field (may contain `-`)                                                                                                                     |
+| `asset_group`     | ✅ Yes (via lookup)           | `VENUES_BY_ASSET_GROUP` reverse lookup in `unified_api_contracts.canonical.venue_taxonomy`                                                         |
 | `data_type`       | ❌ No                         | A single instrument has multiple data_types (e.g. `trades` + `book_snapshot_5` + `funding_rate`). MUST be passed independently via `--data-types`. |
-| `date`            | ❌ No                         | Time axis; MUST come from `--start-date` / `--end-date` or `--shard-key day` segment.              |
+| `date`            | ❌ No                         | Time axis; MUST come from `--start-date` / `--end-date` or `--shard-key day` segment.                                                              |
 
 This is the contract: **`--instrument-ids <canonical_form>` + `--data-types <type>` + `--start-date / --end-date`** is
 sufficient to scope a run to one or more atomic shards. Operators MUST NOT have to also pass `--venues` or
@@ -155,8 +154,8 @@ Composing the canonical form with the time axis + data_type gives the same 6-tup
 
 Both representations are equivalent. `--shard-key` is the pipe-delimited single-string form (good for one-shot
 deploy-missing buttons); `--instrument-ids` + `--data-types` + `--start-date` is the multi-shard form (good for narrow-
-scope backfills covering several instruments / data_types / dates). Services should accept both surfaces and produce
-the same atomic-shard set internally.
+scope backfills covering several instruments / data_types / dates). Services should accept both surfaces and produce the
+same atomic-shard set internally.
 
 #### Parsing rule (the implementation contract)
 
@@ -187,24 +186,23 @@ def filter_blob_by_canonical_instrument_ids(
 
 - **Substring matching against the bare canonical form.** `BINANCE-FUTURES:PERPETUAL:BTCUSDT` is **not** a substring of
   any real blob path because the path uses `=` not `:` as the partition separator (`venue=BINANCE-FUTURES/...`). A
-  substring filter against the canonical form returns ZERO blobs — the operator gets no work done and no error. This
-  is what the MDPS scanner did pre-2026-05-28; the fix is documented at `orchestration_scanner.py:441-457`.
+  substring filter against the canonical form returns ZERO blobs — the operator gets no work done and no error. This is
+  what the MDPS scanner did pre-2026-05-28; the fix is documented at `orchestration_scanner.py:441-457`.
 - **Bare-symbol substring across venues.** `instrument_ids=["BTCUSDT"]` substring-matches against every
   `*BTCUSDT*.parquet` across every venue, every instrument_type, every chain. The operator who passes "BTCUSDT" most
   likely meant ONE specific instrument; the service silently returns ALL of them. May be supported as a deprecated
   legacy convenience with a deprecation log, but MUST NOT be the documented happy path.
-- **Mixing `--asset-group` + `--venues` + `--instrument-ids` redundantly.** If the canonical form is passed, the
-  service derives venue and asset_group from it. Operator-passed `--venues` / `--asset-group` should validate-against
-  the derivation (and fail loudly on mismatch), not silently override.
+- **Mixing `--asset-group` + `--venues` + `--instrument-ids` redundantly.** If the canonical form is passed, the service
+  derives venue and asset_group from it. Operator-passed `--venues` / `--asset-group` should validate-against the
+  derivation (and fail loudly on mismatch), not silently override.
 
 #### Reference incident
 
 **2026-05-28** — MDPS narrow-scope smoke. The operator passed
-`MDPS_INSTRUMENT_IDS="BINANCE-FUTURES:PERPETUAL:BTCUSDT BINANCE-FUTURES:PERPETUAL:ETHUSDT
-BYBIT:PERPETUAL:BTCUSDT BYBIT:PERPETUAL:ETHUSDT"` (the documented canonical form) and `MDPS_VENUES="BINANCE-FUTURES
-BYBIT"`. The scanner did substring matching, the canonical form matched zero blobs, the venue-prefix shortcut
-applied, and the scanner returned ~200 blobs (every instrument in those two venues) instead of 4. Memory hit 70 GB.
-Operator-side post-mortem:
+`MDPS_INSTRUMENT_IDS="BINANCE-FUTURES:PERPETUAL:BTCUSDT BINANCE-FUTURES:PERPETUAL:ETHUSDT BYBIT:PERPETUAL:BTCUSDT BYBIT:PERPETUAL:ETHUSDT"`
+(the documented canonical form) and `MDPS_VENUES="BINANCE-FUTURES BYBIT"`. The scanner did substring matching, the
+canonical form matched zero blobs, the venue-prefix shortcut applied, and the scanner returned ~200 blobs (every
+instrument in those two venues) instead of 4. Memory hit 70 GB. Operator-side post-mortem:
 [`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
 § "Finding B".
 

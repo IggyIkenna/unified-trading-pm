@@ -144,18 +144,18 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
    2026-05-21 slot-11**: green (0 fixes needed) **trading-agent-service VERIFIED 2026-05-21 slot-11**: green (0 fixes
    needed) **position-balance-monitor-service OBSOLETE 2026-05-28**: merged into strategy-service; the local QG fix
    `@7c5f8b7` (pip-audit ignores PYSEC-2024-277/PYSEC-2025-183) is out of scope — re-apply against strategy-service if
-   the same issue still exists there. **pnl-attribution-service OBSOLETE 2026-05-28**: merged into strategy-service;
-   the local QG fix `@db18812` (pip-audit ignores + session-scoped setup_events fixture in conftest.py) is out of
-   scope. **risk-and-exposure-service OBSOLETE 2026-05-28**: merged into strategy-service; the local QG fix `@d350070`
-   (8 RiskMetrics field name corrections in `risk_metrics.py::log_event` — concentration_pct→concentration,
+   the same issue still exists there. **pnl-attribution-service OBSOLETE 2026-05-28**: merged into strategy-service; the
+   local QG fix `@db18812` (pip-audit ignores + session-scoped setup_events fixture in conftest.py) is out of scope.
+   **risk-and-exposure-service OBSOLETE 2026-05-28**: merged into strategy-service; the local QG fix `@d350070` (8
+   RiskMetrics field name corrections in `risk_metrics.py::log_event` — concentration_pct→concentration,
    drawdown_pct→drawdown, etc.) **may still need to land in strategy-service** — verify whether the consolidated copy
-   has the field names right; port if not. **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external,
-   no quality-gates.sh — out of scope for this sweep **deployment-service SKIPPED 2026-05-21 slot-11**: locked by
-   slot-10; not verified this sweep **SWEEP COMPLETE 2026-05-21 slot-11**: all in-scope service repos verified or
-   locally-fixed. ~~3 archived repos require operator unarchive before LDR merge~~ — **resolved 2026-05-28**:
-   position-balance-monitor + pnl-attribution + risk-and-exposure all merged into strategy-service; no unarchive
-   needed. **Follow-up**: confirm the risk_metrics.py field-name fix is also in strategy-service's consolidated copy;
-   if not, re-apply there.
+   has the field names right; port if not. **agent-orchestrator VERIFIED 2026-05-21 slot-11**: arch_tier=external, no
+   quality-gates.sh — out of scope for this sweep **deployment-service SKIPPED 2026-05-21 slot-11**: locked by slot-10;
+   not verified this sweep **SWEEP COMPLETE 2026-05-21 slot-11**: all in-scope service repos verified or locally-fixed.
+   ~~3 archived repos require operator unarchive before LDR merge~~ — **resolved 2026-05-28**:
+   position-balance-monitor + pnl-attribution + risk-and-exposure all merged into strategy-service; no unarchive needed.
+   **Follow-up**: confirm the risk_metrics.py field-name fix is also in strategy-service's consolidated copy; if not,
+   re-apply there.
 
 9. **HUMAN-HARSH-PHASE-5-AWS-BUCKET-MIGRATION** — Phase 5 of coordinator: `aws s3 sync` from current bucket names →
    target symmetric names per Phase 1 inventory CSV. Per-asset-group, single-walk discipline. Composes with:
@@ -211,22 +211,22 @@ Each item ships as a backlog.yaml entry with `target_slot: 1` or `2`, `tier: hum
     GitHub to reject the reusable workflow call — changed to required: false; (f) top-level `concurrency` block in local
     reusable workflow causes "workflow file issue" — removed. ~~**BLOCKER**: unified-trading-pm is a private repo.
     GH_PAT is required to clone it for quality-gates.sh. deployment-ui does NOT have GH_PAT in its GitHub Actions
-    secrets~~ → **CORRECTED 2026-05-28**: GH_PAT lives in GCP Secret Manager (`projects/central-element-323112/secrets/
-    GH_PAT`, created 2026-03-12); operator policy is to fetch it at workflow runtime, not stage it in GHA secrets.
-    Workflow fix shipped at `deployment-ui@23973ce` — workspace-qg.yml now calls the local `ui-quality-gates.yml`
-    instead of PM's `python-quality-gates.yml`; both `ui-quality-gates.yml` and the `dispatch-cloud-build` job auth to
-    GCP via `GCP_SA_KEY` (the GHA secret deployment-ui DOES have), `gcloud secrets versions access`-fetch GH_PAT,
-    `::add-mask::` it, consume it via `steps.gh_pat.outputs.gh_pat`. YAML validated locally with PyYAML +
-    `actionlint@1.7.1` — both pass.
-    🔴 **NEW BLOCKER 2026-05-28**: deployment-ui is hit by the same GitHub "BuildFailed ghost" tracked in
+    secrets~~ → **CORRECTED 2026-05-28**: GH_PAT lives in GCP Secret Manager
+    (`projects/central-element-323112/secrets/ GH_PAT`, created 2026-03-12); operator policy is to fetch it at workflow
+    runtime, not stage it in GHA secrets. Workflow fix shipped at `deployment-ui@23973ce` — workspace-qg.yml now calls
+    the local `ui-quality-gates.yml` instead of PM's `python-quality-gates.yml`; both `ui-quality-gates.yml` and the
+    `dispatch-cloud-build` job auth to GCP via `GCP_SA_KEY` (the GHA secret deployment-ui DOES have),
+    `gcloud secrets versions access`-fetch GH_PAT, `::add-mask::` it, consume it via `steps.gh_pat.outputs.gh_pat`. YAML
+    validated locally with PyYAML + `actionlint@1.7.1` — both pass. 🔴 **NEW BLOCKER 2026-05-28**: deployment-ui is hit
+    by the same GitHub "BuildFailed ghost" tracked in
     [`issues/workspace_qg_ci_startup_failure_2026_05_26.md`](./issues/workspace_qg_ci_startup_failure_2026_05_26.md).
     Ghost workflow_id 283775720 has been firing on every LDR push since 2026-05-26 14:42 UTC instead of the real
-    workspace-qg (id 277985037); my commits `23973ce` + `739c4a3` (Option B rename test) + `2fc3854` (rename revert)
-    all hit the ghost. Workflow content is correct; only the GitHub server-side cache blocks execution. Updated the
-    issue doc to add deployment-ui to the affected-repos list + the Option B-tried-and-failed evidence. **Operator
-    action**: ping GitHub Support on ticket https://support.github.com/ticket/personal/0/4422570 (filed 2026-05-27)
-    to extend the clear-ghost request to include deployment-ui's ghost 283775720 + real workflow 277985037. Once
-    cleared, PR #8 CI will run on the existing workspace-qg.yml content (no further code change needed).
+    workspace-qg (id 277985037); my commits `23973ce` + `739c4a3` (Option B rename test) + `2fc3854` (rename revert) all
+    hit the ghost. Workflow content is correct; only the GitHub server-side cache blocks execution. Updated the issue
+    doc to add deployment-ui to the affected-repos list + the Option B-tried-and-failed evidence. **Operator action**:
+    ping GitHub Support on ticket https://support.github.com/ticket/personal/0/4422570 (filed 2026-05-27) to extend the
+    clear-ghost request to include deployment-ui's ghost 283775720 + real workflow 277985037. Once cleared, PR #8 CI
+    will run on the existing workspace-qg.yml content (no further code change needed).
 
 15. **HUMAN-HARSH-LIVE-PIPELINE-VALIDATION** — Phase 12-13 of coordinator: live-mode adapter behavior matches batch-mode
     (per the live=batch HARD RULE) + batch-live symmetry verification. Composes with:

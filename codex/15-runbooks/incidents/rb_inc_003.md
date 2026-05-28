@@ -18,9 +18,8 @@ related:
 
 # RB-INC-003 — Audit Acknowledgement Handling
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -44,7 +43,8 @@ Category: **Core** · Runbook ID: **RB-INC-003**.
 ## Resolve
 
 - If satisfied: click Audit Ack button. Incident transitions to HUMAN_AUDIT_ACKED → RESOLVED → CLOSED.
-- If the report is INSUFFICIENT: click 'Request more evidence' which fires evidence_collector again + extends audit_ack_due_at.
+- If the report is INSUFFICIENT: click 'Request more evidence' which fires evidence_collector again + extends
+  audit_ack_due_at.
 - If you DISPUTE the automated action: file an issue doc in plans/active/issues/ + escalate to operator chat.
 
 ## Rollback

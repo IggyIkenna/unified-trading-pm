@@ -417,9 +417,9 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Show what would be installed")
     parser.add_argument("--lock-only", action="store_true", help="Only generate lock file from current state")
     parsed = parser.parse_args()
-    do_resolve: bool = bool(cast(object, getattr(parsed, "resolve")))
-    do_dry_run: bool = bool(cast(object, getattr(parsed, "dry_run")))
-    do_lock_only: bool = bool(cast(object, getattr(parsed, "lock_only")))
+    do_resolve: bool = bool(cast(object, parsed.resolve))
+    do_dry_run: bool = bool(cast(object, parsed.dry_run))
+    do_lock_only: bool = bool(cast(object, parsed.lock_only))
 
     if do_lock_only:
         print("Generating lockfile from current .venv-workspace state...")

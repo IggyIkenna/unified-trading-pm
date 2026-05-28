@@ -138,35 +138,35 @@ These must complete before Layer 1 repos can be reliably type-checked.
 - [x] ✅ [AGENT] P2. **market-tick-data-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd market-tick-data-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm:
       vm-ml] — mtds@1864e395 QG green (97s); fixed 22 import violations, test fixtures, orchestrator None-filter, import
-      pattern fix
-      — mtds@0fcad8c | QG exit 0 (84s) | regression fix: UAC 78c5ac1 added scripts/__init__.py (shadows MTDS namespace pkg); HYPERLIQUID/ASTER cefi→defi; UNISWAPV2/V3→UNISWAP_V2/V3 canonical; AssetGroup(ag.upper())→AssetGroup(ag)
+      pattern fix — mtds@0fcad8c | QG exit 0 (84s) | regression fix: UAC 78c5ac1 added scripts/**init**.py (shadows MTDS
+      namespace pkg); HYPERLIQUID/ASTER cefi→defi; UNISWAPV2/V3→UNISWAP_V2/V3 canonical;
+      AssetGroup(ag.upper())→AssetGroup(ag)
 
 - [x] ✅ [AGENT] P2. **features-service QG green** — ruff clean; run full QG to find remaining STEP violations.
       `cd features-service && bash scripts/quality-gates.sh` exits 0. PREREQ: instruments-service QG green. [vm: vm-ml]
       — features@907cca48 QG green (241s); async/await fix in batch/live handlers, socket-blocked conftest, pip-audit
-      PYSEC-2026-161
-      — features@561833a4 | QG exit 0 (186s) | regression fix: resolve_data_type_for_feature_group not on UAC facade; added # noqa: qg-deep-import on from-line of multi-line import in orchestrator.py
+      PYSEC-2026-161 — features@561833a4 | QG exit 0 (186s) | regression fix: resolve_data_type_for_feature_group not on
+      UAC facade; added # noqa: qg-deep-import on from-line of multi-line import in orchestrator.py
 
 - [x] ✅ [AGENT] P2. **market-data-processing-service QG green** — ruff clean; run full QG.
       `cd market-data-processing-service && bash scripts/quality-gates.sh` exits 0. PREREQ: market-tick-data-service QG
       green. [vm: vm-ml] — mdps@cb3d11b | QG exit 0 (91s) | socket-blocked conftest, correct DeFi venue name, stale
-      \_FakeWriter mock (reason= kwarg)
-      — mdps@21700c5 | QG exit 0 (89s) | re-verified; already green, no regressions
+      \_FakeWriter mock (reason= kwarg) — mdps@21700c5 | QG exit 0 (89s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P2. **execution-service QG green** — 20 ruff errors.
       `cd execution-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-trading-core] —
       execution-service@2e3ae4ae | QG exit 0 (631s) | fixed F601 dup dict keys x7, DefaultCredentialsError broad-except
       guard, os.environ removed (recovery_event_helper), extension check before storage init, audit_log
-      path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore
-      — execution-service@ec8bd22b | QG exit 0 (397s) | re-verified; already green, no regressions
+      path+content-type, ThresholdUnit re-export in UAC (77e3b77), orphaned Pinnacle test collect_ignore —
+      execution-service@ec8bd22b | QG exit 0 (397s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P2. **strategy-service QG green (surface only)** — 11 ruff errors; LOGIC FREEZE in effect — fix
       ruff/pyright surface violations only, NO changes to `engine/strategies/v2/`, `engine/allocator/`, collateral,
       liquidation, or cross-venue transfer code. `cd strategy-service && bash scripts/quality-gates.sh` exits 0. PREREQ:
       UTL QG green. Signal: `🟢 STRATEGY-LOGIC UNFREEZE` in `_agent_pings.md` before touching logic paths. [vm:
       vm-trading-core] — strategy-service@721c71ec | QG exit 0 (107s) | starlette>=1.0.1, ruff fixes (E501×7, F401,
-      N816, import pattern)
-      — strategy-service@d31a89b | QG exit 0 (97s) | regression fix: hash() PYTHONHASHSEED-randomised in xdist workers; replaced with hashlib.md5 in execution alpha smoke test
+      N816, import pattern) — strategy-service@d31a89b | QG exit 0 (97s) | regression fix: hash()
+      PYTHONHASHSEED-randomised in xdist workers; replaced with hashlib.md5 in execution alpha smoke test
 
 ---
 
@@ -174,32 +174,32 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 - [x] ✅ [AGENT] P3. **alerting-service QG green** — 3 ruff errors.
       `cd alerting-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
-      alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script)
-      — uac@ca9b569 + alerting-service@de0dea0 | QG exit 0 (62s) | regression fix: IncidentEnvelope slim schema restored by 3d05b8e missing 20 new fields (event_id, timestamp, severity_hint, etc.); all_passed @property called as method; strategy_family extra field in wrap_legacy_alert
+      alerting-service@10a551d | QG exit 0 (275s) | excluded .cursor/ from ruff linting (E501 in symlinked IDE script) —
+      uac@ca9b569 + alerting-service@de0dea0 | QG exit 0 (62s) | regression fix: IncidentEnvelope slim schema restored
+      by 3d05b8e missing 20 new fields (event_id, timestamp, severity_hint, etc.); all_passed @property called as
+      method; strategy_family extra field in wrap_legacy_alert
 
 - [x] ✅ [AGENT] P3. **client-reporting-api QG green** — 44 ruff errors.
       `cd client-reporting-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       client-reporting-api@a82db85 | QG exit 0 (280s) | per-file-ignores for scripts/\*.py (C901+E501),
-      scripts/**init**.py for test import, starlette 1.1.0
-      — client-reporting-api@d6809f4 | QG exit 0 (66s) | regression fix: d7f2c3f lost isinstance guards + introduced Any types + downgraded pyright rules; restored all 3
+      scripts/**init**.py for test import, starlette 1.1.0 — client-reporting-api@d6809f4 | QG exit 0 (66s) | regression
+      fix: d7f2c3f lost isinstance guards + introduced Any types + downgraded pyright rules; restored all 3
 
 - [x] ✅ [AGENT] P3. **unified-trading-api QG green** — 2 ruff errors (auto-fixable).
       `cd unified-trading-api && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
-      unified-trading-api@2a99dded | QG exit 0 (223s) | move import os to top (E402), scripts/\*.py per-file-ignore
-      — unified-trading-api@6615860 | QG exit 0 (108s) | re-verified; already green, no regressions
-      C901/E501/E402
+      unified-trading-api@2a99dded | QG exit 0 (223s) | move import os to top (E402), scripts/\*.py per-file-ignore —
+      unified-trading-api@6615860 | QG exit 0 (108s) | re-verified; already green, no regressions C901/E501/E402
 
 - [x] ✅ [AGENT] P3. **batch-live-reconciliation-service QG green** — ruff clean; run full QG.
       `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm:
       vm-cross-cutting] — batch-live-reconciliation-service@2531e845 | QG exit 0 (177s) | added ruff==0.15.0, pip-audit,
-      bandit to deps
-      — batch-live-reconciliation-service@e6cf1bf | QG exit 0 (75s) | re-verified; already green, no regressions
+      bandit to deps — batch-live-reconciliation-service@e6cf1bf | QG exit 0 (75s) | re-verified; already green, no
+      regressions
 
 - [x] ✅ [AGENT] P3. **greeks-service QG green** — ruff clean; run full QG.
       `cd greeks-service && bash scripts/quality-gates.sh` exits 0. PREREQ: UTL QG green. [vm: vm-cross-cutting] —
       greeks-service@2413055b | QG exit 0 (144s) | add tests+setup.sh, remove UAC dep, fix codex violations (manifest,
-      STEP5.34, setup_events)
-      — greeks-service@cb7f11a | QG exit 0 (57s) | re-verified; already green, no regressions
+      STEP5.34, setup_events) — greeks-service@cb7f11a | QG exit 0 (57s) | re-verified; already green, no regressions
 
 ---
 
@@ -207,8 +207,8 @@ These must complete before Layer 1 repos can be reliably type-checked.
 
 - [x] ✅ [AGENT] P3. **ml-service QG green** — 4 ruff errors. `cd ml-service && bash scripts/quality-gates.sh` exits 0.
       PREREQ: features-service QG green. [vm: vm-ml] — ml-service@6519ca8 | QG exit 0 (292s) | ModelRegistry cloud
-      provider guard (local→no bucket), root test conftest env vars, ruff I001×3+F541×1
-      — ml-service@65d87a5 | QG exit 0 (190s) | re-verified; already green, no regressions
+      provider guard (local→no bucket), root test conftest env vars, ruff I001×3+F541×1 — ml-service@65d87a5 | QG exit 0
+      (190s) | re-verified; already green, no regressions
 
 - [x] ✅ [AGENT] P3. **ml-inference-service QG green** — ruff clean; run full QG.
       `cd ml-inference-service && bash scripts/quality-gates.sh` exits 0. PREREQ: ml-service QG green. [vm: vm-ml] —

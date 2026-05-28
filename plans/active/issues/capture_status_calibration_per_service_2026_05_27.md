@@ -16,9 +16,9 @@ status: active
 
 ## What this is
 
-Operator-raised theme (2026-05-27): the manifest `capture_status` values (`captured` /
-`empty_confirmed` / `attempted_failed` / `expected_unattempted`) are an **ongoing cross-service concern** that must be
-**properly calibrated per service** — for each service + condition, *which status should propagate?*
+Operator-raised theme (2026-05-27): the manifest `capture_status` values (`captured` / `empty_confirmed` /
+`attempted_failed` / `expected_unattempted`) are an **ongoing cross-service concern** that must be **properly calibrated
+per service** — for each service + condition, _which status should propagate?_
 
 ## The principle (operator, verbatim intent)
 
@@ -43,12 +43,12 @@ absence is "**spot present, future absent**" (the future was not listed for that
 
 ## Status decision rule (target — to encode per write-path)
 
-| Real situation | Correct status | Reason / notes |
-|---|---|---|
-| Data genuinely absent (holiday, no source coverage, contract not listed in window) | `empty_confirmed` | typed `EmptyConfirmedReason` (e.g. `EXPECTED_NO_PAIRED_INSTRUMENT`, `SOURCE_RETURNED_ZERO`, holiday/coverage reasons). LAST resort. |
-| Upstream produced nothing but should have (not downloaded yet, dependency not ready) | NOT `empty_confirmed` → `expected_unattempted` / dependency-gate skip | data is **owed**; retry / backfill, do not confirm-empty |
-| Attempted and errored (fetch/backfill error) | `attempted_failed` (+ `stack_trace`) | transient/real failure; not an absence |
-| Wrote rows | `captured` | normal |
+| Real situation                                                                       | Correct status                                                        | Reason / notes                                                                                                                      |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Data genuinely absent (holiday, no source coverage, contract not listed in window)   | `empty_confirmed`                                                     | typed `EmptyConfirmedReason` (e.g. `EXPECTED_NO_PAIRED_INSTRUMENT`, `SOURCE_RETURNED_ZERO`, holiday/coverage reasons). LAST resort. |
+| Upstream produced nothing but should have (not downloaded yet, dependency not ready) | NOT `empty_confirmed` → `expected_unattempted` / dependency-gate skip | data is **owed**; retry / backfill, do not confirm-empty                                                                            |
+| Attempted and errored (fetch/backfill error)                                         | `attempted_failed` (+ `stack_trace`)                                  | transient/real failure; not an absence                                                                                              |
+| Wrote rows                                                                           | `captured`                                                            | normal                                                                                                                              |
 
 ## Live instances (concrete, already found)
 

@@ -233,14 +233,14 @@ resolves the minimum window each family/feature needs and backfills exactly that
       swing_outcome_targets.\_detect_swing_points/\_compute_swing_bools; QG green.
   - NOTE: PPO was previously mis-filed here as a standalone bug — **corrected**: PPO is the A0 data issue (clean for
     BTC, fixed by `ffill(close)`), not a calculator bug.
-- [x] ✅ 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** — **FIXED** features@b594294b (1.6 +
-      this commit). `_process_one_group` now writes a `record_failed` manifest row on every failure path
-      (orchestrator returned False / emission policy rejected / exception), via the new
-      `_failed_group_manifest.py` helper (`ManifestWriter.record_failed` with
-      `row_key={date, feature_group, feature_family}` + `PipelineMode.BATCH_DATABENTO`). `_process_groups`
-      return semantic changed: True if ANY group succeeded; False only if EVERY group failed. Partial-success
-      log lists succeeded + failed groups explicitly for observability. Mirrors the shard-level-failure-isolation
-      HARD RULE. Operator-acked direction 2026-05-28: detect + report per-group success/failure in manifest.
+- [x] ✅ 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** — **FIXED** features@b594294b (1.6 + this
+      commit). `_process_one_group` now writes a `record_failed` manifest row on every failure path (orchestrator
+      returned False / emission policy rejected / exception), via the new `_failed_group_manifest.py` helper
+      (`ManifestWriter.record_failed` with `row_key={date, feature_group, feature_family}` +
+      `PipelineMode.BATCH_DATABENTO`). `_process_groups` return semantic changed: True if ANY group succeeded; False
+      only if EVERY group failed. Partial-success log lists succeeded + failed groups explicitly for observability.
+      Mirrors the shard-level-failure-isolation HARD RULE. Operator-acked direction 2026-05-28: detect + report
+      per-group success/failure in manifest.
 
 ### Phase 3 — multi_timeframe (transitive on delta_one output) `[P1]`
 
@@ -363,15 +363,15 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ## Phase 5 e2e validation results — real GCS run on `-test` (2026-05-26)
 
-Ran `scripts/e2e/run_pipeline_e2e.py` per family on `-test` buckets (CEFI, date 2026-05-03; candle input read-only
-from `-prd`). Status per family:
+Ran `scripts/e2e/run_pipeline_e2e.py` per family on `-test` buckets (CEFI, date 2026-05-03; candle input read-only from
+`-prd`). Status per family:
 
-| family | result | evidence / bug |
-|---|---|---|
-| **delta_one** | ✅ **VALIDATED** | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`. |
-| **volatility** | ⚠️ honest-skip | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`. |
-| **cross_instrument** | ❌ real bug | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one. |
-| **multi_timeframe** | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta_one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **FIXED:** (3) `get_output_bucket`/sink ALSO ignored the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1) — features@72b8a81d (`_resolve_sink_bucket` + `_ensure_sink_for`, parquet + manifest share one bucket). **STILL OPEN (found by the re-run):** (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr_*`). (5) `Cannot serialize DataFrame to parquet` for `tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
+| family               | result                                                         | evidence / bug                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **delta_one**        | ✅ **VALIDATED**                                               | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **volatility**       | ⚠️ honest-skip                                                 | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **cross_instrument** | ❌ real bug                                                    | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **multi_timeframe**  | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta*one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **FIXED:** (3) `get_output_bucket`/sink ALSO ignored the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1) — features@72b8a81d (`_resolve_sink_bucket` + `_ensure_sink_for`, parquet + manifest share one bucket). **STILL OPEN (found by the re-run):** (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr*\*`). (5) `Cannot serialize DataFrame to parquet`for`tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
 
 **e2e-driver (8fa8ebbc) defects found + fixed** (features@62cbe91a, @e6811f31, @335942d9): wrong parquet-assert path
 (`batch/date=…` vs real `day=…/feature_group=…/timeframe=…`); false-PASS honest-skip that masked a captured-but-no-file
@@ -381,34 +381,36 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
 `features-mtf-cefi-test`, asia-northeast1).
 
 - [x] ✅ [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** **DONE (Option A)**
-  features@44fc11d1: new `delta_one/engine/ohlcv_passthrough.py` `attach_ohlcv_passthrough()` left-joins TF-aligned
-  candle OHLCV (`open/high/low/close/volume`) onto the feature frame as the final step of `_compute_features_from_candles`
-  (collision-safe, forward-fills gaps). `regime_detection`/`cross_asset_correlation`/`realized_implied_vol`
-  `validate_input()` now PASS; 1497 tests (6 new). **Contract note for Ikenna:** `FEATURES_SCHEMA` unchanged (still
-  enforces only timestamp/timestamp_out/instrument_id); delta_one parquets now carry additive OHLCV cols;
-  `OHLCV_PASSTHROUGH_COLUMNS` in `ohlcv_passthrough.py` is the canonical reference. Real-parquet confirmation folded into
-  the post-MDPS-agent -test reconciliation (avoiding collision with the in-flight backfill agent's 05-03 writes).
-  Follow-ups: (a) `orchestrator.py` now **exactly 900 lines** (codex cap, zero headroom — trim soon); (b) 2 pre-existing
-  basedpyright errors in cross_instrument (0 new introduced) — separate look.
-- [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash.
-  Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
-  post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
-  by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
-- [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the get_input_bucket
-  bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead of `-test`. mtf's
-  writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET_{AG}` the way delta_one's `FeatureWriter._get_sink_bucket` does.
-  Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added `_resolve_sink_bucket` +
-  `_ensure_sink_for` (rebinds auto-created sink per asset_group via `get_data_sink(bucket=..., routing_key=ag)`;
-  run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest share one bucket.
-  basedpyright 0/0/0 on mtf subtree + ruff clean.
+      features@44fc11d1: new `delta_one/engine/ohlcv_passthrough.py` `attach_ohlcv_passthrough()` left-joins TF-aligned
+      candle OHLCV (`open/high/low/close/volume`) onto the feature frame as the final step of
+      `_compute_features_from_candles` (collision-safe, forward-fills gaps).
+      `regime_detection`/`cross_asset_correlation`/`realized_implied_vol` `validate_input()` now PASS; 1497 tests (6
+      new). **Contract note for Ikenna:** `FEATURES_SCHEMA` unchanged (still enforces only
+      timestamp/timestamp_out/instrument_id); delta_one parquets now carry additive OHLCV cols;
+      `OHLCV_PASSTHROUGH_COLUMNS` in `ohlcv_passthrough.py` is the canonical reference. Real-parquet confirmation folded
+      into the post-MDPS-agent -test reconciliation (avoiding collision with the in-flight backfill agent's 05-03
+      writes). Follow-ups: (a) `orchestrator.py` now **exactly 900 lines** (codex cap, zero headroom — trim soon); (b) 2
+      pre-existing basedpyright errors in cross_instrument (0 new introduced) — separate look.
+- [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash. Root
+      cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
+      post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally).
+      **Confirmed by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
+- [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the
+      get*input_bucket bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead
+      of `-test`. mtf's writer path doesn't honor
+      `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
+      routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
+      share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
-  `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
-  whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test 2026-05-26.
+      `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
+      whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test
+      2026-05-26.
 - [ ] [P2] **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
-  guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed for
-  this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" → dependency gap,
-  a different status. (Future-without-spot is the contradiction; spot-without-future is the real absence.) Folded into
-  the per-service status-calibration audit: `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`.
+      guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
+      for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
+      dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the real
+      absence.) Folded into the per-service status-calibration audit:
+      `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`.
 
 ### TradFi scope (operator decision 2026-05-26)
 
@@ -420,9 +422,9 @@ ES options clusters, not cash SPY) — confirm venue/source before id-canonicali
 
 ## Multi-day backfill experiment + derived-family root cause (2026-05-27)
 
-Operator-directed: seed multi-day delta_one into `-test` (Phase 0.5) then re-validate mtf + cross_instrument, to separate
-real bugs from single-day-input NaN noise. **Result: the backfill ruled OUT day-count as the cause and pinpointed the
-real blockers.**
+Operator-directed: seed multi-day delta_one into `-test` (Phase 0.5) then re-validate mtf + cross_instrument, to
+separate real bugs from single-day-input NaN noise. **Result: the backfill ruled OUT day-count as the cause and
+pinpointed the real blockers.**
 
 - Backfilled delta_one for **2026-05-01 + 05-02** (CeFi candle coverage starts 05-01; nothing earlier) → `-test` now has
   3 days (05-01: 40 parquets, 05-02: 38, 05-03: 59). **Re-ran mtf + cross_instrument @ 05-03 — neither improved.**
@@ -431,45 +433,62 @@ real blockers.**
   `momentum@4h`, `momentum@1d`, `volatility_realized@4h/1d`, `market_structure@4h/1d` → all **missing** → mtf alignment
   features all-NaN → WriteGate rejects everything. Two contributing reasons: (a) **4h (6 bars/day) + 24h (1 bar/day)
   need cross-day candle history** for ≥14-period indicators — delta_one's per-day batch computes each day in isolation
-  (no candle lookback window found in `data_loader.py`), so higher-TF features are structurally NaN on a single day;
-  (b) **5m/15m are also absent** despite ample single-day bars (288/96) — a SEPARATE unexplained gap (delta_one only
+  (no candle lookback window found in `data_loader.py`), so higher-TF features are structurally NaN on a single day; (b)
+  **5m/15m are also absent** despite ample single-day bars (288/96) — a SEPARATE unexplained gap (delta_one only
   produced 15s + 1h, not 5m/15m either). Day-count backfill cannot fix a timeframe-coverage gap.
 - **cross_instrument**: unchanged — `Missing required columns: {'close'}` (the held FINDING-F / Option A-B design call;
-  the resolver itself flags it: *"Full e2e blocked by FINDING-F (needs raw close from delta_one passthrough)"*).
+  the resolver itself flags it: _"Full e2e blocked by FINDING-F (needs raw close from delta_one passthrough)"_).
 - **delta_one for 05-01/05-02 wrote parquets but NO manifest row** (another manifest↔file disconnect instance) + only
   the `technical_indicators` group (vs 05-03's 8) — thinner output those days; tracked.
 
 - [x] ✅ [P1] **delta_one does not emit higher timeframes (4h/24h)** — **RESOLVED (root cause reclassified): upstream
-  MDPS data gap, NOT a features-service code bug.** CeFi 1h candles missing 2026-04-14→04-30; only 05-01..05-04
-  contiguous → 14-day 1h-base lookback for 4h/24h cannot be satisfied. delta_one now correctly fast-fails ("No base
-  candles at 1h") instead of silently NaN-starving — features@ac83bfad (smart TF clustering, task 1.1a). **Unblock =
-  MDPS backfill CeFi 1h candles 04-14→04-30** (tracked as MDPS dependency; `mdps@975fd46` added
-  `MDPS_OUTPUT_BUCKET_{CAT}` test-isolation override needed for the backfill). Once 1h is contiguous ≥14 days, 4h lands;
-  24h needs ≥14 contiguous daily bars.
+      MDPS data gap, NOT a features-service code bug.** CeFi 1h candles missing 2026-04-14→04-30; only 05-01..05-04
+      contiguous → 14-day 1h-base lookback for 4h/24h cannot be satisfied. delta*one now correctly fast-fails ("No base
+      candles at 1h") instead of silently NaN-starving — features@ac83bfad (smart TF clustering, task 1.1a). **Unblock =
+      MDPS backfill CeFi 1h candles 04-14→04-30** (tracked as MDPS dependency; `mdps@975fd46` added
+      `MDPS_OUTPUT_BUCKET*{CAT}` test-isolation override needed for the backfill). Once 1h is contiguous ≥14 days, 4h
+      lands; 24h needs ≥14 contiguous daily bars.
 - [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
-  read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
-  15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
-- [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance: backfill 2026-05-27.
+      read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
+      15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
+- [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
+      backfill 2026-05-27.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
 
 Mapped fix locations (sub-agent code audit, features-service):
 
 **P6.A — delta_one emits ONLY base 15s (+ internal 1h for 2 groups), not the full 7 TFs → starves mtf.**
-- `--output-timeframes` defaults `None` and is **never used** — dead-ends at `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler" comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
-- Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`) sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF indicators NaN-starved even with a loop.
+
+- `--output-timeframes` defaults `None` and is **never used** — dead-ends at
+  `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler"
+  comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one
+  partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
+- Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`)
+  sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF
+  indicators NaN-starved even with a loop.
 - [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525 + @2b20c795 (read-once)
-  + @ac83bfad (smart clustering). Validated 2026-05-28: -test emits 15s/1m/5m/15m/1h. 4h/24h reclassified to upstream
-  MDPS data gap (CeFi 1h missing 2026-04-14→04-30); delta_one fast-fails correctly.
+  - @ac83bfad (smart clustering). Validated 2026-05-28: -test emits 15s/1m/5m/15m/1h. 4h/24h reclassified to upstream
+    MDPS data gap (CeFi 1h missing 2026-04-14→04-30); delta_one fast-fails correctly.
 - [x] ✅ **Fix: per-TF buffer** — same commit; `_calculate_buffer_days(timeframe=out_tf)` sizes the lookback off each
-  output TF (was sized off base 15s).
+      output TF (was sized off base 15s).
 - [x] ✅ [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
-  timeout (bumped 600s→2400s).** — **FIXED** features@2b20c795 (Task 1.1 read base candles once + resample in-memory)
-  + features@ac83bfad (Task 1.1a smart TF clustering for the base-candle read). 7× → ~1 base read per cluster.
+      timeout (bumped 600s→2400s).** — **FIXED** features@2b20c795 (Task 1.1 read base candles once + resample
+      in-memory)
+  - features@ac83bfad (Task 1.1a smart TF clustering for the base-candle read). 7× → ~1 base read per cluster.
 
 **P6.B — mtf writes to PROD not -test (sink override ignored).**
-- `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
-- [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket` (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken files in delta_one; full QG to run once they land.)
+
+- `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds
+  `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is
+  `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
+- [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI
+      `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that
+      rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so
+      tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket`
+      (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on
+      mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken
+      files in delta_one; full QG to run once they land.)
 
 cross_instrument `close` (FINDING-F): **DECIDED 2026-05-27 → Option A (delta_one close passthrough)** — agent in flight.
 volatility `empty_confirmed`: re-scoped into the per-service status-calibration audit

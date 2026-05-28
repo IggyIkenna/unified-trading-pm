@@ -11,9 +11,13 @@ priority: P2
 status: active
 ---
 
-> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Bugs 1/2/3 shipped (Bug 2 incl. `liquidation_events_handler` casing MTDS@c60eb053); B5.1/B5.2 root-cause code shipped (UAC@fdc9206b + IS@a57ae01c). Bug 5 migration chain (B5.3-B5.7) + Bug 4 (post-cutover `data_source_type` taxonomy) lifted into `plans/epics/infrastructure_master.md` P0 block. All content is done or epic-tracked.
+> **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — Bugs 1/2/3 shipped (Bug 2 incl. `liquidation_events_handler` casing
+> MTDS@c60eb053); B5.1/B5.2 root-cause code shipped (UAC@fdc9206b + IS@a57ae01c). Bug 5 migration chain (B5.3-B5.7) +
+> Bug 4 (post-cutover `data_source_type` taxonomy) lifted into `plans/epics/infrastructure_master.md` P0 block. All
+> content is done or epic-tracked.
 >
-> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: root cause shipped + residuals captured in named epic plans). Lock `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
+> Operator-authorized archival 2026-05-27 (issue-doc lifecycle: root cause shipped + residuals captured in named epic
+> plans). Lock `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
 
 ## What I found
 
@@ -290,23 +294,24 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       doc/comment fix; verify no consumer treats `VELODROME_V2`/`TRADER_JOE_V2` (underscore) as canonical before
       adjusting. **NICE-TO-HAVE** — no data impact (the canonicalizer + writer already treat glued as canonical).
 - [x] ✅ [SCRIPT] P1. **B5.3 — GCS re-key (SCHEDULED MIGRATION WINDOW)** — **DONE 2026-05-27** —
-      instruments-service@445756d3 (`scripts/migration_rekey_defi_glued_venues.py`, QG-green: ruff+basedpyright+import-patterns
-      all exit 0). Re-keyed `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/` across both buckets via
-      `gcs_copy_object`/`gcs_describe_object`/`gcs_delete_object` (workers=32), copy→parity-verify(size)→delete,
-      idempotent, `--dry-run` default + `--execute`. Canonical authority = `canonicalize_defi_venue_combined`.
-      **Execute tallies (0 errors)**: instruments-store-defi = **32,760 objects across 27 glued venue-chains**
-      (AAVEV3×8 chains, COMPOUNDV3×4, UNISWAPV3×5, UNISWAPV2/V4, AERODROMEV3, CAMELOTV3, PANCAKESWAPV3×3, SUSHISWAPV3×3
-      — all copied+verified+deleted); market-data-tick-defi = **2,251 objects across 4 glued venue-chains**
-      (AAVEV3/UNISWAPV2/UNISWAPV3/UNISWAPV4-ETHEREUM). **Grand total 35,011 objects, 0 errors.** Correctly NO-OP'd:
-      VELODROMEV2/TRADER_JOEV2 (canonical-glued), BALANCER/CURVE/GMX/JITO/LIDO/etc (no version), protocol-only MTDS
-      venues, and PANCAKESWAPV3-ZKSYNC / LIGHTER-ZKSYNC (ZKSYNC ∉ KNOWN_CHAINS at the time → passthrough; RESOLVED in B5.9
-      2026-05-27 — ZKSYNC added to KNOWN_CHAINS @ac5d2340 + the 446 PANCAKESWAPV3-ZKSYNC objects re-keyed).
-- [x] ✅ [SCRIPT] P1. **B5.4 — Manifest reconcile** — **DONE (audited; no corrector needed) — FINDING 2026-05-27**.
-      Read `_index/availability_index.parquet` in both buckets, grouped by venue, tested every venue with
+      instruments-service@445756d3 (`scripts/migration_rekey_defi_glued_venues.py`, QG-green:
+      ruff+basedpyright+import-patterns all exit 0). Re-keyed `venue=<GLUED>-<CHAIN>/` → `venue=<UNDERSCORE>-<CHAIN>/`
+      across both buckets via `gcs_copy_object`/`gcs_describe_object`/`gcs_delete_object` (workers=32),
+      copy→parity-verify(size)→delete, idempotent, `--dry-run` default + `--execute`. Canonical authority =
+      `canonicalize_defi_venue_combined`. **Execute tallies (0 errors)**: instruments-store-defi = **32,760 objects
+      across 27 glued venue-chains** (AAVEV3×8 chains, COMPOUNDV3×4, UNISWAPV3×5, UNISWAPV2/V4, AERODROMEV3, CAMELOTV3,
+      PANCAKESWAPV3×3, SUSHISWAPV3×3 — all copied+verified+deleted); market-data-tick-defi = **2,251 objects across 4
+      glued venue-chains** (AAVEV3/UNISWAPV2/UNISWAPV3/UNISWAPV4-ETHEREUM). **Grand total 35,011 objects, 0 errors.**
+      Correctly NO-OP'd: VELODROMEV2/TRADER_JOEV2 (canonical-glued), BALANCER/CURVE/GMX/JITO/LIDO/etc (no version),
+      protocol-only MTDS venues, and PANCAKESWAPV3-ZKSYNC / LIGHTER-ZKSYNC (ZKSYNC ∉ KNOWN_CHAINS at the time →
+      passthrough; RESOLVED in B5.9 2026-05-27 — ZKSYNC added to KNOWN_CHAINS @ac5d2340 + the 446 PANCAKESWAPV3-ZKSYNC
+      objects re-keyed).
+- [x] ✅ [SCRIPT] P1. **B5.4 — Manifest reconcile** — **DONE (audited; no corrector needed) — FINDING 2026-05-27**. Read
+      `_index/availability_index.parquet` in both buckets, grouped by venue, tested every venue with
       `canonicalize_defi_venue_combined`. **IS manifest (68,885 rows): 0 glued combined-venue rows** — fully canonical
       (Bug-2 fix landed); AAVE_V3=9,511, UNISWAP_V3=7,853, UNISWAP_V2=2,189, UNISWAP_V4=459, COMPOUND_V3=4,199 all
-      canonical, all `captured`. **MTDS manifest (1.75M rows): 875,920 glued combined-venue rows EXIST but are
-      99.6% `empty_confirmed` (872,800) + 0.4% `attempted_failed` (3,120) — ZERO `captured`.** They are benign honest-absence
+      canonical, all `captured`. **MTDS manifest (1.75M rows): 875,920 glued combined-venue rows EXIST but are 99.6%
+      `empty_confirmed` (872,800) + 0.4% `attempted_failed` (3,120) — ZERO `captured`.** They are benign honest-absence
       markers, NOT phantom coverage; the real MTDS DeFi coverage flows via protocol-only `AAVE_V3`/`UNISWAP_V3` rows
       (chain in a separate column) + the now-canonical IS combined rows. **No corrector shard written**: (a) the
       consolidator dedup key includes `venue` (`_BASE_DEDUP_COLS=(date,venue,data_type,service_name)` in UTL
@@ -322,8 +327,8 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       `--dry-run` on BOTH buckets)**: instruments-store-defi walked 70,151 objects → **0 glued venues remain**;
       market-data-tick-defi walked 321,176 objects → **0 glued venues remain**. Object counts unchanged pre/post
       (re-key, no duplication/loss). Spot-checked 3 canonical parquets readable post-migration: IS
-      `day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, glued deleted), IS
-      `UNISWAP_V3-ETHEREUM` (317 rows), MTDS `AAVE_V3-ETHEREUM` (2,916 rows). No consumer reads glued (see B5.6).
+      `day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, glued deleted), IS `UNISWAP_V3-ETHEREUM`
+      (317 rows), MTDS `AAVE_V3-ETHEREUM` (2,916 rows). No consumer reads glued (see B5.6).
 - [x] ✅ [VERIFY] P2. **B5.6 — deployment-api pool-breakdown resolves canonical path; no hardcoded glued strings** —
       **DONE 2026-05-27 (no code change required)**. The pool-breakdown lives in **deployment-api** (not
       deployment-service/ui), endpoint `GET /api/data-status/pools/breakdown` →
@@ -336,55 +341,58 @@ UAC**. This REVERSES the Bug-3 prior decision ("Old parquets at VENUE-CHAIN path
       backend/deployment-api change, no `deployment-ui`/`user-management-ui`/`unified-trading-system-ui` source touched.
 - [x] ✅ [VERIFY] P0. **B5.7 — re-drill** — **DONE 2026-05-27**. (1) **Pool-breakdown consumer is FUNCTIONAL**:
       `GET /pools/breakdown?day=2026-05-20&venue=ETHENA&chain=ETHEREUM` → `status:"resolved"`, 1 pool
-      (`ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`, vault_share_price=captured). (2) **Original symptom
+      (`ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`, vault*share_price=captured). (2) **Original symptom
       `AAVE_V3-ARBITRUM · 2026-05-03` → `no_data` is STRUCTURALLY CORRECT, not a path bug**: pool-breakdown reads the
       **MTDS** bucket (`raw_tick_data` DEX/pool data); AAVE_V3 is a **lending** protocol with no MTDS DEX pools, and
-      MTDS has **zero** AAVE_V3 objects for 2026-05-03 (the re-keyed AAVE_V3-ETHEREUM MTDS data spans 2024-05-02..2026-01-23).
-      The AAVE_V3-ARBITRUM **reference** data the operator expected lives in the **IS** bucket and is now at the canonical
-      path `instrument_availability/by_date/day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, verified
+      MTDS has **zero** AAVE_V3 objects for 2026-05-03 (the re-keyed AAVE_V3-ETHEREUM MTDS data spans
+      2024-05-02..2026-01-23). The AAVE_V3-ARBITRUM **reference** data the operator expected lives in the **IS** bucket
+      and is now at the canonical path
+      `instrument_availability/by_date/day=2026-05-03/venue=AAVE_V3-ARBITRUM/instruments.parquet` (23 rows, verified
       readable, glued key deleted) — read by the IS-backed venue/shard drilldown, not pool-breakdown. (3) Sampled other
       families: UNISWAP_V3-ETHEREUM IS parquet (317 rows, canonical), AAVE_V3-ETHEREUM MTDS parquet (2,916 rows,
       canonical). **Glued-venue canonicalization is complete + verified end-to-end.** Residual: migrated MTDS
-      `pipeline_mode=batch_onchain_rpc/…ticks_migrated_*.parquet` files lack `instrument_type=/data_type=` partitions so
-      pool-breakdown can't surface them where they exist — pre-existing consumer gap, orthogonal to glued venues → B5.10.
+      `pipeline_mode=batch_onchain_rpc/…ticks_migrated*\*.parquet`files lack`instrument_type=/data_type=` partitions so
+      pool-breakdown can't surface them where they exist — pre-existing consumer gap, orthogonal to glued venues →
+      B5.10.
 - [x] ✅ [CODE] P1. **B5.9 — ZKSYNC re-key (operator approved 2026-05-27)** — **DONE 2026-05-27** —
       unified-api-contracts@ac5d2340 (QG-green exit 0; canonicalizer unit test 7→9 cases). Added `ZKSYNC` to UAC
       `KNOWN_CHAINS` via a new `_EXTRA_VENUE_PARTITION_CHAINS` frozenset (chain-TOKEN recognition set — NO fake
       subgraph/static-protocol mapping, so `get_protocol_chains`/`build_defi_venues` untouched and no expected-coverage
       matrix expands). **KNOWN_CHAINS consumer pre-audit (4 sites)**: all are parse/recognition gates
       (`if chain in KNOWN_CHAINS:` → split protocol/chain) — `mtds/scripts/rebuild_mtds_manifest.py:183`,
-      `instruments-service/scripts/migrate_defi_legacy_venue_chain.py:98`, IS `orchestrator.py:3142` + `:7353`. NONE iterate
-      KNOWN_CHAINS to build a coverage product. `expected_coverage.py` does NOT import KNOWN_CHAINS/`get_all_defi_chains` —
-      its matrix is `EXPECTED_COVERAGE_BY_ASSET_GROUP`, keyed by explicit venue tokens (already independently lists
-      `AAVE_V3-ZKSYNC`/`LIGHTER-ZKSYNC`). **No phantom MISSING_EXPECTED cells created.** Canonicalizer now:
-      `PANCAKESWAPV3-ZKSYNC → PANCAKESWAP_V3-ZKSYNC`; `LIGHTER-ZKSYNC → LIGHTER-ZKSYNC` (chain now PARSES, LIGHTER ∉
-      `PROTOCOL_CAPABILITIES` → unknown-protocol passthrough → unchanged). **Re-key (instruments-service@445756d3
-      `migration_rekey_defi_glued_venues.py`, --execute, 0 errors)**: IS bucket = **446 `PANCAKESWAPV3-ZKSYNC` →
-      `PANCAKESWAP_V3-ZKSYNC`** (copied+verified+deleted); `LIGHTER-ZKSYNC` NO-OP (654 objects untouched); MTDS walked
-      321,176 objects → **0 glued ZKSYNC venues**. **Post-verify**: 0 glued `PANCAKESWAPV3-ZKSYNC` remain, 446 canonical
-      `PANCAKESWAP_V3-ZKSYNC` present, 654 `LIGHTER-ZKSYNC` unchanged; canonical parquet readable. **Manifest**: IS `_index`
-      has 0 rows for all 3 ZKSYNC venues + 0 glued combined venues overall (canonical/benign-empty). **⚠️ SUPERSEDED PRIOR
-      DECISION**: `instruments-service/scripts/purge_pancakeswapv3_zksync.py` (2026-05-06) said "delete + scrub, NOT add
-      ZKSYNC to KNOWN_CHAINS" (446 low-quality rows). That purge never ran on the IS parquet partitions (446 objects still
-      present, now re-keyed). Operator 2026-05-27 explicitly approved B5.9, superseding the 2026-05-06 decision → stale-comment
-      cleanup in B5.9b.
+      `instruments-service/scripts/migrate_defi_legacy_venue_chain.py:98`, IS `orchestrator.py:3142` + `:7353`. NONE
+      iterate KNOWN_CHAINS to build a coverage product. `expected_coverage.py` does NOT import
+      KNOWN_CHAINS/`get_all_defi_chains` — its matrix is `EXPECTED_COVERAGE_BY_ASSET_GROUP`, keyed by explicit venue
+      tokens (already independently lists `AAVE_V3-ZKSYNC`/`LIGHTER-ZKSYNC`). **No phantom MISSING_EXPECTED cells
+      created.** Canonicalizer now: `PANCAKESWAPV3-ZKSYNC → PANCAKESWAP_V3-ZKSYNC`; `LIGHTER-ZKSYNC → LIGHTER-ZKSYNC`
+      (chain now PARSES, LIGHTER ∉ `PROTOCOL_CAPABILITIES` → unknown-protocol passthrough → unchanged). **Re-key
+      (instruments-service@445756d3 `migration_rekey_defi_glued_venues.py`, --execute, 0 errors)**: IS bucket = **446
+      `PANCAKESWAPV3-ZKSYNC` → `PANCAKESWAP_V3-ZKSYNC`** (copied+verified+deleted); `LIGHTER-ZKSYNC` NO-OP (654 objects
+      untouched); MTDS walked 321,176 objects → **0 glued ZKSYNC venues**. **Post-verify**: 0 glued
+      `PANCAKESWAPV3-ZKSYNC` remain, 446 canonical `PANCAKESWAP_V3-ZKSYNC` present, 654 `LIGHTER-ZKSYNC` unchanged;
+      canonical parquet readable. **Manifest**: IS `_index` has 0 rows for all 3 ZKSYNC venues + 0 glued combined venues
+      overall (canonical/benign-empty). **⚠️ SUPERSEDED PRIOR DECISION**:
+      `instruments-service/scripts/purge_pancakeswapv3_zksync.py` (2026-05-06) said "delete + scrub, NOT add ZKSYNC to
+      KNOWN_CHAINS" (446 low-quality rows). That purge never ran on the IS parquet partitions (446 objects still
+      present, now re-keyed). Operator 2026-05-27 explicitly approved B5.9, superseding the 2026-05-06 decision →
+      stale-comment cleanup in B5.9b.
 - [ ] [CODE] P3. **B5.9b — stale purge-script comment + MTDS combined-vs-protocol-only duality** (provenance: B5.4 +
       B5.9 findings 2026-05-27). (1) `instruments-service/scripts/purge_pancakeswapv3_zksync.py` header comment
-      ("Cleanest fix is delete + scrub UAC entries, NOT add ZKSYNC to KNOWN_CHAINS", 2026-05-06) is now stale — superseded by
-      B5.9 (operator-approved 2026-05-27). Update or retire the script. (2) MTDS manifest + GCS carry BOTH combined
-      `AAVEV3-ARBITRUM`/`AAVE_V3-ETHEREUM` AND protocol-only `AAVE_V3` (chain in a separate column) for the same protocol; IS
-      uses only the combined form. The 875,920 MTDS combined-glued manifest rows are all `empty_confirmed`/`attempted_failed`
-      (benign). Decide the SSOT MTDS DeFi venue convention + reconcile so MTDS matches IS. (3) `EXTENDED-STARKNET` /
-      `PACIFICA-SOLANA` (CeFi-ish venues in the defi bucket) — confirm in/out of DeFi universe. **NICE-TO-HAVE** — no current
-      data-correctness impact (no captured glued rows).
+      ("Cleanest fix is delete + scrub UAC entries, NOT add ZKSYNC to KNOWN_CHAINS", 2026-05-06) is now stale —
+      superseded by B5.9 (operator-approved 2026-05-27). Update or retire the script. (2) MTDS manifest + GCS carry BOTH
+      combined `AAVEV3-ARBITRUM`/`AAVE_V3-ETHEREUM` AND protocol-only `AAVE_V3` (chain in a separate column) for the
+      same protocol; IS uses only the combined form. The 875,920 MTDS combined-glued manifest rows are all
+      `empty_confirmed`/`attempted_failed` (benign). Decide the SSOT MTDS DeFi venue convention + reconcile so MTDS
+      matches IS. (3) `EXTENDED-STARKNET` / `PACIFICA-SOLANA` (CeFi-ish venues in the defi bucket) — confirm in/out of
+      DeFi universe. **NICE-TO-HAVE** — no current data-correctness impact (no captured glued rows).
 - [ ] [CODE] P3. **B5.10 — pool-breakdown can't read migrated `pipeline_mode`/flat parquets** (provenance: B5.7
       2026-05-27). `build_pool_breakdown`/`_list_defi_objects_with_aliases` build prefixes
       `day={day}/{hive_key}=defi/venue=…` with NO `pipeline_mode=` segment, and `_list_pool_entities_for_venue` requires
       both `instrument_type=` AND `data_type=` path tokens (skips objects lacking them). The migrated DeFi parquets at
       `raw_tick_data/by_date/day=…/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=…/ticks_migrated_*.parquet`
-      have neither → invisible to pool-breakdown even where they exist. deployment-api consumer change. **NICE-TO-HAVE** —
-      pre-existing, orthogonal to glued-venue canonicalization; affects pool-breakdown completeness for migrated-tick DeFi
-      venues only.
+      have neither → invisible to pool-breakdown even where they exist. deployment-api consumer change. **NICE-TO-HAVE**
+      — pre-existing, orthogonal to glued-venue canonicalization; affects pool-breakdown completeness for migrated-tick
+      DeFi venues only.
 
 ## Temporary states + their canonical follow-up plans
 

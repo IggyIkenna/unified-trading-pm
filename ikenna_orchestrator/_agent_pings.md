@@ -3408,47 +3408,23 @@ AWS agent-orchestrator EventBridge (every 4h offset by 2h so the two passes don'
 
 Operator directive 2026-05-28: "the heavier path (full split) pls."
 
-Gate 5 is now explicitly the FULL per-data-type split per `docs/DEFI_DOWNLOAD_STRATEGY.md:402`
-(*"Old monolithic handlers (evm_defi_handler, solana_defi_handler) replaced by per-data-type handlers"*) — finish what
-the doc declared. NOT modernize-in-place.
+Gate 5 is now explicitly the FULL per-data-type split per `docs/DEFI_DOWNLOAD_STRATEGY.md:402` (_"Old monolithic
+handlers (evm_defi_handler, solana_defi_handler) replaced by per-data-type handlers"_) — finish what the doc declared.
+NOT modernize-in-place.
 
 Steps (HARD-ORDERED, in plan body):
+
 1. Extend `lending_indices_handler.py` / `dex_pools_handler.py` / `lst_rates_handler.py` to include Solana venues
-   (Kamino-lending/Solend/Marginfi → SOLANA_LENDING; Kamino-vault → SOLANA_VAULT; Orca/Raydium/Phoenix → SOLANA_AMM_POOL;
-   Marinade/Jito → existing LST). Helius RPC + protocol APIs for the Solana branches.
+   (Kamino-lending/Solend/Marginfi → SOLANA_LENDING; Kamino-vault → SOLANA_VAULT; Orca/Raydium/Phoenix →
+   SOLANA_AMM_POOL; Marinade/Jito → existing LST). Helius RPC + protocol APIs for the Solana branches.
 2. **Delete** `solana_defi_handler.py` + `cli/main.py:436` registration + `scripts/full-defi-backfill.sh:66` line +
    `scripts/quality-gates.sh:25` QG-exclusion + `deployment-service/scripts/vm/launch-mtds-solana-defi-backfill-vm.sh`.
 3. **Delete** `uts-prod-mtds-collect-solana-defi-cron` Scheduler + its Cloud Run Job + Terraform (NO resume —
    per-data-type crons cover Solana once handlers extended).
-4. Update `capability_declarations/_defi.py`: flip Solana venues' `mtds_operations` from `["collect-solana-defi"]` →
-   the per-data-type ops.
+4. Update `capability_declarations/_defi.py`: flip Solana venues' `mtds_operations` from `["collect-solana-defi"]` → the
+   per-data-type ops.
 5. QG green MTDS + unit tests per Solana venue + live Helius smoke + verify next-day per-data-type cron run includes
    Solana rows in canonical split buckets.
 
-Estimate revised: ~2-3 cal AI-days (was 1-2 for in-place; full split adds registry update + Terraform + per-venue tests).
-End state: one cron per data_type (EVM + Solana); no monolithic Solana code path anywhere. [NOT-ACKED]
-
----
-
-## [orphan-ping-cron → _agent_pings.md] 2026-05-28T18:15:17Z — ⚠️ 1 orphan ping(s) detected (no plan/issue/audit reference)
-
-Per CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item" (4h cron cadence):
-
-```
-ORPHAN | /tmp/unified-trading-pm/ikenna_orchestrator/_agent_pings.md | ## [2026-05-28 GATE-5 HEAVIER PATH] Full per-data-type split — monolithic handler retired
-
-```
-
-**Action required**: the agent who posted each orphan ping must either:
-1. **File a plan** in `plans/active/<slug>_2026_05_28.md` (or extend an existing plan in `plans/active/issues/` /
-   `plans/epics/` / `plans/audit/`) describing the work the ping references, AND
-2. **Edit the orphan ping** to add the new plan path inline,
-   OR
-3. **Remove the ping** if it's resolved / no longer actionable.
-
-Re-run `bash scripts/agents/audit_ping_orphans.sh` until orphan count == 0.
-
-Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local crontab on
-Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
-so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
-Phase -1 (workspace-discipline prereq).
+Estimate revised: ~2-3 cal AI-days (was 1-2 for in-place; full split adds registry update + Terraform + per-venue
+tests). End state: one cron per data_type (EVM + Solana); no monolithic Solana code path anywhere. [NOT-ACKED]

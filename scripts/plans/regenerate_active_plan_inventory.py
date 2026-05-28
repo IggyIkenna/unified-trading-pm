@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import re
 import sys
+from datetime import UTC
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -164,9 +165,9 @@ def main() -> int:
         f"**{agg_pct:.0f}% done** | **{total_left_cal:.0f}** | — |"
     )
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     inventory_md = (
         f"\n_Last regenerated: {now} via `scripts/plans/regenerate_active_plan_inventory.py`. "
         f"Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. "

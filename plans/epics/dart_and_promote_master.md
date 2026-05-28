@@ -106,29 +106,31 @@ _(no plans currently assigned at this priority)_
 
 ### [`promote_workflow_may23_cli_path_2026_05_10`](../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (CLI promote DAG design) complete. Phases 3-10 DEFERRED-POST-CUTOVER. Phase 2 smoke VM verification DEFERRED-OPERATOR. · **estimate**: 4.2 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 (CLI promote DAG design) complete. Phases 3-10 DEFERRED-POST-CUTOVER. Phase
+2 smoke VM verification DEFERRED-OPERATOR. · **estimate**: 4.2 cal AI-days (class: design)
 
 ### [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Entire plan DEFERRED-POST-CUTOVER; all 12 phases gated on DeFi 7-day live soak. · **estimate**: 20.0 cal AI-days (class: infra)
+**status**: ✅ ARCHIVED 2026-05-23 — Entire plan DEFERRED-POST-CUTOVER; all 12 phases gated on DeFi 7-day live soak. ·
+**estimate**: 20.0 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 
-> **MIGRATED FROM:** `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (archived 2026-05-23). Full 64-item
-> spec in archived plan. Grouped below by delivery cluster. All DEFERRED-POST-CUTOVER; start window 2026-06-01.
+> **MIGRATED FROM:** `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (archived 2026-05-23). Full 64-item spec
+> in archived plan. Grouped below by delivery cluster. All DEFERRED-POST-CUTOVER; start window 2026-06-01.
 
 ### Post-cutover Group A — Strategy lifecycle events + maturity model
 
 - [ ] [AGENT] P3. **`StrategyMaturityPhase` canonical enum** — pick between 10-state UAC enum; deprecate legacy
-      `StrategyLifecycleStage` (8-state) + `StrategyMaturity` (v2 8-state). Workspace-grep audit every consumer.
-      Add `STRATEGY_LIVE_PAUSED` + `STRATEGY_LIFECYCLE_DEMOTED` event types. Emit `STRATEGY_LIFECYCLE_CHANGED` on PATCH.
-- [ ] [AGENT] P3. **Phase history → audit_log Firestore mirror** — `phase_history` array mirrored to
-      `audit_log` collection for operator drill-down. Per `codex/04-architecture/promote-workflow-architecture.md`.
+      `StrategyLifecycleStage` (8-state) + `StrategyMaturity` (v2 8-state). Workspace-grep audit every consumer. Add
+      `STRATEGY_LIVE_PAUSED` + `STRATEGY_LIFECYCLE_DEMOTED` event types. Emit `STRATEGY_LIFECYCLE_CHANGED` on PATCH.
+- [ ] [AGENT] P3. **Phase history → audit_log Firestore mirror** — `phase_history` array mirrored to `audit_log`
+      collection for operator drill-down. Per `codex/04-architecture/promote-workflow-architecture.md`.
 
 ### Post-cutover Group B — CandidateManifest + Firestore persistence
 
-- [ ] [AGENT] P3. **Extend `MinimalCandidateManifest` → full `CandidateManifest`** — pinned shas + model ref +
-      features manifest version + strategy config snapshot. `strategy_candidate_manifests` Firestore collection.
+- [ ] [AGENT] P3. **Extend `MinimalCandidateManifest` → full `CandidateManifest`** — pinned shas + model ref + features
+      manifest version + strategy config snapshot. `strategy_candidate_manifests` Firestore collection.
       `POST /strategy/{id}/candidate-manifest` admin endpoint + PATCH hook at paper→live gate crossing.
 - [ ] [AGENT] P3. **`BacktestRunManifest` + ranking infrastructure** — `BacktestResultWriter` UTL helper +
       `GroupBMetrics` UAC lift + `RankedCandidate` type + `rank_candidates()` + ranked board UI + API endpoint.
@@ -153,13 +155,13 @@ _(no plans currently assigned at this priority)_
 
 ### Post-cutover Group F — Strategy drift watchdog + backtest cron VMs
 
-- [ ] [AGENT] P3. **`strategy-drift-watchdog` VM prefix** in `VM_PREFIX_TO_BUCKET`; `STRATEGY_CANDIDATE_DRIFT`
-      alerting rule. **`strategy-backtest-cron` VM prefix**; periodic backtest vs champion score comparison cron.
+- [ ] [AGENT] P3. **`strategy-drift-watchdog` VM prefix** in `VM_PREFIX_TO_BUCKET`; `STRATEGY_CANDIDATE_DRIFT` alerting
+      rule. **`strategy-backtest-cron` VM prefix**; periodic backtest vs champion score comparison cron.
 
 ### Post-cutover Group G — Codex + CLAUDE.md
 
-- [ ] [AGENT] P3. **Codex audit + CLAUDE.md update** — re-walk promote-workflow-architecture.md +
-      cli-promote-paths.md; update to reflect post-cutover shipped state. Add key rules to CLAUDE.md.
+- [ ] [AGENT] P3. **Codex audit + CLAUDE.md update** — re-walk promote-workflow-architecture.md + cli-promote-paths.md;
+      update to reflect post-cutover shipped state. Add key rules to CLAUDE.md.
 
 ## Archived plans
 
@@ -168,14 +170,23 @@ _(no plans currently assigned at this priority)_
 **status**: ✅ ARCHIVED 2026-05-23 — Phase 1 complete; Phases 3-10 and Phase 2 VM smoke deferred.
 
 **Deferred (migrated):**
-- **Phases 3-10 (DEFERRED-POST-CUTOVER)**: Full promote-workflow pipeline (Firestore MinimalCandidateManifest write, paper VM auto-launch, ManualTradeGateDialog integration, live VM auto-launch, LIVE_EARLY→LIVE graduation, multi-tenant flow H4) — all gated on DeFi 7-day soak.
-- **Phase 2 smoke VM verification (DEFERRED-OPERATOR)**: Requires `vm-operator-ops` launch to validate CLI promote path end-to-end.
-- **MinimalCandidateManifest enrichment (DEFERRED-POST-CUTOVER)**: Pinned shas, model refs, features manifest version fields.
-- **LifecycleEventType UAC enum (DEFERRED-POST-CUTOVER)**: Extend once `strategy_master` lifecycle state machine settled.
+
+- **Phases 3-10 (DEFERRED-POST-CUTOVER)**: Full promote-workflow pipeline (Firestore MinimalCandidateManifest write,
+  paper VM auto-launch, ManualTradeGateDialog integration, live VM auto-launch, LIVE_EARLY→LIVE graduation, multi-tenant
+  flow H4) — all gated on DeFi 7-day soak.
+- **Phase 2 smoke VM verification (DEFERRED-OPERATOR)**: Requires `vm-operator-ops` launch to validate CLI promote path
+  end-to-end.
+- **MinimalCandidateManifest enrichment (DEFERRED-POST-CUTOVER)**: Pinned shas, model refs, features manifest version
+  fields.
+- **LifecycleEventType UAC enum (DEFERRED-POST-CUTOVER)**: Extend once `strategy_master` lifecycle state machine
+  settled.
 
 ### [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — Entire plan DEFERRED-POST-CUTOVER (gated on DeFi 7-day live soak).
 
 **Deferred (migrated):**
-- **All 12 phases (DEFERRED-POST-CUTOVER)**: Firebase `execution-full` enforcement, Promote button UI pipeline, state-machine consolidation, candidate manifest enrichment, Firestore backend integration, Playwright e2e matrix — all blocked until DeFi goes live and completes 7-day soak.
+
+- **All 12 phases (DEFERRED-POST-CUTOVER)**: Firebase `execution-full` enforcement, Promote button UI pipeline,
+  state-machine consolidation, candidate manifest enrichment, Firestore backend integration, Playwright e2e matrix — all
+  blocked until DeFi goes live and completes 7-day soak.

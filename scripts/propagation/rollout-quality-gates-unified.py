@@ -24,7 +24,6 @@ import json
 import re
 import subprocess
 import sys
-import typing
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TypeAlias, cast
@@ -413,7 +412,7 @@ def ensure_ignore_files(repo_path: Path, template_type: str, dry_run: bool) -> b
     return updated
 
 
-def ensure_bypass_audit(repo_path: Path, doc_standard: typing.Optional[str], dry_run: bool) -> bool:
+def ensure_bypass_audit(repo_path: Path, doc_standard: str | None, dry_run: bool) -> bool:
     """Create QUALITY_GATE_BYPASS_AUDIT.md stub if doc_standard requires it."""
     if not doc_standard or doc_standard not in BYPASS_AUDIT_DOC_STANDARDS:
         return False

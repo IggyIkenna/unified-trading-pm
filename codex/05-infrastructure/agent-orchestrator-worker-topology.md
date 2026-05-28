@@ -128,17 +128,16 @@ Full slot-as-worker contract: `agents/worker.md` in the agent-orchestrator repo.
 
 ## Deferred (post-cutover)
 
-- **EIP allocation**: shippable recipe in
-  `deployment-service/scripts/aws/allocate-orchestrator-eips.sh`. Operator-runnable; idempotent. Allocates +
-  associates + tags one EIP per fleet VM. Run any time; safe to defer until backends.json churn becomes a real
-  pain point.
+- **EIP allocation**: shippable recipe in `deployment-service/scripts/aws/allocate-orchestrator-eips.sh`.
+  Operator-runnable; idempotent. Allocates + associates + tags one EIP per fleet VM. Run any time; safe to defer until
+  backends.json churn becomes a real pain point.
 - **DNS**: FQDNs `api-{vm}.agent-orchestrator.odum-research.com` per
-  [`./agent-orchestrator-dns-cutover.md`](agent-orchestrator-dns-cutover.md). Requires EIPs first. Operator-side
-  action on the `odum-research.com` zone.
-- **Prebaked AMI provisioning** (Phase 9): Packer template at `deployment-service/packer/agent-orchestrator/`
-  bakes Steps 1-2 + Step 4.5 of `bootstrap_vm.sh` into an AMI; `bootstrap_vm.sh` detects
-  `/etc/orchestrator-ami-version` and short-circuits the baked steps. Cuts cold-boot from ~5-15 min to <5 min.
-  Operator-runnable via `packer build`; pass `AMI_ID=<id>` to `launch-epic-vm-aws.sh` to use it.
+  [`./agent-orchestrator-dns-cutover.md`](agent-orchestrator-dns-cutover.md). Requires EIPs first. Operator-side action
+  on the `odum-research.com` zone.
+- **Prebaked AMI provisioning** (Phase 9): Packer template at `deployment-service/packer/agent-orchestrator/` bakes
+  Steps 1-2 + Step 4.5 of `bootstrap_vm.sh` into an AMI; `bootstrap_vm.sh` detects `/etc/orchestrator-ami-version` and
+  short-circuits the baked steps. Cuts cold-boot from ~5-15 min to <5 min. Operator-runnable via `packer build`; pass
+  `AMI_ID=<id>` to `launch-epic-vm-aws.sh` to use it.
 - **SSH-spawn per backend_id**: slots map to backend_ids; orchestrator ssh-tunnels spawn. Ships post-cutover.
 - **`.tabs/` 8-slot worktree population**: epic VMs currently have 4 cross-cutting repos; full service-repo clone ships
   with ssh-spawn + tarball-deploy work.

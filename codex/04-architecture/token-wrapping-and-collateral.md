@@ -40,25 +40,25 @@ wasted gas, and failed strategies. This document covers:
 
 ## Venue Collateral Acceptance Matrix
 
-| Venue               | Accepted Collateral | Haircut | Notes                        |
-| ------------------- | ------------------- | ------- | ---------------------------- |
+| Venue                | Accepted Collateral | Haircut | Notes                        |
+| -------------------- | ------------------- | ------- | ---------------------------- |
 | **AAVE_V3-ETHEREUM** | WETH                | 17.5%   | LTV 82.5%                    |
-|                     | weETH               | 27.5%   | LTV 72.5%                    |
-|                     | wstETH              | 20.5%   | LTV 79.5%                    |
-|                     | USDC / USDT         | 23%     | LTV 77%                      |
-|                     | WBTC                | 27%     | LTV 73%                      |
-| **HYPERLIQUID**     | USDC only           | 0%      | All perp margin must be USDC |
-|                     | ETH / WETH / weETH  | —       | NOT accepted                 |
-| **ASTER**           | USDC                | 0%      | Primary margin               |
-|                     | USDT                | 1%      | Slight haircut               |
-| **BINANCE**         | USDT                | 0%      | Linear futures               |
-|                     | BTC / ETH           | 5%      | Coin-margined inverse        |
-| **OKX**             | USDT                | 0%      | Linear                       |
-|                     | BTC / ETH           | 5%      | Coin-margined                |
-| **BYBIT**           | USDT                | 0%      | Linear                       |
-|                     | BTC                 | 5%      | Coin-margined                |
-| **DERIBIT**         | BTC / ETH           | 0%      | Portfolio margin             |
-|                     | USDC                | 2%      | Slight haircut               |
+|                      | weETH               | 27.5%   | LTV 72.5%                    |
+|                      | wstETH              | 20.5%   | LTV 79.5%                    |
+|                      | USDC / USDT         | 23%     | LTV 77%                      |
+|                      | WBTC                | 27%     | LTV 73%                      |
+| **HYPERLIQUID**      | USDC only           | 0%      | All perp margin must be USDC |
+|                      | ETH / WETH / weETH  | —       | NOT accepted                 |
+| **ASTER**            | USDC                | 0%      | Primary margin               |
+|                      | USDT                | 1%      | Slight haircut               |
+| **BINANCE**          | USDT                | 0%      | Linear futures               |
+|                      | BTC / ETH           | 5%      | Coin-margined inverse        |
+| **OKX**              | USDT                | 0%      | Linear                       |
+|                      | BTC / ETH           | 5%      | Coin-margined                |
+| **BYBIT**            | USDT                | 0%      | Linear                       |
+|                      | BTC                 | 5%      | Coin-margined                |
+| **DERIBIT**          | BTC / ETH           | 0%      | Portfolio margin             |
+|                      | USDC                | 2%      | Slight haircut               |
 
 Haircut = `1 - max_ltv`. Max leverage for a recursive Aave position is `1 / (1 - max_ltv)`.
 
@@ -198,10 +198,10 @@ Used in recursive staking strategies to cap the loop iteration count.
 
 This strategy has two separate collateral pools that must not be mixed:
 
-| Pool        | Token | Venue           | Purpose               |
-| ----------- | ----- | --------------- | --------------------- |
+| Pool        | Token | Venue            | Purpose               |
+| ----------- | ----- | ---------------- | --------------------- |
 | A (lending) | weETH | AAVE_V3-ETHEREUM | Yield from staked ETH |
-| B (margin)  | USDC  | HYPERLIQUID     | Short ETH perp margin |
+| B (margin)  | USDC  | HYPERLIQUID      | Short ETH perp margin |
 
 The `CollateralValidationMixin` enforces this: any instruction with `weETH` directed at `HYPERLIQUID` is blocked. The
 strategy must hold separate USDC for perp margin.

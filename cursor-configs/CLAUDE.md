@@ -116,17 +116,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
 - Service CLIs: `--operation` (what) `--mode` (batch/live) `--asset-group` (domain). SSOT:
   `codex/06-coding-standards/cli-convention.md`.
-- **Feature formula versioning** (delta_one): every parquet in
-  `features-delta-one-{ag}-{pid}` carries `feature_group_version` as a (1) HIVE PARTITION KEY
-  in the GCS path (`.../feature_group=X/feature_group_version={N}/timeframe=Y/day=Z/instr.parquet`)
-  + (2) file-level parquet footer metadata (`feature_group_version` / `feature_column_versions` JSON
-  / `feature_group`). NO per-row column (path-partitioning beats per-row at millions-of-files scale —
-  selective reads list paths instead of scanning every file).
-  Group version resolves as `max(spec.formula_version for spec in get_specs_by_group(group))`.
-  Registry SSOT: `features_service/delta_one/app/features/registry.py` (1,382 specs / 34 groups).
-  CLI: `features-status [--detailed|--group X|--next N|--export csv|markdown|--check-drift]`.
-  Bump formula_version on MATH change only (NOT config — RSI_14 vs RSI_18 is config). SSOT:
-  `codex/02-data/feature-formula-versioning.md`.
+- **Feature formula versioning** (delta_one): every parquet in `features-delta-one-{ag}-{pid}` carries
+  `feature_group_version` as a (1) HIVE PARTITION KEY in the GCS path
+  (`.../feature_group=X/feature_group_version={N}/timeframe=Y/day=Z/instr.parquet`)
+  - (2) file-level parquet footer metadata (`feature_group_version` / `feature_column_versions` JSON / `feature_group`).
+    NO per-row column (path-partitioning beats per-row at millions-of-files scale — selective reads list paths instead
+    of scanning every file). Group version resolves as
+    `max(spec.formula_version for spec in get_specs_by_group(group))`. Registry SSOT:
+    `features_service/delta_one/app/features/registry.py` (1,382 specs / 34 groups). CLI:
+    `features-status [--detailed|--group X|--next N|--export csv|markdown|--check-drift]`. Bump formula_version on MATH
+    change only (NOT config — RSI_14 vs RSI_18 is config). SSOT: `codex/02-data/feature-formula-versioning.md`.
 
 ### Manifest + honest absence
 
@@ -221,28 +220,25 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
   API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
-- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every
-  account in `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own
-  `oauth_token_env_file` (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via
-  `claude setup-token`. **Never copy `~/.claude/.credentials.json` between machines**. The legacy
-  `.credentials.<id>.json` swap path + the `swap_claude_account.sh` flow are removed; the runtime refuses
-  to spawn a worker / agent / `/usage` probe for an account with no env file. To onboard a new account:
-  (1) run `claude setup-token` on a browser machine, (2) write `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset
-  ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the creds bucket
-  (`gs://central-element-323112-orchestrator-creds/accounts/` and
-  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` +
-  `setup_token_expires_at` to `accounts.json`. SSOT:
-  `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
+  `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
+  (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy
+  `~/.claude/.credentials.json` between machines**. The legacy `.credentials.<id>.json` swap path + the
+  `swap_claude_account.sh` flow are removed; the runtime refuses to spawn a worker / agent / `/usage` probe for an
+  account with no env file. To onboard a new account: (1) run `claude setup-token` on a browser machine, (2) write
+  `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the
+  creds bucket (`gs://central-element-323112-orchestrator-creds/accounts/` and
+  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` + `setup_token_expires_at` to
+  `accounts.json`. SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
 - **Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)**: tasks in
-  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in
-  `plans/active/*.md` by `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new
-  tasks** — write the todo in the relevant active plan file using the canonical format
-  (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next `PlanRegenLoop` tick (≤6h, or POST
-  `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is content-based (dedup by
-  raw todo line), so flipping or editing a todo in the plan won't reset the backlog state. Hand-edits
-  are still legitimate for *tuning* derived tasks (priority, repos, target_slot, est_hours,
-  collision_group) once they've been auto-created. SSOT:
-  `agent-orchestrator/server/regen_backlog_from_plan.py` + `unified-trading-pm/plans/PLAN_FORMAT.md`.
+  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in `plans/active/*.md` by
+  `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new tasks** — write the todo in the
+  relevant active plan file using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next
+  `PlanRegenLoop` tick (≤6h, or POST `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is
+  content-based (dedup by raw todo line), so flipping or editing a todo in the plan won't reset the backlog state.
+  Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
+  once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
+  `unified-trading-pm/plans/PLAN_FORMAT.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)

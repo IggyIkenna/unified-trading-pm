@@ -366,16 +366,16 @@ from 2023. Treated as future optimization; not read in this plan's scope.
 
 ### Symbol/data-type alignment for `DEFAULT_INSTRUMENTS`
 
-| UI venue             | UI symbol       | Bucket | `data_type` to use | GCS shard exists?             |
-| -------------------- | --------------- | ------ | ------------------ | ----------------------------- |
-| `BINANCE-FUTURES`    | `BTCUSDT`       | cefi   | `trades`           | ✅ verified 2026-04-14        |
-| `BINANCE-FUTURES`    | `ETHUSDT`       | cefi   | `trades`           | ✅ verified 2026-04-14        |
-| `NASDAQ`             | `AAPL`          | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
-| `NASDAQ`             | `MSFT`          | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
-| `NASDAQ`             | `GOOGL`         | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
-| `NYSE`               | `JPM`           | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
-| `HYPERLIQUID`        | `ETH`           | cefi   | `trades`           | not verified — out of MVP set |
-| `CME`                | `ES`            | tradfi | `ohlcv_1m`         | not verified — out of MVP set |
+| UI venue              | UI symbol       | Bucket | `data_type` to use | GCS shard exists?             |
+| --------------------- | --------------- | ------ | ------------------ | ----------------------------- |
+| `BINANCE-FUTURES`     | `BTCUSDT`       | cefi   | `trades`           | ✅ verified 2026-04-14        |
+| `BINANCE-FUTURES`     | `ETHUSDT`       | cefi   | `trades`           | ✅ verified 2026-04-14        |
+| `NASDAQ`              | `AAPL`          | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
+| `NASDAQ`              | `MSFT`          | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
+| `NASDAQ`              | `GOOGL`         | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
+| `NYSE`                | `JPM`           | tradfi | `ohlcv_1m`         | ✅ verified 2026-04-13        |
+| `HYPERLIQUID`         | `ETH`           | cefi   | `trades`           | not verified — out of MVP set |
+| `CME`                 | `ES`            | tradfi | `ohlcv_1m`         | not verified — out of MVP set |
 | `UNISWAP_V3-ETHEREUM` | `WETH-USDC-500` | defi   | varies             | not in scope                  |
 
 **MVP target symbols for D-grade acceptance: 6 symbols with verified-existing shards.** Others render "No chart data

@@ -91,15 +91,15 @@ This is the **reference-data** service. It owns instrument definitions per day p
 
 #### 2.A.1 Coverage structure
 
-| #       | Expectation                                                                                                                                                                                                               |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.A.1a  | All 5 categories appear (no category missing)                                                                                                                                                                             |
-| 2.A.1b  | DEFI sub-rows: canonical venues only — `UNISWAP_V2`, `UNISWAP_V3`, `UNISWAP_V4`, `CURVE`, `BALANCER`, `AAVE_V3`. **NO** legacy aliases like `AAVE_V3-ETHEREUM`, `UNISWAP_V3-BASE` (filter landed in `22f0024`/`959bdab`)    |
+| #       | Expectation                                                                                                                                                                                                                |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.A.1a  | All 5 categories appear (no category missing)                                                                                                                                                                              |
+| 2.A.1b  | DEFI sub-rows: canonical venues only — `UNISWAP_V2`, `UNISWAP_V3`, `UNISWAP_V4`, `CURVE`, `BALANCER`, `AAVE_V3`. **NO** legacy aliases like `AAVE_V3-ETHEREUM`, `UNISWAP_V3-BASE` (filter landed in `22f0024`/`959bdab`)   |
 | 2.A.1b2 | **Venues summary widget (top-of-tab)** must ALSO not leak `AAVE_V3-{chain}` aliases — check this separately from the per-shard rollup, as the two surfaces derive from different projections and can regress independently |
-| 2.A.1c  | DEFI rows carry a `chain` dimension (ETHEREUM / ARBITRUM / OPTIMISM / POLYGON / BASE / AVALANCHE) visible in drill-down                                                                                                   |
-| 2.A.1d  | PREDICTION sub-rows: `POLYMARKET` venue; drill-down shows 6-dim sharding `market_category × underlying × market_type × resolution_period`                                                                                 |
-| 2.A.1e  | SPORTS sub-rows: sports*reference data types (`MATCHES`, `LEAGUES`, `FIXTURES`, `FIXTURE_EVENTS`, `SFI*\*`, `STANDINGS`, `ODDS`, `PREDICTIONS`, `PLAYER_STATS`, `PLAYER_VALUES`, `INJURIES`)                              |
-| 2.A.1f  | CEFI / TRADFI rows carry `instrument_type` dimension (SPOT, PERPETUAL, FUTURE, OPTION, FUTURE_SPREAD, OPTION_COMBO, etc.)                                                                                                 |
+| 2.A.1c  | DEFI rows carry a `chain` dimension (ETHEREUM / ARBITRUM / OPTIMISM / POLYGON / BASE / AVALANCHE) visible in drill-down                                                                                                    |
+| 2.A.1d  | PREDICTION sub-rows: `POLYMARKET` venue; drill-down shows 6-dim sharding `market_category × underlying × market_type × resolution_period`                                                                                  |
+| 2.A.1e  | SPORTS sub-rows: sports*reference data types (`MATCHES`, `LEAGUES`, `FIXTURES`, `FIXTURE_EVENTS`, `SFI*\*`, `STANDINGS`, `ODDS`, `PREDICTIONS`, `PLAYER_STATS`, `PLAYER_VALUES`, `INJURIES`)                               |
+| 2.A.1f  | CEFI / TRADFI rows carry `instrument_type` dimension (SPOT, PERPETUAL, FUTURE, OPTION, FUTURE_SPREAD, OPTION_COMBO, etc.)                                                                                                  |
 
 #### 2.A.2 Drill-down (click a coverage row → day → instrument list)
 

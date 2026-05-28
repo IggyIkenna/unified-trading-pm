@@ -55,9 +55,9 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 >    `market-data-tick-defi-central-element-323112` covers **2024-05-03 → 2026-01-24 (323 days)**; prd
 >    `market-data-tick-defi-prd-central-element-323112` covers **2026-01-25 → 2026-05-22 (118 days)**; **zero overlap**.
 >    `dex_swaps`/`vault_share_price` (onchain inputs) are **already prd-only** (flat has none — the running backfill
->    consolidates them into prd), so only the candle path is split. **Operator decision: features compute proceeds on prd
->    sample data now — we do NOT need full 2024-25 history for this pass.** The 323-day flat→prd `processed_candles` copy
->    is **deferred (non-blocking)** to the post-backfill fleet-drain window per the pre-migration drain HARD RULE
+>    consolidates them into prd), so only the candle path is split. **Operator decision: features compute proceeds on
+>    prd sample data now — we do NOT need full 2024-25 history for this pass.** The 323-day flat→prd `processed_candles`
+>    copy is **deferred (non-blocking)** to the post-backfill fleet-drain window per the pre-migration drain HARD RULE
 >    (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.0 Stage 0 — all GCP+AWS VMs stopped + manifest
 >    consolidated + snapshot first); when run it is a bounded candle-only copy via `gcs_copy_object` (no API re-fetch).
 > 2. **✅ mtds-dex-swaps-backfill COMPLETED 2026-05-27 10:10:30Z (exit_code=0)** — verified 2026-05-28 by harsh-main
@@ -73,17 +73,12 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 > has NOT launched. Cross-side ping filed 2026-05-28 in `plans/active/_agent_pings.md`. The 3 P0 items below are
 > launch-and-verify (~1-2 hrs end-to-end); harsh-main can execute if delegated.
 
-- [x] ✅ DONE [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
-      delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps backfill COMPLETED 2026-05-27);
-      bucket-split decision resolved (banner #1 — runs on prd). — VM `features-onchain-defi-20260528-183920` launched 2026-05-28, zone asia-northeast1-c,
-      e2-standard-8, VM_SHUTDOWN_ON_COMPLETION=true; CMD: `python -m features_service --feature-family onchain --operation compute --mode batch
-      --start-date 2020-01-01 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL`.
-- [x] ✅ DONE [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd `processed_candles`,
-      118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28** (banner #2 —
-      dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1). — VM
-      `features-delta-one-defi-20260528-184312` launched 2026-05-28, zone asia-northeast1-c, e2-standard-8,
-      VM_SHUTDOWN_ON_COMPLETION=true; CMD: `python -m features_service --feature-family delta_one --operation compute
-      --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL`.
+- [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
+      delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps
+      backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1 — runs on prd).
+- [ ] [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd
+      `processed_candles`, 118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28**
+      (banner #2 — dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
 
 ## Phase 3 — TradFi features compute

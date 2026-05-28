@@ -33,9 +33,11 @@ priority: P0
 ## Deferred work — migrated to:
 
 Bucket SSOT canonicalisation shipped (resolve_bucket_name() + QG STEP 5.69). Remaining items migrated to:
-- `plans/epics/manifest_master.md` § "Deferred work — migrated from archived plans": Phase 0d flat-bucket
-  migration (DEFERRED-OPERATOR-DECISION), prediction bucket naming, workspace-grep audit, legacy rename delegation.
-Archiving 2026-05-23.
+
+- `plans/epics/manifest_master.md` § "Deferred work — migrated from archived plans": Phase 0d flat-bucket migration
+  (DEFERRED-OPERATOR-DECISION), prediction bucket naming, workspace-grep audit, legacy rename delegation. Archiving
+  2026-05-23.
+
 # Bucket-name SSOT canonicalisation
 
 > **Severity**: P1 — silent operational failure surface. The disagreement caused 7 of 55 deleted-but-needed empty
@@ -574,17 +576,17 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
 
 - [x] ✅ **[INFRA+SCRIPT] P0**. **Phase 0f residual — VM script legacy bucket fixes + instruments-store legacy
       consolidator crons (slot-5 2026-05-23).** Follow-up to the 101554s ManifestReader staleness alarm
-      (MDPS-3.3.TradFi-ConsolidatorFix in archived mdps_backfill_phase3). Four additional VM scripts using legacy (no
+      (MDPS-3.3.TradFi-ConsolidatorFix in archived mdps*backfill_phase3). Four additional VM scripts using legacy (no
       env suffix) bucket names fixed: (1) `launch-prediction-pipeline-vm.sh`: compute `DEPLOYMENT_ENV_SHORT`, apply to
       `GCS_BUCKET` + `TICK_BUCKET` (`market-data-tick-prediction-*`); (2) `post-tier3-fanout-audit.sh` line 84:
       `market-data-tick-cefi-central-element-323112` → `${PROJECT}` variable; (3) `launch-expected-universe-v2-vm.sh`:
       compute `DEPLOYMENT_ENV_SHORT` + `CATALOG_AG_SHORT` (prediction→pred), apply to `CATALOG_BUCKET`
-      (instruments-store-_); (4) `setup-data-pipeline-vm.sh`: compute `DEPLOYMENT_ENV_SHORT` from metadata, update all
+      (instruments-store-*); (4) `setup-data-pipeline-vm.sh`: compute `DEPLOYMENT_ENV_SHORT` from metadata, update all
       14 default `BUCKETS_RAW` entries to env-tiered form using `${GCP_PROJECT_ID}`. Also added 5 Cloud Run Jobs + 5
-      Cloud Scheduler crons
-      (`_/1 \* \* \* \*`) for instruments-store legacy buckets (instruments-{cefi,tradfi,defi,sports,prediction}-${project_id})     to `manifest_consolidator_scheduler.tf`;
-      timeout overrides sports→900s, cefi→600s (same rationale as env-tiered counterparts). All 10 resources applied to
-      GCP prod. deployment-service@e1a6d19.
+      Cloud Scheduler crons (`_/1 \* \* \* \*`) for instruments-store legacy buckets
+      (instruments-{cefi,tradfi,defi,sports,prediction}-${project_id}) to `manifest_consolidator_scheduler.tf`; timeout
+      overrides sports→900s, cefi→600s (same rationale as env-tiered counterparts). All 10 resources applied to GCP
+      prod. deployment-service@e1a6d19.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 
@@ -611,7 +613,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
 | **L2-tail `dependency_checker.py`**                     | `features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` inline `"bucket_template": "market-data-tick-{ag}-{pid}"` strings                                                                                                                                                                     | 🟡 DRIFTING — after Phase 0e the yaml `market-data` is env-tiered (`market-data-tick-{ag}-{env}-{pid}`) but the probe template is still flat (`market-data-tick-{ag}-{pid}`); correct for current on-disk reality but drifts from the yaml SSOT                                                                                                                                                                                                                                                                                                                                                                                                                                                   | DEFERRED-AFTER the UTL `BaseDependencyChecker` migration OR code_freeze Phase 2.6 (whichever lands first) — must land in the SAME window as the flat→env-tiered data migration                                                                                                                     |
 | **L3 legacy UTL `get_bucket_name` + `BUCKET_PREFIXES`** | `unified_trading_library/cloud_interface/constants.py` + `core/cloud_constants.py` — defns + ~36+ consumers across instruments-service (~16 files) / execution-service (~22) / MTDS (~21) / deployment-service (~7) / features-service (~8) / strategy-service (~3) / pnl-attribution (~2) / deployment-api (~1) / PM scripts (~2) | 🟡 DRIFTING — NOT yet delegated to `resolve_bucket_name`; Group-A consumers (instruments-service/MTDS — `market-data`/`instruments-store`) write continuously so a premature delegate breaks first-write (the "safe gap" reasoning per A6)                                                                                                                                                                                                                                                                                                                                                                                                                                                        | DEFERRED-AFTER code_freeze Phase 2.6 (= step 2.6.4 — flip the delegate workspace-wide during the write-pause, alongside provision→rsync→archive). Done-def #3. Pre-audit (~92 candidate files; ~36+ are the real legacy-delegate consumers) is in § Pre-audit manifest "Layer 3 migration recipe". |
 | **L4 UTL `bucket_naming` resolver**                     | `unified_trading_library/cloud_interface/bucket_naming.py` (reads L1; `_KIND_ALIASES` bridge; `${DEPLOYMENT_ENV_SHORT}` 3-char form)                                                                                                                                                                                               | ✅ TARGET — keeps in sync with L1 by construction (reads the yaml at call time). Parity test (`test_bucket_naming.py`) extended to features-\* + sports + tradfi + market-data + instruments-store + prediction (UTL@`e8dc6e3` + `2118b1e` + `ba6089c` + `4ee24b5` + `e3dd846` + `5058381`) — ZERO drift between L1 and L4 enforced by the parity test.                                                                                                                                                                                                                                                                                                                                           | —                                                                                                                                                                                                                                                                                                  |
-| **L5 deployment-api internal templates (reader-side)**  | `DataStatusService._BUCKET_TEMPLATES` (18 entries) + `data_status_drilldown._BUCKET_TEMPLATES` (16, already drifts from the first on `ml-*`) + `data_query_service.build_bucket_name` (a 3rd shape) + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."` f-strings             | 🟡 DRIFTING (flat-shape; correct for current on-disk reality) — deployment-api reads buckets continuously, so its bucket-name source must flip in lockstep with the data migration, not before                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | DEFERRED-AFTER code_freeze Phase 2.6 reader-repoint (GAP-2.4.D) — replace all with `resolve_bucket_name(...)` calls + reconcile the L5.1↔L5.2 `ml-*` drift (yaml SSOT wins). Full inventory + the `service → kind` map in § Pre-audit manifest "Layer 5".                                          |
+| **L5 deployment-api internal templates (reader-side)**  | `DataStatusService._BUCKET_TEMPLATES` (18 entries) + `data_status_drilldown._BUCKET_TEMPLATES` (16, already drifts from the first on `ml-*`) + `data_query_service.build_bucket_name` (a 3rd shape) + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."` f-strings             | 🟡 DRIFTING (flat-shape; correct for current on-disk reality) — deployment-api reads buckets continuously, so its bucket-name source must flip in lockstep with the data migration, not before                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | DEFERRED-AFTER code_freeze Phase 2.6 reader-repoint (GAP-2.4.D) — replace all with `resolve_bucket_name(...)` calls + reconcile the L5.1↔L5.2 `ml-*` drift (yaml SSOT wins). Full inventory + the `service → kind` map in § Pre-audit manifest "Layer 5".                                         |
 | **Inline `f"gs://...`/`f"s3://...` formatters**         | Workspace-wide `gs://`/`s3://` f-string URI-builders WITHOUT a `# noqa: gs-uri` marker                                                                                                                                                                                                                                             | ✅ RATCHETED + PARTIALLY LOWERED — QG STEP 5.69 (`check_inline_bucket_uri.py` + `inline_bucket_uri_baseline.yaml`) + instruments-service (1→**0** @`5210149`) + deployment-service (3→**0** @`0b802ec`) baselines lowered (4 noqa markers added to error-message strings, not bucket constructors) + PM baseline yaml @`be768d2b`. + **deployment-api (27→0** @`297b406` — 5 Cat-A events-bucket noqa, 16 Cat-B URI-composer noqa, 2 Cat-C instruments-store-sports hardcoded replaced with `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")`). Remaining: execution-service 33, UTL 23, batch-live-recon 7, UAC 5, UI 4, features-service 2, strategy-service 2 | Remaining baselines ratchet DOWN in code_freeze Phase 2.6 as L2-tail/L3/L5 migrate; v2 AST-walk drops docstring false-positives                                                                                                                                                                    |
 
 **Verified-zero-drift today (2026-05-11)**: L1↔L4 (parity test); L2 features-\* config.py bucket templates (migrated to
@@ -753,8 +755,16 @@ owner's done-def (GAP-2.4.D extends Done-def #6).
 
 ## Deferred work — migrated to: manifest_master
 
-_Archived 2026-05-23 slot 2. Phases 0a/0b/0c/0e/L1/L2-non-service complete. Service-code legacy delegate rows deferred (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION)._
+_Archived 2026-05-23 slot 2. Phases 0a/0b/0c/0e/L1/L2-non-service complete. Service-code legacy delegate rows deferred
+(BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION)._
 
-- **L2 dependency_checker.py probe templates** (ml-inference-service × 2, execution-service × 5, features-service × 16): BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration (Phase 2.6 or `code_freeze_migrate_backfill_sequencing` Phase 2.6).
-- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution-service × 2, execution-service × 1, UTL seed_writer × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window alongside manifest atomic rename + GCS bundled migration.
-- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`, `data_status_drilldown._BUCKET_TEMPLATES`, `data_query_service.build_bucket_name`, `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE`, 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data migration.
+- **L2 dependency_checker.py probe templates** (ml-inference-service × 2, execution-service × 5, features-service × 16):
+  BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration (Phase 2.6 or
+  `code_freeze_migrate_backfill_sequencing` Phase 2.6).
+- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution-service × 2, execution-service
+  × 1, UTL seed_writer × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window alongside
+  manifest atomic rename + GCS bundled migration.
+- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`,
+  `data_status_drilldown._BUCKET_TEMPLATES`, `data_query_service.build_bucket_name`,
+  `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE`, 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data
+  migration.

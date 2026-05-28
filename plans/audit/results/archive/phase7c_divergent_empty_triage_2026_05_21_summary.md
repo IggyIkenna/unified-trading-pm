@@ -14,8 +14,8 @@ adapter-level bug (handler returned 0 data when protocol had activity) — NOT a
 
 ## Distribution
 
-| venue           | data_type          | cells   | triage_decision     |
-| --------------- | ------------------ | ------- | ------------------- |
+| venue            | data_type          | cells   | triage_decision     |
+| ---------------- | ------------------ | ------- | ------------------- |
 | AAVE_V3-OPTIMISM | flash_loan_events  | 141     | phase_11_rebackfill |
 | AAVE_V3-OPTIMISM | lending_indices    | 141     | phase_11_rebackfill |
 | AAVE_V3-OPTIMISM | liquidation_events | 141     | phase_11_rebackfill |
@@ -25,7 +25,7 @@ adapter-level bug (handler returned 0 data when protocol had activity) — NOT a
 | COMPOUND_V3-BASE | liquidation_events | 15      | phase_11_rebackfill |
 | COMPOUND_V3-BASE | position_data      | 15      | phase_11_rebackfill |
 | COMPOUND_V3-BASE | risk_params        | 15      | phase_11_rebackfill |
-| **TOTAL**       |                    | **765** |                     |
+| **TOTAL**        |                    | **765** |                     |
 
 ## Triage buckets (master_coord § Phase 7(c))
 

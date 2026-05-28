@@ -18,9 +18,8 @@ related:
 
 # RB-RECON-001 — Position Reconciliation Lag
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -44,7 +43,7 @@ Category: **Reconciliation** · Runbook ID: **RB-RECON-001**.
 ## Resolve
 
 - If lag is API/network: wait for venue to catch up.
-- If unexplained: cancel open orders via Safety Ops → CANCEL_ALL_<venue> → wait for venue ack → re-reconcile.
+- If unexplained: cancel open orders via Safety Ops → CANCEL*ALL*<venue> → wait for venue ack → re-reconcile.
 - If still mismatched: flatten the affected scope manually via execution-service /admin endpoints.
 
 ## Rollback

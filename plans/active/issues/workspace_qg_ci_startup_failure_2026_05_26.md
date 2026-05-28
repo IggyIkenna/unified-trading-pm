@@ -20,16 +20,16 @@ is a **GitHub server-side infrastructure issue**, not fixable by changing workfl
 - batch-live-reconciliation-service
 - execution-service
 - instruments-service
-- **unified-api-contracts** (ghost: 283776088 — confirmed 2026-05-27T12:58Z on staging push; was missing from original list)
-- **deployment-ui** (ghost: 283775720, real wf: 277985037 — confirmed 2026-05-28 on LDR push). Same root cause:
-  last real workspace-qg run 2026-05-26 14:42 UTC during the bad PM commit window; subsequent pushes (2026-05-27,
-  2026-05-28) all return BuildFailed pseudo-workflow. **Option B verified ineffective** for deployment-ui too —
-  renamed `workspace-qg.yml` → `workspace-qg-v2.yml` (commit `739c4a3`), got same ghost workflow_id 283775720
-  on first push (run 26580358214). Reverted the rename. **Adds deployment-ui to the GitHub Support ticket**.
-  Note: deployment-ui's workspace-qg.yml was fixed independently in commit `23973ce` to call the local
-  `ui-quality-gates.yml` (not PM's `python-quality-gates.yml`) and to fetch GH_PAT from GCP Secret Manager via
-  `GCP_SA_KEY` — see `human_work_backlog_2026_05_20.md` item 14. The fix is content-correct; only the ghost
-  blocks execution.
+- **unified-api-contracts** (ghost: 283776088 — confirmed 2026-05-27T12:58Z on staging push; was missing from original
+  list)
+- **deployment-ui** (ghost: 283775720, real wf: 277985037 — confirmed 2026-05-28 on LDR push). Same root cause: last
+  real workspace-qg run 2026-05-26 14:42 UTC during the bad PM commit window; subsequent pushes (2026-05-27, 2026-05-28)
+  all return BuildFailed pseudo-workflow. **Option B verified ineffective** for deployment-ui too — renamed
+  `workspace-qg.yml` → `workspace-qg-v2.yml` (commit `739c4a3`), got same ghost workflow_id 283775720 on first push (run
+  26580358214). Reverted the rename. **Adds deployment-ui to the GitHub Support ticket**. Note: deployment-ui's
+  workspace-qg.yml was fixed independently in commit `23973ce` to call the local `ui-quality-gates.yml` (not PM's
+  `python-quality-gates.yml`) and to fetch GH_PAT from GCP Secret Manager via `GCP_SA_KEY` — see
+  `human_work_backlog_2026_05_20.md` item 14. The fix is content-correct; only the ghost blocks execution.
 
 **Repos working normally** (success/failure/queued — no startup_failure):
 

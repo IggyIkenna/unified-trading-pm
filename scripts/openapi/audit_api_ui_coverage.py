@@ -19,7 +19,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -524,7 +524,7 @@ def run_audit(
 
     report = {
         "_meta": {
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "workspace_root": str(workspace_root),
             "spec_path": str(spec_path),
             "elapsed_seconds": round(elapsed, 1),

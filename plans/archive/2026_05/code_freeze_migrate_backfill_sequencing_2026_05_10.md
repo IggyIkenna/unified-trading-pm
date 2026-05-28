@@ -19,10 +19,11 @@ priority: P0
 ## Deferred work — migrated to:
 
 Phases 1-2 (GCS bundle migration + v8 schema bump) complete. Post-cutover gates tracked in:
+
 - `plans/active/master_to_live_defi_2026_05_23.md` § Groups B-G (features green, ML, paper-trade, live archetypes).
 - `plans/epics/mtds_mdps_master.md` (Phases 11-14 sequencing).
-- Backfill plans archived 2026-05-23; execution evidence in git history.
-Archiving 2026-05-23.
+- Backfill plans archived 2026-05-23; execution evidence in git history. Archiving 2026-05-23.
+
 # Code-freeze → migrate → backfill sequencing master
 
 ## Why this plan exists
@@ -1862,11 +1863,19 @@ final cycle-close DONE-2026-05-15 block + final cross-side ping at 2026-05-15 ac
 
 ## Deferred work — migrated to: defi_master
 
-_Archived 2026-05-23 slot 2. Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped. Post-cutover execution items and service-repo work deferred._
+_Archived 2026-05-23 slot 2. Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped. Post-cutover
+execution items and service-repo work deferred._
 
-- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh`, `verify_flat_to_env_tiered_drift.py`, `verify_env_tiered_buckets_provisioned.py`, `vm_zombie_watchdog` dict re-point + codex section. Requires deployment-service, MTDS, MDPS, features-service not available in slot 6 worktree. Owner: slot 8 (deployment-service surface).
-- **Phase 3 — Full workspace QG green**: `quality-gates.sh` sweep deferred all cycle (slot worktrees have no per-repo `.venv`). Highest-risk repos: UAC, UTL, MTDS, MDPS, features-service, deployment-api. Tracked in `qg_sweep_2026_05_11.md`.
-- **Phase 4.DEFAULT-REMOVAL**: Blocked-after-MTDS+FEATURES+GREP-VERIFY sweep. Remove 4 `None` defaults from 5 `record_*` methods + bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + reconcile codex prose.
-- **Phase 0.B PRE-baseline + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` does not exist; requires GCS access from GCE VM. Operator must author + run from trading-VM SA. Gates Phase 12 ratchet lock-in.
+- **Phase 2.6 execution (DEFERRED-SERVICE-REPOS)**: `launch-bucket-rsync-vm.sh`, `verify_flat_to_env_tiered_drift.py`,
+  `verify_env_tiered_buckets_provisioned.py`, `vm_zombie_watchdog` dict re-point + codex section. Requires
+  deployment-service, MTDS, MDPS, features-service not available in slot 6 worktree. Owner: slot 8 (deployment-service
+  surface).
+- **Phase 3 — Full workspace QG green**: `quality-gates.sh` sweep deferred all cycle (slot worktrees have no per-repo
+  `.venv`). Highest-risk repos: UAC, UTL, MTDS, MDPS, features-service, deployment-api. Tracked in
+  `qg_sweep_2026_05_11.md`.
+- **Phase 4.DEFAULT-REMOVAL**: Blocked-after-MTDS+FEATURES+GREP-VERIFY sweep. Remove 4 `None` defaults from 5 `record_*`
+  methods + bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + reconcile codex prose.
+- **Phase 0.B PRE-baseline + Phase 12 ratchet (OPERATOR ACTION)**: `measure-honest-coverage.py` does not exist; requires
+  GCS access from GCE VM. Operator must author + run from trading-VM SA. Gates Phase 12 ratchet lock-in.
 - **TradFi 4.3% phantom audit**: Post-cutover operator triage of TradFi phantom percentage (tradfi-domain scope).
 - **`cme_polymarket_arb` Phases 2-5**: DEFERRED-POST-CUTOVER; depends on predictions-master + tradfi-master.

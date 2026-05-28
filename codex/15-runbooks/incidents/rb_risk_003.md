@@ -18,9 +18,8 @@ related:
 
 # RB-RISK-003 — Liquidation Risk / Margin Danger
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -31,7 +30,8 @@ Category: **Risk** · Runbook ID: **RB-RISK-003**.
 ## First 60 seconds — acknowledge + scope
 
 1. Acknowledge.
-2. Check which of the 6 triggers fired: margin ratio / liquidation distance / collateral transfer fail / ADL/insurance / venue API uncertainty / price gap.
+2. Check which of the 6 triggers fired: margin ratio / liquidation distance / collateral transfer fail / ADL/insurance /
+   venue API uncertainty / price gap.
 
 ## Diagnose
 

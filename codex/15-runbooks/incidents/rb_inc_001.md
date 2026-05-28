@@ -18,9 +18,8 @@ related:
 
 # RB-INC-001 — SEV0 Incident Handling
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -44,14 +43,16 @@ Category: **Core** · Runbook ID: **RB-INC-001**.
 
 ## Resolve
 
-- If `recovery_confirmed=False` AND `risk_state` in {unknown, live_unresolved}: take ownership via Operational Ack button + investigate root cause before any action.
+- If `recovery_confirmed=False` AND `risk_state` in {unknown, live_unresolved}: take ownership via Operational Ack
+  button + investigate root cause before any action.
 - If automation has SAFE_MODE_ACTIVE: verify scope is correct + verify positions reconcile.
 - If LLM verdict=DISPUTE_AUTOMATED_ACTION: assume automated action was wrong; re-evaluate from upstream signal.
 - When risk neutralised: transition to AUDIT_REPORT_GENERATED via gateway state machine.
 
 ## Rollback
 
-If a Layer-0 action made things worse (rare): use Safety Ops tab to undo (e.g. UNDISABLE_VENUE) — typed-confirm-string required.
+If a Layer-0 action made things worse (rare): use Safety Ops tab to undo (e.g. UNDISABLE_VENUE) — typed-confirm-string
+required.
 
 ## Escalate
 

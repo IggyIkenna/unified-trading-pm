@@ -68,7 +68,7 @@ def build_adj(manifest: dict[str, object]) -> dict[str, list[str]]:
 def find_cycles(adj: dict[str, list[str]], start_nodes: list[str] | None = None) -> list[list[str]]:
     """DFS cycle detection. Returns list of cycles found (each cycle is a list of node names)."""
     WHITE, GRAY, BLACK = 0, 1, 2
-    color: dict[str, int] = {node: WHITE for node in adj}
+    color: dict[str, int] = dict.fromkeys(adj, WHITE)
     path: list[str] = []
     cycles: list[list[str]] = []
 

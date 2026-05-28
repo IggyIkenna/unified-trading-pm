@@ -51,9 +51,9 @@ Only triggers when: net_APY_new - net_APY_current > annualized(gas_cost + bridge
 
 ## Instruments
 
-| Instrument Key                       | Venue   | Type      | Role                           |
-| ------------------------------------ | ------- | --------- | ------------------------------ |
-| `WALLET:SPOT_ASSET:USDT`             | Wallet  | Spot      | Initial capital                |
+| Instrument Key                        | Venue   | Type      | Role                           |
+| ------------------------------------- | ------- | --------- | ------------------------------ |
+| `WALLET:SPOT_ASSET:USDT`              | Wallet  | Spot      | Initial capital                |
 | `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Ethereum)     |
 | `AAVE_V3-ARBITRUM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Arbitrum)     |
 | `AAVE_V3-OPTIMISM:A_TOKEN:AWBTC`      | Aave V3 | aToken    | Supply position (Optimism)     |
@@ -104,8 +104,8 @@ Unlike most DeFi strategies, this strategy dynamically selects which chain to de
 
 ### Layer 1: DEX SOR (swap leg)
 
-| Leg                       | SOR? | Allowed Venues                                                 | SSOT                 |
-| ------------------------- | ---- | -------------------------------------------------------------- | -------------------- |
+| Leg                       | SOR? | Allowed Venues                                                  | SSOT                 |
+| ------------------------- | ---- | --------------------------------------------------------------- | -------------------- |
 | Step 1 (USDT-->WBTC swap) | YES  | Chain-dependent (e.g., `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`) | `defi_base.py:84-86` |
 
 ### Layer 2: CrossChainSOR (chain selection)
@@ -206,8 +206,8 @@ assessment --> rebalance/exit decisions)
 
 ### Exposure Subscriptions
 
-| Instrument Pattern             | Exposure Type    | Used For                       |
-| ------------------------------ | ---------------- | ------------------------------ |
+| Instrument Pattern              | Exposure Type    | Used For                       |
+| ------------------------------- | ---------------- | ------------------------------ |
 | `AAVE_V3-*:A_TOKEN:AWBTC`       | Collateral value | Health factor numerator        |
 | `AAVE_V3-*:A_TOKEN:ACBBTC`      | Collateral value | Health factor numerator (Base) |
 | `AAVE_V3-*:DEBT_TOKEN:DEBTUSDC` | Debt value       | Health factor denominator      |

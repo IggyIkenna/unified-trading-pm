@@ -118,10 +118,10 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    caught and moved back to `asia-northeast1-b`.
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
-10. **Per-shard cleanup discipline for multi-shard VMs** (HARD RULE, codified 2026-05-28). An `EPHEMERAL_BATCH` VM
-    does **not** mean "one shard per VM". It means the VM is short-lived (self-deletes on completion) — but inside its
-    Python process, the service CLI may iterate many shards (a date range, a venue list, a data_type list) before exit.
-    A 16-day narrow-scope backfill on one `EPHEMERAL_BATCH` VM processes 16 (or more) atomic shards in one process; an
+10. **Per-shard cleanup discipline for multi-shard VMs** (HARD RULE, codified 2026-05-28). An `EPHEMERAL_BATCH` VM does
+    **not** mean "one shard per VM". It means the VM is short-lived (self-deletes on completion) — but inside its Python
+    process, the service CLI may iterate many shards (a date range, a venue list, a data_type list) before exit. A
+    16-day narrow-scope backfill on one `EPHEMERAL_BATCH` VM processes 16 (or more) atomic shards in one process; an
     asset-group-wide sharded backfill VM processes thousands. Every service that runs on a multi-shard VM MUST wire a
     per-shard cleanup hook in its orchestrator that fires on **every exit path** of per-shard work (success, skip,
     raised exception). Without this, per-shard state (caches, lazy reference DataFrames, manifest buffers) compounds

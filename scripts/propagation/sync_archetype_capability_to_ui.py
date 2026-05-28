@@ -207,7 +207,7 @@ def render_coverage_ts(manifest: dict[str, object]) -> str:
     archetype_blocks = "\n".join(_render_archetype(entry) for entry in archetypes)
 
     mapping_lines = [
-        f"  {str(entry['archetype_id'])}: {_const_name(str(entry['archetype_id']))}," for entry in archetypes
+        f"  {entry['archetype_id']!s}: {_const_name(str(entry['archetype_id']))}," for entry in archetypes
     ]
     mapping_body = "\n".join(mapping_lines)
     footer = _FOOTER.replace("__MAPPING_BODY__", mapping_body)

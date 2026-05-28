@@ -690,14 +690,14 @@ The `try/finally` around the per-shard body guarantees the cleanup hook fires on
 
 Audit checklist for `_cleanup_after_<shard>()` implementations:
 
-| Cache / state                                              | How it leaks                                                  | Cleanup primitive                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
-| Per-service candle / aggregation caches                    | Module-level singleton; orchestrator's `del` doesn't reach    | `service.clear_cache_for_date(date)`           |
-| Per-asset_group `DataSink` registry on the orchestrator    | Held in `self._data_sinks: dict[str, DataSink]`               | `self._data_sinks.clear()` or per-key `del`    |
+| Cache / state                                               | How it leaks                                                  | Cleanup primitive                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| Per-service candle / aggregation caches                     | Module-level singleton; orchestrator's `del` doesn't reach    | `service.clear_cache_for_date(date)`           |
+| Per-asset_group `DataSink` registry on the orchestrator     | Held in `self._data_sinks: dict[str, DataSink]`               | `self._data_sinks.clear()` or per-key `del`    |
 | Lazy-loaded reference DataFrame (e.g. instruments universe) | Held in `self._instruments_df` (or equivalent)                | `self._instruments_df = None`                  |
-| Manifest read buffer (decompressed parquet → pandas)       | Local in caller; should drop on scope exit but often pinned   | Force drop, then `gc.collect()`                |
-| Polars / PyArrow arenas                                    | Not reclaimed by `gc.collect()` or `del`                      | See `data-engine-selection.md` (separate plan) |
-| ResourceProfiler sample buffer                             | If the profiler retains samples per shard, it grows unbounded | Bounded ring buffer; profiler-side concern     |
+| Manifest read buffer (decompressed parquet → pandas)        | Local in caller; should drop on scope exit but often pinned   | Force drop, then `gc.collect()`                |
+| Polars / PyArrow arenas                                     | Not reclaimed by `gc.collect()` or `del`                      | See `data-engine-selection.md` (separate plan) |
+| ResourceProfiler sample buffer                              | If the profiler retains samples per shard, it grows unbounded | Bounded ring buffer; profiler-side concern     |
 
 The first four are in the service's control. The last two (Polars arenas, profiler buffers) need engine-/framework-level
 discipline; see the architecture audit
@@ -709,11 +709,11 @@ The cleanup hook fires at whichever shard boundary the service's `process_catego
 that's per (date, asset_group). For services that loop per-(date, asset_group, data_type) inside the orchestrator, the
 cleanup hook should fire at the innermost loop boundary where per-shard state is built up.
 
-**Single-shard drilldown runs MUST still call cleanup.** A `--start-date 2026-04-15 --end-date 2026-04-15
---asset-group cefi --data-types trades --venues BINANCE-FUTURES --instrument-ids BTCUSDT` invocation processes exactly
-one shard, then exits the Python process. The cleanup hook should still fire — both to validate the cleanup path is
-exercised by all real callers (no silent dead branch) and so that any post-exit teardown the hook does (writing a final
-manifest snapshot, flushing a metrics buffer) happens.
+**Single-shard drilldown runs MUST still call cleanup.** A
+`--start-date 2026-04-15 --end-date 2026-04-15 --asset-group cefi --data-types trades --venues BINANCE-FUTURES --instrument-ids BTCUSDT`
+invocation processes exactly one shard, then exits the Python process. The cleanup hook should still fire — both to
+validate the cleanup path is exercised by all real callers (no silent dead branch) and so that any post-exit teardown
+the hook does (writing a final manifest snapshot, flushing a metrics buffer) happens.
 
 ### Reference implementation
 
@@ -728,9 +728,8 @@ manifest snapshot, flushing a metrics buffer) happens.
 - **2026-05-28** — MDPS 7-day backfill on `e2-standard-8` (32 GB). The `_cleanup_after_day` hook existed but was only
   wired into the early-exit branch. Day 1 completed cleanly (28/28 outputs). Day 2 OOM'd at the date-boundary because
   the day-1 candle/sampling caches were still pinned. Empirical RSS at end of day 1: 25.1 GB (after a `del orchestrator
-  + gc.collect()` at the process_handler boundary, which only reclaimed 87 MB). Plan:
-  [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
-  § "Finding A".
+  - gc.collect()` at the process_handler boundary, which only reclaimed 87 MB). Plan: [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+    § "Finding A".
 
 ### Composes with
 

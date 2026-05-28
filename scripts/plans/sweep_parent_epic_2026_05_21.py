@@ -665,9 +665,7 @@ def list_candidates(include_index: bool) -> list[Path]:
             continue
         text = read_head(path, 50)  # only need frontmatter for orphan check
         current = extract_parent_epic(text)
-        if current == "":
-            candidates.append(path)
-        elif current in SUPERSEDED_SLUGS:
+        if current == "" or current in SUPERSEDED_SLUGS:
             candidates.append(path)
     return candidates
 

@@ -119,7 +119,9 @@ Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
 
 ### [`manifest_schema_final_gate_2026_05_09`](../archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 0-9 + schema code complete (v8 writer-path shipped). Phases 10-13 require operator GCS VM execution (backfill runs, paper-trade smoke, live cutover). · **estimate**: 2.1 cal AI-days (class: design)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 0-9 + schema code complete (v8 writer-path shipped). Phases 10-13 require
+operator GCS VM execution (backfill runs, paper-trade smoke, live cutover). · **estimate**: 2.1 cal AI-days (class:
+design)
 
 ## P1 — important; post-current-gate
 
@@ -131,7 +133,8 @@ Group H. · **estimate**: 2.4 cal AI-days (class: refactor)
 
 ### [`bucket_name_ssot_canonicalisation_2026_05_10`](../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete. 13 service-code legacy delegate rows remain DEFERRED (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION). · **estimate**: 10.0 cal AI-days (class: refactor)
+**status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete. 13 service-code legacy delegate rows
+remain DEFERRED (BLOCKED-PHASE-2.6 or BLOCKED-UTL-MIGRATION). · **estimate**: 10.0 cal AI-days (class: refactor)
 
 ### [`gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)
 
@@ -149,9 +152,14 @@ _(no plans currently assigned at this priority)_
 **status**: ✅ ARCHIVED 2026-05-23 — Phases 0a/0b/0c/0e/L1/L2-non-service complete.
 
 **Deferred (migrated):**
-- **L2 dependency_checker.py probe templates** (ml-inference × 2, execution-service × 5, features-service × 16): BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration.
-- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution × 2, execution-service × 1, UTL × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window.
-- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`, 3 shapes + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data migration.
+
+- **L2 dependency_checker.py probe templates** (ml-inference × 2, execution-service × 5, features-service × 16):
+  BLOCKED-UTL-MIGRATION. Must land in same window as flat→env-tiered data migration.
+- **L3 legacy UTL `get_bucket_name` consumers** (instruments-service × 4, pnl-attribution × 2, execution-service × 1,
+  UTL × 1, deployment-service × 3): BLOCKED-PHASE-2.6. Must flip during write-pause window.
+- **L5 deployment-api internal templates** (`DataStatusService._BUCKET_TEMPLATES`, 3 shapes +
+  `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 f-strings): BLOCKED-PHASE-2.6. Must flip in lockstep with data
+  migration.
 
 ## Deferred work — migrated from archived plans
 
@@ -169,23 +177,23 @@ _(no plans currently assigned at this priority)_
       — operator must approve the migration date + window before execution. Flat-bucket data still in
       `unified-trading-defi-*` style buckets; env-tiered target is `uts-prod-defi-*`. Full migration playbook in
       `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d.
-- [ ] [OPERATOR+AGENT] P2. **Prediction bucket naming migration** (DEFERRED-OPERATOR-DECISION) — prediction service
-      uses legacy bucket naming pattern; migrate to `resolve_bucket_name()` pattern per STEP 5.69. Requires
-      operator decision on migration window + dry-run first.
-- [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero
-      inline `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
+- [ ] [OPERATOR+AGENT] P2. **Prediction bucket naming migration** (DEFERRED-OPERATOR-DECISION) — prediction service uses
+      legacy bucket naming pattern; migrate to `resolve_bucket_name()` pattern per STEP 5.69. Requires operator decision
+      on migration window + dry-run first.
+- [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
+      `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
       `resolve_bucket_name()`. Update QG ratchet baseline.
-- [ ] [AGENT] P2. **Legacy bucket rename delegation** — delegate any remaining legacy bucket renames to the
-      appropriate service-repo owners. Confirm each service's QG STEP 5.69 check is green.
+- [ ] [AGENT] P2. **Legacy bucket rename delegation** — delegate any remaining legacy bucket renames to the appropriate
+      service-repo owners. Confirm each service's QG STEP 5.69 check is green.
 
 > **MIGRATED FROM:** `manifest_schema_final_gate_2026_05_09.md` (archived 2026-05-23) — v8 schema design complete;
 > Phases 8-13 are execution gates tracked in mtds_mdps_master + master plan.
 
-- [ ] [OPERATOR] P1. **Phase 0.A+0.B pre-audit** — run `gcs_migration Phase 0` pre-audit on same-region test bucket
-      + `measure-honest-coverage.py` on production manifests for each asset_group before full migration execution.
-      Human sign-off required before Phase 9 VM launches.
-- [ ] [AGENT] P2. **Phase 4.DEFAULT-REMOVAL-v8kwargs** — remove `= None` defaults from v8 schema kwargs across
-      UTL `ManifestWriter` + UAC schema definitions; enforce required fields. Low urgency once v8 migration runs are
+- [ ] [OPERATOR] P1. **Phase 0.A+0.B pre-audit** — run `gcs_migration Phase 0` pre-audit on same-region test bucket +
+      `measure-honest-coverage.py` on production manifests for each asset_group before full migration execution. Human
+      sign-off required before Phase 9 VM launches.
+- [ ] [AGENT] P2. **Phase 4.DEFAULT-REMOVAL-v8kwargs** — remove `= None` defaults from v8 schema kwargs across UTL
+      `ManifestWriter` + UAC schema definitions; enforce required fields. Low urgency once v8 migration runs are
       complete.
-- [ ] [OPERATOR] P1. **Phase 8.A+8.B sign-off** — operator reviews class-C triage rows + appends sign-off section
-      to `manifest_divergence_triage_2026_05_09.md` confirming production manifest state post-migration.
+- [ ] [OPERATOR] P1. **Phase 8.A+8.B sign-off** — operator reviews class-C triage rows + appends sign-off section to
+      `manifest_divergence_triage_2026_05_09.md` confirming production manifest state post-migration.

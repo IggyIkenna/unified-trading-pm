@@ -85,9 +85,7 @@ def scrub_publishing_order(data: dict[str, object]) -> None:
             continue
         filtered: list[str] = []
         for p in pkgs:
-            if p == "All services":
-                filtered.append(p)
-            elif isinstance(p, str) and p not in REMOVED:
+            if p == "All services" or (isinstance(p, str) and p not in REMOVED):
                 filtered.append(p)
         if not filtered:
             continue

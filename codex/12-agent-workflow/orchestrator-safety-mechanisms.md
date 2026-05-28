@@ -51,20 +51,20 @@ When the active account for a slot hits the rate-limit window OR is otherwise ma
    `account_is_rate_limited()` is true.
 2. **Mid-session token swap is not supported.** claude CLI doesn't re-read env mid-process, and there is no
    `.credentials.json` to swap (that path was removed in Phase 4b-cleanup 2026-05-28).
-3. `rotate_all_slots_off_account(account_id, trigger=...)` walks every slot currently on the exhausted account, picks
-   a healthy sibling (`_pick_next_account`: lowest-weekly-pct first across accounts.json), and **respawns** each slot
-   on the new account: kill tmux session → re-spawn with `env_file=~/.claude-accounts/<next-id>.env` sourced fresh
-   (per [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)).
-4. Workers receive `dispatch_reason: "account-rotated:<new-id> — exiting, new session spawning"` on their next
-   `/done` response and exit cleanly; the orchestrator backend spawns the replacement with the new env file.
-5. If no sibling account is healthy → `dispatch_reason: "Account <X> is rate-limited — no fallback accounts
-   available. Slot held idle until window resets."` + Telegram `notify_all_accounts_exhausted`. No further action
-   until quota resets or operator intervenes.
+3. `rotate_all_slots_off_account(account_id, trigger=...)` walks every slot currently on the exhausted account, picks a
+   healthy sibling (`_pick_next_account`: lowest-weekly-pct first across accounts.json), and **respawns** each slot on
+   the new account: kill tmux session → re-spawn with `env_file=~/.claude-accounts/<next-id>.env` sourced fresh (per
+   [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)).
+4. Workers receive `dispatch_reason: "account-rotated:<new-id> — exiting, new session spawning"` on their next `/done`
+   response and exit cleanly; the orchestrator backend spawns the replacement with the new env file.
+5. If no sibling account is healthy →
+   `dispatch_reason: "Account <X> is rate-limited — no fallback accounts available. Slot held idle until window resets."` +
+   Telegram `notify_all_accounts_exhausted`. No further action until quota resets or operator intervenes.
 
 **Why not mid-session swap?** Setup-tokens are sourced once at `bash -c 'source <env_file>; exec claude'` time; the
 authenticated session caches the token in-process. There is no `/clear`-then-reauth path that re-reads env on a live
-session — the spawn must be replaced. This is intentional: a clean respawn preserves no half-state, and the new
-worker reads the freshest `accounts.json` + creds-bucket state.
+session — the spawn must be replaced. This is intentional: a clean respawn preserves no half-state, and the new worker
+reads the freshest `accounts.json` + creds-bucket state.
 
 ### Failover selection algorithm
 
@@ -87,19 +87,19 @@ deterministic and simple. Refining to `min(healthy, key=lambda a: a.weekly_pct)`
 Current inventory (verified 2026-05-28; both `server/notifications/slack.py` and `server/notifications/telegram.py`
 expose this set):
 
-| Event                           | When                                                              | Severity  |
-| ------------------------------- | ----------------------------------------------------------------- | --------- |
-| `notify_slot_blocked`           | Slot calls `/blocked` (operator answer needed)                    | warn      |
-| `notify_slot_stale`             | HealthMonitor sees working slot silent >25 min                    | warn      |
-| `notify_slot_failed`            | HealthMonitor sees idle slot dead                                 | crit      |
-| `notify_spawn_failure`          | `tmux_spawn.spawn` raised inside the spawn endpoint               | crit      |
-| `notify_agent_stuck_respawned`  | Auto-respawn fired per § A                                        | warn      |
-| `notify_agent_stuck_escalation` | Respawn failed; operator needs to intervene                       | crit      |
-| `notify_account_rotated`        | Active account swapped per § B (slot respawned with new env file) | info      |
-| `notify_all_accounts_exhausted` | Failover ran out of healthy accounts                              | crit      |
-| `notify_setup_token_expiring`   | Token within 30-day (warn) or 7-day (crit) window of expiry       | warn/crit |
-| `notify_git_staleness_red`      | Slot git_status red >15 min AND no auto-pull within 5 min         | warn      |
-| `notify_orchestrator_restart_loop` | systemd OnFailure fires >N restarts in window (Telegram only)  | crit      |
+| Event                              | When                                                              | Severity  |
+| ---------------------------------- | ----------------------------------------------------------------- | --------- |
+| `notify_slot_blocked`              | Slot calls `/blocked` (operator answer needed)                    | warn      |
+| `notify_slot_stale`                | HealthMonitor sees working slot silent >25 min                    | warn      |
+| `notify_slot_failed`               | HealthMonitor sees idle slot dead                                 | crit      |
+| `notify_spawn_failure`             | `tmux_spawn.spawn` raised inside the spawn endpoint               | crit      |
+| `notify_agent_stuck_respawned`     | Auto-respawn fired per § A                                        | warn      |
+| `notify_agent_stuck_escalation`    | Respawn failed; operator needs to intervene                       | crit      |
+| `notify_account_rotated`           | Active account swapped per § B (slot respawned with new env file) | info      |
+| `notify_all_accounts_exhausted`    | Failover ran out of healthy accounts                              | crit      |
+| `notify_setup_token_expiring`      | Token within 30-day (warn) or 7-day (crit) window of expiry       | warn/crit |
+| `notify_git_staleness_red`         | Slot git_status red >15 min AND no auto-pull within 5 min         | warn      |
+| `notify_orchestrator_restart_loop` | systemd OnFailure fires >N restarts in window (Telegram only)     | crit      |
 
 All channels: same group chat (`-5288420200`) for now. Per-VM channels deferred.
 
@@ -113,10 +113,9 @@ notifications. If you see code referencing any of these, treat it as stale docum
 
 **Not yet implemented** (referenced in earlier drafts of this doc):
 
-- `notify_setup_token_required` — when a 1-year token dies pre-expiry (e.g. operator revokes). Currently treated as
-  the same path as `notify_slot_failed` + manual investigation
-- `notify_vm_unreachable` — central API surfaces 5xx for >5 min. Currently surfaces via Fleet tab card state, not
-  alert
+- `notify_setup_token_required` — when a 1-year token dies pre-expiry (e.g. operator revokes). Currently treated as the
+  same path as `notify_slot_failed` + manual investigation
+- `notify_vm_unreachable` — central API surfaces 5xx for >5 min. Currently surfaces via Fleet tab card state, not alert
 
 ## D) Git staleness ping + alert
 

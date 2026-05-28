@@ -18,9 +18,8 @@ related:
 
 # RB-RISK-002 — Liquidation Event
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -36,7 +35,8 @@ Category: **Risk** · Runbook ID: **RB-RISK-002**.
 
 ## Diagnose
 
-- Check the 7 SEV0-escalation predicates (material / more-risk-remains / cause-unknown / strategy-still-trading / margin-uncertain / cross-account-affected / not-predicted).
+- Check the 7 SEV0-escalation predicates (material / more-risk-remains / cause-unknown / strategy-still-trading /
+  margin-uncertain / cross-account-affected / not-predicted).
 - If any escalation predicate True → SEV0.
 - Check whether close/reduce logic failed (was margin too low when reduce fired?).
 - Check whether risk limits were in force + correctly evaluated.

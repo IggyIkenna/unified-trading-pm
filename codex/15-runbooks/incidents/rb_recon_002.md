@@ -18,9 +18,8 @@ related:
 
 # RB-RECON-002 — Open Order Uncertainty
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -42,7 +41,7 @@ Category: **Reconciliation** · Runbook ID: **RB-RECON-002**.
 
 ## Resolve
 
-- Cancel each ambiguous order via Safety Ops → CANCEL_ALL_<venue>.
+- Cancel each ambiguous order via Safety Ops → CANCEL*ALL*<venue>.
 - If cancel returns partial-success: KILL_SWITCH_CANNOT_CONFIRM_CANCEL fires → SEV0 escalation.
 - Once cancellation confirmed: re-reconcile internal ledger.
 

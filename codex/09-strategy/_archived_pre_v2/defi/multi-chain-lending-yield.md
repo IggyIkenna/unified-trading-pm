@@ -39,17 +39,17 @@ Step 9 - BRIDGE:    Bridge back to Ethereum (if on another chain)
 
 ## Instruments
 
-| Instrument Key                            | Venue       | Type   | Role                                |
-| ----------------------------------------- | ----------- | ------ | ----------------------------------- |
-| `WALLET:SPOT_ASSET:USDC`                  | Wallet      | Spot   | Initial capital                     |
-| `WALLET:SPOT_ASSET:USDT`                  | Wallet      | Spot   | Alternative initial capital         |
-| `WALLET:SPOT_ASSET:DAI`                   | Wallet      | Spot   | Alternative initial capital         |
-| `WALLET:SPOT_ASSET:ETH`                   | Wallet      | Spot   | Alternative initial capital         |
+| Instrument Key                             | Venue       | Type   | Role                                |
+| ------------------------------------------ | ----------- | ------ | ----------------------------------- |
+| `WALLET:SPOT_ASSET:USDC`                   | Wallet      | Spot   | Initial capital                     |
+| `WALLET:SPOT_ASSET:USDT`                   | Wallet      | Spot   | Alternative initial capital         |
+| `WALLET:SPOT_ASSET:DAI`                    | Wallet      | Spot   | Alternative initial capital         |
+| `WALLET:SPOT_ASSET:ETH`                    | Wallet      | Spot   | Alternative initial capital         |
 | `AAVE_V3_{CHAIN}:A_TOKEN:A{ASSET}@{CHAIN}` | Aave V3     | aToken | Yield-bearing position (Aave)       |
 | `COMPOUND_V3_{CHAIN}:C_TOKEN:C{ASSET}`     | Compound V3 | cToken | Yield-bearing position (Compound)   |
-| `MORPHO_{CHAIN}:M_TOKEN:M{ASSET}`         | Morpho      | mToken | Yield-bearing position (Morpho)     |
-| `KAMINO_SOLANA:K_TOKEN:K{ASSET}`          | Kamino      | kToken | Yield-bearing position (Kamino/SOL) |
-| `SOCKET:BRIDGE:{ASSET}`                   | Socket      | Bridge | Cross-chain capital transfer        |
+| `MORPHO_{CHAIN}:M_TOKEN:M{ASSET}`          | Morpho      | mToken | Yield-bearing position (Morpho)     |
+| `KAMINO_SOLANA:K_TOKEN:K{ASSET}`           | Kamino      | kToken | Yield-bearing position (Kamino/SOL) |
+| `SOCKET:BRIDGE:{ASSET}`                    | Socket      | Bridge | Cross-chain capital transfer        |
 
 **Supported chains (Aave V3):** Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Base, Gnosis, Metis, Scroll, zkSync
 
@@ -191,13 +191,13 @@ assessment -> rebalance/exit decisions)
 
 ### Exposure Subscriptions
 
-| Instrument Pattern       | Exposure Type                      | Used For                   |
-| ------------------------ | ---------------------------------- | -------------------------- |
+| Instrument Pattern        | Exposure Type                      | Used For                   |
+| ------------------------- | ---------------------------------- | -------------------------- |
 | `AAVE_V3_*:A_TOKEN:*`     | aToken balance (growing via index) | Yield tracking per chain   |
 | `COMPOUND_V3_*:C_TOKEN:*` | cToken balance (via exchange rate) | Yield tracking per chain   |
-| `MORPHO_*:M_TOKEN:*`     | mToken balance                     | Yield tracking per chain   |
-| `WALLET:SPOT_ASSET:*`    | Wallet balance (pre/post deploy)   | Capital tracking           |
-| `SOCKET:BRIDGE:*`        | In-transit capital                 | Bridge exposure monitoring |
+| `MORPHO_*:M_TOKEN:*`      | mToken balance                     | Yield tracking per chain   |
+| `WALLET:SPOT_ASSET:*`     | Wallet balance (pre/post deploy)   | Capital tracking           |
+| `SOCKET:BRIDGE:*`         | In-transit capital                 | Bridge exposure monitoring |
 
 Config: `defi_mode.enabled=True`, `defi_mode.track_aave_positions=True`, `defi_mode.track_compound_positions=True` SSOT:
 [`ExposureMonitorConfig`](../../../strategy-service/strategy_service/config.py)

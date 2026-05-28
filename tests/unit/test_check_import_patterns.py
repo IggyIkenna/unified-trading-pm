@@ -121,7 +121,7 @@ class TestImportChecker:
         mod = _load_module()
         f = tmp_path / "multi.py"
         f.write_text(
-            "from unified_trading_library.core import X\n"  # noqa: E501
+            "from unified_trading_library.core import X\n"
             "from unified_trading_library.events.models import E\n"
         )
         checker = mod.ImportChecker()

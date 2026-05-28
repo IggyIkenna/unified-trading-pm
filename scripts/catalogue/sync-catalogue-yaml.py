@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -93,8 +93,8 @@ def sync_catalogue(project_id: str, *, dry_run: bool = False) -> None:
             existing = _load_existing_yaml(svc)
             services[svc] = {
                 "service_name": svc,
-                "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                "auto_refreshed": datetime.now(timezone.utc).isoformat(),
+                "last_updated": datetime.now(UTC).strftime("%Y-%m-%d"),
+                "auto_refreshed": datetime.now(UTC).isoformat(),
                 "status": existing.get("status", "UNKNOWN"),
                 "known_exceptions": existing.get("known_exceptions", []),
                 "catalogue_dimensions": existing.get("catalogue_dimensions", ["category", "venue", "date"]),
@@ -115,7 +115,7 @@ def sync_catalogue(project_id: str, *, dry_run: bool = False) -> None:
             "max_date": str(record["max_date"]),
             "total_rows": int(record["total_rows"]),
             "latest_date": str(record["latest_date"]),
-            "synced_at": datetime.now(timezone.utc).isoformat(),
+            "synced_at": datetime.now(UTC).isoformat(),
         }
         shard[cat] = cat_data
 

@@ -457,15 +457,16 @@ single-walk-discipline gate) **COMPLETE 2026-05-27**: **B5.3** GCS re-key glued�
 buckets) → **B5.6 [UI]** deployment-api pool-breakdown resolves canonical (no code change) → **B5.7 (VERIFY)** re-drill
 done. **B5.8 (P3)** stale-comment cleanup. **B5.9 — ZKSYNC re-key (operator approved 2026-05-27) DONE**:
 unified-api-contracts@ac5d2340 added `ZKSYNC` to `KNOWN_CHAINS` (chain-token recognition set, no expected-coverage
-expansion, consumer pre-audit clean) + re-keyed **446 `PANCAKESWAPV3-ZKSYNC` → `PANCAKESWAP_V3-ZKSYNC`** (instruments-service@445756d3,
-0 errors); `LIGHTER-ZKSYNC` correct no-op (654 untouched); MTDS 0 glued ZKSYNC. **⚠️ Superseded the 2026-05-06
-`purge_pancakeswapv3_zksync.py` "do not add ZKSYNC" decision** (purge never ran on the IS partitions). Also Bug 2 residual
-(`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Open residuals (NICE-TO-HAVE, P3)**: **B5.9b**
-stale purge-script comment + MTDS combined-vs-protocol-only venue duality + `EXTENDED-STARKNET`/`PACIFICA-SOLANA` universe
-confirm; **B5.10** pool-breakdown can't read migrated `pipeline_mode`/flat parquets. **Bug 4 (POST-CUTOVER)**: add a
-`data_source_type` taxonomy enum so LST venue `ANKR` (ankrETH) vs RPC-provider `ANKR` (and `ALCHEMY`/`CHAINLINK`/`GAS_FEES`
-grid contaminants, DQ-04) are distinguishable — fold the `oracle_prices_handler` `COINBASE-SPOT`-into-defi-grid filter fix
-in here. Full phased todos in the (now archived) issue doc.
+expansion, consumer pre-audit clean) + re-keyed **446 `PANCAKESWAPV3-ZKSYNC` → `PANCAKESWAP_V3-ZKSYNC`**
+(instruments-service@445756d3, 0 errors); `LIGHTER-ZKSYNC` correct no-op (654 untouched); MTDS 0 glued ZKSYNC. **⚠️
+Superseded the 2026-05-06 `purge_pancakeswapv3_zksync.py` "do not add ZKSYNC" decision** (purge never ran on the IS
+partitions). Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Open residuals
+(NICE-TO-HAVE, P3)**: **B5.9b** stale purge-script comment + MTDS combined-vs-protocol-only venue duality +
+`EXTENDED-STARKNET`/`PACIFICA-SOLANA` universe confirm; **B5.10** pool-breakdown can't read migrated
+`pipeline_mode`/flat parquets. **Bug 4 (POST-CUTOVER)**: add a `data_source_type` taxonomy enum so LST venue `ANKR`
+(ankrETH) vs RPC-provider `ANKR` (and `ALCHEMY`/`CHAINLINK`/`GAS_FEES` grid contaminants, DQ-04) are distinguishable —
+fold the `oracle_prices_handler` `COINBASE-SPOT`-into-defi-grid filter fix in here. Full phased todos in the (now
+archived) issue doc.
 
 ## P1 — important; post-current-gate
 

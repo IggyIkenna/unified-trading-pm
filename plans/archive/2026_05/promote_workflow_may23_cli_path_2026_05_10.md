@@ -956,10 +956,17 @@ differs.
 
 ## Deferred work — migrated to: dart_and_promote_master
 
-_Archived 2026-05-23 slot 2. Phase 1 (launchers) + Phase 2 (V2BatchHarness resolver + ServiceBootstrap) DONE. Phases 3-10 all DEFERRED to companion post-cutover plan._
+_Archived 2026-05-23 slot 2. Phase 1 (launchers) + Phase 2 (V2BatchHarness resolver + ServiceBootstrap) DONE. Phases
+3-10 all DEFERRED to companion post-cutover plan._
 
-- **Phases 3-10 — All DEFERRED to `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`**: Copper sub-account setup, Tenderly fork setup, live rehearsal, UI state-machine, per-archetype Pydantic configs (48/53 missing), drift detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, operational modes consolidation.
-- **Phase 2 P0 smoke VM verification**: `strategy-paper-carry-staked-basis-20260512-200952` deleted before end-to-end verification. Next session: re-run smoke VM to verify resolver end-to-end.
-- **`MinimalCandidateManifest` enrichment**: Full enrichment (pinned shas / model refs / features manifest version) deferred to post-cutover plan Phase 2 (`CandidateManifest` UAC type).
-- **`LifecycleEventType` UAC enum membership**: UTL bare-string events (`STRATEGY_PROMOTED_TO_CANDIDATE` etc.) functional but not in UAC enum. Deferred to post-cutover plan Phase 3.
+- **Phases 3-10 — All DEFERRED to `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`**: Copper sub-account setup,
+  Tenderly fork setup, live rehearsal, UI state-machine, per-archetype Pydantic configs (48/53 missing), drift
+  detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, operational
+  modes consolidation.
+- **Phase 2 P0 smoke VM verification**: `strategy-paper-carry-staked-basis-20260512-200952` deleted before end-to-end
+  verification. Next session: re-run smoke VM to verify resolver end-to-end.
+- **`MinimalCandidateManifest` enrichment**: Full enrichment (pinned shas / model refs / features manifest version)
+  deferred to post-cutover plan Phase 2 (`CandidateManifest` UAC type).
+- **`LifecycleEventType` UAC enum membership**: UTL bare-string events (`STRATEGY_PROMOTED_TO_CANDIDATE` etc.)
+  functional but not in UAC enum. Deferred to post-cutover plan Phase 3.
 - **Multi-tenant client-id flow (H4)**: Deferred to Tier 3 post-launch.

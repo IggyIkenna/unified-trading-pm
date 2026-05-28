@@ -148,7 +148,7 @@ def parse_pyproject(repo_path: Path) -> tuple[dict[str, str], dict[str, list[str
                     if isinstance(v, dict) and isinstance(v.get("path"), str):
                         uv_sources[normalize_pkg_name(k)] = v["path"]
 
-    internal_deps: dict[str, str] = {k: "path" for k in uv_sources}
+    internal_deps: dict[str, str] = dict.fromkeys(uv_sources, "path")
     external_deps: dict[str, list[str]] = {}
 
     for dep in deps_raw:
