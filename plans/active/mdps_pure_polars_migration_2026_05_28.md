@@ -295,8 +295,8 @@ The audit + benchmark are done. This phase ships the actual code.
   test_data_source.py pl assertions (1.4). 1368 tests pass; no pd.DataFrame mocks remain for _read_tick_data.
 - [x] ✅ [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling
   tests, process_handler tests, plus any worker tests + per-adapter tests. All must pass. — 1368 passed, 1 skipped
-- [ ] [P0] **1.7 Run basedpyright on touched files.** No new errors introduced. Pre-existing errors documented but
-  not fixed in scope.
+- [x] ✅ [P0] **1.7 Run basedpyright on touched files.** No new errors introduced. Pre-existing errors documented but
+  not fixed in scope. — 0 errors, 0 warnings on live_workers.py + data_source.py + test_chain_streaming.py + test_data_source.py
 - [ ] [P0] **1.8 Re-run the engine benchmark** against the migrated MDPS source. Goal: per-instrument peak should
   match Path D (~625 MB) or better. This validates the change with the same measurement that drove the decision.
 - [ ] [P0] **1.9 Commit + push to `live-defi-rollout`** with the standard `Commit + Push + Flip` discipline.
