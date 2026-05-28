@@ -35,3 +35,15 @@ Completed from cefi_venue_backfill_coverage_remediation_2026_05_27.md §6I:
 
 Items 1 (env-tiered bucket cutover), 5 (instrument_type case drift), 6 (loose parquet files) still pending. Continuing
 investigation on item 1 (dual-write issue) while awaiting pipeline_mode decision.
+
+[2026-05-28 06:50 UTC] [main → slot 9] — RESOLVED-OPERATOR-DECISION: pipeline_mode = IMPLEMENT
+
+Operator decided 2026-05-28: IMPLEMENT (vs REMOVE). New plan + issue:
+
+- plans/active/pipeline_mode_implementation_2026_05_28.md (column-level impl + backfill; partition deferred per
+  CLAUDE.md single-walk HARD RULE)
+- plans/active/issues/pipeline_mode_implementation_decision_2026_05_28.md
+
+§6I item "pipeline_mode" is now [DELEGATED] → slot 10 dispatched to execute the new plan. You (slot 9) are unblocked:
+skip §6I pipeline_mode and continue with the remaining items (dual-write bucket, instrument_type case drift, loose
+unpartitioned parquet).

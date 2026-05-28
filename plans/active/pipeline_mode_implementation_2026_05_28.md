@@ -1,0 +1,141 @@
+---
+name: pipeline_mode_implementation
+title:
+  "pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration
+  window)"
+parent_epic: batch_live_symmetry_master
+assigned_vm: vm-cross-cutting
+priority: P1
+status: active
+created: 2026-05-28
+last_updated: 2026-05-28
+estimate_class: refactor
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 2.4
+estimate_calibration_note: |
+  Refactor (0.4×): bulk is propagating an existing arg through known callsites + a one-shot
+  derivation pass over the manifest. Net-new surface is small (one UTL helper + one StrEnum +
+  one backfill script). Partition migration is explicitly deferred (Phase 5).
+locked_by: live-defi-rollout
+locked_since: 2026-05-28
+related:
+  - issues/pipeline_mode_implementation_decision_2026_05_28.md
+  - cefi_venue_backfill_coverage_remediation_2026_05_27.md # §6I item 3 — this plan unblocks it
+  - archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md # original design intent
+---
+
+# pipeline_mode — implement properly
+
+**Operator decision 2026-05-28**: IMPLEMENT (vs REMOVE). Restores the original design intent — batch ↔ live
+reconciliation as `GROUP BY pipeline_mode` over the same manifest.
+
+**Constraint (CLAUDE.md HARD RULE — Single-walk discipline)**: partition-key additions are review-blocking outside a
+whole-corpus migration window. This plan ships **column-level** implementation; the on-disk `pipeline_mode=` partition
+is split into a **named successor** that piggybacks on the next migration window. Reads can still filter by
+`pipeline_mode` via column-scan (low cardinality, ~10 enum values) until the partition lands — acceptable performance
+impact, no walk needed now.
+
+---
+
+## Phase 0 — Pre-audit (P0)
+
+- [ ] [AGENT] P0. Audit every `pipeline_mode` reference workspace-wide. Tabulate: (a) every manifest writer call-site
+      (MTDS, instruments-service, features-service, strategy-service, execution-service); (b) every reader/consumer
+      (batch-live-reconciliation, data-status drilldown, instrument-catalogue); (c) function-arg threading; (d) any
+      current `GROUP BY pipeline_mode` consumers. Output: `pipeline_mode_audit_2026_05_28.md` linked from this plan as a
+      sub-doc. Workspace grep: `rg -n 'pipeline_mode' --glob '!*.venv*' --glob '!node_modules'`.
+- [ ] [AGENT] P0. Read the archived `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md` for the
+      canonical enum set + reconciliation pattern. Confirm closed-set membership against asset_group × venue × source
+      matrix. Proposed members: `batch_tardis`, `batch_databento`, `batch_ccxt`, `batch_yahoo`, `batch_polygon`
+      (predictions L2 chain, not TradFi vendor — see CLAUDE.md "Removed providers" note), `batch_odds_api`,
+      `batch_polymarket`, `batch_kalshi`, `batch_onchain_rpc`, `live_websocket`, `live_polling`. Adjust if audit
+      surfaces gaps.
+- [ ] [AGENT] P0. Define the **(asset_group, venue, service_name, written_at) → pipeline_mode** derivation table used
+      for backfilling existing ~38M+ rows. Source the mapping from `unified_api_contracts/registry/venue_mapping.py` +
+      MTDS adapter registry. Include a "best guess" path for legacy rows where service_name is sparse — document the
+      fallback rule explicitly.
+
+## Phase 1 — UAC schema (P0)
+
+- [ ] [AGENT] P0. Promote `pipeline_mode` to a typed `PipelineMode` `StrEnum` in
+      `unified_api_contracts.canonical.crosscutting` (sibling location to `EmptyConfirmedReason`). Closed set per
+      Phase 0. Add the enum + its members to the public facade (`from unified_api_contracts import PipelineMode`).
+- [ ] [AGENT] P0. Make the column **NOT NULL going forward** in the manifest schema (existing rows allowed NULL until
+      Phase 3 backfill completes; flip post-backfill).
+- [ ] [AGENT] P0. UAC contract test: every captured row carries a valid (non-null, in-enum) `pipeline_mode`. Test runs
+      in `unified-api-contracts/tests/`.
+
+## Phase 2 — Writer wiring (P0)
+
+- [ ] [AGENT] P0. Add UTL helper
+      `unified_trading_library.events.resolve_pipeline_mode(service: str, mode: str, venue: str | None) → PipelineMode`
+      as the SSOT for pipeline_mode resolution. Helper covers: MTDS batch (Tardis / Databento / onchain RPC), MTDS live
+      (websocket / polling), instruments-service (per-venue), features-service (derives from upstream input manifest's
+      pipeline_mode — pass-through), strategy/execution (per service tier).
+- [ ] [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep — every
+      site identified in Phase 0 (a). NO inline string literals.
+- [ ] [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer omits
+      `pipeline_mode=`; no inline string literals for pipeline_mode outside `resolve_pipeline_mode` + UAC enum. Land as
+      a new STEP 5.7x in `unified-trading-pm/scripts/quality-gates-base/*.sh`.
+
+## Phase 3 — Existing-row backfill (P0)
+
+- [ ] [AGENT] P0. Write one-shot script `unified-trading-pm/scripts/manifest/backfill_pipeline_mode.py` that mutates
+      existing manifest rows: derive `pipeline_mode` from Phase 0 (d) table on
+      `(asset_group, venue,     service_name, written_at)`. Per CLAUDE.md "GCS object ops in migration scripts", use
+      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_describe_object` — NEVER subprocess gsutil for
+      per-object ops. Idempotent (skip rows where pipeline_mode is already set, even if to a stale value — flag with
+      `--force` for operator-blessed overwrite).
+- [ ] [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
+      prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`.
+- [ ] [AGENT] P0. Verify post-backfill:
+      `SELECT count(*) FROM index WHERE pipeline_mode IS NULL     OR pipeline_mode = ''` per bucket → must equal 0 (or
+      equal a documented exempt count for pre-history rows older than written_at tracking).
+- [ ] [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
+
+## Phase 4 — Consumer migration (P1)
+
+- [ ] [AGENT] P1. Update `batch-live-reconciliation-service` to actually use `GROUP BY pipeline_mode` (currently
+      grouping on an empty column → no-op). Add reconciliation tests that fail when `pipeline_mode IS NULL` appears in
+      input data.
+- [ ] [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
+      chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
+      tick.
+- [ ] [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
+      dimension in the catalogue parquet + the published markdown matrix.
+
+## Phase 5 — On-disk partition (DEFERRED — named successor)
+
+- [ ] [DEFERRED] P2. Add `pipeline_mode=` to the on-disk partition path:
+      `day=…/pipeline_mode=…/asset_group=…/venue=…/…`. **HARD RULE deferral**: CLAUDE.md "Single-walk discipline" —
+      partition-key addition is review-blocking outside a whole-corpus migration window. **Named successor plan**:
+      `pipeline_mode_partition_migration_<next-window-date>.md` — to be created when the next whole-corpus walk is
+      scheduled, bundling `pipeline_mode=` with any other pending partition changes (e.g. residual hive-vocab cleanups).
+      Reads filter by column-scan until then.
+
+## Phase 6 — Codex SSOT updates
+
+- [ ] [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
+      `PipelineMode` enum, the derivation table, the reconciliation pattern, and the deferred-partition note. Cross-link
+      from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`.
+- [ ] [AGENT] P2. Once Phase 3 backfill verifies clean, EDIT
+      `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I item 3 to mark as
+      `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md` and remove the "BLOCKED-OPERATOR-DECISION"
+      framing.
+
+## Out of scope (explicit)
+
+- **On-disk partition migration** → Phase 5 deferred to next migration window. Pre-emptive partition walks are
+  review-blocking.
+- **REMOVE path** → operator explicitly rejected REMOVE 2026-05-28; do NOT propose REMOVE again in any sub-plan.
+- **Hyperliquid / Aster / direct-API venues** that don't go through Tardis/Databento — these fall under `live_polling`
+  or `batch_onchain_rpc` per the Phase 0 derivation table; no special case here.
+
+## Success criteria
+
+- `SELECT count(*) WHERE pipeline_mode IS NULL` across every asset-group manifest = 0.
+- `batch-live-reconciliation-service` reconciliation output groups by pipeline_mode and distinguishes batch vs live row
+  sets for the same shard.
+- QG STEP 5.7x asserts no missing pipeline_mode at write sites — green workspace-wide.
+- Codex doc landed + cross-linked.
+- §6I item 3 in `cefi_venue_backfill_coverage_remediation_2026_05_27.md` ticked.

@@ -234,23 +234,24 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 > renewal). Fix + re-consolidate before §3's coverage map is published. Likely applies to all asset_groups, not just
 > cefi.
 
-- [ ] [BLOCKED-DEPENDENCY] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env bucket.**
-      Latest `captured` date in canonical `market-data-tick-cefi-prd-central-element-323112` = **2026-05-07**, but in
-      legacy `market-data-tick-cefi-central-element-323112` = **2026-05-24** (17 days fresher) → a live writer is still
-      resolving the legacy bucket name. **2026-05-28 (harsh-main investigation):** the framing here understates scope —
-      `resolve_bucket_name(...)` has **0 callsites workspace-wide**; every consumer (MTDS / MDPS / UTL
+- [ ] [BLOCKED-DEPENDENCY] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env
+      bucket.** Latest `captured` date in canonical `market-data-tick-cefi-prd-central-element-323112` = **2026-05-07**,
+      but in legacy `market-data-tick-cefi-central-element-323112` = **2026-05-24** (17 days fresher) → a live writer is
+      still resolving the legacy bucket name. **2026-05-28 (harsh-main investigation):** the framing here understates
+      scope — `resolve_bucket_name(...)` has **0 callsites workspace-wide**; every consumer (MTDS / MDPS / UTL
       `instrument_lifecycle_loader._BUCKETS` / multiple scripts) uses the legacy `cloud_constants.get_bucket_name`
       helper that returns `{prefix}-{category}-{project_id}` with no env at all. This isn't a single-writer fix; it's a
       workspace-wide architectural drift blocking the same migration this item points at. Escalated to
-      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md)
-      + cross-pinged ikenna-main 2026-05-28 for scope decision (workspace-wide migration vs env-aware shim vs targeted
+      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) +
+      cross-pinged ikenna-main 2026-05-28 for scope decision (workspace-wide migration vs env-aware shim vs targeted
       cefi-only patch). SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`.
-- [ ] [AGENT] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
-      buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/` (path is
-      `asset_group/venue/instrument_type/data_type` — no `pipeline_mode=`). The
-      `batch_tardis|batch_databento|…|live_websocket` discriminator was never implemented. Either implement it
-      end-to-end (writer path + manifest) OR remove it from the manifest schema and any batch↔live reconciliation that
-      does `GROUP BY pipeline_mode` (it currently groups by an always-empty column). Decide + ship one way.
+- [ ] [DELEGATED] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
+      buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/`. **Operator-decided 2026-05-28:
+      IMPLEMENT** (vs REMOVE). Tracked in
+      [`pipeline_mode_implementation_2026_05_28.md`](pipeline_mode_implementation_2026_05_28.md) +
+      [`issues/pipeline_mode_implementation_decision_2026_05_28.md`](issues/pipeline_mode_implementation_decision_2026_05_28.md).
+      Slot 10 dispatched 2026-05-28. Tick this checkbox when Phase 3 backfill completes (success criterion in the new
+      plan).
 - [x] ✅ [AGENT] P0. **Chain dimension-modeling bug → manifest massively UNDER-reports derivatives coverage.** On disk,
       option/future chains live at
       `instrument_type=options_chain|futures_chain / data_type=trades / underlying=… /     ticks.parquet` (verified
