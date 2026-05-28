@@ -18,6 +18,17 @@ source:
 
 # Solana DeFi legacy→canonical migration
 
+> **🛑 SSOT REASSERTED 2026-05-28 (operator directive)**: **Dedicated per-data-type split buckets are canonical for
+> `lending_indices`, `lst_rates`, `dex_pools` — EVERYWHERE.** No DeFi writer for these types may target the unified
+> `market-data-tick-defi*` bucket. Any handler/script writing them to the unified bucket is a **bug** and must be fixed
+> to use `get_write_bucket_name("lending-indices"|"lst-rates"|"dex-pools")` + the new `SOLANA_LENDING`/`SOLANA_VAULT`/
+> `SOLANA_AMM_POOL` instrument_types (Gate-1 SchemaContracts UAC@7e9f4ad9 + UAC@90b2bb9d). Sources of truth for this
+> SSOT: `deployment-service/configs/cloud-providers.yaml` (kind→bucket map), `unified_trading_library/core/cloud_constants.py`
+> `get_write_bucket_name`, the live per-data-type handlers (`lending_indices_handler.py` / `lst_rates_handler.py` /
+> `dex_pools_handler.py` all already do this for EVM). Solana write-path drift surfaced 2026-05-28: legacy monolithic
+> `solana_defi_handler.py` writes to `market-data-tick-defi-central-element-323112/raw_tick_data/by_date/…/instrument_type=lending|pool/…`
+> (wrong bucket + wrong instrument_type + flat-not-env-tier) — see new Gate-5 + Gate-7 below.
+
 > **Provenance**: started from `defi_code_codex_drift_2026_05_27` **D2** ("delete legacy
 > `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in `market-data-tick-defi-prd`; canonical is the dedicated split
 > buckets"). Verification on 2026-05-27 showed it is **not** a clean delete — the legacy prefixes hold **unique Solana
@@ -84,7 +95,18 @@ source:
 - [ ] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
       (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
       rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
-- [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP Secret
+- [ ] [SCRIPT] P0. **Gate 7 — clean up wrong-bucket Solana writes (NEW 2026-05-28)**: the autonomous
+      `mtds-solana-defi-backfill` VM (launched ~13:06 UTC, **STOPPED 2026-05-28** per SSOT-enforcement directive) wrote
+      Solana DeFi rows for dates ≥2025-07-22 to the **WRONG** target
+      `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/asset_group=defi/venue=*/chain=SOLANA/
+      instrument_type=lending|pool/data_type={lending_indices,dex_pools}/...` (unified flat bucket + EVM-style
+      instrument_types). After Gate 5 lands the corrected handler, either (a) MIGRATE these wrong-bucket writes into
+      the canonical split buckets with the new `SOLANA_LENDING`/`SOLANA_VAULT`/`SOLANA_AMM_POOL` instrument_types
+      (mirror the Gate-2 script's pattern) or (b) DELETE them and re-run Gate-5 collector to rewrite to the canonical
+      paths. Then delete the legacy-target writes the consolidator may have indexed in the wrong bucket's _index.
+      Sample-inspect for completeness before deletion.
+- [ ] [CODE] P1. **Gate 5 — go-forward collectors** — **SSOT MANDATE: refactor MUST write dedicated split buckets +
+      SOLANA_* instrument_types — NOT the unified bucket.** **NOT BLOCKED-CREDENTIALS (keys verified 2026-05-28).** GCP Secret
       Manager has `helius-api-key` + `solana-paper-keypair-private-key` + `solana-wallet-address`;
       `dependency_health_policies.yaml` (lines 139/151/157) registers `helius_solana_rpc` + `solana_rpc_primary` (Helius
       as backup); UAC has `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url`; KMNO/RAY/ORCA in

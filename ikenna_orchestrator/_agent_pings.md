@@ -3345,3 +3345,23 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+
+## [2026-05-28 SSOT-ENFORCEMENT] Stopping mtds-solana-defi-backfill — wrong-bucket writes
+
+Operator directive 2026-05-28: **dedicated per-data-type split buckets are canonical for lending_indices/lst_rates/dex_pools, EVERYWHERE.**
+
+The autonomous `mtds-solana-defi-backfill` VM (launched ~13:06 UTC via legacy `solana_defi_handler.py`) is writing to the
+**wrong target** `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/…/instrument_type=lending|pool/…`
+(unified-flat bucket + EVM-style instrument_types). Conflicts with SSOT (per `cloud-providers.yaml` +
+`get_write_bucket_name` + Gates 1/1.5 contracts). Also predictably failed for Kamino:
+*"row is missing required symbol column 'pool_id' (declared by SchemaContract for defi/pool/dex_pools)"* — exactly the
+`SOLANA_VAULT` mismatch.
+
+**Action 2026-05-28**: stopping the VM (NOT deleting; reversible). Plan body updated with:
+- 🛑 SSOT REASSERTED banner at top of `solana_defi_legacy_migration_2026_05_27.md`.
+- **Gate 5** SSOT mandate: refactor MUST write dedicated split buckets + SOLANA_* instrument_types — NOT the unified bucket.
+- **Gate 7 (NEW)**: clean up the wrong-bucket writes the VM made today (migrate-or-delete-and-rewrite).
+
+**Do NOT relaunch `mtds-solana-defi-backfill` or any descendant of the legacy monolithic handler until Gate 5 (handler
+refactor) ships.** Gate 2 (historical legacy → canonical split bucket migration via
+`scripts/migrate_legacy_solana_defi_to_canonical.py`) is the FIRST priority + uses the correct SSOT paths. [NOT-ACKED]
