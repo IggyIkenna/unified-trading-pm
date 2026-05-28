@@ -46,10 +46,14 @@ window — never request outside `[available_from, available_to]`.
 - [x] ✅ DONE [AGENT] P0. Verify on free dates without the paid key: a 1st-of-month in-window date (e.g. `BTC-USD-240105` @
       2024-01-01) must download 200/real-rows; an out-of-window date must be skipped (zero request issued). Add a unit
       test for the window filter (in-window kept, pre-listing skipped, post-expiry skipped).
-- [ ] [AGENT] P1. Confirm instruments-service actually populates `available_to_datetime` for ALL okx-futures dated
+- [x] ✅ [AGENT] P1. Confirm instruments-service actually populates `available_to_datetime` for ALL okx-futures dated
       contracts (and other dated venues: deribit, kraken-futures, bitfinex-derivatives). If any venue lacks it, derive
       from the symbol expiry suffix (YYMMDD) as a fallback at universe-build time. Grep: `available_to_datetime` in IS
       okx universe builder.
+      Audit result: OKX (YYMMDD dash-parser + `_populate_availability()`) ✅; Deribit (DDMMMYY + Tardis expiry) ✅;
+      BITFINEX-FUTURES (perpetuals only, None correct) ✅; KRAKEN-FUTURES GAP: underscore symbols (`FI_XBTUSD_240329`)
+      not covered by dash-parser, added `_parse_underscore_yymmdd_symbol_expiry()` fallback. 5 new tests, 2986 pass. —
+      instruments-service@ffb8192
 
 ## §2 — Honest-absence vs blocked-credentials (HARD distinction — operator-directed) (P0)
 
