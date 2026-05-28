@@ -96,3 +96,8 @@ The `strategy-paper-*` VMs (LONG_LIVED_LIVE) legitimately stay TERMINATED until 
 1. **Immediate (operator, <5 min)**: relaunch watchdog with the 2 commands above.
 2. **Review `strategy-paper-*` VMs**: 5 terminated paper-trade VMs from 2026-05-18/19 — determine if these should be deleted or are awaiting re-promotion.
 3. **P3 hardening**: add boot-time smoke-test to launcher (separate issue if desired).
+
+## Status log
+
+- 2026-05-28 11:26 UTC — harsh-main executed the relaunch: deleted `vm-zombie-watchdog-20260524-191752`, launched `vm-zombie-watchdog-20260528-112656` (asia-northeast1-c, e2-small, 10.146.0.2 / 34.85.46.246, interval=300s). VM RUNNING. T+10min verification still pending — should confirm first sweep event lands by 11:36 UTC.
+- 2026-05-28 — operator review pending on the 5 `strategy-paper-*` TERMINATED VMs (decision 2 above).
