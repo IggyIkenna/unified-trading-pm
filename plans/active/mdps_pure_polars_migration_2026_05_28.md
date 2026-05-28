@@ -287,8 +287,8 @@ The audit + benchmark are done. This phase ships the actual code.
 - [x] ✅ [P0] **1.3 `_iter_chain_symbol_dfs` returns polars** ([live_workers.py:483-570](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L483-L570)).
   Already streams via polars; drop the `.collect().to_pandas()` at the yield boundary. Document that consumers must
   convert at the adapter boundary. — market-data-processing-service@ceb7a12
-- [ ] [P0] **1.4 `data_source.py` returns polars** ([data_source.py:171](../../../market-data-processing-service/market_data_processing_service/app/core/data_source.py#L171)).
-  Drop the `.to_pandas()`. Mirror the worker change.
+- [x] ✅ [P0] **1.4 `data_source.py` returns polars** ([data_source.py:171](../../../market-data-processing-service/market_data_processing_service/app/core/data_source.py#L171)).
+  Drop the `.to_pandas()`. Mirror the worker change. — market-data-processing-service@c24b17c
 - [ ] [P0] **1.5 Update worker unit tests**. Existing tests that pass `pd.DataFrame` fixtures need to construct
   polars instead. Add a regression test that asserts `_read_tick_data` returns `pl.DataFrame`.
 - [ ] [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling
