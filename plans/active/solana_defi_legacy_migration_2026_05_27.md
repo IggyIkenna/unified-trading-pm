@@ -397,11 +397,16 @@ plan. Commit + push via the standard `docs(plans):` flow.
       for UNISWAP_V2-ETHEREUM (3,444), AAVEV3-OPTIMISM (2,820), EIGENLAYER (1,311), CURVE-ETHEREUM (1,281), MAKER
       (1,113), FRAX (1,032), COMPOUND_V3-BASE (300), DRIFT-SOLANA (200), KAMINO/JITO/MARGINFI (~75 each). MDPS fix
       already on LDR: `market-data-processing-service@7f1a5b5` + `@3799c8d`.
-- [ ] [VERIFY] [AGENT-AUTO] P0. **`mtds-solana-defi-backfill`** — `collect-solana-defi` for
+- [x] ✅ [VERIFY] [AGENT-AUTO] P0. **`mtds-solana-defi-backfill`** — `collect-solana-defi` for
       MARGINFI/SOLEND/KAMINO/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX/JITO over 2025-01-17→2026-05-28 (~498 dates). ETA
       ~58min from launch (~13:07 UTC). Verify on completion: MTDS DeFi manifest last_captured moves from 2025-01-17 to
       ~2026-05-28 for MARGINFI/SOLEND/KAMINO/RAYDIUM/ORCA. Note: Kamino vault-strategies path WILL fail per Bug-K below
       — retry after fix.
+      **VERIFIED 2026-05-28**: VM self-deleted (VM_SHUTDOWN_ON_COMPLETION=true). market-data-tick-defi manifest:
+      MARGINFI=527 rows last_captured=2026-05-28 ✅; SOLEND=526 last_captured=2026-05-28 ✅; KAMINO=1,092
+      last_captured=2026-05-28 ✅; RAYDIUM=728 last_captured=2026-05-28 ✅; ORCA=741 last_captured=2026-05-28 ✅.
+      Kamino vault=0 captured (Bug-K pool_id mismatch — expected). JITO=0 captured (Bug-J Stakenet API — expected).
+      Data wrote to unified defi bucket (wrong-bucket per Gate-7 scope; migration pending).
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
