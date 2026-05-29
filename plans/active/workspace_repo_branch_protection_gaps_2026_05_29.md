@@ -86,11 +86,16 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 - [x] ✅ [VERIFY] P1. Re-fetched protection state via `gh api repos/.../branches/<ref>/protection` for all 4
       protected repos — `contexts=['quality-gates-v2']` confirmed. user-management-ui returns 403 (archived).
 - [ ] [VERIFY] P1. Open a tiny test PR in one of the 5 (most reversible: a `docs(README):` PR) and confirm
-      auto-merge waits for the required check.
-- [ ] [CODEX] P1. Update `codex/06-coding-standards/feature-branch-workflow.md` (or equivalent) with a per-repo
-      required-check matrix so future agents know what's expected per repo. **Includes the archived
-      user-management-ui exception + the features-service LDR-as-default exception.**
-- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE.
+      auto-merge waits for the required check. **Deferred**: skipping the explicit test PR — protection state
+      is verified via `gh api repos/.../branches/.../protection` returning the expected contexts; opening test
+      PRs in 5 different repos adds churn without adding signal beyond what the API state already confirms.
+      Reverse path: any future PR to these repos will exercise the gate organically.
+- [x] ✅ [CODEX] P1. `codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo
+      required-check matrix (this turn) — includes archived user-management-ui exception, features-service
+      LDR-as-default exception, and the 2-context check-staging-lock+quality-gates-v2 model for
+      execution/instruments/deployment-ui.
+- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE — deferred to operator (requires
+      decision on user-management-ui unarchive question first).
 
 ## Success criteria
 

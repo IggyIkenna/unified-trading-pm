@@ -190,6 +190,31 @@ Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced 
 
 ---
 
+## Canonical required check name (post-Option-D, 2026-05-29)
+
+The workspace-canonical required status check is **`quality-gates-v2`** (NOT the legacy `quality-gates`).
+
+**Why the rename?** A 2026-05-26 bad-YAML incident in `python-quality-gates.yml` caused GitHub to cache a
+"BuildFailed" ghost workflow registration that fired startup_failure on every subsequent push across 10+ workspace
+repos. The fix (Option D, shipped 2026-05-29 via `ci_canonical_v2_migration_2026_05_29` plan) renames the entire
+caller+callee chain to new file paths (`quality-gates-v2.yml` + `python-quality-gates-v2.yml`) and a new job key
+(`quality-gates-v2`) so GitHub registers a fresh validation context that bypasses the cached ghost.
+
+**Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
+matrix"):
+
+- v2 deployed on canonical branches of all 10 ghost-affected repos + the 3 priority repos (PM, UAC, UTL)
+- Branch protection / ruleset enforcement updated to require `quality-gates-v2` across all rotated repos
+- Sentinel-write logic (commit `a8b758c58`) ensures local `quality-gates.sh` writes `.qg_last_passed_sha` on
+  clean full-pass exit, enabling quickmerge `--agent` fast-path
+
+**v1 cleanup**: v1 caller workflows (`quality-gates.yml`, `workspace-qg.yml`) on the rotated repos are now
+orphaned but NOT yet deleted — held until GH Support ticket #4422570 resolves the cached ghost (after which
+the v1 callee `python-quality-gates.yml` can also be removed). Tracked in `ci_canonical_v2_migration_2026_05_29.md`
+Phase 5.
+
+---
+
 ## Conditional Push Protocol (Multi-Agent Environment)
 
 With 8+ slots running in parallel, always check for incoming commits before pushing:
