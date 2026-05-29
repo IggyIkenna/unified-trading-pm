@@ -75,9 +75,12 @@ why + reproduction.
 
 ## Phase 1 — Cross-operator rotation (P0)
 
-- [ ] [AGENT] P0. If Phase 0 found an operator-boundary filter in `_pick_next_account`, remove it — the round-robin MUST
+- [x] ✅ [AGENT] P0. If Phase 0 found an operator-boundary filter in `_pick_next_account`, remove it — the round-robin MUST
       pick from ALL non-rate-limited / non-auth-failed accounts regardless of `operator` field. Add a unit test proving
       `harsh-primary` rotates into `sub-a-ikenna` when no other harsh-tagged account is available.
+      **Finding (2026-05-29):** No filter existed (Phase 0 confirmed). Added 6-test suite in
+      `tests/test_account_rotation.py` (agent-orchestrator@9191967): proves harsh-primary→sub-a-ikenna wrap-around,
+      rate-limited skipping across operators, pool-exhausted→None, single-account→None, unknown-account fallback.
 - [ ] [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
       the DB (or `POST /api/conditions/<name>` if exposed), confirm next `/boot` returns a dispatch with an
       `ikenna`-tagged account in `dispatch_reason: account-rotated:<id>`.
