@@ -574,6 +574,23 @@ revised Stage 4 reflects the audit-derived split between dead-code delete and li
       (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"), measuring actual
       per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3
       item 3.8 unblocks when the canary lands.
+- [x] ✅ [P0] **4.H Adapter density audit (discovered during Stage 4 verification)** — operator
+      directive 2026-05-29: illiquid instruments with no-trade gaps must produce LOCF-dense candles
+      (state cols carried forward, flow cols zero, OHLC = prior close), no NaN in output. Audit
+      surfaced two broken adapters fixed inline + 7 state-only adapters with a leading-NaN pattern
+      deferred to operator decision. Shipped:
+      - `defi/fx_rate_adapter`: full rewrite — prior `CandleOutput(candles=...)` call had 5
+        non-existent dataclass kwargs (TypeError on every non-empty input; introduced 2026-04-03
+        via c40630bd). New `_finalize_session_grid`-based LOCF path + 6 unit tests.
+      - `defi/swap_adapter`: dropped the "drop empty bins" filter; now LOCF-dense from first swap
+        through end of day (1 sparse row → 24 dense LOCF rows for the user's "2h no-trade" case).
+      - `fast_candle_aggregation.py`: NaN-guard WARN log so future adapter density bugs surface
+        in production logs.
+      - market-data-processing-service@db233e2 | 1246 pass / 1 skip; basedpyright 21 = baseline.
+      - State-only adapter audit (7 adapters: derivative, futures_chain, options_chain,
+        market_state, liquidity, book_snapshot, tbbo) deferred via
+        `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` — operator picks
+        A/B/C on the `_finalize_session_grid` extension before agents touch state adapters.
 
 ## Phase 5 — Stage 5 implementation (long-tail cleanup)
 
