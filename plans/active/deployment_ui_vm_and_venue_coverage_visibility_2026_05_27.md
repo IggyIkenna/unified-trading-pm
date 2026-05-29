@@ -83,10 +83,14 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
 
 ## §4 — Coverage / remaining-to-download view (P1)
 
-- [ ] [AGENT][UI] P1. Per venue × asset_group × year: show captured vs expected vs **remaining-to-download**, and the
+- [x] ✅ [AGENT][UI] P1. Per venue × asset_group × year: show captured vs expected vs **remaining-to-download**, and the
       reason a cell is empty (genuine `expected_unattempted` vs `pending_paid_key` vs `attempted_failed`). Critical: a
       401-blocked cell must read "downloadable once key active", NOT "complete/empty" (mirrors the honest-absence-vs-
       blocked-credentials rule). Source: `_index/availability_index.parquet` per bucket.
+      — deployment-api@7556ff7: `GET /data-status/venue-year-coverage` endpoint + 6/6 unit tests.
+        deployment-ui@82e3d49: `VenueCoverageTable.tsx` component wired as "Venue Coverage" tab on
+        market-tick-data-service; `getVenueYearCoverage` API client; Playwright smoke spec (5 tests,
+        pw:L2 BLOCKED-INFRA: libatk missing). pending_paid_key rows show "★key" marker, NOT complete/empty.
 - [ ] [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
       (venue, date) cells would be filled by a relaunch now vs after key renewal — so launches are decided with eyes
       open.
