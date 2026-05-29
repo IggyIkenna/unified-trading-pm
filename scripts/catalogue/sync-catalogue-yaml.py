@@ -85,7 +85,7 @@ def sync_catalogue(project_id: str, *, dry_run: bool = False) -> None:
 
     services: dict[str, dict[str, object]] = {}
     for row in rows:
-        record = dict(zip(columns, row))
+        record = dict(zip(columns, row, strict=False))
         svc = str(record["service_name"])
         cat = str(record["category"])
 

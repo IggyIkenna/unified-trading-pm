@@ -76,9 +76,9 @@ def check_chain_set_inclusion() -> list[str]:
     except (ImportError, FileNotFoundError) as exc:
         return [f"FATAL: cannot load unified_api_contracts.registry.chain_env: {exc}"]
 
-    MAINNET_CHAIN_IDS: dict[str, int] = module.MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
-    CHAIN_GENESIS_DATES: dict[str, str] = module.CHAIN_GENESIS_DATES  # type: ignore[attr-defined]
-    GAS_FEE_CHAIN_START_DATES: dict[int, str] = module.GAS_FEE_CHAIN_START_DATES  # type: ignore[attr-defined]
+    MAINNET_CHAIN_IDS: dict[str, int] = module.MAINNET_CHAIN_IDS  # type: ignore[attr-defined]  # noqa: N806
+    CHAIN_GENESIS_DATES: dict[str, str] = module.CHAIN_GENESIS_DATES  # type: ignore[attr-defined]  # noqa: N806
+    GAS_FEE_CHAIN_START_DATES: dict[int, str] = module.GAS_FEE_CHAIN_START_DATES  # type: ignore[attr-defined]  # noqa: N806
 
     violations: list[str] = []
 

@@ -148,12 +148,11 @@ class TestUiApiMappingConsistency:
                 continue
             entry = repositories[api]
             serves_ui = entry.get("serves_ui", [])
-            if isinstance(serves_ui, list) and ui not in serves_ui:
+            if isinstance(serves_ui, list) and ui not in serves_ui and len(serves_ui) == 0:
                 # Some stacks intentionally pair one UI with a secondary API in mapping;
                 # manifest `serves_ui` may list the same UI under a different API.
                 # Only flag if serves_ui is empty.
-                if len(serves_ui) == 0:
-                    missing_pairings.append(f"stack={stack_name}: {api} should serve {ui}")
+                missing_pairings.append(f"stack={stack_name}: {api} should serve {ui}")
         # Note: Not all mappings will match 1:1 since some UIs are dual-served.
         # This test flags only APIs with no serves_ui at all.
         assert not missing_pairings, f"UI-API pairings in mapping not reflected in manifest: {missing_pairings}"

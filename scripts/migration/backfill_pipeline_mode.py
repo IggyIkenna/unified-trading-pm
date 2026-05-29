@@ -58,7 +58,7 @@ for _p in (UAC_PATH, UTL_PATH):
 import pandas as pd
 from unified_api_contracts.canonical.crosscutting.pipeline_mode import PipelineMode  # type: ignore[import-not-found]
 from unified_trading_library import get_storage_client  # type: ignore[import-not-found]
-from unified_trading_library.pipeline_mode_resolver import derive_pipeline_mode_for_row  # type: ignore[import-not-found]
+from unified_trading_library import derive_pipeline_mode_for_row  # type: ignore[import-not-found]
 
 # ── Constants ──────────────────────────────────────────────────────────────
 _INDEX_BLOB = "_index/availability_index.parquet"
@@ -141,10 +141,7 @@ def _backfill_df_vectorized(
 
     # Identify rows needing backfill.
     null_mask = df["pipeline_mode"].apply(_is_pipeline_mode_null)
-    if force:
-        fill_mask = pd.Series([True] * len(df), index=df.index)
-    else:
-        fill_mask = null_mask
+    fill_mask = pd.Series([True] * len(df), index=df.index) if force else null_mask
     counts["skipped"] = int((~fill_mask).sum())
 
     rows_to_fill = df[fill_mask]
@@ -152,13 +149,25 @@ def _backfill_df_vectorized(
         return df, counts
 
     # Build lookup key per unique (venue, data_type) combo.
-    venue_col = rows_to_fill["venue"].fillna("").astype(str) if "venue" in rows_to_fill.columns else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
-    data_type_col = rows_to_fill["data_type"].fillna("").astype(str) if "data_type" in rows_to_fill.columns else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
-    _SEP = "|||SPLIT|||"
+    venue_col = (
+        rows_to_fill["venue"].fillna("").astype(str)
+        if "venue" in rows_to_fill.columns
+        else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
+    )
+    data_type_col = (
+        rows_to_fill["data_type"].fillna("").astype(str)
+        if "data_type" in rows_to_fill.columns
+        else pd.Series([""] * len(rows_to_fill), index=rows_to_fill.index)
+    )
+    _SEP = "|||SPLIT|||"  # noqa: N806
     key_series = venue_col + _SEP + data_type_col
 
     unique_keys = key_series.unique()
-    logger.info("Deriving pipeline_mode for %d unique (venue, data_type) combos (out of %d rows)", len(unique_keys), len(rows_to_fill))
+    logger.info(
+        "Deriving pipeline_mode for %d unique (venue, data_type) combos (out of %d rows)",
+        len(unique_keys),
+        len(rows_to_fill),
+    )
 
     key_to_pm: dict[str, str | None] = {}
     for k in unique_keys:
@@ -326,7 +335,9 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", default=False, help="Apply changes (default: dry-run)")
     parser.add_argument("--force", action="store_true", default=False, help="Overwrite rows with existing values")
     parser.add_argument("--verify", action="store_true", default=False, help="Count NULL rows only, no changes")
-    parser.add_argument("--per-vm", action="store_true", default=False, help="Also process per-VM shards under _index/per_vm/")
+    parser.add_argument(
+        "--per-vm", action="store_true", default=False, help="Also process per-VM shards under _index/per_vm/"
+    )
     args = parser.parse_args()
 
     if args.all_buckets and not args.project_id:

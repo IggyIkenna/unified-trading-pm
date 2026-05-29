@@ -171,10 +171,8 @@ def _call_has_timeframe_arg(call: ast.Call) -> bool:
 def _replace_has_truncation_kwargs(call: ast.Call) -> bool:
     """Return True if .replace(...) has truncation kwargs zeroed out."""
     for kw in call.keywords:
-        if kw.arg in _REPLACE_TRUNCATION_KWARGS:
-            # Match zero/0 literal value
-            if isinstance(kw.value, ast.Constant) and kw.value.value == 0:
-                return True
+        if kw.arg in _REPLACE_TRUNCATION_KWARGS and isinstance(kw.value, ast.Constant) and kw.value.value == 0:
+            return True
     return False
 
 
@@ -226,20 +224,19 @@ def _scan_file(file_path: Path) -> list[_Violation]:
                 )
 
         # Pattern 2: .replace(minute=0, second=0, microsecond=0)
-        elif attr_name == "replace":
-            if _replace_has_truncation_kwargs(node):
-                if _line_has_noqa(file_lines, node.lineno):
-                    continue
-                snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
-                violations.append(
-                    _Violation(
-                        file_path=file_path,
-                        line=node.lineno,
-                        col=node.col_offset,
-                        snippet=snippet,
-                        reason=("dt.replace(minute=0, ...) truncation bypass — use compute_bar_close_boundary()"),
-                    )
+        elif attr_name == "replace" and _replace_has_truncation_kwargs(node):
+            if _line_has_noqa(file_lines, node.lineno):
+                continue
+            snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
+            violations.append(
+                _Violation(
+                    file_path=file_path,
+                    line=node.lineno,
+                    col=node.col_offset,
+                    snippet=snippet,
+                    reason=("dt.replace(minute=0, ...) truncation bypass — use compute_bar_close_boundary()"),
                 )
+            )
 
     return violations
 

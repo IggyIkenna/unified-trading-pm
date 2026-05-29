@@ -219,9 +219,8 @@ def _find_test_files(repo_path: Path) -> list[Path]:
         if any(part in _EXCLUDED_DIRS for part in e2e_dir.parts):
             continue
         for f in e2e_dir.rglob("*"):
-            if f.is_file() and f.suffix in (".ts", ".tsx", ".js", ".jsx"):
-                if f not in test_files:
-                    test_files.append(f)
+            if f.is_file() and f.suffix in (".ts", ".tsx", ".js", ".jsx") and f not in test_files:
+                test_files.append(f)
     return sorted(set(test_files))
 
 
@@ -600,10 +599,7 @@ def main(argv: list[str] | None = None) -> int:
     report = run_triad_check(workspace_root, manifest_path, critical_only=args.critical_only)
 
     # Format and print
-    if args.format == "json":
-        output = format_report_json(report)
-    else:
-        output = format_report(report)
+    output = format_report_json(report) if args.format == "json" else format_report(report)
 
     print(output)
 

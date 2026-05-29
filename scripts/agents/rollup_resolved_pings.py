@@ -82,7 +82,7 @@ def rollup(ping_path: Path, dry_run: bool = False) -> int:
     if not to_roll:
         return 0
 
-    rolled_block: list[str] = [prior_header] + prior_lines + to_roll
+    rolled_block: list[str] = [prior_header, *prior_lines, *to_roll]
     new_text = "".join(keep) + "\n" + "".join(rolled_block)
 
     if not dry_run:

@@ -2,7 +2,7 @@
 """Regenerate the auto-tracked active plan inventory in master_to_live_defi_2026_05_23.md.
 
 Reads every `plans/active/*.md` plan with `estimate_class` frontmatter, computes per-plan
-done/todo checkbox count + cal_remaining (calibrated × todo/total), finds which epic master
+done/todo checkbox count + cal_remaining (calibrated x todo/total), finds which epic master
 (if any) references the plan, and writes a sorted markdown table between the AUTO-INVENTORY
 markers in the master plan.
 

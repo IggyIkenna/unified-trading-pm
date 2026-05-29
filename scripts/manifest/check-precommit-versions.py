@@ -310,15 +310,14 @@ def main() -> int:
                     issues.append(msg)
 
         # --- Check bump-library-version hook (library repos only) ---
-        if repo_type == "library":
-            if not has_bump_library_hook(repos_list):
-                msg = f"NO_BUMP_HOOK: {repo_name}  (library repo missing bump-library-version hook)"
-                if apply_fixes:
-                    add_bump_library_hook(config_path)
-                    print(f"  added bump-library-version hook to {repo_name}")
-                    fixes_applied += 1
-                else:
-                    issues.append(msg)
+        if repo_type == "library" and not has_bump_library_hook(repos_list):
+            msg = f"NO_BUMP_HOOK: {repo_name}  (library repo missing bump-library-version hook)"
+            if apply_fixes:
+                add_bump_library_hook(config_path)
+                print(f"  added bump-library-version hook to {repo_name}")
+                fixes_applied += 1
+            else:
+                issues.append(msg)
 
         # --- Check .git/hooks/pre-commit exists ---
         git_hook = repo_path / ".git" / "hooks" / "pre-commit"

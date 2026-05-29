@@ -14,7 +14,7 @@ Per-repo overrides:
   checked against that repo.
 
 Exit-code semantics:
-  0 — at or above target for every (repo × surface) tuple checked
+  0 — at or above target for every (repo x surface) tuple checked
   1 — one or more surfaces below target
   2 — yaml / coverage.xml / IO error
 
@@ -124,10 +124,7 @@ def _file_matches_surface(filepath: str, repo_name: str, surface: Surface) -> bo
     Prefix it with `{repo_name}/` to compare.
     """
     full_path = f"{repo_name}/{filepath}"
-    for pat in surface.glob_patterns:
-        if fnmatch.fnmatch(full_path, pat):
-            return True
-    return False
+    return any(fnmatch.fnmatch(full_path, pat) for pat in surface.glob_patterns)
 
 
 def _compute_surface_result(
@@ -253,7 +250,7 @@ def main() -> int:
             if not result.passed:
                 failures.append((repo_name, result))
 
-    print(f"\n=== Summary: {total_checks} (repo × surface) checks; {len(failures)} below target ===")
+    print(f"\n=== Summary: {total_checks} (repo x surface) checks; {len(failures)} below target ===")
     if failures:
         print("\nFailures:")
         for repo_name, r in failures:

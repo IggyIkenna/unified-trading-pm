@@ -164,6 +164,6 @@ class TestExtremeFixturesContent:
         assert "asks_depleted" in states, "Must include an asks-depleted state"
         assert "bids_depleted" in states, "Must include a bids-depleted state"
         # Verify the both_empty state actually has empty books
-        both_empty = [s for s in snapshots if s["state"] == "both_empty"][0]
+        both_empty = next(s for s in snapshots if s["state"] == "both_empty")
         assert both_empty["bids"] == []
         assert both_empty["asks"] == []

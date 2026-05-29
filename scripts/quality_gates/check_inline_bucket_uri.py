@@ -19,7 +19,7 @@ URI from a *resolved* bucket var + a path is fine — that won't all migrate to
   1. Load ``inline_bucket_uri_baseline.yaml`` — a per-repo count of the
      CURRENTLY-KNOWN inline ``f"gs://...`` / ``f"s3://...`` formatters in service
      source (excluding lines carrying a ``# noqa: gs-uri`` marker — the
-     "grandfathered, intentional" exemption, already used ~16× in
+     "grandfathered, intentional" exemption, already used ~16x in
      execution-service etc.).
   2. Scan every ``.py`` file under the given source dir(s) (skipping venvs /
      build artefacts / archived trees / ``scripts/`` / ``tests/``) and count
@@ -215,9 +215,7 @@ def _is_excluded_path(path: Path) -> bool:
     name = path.name
     if any(name.startswith(p) for p in TEST_FILE_PREFIXES):
         return True
-    if any(name.endswith(s) for s in TEST_FILE_SUFFIXES):
-        return True
-    return False
+    return bool(any(name.endswith(s) for s in TEST_FILE_SUFFIXES))
 
 
 def _iter_py_files(root: Path) -> Iterator[Path]:
@@ -261,9 +259,12 @@ def _ast_docstring_lines(tree: ast.AST) -> frozenset[int]:
 def _fstring_has_cloud_uri(node: ast.JoinedStr) -> bool:
     """Return True if any literal constant part of the f-string contains ``gs://`` or ``s3://``."""
     for child in ast.walk(node):
-        if isinstance(child, ast.Constant) and isinstance(child.value, str):
-            if "gs://" in child.value or "s3://" in child.value:
-                return True
+        if (
+            isinstance(child, ast.Constant)
+            and isinstance(child.value, str)
+            and ("gs://" in child.value or "s3://" in child.value)
+        ):
+            return True
     return False
 
 

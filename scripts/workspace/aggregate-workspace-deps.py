@@ -26,11 +26,11 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
 # Type aliases
-DepSpec: TypeAlias = str  # e.g. "pydantic>=2.12.5,<3.0.0"
-TomlDict: TypeAlias = dict[str, object]
+type DepSpec = str  # e.g. "pydantic>=2.12.5,<3.0.0"
+type TomlDict = dict[str, object]
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 PM_ROOT = WORKSPACE_ROOT / "unified-trading-pm"
@@ -369,7 +369,7 @@ def run_uv_install(
         return False
 
     uv_prefix, use_system_uv = uv_result
-    cmd = uv_prefix + ["pip", "install"]
+    cmd = [*uv_prefix, "pip", "install"]
     if use_system_uv:
         cmd.extend(["--python", str(venv_python)])
     if no_deps:

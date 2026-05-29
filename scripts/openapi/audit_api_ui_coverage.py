@@ -260,7 +260,7 @@ def _strip_path_params(path: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _match_endpoints(
+def _match_endpoints(  # noqa: C901
     api_endpoints: dict[str, list[str]],
     ui_paths: set[str],
     gateway_map: dict[str, str],
@@ -340,9 +340,8 @@ def _match_endpoints(
 
         # 4. Reporting paths: client-reporting-api has /api/reporting/X,
         #    UI calls /api/reporting/X (rewritten by specific rule).
-        if not matched and normalised.startswith("/api/"):
-            if normalised in {up for up in ui_paths}:
-                matched = True
+        if not matched and normalised.startswith("/api/") and normalised in set(ui_paths):
+            matched = True
 
         if not matched:
             service = ""

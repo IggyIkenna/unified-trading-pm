@@ -100,17 +100,15 @@ def _check_file(file_path: Path, ratchet: Ratchet) -> RatchetViolation | None:
         return None
 
     # Apply condition_pattern: only check files that contain the condition
-    if ratchet.condition_pattern is not None:
-        if not re.search(ratchet.condition_pattern, text):
-            return None
+    if ratchet.condition_pattern is not None and not re.search(ratchet.condition_pattern, text):
+        return None
 
-    if ratchet.banned_substring is not None:
-        if ratchet.banned_substring in text:
-            return RatchetViolation(
-                rule_name=ratchet.name,
-                path=file_path,
-                detail=f"contains banned substring: {ratchet.banned_substring!r}",
-            )
+    if ratchet.banned_substring is not None and ratchet.banned_substring in text:
+        return RatchetViolation(
+            rule_name=ratchet.name,
+            path=file_path,
+            detail=f"contains banned substring: {ratchet.banned_substring!r}",
+        )
 
     if ratchet.banned_pattern is not None:
         m = re.search(ratchet.banned_pattern, text)
@@ -121,13 +119,12 @@ def _check_file(file_path: Path, ratchet: Ratchet) -> RatchetViolation | None:
                 detail=f"matches banned pattern: {m.group(0)[:80]}",
             )
 
-    if ratchet.banned_unless_contains is not None:
-        if ratchet.banned_unless_contains not in text:
-            return RatchetViolation(
-                rule_name=ratchet.name,
-                path=file_path,
-                detail=f"matches condition but lacks required substring {ratchet.banned_unless_contains!r}",
-            )
+    if ratchet.banned_unless_contains is not None and ratchet.banned_unless_contains not in text:
+        return RatchetViolation(
+            rule_name=ratchet.name,
+            path=file_path,
+            detail=f"matches condition but lacks required substring {ratchet.banned_unless_contains!r}",
+        )
 
     return None
 

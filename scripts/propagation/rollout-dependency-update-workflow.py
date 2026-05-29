@@ -14,9 +14,9 @@ Options:
 import argparse
 import json
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-JsonDict: TypeAlias = dict[str, object]
+type JsonDict = dict[str, object]
 
 
 def _jdict(val: object) -> JsonDict | None:

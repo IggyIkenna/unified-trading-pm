@@ -20,9 +20,8 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import TypeAlias
 
-JsonDict: TypeAlias = dict[str, object]
+type JsonDict = dict[str, object]
 
 
 class _Args(argparse.Namespace):

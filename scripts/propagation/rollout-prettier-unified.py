@@ -22,9 +22,9 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-JsonDict: TypeAlias = dict[str, object]
+type JsonDict = dict[str, object]
 
 
 def _jdict(val: object) -> JsonDict | None:
@@ -108,7 +108,9 @@ def find_insert_position(content: str) -> int:
         for i, line in enumerate(lines):
             if "ruff-pre-commit" in line:
                 in_ruff = True
-            elif (in_ruff and re.match(r"^\s{0,2}- repo:", line)) or (in_ruff and line.strip() and not line.startswith((" ", "\t"))):
+            elif (in_ruff and re.match(r"^\s{0,2}- repo:", line)) or (
+                in_ruff and line.strip() and not line.startswith((" ", "\t"))
+            ):
                 return i
         return len(lines)
     # No ruff: insert as first repos entry (before first "- repo:")
@@ -125,7 +127,7 @@ def insert_prettier_block(content: str) -> str:
     pos = find_insert_position(content)
     lines = content.split("\n")
     block_lines = PRETTIER_BLOCK.strip().split("\n")
-    new_lines = lines[:pos] + [""] + block_lines + [""] + lines[pos:]
+    new_lines = [*lines[:pos], "", *block_lines, "", *lines[pos:]]
     return "\n".join(new_lines)
 
 

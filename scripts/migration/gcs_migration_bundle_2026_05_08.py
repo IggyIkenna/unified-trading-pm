@@ -82,18 +82,18 @@ for _p in (UAC_PATH, UTL_PATH):
     if _p.exists() and _p_str not in sys.path:
         sys.path.insert(0, _p_str)
 
+import contextlib
+
 from unified_api_contracts.canonical.crosscutting.pipeline_mode import (  # type: ignore[import-not-found]
     PipelineMode,
     pipeline_mode_for_source,
 )
-from unified_trading_library import (  # type: ignore[import-not-found]
+from unified_trading_library import (  # type: ignore[import-not-found]  # type: ignore[import-not-found]
+    MissingVMShardIsolationError,
+    V7ToV8MigrationResult,
     gcs_copy_object,
     gcs_delete_object,
     gcs_describe_object,
-)
-from unified_trading_library.manifest_migrations import (  # type: ignore[import-not-found]  # noqa: qg-deep-import
-    MissingVMShardIsolationError,
-    V7ToV8MigrationResult,
     migrate_v7_to_v8,
 )
 
@@ -404,7 +404,7 @@ def plan_target_path(
 # ---------------------------------------------------------------------------
 # GCS Python-client wrappers (mocked in tests via same Callable signatures)
 # ---------------------------------------------------------------------------
-# Replaces subprocess gcloud CLI calls (5 spawns/parquet × ~500ms startup each
+# Replaces subprocess gcloud CLI calls (5 spawns/parquet x ~500ms startup each
 # = ~2.5s/parquet). Python client uses REST API directly: ~50-200ms per call.
 # ThreadPoolExecutor benefits fully because GCS network calls release the GIL.
 # ---------------------------------------------------------------------------
@@ -475,10 +475,8 @@ def _read_instrument_id_from_parquet_footer(uri: str) -> str | None:
     except Exception:
         return None
     finally:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
 
 
 # ---------------------------------------------------------------------------

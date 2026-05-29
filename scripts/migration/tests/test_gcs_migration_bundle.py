@@ -60,7 +60,7 @@ from gcs_migration_bundle_2026_05_08 import (  # type: ignore[import-not-found]
     run_migration,
     run_v8_column_backfill,
 )
-from unified_trading_library.manifest_migrations import (  # type: ignore[import-not-found]  # noqa: qg-deep-import
+from unified_trading_library import (  # type: ignore[import-not-found]
     V7ToV8MigrationResult,
 )
 
@@ -534,7 +534,7 @@ def test_parse_rescan_output_counts_class_a_auto_fixes_and_class_c() -> None:
     )
     class_a, class_c = _parse_rescan_output(stdout)
     assert class_a == 2
-    # PHANTOM × 2 + explicit class-C × 1 = 3 triage entries.
+    # PHANTOM x 2 + explicit class-C x 1 = 3 triage entries.
     assert class_c == 3
 
 

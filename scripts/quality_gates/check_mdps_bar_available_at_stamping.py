@@ -92,7 +92,7 @@ CANONICAL_WRITER_ALLOWED_FUNCTIONS: Final[frozenset[str]] = frozenset(
 CANONICAL_WRITER_PATH_SUFFIX: Final[str] = "app/core/canonical_writer.py"
 
 #: Inline escape-hatch comment marker — same shape as workspace
-#: `# QG-BYPASS:` / `# noqa:` precedent.
+#: ``# QG-BYPASS:`` / ruff-noqa-style precedent.
 QG_ALLOW_MARKER: Final[str] = "# QG-allow: mdps-bar-available-at"
 
 #: Top-level dir names to skip when walking. Mirrors the existing
@@ -178,9 +178,7 @@ def _is_available_at_subscript(target: ast.expr) -> bool:
         return False
     slice_node = target.slice
     # py3.9+: ast.Index removed; ast.Constant directly.
-    if isinstance(slice_node, ast.Constant) and slice_node.value == "available_at":
-        return True
-    return False
+    return bool(isinstance(slice_node, ast.Constant) and slice_node.value == "available_at")
 
 
 def _scan_file(
@@ -267,11 +265,7 @@ def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | N
     if not repo_root.is_dir():
         return []
 
-    if source_dir is not None:
-        scan_root = repo_root / source_dir
-    else:
-        # Default: scan the MDPS package source dir.
-        scan_root = repo_root / "market_data_processing_service"
+    scan_root = repo_root / source_dir if source_dir is not None else repo_root / "market_data_processing_service"
     if not scan_root.is_dir():
         return []
 

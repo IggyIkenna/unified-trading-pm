@@ -73,25 +73,25 @@ todos:
 
     def test_incomplete_frontmatter(self) -> None:
         content = "---\nname: test\n# no closing ---\nsome content"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is None
 
     def test_empty_frontmatter_returns_none(self) -> None:
         # The regex requires at least one line between --- markers
         content = "---\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         # An empty frontmatter block has no lines between ---, which the regex cannot match
         assert data is None
 
     def test_minimal_frontmatter(self) -> None:
         content = "---\nname: x\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is not None
         assert data["name"] == "x"
 
     def test_comments_in_frontmatter(self) -> None:
         content = "---\n# This is a comment\nname: test\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is not None
         assert data["name"] == "test"
 
@@ -159,7 +159,7 @@ class TestValidatePlan:
         errors = MOD.validate_plan(plan)
         assert any("overview" in e for e in errors)
 
-    def test_missing_isProject(self, tmp_path: Path) -> None:
+    def test_missing_isProject(self, tmp_path: Path) -> None:  # noqa: N802
         plan = tmp_path / "no-isproject.md"
         plan.write_text(
             "---\nname: Plan\noverview: An overview\ntodos:\n  - id: 1\n    content: foo\n    status: done\n---\nBody\n"

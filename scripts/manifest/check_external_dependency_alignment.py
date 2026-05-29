@@ -281,7 +281,7 @@ def check_repo(
             if not str(canon_entry.specifier):
                 continue
 
-            ok, reason = check_specifier_compatible(spec_str, canon_entry)
+            ok, _reason = check_specifier_compatible(spec_str, canon_entry)
             if not ok:
                 result.violations.append(
                     Violation(
@@ -379,7 +379,7 @@ def print_report(results: list[RepoResult], *, show_clean: bool = False) -> int:
     if repos_skipped:
         print("\n── SKIPPED ─────────────────────────────────────────────────────────")
         for r in repos_skipped:
-            print(f"  –  {r.repo}  ({r.skip_reason})")
+            print(f"  -  {r.repo}  ({r.skip_reason})")
 
     print("\n" + "=" * 72)
     if total_violations == 0:

@@ -25,15 +25,18 @@ from check_pipeline_mode_explicit_at_record_calls import (  # type: ignore[impor
 
 def test_record_method_names_closed_set() -> None:
     """The 5 v8 ManifestWriter record-* methods are exactly the closed set."""
-    assert frozenset(
-        {
-            "record_captured",
-            "record_empty",
-            "record_failed",
-            "record_expected_unattempted",
-            "record_empty_for_shard",
-        }
-    ) == RECORD_METHOD_NAMES
+    assert (
+        frozenset(
+            {
+                "record_captured",
+                "record_empty",
+                "record_failed",
+                "record_expected_unattempted",
+                "record_empty_for_shard",
+            }
+        )
+        == RECORD_METHOD_NAMES
+    )
 
 
 def _write_py(tmp_path: Path, name: str, content: str) -> Path:

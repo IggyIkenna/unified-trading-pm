@@ -68,9 +68,8 @@ def _satisfies(version: str, constraint: str) -> bool:
         elif part.startswith("<"):
             if ver >= _parse_version(part[1:]):
                 return False
-        elif part.startswith("=="):
-            if ver != _parse_version(part[2:]):
-                return False
+        elif part.startswith("==") and ver != _parse_version(part[2:]):
+            return False
     return True
 
 

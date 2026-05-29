@@ -210,7 +210,14 @@ def check_constraint_satisfied(version: str, constraint: str) -> bool:
         op = m.group(1)
         c_tuple = _parse_version_tuple(m.group(2))
 
-        if (op == ">=" and not (v_tuple >= c_tuple)) or (op == ">" and not (v_tuple > c_tuple)) or (op == "==" and not (v_tuple == c_tuple)) or (op == "<=" and not (v_tuple <= c_tuple)) or (op == "<" and not (v_tuple < c_tuple)) or (op == "!=" and not (v_tuple != c_tuple)):
+        if (
+            (op == ">=" and not (v_tuple >= c_tuple))
+            or (op == ">" and not (v_tuple > c_tuple))
+            or (op == "==" and v_tuple != c_tuple)
+            or (op == "<=" and not (v_tuple <= c_tuple))
+            or (op == "<" and not (v_tuple < c_tuple))
+            or (op == "!=" and v_tuple == c_tuple)
+        ):
             return False
 
     return True
@@ -260,10 +267,7 @@ def main() -> int:
 
         # Determine the expected constraint
         manifest_constraint = get_dep_constraint(repo_entry, dep_name)
-        if manifest_constraint:
-            expected_constraint = manifest_constraint
-        else:
-            expected_constraint = build_expected_constraint(remote_version)
+        expected_constraint = manifest_constraint or build_expected_constraint(remote_version)
 
         # Check alignment: is the remote version within the expected constraint?
         if not check_constraint_satisfied(remote_version, expected_constraint):

@@ -128,13 +128,12 @@ def extract_all_names(init_path: Path) -> list[str]:
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "__all__":
-                    if isinstance(node.value, ast.List):
-                        names: list[str] = []
-                        for elt in node.value.elts:
-                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                                names.append(elt.value)
-                        return names
+                if isinstance(target, ast.Name) and target.id == "__all__" and isinstance(node.value, ast.List):
+                    names: list[str] = []
+                    for elt in node.value.elts:
+                        if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                            names.append(elt.value)
+                    return names
     logger.warning("Could not find __all__ in %s", init_path)
     return []
 
@@ -256,9 +255,8 @@ def _batch_search_instantiation(
     pairs = _run_rg_with_content(pattern, search_paths)
     for file_path, matched_line in pairs:
         for name in type_names:
-            if f"{name}(" in matched_line:
-                if file_path not in results[name]:
-                    results[name].append(file_path)
+            if f"{name}(" in matched_line and file_path not in results[name]:
+                results[name].append(file_path)
     return results
 
 
@@ -283,9 +281,8 @@ def _batch_search_type_annotation(
                 or f"[{name}," in matched_line
                 or f", {name}]" in matched_line
                 or f"[{name}]" in matched_line
-            ):
-                if file_path not in results[name]:
-                    results[name].append(file_path)
+            ) and file_path not in results[name]:
+                results[name].append(file_path)
     return results
 
 
@@ -301,9 +298,8 @@ def _batch_search_isinstance(
     pairs = _run_rg_with_content(pattern, search_paths)
     for file_path, matched_line in pairs:
         for name in type_names:
-            if "isinstance(" in matched_line and name in matched_line:
-                if file_path not in results[name]:
-                    results[name].append(file_path)
+            if "isinstance(" in matched_line and name in matched_line and file_path not in results[name]:
+                results[name].append(file_path)
     return results
 
 
@@ -320,9 +316,8 @@ def _batch_search_re_export(
     pairs = _run_rg_with_content(pattern, search_paths, extra_args=["--glob", "*__init__.py"])
     for file_path, matched_line in pairs:
         for name in type_names:
-            if f"{name} as {name}" in matched_line:
-                if file_path not in results[name]:
-                    results[name].append(file_path)
+            if f"{name} as {name}" in matched_line and file_path not in results[name]:
+                results[name].append(file_path)
     return results
 
 
@@ -378,9 +373,8 @@ def _batch_search_import_only(
                     # __all__ entry
                     import_count += 1
 
-            if total_count > 0 and total_count == import_count:
-                if file_path not in results[name]:
-                    results[name].append(file_path)
+            if total_count > 0 and total_count == import_count and file_path not in results[name]:
+                results[name].append(file_path)
 
     return results
 

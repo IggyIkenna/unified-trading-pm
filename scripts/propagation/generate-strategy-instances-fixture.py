@@ -696,7 +696,7 @@ def _generate_instances(entries: list[StrategyEntry]) -> str:
     lines.append("export const STRATEGY_INSTANCES: StrategyInstance[] = [")
     for e in entries:
         readiness_status, status = _readiness_for(e.coverage_status)
-        arch_prefix, body = _parse_slot(e.slot)
+        _arch_prefix, body = _parse_slot(e.slot)
         venues = _derive_venues(body, e.asset_group)
         underlying = _derive_underlying(body)
         exec_mode = _ARCHETYPE_EXEC_MODE[e.archetype_v2]

@@ -33,7 +33,7 @@ MANIFEST = PM_ROOT / "workspace-manifest.json"
 # ---------------------------------------------------------------------------
 
 
-def infer_tags(name: str, info: dict[str, object]) -> list[str]:
+def infer_tags(name: str, info: dict[str, object]) -> list[str]:  # noqa: C901
     """Infer tags for a repo based on its manifest fields and name."""
     tags: set[str] = set()
 

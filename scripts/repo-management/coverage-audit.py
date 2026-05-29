@@ -27,9 +27,9 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-JsonDict: TypeAlias = dict[str, object]
+type JsonDict = dict[str, object]
 
 
 class _Args(argparse.Namespace):

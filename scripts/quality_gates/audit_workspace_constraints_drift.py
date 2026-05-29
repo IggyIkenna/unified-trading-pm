@@ -203,18 +203,17 @@ def audit_repo(repo_path: Path, constraints: dict[str, str]) -> RepoResult:
             continue
 
         # Floor: repo uses lower floor than canonical → error (could pull in old vulnerable version)
-        if dep_floor and canon_floor:
-            if _ver_lt(dep_floor, canon_floor):
-                result.errors.append(
-                    DriftEntry(
-                        repo=repo_path.name,
-                        dep_name=dep_name,
-                        dep_raw=dep_raw,
-                        canon_raw=canon_raw,
-                        kind="floor_below_canon",
-                        detail=f">={dep_floor} < canonical >={canon_floor}",
-                    )
+        if dep_floor and canon_floor and _ver_lt(dep_floor, canon_floor):
+            result.errors.append(
+                DriftEntry(
+                    repo=repo_path.name,
+                    dep_name=dep_name,
+                    dep_raw=dep_raw,
+                    canon_raw=canon_raw,
+                    kind="floor_below_canon",
+                    detail=f">={dep_floor} < canonical >={canon_floor}",
                 )
+            )
 
         # Floor: repo uses higher floor than canonical → just informational (fine)
 
@@ -293,12 +292,11 @@ def _build_fixed_spec(err: DriftEntry, canon_raw: str) -> str:
     canon_floor = _parse_version_floor(canon_raw)
     canon_ceiling = _parse_version_ceiling(canon_raw)
 
-    if err.kind == "ceiling_above_canon" and dep_floor and canon_floor:
+    if err.kind == "ceiling_above_canon" and dep_floor and canon_floor and _ver_gt(dep_floor, canon_floor):
         # Preserve the repo's floor if it's tighter (higher) than canonical
-        if _ver_gt(dep_floor, canon_floor):
-            if canon_ceiling:
-                return f">={dep_floor},<{canon_ceiling}"
-            return f">={dep_floor}"
+        if canon_ceiling:
+            return f">={dep_floor},<{canon_ceiling}"
+        return f">={dep_floor}"
     # Default: use the full canonical spec
     spec_m = re.search(r"[><=!].*", canon_raw)
     return spec_m.group(0) if spec_m else ""

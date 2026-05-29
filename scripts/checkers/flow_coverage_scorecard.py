@@ -39,10 +39,7 @@ def _resolve_paths(
     pm_root = ws / "unified-trading-pm"
     checker = pm_root / "scripts" / "checkers" / "check_ui_api_flow_coverage.py"
 
-    if history_file is not None:
-        hist = history_file.resolve()
-    else:
-        hist = pm_root / "docs" / "flow-coverage-history.jsonl"
+    hist = history_file.resolve() if history_file is not None else pm_root / "docs" / "flow-coverage-history.jsonl"
 
     return ws, checker, hist
 

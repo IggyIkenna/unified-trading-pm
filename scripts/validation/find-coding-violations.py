@@ -145,9 +145,7 @@ class PrintChecker(ViolationChecker):
             return True
         if stripped.startswith('"') or stripped.startswith("'"):
             return True
-        if "python3 -c" in stripped or "python -c" in stripped:
-            return True
-        return False
+        return bool("python3 -c" in stripped or "python -c" in stripped)
 
     @override
     def check(self) -> CheckResult:
@@ -188,10 +186,7 @@ class IndentedImportChecker(ViolationChecker):
         for prefix in exclusions.get("startswith_patterns") or []:
             if content.startswith(prefix):
                 return True
-        for pat in exclusions.get("substring_patterns") or []:
-            if pat in stripped:
-                return True
-        return False
+        return any(pat in stripped for pat in exclusions.get("substring_patterns") or [])
 
     @override
     def check(self) -> CheckResult:
@@ -209,9 +204,7 @@ class NaiveDatetimeChecker(ViolationChecker):
         if stripped.startswith("#"):
             return True
         # Exclude if it is in a comment about the correct pattern
-        if ("NOT " + "datetime" + "." + "now" + "()") in content:
-            return True
-        return False
+        return "NOT " + "datetime" + "." + "now" + "()" in content
 
     @override
     def check(self) -> CheckResult:
@@ -235,9 +228,7 @@ class BareExceptChecker(ViolationChecker):
         stripped = content.strip()
         if stripped.startswith("#"):
             return True
-        if re.match(r"except\s+\w+", stripped):
-            return True
-        return False
+        return bool(re.match(r"except\s+\w+", stripped))
 
     @override
     def check(self) -> CheckResult:
@@ -267,9 +258,7 @@ class HardcodedPathChecker(ViolationChecker):
             return True
         if '": "/' in stripped or "': '/" in stripped:  # API path in dict
             return True
-        if "{" in stripped and '"/' in stripped:  # Path with param e.g. "/path/{id}"
-            return True
-        return False
+        return "{" in stripped and '"/' in stripped  # Path with param e.g. "/path/{id}"
 
     @override
     def check(self) -> CheckResult:
@@ -325,7 +314,7 @@ def print_results(
     print(f"📁 {repo_name}: {total_violations} violations")
     print(f"{'=' * 70}")
 
-    for check_name, result in results.items():
+    for _check_name, result in results.items():
         count = result.count
         if count == 0:
             print(f"  ✅ {result.name}: CLEAN")
@@ -514,7 +503,7 @@ def main():
                 results = all_results.get(repo_name) or {}
                 total = sum(r.count for r in results.values())
                 f.write(f"\n## {repo_name} ({total} violations)\n\n")
-                for check_name, result in results.items():
+                for _check_name, result in results.items():
                     if result.count == 0:
                         continue
                     f.write(f"### {result.name} ({result.count})\n\n")

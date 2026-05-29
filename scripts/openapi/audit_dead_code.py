@@ -309,7 +309,7 @@ def _run_rg_files_only(
     return [line for line in result.stdout.strip().split("\n") if line]
 
 
-def _build_import_edges(
+def _build_import_edges(  # noqa: C901
     repo_path: Path,
     package_name: str,
     all_modules: list[ModuleInfo],
@@ -390,10 +390,7 @@ def _build_import_edges(
                 return None
             base_parts = base_parts[:-levels_up]
 
-        if dotted_suffix:
-            target = ".".join(base_parts) + "." + dotted_suffix
-        else:
-            target = ".".join(base_parts)
+        target = ".".join(base_parts) + "." + dotted_suffix if dotted_suffix else ".".join(base_parts)
 
         return _resolve_dotted(target)
 
@@ -496,10 +493,7 @@ def _build_import_edges(
         for name in imported_names.split(","):
             name = name.strip().split(" as ")[0].strip()
             if name and name != "*":
-                if suffix:
-                    full_suffix = f"{suffix}.{name}"
-                else:
-                    full_suffix = name
+                full_suffix = f"{suffix}.{name}" if suffix else name
                 resolved_name = _resolve_relative(importer.file_path, full_suffix, dot_count)
                 if resolved_name:
                     edges[importer.dotted_module].add(resolved_name)
@@ -767,9 +761,12 @@ def _audit_service(
     #    If the fallback finds references, promote to DEAD_BRANCH (imported
     #    but still not reachable from entry points).
     for module in all_modules:
-        if module.classification == "ORPHAN_MODULE" and not module.is_init:
-            if _fallback_string_search(repo_path, package_name, module):
-                module.classification = "DEAD_BRANCH"
+        if (
+            module.classification == "ORPHAN_MODULE"
+            and not module.is_init
+            and _fallback_string_search(repo_path, package_name, module)
+        ):
+            module.classification = "DEAD_BRANCH"
 
     # 6b. Import-based verification: attempt to load entry points and check
     #     which modules Python actually imports (catches transitive chains,

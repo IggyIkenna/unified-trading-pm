@@ -57,9 +57,12 @@ def _check(instrument_path: Path) -> list[str]:
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id in _REQUIRED_FROZENSETS:
                     found_frozensets.add(target.id)
-        elif isinstance(node, ast.AnnAssign):
-            if isinstance(node.target, ast.Name) and node.target.id in _REQUIRED_FROZENSETS:
-                found_frozensets.add(node.target.id)
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id in _REQUIRED_FROZENSETS
+        ):
+            found_frozensets.add(node.target.id)
 
     missing_frozensets = _REQUIRED_FROZENSETS - found_frozensets
     for name in sorted(missing_frozensets):

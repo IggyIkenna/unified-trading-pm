@@ -25,9 +25,7 @@ def _is_blank_reason(node: ast.Call) -> bool:
     for kw in node.keywords:
         if kw.arg == "reason":
             val = kw.value
-            if isinstance(val, ast.Constant) and val.value == "":
-                return True
-            return False
+            return bool(isinstance(val, ast.Constant) and val.value == "")
     return True
 
 

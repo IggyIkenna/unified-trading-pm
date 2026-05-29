@@ -132,9 +132,8 @@ def add_collaborator(token: str, repo: str, username: str) -> tuple[bool, str]:
     )
     if code in (204, 200, 201):
         return True, "ok" if code != 201 else "invitation sent"
-    if code == 422:
-        if "already exists" in body.lower():
-            return True, "already added"
+    if code == 422 and "already exists" in body.lower():
+        return True, "already added"
     return False, f"HTTP {code}: {body[:150]}"
 
 

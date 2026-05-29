@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 from pathlib import Path
 from unittest.mock import patch
@@ -121,8 +122,7 @@ class TestImportChecker:
         mod = _load_module()
         f = tmp_path / "multi.py"
         f.write_text(
-            "from unified_trading_library.core import X\n"
-            "from unified_trading_library.events.models import E\n"
+            "from unified_trading_library.core import X\nfrom unified_trading_library.events.models import E\n"
         )
         checker = mod.ImportChecker()
         checker.check_directory(tmp_path)
@@ -149,7 +149,7 @@ class TestMain:
         with patch("sys.argv", ["check-import-patterns.py", str(tmp_path)]):
             try:
                 mod.main()
-                assert False, "Should have raised SystemExit"
+                raise AssertionError("Should have raised SystemExit")
             except SystemExit as e:
                 assert e.code == 1
 
@@ -165,13 +165,10 @@ class TestMain:
 
     def test_main_nonexistent_path_warns(self, capsys) -> None:
         mod = _load_module()
-        with patch("sys.argv", ["check-import-patterns.py", "/nonexistent/path/xyz"]):
-            try:
-                mod.main()
-            except SystemExit:
-                pass
+        with patch("sys.argv", ["check-import-patterns.py", "/nonexistent/path/xyz"]), contextlib.suppress(SystemExit):
+            mod.main()
         captured = capsys.readouterr()
-        assert "Warning" in captured.out or captured.out == "" or True  # graceful handling
+        assert True  # graceful handling
 
     def test_main_quiet_no_violations(self, tmp_path: Path, capsys) -> None:
         mod = _load_module()

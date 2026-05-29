@@ -19,6 +19,7 @@ Environment:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import subprocess
 import sys
@@ -220,10 +221,8 @@ def _check_cr1(repo_path: Path) -> GateResult:
             for line in result.stdout.strip().splitlines():
                 if ":" in line:
                     _, _, count_str = line.rpartition(":")
-                    try:
+                    with contextlib.suppress(ValueError):
                         total_hits += int(count_str.strip())
-                    except ValueError:
-                        pass
     except FileNotFoundError:
         # rg not available; fall back to Python glob
         excl_dirs = {"tests", ".venv", "node_modules", "__pycache__", "build", "dist"}
@@ -277,10 +276,8 @@ def _check_cr2(repo_path: Path, declared_coverage: str) -> GateResult:
 
         declared_num: float | None = None
         clean = declared_coverage.rstrip("%")
-        try:
+        with contextlib.suppress(ValueError):
             declared_num = float(clean)
-        except ValueError:
-            pass
 
         if declared_num is not None and actual_pct < declared_num - 1.0:
             return GateResult(
@@ -383,10 +380,8 @@ def _check_cr4(repo_path: Path) -> GateResult:
             for line in result.stdout.strip().splitlines():
                 if ":" in line:
                     _, _, count_str = line.rpartition(":")
-                    try:
+                    with contextlib.suppress(ValueError):
                         noqa_count += int(count_str.strip())
-                    except ValueError:
-                        pass
     except FileNotFoundError:
         pass
 

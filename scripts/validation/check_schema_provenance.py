@@ -44,9 +44,7 @@ def should_exclude_file(rel_path: str) -> bool:
         return True
     if rel_path.endswith("__init__.py"):
         return True
-    if "output_schemas.py" in rel_path:
-        return True
-    return False
+    return "output_schemas.py" in rel_path
 
 
 def has_schema_provenance_exempt(filepath: Path) -> bool:
@@ -174,10 +172,10 @@ def load_repos_from_manifest(manifest_path: Path | None = None) -> list[str]:
             if (r.get("name", r) if isinstance(r, dict) else r) and not str(r).startswith("_")
         ]
     else:
-        names = [k for k in repos.keys() if not k.startswith("_")]
+        names = [k for k in repos if not k.startswith("_")]
     if not names:
         vers = m.get("versions", {})  # noqa: qg-empty-fallback
-        names = [k for k in vers.keys() if not k.startswith("_")]
+        names = [k for k in vers if not k.startswith("_")]
     return names
 
 

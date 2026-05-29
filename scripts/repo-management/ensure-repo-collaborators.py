@@ -110,10 +110,9 @@ def add_collaborator(
         body = e.read().decode() if e.fp else ""
         if e.code == 204:
             return True, "ok"
-        if e.code == 422:
+        if e.code == 422 and ("already exists" in body.lower() or "request" in body.lower()):
             # might already be collaborator with same permission
-            if "already exists" in body.lower() or "request" in body.lower():
-                return True, "already added"
+            return True, "already added"
         return False, f"HTTP {e.code}: {body[:200]}"
     except (OSError, ValueError) as e:
         return False, str(e)
