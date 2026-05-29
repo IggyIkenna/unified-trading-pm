@@ -63,12 +63,15 @@ Strict auth is in effect post-2026-05-19 cutover (`ALLOW_ANONYMOUS=False`).
 
 2. Open `https://agent-orchestrator.odum-research.com`, pick the right backend from the dropdown (Ikenna VM = default),
    sign in with the username + password from step 1.
-3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` from `~/.config/agent-orchestrator/jwt-secret` on the VM or
-   the equivalent path on the legacy host).
+3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` — central-VM-only secret loaded from
+   `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`). The operator JWT validates on the central
+   API only and never leaves that VM — central→worker proxy calls use the separate `ORCHESTRATOR_INTERNAL_SECRET`
+   (codified 2026-05-29; see `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` § "Auth: two-secret model").
 
-Per-backend bootstrap: each backend has its own `data/config/users.json` — you authenticate against whichever backend
-the dropdown selected. Adding Ikenna as a user on Harsh's backend (so Ikenna can see Harsh's slots) requires Harsh to
-run `manage_users.py add ikenna` on HIS host and share the password.
+Per-backend bootstrap: each backend has its own `data/config/users.json`, but per the centralized-router model
+(2026-05-22) the dashboard only ever logs into the **central** API. Operator JWT is validated there; the central proxies
+per-VM calls to workers over the private VPC using a separately-signed internal service token. Adding a new operator
+means adding a `users.json` row only on the central VM.
 
 Full flip-day checklist: `agent-orchestrator/docs/AUTH_INVENTORY.md`.
 

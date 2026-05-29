@@ -222,6 +222,21 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
   API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
+- **Agent-orchestrator two-secret auth model (HARD RULE codified 2026-05-29)**: the orchestrator runs on TWO
+  cryptographically distinct HS256 secrets — never collapse them into one shared key. (1) `ORCHESTRATOR_JWT_SECRET` —
+  operator dashboard login JWT, **central VM only**, never wired into worker `.env.local`. (2)
+  `ORCHESTRATOR_INTERNAL_SECRET` — central↔worker proxy auth, fleet-shared via
+  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret` (workers wire
+  `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret`; central holds the literal value because its AWS-host ADC
+  has no GCP project context). The central terminates the operator JWT at the perimeter then mints a fresh 5-min
+  internal-secret-signed token (`auth.get_internal_service_token`) for the upstream Authorization. Operator JWT never
+  reaches a worker. Symptom of regression: dashboard log-in succeeds (200 on `/api/auth/login`) but every
+  `/api/backends` + `/api/vms/<id>/*` returns 401, bouncing the operator back to the login screen. Diagnosis: SSH a
+  worker + check journal for `"Loaded internal central↔worker secret from GCS."` startup line; absence ⇒ `.env.local`
+  missing the GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` unset. Rotation: overwrite the GCS object + restart each
+  orchestrator (`reload_secret()` hot-swap fires on next config-poller tick and clears the cached internal token).
+  SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` § "Auth (two-secret model)" +
+  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` § "Auth: two-secret model".
 - **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
   `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
   (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy

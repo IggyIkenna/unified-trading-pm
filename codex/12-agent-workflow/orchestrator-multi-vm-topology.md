@@ -46,10 +46,13 @@ last_reviewed: 2026-05-28
 │  nginx :443 (Let's Encrypt) → orchestrator backend :8765                          │
 │                                                                                  │
 │  Acts as:                                                                        │
-│   - Auth boundary: operator JWT validated here; never leaves this perimeter     │
+│   - Auth boundary: operator JWT validated here against ORCHESTRATOR_JWT_SECRET   │
+│     (central-only key); never leaves this perimeter                              │
 │   - Server-side fan-out: /api/fleet/summary calls each VM in parallel + merges  │
 │   - Per-VM proxy: /api/vms/<id>/<path> → forwards to <id>'s private_url over     │
-│     the VPC, mints a fresh internal service token for the upstream Authorization │
+│     the VPC, mints a fresh internal service token signed with                    │
+│     ORCHESTRATOR_INTERNAL_SECRET (fleet-shared key) for the upstream             │
+│     Authorization header — workers validate against the same internal key       │
 │   - Planning slots: Slot 1 Ikenna + Slot 2 Harsh interactive (Opus 4.7)          │
 └──────────────────────────────────────────┬──────────────────────────────────────┘
                                            │ HTTP private VPC (vpc-6ee70e08)
@@ -75,6 +78,32 @@ last_reviewed: 2026-05-28
 The browser never reaches an epic VM directly — every `/api/...` call from the dashboard has its baseUrl rewritten to
 `<central>/api/vms/<id>` (or stays at the central origin for fleet-wide endpoints), so per-VM control travels through
 the central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` + `server/server.py::proxy_to_vm`.
+
+### Auth: two-secret model (codified 2026-05-29)
+
+The auth boundary above runs on **two independent HS256 secrets** — codifying the "operator JWT never reaches workers"
+invariant the topology depends on:
+
+- **`ORCHESTRATOR_JWT_SECRET`** — operator dashboard login JWT only. **Lives on the central VM only.** Validates the
+  Bearer token on every authed request that enters at the public edge. Workers don't have it (their `_jwt_secret` module
+  global resolves to an ephemeral per-process random, so operator JWTs can never validate on a worker by construction).
+- **`ORCHESTRATOR_INTERNAL_SECRET`** — central↔worker proxy auth. **Fleet-shared** via
+  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret`. Every worker's `.env.local` wires
+  `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret` (loaded at startup via the GCS Storage client; works because
+  workers have `GOOGLE_APPLICATION_CREDENTIALS` from bootstrap). The central VM holds the literal value directly
+  (`ORCHESTRATOR_INTERNAL_SECRET=<literal>`) because its AWS-side ADC has no GCP project context for the SDK's project
+  auto-detection — equivalent to the GCS-shared value, rotate together with the GCS object.
+- **Flow per request**: operator → central with Bearer<operator-JWT>. Central validates against
+  `ORCHESTRATOR_JWT_SECRET`, terminates that token, mints a fresh 5-min JWT signed with `ORCHESTRATOR_INTERNAL_SECRET`
+  (claims: `role=worker, machine=central-proxy, sub=orchestrator`), forwards THAT in the upstream Authorization. Worker
+  validates against its copy of the internal secret. The operator's token never leaves the central VM.
+- **Symmetric `decode_token`**: both sides try the operator key first, then the internal key. So the central can accept
+  its own internal-token loopback if a route ever proxies back to itself; workers reject operator JWTs by construction.
+
+Failure mode if the secrets get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
+`/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
+journal for `"Loaded internal central↔worker secret from GCS."` startup line. Absence → `.env.local` missing the GCS
+URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
 
