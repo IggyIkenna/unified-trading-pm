@@ -165,9 +165,11 @@ class TestMain:
 
     def test_main_nonexistent_path_warns(self, capsys) -> None:
         mod = _load_module()
-        with patch("sys.argv", ["check-import-patterns.py", "/nonexistent/path/xyz"]):
-            with contextlib.suppress(SystemExit):
-                mod.main()
+        with (
+            patch("sys.argv", ["check-import-patterns.py", "/nonexistent/path/xyz"]),
+            contextlib.suppress(SystemExit),
+        ):
+            mod.main()
         captured = capsys.readouterr()
         assert True  # graceful handling
 
