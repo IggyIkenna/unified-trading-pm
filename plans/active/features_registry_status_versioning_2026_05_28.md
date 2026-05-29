@@ -203,9 +203,14 @@ guard.
       FeatureSpec — features@32c0a1ce.
 - [x] ✅ [SCRIPT] P1. 12 pytest cases cover every CLI mode + drift baseline. 8,405 total tests pass, basedpyright clean
       — features@32c0a1ce.
-- [ ] [QG] P2. Wire `--check-drift` into `quality-gates.sh` as STEP 5.XX once `FeatureSpec.formula_hash` is populated
-      with the baseline. Today's behaviour: prints baseline (informational); next iteration:
-      compare-against-stored-hash, fail on mismatch.
+- [x] ✅ [QG] P2. **DRIFT GATE OPERATIONAL** — features@dd2ed36f shipped 2026-05-29: (a)
+      `registry.BASELINE_FORMULA_HASHES` records per-group hash for the 5 verified/tested groups;
+      (b) `check_drift()` compares + exits non-zero on mismatch (MATCH/DRIFTED/NEW outcomes; NEW =
+      informational only so the 29 listed groups don't fail the gate); (c) QG STEP 5.91 in
+      `scripts/quality-gates.sh` runs every quality-gates invocation. 3 new tests cover clean
+      baseline + forced-mismatch detection + `main()` exit code propagation. 6,952 total tests pass,
+      basedpyright clean. Today's state: `MATCH=5  DRIFTED=0  NEW=29`. Drift detection is now
+      operational, not informational — audit item (r) is GREEN.
 
 ### Phase 5 — Codex alignment + consumer pin pattern [P2]
 
