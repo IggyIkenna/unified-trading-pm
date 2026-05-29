@@ -170,8 +170,13 @@ watchdog crash-looping and the manifest-consolidator infra possibly degraded in 
       `vm-logs/<vm>/vm-setup.log` + `SETUP_EXIT_STATUS`. Scoped narrowly (other VMs unaffected). Picked option (b) over
       recommended option (a) because option (a) touches the UTL `read_availability_index` SSOT that many cross-repo
       consumers depend on — that change deserves a focused PR + cross-repo consumer audit and isn't worth bundling with
-      incident response. Option (a) remains a future hardening — file separately if/when an MTDS slot has the cycles.
-      Option (c) (raise heavy machine type) not pursued — no measured evidence the current type is wrong.
+      incident response. **Option (a) shipped 2026-05-28** alongside option (b) under
+      [`plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md`](../manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md)
+      — `unified-trading-library@cb1f4b5f` adds opt-in `MANIFEST_FAIL_ON_STALE_FALLBACK` env + typed
+      `ManifestConsolidatorStaleError` exception in `read_availability_index`; `deployment-service@3f4b14e` opts the
+      cefi-heavy backfill launcher in (paired with the shell preflight from `7add531`). Both layers now reinforce —
+      shell catches at bootstrap, Python catches mid-run. Option (c) (raise heavy machine type) not pursued — no
+      measured evidence the current type is wrong.
 - [x] ✅ [INFRA] P0. Make VM self-delete fire on rc≠0 too. **Done 2026-05-28** — shipped `deployment-service@334784c`.
       Real gap was not in `vm-exec-with-gcs-tee.sh:277` (which already fires on rc≠0 unconditionally on
       `VM_SHUTDOWN_ON_COMPLETION=true`) but in `setup-data-pipeline-vm.sh` which uses `set -euo pipefail` with no EXIT

@@ -1463,6 +1463,27 @@ python -m unified_trading_library.manifest_consolidator --bucket market-data-tic
 
 Idempotent + safe to run concurrently with the scheduled cycle.
 
+### Read path fail-fast on stale-fallback (2026-05-28 opt-in)
+
+The reader's slow-path fallback (`_read_and_merge_per_vm_shards`) loads every per-VM shard in the bucket when the
+consolidated `availability_index.parquet` is stale or missing. On large buckets (cefi: 1700+ shards) this is ~12 GB
+pandas heap → SIGKILL at startup before wrapper lifecycle.
+
+Callers that prefer fail-fast over OOM opt in via `MANIFEST_FAIL_ON_STALE_FALLBACK` (closed-set truthy: `1` / `true` /
+`yes`, case-insensitive). When set, the fallback path raises `ManifestConsolidatorStaleError`
+(`unified_trading_library.ManifestConsolidatorStaleError`) instead of merging. Default unset → unchanged behavior; every
+existing caller is unaffected until it explicitly opts in.
+
+| Layer            | Where                                                           | Scope                                                                                                      |
+| ---------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Shell preflight  | `setup-data-pipeline-vm.sh` § 5b (`deployment-service@7add531`) | Catches before Python starts — `gsutil ls -L` on the index, exit 78 if older than budget                   |
+| Python fail-fast | `read_availability_index` (`unified-trading-library@cb1f4b5f`)  | Catches anything past the preflight — typed `ManifestConsolidatorStaleError` raised inside the SSOT module |
+
+Both fire on the same trigger (`MANIFEST_CONSOLIDATED_STALENESS_SEC` budget exceeded). The Python layer additionally
+fires when the consolidator goes stale **mid-run** (not just at bootstrap). The cefi-heavy backfill launcher
+(`launch-cefi-sharded-backfill.sh`) is the first opt-in caller. See follow-up plan
+[`manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md`](../../plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md).
+
 ## Honest-coverage measurement script + UI surface (Phase 2, 2026-05-12)
 
 `instruments-service/scripts/measure_honest_coverage.py` — daily cron script that reads each asset_group's canonical
