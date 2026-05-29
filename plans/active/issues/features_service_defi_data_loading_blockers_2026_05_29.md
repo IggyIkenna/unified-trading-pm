@@ -186,6 +186,24 @@ Operator directive 2026-05-29 16:00 IST: "we already have raw tick data — just
 **Step 2 — MDPS canary** —
 - **First attempt 18:44 IST → STUCK + KILLED 19:30 IST**: VM `mdps-backfill-cefi-main-test-20260529-184417` (e2-standard-8, 32 GB). T+10min check: 3,920 parquets, day-1 had all 7 timeframes ✓. T+30min check: still 3,920 parquets (zero growth in 20 min). Latest event was `PROCESS_MEMORY_WARNING` — `process_rss=31.2 GB / system_memory_percent=95.4% / process_cpu_percent=136.4% / process_num_threads=75`. Confirmed: backpressure-gating wedge, NOT a crash. The `_cleanup_after_day` fix alone isn't enough on e2-standard-8 for this scope. Root cause: filter-pushdown bug (`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`) means MDPS reads ALL ~9 instruments per venue per data_type per day, ignoring `MDPS_INSTRUMENT_IDS=BTCUSDT+ETHUSDT` filter. Peak per-day RSS exceeds 32 GB even at day-1.
 - **Second attempt 19:34 IST**: VM `mdps-backfill-cefi-main-test-20260529-193445` (e2-highmem-8, **64 GB** = 2× headroom). Same scope, same env vars; only machine type changed. If filter-pushdown peak is ~31 GB, this VM should clear it with 33 GB margin.
+- **v2 T+15min**: memory 29% / RSS 22.8 GB / day-18 already at 189 parquets ✓ healthy.
+- **v2 T+30min**: memory **61%** / RSS **44.6 GB** (doubled in 15min). 8 days have output (04-15 → 04-22). VM still RUNNING. Per-day-cleanup not aggressive enough yet — memory still climbing but plenty of headroom on 64 GB.
+
+**Step 3 — features-service smoke 20:32–20:39 IST** — TWO REAL BUGS FOUND + ONE SUCCESS:
+
+  - First smoke attempt FAILED with `unable to vstack, column names don't match: "buy_volume" and "buy_trade_count"`. Root cause: **MDPS canonical_writer produces inconsistent column ORDER across days**. Day-15 (written by v1 VM before crash): `..., buy_volume, sell_volume, buy_trade_count, sell_trade_count, ...`. Day-16+ (written by v2 VM, current code): `..., buy_trade_count, sell_trade_count, buy_volume, sell_volume, ...`. Same 35 columns, same data, just different order. Polars `vstack` is strict on column order. This is BOTH (a) an MDPS bug — canonical_writer should produce stable column ordering — AND (b) a features-service improvement opportunity — `data_loader._concat_and_sort` should use `pl.concat([...], how="diagonal_relaxed")` to handle column-order drift. File as findings against MDPS + features-service.
+
+  - Second smoke attempt (after day-15 BTCUSDT vanished — v2 may have overwritten or relocated): vstack error GONE ✓ but new gate: `Insufficient data for technical_indicators: have 43 rows, need 50` (1h). 7 days of BTCUSDT present in test bucket (04-16 → 04-22 = 168 hours raw) but only 43 hours actually loaded. Likely the loader's per-instrument concat is silently dropping rows that don't match schema/window strictly. Will resolve once MDPS writes more days OR a feature_group with smaller lookback runs.
+
+**Success surface validated**:
+  - Bucket override (`PROTOCOL_DATA_SOURCE_BUCKET_CEFI`) works for both manifest read + per-day blob reads ✓
+  - features-service loads MDPS-test-bucket data successfully ✓
+  - FINDING-B failure manifest writes work (`record_failed` rows landed in `features-delta-one-cefi-PID`) ✓
+  - Path-partition versioning code path reached (even though no successful write yet, the gate logic ran)
+
+**Remaining blockers**:
+  - MDPS column-order drift fix needed (or features-service load_candles needs `diagonal_relaxed`).
+  - Sufficient BTCUSDT days for 50-bar lookback. Once MDPS clears more days, retry.
 
 **Step 3 — Features-service smoke** (pending Step 2 success): once MDPS produces processed candles in test bucket, features-service runs with `PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112`. First write to `gs://features-delta-one-cefi-*` unblocks audit items (l) / (live-versioning) / (batch-live) per `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`.
 
