@@ -189,9 +189,45 @@ Concrete questions to answer + corresponding redesigns to ship:
   **Why not share manifest across subprocesses**: passing a 526 MB parquet frame via pickle/IPC adds coordination complexity and a serialization cost that rivals the cold-load. The simpler contract — each subprocess loads what it needs — is safer and is already validated by Phase 3.1 (one subprocess = one date = clean slate).
 
   **Transition**: the subprocess-per-date model is a thin wrapper around the existing `process_category` / `process_candles_handler` calls. The inner date-loop in `process_handler.py:_process_candles_for_one_date` becomes `subprocess.run(...)`. No changes to the orchestrator's scan/filter/aggregate/write logic are needed for Phase 4.1.
-- [ ] [DESIGN] P1. **1.2 Map state ownership to the chosen execution model.** Which state lives in the long- running
+- [x] ✅ [DESIGN] P1. **1.2 Map state ownership to the chosen execution model.** Which state lives in the long- running
       parent (manifest? reference data? auth sessions?) and which lives in the per-shard worker (tick DataFrame, candle
       accumulators)? This is the foundation for any refactor that follows.
+
+  **State ownership map (2026-05-29, slot-9) — subprocess-per-date model:**
+
+  | State object | Owner | Lifetime | Notes |
+  |---|---|---|---|
+  | CLI args (venues, instrument_ids, data_types, date range) | **Parent** — parsed once at startup | Parent process lifetime | Forwarded verbatim to each subprocess as argv; no serialisation needed |
+  | Date list | **Parent** — generated from `--start-date` / `--end-date` | Parent process lifetime | Ordered sequence; parent iterates and spawns one subprocess per date |
+  | `manifest` / `availability_index.parquet` (~526 MB) | **Per-subprocess** — loaded on first `check_shard_freshness()` call | Subprocess lifetime | Cheaper to reload (1–5 s) than to pickle / mmap across a subprocess boundary; UTL in-process TTL cache deduplicates calls within one subprocess |
+  | Tradable instruments DataFrame | **Per-subprocess** — loaded in `_get_tradable_instruments()` | Subprocess lifetime | ~1–2 s; IPC cost of serialising a 4128-row polars frame rivals cold load |
+  | `_storage_client` | **Per-subprocess** — lazy singleton | Subprocess lifetime | Stateless after init (~10 ms); no cross-date state to propagate |
+  | `_data_sinks` dict | **Per-subprocess** — created lazily per category | Subprocess lifetime | GCS write handles + buffer state; released on subprocess exit; no contamination risk |
+  | `_is_holiday()` lru_cache | **Per-subprocess** — starts empty | Subprocess lifetime | Bounded to 1024 entries; cleared naturally at subprocess exit |
+  | Tick DataFrames (raw parquet reads) | **Per-subprocess** — inside `process_category` scan | Subprocess lifetime | Python GC sees wrapper; C-level arena bytes released on subprocess exit — **this is the structural fix for the 25 GB/day floor** |
+  | Candle accumulators | **Per-subprocess** — inside `CandleProcessingService` | Subprocess lifetime | Per-instrument aggregation state; no cross-date leakage |
+  | `candle_processing_service.cache` | **Per-subprocess** — fresh instance | Subprocess lifetime | UTL service instance; cache starts empty each date |
+  | `sampling_service.cache` | **Per-subprocess** — fresh instance | Subprocess lifetime | Same |
+  | `_active_resource_profiler` | **Per-subprocess** — set once in `cli/main.py` | Subprocess lifetime | Observer only; no accumulation |
+  | Polars/PyArrow C-level arenas | **Per-subprocess** — allocated by `libarrow.so` / Rust allocator | Subprocess lifetime | **RELEASED ON SUBPROCESS EXIT** — the OS reclaims the full arena; `gc.collect()` has zero effect on these |
+  | Auth credentials (GCP SA key, env vars) | **Inherited by subprocess** — `env=os.environ.copy()` | Subprocess lifetime | No re-authentication per date; env vars inherited from parent at `subprocess.run()` |
+
+  **Parent process contract (the entire parent-side implementation of Phase 4.1):**
+  ```python
+  for date in date_list:                         # only thing parent holds
+      rc = subprocess.run(
+          [sys.executable, "-m", "market_data_processing_service.cli.main",
+           "--start-date", date, "--end-date", date,
+           *forwarded_args],                      # venues, instrument_ids, data_types, etc.
+          env=os.environ.copy(),                  # auth credentials inherited
+      ).returncode
+      log(f"date={date} rc={rc}")                # 0 = success; non-zero = log + continue
+  ```
+  Parent holds: one `list[str]` of date strings. Nothing else. Zero memory accumulation.
+
+  **What `_cleanup_after_day` becomes**: vestigial in the new model — the OS does the cleanup. It should be kept in place (it catches genuine Python-cycle garbage) but is no longer critical for memory correctness. The `del + gc.collect()` patches from the sibling plan (Phase 2.2) are safe to remove in Phase 4.3 — they will no longer be needed.
+
+  **Why no manifest sharing across subprocesses**: passing a 526 MB polars frame via `multiprocessing.shared_memory` or pickle adds ~0.5–1 s serialisation + IPC coordination that erases most of the saving vs a cold load. The shared-manifest optimisation is only worth it if the subprocess count is high (e.g., subprocess-per-shard at 32 shards). For subprocess-per-date (≤ 30 dates), cold-load-per-subprocess is simpler and safe.
 
 ## Phase 2 — Decide the data-engine shape
 
