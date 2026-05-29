@@ -166,10 +166,6 @@ ignore = [
 reportImplicitOverride = "none"
 reportExplicitAny = "none"
 reportAny = "error"
-reportUnknownArgumentType = "none"
-reportUnknownVariableType = "none"
-reportUnknownMemberType = "none"
-reportUnknownParameterType = "none"
 reportUnnecessaryComparison = "warning"
 reportUnreachable = "warning"
 [[tool.basedpyright.executionEnvironments]]
