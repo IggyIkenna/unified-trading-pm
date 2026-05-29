@@ -64,10 +64,10 @@ operator intervention.
 > Need to catch the moment. Two paths: (a) wait for next impairment + use the EC2 Get-Console-Output API which works
 > even when the OS is unresponsive; (b) write a watchdog that captures local state when reachability flips.
 
-- [ ] [AGENT] P0. Write a tiny watchdog (cron or systemd timer running every 60s on the host) that on each tick: writes
+- [x] ✅ [AGENT] P0. Write a tiny watchdog (cron or systemd timer running every 60s on the host) that on each tick: writes
       `free -m`, `top -b -n1`, `dmesg | tail -50`, `pgrep -af claude`, FD count, socket count to a rotating log at
       `/var/log/orch-watchdog/`. When status checks flip to FAILED, the last pre-impairment snapshot is the forensic
-      gold.
+      gold. — agent-orchestrator@b833df8
 - [ ] [AGENT] P0. On next impairment: pull `aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest` —
       kernel-level messages survive even OS-level hang. Look for OOM-killer entries (`Out of memory: Killed process`),
       kernel panics, or hardware faults.
