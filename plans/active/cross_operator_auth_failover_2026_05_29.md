@@ -102,8 +102,11 @@ why + reproduction.
       `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` (default **180**), mark the assigned `account_id` as `auth_failed` in the DB.
       Then call `_pick_next_account` on that slot and re-spawn the tmux session with the new account. Cap retries at 2
       to avoid infinite-loop on a fully-broken pool.
-- [ ] [AGENT] P0. Healing path: when an `auth_failed` account next successfully /heartbeats (after operator re-auths),
+- [x] ✅ [AGENT] P0. Healing path: when an `auth_failed` account next successfully /heartbeats (after operator re-auths),
       flip its status back to `healthy`. Same pattern as rate-limit recovery — auto-unflag on success.
+      — agent-orchestrator@7c4ba9b: heartbeat_slot detects account_is_auth_failed → calls clear_account_auth_failed
+      + logs account_auth_restored activity. _pick_next_account updated to use account_is_usable (covers
+      rate_limited + auth_failed + disabled).
 - [ ] [AGENT] P0. Unit + integration tests: (a) spawn slot with deliberately-stale token → 180s timeout → auto-rotate to
       next account → second spawn /heartbeat-s → original account status `auth_failed`. (b) Operator re-auths original
       account → next spawn on it /heartbeat-s → status flips back to `healthy`.
