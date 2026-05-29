@@ -73,11 +73,28 @@ Concrete questions to answer + corresponding redesigns to ship:
 
 ## Phase 0 — Frame the problem (no code edits)
 
-- [ ] [AUDIT] P1. **0.1 Inventory the current fan-out assumptions baked into the code.** Find every place where the
+- [x] ✅ [AUDIT] P1. **0.1 Inventory the current fan-out assumptions baked into the code.** Find every place where the
       orchestrator constructs per-instance state that would be redundant for the next shard / next date. Examples
       (preliminary, surfaced by the sibling plan): lazy `_storage_client`, per-asset_group `_data_sinks` dict, the
       4128-instrument reference DataFrame, the freshness-check manifest read. Tabulate with
       `(field, owner, lifetime, reset_cost)`.
+
+  **Audit findings (2026-05-29, slot-9):**
+
+  | Field / Object | Owner (file:line) | Lifetime | Reset cost |
+  |---|---|---|---|
+  | `_storage_client` | `CandleOrchestrationBase` (orchestration_base.py:47) | Process-lifetime lazy singleton; initialized on first `.storage_client` access | **Cheap** — single `get_storage_client()` call (~10 ms); thread-safe; no accumulation risk |
+  | `_data_sinks` dict | `CandleOrchestrationBase` (orchestration_base.py:49) | Per-orchestrator-instance (one per date × category in `process_handler._process_one_category`) | **Moderate** — `get_data_sink(routing_key=key)` per category key; 4–6 per call; ~50–100 ms total; no per-shard `.clear()` — if a shard leaves a DataSink in a bad state, subsequent shards in the same date are contaminated |
+  | `data_source` / `data_sink` (live adapters) | `CandleOrchestrationBase` (orchestration_base.py:51–52) | Set externally by `LiveModeHandler` before the run; never re-set per shard | **Cheap** — just references; but live mode is not the batch concern here |
+  | Tradable instruments DataFrame | `CandleOrchestrationService._get_tradable_instruments()` called from `orchestration_service.py:507` | Per-date (loaded once per `process_category` call) | **Moderate** — polars read of per-venue instrument parquet files; parallel load via `ThreadPoolExecutor`; ~1–2 s for full CeFi scope; cached in the orchestrator for the duration of one date |
+  | Manifest freshness check (`availability_index.parquet`) | `check_shard_freshness()` at `orchestration_service.py:184` | Per-category per-date (single call, deferred UTL in-process TTL cache) | **Expensive** — ~526 MB parquet materialised to ~2–5 GB decompressed polars per call; UTL has an in-process TTL cache so repeated calls within a short window are cheap, but on a fresh process (new date) the first call always pays the full cost (~1–5 s) |
+  | `_active_resource_profiler` | Module-level global in `batch_workers.py:49` | Process-lifetime; set once from `cli/main.py` via `set_active_resource_profiler()` | **Free** — read-only after init; safe for all shards |
+  | `_MDPSPriorLTPProvider._cache` | Per-instance dict in `live_aggregator.py` | Per-shard last-trade-price window | **Cheap** — in-memory dict; GC'd when provider instance is collected; no explicit `.clear()` |
+  | `candle_processing_service` / `sampling_service` caches | Created inside `CandleOrchestrationService` per date | Per-date (lifecycle matches the orchestrator instance) | **Moderate** — `_cleanup_after_day` at `orchestration_base.py:79` calls `gc.collect()` but does NOT call `.cache.clear()` on either service — the sibling plan noted these as the retention owners, but the actual cleanup hook only does GC, not cache eviction |
+
+  **Key risk**: `_data_sinks` dict has no per-shard cleanup. If an exception mid-shard corrupts a DataSink's write state, all subsequent shards for that date share the same contaminated sink. Per-shard isolation requires either: (a) re-creating the orchestrator per shard, or (b) catching exceptions and replacing the affected `_data_sinks[key]` entry.
+
+  **`_cleanup_after_day` gap** (confirmed from code at orchestration_base.py:79–93): the current implementation only calls `gc.collect()` and logs RSS — it does NOT clear `candle_processing_service.cache` or `sampling_service.cache`. The sibling plan's text was aspirational; the cache clearing was never actually added. This is a confirmed residual gap for 0.2.
 - [ ] [AUDIT] P1. **0.2 Inventory caches and their cleanup paths.** Beyond the `candle_processing_service` /
       `sampling_service` caches that `_cleanup_after_day` knows about — what other module-level or singleton state
       exists? `unified_trading_library` data sinks, the `ResourceProfiler`, event sinks, polars/pyarrow arenas. Where is
