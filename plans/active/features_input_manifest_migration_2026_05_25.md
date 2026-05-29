@@ -181,12 +181,12 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       manifest — captured data_types: trades/ohlcv_1m/derivative_ticker/book_snapshot_5/liquidations). basedpyright 0
       errors; 683 volatility unit tests pass. (WRITE P0 `write_daily_partition` deferred per Phase 1 finding — reaching
       write means read+calc worked.) — features-service@4b7e57b1
-- [ ] 🟠 [IMPLEMENT] P1. **DEFERRED** — volatility `engine/orchestrator.py:263` + `core/orchestration_service.py:166`
-      still scan raw chain files via `raw_tick_data/.../instrument_type={chain_type}/` + `list_blobs` (the
-      `VolatilityFeaturesOrchestrator` engine path — a SEPARATE raw-chain-discovery surface from `VolatilityDataLoader`
-      which reads `processed_candles`). Same legacy `instrument_type=` + raw-list bug class; migrate to manifest-driven
-      raw-chain discovery. Out of Phase-2 scope (processed-candle read path); named here as the successor. Provenance:
-      Phase 2 grep-clean sweep 2026-05-25.
+- [x] ✅ [IMPLEMENT] P1. **DEFERRED → DONE** — volatility `engine/orchestrator.py:263` + `core/orchestration_service.py:166`
+      migrated from `list_blobs` raw scan to `read_availability_index`-driven discovery. Both files updated: manifest
+      filtered by date/data_type=book_snapshot_5/instrument_type/capture_status=captured; canonical v5 path
+      (`asset_group=cefi/venue=VENUE/...`) constructed from manifest rows; `_extract_venue` extended to parse `venue=X`
+      hive segment (canonical) in addition to legacy `VENUE:TYPE:SYMBOL` filename format. Tests in
+      `test_orchestrator_gcs.py` updated + 4 new manifest-mock tests added (22 pass). — features-service@458415c6
 
 ### Phase 3 — cross_instrument `[P1]`
 
