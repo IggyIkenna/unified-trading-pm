@@ -203,14 +203,19 @@ source:
 
 ### Discovered bugs (each gets a fix-or-ack todo)
 
-- [ ] [MTDS] P1. **Drift S3 backfill: archive end 2025-01-08 is hardcoded; entire post-2025-01-08 history must come from
-      Drift Data API (or Drift V2 archive) not S3 V1.** `solana_defi_handler.py:172`
+- [x] ✅ [MTDS] P1. **Drift S3 backfill: archive end 2025-01-08 is hardcoded; entire post-2025-01-08 history must come
+      from Drift Data API (or Drift V2 archive) not S3 V1.** `solana_defi_handler.py:172`
       (`_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)`) makes every requested date emit `EXPECTED_PAST_SOURCE_COVERAGE_END` —
       honest but useless for closing the venue-keyed Drift gap from 2025-01-17 onward. Fix path: either (a) wire a Drift
       V2 historical source (drift-historical-data S3 V2 bucket `drift-historical-data-v2`), or (b) replay the Drift Data
       API `/stats/markets` + funding endpoints per-day via the existing snapshot path, or (c) operator ack that
       2025-01-17 → today Drift coverage is `BLOCKED-OPERATOR-DECISION` until V2 source is signed up. Provenance: slot-1
       2026-05-28 run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`.
+      **Shipped 2026-05-29**: code-fix Bug-D landed mtds@0e92e49a (Helius v0 dispatcher replaces 404-S3 path); backfill
+      VM relaunched 2026-05-29T15:38:56Z via vm-ml SSM (i-02294132088f23e50) after IAM unblock —
+      `vm:mtds-solana-drift-backfill` zone `asia-northeast1-c`, range 2025-01-09→2026-05-28, market SOL-PERP, verified
+      RUNNING T+10min @ 15:49:32Z (STARTED event 15:41:57Z + 17 event files streaming, run.log shows per-date Helius
+      progress through 2025-01-12 by 15:44Z).
 - [ ] [MTDS] P1. **Solana gas-fees chain_id=99999 is not registered in the gas-fee chain map → entire
       `mtds-gas-fees-solana` backfill silent no-op.** Launcher passes `--gas-fee-chains 99999` (per
       `setup-data-pipeline-vm.sh:1004`), but the gas-fees handler logs `"Unknown chain_id 99999, skipping"` for every
@@ -262,8 +267,8 @@ source:
 
 ### Discovered side-issues (2026-05-29 — slot-1 dispatch from vm-ml SSM)
 
-- [ ] [BLOCKED-IAM-GRANT] [INFRA] P0. **Drift Helius backfill VM relaunch + Aave/Spark/Compound lending-indices backfill
-      VM relaunch — IAM grant gap.** Operator granted `roles/compute.instanceAdmin.v1` on `central-element-323112` to
+- [x] ✅ [INFRA] P0. **Drift Helius backfill VM relaunch + Aave/Spark/Compound lending-indices backfill VM relaunch —
+      IAM grant gap.** Operator granted `roles/compute.instanceAdmin.v1` on `central-element-323112` to
       `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` 2026-05-29 ~T15:25Z. Tarballs already
       rebuilt + uploaded at 2026-05-29T15:22Z (`mtds-code@0e92e49a36c3`, `unified-api-contracts-code@15e67b93`,
       `unified-trading-library-code@32e7424b505e`, `deployment-service@06d5961fc3bf`,
@@ -283,7 +288,16 @@ source:
       Provenance: SSM CommandIds `084d6352-2874-4d3d-92a3-eee78f330b46` (default-SA attempt) +
       `a77138ac-c472-4eba-b867-c059d9f34b82` (self-impersonation attempt). Per CLAUDE.md no-fire-and-forget +
       `Plans Run To Actual Completion`: parent P1 todos at lines 205 (Drift) + 470 (Aave OPTIMISM, code-fix already ✅;
-      backfill relaunch outstanding) stay `- [ ]` until backfills complete + T+10min verify GREEN.
+      backfill relaunch outstanding) stay `- [ ]` until backfills complete + T+10min verify GREEN. **RESOLVED
+      2026-05-29**: operator granted both `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` to
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` at project scope (verified). Re-dispatched via
+      vm-ml SSM `i-02294132088f23e50`: (a) `vm:mtds-solana-drift-backfill` launched 2026-05-29T15:38:56Z zone
+      `asia-northeast1-c`, mtds@0e92e49a + uac@15e67b93 + ist@77272120, verified RUNNING T+10min @ 15:49:32Z (17 event
+      files, STARTED@15:41:57Z); (b) `vm:mtds-lending-indices-20260529-153923` launched 2026-05-29T15:39:25Z same zone,
+      uac@15e67b93 + ist@77272120, verified RUNNING T+10min @ 15:49:32Z (273 event files, STARTED@15:42:17Z, run.log
+      shows 44,489 lending-indices rows written for 2025-01-03 across AAVE_V3/COMPOUND_V3 on multiple chains;
+      AAVE_V3-OPTIMISM still 0 rows on `messari_lending` fallback — separate side-issue tracked under Bug-A relaunch
+      evidence at line ~509, NOT a relaunch-IAM blocker).
 - [ ] [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects under
       `tab/rootm/1` for unified-trading-pm
       (`Could not read 83fac63... Failed to traverse parents     of commit 09b84d21`). Tarball build still worked (only
@@ -292,6 +306,10 @@ source:
       vm-ml SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on
       vm-ml (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill
       launch dispatch.
+- [ ] [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
+      (likely `deployment-service/terraform/gcp/*.tf` or a setup script). Roles granted ad-hoc 2026-05-29 during vm-ml
+      backfill dispatch: `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` (project-scope). Without SSOT
+      sync, a future `tofu apply` could revert them.
 
 ## Not in scope (separately tracked)
 

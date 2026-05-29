@@ -44,21 +44,50 @@ why + reproduction.
 
 ## Phase 0 — Pre-audit (P0)
 
-- [ ] [AGENT] P0. Read `agent-orchestrator/server/server.py` `_pick_next_account` (line 334). Confirm whether it filters
+- [x] ✅ [AGENT] P0. Read `agent-orchestrator/server/server.py` `_pick_next_account` (line 334). Confirm whether it filters
       by `operator` field on the account record. If yes — that filter is the bug; if no — confirm and document.
-- [ ] [AGENT] P0. Map every call-site of `_pick_next_account` (rate-limit branch line 404, /boot guard line 587,
+      **Finding (2026-05-29):** NO operator-boundary filter exists. The function (lines 334–352) loads ALL accounts from
+      `accounts.json`, skips only `current_account_id` by position, then skips any account where
+      `ss.account_is_rate_limited()` returns true. There is NO filter on the `operator` field. Cross-operator rotation
+      already works at this level — if `harsh-primary` is rate-limited, `_pick_next_account` WILL return an ikenna
+      account as the next candidate (assuming it is not rate-limited). The bug the operator describes (slot 6 not
+      rotating to ikenna) is NOT a filter bug here; it is downstream — likely the `auth_failed` path (no heartbeat
+      after spawn) is not implemented, so the stale-token slot never triggers rotation at all.
+- [x] ✅ [AGENT] P0. Map every call-site of `_pick_next_account` (rate-limit branch line 404, /boot guard line 587,
       operator-directed line 728). Tabulate which existing dispatch_reason strings get emitted.
-- [ ] [AGENT] P0. Identify the existing Slack-alert plumbing (which module emits the `Slot N STALE` alert) and confirm
+      **Finding (2026-05-29):** 4 call sites (plan said 3; there is a 4th at line 1117):
+      | Line | Context | Trigger | dispatch_reason / message emitted |
+      |------|---------|---------|-----------------------------------|
+      | 404  | `rotate_all_slots_off_account()` | account quota sweep | activity: `account_rotation_triggered` → `_spawn_with_account_bg` (no dispatch_reason field returned) |
+      | 589  | `/boot` endpoint | rate-limited at boot | `"account-rotated:{next_acc.id} — exiting, new session spawning"` or `"account {id} is rate-limited — no fallback accounts available"` |
+      | 728  | `/heartbeat` endpoint | rate-limited at heartbeat | same pattern as /boot |
+      | 1117 | `/done` endpoint | rate-limited after done | `message` field (not dispatch_reason): `"account-rotated:{next_acc.id} — exiting, new session spawning"` or `"Account {id} is rate-limited — no fallback accounts available. Slot held idle until window resets."` |
+      No `operator_directed` trigger exists yet (plan item for Phase 3). The string `"account-rotated:<id>"` is the
+      sentinel the worker detects to exit cleanly.
+- [x] ✅ [AGENT] P0. Identify the existing Slack-alert plumbing (which module emits the `Slot N STALE` alert) and confirm
       whether rotation events flow through the same channel. Document the channel name (`agent-orchestrator-alerts`).
+      **Finding (2026-05-29):** Slack module: `server/notifications/slack.py`. Webhook env var:
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`. `notify_slot_stale()` is called from `server/health.py:116`. A
+      `notify_account_rotated()` stub exists at `slack.py:173` but is **not wired to any call site** — rotation events
+      currently do NOT fire Slack alerts. Phase 3 must call `notify_account_rotated()` (or a richer version) from
+      every `_pick_next_account` call site. Channel name: `agent-orchestrator-alerts` (configured in the Slack app's
+      webhook URL; not hardcoded in Python).
 
 ## Phase 1 — Cross-operator rotation (P0)
 
-- [ ] [AGENT] P0. If Phase 0 found an operator-boundary filter in `_pick_next_account`, remove it — the round-robin MUST
+- [x] ✅ [AGENT] P0. If Phase 0 found an operator-boundary filter in `_pick_next_account`, remove it — the round-robin MUST
       pick from ALL non-rate-limited / non-auth-failed accounts regardless of `operator` field. Add a unit test proving
       `harsh-primary` rotates into `sub-a-ikenna` when no other harsh-tagged account is available.
-- [ ] [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
+      **Finding (2026-05-29):** No filter existed (Phase 0 confirmed). Added 6-test suite in
+      `tests/test_account_rotation.py` (agent-orchestrator@9191967): proves harsh-primary→sub-a-ikenna wrap-around,
+      rate-limited skipping across operators, pool-exhausted→None, single-account→None, unknown-account fallback.
+- [x] ✅ [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
       the DB (or `POST /api/conditions/<name>` if exposed), confirm next `/boot` returns a dispatch with an
       `ikenna`-tagged account in `dispatch_reason: account-rotated:<id>`.
+      **Verified (2026-05-29):** Set `rate_limited_until=NOW+60s` directly in `account_usage` SQLite (bypasses
+      `rotate_all_slots_off_account` fan-out to avoid disrupting active slots). `/boot` on slot 97 with
+      `account_id=harsh-primary` returned: `dispatch_reason: "account-rotated:sub-a-ikenna — exiting, new session
+      spawning"`. `sub-a-ikenna` operator=ikenna ✓. Cleaned up orch-slot-97 tmux session and marked slot killed.
 
 ## Phase 2 — Auth-fail rotation trigger (P0)
 
