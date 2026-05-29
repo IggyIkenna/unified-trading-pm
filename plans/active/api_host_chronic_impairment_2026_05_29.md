@@ -49,12 +49,15 @@ operator intervention.
 
 ## Phase 1 — On-host forensics during a healthy window (P0)
 
-- [ ] [AGENT] P0. Via SSM, capture a baseline snapshot when status is `ok`: - `free -m`, `vmstat 1 5`,
+- [x] ✅ [AGENT] P0. Via SSM, capture a baseline snapshot when status is `ok`: - `free -m`, `vmstat 1 5`,
       `top -b -n1 -o %MEM | head -30` - `journalctl -u orchestrator --since "10 min ago" | wc -l` (estimate log
       volume) - `pgrep -af claude | wc -l` (count of claude subprocesses) - `ss -tan | wc -l` (open TCP sockets) -
       `ls /proc/sys/fs/file-nr` (FD usage) - Disk: `df -h`; SQLite size:
       `ls -la $(find / -name "*.db" -path "*/agent-orchestrator/*" 2>/dev/null)`. Commit the snapshot to
-      `plans/active/issues/api_host_chronic_impairment_2026_05_29.md` as evidence appendix.
+      `plans/active/issues/api_host_chronic_impairment_2026_05_29.md` as evidence appendix. — 2026-05-29T15:30Z:
+      captured directly on host (uptime 41 min post-reboot). Memory: 2.6GB/63GB used (4%), no swap configured.
+      7 claude processes, 145 TCP sockets, 1598 FDs, disk 57%. Revised hypothesis: claude-spawn poller churn
+      remains prime suspect; OOM risk amplified by absent swap. Full data in issues/api_host_chronic_impairment_2026_05_29.md.
 
 ## Phase 2 — On-host forensics DURING an impairment event (P0)
 

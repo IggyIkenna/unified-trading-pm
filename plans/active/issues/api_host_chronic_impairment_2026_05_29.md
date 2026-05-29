@@ -91,3 +91,125 @@ See [`plans/active/api_host_chronic_impairment_2026_05_29.md`](../api_host_chron
 - The autonomous loop's reliability (every plan-push, every worker /boot, every regen tick depends on this host).
 - Removes the "have to manually reboot 2-3× a day" operational tax.
 - Closes the Slack alert-storm pattern (mass "Slot N STALE" on every outage).
+
+---
+
+## Phase 1 Evidence Appendix — Baseline Snapshot (healthy window post-reboot)
+
+**Captured**: 2026-05-29T15:30:29Z (on-host; captured directly on i-0c9b283b31d6b5ca7 — uptime 41 min post-reboot)
+**Method**: direct local commands (SSM also online; IAM profile uts-orchestrator-epic confirmed Phase 0)
+
+### `free -m`
+
+```
+               total        used        free      shared  buff/cache   available
+Mem:           63255        2676       54209           3        7095       60578
+Swap:              0           0           0
+```
+
+**Key observation**: Memory usage is LOW — only 2.6 GB of 63 GB used (4%). Swap is NOT configured.
+If usage climbs over 63 GB, OOM killer fires immediately (no swap buffer). This is the critical risk path.
+
+### `vmstat 1 5`
+
+```
+procs -----------memory---------- ---swap-- -----io---- -system-- -------cpu-------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st gu
+ 8  0      0 55510216 3921176 3344136    0    0  2208   323 1666    3  1  0 95  4  0  0
+ 1  0      0 55541784 3921176 3344216    0    0     4     0 4445 13967  4  1 96  0  0  0
+ 0  0      0 55542168 3921176 3344216    0    0     0     0 3185 12884  2  1 97  0  0  0
+ 0  0      0 55543056 3921176 3344220    0    0     0     8 3925 15051  3  1 96  0  0  0
+ 0  0      0 55546168 3921176 3344232    0    0     0     0 3260 14655  2  0 97  0  0  0
+```
+
+No swap activity. IO mostly idle after initial boot. CPU 95-97% idle. Context switches 13k-15k/s (moderate for
+16 vCPUs running 8 worker slots).
+
+### `top -b -n1 -o %MEM | head -30`
+
+```
+top - 15:30:33 up 40 min,  0 user,  load average: 5.72, 8.07, 3.84
+Tasks: 293 total,   2 running, 291 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.3 us,  0.6 sy,  0.0 ni, 97.1 id,  0.0 wa
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  56101 ubuntu    20   0 3421308 570568 100612 S   0.0   0.9   0:17.76 python3
+  65983 ubuntu    20   0   70.4g 336860 103320 S  10.0   0.5   0:46.93 claude
+  66336 ubuntu    20   0   70.4g 335756 103688 R  30.0   0.5   0:46.72 claude
+  66151 ubuntu    20   0   70.4g 331628 103488 S   0.0   0.5   0:52.10 claude
+  65779 ubuntu    20   0   70.4g 330172 103348 S  30.0   0.5   0:49.09 claude
+    736 root      20   0 2441532  38320  25112 S   0.0   0.1   0:01.28 snapd
+  46819 root      20   0 2877832  33104  18924 S   0.0   0.1   0:00.68 ssm-age+
+```
+
+Top memory consumers: python3 orchestrator (570 MB RSS / 0.9%), each claude worker slot ~330-570 MB RSS (0.5%).
+Load average 5.72/8.07/3.84 on 16 vCPUs = 36-50% saturation. No zombie processes.
+
+### `journalctl -u orchestrator --since "10 min ago" | wc -l`
+
+```
+763
+```
+
+~76 log lines/min. Moderate volume; not alarming in absolute terms but worth watching under load.
+
+### `pgrep -af claude | wc -l`
+
+```
+7
+```
+
+Active at snapshot time: 4 claude worker processes (slot 4) + 3 bash helper processes. VIRT shows 70.4 GB
+per claude process (maps shared node/electron libs) but RSS is only ~330-570 MB each — actual memory is fine.
+
+### `ss -tan | wc -l`
+
+```
+145
+```
+
+145 open TCP sockets. Reasonable for 8 worker slots + nginx + orchestrator + SSM.
+
+### `/proc/sys/fs/file-nr`
+
+```
+1598	0	9223372036854775807
+```
+
+1,598 open FDs of 9.2 quintillion max. No FD pressure whatsoever.
+
+### `df -h`
+
+```
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        290G  163G  127G  57% /
+tmpfs             31G     0   31G   0% /dev/shm
+/dev/nvme0n1p16  881M   94M  726M  12% /boot
+```
+
+Disk: 57% used (163/290 GB). 127 GB free — not at risk of filling soon.
+
+### SQLite DB sizes
+
+```
+-rw-r--r-- 1 ubuntu ubuntu 5.8M May 29 09:02 .../agent-orchestrator/data/state/state.db
+```
+
+5.8 MB — negligible.
+
+### Phase 1 Interpretation
+
+This is a **fresh post-reboot baseline** (41 min uptime). Memory, FDs, disk, and TCP sockets are all healthy.
+The impairments occur hours into uptime, not immediately — consistent with a gradual accumulation problem.
+
+**Revised hypothesis ranking** (post Phase 1 data):
+
+| # | Hypothesis | Assessment |
+|---|-----------|-----------|
+| 1 | Claude-spawn-based usage poller accumulating processes/RSS over hours | **STILL PRIME SUSPECT** — 4 visible claude processes even at 41 min; at 6h uptime with ~24 spawns/min that's ~86k spawns |
+| 2 | No swap — OOM kill is immediate when memory fills | **Risk amplifier** — not root cause, but means even brief spike is fatal |
+| 3 | Kernel/network-stack wedge under I/O load | Less likely given low wa% baseline, but can't rule out |
+| 4 | Disk fill | **Unlikely** — 127 GB free |
+
+**Recommended next steps**: Implement Phase 2 watchdog to capture state during next impairment event,
+and Phase 3 poller replacement to eliminate subprocess churn.
