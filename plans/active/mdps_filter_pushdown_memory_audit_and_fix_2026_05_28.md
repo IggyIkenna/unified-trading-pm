@@ -316,13 +316,24 @@ This is also covered in the new architectural plan.
 
 Per operator 2026-05-28 EOD, the sequence is:
 
-- [ ] [P0] **3.X-1** Wire `_cleanup_after_day(date_str)` into the success path of `process_category` (and any other
+- [x] ✅ [P0] **3.X-1** Wire `_cleanup_after_day(date_str)` into the success path of `process_category` (and any other
       terminal path where per-day work completes — including single-day-single-instrument drilldowns). Smallest viable
-      cleanup landing.
-- [ ] [P0] **3.X-2** Rebuild MDPS tarball, re-run Phase 3.2 (7-day) on `e2-standard-8`. Pass criterion: RSS reclaim at
-      each date boundary measurable in the `📉 date-boundary GC` log line; no day-2 OOM.
-- [ ] [P0] **3.X-3** Launch the 16-day narrow-scope backfill on `e2-standard-8`. Outputs go to the test bucket so
-      downstream agents (features-service, etc.) can re-run their per-shard work against the canary data.
+      cleanup landing. — `market-data-processing-service@dcd7416`: added `try/finally` wrapping entire `process_category`
+      body (`orchestration_service.py:296-302`) so `_cleanup_after_day(date_str)` fires on every exit path. (Note:
+      checkbox was incorrectly reverted by commit `76288c4d6` word-wrap reformat; re-flipped 2026-05-29.)
+- [~] [P0] **3.X-2** Rebuild MDPS tarball, re-run Phase 3.2 (7-day) on `e2-standard-8`. Pass criterion: RSS reclaim at
+      each date boundary measurable in the `📉 date-boundary GC` log line; no day-2 OOM. **SUPERSEDED by Stage 1-4
+      pure-polars refactor** — canary `mdps-backfill-cefi-20260528-195400` used pre-Stage-4 tarball `@029843a` and OOM'd
+      at day-2 transition (only `day=2026-04-15` + `day=2026-04-18` landed in test bucket). The Stage 1-4 pure-polars
+      migration (commits `ceb7a12..db233e2`) eliminates the polars→pandas→polars double-allocation (Finding D), which
+      was the dominant contributor to the 25 GB per-day floor. A fresh tarball `@db233e266a4f` was built 2026-05-29 and
+      used for 3.X-3 directly — the 16-day run IS the Phase 3.2 re-verification at wider scope.
+- [x] ✅ [P0] **3.X-3** Launch the 16-day narrow-scope backfill on `e2-standard-8`. Outputs go to the test bucket so
+      downstream agents (features-service, etc.) can re-run their per-shard work against the canary data. — VM
+      `mdps-backfill-cefi-20260529-090755` (asia-northeast1-c, e2-standard-8) launched 2026-05-29T09:07:55Z. MDPS
+      tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day` wired). Scope: BINANCE-FUTURES + BYBIT ×
+      BTCUSDT + ETHUSDT × trades × 2026-04-15→2026-04-30, `MAX_WORKERS=2`, output →
+      `market-data-tick-cefi-test-central-element-323112`. VM auto-deletes on completion.
 - [ ] [P1] **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to land
       architecture here — that's a multi-week refactor, not a "smallest viable fix".
 
