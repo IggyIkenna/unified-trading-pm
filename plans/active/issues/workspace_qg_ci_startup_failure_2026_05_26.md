@@ -4,7 +4,21 @@ created: 2026-05-26
 author: slot-1 (ikenna)
 source:
   - workspace_qg_sweep_2026_05_23.md (archived)
+last_updated: 2026-05-29
+remediation_plan: plans/active/ci_canonical_v2_migration_2026_05_29.md
+parent_epic: infrastructure_master
 ---
+
+> **2026-05-29 status**: Operator-acked plan-of-record is
+> [`plans/active/ci_canonical_v2_migration_2026_05_29.md`](../ci_canonical_v2_migration_2026_05_29.md) (parent epic
+> `infrastructure_master`). Implements **Option D** below (v2 caller + v2 callee + new job-key rotation). Operator
+> verbatim 2026-05-29: "you yourself need to do all the work and then get PM repo, then UAC then UTL fully working off
+> those... following the new canonical form with quality gates initially bypassed AFTER WE ARE SURE THEY PASSED LOCALLY
+> IN FULL as per new canonical".
+>
+> **New canonical CI flow SSOT**: `codex/08-workflows/ci-cd-flow.md` (sentinel-based two-pass: full local QG writes
+> `.qg_last_passed_sha` → quickmerge --agent verifies SHA match → push to staging → PR auto-merges on workspace-qg green
+> → semver-agent bump → staging-to-main → Cloud Build on main).
 
 ## What I found
 
@@ -20,7 +34,8 @@ is a **GitHub server-side infrastructure issue**, not fixable by changing workfl
 - batch-live-reconciliation-service
 - execution-service
 - instruments-service
-- **unified-api-contracts** (ghost: 283776088 — confirmed 2026-05-27T12:58Z on staging push; was missing from original list)
+- **unified-api-contracts** (ghost: 283776088 — confirmed 2026-05-27T12:58Z on staging push; was missing from original
+  list)
 
 **Repos working normally** (success/failure/queued — no startup_failure):
 
@@ -99,8 +114,48 @@ at all (no push trigger in file; workflow_dispatch requires file on default bran
 Confirms: the ghost fires on EVERY push to live-defi-rollout regardless of which file changed. The ghost's trigger
 conditions (push + workflow_dispatch) are baked into GitHub's server-side registration and cannot be changed from LDR.
 
-**Final conclusion**: callee cache is global (not per-registration), AND ghost fires on every push regardless of file
-changes. Both mechanisms require GitHub server-side intervention. **GitHub Support (Option A) is the only fix.**
+**Final conclusion** (2026-05-27): callee cache is global (not per-registration), AND ghost fires on every push
+regardless of file changes. Both mechanisms require GitHub server-side intervention. GitHub Support (Option A) was
+filed.
+
+> **2026-05-29 SUPERSEDED by Option D below** — operator directive to roll out a code-level fix via the new canonical CI
+> flow (caller AND callee renamed simultaneously, new job key, branch-protection rotation) rather than continue waiting
+> on GH Support ticket #4422570. See § "Option D" + the remediation plan
+> [`plans/active/ci_canonical_v2_migration_2026_05_29.md`](../ci_canonical_v2_migration_2026_05_29.md).
+
+## Option D: caller+callee rename WITH new job key (operator-acked 2026-05-29)
+
+**Why Options B and C failed**: they renamed only ONE end of the chain (the caller workspace-qg.yml). GitHub's cache
+keys on the **callee path** (`python-quality-gates.yml@live-defi-rollout`) — so any new caller that references the same
+callee inherits the BuildFailed validation cache on first trigger.
+
+**Option D design** (must change BOTH ends + the required-check name):
+
+1. **New caller**: `.github/workflows/quality-gates-v2.yml` — new `name:` field + new job key (e.g.
+   `quality-gates-2026-06`)
+2. **New callee**: `.github/workflows/python-quality-gates-v2.yml` — new `name:` + new `workflow_call:` signature. The
+   v2 caller references the v2 callee — **zero reference to the v1 callee path**, so GitHub has no prior cache key to
+   hit
+3. **Required-check rotation**: drop v1 `quality-gates` from main branch protection (frees blocked PRs immediately) →
+   wait for v2 to register on first PR-against-main trigger → add v2 job key (`quality-gates-2026-06`) as new required
+   check
+4. **Optional Plan-B**: if v2 ALSO ghosts (cache keys deeper than path), inline QG steps directly in the v2 caller. One
+   job, no reusable. GitHub can't ghost what doesn't reference anything
+
+**Operational sequencing** (per `codex/08-workflows/ci-cd-flow.md` canonical flow):
+
+1. Local `bash scripts/quality-gates.sh` IN FULL (no skip flags) → writes `.qg_last_passed_sha` sentinel
+2. `quickmerge.sh "msg" --agent` verifies sentinel SHA matches HEAD → PR to staging → auto-merge
+3. After staging→main lands, rotate branch protection to v2 check
+4. Verify v2 reports cleanly on next PR
+
+**Affected repos** (per "What I found"): PM (canonical host), UAC, UTL prioritized in this plan; alerting-service,
+ml-service, features-service, batch-live-reconciliation-service, execution-service, instruments-service, deployment-ui
+as Phase 4 rollout.
+
+**Note on Option B's failed evidence**: Option B's caller-rename used a fresh CALLER but same CALLEE
+(`python-quality-gates.yml`). Option D differs by renaming the CALLEE too. Worth re-testing with this diff; if still
+ghosts, Plan-B (inline) is the escape hatch.
 
 ## Recommended decision
 
