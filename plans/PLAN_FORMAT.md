@@ -183,6 +183,38 @@ Reviewer rejects ✅ ticks on `[UI]`-tagged todos that lack `pw:` evidence.
 **Why:** Cursor reads the checkbox from the content; `status:` in YAML alone does not render filled circles. Without
 this prefix, done tasks still appear hollow in the UI.
 
+### Canonical form + automated hygiene (codified 2026-05-29)
+
+Canonical form for any unchecked todo:
+
+```
+- [ ] [TAG] P<0-3>. <description>
+```
+
+Multi-tag is allowed (`[AGENT][UI] P0. ...` per the UI HARD RULE above). Sub-priority allowed (`P0.7.`, `P1.10.`).
+
+**Why this matters for the autonomous loop**: `agent-orchestrator/server/regen_backlog_from_plan.py` ingests every
+`- [ ]` line into the dispatcher backlog and extracts priority via `\bP[0-3]\b`. Lines **without a P-tag anywhere** get
+priority `None` → dispatcher de-prioritizes → task rots in the queue. Non-canonical bracket placement (`[TAG][P<n>]`,
+`[P<n>]` alone, etc.) still ingests but displays inconsistently in the dashboard.
+
+**Two hygiene scripts ship with this convention:**
+
+- `scripts/plan-hygiene/check_todo_format.sh` — HARD check wired into `run_hygiene_sweep.sh`. Flags todos with no
+  P-priority (regen assigns `None`) as ❌ FAIL; non-canonical-style with priority present as ⚠️ WARN.
+- `scripts/plan-hygiene/fix_todo_format.sh` — mechanical auto-fixer. Rewrites `[TAG][P<n>]`, `[P<n>][TAG]`,
+  `[TAG] [P<n>]`, and bare `[P<n>]` (→ `[AGENT] P<n>.` default tag) to canonical. Run with `--apply` to write changes in
+  place.
+
+**Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag):
+
+```
+AGENT | SCRIPT | HUMAN | HUMAN+AGENT | AUDIT | DESIGN | SPEC | VERIFY | CONFIG | IMPLEMENT
+DEFERRED | DELEGATED | UI
+BLOCKED-CREDENTIALS | BLOCKED-OPERATOR-DECISION | BLOCKED-UPSTREAM-OUTAGE
+BLOCKED-PLAYWRIGHT | BLOCKED-OPERATOR | BLOCKED-INFRA
+```
+
 ### Sub-bullet checkboxes (explicit allowance, codified 2026-05-12)
 
 Nested checkboxes under a parent todo are **allowed** when they represent atomic sub-tasks that ship together with the
