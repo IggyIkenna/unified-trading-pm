@@ -241,6 +241,7 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 ## Codex SSOTs
 
 - `codex/08-workflows/ci-cd-flow.md` (Phase 5 update — v2 job key as canonical required check)
+- `codex/08-workflows/deployment-flow.md` (detailed canonical full CI/CD flow SSOT)
 - `codex/05-infrastructure/quickmerge-architecture.md` (verify sentinel-write step doc; no edit expected)
 - `codex/06-coding-standards/feature-branch-workflow.md` (verify aligned with new canonical; no edit expected)
 - `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` (Phase 5 close-out)
