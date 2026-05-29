@@ -158,9 +158,14 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
   - [ ] 🟠 [UPSTREAM] P2. **Bitfinex manifest rows have empty `instrument_type`** → features can't form their canonical
         id, so they're skipped. Needs the manifest writer to populate `instrument_type` for Bitfinex. Added to issue
         `cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`.
-- [ ] 🟠 [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
+- [x] ✅ [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
       receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
       legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
+      **Flagged (2026-05-29):** scope is workspace-wide — `resolve_bucket_name` has 0 callsites; all consumers use
+      legacy `cloud_constants.get_bucket_name`. Documented in
+      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md)
+      + cross-pinged ikenna-main 2026-05-28 for scope decision. SSOT:
+      `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I.A.
 
 ### Phase 2 — volatility `[P0]`
 
