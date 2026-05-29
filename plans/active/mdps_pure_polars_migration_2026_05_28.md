@@ -540,25 +540,40 @@ revised Stage 4 reflects the audit-derived split between dead-code delete and li
       (3 LIVE call sites) by mistake — basedpyright caught it immediately; restored from `git show HEAD:`.
       Lesson recorded for future surgical deletes: separately handle module-level constants between function
       defs. Verification: basedpyright 21 errors (= baseline), 1236 tests pass, 0 failures.
-- [ ] [P1] **4.C Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`**:
-      - Flip `aggregate_from_15s_efficient(candles_15s_df: pl.DataFrame, target_timeframe: str) -> pl.DataFrame`.
-      - Flip `create_candle_from_interval(interval_ticks: pl.DataFrame, ...) -> dict[str, object]`.
-      - Make `_aggregate_from_15s_polars` the only path; delete the pandas fallback in
-        `aggregate_from_15s_efficient`.
-      - Remove the `pl.from_pandas(...)` at line 394 + the `.to_pandas()` materialisation inside
-        `_aggregate_from_15s_polars` (polars now arrives at the function boundary).
-- [ ] [P1] **4.D Update the 3 LIVE call sites** — `live_workers.py:791` + `live_workers.py:1260`
-      (drop the `.to_pandas()` + `pl.from_pandas()` round-trip wrap), `live_aggregator.py:345`
-      (pass polars directly).
-- [ ] [P1] **4.E Regression tests** — keep + update `test_smart_aggregation.py`,
-      `test_writer_schema_preservation.py`, `test_aggregation_fix.py` to use polars fixtures; tests for the
-      deleted dead surface go away under 4.A/4.B.
-- [ ] [P1] **4.F basedpyright + full unit suite** — must stay at the post-Stage-3 baseline (21 errors,
-      1372 pass) or better.
-- [ ] [P2] **4.G Benchmark re-run** — unblock Phase 3 item 3.8 via
-      `cd unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28 && uv run python
-      run_all.py ...`. Stage 4 lands the bulk of the per-instrument-peak RSS drop projected by Path A in the
-      benchmark.
+- [x] ✅ [P1] **4.C Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`** —
+      market-data-processing-service@6a8bcb9. Signature flips on `aggregate_from_15s_efficient`,
+      `_aggregate_from_15s_polars`, `create_candle_from_interval` to `pl.DataFrame` in/out. Pandas
+      fallback path + 4 dead helpers (`_prepare_indexed_df`, `_build_aggregation_rules`,
+      `_post_process_aggregated`, `_reorder_columns`) removed alongside `_polars_available` +
+      `_use_polars_aggregation` + `_POLARS_OK` + the `pandas`/`importlib.util` imports (all dead once
+      the fallback path goes). Internal `pl.from_pandas`/`to_pandas` round-trip in
+      `_aggregate_from_15s_polars` eliminated — polars now arrives at the function boundary.
+- [x] ✅ [P1] **4.D Update the 3 LIVE call sites** — market-data-processing-service@6a8bcb9.
+      `live_workers.py:791` + `live_workers.py:1260` dropped the
+      `pl.from_pandas(aggregate_from_15s_efficient(base.to_pandas(), ...))` wrap → direct
+      `aggregate_from_15s_efficient(base, ...)`. `live_aggregator.py:345` `create_candle_from_interval`
+      seam: UTL's `OHLCVAggregator` Protocol still passes pandas (changing the Protocol would touch
+      UTL + every consumer), so a single `pl.from_pandas(ticks)` stays at the call.
+- [x] ✅ [P1] **4.E Regression tests** — market-data-processing-service@6a8bcb9.
+      `test_fast_candle_aggregation.py`: `TestBuildAggregationRules` (tested deleted helper) deleted;
+      `TestFastCandleAggregation` + `TestAggregateFrom15sEfficient` rebuilt with `pl.DataFrame`
+      fixtures + `.is_empty()`/`.height`/`.columns` polars assertions. `test_writer_schema_preservation.py`:
+      5 `aggregate_from_15s_efficient` call sites wrapped with `pl.from_pandas(base_df)`/`.to_pandas()`
+      at the seam (rest of file uses pandas idiomatically for adapter-output assertions; wrap is
+      cheaper than full rewrite). `test_smart_aggregation.py` + `test_aggregation_fix.py` continued
+      passing without changes (they hit the early-empty path which works regardless of engine).
+- [x] ✅ [P1] **4.F basedpyright + full unit suite** — 21 errors (= Stage 4.B baseline, zero
+      regressions); 1231 tests pass, 0 failures, 1 skipped. Net Stage 4.C/D/E source change:
+      5 files changed, 120 insertions, 308 deletions (−188 net lines, on top of the 3,627-line
+      delete from Stage 4.A + 4.B).
+- [ ] [P2] **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
+      `unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/` measures
+      the ENGINE CHOICE (still Path A pure-polars wins) but NOT the actual MDPS code — Stage 4 didn't
+      change the synthetic re-implementations, so a re-run would produce numbers identical to the
+      `results.md` baseline. The real validation = production canary on a 7-day backfill VM
+      (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"), measuring actual
+      per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3
+      item 3.8 unblocks when the canary lands.
 
 ## Phase 5 — Stage 5 implementation (long-tail cleanup)
 
