@@ -140,7 +140,7 @@ alone doesn't escape it.
 
 ### Phase 1 — PM (1 day)
 
-- [ ] [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
+- [x] ✅ [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
       `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`.
 - [x] ✅ [SCRIPT] P0. Stage current working-tree changes (none expected post-slot-reset). Create v2 workflow files:
   - `.github/workflows/quality-gates-v2.yml` — caller, job key `quality-gates-v2` — unified-trading-pm@a9d340df
