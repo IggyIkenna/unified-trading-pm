@@ -138,9 +138,33 @@ Concrete questions to answer + corresponding redesigns to ship:
   | **Process-pool (N=4 concurrent workers)** | ~20 min (4 parallel date batches of 4) | 4 × 25 GB = 100 GB → needs e2-highmem-16 ($1.01/h) | (20/60) × $1.01 = **~$0.34** | Per-worker (but peak RAM 4× higher) |
 
   **Conclusion**: `subprocess-per-date` (option a in Phase 1.1) is the cheapest structural fix — essentially the same cost as the broken in-process model ($0.28 vs $0.26), zero infrastructure overhead vs spawning 16 separate VMs, and full C-arena isolation at date boundaries. The `subprocess-per-shard` model is cheaper still ($0.17) but has higher per-subprocess overhead and more complex coordination. The 16 × 1-day VMs approach is ~2× more expensive but completes 8× faster if time matters. For the architecture recommendation: default to subprocess-per-date; use 16 × 1-day VMs only when wall-clock time is critical and cost is not.
-- [ ] [AUDIT] P1. **0.4 Granularity contract**. Document the canonical instrument_id form and the asset_group / venue /
+- [x] ✅ [AUDIT] P1. **0.4 Granularity contract**. Document the canonical instrument_id form and the asset_group / venue /
       instrument_type / data_type axes. State which axes are derivable from instrument_id and which are independent.
       This becomes the input spec for redesigning the CLI filter logic.
+
+  **Contract findings (2026-05-29, slot-9):**
+
+  **Canonical form**: `VENUE:INSTRUMENT_TYPE:SYMBOL` — e.g. `BINANCE-FUTURES:PERPETUAL:BTCUSDT`. Implemented at `market_data_processing_service/app/utils/path_parsing.py:149` (`parse_canonical_instrument_id`) and `blob_matches_canonical_instrument_id` (line 178). Symbol may itself contain `:` (split on first 2 colons only). Bare-symbol fallback (`BTCUSDT`) still works but emits a once-per-process deprecation log (`_LEGACY_BARE_SYMBOL_WARNED` guard at line 253).
+
+  **Hive path structure** (from `orchestration_scanner.py`):
+  ```
+  raw_tick_data/by_date/day={DATE}/asset_group={AG}/venue={VENUE}/instrument_type={IT}/data_type={DT}/{SYMBOL}.parquet
+  ```
+
+  **Axis derivability table:**
+
+  | Axis | Derivable from canonical instrument_id? | Notes |
+  |---|---|---|
+  | `venue` | ✅ Yes — part[0] | e.g. `BINANCE-FUTURES` |
+  | `instrument_type` | ✅ Yes — part[1] | e.g. `PERPETUAL` (lowercase in path; canonical form uppercase) |
+  | `symbol` | ✅ Yes — part[2] | e.g. `BTCUSDT` (matched as `{symbol}.parquet` filename) |
+  | `data_type` | ❌ Independent | Same instrument has `trades`, `book_snapshot_5`, `derivative_ticker`, etc. — requires `--data-types` |
+  | `asset_group` | ❌ Independent | Determined by which bucket (cefi/tradfi/defi/sports/prediction) is scanned; the instrument_id alone doesn't determine the bucket |
+  | `date` | ❌ Independent | Requires `--start-date` / `--end-date` |
+
+  **Atomic shard** = `(asset_group, venue, instrument_type, data_type, symbol, date)`. A canonical instrument_id pins 3 of 6 axes. The minimum additional args for a fully-pinned single shard: `--data-types {DT} --start-date {D} --end-date {D}` (asset_group is implied by the bucket selection).
+
+  **Status**: Phase 2.1 (filter-pushdown) + Phase 3 (CLI granularity) of the sibling plan have already shipped `parse_canonical_instrument_id` and `blob_matches_canonical_instrument_id` (market-data-processing-service@e47205d). The canonical form is now the operative matcher. The UAC (`unified_api_contracts`) currently has `InstrumentType` enum values (`PERPETUAL`, `SPOT_PAIR`, `FUTURE`, `OPTION`, `SPOT_ASSET`) but no shared `parse_canonical_instrument_id` utility — the parser lives in MDPS `utils/path_parsing.py` and should be considered for promotion to UAC (Phase 3.1 of this plan).
 
 ## Phase 1 — Decide the execution-unit shape
 
