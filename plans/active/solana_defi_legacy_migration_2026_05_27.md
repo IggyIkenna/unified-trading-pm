@@ -464,9 +464,10 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — restored after Bug-D-followup architecture
-      shipped 2026-05-29 (MTDS@9a840e01); see Bug-D-followup sub-todo for new code path. Original
-      fix shipped 2026-05-29 (MTDS@fc7e0636). Root cause **CONFIRMED** by slot-1 probe 2026-05-29:
+- [ ] 🟡 OPERATIONALLY BROKEN [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
+      mtds@9a840e01 but sig index NOT BUILT on GCS yet; index builder dispatched 2026-05-29 — relaunch + flip will
+      follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636). Root cause **CONFIRMED** by
+      slot-1 probe 2026-05-29:
       `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
       ListBucket: `prefix=market` → 0 keys; the only populated prefix is
       `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/` with per-authority sub-paths). The legacy
@@ -489,8 +490,11 @@ plan. Commit + push via the standard `docs(plans):` flow.
       success). **Sub-evidence**: test fixture corrected (mtds@05cc05b0) — in_range_ts was 1779200000 (May-19 actual)
       labelled as May-20 in comment; bumped to 1779260000. QG green. Re-run via
       `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28` only AFTER Bug-D-followup fix below.
-  - [x] ✅ [CODE] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — shipped
-        MTDS@9a840e01 via Option 2 (persistent sig->blockTime index). **Probe results** (slot-1
+  - [ ] [CODE] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — handler shipped
+        mtds@9a840e01; awaiting index build at `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet`
+        (running on vm-ml; multi-hour). Drift V2 density discovered higher than prior estimate (~1.6M sigs/day at
+        April 2026 peak); index build size + duration TBD. Shipped via Option 2 (persistent sig->blockTime index).
+        **Probe results** (slot-1
         2026-05-29): Option 1 (Helius v0 time-range params) FAILS — `startTime/endTime/from/to/minTime/maxTime`
         silently ignored (always return HEAD-anchored page); only `until` returns 400 "invalid query parameter".
         Option 3 (Drift V2 S3 archive) FAILS — bucket `drift-historical-data-v2` confirmed ends 2025-01-07 via
