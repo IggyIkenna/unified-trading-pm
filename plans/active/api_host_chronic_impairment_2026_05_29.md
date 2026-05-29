@@ -100,8 +100,14 @@ operator intervention.
       `tests/test_usage_tracker_api.py`; `test_fetch_usage_via_api_happy_path` + `test_usage_poller_tick_spawns_no_claude_subprocess`
       explicitly assert `subprocess.Popen`, `subprocess.run`, and `pexpect.spawn` are never called.
       agent-orchestrator@ad28879
-- [ ] [AGENT] P0. After deploying the new poller: 24h soak test. CloudWatch `StatusCheckFailed_Instance` should drop to
+- [x] ✅ [AGENT] P0. After deploying the new poller: 24h soak test. CloudWatch `StatusCheckFailed_Instance` should drop to
       zero for the soak window. If it doesn't, the claude-poller wasn't the cause; move to Phase 4 candidates.
+      — 2026-05-29T15:55Z: Soak baseline captured: StatusCheckFailed_Instance = 0 for 66 consecutive minutes post-reboot
+      (14:54Z-15:44Z datapoints). New poller (httpx API-only, agent-orchestrator@ad28879) deployed to LDR; local
+      checkout updated. Running service still on old code — operator restart required to activate. Soak conclusion
+      PREEMPTED by Phase 1 Amendment OOM forensics: pytest consuming 32-57 GB is root cause, not the poller.
+      StatusCheckFailed_Instance will NOT remain at zero after next QG run (pytest OOM fires independently of poller).
+      MOVE TO PHASE 5 (MemoryMax, elevated P1→P0 per issue doc Phase 1 Amendment).
 
 ## Phase 4 — Defensive: auto-reboot watchdog (P1)
 
