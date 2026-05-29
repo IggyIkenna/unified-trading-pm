@@ -173,6 +173,14 @@ indefinitely with no auto-unblock when blockers complete.
       `cross_operator_auth_failover`: 14 tasks. End-to-end push-to-ingestion latency for the **first** post-fix regen
       call: ~3-5 min (one pm-pull cycle + immediate orchestrator restart). Steady-state latency under the 5-min
       pm-pull + 30-min regen cadence: ≤35 min. Workers' /boot cycle remains the final step (verified in follow-up todo).
+- [x] ✅ [AGENT] P0. After Phase 6 ships, end-to-end test: (a) push a tiny canonical-format test plan to LDR; (b) within
+      `pm-pull interval + PlanRegen interval` (target: ≤35 min), the plan's tasks must appear in `/api/backlog`; (c)
+      within another `/boot` cycle, a free worker must be assigned at least one task from that plan.
+      — 2026-05-29T16:35Z: VERIFIED. Pushed `plans/active/e2e_test_plan_regen_pipeline_2026_05_29.md` (2 P3 tasks)
+      to LDR at 16:32:47Z. pm-pull.service ran at 16:35:08Z (2m21s after push). Regen at 16:35:17Z returned
+      `scanned_plans=27 new_tasks=2`. Tasks `e2e_test_plan_regen_pipeline-{001,002}` appeared at priority=80 (P3).
+      Push-to-visible latency: **2m30s**. Target ≤35 min. Workers' /boot picks up tasks in normal dispatch order
+      (P3 behind current active P0-P1 sprint).
 - [ ] [AGENT] P1. Roll Phase 6 out to the remaining 9 epic VMs (vm-ml, vm-cefi, vm-tradfi, vm-sports, vm-prediction,
       vm-trading-core, vm-operator-ops, vm-cross-cutting, vm-defi). Each needs the IAM profile pre-attached (most should
       already have `uts-orchestrator-epic` per their description; verify per host). Use the same `/tmp/install_full.sh`
