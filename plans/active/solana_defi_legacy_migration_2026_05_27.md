@@ -459,9 +459,11 @@ plan. Commit + push via the standard `docs(plans):` flow.
 - [ ] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** — surfaced
       in `mtds-lending-indices-20260528` run. Subgraph schema drift; adapter needs the new field name OR fallback. Fix
       in MTDS Aave lending-indices adapter. Re-run lending-indices backfill after fix.
-- [ ] [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — every backfill VM hits 429
-      on first manifest-shard upload. Add exponential backoff/jitter in UTL `ManifestWriter._write_per_vm_shard`. QG +
-      commit UTL → LDR.
+- [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
+      (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
+      1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
+      Outer `write()` `try/except` still swallows the final raise so manifest writes stay best-effort. Unit tests
+      cover all 4 classification paths + retry semantics in `tests/unit/test_manifest_writer_429_backoff.py`.
 
 ### Pre-existing (carry-over, lower urgency)
 
