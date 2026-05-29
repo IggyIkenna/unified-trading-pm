@@ -490,7 +490,7 @@ plan. Commit + push via the standard `docs(plans):` flow.
       success). **Sub-evidence**: test fixture corrected (mtds@05cc05b0) — in_range_ts was 1779200000 (May-19 actual)
       labelled as May-20 in comment; bumped to 1779260000. QG green. Re-run via
       `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28` only AFTER Bug-D-followup fix below.
-  - [ ] [CODE] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — handler shipped
+  - [x] ✅ [CODE] [AGENT-AUTO] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — handler shipped
         mtds@9a840e01; awaiting index build at `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet`
         (running on vm-ml; multi-hour). Drift V2 density discovered higher than prior estimate (~1.6M sigs/day at
         April 2026 peak); index build size + duration TBD. Shipped via Option 2 (persistent sig->blockTime index).
@@ -520,6 +520,7 @@ plan. Commit + push via the standard `docs(plans):` flow.
         (estimate: several hours; idempotent — safe to interrupt and resume; persistent across calls).
         Once index lands at `gs://market-data-tick-defi-central-element-323112/_index/drift_v2_sig_index.parquet`,
         relaunch via `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`.
+        **slot-9 confirm 2026-05-29**: all 6 `TestBackfillDriftHelius` tests green; checkbox flipped.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** — fixed both sides 2026-05-29.
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1102` now passes `--gas-fee-chains solana` sentinel
       (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel and
