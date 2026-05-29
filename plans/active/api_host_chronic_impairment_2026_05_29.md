@@ -72,7 +72,11 @@ operator intervention.
       kernel-level messages survive even OS-level hang. Look for OOM-killer entries (`Out of memory: Killed process`),
       kernel panics, or hardware faults. — 2026-05-29T15:31Z: boot at 14:49Z captured. No OOM/panic/HW faults.
       Application-level soft-hang confirmed. Phase 2 Evidence section added to issue doc.
-- [ ] [AGENT] P0. Capture the watchdog log + console output into the issue doc as Phase 2 evidence.
+- [x] ✅ [AGENT] P0. Capture the watchdog log + console output into the issue doc as Phase 2 evidence. — 2026-05-29T15:44Z:
+      EC2 console output captured (no OOM/panic); journal boot -2 captured: `sqlite3.OperationalError: database is
+      locked` at 12:55Z from TmuxPruner (secondary to 12:19Z OOM). Boot history: 4 OOM events total (boot -3: x2,
+      boot -2: x2). Root cause confirmed: pytest consuming 32-57 GB RAM. Watchdog NoNewPrivs constraint documented;
+      operator must run installer. Full supplement in issues/api_host_chronic_impairment_2026_05_29.md.
 
 ## Phase 3 — Likely root cause: claude-usage-poller churn (P0)
 

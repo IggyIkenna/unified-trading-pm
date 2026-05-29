@@ -352,6 +352,64 @@ fix the impairment. The OOM root cause is pytest test memory usage, not the usag
 
 ---
 
+## Phase 2 Supplement — SQLite Lock Contention as Secondary Failure Indicator
+
+**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis  
+**Context**: Boot -2 ran 08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
+
+### Boot History (complete)
+
+```
+IDX  FIRST ENTRY              LAST ENTRY               Duration
+ -4  2026-05-19T15:56Z  →  2026-05-22T14:38Z           ~3 days
+ -3  2026-05-22T14:38Z  →  2026-05-29T08:48Z           ~7 days (OOM x2: 03:27Z, 03:38Z)
+ -2  2026-05-29T08:48Z  →  2026-05-29T13:07Z           ~4.3 h  (OOM x2: 09:14Z, 12:19Z)
+ -1  2026-05-29T14:33Z  →  2026-05-29T14:48Z           15 min  (clean, operator rebooted again)
+  0  2026-05-29T14:49Z  →  running                     ~47 min (healthy baseline)
+```
+
+### SQLite DB Lock (boot -2, 12:55Z-13:07Z)
+
+After the 12:19Z OOM event (pytest), the boot -2 boot continued running. At 12:55Z (journal time,
+actual error ~12:46-47Z) a secondary failure appeared:
+
+```
+python3[243726]: ERROR: TmuxPruner tick failed (continuing)
+  server/tmux_pruner.py:198 prune_once() → session.scalars()
+  → conn.exec_driver_sql("BEGIN IMMEDIATE")
+  → sqlite3.OperationalError: database is locked
+```
+
+Repeated 3 times with growing gaps (12:55Z → 12:59Z → 13:07Z journal time). The python3 log messages
+show a ~9-minute buffer delay (python3 logged at 12:46Z, journald received at 12:55Z) — consistent
+with the python3 event loop being blocked/hung for 9 minutes.
+
+**Preceding entry (12:44Z)**: `CredsEnvPoller: download failed ... TimeoutExpired(['aws', 's3', 'cp', ...], 60)`
+
+### Interpretation
+
+The SQLite "database is locked" errors are a **secondary consequence** of the OOM event at 12:19Z:
+- After the 12:19Z OOM kill, systemd restarted orchestrator
+- During restart, some transaction was left in an inconsistent state (RESERVED lock not released)
+- OR a long-running async task (CredsEnvPoller S3 download, 60s timeout) was mid-transaction
+- `TmuxPruner.prune_once()` and other callers fail with `BEGIN IMMEDIATE` → "database is locked"
+- The Python asyncio event loop backs up; journald buffer fills (9-minute delay)
+- Last journal entry at 13:07:46Z → boot ended
+
+**Root note**: `server/db.py` does NOT set `PRAGMA busy_timeout`. Default SQLite busy timeout is 5s.
+After an OOM-induced restart with a stuck lock, 5s is insufficient. **Adding `PRAGMA busy_timeout=30000`
+is a 2-line fix that prevents cascading DB failures after a partial restart**.
+
+### EC2 Console Output (confirmed by slot-10 + slot-5)
+
+Both slots verified: no OOM-killer entries in EC2 console output (console only shows current healthy
+boot). Journal is the authoritative source for OOM evidence (see Phase 1 Amendment above).
+
+**Watchdog installation status**: `NoNewPrivs=1` prevents `sudo` in Claude Code workers. Operator
+must run: `bash scripts/install-orch-watchdog.sh --operator ubuntu --start` directly on the host.
+
+---
+
 ## Phase 3 Evidence Appendix — Usage Poller Code Audit (2026-05-29T15:35Z)
 
 **Captured by**: slot-9 (task api_host_chronic_impairment-006)
