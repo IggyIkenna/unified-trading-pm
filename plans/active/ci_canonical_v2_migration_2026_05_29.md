@@ -183,7 +183,14 @@ alone doesn't escape it.
   - Add v2 caller workflow
   - Quickmerge
 - [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` 2026-05-29 (18-branch sweep).
-- [ ] [VERIFY] P0. Next UTL PR triggers v2 cleanly.
+- [x] ✅ [VERIFY] P0. Next UTL PR triggers v2 cleanly.
+
+  **Verified (2026-05-29, slot-9):** Three UTL `quality-gates-v2` runs observed — all triggered correctly with zero
+  `startup_failure`. Run 26654008026 (PR `ikenna/utl-v2-bootstrap-2026-05-29`, 10m17s, failure) and run 26654010323
+  (main push, 5m8s, failure) both ran past setup into the "Run quality gates" step. Run 26657551461 (PR
+  `fix/utl-coverage-ci-unblock-2026-05-29`, in-progress at verify time) also triggered v2 cleanly. The failures are
+  pre-existing test failures (`ModuleNotFoundError: No module named 'moto'`, coverage gate), not ghost cache
+  `startup_failure`. Option D v2 escape confirmed working for UTL.
 
 ### Phase 4 — Rollout to remaining 7 ghost-affected repos (1.5 days)
 
