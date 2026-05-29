@@ -184,8 +184,10 @@ one huge "changed" shard can exceed `memory_limit`; that case uses a `--force` s
 
 ### Phase 2 — Deploy + re-enable crons (operator — gated on the seed/enumerator decision)
 
-- [ ] [INFRA] P1. Rebuild UTL base + market-tick-data-service images (picks up duckdb dep + the rewrite). Note: **no
+- [x] ✅ [INFRA] P1. Rebuild UTL base + market-tick-data-service images (picks up duckdb dep + the rewrite). Note: **no
       Cloud Run memory bump needed** — fits the existing 16 GiB at `memory_limit=8GB`.
+      — UTL build cc6e20ac SUCCESS (2026-05-29T17:23Z, ~7m); MTDS build c523d2cd SUCCESS (2026-05-29T17:31Z, ~8m).
+        Both triggered from trigger live-defi-rollout, region asia-northeast1.
 - [ ] [INFRA] P0. Seed the cefi flat canonical once (75.5M rows) via `--force` on a big-RAM host
       (`CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=46GB`) — OR upload the validated `/data/cefi_consolidate/consolidated.parquet`.
       Gated on the enumerator-fix / NULL-version decision above. Without a seed the first cron cycle would only pick up
