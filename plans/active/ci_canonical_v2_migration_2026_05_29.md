@@ -160,7 +160,7 @@ alone doesn't escape it.
 
 ### Phase 2 — UAC (0.5 day)
 
-- [ ] [SCRIPT] P0. Same recipe as Phase 1 in UAC:
+- [x] ✅ [SCRIPT] P0. Same recipe as Phase 1 in UAC:
   - Local `quality-gates.sh` full run → sentinel
   - Add `.github/workflows/quality-gates-v2.yml` to UAC. UAC's caller references PM's v2 callee at LDR ref (just like v1
     references python-quality-gates.yml at LDR)
