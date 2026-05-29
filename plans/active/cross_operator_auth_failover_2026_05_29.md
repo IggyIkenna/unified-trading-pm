@@ -1,95 +1,111 @@
 ---
-name: harsh_account_pool_expansion
-title: "Harsh adds 2 Anthropic accounts to mirror Ikenna's rotation pool (Phase 5 setup-token flow)"
+name: cross_operator_auth_failover
+title: "Cross-operator account rotation + auth-fail trigger + Slack alert on rotation"
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1
 status: active
 created: 2026-05-29
 last_updated: 2026-05-29
-estimate_class: infra
-estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.4
+estimate_class: refactor
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 0.8
 estimate_calibration_note: |
-  Infra (0.8×): single-operator action × 2 accounts × known recipe. Mostly elapsed time
-  (account-creation cooldowns + KYC waiting); active work is the setup-token mint +
-  env-file push per Phase 5 SSOT. Same recipe Ikenna already followed for his 3 accounts.
+  Refactor (0.4×): rotation logic exists (_pick_next_account); changes are removing
+  any operator-boundary filter, adding an auth-fail detection path (no-heartbeat-
+  after-spawn → mark auth_failed → rotate), and threading a rotation-reason field
+  through the existing Slack-alert path. No new infra; one StrEnum + one server
+  branch + one alert template.
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
 related:
-  - issues/harsh_account_pool_expansion_2026_05_29.md
+  - issues/cross_operator_auth_failover_2026_05_29.md
   - ../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md
+supersedes:
+  - harsh_account_pool_expansion_2026_05_29.md # original misframing (operator corrected 2026-05-29)
 ---
 
-# Harsh — expand to 3-account rotation pool (mirror Ikenna)
+# Cross-operator account rotation + auth-fail trigger + Slack alert
 
-Operator-directed 2026-05-29 (ikenna): "put in one of the issues and plans that harsh needs to reauth the same way
-Ikenna did on his 3 accounts." Single-account-Harsh is a structural rotation gap — see
-[`issues/harsh_account_pool_expansion_2026_05_29.md`](issues/harsh_account_pool_expansion_2026_05_29.md) for the why.
+Operator-corrected 2026-05-29 (ikenna): "harsh shoudl be able to fail ove rteh ieknna auth those 4 keys are there for a
+reason for both to be able to round robin betwene each ... doesnt need 2 more harsh accounts just neeeds use of ikenna
+accounts ... Setup-token stale / OAuth auth-fail at startup shoudl allo round robin and send a slack alert to inform us
+that we have switche deithe rbwcause of Setup-token stale / OAuth auth-fail at startup or Account rate-limited (429 from
+Anthropic)."
 
-End state: **3 harsh-tagged accounts** in `agent-orchestrator/data/config/accounts.json`, each with a working
-setup-token and `oauth_token_env_file`. Mirrors Ikenna's pool exactly so harsh-tagged slots survive single-account
-failures via the existing `_pick_next_account` round-robin.
+End state:
 
-## Phase 0 — Decide the two new account identities (P1)
+1. `_pick_next_account` round-robins across the **entire** `accounts.json` pool regardless of `operator` tag.
+2. A worker that fails to /heartbeat within N seconds of `/spawn` triggers rotation with reason `auth_failed`.
+3. Every rotation event posts a Slack alert with the reason (`rate_limit` | `auth_failed` | `operator_directed`).
 
-- [ ] [HUMAN] P1. **Harsh** picks two more Anthropic identities to provision. Constraints (per
-      `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`): - Must be distinct Anthropic-side identities
-      (different primary email; OR same Google account with different secondary email allowed if Anthropic accepts). -
-      Each must be on a **subscription tier** (Pro / Max5 / Max20) to qualify for weekly-msg-limit pooling. - Suggested
-      labels mirroring Ikenna's pattern: `harsh-secondary` + `harsh-tertiary` (or equivalent slugs).
-- [ ] [HUMAN] P1. Confirm tier + weekly_msg_limit per new account (1200/wk on max20 matches Ikenna's pool).
+See [`issues/cross_operator_auth_failover_2026_05_29.md`](issues/cross_operator_auth_failover_2026_05_29.md) for the
+why + reproduction.
 
-## Phase 1 — Mint setup-tokens (P1)
+## Phase 0 — Pre-audit (P0)
 
-- [ ] [HUMAN] P1. For EACH new account, on a browser-capable machine, run: `bash     claude setup-token     ` →
-      completes OAuth in browser → emits a long-lived setup-token (~365d TTL). Stores at `~/.claude/.credentials.json`
-      on that machine.
-- [ ] [HUMAN] P1. For EACH account, copy the setup-token + write to its env file under `~/.claude-accounts/`:
-      `bash     cat > ~/.claude-accounts/<account-id>.env <<EOF     CLAUDE_CODE_OAUTH_TOKEN=<setup-token-value>     unset ANTHROPIC_API_KEY     EOF     chmod 600 ~/.claude-accounts/<account-id>.env     `
+- [ ] [AGENT] P0. Read `agent-orchestrator/server/server.py` `_pick_next_account` (line 334). Confirm whether it filters
+      by `operator` field on the account record. If yes — that filter is the bug; if no — confirm and document.
+- [ ] [AGENT] P0. Map every call-site of `_pick_next_account` (rate-limit branch line 404, /boot guard line 587,
+      operator-directed line 728). Tabulate which existing dispatch_reason strings get emitted.
+- [ ] [AGENT] P0. Identify the existing Slack-alert plumbing (which module emits the `Slot N STALE` alert) and confirm
+      whether rotation events flow through the same channel. Document the channel name (`agent-orchestrator-alerts`).
 
-## Phase 2 — Push env files to fleet creds buckets (P1)
+## Phase 1 — Cross-operator rotation (P0)
 
-- [ ] [AGENT] P1. For each new env file, push to BOTH cred buckets (matches Phase 5 distribution path):
-      `bash     gsutil cp ~/.claude-accounts/<id>.env gs://central-element-323112-orchestrator-creds/accounts/     aws s3 cp ~/.claude-accounts/<id>.env s3://uts-orchestrator-creds-427895769566/accounts/     `
-      Verify mode 600 preserved.
-- [ ] [AGENT] P1. Trigger the fleet credential-sync (whichever script/cron pulls into each VM's
-      `/home/ubuntu/.claude-accounts/`) — confirm each backend has the new files.
+- [ ] [AGENT] P0. If Phase 0 found an operator-boundary filter in `_pick_next_account`, remove it — the round-robin MUST
+      pick from ALL non-rate-limited / non-auth-failed accounts regardless of `operator` field. Add a unit test proving
+      `harsh-primary` rotates into `sub-a-ikenna` when no other harsh-tagged account is available.
+- [ ] [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
+      the DB (or `POST /api/conditions/<name>` if exposed), confirm next `/boot` returns a dispatch with an
+      `ikenna`-tagged account in `dispatch_reason: account-rotated:<id>`.
 
-## Phase 3 — Register in accounts.json (P0 — this is the SSOT flip)
+## Phase 2 — Auth-fail rotation trigger (P0)
 
-- [ ] [AGENT] P0. Add the 2 new account entries to `agent-orchestrator/data/config/accounts.json` mirroring
-      `harsh-primary`'s shape:
-      `json     {       "id": "<new-account-id>",       "label": "Harsh — <sub-label>",       "tier": "max20",       "weekly_msg_limit": 1200,       "primary_email": "<email>",       "operator": "harsh",       "oauth_token_env_file": "~/.claude-accounts/<new-account-id>.env",       "setup_token_expires_at": "<ISO date ~365d from mint>"     }     `
-      Update the `_phase5_note` to reflect 6 total accounts.
-- [ ] [AGENT] P0. Reload accounts on every backend without restart (per the hot-reload pattern documented in
-      `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`) OR rolling-restart the orchestrator service
-      on each VM.
+- [ ] [AGENT] P0. Define `AccountStatus` `StrEnum` in `agent-orchestrator/server/models.py` (or wherever account-status
+      enums live): `healthy`, `rate_limited`, `auth_failed`, `disabled`. Migrate any existing boolean flag (e.g. the
+      rate-limited DB column) to use the enum.
+- [ ] [AGENT] P0. Add server-side watchdog: when `/api/slots/<N>/spawn` returns `ok` but no /heartbeat arrives within
+      `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` (default **180**), mark the assigned `account_id` as `auth_failed` in the DB.
+      Then call `_pick_next_account` on that slot and re-spawn the tmux session with the new account. Cap retries at 2
+      to avoid infinite-loop on a fully-broken pool.
+- [ ] [AGENT] P0. Healing path: when an `auth_failed` account next successfully /heartbeats (after operator re-auths),
+      flip its status back to `healthy`. Same pattern as rate-limit recovery — auto-unflag on success.
+- [ ] [AGENT] P0. Unit + integration tests: (a) spawn slot with deliberately-stale token → 180s timeout → auto-rotate to
+      next account → second spawn /heartbeat-s → original account status `auth_failed`. (b) Operator re-auths original
+      account → next spawn on it /heartbeat-s → status flips back to `healthy`.
 
-## Phase 4 — Verify rotation pool (P1)
+## Phase 3 — Slack alert on every rotation (P0)
 
-- [ ] [AGENT] P1. Spawn a test worker on a free slot with `account_id: harsh-primary`. While running, mark
-      `harsh-primary` rate-limited via `POST /api/conditions/<name>` (or simulate by injecting a 429). Confirm
-      `_pick_next_account` rotates to `harsh-secondary` (NOT `sub-a-ikenna`) — round-robin must respect operator
-      boundary if such filtering exists, OR confirm cross-operator rotation is acceptable.
-- [ ] [AGENT] P1. Document the observed rotation behavior in this plan's success criteria + update
-      `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` § "Rotation semantics" if it's not already
-      specified.
+- [ ] [AGENT] P0. Add a `RotationReason` `StrEnum`: `rate_limit`, `auth_failed`, `operator_directed`. Thread it through
+      every `_pick_next_account` callsite so the dispatch_reason string carries the reason verbatim.
+- [ ] [AGENT] P0. Wire the existing Slack `agent-orchestrator-alerts` channel to fire on every rotation event. Payload
+      shape:
+      `     🔄 Account rotation     Slot:        <N>     Operator:    <ikenna|harsh>     Swapped out: <old_account_id> (operator: <ikenna|harsh>)     Swapped in:  <new_account_id> (operator: <ikenna|harsh>)     Reason:      rate_limit | auth_failed | operator_directed     Time:        <ISO UTC>     `
+      Cross-operator rotation (e.g. `harsh-primary` → `sub-a-ikenna`) should be visually highlighted (different emoji or
+      color) so the operator immediately sees when one operator's slot is using another operator's quota.
+- [ ] [AGENT] P0. End-to-end test on staging: trigger each rotation reason in turn, confirm Slack receives one alert per
+      event with the correct reason field.
 
-## Phase 5 — Codex SSOT updates (P2)
+## Phase 4 — Codex SSOT updates (P1)
 
-- [ ] [AGENT] P2. Update `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to note the
-      operator-symmetric pool requirement (each operator should have ≥2 accounts to enable rotation; ≥3 matches Ikenna's
-      resilience pattern). Cross-link from `agent-orchestrator/data/config/accounts.json` `_phase5_note`.
+- [ ] [AGENT] P1. Update `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to document: - Shared-pool
+      design (any account can serve any operator). - Rotation triggers (`rate_limit`, `auth_failed`,
+      `operator_directed`). - The 180s spawn-heartbeat watchdog. - The Slack alert schema for rotation events.
+- [ ] [AGENT] P1. Cross-link from `agent-orchestrator/data/config/accounts.json` `_phase5_note` → this codex doc → this
+      plan.
 
 ## Success criteria
 
-- `accounts.json` contains 3 harsh-tagged accounts with valid `oauth_token_env_file` paths.
-- Each env file present on every backend VM, mode 600.
-- A simulated `harsh-primary` rate-limit triggers rotation to a harsh-side fallback (verified live).
-- Harsh-tagged slots in `/api/state` can /heartbeat successfully on any of the 3 accounts.
+- `_pick_next_account` proven (by test) to rotate cross-operator (harsh → ikenna pool and vice versa).
+- A stale-token worker spawn auto-rotates within 180s, with the original account marked `auth_failed`.
+- Slack `agent-orchestrator-alerts` receives one alert per rotation event, citing reason. Verified on staging.
+- Re-spawning slot 6 today with `harsh-primary` (still stale per the 2026-05-29 reproduction) results in: 180s timeout →
+  rotation to an ikenna account → worker /heartbeats → Slack alert fires with `reason: auth_failed`.
 
 ## Out of scope
 
-- Token refresh automation (annual re-auth is still HUMAN; setup-tokens last ~365d).
-- Cross-operator rotation semantics — separate plan if rotation should respect operator boundary vs. share globally.
+- Adding more accounts to the pool (operator explicitly excluded 2026-05-29).
+- Token-refresh automation (annual re-auth remains HUMAN; setup-tokens last ~365d).
+- Per-operator quota-billing reconciliation when one operator's slot rides another operator's account — separate finance
+  plan if needed.
