@@ -5046,3 +5046,61 @@ Plan ref: `plans/active/instruments_backfill_phase3_2026_05_22.md`
    - Need account registration + API key at kalshi.com
 
 — slot-1 main / autonomous loop 08:00 UTC
+
+---
+
+## 2026-05-29 ~09:00 UTC — Solana DeFi bug-fix sweep + Bug-D credentials block
+
+Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md` AGENT-AUTO section.
+
+**Shipped on LDR this session (4 P1 bugs + 1 P2 bug):**
+
+- **Bug-K** ✅ Kamino pool_id schema mismatch — MTDS@c3ae794c. `_collect_kamino` now emits `pool_id` (aliased from
+  vault PDA `address`) + `token_a`/`token_b` to satisfy `DEFI_POOL_DEX_POOLS` SchemaContract. Re-run scoped
+  Kamino backfill pending tarball rebuild.
+- **Bug-J** ✅ Jito Stakenet API drift — MTDS@c3ae794c. Stakenet shape changed from single `pool_total_lamports`/
+  `pool_token_supply` object to time-series payload (`apy[]`/`tvl[]`/`supply[]`/`num_validators[]`); rewrote
+  `_collect_jito` for the new shape + added `_collect_jito_historical` (DeFiLlama yields chart, pool
+  `0e7d0722-9054-4907-8593-567b353c0900`).
+- **Bug-M** ✅ Marinade per-date — MTDS@c3ae794c. Verified Marinade's `/msol/apy/365d` (rolling 365d annualised) and
+  `/msol/price_sol?from=&to=` (ignores filters, returns current) don't expose true historical APY. Re-routed
+  past-date Marinade collection through DeFiLlama yields chart for marinade-liquid-staking MSOL pool
+  (`b3f93865-5ec8-4662-90a0-11808e0aa2bd` — daily APY back to 2025-02-26; pre-2025-02-26 honest-empty).
+- **Bug-G** ✅ Solana gas chain mapping — deployment-service@3e83f30 + MTDS@c3ae794c. Two-part fix: handler now
+  accepts `--gas-fee-chains solana` sentinel + `solana_enabled` gated on it (was hardcoded False); launcher
+  updated from `99999` to `solana`. `_collect_solana_historical` already implemented; previously unreachable.
+
+**CREDENTIAL APPROVAL REQUEST — Drift historical funding (Bug-D)**
+
+```
+CREDENTIAL APPROVAL REQUEST — drift_historical_funding
+Vendor: Drift Protocol (paid tier OR Helius mainnet-beta archival RPC, latter likely already covered by helius-api-key)
+What I need: confirmation that Helius paid tier supports getSignaturesForAddress + getTransaction
+              with finalized commitment over 2025-01-09 -> today against Drift program
+              dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH; OR a Drift Institutional /
+              hyperdrive API key if Drift's own paid data product is the canonical path.
+Account to use: existing helius-api-key in Secret Manager (already present per
+                dependency_health_policies.yaml lines 139/151/157) — needs verification it's
+                on a tier high enough for archival queries (free tier = last ~150 slots only).
+                If insufficient, upgrade to Helius Professional ($499/mo) OR Triton One.
+Unblocks: DRIFT-SOLANA perp_funding for 2025-01-09 -> 2026-05-29 (the full venue-keyed gap
+          since Drift's public V1+V2 S3 archive ended 2025-01-08 — slot-1 verified via
+          AWS S3 ListBucket on both bucket names).
+Without it: _DRIFT_S3_ARCHIVE_END = date(2025, 1, 8) constant stays accurate; every requested
+            date emits EXPECTED_PAST_SOURCE_COVERAGE_END (honest); Drift forward-coverage
+            depends on go-forward daily snapshot collection via _collect_drift (which works
+            against the live data.api.drift.trade /stats/markets endpoint).
+```
+
+Bug-D plan-flip is `- [ ] [BLOCKED-CREDENTIALS]` (NOT ticked). Adapter scaffold ships; integration test gates on
+credential availability per the External-Data HARD RULE.
+
+**Pending in this session (will continue):**
+
+- Bug-A (Aave subgraph `marketDailySnapshots` field-missing) — investigate + fix
+- Bug-R (UTL ManifestWriter GCS 429 backoff)
+- Gate-7 (extend `migrate_legacy_solana_defi_to_canonical.py` with `--source-bucket` flag + execute on wrong-bucket
+  Solana parquets per operator directive)
+- Rebuild VM tarballs + relaunch affected backfill VMs (Kamino, Marinade, Jito, Solana-gas) once tarballs are fresh
+
+— slot-1 main / Solana DeFi sweep 2026-05-29
