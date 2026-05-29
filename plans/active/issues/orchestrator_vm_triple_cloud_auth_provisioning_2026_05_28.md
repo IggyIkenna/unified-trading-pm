@@ -103,8 +103,12 @@ runs.
 
 ## Residual / follow-ups
 
-- [ ] [INFRA] P2. Fold `ORCHESTRATOR_VM_GCP_ADC` IAM grant into Terraform (`uts-orchestrator-epic-policy`) — currently
-      the v2 policy version is set as default but the TF source-of-truth still encodes v1. Re-apply the TF will revert.
+- [x] ✅ [INFRA] P2. Fold `ORCHESTRATOR_VM_GCP_ADC` IAM grant into the IAM SSOT (`uts-orchestrator-epic-policy`) —
+      **fixed: deployment-service@9387aff**. Correction to the earlier framing: the IAM SSOT is
+      `deployment-service/scripts/aws/setup-orchestrator-iam.sh` (a shell script that PUTs the policy via aws CLI), NOT
+      a Terraform resource (`deployment-service/terraform/aws/orchestrator_epic_vms.tf` does not exist). The script now
+      lists ORCHESTRATOR_VM_GCP_ADC in both the header comment and the SecretsReadOnly Resource ARN array, so re-running
+      it produces a v3 == v2 (idempotent) and the console-pushed v2 grant is preserved across future re-runs.
 - [ ] [INFRA] P2. SA-key rotation: the new key expires `unified-trading-sa` keys rotate. Add a calendar reminder 90d out
       (or move to short-lived workload-identity-federation post-cutover).
 - [ ] [INFRA] P3. Pre-bake the AMI so `gcloud + gh` install (~30s) happens once at AMI build time, not per cold boot.
