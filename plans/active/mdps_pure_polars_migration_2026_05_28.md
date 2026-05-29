@@ -626,34 +626,34 @@ single pl→pd before UTL call) — never per-helper round-trips.
       (its caller `candle_write_mixin._validate_and_convert_timestamps` is
       still pandas; flips with Phase 5C). Net −174 lines.
       market-data-processing-service@6a14f3b.
-- [ ] [P1] **5C `canonical_writer.py` MDPS-internal helpers → polars** — operator-acked.
-      Scope: 8 internal helpers + 2 entry points, single coordinated commit
-      (no per-helper round-trips). Audit baseline 2026-05-29:
-      - `_renormalize_legacy_tradfi_instrument_ids` (81 lines, 7 pd-ops)
-      - `_infer_instrument_type` (52 lines, 7 pd-ops)
-      - `_infer_chain` (38 lines, 5 pd-ops)
-      - `_infer_league_id` (9 lines, 3 pd-ops)
-      - `_infer_v6_columns` (39 lines, 3 pd-ops)
-      - `_stamp_candle_available_at` (101 lines, **14 pd-ops** — heaviest;
-        datetime arithmetic per row, polars win is largest here)
-      - `_inject_schema_contract_columns` (58 lines, 11 pd-ops)
-      - `_validate_stamped_candle_bar_boundary` (89 lines, 11 pd-ops; uses
-        `pd.NaT` + `pd.Timestamp.tz_localize` — polars uses `datetime` builtin)
-      Entry points: `write_candle_parquet` (line 1088, full write path) +
-      `write_streaming_chunk` (line 1979, streaming path). Both convert
-      `pd.DataFrame` → `pl.DataFrame` once at entry, pass polars through every
-      helper, convert back to `pd.DataFrame` once just before the UTL boundary
-      calls (`_utl_write_chunk`, `manifest_writer.record_captured`,
-      `pd.read_parquet` → `pl.read_parquet`).
-      Test plan: every existing canonical_writer test must pass unchanged
-      (the boundary pd-output preserves the public contract). Add
-      regression test for `_validate_stamped_candle_bar_boundary` polars
-      timestamp handling. ~10 files touched.
-- [ ] [P2] **5D `live_aggregator.py:321` `_MDPSTickFetcher._read`** — operator-acked.
+- [x] ✅ [P1] **5C `canonical_writer.py` MDPS-internal helpers → polars** — single
+      coordinated commit landed. All 8 helpers now polars-typed:
+      `_renormalize_legacy_tradfi_instrument_ids` (uses
+      `pl.col(...).replace_strict()` for the id + type remap),
+      `_infer_instrument_type` / `_infer_chain` / `_infer_league_id` /
+      `_infer_v6_columns` (direct `df[col][0]` reads, no round-trip),
+      `_stamp_candle_available_at` (heaviest pre-conversion at 14 pd-ops;
+      now `pl.from_epoch` + `dt.replace_time_zone` + timedelta arithmetic),
+      `_inject_schema_contract_columns` (`with_columns(pl.lit / .cast /
+      pl.from_epoch)`), `_validate_stamped_candle_bar_boundary` (polars
+      datetime indexing returns native Python `datetime` — UAC validator
+      hit directly; NaT-text → null-text reflecting polars vocabulary).
+      Entry points `write_candle_parquet` + `write_streaming_chunk` +
+      `open_candle_streaming_writer` each do ONE `pl.from_pandas` at entry
+      and ONE `.to_pandas()` just before the UTL `_utl_write_chunk` /
+      `record_captured` boundary calls.
+      Tests: pandas-compat shims in `test_canonical_writer_record_helpers`,
+      `test_batch_live_mode_parity`, `test_bar_boundary_write_gate` so the
+      existing pandas-fixture call sites work unchanged; `_infer_*` test
+      fixtures + streaming `_renormalize` fixtures flipped to `pl.DataFrame`
+      directly. NaT-regex tests updated to match polars "null" wording.
+      Result: 1246 pass / 1 skip; basedpyright 21 = baseline.
+      market-data-processing-service@c9d7fe7.
+- [x] ✅ [P2] **5D `live_aggregator.py:321` `_MDPSTickFetcher._read`** —
       `pd.read_parquet(io.BytesIO(raw))` → `pl.read_parquet(io.BytesIO(raw)).to_pandas()`
-      at the UTL `TickFetcher` Protocol boundary. Marginal direct memory win
-      (boundary conversion); cleaner direction for the eventual UTL Protocol
-      lift. Single-line change in the read method.
+      at the UTL `TickFetcher` Protocol boundary. Polars-native arrow decode
+      (GIL-released under thread parallelism) with the pandas conversion at
+      the cross-repo seam. market-data-processing-service@c9d7fe7.
 - [x] ✅ [P2] **5.5 `app/utils/*` audit** — surveyed 5 files:
       - `adapter_utils.py` (156 lines): `apply_locf_fill` is numpy-only ✓;
         `parse_timestamps_flexible` takes `pd.DataFrame` because adapters
