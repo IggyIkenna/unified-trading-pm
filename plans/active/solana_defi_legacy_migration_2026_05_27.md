@@ -456,9 +456,24 @@ plan. Commit + push via the standard `docs(plans):` flow.
       series (exchange_rate = tvl_lamports/1e9 / supply_jitosol). Added `_collect_jito_historical` for past dates
       via DeFiLlama yields chart for the jito-liquid-staking JITOSOL pool
       (`0e7d0722-9054-4907-8593-567b353c0900`). No credential ask needed.
-- [ ] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** — surfaced
-      in `mtds-lending-indices-20260528` run. Subgraph schema drift; adapter needs the new field name OR fallback. Fix
-      in MTDS Aave lending-indices adapter. Re-run lending-indices backfill after fix.
+- [~] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** —
+      **DIAGNOSED 2026-05-29 — narrower than initially reported**. The cascade-with-Messari-fallback
+      (`lending_indices_handler._collect_via_cascade` lines 703-715) already handles schema drift correctly: AAVE_V3
+      ETHEREUM/ARBITRUM/POLYGON/AVALANCHE/BASE/LINEA/BSC all succeed via `aave_v3_native` (8016/11529/2663/4822/31025/
+      722/2155 rows respectively in 2026-05-28 run). The failure is **AAVE_V3-OPTIMISM only**: subgraph
+      `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` returns 0 rows on the native `reserveParamsHistoryItems` query
+      AND has no `marketDailySnapshots` field (Messari schema absent). Cascade exhaustion is correctly recorded as
+      `record_empty` (legitimate per shard-failure-isolation SSOT). **Root cause investigation requires querying the
+      subgraph schema directly** which is gated on a Graph Gateway API key — slot-1 attempted unauthenticated probe
+      2026-05-29 and got `auth error: missing authorization header`. Two possible upstreams:
+      (a) the Optimism Aave V3 deployment is no longer maintained on this subgraph id and a newer subgraph id is
+      canonical (would need to scan `unified_api_contracts/registry/capability_declarations/_defi.py` Aave-V3-Optimism
+      entry vs The Graph Studio's current Aave-V3-Optimism subgraph). (b) the subgraph is alive but the
+      `reserveParamsHistoryItems` table is unpopulated for the requested date range. Triage path:
+      `unified_api_contracts/registry/capability_declarations/_defi.py` AAVE_V3-OPTIMISM `subgraph_id` field is the
+      SSOT to update if (a). **Status: capturing for the next Aave-targeted plan**, since the May-23 archetypes
+      (`carry_staked_basis` + `arbitrage_price_dispersion`) treat AAVE-OPTIMISM as one of N base-rate sources and the
+      remaining chains (ETHEREUM/ARBITRUM/etc.) carry the signal.
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
