@@ -133,6 +133,7 @@ for arg in "$@"; do
         --fix) FIX_MODE=true ;;       --skip-typecheck) SKIP_TYPECHECK=true ;;
         --act) ACT_MODE=true ;;       --ignore-timeout) IGNORE_TIMEOUT=true ;;
         --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
+        --skip-codex) SKIP_CODEX_FLAG=true ;;
     esac
 done
 
@@ -2364,3 +2365,19 @@ fi
 
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
+
+# ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) ────────────
+# Only written on a COMPLETE run (no skip flags). Partial runs (--skip-tests,
+# --skip-lint, --quick, --lint-only, --skip-codex) must NOT write the sentinel
+# because they do not verify the full gate surface.
+if [[ "${RUN_TESTS}" == "true" ]] && \
+   [[ "${RUN_LINT}" == "true" ]] && \
+   [[ "${QUICK_MODE}" == "false" ]] && \
+   [[ "${ACT_MODE}" == "false" ]] && \
+   [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
+    git rev-parse HEAD > "${REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
+        echo "Sentinel written: .qg_last_passed_sha=$(cat "${REPO_ROOT}/.qg_last_passed_sha")" || \
+        echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+else
+    echo "Sentinel NOT written — partial run detected (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
+fi
