@@ -144,12 +144,15 @@ alone doesn't escape it.
 
 - [ ] [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
       `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`.
-- [ ] [SCRIPT] P0. Stage current working-tree changes (none expected post-slot-reset). Create v2 workflow files:
+- [x] ✅ [SCRIPT] P0. Stage current working-tree changes (none expected post-slot-reset). Create v2 workflow files:
   - `.github/workflows/quality-gates-v2.yml` — new `name:`, new `on:` triggers (same as v1: push+PR to main), new job
     key `quality-gates-2026-06`, calls new v2 callee
   - `.github/workflows/python-quality-gates-v2.yml` — new `name:`, new `workflow_call:` signature, fresh
     `jobs.quality-gates:` block (same body as v1)
   - DO NOT delete v1 files yet — leave them as ghost-targets so the cache doesn't poison v2 via shared registration
+  — Files already shipped: `quality-gates-v2.yml` + `python-quality-gates-v2.yml` present on LDR via
+    commits `a9d340df8` + `bb2bc398f`. Job key is `quality-gates-v2` (Option D; plan had `quality-gates-2026-06`
+    as a placeholder — the actual key used is `quality-gates-v2`). V1 files retained. Verified correct shape.
 - [ ] [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
       Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
