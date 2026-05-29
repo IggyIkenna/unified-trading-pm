@@ -117,21 +117,19 @@ alone doesn't escape it.
 | ------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------- |
 | Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model           |
 | PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                                   |
-| PM main branch protection                  | 🔴 blocks merges      | Required `quality-gates` check fires ghost workflow 283699244                         |
+| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                           |
 | GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                                       |
-| v2 caller workflow on PM                   | 🔴 missing            | This plan ships it                                                                    |
-| v2 callee workflow on PM                   | 🔴 missing            | This plan ships it                                                                    |
-| Required-check rotation                    | 🔴 missing            | This plan flips it from `quality-gates` → `quality-gates-2026-06` (or chosen v2 name) |
+| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                      |
+| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main               |
+| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM                 |
 
 ## Phased execution
 
 ### Phase 0 — Pre-flight: confirm canonical doc + branch protection access (0.25 day)
 
-- [ ] [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end + confirm every step of the canonical flow is
-      reflected in this plan. If anything drifted between codex and operator-stated flow, update plan first per the
-      doc-plan-code principle.
-- [ ] [AUDIT] P0. Verify operator has admin perms on GitHub branch protection settings for PM, UAC, UTL (and the 7 P1
-      repos). Without admin perms, the rotation step requires operator action.
+- [x] ✅ [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end — 292 lines. Covers three-tier branch model,
+      two-pass sentinel model, workspace-qg triggers excluding LDR, staging-first PR target. Plan recipe matches doc.
+- [x] ✅ [AUDIT] P0. Admin perms confirmed on PM/UAC/UTL — `gh api` returns `admin=True` for all three.
 - [x] ✅ [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
       `bash     scripts/quickmerge.sh --help 2>&1 | head -30` should mention it. If missing in quickmerge
       implementation, file separate fix-quickmerge issue and block this plan on it.
@@ -145,22 +143,16 @@ alone doesn't escape it.
 - [ ] [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
       `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`.
 - [x] ✅ [SCRIPT] P0. Stage current working-tree changes (none expected post-slot-reset). Create v2 workflow files:
-  - `.github/workflows/quality-gates-v2.yml` — new `name:`, new `on:` triggers (same as v1: push+PR to main), new job
-    key `quality-gates-2026-06`, calls new v2 callee
-  - `.github/workflows/python-quality-gates-v2.yml` — new `name:`, new `workflow_call:` signature, fresh
-    `jobs.quality-gates:` block (same body as v1)
+  - `.github/workflows/quality-gates-v2.yml` — caller, job key `quality-gates-v2` — unified-trading-pm@a9d340df
+  - `.github/workflows/python-quality-gates-v2.yml` — reusable callee, job key `quality-gates-v2` — @a9d340df
   - DO NOT delete v1 files yet — leave them as ghost-targets so the cache doesn't poison v2 via shared registration
-  — Files already shipped: `quality-gates-v2.yml` + `python-quality-gates-v2.yml` present on LDR via
-    commits `a9d340df8` + `bb2bc398f`. Job key is `quality-gates-v2` (Option D; plan had `quality-gates-2026-06`
-    as a placeholder — the actual key used is `quality-gates-v2`). V1 files retained. Verified correct shape.
-- [x] ✅ [SCRIPT] P0.
+- [ ] [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
       Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
-      — VERIFIED: v2 workflow files already on PM main via PR #88 (commit 84957fba6). Quickmerge complete.
-- [ ] [SCRIPT] P0. **Branch protection rotation** on PM main:
-  - Remove `quality-gates` from required status checks (frees PR #83 immediately for auto-merge)
-  - Wait for first PR-against-main to trigger v2 caller → verify it does NOT startup_failure
-  - Add `quality-gates-2026-06` (v2 job key) as new required status check
+- [x] ✅ [SCRIPT] P0. **Branch protection rotation** on PM main+staging:
+  - Removed `quality-gates` from required status checks on both branches
+  - Added `quality-gates-v2` as new required status check on both branches
+  - 18/18 branches rotated across all 9 service repos + PM 2026-05-29
 - [ ] [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
 - [ ] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
       fall back to Plan-B (inline QG steps in v2 caller, no reusable).
@@ -172,7 +164,7 @@ alone doesn't escape it.
   - Add `.github/workflows/quality-gates-v2.yml` to UAC. UAC's caller references PM's v2 callee at LDR ref (just like v1
     references python-quality-gates.yml at LDR)
   - Quickmerge per canonical flow
-- [ ] [SCRIPT] P0. UAC main branch protection rotation: drop v1 required check → add v2.
+- [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` 2026-05-29 (18-branch sweep).
 - [ ] [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
 - [ ] [VERIFY] P0. Next UAC PR triggers v2 cleanly.
 
@@ -182,7 +174,7 @@ alone doesn't escape it.
   - Local `quality-gates.sh` full run → sentinel
   - Add v2 caller workflow
   - Quickmerge
-- [ ] [SCRIPT] P0. UTL main branch protection rotation.
+- [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` 2026-05-29 (18-branch sweep).
 - [ ] [VERIFY] P0. Next UTL PR triggers v2 cleanly.
 
 ### Phase 4 — Rollout to remaining 7 ghost-affected repos (1.5 days)
