@@ -256,10 +256,17 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 - [ ] [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
       miss, every poll logs `Found 0 upcoming fixtures within 48h horizon` → the fixture-window dispatch never triggers
       (likely a downstream effect of instruments_service data never being written). Re-verify after the venv fix.
-- [ ] [AGENT] P1. **alerting-quietness processed ZERO alert messages in 5+ days** (730 heartbeats, no
+- [x] ✅ [AGENT] P1. **alerting-quietness processed ZERO alert messages in 5+ days** (730 heartbeats, no
       ALERT_RECEIVED/FIRED/SUPPRESSED across 5 subscribed topics). Either no upstream service publishes to those topics,
       or the subscriber consumes silently. Verify the publisher side — an alerting pipeline that has seen zero traffic
       for 5 days is an observability blind spot, not necessarily "healthy". [observability]
+      — **Root cause: 4 of 5 topics have no publisher.** `margin-events` has a live producer
+      (position-balance-monitor-service). The other 4 (`risk_alerts_circuit_breaker_triggers`,
+      `balance_discrepancy_alerts`, `order_rejection_spikes`, `service_error_events`) exist in GCP + subscriber code
+      but nothing publishes to them — they are planned topics without an implemented publisher. Not in
+      `EVENT_TOPIC_REGISTRY` SSOT. Zero traffic is expected, not an incident. alerting-service@6ff5c36:
+      `_SUBSCRIPTIONS_WITH_NO_PUBLISHER` + startup warning log documents the gap so future operators won't
+      re-investigate the same "zero traffic" observation.
 - [ ] [AGENT] P2. **qg-snapshot job never ran**: no run.log ever; serial shows clean boot then only OS noise for 5+ days
       — the QG-snapshot startup task never produced output (missing/failed-pre-logging). Diagnose or retire.
 
