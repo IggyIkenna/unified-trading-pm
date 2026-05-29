@@ -539,6 +539,13 @@ plan. Commit + push via the standard `docs(plans):` flow.
       WBTC=0.018%). **NOT BLOCKED-CREDENTIALS** — uses the existing `alchemy-api-key` Secret Manager entry already in
       use by `aave_positions.py`. QG-green (only pre-existing foreign-file failure
       `test_solana_defi_handler.py::TestBackfillDriftHelius` remains).
+      — + operational verify 2026-05-29T17:27Z: manifest cleaned (320 rows rewritten `empty_confirmed`→`expected_unattempted`
+      across 4 per-VM shards via `/tmp/li_clean/scripts/clean_aave_op_empty_rows.py` on agent-orch-vm-ml) +
+      tarballs rebuilt @ mtds@2e86a76 (DEFI scope, includes 119056a6 RPC fallback) +
+      retry VM `mtds-lending-indices-20260529-171631` (asia-northeast1-c) launched RUNNING T+10min verified —
+      log evidence: `aave_v3/OPTIMISM: direct-RPC fallback succeeded (14 rows)` writing to
+      `lending-indices-central-element-323112/raw_tick_data/.../venue=AAVE_V3/chain=OPTIMISM/`.
+      Bonus discovery: AAVE_V3-LINEA also had subgraph-empty; same RPC fallback now hydrates LINEA (9 rows/day).
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
