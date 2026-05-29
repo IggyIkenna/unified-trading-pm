@@ -121,6 +121,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/quality_gates/**"
     "!**/migration/**"
     "!**/qg/**"
+    "!**/plans/**"
 )
 BE_EXCLUDE_GLOBS=(
     "**/smoke-test-dev.py"
