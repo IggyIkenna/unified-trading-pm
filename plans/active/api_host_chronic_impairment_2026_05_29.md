@@ -90,12 +90,15 @@ operator intervention.
       timeouts that orphan claude processes? — agent-orchestrator@039664c; findings in issues/api_host_chronic_impairment_2026_05_29.md §Phase 3.
       Key: UsagePoller 30-min interval; 4 sequential pexpect spawns per tick (~13s each); finally-block SIGTERM+close(force=True)
       reaps direct child but not node.js grandchildren (orphan risk vector). render_floor is NOT an orphan source.
-- [ ] [AGENT] P0. Replace the claude-spawn-based usage poller with a direct **Anthropic API call** to the usage/limits
+- [x] ✅ [AGENT] P0. Replace the claude-spawn-based usage poller with a direct **Anthropic API call** to the usage/limits
       endpoint (per Anthropic docs). Same data, no subprocess churn. Implementation: `httpx.get` against
       `https://api.anthropic.com/v1/messages/limits` (or whatever the canonical endpoint is — check Anthropic API
-      reference). Account-key auth via setup-token.
-- [ ] [AGENT] P0. Add unit + integration tests proving the new poller reads identical fields (`weekly_msg_limit_pct`,
-      `5h_pct`, etc.) and that no `claude` subprocess is spawned during a poll cycle.
+      reference). Account-key auth via setup-token. — agent-orchestrator@ad28879 (fetch_usage_via_api added to
+      usage_tracker.py; POST /v1/messages with Bearer token, reads anthropic-ratelimit-unified-5h/7d-utilization headers)
+- [x] ✅ [AGENT] P0. Add unit + integration tests proving the new poller reads identical fields (`weekly_msg_limit_pct`,
+      `5h_pct`, etc.) and that no `claude` subprocess is spawned during a poll cycle. — agent-orchestrator@ad28879
+      (17 tests in tests/test_usage_tracker_api.py: token loading, utilization parsing, happy path, partial/no headers,
+      no-subprocess assertion via test_usage_poller_tick_spawns_no_claude_subprocess)
 - [ ] [AGENT] P0. After deploying the new poller: 24h soak test. CloudWatch `StatusCheckFailed_Instance` should drop to
       zero for the soak window. If it doesn't, the claude-poller wasn't the cause; move to Phase 4 candidates.
 
