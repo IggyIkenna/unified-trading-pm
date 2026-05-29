@@ -526,6 +526,19 @@ plan. Commit + push via the standard `docs(plans):` flow.
       BLOCKED-CREDENTIALS** — was a subgraph-deployment-ID bug; existing `graph-api-key` Secret Manager entry works
       fine. Backfill re-run: launched `mtds-aave-optimism-backfill` covering attempted_failed/empty_confirmed dates;
       T+10min verify per plan.
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-A AAVE_V3-OPTIMISM follow-up — direct-RPC fallback shipped 2026-05-29
+      (MTDS@119056a6)**. The earlier Messari-subgraph swap (Bug-A above) was correct in shape but the Messari deployment
+      `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` stopped indexing 2024-09-11, so 2025+ OPTIMISM days still came back
+      empty — both subgraph variants (github-README + Messari swap) return 0 honest rows for 2025+. Added a 3rd-tier RPC
+      fallback to `lending_indices_handler.py::_fetch_aave_v3_via_rpc` that reads `getReserveData(asset)` directly from
+      the on-chain Pool `0x794a61358D6845594F94dc1DB02A252b5b4814aD` via the existing `alchemy-api-key` Secret Manager
+      entry + `AlchemyBaseClient`. Reserve list comes from `AaveProtocolDataProvider.getAllReservesTokens()`. Output
+      schema matches `_parse_aave_v3` exactly so no downstream diff. Sync `web3` calls wrapped in `asyncio.to_thread` to
+      preserve the async loop. 8-chain coverage (ETH/ARB/OP/POLY/AVAX/BASE/BSC/LINEA). Verified locally: OPTIMISM @
+      2026-01-15 returns 14 rows / 13 reserves with non-zero indices (USDC liquidity_rate=1.75%, WETH=0.93%,
+      WBTC=0.018%). **NOT BLOCKED-CREDENTIALS** — uses the existing `alchemy-api-key` Secret Manager entry already in
+      use by `aave_positions.py`. QG-green (only pre-existing foreign-file failure
+      `test_solana_defi_handler.py::TestBackfillDriftHelius` remains).
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
