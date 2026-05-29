@@ -456,24 +456,18 @@ plan. Commit + push via the standard `docs(plans):` flow.
       series (exchange_rate = tvl_lamports/1e9 / supply_jitosol). Added `_collect_jito_historical` for past dates
       via DeFiLlama yields chart for the jito-liquid-staking JITOSOL pool
       (`0e7d0722-9054-4907-8593-567b353c0900`). No credential ask needed.
-- [~] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** —
-      **DIAGNOSED 2026-05-29 — narrower than initially reported**. The cascade-with-Messari-fallback
-      (`lending_indices_handler._collect_via_cascade` lines 703-715) already handles schema drift correctly: AAVE_V3
-      ETHEREUM/ARBITRUM/POLYGON/AVALANCHE/BASE/LINEA/BSC all succeed via `aave_v3_native` (8016/11529/2663/4822/31025/
-      722/2155 rows respectively in 2026-05-28 run). The failure is **AAVE_V3-OPTIMISM only**: subgraph
-      `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` returns 0 rows on the native `reserveParamsHistoryItems` query
-      AND has no `marketDailySnapshots` field (Messari schema absent). Cascade exhaustion is correctly recorded as
-      `record_empty` (legitimate per shard-failure-isolation SSOT). **Root cause investigation requires querying the
-      subgraph schema directly** which is gated on a Graph Gateway API key — slot-1 attempted unauthenticated probe
-      2026-05-29 and got `auth error: missing authorization header`. Two possible upstreams:
-      (a) the Optimism Aave V3 deployment is no longer maintained on this subgraph id and a newer subgraph id is
-      canonical (would need to scan `unified_api_contracts/registry/capability_declarations/_defi.py` Aave-V3-Optimism
-      entry vs The Graph Studio's current Aave-V3-Optimism subgraph). (b) the subgraph is alive but the
-      `reserveParamsHistoryItems` table is unpopulated for the requested date range. Triage path:
-      `unified_api_contracts/registry/capability_declarations/_defi.py` AAVE_V3-OPTIMISM `subgraph_id` field is the
-      SSOT to update if (a). **Status: capturing for the next Aave-targeted plan**, since the May-23 archetypes
-      (`carry_staked_basis` + `arbitrage_price_dispersion`) treat AAVE-OPTIMISM as one of N base-rate sources and the
-      remaining chains (ETHEREUM/ARBITRUM/etc.) carry the signal.
+- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** —
+      fixed 2026-05-29 (UAC@15e67b93). Root cause confirmed via authenticated graph-api-key probes 2026-05-29: the
+      github-README deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` is schema-valid (has
+      `reserveParamsHistoryItems` AND `reserves`) but contains ZERO entries at any timestamp despite being head-
+      indexed (`_meta.block.number=152230969`, ts=1780060715; `reserves(first:5)` → []). The Messari
+      `marketDailySnapshots` field absence on this deployment was the cascade's second-variant fingerprint —
+      Bug-A reported it but the underlying issue was the empty native deployment. Swapped OPTIMISM in
+      `SUBGRAPH_IDS["aave_v3"]` to `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment;
+      populated history through 2024-09-11). The existing lending_indices cascade now resolves OPTIMISM via the
+      `messari_lending` variant on second try. **NOT BLOCKED-CREDENTIALS** — was a subgraph-deployment-ID
+      bug; existing `graph-api-key` Secret Manager entry works fine. Backfill re-run: launched
+      `mtds-aave-optimism-backfill` covering attempted_failed/empty_confirmed dates; T+10min verify per plan.
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
