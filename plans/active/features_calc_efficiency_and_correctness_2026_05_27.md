@@ -115,8 +115,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       to `{4h,24h}`. Benchmark (24h/75-day lookback): **26 MB → 1.1 MB per instrument (22×)**. Methods all ≤50L (shared
       `_run_feature_group_lifecycle`), files <900, basedpyright 0, 1491 tests pass. Optimises **bytes read**, not GET
       count. (Original spec below for provenance.)
-- [ ] [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
-      choice.** Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
+- [x] ✅ [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
+      choice.** — DONE (spec retained for provenance; fix shipped at features@ac83bfad) Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
       **widest buffer across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a
       deep lookback (tens– hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs
       reading MDPS's already- materialised 24h candles directly (~75 × 6.6 KB ≈ **0.5 MB**). MDPS persists ALL 7 TFs
