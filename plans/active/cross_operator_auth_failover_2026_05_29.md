@@ -98,10 +98,16 @@ why + reproduction.
       `account_status VARCHAR` column on `AccountUsageRow` + bootstrap migration. `mark_account_auth_failed()`,
       `clear_account_auth_failed()`, `account_is_usable()` in `state_store.py`. `_account_to_view()` surfaces
       `auth_failed`/`disabled` from DB column. Dashboard `types.ts` + `App.tsx` updated for new values.
-- [ ] [AGENT] P0. Add server-side watchdog: when `/api/slots/<N>/spawn` returns `ok` but no /heartbeat arrives within
+- [x] ✅ [AGENT] P0. Add server-side watchdog: when `/api/slots/<N>/spawn` returns `ok` but no /heartbeat arrives within
       `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` (default **180**), mark the assigned `account_id` as `auth_failed` in the DB.
       Then call `_pick_next_account` on that slot and re-spawn the tmux session with the new account. Cap retries at 2
       to avoid infinite-loop on a fully-broken pool.
+      — agent-orchestrator@6871070: WorkerLivenessKicker._check_spawn_heartbeat_timeouts() ticks on every liveness
+      scan; detects slots where last_spawned_at > TIMEOUT and last_ping < last_spawned_at; marks account auth_failed
+      via state_store.mark_account_auth_failed(); picks next usable account via new state_store.pick_next_account();
+      fires _do_auth_fail_respawn() in daemon thread (kill old session + spawn fresh); fires Slack alert
+      (reason:auth_failed). Retry cap: spawn_retry_count ≥ 2 silences watchdog for that slot. Schema: last_spawned_at
+      + spawn_retry_count on SlotRow (ORM + bootstrap migration); /spawn resets both fields on each spawn.
 - [x] ✅ [AGENT] P0. Healing path: when an `auth_failed` account next successfully /heartbeats (after operator re-auths),
       flip its status back to `healthy`. Same pattern as rate-limit recovery — auto-unflag on success.
       — agent-orchestrator@7c4ba9b: heartbeat_slot detects account_is_auth_failed → calls clear_account_auth_failed
