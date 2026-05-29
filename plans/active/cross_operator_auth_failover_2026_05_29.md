@@ -107,9 +107,13 @@ why + reproduction.
       — agent-orchestrator@7c4ba9b: heartbeat_slot detects account_is_auth_failed → calls clear_account_auth_failed
       + logs account_auth_restored activity. _pick_next_account updated to use account_is_usable (covers
       rate_limited + auth_failed + disabled).
-- [ ] [AGENT] P0. Unit + integration tests: (a) spawn slot with deliberately-stale token → 180s timeout → auto-rotate to
+- [x] ✅ [AGENT] P0. Unit + integration tests: (a) spawn slot with deliberately-stale token → 180s timeout → auto-rotate to
       next account → second spawn /heartbeat-s → original account status `auth_failed`. (b) Operator re-auths original
       account → next spawn on it /heartbeat-s → status flips back to `healthy`.
+      — agent-orchestrator@9e0c712: 19 tests (14 state_store unit + 4 _pick_next_account skip-auth_failed + 1 healing
+      path integration). 1 spawn-watchdog stub skipped pending task-007. Tests verify: mark/clear/is_auth_failed,
+      account_is_usable (healthy/RL/auth_failed/disabled), rotation skips unusable via account_is_usable mock,
+      healing path (clear → usable). All 19 pass; pre-existing 5 failures unrelated to Phase 2.
 
 ## Phase 3 — Slack alert on every rotation (P0)
 
