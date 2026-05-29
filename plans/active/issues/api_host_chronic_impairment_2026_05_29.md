@@ -262,3 +262,90 @@ watchdog (capturing `pgrep`, `free`, FD counts every 60s) will show the accumula
 
 **Combined Phase 1 + Phase 2 conclusion**: Both independent forensic sources point to the same root cause. Phase 3
 (replace claude-spawn poller with direct Anthropic API call) is the correct fix.
+
+---
+
+## Phase 1 Amendment — Kernel Journal OOM Evidence (CRITICAL: root cause correction)
+
+**Captured**: 2026-05-29T15:32Z by slot-5 (agent) — reading systemd journal directly on-host
+**Source**: `journalctl --since "today" 2>/dev/null | grep -E "oom|OOM|Killed process|memory peak"`
+
+### OOM killer events confirmed in kernel journal
+
+All four StatusCheckFailed_Instance impairment windows correspond to OOM-killer events in the kernel journal:
+
+| Time (UTC) | Trigger | Killed process | anon-RSS | cgroup |
+|------------|---------|----------------|----------|--------|
+| 03:27:12 | cron | pytest (PID 595124) | **32.3 GB** | orchestrator.service |
+| 03:38:00 | apport | pytest (PID 595782) | **57.6 GB** | orchestrator.service |
+| 09:14:00 | python | python (PID 129050) | **36.1 GB** | orchestrator.service |
+| 12:19:09 | git | pytest (PID 130766) | **38.6 GB** | orchestrator.service |
+
+Raw kernel messages (examples):
+
+```
+03:27:13 kernel: Out of memory: Killed process 595124 (pytest) total-vm:36800608kB, anon-rss:33841248kB, ...
+03:38:00 kernel: Out of memory: Killed process 595782 (pytest) total-vm:63368744kB, anon-rss:57641324kB, ...
+09:14:00 kernel: Out of memory: Killed process 129050 (python) total-vm:38593612kB, anon-rss:36084188kB, ...
+12:19:09 kernel: Out of memory: Killed process 130766 (pytest) total-vm:42510856kB, anon-rss:38607828kB, ...
+```
+
+Systemd service accounting at each shutdown:
+
+```
+03:27:21 orchestrator.service: Consumed 7h 7min 58.884s CPU time, 59.5G memory peak
+03:38:04 orchestrator.service: Consumed 7min 51.030s CPU time, 59.6G memory peak
+09:14:04 orchestrator.service: Consumed 52min 28.858s CPU time, 60.5G memory peak
+12:19:17 orchestrator.service: Consumed 24min 5.366s CPU time, 60.5G memory peak
+```
+
+The killed processes are in `task_memcg=/system.slice/orchestrator.service` because worker-slot tmux sessions are
+children of processes in the orchestrator service cgroup.
+
+### Usage poller: hypothesis INCORRECT
+
+The usage poller actually runs at **interval=1800s (30 minutes)**, not every 10 seconds. Per journal:
+
+```
+14:33:22 UsagePoller started (interval=1800s)
+14:33:52 usage refresh: spawning claude in ... (render_floor=3.0s)
+14:34:05 usage refresh: captured 17836 raw chars → parsed session=23% weekly=12%
+14:34:05 usage refresh: spawning claude (account 2)
+14:34:18 captured → spawning claude (account 3)
+14:34:31 captured → spawning claude (account 4)
+```
+
+Total per cycle: 4 sequential claude spawns over ~52 seconds every 30 minutes. Each claude process uses ~340 MB RSS.
+Peak during poll cycle: ~1.4 GB additional RSS for 52 seconds. This is **not** the root cause.
+
+### Actual root cause: quality-gate pytest on worker slots consuming 32-57 GB
+
+Worker slots (tmux sessions, children of orchestrator cgroup) run quality-gate scripts that invoke `pytest`. Some
+test suite (likely loading large financial data fixtures or accumulating data in memory during a long test run)
+grows to 32-57 GB RSS before the OOM killer fires.
+
+The causal chain:
+1. Worker agent runs `bash scripts/quality-gates.sh` → pytest invoked
+2. pytest loads large test data / has a memory leak in a test fixture
+3. pytest RSS reaches 32-57 GB → OS OOM threshold
+4. OOM killer fires; during page-table teardown of 57 GB process, kernel stalls briefly
+5. EC2 hypervisor ARP/ICMP health check times out → `StatusCheckFailed_Instance`
+6. `orchestrator.service: Failed with result 'oom-kill'` (collateral — pytest was in the cgroup)
+7. systemd restarts orchestrator → usage poller runs 4 claude spawns → 1.4 GB spike → second OOM minutes later (03:27 → 03:38)
+
+### Phase 3 recommendation: AMEND
+
+Phase 3 (replace usage poller) is **still worth doing** (reduces subprocess count, cleaner code), but it will NOT
+fix the impairment. The OOM root cause is pytest test memory usage, not the usage poller.
+
+**Required fixes**:
+1. **Phase 5 (MemoryMax)** — priority must be elevated from P1 to P0. Setting `MemoryMax=56G` on orchestrator.service
+   caps the entire cgroup (all worker slots + pytest included) at 56 GB. OOM kills the service cleanly rather than
+   wedging the OS network stack. This alone prevents StatusCheckFailed_Instance.
+2. **Identify the memory-exploding pytest tests** — find which test file loads 32-57 GB and fix the fixture or mock
+   the large data dependency. Check test files loading parquet/GCS data without streaming.
+3. **Add swap (at minimum 16 GB)** — gives the OOM killer a buffer before firing. A 57 GB pytest run on a 63 GB
+   machine with 0 swap has no margin. Even 16 GB swap buys time for the watchdog to detect and `systemctl stop`.
+4. **Worker slots should run QG on dedicated VMs** — the central orchestrator host is not designed to absorb 60 GB
+   pytest runs alongside the dispatch service. Worker slots for code-heavy repos should run on vm-cross-cutting or
+   vm-cefi, not the central API host.
