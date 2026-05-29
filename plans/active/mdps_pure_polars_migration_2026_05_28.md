@@ -594,37 +594,66 @@ revised Stage 4 reflects the audit-derived split between dead-code delete and li
 
 ## Phase 5 — Stage 5 implementation (long-tail cleanup)
 
-Gated on Stages 1-4 being green. Lowest priority.
+**Operator directive 2026-05-29 mid-session**: "Every processing that happens
+inside the MDPS should be polars based, if the output is pandas it is okay
+for now, we will do the migration later on for cross repos."
 
-Stage 5 audit 2026-05-29 (mdps@db233e2 baseline): items 5.1-5.4 are all
-**boundary-Protocol-constrained** — each touches a public API where the
-consumer / Protocol contract expects pandas. Converting internals to
-polars without lifting the Protocol would mean adding `pl.from_pandas` +
-`.to_pandas` round-trips at the boundary, defeating the memory-win
-purpose. Each item documented below with the specific Protocol that
-needs to change first.
+This unblocks Stage 5: items 5.1–5.4 are no longer
+``BLOCKED-PROTOCOL`` — the cross-repo Protocol boundaries (UTL ``TickFetcher``,
+``OHLCVAggregator``, UAC ``SchemaContract`` validators) stay pandas at the
+seams; MDPS-internal compute flips to polars. Boundary conversions
+(``pl.from_pandas``/``.to_pandas``) are acceptable at the cross-repo edge,
+NOT at the per-helper level. Phases 5C/5D below are scoped to one
+coordinated commit per consumer chain (single pd→pl at top of entry-point +
+single pl→pd before UTL call) — never per-helper round-trips.
 
-- [ ] [P2] [BLOCKED-PROTOCOL] **5.1 `cloud_data_provider.py`** — boundary issue: callers
-      `orchestration_scheduling.py:130-165` + `orchestration_scanner.py:258-285` use
-      `.empty`, `.isin`, `.apply(_should_proc, axis=1)`, `.to_dict()` (pandas
-      idioms). The `_should_proc` row-by-row apply is the TRADFI session-hours
-      filter — converting to polars would mean a `partition_by` + per-row UDF
-      pattern. Pure-polars conversion ripples to 2 scheduling callers + their
-      tests. Unblock: operator decision on whether to lift the
-      `instruments_df: pd.DataFrame` contract in scheduling/scanner.
-- [ ] [P2] [BLOCKED-PROTOCOL] **5.2 `live_aggregator.py:321`** — `_MDPSTickFetcher._read`
-      returns `pd.DataFrame` to satisfy UTL's `TickFetcher` Protocol (Live = batch
-      requirement). Boundary conversion at this seam is correct (same pattern as
-      Stage 4.D's `OHLCVAggregator` Protocol seam at line 349). Unblock: UTL
-      `TickFetcher` Protocol change → ripples to every live-aggregator consumer.
-- [ ] [P2] [BLOCKED-PROTOCOL] **5.3 `canonical_writer.py`** — every public function
-      signature uses `pd.DataFrame` (parameters + return types at lines 238, 289,
-      370, 421, 431, 517, 660, 761...). Lifting any one means lifting all + every
-      downstream consumer. This is a "Stage 3 redux" — the deferred big-bang
-      that Stage 1's BATCH writer addressed in a focused way. Unblock: operator
-      signoff on a canonical_writer pandas → polars cascade plan.
-- [ ] [P2] [BLOCKED-PROTOCOL] **5.4 `orchestration_writer.py`** — same constraint as
-      5.3; signatures pinned to pandas.
+- [x] ✅ [P2] **5A `cloud_data_provider.py` chain** — `cloud_data_provider`,
+      `orchestration_scheduling._get_tradable_instruments`,
+      `orchestration_scanner._get_tradable_instruments`, plus the
+      `orchestration_service` consumer all flipped to polars. `pl.read_parquet`
+      replaces `pd.read_parquet`; `pl.concat(how="vertical_relaxed")` replaces
+      `pd.concat`; `.is_empty()` / `pl.col(...).is_in(...)` replace `.empty` /
+      `[mask]`; TRADFI `.apply(_should_proc, axis=1)` replaced by
+      `iter_rows(named=True)` + `pl.Series` mask. 6 files modified, 78 +/63 −.
+      market-data-processing-service@74b4856.
+- [x] ✅ [P2] **5B `orchestration_writer.py` dead-code purge** — surfaced 4 dead
+      pandas-using helpers left over from the fe7deb5 `_write_candles` removal:
+      `_get_instrument_metadata`, `_resolve_venue`, `_resolve_output_path`,
+      `_validate_alignment_and_schema`. Verified zero external callers (the
+      live equivalents are in `candle_write_mixin.py`). Deleted per workspace
+      rule "No parallel code paths". Remaining pandas surface (2 hits) is
+      `_log_timestamp_mismatch_details` which stays pandas at this seam
+      (its caller `candle_write_mixin._validate_and_convert_timestamps` is
+      still pandas; flips with Phase 5C). Net −174 lines.
+      market-data-processing-service@6a14f3b.
+- [ ] [P1] **5C `canonical_writer.py` MDPS-internal helpers → polars** — operator-acked.
+      Scope: 8 internal helpers + 2 entry points, single coordinated commit
+      (no per-helper round-trips). Audit baseline 2026-05-29:
+      - `_renormalize_legacy_tradfi_instrument_ids` (81 lines, 7 pd-ops)
+      - `_infer_instrument_type` (52 lines, 7 pd-ops)
+      - `_infer_chain` (38 lines, 5 pd-ops)
+      - `_infer_league_id` (9 lines, 3 pd-ops)
+      - `_infer_v6_columns` (39 lines, 3 pd-ops)
+      - `_stamp_candle_available_at` (101 lines, **14 pd-ops** — heaviest;
+        datetime arithmetic per row, polars win is largest here)
+      - `_inject_schema_contract_columns` (58 lines, 11 pd-ops)
+      - `_validate_stamped_candle_bar_boundary` (89 lines, 11 pd-ops; uses
+        `pd.NaT` + `pd.Timestamp.tz_localize` — polars uses `datetime` builtin)
+      Entry points: `write_candle_parquet` (line 1088, full write path) +
+      `write_streaming_chunk` (line 1979, streaming path). Both convert
+      `pd.DataFrame` → `pl.DataFrame` once at entry, pass polars through every
+      helper, convert back to `pd.DataFrame` once just before the UTL boundary
+      calls (`_utl_write_chunk`, `manifest_writer.record_captured`,
+      `pd.read_parquet` → `pl.read_parquet`).
+      Test plan: every existing canonical_writer test must pass unchanged
+      (the boundary pd-output preserves the public contract). Add
+      regression test for `_validate_stamped_candle_bar_boundary` polars
+      timestamp handling. ~10 files touched.
+- [ ] [P2] **5D `live_aggregator.py:321` `_MDPSTickFetcher._read`** — operator-acked.
+      `pd.read_parquet(io.BytesIO(raw))` → `pl.read_parquet(io.BytesIO(raw)).to_pandas()`
+      at the UTL `TickFetcher` Protocol boundary. Marginal direct memory win
+      (boundary conversion); cleaner direction for the eventual UTL Protocol
+      lift. Single-line change in the read method.
 - [x] ✅ [P2] **5.5 `app/utils/*` audit** — surveyed 5 files:
       - `adapter_utils.py` (156 lines): `apply_locf_fill` is numpy-only ✓;
         `parse_timestamps_flexible` takes `pd.DataFrame` because adapters
