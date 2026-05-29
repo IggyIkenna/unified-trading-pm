@@ -183,9 +183,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `aiohttp.ClientPayloadError` (superclass of `ContentLengthError`); exponential backoff (2s, 4s) between attempts;
       logs per-attempt warning + final error on exhaustion. Non-retryable errors (TardisHTTPError, ConnectionError, etc.)
       still propagate immediately. stream_bulk_csv_to_parquet cleans up .tmp on failure so retries start fresh.
-- [ ] [AGENT] P1. **Deribit instrument-type routing bug**: spot `BTC`/`ETH` symbols are sent to deribit (a
+- [x] ✅ [AGENT] P1. **Deribit instrument-type routing bug**: spot `BTC`/`ETH` symbols are sent to deribit (a
       derivatives-only venue) → `HTTP 400` ×4. The instrument universe is routing spot-type instruments to a venue that
       has none. Fix universe/routing so only valid instrument types per venue are requested. [degraded]
+      — market-tick-data-service@2e86a76: Removed bare "BTC"/"ETH" from `_VENUE_WIRE_SYMBOL_FALLBACK["DERIBIT"]`
+      (these are Tardis batch-API glob patterns, not valid per-instrument IDs). Added guard in
+      `TardisAdapter._resolve_symbols` to filter symbols without "-" for derivatives-only venues.
+      6 new tests in `test_deribit_universe_routing.py` prove the fix.
 - [ ] [AGENT] P2. **Coinbase 400 = symbol-not-yet-listed** (SOL/DOGE/ADA/AVAX-USD not on Coinbase in 2020) — a DIFFERENT
       400 cause than OKX's expiry-window. Handled as partial (`captured=4 expected=8`), but feed it into the §3 coverage
       map so "not-listed-yet" is distinguished from "out-of-window" and "blocked-key".
