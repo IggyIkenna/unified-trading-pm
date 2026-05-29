@@ -96,7 +96,7 @@ class CanonicalEntry:
     specifier: SpecifierSet
 
     @classmethod
-    def from_dict(cls, d: dict[str, str]) -> "CanonicalEntry":
+    def from_dict(cls, d: dict[str, str]) -> CanonicalEntry:
         name = d["name"]
         version_range = d["versionRange"]
         # Parse just the specifier part (strip package name + extras)
@@ -281,7 +281,7 @@ def check_repo(
             if not str(canon_entry.specifier):
                 continue
 
-            ok, reason = check_specifier_compatible(spec_str, canon_entry)
+            ok, _reason = check_specifier_compatible(spec_str, canon_entry)
             if not ok:
                 result.violations.append(
                     Violation(

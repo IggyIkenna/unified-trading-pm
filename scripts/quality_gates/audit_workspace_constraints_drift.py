@@ -203,18 +203,17 @@ def audit_repo(repo_path: Path, constraints: dict[str, str]) -> RepoResult:
             continue
 
         # Floor: repo uses lower floor than canonical → error (could pull in old vulnerable version)
-        if dep_floor and canon_floor:
-            if _ver_lt(dep_floor, canon_floor):
-                result.errors.append(
-                    DriftEntry(
-                        repo=repo_path.name,
-                        dep_name=dep_name,
-                        dep_raw=dep_raw,
-                        canon_raw=canon_raw,
-                        kind="floor_below_canon",
-                        detail=f">={dep_floor} < canonical >={canon_floor}",
-                    )
+        if dep_floor and canon_floor and _ver_lt(dep_floor, canon_floor):
+            result.errors.append(
+                DriftEntry(
+                    repo=repo_path.name,
+                    dep_name=dep_name,
+                    dep_raw=dep_raw,
+                    canon_raw=canon_raw,
+                    kind="floor_below_canon",
+                    detail=f">={dep_floor} < canonical >={canon_floor}",
                 )
+            )
 
         # Floor: repo uses higher floor than canonical → just informational (fine)
 

@@ -82,7 +82,8 @@ for _p in (UAC_PATH, UTL_PATH):
     if _p.exists() and _p_str not in sys.path:
         sys.path.insert(0, _p_str)
 
-# ruff: noqa: E402
+import contextlib
+
 from unified_api_contracts.canonical.crosscutting.pipeline_mode import (  # type: ignore[import-not-found]
     PipelineMode,
     pipeline_mode_for_source,
@@ -459,7 +460,7 @@ def _read_instrument_id_from_parquet_footer(uri: str) -> str | None:
     tmp_fd, tmp_path = tempfile.mkstemp(suffix=".parquet")
     os.close(tmp_fd)
     try:
-        subprocess.run(  # noqa: S603 — gcloud is a trusted tool
+        subprocess.run(
             ["gcloud", "storage", "cp", uri, tmp_path],
             check=True,
             capture_output=True,
@@ -473,13 +474,11 @@ def _read_instrument_id_from_parquet_footer(uri: str) -> str | None:
             val = batch.column("instrument_id")[0].as_py()
             return str(val) if val is not None else None
         return None
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
     finally:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -673,7 +672,7 @@ def iter_parquet_uris_for_slice(
     # gcloud storage ls --recursive does NOT support prefix matching without trailing /,
     # and returns exit code 1 on no matches — making it unusable for year-slice prefixes.
     # gsutil ls also exits 1 on zero matches, so check=False + inspect returncode.
-    proc = subprocess.run(  # noqa: S603 — gsutil is a trusted tool
+    proc = subprocess.run(
         ["gsutil", "ls", "-r", f"gs://{bucket}/{prefix_slice}**"],
         check=False,
         capture_output=True,
@@ -861,7 +860,7 @@ def run_cross_asset_rescan(
     if run_fn is not None:
         rc, stdout, stderr = run_fn(cmd)
     else:
-        proc = subprocess.run(  # noqa: S603 — sys.executable + trusted script path
+        proc = subprocess.run(
             cmd,
             check=False,
             capture_output=True,

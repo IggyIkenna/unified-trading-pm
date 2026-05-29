@@ -20,7 +20,7 @@ import json
 import logging
 import sys
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
@@ -28,7 +28,7 @@ from typing import cast
 def _load_storage_client():
     try:
         uts = __import__("unified_trading_services", fromlist=["get_storage_client"])
-        return getattr(uts, "get_storage_client")
+        return uts.get_storage_client
     except ImportError:
         return None  # acceptable: optional GCS upload in PM tooling script; caller checks for None
 
@@ -83,7 +83,7 @@ def main() -> None:
     with open(args.audit_file) as f:
         audit_data = cast(dict[str, object], json.load(f))
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     date_str = now.strftime("%Y-%m-%d")
     timestamp_str = now.strftime("%Y%m%dT%H%M%SZ")
     blob_path = f"sboms/{args.service_name}/{date_str}/{timestamp_str}.json"
@@ -102,7 +102,7 @@ def main() -> None:
         client = get_storage_client(project_id=project_id)
         bucket = client.bucket(args.bucket)
         blob = bucket.blob(blob_path)
-        upload_fn = cast(Callable[..., None], getattr(blob, "upload_from_string"))
+        upload_fn = cast(Callable[..., None], blob.upload_from_string)
         upload_fn(
             json.dumps(payload, indent=2),
             content_type="application/json",

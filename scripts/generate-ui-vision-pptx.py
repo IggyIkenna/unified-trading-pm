@@ -764,7 +764,7 @@ def slide_04_exploration_to_live(prs):
 
         labels = ["Configure", "Generate", "Run Batch", "Analyse", "Select", "Promote"]
         y = 3.3
-        for i, (label, detail) in enumerate(zip(labels, steps)):
+        for i, (label, detail) in enumerate(zip(labels, steps, strict=False)):
             add_text_box(
                 slide, x + 0.2, y, 0.8, 0.18, f"0{i + 1} {label}", font_size=8, bold=True, font_color_override=color
             )

@@ -85,9 +85,8 @@ def get_path_deps(pyproject_path: Path) -> list[str]:
                 if key_part and not key_part.startswith("#"):
                     # Value has path = "../..." -> this key is a path dep
                     rest = line[line.find("=") + 1 :].strip()
-                    if "path" in rest or "../" in rest or "..\\" in rest:
-                        if key_part not in deps:
-                            deps.append(key_part)
+                    if ("path" in rest or "../" in rest or "..\\" in rest) and key_part not in deps:
+                        deps.append(key_part)
     return deps
 
 

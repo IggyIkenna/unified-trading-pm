@@ -73,7 +73,7 @@ class TestScriptStructure(unittest.TestCase):
         ]
 
         for script_path in scripts:
-            with open(script_path, "r") as f:
+            with open(script_path) as f:
                 first_line = f.readline().strip()
                 self.assertTrue(
                     first_line.startswith("#!/usr/bin/env python"), f"Script missing shebang: {script_path.name}"
@@ -88,7 +88,7 @@ class TestScriptStructure(unittest.TestCase):
         ]
 
         for script_path in scripts:
-            with open(script_path, "r") as f:
+            with open(script_path) as f:
                 content = f.read()
                 # Check for triple-quoted docstring after shebang
                 self.assertIn('"""', content, f"Script missing docstring: {script_path.name}")
@@ -100,7 +100,7 @@ class TestScriptConstants(unittest.TestCase):
     def test_check_file_size_has_extensions(self):
         """Test that check-file-size-cods.py defines extensions."""
         script_path = SCRIPT_DIR / "core" / "05-check-file-size-cods.py"
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             content = f.read()
             self.assertIn("EXTENSIONS", content)
             self.assertIn(".py", content)
@@ -109,7 +109,7 @@ class TestScriptConstants(unittest.TestCase):
     def test_check_file_size_has_exclude_patterns(self):
         """Test that check-file-size-cods.py defines exclude patterns."""
         script_path = SCRIPT_DIR / "core" / "05-check-file-size-cods.py"
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             content = f.read()
             self.assertIn("EXCLUDE_PATTERNS", content)
             self.assertIn("node_modules", content)
@@ -118,7 +118,7 @@ class TestScriptConstants(unittest.TestCase):
     def test_check_file_size_respects_gitignore(self):
         """Test that check-file-size-cods.py uses git ls-files."""
         script_path = SCRIPT_DIR / "core" / "05-check-file-size-cods.py"
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             content = f.read()
             # Accept either shell-style "git ls-files" or subprocess list ["git", "ls-files"]
             uses_git_ls_files = "git ls-files" in content or '"ls-files"' in content
@@ -137,7 +137,7 @@ class TestScriptHelp(unittest.TestCase):
         ]
 
         for script_path in scripts:
-            with open(script_path, "r") as f:
+            with open(script_path) as f:
                 content = f.read()
                 self.assertIn("argparse", content, f"Script should use argparse: {script_path.name}")
                 self.assertIn("ArgumentParser", content, f"Script should use ArgumentParser: {script_path.name}")

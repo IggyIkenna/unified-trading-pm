@@ -145,9 +145,7 @@ class PrintChecker(ViolationChecker):
             return True
         if stripped.startswith('"') or stripped.startswith("'"):
             return True
-        if "python3 -c" in stripped or "python -c" in stripped:
-            return True
-        return False
+        return bool("python3 -c" in stripped or "python -c" in stripped)
 
     @override
     def check(self) -> CheckResult:
@@ -188,10 +186,7 @@ class IndentedImportChecker(ViolationChecker):
         for prefix in exclusions.get("startswith_patterns") or []:
             if content.startswith(prefix):
                 return True
-        for pat in exclusions.get("substring_patterns") or []:
-            if pat in stripped:
-                return True
-        return False
+        return any(pat in stripped for pat in exclusions.get("substring_patterns") or [])
 
     @override
     def check(self) -> CheckResult:
@@ -209,9 +204,7 @@ class NaiveDatetimeChecker(ViolationChecker):
         if stripped.startswith("#"):
             return True
         # Exclude if it is in a comment about the correct pattern
-        if ("NOT " + "datetime" + "." + "now" + "()") in content:
-            return True
-        return False
+        return "NOT " + "datetime" + "." + "now" + "()" in content
 
     @override
     def check(self) -> CheckResult:
@@ -235,9 +228,7 @@ class BareExceptChecker(ViolationChecker):
         stripped = content.strip()
         if stripped.startswith("#"):
             return True
-        if re.match(r"except\s+\w+", stripped):
-            return True
-        return False
+        return bool(re.match(r"except\s+\w+", stripped))
 
     @override
     def check(self) -> CheckResult:
@@ -325,7 +316,7 @@ def print_results(
     print(f"📁 {repo_name}: {total_violations} violations")
     print(f"{'=' * 70}")
 
-    for check_name, result in results.items():
+    for _check_name, result in results.items():
         count = result.count
         if count == 0:
             print(f"  ✅ {result.name}: CLEAN")

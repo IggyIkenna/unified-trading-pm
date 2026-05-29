@@ -118,7 +118,7 @@ def _load_sports_fixtures(workspace_root: Path) -> list[dict[str, object]]:
 
         # Collect bookmakers that have odds for this fixture
         bookmakers: list[str] = []
-        for market_type, market_data in markets.items():
+        for _market_type, market_data in markets.items():
             if isinstance(market_data, dict):
                 for bm in market_data.get("bookmakers", market_data.keys()):
                     if isinstance(bm, str) and bm not in bookmakers:

@@ -73,25 +73,25 @@ todos:
 
     def test_incomplete_frontmatter(self) -> None:
         content = "---\nname: test\n# no closing ---\nsome content"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is None
 
     def test_empty_frontmatter_returns_none(self) -> None:
         # The regex requires at least one line between --- markers
         content = "---\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         # An empty frontmatter block has no lines between ---, which the regex cannot match
         assert data is None
 
     def test_minimal_frontmatter(self) -> None:
         content = "---\nname: x\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is not None
         assert data["name"] == "x"
 
     def test_comments_in_frontmatter(self) -> None:
         content = "---\n# This is a comment\nname: test\n---\nBody"
-        data, rest = MOD._parse_frontmatter(content)
+        data, _rest = MOD._parse_frontmatter(content)
         assert data is not None
         assert data["name"] == "test"
 

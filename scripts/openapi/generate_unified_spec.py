@@ -324,7 +324,7 @@ def merge_specs(
                     # Merge tags: keep existing + add service name
                     existing_tags = op.get("tags", [])
                     if service_name not in existing_tags:
-                        op["tags"] = [service_name] + existing_tags
+                        op["tags"] = [service_name, *existing_tags]
 
             unified_paths[prefixed_path] = updated_item
 
@@ -379,9 +379,8 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
             try:
                 obj = getattr(unified_api_contracts, name)
                 # Check if it's a Pydantic model class (not instance, not function)
-                if isinstance(obj, type) and hasattr(obj, "model_fields"):
-                    if name not in schema_names:
-                        orphans.append(f"UAC: {name}")
+                if isinstance(obj, type) and hasattr(obj, "model_fields") and name not in schema_names:
+                    orphans.append(f"UAC: {name}")
             except Exception:
                 pass
         logger.info("UAC audit: %d exports checked", len(uac_all))
@@ -396,9 +395,8 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
         for name in uic_all:
             try:
                 obj = getattr(unified_api_contracts.internal, name)
-                if isinstance(obj, type) and hasattr(obj, "model_fields"):
-                    if name not in schema_names:
-                        orphans.append(f"UIC: {name}")
+                if isinstance(obj, type) and hasattr(obj, "model_fields") and name not in schema_names:
+                    orphans.append(f"UIC: {name}")
             except Exception:
                 pass
         logger.info("UIC audit: %d exports checked", len(uic_all))

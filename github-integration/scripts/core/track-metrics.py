@@ -24,7 +24,7 @@ import logging
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import cast
 
@@ -100,7 +100,7 @@ def _parse_issues(raw: str) -> list[JsonDict]:
 
 def _get_issues_created_in_period(repo: str, days: int) -> list[JsonDict]:
     """Get all issues created in the last N days."""
-    since_date: datetime = datetime.now(timezone.utc) - timedelta(days=days)
+    since_date: datetime = datetime.now(UTC) - timedelta(days=days)
     since_str: str = since_date.strftime("%Y-%m-%d")
 
     result: str = _run_gh(
@@ -125,7 +125,7 @@ def _get_issues_created_in_period(repo: str, days: int) -> list[JsonDict]:
 
 def _get_pr_checks_in_period(repo: str, days: int) -> list[JsonDict]:
     """Get all PR check runs in the last N days."""
-    since_date: datetime = datetime.now(timezone.utc) - timedelta(days=days)
+    since_date: datetime = datetime.now(UTC) - timedelta(days=days)
     since_str: str = since_date.strftime("%Y-%m-%d")
 
     result: str = _run_gh(
@@ -370,7 +370,7 @@ def collect_metrics(repo: str, period_days: int) -> WorkflowMetrics:
     total_regen, avg_regen, max_regen = calculate_regeneration_metrics(issues)
 
     return WorkflowMetrics(
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         repo=repo,
         period_days=period_days,
         drift_gaps_found=drift_found,

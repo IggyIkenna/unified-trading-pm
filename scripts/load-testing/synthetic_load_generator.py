@@ -233,7 +233,7 @@ def main() -> None:
         seed=args.seed,
     )
 
-    print(result.to_json())  # noqa: T201
+    print(result.to_json())
 
     if args.output:
         from pathlib import Path

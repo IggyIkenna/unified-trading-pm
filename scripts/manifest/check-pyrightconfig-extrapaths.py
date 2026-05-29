@@ -71,10 +71,7 @@ def extrapaths_to_repo_names(paths: list[str], repo_root: Path, workspace_root: 
         if str(p) in (".", ".."):
             continue
         # Resolve to absolute
-        if raw.is_absolute():
-            resolved = raw
-        else:
-            resolved = (repo_root / raw).resolve()
+        resolved = raw if raw.is_absolute() else (repo_root / raw).resolve()
         # Must be a direct child of workspace_root to be a sibling repo
         try:
             resolved.relative_to(workspace_root)

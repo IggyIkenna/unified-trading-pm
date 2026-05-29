@@ -129,9 +129,8 @@ def generate_cloudbuild(repo_name: str, repo_info: dict, deploy_via_dispatch: bo
     template_name = TYPE_TO_TEMPLATE.get(repo_type)
     if not template_name:
         return None
-    if repo_type == "infrastructure":
-        if repo_name not in INFRA_REPO_CONFIG:
-            return None
+    if repo_type == "infrastructure" and repo_name not in INFRA_REPO_CONFIG:
+        return None
     template_path = CONFIGS_DIR / template_name
     if not template_path.exists():
         print(f"  Template not found: {template_path}", file=sys.stderr)

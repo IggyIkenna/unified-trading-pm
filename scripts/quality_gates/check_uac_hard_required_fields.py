@@ -196,7 +196,7 @@ class _BundledShardKeyVisitor(ast.NodeVisitor):
         self._file = file_path
         self.violations: list[Violation] = []
 
-    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
+    def visit_Call(self, node: ast.Call) -> None:
         # Match: <anything>.record_captured(...) or record_captured(...)
         method_name: str | None = None
         if isinstance(node.func, ast.Attribute):

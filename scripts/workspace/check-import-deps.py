@@ -35,9 +35,9 @@ import sys
 import sysconfig
 import tomllib
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-TomlDict: TypeAlias = dict[str, object]
+type TomlDict = dict[str, object]
 
 # Resolve workspace paths relative to this script
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -374,10 +374,9 @@ def extract_imports_from_file(filepath: Path) -> set[str]:
                 # Get top-level module: "foo.bar.baz" -> "foo"
                 top = alias.name.split(".")[0]
                 imports.add(top)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module and node.level == 0:  # Skip relative imports
-                top = node.module.split(".")[0]
-                imports.add(top)
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:  # Skip relative imports
+            top = node.module.split(".")[0]
+            imports.add(top)
     return imports
 
 

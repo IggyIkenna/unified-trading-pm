@@ -136,7 +136,7 @@ def log_error(msg: str):
 def count_lines(file_path: Path) -> int:
     """Count non-empty lines in a file."""
     try:
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
             return sum(1 for line in f if line.strip())
     except (OSError, ValueError) as e:
         log_warning(f"Could not read {file_path}: {e}")

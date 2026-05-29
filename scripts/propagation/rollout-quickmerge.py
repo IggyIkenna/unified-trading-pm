@@ -22,9 +22,9 @@ Options:
 import argparse
 import json
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-JsonDict: TypeAlias = dict[str, object]
+type JsonDict = dict[str, object]
 
 MANIFEST_PATH = Path(__file__).parent.parent.parent / "workspace-manifest.json"
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent

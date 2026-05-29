@@ -302,7 +302,7 @@ class TestValidateClassPaths:
                 },
             }
         )
-        errors, warnings = MOD.validate_class_paths([strat])
+        errors, _warnings = MOD.validate_class_paths([strat])
         assert not errors
 
     def test_warns_when_strategy_service_missing(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -316,7 +316,7 @@ class TestValidateClassPaths:
         monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", tmp_path)
         monkeypatch.setattr(MOD, "WORKSPACE_ROOT", tmp_path.parent)
         strat = _make_strategy(class_path="strategy_service.engine.strategies.nonexistent.NoStrategy")
-        errors, warnings = MOD.validate_class_paths([strat])
+        errors, _warnings = MOD.validate_class_paths([strat])
         assert len(errors) == 1
         assert "class_exists=true but module file not found" in errors[0]
 
@@ -328,7 +328,7 @@ class TestValidateClassPaths:
         module_dir.mkdir(parents=True)
         (module_dir / "test_strat.py").write_text("class TestStrategy: pass")
         strat = _make_strategy(class_path="strategy_service.engine.strategies.test_strat.TestStrategy")
-        errors, warnings = MOD.validate_class_paths([strat])
+        errors, _warnings = MOD.validate_class_paths([strat])
         assert not errors
 
 
@@ -347,17 +347,17 @@ class TestGenerateInstrumentMatrix:
 
     def test_empty_venues_warns(self) -> None:
         strat = _make_strategy(venues=[])
-        rows, warnings = MOD.generate_instrument_matrix([strat])
+        _rows, warnings = MOD.generate_instrument_matrix([strat])
         assert any("no venues" in w for w in warnings)
 
     def test_empty_asset_groupes_warns(self) -> None:
         strat = _make_strategy(asset_groupes=[])
-        rows, warnings = MOD.generate_instrument_matrix([strat])
+        _rows, warnings = MOD.generate_instrument_matrix([strat])
         assert any("no asset_groupes" in w for w in warnings)
 
     def test_venues_only_no_asset_groupes(self) -> None:
         strat = _make_strategy(venues=["BINANCE"], asset_groupes=[])
-        rows, warnings = MOD.generate_instrument_matrix([strat])
+        rows, _warnings = MOD.generate_instrument_matrix([strat])
         # Should produce rows with "(none)" for asset class
         assert len(rows) == 1
         assert rows[0][2] == "(none)"

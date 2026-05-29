@@ -29,7 +29,7 @@ import argparse
 import logging
 import os
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from google.cloud import storage
 
@@ -144,7 +144,7 @@ def _write_manifest(
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
         "total_files_copied": total_files,
-        "synced_at": datetime.now(timezone.utc).isoformat(),
+        "synced_at": datetime.now(UTC).isoformat(),
     }
 
     path = f"sync-manifests/{service}/{category}/{scenario_name}.json"

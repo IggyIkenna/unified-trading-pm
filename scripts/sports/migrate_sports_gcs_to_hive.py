@@ -142,9 +142,8 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
             continue
         date_str = parts[1]
 
-        if date_range:
-            if date_str < date_range[0] or date_str > date_range[1]:
-                continue
+        if date_range and (date_str < date_range[0] or date_str > date_range[1]):
+            continue
 
         dates_seen.add(date_str)
 

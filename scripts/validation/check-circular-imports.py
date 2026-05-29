@@ -80,7 +80,7 @@ def find_cycles(graph: dict[str, set[str]]) -> list[list[str]]:
                 normalized = tuple(sorted(range(len(cycle)), key=lambda i: cycle[i]))
                 rotated = cycle[normalized[0] :] + cycle[: normalized[0]]
                 if rotated not in [list(c) for c in cycles]:
-                    cycles.append(rotated + [rotated[0]])  # show full loop
+                    cycles.append([*rotated, rotated[0]])  # show full loop
                 return False
 
         rec_stack.pop()

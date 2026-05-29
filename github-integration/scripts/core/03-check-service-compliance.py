@@ -667,11 +667,7 @@ def check_existing_issue(gap: Gap) -> bool:
         return False
 
     issues: list[dict[str, object]] = cast(list[dict[str, object]], json.loads(result.stdout))
-    for issue in issues:
-        if gap_id in str(issue.get("body", "")):
-            return True
-
-    return False
+    return any(gap_id in str(issue.get("body", "")) for issue in issues)
 
 
 # ============================================================================

@@ -60,7 +60,7 @@ from typing import Final
 
 #: Per-line opt-out markers (case-insensitive). Handles both the canonical
 #: single-code form (``# noqa: imports-inside-functions``) and multi-code
-#: form where the marker appears after a comma (``# noqa: PLC0415, qg-inside-import``).
+#: form where the marker appears after a comma (``
 #: Also recognises the ruff code PLC0415 which is the ruff equivalent.
 NOQA_MARKERS: Final[tuple[str, ...]] = (
     "noqa: imports-inside-functions",

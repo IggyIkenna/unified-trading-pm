@@ -84,12 +84,12 @@ def _load_uac_literals() -> dict[str, tuple[str, ...]]:
 
     module = importlib.import_module(UAC_MODULE_PATH)
     aliases = {
-        "QuestionnaireCategory": getattr(module, "QuestionnaireCategory"),
-        "QuestionnaireInstrumentType": getattr(module, "QuestionnaireInstrumentType"),
-        "QuestionnaireStrategyStyle": getattr(module, "QuestionnaireStrategyStyle"),
-        "QuestionnaireServiceFamily": getattr(module, "QuestionnaireServiceFamily"),
-        "QuestionnaireFundStructure": getattr(module, "QuestionnaireFundStructure"),
-        "QuestionnaireLicenceRegion": getattr(module, "QuestionnaireLicenceRegion"),
+        "QuestionnaireCategory": module.QuestionnaireCategory,
+        "QuestionnaireInstrumentType": module.QuestionnaireInstrumentType,
+        "QuestionnaireStrategyStyle": module.QuestionnaireStrategyStyle,
+        "QuestionnaireServiceFamily": module.QuestionnaireServiceFamily,
+        "QuestionnaireFundStructure": module.QuestionnaireFundStructure,
+        "QuestionnaireLicenceRegion": module.QuestionnaireLicenceRegion,
     }
     return {name: tuple(_iter_literal_values(obj)) for name, obj in aliases.items()}
 
@@ -98,7 +98,7 @@ def _load_uac_field_names() -> tuple[str, ...]:
     """Return the ordered tuple of ``QuestionnaireResponse`` field names."""
 
     module = importlib.import_module(UAC_MODULE_PATH)
-    response_cls = getattr(module, "QuestionnaireResponse")
+    response_cls = module.QuestionnaireResponse
     return tuple(response_cls.model_fields.keys())
 
 

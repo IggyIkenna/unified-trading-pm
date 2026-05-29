@@ -390,10 +390,7 @@ def _build_import_edges(
                 return None
             base_parts = base_parts[:-levels_up]
 
-        if dotted_suffix:
-            target = ".".join(base_parts) + "." + dotted_suffix
-        else:
-            target = ".".join(base_parts)
+        target = ".".join(base_parts) + "." + dotted_suffix if dotted_suffix else ".".join(base_parts)
 
         return _resolve_dotted(target)
 
@@ -496,10 +493,7 @@ def _build_import_edges(
         for name in imported_names.split(","):
             name = name.strip().split(" as ")[0].strip()
             if name and name != "*":
-                if suffix:
-                    full_suffix = f"{suffix}.{name}"
-                else:
-                    full_suffix = name
+                full_suffix = f"{suffix}.{name}" if suffix else name
                 resolved_name = _resolve_relative(importer.file_path, full_suffix, dot_count)
                 if resolved_name:
                     edges[importer.dotted_module].add(resolved_name)

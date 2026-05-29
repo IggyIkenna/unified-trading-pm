@@ -42,9 +42,7 @@ def should_skip_path(rel_path: Path) -> bool:
     parts = rel_path.parts
     if any(seg in parts for seg in EXCLUDE_SEGMENTS):
         return True
-    if rel_path.name in EXCLUDE_FILENAMES:
-        return True
-    return False
+    return rel_path.name in EXCLUDE_FILENAMES
 
 
 def extract_imports_from_file(file_path: Path) -> set[str]:

@@ -26,7 +26,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Optional, cast
+from typing import cast
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -89,12 +89,12 @@ def get_repo_dependencies(repo_entry: dict[str, object]) -> list[str]:
     return names
 
 
-def get_dep_constraint(repo_entry: dict[str, object], dep_name: str) -> Optional[str]:
+def get_dep_constraint(repo_entry: dict[str, object], dep_name: str) -> str | None:
     """Return the constraint string for a dep, if declared in the manifest."""
     raw_deps: list[object] = cast(list[object], repo_entry.get("dependencies") or [])
     for dep in raw_deps:
         if isinstance(dep, dict) and dep.get("name") == dep_name:
-            return cast(Optional[str], dep.get("constraint"))
+            return cast(str | None, dep.get("constraint"))
     return None
 
 
@@ -123,7 +123,7 @@ def get_owner_from_manifest(manifest: dict[str, object], dep_name: str) -> str:
 # ── Remote Version Fetching ───────────────────────────────────────────────────
 
 
-def fetch_remote_pyproject(owner: str, repo_name: str, branch: str) -> Optional[str]:
+def fetch_remote_pyproject(owner: str, repo_name: str, branch: str) -> str | None:
     """Fetch pyproject.toml content from GitHub API via gh cli.
 
     Returns the decoded file content as a string, or None on failure.
@@ -153,7 +153,7 @@ def fetch_remote_pyproject(owner: str, repo_name: str, branch: str) -> Optional[
         return None
 
 
-def parse_version_from_pyproject(content: str) -> Optional[str]:
+def parse_version_from_pyproject(content: str) -> str | None:
     """Extract [project] version from pyproject.toml content.
 
     Handles both:
@@ -210,17 +210,14 @@ def check_constraint_satisfied(version: str, constraint: str) -> bool:
         op = m.group(1)
         c_tuple = _parse_version_tuple(m.group(2))
 
-        if op == ">=" and not (v_tuple >= c_tuple):
-            return False
-        elif op == ">" and not (v_tuple > c_tuple):
-            return False
-        elif op == "==" and not (v_tuple == c_tuple):
-            return False
-        elif op == "<=" and not (v_tuple <= c_tuple):
-            return False
-        elif op == "<" and not (v_tuple < c_tuple):
-            return False
-        elif op == "!=" and not (v_tuple != c_tuple):
+        if (
+            (op == ">=" and not (v_tuple >= c_tuple))
+            or (op == ">" and not (v_tuple > c_tuple))
+            or (op == "==" and v_tuple != c_tuple)
+            or (op == "<=" and not (v_tuple <= c_tuple))
+            or (op == "<" and not (v_tuple < c_tuple))
+            or (op == "!=" and v_tuple == c_tuple)
+        ):
             return False
 
     return True
@@ -270,10 +267,7 @@ def main() -> int:
 
         # Determine the expected constraint
         manifest_constraint = get_dep_constraint(repo_entry, dep_name)
-        if manifest_constraint:
-            expected_constraint = manifest_constraint
-        else:
-            expected_constraint = build_expected_constraint(remote_version)
+        expected_constraint = manifest_constraint or build_expected_constraint(remote_version)
 
         # Check alignment: is the remote version within the expected constraint?
         if not check_constraint_satisfied(remote_version, expected_constraint):

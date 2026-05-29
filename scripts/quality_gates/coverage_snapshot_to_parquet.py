@@ -35,7 +35,7 @@ import io
 import json
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def _build_parquet_bytes(rows_by_repo: dict[str, list[dict[str, object]]]) -> dict[str, bytes]:
@@ -87,7 +87,7 @@ def main() -> None:
     args = parser.parse_args()
 
     project_id: str = args.project_id
-    date_str: str = args.date or datetime.now(timezone.utc).strftime("%Y_%m_%d")
+    date_str: str = args.date or datetime.now(UTC).strftime("%Y_%m_%d")
 
     rows_by_repo: dict[str, list[dict[str, object]]] = defaultdict(list)
     for line in sys.stdin:

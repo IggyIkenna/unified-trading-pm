@@ -190,10 +190,7 @@ def _is_excluded(path: Path, workspace_root: Path) -> bool:
         if part.startswith(".venv"):
             return True
     rel_str = str(rel).replace("\\", "/")
-    for fragment in EXCLUDE_PATH_FRAGMENTS:
-        if fragment in f"/{rel_str}/":
-            return True
-    return False
+    return any(fragment in f"/{rel_str}/" for fragment in EXCLUDE_PATH_FRAGMENTS)
 
 
 def iter_python_files(workspace_root: Path) -> Iterable[Path]:

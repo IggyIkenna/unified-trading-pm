@@ -16,7 +16,7 @@ import pytest
 _HERE = Path(__file__).parent
 sys.path.insert(0, str(_HERE))
 
-from check_chain_set_inclusion import check_chain_set_inclusion  # type: ignore[import-not-found]  # noqa: E402
+from check_chain_set_inclusion import check_chain_set_inclusion  # type: ignore[import-not-found]
 
 
 def test_invariant_holds_on_live_uac() -> None:

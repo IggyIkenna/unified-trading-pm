@@ -26,11 +26,11 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
 # Type aliases
-DepSpec: TypeAlias = str  # e.g. "pydantic>=2.12.5,<3.0.0"
-TomlDict: TypeAlias = dict[str, object]
+type DepSpec = str  # e.g. "pydantic>=2.12.5,<3.0.0"
+type TomlDict = dict[str, object]
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 PM_ROOT = WORKSPACE_ROOT / "unified-trading-pm"
@@ -369,7 +369,7 @@ def run_uv_install(
         return False
 
     uv_prefix, use_system_uv = uv_result
-    cmd = uv_prefix + ["pip", "install"]
+    cmd = [*uv_prefix, "pip", "install"]
     if use_system_uv:
         cmd.extend(["--python", str(venv_python)])
     if no_deps:
@@ -417,9 +417,9 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Show what would be installed")
     parser.add_argument("--lock-only", action="store_true", help="Only generate lock file from current state")
     parsed = parser.parse_args()
-    do_resolve: bool = bool(cast(object, getattr(parsed, "resolve")))
-    do_dry_run: bool = bool(cast(object, getattr(parsed, "dry_run")))
-    do_lock_only: bool = bool(cast(object, getattr(parsed, "lock_only")))
+    do_resolve: bool = bool(cast(object, parsed.resolve))
+    do_dry_run: bool = bool(cast(object, parsed.dry_run))
+    do_lock_only: bool = bool(cast(object, parsed.lock_only))
 
     if do_lock_only:
         print("Generating lockfile from current .venv-workspace state...")

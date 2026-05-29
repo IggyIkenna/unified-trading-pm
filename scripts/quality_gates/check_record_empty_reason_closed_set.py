@@ -239,9 +239,8 @@ def _collect_source_dirs(workspace_root: Path, scope: str | None) -> list[Path]:
             src = repo_path / candidate
             if src.is_dir():
                 dirs.append(src)
-        if not dirs or dirs[-1].parent != repo_path:
-            if repo_path.is_dir():
-                dirs.append(repo_path)
+        if (not dirs or dirs[-1].parent != repo_path) and repo_path.is_dir():
+            dirs.append(repo_path)
     return dirs
 
 

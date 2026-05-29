@@ -215,9 +215,7 @@ def _is_excluded_path(path: Path) -> bool:
     name = path.name
     if any(name.startswith(p) for p in TEST_FILE_PREFIXES):
         return True
-    if any(name.endswith(s) for s in TEST_FILE_SUFFIXES):
-        return True
-    return False
+    return bool(any(name.endswith(s) for s in TEST_FILE_SUFFIXES))
 
 
 def _iter_py_files(root: Path) -> Iterator[Path]:

@@ -69,7 +69,7 @@ EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
 
 
 class _Finding:
-    __slots__ = ("path", "line", "missing", "kind")
+    __slots__ = ("kind", "line", "missing", "path")
 
     def __init__(self, path: Path, line: int, missing: frozenset[str], kind: str) -> None:
         self.path = path
