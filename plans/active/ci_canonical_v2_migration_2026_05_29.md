@@ -152,8 +152,9 @@ alone doesn't escape it.
   - All other settings preserved (dismiss_stale=true, required_approving_review_count=1,
     enforce_admins=false, restrictions=null) — 18/18 branches rotated 2026-05-29
 - [ ] [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
-- [ ] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
+- [x] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
       fall back to Plan-B (inline QG steps in v2 caller, no reusable).
+      — PR #93 (fix/pm-ci-self-clone) merged 2026-05-29; run 26654854795 passed ✅ (V=12/12).
 
 ### Phase 2 — UAC (0.5 day)
 
