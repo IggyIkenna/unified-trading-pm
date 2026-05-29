@@ -107,6 +107,8 @@ alone doesn't escape it.
 
 ### Phase 0 — Pre-flight: confirm canonical doc + branch protection access (0.25 day)
 
+<<<<<<< Updated upstream
+
 - [ ] [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end + confirm every step of the canonical flow is
       reflected in this plan. If anything drifted between codex and operator-stated flow, update plan first per the
       doc-plan-code principle.
@@ -116,9 +118,33 @@ alone doesn't escape it.
       `central-element-323112/GH_PAT` is the cron-side fallback.
 - [ ] [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
       `bash scripts/quickmerge.sh --help 2>&1 | head -30` should mention it. If missing in quickmerge implementation,
-      file separate fix-quickmerge issue and block this plan on it.
+      file separate fix-quickmerge issue and block this plan on it. =======
+- [x] ✅ [AUDIT] P0. Canonical CI doc read end-to-end — `codex/08-workflows/ci-cd-flow.md` 292 lines. Covers three-tier
+      branch model (feat/staging/main/LDR/tab), two-pass sentinel model, workspace-qg triggers explicitly excluding LDR,
+      staging-first PR target, agent-vs-human paths. **Plan's Phase 1-3 recipe matches doc verbatim — no plan-edit
+      needed pre-execution.**
+- [x] ✅ [AUDIT] P0. Admin perms confirmed on PM/UAC/UTL — `gh api repos/IggyIkenna/{pm,uac,utl}/` returns `admin=True`
+      for all three via slot-1 `gh` CLI auth (`IggyIkenna` account, `repo` scope). GH_PAT in
+      `central-element-323112/GH_PAT` is the cron-side fallback. Agent does rotations directly via
+      `gh api PUT repos/.../branches/main/protection`.
+- [x] ✅ [AUDIT] P0. Sentinel verified — `_SENTINEL=".qg_last_passed_sha"` at `scripts/quickmerge.sh:819`, AGENT
+      FAST-PATH comment at L818, SHA-match log at L830. Sentinel format = single line with `git rev-parse     HEAD`
+      value, written by `scripts/quality-gates.sh` on clean full-run exit.
+- [x] ✅ [AUDIT] P0. **Side-finding 2026-05-29**: Phase 1 Step 1 (full local QG) will hit pre-existing
+      `❌ Dependency alignment FAILED` in PM (Stage 1.5 of quickmerge surfaces it; derived-dependency-manifest.json is
+      drifted). Resolution wired into Phase 1 as new Step 0.5 below. Remediation per Stage 1.5 output:
+      `python scripts/manifest/generate-derived-manifest.py` + `check-dependency-alignment.py --json` +
+      `fix-internal-dependency-alignment.py --apply` (or external variant if external mismatches surface).
+  > > > > > > > Stashed changes
 
 ### Phase 1 — PM (1 day)
+
+- [ ] [SCRIPT] P0. **Step 0.5 — Resolve pre-existing PM dep-alignment failure** (Phase 0 side-finding). Run
+      `python scripts/manifest/generate-derived-manifest.py` + `check-dependency-alignment.py --json`. If internal-only
+      drift: `fix-internal-dependency-alignment.py --apply`. If external drift:
+      `fix_external_dependency_alignment.py --apply`. Verify Stage 1.5 of quickmerge passes before proceeding to Step 1.
+      Commit the manifest fixes as a SEPARATE quickmerge / admin-merge before the v2 workflow files (clean separation of
+      concerns).
 
 - [ ] [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
       `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`.
