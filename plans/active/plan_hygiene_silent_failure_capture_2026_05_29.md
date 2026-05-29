@@ -38,10 +38,31 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 0 — Pre-audit (P0)
 
-- [ ] [AGENT] P0. Read `agent-orchestrator/server/regen_backlog_from_plan.py` end-to-end. Tabulate: (a) the parse
+- [x] ✅ [AGENT] P0. Read `agent-orchestrator/server/regen_backlog_from_plan.py` end-to-end. Tabulate: (a) the parse
       pipeline (UNCHECKED_RE → PRIORITY_RE → TITLE_PREFIX_RE); (b) how `parent_epic` is used downstream — does the
       dispatcher actually route by it, or is `assigned_vm` the SSOT? (c) how `blocked` task state is set (is there a
       blocker-dependency table?). Output: short audit doc inline.
+      **Finding (2026-05-29):**
+      **(a) Parse pipeline:**
+      1. `_UNCHECKED_RE = r"^\s*-\s+\[ \]\s+(.+)$"` — matches only `- [ ]` lines (exact single space); `- [x]`/`✅` skipped.
+      2. `_PRIORITY_RE = r"\bP([0-3])\b"` — searches anywhere in the description; any P0-P3 tag anywhere in the line maps to
+         priority {0→10, 1→20, 2→50, 3→80, None→100}.
+      3. `_TITLE_PREFIX_RE = r"^\s*(?:\[[A-Z]+\]\s+)?(?:P[0-3]\.\s*)?"` — strips one optional `[CATEGORY]` tag + `P<N>. ` prefix.
+         Multi-tag todos (e.g. `[AGENT] [AUDIT] P0.`) only have the first tag stripped; title includes the second tag as noise
+         (non-breaking: the title is display-only; brief carries the raw line for dedupe).
+      Frontmatter (--- ... ---), fenced code blocks, strikethrough, and header lines are all skipped. Idempotency via
+      both task_id AND brief de-dupe so re-runs are safe.
+      **(b) `parent_epic` and `assigned_vm` routing:** NEITHER field is read by `regen_backlog_from_plan.py` (frontmatter
+      skipped entirely). `BacklogTask` has no `parent_epic` or `assigned_vm` field. `dispatch.py`'s `pick_next_task()`
+      routes ONLY by: `status=queued`, `prereqs` (completed_tasks + conditions), affinity/target_slot, repos collision,
+      collision_group. `parent_epic` and `assigned_vm` are **purely informational** for human operators — they have zero
+      effect on dispatch. Cross-VM isolation works because each VM runs its own regen against its own PM clone, not
+      because the dispatcher reads these fields.
+      **(c) `blocked` task state:** There is NO `blocked` status in the DB. Tasks are blocked implicitly — `TaskRow.status`
+      stays `queued`; the dispatcher just skips tasks whose `prereqs` aren't met. `prereqs.completed_tasks` lists task IDs
+      that must be `done`; `prereqs.conditions` lists boolean condition names. No `blocked_on` table, no explicit
+      `blocked` status transition. Phase 3's stale-blocker reaper design must query `status=queued` tasks where prereqs
+      are unmet (not `status=blocked` as originally framed — that state doesn't exist).
 - [ ] [AGENT] P0. Read `scripts/dev/slot-git-status-report.sh` end-to-end. Confirm the Slack alert payload format and
       identify the file-path stanza to extend.
 
