@@ -251,24 +251,31 @@ jobs:
         env:
           SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
-          BRANCH: ${{ github.head_ref || github.ref_name }}
+          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+          TARGET_BRANCH: ${{ github.base_ref || github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           [ -z "${SLACK_CI_WEBHOOK_URL}" ] && echo "SLACK_CI_WEBHOOK_URL not set — skipping" && exit 0
           SHORT_SHA="${SHA:0:7}"
+          REPO_NAME="${REPO#*/}"
+          if [ "${EVENT}" = "pull_request" ] && [ -n "${PR_NUMBER}" ]; then
+            CONTEXT="PR <${PR_URL}|#${PR_NUMBER}> \`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`"
+          else
+            CONTEXT="push to \`${TARGET_BRANCH}\`"
+          fi
           EXCERPT=""
           if [ -f /tmp/qg_output.log ]; then
-            EXCERPT=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | grep -E "FAILED|ERROR|error|assert" | tail -5 | head -c 300 | jq -Rs .)
+            EXCERPT=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | grep -E "FAILED|ERROR|error|assert" | tail -5 | head -c 300)
           fi
-          TEXT=":x: *QG FAILED* | <${RUN_URL}|${REPO}> | branch: \`${BRANCH}\` | sha: \`${SHORT_SHA}\`"
-          if [ -n "${EXCERPT}" ] && [ "${EXCERPT}" != "null" ]; then
-            curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -d "{\"text\": \"${TEXT}\n\`\`\`${EXCERPT}\`\`\`\"}"
+          TEXT=":x: *QG FAILED* | *${REPO_NAME}* | ${CONTEXT} | <${RUN_URL}|sha \`${SHORT_SHA}\`>"
+          if [ -n "${EXCERPT}" ]; then
+            BODY="{\"text\": \"${TEXT}\n\`\`\`${EXCERPT}\`\`\`\"}"
           else
-            curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -d "{\"text\": \"${TEXT}\"}"
+            BODY="{\"text\": \"${TEXT}\"}"
           fi
+          curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" -H "Content-Type: application/json" -d "${BODY}"
           echo "Slack notification sent to #ci-failures"
