@@ -129,8 +129,8 @@ Principle: **minimum-viable change**. Don't refactor more than needed.
   instrument's `_process_all_timeframes()` call. Bloat was upstream (scanner over-queueing). Revisit only if Phase 3.1
   RSS cap fails with the scanner fix in place.
 - [~] [P2] **2.3 Optional: streaming-per-instrument orchestrator mode.** SKIPPED — same reasoning. The orchestrator IS
-  already streaming-per-instrument (ThreadPoolExecutor with one future per blob, max_workers=N concurrent). The previous
-  symptom was N × _over-queued blobs_, not N × _too-large frames_. Once the scanner returns the operator-requested file
+  already streaming-per-instrument (ThreadPoolExecutor with one future per blob, max*workers=N concurrent). The previous
+  symptom was N × \_over-queued blobs*, not N × _too-large frames_. Once the scanner returns the operator-requested file
   list, the existing concurrency model is correctly shaped.
 
 If Phase 3 verification surprises us with residual memory growth, revisit 2.2 and 2.3 with concrete evidence.
@@ -165,7 +165,7 @@ returns audibly if the fix is incomplete — not silently absorbed by capacity.
   `process_handler.py:_process_candles_for_one_date` and/or at the per-instrument boundary in
   `live_workers._process_instrument_file`) needs to be re-opened — this plan's audit was wrong to skip it. See
   "Re-opened Phase 2.2" below.
-- [ ] [VERIFY][P1] **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **GATED on Phase 2.2 re-open +
+- [ ] [VERIFY] P1. **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **GATED on Phase 2.2 re-open +
       Phase 3.2 re-verification.** Alternative path if 2.2 is too invasive: ship 16 × 1-day VMs (each fresh process; no
       cross-day retention) — verified by 3.1 + 3.2-day-1 to complete cleanly per-day. This is the operationally-shipped
       equivalent of the 16-day run.
@@ -242,8 +242,8 @@ is no path through the orchestrator where skipping cleanup is correct.
 
 ### Finding B — CLI granularity claims aren't matched by the filter logic
 
-Operator: "instrument_id is the last thing and it covers everything — which venue, which asset_group, which data_type."
-That is the _intent_ of the canonical instrument_id form (`VENUE:INSTRUMENT_TYPE:SYMBOL`). But the current
+Operator: "instrument*id is the last thing and it covers everything — which venue, which asset_group, which data_type."
+That is the \_intent* of the canonical instrument_id form (`VENUE:INSTRUMENT_TYPE:SYMBOL`). But the current
 implementation breaks the contract:
 
 - `MDPS_INSTRUMENT_IDS` env var → bridged to `--instrument-ids` argv → reaches `_collect_matching_parquet_blobs` →
@@ -318,32 +318,32 @@ Per operator 2026-05-28 EOD, the sequence is:
 
 - [x] ✅ [P0] **3.X-1** Wire `_cleanup_after_day(date_str)` into the success path of `process_category` (and any other
       terminal path where per-day work completes — including single-day-single-instrument drilldowns). Smallest viable
-      cleanup landing. — `market-data-processing-service@dcd7416`: added `try/finally` wrapping entire `process_category`
-      body (`orchestration_service.py:296-302`) so `_cleanup_after_day(date_str)` fires on every exit path. (Note:
-      checkbox was incorrectly reverted by commit `76288c4d6` word-wrap reformat; re-flipped 2026-05-29.)
+      cleanup landing. — `market-data-processing-service@dcd7416`: added `try/finally` wrapping entire
+      `process_category` body (`orchestration_service.py:296-302`) so `_cleanup_after_day(date_str)` fires on every exit
+      path. (Note: checkbox was incorrectly reverted by commit `76288c4d6` word-wrap reformat; re-flipped 2026-05-29.)
 - [~] [P0] **3.X-2** Rebuild MDPS tarball, re-run Phase 3.2 (7-day) on `e2-standard-8`. Pass criterion: RSS reclaim at
-      each date boundary measurable in the `📉 date-boundary GC` log line; no day-2 OOM. **SUPERSEDED by Stage 1-4
-      pure-polars refactor** — canary `mdps-backfill-cefi-20260528-195400` used pre-Stage-4 tarball `@029843a` and OOM'd
-      at day-2 transition (only `day=2026-04-15` + `day=2026-04-18` landed in test bucket). The Stage 1-4 pure-polars
-      migration (commits `ceb7a12..db233e2`) eliminates the polars→pandas→polars double-allocation (Finding D), which
-      was the dominant contributor to the 25 GB per-day floor. A fresh tarball `@db233e266a4f` was built 2026-05-29 and
-      used for 3.X-3 directly — the 16-day run IS the Phase 3.2 re-verification at wider scope.
+  each date boundary measurable in the `📉 date-boundary GC` log line; no day-2 OOM. **SUPERSEDED by Stage 1-4
+  pure-polars refactor** — canary `mdps-backfill-cefi-20260528-195400` used pre-Stage-4 tarball `@029843a` and OOM'd at
+  day-2 transition (only `day=2026-04-15` + `day=2026-04-18` landed in test bucket). The Stage 1-4 pure-polars migration
+  (commits `ceb7a12..db233e2`) eliminates the polars→pandas→polars double-allocation (Finding D), which was the dominant
+  contributor to the 25 GB per-day floor. A fresh tarball `@db233e266a4f` was built 2026-05-29 and used for 3.X-3
+  directly — the 16-day run IS the Phase 3.2 re-verification at wider scope.
 - [x] ✅ [P0] **3.X-3** Launch the 16-day narrow-scope backfill on `e2-standard-8`. Outputs go to the test bucket so
       downstream agents (features-service, etc.) can re-run their per-shard work against the canary data. — VM
       `mdps-backfill-cefi-20260529-090755` (asia-northeast1-c, e2-standard-8) launched 2026-05-29T09:07:55Z. MDPS
       tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day` wired). Scope: BINANCE-FUTURES + BYBIT ×
       BTCUSDT + ETHUSDT × trades × 2026-04-15→2026-04-30, `MAX_WORKERS=2`, output →
       `market-data-tick-cefi-test-central-element-323112`. VM auto-deletes on completion.
-- [ ] [P1] **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to land
-      architecture here — that's a multi-week refactor, not a "smallest viable fix".
+- [ ] [AGENT] P1. **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to
+      land architecture here — that's a multi-week refactor, not a "smallest viable fix".
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
-- [ ] [P2] **4.1 Update `codex/04-architecture/` or `codex/06-coding-standards/` with the read-time filter discipline**
-      — every batch service whose pipeline matches MDPS's shape (list raw → filter → load → process → write) MUST apply
-      scope filters at the LIST stage, not the WRITE stage. Reference this plan + the 2026-05-28 incident. (If no codex
-      doc fits, write a stub.)
-- [ ] [P2] **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
+- [ ] [AGENT] P2. **4.1 Update `codex/04-architecture/` or `codex/06-coding-standards/` with the read-time filter
+      discipline** — every batch service whose pipeline matches MDPS's shape (list raw → filter → load → process →
+      write) MUST apply scope filters at the LIST stage, not the WRITE stage. Reference this plan + the 2026-05-28
+      incident. (If no codex doc fits, write a stub.)
+- [ ] [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
       launcher.** **Refinement** (discovered 2026-05-28 during Phase 3 prep): the TradFi `e2-highmem-8 + max-workers=2`
       mitigation in `launch-mdps-sharded-backfill.sh:174,184` targets a _different_ root cause than the scanner
       over-queueing fixed in Phase 2.1 — namely per-file Polars memory from legacy `ticks.parquet` bundles with 4000+

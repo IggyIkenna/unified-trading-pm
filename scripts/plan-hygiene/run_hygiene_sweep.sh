@@ -40,6 +40,7 @@ echo ""
 
 run_check "Todo regression vs origin"       hard "$SCRIPT_DIR/check_todo_regression.sh"
 run_check "Frontmatter validity"             hard "$SCRIPT_DIR/check_frontmatter.sh"
+run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_format.sh"
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "Line caps (500 soft/1000 hard)"   soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"

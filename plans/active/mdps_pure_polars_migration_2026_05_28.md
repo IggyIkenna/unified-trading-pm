@@ -241,117 +241,121 @@ pandas → polars by adding one new method to UAC + flipping the writer signatur
 
 ### Stage 4 — Aggregation calculators (re-audited 2026-05-29)
 
-**Goal**: convert the rollup engines from mixed-engine to pure polars + delete the dead-code chain that
-the original Stage 4 framing treated as live.
+**Goal**: convert the rollup engines from mixed-engine to pure polars + delete the dead-code chain that the original
+Stage 4 framing treated as live.
 
 **Re-audit methodology (2026-05-29 Harsh+slot8)**:
-- pandas-op count = lines matching `\b(pd\.|\.iloc|\.loc\[|\.iat|\.at\[|\.groupby|\.merge|\.concat|\.apply|\.set_index|\.reset_index|\.assign|\.melt|\.pivot|\.stack|\.unstack|MultiIndex|\.values\b|\.copy\(\)|\.dropna|\.fillna|\.astype|\.rename|\.sort_values|\.sort_index|\.to_dict|\.to_numpy|\.tolist|pd\.api\.types|\.Series|\.DataFrame|\.Timedelta|\.Timestamp)\b`
-- reachability = `grep -rn` for every public function across `market_data_processing_service/` and `tests/`,
-  excluding the function's own definition file and `app/calculators/__init__.py` re-exports.
+
+- pandas-op count = lines matching
+  `\b(pd\.|\.iloc|\.loc\[|\.iat|\.at\[|\.groupby|\.merge|\.concat|\.apply|\.set_index|\.reset_index|\.assign|\.melt|\.pivot|\.stack|\.unstack|MultiIndex|\.values\b|\.copy\(\)|\.dropna|\.fillna|\.astype|\.rename|\.sort_values|\.sort_index|\.to_dict|\.to_numpy|\.tolist|pd\.api\.types|\.Series|\.DataFrame|\.Timedelta|\.Timestamp)\b`
+- reachability = `grep -rn` for every public function across `market_data_processing_service/` and `tests/`, excluding
+  the function's own definition file and `app/calculators/__init__.py` re-exports.
 
 #### `app/calculators/fast_candle_aggregation.py` — 835 lines
 
-| Metric | Count | Methodology |
-|---|---|---|
-| Total lines | 835 | `wc -l` |
-| Lines matching `pd.` | 43 | `grep -cE 'pd\.'` |
-| Lines matching `pl.` | 15 | `grep -cE 'pl\.'` |
-| Lines matching pandas-op regex | 50 | broad regex above |
+| Metric                         | Count | Methodology       |
+| ------------------------------ | ----- | ----------------- |
+| Total lines                    | 835   | `wc -l`           |
+| Lines matching `pd.`           | 43    | `grep -cE 'pd\.'` |
+| Lines matching `pl.`           | 15    | `grep -cE 'pl\.'` |
+| Lines matching pandas-op regex | 50    | broad regex above |
 
 8 public functions; reachability outside the file:
 
-| Function | Line | External callers | Status |
-|---|---|---|---|
-| `create_continuous_candles_simple_working` | 155 | 0 | DEAD |
-| `create_candle_from_interval` | 195 | live_aggregator.py:345 | **LIVE** |
-| `create_empty_candle` | 281 | 0 | DEAD |
-| `create_24h_candle_no_lookahead` | 303 | 0 | DEAD |
-| `aggregate_from_15s_efficient` | 513 | live_workers.py:791, 1260 + 3 test files + sampling_service.py:143 (dead) | **LIVE** |
-| `should_aggregate_from_15s` | 655 | 0 | DEAD |
-| `create_candle_from_interval_fixed` | 751 | 0 | DEAD |
-| `create_empty_candle_sophisticated` | 795 | 0 | DEAD |
+| Function                                   | Line | External callers                                                          | Status   |
+| ------------------------------------------ | ---- | ------------------------------------------------------------------------- | -------- |
+| `create_continuous_candles_simple_working` | 155  | 0                                                                         | DEAD     |
+| `create_candle_from_interval`              | 195  | live_aggregator.py:345                                                    | **LIVE** |
+| `create_empty_candle`                      | 281  | 0                                                                         | DEAD     |
+| `create_24h_candle_no_lookahead`           | 303  | 0                                                                         | DEAD     |
+| `aggregate_from_15s_efficient`             | 513  | live_workers.py:791, 1260 + 3 test files + sampling_service.py:143 (dead) | **LIVE** |
+| `should_aggregate_from_15s`                | 655  | 0                                                                         | DEAD     |
+| `create_candle_from_interval_fixed`        | 751  | 0                                                                         | DEAD     |
+| `create_empty_candle_sophisticated`        | 795  | 0                                                                         | DEAD     |
 
 13 internal `_` helpers; live-vs-dead chain (each helper has exactly one in-file caller):
 
-| Helper | Reached from | Status |
-|---|---|---|
-| `_polars_available` (line 36) | `_use_polars_aggregation:53` | LIVE |
-| `_use_polars_aggregation` (line 46) | `aggregate_from_15s_efficient:535` | LIVE |
-| `_parse_timeframe_seconds` (line 56) | `create_continuous_candles_simple_working:171` | DEAD |
-| `_detect_time_column` (line 67) | `create_continuous_candles_simple_working:172` | DEAD |
-| `_build_24h_candles` (line 87) | `create_continuous_candles_simple_working:181` | DEAD |
-| `_build_interval_candles` (line 107) | `create_continuous_candles_simple_working:183` | DEAD |
-| `_aggregate_from_15s_polars` (line 384) | `aggregate_from_15s_efficient:537` | LIVE |
-| `_prepare_indexed_df` (line 573) | `aggregate_from_15s_efficient:553` | LIVE |
-| `_build_aggregation_rules` (line 584) | `aggregate_from_15s_efficient:554` | LIVE |
-| `_post_process_aggregated` (line 589) | `aggregate_from_15s_efficient:564` | LIVE |
-| `_reorder_columns` (line 621) | `_post_process_aggregated:611` | LIVE |
-| `_compute_buy_sell_split` (line 673) | `_build_filled_candle_dict:704` | DEAD (only via `create_candle_from_interval_fixed`) |
-| `_build_filled_candle_dict` (line 692) | `create_candle_from_interval_fixed:779` | DEAD |
+| Helper                                  | Reached from                                   | Status                                              |
+| --------------------------------------- | ---------------------------------------------- | --------------------------------------------------- |
+| `_polars_available` (line 36)           | `_use_polars_aggregation:53`                   | LIVE                                                |
+| `_use_polars_aggregation` (line 46)     | `aggregate_from_15s_efficient:535`             | LIVE                                                |
+| `_parse_timeframe_seconds` (line 56)    | `create_continuous_candles_simple_working:171` | DEAD                                                |
+| `_detect_time_column` (line 67)         | `create_continuous_candles_simple_working:172` | DEAD                                                |
+| `_build_24h_candles` (line 87)          | `create_continuous_candles_simple_working:181` | DEAD                                                |
+| `_build_interval_candles` (line 107)    | `create_continuous_candles_simple_working:183` | DEAD                                                |
+| `_aggregate_from_15s_polars` (line 384) | `aggregate_from_15s_efficient:537`             | LIVE                                                |
+| `_prepare_indexed_df` (line 573)        | `aggregate_from_15s_efficient:553`             | LIVE                                                |
+| `_build_aggregation_rules` (line 584)   | `aggregate_from_15s_efficient:554`             | LIVE                                                |
+| `_post_process_aggregated` (line 589)   | `aggregate_from_15s_efficient:564`             | LIVE                                                |
+| `_reorder_columns` (line 621)           | `_post_process_aggregated:611`                 | LIVE                                                |
+| `_compute_buy_sell_split` (line 673)    | `_build_filled_candle_dict:704`                | DEAD (only via `create_candle_from_interval_fixed`) |
+| `_build_filled_candle_dict` (line 692)  | `create_candle_from_interval_fixed:779`        | DEAD                                                |
 
-**Live surface in fast_candle_aggregation.py = 2 public functions + 7 helpers.** The other 6 public + 6 helpers are
-dead and removable.
+**Live surface in fast_candle_aggregation.py = 2 public functions + 7 helpers.** The other 6 public + 6 helpers are dead
+and removable.
 
-`aggregate_from_15s_efficient` already has a polars dispatch (line 535-537 dispatches to
-`_aggregate_from_15s_polars`) but does an internal round-trip: `pl.from_pandas(candles_15s_df)` at line 394 →
-aggregate → `.to_pandas()` somewhere → return pandas. Callers in `live_workers.py:791` and `live_workers.py:1260`
-then wrap with `pl.from_pandas(...)` on top of the function's `.to_pandas()`, totaling 4 conversions per call.
+`aggregate_from_15s_efficient` already has a polars dispatch (line 535-537 dispatches to `_aggregate_from_15s_polars`)
+but does an internal round-trip: `pl.from_pandas(candles_15s_df)` at line 394 → aggregate → `.to_pandas()` somewhere →
+return pandas. Callers in `live_workers.py:791` and `live_workers.py:1260` then wrap with `pl.from_pandas(...)` on top
+of the function's `.to_pandas()`, totaling 4 conversions per call.
 
 #### `app/calculators/timeframe_candles.py` — 780 lines
 
-| Metric | Count | Methodology |
-|---|---|---|
-| Total lines | 780 | `wc -l` |
-| Lines matching `pd.` | 47 | `grep -cE 'pd\.'` |
-| Lines matching `pl.` | 0 | `grep -cE 'pl\.'` |
-| Lines matching pandas-op regex | 71 | broad regex above |
+| Metric                         | Count | Methodology       |
+| ------------------------------ | ----- | ----------------- |
+| Total lines                    | 780   | `wc -l`           |
+| Lines matching `pd.`           | 47    | `grep -cE 'pd\.'` |
+| Lines matching `pl.`           | 0     | `grep -cE 'pl\.'` |
+| Lines matching pandas-op regex | 71    | broad regex above |
 
 4 public functions; reachability outside the file:
 
-| Function | Line | External callers | Status |
-|---|---|---|---|
-| `get_candles_per_day` (module-level, returns tuple) | 29 | sampling_service.py + tests | DEAD via sampling_service chain |
-| `safe_average` | 54 | 0 | DEAD |
-| `create_timeframe_candles` | 290 | sampling_service.py:138, 151 + tests | DEAD via sampling_service chain |
-| `create_continuous_candles_vectorized` | 774 | 0 | DEAD |
+| Function                                            | Line | External callers                     | Status                          |
+| --------------------------------------------------- | ---- | ------------------------------------ | ------------------------------- |
+| `get_candles_per_day` (module-level, returns tuple) | 29   | sampling_service.py + tests          | DEAD via sampling_service chain |
+| `safe_average`                                      | 54   | 0                                    | DEAD                            |
+| `create_timeframe_candles`                          | 290  | sampling_service.py:138, 151 + tests | DEAD via sampling_service chain |
+| `create_continuous_candles_vectorized`              | 774  | 0                                    | DEAD                            |
 
 **NOTE**: 17 adapter call sites reference `self.get_candles_per_day(...)` — these resolve to
-`BaseCandleAdapter.get_candles_per_day` (an unrelated method in `app/adapters/base_adapter.py:127` that returns
-`int`, not a tuple). They do **not** reach `timeframe_candles.get_candles_per_day`. Similar disambiguation for
+`BaseCandleAdapter.get_candles_per_day` (an unrelated method in `app/adapters/base_adapter.py:127` that returns `int`,
+not a tuple). They do **not** reach `timeframe_candles.get_candles_per_day`. Similar disambiguation for
 `utils/candle_utils.py:get_candles_per_day` — only `tests/unit/test_candle_utils.py` imports it.
 
-`timeframe_candles.py` is reached only via `app/core/sampling_service.py` (which is itself test-only — see chain
-below). **All 780 lines are dead in production.**
+`timeframe_candles.py` is reached only via `app/core/sampling_service.py` (which is itself test-only — see chain below).
+**All 780 lines are dead in production.**
 
 #### Dead-code chain summary (test-only reach)
 
-| File | Lines | Production reach |
-|---|---|---|
-| `app/calculators/timeframe_candles.py` | 780 | only `sampling_service.py` (dead) |
-| `app/core/sampling_service.py` | 167 | only `cloud_candle_storage.py` (dead) |
-| `app/core/cloud_candle_storage.py` | 211 | only tests (4 files) |
-| `utils/candle_utils.py` | 135 | only `tests/unit/test_candle_utils.py` |
-| `tests/unit/test_timeframe_candles.py` | 711 | self |
-| `tests/unit/test_sampling_service.py` | 236 | self |
-| `tests/unit/test_cloud_candle_storage.py` | 143 | self |
-| `tests/unit/test_candle_utils.py` | 121 | self |
-| `tests/integration/test_candle_storage.py` | 47 | self |
-| `tests/e2e/test_may_2023_e2e.py` | 204 | self (marked `@pytest.mark.e2e`) |
-| `tests/conftest.py:23 import + :188-190 fixture` | ~4 | only via `CloudCandleStorage` (dead) |
-| **Total dead chain** | **~2759** | |
+| File                                             | Lines     | Production reach                       |
+| ------------------------------------------------ | --------- | -------------------------------------- |
+| `app/calculators/timeframe_candles.py`           | 780       | only `sampling_service.py` (dead)      |
+| `app/core/sampling_service.py`                   | 167       | only `cloud_candle_storage.py` (dead)  |
+| `app/core/cloud_candle_storage.py`               | 211       | only tests (4 files)                   |
+| `utils/candle_utils.py`                          | 135       | only `tests/unit/test_candle_utils.py` |
+| `tests/unit/test_timeframe_candles.py`           | 711       | self                                   |
+| `tests/unit/test_sampling_service.py`            | 236       | self                                   |
+| `tests/unit/test_cloud_candle_storage.py`        | 143       | self                                   |
+| `tests/unit/test_candle_utils.py`                | 121       | self                                   |
+| `tests/integration/test_candle_storage.py`       | 47        | self                                   |
+| `tests/e2e/test_may_2023_e2e.py`                 | 204       | self (marked `@pytest.mark.e2e`)       |
+| `tests/conftest.py:23 import + :188-190 fixture` | ~4        | only via `CloudCandleStorage` (dead)   |
+| **Total dead chain**                             | **~2759** |                                        |
 
 Plus orchestration framework hooks that always return `None` because nothing sets the attribute:
+
 - `orchestration_base.py:83` — `getattr(self, "candle_processing_service" / "sampling_service", None)`
 - `orchestration_state.py:50, 55` — same pattern
 - `orchestration_service.py:139` — same pattern
 
 **Zero production code does `self.sampling_service = ...`** (verified by grep
-`-rE "self\.sampling_service\s*=|self\.candle_processing_service\s*="` — zero hits in `market_data_processing_service/`).
+`-rE "self\.sampling_service\s*=|self\.candle_processing_service\s*="` — zero hits in
+`market_data_processing_service/`).
 
 #### Stage 4 plan (revised)
 
-Per the workspace rule "Delete deprecated code. No parallel code paths" (universal.md), the bulk of the original
-Stage 4 is **delete**, not **migrate**.
+Per the workspace rule "Delete deprecated code. No parallel code paths" (universal.md), the bulk of the original Stage 4
+is **delete**, not **migrate**.
 
 - **4.A** Delete the dead-code chain (~2759 lines):
   - `app/calculators/timeframe_candles.py`
@@ -364,34 +368,33 @@ Stage 4 is **delete**, not **migrate**.
   - `tests/e2e/test_may_2023_e2e.py`
   - `tests/conftest.py` — drop the import + the unreachable `cached_cloud_candle_storage_source` fixture
   - `app/calculators/__init__.py` — drop the `timeframe_candles` re-exports
-  - Clean up `getattr(self, "sampling_service" | "candle_processing_service", None)` calls in
-    `orchestration_base.py`, `orchestration_state.py`, `orchestration_service.py` (unreachable branches —
-    confirm with basedpyright after the delete that no code references them).
-- **4.B** Delete the 6 dead public functions + 6 dead internal helpers from `fast_candle_aggregation.py`. The
-  exact line ranges per the table above; spot-check each deletion against the post-4.A test suite (the
-  `test_smart_aggregation.py`, `test_writer_schema_preservation.py`, `test_aggregation_fix.py` suites cover
-  the LIVE functions and should continue to pass).
+  - Clean up `getattr(self, "sampling_service" | "candle_processing_service", None)` calls in `orchestration_base.py`,
+    `orchestration_state.py`, `orchestration_service.py` (unreachable branches — confirm with basedpyright after the
+    delete that no code references them).
+- **4.B** Delete the 6 dead public functions + 6 dead internal helpers from `fast_candle_aggregation.py`. The exact line
+  ranges per the table above; spot-check each deletion against the post-4.A test suite (the `test_smart_aggregation.py`,
+  `test_writer_schema_preservation.py`, `test_aggregation_fix.py` suites cover the LIVE functions and should continue to
+  pass).
 - **4.C** Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`:
   - Flip `aggregate_from_15s_efficient(candles_15s_df: pl.DataFrame, target_timeframe: str) -> pl.DataFrame`.
   - Flip `create_candle_from_interval(interval_ticks: pl.DataFrame, ...) -> dict[str, object]`.
-  - Remove the pandas fallback path in `aggregate_from_15s_efficient` (lines ~540-590; the polars dispatch
-    becomes the only path).
-  - Remove `pl.from_pandas` + `.to_pandas()` round-trip inside `_aggregate_from_15s_polars` (the polars
-    DataFrame now arrives at the function boundary).
+  - Remove the pandas fallback path in `aggregate_from_15s_efficient` (lines ~540-590; the polars dispatch becomes the
+    only path).
+  - Remove `pl.from_pandas` + `.to_pandas()` round-trip inside `_aggregate_from_15s_polars` (the polars DataFrame now
+    arrives at the function boundary).
 - **4.D** Update the 3 LIVE call sites to drop the boundary conversions:
   - `live_workers.py:791` — drop `.to_pandas()` + `pl.from_pandas()` wrapping.
   - `live_workers.py:1260` — same.
   - `live_aggregator.py:345` — `create_candle_from_interval(ticks: pl.DataFrame, ...)`.
 - **4.E** Verify: basedpyright clean on touched files; existing tests for `aggregate_from_15s_efficient` +
-  `create_candle_from_interval` updated to polars fixtures; full unit suite stable; benchmark re-run unblocks
-  3.8 from Phase 3.
+  `create_candle_from_interval` updated to polars fixtures; full unit suite stable; benchmark re-run unblocks 3.8 from
+  Phase 3.
 
-**Why this re-audit matters**: the original Stage 4 framing ("78 combined pandas-ops") treated
-`timeframe_candles.py` as live perf-critical code. It isn't. The actual perf-critical surface is ~9 functions
-in `fast_candle_aggregation.py`. The net code change for Stage 4 is roughly **−2759 lines (dead chain) − ~300
-lines (dead pieces of fast_candle_aggregation) + ~200 lines (polars rewrite of the live surface) = ~−2859
-lines net**, vs the original "rewrite 78 pandas-ops" framing which implied a much larger PR for zero
-behavior improvement on the dead surface.
+**Why this re-audit matters**: the original Stage 4 framing ("78 combined pandas-ops") treated `timeframe_candles.py` as
+live perf-critical code. It isn't. The actual perf-critical surface is ~9 functions in `fast_candle_aggregation.py`. The
+net code change for Stage 4 is roughly **−2759 lines (dead chain) − ~300 lines (dead pieces of
+fast_candle_aggregation) + ~200 lines (polars rewrite of the live surface) = ~−2859 lines net**, vs the original
+"rewrite 78 pandas-ops" framing which implied a much larger PR for zero behavior improvement on the dead surface.
 
 ### Stage 5 — Long-tail cleanup
 
@@ -416,34 +419,40 @@ behavior improvement on the dead surface.
 
 The audit + benchmark are done. This phase ships the actual code.
 
-- [x] ✅ [P0] **1.1 `_read_tick_data` returns polars** ([live_workers.py:449-479](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L449-L479)).
-  Drop the `.to_pandas()`. Return `pl.DataFrame` eagerly. Update docstring. Verify no caller breaks. — market-data-processing-service@591120b; regression test in `tests/unit/test_read_tick_data_polars_return.py`.
-- [x] ✅ [P0] **1.2 `_process_all_timeframes` accepts polars** ([live_workers.py:671+](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L671)).
-  Update signature to `tick_data: pl.DataFrame`. Add a single documented `.to_pandas()` at the
-  `adapter.process_to_candles(tick_data=tick_data_pd, ...)` call site (one conversion per timeframe loop iteration
-  is fine; the adapter is the consumer that requires pandas). Also updated `_eager_preprocess_and_recover_metadata`,
-  `_run_adapter_and_write`, `_is_chain_data`, `_process_chain_timeframe`, `_process_chain_timeframe_by_symbol`,
-  `_process_standard_timeframe`. Fixed polars `n_unique()` in `_is_chain_data`; updated test fixtures.
-  — market-data-processing-service@34bb0e2; all 1368 tests pass.
-- [x] ✅ [P0] **1.3 `_iter_chain_symbol_dfs` returns polars** ([live_workers.py:483-570](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L483-L570)).
-  Already streams via polars; drop the `.collect().to_pandas()` at the yield boundary. Document that consumers must
-  convert at the adapter boundary. — market-data-processing-service@ceb7a12
-- [x] ✅ [P0] **1.4 `data_source.py` returns polars** ([data_source.py:171](../../../market-data-processing-service/market_data_processing_service/app/core/data_source.py#L171)).
-  Drop the `.to_pandas()`. Mirror the worker change. — market-data-processing-service@c24b17c
+- [x] ✅ [P0] **1.1 `_read_tick_data` returns polars**
+      ([live_workers.py:449-479](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L449-L479)).
+      Drop the `.to_pandas()`. Return `pl.DataFrame` eagerly. Update docstring. Verify no caller breaks. —
+      market-data-processing-service@591120b; regression test in `tests/unit/test_read_tick_data_polars_return.py`.
+- [x] ✅ [P0] **1.2 `_process_all_timeframes` accepts polars**
+      ([live_workers.py:671+](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L671)).
+      Update signature to `tick_data: pl.DataFrame`. Add a single documented `.to_pandas()` at the
+      `adapter.process_to_candles(tick_data=tick_data_pd, ...)` call site (one conversion per timeframe loop iteration
+      is fine; the adapter is the consumer that requires pandas). Also updated `_eager_preprocess_and_recover_metadata`,
+      `_run_adapter_and_write`, `_is_chain_data`, `_process_chain_timeframe`, `_process_chain_timeframe_by_symbol`,
+      `_process_standard_timeframe`. Fixed polars `n_unique()` in `_is_chain_data`; updated test fixtures. —
+      market-data-processing-service@34bb0e2; all 1368 tests pass.
+- [x] ✅ [P0] **1.3 `_iter_chain_symbol_dfs` returns polars**
+      ([live_workers.py:483-570](../../../market-data-processing-service/market_data_processing_service/app/core/live_workers.py#L483-L570)).
+      Already streams via polars; drop the `.collect().to_pandas()` at the yield boundary. Document that consumers must
+      convert at the adapter boundary. — market-data-processing-service@ceb7a12
+- [x] ✅ [P0] **1.4 `data_source.py` returns polars**
+      ([data_source.py:171](../../../market-data-processing-service/market_data_processing_service/app/core/data_source.py#L171)).
+      Drop the `.to_pandas()`. Mirror the worker change. — market-data-processing-service@c24b17c
 - [x] ✅ [P0] **1.5 Update worker unit tests**. Existing tests that pass `pd.DataFrame` fixtures need to construct
-  polars instead. Add a regression test that asserts `_read_tick_data` returns `pl.DataFrame`. — Done across
-  Stages 1.1-1.4: test_read_tick_data_polars_return.py (1.1), test_chain_streaming.py pl assertions (1.3),
-  test_data_source.py pl assertions (1.4). 1368 tests pass; no pd.DataFrame mocks remain for _read_tick_data.
-- [x] ✅ [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling
-  tests, process_handler tests, plus any worker tests + per-adapter tests. All must pass. — 1368 passed, 1 skipped
+      polars instead. Add a regression test that asserts `_read_tick_data` returns `pl.DataFrame`. — Done across Stages
+      1.1-1.4: test_read_tick_data_polars_return.py (1.1), test_chain_streaming.py pl assertions (1.3),
+      test_data_source.py pl assertions (1.4). 1368 tests pass; no pd.DataFrame mocks remain for \_read_tick_data.
+- [x] ✅ [P0] **1.6 Run all unit tests for orchestration + worker + adapters.** All 38+ scanner tests, scheduling tests,
+      process_handler tests, plus any worker tests + per-adapter tests. All must pass. — 1368 passed, 1 skipped
 - [x] ✅ [P0] **1.7 Run basedpyright on touched files.** No new errors introduced. Pre-existing errors documented but
-  not fixed in scope. — 0 errors, 0 warnings on live_workers.py + data_source.py + test_chain_streaming.py + test_data_source.py
+      not fixed in scope. — 0 errors, 0 warnings on live_workers.py + data_source.py + test_chain_streaming.py +
+      test_data_source.py
 - [x] ✅ [P0] **1.8 Re-run the engine benchmark** against the migrated MDPS source. Goal: per-instrument peak should
-  match Path D (~625 MB) or better. — Rerun with synthetic data (prod parquets unavailable on worker VM); D=99 MB
-  vs C=204 MB mean peak (51% lower). Original baseline D=625 MB vs C=1861 MB (66% lower on real data). Relative
-  ordering consistent: D < A < B < C. See results_synthetic_stage1_2026_05_28.md.
-- [x] ✅ [P0] **1.9 Commit + push to `live-defi-rollout`** with the standard `Commit + Push + Flip` discipline.
-  — MDPS: Stage 1.3@ceb7a12, Stage 1.4@c24b17c; Plan: checkboxes 1.3-1.8 all pushed @81f03d2f
+      match Path D (~625 MB) or better. — Rerun with synthetic data (prod parquets unavailable on worker VM); D=99 MB vs
+      C=204 MB mean peak (51% lower). Original baseline D=625 MB vs C=1861 MB (66% lower on real data). Relative
+      ordering consistent: D < A < B < C. See results_synthetic_stage1_2026_05_28.md.
+- [x] ✅ [P0] **1.9 Commit + push to `live-defi-rollout`** with the standard `Commit + Push + Flip` discipline. — MDPS:
+      Stage 1.3@ceb7a12, Stage 1.4@c24b17c; Plan: checkboxes 1.3-1.8 all pushed @81f03d2f
 - [x] ✅ [P0] **1.10 Flip the Efficiency Checklist E5 item** in
       `unified-trading-pm/plans/audit/instructions/mtds_mdps_master_audit_instructions.md` from `- [ ]` to
       `- [x] ✅ — MDPS@c24b17c` (Stage 1.4 final sha; E5 updated with Stage 1.3+1.4 audit notes).
@@ -452,260 +461,207 @@ The audit + benchmark are done. This phase ships the actual code.
 
 Gated on Stage 1 being green + benchmark-verified.
 
-- [ ] [P1] **2.1 Refactor `cefi/trades_adapter.py`** as the reference implementation. Drop the `pl.from_pandas(...)`
-      round trip at line 229 + the `.to_pandas().set_index(...)` round trip at line 260. Internal polars only; convert
-      to pandas at the function return boundary (since signature is still pandas in this stage).
-- [ ] [P1] **2.2 Audit each of the other 17 adapters** for internal `pl.from_pandas` / `.to_pandas` round trips.
+- [ ] [AGENT] P1. **2.1 Refactor `cefi/trades_adapter.py`** as the reference implementation. Drop the
+      `pl.from_pandas(...)` round trip at line 229 + the `.to_pandas().set_index(...)` round trip at line 260. Internal
+      polars only; convert to pandas at the function return boundary (since signature is still pandas in this stage).
+- [ ] [AGENT] P1. **2.2 Audit each of the other 17 adapters** for internal `pl.from_pandas` / `.to_pandas` round trips.
       Tabulate. For each adapter with the pattern, ship a separate PR following the trades_adapter shape.
-- [ ] [P1] **2.3 Per-adapter tests** — each refactored adapter MUST have a regression test that pins its behaviour
-      (input → output) against a small synthetic tick fixture.
-- [ ] [P1] **2.4 Re-run engine benchmark after each refactored adapter** — track cumulative improvement.
+- [ ] [AGENT] P1. **2.3 Per-adapter tests** — each refactored adapter MUST have a regression test that pins its
+      behaviour (input → output) against a small synthetic tick fixture.
+- [ ] [AGENT] P1. **2.4 Re-run engine benchmark after each refactored adapter** — track cumulative improvement.
 
 ## Phase 3 — Stage 3 implementation (output side, smaller than originally feared)
 
 Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature change in this stage.**
 
-- [x] ✅ [P1] **3.1 Add `CandleOutput.to_polars()` method in UAC** at
-  `unified-api-contracts/.../adapter_models.py:81`. ~20 lines, mirrors the existing `to_dataframe()`. UAC release
-  bump. — unified-api-contracts@3814249 (CandleOutput.to_polars() + test coverage + polars dep)
-- [x] ✅ [P1] **3.2 Change `canonical_writer.write_candle_parquet` signature** — boundary moved UP one layer
-  instead. `candle_write_mixin._write_candles` now accepts `pl.DataFrame` and converts to pandas once at the
-  top before the canonical_writer/UTL chain. write_candle_parquet keeps pandas (plan's "lower-risk" hedge);
-  arena #3 (numpy→pandas) is still eliminated because the conversion happens AFTER the polars-internal flow
-  in live_workers / candle_generator. cluster-validation re-read at 1328/2121 stays pandas (Stage 5
-  candidate). — market-data-processing-service@6e61cfe
-- [x] ✅ [P1] **3.3 Update `_process_all_timeframes`** + every other `to_dataframe()` site in live_workers
-  (5 total) + the 2 in candle_generator now call `.to_polars()`. `_inject_passthrough_columns` polarised
-  (with_columns + pl.lit). `_emit_instrument_processed_event` polarised (get_column().is_not_null().sum()).
-  pd.concat→pl.concat, sort_values→sort, .empty→.is_empty(). — market-data-processing-service@6e61cfe
-- [x] ✅ [P2] **3.4 Update `orchestration_writer.py`** — **AUDIT, NO-OP CONFIRMED.** Walked every `candles_df`
-  reader in `CandleOrchestrationWriter` (`_log_timestamp_mismatch_details`, `_resolve_venue`,
-  `_resolve_output_path`, `_validate_alignment_and_schema`). All of them are called downstream of the Stage 3
-  boundary conversion in `candle_write_mixin._write_candles` — they see pandas frames by construction. No
-  code change needed; closed as audited.
-- [x] ✅ [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead
-  of `df.to_parquet(...)` (pandas). — market-data-processing-service@5e50b7d (polarise) → @febcb3b (delete).
-  Stage 3.5 first polarised `StorageDispatchWorker.write` + `ParquetSchemaWorker.validate` + removed the
-  polars→pandas boundary in `OrchestrationCoordinator.process_batch`. Then per workspace rule "Delete
-  deprecated code. No parallel code paths" (universal.md), the entire (B) thin-coordinator scaffold was
-  removed — `OrchestrationCoordinator` + `CandleGeneratorWorker` + `ParquetSchemaWorker` +
-  `StorageDispatchWorker` plus their four unit-test files. All four were unreachable from any production
-  entry point (instantiation grep: 1 hit, in their own tests). The (B) scaffold was a toy — it deliberately
-  omitted every workspace HARD RULE the production write chain enforces (manifest emission, honest absence,
-  UAC SchemaContract, emission policy, cluster validation, chain-bundle streaming, Category D zero-activity,
-  VIX gap, multi-timeframe iteration with fast aggregation, etc.). 1269 lines removed, 20 added.
-  `OrchestrationWorkersMixin` (the production composition shim used by `CandleOrchestrationWriter`) trimmed
-  + kept; production MRO intact (`OrchestrationWorkersMixin → BatchOrchestrationMixin →
-  LiveOrchestrationMixin → CandleWriteMixin → object`).
-- [ ] [BLOCKED-ON-STAGE-4] [P1] **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at
-  `_process_all_timeframes` adapter call. The plan's own self-note says "keep this for now since adapter
-  signature still requires pandas; re-evaluate after Stage 4 + the eventual adapter-contract plan." The
-  adapter base-class signature change touches all 18 adapter implementations and is the entry point of a
-  separate follow-up plan; cannot ship in isolation under Stage 3.
-- [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — Initial pass updated
-  10 tests (test_league_passthrough, test_per_instrument_pipeline, plus tests for the four (B)-scaffold
-  classes). The (B) test files were subsequently deleted with the (B) deletion at @febcb3b, so the
-  net result is the remaining production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`)
-  use polars fixtures; 1365 pass; 3 pre-existing failures unchanged. —
-  market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
-- [ ] [BLOCKED-ON-STAGE-4] [P2] **3.8 Benchmark re-run** — should see additional improvement on the output side.
-  The existing harness (`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py`)
-  runs SYNTHETIC re-implementations of 4 engine paths (A/B/C/D), not the actual MDPS code. Re-running it
-  after Stage 3 alone would only re-prove the engine-choice direction (path A wins) without measuring the
-  Stage 3 work. Meaningful measurement comes from either (a) Stage 4 landing first so the bulk of the
-  per-day RSS floor moves, then re-running the harness, OR (b) a real production canary on a 7-day backfill
-  VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"). Recommend route (b) — the
-  benchmark is best held until Stage 4 lands.
+- [x] ✅ [P1] **3.1 Add `CandleOutput.to_polars()` method in UAC** at `unified-api-contracts/.../adapter_models.py:81`.
+      ~20 lines, mirrors the existing `to_dataframe()`. UAC release bump. — unified-api-contracts@3814249
+      (CandleOutput.to_polars() + test coverage + polars dep)
+- [x] ✅ [P1] **3.2 Change `canonical_writer.write_candle_parquet` signature** — boundary moved UP one layer instead.
+      `candle_write_mixin._write_candles` now accepts `pl.DataFrame` and converts to pandas once at the top before the
+      canonical_writer/UTL chain. write_candle_parquet keeps pandas (plan's "lower-risk" hedge); arena #3 (numpy→pandas)
+      is still eliminated because the conversion happens AFTER the polars-internal flow in live_workers /
+      candle_generator. cluster-validation re-read at 1328/2121 stays pandas (Stage 5 candidate). —
+      market-data-processing-service@6e61cfe
+- [x] ✅ [P1] **3.3 Update `_process_all_timeframes`** + every other `to_dataframe()` site in live_workers (5 total) +
+      the 2 in candle_generator now call `.to_polars()`. `_inject_passthrough_columns` polarised (with_columns +
+      pl.lit). `_emit_instrument_processed_event` polarised (get_column().is_not_null().sum()). pd.concat→pl.concat,
+      sort_values→sort, .empty→.is_empty(). — market-data-processing-service@6e61cfe
+- [x] ✅ [P2] **3.4 Update `orchestration_writer.py`** — **AUDIT, NO-OP CONFIRMED.** Walked every `candles_df` reader in
+      `CandleOrchestrationWriter` (`_log_timestamp_mismatch_details`, `_resolve_venue`, `_resolve_output_path`,
+      `_validate_alignment_and_schema`). All of them are called downstream of the Stage 3 boundary conversion in
+      `candle_write_mixin._write_candles` — they see pandas frames by construction. No code change needed; closed as
+      audited.
+- [x] ✅ [P2] **3.5 Update `storage_dispatch_worker.py:51`** to use `df.write_parquet(...)` (polars) instead of
+      `df.to_parquet(...)` (pandas). — market-data-processing-service@5e50b7d (polarise) → @febcb3b (delete). Stage 3.5
+      first polarised `StorageDispatchWorker.write` + `ParquetSchemaWorker.validate` + removed the polars→pandas
+      boundary in `OrchestrationCoordinator.process_batch`. Then per workspace rule "Delete deprecated code. No parallel
+      code paths" (universal.md), the entire (B) thin-coordinator scaffold was removed — `OrchestrationCoordinator` +
+      `CandleGeneratorWorker` + `ParquetSchemaWorker` + `StorageDispatchWorker` plus their four unit-test files. All
+      four were unreachable from any production entry point (instantiation grep: 1 hit, in their own tests). The (B)
+      scaffold was a toy — it deliberately omitted every workspace HARD RULE the production write chain enforces
+      (manifest emission, honest absence, UAC SchemaContract, emission policy, cluster validation, chain-bundle
+      streaming, Category D zero-activity, VIX gap, multi-timeframe iteration with fast aggregation, etc.). 1269 lines
+      removed, 20 added. `OrchestrationWorkersMixin` (the production composition shim used by
+      `CandleOrchestrationWriter`) trimmed
+  - kept; production MRO intact
+    (`OrchestrationWorkersMixin → BatchOrchestrationMixin → LiveOrchestrationMixin → CandleWriteMixin → object`).
+- [ ] [BLOCKED-ON-STAGE-4] P1. **3.6 Remove the boundary `.to_pandas()` introduced in Stage 1** at
+      `_process_all_timeframes` adapter call. The plan's own self-note says "keep this for now since adapter signature
+      still requires pandas; re-evaluate after Stage 4 + the eventual adapter-contract plan." The adapter base-class
+      signature change touches all 18 adapter implementations and is the entry point of a separate follow-up plan;
+      cannot ship in isolation under Stage 3.
+- [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — Initial pass updated 10 tests
+      (test_league_passthrough, test_per_instrument_pipeline, plus tests for the four (B)-scaffold classes). The (B)
+      test files were subsequently deleted with the (B) deletion at @febcb3b, so the net result is the remaining
+      production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`) use polars fixtures; 1365 pass;
+      3 pre-existing failures unchanged. — market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
+- [ ] [BLOCKED-ON-STAGE-4] P2. **3.8 Benchmark re-run** — should see additional improvement on the output side. The
+      existing harness (`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py`) runs
+      SYNTHETIC re-implementations of 4 engine paths (A/B/C/D), not the actual MDPS code. Re-running it after Stage 3
+      alone would only re-prove the engine-choice direction (path A wins) without measuring the Stage 3 work. Meaningful
+      measurement comes from either (a) Stage 4 landing first so the bulk of the per-day RSS floor moves, then
+      re-running the harness, OR (b) a real production canary on a 7-day backfill VM (per § Test plan "Production canary
+      VM after Stage 1 + Stage 3 lands"). Recommend route (b) — the benchmark is best held until Stage 4 lands.
 
 ## Phase 4 — Stage 4 implementation (re-audited 2026-05-29)
 
-Gated on Stages 1-3 being green (verified 2026-05-29 morning: 1372 unit tests pass, 0 failures, 21 basedpyright
-errors unchanged from yesterday's baseline; all Stages 1-3 plan items verified against actual code state). The
-revised Stage 4 reflects the audit-derived split between dead-code delete and live-surface migrate. See the
-"Stage 4 plan (revised)" subsection above for methodology + full caller tables.
+Gated on Stages 1-3 being green (verified 2026-05-29 morning: 1372 unit tests pass, 0 failures, 21 basedpyright errors
+unchanged from yesterday's baseline; all Stages 1-3 plan items verified against actual code state). The revised Stage 4
+reflects the audit-derived split between dead-code delete and live-surface migrate. See the "Stage 4 plan (revised)"
+subsection above for methodology + full caller tables.
 
-- [x] ✅ [P1] **4.A Delete the dead-code chain** — market-data-processing-service@52cd104. Actual delete:
-      **3033 lines net** (audit predicted ~2759; runtime caught 2 more dead test files I missed —
-      `test_error_handling.py` (46 lines, tested `get_venue_from_instrument_key` in cloud_candle_storage) and
-      `test_timestamp_date_alignment.py` (117 lines, tested `CloudCandleStorage` timestamp alignment)). 12
-      files deleted + 7 files edited. basedpyright stable at 21 errors (baseline); 1252 unit tests pass, 0
-      failures. Production `OrchestrationWorkersMixin` MRO intact.
-- [x] ✅ [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`** — market-data-processing-service@a9641a8.
-      All 12 functions deleted per the audit table (6 public + 6 helpers): 423 source lines, file shrinks
-      835 → 412 lines (−51%). Plus 5 dead test classes deleted in `tests/unit/test_fast_candle_aggregation.py`
-      (171 test lines, file shrinks 352 → 181). Net Stage 4.B delete = 594 lines. Each candidate passed the
-      revised deletion criterion (no GCS/manifest/schema/persistence side effects, classic refactor-leftover
-      naming `_simple_working`/`_fixed`/`_sophisticated`, zero external callers, zero string-name runtime
-      references). Mid-edit incident: first sed pass deleted the `_TIMEFRAME_FREQ_MAP` module-level constant
-      (3 LIVE call sites) by mistake — basedpyright caught it immediately; restored from `git show HEAD:`.
-      Lesson recorded for future surgical deletes: separately handle module-level constants between function
-      defs. Verification: basedpyright 21 errors (= baseline), 1236 tests pass, 0 failures.
+- [x] ✅ [P1] **4.A Delete the dead-code chain** — market-data-processing-service@52cd104. Actual delete: **3033 lines
+      net** (audit predicted ~2759; runtime caught 2 more dead test files I missed — `test_error_handling.py` (46 lines,
+      tested `get_venue_from_instrument_key` in cloud_candle_storage) and `test_timestamp_date_alignment.py` (117 lines,
+      tested `CloudCandleStorage` timestamp alignment)). 12 files deleted + 7 files edited. basedpyright stable at 21
+      errors (baseline); 1252 unit tests pass, 0 failures. Production `OrchestrationWorkersMixin` MRO intact.
+- [x] ✅ [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`** — market-data-processing-service@a9641a8. All
+      12 functions deleted per the audit table (6 public + 6 helpers): 423 source lines, file shrinks 835 → 412 lines
+      (−51%). Plus 5 dead test classes deleted in `tests/unit/test_fast_candle_aggregation.py` (171 test lines, file
+      shrinks 352 → 181). Net Stage 4.B delete = 594 lines. Each candidate passed the revised deletion criterion (no
+      GCS/manifest/schema/persistence side effects, classic refactor-leftover naming
+      `_simple_working`/`_fixed`/`_sophisticated`, zero external callers, zero string-name runtime references). Mid-edit
+      incident: first sed pass deleted the `_TIMEFRAME_FREQ_MAP` module-level constant (3 LIVE call sites) by mistake —
+      basedpyright caught it immediately; restored from `git show HEAD:`. Lesson recorded for future surgical deletes:
+      separately handle module-level constants between function defs. Verification: basedpyright 21 errors (= baseline),
+      1236 tests pass, 0 failures.
 - [x] ✅ [P1] **4.C Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`** —
       market-data-processing-service@6a8bcb9. Signature flips on `aggregate_from_15s_efficient`,
-      `_aggregate_from_15s_polars`, `create_candle_from_interval` to `pl.DataFrame` in/out. Pandas
-      fallback path + 4 dead helpers (`_prepare_indexed_df`, `_build_aggregation_rules`,
-      `_post_process_aggregated`, `_reorder_columns`) removed alongside `_polars_available` +
-      `_use_polars_aggregation` + `_POLARS_OK` + the `pandas`/`importlib.util` imports (all dead once
-      the fallback path goes). Internal `pl.from_pandas`/`to_pandas` round-trip in
+      `_aggregate_from_15s_polars`, `create_candle_from_interval` to `pl.DataFrame` in/out. Pandas fallback path + 4
+      dead helpers (`_prepare_indexed_df`, `_build_aggregation_rules`, `_post_process_aggregated`, `_reorder_columns`)
+      removed alongside `_polars_available` + `_use_polars_aggregation` + `_POLARS_OK` + the `pandas`/`importlib.util`
+      imports (all dead once the fallback path goes). Internal `pl.from_pandas`/`to_pandas` round-trip in
       `_aggregate_from_15s_polars` eliminated — polars now arrives at the function boundary.
-- [x] ✅ [P1] **4.D Update the 3 LIVE call sites** — market-data-processing-service@6a8bcb9.
-      `live_workers.py:791` + `live_workers.py:1260` dropped the
-      `pl.from_pandas(aggregate_from_15s_efficient(base.to_pandas(), ...))` wrap → direct
-      `aggregate_from_15s_efficient(base, ...)`. `live_aggregator.py:345` `create_candle_from_interval`
-      seam: UTL's `OHLCVAggregator` Protocol still passes pandas (changing the Protocol would touch
-      UTL + every consumer), so a single `pl.from_pandas(ticks)` stays at the call.
-- [x] ✅ [P1] **4.E Regression tests** — market-data-processing-service@6a8bcb9.
-      `test_fast_candle_aggregation.py`: `TestBuildAggregationRules` (tested deleted helper) deleted;
-      `TestFastCandleAggregation` + `TestAggregateFrom15sEfficient` rebuilt with `pl.DataFrame`
-      fixtures + `.is_empty()`/`.height`/`.columns` polars assertions. `test_writer_schema_preservation.py`:
-      5 `aggregate_from_15s_efficient` call sites wrapped with `pl.from_pandas(base_df)`/`.to_pandas()`
-      at the seam (rest of file uses pandas idiomatically for adapter-output assertions; wrap is
-      cheaper than full rewrite). `test_smart_aggregation.py` + `test_aggregation_fix.py` continued
+- [x] ✅ [P1] **4.D Update the 3 LIVE call sites** — market-data-processing-service@6a8bcb9. `live_workers.py:791` +
+      `live_workers.py:1260` dropped the `pl.from_pandas(aggregate_from_15s_efficient(base.to_pandas(), ...))` wrap →
+      direct `aggregate_from_15s_efficient(base, ...)`. `live_aggregator.py:345` `create_candle_from_interval` seam:
+      UTL's `OHLCVAggregator` Protocol still passes pandas (changing the Protocol would touch UTL + every consumer), so
+      a single `pl.from_pandas(ticks)` stays at the call.
+- [x] ✅ [P1] **4.E Regression tests** — market-data-processing-service@6a8bcb9. `test_fast_candle_aggregation.py`:
+      `TestBuildAggregationRules` (tested deleted helper) deleted; `TestFastCandleAggregation` +
+      `TestAggregateFrom15sEfficient` rebuilt with `pl.DataFrame` fixtures + `.is_empty()`/`.height`/`.columns` polars
+      assertions. `test_writer_schema_preservation.py`: 5 `aggregate_from_15s_efficient` call sites wrapped with
+      `pl.from_pandas(base_df)`/`.to_pandas()` at the seam (rest of file uses pandas idiomatically for adapter-output
+      assertions; wrap is cheaper than full rewrite). `test_smart_aggregation.py` + `test_aggregation_fix.py` continued
       passing without changes (they hit the early-empty path which works regardless of engine).
-- [x] ✅ [P1] **4.F basedpyright + full unit suite** — 21 errors (= Stage 4.B baseline, zero
-      regressions); 1231 tests pass, 0 failures, 1 skipped. Net Stage 4.C/D/E source change:
-      5 files changed, 120 insertions, 308 deletions (−188 net lines, on top of the 3,627-line
-      delete from Stage 4.A + 4.B).
-- [ ] [P2] **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
-      `unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/` measures
-      the ENGINE CHOICE (still Path A pure-polars wins) but NOT the actual MDPS code — Stage 4 didn't
-      change the synthetic re-implementations, so a re-run would produce numbers identical to the
-      `results.md` baseline. The real validation = production canary on a 7-day backfill VM
-      (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"), measuring actual
-      per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3
-      item 3.8 unblocks when the canary lands.
-- [x] ✅ [P0] **4.H Adapter density audit (discovered during Stage 4 verification)** — operator
-      directive 2026-05-29: illiquid instruments with no-trade gaps must produce LOCF-dense candles
-      (state cols carried forward, flow cols zero, OHLC = prior close), no NaN in output. Audit
-      surfaced two broken adapters fixed inline + 7 state-only adapters with a leading-NaN pattern
-      deferred to operator decision. Shipped:
-      - `defi/fx_rate_adapter`: full rewrite — prior `CandleOutput(candles=...)` call had 5
-        non-existent dataclass kwargs (TypeError on every non-empty input; introduced 2026-04-03
-        via c40630bd). New `_finalize_session_grid`-based LOCF path + 6 unit tests.
-      - `defi/swap_adapter`: dropped the "drop empty bins" filter; now LOCF-dense from first swap
-        through end of day (1 sparse row → 24 dense LOCF rows for the user's "2h no-trade" case).
-      - `fast_candle_aggregation.py`: NaN-guard WARN log so future adapter density bugs surface
-        in production logs.
-      - market-data-processing-service@db233e2 | 1246 pass / 1 skip; basedpyright 21 = baseline.
-      - State-only adapter audit (7 adapters: derivative, futures_chain, options_chain,
-        market_state, liquidity, book_snapshot, tbbo) deferred via
-        `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` — operator picks
-        A/B/C on the `_finalize_session_grid` extension before agents touch state adapters.
+- [x] ✅ [P1] **4.F basedpyright + full unit suite** — 21 errors (= Stage 4.B baseline, zero regressions); 1231 tests
+      pass, 0 failures, 1 skipped. Net Stage 4.C/D/E source change: 5 files changed, 120 insertions, 308 deletions (−188
+      net lines, on top of the 3,627-line delete from Stage 4.A + 4.B).
+- [ ] [AGENT] P2. **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
+      `unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/` measures the ENGINE CHOICE
+      (still Path A pure-polars wins) but NOT the actual MDPS code — Stage 4 didn't change the synthetic
+      re-implementations, so a re-run would produce numbers identical to the `results.md` baseline. The real validation
+      = production canary on a 7-day backfill VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"),
+      measuring actual per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3 item
+      3.8 unblocks when the canary lands.
+- [x] ✅ [P0] **4.H Adapter density audit (discovered during Stage 4 verification)** — operator directive 2026-05-29:
+      illiquid instruments with no-trade gaps must produce LOCF-dense candles (state cols carried forward, flow cols
+      zero, OHLC = prior close), no NaN in output. Audit surfaced two broken adapters fixed inline + 7 state-only
+      adapters with a leading-NaN pattern deferred to operator decision. Shipped: - `defi/fx_rate_adapter`: full rewrite
+      — prior `CandleOutput(candles=...)` call had 5 non-existent dataclass kwargs (TypeError on every non-empty input;
+      introduced 2026-04-03 via c40630bd). New `_finalize_session_grid`-based LOCF path + 6 unit tests. -
+      `defi/swap_adapter`: dropped the "drop empty bins" filter; now LOCF-dense from first swap through end of day (1
+      sparse row → 24 dense LOCF rows for the user's "2h no-trade" case). - `fast_candle_aggregation.py`: NaN-guard WARN
+      log so future adapter density bugs surface in production logs. - market-data-processing-service@db233e2 | 1246
+      pass / 1 skip; basedpyright 21 = baseline. - State-only adapter audit (7 adapters: derivative, futures_chain,
+      options_chain, market_state, liquidity, book_snapshot, tbbo) deferred via
+      `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` — operator picks A/B/C on the
+      `_finalize_session_grid` extension before agents touch state adapters.
 
 ## Phase 5 — Stage 5 implementation (long-tail cleanup)
 
-**Operator directive 2026-05-29 mid-session**: "Every processing that happens
-inside the MDPS should be polars based, if the output is pandas it is okay
-for now, we will do the migration later on for cross repos."
+**Operator directive 2026-05-29 mid-session**: "Every processing that happens inside the MDPS should be polars based, if
+the output is pandas it is okay for now, we will do the migration later on for cross repos."
 
-This unblocks Stage 5: items 5.1–5.4 are no longer
-``BLOCKED-PROTOCOL`` — the cross-repo Protocol boundaries (UTL ``TickFetcher``,
-``OHLCVAggregator``, UAC ``SchemaContract`` validators) stay pandas at the
-seams; MDPS-internal compute flips to polars. Boundary conversions
-(``pl.from_pandas``/``.to_pandas``) are acceptable at the cross-repo edge,
-NOT at the per-helper level. Phases 5C/5D below are scoped to one
-coordinated commit per consumer chain (single pd→pl at top of entry-point +
-single pl→pd before UTL call) — never per-helper round-trips.
+This unblocks Stage 5: items 5.1–5.4 are no longer `BLOCKED-PROTOCOL` — the cross-repo Protocol boundaries (UTL
+`TickFetcher`, `OHLCVAggregator`, UAC `SchemaContract` validators) stay pandas at the seams; MDPS-internal compute flips
+to polars. Boundary conversions (`pl.from_pandas`/`.to_pandas`) are acceptable at the cross-repo edge, NOT at the
+per-helper level. Phases 5C/5D below are scoped to one coordinated commit per consumer chain (single pd→pl at top of
+entry-point + single pl→pd before UTL call) — never per-helper round-trips.
 
 - [x] ✅ [P2] **5A `cloud_data_provider.py` chain** — `cloud_data_provider`,
-      `orchestration_scheduling._get_tradable_instruments`,
-      `orchestration_scanner._get_tradable_instruments`, plus the
-      `orchestration_service` consumer all flipped to polars. `pl.read_parquet`
-      replaces `pd.read_parquet`; `pl.concat(how="vertical_relaxed")` replaces
-      `pd.concat`; `.is_empty()` / `pl.col(...).is_in(...)` replace `.empty` /
-      `[mask]`; TRADFI `.apply(_should_proc, axis=1)` replaced by
-      `iter_rows(named=True)` + `pl.Series` mask. 6 files modified, 78 +/63 −.
-      market-data-processing-service@74b4856.
-- [x] ✅ [P2] **5B `orchestration_writer.py` dead-code purge** — surfaced 4 dead
-      pandas-using helpers left over from the fe7deb5 `_write_candles` removal:
-      `_get_instrument_metadata`, `_resolve_venue`, `_resolve_output_path`,
-      `_validate_alignment_and_schema`. Verified zero external callers (the
-      live equivalents are in `candle_write_mixin.py`). Deleted per workspace
-      rule "No parallel code paths". Remaining pandas surface (2 hits) is
-      `_log_timestamp_mismatch_details` which stays pandas at this seam
-      (its caller `candle_write_mixin._validate_and_convert_timestamps` is
-      still pandas; flips with Phase 5C). Net −174 lines.
+      `orchestration_scheduling._get_tradable_instruments`, `orchestration_scanner._get_tradable_instruments`, plus the
+      `orchestration_service` consumer all flipped to polars. `pl.read_parquet` replaces `pd.read_parquet`;
+      `pl.concat(how="vertical_relaxed")` replaces `pd.concat`; `.is_empty()` / `pl.col(...).is_in(...)` replace
+      `.empty` / `[mask]`; TRADFI `.apply(_should_proc, axis=1)` replaced by `iter_rows(named=True)` + `pl.Series` mask.
+      6 files modified, 78 +/63 −. market-data-processing-service@74b4856.
+- [x] ✅ [P2] **5B `orchestration_writer.py` dead-code purge** — surfaced 4 dead pandas-using helpers left over from the
+      fe7deb5 `_write_candles` removal: `_get_instrument_metadata`, `_resolve_venue`, `_resolve_output_path`,
+      `_validate_alignment_and_schema`. Verified zero external callers (the live equivalents are in
+      `candle_write_mixin.py`). Deleted per workspace rule "No parallel code paths". Remaining pandas surface (2 hits)
+      is `_log_timestamp_mismatch_details` which stays pandas at this seam (its caller
+      `candle_write_mixin._validate_and_convert_timestamps` is still pandas; flips with Phase 5C). Net −174 lines.
       market-data-processing-service@6a14f3b.
-- [x] ✅ [P1] **5C `canonical_writer.py` MDPS-internal helpers → polars** — single
-      coordinated commit landed. All 8 helpers now polars-typed:
-      `_renormalize_legacy_tradfi_instrument_ids` (uses
-      `pl.col(...).replace_strict()` for the id + type remap),
-      `_infer_instrument_type` / `_infer_chain` / `_infer_league_id` /
-      `_infer_v6_columns` (direct `df[col][0]` reads, no round-trip),
-      `_stamp_candle_available_at` (heaviest pre-conversion at 14 pd-ops;
-      now `pl.from_epoch` + `dt.replace_time_zone` + timedelta arithmetic),
-      `_inject_schema_contract_columns` (`with_columns(pl.lit / .cast /
-      pl.from_epoch)`), `_validate_stamped_candle_bar_boundary` (polars
-      datetime indexing returns native Python `datetime` — UAC validator
-      hit directly; NaT-text → null-text reflecting polars vocabulary).
-      Entry points `write_candle_parquet` + `write_streaming_chunk` +
-      `open_candle_streaming_writer` each do ONE `pl.from_pandas` at entry
-      and ONE `.to_pandas()` just before the UTL `_utl_write_chunk` /
-      `record_captured` boundary calls.
-      Tests: pandas-compat shims in `test_canonical_writer_record_helpers`,
-      `test_batch_live_mode_parity`, `test_bar_boundary_write_gate` so the
-      existing pandas-fixture call sites work unchanged; `_infer_*` test
-      fixtures + streaming `_renormalize` fixtures flipped to `pl.DataFrame`
-      directly. NaT-regex tests updated to match polars "null" wording.
-      Result: 1246 pass / 1 skip; basedpyright 21 = baseline.
+- [x] ✅ [P1] **5C `canonical_writer.py` MDPS-internal helpers → polars** — single coordinated commit landed. All 8
+      helpers now polars-typed: `_renormalize_legacy_tradfi_instrument_ids` (uses `pl.col(...).replace_strict()` for the
+      id + type remap), `_infer_instrument_type` / `_infer_chain` / `_infer_league_id` / `_infer_v6_columns` (direct
+      `df[col][0]` reads, no round-trip), `_stamp_candle_available_at` (heaviest pre-conversion at 14 pd-ops; now
+      `pl.from_epoch` + `dt.replace_time_zone` + timedelta arithmetic), `_inject_schema_contract_columns`
+      (`with_columns(pl.lit / .cast /     pl.from_epoch)`), `_validate_stamped_candle_bar_boundary` (polars datetime
+      indexing returns native Python `datetime` — UAC validator hit directly; NaT-text → null-text reflecting polars
+      vocabulary). Entry points `write_candle_parquet` + `write_streaming_chunk` + `open_candle_streaming_writer` each
+      do ONE `pl.from_pandas` at entry and ONE `.to_pandas()` just before the UTL `_utl_write_chunk` / `record_captured`
+      boundary calls. Tests: pandas-compat shims in `test_canonical_writer_record_helpers`,
+      `test_batch_live_mode_parity`, `test_bar_boundary_write_gate` so the existing pandas-fixture call sites work
+      unchanged; `_infer_*` test fixtures + streaming `_renormalize` fixtures flipped to `pl.DataFrame` directly.
+      NaT-regex tests updated to match polars "null" wording. Result: 1246 pass / 1 skip; basedpyright 21 = baseline.
       market-data-processing-service@c9d7fe7.
-- [x] ✅ [P2] **5D `live_aggregator.py:321` `_MDPSTickFetcher._read`** —
-      `pd.read_parquet(io.BytesIO(raw))` → `pl.read_parquet(io.BytesIO(raw)).to_pandas()`
-      at the UTL `TickFetcher` Protocol boundary. Polars-native arrow decode
-      (GIL-released under thread parallelism) with the pandas conversion at
-      the cross-repo seam. market-data-processing-service@c9d7fe7.
-- [x] ✅ [P2] **5.5 `app/utils/*` audit** — surveyed 5 files:
-      - `adapter_utils.py` (156 lines): `apply_locf_fill` is numpy-only ✓;
-        `parse_timestamps_flexible` takes `pd.DataFrame` because adapters
-        pre-aggregation already hold pandas (caller-driven, not pure-util).
-      - `gcs_path_utils.py`: zero pandas — nothing to convert.
-      - `market_state_detector.py` (438 lines): uses `pd.Timestamp` as the
-        interop with `exchange_calendars` (third-party library; pandas-only
-        API). Single-row lookups, not bulk DataFrame transforms — polars
-        conversion would add boundary cost without compute benefit.
-      - `path_parsing.py`: zero pandas — nothing to convert.
-      - `__init__.py`: passthrough.
-      No actionable polars conversions in app/utils. Stage 5.5 closed as a
-      no-op (audit confirmed nothing to do). mdps@db233e2.
-- [x] ✅ [P0] **5E You-Were-Right Audit — second-pass MDPS-internal sweep**.
-      Operator challenge 2026-05-29 ("verify nothing is remaining like Phase 1")
-      surfaced 10 `app/core/` files I'd missed in the Phase 5C/5D claim of
-      "polars end-to-end":
-      - `candle_write_mixin.py`: `_write_candles` dropped the `to_pandas()`
-        round-trip at line 121; 5 internal helpers flipped to pl.DataFrame
-        (`_build_candle_output_path`, `_coerce_int_timestamp_column`,
-        `_validate_and_convert_timestamps`,
-        `_validate_candle_schema_before_upload`, `_upload_candles_to_gcs`).
-        Each helper now converts at the UTL boundary only.
-      - `orchestration_writer.py`, `orchestration_state.py`,
-        `orchestration_base.py`: `_log_timestamp_mismatch_details` +
-        `_save_local_sample` flipped to polars (`.write_csv()` for sample).
-      - `canonical_writer.py:1371,2173`: `pd.read_parquet` →
-        `pl.read_parquet().to_pandas()` at both write paths.
-      - `timestamp_validator.py` + `granularity_detector.py`: full
-        polars-internal rewrites (`pl.from_epoch` + `dt.replace_time_zone`,
-        polars `diff`/`median`).
-      - `dependency_checker.py`: `pd.date_range` → `pl.date_range`; boolean
-        mask filter → `pl.filter(pl.col).is_in + str.contains`.
-      - `data_source.py` + `live_workers.py:503`: removed the
-        `pl.from_pandas(pd.read_parquet(...))` fallback per
-        `[[feedback_no_fallback_one_engine]]` — failures propagate instead
-        of silent double-decode.
-      - `live_workers.py`: `_extract_instrument_info` flipped to polars
-        (matching the test fixtures); `_build_candle_output_path` call site
-        passes polars directly.
-      - `types.py`: `WriteTaskDict.candles_df` type `pl.DataFrame`.
-      - `cli/handlers/live_mode_handler.py`: consumer type updated.
-      15 test files updated — `@patch("pandas.read_parquet")` →
-      `@patch("polars.read_parquet")` with `pl.from_pandas(...)` returns;
-      pandas-fixture call sites flipped to `pl.DataFrame` or polars-aware
-      assertions (`isinstance(schema[col], pl.Datetime)` instead of
-      `pd.api.types.is_datetime64_any_dtype`); `.iloc[N]` → `[N]`.
-      Result: 1246 pass / 1 skip; basedpyright 21 errors = original baseline
-      (no new violations introduced by the polars conversion).
-      market-data-processing-service@8d36df8.
-- [ ] [P3] **5.6 `mock_data_provider.py`** + 55 test files — bulk audit. P3.
-- [ ] [P2] **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
+- [x] ✅ [P2] **5D `live_aggregator.py:321` `_MDPSTickFetcher._read`** — `pd.read_parquet(io.BytesIO(raw))` →
+      `pl.read_parquet(io.BytesIO(raw)).to_pandas()` at the UTL `TickFetcher` Protocol boundary. Polars-native arrow
+      decode (GIL-released under thread parallelism) with the pandas conversion at the cross-repo seam.
+      market-data-processing-service@c9d7fe7.
+- [x] ✅ [P2] **5.5 `app/utils/*` audit** — surveyed 5 files: - `adapter_utils.py` (156 lines): `apply_locf_fill` is
+      numpy-only ✓; `parse_timestamps_flexible` takes `pd.DataFrame` because adapters pre-aggregation already hold
+      pandas (caller-driven, not pure-util). - `gcs_path_utils.py`: zero pandas — nothing to convert. -
+      `market_state_detector.py` (438 lines): uses `pd.Timestamp` as the interop with `exchange_calendars` (third-party
+      library; pandas-only API). Single-row lookups, not bulk DataFrame transforms — polars conversion would add
+      boundary cost without compute benefit. - `path_parsing.py`: zero pandas — nothing to convert. - `__init__.py`:
+      passthrough. No actionable polars conversions in app/utils. Stage 5.5 closed as a no-op (audit confirmed nothing
+      to do). mdps@db233e2.
+- [x] ✅ [P0] **5E You-Were-Right Audit — second-pass MDPS-internal sweep**. Operator challenge 2026-05-29 ("verify
+      nothing is remaining like Phase 1") surfaced 10 `app/core/` files I'd missed in the Phase 5C/5D claim of "polars
+      end-to-end": - `candle_write_mixin.py`: `_write_candles` dropped the `to_pandas()` round-trip at line 121; 5
+      internal helpers flipped to pl.DataFrame (`_build_candle_output_path`, `_coerce_int_timestamp_column`,
+      `_validate_and_convert_timestamps`, `_validate_candle_schema_before_upload`, `_upload_candles_to_gcs`). Each
+      helper now converts at the UTL boundary only. - `orchestration_writer.py`, `orchestration_state.py`,
+      `orchestration_base.py`: `_log_timestamp_mismatch_details` + `_save_local_sample` flipped to polars
+      (`.write_csv()` for sample). - `canonical_writer.py:1371,2173`: `pd.read_parquet` →
+      `pl.read_parquet().to_pandas()` at both write paths. - `timestamp_validator.py` + `granularity_detector.py`: full
+      polars-internal rewrites (`pl.from_epoch` + `dt.replace_time_zone`, polars `diff`/`median`). -
+      `dependency_checker.py`: `pd.date_range` → `pl.date_range`; boolean mask filter →
+      `pl.filter(pl.col).is_in + str.contains`. - `data_source.py` + `live_workers.py:503`: removed the
+      `pl.from_pandas(pd.read_parquet(...))` fallback per `[[feedback_no_fallback_one_engine]]` — failures propagate
+      instead of silent double-decode. - `live_workers.py`: `_extract_instrument_info` flipped to polars (matching the
+      test fixtures); `_build_candle_output_path` call site passes polars directly. - `types.py`:
+      `WriteTaskDict.candles_df` type `pl.DataFrame`. - `cli/handlers/live_mode_handler.py`: consumer type updated. 15
+      test files updated — `@patch("pandas.read_parquet")` → `@patch("polars.read_parquet")` with `pl.from_pandas(...)`
+      returns; pandas-fixture call sites flipped to `pl.DataFrame` or polars-aware assertions
+      (`isinstance(schema[col], pl.Datetime)` instead of `pd.api.types.is_datetime64_any_dtype`); `.iloc[N]` → `[N]`.
+      Result: 1246 pass / 1 skip; basedpyright 21 errors = original baseline (no new violations introduced by the polars
+      conversion). market-data-processing-service@8d36df8.
+- [ ] [AGENT] P3. **5.6 `mock_data_provider.py`** + 55 test files — bulk audit. P3.
+- [ ] [AGENT] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
       **DEFERRED to operator-scheduled canary** (same as 4.G).
 
 ## Test plan

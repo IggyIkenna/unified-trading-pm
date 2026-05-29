@@ -96,12 +96,12 @@ fixed `swap_adapter` should write candles successfully.
 
 ## Status flip path
 
-- [ ] Verify MTDS upstream tick parquets for UNISWAP_V3-ETHEREUM 2024-05-06 → 2026-01-17 have `chain` column populated
-      (Path A pre-flight)
-- [ ] Launch MDPS reprocess VM for UNISWAP_V3-ETHEREUM swaps_ohlcv historical range
-- [ ] Verify post-retry: `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to 0; equivalent rows now
-      `captured` (or `empty_confirmed` for legitimately empty pool-days)
-- [ ] Archive this issue doc
+- [ ] [AGENT] P1. Verify MTDS upstream tick parquets for UNISWAP_V3-ETHEREUM 2024-05-06 → 2026-01-17 have `chain` column
+      populated (Path A pre-flight)
+- [ ] [AGENT] P1. Launch MDPS reprocess VM for UNISWAP_V3-ETHEREUM swaps_ohlcv historical range
+- [ ] [AGENT] P1. Verify post-retry: `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to 0; equivalent
+      rows now `captured` (or `empty_confirmed` for legitimately empty pool-days)
+- [ ] [AGENT] P2. Archive this issue doc
 
 ## Cross-references
 

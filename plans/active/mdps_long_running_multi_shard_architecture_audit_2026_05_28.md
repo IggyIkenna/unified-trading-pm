@@ -73,25 +73,25 @@ Concrete questions to answer + corresponding redesigns to ship:
 
 ## Phase 0 — Frame the problem (no code edits)
 
-- [ ] [AUDIT][P1] **0.1 Inventory the current fan-out assumptions baked into the code.** Find every place where the
+- [ ] [AUDIT] P1. **0.1 Inventory the current fan-out assumptions baked into the code.** Find every place where the
       orchestrator constructs per-instance state that would be redundant for the next shard / next date. Examples
       (preliminary, surfaced by the sibling plan): lazy `_storage_client`, per-asset_group `_data_sinks` dict, the
       4128-instrument reference DataFrame, the freshness-check manifest read. Tabulate with
       `(field, owner, lifetime, reset_cost)`.
-- [ ] [AUDIT][P1] **0.2 Inventory caches and their cleanup paths.** Beyond the `candle_processing_service` /
+- [ ] [AUDIT] P1. **0.2 Inventory caches and their cleanup paths.** Beyond the `candle_processing_service` /
       `sampling_service` caches that `_cleanup_after_day` knows about — what other module-level or singleton state
       exists? `unified_trading_library` data sinks, the `ResourceProfiler`, event sinks, polars/pyarrow arenas. Where is
       each cache's `clear()` / `dispose()` method, and is anything calling it?
-- [ ] [AUDIT][P1] **0.3 Document the cost model**. What does one VM-hour cost? What does N parallel small VMs cost vs
+- [ ] [AUDIT] P1. **0.3 Document the cost model**. What does one VM-hour cost? What does N parallel small VMs cost vs
       one long-running VM for the same work? This frames whether "subprocess-per-date" inside one VM is meaningfully
       cheaper than 16 × 1-day VMs, and whether subprocess-per-shard is cost-feasible.
-- [ ] [AUDIT][P1] **0.4 Granularity contract**. Document the canonical instrument_id form and the asset_group / venue /
+- [ ] [AUDIT] P1. **0.4 Granularity contract**. Document the canonical instrument_id form and the asset_group / venue /
       instrument_type / data_type axes. State which axes are derivable from instrument_id and which are independent.
       This becomes the input spec for redesigning the CLI filter logic.
 
 ## Phase 1 — Decide the execution-unit shape
 
-- [ ] [DESIGN][P1] **1.1 Choose the execution model.** Closed set:
+- [ ] [DESIGN] P1. **1.1 Choose the execution model.** Closed set:
   - **(a) Subprocess-per-date**: `process_candles_handler` invokes `subprocess.run([sys.executable, "-m", ...])` per
     date. Kernel reclaims the address space at exit; no in-process accumulation possible.
   - **(b) Subprocess-per-shard**: same idea, finer grain (per date × per data_type × per venue). Higher fork overhead,
@@ -102,41 +102,42 @@ Concrete questions to answer + corresponding redesigns to ship:
     per-shard work to a `concurrent.futures.ProcessPoolExecutor`. Workers do isolated work, no accumulation. Pick one.
     Document trade-offs explicitly. Sibling-plan empirical data: Phase 3.2 attempt-2 proved (c) is unreliable on a 32 GB
     box even with cleanup-hook wiring; that drives the case for (a) / (b) / (d).
-- [ ] [DESIGN][P1] **1.2 Map state ownership to the chosen execution model.** Which state lives in the long- running
+- [ ] [DESIGN] P1. **1.2 Map state ownership to the chosen execution model.** Which state lives in the long- running
       parent (manifest? reference data? auth sessions?) and which lives in the per-shard worker (tick DataFrame, candle
       accumulators)? This is the foundation for any refactor that follows.
 
 ## Phase 2 — Decide the data-engine shape
 
-- [ ] [DESIGN][P1] **2.1 Pick the data engine.** Closed set:
+- [ ] [DESIGN] P1. **2.1 Pick the data engine.** Closed set:
   - **(a) Pure Polars end-to-end**: read raw via polars, aggregate via polars (already partially in place), write via
     polars. Pandas eliminated.
   - **(b) Pure Pandas with pyarrow engine**: `pd.read_parquet(engine="pyarrow")`. Eliminates polars but loses polars'
     faster aggregation path.
   - **(c) Pyarrow-table end-to-end**: lowest-level, most explicit memory control, fewer high-level conveniences. Pick
     one. The expectation per operator direction is (a). Document why.
-- [ ] [DESIGN][P1] **2.2 Audit every parquet read/write callsite in MDPS.** Tabulate `(file:line, engine, why)`. Any
+- [ ] [DESIGN] P1. **2.2 Audit every parquet read/write callsite in MDPS.** Tabulate `(file:line, engine, why)`. Any
       mixed-engine boundary is a candidate conversion buffer that the refactor must eliminate.
-- [ ] [DESIGN][P1] **2.3 Measure the per-instrument peak memory for the chosen engine.** Run one instrument-day through
+- [ ] [DESIGN] P1. **2.3 Measure the per-instrument peak memory for the chosen engine.** Run one instrument-day through
       the chosen engine, take a tracemalloc snapshot at peak. Compare against the current mixed-engine peak. The bar:
       per-instrument peak ≤ 2 GB for a typical CeFi perp trades day. (Numbers from the canary suggest the current
       mixed-engine peak is ~7-8 GB per instrument-day; the bar should be a real improvement, not parity.)
 
 ## Phase 3 — Fix the CLI granularity (closes Finding B from the sibling plan)
 
-- [ ] [DESIGN][P1] **3.1 Define the canonical instrument_id parser.** A canonical id is `VENUE:INSTRUMENT_TYPE:SYMBOL`.
+- [ ] [DESIGN] P1. **3.1 Define the canonical instrument_id parser.** A canonical id is `VENUE:INSTRUMENT_TYPE:SYMBOL`.
       Given a list of canonical ids, the scanner can derive the venue set + the instrument_type set + the symbol set,
       and filter blob paths on each axis independently. Document the parser spec in UAC (it likely belongs there as a
       shared utility; check `unified_api_contracts.canonical.*` for an existing parser before adding one).
-- [ ] [P1] **3.2 Replace the substring filter in `_collect_matching_parquet_blobs`** with a structured check derived
-      from the parsed canonical id. Each blob path is matched on (venue, instrument_type, symbol) extracted from the
-      path, against the per-axis derived sets. Bare-symbol matching (`BTCUSDT`) stays supported as a fallback for legacy
-      / convenience use cases but emits a deprecation log.
-- [ ] [P1] **3.3 Update the regression tests** in `test_orchestration_scanner.py`. Add cases for canonical matching
-      (`["BINANCE-FUTURES:PERPETUAL:BTCUSDT"]` → exactly the BINANCE-FUTURES perpetual BTCUSDT blob, even if a BYBIT
-      perpetual BTCUSDT exists in the same scope) and the bare-symbol fallback (with the deprecation log assertion).
-- [ ] [P1] **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend canonical
-      form. The bare-symbol form should be tagged as legacy.
+- [ ] [AGENT] P1. **3.2 Replace the substring filter in `_collect_matching_parquet_blobs`** with a structured check
+      derived from the parsed canonical id. Each blob path is matched on (venue, instrument_type, symbol) extracted from
+      the path, against the per-axis derived sets. Bare-symbol matching (`BTCUSDT`) stays supported as a fallback for
+      legacy / convenience use cases but emits a deprecation log.
+- [ ] [AGENT] P1. **3.3 Update the regression tests** in `test_orchestration_scanner.py`. Add cases for canonical
+      matching (`["BINANCE-FUTURES:PERPETUAL:BTCUSDT"]` → exactly the BINANCE-FUTURES perpetual BTCUSDT blob, even if a
+      BYBIT perpetual BTCUSDT exists in the same scope) and the bare-symbol fallback (with the deprecation log
+      assertion).
+- [ ] [AGENT] P1. **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend
+      canonical form. The bare-symbol form should be tagged as legacy.
 
 ## Phase 4 — Implement the chosen execution + engine model
 
@@ -144,51 +145,52 @@ Once Phase 1 and Phase 2 land their `[DESIGN][P1]` items, this phase is the actu
 TBD here — they depend on which execution model and which engine are chosen. Land the design decisions first; don't
 start implementation against an unconfirmed shape.
 
-- [ ] [P1] **4.1 Refactor execution model** per the Phase 1 decision.
-- [ ] [P1] **4.2 Refactor data engine** per the Phase 2 decision.
-- [ ] [P1] **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural cleanup
-      the refactor enables. The sibling plan's Phase 2.2 fix should be **deleted** at this point — keeping it would mask
-      any retention regressions the new architecture introduces.
-- [ ] [P1] **4.4 Wire memory bounds into QG.** A per-shard memory regression test that runs a representative scope and
-      asserts peak RSS < threshold. This is what should have caught the 25 GB per-day floor at code-review time.
-      Threshold = whatever the Phase 2.3 measurement establishes for the chosen engine.
+- [ ] [AGENT] P1. **4.1 Refactor execution model** per the Phase 1 decision.
+- [ ] [AGENT] P1. **4.2 Refactor data engine** per the Phase 2 decision.
+- [ ] [AGENT] P1. **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural
+      cleanup the refactor enables. The sibling plan's Phase 2.2 fix should be **deleted** at this point — keeping it
+      would mask any retention regressions the new architecture introduces.
+- [ ] [AGENT] P1. **4.4 Wire memory bounds into QG.** A per-shard memory regression test that runs a representative
+      scope and asserts peak RSS < threshold. This is what should have caught the 25 GB per-day floor at code-review
+      time. Threshold = whatever the Phase 2.3 measurement establishes for the chosen engine.
 
 ## Phase 5 — Observability
 
-- [ ] [P2] **5.1** Emit `MEMORY_HIGH_WATER_MARK` events at each shard boundary (per-date, per-data_type, per-instrument)
-      — currently the only memory signal is the existing `MEMORY_BACKPRESSURE_ENGAGED` warning, which only fires when
-      we're already in trouble.
-- [ ] [P2] **5.2** Per-shard wall-clock timing emitted as a `SHARD_COMPLETED` event with structured fields, so the
-      per-shard cost model in Phase 0.3 can be validated against real production data.
-- [ ] [P2] **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions ("the
-      manifest is now 1.2 GB") are caught before they OOM a small box.
+- [ ] [AGENT] P2. **5.1** Emit `MEMORY_HIGH_WATER_MARK` events at each shard boundary (per-date, per-data_type,
+      per-instrument) — currently the only memory signal is the existing `MEMORY_BACKPRESSURE_ENGAGED` warning, which
+      only fires when we're already in trouble.
+- [ ] [AGENT] P2. **5.2** Per-shard wall-clock timing emitted as a `SHARD_COMPLETED` event with structured fields, so
+      the per-shard cost model in Phase 0.3 can be validated against real production data.
+- [ ] [AGENT] P2. **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
+      ("the manifest is now 1.2 GB") are caught before they OOM a small box.
 
 ## Phase 6 — Codex updates (targets from the 2026-05-28 codex audit)
 
 The codex audit above named the exact docs that need to land. Phase 6 is the close-out for each finding.
 
-- [ ] [P2] **6.1 (Finding A — cleanup discipline)** Add a new §15 to
+- [ ] [AGENT] P2. **6.1 (Finding A — cleanup discipline)** Add a new §15 to
       [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md):
       "Batch Service Lifecycle: Setup, Work, Cleanup". Body: every batch service with per-date state (caches, GCS
       clients, manifest buffers) MUST call a `_cleanup_after_date(date)` hook on every per-date exit path, including
       success. Reference implementation: `orchestration_base.py::_cleanup_after_day()`. Reference incident: sibling plan
       Phase 3.2 attempt-2 (25 GB per-day floor before the wiring fix).
-- [ ] [P2] **6.2 (Finding B — instrument_id contract)** Add a new section to
+- [ ] [AGENT] P2. **6.2 (Finding B — instrument_id contract)** Add a new section to
       [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md): "Instrument
       Identity and CLI Granularity". Body: canonical form `VENUE:INSTRUMENT_TYPE:SYMBOL`; venue + instrument_type ARE
       derivable; data_type is INDEPENDENT (requires `--data-types`); atomic shard is
       `(asset_group, venue, instrument_type, data_type, symbol, date)`; bare-symbol substring matching is a deprecated
       convenience.
-- [ ] [P2] **6.3 (Finding C — VM lifecycle reconciliation)** Extend
+- [ ] [AGENT] P2. **6.3 (Finding C — VM lifecycle reconciliation)** Extend
       [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) §
       "The invariants" with a new invariant: "Services running as `EPHEMERAL_BATCH` may amortise startup cost across one
       shard. Services running multi-shard inside one VM lifecycle (the actual MDPS deployment shape) MUST call
       `_cleanup_after_shard()` at every shard boundary." Either extend `EPHEMERAL_BATCH` semantics or add a new
       LifecycleClass `LONG_RUNNING_MULTI_SHARD_BATCH` — decision belongs to Phase 1.1 of this plan.
-- [ ] [P2] **6.4 (Finding D — data engine)** Add a new doc at `codex/06-coding-standards/data-engine-selection.md`.
-      Body: pick one engine end-to-end; Polars→Pandas→Polars is a banned anti-pattern; for parquet I/O + aggregation
-      prefer pure Polars; for I/O only use `pd.read_parquet(engine="pyarrow")`; `low_memory=True` only matters when no
-      intermediate `.to_pandas()` is inserted.
+- [ ] [AGENT] P2. **6.4 (Finding D — data engine)** Add a new doc at
+      `codex/06-coding-standards/data-engine-selection.md`. Body: pick one engine end-to-end; Polars→Pandas→Polars is a
+      banned anti-pattern; for parquet I/O + aggregation prefer pure Polars; for I/O only use
+      `pd.read_parquet(engine="pyarrow")`; `low_memory=True` only matters when no intermediate `.to_pandas()` is
+      inserted.
 
 ## Out of scope
 

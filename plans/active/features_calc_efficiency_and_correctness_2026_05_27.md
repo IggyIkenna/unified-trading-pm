@@ -85,7 +85,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       row/11.8KB, 4h=6 rows/12.4KB, 1h=24/14.2KB, 15s=5760/350KB; 7× amplification = 7 `load_candles_with_buffer` calls;
       consolidation candidates (24h→yearly, 4h/1h→monthly) tagged `needs-design + blocked-on-migration-window`. Below is
       the original task spec (kept for provenance):
-- [ ] [AUDIT] [P1] **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).**
+- [ ] [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).**
       Operator-directed: before any layout redesign, ground in how data is _actually_ processed + saved in
       `processed_candles/`. Deliverable is an audit doc
       (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
@@ -115,7 +115,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       to `{4h,24h}`. Benchmark (24h/75-day lookback): **26 MB → 1.1 MB per instrument (22×)**. Methods all ≤50L (shared
       `_run_feature_group_lifecycle`), files <900, basedpyright 0, 1491 tests pass. Optimises **bytes read**, not GET
       count. (Original spec below for provenance.)
-- [ ] [SPEC][P1] **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
+- [ ] [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
       choice.** Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
       **widest buffer across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a
       deep lookback (tens– hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs
@@ -147,12 +147,12 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       ~0.8-3.2 s per (instrument, feature_group, timeframe)); now fire concurrently. 4-8× wall-clock win on the
       GCS-latency-bound write path. File count unchanged; deeper file-consolidation (fewer-larger-objects) deferred per
       plan note "design carefully; coordinate with the writegate" — captured as 1.3b below.
-- [ ] [P2][DEFERRED] **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
+- [ ] [DEFERRED] P2. **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
       object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
       cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
       output. Multi-day work; named-successor for the deeper batching goal in 1.3. **Operator 2026-05-28**: needs deeper
       investigation — dig in before scheduling a migration window.
-- [ ] [P2][DEFERRED] **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
+- [ ] [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
       successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest
       scope assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
       (candlestick_patterns / momentum / moving_averages / oscillators / technical_indicators / volatility_realized /
@@ -174,13 +174,13 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       `gs://{bucket}/day={day}/feature_group={fg}/timeframe={tf}/{instrument_id}.parquet`, wrapped in
       `asyncio.to_thread`. Probe failure returns False (= redo to be safe). Now subsequent backfill runs skip
       compute+write for landed partitions.
-- [ ] [P3][DEFERRED] **1.5b Column pruning at delta_one read** (mtf + cross*instrument readers of the 964-col delta_one
+- [ ] [DEFERRED] P3. **1.5b Column pruning at delta_one read** (mtf + cross*instrument readers of the 964-col delta_one
       output). Blocked on: current `SourceSpec` model takes ALL columns by default and applies a
       `*{timeframe}`suffix to each — there's no "required subset" declared. Adding column pruning needs a     SourceSpec API redesign (declare`required_columns:
       list[str]`per spec; reader passes that as    `pl.read_parquet(... columns=...)`). Real win for mtf joins on wide
       delta_one frames. Multi-hour redesign; named-successor item for the read-side optimisation goal in 1.5. **Operator
       2026-05-28**: deferred — revisit later alongside other optimisations after end-to-end + correctness.
-- [ ] [P3][NOT-APPLICABLE] **1.5c Predicate pushdown at parquet read.** Each delta_one parquet is already partitioned
+- [ ] [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read.** Each delta_one parquet is already partitioned
       per-day at the blob path (`day={YYYY-MM-DD}/...`); within a parquet, predicate pushdown on timestamp would only
       win against intra-day filters, which we don't issue. Closed as not-applicable to the current partition shape.
 - [x] ✅ [P3] **1.6 Parallelism tune (feature-group level).** — **DONE** features@3ef4f2c8. `_process_groups` serially
@@ -226,7 +226,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       refactored `base.py _add_lagged_features` 58L → 27L by extracting `_select_lag_candidates`. Result:
       `batch_handler.py` 1058 → 737L, all methods ≤48L, basedpyright 0/0/0, ruff clean. Full QG: codex-compliance 3
       violations → 1 (the remaining one is 1.7e, deferred). Runtime semantics unchanged; smoke tests pass.
-- [ ] [CONFIG][P2] **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
+- [ ] [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
       workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
       (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in e8c8693d
       (2026-05-26) when consolidating basedpyright config into pyproject.toml; comment said "kept at pre-rollout

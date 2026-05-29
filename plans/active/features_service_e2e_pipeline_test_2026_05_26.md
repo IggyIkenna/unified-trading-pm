@@ -118,18 +118,18 @@ resolves the minimum window each family/feature needs and backfills exactly that
       agent running a calc can bump the window up for features that need more history than the resolver's floor.
       Resolver output is the default; the flag overrides. No hardcoded global window. — features-service@8084d93b
       `scripts/e2e/run_backfill.py`; FEATURES_E2E_BACKFILL_RUN=true to execute live
-- [x] ✅ DONE [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
-      resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
-      per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
-      path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
-      `mtds_mdps_master` sequencing — do not collide with the single-walk migration.
-      — **MTDS (2026-05-25):** CeFi MTDS raw-tick VMs launched (cefi-bybit-2024, cefi-okx-2020-2024, cefi-deribit-2021,
-      cefi-hyperliquid-2025, cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed).
-      — **MDPS (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
-      `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647` (2025-01-01..2025-12-31);
-      both RUNNING; DEPLOYMENT_ENV=prod → writes to `market-data-tick-cefi-prd-*`; VM_SHUTDOWN_ON_COMPLETION=true.
-      — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed 2026-05-27/28; DeFi features VMs
-      launched separately (features_backfill_phase3 tasks -001/-002).
+- [x] ✅ DONE [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for
+      the resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start;
+      extend per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e
+      read path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
+      `mtds_mdps_master` sequencing — do not collide with the single-walk migration. — **MTDS (2026-05-25):** CeFi MTDS
+      raw-tick VMs launched (cefi-bybit-2024, cefi-okx-2020-2024, cefi-deribit-2021, cefi-hyperliquid-2025,
+      cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed). — **MDPS
+      (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
+      `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647`
+      (2025-01-01..2025-12-31); both RUNNING; DEPLOYMENT_ENV=prod → writes to `market-data-tick-cefi-prd-*`;
+      VM_SHUTDOWN_ON_COMPLETION=true. — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
+      2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
 - [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
@@ -401,11 +401,11 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
       routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
       share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
-- [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
+- [ ] [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
       `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
       whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test
       2026-05-26.
-- [ ] [P2] **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
+- [ ] [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
       guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
       for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
       dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the real
@@ -451,7 +451,7 @@ pinpointed the real blockers.**
 - [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
       read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
       15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
-- [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
+- [ ] [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
       backfill 2026-05-27.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
