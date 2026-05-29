@@ -185,8 +185,14 @@ jobs:
             echo "WARN: Branch '$BRANCH' clone failed for $name — falling back to main"
             git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"
           }
-          # Always clone PM — base-service.sh lives here
-          clone_repo unified-trading-pm
+          # Clone PM (base-service.sh lives here) — skip if running in PM itself
+          # (checkout already placed the repo at ../unified-trading-pm, so a second
+          # clone would fail with "already exists and is not an empty directory").
+          if [ "${GITHUB_REPOSITORY}" = "${OWNER}/unified-trading-pm" ]; then
+            echo "Running in unified-trading-pm — skipping self-clone (checkout already placed it)"
+          else
+            clone_repo unified-trading-pm
+          fi
           # Clone declared deps
           for repo in $DEP_REPOS; do
             clone_repo "$repo"
