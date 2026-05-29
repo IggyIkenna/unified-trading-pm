@@ -168,17 +168,27 @@ Concrete questions to answer + corresponding redesigns to ship:
 
 ## Phase 1 — Decide the execution-unit shape
 
-- [ ] [DESIGN] P1. **1.1 Choose the execution model.** Closed set:
-  - **(a) Subprocess-per-date**: `process_candles_handler` invokes `subprocess.run([sys.executable, "-m", ...])` per
-    date. Kernel reclaims the address space at exit; no in-process accumulation possible.
+- [x] ✅ [DESIGN] P1. **1.1 Choose the execution model.** Closed set:
+  - **(a) Subprocess-per-date** ← **CHOSEN** (see decision below)
   - **(b) Subprocess-per-shard**: same idea, finer grain (per date × per data_type × per venue). Higher fork overhead,
     lower per-process footprint.
   - **(c) In-process with proper cleanup**: trust that `_cleanup_after_day` + arena drops + `malloc_trim(0)` can keep
     the per-day floor flat. Requires solving the Polars/PyArrow arena retention problem.
   - **(d) Process-pool worker model**: long-running parent process holds the manifest + reference data, dispatches
-    per-shard work to a `concurrent.futures.ProcessPoolExecutor`. Workers do isolated work, no accumulation. Pick one.
-    Document trade-offs explicitly. Sibling-plan empirical data: Phase 3.2 attempt-2 proved (c) is unreliable on a 32 GB
-    box even with cleanup-hook wiring; that drives the case for (a) / (b) / (d).
+    per-shard work to a `concurrent.futures.ProcessPoolExecutor`. Workers do isolated work, no accumulation.
+
+  **Decision: (a) Subprocess-per-date** (2026-05-29, slot-9)
+
+  | Model | Rules out | Reason |
+  |---|---|---|
+  | **(c) in-process** | ❌ Eliminated | Phase 3.2 attempt-2 empirically proved that `del orchestrator + gc.collect()` only reclaims 87 MB / 25 GB (0.3%) per date. C-level PyArrow/Polars arenas are invisible to Python GC. No in-process API can force OS reclaim. |
+  | **(d) process-pool N=4** | ❌ Ruled out for 32 GB box | 4 concurrent workers each peak at ~25 GB = 100 GB required; needs e2-highmem-16 at ~$0.34 vs $0.28 for (a); extra complexity with no benefit over (a) at N=1. |
+  | **(b) subprocess-per-shard** | ❌ Not now | Cheaper (~$0.17) but each subprocess independently loads the 526 MB manifest + 4128-instrument reference; at 32 shards the aggregate startup dominates. Viable once manifest load is lazy/cached in parent — revisit at Phase 4.1 if per-date isn't sufficient. |
+  | **(a) subprocess-per-date** | ✅ **CHOSEN** | Same cost as broken in-process model ($0.28), same wall-clock, full C-arena isolation at each date exit. Minimally invasive: `process_candles_handler` wraps each date in `subprocess.run([sys.executable, "-m", "market_data_processing_service", "--date", date, ...])`. Parent holds manifest + reference data only between subprocess calls — not shared (simplest: each subprocess loads its own). |
+
+  **Why not share manifest across subprocesses**: passing a 526 MB parquet frame via pickle/IPC adds coordination complexity and a serialization cost that rivals the cold-load. The simpler contract — each subprocess loads what it needs — is safer and is already validated by Phase 3.1 (one subprocess = one date = clean slate).
+
+  **Transition**: the subprocess-per-date model is a thin wrapper around the existing `process_category` / `process_candles_handler` calls. The inner date-loop in `process_handler.py:_process_candles_for_one_date` becomes `subprocess.run(...)`. No changes to the orchestrator's scan/filter/aggregate/write logic are needed for Phase 4.1.
 - [ ] [DESIGN] P1. **1.2 Map state ownership to the chosen execution model.** Which state lives in the long- running
       parent (manifest? reference data? auth sessions?) and which lives in the per-shard worker (tick DataFrame, candle
       accumulators)? This is the foundation for any refactor that follows.
