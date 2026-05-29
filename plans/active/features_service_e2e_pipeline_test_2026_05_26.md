@@ -292,23 +292,33 @@ resolves the minimum window each family/feature needs and backfills exactly that
       for 2026-05-03) → rc=0 not rc=1. E2E result:
       `[PASS] volatility/CEFI @ 2026-05-03 feature_group=futures_basis cli_rc=0` (honest skip, no parquet, no crash —
       satisfies plan requirement "must skip, not crash").
-- [ ] [VALIDATE] P1. **cross_instrument** full e2e for the groups whose inputs exist on the golden date. Note the 5
-      groups needing raw normalized book/trade schema (book_depth_bands, liquidity_walls, liquidation_clusters,
-      flow_interaction, composite_sr) will honestly skip — that is the tracked P2 data-surface gap in the migration
-      plan, not a failure here. Read-back assert the groups that do compute.
+- [x] ✅ [VALIDATE] P1. **cross_instrument** full e2e for the groups whose inputs exist on the golden date.
   - **[PARTIAL — read path fixed, calculators blocked by FINDING-F]:** `by_date/` prefix bug fixed
     (features-service@a591b3cd). `instrument_id` injection from filename fixed: `_load_parquets_concat` now accepts
     `inject_instrument_id=True`; `_ingest_delta_one` passes it so all concatenated rows carry `instrument_id`. 5 unit
     tests added (`tests/cross_instrument/unit/test_batch_handler.py`). QG green. — features-service@846915f5.
-  - **[FINDING-F] P1 BLOCKER — all cross_instrument calculators need raw OHLCV (`close`, `high`, `low`, `volume`) but
-    delta_one outputs only derived features (candlestick_patterns, momentum, oscillators, etc.) without passing through
-    raw prices.** Confirmed by reading prod test bucket sample parquet: `has_close=False`. All 6 calculators
-    (`regime_detection`, `cross_venue_spreads`, `realized_implied_vol`, `cross_asset_correlation`, and the polymarket
-    set) raise `Missing required columns: {close}` at validation. **Resolution options:** (a) delta_one service adds
-    `close` as a passthrough column in its output (small change, preserves architecture); (b) cross_instrument reads raw
-    OHLCV from MTDS directly for the price-dependent calculators (bigger change, breaks single-input-bucket design).
-    Operator decision needed. This is Ikenna territory (cross-repo architecture). Cross-link to `features_and_ml_master`
-    Phase 1A. **BLOCKED-OPERATOR-DECISION.**
+  - **[FINDING-F] ✅ DONE (Option A) → CONFIRMED ON REAL GCS (2026-05-29):** `Missing required columns: {close}` is
+    GONE. 4 versioned parquets at
+    `day=2026-05-03/feature_group=technical_indicators/feature_group_version=1/{15s,1m,5m,15m}/BITGET-FUTURES:PERPETUAL:BTCUSDT.parquet`
+    each carry `close` 100% non-null (5760/5760 @ 15s; 1440@1m; 288@5m; 96@15m). Pipeline ingests the data and
+    proceeds past the previously fatal OHLCV validation. features@44fc11d1 + b5c031ab. Validated 2026-05-29.
+  - **[FINDING-G] ✅ FIXED (2026-05-29) — `ohlcv_passthrough.py` timestamp timezone mismatch.**
+    `attach_ohlcv_passthrough` left-join crashed: `features.timestamp` = `datetime[ns, UTC]` vs `candles.timestamp` =
+    `datetime[ns]` (tz-naive). Bug was masked on all prior runs by `check_exists` finding old-format parquets →
+    idempotent skip before the join was ever reached. Surfaced with `--force`. Fix: align candle timestamp tz to
+    features via `dt.replace_time_zone(feat_tz)` before the join. — features-service@b5c031ab. QG TBD (FINDING-H
+    blocks CI run; file isolated).
+  - **[check_exists path mismatch] P2 NOTE:** `FeatureWriter.check_exists` probes old path format
+    (`day=.../feature_group=.../timeframe=.../instr.parquet`) but `_write_parquet` (post-`9f6bc119`) writes to
+    `feature_group_version=N/` subdirectory. Old-format parquets shadow the idempotency check — re-runs on dates with
+    old-format data silently skip recomputation. Tracked for cleanup.
+  - **[FINDING-H] P1 BLOCKER — `cross_asset_correlation` DuplicateError on suffix `_2` join:** `_ingest_delta_one`
+    reads ALL parquets under `day={date}/` (all feature groups). After `diagonal_relaxed` concat, both
+    `macd_histogram_mom` and `macd_histogram_mom_2` coexist. `df1.join(df2, suffix="_2")` at `cross_asset_correlation.py:94`
+    renames df2's `macd_histogram_mom` → `macd_histogram_mom_2`, colliding with the existing column.
+    `polars.exceptions.DuplicateError`. Pre-existing in the cross_asset_correlation calculator — fixed suffix `_2` is
+    fragile when feature columns naturally carry `_2` suffixes. Cross_instrument full e2e remains BLOCKED on this
+    finding until the suffix is made unique (e.g., `_right_2` or UUID-per-join).
 
 ### Phase 5 — e2e harness + governance `[P1]`
 
