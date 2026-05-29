@@ -196,9 +196,18 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6C — Memory / performance
 
-- [ ] [AGENT] P1. **Cross-date memory accumulation** (coinbase 24→66→78 GB, upbit ~78 GB, binance memory-pressure
+- [x] ✅ [AGENT] P1. **Cross-date memory accumulation** (coinbase 24→66→78 GB, upbit ~78 GB, binance memory-pressure
       pauses): RSS is not released between dates — `ParallelPerSymbolRunner` appears to hold references across date
       boundaries → 30s memory-pressure pauses flooding every worker, throughput collapse. Release/reset between dates.
+      — Root cause: each download_batch call (per date) constructed a new ParallelPerSymbolRunner as a local var.
+      Each runner called resource_profiler.add_memory_warning_callback(self.on_memory_warning) at init; the profiler
+      stored the bound method → held a ref to the runner → stale runner instances were never GC'd.
+      Fix (market-tick-data-service@caa0aba, orphan-wip promoted): _perp_runner and _futures_runner are now
+      instance vars on TardisAdapter, lazily created once on first download_batch and reused across all subsequent
+      dates. The profiler callback is registered exactly once; runner lives as long as the adapter.
+      Tests: market-tick-data-service@535722b — 4 tests in test_cross_date_runner_reuse.py: runner slots start None,
+      per-instance not shared, perp runner created once across two download_batch calls, futures runner created
+      once across two _download_futures_per_instrument calls.
 - [ ] [AGENT] P2. **OKX book_snapshot_5 RSS spikes** (2022 peak 3.56 GB, 2024 3.32 GB on big-day BTC/ADA shards) — near
       the 85% watchdog on a 4 GB VM. Size VMs or chunk book_snapshot_5 by intra-day. (deribit OOM already in §4.)
 
