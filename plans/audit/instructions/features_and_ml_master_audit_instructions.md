@@ -4,7 +4,7 @@ type: audit-instructions
 epic: features_and_ml_master
 assigned_vm: vm-ml
 tier: L1
-last_updated: 2026-05-28
+last_updated: 2026-05-29
 ---
 
 # Features + ML Master — Audit Instructions
@@ -28,15 +28,23 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
 - **After any edit to `codex/02-data/feature-formula-versioning.md` or `codex/04-architecture/artifact-versioning.md`**
   (doc-code drift — items p, t)
 - **After a `live-defi-rollout` push to features-service** (composes with CI-Verification HARD RULE)
+- **After the FIRST successful features-service write to any `gs://features-delta-one-{ag}-{pid}/`** — that write is
+  the only signal that unblocks items (l) / (live-versioning) / (batch-live). Until it happens, those items stay
+  BLOCKED — see `plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`.
 
 ## Checklist
 
-- [ ] (a) **All 8 feature families have active adapters**: each family has at least one adapter with batch+live parity.
-      Find: `rg "class.*Feature.*Adapter|class.*Handler" features-service/ --include="*.py" -l` Verify: 8 families
-      covered (DeFi, CeFi, TradFi, Sports, Predictions, Macro, On-Chain, Cross-Asset)
+- [ ] (a) **All 9 computation-type families have a CLI entry**: the `--feature-family` argument in `features-service`
+      CLI must accept all 9 currently-shipped families (matching subdirectories in `features_service/` excluding
+      `api`/`cli`/`common`): `calendar`, `commodity`, `cross_instrument`, `delta_one`, `multi_timeframe`, `onchain`,
+      `performance_features`, `sports`, `volatility`. Find:
+      `features-service --feature-family $UNKNOWN --help 2>&1 | head -3` returns the canonical list. Verify: every
+      subdirectory matches a CLI choice. **Asset-group coverage** (CEFI / DEFI / TRADFI / PREDICTION) is enforced per
+      family via the `--asset-group` argument — NOT a per-family directory. Computation-type axis ≠ asset-group axis.
 
-- [ ] (b) **IS→features contract**: `is_features_contract_audit_2026_05_20.md` findings all addressed. Check: any
-      outstanding RED items in that audit have been absorbed into active plans
+- [ ] (b) **IS→features contract**: `is_features_contract_audit_2026_05_20.md` (archived at
+      `plans/audit/archive/is_features_contract_audit_2026_05_20.md`) — confirm findings closed at archive time +
+      no follow-up RED items active in `plans/active/`
 
 - [ ] (c) **ml-service inference end-to-end test**: inference path has a test that exercises the full pipeline (features
       → model → signal) with mock data. Find: `rg "inference|predict" ml-service/tests/ --include="*.py" -l` (or merged
@@ -56,8 +64,9 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
       per-family tests (not just root-level `tests/unit/`). Check: `features-service/scripts/quality-gates.sh` — verify
       override is set before `source base-service.sh`
 
-- [ ] (h) **ml-service repo consolidation complete**: if `ml_repo_consolidation` plan is complete, verify merged repo
-      has no duplicate code paths or conflicting imports. Check: `ml_repo_consolidation_2026_05_19.md` completion status
+- [ ] (h) **ml-service repo consolidation complete**: `ml_repo_consolidation_2026_05_19.md` archived at
+      `plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md` (= complete). Verify merged repo at `ml-service/`
+      has no duplicate code paths or conflicting imports
 
 ### Registry SSOT + Formula Versioning
 
@@ -192,6 +201,6 @@ Result file at `plans/audit/results/features_and_ml_master_audit_YYYY_MM_DD.md`.
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                                | Status                  |
+| ---------- | -------------------------------------------------------------------------- | ----------------------- |
+| 2026-05-29 | `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`           | GREEN=14, DRIFT=3 (a/b/h — text fixed in same commit), BLOCKED=3 (l, live-versioning, batch-live — composes with `features_service_defi_data_loading_blockers_2026_05_29.md`), NOT-RUN=2 (c, d — ml-service punt) |
