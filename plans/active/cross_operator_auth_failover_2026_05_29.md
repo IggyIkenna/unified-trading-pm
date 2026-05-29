@@ -81,9 +81,13 @@ why + reproduction.
       **Finding (2026-05-29):** No filter existed (Phase 0 confirmed). Added 6-test suite in
       `tests/test_account_rotation.py` (agent-orchestrator@9191967): proves harsh-primary→sub-a-ikenna wrap-around,
       rate-limited skipping across operators, pool-exhausted→None, single-account→None, unknown-account fallback.
-- [ ] [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
+- [x] ✅ [AGENT] P0. Live verify: spawn a test slot with `account_id: harsh-primary`, mark `harsh-primary` rate-limited via
       the DB (or `POST /api/conditions/<name>` if exposed), confirm next `/boot` returns a dispatch with an
       `ikenna`-tagged account in `dispatch_reason: account-rotated:<id>`.
+      **Verified (2026-05-29):** Set `rate_limited_until=NOW+60s` directly in `account_usage` SQLite (bypasses
+      `rotate_all_slots_off_account` fan-out to avoid disrupting active slots). `/boot` on slot 97 with
+      `account_id=harsh-primary` returned: `dispatch_reason: "account-rotated:sub-a-ikenna — exiting, new session
+      spawning"`. `sub-a-ikenna` operator=ikenna ✓. Cleaned up orch-slot-97 tmux session and marked slot killed.
 
 ## Phase 2 — Auth-fail rotation trigger (P0)
 
