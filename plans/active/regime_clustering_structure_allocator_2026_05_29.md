@@ -1,0 +1,212 @@
+---
+name: regime_clustering_structure_allocator_2026_05_29
+title: "Regime Clustering + Proximity → Factor-Targeted Structure Allocator"
+type: mixed
+parent_epic: features_and_ml_master
+priority: P2
+status: active
+estimate_class: brand-new
+estimate_baseline_ai_days: 18
+estimate_calibrated_ai_days: 18
+assigned_vm: vm-ml
+locked_by: live-defi-rollout
+locked_since: 2026-05-29
+completion_gates:
+  code: C5
+  deployment: D3
+  business: B4
+repo_gates:
+  - repo: features-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: ml-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: strategy-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: trading-agent-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-api-contracts
+    code: C0
+    deployment: none
+    business: none
+related_plans:
+  - plans/epics/features_and_ml_master.md
+  - plans/epics/strategy_master.md
+  - plans/epics/trading_agent_master.md
+  - plans/epics/execution_master.md
+---
+
+# Regime Clustering + Proximity → Factor-Targeted Structure Allocator
+
+> **Provenance**: distilled from a design conversation (Ikenna ↔ external collaborator "Kade"/Blue Flame, 2026-05-29).
+> The "best of both worlds" merge: our existing PIT-guarded, walk-forward, batch=live infra **+** the genuinely good
+> ideas surfaced externally — (a) factor-targeted *dynamic* structure construction instead of a fixed-structure menu
+> lookup, (b) an analog-based execution gate, (c) a hard deterministic pre-trade risk-veto layer. Plus the validation
+> discipline both sides were missing (abstain/OOD guard, deflated-Sharpe overfit control, discrete-grid execution
+> realism, edge-not-tracking-error objective).
+
+## Crux
+
+Five-step pipeline, mapped onto what already exists vs what is new:
+
+1. **Vectorise market state** → feature vector. *Exists* (`features-service` `feature_writer.py:316-351`, 3-layer PIT guard).
+2. **Cluster historical states (unsupervised)** → discover regimes. *Partial* — HMM walk-forward exists
+   (`cross_instrument/app/calculators/regime_calculator.py:121-150`); learned clustering + proximity is **new**.
+3. **Assign live vector → cluster** (which regime?). **New** — plus an **abstain/OOD guard** (no confident regime).
+4. **Allocate a bespoke options structure** conditioned on cluster history → custom strikes/wings. **New** — only a
+   hardcoded 2-leg straddle exists today (`vol_trading/options.py:86-100`). Build as **factor-targeted construction
+   solved over the discrete listed universe**, not menu lookup, not optimise-then-snap.
+5. **Repeat per timeframe** with an explicit **fusion rule**. **New.**
+
+## Design invariants (HARD)
+
+- **Batch = Live**: fit clusters in batch only; `assign` + `proximity` run identical code batch/live (one GCS artifact).
+- **No look-ahead**: PnL features strictly point-in-time lagged; PCA/cluster models **fit inside each walk-forward fold
+  (train only)**, applied forward. Fitting any transform on full history is leakage and is review-blocking.
+- **Discrete reality**: prediction/ML may live on a continuous *normalised* surface; **execution ledger + P&L must
+  convert to real listed strikes/terms with fees + size/depth-aware slippage.**
+- **Abstain is a first-class output**: overlap / out-of-distribution live state → minimum size or no-trade, never a
+  forced bucket.
+- **Overfit controls mandatory**: structure selection per regime validated out-of-sample (Deflated Sharpe / PBO), never
+  "the structure that dominated in the backtest permutation pool" / "the cluster that had +Sharpe in-sample."
+- **Objective is edge, not replication**: maximise expected P&L net of cost subject to tracking-error + risk
+  constraints — never minimise greek tracking error alone.
+
+---
+
+## Phase 0 — Unblock per-archetype PnL attribution (foundation)
+
+- [ ] [STRATEGY] P2. Wire real per-archetype `pnl_realized` / `pnl_unrealized` into `StrategyPnlStreamEvent` — replace the
+  `0` placeholders (`strategy-service/.../carry_and_yield/staked_basis.py:601-620` + APD `price_dispersion.py`).
+- [ ] [FEATURES] P2. Subscribe the PnL stream in features-service, roll to lagged 30d/Nd windows, land as feature group
+  `strategy_pnl_archetype` through the existing `FeatureWriter` PIT path. Regime-focused → lag is acceptable by design.
+- [ ] [FEATURES] P2. **PnL vectorisation = one sub-vector per archetype** (each archetype contributes its own
+  PnL/Sharpe/drawdown dims) concatenated into the market-state feature vector, so the cluster space sees *how each
+  archetype is performing now* alongside conventional market features. This is the explicit "PnL-per-archetype as
+  features" lever — it enriches regime discovery beyond price/fundamental features alone.
+- [ ] [TEST] P2. PIT test: assert every `strategy_pnl_archetype` value is knowable strictly before its row `timestamp`
+  (extend `LookaheadBiasError` coverage).
+
+## Phase 1 — Regime clustering as a PIT feature (features-service)
+
+- [ ] [FEATURES] P2. New `cross_instrument/app/calculators/regime_clustering.py`: `fit_regime_clusters()` (batch only) —
+  PCA-whiten/decorrelate **inside fold** → GMM (soft) / HDBSCAN fit via `PurgedWalkForwardSplitter`
+  (`ml-service/.../backtest_v2/walk_forward.py`, with embargo). Persist centroids + transform to GCS + manifest
+  (`feature_group="regime_clustering"`, `job_id=fold_id`).
+- [ ] [FEATURES] P2. `assign_clusters()` + `compute_proximity()` — identical batch/live code. Emit `cluster_id`, soft
+  membership probs, centroid distances, and `regime_abstain` flag (distance > threshold OR membership entropy high).
+- [ ] [SCRIPT] P3. Use **exact** distances (data is ~MBs; no IVF-PQ/quantisation). Metric = Mahalanobis / post-PCA
+  Euclidean, never raw correlated-feature Euclidean.
+- [ ] [UAC] P2. Register `regime_clustering` (+ `strategy_pnl_archetype`) in
+  `unified_api_contracts/.../features/registry.py EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
+
+## Phase 2 — Consume regime in supervised layer (ml-service) — *no new service*
+
+- [ ] [ML] P2. Feed `cluster_id` / soft-membership into `regime_conditional_trainer.py:20-95` (augment the thin binary
+  vol-regime it splits on today). Confirms separation of concerns: clustering = unsupervised *discovery*; ml-service =
+  supervised *selection*. No kNN/clustering lands inside ml-service.
+- [ ] [STRATEGY] P3. Route `cluster_id` into `RegimeAwareAllocator.regime_score`
+  (`portfolio_allocator/archetypes.py:360`).
+
+## Phase 3 — Factor-targeted structure allocator (strategy-service / trading-agent) — *the real new build*
+
+- [ ] [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
+  cluster's PIT history → solve for the option combo that hits the target. Replaces fixed-menu (iron condor/straddle)
+  with continuous construction. (This is the legit core of the external "factor-deconstruction" idea, de-marketed.)
+- [ ] [STRATEGY] P2. **Normalised strike/term representation for modelling**: model/select in stationary coordinates —
+  log-moneyness `k = ln(K/F)`, normalised tenor `τ`, delta-space — NOT raw dollar strikes (non-stationary across
+  underlyings + time). Training/clustering and the factor-target solve operate in this normalised continuous space; the
+  real listed strike/expiry is recovered in Phase 4. Keeps the prediction matrix clean while execution stays discrete.
+- [ ] [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
+  strikes×expiries) — NOT optimise-continuous-then-snap (nearest-strike ≠ nearest-risk; snapping distorts the engineered
+  profile).
+- [ ] [STRATEGY] P1. **Objective = maximise expected P&L net of cost, subject to (a) greek-tracking-error constraint and
+  (b) risk gates** — NOT minimise greek tracking error alone (tracking error is a *replication* objective; the
+  min-tracking-error portfolio can be negative-EV after costs). Tracking-error penalty terms must be **dollar-scaled per
+  greek** (greek × P&L sensitivity), never raw-unit summed. Any brute-force combo winner re-validated OOS (see PBO gate).
+- [ ] [STRATEGY] P1. **Overfit gate**: per-cluster structure must clear Deflated Sharpe / PBO out-of-sample before it is
+  selectable. Reject "dominated-in-permutation-pool" / "+Sharpe-in-sample" winners.
+- [ ] [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
+  `vol_trading_options` / a new options engine.
+
+## Phase 4 — Continuous→discrete execution realism
+
+- [ ] [FEATURES] P1. Ingest **point-in-time historical option chains** (bid/ask **and size/depth**) so the backtest's
+  availability + slippage are real, not synthetic. Source decision (IB historical vs vendor) → if blocked, file
+  `BLOCKED-CREDENTIALS` ping per the External-Data rule (do not descope).
+- [ ] [EXECUTION] P1. Slippage model uses quote **size/depth + partial fills**, not just spread width — options books are
+  thin; "can't fill the size" is the binding constraint.
+- [ ] [STRATEGY] P1. P&L computed on rounded discrete contracts incl. exchange fees + modelled slippage (no synthetic-mid
+  fills).
+
+## Phase 4b — Hard pre-trade risk-gate veto (the "survival layer")
+
+> Absorbs the genuinely-good Tier 3 of the external design — a deterministic, **model-independent** veto that assumes the
+> model can be wrong. **Reuse, do not rebuild**: wire into execution-service's existing pre-trade path (per-client
+> preflight KMS → venue auth → balance; shard-level isolation) rather than inventing a new "Go-Bus."
+
+- [ ] [EXECUTION] P1. After construction + sizing, every proposed structure passes a hard-limit gate (margin ceiling,
+  portfolio VaR, aggregate per-tenor vega/gamma caps, liquidity-sink check). Breach → systemic veto, drop trade. Limits
+  are static config, independent of the regime model.
+- [ ] [EXECUTION] P2. Gate is the LAST step (after Phase 3 sizing + Phase 5 analog overlay) and cannot be overridden by a
+  high regime/conviction score — a "good" prediction that breaches a risk limit is still vetoed.
+
+## Phase 5 — Analog-based execution gate (steal from Blue Flame — the genuinely good idea)
+
+- [ ] [EXECUTION] P2. Risk overlay: kNN of analogous historical states → if analogs executed with heavy slippage/loss,
+  size down or veto; if clean, soft-Kelly up. Conditions on realised execution quality (≈exogenous), so survives the
+  selection-bias critique. Layered on top of Phase 3 sizing, reads the same regime artifact.
+
+## Phase 6 — Multi-timeframe + fusion
+
+- [ ] [FEATURES] P3. Run clustering per timeframe window.
+- [ ] [STRATEGY] P3. Define the **fusion rule explicitly** (e.g. long-frame regime gates short-frame entry vs weighted
+  vote). Undefined fusion = more overfit knobs; review-blocking without a stated rule.
+
+## Phase 7 — Validation, acceptance KPIs, codex
+
+- [ ] [TEST] P1. **Backtest↔paper tracking-error KPI** (B4): backtest P&L must track paper fills within a declared bps
+  band — the single number that proves the continuous→discrete bridge is real, not cosmetic.
+- [ ] [TEST] P1. All fitting under purged+embargoed walk-forward; report deflated OOS Sharpe per regime + abstain
+  coverage on OOD live states.
+- [ ] [CODEX] P2. Write `codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
+  abstain semantics, discrete-grid execution contract, three-layer policy/construction/risk decision matrix) + update
+  `features_and_ml_master` related_plans.
+
+---
+
+## Success criteria (B3 KPIs)
+
+| KPI | Target |
+| --- | --- |
+| Backtest↔paper P&L tracking error | within declared bps band (B4) |
+| Per-regime structure OOS edge | Deflated Sharpe > 0 / PBO below threshold |
+| OOD coverage | 100% of no-confident-regime live states route to abstain/min-size |
+| Risk-gate veto | 100% of limit-breaching structures vetoed regardless of conviction |
+| Look-ahead | 0 violations (PIT gate + fit-in-fold) |
+
+## Decision matrix (policy / construction / risk) — maps the external "three-tier" design
+
+| Layer | This plan | Correction vs external design |
+| --- | --- | --- |
+| **Policy** (is the strategic direction good?) | Phase 1–3 regime proximity + per-cluster factor target | external Tier-1 "+Sharpe per cluster" lacks overfit control → our Deflated-Sharpe/PBO gate |
+| **Construction** (which real contracts?) | Phase 3 discrete solve + Phase 4 execution realism | external Tier-2 minimises greek tracking error → ours maximises **edge net of cost** with tracking error as a *constraint*, dollar-scaled greeks |
+| **Risk** (does it breach a hard limit?) | Phase 4b deterministic veto | external Tier-3 is sound — reuse execution-service preflight, not a new bus |
+
+## Separation-of-concerns note (resolves the "overlap with ml-service hierarchical learning?" question)
+
+ml-service "hierarchical learning" = supervised stacking + regime-conditional specialists; it **consumes** a regime
+label. This plan **produces** a richer regime label (unsupervised, in features-service) and a structure layer
+(strategy-service/trading-agent/execution-service). The "hierarchy" is the **service pipeline**, not a monolith —
+opposite of the external single-DB design. No clustering/kNN belongs inside ml-service.
