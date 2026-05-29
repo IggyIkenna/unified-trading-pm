@@ -122,9 +122,22 @@ Concrete questions to answer + corresponding redesigns to ship:
   6. Result: RSS floor rises ~20–25 GB per date processed; never returns to OS between dates
 
   **Fix direction for Phase 4**: Subprocess-per-date or process-pool model (options a/d from Phase 1.1) is the only structural solution — the OS reclaims the full C arena on subprocess exit. In-process cleanup (option c) cannot solve C-arena retention without calling `pa.default_memory_pool().release_unused()` (PyArrow) and `jemalloc_stats_epoch()` / `malloc_trim(0)` (glibc), which are fragile and not exposed via Polars' public API.
-- [ ] [AUDIT] P1. **0.3 Document the cost model**. What does one VM-hour cost? What does N parallel small VMs cost vs
+- [x] ✅ [AUDIT] P1. **0.3 Document the cost model**. What does one VM-hour cost? What does N parallel small VMs cost vs
       one long-running VM for the same work? This frames whether "subprocess-per-date" inside one VM is meaningfully
       cheaper than 16 × 1-day VMs, and whether subprocess-per-shard is cost-feasible.
+
+  **Cost model (2026-05-29, slot-9):** Reference scenario: 16-day narrow scope (BINANCE-FUTURES + BYBIT × BTCUSDT + ETHUSDT × trades). Empirical timing: ~200s per date (Phase 3.1: 191s; Phase 3.2 day-1: 133.6s). VM startup + tarball pull: ~3–5 min per fresh VM (from `launch-mdps-sharded-backfill.sh` header). Machine rate: e2-standard-8 (8 vCPU, 32 GB) ≈ **$0.268/hour** (GCP asia-northeast1 on-demand).
+
+  | Execution model | Wall-clock | Peak RAM needed | Cost estimate | Memory isolation |
+  |---|---|---|---|---|
+  | **16 × 1-day VMs (parallel)** | ~8 min (dominated by startup) | 25 GB per VM | 16 × (8/60 h) × $0.268 = **~$0.57** | Full (OS reclaims C arenas at VM exit) |
+  | **1 VM, in-process multi-date** (current, broken) | ~58 min | 25 GB × day count → OOM at day 2 on 32 GB | (58/60) × $0.268 = **~$0.26** | None — C arenas accumulate |
+  | **1 VM, subprocess-per-date** (proposed) | ~62 min (5 min startup + 16 × ~210s) | ≤ 25 GB (one date in-flight) | (62/60) × $0.268 = **~$0.28** | Per-date (subprocess exit releases C arenas) |
+  | **1 VM, subprocess-per-shard** (fine-grain) | ~38 min (32 subprocesses, some startup overlap) | ≤ ~15 GB (one shard = 2 instr × 1 data_type × 1 date) | (38/60) × $0.268 = **~$0.17** | Per-shard — highest isolation |
+  | **Process-pool (N=1 serial worker)** | Same as subprocess-per-date | Same | Same | Same — equivalent to option 3 |
+  | **Process-pool (N=4 concurrent workers)** | ~20 min (4 parallel date batches of 4) | 4 × 25 GB = 100 GB → needs e2-highmem-16 ($1.01/h) | (20/60) × $1.01 = **~$0.34** | Per-worker (but peak RAM 4× higher) |
+
+  **Conclusion**: `subprocess-per-date` (option a in Phase 1.1) is the cheapest structural fix — essentially the same cost as the broken in-process model ($0.28 vs $0.26), zero infrastructure overhead vs spawning 16 separate VMs, and full C-arena isolation at date boundaries. The `subprocess-per-shard` model is cheaper still ($0.17) but has higher per-subprocess overhead and more complex coordination. The 16 × 1-day VMs approach is ~2× more expensive but completes 8× faster if time matters. For the architecture recommendation: default to subprocess-per-date; use 16 × 1-day VMs only when wall-clock time is critical and cost is not.
 - [ ] [AUDIT] P1. **0.4 Granularity contract**. Document the canonical instrument_id form and the asset_group / venue /
       instrument_type / data_type axes. State which axes are derivable from instrument_id and which are independent.
       This becomes the input spec for redesigning the CLI filter logic.
