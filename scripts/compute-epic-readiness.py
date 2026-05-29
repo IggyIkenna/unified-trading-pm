@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -243,7 +243,7 @@ def compute_epic(
         "epic_id": epic_id,
         "display_name": epic.get("display_name", epic_id),
         "mvp_priority": epic.get("mvp_priority", 99),
-        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "computed_at": datetime.now(UTC).isoformat(),
         "epic_pct": epic_pct,
         "total_required": total_required,
         "completed": completed,

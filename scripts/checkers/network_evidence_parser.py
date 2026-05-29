@@ -715,10 +715,7 @@ def main(argv: list[str] | None = None) -> int:
             report.schema_validations.extend(validations)
 
     # Format and print output
-    if args.format == "json":
-        output = format_report_json(report)
-    else:
-        output = format_report(report)
+    output = format_report_json(report) if args.format == "json" else format_report(report)
 
     print(output)
 

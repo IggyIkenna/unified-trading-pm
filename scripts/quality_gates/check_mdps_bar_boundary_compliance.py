@@ -119,7 +119,7 @@ _NOQA_MARKER = "# noqa: bar-boundary-truncation"
 
 
 class _Violation:
-    __slots__ = ("file_path", "line", "col", "snippet", "reason")
+    __slots__ = ("col", "file_path", "line", "reason", "snippet")
 
     def __init__(
         self,
@@ -226,20 +226,19 @@ def _scan_file(file_path: Path) -> list[_Violation]:
                 )
 
         # Pattern 2: .replace(minute=0, second=0, microsecond=0)
-        elif attr_name == "replace":
-            if _replace_has_truncation_kwargs(node):
-                if _line_has_noqa(file_lines, node.lineno):
-                    continue
-                snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
-                violations.append(
-                    _Violation(
-                        file_path=file_path,
-                        line=node.lineno,
-                        col=node.col_offset,
-                        snippet=snippet,
-                        reason=("dt.replace(minute=0, ...) truncation bypass — use compute_bar_close_boundary()"),
-                    )
+        elif attr_name == "replace" and _replace_has_truncation_kwargs(node):
+            if _line_has_noqa(file_lines, node.lineno):
+                continue
+            snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
+            violations.append(
+                _Violation(
+                    file_path=file_path,
+                    line=node.lineno,
+                    col=node.col_offset,
+                    snippet=snippet,
+                    reason=("dt.replace(minute=0, ...) truncation bypass — use compute_bar_close_boundary()"),
                 )
+            )
 
     return violations
 

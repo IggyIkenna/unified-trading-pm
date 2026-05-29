@@ -43,7 +43,7 @@ def _validate(raw: dict[str, object]) -> list[str]:
 
     axes = raw.get("axes", {})
     if not isinstance(axes, dict):
-        return errors + ["'axes' must be a mapping"]
+        return [*errors, "'axes' must be a mapping"]
 
     actual = set(axes.keys())
     unknown = actual - _ALLOWED_AXES

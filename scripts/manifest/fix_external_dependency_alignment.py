@@ -107,7 +107,7 @@ class CanonicalEntry:
     fix_specifier: str
 
     @classmethod
-    def from_dict(cls, d: dict[str, str]) -> "CanonicalEntry":
+    def from_dict(cls, d: dict[str, str]) -> CanonicalEntry:
         name = d["name"]
         version_range = d["versionRange"]
         try:

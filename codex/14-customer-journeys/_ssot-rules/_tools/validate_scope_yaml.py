@@ -42,7 +42,7 @@ def _validate(raw: dict[str, object]) -> list[str]:
 
     families = raw.get("service_families", {})
     if not isinstance(families, dict):
-        return errors + ["'service_families' must be a mapping"]
+        return [*errors, "'service_families' must be a mapping"]
 
     actual = set(families.keys())
     unknown = actual - _CLOSED_FAMILIES

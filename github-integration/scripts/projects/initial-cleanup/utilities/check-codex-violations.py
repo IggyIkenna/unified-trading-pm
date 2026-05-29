@@ -19,7 +19,7 @@ import json
 import os
 import sys
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
@@ -144,7 +144,7 @@ def _write_output_json(
     """Write results to output JSON file."""
     serializable_gaps: list[JsonDict] = [gap_to_dict(g) for g in all_gaps]
     output_data: JsonDict = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "codex_root": str(codex_root),
         "workspace_root": str(workspace_root),
         "target_repo": repo,

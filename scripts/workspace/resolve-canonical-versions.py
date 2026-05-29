@@ -22,10 +22,10 @@ import json
 import sys
 import tomllib
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
-DepSpec: TypeAlias = str
-TomlDict: TypeAlias = dict[str, object]
+type DepSpec = str
+type TomlDict = dict[str, object]
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"

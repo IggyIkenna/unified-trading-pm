@@ -83,7 +83,7 @@ def patch_workflow(path: Path, dry_run: bool) -> str:
             last_clone_idx = i
 
     if last_clone_idx >= 0:
-        new_lines = lines[: last_clone_idx + 1] + [PM_CLONE_LINE] + lines[last_clone_idx + 1 :]
+        new_lines = [*lines[: last_clone_idx + 1], PM_CLONE_LINE, *lines[last_clone_idx + 1 :]]
         new_text = "".join(new_lines)
         if not dry_run:
             path.write_text(new_text)

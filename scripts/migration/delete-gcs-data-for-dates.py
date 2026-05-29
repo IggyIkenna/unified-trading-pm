@@ -33,7 +33,6 @@ UCS_PATH = WORKSPACE_ROOT / "unified-trading-services"
 if UCS_PATH.exists() and str(UCS_PATH) not in sys.path:
     sys.path.insert(0, str(UCS_PATH))  # unified-trading-services/ contains unified_trading_services/
 
-# ruff: noqa: E402
 from unified_trading_services import (
     get_bucket_name,
     get_project_id,

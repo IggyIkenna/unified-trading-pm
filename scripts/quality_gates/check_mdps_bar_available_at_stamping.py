@@ -178,9 +178,7 @@ def _is_available_at_subscript(target: ast.expr) -> bool:
         return False
     slice_node = target.slice
     # py3.9+: ast.Index removed; ast.Constant directly.
-    if isinstance(slice_node, ast.Constant) and slice_node.value == "available_at":
-        return True
-    return False
+    return bool(isinstance(slice_node, ast.Constant) and slice_node.value == "available_at")
 
 
 def _scan_file(

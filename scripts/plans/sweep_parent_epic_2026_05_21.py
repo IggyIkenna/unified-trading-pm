@@ -524,7 +524,7 @@ def read_head(path: Path, n_lines: int = SCAN_LINES) -> str:
     """Read first n_lines of a file."""
     try:
         with path.open(encoding="utf-8") as fp:
-            return "".join(line for _, line in zip(range(n_lines), fp))
+            return "".join(line for _, line in zip(range(n_lines), fp, strict=False))
     except (UnicodeDecodeError, FileNotFoundError):
         return ""
 
@@ -651,10 +651,7 @@ def should_skip(plan_path: Path, include_index: bool) -> bool:
         return False
     if fn in SKIP_FILENAMES_DEFAULT:
         return True
-    for glob in SKIP_GLOBS_DEFAULT:
-        if plan_path.match(glob):
-            return True
-    return False
+    return any(plan_path.match(glob) for glob in SKIP_GLOBS_DEFAULT)
 
 
 def list_candidates(include_index: bool) -> list[Path]:
@@ -665,9 +662,7 @@ def list_candidates(include_index: bool) -> list[Path]:
             continue
         text = read_head(path, 50)  # only need frontmatter for orphan check
         current = extract_parent_epic(text)
-        if current == "":
-            candidates.append(path)
-        elif current in SUPERSEDED_SLUGS:
+        if current == "" or current in SUPERSEDED_SLUGS:
             candidates.append(path)
     return candidates
 

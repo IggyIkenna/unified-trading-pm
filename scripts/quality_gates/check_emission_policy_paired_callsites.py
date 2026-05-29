@@ -210,9 +210,7 @@ def _is_excluded_path(path: Path, root: Path) -> bool:
             return True
     name = path.name
     # Skip test files.
-    if name.startswith("test_") or name.endswith("_test.py"):
-        return True
-    return False
+    return bool(name.startswith("test_") or name.endswith("_test.py"))
 
 
 def iter_python_files(root: Path) -> Iterator[Path]:

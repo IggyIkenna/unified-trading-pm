@@ -124,10 +124,7 @@ def _file_matches_surface(filepath: str, repo_name: str, surface: Surface) -> bo
     Prefix it with `{repo_name}/` to compare.
     """
     full_path = f"{repo_name}/{filepath}"
-    for pat in surface.glob_patterns:
-        if fnmatch.fnmatch(full_path, pat):
-            return True
-    return False
+    return any(fnmatch.fnmatch(full_path, pat) for pat in surface.glob_patterns)
 
 
 def _compute_surface_result(

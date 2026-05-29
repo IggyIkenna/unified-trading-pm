@@ -19,7 +19,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -340,9 +340,8 @@ def _match_endpoints(
 
         # 4. Reporting paths: client-reporting-api has /api/reporting/X,
         #    UI calls /api/reporting/X (rewritten by specific rule).
-        if not matched and normalised.startswith("/api/"):
-            if normalised in {up for up in ui_paths}:
-                matched = True
+        if not matched and normalised.startswith("/api/") and normalised in set(ui_paths):
+            matched = True
 
         if not matched:
             service = ""
@@ -524,7 +523,7 @@ def run_audit(
 
     report = {
         "_meta": {
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "workspace_root": str(workspace_root),
             "spec_path": str(spec_path),
             "elapsed_seconds": round(elapsed, 1),

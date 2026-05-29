@@ -81,10 +81,7 @@ def parse_internal_deps(pyproject_path: Path, workspace_repos: frozenset[str]) -
 
 def uses_inline_table_format(pyproject_path: Path) -> bool:
     """Return True if file uses [tool.uv.sources] inline table (not [tool.uv.sources.dep] sections)."""
-    for line in pyproject_path.read_text().splitlines():
-        if re.match(r"^\[tool\.uv\.sources\]\s*$", line):
-            return True
-    return False
+    return any(re.match(r"^\[tool\.uv\.sources\]\s*$", line) for line in pyproject_path.read_text().splitlines())
 
 
 def parse_uv_sources(pyproject_path: Path) -> dict[str, dict[str, str]]:

@@ -29,6 +29,7 @@ os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("API_KEY", "mock-api-key-for-openapi-gen")
 
 import argparse
+import contextlib
 import enum
 import json
 import logging
@@ -157,10 +158,8 @@ def extract_uac_enums() -> dict[str, list[str]]:
         for name in sorted(dir(uac)):
             obj = getattr(uac, name, None)
             if obj and isinstance(obj, type) and issubclass(obj, enum.Enum) and obj is not enum.Enum:
-                try:
+                with contextlib.suppress(Exception):
                     enums[name] = extract_enum_values(obj)
-                except Exception:
-                    pass
         logger.info("  Extracted %d UAC enums (auto-discovered)", len(enums))
     except Exception as e:
         logger.warning("  Failed to extract UAC enums: %s", e)
@@ -177,10 +176,8 @@ def extract_uic_enums() -> dict[str, list[str]]:
         for name in dir(uic):
             obj = getattr(uic, name, None)
             if obj and isinstance(obj, type) and issubclass(obj, enum.Enum) and obj is not enum.Enum:
-                try:
+                with contextlib.suppress(Exception):
                     enums[name] = extract_enum_values(obj)
-                except Exception:
-                    pass
 
         logger.info("  Extracted %d UIC enums", len(enums))
     except Exception as e:

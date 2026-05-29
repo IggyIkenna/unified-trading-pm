@@ -32,7 +32,7 @@ from pathlib import Path
 WORKSPACE_ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(WORKSPACE_ROOT / "unified-api-contracts"))
 
-from unified_api_contracts.registry.expected_coverage import (  # noqa: E402
+from unified_api_contracts.registry.expected_coverage import (
     EXPECTED_COVERAGE_BY_ASSET_GROUP,
 )
 
@@ -44,8 +44,16 @@ ADAPTER_REPOS: list[str] = [
 
 SKIP_DIR_NAMES: frozenset[str] = frozenset(
     {
-        ".venv", ".venv-workspace", "build", "dist", "node_modules",
-        "__pycache__", ".git", ".tox", ".pytest_cache", "tests",
+        ".venv",
+        ".venv-workspace",
+        "build",
+        "dist",
+        "node_modules",
+        "__pycache__",
+        ".git",
+        ".tox",
+        ".pytest_cache",
+        "tests",
     },
 )
 
@@ -173,9 +181,12 @@ def main() -> int:
                 "has_batch": len(entry["batch"]) > 0,
                 "has_live": len(entry["live"]) > 0,
                 "parity_status": (
-                    "GREEN" if entry["batch"] and entry["live"]
-                    else "BATCH_ONLY" if entry["batch"]
-                    else "LIVE_ONLY" if entry["live"]
+                    "GREEN"
+                    if entry["batch"] and entry["live"]
+                    else "BATCH_ONLY"
+                    if entry["batch"]
+                    else "LIVE_ONLY"
+                    if entry["live"]
                     else "MISSING_BOTH"
                 ),
                 "sample_batch_path": next(iter(entry["batch"]), ""),
@@ -291,10 +302,10 @@ def main() -> int:
     print(f"  CSV:     {csv_path}")
     print(f"  Summary: {summary_path}")
     print(f"  In-scope tuples checked: {len(rows):,}")
-    print(f"  GREEN: {sum(1 for r in rows if r['parity_status']=='GREEN')}")
-    print(f"  BATCH_ONLY (review-blocking): {sum(1 for r in rows if r['parity_status']=='BATCH_ONLY')}")
-    print(f"  LIVE_ONLY: {sum(1 for r in rows if r['parity_status']=='LIVE_ONLY')}")
-    print(f"  MISSING_BOTH: {sum(1 for r in rows if r['parity_status']=='MISSING_BOTH')}")
+    print(f"  GREEN: {sum(1 for r in rows if r['parity_status'] == 'GREEN')}")
+    print(f"  BATCH_ONLY (review-blocking): {sum(1 for r in rows if r['parity_status'] == 'BATCH_ONLY')}")
+    print(f"  LIVE_ONLY: {sum(1 for r in rows if r['parity_status'] == 'LIVE_ONLY')}")
+    print(f"  MISSING_BOTH: {sum(1 for r in rows if r['parity_status'] == 'MISSING_BOTH')}")
     return 0
 
 

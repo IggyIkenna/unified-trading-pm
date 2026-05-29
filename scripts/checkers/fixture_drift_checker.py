@@ -584,10 +584,7 @@ def main(argv: list[str] | None = None) -> int:
     report.unmatched_fixtures = [f for f in all_fixtures if f.file_path not in matched_files]
 
     # Format and print
-    if args.format == "json":
-        output = format_report_json(report)
-    else:
-        output = format_report(report)
+    output = format_report_json(report) if args.format == "json" else format_report(report)
 
     print(output)
 

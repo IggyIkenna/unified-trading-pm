@@ -25,7 +25,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 # A ping line is resolved if it contains one of these markers.
@@ -40,7 +40,7 @@ def _parse_ts(line: str) -> datetime | None:
     if not m:
         return None
     try:
-        return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+        return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M").replace(tzinfo=UTC)
     except ValueError:
         return None
 
@@ -59,7 +59,7 @@ def rollup(ping_path: Path, dry_run: bool = False) -> int:
     """
     text = ping_path.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(tz=UTC) - timedelta(hours=24)
 
     # Split out the existing "## Prior context (rolled)" block if present.
     prior_header = "## Prior context (rolled)\n"
@@ -82,7 +82,7 @@ def rollup(ping_path: Path, dry_run: bool = False) -> int:
     if not to_roll:
         return 0
 
-    rolled_block: list[str] = [prior_header] + prior_lines + to_roll
+    rolled_block: list[str] = [prior_header, *prior_lines, *to_roll]
     new_text = "".join(keep) + "\n" + "".join(rolled_block)
 
     if not dry_run:

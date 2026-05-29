@@ -77,9 +77,8 @@ def generate_mermaid(repos: dict[str, dict[str, object]], max_tier: int | None) 
     filtered_repos: dict[str, dict[str, object]] = {}
     for name, data in repos.items():
         tier = _get_tier(data)
-        if max_tier is not None:
-            if tier is None or tier > max_tier:
-                continue
+        if max_tier is not None and (tier is None or tier > max_tier):
+            continue
         filtered_repos[name] = data
 
     if not filtered_repos:

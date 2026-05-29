@@ -211,10 +211,7 @@ def months_in_range(start: date, end: date) -> list[tuple[int, int]]:
     current = date(start.year, start.month, 1)
     while current <= end:
         result.append((current.year, current.month))
-        if current.month == 12:
-            current = date(current.year + 1, 1, 1)
-        else:
-            current = date(current.year, current.month + 1, 1)
+        current = date(current.year + 1, 1, 1) if current.month == 12 else date(current.year, current.month + 1, 1)
     return result
 
 

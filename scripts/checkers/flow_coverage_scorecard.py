@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -39,10 +39,7 @@ def _resolve_paths(
     pm_root = ws / "unified-trading-pm"
     checker = pm_root / "scripts" / "checkers" / "check_ui_api_flow_coverage.py"
 
-    if history_file is not None:
-        hist = history_file.resolve()
-    else:
-        hist = pm_root / "docs" / "flow-coverage-history.jsonl"
+    hist = history_file.resolve() if history_file is not None else pm_root / "docs" / "flow-coverage-history.jsonl"
 
     return ws, checker, hist
 
@@ -192,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Build history entry with timestamp
     entry: dict[str, object] = {
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
         "summary": checker_output.get("summary", {}),
     }
 

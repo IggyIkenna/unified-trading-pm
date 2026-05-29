@@ -18,7 +18,7 @@ import json
 import sys
 import tomllib
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast
@@ -76,7 +76,7 @@ def write_manifest_json(constraints: dict[str, str]) -> None:
             "SSOT. Internal/private repos are in workspace-manifest.json."
         ),
         "sourceFile": "workspace-constraints.toml",
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": datetime.now(UTC).isoformat(),
         "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
         "externalPackages": packages,
         "count": len(packages),

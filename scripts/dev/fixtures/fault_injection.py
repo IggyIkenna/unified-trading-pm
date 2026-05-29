@@ -27,17 +27,17 @@ class FaultConfig:
     def should_inject_timeout(self) -> bool:
         if not self.enabled:
             return False
-        return random.random() < self.timeout_rate  # noqa: S311
+        return random.random() < self.timeout_rate
 
     def should_inject_error(self) -> bool:
         if not self.enabled:
             return False
-        return random.random() < self.error_rate  # noqa: S311
+        return random.random() < self.error_rate
 
     def should_inject_rate_limit(self) -> bool:
         if not self.enabled:
             return False
-        return random.random() < self.rate_limit_rate  # noqa: S311
+        return random.random() < self.rate_limit_rate
 
 
 class FaultInjectionTransport(httpx.AsyncBaseTransport):

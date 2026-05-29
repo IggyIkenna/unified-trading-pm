@@ -57,7 +57,7 @@ def main() -> int:
             # filename convention (active=``.md``, archive=``.plan.md``).
             archive_dir = plans_dir.parent / "archive"
             archive_bases = (
-                [archive_dir] + sorted(d for d in archive_dir.iterdir() if d.is_dir()) if archive_dir.is_dir() else []
+                [archive_dir, *sorted(d for d in archive_dir.iterdir() if d.is_dir())] if archive_dir.is_dir() else []
             )
             candidates: list[Path] = []
             for base in (plans_dir, *archive_bases, ws_root):

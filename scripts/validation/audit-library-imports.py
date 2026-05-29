@@ -98,22 +98,12 @@ class ImportAuditor(ast.NodeVisitor):
         """Visit 'from X import Y' statements."""
         if node.module:
             # Check for split library imports
-            if node.module in self.SPLIT_LIBRARIES or node.module.startswith(
-                tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES)
+            if (
+                node.module in self.SPLIT_LIBRARIES
+                or node.module.startswith(tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES))
+                or node.module == "unified_trading_services"
+                or node.module.startswith("unified_trading_services.")
             ):
-                names = [alias.name for alias in node.names]
-                self.imports.append(
-                    ImportInfo(
-                        module=node.module,
-                        names=names,
-                        is_fallback=self.in_try_block,
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                    )
-                )
-
-            # Check for UCS imports
-            elif node.module == "unified_trading_services" or node.module.startswith("unified_trading_services."):
                 names = [alias.name for alias in node.names]
                 self.imports.append(
                     ImportInfo(
@@ -130,19 +120,12 @@ class ImportAuditor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         """Visit 'import X' statements."""
         for alias in node.names:
-            if alias.name in self.SPLIT_LIBRARIES or alias.name.startswith(
-                tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES)
+            if (
+                alias.name in self.SPLIT_LIBRARIES
+                or alias.name.startswith(tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES))
+                or alias.name == "unified_trading_services"
+                or alias.name.startswith("unified_trading_services.")
             ):
-                self.imports.append(
-                    ImportInfo(
-                        module=alias.name,
-                        names=[],
-                        is_fallback=self.in_try_block,
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                    )
-                )
-            elif alias.name == "unified_trading_services" or alias.name.startswith("unified_trading_services."):
                 self.imports.append(
                     ImportInfo(
                         module=alias.name,
@@ -176,7 +159,7 @@ class ImportAuditor(ast.NodeVisitor):
 def scan_file(file_path: Path) -> tuple[list[ImportInfo], list[dict[str, str]]]:
     """Scan a single Python file for imports."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content, filename=str(file_path))
@@ -214,9 +197,8 @@ def analyze_imports(imports: list[ImportInfo]) -> dict[str, object]:
     # Group direct imports by library
     direct_imports = defaultdict(set)
     for imp in imports:
-        if imp.module in ImportAuditor.SPLIT_LIBRARIES:
-            if not imp.is_fallback:
-                direct_imports[imp.module].add(imp.file_path)
+        if imp.module in ImportAuditor.SPLIT_LIBRARIES and not imp.is_fallback:
+            direct_imports[imp.module].add(imp.file_path)
 
     # Group UCS imports by imported name
     ucs_imports = defaultdict(set)
@@ -431,7 +413,7 @@ def print_report(reports: list[ServiceImportReport]) -> None:
 
     lib_usage = defaultdict(int)
     for report in reports:
-        for lib in report.direct_imports.keys():
+        for lib in report.direct_imports:
             lib_usage[lib] += 1
 
     for lib in sorted(lib_usage.keys()):
