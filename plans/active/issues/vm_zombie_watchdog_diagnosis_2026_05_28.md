@@ -161,16 +161,17 @@ watchdog crash-looping and the manifest-consolidator infra possibly degraded in 
       launched" — no serial console preserved, so the exact apt/pip line is unknown. Audit-only finding for legacy
       consolidator (39 errors over 5 days = 0.5% failure rate, not breaking any flow we use today) → tracked in
       [legacy-flat-cefi-consolidator-failure-rate-2026-05-28](TBD if action needed).
-- [ ] [INFRA] P1. Harden OOM mitigation for cefi-heavy backfills. **Downgraded urgency 2026-05-28**: the audit above
-      showed OOM-on-stale-fallback was NOT the actual cause of the 9 cefi-heavy 2024 zombies, so this is now
-      defense-in-depth rather than incident response. Options stand: (a) make `ManifestReader` fail fast (raise typed
-      error) instead of silently loading-all-shards when staleness budget exceeded, so the VM exits non-zero quickly
-      instead of OOM-killing after multi-minute load; (b) gate the bootstrap on a `_index/availability_index.parquet`
-      mtime preflight check — if stale beyond budget, exit 78 (config error) with a typed message rather than even
-      attempting Python startup; (c) raise the heavy machine type baseline once measured. Pick one + ship; do not bundle
-      all three. **Recommend (a)** — cleanest semantically (fail-fast inside the SSOT module instead of an out-of-band
-      shell preflight that drifts from the Python policy). Owner: any MTDS slot picking this up. Lives in
-      `market-tick-data-service` not deployment-service.
+- [x] ✅ [INFRA] P1. Harden OOM mitigation for cefi-heavy backfills. **Shipped 2026-05-28 option (b)** —
+      `deployment-service@7add531`. Added shell-level preflight in `setup-data-pipeline-vm.sh`: when
+      `VM_SERVICE=market_tick_data_service` + `VM_OPERATION=download` + asset_group in {cefi,defi,tradfi,sports,pred},
+      `gsutil ls -L` the bucket's `_index/availability_index.parquet` and compare mtime against
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC` budget (default 86400s). If stale beyond budget → log typed diagnosis + exit
+      78 (EX_CONFIG). The EXIT trap from `334784c` catches and self-deletes with forensics to
+      `vm-logs/<vm>/vm-setup.log` + `SETUP_EXIT_STATUS`. Scoped narrowly (other VMs unaffected). Picked option (b) over
+      recommended option (a) because option (a) touches the UTL `read_availability_index` SSOT that many cross-repo
+      consumers depend on — that change deserves a focused PR + cross-repo consumer audit and isn't worth bundling with
+      incident response. Option (a) remains a future hardening — file separately if/when an MTDS slot has the cycles.
+      Option (c) (raise heavy machine type) not pursued — no measured evidence the current type is wrong.
 - [x] ✅ [INFRA] P0. Make VM self-delete fire on rc≠0 too. **Done 2026-05-28** — shipped `deployment-service@334784c`.
       Real gap was not in `vm-exec-with-gcs-tee.sh:277` (which already fires on rc≠0 unconditionally on
       `VM_SHUTDOWN_ON_COMPLETION=true`) but in `setup-data-pipeline-vm.sh` which uses `set -euo pipefail` with no EXIT
