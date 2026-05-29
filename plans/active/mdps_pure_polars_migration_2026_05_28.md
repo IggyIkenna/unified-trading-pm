@@ -239,21 +239,159 @@ abstracts away the engine choice already, so the change is to add a polars emit 
 **Why this is safer than originally feared**: the `CandleOutput` numpy abstraction means the worker→writer pipe goes
 pandas → polars by adding one new method to UAC + flipping the writer signature. No per-adapter changes.
 
-### Stage 4 — Aggregation calculators (the actual pandas-heavy code)
+### Stage 4 — Aggregation calculators (re-audited 2026-05-29)
 
-**Goal**: convert the rollup engines from mixed-engine to pure polars. These are the calculators that aggregate 15s
-candles into larger timeframes (1m, 5m, 15m, 1h, 4h, 24h).
+**Goal**: convert the rollup engines from mixed-engine to pure polars + delete the dead-code chain that
+the original Stage 4 framing treated as live.
 
-**Files touched (one PR each due to size)**:
+**Re-audit methodology (2026-05-29 Harsh+slot8)**:
+- pandas-op count = lines matching `\b(pd\.|\.iloc|\.loc\[|\.iat|\.at\[|\.groupby|\.merge|\.concat|\.apply|\.set_index|\.reset_index|\.assign|\.melt|\.pivot|\.stack|\.unstack|MultiIndex|\.values\b|\.copy\(\)|\.dropna|\.fillna|\.astype|\.rename|\.sort_values|\.sort_index|\.to_dict|\.to_numpy|\.tolist|pd\.api\.types|\.Series|\.DataFrame|\.Timedelta|\.Timestamp)\b`
+- reachability = `grep -rn` for every public function across `market_data_processing_service/` and `tests/`,
+  excluding the function's own definition file and `app/calculators/__init__.py` re-exports.
 
-- `app/calculators/fast_candle_aggregation.py` — 36 pandas-ops in 835 lines. Internal `pl.from_pandas` (line 394) →
-  aggregate → `.to_pandas()` (line 504). Convert to pure polars.
-- `app/calculators/timeframe_candles.py` — 48 pandas-ops in 780 lines. Heaviest pandas user in the calculator layer.
-  Per-timeframe candle generation logic.
+#### `app/calculators/fast_candle_aggregation.py` — 835 lines
 
-**Why staged separately**: these are the largest behavioral surfaces (78 combined pandas-ops). Each function needs
-careful before/after comparison. Likely produces meaningful per-day RSS reduction beyond Stage 3 because these are
-called inside the inner aggregation loop.
+| Metric | Count | Methodology |
+|---|---|---|
+| Total lines | 835 | `wc -l` |
+| Lines matching `pd.` | 43 | `grep -cE 'pd\.'` |
+| Lines matching `pl.` | 15 | `grep -cE 'pl\.'` |
+| Lines matching pandas-op regex | 50 | broad regex above |
+
+8 public functions; reachability outside the file:
+
+| Function | Line | External callers | Status |
+|---|---|---|---|
+| `create_continuous_candles_simple_working` | 155 | 0 | DEAD |
+| `create_candle_from_interval` | 195 | live_aggregator.py:345 | **LIVE** |
+| `create_empty_candle` | 281 | 0 | DEAD |
+| `create_24h_candle_no_lookahead` | 303 | 0 | DEAD |
+| `aggregate_from_15s_efficient` | 513 | live_workers.py:791, 1260 + 3 test files + sampling_service.py:143 (dead) | **LIVE** |
+| `should_aggregate_from_15s` | 655 | 0 | DEAD |
+| `create_candle_from_interval_fixed` | 751 | 0 | DEAD |
+| `create_empty_candle_sophisticated` | 795 | 0 | DEAD |
+
+13 internal `_` helpers; live-vs-dead chain (each helper has exactly one in-file caller):
+
+| Helper | Reached from | Status |
+|---|---|---|
+| `_polars_available` (line 36) | `_use_polars_aggregation:53` | LIVE |
+| `_use_polars_aggregation` (line 46) | `aggregate_from_15s_efficient:535` | LIVE |
+| `_parse_timeframe_seconds` (line 56) | `create_continuous_candles_simple_working:171` | DEAD |
+| `_detect_time_column` (line 67) | `create_continuous_candles_simple_working:172` | DEAD |
+| `_build_24h_candles` (line 87) | `create_continuous_candles_simple_working:181` | DEAD |
+| `_build_interval_candles` (line 107) | `create_continuous_candles_simple_working:183` | DEAD |
+| `_aggregate_from_15s_polars` (line 384) | `aggregate_from_15s_efficient:537` | LIVE |
+| `_prepare_indexed_df` (line 573) | `aggregate_from_15s_efficient:553` | LIVE |
+| `_build_aggregation_rules` (line 584) | `aggregate_from_15s_efficient:554` | LIVE |
+| `_post_process_aggregated` (line 589) | `aggregate_from_15s_efficient:564` | LIVE |
+| `_reorder_columns` (line 621) | `_post_process_aggregated:611` | LIVE |
+| `_compute_buy_sell_split` (line 673) | `_build_filled_candle_dict:704` | DEAD (only via `create_candle_from_interval_fixed`) |
+| `_build_filled_candle_dict` (line 692) | `create_candle_from_interval_fixed:779` | DEAD |
+
+**Live surface in fast_candle_aggregation.py = 2 public functions + 7 helpers.** The other 6 public + 6 helpers are
+dead and removable.
+
+`aggregate_from_15s_efficient` already has a polars dispatch (line 535-537 dispatches to
+`_aggregate_from_15s_polars`) but does an internal round-trip: `pl.from_pandas(candles_15s_df)` at line 394 →
+aggregate → `.to_pandas()` somewhere → return pandas. Callers in `live_workers.py:791` and `live_workers.py:1260`
+then wrap with `pl.from_pandas(...)` on top of the function's `.to_pandas()`, totaling 4 conversions per call.
+
+#### `app/calculators/timeframe_candles.py` — 780 lines
+
+| Metric | Count | Methodology |
+|---|---|---|
+| Total lines | 780 | `wc -l` |
+| Lines matching `pd.` | 47 | `grep -cE 'pd\.'` |
+| Lines matching `pl.` | 0 | `grep -cE 'pl\.'` |
+| Lines matching pandas-op regex | 71 | broad regex above |
+
+4 public functions; reachability outside the file:
+
+| Function | Line | External callers | Status |
+|---|---|---|---|
+| `get_candles_per_day` (module-level, returns tuple) | 29 | sampling_service.py + tests | DEAD via sampling_service chain |
+| `safe_average` | 54 | 0 | DEAD |
+| `create_timeframe_candles` | 290 | sampling_service.py:138, 151 + tests | DEAD via sampling_service chain |
+| `create_continuous_candles_vectorized` | 774 | 0 | DEAD |
+
+**NOTE**: 17 adapter call sites reference `self.get_candles_per_day(...)` — these resolve to
+`BaseCandleAdapter.get_candles_per_day` (an unrelated method in `app/adapters/base_adapter.py:127` that returns
+`int`, not a tuple). They do **not** reach `timeframe_candles.get_candles_per_day`. Similar disambiguation for
+`utils/candle_utils.py:get_candles_per_day` — only `tests/unit/test_candle_utils.py` imports it.
+
+`timeframe_candles.py` is reached only via `app/core/sampling_service.py` (which is itself test-only — see chain
+below). **All 780 lines are dead in production.**
+
+#### Dead-code chain summary (test-only reach)
+
+| File | Lines | Production reach |
+|---|---|---|
+| `app/calculators/timeframe_candles.py` | 780 | only `sampling_service.py` (dead) |
+| `app/core/sampling_service.py` | 167 | only `cloud_candle_storage.py` (dead) |
+| `app/core/cloud_candle_storage.py` | 211 | only tests (4 files) |
+| `utils/candle_utils.py` | 135 | only `tests/unit/test_candle_utils.py` |
+| `tests/unit/test_timeframe_candles.py` | 711 | self |
+| `tests/unit/test_sampling_service.py` | 236 | self |
+| `tests/unit/test_cloud_candle_storage.py` | 143 | self |
+| `tests/unit/test_candle_utils.py` | 121 | self |
+| `tests/integration/test_candle_storage.py` | 47 | self |
+| `tests/e2e/test_may_2023_e2e.py` | 204 | self (marked `@pytest.mark.e2e`) |
+| `tests/conftest.py:23 import + :188-190 fixture` | ~4 | only via `CloudCandleStorage` (dead) |
+| **Total dead chain** | **~2759** | |
+
+Plus orchestration framework hooks that always return `None` because nothing sets the attribute:
+- `orchestration_base.py:83` — `getattr(self, "candle_processing_service" / "sampling_service", None)`
+- `orchestration_state.py:50, 55` — same pattern
+- `orchestration_service.py:139` — same pattern
+
+**Zero production code does `self.sampling_service = ...`** (verified by grep
+`-rE "self\.sampling_service\s*=|self\.candle_processing_service\s*="` — zero hits in `market_data_processing_service/`).
+
+#### Stage 4 plan (revised)
+
+Per the workspace rule "Delete deprecated code. No parallel code paths" (universal.md), the bulk of the original
+Stage 4 is **delete**, not **migrate**.
+
+- **4.A** Delete the dead-code chain (~2759 lines):
+  - `app/calculators/timeframe_candles.py`
+  - `app/core/sampling_service.py`
+  - `app/core/cloud_candle_storage.py`
+  - `utils/candle_utils.py`
+  - `tests/unit/test_timeframe_candles.py`, `test_sampling_service.py`, `test_cloud_candle_storage.py`,
+    `test_candle_utils.py`
+  - `tests/integration/test_candle_storage.py`
+  - `tests/e2e/test_may_2023_e2e.py`
+  - `tests/conftest.py` — drop the import + the unreachable `cached_cloud_candle_storage_source` fixture
+  - `app/calculators/__init__.py` — drop the `timeframe_candles` re-exports
+  - Clean up `getattr(self, "sampling_service" | "candle_processing_service", None)` calls in
+    `orchestration_base.py`, `orchestration_state.py`, `orchestration_service.py` (unreachable branches —
+    confirm with basedpyright after the delete that no code references them).
+- **4.B** Delete the 6 dead public functions + 6 dead internal helpers from `fast_candle_aggregation.py`. The
+  exact line ranges per the table above; spot-check each deletion against the post-4.A test suite (the
+  `test_smart_aggregation.py`, `test_writer_schema_preservation.py`, `test_aggregation_fix.py` suites cover
+  the LIVE functions and should continue to pass).
+- **4.C** Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`:
+  - Flip `aggregate_from_15s_efficient(candles_15s_df: pl.DataFrame, target_timeframe: str) -> pl.DataFrame`.
+  - Flip `create_candle_from_interval(interval_ticks: pl.DataFrame, ...) -> dict[str, object]`.
+  - Remove the pandas fallback path in `aggregate_from_15s_efficient` (lines ~540-590; the polars dispatch
+    becomes the only path).
+  - Remove `pl.from_pandas` + `.to_pandas()` round-trip inside `_aggregate_from_15s_polars` (the polars
+    DataFrame now arrives at the function boundary).
+- **4.D** Update the 3 LIVE call sites to drop the boundary conversions:
+  - `live_workers.py:791` — drop `.to_pandas()` + `pl.from_pandas()` wrapping.
+  - `live_workers.py:1260` — same.
+  - `live_aggregator.py:345` — `create_candle_from_interval(ticks: pl.DataFrame, ...)`.
+- **4.E** Verify: basedpyright clean on touched files; existing tests for `aggregate_from_15s_efficient` +
+  `create_candle_from_interval` updated to polars fixtures; full unit suite stable; benchmark re-run unblocks
+  3.8 from Phase 3.
+
+**Why this re-audit matters**: the original Stage 4 framing ("78 combined pandas-ops") treated
+`timeframe_candles.py` as live perf-critical code. It isn't. The actual perf-critical surface is ~9 functions
+in `fast_candle_aggregation.py`. The net code change for Stage 4 is roughly **−2759 lines (dead chain) − ~300
+lines (dead pieces of fast_candle_aggregation) + ~200 lines (polars rewrite of the live surface) = ~−2859
+lines net**, vs the original "rewrite 78 pandas-ops" framing which implied a much larger PR for zero
+behavior improvement on the dead surface.
 
 ### Stage 5 — Long-tail cleanup
 
@@ -379,17 +517,45 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
   VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"). Recommend route (b) — the
   benchmark is best held until Stage 4 lands.
 
-## Phase 4 — Stage 4 implementation (aggregation calculators)
+## Phase 4 — Stage 4 implementation (re-audited 2026-05-29)
 
-Gated on Stages 1-3 being green + benchmark-verified.
+Gated on Stages 1-3 being green (verified 2026-05-29 morning: 1372 unit tests pass, 0 failures, 21 basedpyright
+errors unchanged from yesterday's baseline; all Stages 1-3 plan items verified against actual code state). The
+revised Stage 4 reflects the audit-derived split between dead-code delete and live-surface migrate. See the
+"Stage 4 plan (revised)" subsection above for methodology + full caller tables.
 
-- [ ] [P1] **4.1 Refactor `fast_candle_aggregation.py`** (36 pandas-ops in 835 lines) to pure polars. The internal
-      `pl.from_pandas` (line 394) → aggregate → `.to_pandas()` (line 504) round trip becomes pure polars. Adapter-
-      facing signature stays pandas via boundary conversion (caller already converts).
-- [ ] [P1] **4.2 Refactor `timeframe_candles.py`** (48 pandas-ops in 780 lines) to pure polars. Per-timeframe candle
-      generation logic. Largest behavioral surface in the plan; needs careful test coverage.
-- [ ] [P1] **4.3 Regression tests** for both calculators — pin output against synthetic fixtures.
-- [ ] [P1] **4.4 Benchmark re-run** — should see the bulk of the per-instrument-peak RSS drop here.
+- [ ] [P1] **4.A Delete the dead-code chain** (~2759 lines) — `timeframe_candles.py` + `sampling_service.py` +
+      `cloud_candle_storage.py` + `utils/candle_utils.py` + 6 corresponding test files + `tests/conftest.py:23`
+      import + `:188-190` `cached_cloud_candle_storage_source` fixture + `app/calculators/__init__.py` re-exports
+      + dead `getattr(self, "sampling_service"|"candle_processing_service", None)` branches in
+      `orchestration_base.py`, `orchestration_state.py`, `orchestration_service.py`. All have zero production
+      reach per the caller tables. Per workspace rule "Delete deprecated code. No parallel code paths"
+      (universal.md). Mirrors the (B) scaffold deletion at MDPS@febcb3b (Phase 3.5).
+- [ ] [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`**: 6 public functions
+      (`create_continuous_candles_simple_working`, `create_empty_candle`, `create_24h_candle_no_lookahead`,
+      `should_aggregate_from_15s`, `create_candle_from_interval_fixed`, `create_empty_candle_sophisticated`)
+      + 6 helpers (`_parse_timeframe_seconds`, `_detect_time_column`, `_build_24h_candles`,
+      `_build_interval_candles`, `_compute_buy_sell_split`, `_build_filled_candle_dict`). Each has zero
+      external callers per the audit table.
+- [ ] [P1] **4.C Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`**:
+      - Flip `aggregate_from_15s_efficient(candles_15s_df: pl.DataFrame, target_timeframe: str) -> pl.DataFrame`.
+      - Flip `create_candle_from_interval(interval_ticks: pl.DataFrame, ...) -> dict[str, object]`.
+      - Make `_aggregate_from_15s_polars` the only path; delete the pandas fallback in
+        `aggregate_from_15s_efficient`.
+      - Remove the `pl.from_pandas(...)` at line 394 + the `.to_pandas()` materialisation inside
+        `_aggregate_from_15s_polars` (polars now arrives at the function boundary).
+- [ ] [P1] **4.D Update the 3 LIVE call sites** — `live_workers.py:791` + `live_workers.py:1260`
+      (drop the `.to_pandas()` + `pl.from_pandas()` round-trip wrap), `live_aggregator.py:345`
+      (pass polars directly).
+- [ ] [P1] **4.E Regression tests** — keep + update `test_smart_aggregation.py`,
+      `test_writer_schema_preservation.py`, `test_aggregation_fix.py` to use polars fixtures; tests for the
+      deleted dead surface go away under 4.A/4.B.
+- [ ] [P1] **4.F basedpyright + full unit suite** — must stay at the post-Stage-3 baseline (21 errors,
+      1372 pass) or better.
+- [ ] [P2] **4.G Benchmark re-run** — unblock Phase 3 item 3.8 via
+      `cd unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28 && uv run python
+      run_all.py ...`. Stage 4 lands the bulk of the per-instrument-peak RSS drop projected by Path A in the
+      benchmark.
 
 ## Phase 5 — Stage 5 implementation (long-tail cleanup)
 
