@@ -95,10 +95,33 @@ Concrete questions to answer + corresponding redesigns to ship:
   **Key risk**: `_data_sinks` dict has no per-shard cleanup. If an exception mid-shard corrupts a DataSink's write state, all subsequent shards for that date share the same contaminated sink. Per-shard isolation requires either: (a) re-creating the orchestrator per shard, or (b) catching exceptions and replacing the affected `_data_sinks[key]` entry.
 
   **`_cleanup_after_day` gap** (confirmed from code at orchestration_base.py:79–93): the current implementation only calls `gc.collect()` and logs RSS — it does NOT clear `candle_processing_service.cache` or `sampling_service.cache`. The sibling plan's text was aspirational; the cache clearing was never actually added. This is a confirmed residual gap for 0.2.
-- [ ] [AUDIT] P1. **0.2 Inventory caches and their cleanup paths.** Beyond the `candle_processing_service` /
+- [x] ✅ [AUDIT] P1. **0.2 Inventory caches and their cleanup paths.** Beyond the `candle_processing_service` /
       `sampling_service` caches that `_cleanup_after_day` knows about — what other module-level or singleton state
       exists? `unified_trading_library` data sinks, the `ResourceProfiler`, event sinks, polars/pyarrow arenas. Where is
       each cache's `clear()` / `dispose()` method, and is anything calling it?
+
+  **Audit findings (2026-05-29, slot-9):** _(Note: task 0.1 already confirmed `_cleanup_after_day` only calls `gc.collect()` — no service cache clearing happens. This task expands the inventory.)_
+
+  | Object | Owner / Location | `clear()` / `dispose()` exists? | Currently called between dates? | Retention pattern |
+  |---|---|---|---|---|
+  | `_data_sinks` dict | `CandleOrchestrationBase` (orchestration_base.py:49) | No explicit `.clear()` on the dict | **No** | Dict populated lazily per category; reused across all dates in a run; GCS connections/buffers inside each `DataSink` are pooled indefinitely |
+  | `_storage_client` | `CandleOrchestrationBase` (orchestration_base.py:47) | No | No | Singleton; stateless after init; safe to reuse |
+  | `_is_holiday()` lru_cache | `market_state_detector.py:70` (`functools.lru_cache(maxsize=1024)`) | **Yes** — `_is_holiday.cache_clear()` | **No** — never called between dates | Accumulates to 1024 entries and stays there for process lifetime |
+  | `candle_processing_service.cache` | Created inside `CandleOrchestrationService` per date | Unknown (depends on UTL impl) | **No** — confirmed: `_cleanup_after_day` does not call it | If UTL service holds a TTL dict, it stays warm across dates |
+  | `sampling_service.cache` | Created inside `CandleOrchestrationService` per date | Unknown (depends on UTL impl) | **No** — same as above | Same retention pattern |
+  | `ResourceProfiler` (`_active_resource_profiler`) | Module-level global in `batch_workers.py:49` | No explicit dispose | No | Process-lifetime; used for memory callbacks; no accumulation risk (observability only) |
+  | `persistence_queue` (live mode) | `AsyncGCSDataSink.persistence_queue` (`data_sink.py`) | No drain/clear between dates | No | Live mode only; unflushed write tasks accumulate if dates run back-to-back without queue drain |
+  | Polars/PyArrow C-level arenas | System (`libarrow.so` / Polars Rust allocator) | No Python-callable clear | `gc.collect()` has **zero effect** on C arenas | **Critical**: Each `pl.read_parquet()` / `.to_pandas()` / aggregation allocates C-level memory that Python GC cannot reclaim. Arena memory is only returned to OS at process exit. This is the 25 GB per-day floor explained. |
+
+  **Root-cause chain for the 25 GB per-day floor:**
+  1. `pl.read_parquet()` → PyArrow/Polars C arena allocates ~2–5 GB per tick file batch
+  2. `.to_pandas()` (now eliminated by pure-polars migration) added a second allocation layer
+  3. Aggregation (polars) materializes another arena allocation
+  4. Python `del frame` → Python wrapper freed, but C arena bytes remain in `libarrow.so` memory pool
+  5. `gc.collect()` → cleans Python cycles only; C arenas unchanged
+  6. Result: RSS floor rises ~20–25 GB per date processed; never returns to OS between dates
+
+  **Fix direction for Phase 4**: Subprocess-per-date or process-pool model (options a/d from Phase 1.1) is the only structural solution — the OS reclaims the full C arena on subprocess exit. In-process cleanup (option c) cannot solve C-arena retention without calling `pa.default_memory_pool().release_unused()` (PyArrow) and `jemalloc_stats_epoch()` / `malloc_trim(0)` (glibc), which are fragile and not exposed via Polars' public API.
 - [ ] [AUDIT] P1. **0.3 Document the cost model**. What does one VM-hour cost? What does N parallel small VMs cost vs
       one long-running VM for the same work? This frames whether "subprocess-per-date" inside one VM is meaningfully
       cheaper than 16 × 1-day VMs, and whether subprocess-per-shard is cost-feasible.
