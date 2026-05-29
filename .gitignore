@@ -27,6 +27,9 @@ central-element-323112-*.json
 *.p12
 *.json.bak
 
+# --- QG sentinel (local-only SHA fingerprint; never committed) ---
+/.qg_last_passed_sha
+
 # --- OS / editor ---
 .DS_Store
 .DS_Store?

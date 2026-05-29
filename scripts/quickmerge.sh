@@ -814,24 +814,40 @@ echo "=========================================="
 echo ""
 
 if [ -f "scripts/quality-gates.sh" ]; then
-  # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
-  echo "[$REPO_NAME] Phase 1: lint auto-fix..."
-  bash scripts/quality-gates.sh --lint --fix $SKIP_CODEX
+  if [ "$AGENT_MODE" = true ]; then
+    # ── AGENT FAST-PATH: verify Pass 1 sentinel instead of re-running QG ──
+    _SENTINEL=".qg_last_passed_sha"
+    _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
+    _SENTINEL_SHA=""
+    [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
+    if [ -z "$_SENTINEL_SHA" ] || [ "$_SENTINEL_SHA" != "$_CURRENT_SHA" ]; then
+      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh not run on current HEAD (SHA mismatch)."
+      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}"
+      echo "  HEAD:     ${_CURRENT_SHA}"
+      echo "  Run: bash scripts/quality-gates.sh"
+      exit 1
+    fi
+    echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
+  else
+    # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
+    echo "[$REPO_NAME] Phase 1: lint auto-fix..."
+    bash scripts/quality-gates.sh --lint --fix $SKIP_CODEX
 
-  # Phase 2: verify lint is clean after fixes (abort early if unfixable lint errors remain)
-  echo "[$REPO_NAME] Phase 2: lint verify (--no-fix)..."
-  if ! bash scripts/quality-gates.sh --no-fix --lint $SKIP_CODEX; then
-    echo "[$REPO_NAME] ❌ Lint FAILED — fix remaining issues before merging"
-    exit 1
-  fi
+    # Phase 2: verify lint is clean after fixes (abort early if unfixable lint errors remain)
+    echo "[$REPO_NAME] Phase 2: lint verify (--no-fix)..."
+    if ! bash scripts/quality-gates.sh --no-fix --lint $SKIP_CODEX; then
+      echo "[$REPO_NAME] ❌ Lint FAILED — fix remaining issues before merging"
+      exit 1
+    fi
 
-  # Phase 3: full gates minus lint (tests + typecheck + codex run exactly once)
-  echo "[$REPO_NAME] Phase 3: full gates (tests + typecheck + codex, lint already verified)..."
-  if ! bash scripts/quality-gates.sh --no-fix --skip-lint $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX; then
-    echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
-    exit 1
+    # Phase 3: full gates minus lint (tests + typecheck + codex run exactly once)
+    echo "[$REPO_NAME] Phase 3: full gates (tests + typecheck + codex, lint already verified)..."
+    if ! bash scripts/quality-gates.sh --no-fix --skip-lint $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX; then
+      echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
+      exit 1
+    fi
+    echo "[$REPO_NAME] ✅ Quality gates PASSED"
   fi
-  echo "[$REPO_NAME] ✅ Quality gates PASSED"
 else
   # Strict check: repos that require quality gates must have scripts/quality-gates.sh
   REPO_TYPE=""
