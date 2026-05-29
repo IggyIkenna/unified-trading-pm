@@ -170,7 +170,11 @@ alone doesn't escape it.
 - [x] ✅ [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
       PR #50 merged 2026-05-29T18:08Z. Post-merge CI failed (exchange mappings missing for 10 new ETF tickers).
       Fixed in PR #53 (merged 2026-05-29T19:08Z); UAC CI now green on main.
-- [ ] [VERIFY] P0. Next UAC PR triggers v2 cleanly.
+- [x] ✅ [VERIFY] P0. Next UAC PR triggers v2 cleanly.
+
+  **Verified (2026-05-29, slot-9):** PR #54 triggered `quality-gates-v2` run 26656815065 on branch
+  `tab/ikennaigboaka/9` (pull_request event). Status: `completed success` in 11m45s. No `startup_failure` — v2
+  successfully escaped the GitHub ghost cache. The check registered as a fresh context, confirming Option D works.
 
 ### Phase 3 — UTL (0.5 day)
 
