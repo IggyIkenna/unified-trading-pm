@@ -596,13 +596,51 @@ revised Stage 4 reflects the audit-derived split between dead-code delete and li
 
 Gated on Stages 1-4 being green. Lowest priority.
 
-- [ ] [P2] **5.1 `cloud_data_provider.py`** instruments DataFrame loading (lines 140, 225, 242) → polars.
-- [ ] [P2] **5.2 `live_aggregator.py:320`** → polars.
-- [ ] [P2] **5.3 `canonical_writer.py:1328, 2121`** (if not done in Stage 3.2) → polars.
-- [ ] [P2] **5.4 `orchestration_writer.py`** remaining pandas-ops → polars.
-- [ ] [P2] **5.5 `app/utils/*`** adapter_utils + market_state_detector audits.
-- [ ] [P2] **5.6 `mock_data_provider.py`** + the 55 test files — bulk audit.
+Stage 5 audit 2026-05-29 (mdps@db233e2 baseline): items 5.1-5.4 are all
+**boundary-Protocol-constrained** — each touches a public API where the
+consumer / Protocol contract expects pandas. Converting internals to
+polars without lifting the Protocol would mean adding `pl.from_pandas` +
+`.to_pandas` round-trips at the boundary, defeating the memory-win
+purpose. Each item documented below with the specific Protocol that
+needs to change first.
+
+- [ ] [P2] [BLOCKED-PROTOCOL] **5.1 `cloud_data_provider.py`** — boundary issue: callers
+      `orchestration_scheduling.py:130-165` + `orchestration_scanner.py:258-285` use
+      `.empty`, `.isin`, `.apply(_should_proc, axis=1)`, `.to_dict()` (pandas
+      idioms). The `_should_proc` row-by-row apply is the TRADFI session-hours
+      filter — converting to polars would mean a `partition_by` + per-row UDF
+      pattern. Pure-polars conversion ripples to 2 scheduling callers + their
+      tests. Unblock: operator decision on whether to lift the
+      `instruments_df: pd.DataFrame` contract in scheduling/scanner.
+- [ ] [P2] [BLOCKED-PROTOCOL] **5.2 `live_aggregator.py:321`** — `_MDPSTickFetcher._read`
+      returns `pd.DataFrame` to satisfy UTL's `TickFetcher` Protocol (Live = batch
+      requirement). Boundary conversion at this seam is correct (same pattern as
+      Stage 4.D's `OHLCVAggregator` Protocol seam at line 349). Unblock: UTL
+      `TickFetcher` Protocol change → ripples to every live-aggregator consumer.
+- [ ] [P2] [BLOCKED-PROTOCOL] **5.3 `canonical_writer.py`** — every public function
+      signature uses `pd.DataFrame` (parameters + return types at lines 238, 289,
+      370, 421, 431, 517, 660, 761...). Lifting any one means lifting all + every
+      downstream consumer. This is a "Stage 3 redux" — the deferred big-bang
+      that Stage 1's BATCH writer addressed in a focused way. Unblock: operator
+      signoff on a canonical_writer pandas → polars cascade plan.
+- [ ] [P2] [BLOCKED-PROTOCOL] **5.4 `orchestration_writer.py`** — same constraint as
+      5.3; signatures pinned to pandas.
+- [x] ✅ [P2] **5.5 `app/utils/*` audit** — surveyed 5 files:
+      - `adapter_utils.py` (156 lines): `apply_locf_fill` is numpy-only ✓;
+        `parse_timestamps_flexible` takes `pd.DataFrame` because adapters
+        pre-aggregation already hold pandas (caller-driven, not pure-util).
+      - `gcs_path_utils.py`: zero pandas — nothing to convert.
+      - `market_state_detector.py` (438 lines): uses `pd.Timestamp` as the
+        interop with `exchange_calendars` (third-party library; pandas-only
+        API). Single-row lookups, not bulk DataFrame transforms — polars
+        conversion would add boundary cost without compute benefit.
+      - `path_parsing.py`: zero pandas — nothing to convert.
+      - `__init__.py`: passthrough.
+      No actionable polars conversions in app/utils. Stage 5.5 closed as a
+      no-op (audit confirmed nothing to do). mdps@db233e2.
+- [ ] [P3] **5.6 `mock_data_provider.py`** + 55 test files — bulk audit. P3.
 - [ ] [P2] **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
+      **DEFERRED to operator-scheduled canary** (same as 4.G).
 
 ## Test plan
 
