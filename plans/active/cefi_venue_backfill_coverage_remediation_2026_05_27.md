@@ -196,11 +196,16 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6D — Manifest write robustness
 
-- [ ] [AGENT] P1. **GCS 429 on per-VM manifest shard** (prediction-2025: 215×
+- [x] ✅ [AGENT] P1. **GCS 429 on per-VM manifest shard** (prediction-2025: 215×
       `429 … _index/per_vm/<vm>.parquet exceeded     the rate limit for object mutation operations`; also tradfi
       pre-death; binance `MANIFEST_EMERGENCY_FLUSH` event dropped). Single parquet object mutated faster than GCS's ~1
       write/s/object limit → entries silently dropped → manifest undercount. Fix: coalesce/batch per-VM shard writes
       (buffer + periodic flush with backoff, or write-new-then-rename). [data-loss/correctness]
+      — unified-trading-library@cb1f4b5f: `_upload_with_backoff_on_429()` wraps `_write_per_vm_shard` upload with 3
+      retries at 1s/2s/4s base ±30% jitter. Combined with the pre-existing 10s time-based write buffer
+      (`_WRITE_FLUSH_INTERVAL`), at most 1 GCS write/10s per bucket per VM — well under GCS's ~1 write/s/object
+      limit. 142-line test file `tests/unit/test_manifest_writer_429_backoff.py` covers retry, jitter, re-raise on
+      4th attempt, non-429 pass-through.
 - [ ] [AGENT] P2. **GcsEventSink upload timeouts** drop telemetry events (RESOURCE_PROFILER_SAMPLE,
       PROCESS_CPU_SATURATED, and notably MANIFEST_EMERGENCY_FLUSH) under CPU saturation — add retry/backoff or a durable
       local spool.
