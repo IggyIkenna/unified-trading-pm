@@ -118,8 +118,9 @@ creds env files are operator-managed manually.
 `server/auth.py::validate_credentials` is currently permissive (`ALLOW_ANONYMOUS=True`) — by operator decision at
 launch, trading permissive auth for faster iteration. Strict auth flip recipe (whenever the project is ready):
 
-- Provision `ORCHESTRATOR_JWT_SECRET` (HS256 32-byte random) in AWS Secrets Manager (or GCP Secret Manager for the
-  GCP-path re-spin)
+- Provision `ORCHESTRATOR_JWT_SECRET` (HS256 32-byte random) on the central VM only (operator JWT — never wire to
+  workers). Provision `ORCHESTRATOR_INTERNAL_SECRET` (separate HS256 random, fleet-shared via
+  `gs://…/orchestrator/internal-secret`) on every VM — central + every worker. See the two-secret model below.
 - Replace `validate_credentials` with argon2-hashed user list (schema from `scripts/manage_users.py`)
 - Flip `auth.ALLOW_ANONYMOUS=False`
 - Smoke test: 3-curl sequence (valid creds → 200, wrong password → 401, anonymous → 401)
@@ -310,12 +311,23 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 - **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
   / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
   route through unchanged.
-- **Auth**: one JWT secret (`ORCHESTRATOR_JWT_SECRET` env var) shared fleet-wide; one login → one operator token. The
-  central API validates the operator JWT at its perimeter, then **mints a fresh internal service token** from the same
-  shared secret and forwards THAT to the upstream VM as the proxied `Authorization` header
-  (`server/server.py::proxy_to_vm` line 2767-2769; `auth.get_internal_service_token()`). Operator credentials therefore
-  never leave the central API box; an upstream VM compromise can't impersonate the operator. `JWT_ALGORITHM` env-driven
-  (HS256 now; RS256/ES256 seam for later).
+- **Auth (two-secret model, codified 2026-05-29)**: the central API holds two independent HS256 secrets:
+  - `ORCHESTRATOR_JWT_SECRET` — operator dashboard login JWT only. **Central-only** (never wired into worker
+    `.env.local`). Validates the Bearer token on every authed request that enters at the public edge.
+  - `ORCHESTRATOR_INTERNAL_SECRET` — central↔worker proxy auth. **Fleet-shared** via
+    `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret` (workers wire
+    `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret` in `.env.local`; the central holds the literal value
+    because its AWS host has no GCP project context for ADC project auto-detection).
+  - **Flow**: operator hits central with their JWT. The central validates against `ORCHESTRATOR_JWT_SECRET` at the
+    perimeter, terminates that token, then mints a fresh short-lived (5 min, role=worker, machine=central-proxy) JWT
+    signed with `ORCHESTRATOR_INTERNAL_SECRET` and forwards THAT in the upstream `Authorization` header. Workers
+    validate against their copy of the internal secret only — they never see the operator secret.
+    (`server/server.py::proxy_to_vm`; `auth.get_internal_service_token()`.)
+  - `decode_token()` on either side tries both keys in turn, so a VM that holds both (the central) accepts both flows
+    while workers reject operator JWTs by construction (the operator key on a worker is an ephemeral random — operator
+    JWTs won't validate).
+  - Operator-credential exposure is bounded to the central VM. An upstream VM compromise can't impersonate the operator.
+  - `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later).
 - **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
   `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
 - **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
