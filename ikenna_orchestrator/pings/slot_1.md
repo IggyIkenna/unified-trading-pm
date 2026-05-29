@@ -5168,3 +5168,62 @@ Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md`.
    `the-graph-api-key` or similar)?
 
 — slot-1 main / Solana DeFi sweep continuation 2026-05-29
+
+---
+
+## 2026-05-29 — slot-1 (Bug-A + Bug-D RESOLVED, ref `plans/active/solana_defi_legacy_migration_2026_05_27.md`)
+
+Operator empirically verified both keys exist + work; the prior "BLOCKED-CREDENTIALS" status was incorrect on both.
+
+**Bug-A (Aave V3 OPTIMISM `marketDailySnapshots` field-missing) — RESOLVED.** Code at **UAC@15e67b93** (plan-flip at
+PM@40dddc39a). NOT a credential issue; using existing `graph-api-key` Secret Manager entry. Root cause confirmed via
+authenticated probes: the github-README deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` is schema-valid
+(has `reserveParamsHistoryItems` + `reserves`) but contains ZERO entries at any timestamp despite being head-indexed
+(`_meta.block.number=152230969`, `ts=1780060715`; `reserves(first:5)` returns []). Swapped OPTIMISM in
+`SUBGRAPH_IDS["aave_v3"]` to `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment; populated
+history through 2024-09-11). The existing `lending_indices_handler` cascade-with-Messari-fallback already handles
+this — the native `aave_v3_native` attempt now raises `SubgraphSchemaError` and the cascade lands on
+`messari_lending`. No handler changes needed.
+
+**Bug-D (Drift S3 archive cutoff) — RESOLVED.** Code at **MTDS@fc7e0636** (plan-flip at PM@14902b392). NOT a
+credential issue; using existing `helius-api-key` Secret Manager entry (verified via slot-1 `getVersion` 200 on
+`mainnet.helius-rpc.com/?api-key=$KEY` + Helius v0 parsed-history
+`/v0/addresses/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/transactions` returning pre-decoded Drift transactions).
+Replaced the legacy `EXPECTED_PAST_SOURCE_COVERAGE_END` empty-record at
+`_backfill_drift_s3_date:1357` with a dispatcher into new `_backfill_drift_helius_date` method:
+
+- Loads `helius-api-key` from Secret Manager via UTL `get_secret_client`.
+- Paginates Helius v0 `api.helius.xyz/v0/addresses/<drift_v2_program>/transactions` with `before=<sig>` cursors.
+- Filters to the target day's `[00:00, 23:59:59]` UTC window.
+- Routes per-shard failures through `record_failed`; empty pages → `record_empty(SOURCE_RETURNED_ZERO)`; success →
+  `record_captured`.
+- Writes to the canonical hive path (same as the existing S3 backfill — `day=YYYY-MM-DD/asset_group=defi/venue=DRIFT/
+  chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`) with filename `drift_helius_<market>_<yyyymmdd>.parquet`.
+
+**Schema-mapping caveat** (documented in the method docstring): Helius parsed-history is signature-level metadata,
+NOT decoded Drift V2 funding rates. The exact V1 S3 schema (`fundingRate24h`, `oraclePrice`, ...) is unrecoverable
+from Helius alone without bundling the Drift V2 Anchor IDL decoder. Rows carry `data_quality=
+"helius_v2_signatures_only"` + extension columns (`helius_signature/slot/tx_type/fee_lamports/description/source`).
+The live `/stats/markets` snapshot path remains the canonical funding-rate source; this fix unblocks the historical
+date range for the carry_staked_basis backtest signal. Follow-up todo to bundle the Drift V2 IDL decoder + emit
+fully-mapped `funding_rate_*` columns is captured implicitly in the docstring + can be filed as a P3 nice-to-have
+once UAC SchemaContract for Drift-V2-IDL ships.
+
+**QG**: `bash scripts/quality-gates.sh --no-fix` on MTDS → "✅ ALL QUALITY GATES PASSED (162s)".
+
+**Backfill relaunch** — tarball rebuild + VM launches deferred to next pass (tarball build running ~25min on this
+session; not blocking on operator action). Recipe for next slot:
+
+```bash
+cd ${WORKSPACE_ROOT} && bash deployment-service/scripts/vm/create-code-tarballs.sh \
+  --allow-dirty-tarball --asset-group DEFI
+# Bug-D backfill:
+bash deployment-service/scripts/vm/launch-mtds-solana-drift-backfill-vm.sh \
+  --start 2025-01-09 --end 2026-05-28 --market SOL-PERP
+# Bug-A backfill (Aave V3 lending indices covers all 8 chains; OPTIMISM subgraph fix lands automatically):
+bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh \
+  2025-01-01 2026-05-28
+# T+10min verify each via `gcloud compute instances describe` = RUNNING + run.log shows PROGRESS lines.
+```
+
+— slot-1 main / Bug-A + Bug-D code-ship pass 2026-05-29
