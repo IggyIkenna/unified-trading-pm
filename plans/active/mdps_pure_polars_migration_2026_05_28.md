@@ -524,13 +524,12 @@ errors unchanged from yesterday's baseline; all Stages 1-3 plan items verified a
 revised Stage 4 reflects the audit-derived split between dead-code delete and live-surface migrate. See the
 "Stage 4 plan (revised)" subsection above for methodology + full caller tables.
 
-- [ ] [P1] **4.A Delete the dead-code chain** (~2759 lines) — `timeframe_candles.py` + `sampling_service.py` +
-      `cloud_candle_storage.py` + `utils/candle_utils.py` + 6 corresponding test files + `tests/conftest.py:23`
-      import + `:188-190` `cached_cloud_candle_storage_source` fixture + `app/calculators/__init__.py` re-exports
-      + dead `getattr(self, "sampling_service"|"candle_processing_service", None)` branches in
-      `orchestration_base.py`, `orchestration_state.py`, `orchestration_service.py`. All have zero production
-      reach per the caller tables. Per workspace rule "Delete deprecated code. No parallel code paths"
-      (universal.md). Mirrors the (B) scaffold deletion at MDPS@febcb3b (Phase 3.5).
+- [x] ✅ [P1] **4.A Delete the dead-code chain** — market-data-processing-service@52cd104. Actual delete:
+      **3033 lines net** (audit predicted ~2759; runtime caught 2 more dead test files I missed —
+      `test_error_handling.py` (46 lines, tested `get_venue_from_instrument_key` in cloud_candle_storage) and
+      `test_timestamp_date_alignment.py` (117 lines, tested `CloudCandleStorage` timestamp alignment)). 12
+      files deleted + 7 files edited. basedpyright stable at 21 errors (baseline); 1252 unit tests pass, 0
+      failures. Production `OrchestrationWorkersMixin` MRO intact.
 - [ ] [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`**: 6 public functions
       (`create_continuous_candles_simple_working`, `create_empty_candle`, `create_24h_candle_no_lookahead`,
       `should_aggregate_from_15s`, `create_candle_from_interval_fixed`, `create_empty_candle_sophisticated`)
