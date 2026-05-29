@@ -162,7 +162,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
