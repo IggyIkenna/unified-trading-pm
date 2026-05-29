@@ -5104,3 +5104,67 @@ credential availability per the External-Data HARD RULE.
 - Rebuild VM tarballs + relaunch affected backfill VMs (Kamino, Marinade, Jito, Solana-gas) once tarballs are fresh
 
 — slot-1 main / Solana DeFi sweep 2026-05-29
+
+---
+
+## 2026-05-29 ~10:30 UTC — Solana DeFi sweep continuation: Bug-R + Bug-A + Gate-7 status
+
+Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md`.
+
+**Additionally shipped this session:**
+
+- **Bug-R** ✅ UTL@cb1f4b5f. `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` —
+  3 retries at 1s/2s/4s base ±30% jitter. Unit tests in `tests/unit/test_manifest_writer_429_backoff.py` cover all
+  4 classification paths + retry semantics.
+- **Bug-A** diagnosed (PM@cb87583). Original report implied workspace-wide AAVE schema drift; investigation
+  reads 2026-05-28 run.log directly: AAVE_V3 ETHEREUM/ARBITRUM/POLYGON/AVALANCHE/BASE/LINEA/BSC all succeed via
+  `aave_v3_native` (8016/11529/2663/4822/31025/722/2155 rows). Only **AAVE_V3-OPTIMISM** subgraph
+  `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` returns 0 rows on native + 'no field marketDailySnapshots' on
+  Messari fallback. Cascade-with-`record_empty` is the correct shard-failure-isolation response. Further triage
+  needs Graph API gateway auth (slot-1 attempted unauthenticated probe; got `auth error: missing authorization
+  header`); captured for next Aave-targeted plan. Other 7 chains carry the AAVE-V3 signal so paper-trade gates are
+  not blocked.
+
+**Gate-7 (wrong-bucket Solana migration) — script already exists, runtime blocker:**
+
+- `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` already has the `--source-bucket
+  defi` flag and full Gate-7 implementation (shipped earlier at MTDS@3fed4a7e). All migration logic ready.
+- **Blocker**: my local `unified-api-contracts` worktree is on `ci-timeout-boost` (foreign-dirty), 8 commits
+  behind LDR, so `from unified_api_contracts import InstrumentType` doesn't expose `SOLANA_LENDING/SOLANA_VAULT/
+  SOLANA_AMM_POOL`. I worked around this by building a fresh LDR-pinned UAC+UTL venv at `/tmp/migenv` from a clean
+  clone of `live-defi-rollout`. The dry-run was launched but the `_list_wrong_bucket_solana_blobs` full bucket
+  scan is slow (~2000+ blobs across the unified flat bucket) and the smoke run was killed before completing.
+- **Recommended runbook for next pass** (vm-ml or operator laptop with clean UAC worktree on LDR):
+  ```bash
+  cd market-tick-data-service
+  CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DEPLOYMENT_ENV=prod DEPLOYMENT_ENV_SHORT=prd \
+    GCP_PROJECT_ID=central-element-323112 PYTHONUNBUFFERED=1 \
+    .venv/bin/python scripts/migrate_legacy_solana_defi_to_canonical.py \
+    --source-bucket defi --dry-run --log-level INFO 2>&1 | tee /tmp/gate7_dryrun.log
+  # Inspect counts, then re-run without --dry-run and with --delete-source.
+  ```
+- The script is idempotent (skip-if-exists in canonical bucket); operator can rerun safely.
+
+**Tarball-rebuild + VM relaunch deferred to next pass:**
+
+- Bug-K/J/M/G fixes are on LDR. The affected backfill VMs (`mtds-solana-defi-backfill`,
+  `launch-marinade-solana-backfill-vm.sh`, `launch-mtds-solana-gas-backfill-vm.sh`) self-deleted on
+  `VM_SHUTDOWN_ON_COMPLETION=true` after writing the buggy outputs.
+- Relaunching now requires `bash scripts/vm/create-code-tarballs.sh` from a slot with clean worktrees (mine has
+  foreign-dirty files in UAC + a few other repos from parallel agents). Operator-acked `--allow-dirty-tarball`
+  override IS an option but risks contaminating the tarball with other agents' WIP — defer to a slot in a clean
+  state.
+- Bug-G impact: Solana gas-fees won't be collected until the next launch; not a paper-trade blocker.
+- Bug-K/J/M impact: Kamino-vault/Jito/Marinade historical lst_rates+dex_pools backfills won't fill until
+  re-launch; live forward-day collection through Gate-5 per-data-type handlers (when they ship) will use the new
+  paths.
+
+**Pending operator decisions:**
+
+1. Drift Bug-D credentials — Helius archival tier verification vs Drift Institutional API (per earlier ping).
+2. Tarball rebuild + VM relaunch sequencing — wait for clean-slot opportunity, or operator-ack
+   `--allow-dirty-tarball` and proceed.
+3. Aave V3 OPTIMISM subgraph triage — does the workspace have a Graph Gateway API key (Secret Manager
+   `the-graph-api-key` or similar)?
+
+— slot-1 main / Solana DeFi sweep continuation 2026-05-29
