@@ -221,3 +221,66 @@ Each of these is a real cross-repo finding that blocks features-service from wri
 **Step 3 — Features-service smoke** (pending Step 2 success): once MDPS produces processed candles in test bucket, features-service runs with `PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112`. First write to `gs://features-delta-one-cefi-*` unblocks audit items (l) / (live-versioning) / (batch-live) per `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`.
 
 The four DeFi operator-decisions in the original issue body remain open — this CeFi pivot is the parallel path, not a replacement.
+
+---
+
+## EOD handoff 2026-05-29 21:30 IST — for Ikenna
+
+### What completed today
+
+- **MDPS canary v2 SUCCESS**: VM `mdps-backfill-cefi-main-test-20260529-193445` (e2-highmem-8, 64 GB) ran from 19:34 → 21:19 IST (~2h15m), emitted `PROCESSING_COMPLETED` + `STOPPED` cleanly, self-deleted on stop. Output in `gs://market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/`:
+  - **4,424 processed parquets** across 21 days × 7 timeframes × 4 data_types × 2 venues
+  - **19 BTCUSDT days present** (04-16 → 05-04). Edges 04-15 + 05-05 were source-missing in legacy raw, not a canary failure.
+- **Drift gate operational** — features-service@dd2ed36f shipped `BASELINE_FORMULA_HASHES` + QG STEP 5.91 + DRIFTED-detection. State: MATCH=5 / DRIFTED=0 / NEW=29.
+- **Audit shipped** — `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`. 14 GREEN / 3 DRIFT (text-fixed in same commit) / 3 BLOCKED (l + live-versioning + batch-live, all waiting on the first features-delta-one parquet) / 2 NOT-RUN (ml-service).
+
+### What's BLOCKED — three cross-repo bugs need a slot
+
+Each bug below independently blocks features-service from writing its first real parquet. Ordered by fastest unblock first:
+
+**1. MDPS / features-service tz-aware vs naive datetime contract drift (P0 — fastest unblock)**
+- Symptom: `datatypes of join keys don't match - "timestamp": datetime[ns, UTC] on left does not match "timestamp": datetime[ns] on right`.
+- Cause: MDPS canonical_writer produces `timestamp` as **naive** (no tz) but `available_at` as **UTC-aware**. Features-service joins them in delta_one's PIT / lookahead enforcement.
+- Fix options:
+  - (a) MDPS — make canonical_writer produce `timestamp` as UTC-aware (preferred, since `available_at` already is); ~5-line change in the writer.
+  - (b) features-service — add `.dt.replace_time_zone("UTC")` on the naive side at the failing join site. Code site near `features_service/delta_one/engine/orchestrator.py:760` (`tz_localize("UTC")` already exists for one path; need to locate the joining one).
+- Single PR either way; ~30 min work. After this, features-service should write the first real parquet to `gs://features-delta-one-cefi-{pid}/feature_group=*/feature_group_version=1/...`. That write unblocks audit items (l) + (live-versioning) + (batch-live).
+
+**2. MDPS canonical_writer column-order drift across days (P0 — silent corruption risk)**
+- Symptom: Day-15 (written by killed v1 VM) has `..., buy_volume, sell_volume, buy_trade_count, sell_trade_count, ...`. Day-16+ (v2) has `..., buy_trade_count, sell_trade_count, buy_volume, sell_volume, ...`. Same 35 cols, same data, different order. Polars `vstack` is strict → load fails.
+- Cause: canonical_writer derives column order from a non-deterministic source (probably `dict()` iteration on an older Python or a `set`). Two MDPS code paths produce two different orders.
+- Fix:
+  - (a) MDPS — declare a canonical column order in `unified_api_contracts.internal.MDPS_CANDLE_SCHEMA` and have the writer reorder to it before `write_parquet`. Single SSOT.
+  - (b) features-service — change `data_loader._concat_and_sort` (and any other `vstack` callsite) to `pl.concat([...], how="diagonal_relaxed")` to tolerate column-order mismatches defensively.
+- Both should ship. (b) protects against future MDPS schema-evolution surprises.
+
+**3. MDPS filter-pushdown queue-time fix (P1 — wasteful, not a correctness blocker)**
+- Symptom: 23 GB resident baseline for processing 156 MB/day of raw input. ~150× overhead. e2-highmem-8 (64 GB) needed; e2-standard-8 wedges.
+- Cause: `_collect_matching_parquet_blobs` queues every file from every day before filtering on `MDPS_INSTRUMENT_IDS`. 1,440 files queued as polars lazy frames = ~25 GB queue overhead.
+- Fix: 3-line change in `_collect_matching_parquet_blobs` per audit § 5 of `plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md` — filter at queue time, not at work time. Per-day peak should drop to <500 MB.
+- Plan already filed; just needs to ship.
+
+### What's READY to be used
+
+- Test bucket `market-data-tick-cefi-test-central-element-323112/processed_candles/` has **4,424 high-quality processed candles** for BINANCE-FUTURES + BYBIT × 9 instruments × 4 data_types × 7 timeframes × 2026-04-16 → 2026-05-04 (19 days).
+- Once bug 1 ships, this bucket is the unblock-data for the features-service smoke chain. Invocation:
+  ```bash
+  PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112 \
+  GCP_PROJECT_ID=central-element-323112 \
+  features-service --feature-family delta_one --operation compute --mode batch \
+    --asset-group CEFI --start-date 2026-04-22 --end-date 2026-04-22 \
+    --feature-group technical_indicators --timeframe 1h \
+    --instruments "BINANCE-FUTURES:PERPETUAL:BTCUSDT" \
+    --max-workers 1 --skip-preflight --skip-dependency-check
+  ```
+
+### What can be picked up later (lower priority)
+
+- Audit items (c) + (d) — ml-service inference / training tests, separate audit pass.
+- Audit item (o) — "listed" backlog trend (needs week-over-week snapshots; first one taken today at `listed=1329`).
+- DeFi parallel path — the four original operator decisions in this issue body (data_type override / legacy manifest / OHLC contract / duplicate columns) are still open. CeFi pivot proved we can validate features-service without resolving DeFi first; DeFi remains a separate workstream.
+
+### Plan & code commits today
+
+- features-service: `9a53b888` (Phase 1) → `e4e085d1` (Phase 2) → `0fe3160d`/`9f6bc119` (Phase 3 + path-partition correction) → `32c0a1ce` (Phase 4) → `dd2ed36f` (drift gate operational + QG STEP 5.91).
+- unified-trading-pm: features_registry_status_versioning plan + 5 phase flips + features_and_ml audit-instructions extension + features_and_ml audit-result doc + this issue doc with continuous status updates.
