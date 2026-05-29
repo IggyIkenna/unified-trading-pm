@@ -349,3 +349,91 @@ fix the impairment. The OOM root cause is pytest test memory usage, not the usag
 4. **Worker slots should run QG on dedicated VMs** — the central orchestrator host is not designed to absorb 60 GB
    pytest runs alongside the dispatch service. Worker slots for code-heavy repos should run on vm-cross-cutting or
    vm-cefi, not the central API host.
+
+---
+
+## Phase 3 Evidence Appendix — Usage Poller Code Audit (2026-05-29T15:35Z)
+
+**Captured by**: slot-9 (task api_host_chronic_impairment-006)
+**Note**: Slot-5's OOM evidence above corrects the primary root cause. Phase 3 replacement is still
+worthwhile (cleaner code, eliminates pexpect PTY overhead), but will not alone fix impairments.
+
+### Files audited
+
+- `server/usage_poller.py` — `UsagePoller` class (background thread)
+- `server/usage_tracker.py` — `fetch_usage_via_claude()` (pexpect spawn logic)
+- `server/server.py:179` — instantiation + interval config
+
+### Findings
+
+**1. Class + interval**
+
+`UsagePoller` (daemon thread, serialized via `_USAGE_REFRESH_LOCK`). Interval
+controlled by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES` env var; default **30 minutes**.
+NOT set in `.env.local` on this host → default 30 min applies. Startup settle delay:
+min(interval_seconds, 30) = **30 seconds**.
+
+**2. Spawn mechanism**
+
+`fetch_usage_via_claude()` calls `pexpect.spawn("bash", ["-c", f"source {env_file}; exec claude"])`.
+Key points:
+- New PTY session (`setsid` implicit via pexpect) — child gets its own process group.
+- 4 accounts, sequential (one at a time, serialized). Three have `oauth_token_env_file`; `ikenna-backup`
+  is skipped (no env file). Per-spawn wall time: ~13 s. Full tick: ~39–52 s.
+- Actual confirmed from journal at 15:20:13Z startup: 4 probes ran at 15:20:13, 15:20:27,
+  15:20:40, 15:20:53 — gaps of 13–14s (intra-cycle sequential spacing).
+  The "every ~10s" in the issue doc referred to this intra-cycle spacing, NOT a standalone
+  short poll interval. Full tick rate: 4 spawns per 30 min = **0.13 spawns/min**.
+
+**3. Reaping lifecycle**
+
+```python
+finally:
+    with contextlib.suppress(Exception):
+        child.send("\x1b")    # ESC — dismiss any modal
+        time.sleep(0.2)
+        child.kill(15)         # SIGTERM to direct child (bash exec'd to claude)
+    with contextlib.suppress(Exception):
+        child.close(force=True)  # closes PTY master → SIGHUP to session group
+                                  # + os.waitpid() on direct child
+```
+
+The `finally` block ALWAYS runs (even on exception). The `contextlib.suppress(Exception)` on
+each step is defensive — failures are silenced. `close(force=True)` calls `os.waitpid()` on
+the **direct** child (claude) but NOT on grandchildren.
+
+**4. Orphan risk vector — node.js grandchildren**
+
+`exec claude` replaces bash with the Claude CLI (Python). The CLI spawns node.js for its TUI.
+When `child.kill(15)` sends SIGTERM to claude:
+
+- Claude (Python) exits promptly → repaped by pexpect's `os.waitpid()` → no zombie.
+- Node.js grandchild: receives SIGHUP when PTY master closes (pexpect's `close(force=True)`).
+  If node.js handles or ignores SIGHUP, it becomes an orphan reparented to PID 1.
+- `close(force=True)` does NOT wait for node.js — only for claude (the direct child).
+
+**Risk assessment**: At 0.13 spawns/min (4 per 30-min cycle), any node.js orphan accumulates
+at most 0.13/min. Over 6 h uptime = ~48 potential orphans. Each node.js process is ~80–120 MB
+RSS. 48 × 100 MB = ~4.8 GB potential leak — secondary contributor, not the primary cause per
+OOM evidence above (which shows pytest consuming 32-57 GB as the primary driver).
+
+**5. "render_floor" is NOT an orphan source**
+
+`render_floor` in the log message corresponds to `render_seconds=3.0` — the minimum drain time
+after sending `/usage\r` before the code starts scanning for "Resets" markers. It is NOT a hard
+timeout that cuts off cleanup. The `finally` block always runs regardless of `render_seconds`.
+
+**6. No evidence of premature SIGKILL**
+
+pexpect's `close(force=True)` sends SIGKILL only if the child is still running after a timeout
+(default 5s). Given each probe exits in ~13s and SIGTERM is sent at the end, the child is
+almost certainly already dead by `close(force=True)`. No SIGKILL evidence in logs.
+
+### Conclusion for Phase 3
+
+Replacing `fetch_usage_via_claude` with a direct HTTP call eliminates all pexpect PTY spawns.
+The replacement (task api_host_chronic_impairment-007) should:
+- Use `httpx` (already in requirements) to call the Anthropic usage/limits API directly.
+- Verify the same fields (`weekly_pct`, `session_pct`) are recoverable from the API response.
+- Add a test that no `pexpect` / subprocess is invoked during a poll cycle.
+Primary fix remains Phase 5 (MemoryMax) per OOM evidence.

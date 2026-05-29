@@ -81,9 +81,11 @@ operator intervention.
 > Python+claude+node stack. Over 6 days uptime that's ~200K subprocess creations. Even small leaks (lingering tmux
 > buffers, claude-cache files, FD leaks in unfork) accumulate.
 
-- [ ] [AGENT] P0. Audit `agent-orchestrator/server/` for the usage poller (grep `usage refresh: spawning claude`).
+- [x] ✅ [AGENT] P0. Audit `agent-orchestrator/server/` for the usage poller (grep `usage refresh: spawning claude`).
       Locate the poller class + interval. Document its lifecycle: how does it reap? Are there any "render_floor"
-      timeouts that orphan claude processes?
+      timeouts that orphan claude processes? — agent-orchestrator@039664c; findings in issues/api_host_chronic_impairment_2026_05_29.md §Phase 3.
+      Key: UsagePoller 30-min interval; 4 sequential pexpect spawns per tick (~13s each); finally-block SIGTERM+close(force=True)
+      reaps direct child but not node.js grandchildren (orphan risk vector). render_floor is NOT an orphan source.
 - [ ] [AGENT] P0. Replace the claude-spawn-based usage poller with a direct **Anthropic API call** to the usage/limits
       endpoint (per Anthropic docs). Same data, no subprocess churn. Implementation: `httpx.get` against
       `https://api.anthropic.com/v1/messages/limits` (or whatever the canonical endpoint is — check Anthropic API
