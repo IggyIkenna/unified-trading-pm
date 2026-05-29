@@ -107,18 +107,6 @@ alone doesn't escape it.
 
 ### Phase 0 — Pre-flight: confirm canonical doc + branch protection access (0.25 day)
 
-<<<<<<< Updated upstream
-
-- [ ] [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end + confirm every step of the canonical flow is
-      reflected in this plan. If anything drifted between codex and operator-stated flow, update plan first per the
-      doc-plan-code principle.
-- [ ] [AUDIT] P0. Verify admin perms on GitHub branch protection settings for PM, UAC, UTL (and the 7 P1 repos). Without
-      admin perms, the rotation step requires operator action. **Confirmed 2026-05-29**: `gh api repos/.../permissions`
-      returns `admin=True` for PM/UAC/UTL via the slot-1 gh CLI auth (IggyIkenna account, `repo` scope). GH_PAT in
-      `central-element-323112/GH_PAT` is the cron-side fallback.
-- [ ] [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
-      `bash scripts/quickmerge.sh --help 2>&1 | head -30` should mention it. If missing in quickmerge implementation,
-      file separate fix-quickmerge issue and block this plan on it. =======
 - [x] ✅ [AUDIT] P0. Canonical CI doc read end-to-end — `codex/08-workflows/ci-cd-flow.md` 292 lines. Covers three-tier
       branch model (feat/staging/main/LDR/tab), two-pass sentinel model, workspace-qg triggers explicitly excluding LDR,
       staging-first PR target, agent-vs-human paths. **Plan's Phase 1-3 recipe matches doc verbatim — no plan-edit
@@ -135,7 +123,6 @@ alone doesn't escape it.
       drifted). Resolution wired into Phase 1 as new Step 0.5 below. Remediation per Stage 1.5 output:
       `python scripts/manifest/generate-derived-manifest.py` + `check-dependency-alignment.py --json` +
       `fix-internal-dependency-alignment.py --apply` (or external variant if external mismatches surface).
-  > > > > > > > Stashed changes
 
 ### Phase 1 — PM (1 day)
 
