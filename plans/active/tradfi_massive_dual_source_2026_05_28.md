@@ -85,10 +85,18 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 0 — Audit + plan baseline (0.5 day)
 
-- [ ] [AUDIT] P1. Confirm Massive subscription tier(s) signed up + API key in Secret Manager.
-  - Credential ask → operator if not yet signed. Per External Data Is Always Available rule, this is
-    `BLOCKED-CREDENTIALS` until [ack].
-  - Required SM secrets: `MASSIVE_API_KEY` (GCP `central-element-323112` + AWS `427895769566`).
+- [x] ✅ [AUDIT] P1. Confirm Massive subscription tier(s) signed up + API key in Secret Manager. — operator provided
+      credentials 2026-05-28 chat; 5 secrets stored in GCP SM (`central-element-323112`) + AWS SM (`ap-northeast-1`,
+      account `427895769566`). REST API smoke test green (SPY ticker reference resolves via
+      `https://api.massive.com/v3/reference/tickers`); S3 flat-files smoke test green (bucket `flatfiles` at
+      `https://files.massive.com` lists 9 prefixes including `us_futures_cme/`, `us_options_opra/`, `us_stocks_sip/`,
+      `us_indices/` — all MVP cells reachable).
+  - SM secret names (identical names in both clouds):
+    - `MASSIVE_API_KEY` — REST API key
+    - `MASSIVE_S3_ACCESS_KEY_ID` — flat-files S3 access key id
+    - `MASSIVE_S3_SECRET_ACCESS_KEY` — flat-files S3 secret access key
+    - `MASSIVE_S3_ENDPOINT` — `https://files.massive.com`
+    - `MASSIVE_S3_BUCKET` — `flatfiles`
 - [ ] [AUDIT] P1. Workspace-wide grep for "databento" + "polygon" + "polygon.io" hardcoded references; capture
       remediation list. Plan Pass 1 = registry-driven, not text-replace.
 - [ ] [AUDIT] P1. Confirm `SOURCE_PRIORITY` module docstring's deferred-plan slug is `multi_source_priority_merge_*` and
@@ -155,6 +163,21 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [MTDS] P1. Unit tests: 200 happy path, 401 auth-fail, 429 rate-limit, 5xx upstream, 200 empty (→
       `SOURCE_RETURNED_ZERO`), per-data_type cassette tests.
 - [ ] [MTDS] P1. Integration tests: `@pytest.mark.requires_credentials` — gated, skipped without `MASSIVE_API_KEY`.
+- [ ] [MTDS] P1. **S3 flat-files bulk-historical pathway** — alternative to rate-limited REST for backfill. Massive
+      ships full historical parquet/CSV via S3-compatible endpoint at `https://files.massive.com`, bucket `flatfiles`.
+      Confirmed prefixes (smoke-tested 2026-05-28):
+  - `us_futures_cme/` → ES, BTC, ETH, micro contracts (CME Globex)
+  - `us_futures_cbot/` → ZN, ZB (treasury futures)
+  - `us_futures_nymex/` → CL, NG (oil + natgas)
+  - `us_futures_comex/` → GC, SI (metals)
+  - `us_options_opra/` → SPX/VIX index options + ETF options (IBIT, ETHA, …)
+  - `us_stocks_sip/` → equities + ETFs
+  - `us_indices/` → SPX, VIX index values
+  - `global_crypto/` + `global_forex/` → out of TradFi MVP scope Use `unified_trading_library.cloud_interface` S3 client
+    with `MASSIVE_S3_*` SM secrets; do NOT subprocess `aws s3 cp` per `codex/05-infrastructure/gcs-object-operations.md`
+    analogue. Cheaper + faster than paginated REST for multi-year backfill. Phase 4 connector should expose
+    `--mode=flat-files-bulk` flag alongside REST mode; same parquet output, same manifest emission, same
+    `source='massive'` row column.
 
 ### Phase 5 — Backfill Databento corpus with source column (1 day + run-to-completion)
 
