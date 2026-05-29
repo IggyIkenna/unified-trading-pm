@@ -153,9 +153,10 @@ alone doesn't escape it.
   — Files already shipped: `quality-gates-v2.yml` + `python-quality-gates-v2.yml` present on LDR via
     commits `a9d340df8` + `bb2bc398f`. Job key is `quality-gates-v2` (Option D; plan had `quality-gates-2026-06`
     as a placeholder — the actual key used is `quality-gates-v2`). V1 files retained. Verified correct shape.
-- [ ] [SCRIPT] P0.
+- [x] ✅ [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
       Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
+      — VERIFIED: v2 workflow files already on PM main via PR #88 (commit 84957fba6). Quickmerge complete.
 - [ ] [SCRIPT] P0. **Branch protection rotation** on PM main:
   - Remove `quality-gates` from required status checks (frees PR #83 immediately for auto-merge)
   - Wait for first PR-against-main to trigger v2 caller → verify it does NOT startup_failure
