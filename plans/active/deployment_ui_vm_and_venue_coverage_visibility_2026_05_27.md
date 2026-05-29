@@ -69,10 +69,14 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
 
 ## §3 — Venue API-key status panel (names + status, never the key) (P1)
 
-- [ ] [AGENT][UI] P1. Add a per-venue credential-status view: secret NAME (`tardis-api-key`, …) + STATUS (active /
+- [x] ✅ [AGENT][UI] P1. Add a per-venue credential-status view: secret NAME (`tardis-api-key`, …) + STATUS (active /
       EXPIRED / missing / unentitled) — NEVER the key value. Status from a lightweight backend probe (e.g. Tardis
       `api-key-info` → `[]`/expired ⇒ flag). Today this would show `tardis-api-key: EXPIRED` — the single fact blocking
       all CeFi paid history.
+      — deployment-api@6d0fa33 | deployment-ui@0c1496c | pw:L2 BLOCKED-INFRA: libatk-1.0.so.0 missing in slot env |
+      regression: tests/smoke/venue_credentials.spec.ts. Backend: GET /api/venue-credentials probes Secret Manager →
+      Tardis api-key-info (5s timeout); returns active/expired/missing/error; mock mode returns simulated EXPIRED.
+      Frontend: VenueCredentialsPanel.tsx added to VmDeployments page with 7 unit tests.
 - [ ] [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
       key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
       `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3.
