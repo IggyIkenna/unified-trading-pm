@@ -667,6 +667,43 @@ single pl→pd before UTL call) — never per-helper round-trips.
       - `__init__.py`: passthrough.
       No actionable polars conversions in app/utils. Stage 5.5 closed as a
       no-op (audit confirmed nothing to do). mdps@db233e2.
+- [x] ✅ [P0] **5E You-Were-Right Audit — second-pass MDPS-internal sweep**.
+      Operator challenge 2026-05-29 ("verify nothing is remaining like Phase 1")
+      surfaced 10 `app/core/` files I'd missed in the Phase 5C/5D claim of
+      "polars end-to-end":
+      - `candle_write_mixin.py`: `_write_candles` dropped the `to_pandas()`
+        round-trip at line 121; 5 internal helpers flipped to pl.DataFrame
+        (`_build_candle_output_path`, `_coerce_int_timestamp_column`,
+        `_validate_and_convert_timestamps`,
+        `_validate_candle_schema_before_upload`, `_upload_candles_to_gcs`).
+        Each helper now converts at the UTL boundary only.
+      - `orchestration_writer.py`, `orchestration_state.py`,
+        `orchestration_base.py`: `_log_timestamp_mismatch_details` +
+        `_save_local_sample` flipped to polars (`.write_csv()` for sample).
+      - `canonical_writer.py:1371,2173`: `pd.read_parquet` →
+        `pl.read_parquet().to_pandas()` at both write paths.
+      - `timestamp_validator.py` + `granularity_detector.py`: full
+        polars-internal rewrites (`pl.from_epoch` + `dt.replace_time_zone`,
+        polars `diff`/`median`).
+      - `dependency_checker.py`: `pd.date_range` → `pl.date_range`; boolean
+        mask filter → `pl.filter(pl.col).is_in + str.contains`.
+      - `data_source.py` + `live_workers.py:503`: removed the
+        `pl.from_pandas(pd.read_parquet(...))` fallback per
+        `[[feedback_no_fallback_one_engine]]` — failures propagate instead
+        of silent double-decode.
+      - `live_workers.py`: `_extract_instrument_info` flipped to polars
+        (matching the test fixtures); `_build_candle_output_path` call site
+        passes polars directly.
+      - `types.py`: `WriteTaskDict.candles_df` type `pl.DataFrame`.
+      - `cli/handlers/live_mode_handler.py`: consumer type updated.
+      15 test files updated — `@patch("pandas.read_parquet")` →
+      `@patch("polars.read_parquet")` with `pl.from_pandas(...)` returns;
+      pandas-fixture call sites flipped to `pl.DataFrame` or polars-aware
+      assertions (`isinstance(schema[col], pl.Datetime)` instead of
+      `pd.api.types.is_datetime64_any_dtype`); `.iloc[N]` → `[N]`.
+      Result: 1246 pass / 1 skip; basedpyright 21 errors = original baseline
+      (no new violations introduced by the polars conversion).
+      market-data-processing-service@8d36df8.
 - [ ] [P3] **5.6 `mock_data_provider.py`** + 55 test files — bulk audit. P3.
 - [ ] [P2] **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
       **DEFERRED to operator-scheduled canary** (same as 4.G).
