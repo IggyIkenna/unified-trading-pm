@@ -205,6 +205,19 @@ Operator directive 2026-05-29 16:00 IST: "we already have raw tick data — just
   - MDPS column-order drift fix needed (or features-service load_candles needs `diagonal_relaxed`).
   - Sufficient BTCUSDT days for 50-bar lookback. Once MDPS clears more days, retry.
 
+**v2 T+60min** (current): memory **cycled back to 29% / 23 GB** — confirms per-day cleanup IS working between days (peak ~45 GB during processing, floor ~23 GB after day-rollover). 4,403 parquets, 18 contiguous BTCUSDT days (04-16 → 05-03). Memory amplitude proves the filter-pushdown bug is what's driving peak: each day's processing allocates ~20 GB over the 23 GB baseline, then releases. The baseline itself is ~150× the raw input size (156 MB/day raw → 23 GB resident) — confirms operator's observation that "32 GB should have been overprovisioned." Root cause: queue-time over-allocation per audit § 5 (un-shipped 3-line fix to `_collect_matching_parquet_blobs`).
+
+**Step 3 retry — features-service smoke 21:18 IST** — Real progress + new bug:
+  - **Loaded 168 candles ✓** (7 days × 24 hours of 1h BTCUSDT). MDPS data is consistent + features-service is consuming it.
+  - **NEW BUG: timezone-aware vs naive datetime join mismatch**: `datatypes of join keys don't match - "timestamp": datetime[ns, UTC] on left does not match "timestamp": datetime[ns] on right (and no other type was available to cast to)`. MDPS canonical_writer produces `timestamp` as **naive** (no time zone) but `available_at` as **UTC-aware**. Some join in features-service compares the two and polars refuses to cross types. Code at `features_service/delta_one/engine/orchestrator.py:760` has `tz_localize("UTC")` for one path but not the join that's failing here. **Third real bug surfaced by the smoke** (after column-order drift + load-volume gating).
+
+Compounding tally for the day:
+  1. MDPS canonical_writer column-order drift across days (v1 vs v2)
+  2. MDPS filter-pushdown bug: 150× memory overhead vs raw input size (audit § 5 fix still un-shipped)
+  3. MDPS/features-service tz-aware vs naive datetime contract mismatch on `timestamp` vs `available_at`
+
+Each of these is a real cross-repo finding that blocks features-service from writing its first real parquet to `gs://features-delta-one-cefi-*`. The audit items (l) / (live-versioning) / (batch-live) remain BLOCKED on a clean end-to-end write, but the pipeline shape is proven working.
+
 **Step 3 — Features-service smoke** (pending Step 2 success): once MDPS produces processed candles in test bucket, features-service runs with `PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112`. First write to `gs://features-delta-one-cefi-*` unblocks audit items (l) / (live-versioning) / (batch-live) per `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`.
 
 The four DeFi operator-decisions in the original issue body remain open — this CeFi pivot is the parallel path, not a replacement.
