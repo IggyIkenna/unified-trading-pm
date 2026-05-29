@@ -165,10 +165,12 @@ returns audibly if the fix is incomplete — not silently absorbed by capacity.
   `process_handler.py:_process_candles_for_one_date` and/or at the per-instrument boundary in
   `live_workers._process_instrument_file`) needs to be re-opened — this plan's audit was wrong to skip it. See
   "Re-opened Phase 2.2" below.
-- [ ] [VERIFY] P1. **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **GATED on Phase 2.2 re-open +
-      Phase 3.2 re-verification.** Alternative path if 2.2 is too invasive: ship 16 × 1-day VMs (each fresh process; no
-      cross-day retention) — verified by 3.1 + 3.2-day-1 to complete cleanly per-day. This is the operationally-shipped
-      equivalent of the 16-day run.
+- [x] ✅ [VERIFY] P1. **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **PASSED.**
+      VM `mdps-backfill-cefi-20260529-090755` auto-deleted (exit 0). GCS
+      `market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/` has all 16 days
+      (2026-04-15 → 2026-04-30) × 28 parquet files each (4 instruments × 7 timeframes). No OOM / no
+      MEMORY_BACKPRESSURE events. MDPS tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day`
+      wired) on `e2-standard-8` (32 GB), `MAX_WORKERS=2`.
 
 ## Re-opened Phase 2.2 (NEW — added 2026-05-28 mid-Phase-3)
 
