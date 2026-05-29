@@ -414,32 +414,48 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [ ] [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** —
-      `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:172` hardcodes
-      `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)` → every date 2025-01-09→today emits
-      `EXPECTED_PAST_SOURCE_COVERAGE_END`. Switch to V2 Drift S3 source OR Drift Data API per-day replay (per CLAUDE.md
-      `External Data Is Always Available` — paid tier credentials if needed; file ping not defer). After fix: relaunch
-      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end <today>`. QG + commit MTDS → LDR.
-- [ ] [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** —
-      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1004` passes `--gas-fee-chains 99999`; Solana doesn't
-      have EVM-style numeric chain_id. Replace with canonical key from UAC `registry/data_source_continuity.py`
-      (`SOLANA` string or whatever the handler expects — read `gas_fees_handler` to confirm). After fix: relaunch
-      `launch-mtds-solana-gas-backfill-vm.sh --start 2025-01-17 --end <today>`. QG + commit deployment-service → LDR.
-- [ ] [CODE] [AGENT-AUTO] P1. **Bug-M (Marinade date-filter)** — `collect-lst-rates` handler uses sentinel-cluster
-      latest-only; needs `target_date_str` analog like `_collect_marginfi_tvl`. Extend handler to accept per-date
-      backfill. After fix: relaunch `launch-marinade-solana-backfill-vm.sh 2025-01-17 <today>`. QG + commit MTDS → LDR.
-- [ ] [CODE] [AGENT-AUTO] P1. **Bug-K (Kamino pool_id mismatch)** — `_collect_kamino` vault-strategies emits
-      `vault_address`; `dex_pools` SchemaContract requires `pool_id`. Rename/map at adapter boundary (preserve
-      `vault_address` as additional dimension if needed). After fix: re-run a scoped
-      `collect-solana-defi --solana-protocols kamino` over the same date range to backfill Kamino rows the in-flight T4
-      VM dropped. QG + commit MTDS → LDR.
+- [ ] [BLOCKED-CREDENTIALS] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — slot-1 probe 2026-05-29 verified:
+      both `drift-historical-data-v1.s3.eu-west-1.amazonaws.com` AND `drift-historical-data-v2.s3.eu-west-1.amazonaws.com`
+      stop publishing daily files on 2025-01-08 (verified via S3 ListBucket — V2 has exactly 4 files for SOL-PERP
+      fundingRateRecords in 2025 and 0 for 2026). The Drift Data API (`data.api.drift.trade/stats/markets`) returns
+      only current snapshots, not per-date history. The `_DRIFT_S3_ARCHIVE_END = date(2025, 1, 8)` constant
+      accurately reflects the public Drift V1/V2 coverage end — this isn't a date-bump bug, it's an upstream public
+      data exhaustion. **CREDENTIAL APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_1.md`**: Drift offers
+      paid hyperdrive / "Drift institutional data" tiers that expose historical funding via SDK; or the equivalent
+      data can be replayed from Solana RPC archival nodes (Helius mainnet-beta archive on the paid tier we already
+      have, via `getSignaturesForAddress` on the Drift program ID + decoding `FundingRateUpdate` events). Either
+      unblocks 2025-01-09 → today. Once credentials/decoder land, drop the cutoff guard + relaunch
+      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end <today>`.
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** — fixed both sides 2026-05-29.
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1102` now passes `--gas-fee-chains solana` sentinel
+      (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel
+      and gates `solana_enabled` on it (was hardcoded False) (MTDS@c3ae794c). Relaunch via
+      `launch-mtds-solana-gas-backfill-vm.sh --start 2025-01-17 --end 2026-05-28` after tarball rebuild.
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-M (Marinade date-filter)** — fixed 2026-05-29 (MTDS@c3ae794c). Marinade's
+      official `/msol/apy/365d` and `/msol/price_sol` endpoints don't honour date filters (per slot-1 probe
+      2026-05-29 — both return the current snapshot regardless of `from_date`/`to_date`). `_collect_marinade` now
+      accepts `target_date_str` and for past dates routes through `_collect_marinade_historical` (DeFiLlama yields
+      chart, pool `b3f93865-5ec8-4662-90a0-11808e0aa2bd`, daily APY back to 2025-02-26). Pre-2025-02-26 = honest
+      empty (DeFiLlama coverage start). Re-run via `launch-marinade-solana-backfill-vm.sh 2025-01-17 2026-05-28`
+      after tarball rebuild.
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-K (Kamino pool_id mismatch)** — fixed 2026-05-29 (MTDS@c3ae794c).
+      `_collect_kamino` now emits both `pool_id` (aliased from the vault PDA `address`) and `vault_address` so
+      the dex_pools `DEFI_POOL_DEX_POOLS` SchemaContract validates while preserving the vault-flavour dimension.
+      Also added `token_a`/`token_b` from the resolved Solana mint symbols (required-nullable on the EVM contract).
+      Re-run via scoped `collect-solana-defi --solana-protocols kamino` over 2025-01-17→2026-05-28 after tarball
+      rebuild.
 
 ### Lower-priority bugs (capture-then-fix; no immediate backfill blocker)
 
-- [ ] [CODE] [AGENT-AUTO] P2. **Bug-J (JITO Stakenet API `pool_token_supply=0`)** — every fetch returns 0 → "cannot
-      compute exchange rate". Likely API drift / auth change. Investigate Stakenet API status, file CREDENTIAL APPROVAL
-      REQUEST ping in `ikenna_orchestrator/pings/slot_1.md` if it's an auth/tier issue (don't defer silently). Re-run
-      JITO scope after fix.
+- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-J (JITO Stakenet API `pool_token_supply=0`)** — fixed 2026-05-29
+      (MTDS@c3ae794c). Root cause = API drift, NOT auth/tier issue. Jito's Stakenet API
+      (`kobe.mainnet.jito.network/api/v1/stake_pool_stats`) shape changed from a single object with
+      `pool_total_lamports`+`pool_token_supply` to a time-series payload with `apy[]`/`tvl[]`/`supply[]`/
+      `num_validators[]`/`mev_rewards[]` arrays (each `{date, data}`). The endpoint returns only the latest ~8 days
+      and ignores `?from=`/`?to=`/`?range=` filters. Rewrote `_collect_jito` to consume the latest entry of each
+      series (exchange_rate = tvl_lamports/1e9 / supply_jitosol). Added `_collect_jito_historical` for past dates
+      via DeFiLlama yields chart for the jito-liquid-staking JITOSOL pool
+      (`0e7d0722-9054-4907-8593-567b353c0900`). No credential ask needed.
 - [ ] [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** — surfaced
       in `mtds-lending-indices-20260528` run. Subgraph schema drift; adapter needs the new field name OR fallback. Fix
       in MTDS Aave lending-indices adapter. Re-run lending-indices backfill after fix.
