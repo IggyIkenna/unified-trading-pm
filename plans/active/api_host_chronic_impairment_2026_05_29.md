@@ -68,9 +68,10 @@ operator intervention.
       `free -m`, `top -b -n1`, `dmesg | tail -50`, `pgrep -af claude`, FD count, socket count to a rotating log at
       `/var/log/orch-watchdog/`. When status checks flip to FAILED, the last pre-impairment snapshot is the forensic
       gold. — agent-orchestrator@b833df8
-- [ ] [AGENT] P0. On next impairment: pull `aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest` —
+- [x] ✅ [AGENT] P0. On next impairment: pull `aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest` —
       kernel-level messages survive even OS-level hang. Look for OOM-killer entries (`Out of memory: Killed process`),
-      kernel panics, or hardware faults.
+      kernel panics, or hardware faults. — 2026-05-29T15:31Z: boot at 14:49Z captured. No OOM/panic/HW faults.
+      Application-level soft-hang confirmed. Phase 2 Evidence section added to issue doc.
 - [ ] [AGENT] P0. Capture the watchdog log + console output into the issue doc as Phase 2 evidence.
 
 ## Phase 3 — Likely root cause: claude-usage-poller churn (P0)

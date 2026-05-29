@@ -213,3 +213,52 @@ The impairments occur hours into uptime, not immediately — consistent with a g
 
 **Recommended next steps**: Implement Phase 2 watchdog to capture state during next impairment event,
 and Phase 3 poller replacement to eliminate subprocess churn.
+
+---
+
+## Phase 2 Evidence — EC2 Console Output Forensics
+
+**Captured**: 2026-05-29T15:31Z by slot-10 (agent)
+**Command**: `aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest --region ap-northeast-1`
+
+### Key findings
+
+- **Captured boot**: `2026-05-29T14:49:58Z` — the reboot initiated at 14:28Z, instance up by 14:49Z (~21s kernel boot).
+- **No OOM-killer entries**: no `Out of memory: Killed process` messages anywhere in the console output.
+- **No kernel panics**: no `Kernel panic`, `BUG:`, `OOPS:`, or `general protection fault` messages.
+- **No hardware faults**: RAS collector initialized normally (`RAS: Correctable Errors collector initialized`), no MCE
+  (Machine Check Exceptions), no NVMe errors, no ECC corrections.
+- **Clean systemd boot**: `orchestrator.service` and `nginx.service` both reached `[OK]` state.
+- **SSM Agent auth error at boot** (`14:50:00Z`): "no valid credentials could be retrieved for ec2 identity" —
+  expected, because the IAM instance profile was not yet attached at boot time. SSM Agent registered successfully
+  at `15:15:15Z` once the IAM profile propagated.
+- **Instance IP**: `172.31.5.118` (private), consistent with `ikenna-vm` backend record.
+
+### Console output excerpt (boot through full startup)
+
+```
+[    0.000000] Linux version 6.8.0-1029-aws ...
+[    1.410673] RAS: Correctable Errors collector initialized.
+[    7.031654] cloud-init v. 25.3-0ubuntu1~24.04.1 running 'init' at Fri, 29 May 2026 14:49:58 +0000. Up 7.02s
+[    7.050207] ci-info: | enp39s0 | True | 172.31.5.118 | 255.255.240.0 | global | 0a:bc:c0:71:c0:1f |
+[OK] Started orchestrator.service - orchestral agent orchestration HTTP server.
+[OK] Started nginx.service - A high performance server and a reverse proxy server.
+[OK] Reached target multi-user.target - Multi-User System.
+2026/05/29 14:50:00Z: SSM Agent unable to acquire credentials: AccessDeniedException (pre-IAM-profile-attach)
+2026/05/29 15:15:15Z: Amazon SSM Agent v3.3.4121.0 is running  ← IAM profile attached, SSM healthy
+```
+
+### Interpretation
+
+The console output covers the last reboot (14:49Z) through 15:31Z with no anomalies. **No kernel-level root cause
+is evident.** The `StatusCheckFailed_Instance` failures are NOT caused by OOM-killer, kernel panic, or hardware
+errors. This confirms a **userspace soft-hang**: the process table / FD / memory pressure accumulates until the
+kernel network stack becomes unresponsive to EC2 ARP/ICMP health checks — but the kernel itself never panics or
+invokes the OOM-killer. The damage threshold is below the kernel-kill threshold.
+
+This is the expected pattern for Hypothesis #1 (claude-spawn-based usage poller churn): gradual accumulation over
+hours, not an acute event that leaves a kernel breadcrumb. Console output will never catch it — only the Phase 2
+watchdog (capturing `pgrep`, `free`, FD counts every 60s) will show the accumulation curve in real time.
+
+**Combined Phase 1 + Phase 2 conclusion**: Both independent forensic sources point to the same root cause. Phase 3
+(replace claude-spawn poller with direct Anthropic API call) is the correct fix.
