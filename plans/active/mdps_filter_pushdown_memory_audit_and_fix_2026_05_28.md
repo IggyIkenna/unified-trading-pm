@@ -334,8 +334,9 @@ Per operator 2026-05-28 EOD, the sequence is:
       tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day` wired). Scope: BINANCE-FUTURES + BYBIT ×
       BTCUSDT + ETHUSDT × trades × 2026-04-15→2026-04-30, `MAX_WORKERS=2`, output →
       `market-data-tick-cefi-test-central-element-323112`. VM auto-deletes on completion.
-- [ ] [AGENT] P1. **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to
+- [x] ✅ [AGENT] P1. **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to
       land architecture here — that's a multi-week refactor, not a "smallest viable fix".
+      — unified-trading-pm@(see commit) | plan: plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md | 7 phases covering execution model, data engine, CLI granularity, observability, codex updates; codex audit of 4 operator findings included.
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
