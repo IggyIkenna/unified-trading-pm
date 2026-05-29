@@ -5055,20 +5055,20 @@ Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md` AGENT-AUTO s
 
 **Shipped on LDR this session (4 P1 bugs + 1 P2 bug):**
 
-- **Bug-K** ✅ Kamino pool_id schema mismatch — MTDS@c3ae794c. `_collect_kamino` now emits `pool_id` (aliased from
-  vault PDA `address`) + `token_a`/`token_b` to satisfy `DEFI_POOL_DEX_POOLS` SchemaContract. Re-run scoped
-  Kamino backfill pending tarball rebuild.
+- **Bug-K** ✅ Kamino pool_id schema mismatch — MTDS@c3ae794c. `_collect_kamino` now emits `pool_id` (aliased from vault
+  PDA `address`) + `token_a`/`token_b` to satisfy `DEFI_POOL_DEX_POOLS` SchemaContract. Re-run scoped Kamino backfill
+  pending tarball rebuild.
 - **Bug-J** ✅ Jito Stakenet API drift — MTDS@c3ae794c. Stakenet shape changed from single `pool_total_lamports`/
   `pool_token_supply` object to time-series payload (`apy[]`/`tvl[]`/`supply[]`/`num_validators[]`); rewrote
   `_collect_jito` for the new shape + added `_collect_jito_historical` (DeFiLlama yields chart, pool
   `0e7d0722-9054-4907-8593-567b353c0900`).
 - **Bug-M** ✅ Marinade per-date — MTDS@c3ae794c. Verified Marinade's `/msol/apy/365d` (rolling 365d annualised) and
-  `/msol/price_sol?from=&to=` (ignores filters, returns current) don't expose true historical APY. Re-routed
-  past-date Marinade collection through DeFiLlama yields chart for marinade-liquid-staking MSOL pool
+  `/msol/price_sol?from=&to=` (ignores filters, returns current) don't expose true historical APY. Re-routed past-date
+  Marinade collection through DeFiLlama yields chart for marinade-liquid-staking MSOL pool
   (`b3f93865-5ec8-4662-90a0-11808e0aa2bd` — daily APY back to 2025-02-26; pre-2025-02-26 honest-empty).
-- **Bug-G** ✅ Solana gas chain mapping — deployment-service@3e83f30 + MTDS@c3ae794c. Two-part fix: handler now
-  accepts `--gas-fee-chains solana` sentinel + `solana_enabled` gated on it (was hardcoded False); launcher
-  updated from `99999` to `solana`. `_collect_solana_historical` already implemented; previously unreachable.
+- **Bug-G** ✅ Solana gas chain mapping — deployment-service@3e83f30 + MTDS@c3ae794c. Two-part fix: handler now accepts
+  `--gas-fee-chains solana` sentinel + `solana_enabled` gated on it (was hardcoded False); launcher updated from `99999`
+  to `solana`. `_collect_solana_historical` already implemented; previously unreachable.
 
 **CREDENTIAL APPROVAL REQUEST — Drift historical funding (Bug-D)**
 
@@ -5113,27 +5113,26 @@ Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md`.
 
 **Additionally shipped this session:**
 
-- **Bug-R** ✅ UTL@cb1f4b5f. `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` —
-  3 retries at 1s/2s/4s base ±30% jitter. Unit tests in `tests/unit/test_manifest_writer_429_backoff.py` cover all
-  4 classification paths + retry semantics.
-- **Bug-A** diagnosed (PM@cb87583). Original report implied workspace-wide AAVE schema drift; investigation
-  reads 2026-05-28 run.log directly: AAVE_V3 ETHEREUM/ARBITRUM/POLYGON/AVALANCHE/BASE/LINEA/BSC all succeed via
+- **Bug-R** ✅ UTL@cb1f4b5f. `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries
+  at 1s/2s/4s base ±30% jitter. Unit tests in `tests/unit/test_manifest_writer_429_backoff.py` cover all 4
+  classification paths + retry semantics.
+- **Bug-A** diagnosed (PM@cb87583). Original report implied workspace-wide AAVE schema drift; investigation reads
+  2026-05-28 run.log directly: AAVE_V3 ETHEREUM/ARBITRUM/POLYGON/AVALANCHE/BASE/LINEA/BSC all succeed via
   `aave_v3_native` (8016/11529/2663/4822/31025/722/2155 rows). Only **AAVE_V3-OPTIMISM** subgraph
-  `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` returns 0 rows on native + 'no field marketDailySnapshots' on
-  Messari fallback. Cascade-with-`record_empty` is the correct shard-failure-isolation response. Further triage
-  needs Graph API gateway auth (slot-1 attempted unauthenticated probe; got `auth error: missing authorization
-  header`); captured for next Aave-targeted plan. Other 7 chains carry the AAVE-V3 signal so paper-trade gates are
-  not blocked.
+  `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` returns 0 rows on native + 'no field marketDailySnapshots' on Messari
+  fallback. Cascade-with-`record_empty` is the correct shard-failure-isolation response. Further triage needs Graph API
+  gateway auth (slot-1 attempted unauthenticated probe; got `auth error: missing authorization header`); captured for
+  next Aave-targeted plan. Other 7 chains carry the AAVE-V3 signal so paper-trade gates are not blocked.
 
 **Gate-7 (wrong-bucket Solana migration) — script already exists, runtime blocker:**
 
-- `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` already has the `--source-bucket
-  defi` flag and full Gate-7 implementation (shipped earlier at MTDS@3fed4a7e). All migration logic ready.
-- **Blocker**: my local `unified-api-contracts` worktree is on `ci-timeout-boost` (foreign-dirty), 8 commits
-  behind LDR, so `from unified_api_contracts import InstrumentType` doesn't expose `SOLANA_LENDING/SOLANA_VAULT/
-  SOLANA_AMM_POOL`. I worked around this by building a fresh LDR-pinned UAC+UTL venv at `/tmp/migenv` from a clean
-  clone of `live-defi-rollout`. The dry-run was launched but the `_list_wrong_bucket_solana_blobs` full bucket
-  scan is slow (~2000+ blobs across the unified flat bucket) and the smoke run was killed before completing.
+- `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py` already has the `--source-bucket defi`
+  flag and full Gate-7 implementation (shipped earlier at MTDS@3fed4a7e). All migration logic ready.
+- **Blocker**: my local `unified-api-contracts` worktree is on `ci-timeout-boost` (foreign-dirty), 8 commits behind LDR,
+  so `from unified_api_contracts import InstrumentType` doesn't expose `SOLANA_LENDING/SOLANA_VAULT/ SOLANA_AMM_POOL`. I
+  worked around this by building a fresh LDR-pinned UAC+UTL venv at `/tmp/migenv` from a clean clone of
+  `live-defi-rollout`. The dry-run was launched but the `_list_wrong_bucket_solana_blobs` full bucket scan is slow
+  (~2000+ blobs across the unified flat bucket) and the smoke run was killed before completing.
 - **Recommended runbook for next pass** (vm-ml or operator laptop with clean UAC worktree on LDR):
   ```bash
   cd market-tick-data-service
@@ -5151,19 +5150,17 @@ Plan ref: `plans/active/solana_defi_legacy_migration_2026_05_27.md`.
   `launch-marinade-solana-backfill-vm.sh`, `launch-mtds-solana-gas-backfill-vm.sh`) self-deleted on
   `VM_SHUTDOWN_ON_COMPLETION=true` after writing the buggy outputs.
 - Relaunching now requires `bash scripts/vm/create-code-tarballs.sh` from a slot with clean worktrees (mine has
-  foreign-dirty files in UAC + a few other repos from parallel agents). Operator-acked `--allow-dirty-tarball`
-  override IS an option but risks contaminating the tarball with other agents' WIP — defer to a slot in a clean
-  state.
+  foreign-dirty files in UAC + a few other repos from parallel agents). Operator-acked `--allow-dirty-tarball` override
+  IS an option but risks contaminating the tarball with other agents' WIP — defer to a slot in a clean state.
 - Bug-G impact: Solana gas-fees won't be collected until the next launch; not a paper-trade blocker.
-- Bug-K/J/M impact: Kamino-vault/Jito/Marinade historical lst_rates+dex_pools backfills won't fill until
-  re-launch; live forward-day collection through Gate-5 per-data-type handlers (when they ship) will use the new
-  paths.
+- Bug-K/J/M impact: Kamino-vault/Jito/Marinade historical lst_rates+dex_pools backfills won't fill until re-launch; live
+  forward-day collection through Gate-5 per-data-type handlers (when they ship) will use the new paths.
 
 **Pending operator decisions:**
 
 1. Drift Bug-D credentials — Helius archival tier verification vs Drift Institutional API (per earlier ping).
-2. Tarball rebuild + VM relaunch sequencing — wait for clean-slot opportunity, or operator-ack
-   `--allow-dirty-tarball` and proceed.
+2. Tarball rebuild + VM relaunch sequencing — wait for clean-slot opportunity, or operator-ack `--allow-dirty-tarball`
+   and proceed.
 3. Aave V3 OPTIMISM subgraph triage — does the workspace have a Graph Gateway API key (Secret Manager
    `the-graph-api-key` or similar)?
 
@@ -5177,37 +5174,37 @@ Operator empirically verified both keys exist + work; the prior "BLOCKED-CREDENT
 
 **Bug-A (Aave V3 OPTIMISM `marketDailySnapshots` field-missing) — RESOLVED.** Code at **UAC@15e67b93** (plan-flip at
 PM@40dddc39a). NOT a credential issue; using existing `graph-api-key` Secret Manager entry. Root cause confirmed via
-authenticated probes: the github-README deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` is schema-valid
-(has `reserveParamsHistoryItems` + `reserves`) but contains ZERO entries at any timestamp despite being head-indexed
+authenticated probes: the github-README deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` is schema-valid (has
+`reserveParamsHistoryItems` + `reserves`) but contains ZERO entries at any timestamp despite being head-indexed
 (`_meta.block.number=152230969`, `ts=1780060715`; `reserves(first:5)` returns []). Swapped OPTIMISM in
-`SUBGRAPH_IDS["aave_v3"]` to `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment; populated
-history through 2024-09-11). The existing `lending_indices_handler` cascade-with-Messari-fallback already handles
-this — the native `aave_v3_native` attempt now raises `SubgraphSchemaError` and the cascade lands on
-`messari_lending`. No handler changes needed.
+`SUBGRAPH_IDS["aave_v3"]` to `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment; populated history
+through 2024-09-11). The existing `lending_indices_handler` cascade-with-Messari-fallback already handles this — the
+native `aave_v3_native` attempt now raises `SubgraphSchemaError` and the cascade lands on `messari_lending`. No handler
+changes needed.
 
-**Bug-D (Drift S3 archive cutoff) — RESOLVED.** Code at **MTDS@fc7e0636** (plan-flip at PM@14902b392). NOT a
-credential issue; using existing `helius-api-key` Secret Manager entry (verified via slot-1 `getVersion` 200 on
+**Bug-D (Drift S3 archive cutoff) — RESOLVED.** Code at **MTDS@fc7e0636** (plan-flip at PM@14902b392). NOT a credential
+issue; using existing `helius-api-key` Secret Manager entry (verified via slot-1 `getVersion` 200 on
 `mainnet.helius-rpc.com/?api-key=$KEY` + Helius v0 parsed-history
 `/v0/addresses/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/transactions` returning pre-decoded Drift transactions).
-Replaced the legacy `EXPECTED_PAST_SOURCE_COVERAGE_END` empty-record at
-`_backfill_drift_s3_date:1357` with a dispatcher into new `_backfill_drift_helius_date` method:
+Replaced the legacy `EXPECTED_PAST_SOURCE_COVERAGE_END` empty-record at `_backfill_drift_s3_date:1357` with a dispatcher
+into new `_backfill_drift_helius_date` method:
 
 - Loads `helius-api-key` from Secret Manager via UTL `get_secret_client`.
 - Paginates Helius v0 `api.helius.xyz/v0/addresses/<drift_v2_program>/transactions` with `before=<sig>` cursors.
 - Filters to the target day's `[00:00, 23:59:59]` UTC window.
 - Routes per-shard failures through `record_failed`; empty pages → `record_empty(SOURCE_RETURNED_ZERO)`; success →
   `record_captured`.
-- Writes to the canonical hive path (same as the existing S3 backfill — `day=YYYY-MM-DD/asset_group=defi/venue=DRIFT/
-  chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`) with filename `drift_helius_<market>_<yyyymmdd>.parquet`.
+- Writes to the canonical hive path (same as the existing S3 backfill —
+  `day=YYYY-MM-DD/asset_group=defi/venue=DRIFT/ chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`) with
+  filename `drift_helius_<market>_<yyyymmdd>.parquet`.
 
-**Schema-mapping caveat** (documented in the method docstring): Helius parsed-history is signature-level metadata,
-NOT decoded Drift V2 funding rates. The exact V1 S3 schema (`fundingRate24h`, `oraclePrice`, ...) is unrecoverable
-from Helius alone without bundling the Drift V2 Anchor IDL decoder. Rows carry `data_quality=
-"helius_v2_signatures_only"` + extension columns (`helius_signature/slot/tx_type/fee_lamports/description/source`).
-The live `/stats/markets` snapshot path remains the canonical funding-rate source; this fix unblocks the historical
-date range for the carry_staked_basis backtest signal. Follow-up todo to bundle the Drift V2 IDL decoder + emit
-fully-mapped `funding_rate_*` columns is captured implicitly in the docstring + can be filed as a P3 nice-to-have
-once UAC SchemaContract for Drift-V2-IDL ships.
+**Schema-mapping caveat** (documented in the method docstring): Helius parsed-history is signature-level metadata, NOT
+decoded Drift V2 funding rates. The exact V1 S3 schema (`fundingRate24h`, `oraclePrice`, ...) is unrecoverable from
+Helius alone without bundling the Drift V2 Anchor IDL decoder. Rows carry `data_quality= "helius_v2_signatures_only"` +
+extension columns (`helius_signature/slot/tx_type/fee_lamports/description/source`). The live `/stats/markets` snapshot
+path remains the canonical funding-rate source; this fix unblocks the historical date range for the carry*staked_basis
+backtest signal. Follow-up todo to bundle the Drift V2 IDL decoder + emit fully-mapped `funding_rate*\*` columns is
+captured implicitly in the docstring + can be filed as a P3 nice-to-have once UAC SchemaContract for Drift-V2-IDL ships.
 
 **QG**: `bash scripts/quality-gates.sh --no-fix` on MTDS → "✅ ALL QUALITY GATES PASSED (162s)".
 
@@ -5227,3 +5224,31 @@ bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh \
 ```
 
 — slot-1 main / Bug-A + Bug-D code-ship pass 2026-05-29
+
+---
+
+## [slot-1-main] 2026-05-29 — orchestrator VM triple-cloud auth parity DONE 10/10
+
+**Plan refs**: `plans/active/issues/orchestrator_vm_triple_cloud_auth_provisioning_2026_05_28.md`
+
+**Status**: 10/10 epic VMs (i-007e8d9 / 06e33c6 / 0a66300 / 05805eb / 0e51b9c / 0e89a5f / 063bc8d / 005e1ba / 003be93
+/ 02294132) now have GCP ADC (unified-trading-sa) + GitHub auth (gh CLI + git credential helper) + AWS instance role —
+all 6/6 verify checks PASS per VM (gcloud auth list, gsutil ls, gh auth status, aws sts, git ls-remote, ADC file).
+
+**Provenance**:
+
+- Bootstrap commits: `agent-orchestrator@0febb19` (STEP 1.6 + STEP 5.5) + `agent-orchestrator@843c187` (gh-setup-git +
+  resilient PM pull).
+- New AWS SM secret: `ORCHESTRATOR_VM_GCP_ADC` (2397 bytes). IAM policy `uts-orchestrator-epic-policy` extended to v2
+  (default) for `secretsmanager:GetSecretValue` on the new ARN.
+- GCP SA reused: `unified-trading-sa@central-element-323112` (already has storage.objectAdmin /
+  secretmanager.secretAccessor / bigquery.dataEditor / pubsub.editor / run.invoker — no new SA needed).
+- New SA key id: `4af7b762c69e34eda225428a0979c039db4ad18a`.
+
+**Follow-ups** (logged as P2/P3 in the issue doc):
+
+- Fold IAM grant into Terraform `uts-orchestrator-epic-policy` source-of-truth (v2 will revert on next `tofu apply`).
+- 90-day SA-key rotation calendar reminder.
+- Pre-bake gcloud + gh into the AMI to shave bootstrap time.
+
+— slot-1 main / triple-cloud auth provisioning pass 2026-05-29
