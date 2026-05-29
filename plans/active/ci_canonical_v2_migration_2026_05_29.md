@@ -163,7 +163,8 @@ alone doesn't escape it.
   - Add `.github/workflows/quality-gates-v2.yml` to UAC. UAC's caller references PM's v2 callee at LDR ref (just like v1
     references python-quality-gates.yml at LDR)
   - Quickmerge per canonical flow
-- [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on both branches 2026-05-29 (included in 18-branch sweep).
+- [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on both branches.
+      staging had quality-gates-v2 from 18-branch sweep 2026-05-29; main rotation applied 2026-05-29 (main had no prior required check — was missing from sweep).
 - [ ] [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
 - [ ] [VERIFY] P0. Next UAC PR triggers v2 cleanly.
 
