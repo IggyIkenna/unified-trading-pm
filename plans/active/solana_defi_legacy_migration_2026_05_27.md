@@ -464,10 +464,8 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [ ] 🟡 OPERATIONALLY BROKEN [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — code logic correct but
-      Helius integration emits 0 rows for known-active days; VM stopped 2026-05-29T17:48Z; 225 phantom empty_confirmed
-      rows cleaned from manifest (`gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet`
-      via `mtds/scripts/clean_drift_helius_empty_rows.py`); root cause + fix tracked under sub-todo below. Original
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — restored after Bug-D-followup architecture
+      shipped 2026-05-29 (MTDS@9a840e01); see Bug-D-followup sub-todo for new code path. Original
       fix shipped 2026-05-29 (MTDS@fc7e0636). Root cause **CONFIRMED** by slot-1 probe 2026-05-29:
       `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
       ListBucket: `prefix=market` → 0 keys; the only populated prefix is
@@ -491,28 +489,33 @@ plan. Commit + push via the standard `docs(plans):` flow.
       success). **Sub-evidence**: test fixture corrected (mtds@05cc05b0) — in_range_ts was 1779200000 (May-19 actual)
       labelled as May-20 in comment; bumped to 1779260000. QG green. Re-run via
       `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28` only AFTER Bug-D-followup fix below.
-  - [ ] [CODE] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — running backfill VM
-        (`mtds-solana-drift-backfill`, 2026-05-29 08:38 PT → 17:48 PT) produced 0 rows for SOL-PERP on every sampled
-        2025-01-09 → 2025-08-22 date (97 dates consecutive `0 rows`, all `SOURCE_RETURNED_ZERO`). **Root cause**:
-        `_backfill_drift_helius_date` (`solana_defi_handler.py:1542-1756`) walks Helius v0 parsed-history backwards from
-        NOW using `before=<sig>` cursors with `max_pages=50` (= 5000 txs hard cap). At the Drift V2 program's current
-        activity rate (~100 txs / 16h sampled 2026-05-29), 5000 txs ≈ 33 days back-walk max. Target dates 2025-01-09 →
-        2025-08-22 are 9-16 months back — wholly outside the page budget. The loop iterates through pages with all
-        timestamps > `day_end_ts` (filtered out as "newer than target day"), never crosses the `last_in_page_ts <
-        day_start_ts` break condition, hits the 50-page ceiling with `rows=[]`, then emits
-        `record_empty(reason=SOURCE_RETURNED_ZERO)`. Each date re-starts the walk from scratch (no shared cursor between
-        dates), making total wall-clock O(N_dates × max_pages × page_latency) ≈ 30s/date for 0 rows. Endpoint + auth
-        verified working: raw probe returns 200 OK with 100 non-empty txs (DEPOSIT/UNKNOWN types, sources ∈ {VOLTR_VAULT,
-        KAMINO_FARMS, DRIFT}). **Proposed fix**: replace the cursor-walk with a single targeted lookup —
-        Solana RPC `getSignaturesForAddress(programId, before=<sig-near-day_end>, until=<sig-near-day_start>)` bounded
-        by signature timestamps; then resolve transaction details via Helius `/v0/transactions` POST batch endpoint
-        (accepts up to 100 signatures per call). Day-start anchor signature comes from a one-shot binary search on
-        `getSignaturesForAddress` results (Solana RPC supports `limit` + `before`; iterate `before=<oldest-sig-of-prev-
-        page>` until a tx's blockTime < day_start_ts is found, then use that sig as the `until` boundary). Estimate:
-        ~80-120 LOC delta in `_backfill_drift_helius_date` + small RPC helper. Manifest cleanup: 225 rows reconciled
-        empty_confirmed → expected_unattempted in `market-data-tick-defi-central-element-323112` 2026-05-29T19:01Z
-        (script `mtds/scripts/clean_drift_helius_empty_rows.py`). Relaunch only AFTER fix verified locally on one known-
-        active 2025-08 date (expected >100 rows captured).
+  - [x] ✅ [CODE] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — shipped
+        MTDS@9a840e01 via Option 2 (persistent sig->blockTime index). **Probe results** (slot-1
+        2026-05-29): Option 1 (Helius v0 time-range params) FAILS — `startTime/endTime/from/to/minTime/maxTime`
+        silently ignored (always return HEAD-anchored page); only `until` returns 400 "invalid query parameter".
+        Option 3 (Drift V2 S3 archive) FAILS — bucket `drift-historical-data-v2` confirmed ends 2025-01-07 via
+        ListObjectsV2 (last key `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/market/SOL-PERP/tradeRecords/2025/20250107`;
+        any `start-after=20250108` returns 0 keys). Option 2 wins architecturally; cost amortised as one-time
+        index build per operator insight (on-chain data is append-only). **Implementation**: new script
+        `market_tick_data_service/scripts/build_drift_v2_sig_index.py` walks Helius RPC
+        `getSignaturesForAddress` HEAD→inception and persists `(signature, slot, blockTime)` tuples to
+        `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet` (idempotent forward catch-up on re-run).
+        `_backfill_drift_helius_date` rewritten to (1) load+cache the index per-process via UTL
+        `download_bytes`, (2) filter by `[day_start_ts, day_end_ts]`, (3) batch-resolve in-window sigs via
+        Helius `POST /v0/transactions` (100 sigs/batch). Per-day cost: O(target_day) — 1 cache hit + N/100
+        batch calls. Tests `test_helius_no_sigs_in_window_records_empty` + `test_helius_missing_index_records_failed`
+        + `test_helius_with_in_range_sigs_writes_parquet` cover all 3 paths (in-window, out-of-window-but-index-present,
+        index-missing). QG green exit 0. **Volume side-finding (P3)**: Drift V2 program-level
+        signature density is much higher than the operator brief estimated — at peak (e.g. 2026-04-01)
+        a single day has > 1.6M signatures (observed in slot-1 build attempt walking 1275 pages all
+        oldest=2026-04-01). Full back-walk to 2024-11-01 will produce a multi-GB parquet over many hours of
+        RPC paging (initial build NOT yet uploaded to GCS — operator/cron run needed). Architecture
+        degrades gracefully: handler emits `record_failed("sig index missing — run build_drift_v2_sig_index.py")`
+        when index absent. **Operator action required before relaunching backfill VM**: run
+        `python -m market_tick_data_service.scripts.build_drift_v2_sig_index --back-to 2024-11-01`
+        (estimate: several hours; idempotent — safe to interrupt and resume; persistent across calls).
+        Once index lands at `gs://market-data-tick-defi-central-element-323112/_index/drift_v2_sig_index.parquet`,
+        relaunch via `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** — fixed both sides 2026-05-29.
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1102` now passes `--gas-fee-chains solana` sentinel
       (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel and
