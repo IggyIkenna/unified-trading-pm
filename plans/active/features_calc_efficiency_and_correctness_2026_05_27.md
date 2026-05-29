@@ -85,7 +85,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       row/11.8KB, 4h=6 rows/12.4KB, 1h=24/14.2KB, 15s=5760/350KB; 7× amplification = 7 `load_candles_with_buffer` calls;
       consolidation candidates (24h→yearly, 4h/1h→monthly) tagged `needs-design + blocked-on-migration-window`. Below is
       the original task spec (kept for provenance):
-- [ ] [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).**
+- [x] ✅ [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — DONE (spec retained for provenance; audit shipped at PM@475d6601)
       Operator-directed: before any layout redesign, ground in how data is _actually_ processed + saved in
       `processed_candles/`. Deliverable is an audit doc
       (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
