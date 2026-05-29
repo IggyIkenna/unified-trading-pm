@@ -113,6 +113,13 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
       ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
       read actual GCS rows. Status TBC pending audit script run.
+- [x] ✅ [AUDIT] P1. Massive Stocks Starter coverage of BTC/ETH ETFs verified live 2026-05-28 — operator added Stocks
+      Starter tier; smoke-tested 1m OHLCV for every ETF on its listing day; all 18 return data: 9 BTC spot at 2024-01-11
+      (IBIT/FBTC/BITB/ARKB/BTCO/BRRR/HODL/EZBC/GBTC), BITO at 2021-10-19 (BTC futures ETF), 8 ETH spot at 2024-07-23
+      (ETHA/FETH/ETHE/ETHV/ETHW/CETH/QETH/EZET). Starter's 5-year window (boundary verified 2021-05-28 = NOT_AUTHORIZED,
+      2021-06-01 = OK) contains every ETF's full lifetime — Massive alone is sufficient backfill source for the ETF
+      cells regardless of Databento state. Phase 4 connector should prefer `s3://flatfiles/us_stocks_sip/` bulk download
+      for these 18 tickers (one-shot per ETF for full history vs paginated REST).
 
 ### Phase 1 — UAC contract additions (1 day)
 
