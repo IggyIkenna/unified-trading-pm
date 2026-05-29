@@ -132,9 +132,13 @@ alone doesn't escape it.
       doc-plan-code principle.
 - [ ] [AUDIT] P0. Verify operator has admin perms on GitHub branch protection settings for PM, UAC, UTL (and the 7 P1
       repos). Without admin perms, the rotation step requires operator action.
-- [ ] [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
+- [x] ✅ [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
       `bash     scripts/quickmerge.sh --help 2>&1 | head -30` should mention it. If missing in quickmerge
       implementation, file separate fix-quickmerge issue and block this plan on it.
+      — CONFIRMED: `scripts/quickmerge.sh:819` (`_SENTINEL=".qg_last_passed_sha"`) reads the sentinel in
+        `--agent` mode; `scripts/quality-gates-base/base-service.sh:2411` writes `git rev-parse HEAD` to
+        `.qg_last_passed_sha` on a COMPLETE run (all gates on: tests+lint+codex, no --quick/--skip flags).
+        Format: full SHA, trimmed on read (`tr -d '[:space:]'`). No separate fix-quickmerge issue needed.
 
 ### Phase 1 — PM (1 day)
 
