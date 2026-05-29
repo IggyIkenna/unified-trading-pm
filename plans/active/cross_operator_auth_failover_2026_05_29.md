@@ -121,11 +121,14 @@ why + reproduction.
       `"account-rotated:<id> — reason:rate_limit — exiting, new session spawning"`. Preserves `account-rotated:<id>`
       sentinel for worker exit detection. All current sites use `rate_limit`; `auth_failed`/`operator_directed` wired
       in Phase 2 watchdog + future operator-directed endpoint.
-- [ ] [AGENT] P0. Wire the existing Slack `agent-orchestrator-alerts` channel to fire on every rotation event. Payload
+- [x] ✅ [AGENT] P0. Wire the existing Slack `agent-orchestrator-alerts` channel to fire on every rotation event. Payload
       shape:
       `     🔄 Account rotation     Slot:        <N>     Operator:    <ikenna|harsh>     Swapped out: <old_account_id> (operator: <ikenna|harsh>)     Swapped in:  <new_account_id> (operator: <ikenna|harsh>)     Reason:      rate_limit | auth_failed | operator_directed     Time:        <ISO UTC>     `
       Cross-operator rotation (e.g. `harsh-primary` → `sub-a-ikenna`) should be visually highlighted (different emoji or
       color) so the operator immediately sees when one operator's slot is using another operator's quota.
+      **Shipped (agent-orchestrator@3daacc0):** `_fire_rotation_alert()` helper fires `notify_account_rotated()` in a
+      daemon thread at all 4 call-sites. `notify_account_rotated()` upgraded to full 6-arg Block Kit impl with
+      `:rotating_light:` + "CROSS-OPERATOR" header suffix for cross-operator swaps.
 - [ ] [AGENT] P0. End-to-end test on staging: trigger each rotation reason in turn, confirm Slack receives one alert per
       event with the correct reason field.
 
