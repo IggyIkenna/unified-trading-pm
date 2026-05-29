@@ -101,9 +101,40 @@ indefinitely with no auto-unblock when blockers complete.
 - [ ] [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors see
       the canonical form + the auto-fixer in one place.
 
+## Phase 6 — PM-pull + PlanRegenLoop latency (P0 — added 2026-05-29 after empirical test)
+
+> Operator-discovered 2026-05-29: pushed `plan_hygiene_silent_failure_capture` to LDR at 14:11Z; 25 min later
+> `/api/backlog/regen` returned `scanned_plans=21, new_tasks=0` — the plan was NOT ingested. Root cause: the regen-host
+> reads the local PM clone without doing its own `git pull`; the PlanRegenLoop only ticks every 6h (default). On
+> vm-orchestrator (SSM-accessible proxy for the API host), `slot-cron-ff-pull.service` is NOT installed — so there is no
+> observed automatic PM-pull on the orchestrator hosts. Plans languish until someone manually pulls or the loop next
+> ticks against a manually-pulled clone.
+
+- [ ] [AGENT] P0. Audit each orchestrator host's PM-pull mechanism: - API host (`i-0c9b283b31d6b5ca7`): does ANY cron /
+      systemd timer / inline-server thread run `git fetch + git       merge --ff-only origin/live-defi-rollout` on the
+      local PM clone? If no, that's the gap. - vm-orchestrator (`i-007e8d99d12831578`): same check. Confirmed
+      `slot-cron-ff-pull.service` absent there. - Every other epic VM (vm-ml, vm-cefi, …, vm-cross-cutting): each runs
+      its own orchestrator instance; each needs the same audit. Output: per-host table of pull-mechanism present /
+      absent / interval.
+- [ ] [AGENT] P0. Install a uniform PM-pull mechanism on every orchestrator host. Two options: - **Option A
+      (recommended)**: add a `pm-pull` systemd timer that runs every 5 min on every orchestrator host, mirroring
+      `slot-cron-ff-pull` but scoped to the orchestrator's PM clone path (`config.REPO_ROOT.parent`). - **Option B**:
+      extend `PlanRegenLoop._loop` to call `git -C $PM_PATH fetch + merge --ff-only origin/<branch>` before each tick.
+      Bounded latency = PlanRegen interval. Pick A — keeps the pull concern separate from the regen logic + matches
+      slot-host pattern operators already know.
+- [ ] [AGENT] P0. Tighten `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS` from 6h to **30 min** (or operator-decided shorter). 6h
+      is too long for the operator-described "VMs autonomously act on plans immediately" workflow. The current cost of a
+      regen tick is small (~21 plans scanned, ~100ms in normal case) — there's no reason to wait 6h.
+- [ ] [AGENT] P0. After Phase 6 ships, end-to-end test: (a) push a tiny canonical-format test plan to LDR; (b) within
+      `pm-pull interval + PlanRegen interval` (target: ≤35 min), the plan's tasks must appear in `/api/backlog`; (c)
+      within another `/boot` cycle, a free worker must be assigned at least one task from that plan. Document the
+      observed latency in the codex hygiene doc (Phase 5).
+
 ## Success criteria
 
 - 4-of-4 silent-failure modes have a hygiene check that fires within 24h of introduction.
+- PM-pull cron present + verified on every orchestrator host; PlanRegenLoop interval ≤30 min.
+- End-to-end push-to-task-pickup latency ≤35 min in normal operation (verified by Phase 6 test).
 - `check_parent_epic_alignment.py` flags any plan whose body-keyword profile doesn't match its declared epic (soft).
 - Slack alert escalates immediately on unpushed plan file (5-min dirty threshold + plan-path detection).
 - Daily reaper auto-unblocks tasks whose blockers are `done`; raises `Slack` alerts for deadlocks / orphan-blocked.
