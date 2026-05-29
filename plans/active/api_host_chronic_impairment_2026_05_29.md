@@ -38,9 +38,14 @@ operator intervention.
 > not in a valid state for account"). Either the SSM agent isn't running, or the IAM role lacks
 > `AmazonSSMManagedInstanceCore`. Without SSM we can't read journal logs, run top, check FD counts, etc.
 
-- [ ] [HUMAN] P0. Attach `AmazonSSMManagedInstanceCore` (or equivalent) to the instance's IAM role + restart the SSM
-      agent (`sudo systemctl restart amazon-ssm-agent`). Verify with
-      `aws ssm describe-instance-information --filters Key=InstanceIds,Values=i-0c9b283b31d6b5ca7`.
+- [x] ✅ [HUMAN+AGENT] P0. Attach `AmazonSSMManagedInstanceCore` (or equivalent) to the instance's IAM role + restart
+      the SSM agent (`sudo systemctl restart amazon-ssm-agent`). Verify with
+      `aws ssm describe-instance-information --filters Key=InstanceIds,Values=i-0c9b283b31d6b5ca7`. — 2026-05-29:
+      i-0c9b283b31d6b5ca7 had **no IAM instance profile at all** (`describe-instances` returned `[]`). Operator-blessed
+      fix: associated `uts-orchestrator-epic` (the same profile vm-orchestrator uses — role
+      `uts-orchestrator-epic-role`) via `aws ec2 associate-iam-instance-profile` (AssociationId
+      `iip-assoc-0e7a9249d85b2c21e`). SSM agent registered within ~3 min — `describe-instance-information` confirms
+      `PingStatus: Online`, agent `3.3.4121.0`. SendCommand smoke-tested successfully. Unblocks Phases 1+.
 
 ## Phase 1 — On-host forensics during a healthy window (P0)
 
