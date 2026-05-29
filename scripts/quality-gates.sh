@@ -118,8 +118,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/generate_instrument_snapshot.py"
     "!**/generate-strategy-instances-fixture.py"
     "!**/audit_dead_code.py"
-    "!**/test_detect_template_drift.py"
-    "!**/check_chain_set_inclusion.py"
+    "!**/quality_gates/**"
 )
 BE_EXCLUDE_GLOBS=(
     "**/smoke-test-dev.py"
