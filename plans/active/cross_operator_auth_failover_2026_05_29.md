@@ -91,9 +91,13 @@ why + reproduction.
 
 ## Phase 2 — Auth-fail rotation trigger (P0)
 
-- [ ] [AGENT] P0. Define `AccountStatus` `StrEnum` in `agent-orchestrator/server/models.py` (or wherever account-status
+- [x] ✅ [AGENT] P0. Define `AccountStatus` `StrEnum` in `agent-orchestrator/server/models.py` (or wherever account-status
       enums live): `healthy`, `rate_limited`, `auth_failed`, `disabled`. Migrate any existing boolean flag (e.g. the
       rate-limited DB column) to use the enum.
+      **Shipped (agent-orchestrator@ab64720):** `AccountStatus(StrEnum)` with 5 values in `models.py`. New
+      `account_status VARCHAR` column on `AccountUsageRow` + bootstrap migration. `mark_account_auth_failed()`,
+      `clear_account_auth_failed()`, `account_is_usable()` in `state_store.py`. `_account_to_view()` surfaces
+      `auth_failed`/`disabled` from DB column. Dashboard `types.ts` + `App.tsx` updated for new values.
 - [ ] [AGENT] P0. Add server-side watchdog: when `/api/slots/<N>/spawn` returns `ok` but no /heartbeat arrives within
       `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` (default **180**), mark the assigned `account_id` as `auth_failed` in the DB.
       Then call `_pick_next_account` on that slot and re-spawn the tmux session with the new account. Cap retries at 2
