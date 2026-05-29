@@ -113,8 +113,14 @@ why + reproduction.
 
 ## Phase 3 — Slack alert on every rotation (P0)
 
-- [ ] [AGENT] P0. Add a `RotationReason` `StrEnum`: `rate_limit`, `auth_failed`, `operator_directed`. Thread it through
+- [x] ✅ [AGENT] P0. Add a `RotationReason` `StrEnum`: `rate_limit`, `auth_failed`, `operator_directed`. Thread it through
       every `_pick_next_account` callsite so the dispatch_reason string carries the reason verbatim.
+      **Shipped (agent-orchestrator@d69598c):** `RotationReason(StrEnum)` added to `models.py`. Threaded through all 4
+      call-sites in `server.py` (rotate_all_slots_off_account, /boot, /heartbeat, /done): `rotation_reason` field in
+      `log_activity` details + dispatch_reason strings now carry the reason verbatim, e.g.
+      `"account-rotated:<id> — reason:rate_limit — exiting, new session spawning"`. Preserves `account-rotated:<id>`
+      sentinel for worker exit detection. All current sites use `rate_limit`; `auth_failed`/`operator_directed` wired
+      in Phase 2 watchdog + future operator-directed endpoint.
 - [ ] [AGENT] P0. Wire the existing Slack `agent-orchestrator-alerts` channel to fire on every rotation event. Payload
       shape:
       `     🔄 Account rotation     Slot:        <N>     Operator:    <ikenna|harsh>     Swapped out: <old_account_id> (operator: <ikenna|harsh>)     Swapped in:  <new_account_id> (operator: <ikenna|harsh>)     Reason:      rate_limit | auth_failed | operator_directed     Time:        <ISO UTC>     `
