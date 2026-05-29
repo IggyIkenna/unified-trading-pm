@@ -664,6 +664,106 @@ entry-point + single pl→pd before UTL call) — never per-helper round-trips.
 - [ ] [AGENT] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
       **DEFERRED to operator-scheduled canary** (same as 4.G).
 
+## Phase 6 — `_publish_emission_check` manifest-catalogue read scalability (DO NOT TOUCH YET)
+
+> **OPERATOR DIRECTIVE 2026-05-29**: "the manifest catalogue read inside
+> `_publish_emission_check` is a known issue and the correct path for that is
+> still not decided. Document that as the last phase of the plan. Manifest
+> will be done later on, don't start anything on that part — we need to
+> check how to handle that one properly."
+
+**Status: SCOPED, NOT STARTED. No agent may begin Phase 6 work without an
+explicit operator directive selecting an approach.**
+
+### What was observed (2026-05-29 GCS smoke test)
+
+The Phase 5E ns-precision fix smoke test (`/tmp/smoke_test_2day.py`) on
+COINBASE-SPOT BTC-USDT trades for two days exposed a pre-existing
+scalability problem in the production write path — **not** caused by the
+Phase 5 polars refactor:
+
+- `canonical_writer.write_candle_parquet` calls `_resolve_policy_output_data_type`
+  to check whether the target `(asset_group, source_data_type, mdps_dt)` is
+  policy-gated.
+- For gated combos (e.g. `ohlcv_1m:historical`, `ohlcv_1h:historical` with
+  `partial_ok` policy) it then calls `_publish_emission_check(bucket, row_key, output_data_type)`.
+- `_publish_emission_check` calls into UTL `publish_with_manifest_lookup`
+  which reads the **entire** consolidated manifest catalogue for the
+  bucket to evaluate completeness against the policy window.
+
+Measured RSS during a single-instrument single-day smoke run that
+exercised `_publish_emission_check`: **VmRSS climbed to 57 GB; VmPeak 75 GB
+within ~10 minutes** before the smoke was killed (no progress on per-shard
+manifest write). Compare with the streamlined polars-only path (skip
+canonical_writer, write parquet directly): **peak RSS 764 MB / mean
+579 MB / 21 seconds wall-clock for the same 2-day × 6-timeframe shard
+set**. So the bloat is entirely in the manifest-catalogue load, not in
+the Phase 5 polars chain.
+
+### What is NOT in scope for this phase (until operator decides)
+
+- Modifying any code in `unified_trading_library.manifest_*`.
+- Modifying `canonical_writer._publish_emission_check` /
+  `_resolve_policy_output_data_type`.
+- Modifying the `partial_ok` / `must_publish` / other publish policy
+  definitions or their per-data-type registrations.
+- Modifying the consolidated manifest catalogue storage layout / hive
+  partitioning / index format.
+- Bypassing the policy gate via `strict=False` or a code path flag.
+
+### What needs to be decided BEFORE work starts (operator-only)
+
+Closed set of options for the next session to discuss with the operator —
+do not pick autonomously:
+
+1. **Per-shard lazy lookup.** `publish_with_manifest_lookup` reads only
+   the rows for the requested `(date, venue, instrument_type, data_type,
+   timeframe)` from the partitioned manifest snapshot instead of the full
+   catalogue. Requires UTL manifest reader changes (cross-repo).
+2. **In-memory cache shared across shards.** One per-process load,
+   reused for every per-shard `_publish_emission_check` call. Reduces N
+   shard writes from N × full-load to 1 × full-load. Needs a cache
+   invalidation strategy + concurrency model.
+3. **Manifest snapshot partitioning by completeness-window.** Store
+   manifest rows in hive paths keyed by the policy completeness window
+   (e.g. `_index/policy_windows/output_data_type=ohlcv_1m/historical/...`).
+   Selective reads become O(target window) instead of O(full bucket).
+4. **Off-process policy decision service.** A long-running policy
+   evaluator that holds the manifest catalogue in memory and answers
+   `should_publish_row` queries via local RPC. Removes the per-call
+   load entirely; introduces a deployment dependency.
+5. **Defer the policy gate to a post-write reconciler.** Always
+   `record_captured` at the per-shard write; a separate daily job
+   downgrades to `PUBLISHED_DEGRADED` / `attempted_failed` for shards
+   whose window fails completeness. Loses real-time gating; safer on
+   memory.
+
+Each option has different cross-repo blast-radius (UTL changes vs MDPS-only),
+different live-vs-batch implications, and different
+`Manifest + Honest Absence` SSOT consequences. **None can be chosen
+without operator review.**
+
+### What the next agent should do
+
+1. **NOT** modify `_publish_emission_check`, `publish_with_manifest_lookup`,
+   any UTL manifest reader, or the manifest catalogue storage layout.
+2. Ping the operator with the option list above + any additional context
+   discovered since this plan was written.
+3. Wait for an explicit option selection before scoping the
+   implementation work as a separate plan.
+
+### Cross-references
+
+- Smoke evidence: 2026-05-29 session, `/tmp/smoke_test_2day.log` (heavy
+  path killed at VmRSS 57 GB) + `/tmp/smoke_lite.log` (streamlined path
+  succeeded in 21s at peak 764 MB).
+- This phase **does not block** Phases 2 / 3.6 / 5.6 / 5.7 — those touch
+  unrelated surfaces.
+- Composes with `codex/02-data/availability-manifest-and-data-status.md`
+  (manifest SSOT) and `codex/02-data/honest-absence-downstream-handling.md`
+  (per-shard policy semantics) — any chosen option must preserve their
+  contracts.
+
 ## Test plan
 
 - **Unit tests** at every stage: scanner (38 tests), scheduling, process_handler, worker, adapter (per-adapter).
