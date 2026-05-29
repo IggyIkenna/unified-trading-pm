@@ -530,12 +530,16 @@ revised Stage 4 reflects the audit-derived split between dead-code delete and li
       `test_timestamp_date_alignment.py` (117 lines, tested `CloudCandleStorage` timestamp alignment)). 12
       files deleted + 7 files edited. basedpyright stable at 21 errors (baseline); 1252 unit tests pass, 0
       failures. Production `OrchestrationWorkersMixin` MRO intact.
-- [ ] [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`**: 6 public functions
-      (`create_continuous_candles_simple_working`, `create_empty_candle`, `create_24h_candle_no_lookahead`,
-      `should_aggregate_from_15s`, `create_candle_from_interval_fixed`, `create_empty_candle_sophisticated`)
-      + 6 helpers (`_parse_timeframe_seconds`, `_detect_time_column`, `_build_24h_candles`,
-      `_build_interval_candles`, `_compute_buy_sell_split`, `_build_filled_candle_dict`). Each has zero
-      external callers per the audit table.
+- [x] ✅ [P1] **4.B Delete dead pieces of `fast_candle_aggregation.py`** — market-data-processing-service@a9641a8.
+      All 12 functions deleted per the audit table (6 public + 6 helpers): 423 source lines, file shrinks
+      835 → 412 lines (−51%). Plus 5 dead test classes deleted in `tests/unit/test_fast_candle_aggregation.py`
+      (171 test lines, file shrinks 352 → 181). Net Stage 4.B delete = 594 lines. Each candidate passed the
+      revised deletion criterion (no GCS/manifest/schema/persistence side effects, classic refactor-leftover
+      naming `_simple_working`/`_fixed`/`_sophisticated`, zero external callers, zero string-name runtime
+      references). Mid-edit incident: first sed pass deleted the `_TIMEFRAME_FREQ_MAP` module-level constant
+      (3 LIVE call sites) by mistake — basedpyright caught it immediately; restored from `git show HEAD:`.
+      Lesson recorded for future surgical deletes: separately handle module-level constants between function
+      defs. Verification: basedpyright 21 errors (= baseline), 1236 tests pass, 0 failures.
 - [ ] [P1] **4.C Pure-polars rewrite of the LIVE surface in `fast_candle_aggregation.py`**:
       - Flip `aggregate_from_15s_efficient(candles_15s_df: pl.DataFrame, target_timeframe: str) -> pl.DataFrame`.
       - Flip `create_candle_from_interval(interval_ticks: pl.DataFrame, ...) -> dict[str, object]`.
