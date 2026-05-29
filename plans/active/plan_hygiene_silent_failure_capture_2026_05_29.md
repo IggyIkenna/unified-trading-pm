@@ -63,8 +63,28 @@ indefinitely with no auto-unblock when blockers complete.
       that must be `done`; `prereqs.conditions` lists boolean condition names. No `blocked_on` table, no explicit
       `blocked` status transition. Phase 3's stale-blocker reaper design must query `status=queued` tasks where prereqs
       are unmet (not `status=blocked` as originally framed — that state doesn't exist).
-- [ ] [AGENT] P0. Read `scripts/dev/slot-git-status-report.sh` end-to-end. Confirm the Slack alert payload format and
+- [x] ✅ [AGENT] P0. Read `scripts/dev/slot-git-status-report.sh` end-to-end. Confirm the Slack alert payload format and
       identify the file-path stanza to extend.
+      **Finding (2026-05-29):**
+      - **Script flow**: `classify_repo()` (lines 114-190) walks each repo dir via `git status --porcelain`, tracks
+        `dirty_oldest_mtime` from the oldest mtime among dirty files, emits a TAB-separated row. `post_snapshot()` (lines
+        218-276) serialises all rows to JSON via Python3 and POSTs to `POST /api/slots/<N>/git-status` with shape:
+        `{"reported_at":"<ISO>","host":"<hostname>","repos":[{"name","branch","state","dirty_files","ahead","behind","local_sha","integration_branch","dirty_oldest_mtime?"}]}`.
+      - **Dirty-file loop stanza** (lines 134-148 of the script): This is the extension point for Phase 2. After the
+        `while IFS= read -r line; do` loop that finds the oldest mtime, insert a parallel loop (or combined pass) that
+        detects any `file` path matching `plans/active/*.md` or `plans/active/issues/*.md` and appends to a local
+        `unpushed_plans` array. This array gets passed as a new column in the TSV row (or as a separate JSON field built
+        in `post_snapshot`'s Python block).
+      - **Slack alert chain**: `post_snapshot` → server's `POST /api/slots/{slot_id}/git-status` →
+        `_maybe_send_sync_nudge()` (in-slot queue message, not Slack). Slack fires separately via
+        `WorkerLivenessKicker._maybe_alert_git_staleness()` in `worker_liveness.py:285` — it reads
+        `slot.git_status_json` on each liveness tick, checks if the cron is stale (>5 min) AND any repo is red for >15
+        min, then calls `slack_notify.notify_git_staleness_red(slot_id, dirty_minutes, behind_count)`.
+      - **Extension plan for Phase 2**: (a) Add `unpushed_plans: list[str]` to TSV output in `classify_repo` and to the
+        Python JSON serialiser block in `post_snapshot`. (b) Add `unpushed_plans` field to `GitStatusPostRequest` /
+        `RepoStatus` models. (c) In `_maybe_alert_git_staleness` (or a sibling), detect `unpushed_plans` and call a new
+        `notify_unpushed_plans(slot_id, plans)` Slack alert immediately (no 15-min threshold — a dirty plan file is
+        always operator-actionable).
 
 ## Phase 1 — `parent_epic` semantic check (P1)
 
