@@ -1,3 +1,7 @@
+---
+last_reviewed: 2026-05-29
+---
+
 # Dependency Health Policy
 
 Shipped: 2026-05-23. Plan: `plans/active/connectivity_dependency_buffer_policy_2026_05_23.md` (archived).
