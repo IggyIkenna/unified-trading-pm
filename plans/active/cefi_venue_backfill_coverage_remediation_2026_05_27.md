@@ -176,9 +176,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `ArrowInvalid: CSV conversion error to int64: invalid value '745.5'` / `'0.01'` (cols #6, #18) — Upbit emits
       floats in columns the Arrow schema types int64 → those symbol-shards silently dropped. Fix the Upbit Tardis schema
       (int64→float for affected cols). [data-loss] — market-tick-data-service@4db7956
-- [ ] [AGENT] P1. **Coinbase `ContentLengthError: Not enough data to satisfy content length header`** on large
+- [x] ✅ [AGENT] P1. **Coinbase `ContentLengthError: Not enough data to satisfy content length header`** on large
       book_snapshot_5 (e.g. LINK-USD 2020-01-02) — aiohttp stream cut mid-response → 0-row shard (7/8 partitions). Add
       retry on truncated stream. [degraded→data-loss]
+      — market-tick-data-service@850a95f: Wrapped queue/task/executor block in 3-attempt retry loop. Catches
+      `aiohttp.ClientPayloadError` (superclass of `ContentLengthError`); exponential backoff (2s, 4s) between attempts;
+      logs per-attempt warning + final error on exhaustion. Non-retryable errors (TardisHTTPError, ConnectionError, etc.)
+      still propagate immediately. stream_bulk_csv_to_parquet cleans up .tmp on failure so retries start fresh.
 - [ ] [AGENT] P1. **Deribit instrument-type routing bug**: spot `BTC`/`ETH` symbols are sent to deribit (a
       derivatives-only venue) → `HTTP 400` ×4. The instrument universe is routing spot-type instruments to a venue that
       has none. Fix universe/routing so only valid instrument types per venue are requested. [degraded]
