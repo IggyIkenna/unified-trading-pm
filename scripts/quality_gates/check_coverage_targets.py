@@ -93,7 +93,7 @@ def _load_targets(path: Path) -> list[Surface]:
 def _parse_coverage_xml(path: Path) -> list[FileCoverage]:
     """Parse Cobertura-format coverage.xml emitted by pytest --cov."""
     try:
-        tree = ET.parse(path)
+        tree = ET.parse(path)  # nosec B320 — input is pytest-generated coverage.xml, not user-controlled
     except (OSError, ET.ParseError):
         return []
     root = tree.getroot()

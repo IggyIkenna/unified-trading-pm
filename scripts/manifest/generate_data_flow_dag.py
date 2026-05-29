@@ -82,9 +82,9 @@ def parse_flows(data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[s
         if not entry:
             continue
         mode = _jstr(entry.get("mode"), "").lower()
-        if mode == "batch":
+        if mode == "batch":  # noqa: L2-mode-seam
             batch.append(entry)
-        elif mode == "live":
+        elif mode == "live":  # noqa: L2-mode-seam
             live.append(entry)
 
     return batch, live

@@ -30,6 +30,7 @@ make zero network calls.
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -612,7 +613,7 @@ def test_run_cross_asset_rescan_subprocess_command_shape() -> None:
     result = run_cross_asset_rescan(
         asset_group="cefi",
         apply=True,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=fake_run,
     )
     assert len(captured) == 1
@@ -636,7 +637,7 @@ def test_run_cross_asset_rescan_dry_run_omits_apply_flag() -> None:
     run_cross_asset_rescan(
         asset_group="defi",
         apply=False,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=fake_run,
     )
     cmd = captured[0]
@@ -648,7 +649,7 @@ def test_run_cross_asset_rescan_subprocess_failure_surfaces_rc() -> None:
     result = run_cross_asset_rescan(
         asset_group="sports",
         apply=False,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=lambda _cmd: (1, "", "rescan failed: catalog missing"),
     )
     assert result.return_code == 1
