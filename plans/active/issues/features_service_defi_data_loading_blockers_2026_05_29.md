@@ -170,3 +170,21 @@ features-service --feature-family delta_one --operation compute --mode batch \
 ## Status taxonomy
 
 `BLOCKED-OPERATOR-DECISION` — operator must pick between (1) extend DEFI_DATA_TYPE_OVERRIDES to PRD's data_type names, (2) rebuild legacy manifest, or (3) wait for MDPS refactor + canonical migration to finish before any features-service work against DeFi. Until one of these lands, features-service smoke tests against real DeFi data cannot proceed.
+
+## Unblock progress 2026-05-29 evening — CeFi path-of-least-resistance kicked off
+
+Operator directive 2026-05-29 16:00 IST: "we already have raw tick data — just use the date range that has it. If not in prd, copy from legacy to test." Pivoted from the four open DeFi decisions above to running the chain on CeFi via legacy raw → test bucket, since legacy CeFi raw has all the top venues (BINANCE-FUTURES, BINANCE-SPOT, BYBIT, COINBASE-SPOT, DERIBIT, KRAKEN-FUTURES/SPOT, OKX-SPOT/SWAP, BITFINEX-FUTURES, BITGET-FUTURES/SPOT, UPBIT) for the 2026-04-15 → 2026-05-04 window.
+
+**Test scope** (kept narrow for first end-to-end pass):
+- Venues: BINANCE-FUTURES + BYBIT (no Tardis-key dependency for either)
+- Instruments: BTCUSDT + ETHUSDT (top 2 perp pairs)
+- Data types: trades + book_snapshot_5 + derivative_ticker + liquidations
+- Window: 2026-04-15 → 2026-05-04 (21 days)
+
+**Step 1 — Raw copy DONE 18:32 IST**: 334 of 336 expected parquets copied from `market-data-tick-cefi-central-element-323112` → `market-data-tick-cefi-test-central-element-323112`. The 2 missing files (`day=2026-05-04 BINANCE-FUTURES book_snapshot_5 ETHUSDT.parquet`, `day=2026-05-04 BYBIT trades BTCUSDT.parquet`) are missing in the source legacy bucket too — not a copy failure. MDPS will record_empty for those shards.
+
+**Step 2 — MDPS canary IN-FLIGHT 18:44 IST**: VM `mdps-backfill-cefi-main-test-20260529-184417` (e2-standard-8, asia-northeast1-c). Source bucket override → test bucket; sink override (`MDPS_OUTPUT_BUCKET_CEFI`) → test bucket. Uses the current MDPS HEAD with the polars migration + `_cleanup_after_day` fix that the previous canary VM lacked. T+10min health check scheduled.
+
+**Step 3 — Features-service smoke** (pending Step 2 success): once MDPS produces processed candles in test bucket, features-service runs with `PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112`. First write to `gs://features-delta-one-cefi-*` unblocks audit items (l) / (live-versioning) / (batch-live) per `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`.
+
+The four DeFi operator-decisions in the original issue body remain open — this CeFi pivot is the parallel path, not a replacement.
