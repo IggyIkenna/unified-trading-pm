@@ -94,6 +94,26 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [AUDIT] P1. Confirm `SOURCE_PRIORITY` module docstring's deferred-plan slug is `multi_source_priority_merge_*` and
       reserve THIS plan's slug as the canonical successor (cross-link both ways).
 
+### Phase 0.5 — Universe expansion (shipped 2026-05-28)
+
+- [x] ✅ [UAC] P1. `tradfi_ticker_universe.py` — added missing BTC ETFs (BITB, BTCO, BRRR, HODL, EZBC) + ETH ETFs (ETHV,
+      ETHW, CETH, QETH, EZET); coverage now 10 BTC + 8 ETH = all 18 US-listed crypto-spot ETFs the operator validated on
+      ThetaData earlier.
+- [x] ✅ [UAC] P1. `tradfi_ticker_universe.py` — added new `TRADFI_FUTURES_PRODUCTS` list (12 CME-group root products):
+      ES, MES, BTC, MBT, ETH, MET (CME); CL, MCL, NG, QG (NYMEX); GC, MGC (COMEX). Wired into `TRADFI_TICKER_UNIVERSE`
+      dict under `futures_products` key.
+- [ ] [BLOCKED-CREDENTIALS — operator action] [AUDIT] P0. Massive `/v3/reference/futures/*` endpoints return
+      `404 page not found` despite operator confirming Futures Advanced package purchased 2026-05-28.
+      `/v3/reference/tickers?market=futures` returns 200 + empty array. Either (a) subscription still propagating
+      (typical 30-60 min after billing) or (b) API endpoint shape differs from Massive's published docs. **Operator to
+      verify on `massive.com/dashboard` that Futures Advanced shows active**; re-test after activation. Options Advanced
+      verified working (SPX, I:SPX, IBIT chains all return contract tickers).
+- [ ] [AUDIT] P1. Once Futures endpoint works, confirm Massive ticker convention for CME contracts (`ESH26` / `ES:H26` /
+      `ES.H26` / `F:ESH26`). Codify in `registry/tradfi_symbology.py`.
+- [ ] [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
+      ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
+      read actual GCS rows. Status TBC pending audit script run.
+
 ### Phase 1 — UAC contract additions (1 day)
 
 - [ ] [UAC] P1. `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` — append `"massive"` to:
