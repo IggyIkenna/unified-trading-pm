@@ -105,25 +105,26 @@ source:
 - [ ] [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
       venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets.
 - [~] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
-      (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest
-      rows in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains.
-      **`lst_rates/` DONE 2026-05-28**: deleted 1,200 date-prefix parquets (MARINADE 2023-01-01→2026-04-14); pruned
-      64,373 stale manifest rows from defi-prd `_index/availability_index.parquet` (1,633,780→1,569,407 rows). Canonical
-      `lst-rates-central-element-323112` confirmed superset (dates 2020-01-01→2026-05-19, MARINADE 902 rows).
-      **`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
-      rows — Gate 3 cannot be verified yet). Re-run this gate after Gate 2 migration VM completes and Gate 3 is verified.
+  (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest rows
+  in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains. **`lst_rates/` DONE
+  2026-05-28**: deleted 1,200 date-prefix parquets (MARINADE 2023-01-01→2026-04-14); pruned 64,373 stale manifest rows
+  from defi-prd `_index/availability_index.parquet` (1,633,780→1,569,407 rows). Canonical
+  `lst-rates-central-element-323112` confirmed superset (dates 2020-01-01→2026-05-19, MARINADE 902 rows).
+  **`lending_indices/` + `dex_pools/` deferred**: Gate 2 migration has NOT completed (canonical buckets show 0 SOLANA
+  rows — Gate 3 cannot be verified yet). Re-run this gate after Gate 2 migration VM completes and Gate 3 is verified.
 - [x] ✅ [SCRIPT] P0. **Gate 7 — migrate ALL bad-bucket Solana data → canonical split buckets (operator directive
       2026-05-28: "migrate the old bad buckets too")**: in addition to Gate 2 (which sources from `defi-prd/{type}/…`
       legacy historical), this gate migrates the **2823 wrong-bucket parquets** (actual count; plan estimated 72) the
       autonomous `mtds-solana-defi-backfill` VM wrote (2022-11-01→2026-05-28). **Source**:
       `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/[pipeline_mode=*/]asset_group=defi/venue=*/chain=SOLANA/     instrument_type={lending|pool|lst}/data_type={lending_indices,dex_pools,lst_rates}/...`
-      **7 venue/type combos**: KAMINO+SOLEND+MARGINFI (lending→SOLANA_LENDING), ORCA+RAYDIUM+PHOENIX (pool→SOLANA_AMM_POOL),
-      MARINADE (lst→LST). **Script**: added `--source-bucket defi` + `--delete-source` flags to
+      **7 venue/type combos**: KAMINO+SOLEND+MARGINFI (lending→SOLANA_LENDING), ORCA+RAYDIUM+PHOENIX
+      (pool→SOLANA_AMM_POOL), MARINADE (lst→LST). **Script**: added `--source-bucket defi` + `--delete-source` flags to
       `scripts/migrate_legacy_solana_defi_to_canonical.py`; reuses existing `_to_canonical_df` via thin
       `_to_canonical_df_wrong_bucket` wrapper (drops EVM `instrument_type` col + rebuilds `instrument_id` with correct
       `InstrumentType`). Ran `--source-bucket defi --delete-source` (no `--dry-run`) 2026-05-28: 2823 shards migrated, 0
-      errors, 0 wrong-bucket Solana parquets remaining. Sample-inspected `KAMINO-SOLANA:SOLANA_LENDING:...` instrument_id
-      (correct type). Gate 7 ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT enforced). ✓
+      errors, 0 wrong-bucket Solana parquets remaining. Sample-inspected `KAMINO-SOLANA:SOLANA_LENDING:...`
+      instrument_id (correct type). Gate 7 ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT
+      enforced). ✓
 - [ ] [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the heavier
       path (full split) pls")**. **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
       declared was the direction: _"Old monolithic handlers (`evm_defi_handler`, `solana_defi_handler`) replaced by
@@ -259,6 +260,39 @@ source:
    alias). Each is a 1-2h fix.
 3. Re-launch the affected VMs after the fixes land + setup-data-pipeline-vm.sh is re-uploaded to GCS.
 
+### Discovered side-issues (2026-05-29 — slot-1 dispatch from vm-ml SSM)
+
+- [ ] [BLOCKED-IAM-GRANT] [INFRA] P0. **Drift Helius backfill VM relaunch + Aave/Spark/Compound lending-indices backfill
+      VM relaunch — IAM grant gap.** Operator granted `roles/compute.instanceAdmin.v1` on `central-element-323112` to
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` 2026-05-29 ~T15:25Z. Tarballs already
+      rebuilt + uploaded at 2026-05-29T15:22Z (`mtds-code@0e92e49a36c3`, `unified-api-contracts-code@15e67b93`,
+      `unified-trading-library-code@32e7424b505e`, `deployment-service@06d5961fc3bf`,
+      `instruments-service@7727212009a0`). Two re-launch attempts via `aws ssm send-command i-02294132088f23e50` (vm-ml)
+      both failed at the gcloud `instances.create` step: - Attempt 1 (default-SA route):
+      `ERROR: The user does not have access to service account       '1060025368044-compute@developer.gserviceaccount.com'. ... Ask a project owner to grant you the       iam.serviceAccountUser role on the service account.` -
+      Attempt 2 (`--service-account=unified-trading-sa@…` self-impersonation): same error against
+      `unified-trading-sa@...` itself — `compute.instanceAdmin.v1` doesn't include `iam.serviceAccountUser`. **Unblock
+      (operator-only — agent has no IAM-grant authority)**: pick ONE of: 1. Grant `roles/iam.serviceAccountUser` on
+      `1060025368044-compute@developer.gserviceaccount.com` to
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (lets the existing launchers work as-written
+      with the default compute SA); OR 2. Grant `roles/iam.serviceAccountUser` on
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` to itself (self-impersonation path; still
+      needs a launcher patch to pass `--service-account=unified-trading-sa@…`). Option 1 is the cheaper unblock — no
+      launcher edits. After grant lands, re-dispatch via:
+      `     sudo -iu ubuntu bash -lc 'cd ~/unified-trading-system-repos/.tabs/1 && \       bash deployment-service/scripts/vm/launch-mtds-solana-drift-backfill-vm.sh \         --start 2025-01-09 --end 2026-05-28 --zone asia-northeast1-c --env prod'     sudo -iu ubuntu bash -lc 'cd ~/unified-trading-system-repos/.tabs/1 && \       DEPLOYMENT_ENV=prod bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh \         2025-01-01 2026-05-28'     `
+      Provenance: SSM CommandIds `084d6352-2874-4d3d-92a3-eee78f330b46` (default-SA attempt) +
+      `a77138ac-c472-4eba-b867-c059d9f34b82` (self-impersonation attempt). Per CLAUDE.md no-fire-and-forget +
+      `Plans Run To Actual Completion`: parent P1 todos at lines 205 (Drift) + 470 (Aave OPTIMISM, code-fix already ✅;
+      backfill relaunch outstanding) stay `- [ ]` until backfills complete + T+10min verify GREEN.
+- [ ] [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects under
+      `tab/rootm/1` for unified-trading-pm
+      (`Could not read 83fac63... Failed to traverse parents     of commit 09b84d21`). Tarball build still worked (only
+      PM worktree corrupted; 6 service dep repos clean). Workaround: do all PM plan-flips from the operator's laptop
+      (local cwd `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm`) instead of from
+      vm-ml SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on
+      vm-ml (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill
+      launch dispatch.
+
 ## Not in scope (separately tracked)
 
 - Flat→`-prd` env-tiered dedicated-bucket cutover (writers→flat, `resolve_bucket_name`→`-prd`) — `bucket_name_ssot`
@@ -387,103 +421,98 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### In-flight (MONITOR + verify on completion — no relaunch unless they exit non-zero)
 
-- [~] [IN-PROGRESS] [VERIFY] [AGENT-AUTO] P0. **`mdps-backfill-defi-20260528-071130`** — MDPS reprocess over 2024-05-06→2026-01-17
-      closing the ~40,240 `SCHEMA_VALIDATION_FAILED` rows (UNISWAP_V3-ETHERNET 28,634 + 11 companions). Verify on
-      completion: MTDS DeFi manifest `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to <100; same
-      for UNISWAP_V2-ETHEREUM (3,444), AAVEV3-OPTIMISM (2,820), EIGENLAYER (1,311), CURVE-ETHEREUM (1,281), MAKER
-      (1,113), FRAX (1,032), COMPOUND_V3-BASE (300), DRIFT-SOLANA (200), KAMINO/JITO/MARGINFI (~75 each). MDPS fix
-      already on LDR: `market-data-processing-service@7f1a5b5` + `@3799c8d`.
-      **STATUS 2026-05-28 21:30 UTC**: VM still RUNNING (asia-northeast1-c). Per-VM shard:
-      35,701 entries (captured=10,596 via `venue=UNISWAP_V3`, empty_confirmed=24,878, attempted_failed=269).
-      VM currently processing 2024-09-27 (145/620 dates, ~23% of date range). Note: successful captures write
-      `venue=UNISWAP_V3` (not chain-qualified), so consolidated manifest's `UNISWAP_V3-ETHEREUM` legacy entries won't
-      auto-drop — residual 132 `UNISWAP_V3-ETHEREUM` failures (2024-06-11→2024-09-27) represent truly un-fixable
-      schema cases. Plan's "<100 UNISWAP_V3-ETHEREUM" criterion needs revision: post-VM the right check is
-      `venue=UNISWAP_V3` captured count for 2024-05-06→2026-01-17 ≥ expected. Estimated completion: ~48h from
-      2026-05-28 21:30 UTC.
+- [~] [IN-PROGRESS] [VERIFY] [AGENT-AUTO] P0. **`mdps-backfill-defi-20260528-071130`** — MDPS reprocess over
+  2024-05-06→2026-01-17 closing the ~40,240 `SCHEMA_VALIDATION_FAILED` rows (UNISWAP_V3-ETHERNET 28,634 + 11
+  companions). Verify on completion: MTDS DeFi manifest `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from
+  28,634 to <100; same for UNISWAP_V2-ETHEREUM (3,444), AAVEV3-OPTIMISM (2,820), EIGENLAYER (1,311), CURVE-ETHEREUM
+  (1,281), MAKER (1,113), FRAX (1,032), COMPOUND_V3-BASE (300), DRIFT-SOLANA (200), KAMINO/JITO/MARGINFI (~75 each).
+  MDPS fix already on LDR: `market-data-processing-service@7f1a5b5` + `@3799c8d`. **STATUS 2026-05-28 21:30 UTC**: VM
+  still RUNNING (asia-northeast1-c). Per-VM shard: 35,701 entries (captured=10,596 via `venue=UNISWAP_V3`,
+  empty_confirmed=24,878, attempted_failed=269). VM currently processing 2024-09-27 (145/620 dates, ~23% of date range).
+  Note: successful captures write `venue=UNISWAP_V3` (not chain-qualified), so consolidated manifest's
+  `UNISWAP_V3-ETHEREUM` legacy entries won't auto-drop — residual 132 `UNISWAP_V3-ETHEREUM` failures
+  (2024-06-11→2024-09-27) represent truly un-fixable schema cases. Plan's "<100 UNISWAP_V3-ETHEREUM" criterion needs
+  revision: post-VM the right check is `venue=UNISWAP_V3` captured count for 2024-05-06→2026-01-17 ≥ expected. Estimated
+  completion: ~48h from 2026-05-28 21:30 UTC.
 - [x] ✅ [VERIFY] [AGENT-AUTO] P0. **`mtds-solana-defi-backfill`** — `collect-solana-defi` for
       MARGINFI/SOLEND/KAMINO/KAMINO_LENDING/RAYDIUM/ORCA/PHOENIX/JITO over 2025-01-17→2026-05-28 (~498 dates). ETA
       ~58min from launch (~13:07 UTC). Verify on completion: MTDS DeFi manifest last_captured moves from 2025-01-17 to
       ~2026-05-28 for MARGINFI/SOLEND/KAMINO/RAYDIUM/ORCA. Note: Kamino vault-strategies path WILL fail per Bug-K below
-      — retry after fix.
-      **VERIFIED 2026-05-28**: VM self-deleted (VM_SHUTDOWN_ON_COMPLETION=true). market-data-tick-defi manifest:
-      MARGINFI=527 rows last_captured=2026-05-28 ✅; SOLEND=526 last_captured=2026-05-28 ✅; KAMINO=1,092
-      last_captured=2026-05-28 ✅; RAYDIUM=728 last_captured=2026-05-28 ✅; ORCA=741 last_captured=2026-05-28 ✅.
-      Kamino vault=0 captured (Bug-K pool_id mismatch — expected). JITO=0 captured (Bug-J Stakenet API — expected).
-      Data wrote to unified defi bucket (wrong-bucket per Gate-7 scope; migration pending).
+      — retry after fix. **VERIFIED 2026-05-28**: VM self-deleted (VM_SHUTDOWN_ON_COMPLETION=true).
+      market-data-tick-defi manifest: MARGINFI=527 rows last_captured=2026-05-28 ✅; SOLEND=526 last_captured=2026-05-28
+      ✅; KAMINO=1,092 last_captured=2026-05-28 ✅; RAYDIUM=728 last_captured=2026-05-28 ✅; ORCA=741
+      last_captured=2026-05-28 ✅. Kamino vault=0 captured (Bug-K pool_id mismatch — expected). JITO=0 captured (Bug-J
+      Stakenet API — expected). Data wrote to unified defi bucket (wrong-bucket per Gate-7 scope; migration pending).
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — fixed 2026-05-29 (MTDS@fc7e0636).
-      Root cause **CONFIRMED** by slot-1 probe 2026-05-29: `drift-historical-data-v2.s3.eu-west-1.amazonaws.com`
-      has NO `market/*` prefix entries at all (verified via S3 ListBucket: `prefix=market` → 0 keys; the only
-      populated prefix is `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/` with per-authority
-      sub-paths). The legacy `_backfill_drift_s3_date` per-date HTTP gets at `market/<sym>/{fundingRateRecords,
-      tradeRecords}/<yyyy>/<yyyymmdd>` were always 404-ing post-V1; the `EXPECTED_PAST_SOURCE_COVERAGE_END`
-      empty-record masked that. **NOT BLOCKED-CREDENTIALS** (corrected): operator confirmed `helius-api-key`
-      in Secret Manager covers Drift V2 program — verified via slot-1 probes (getVersion → 200; Helius v0
-      parsed-history `/v0/addresses/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/transactions` returns
-      pre-decoded Drift transactions with `type=DEPOSIT/PERP_TRADE/...` + `source=DRIFT`).
-      **Fix**: replaced the `EXPECTED_PAST_SOURCE_COVERAGE_END` branch in `_backfill_drift_s3_date` with a
-      dispatcher into new `_backfill_drift_helius_date` method (loads `helius-api-key` via UTL
-      `get_secret_client`, paginates Helius v0 with `before=<sig>` cursors, filters to target-day UTC window,
-      writes canonical `perp_funding` parquet to the existing hive path). **Schema-mapping note** (in method
-      docstring): Helius parsed-history is signature-level metadata, NOT decoded Drift V2 funding rates —
-      the exact V1 S3 schema (`fundingRate24h`, `oraclePrice`, ...) is unrecoverable from Helius alone
-      without bundling the Drift V2 Anchor IDL decoder. Rows carry `data_quality="helius_v2_signatures_only"`
-      + extension columns (`helius_signature/slot/tx_type/fee_lamports/description/source`). Live
-      `/stats/markets` snapshot path remains the canonical funding-rate source; this fix unblocks the
-      historical date range for the carry_staked_basis backtest signal. Unit tests in
-      `TestBackfillDriftHelius` cover all 4 dispatch paths (S3 vs Helius; missing key; empty page; success).
-      QG green. Re-run via `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`
-      after tarball rebuild.
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — fixed 2026-05-29 (MTDS@fc7e0636). Root cause
+      **CONFIRMED** by slot-1 probe 2026-05-29: `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*`
+      prefix entries at all (verified via S3 ListBucket: `prefix=market` → 0 keys; the only populated prefix is
+      `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/` with per-authority sub-paths). The legacy
+      `_backfill_drift_s3_date` per-date HTTP gets at
+      `market/<sym>/{fundingRateRecords,     tradeRecords}/<yyyy>/<yyyymmdd>` were always 404-ing post-V1; the
+      `EXPECTED_PAST_SOURCE_COVERAGE_END` empty-record masked that. **NOT BLOCKED-CREDENTIALS** (corrected): operator
+      confirmed `helius-api-key` in Secret Manager covers Drift V2 program — verified via slot-1 probes (getVersion →
+      200; Helius v0 parsed-history `/v0/addresses/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/transactions` returns
+      pre-decoded Drift transactions with `type=DEPOSIT/PERP_TRADE/...` + `source=DRIFT`). **Fix**: replaced the
+      `EXPECTED_PAST_SOURCE_COVERAGE_END` branch in `_backfill_drift_s3_date` with a dispatcher into new
+      `_backfill_drift_helius_date` method (loads `helius-api-key` via UTL `get_secret_client`, paginates Helius v0 with
+      `before=<sig>` cursors, filters to target-day UTC window, writes canonical `perp_funding` parquet to the existing
+      hive path). **Schema-mapping note** (in method docstring): Helius parsed-history is signature-level metadata, NOT
+      decoded Drift V2 funding rates — the exact V1 S3 schema (`fundingRate24h`, `oraclePrice`, ...) is unrecoverable
+      from Helius alone without bundling the Drift V2 Anchor IDL decoder. Rows carry
+      `data_quality="helius_v2_signatures_only"` + extension columns
+      (`helius_signature/slot/tx_type/fee_lamports/description/source`). Live `/stats/markets` snapshot path remains the
+      canonical funding-rate source; this fix unblocks the historical date range for the carry_staked_basis backtest
+      signal. Unit tests in `TestBackfillDriftHelius` cover all 4 dispatch paths (S3 vs Helius; missing key; empty page;
+      success). QG green. Re-run via `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28` after
+      tarball rebuild.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** — fixed both sides 2026-05-29.
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1102` now passes `--gas-fee-chains solana` sentinel
-      (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel
-      and gates `solana_enabled` on it (was hardcoded False) (MTDS@c3ae794c). Relaunch via
+      (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel and
+      gates `solana_enabled` on it (was hardcoded False) (MTDS@c3ae794c). Relaunch via
       `launch-mtds-solana-gas-backfill-vm.sh --start 2025-01-17 --end 2026-05-28` after tarball rebuild.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-M (Marinade date-filter)** — fixed 2026-05-29 (MTDS@c3ae794c). Marinade's
-      official `/msol/apy/365d` and `/msol/price_sol` endpoints don't honour date filters (per slot-1 probe
-      2026-05-29 — both return the current snapshot regardless of `from_date`/`to_date`). `_collect_marinade` now
-      accepts `target_date_str` and for past dates routes through `_collect_marinade_historical` (DeFiLlama yields
-      chart, pool `b3f93865-5ec8-4662-90a0-11808e0aa2bd`, daily APY back to 2025-02-26). Pre-2025-02-26 = honest
-      empty (DeFiLlama coverage start). Re-run via `launch-marinade-solana-backfill-vm.sh 2025-01-17 2026-05-28`
-      after tarball rebuild.
+      official `/msol/apy/365d` and `/msol/price_sol` endpoints don't honour date filters (per slot-1 probe 2026-05-29 —
+      both return the current snapshot regardless of `from_date`/`to_date`). `_collect_marinade` now accepts
+      `target_date_str` and for past dates routes through `_collect_marinade_historical` (DeFiLlama yields chart, pool
+      `b3f93865-5ec8-4662-90a0-11808e0aa2bd`, daily APY back to 2025-02-26). Pre-2025-02-26 = honest empty (DeFiLlama
+      coverage start). Re-run via `launch-marinade-solana-backfill-vm.sh 2025-01-17 2026-05-28` after tarball rebuild.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-K (Kamino pool_id mismatch)** — fixed 2026-05-29 (MTDS@c3ae794c).
-      `_collect_kamino` now emits both `pool_id` (aliased from the vault PDA `address`) and `vault_address` so
-      the dex_pools `DEFI_POOL_DEX_POOLS` SchemaContract validates while preserving the vault-flavour dimension.
-      Also added `token_a`/`token_b` from the resolved Solana mint symbols (required-nullable on the EVM contract).
-      Re-run via scoped `collect-solana-defi --solana-protocols kamino` over 2025-01-17→2026-05-28 after tarball
-      rebuild.
+      `_collect_kamino` now emits both `pool_id` (aliased from the vault PDA `address`) and `vault_address` so the
+      dex_pools `DEFI_POOL_DEX_POOLS` SchemaContract validates while preserving the vault-flavour dimension. Also added
+      `token_a`/`token_b` from the resolved Solana mint symbols (required-nullable on the EVM contract). Re-run via
+      scoped `collect-solana-defi --solana-protocols kamino` over 2025-01-17→2026-05-28 after tarball rebuild.
 
 ### Lower-priority bugs (capture-then-fix; no immediate backfill blocker)
 
-- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-J (JITO Stakenet API `pool_token_supply=0`)** — fixed 2026-05-29
-      (MTDS@c3ae794c). Root cause = API drift, NOT auth/tier issue. Jito's Stakenet API
+- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-J (JITO Stakenet API `pool_token_supply=0`)** — fixed 2026-05-29 (MTDS@c3ae794c).
+      Root cause = API drift, NOT auth/tier issue. Jito's Stakenet API
       (`kobe.mainnet.jito.network/api/v1/stake_pool_stats`) shape changed from a single object with
       `pool_total_lamports`+`pool_token_supply` to a time-series payload with `apy[]`/`tvl[]`/`supply[]`/
-      `num_validators[]`/`mev_rewards[]` arrays (each `{date, data}`). The endpoint returns only the latest ~8 days
-      and ignores `?from=`/`?to=`/`?range=` filters. Rewrote `_collect_jito` to consume the latest entry of each
-      series (exchange_rate = tvl_lamports/1e9 / supply_jitosol). Added `_collect_jito_historical` for past dates
-      via DeFiLlama yields chart for the jito-liquid-staking JITOSOL pool
-      (`0e7d0722-9054-4907-8593-567b353c0900`). No credential ask needed.
-- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** —
-      fixed 2026-05-29 (UAC@15e67b93). Root cause confirmed via authenticated graph-api-key probes 2026-05-29: the
+      `num_validators[]`/`mev_rewards[]` arrays (each `{date, data}`). The endpoint returns only the latest ~8 days and
+      ignores `?from=`/`?to=`/`?range=` filters. Rewrote `_collect_jito` to consume the latest entry of each series
+      (exchange_rate = tvl_lamports/1e9 / supply_jitosol). Added `_collect_jito_historical` for past dates via DeFiLlama
+      yields chart for the jito-liquid-staking JITOSOL pool (`0e7d0722-9054-4907-8593-567b353c0900`). No credential ask
+      needed.
+- [x] ✅ [CODE] [AGENT-AUTO] P2. **Bug-A (Aave lending-indices subgraph `marketDailySnapshots` field-missing)** — fixed
+      2026-05-29 (UAC@15e67b93). Root cause confirmed via authenticated graph-api-key probes 2026-05-29: the
       github-README deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` is schema-valid (has
-      `reserveParamsHistoryItems` AND `reserves`) but contains ZERO entries at any timestamp despite being head-
-      indexed (`_meta.block.number=152230969`, ts=1780060715; `reserves(first:5)` → []). The Messari
-      `marketDailySnapshots` field absence on this deployment was the cascade's second-variant fingerprint —
-      Bug-A reported it but the underlying issue was the empty native deployment. Swapped OPTIMISM in
-      `SUBGRAPH_IDS["aave_v3"]` to `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment;
-      populated history through 2024-09-11). The existing lending_indices cascade now resolves OPTIMISM via the
-      `messari_lending` variant on second try. **NOT BLOCKED-CREDENTIALS** — was a subgraph-deployment-ID
-      bug; existing `graph-api-key` Secret Manager entry works fine. Backfill re-run: launched
-      `mtds-aave-optimism-backfill` covering attempted_failed/empty_confirmed dates; T+10min verify per plan.
+      `reserveParamsHistoryItems` AND `reserves`) but contains ZERO entries at any timestamp despite being head- indexed
+      (`_meta.block.number=152230969`, ts=1780060715; `reserves(first:5)` → []). The Messari `marketDailySnapshots`
+      field absence on this deployment was the cascade's second-variant fingerprint — Bug-A reported it but the
+      underlying issue was the empty native deployment. Swapped OPTIMISM in `SUBGRAPH_IDS["aave_v3"]` to
+      `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` (Messari-style deployment; populated history through 2024-09-11).
+      The existing lending_indices cascade now resolves OPTIMISM via the `messari_lending` variant on second try. **NOT
+      BLOCKED-CREDENTIALS** — was a subgraph-deployment-ID bug; existing `graph-api-key` Secret Manager entry works
+      fine. Backfill re-run: launched `mtds-aave-optimism-backfill` covering attempted_failed/empty_confirmed dates;
+      T+10min verify per plan.
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
-      Outer `write()` `try/except` still swallows the final raise so manifest writes stay best-effort. Unit tests
-      cover all 4 classification paths + retry semantics in `tests/unit/test_manifest_writer_429_backoff.py`.
+      Outer `write()` `try/except` still swallows the final raise so manifest writes stay best-effort. Unit tests cover
+      all 4 classification paths + retry semantics in `tests/unit/test_manifest_writer_429_backoff.py`.
 
 ### Pre-existing (carry-over, lower urgency)
 

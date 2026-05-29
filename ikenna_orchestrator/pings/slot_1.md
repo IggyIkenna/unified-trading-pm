@@ -5252,3 +5252,32 @@ all 6/6 verify checks PASS per VM (gcloud auth list, gsutil ls, gh auth status, 
 - Pre-bake gcloud + gh into the AMI to shave bootstrap time.
 
 — slot-1 main / triple-cloud auth provisioning pass 2026-05-29
+
+---
+
+## 2026-05-29 — BLOCKED-IAM-GRANT: Drift Helius + lending-indices backfill VM launches
+
+**Plan**: `plans/active/solana_defi_legacy_migration_2026_05_27.md` § "Discovered side-issues".
+
+**Context**: tarballs already rebuilt + uploaded at 2026-05-29T15:22Z (mtds@0e92e49a36c3 includes Drift Helius fix
+mtds@fc7e0636, lending-indices Aave OPTIMISM fix uac@15e67b93). Two attempts to re-launch via SSM into vm-ml
+(`i-02294132088f23e50`) both failed at gcloud `instances.create` — `compute.instanceAdmin.v1` doesn't include
+`iam.serviceAccountUser`.
+
+**CREDENTIAL APPROVAL REQUEST** — IAM grant
+
+- **Resource**: pick ONE:
+  1. Grant `roles/iam.serviceAccountUser` on `1060025368044-compute@developer.gserviceaccount.com` to
+     `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (cheapest unblock — no launcher edit), OR
+  2. Grant `roles/iam.serviceAccountUser` on `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` to
+     itself (needs launcher patch to pass `--service-account=unified-trading-sa@…`).
+- **What I need**: one `gcloud iam service-accounts add-iam-policy-binding` per the choice above.
+- **Unblocks**: Drift Helius backfill (2025-01-09→2026-05-28) + Aave/Spark/Compound lending-indices backfill
+  (2025-01-01→2026-05-28, picks up Aave OPTIMISM fix). Both are P1 on the Solana DeFi legacy migration plan.
+- **Without it**: parent P1 todos at lines 205 (Drift) + 470 (Aave OPTIMISM, code-fix already ✅; backfill relaunch
+  outstanding) stay `- [ ]`; no DRIFT/Aave-OPTIMISM `last_captured` progression.
+
+**Side-issue captured (P3)**: vm-ml `tab/rootm/1` PM worktree git-corrupt — appended as separate todo; operator-only
+`--reset-slot 1` at next maintenance pass.
+
+— slot-1 main / Drift+Aave OP backfill dispatch pass 2026-05-29
