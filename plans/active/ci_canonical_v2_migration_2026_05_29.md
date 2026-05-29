@@ -167,7 +167,9 @@ alone doesn't escape it.
   - Quickmerge per canonical flow
 - [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on both branches.
       staging had quality-gates-v2 from 18-branch sweep 2026-05-29; main rotation applied 2026-05-29 (main had no prior required check — was missing from sweep).
-- [ ] [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
+- [x] ✅ [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
+      PR #50 merged 2026-05-29T18:08Z. Post-merge CI failed (exchange mappings missing for 10 new ETF tickers).
+      Fixed in PR #53 (merged 2026-05-29T19:08Z); UAC CI now green on main.
 - [ ] [VERIFY] P0. Next UAC PR triggers v2 cleanly.
 
 ### Phase 3 — UTL (0.5 day)
