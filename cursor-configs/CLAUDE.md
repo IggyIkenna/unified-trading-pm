@@ -162,7 +162,7 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
 
 ### UI changes — playwright gate (HARD RULE — codified 2026-05-23)
 
-Any todo touching `unified-trading-system-ui`, `deployment-ui`, or `user-management-ui` MUST NOT be ticked `- [x] ✅`
+Any todo touching `unified-trading-system-ui` or `deployment-ui` MUST NOT be ticked `- [x] ✅`
 without: (1) tag `[UI]` appended to role tag; (2) **`pw:L2 ✓`** — `npx playwright test --project=chromium tests/smoke/`
 exits 0; (3) **regression guard cited** — spec path in `tests/e2e/`, `tests/playbooks/`, `tests/widgets/`, or
 `tests/smoke/` written/updated to catch reverting the change. Evidence format:
@@ -378,8 +378,9 @@ distinguish live/batch strategies; never build asset-group-specific backtest eng
 
 Look at the existing system before implementing. Key repo map: events → UTL · schemas → UAC · cloud →
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
-(`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated) + `deployment-ui` +
-`user-management-ui` · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; port 8026 locally;
+(`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated, includes
+user-management functionality) + `deployment-ui` (`user-management-ui` repo is ARCHIVED 2026-05 — folded into
+unified-trading-system-ui; do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; port 8026 locally;
 `agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface. `ikenna_orchestrator/`
 LEDGER.md remains as offline fallback only; the `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 →
 `plans/archive/orchestrator_legacy/` (only `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live

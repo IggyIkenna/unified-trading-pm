@@ -69,10 +69,10 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 
 - [x] ✅ [SCRIPT] P1. unified-trading-system-ui: branch protection applied on `main` with `quality-gates-v2`
       required, strict=true. (pw-smoke deferred to UI-hygiene follow-up — not blocking the core protection.)
-- [ ] [BLOCKED-OPERATOR-DECISION] [SCRIPT] P1. user-management-ui: **repo is ARCHIVED** (read-only) — GitHub
-      blocks branch protection PUT with HTTP 403. Archived state is effectively a stronger guarantee than
-      branch protection (no one can push to archived repos). Recommend either unarchive + apply protection,
-      OR accept archived state as sufficient and remove from this plan's scope.
+- [x] ✅ [SCRIPT] P1. user-management-ui: **N/A — repo ARCHIVED BY DESIGN** (operator-clarified 2026-05-30).
+      Functionality consolidated into `unified-trading-system-ui`; the standalone repo is dead-letter. Archived
+      state is the correct final state; no protection PUT needed. Removed from scope. CLAUDE.md updated to
+      remove user-management-ui from the active UI list + flag as archived/folded.
 - [x] ✅ [SCRIPT] P1. features-service: branch protection applied on `live-defi-rollout` (default branch, no
       main exists) with `quality-gates-v2` required, strict=true.
 - [x] ✅ [SCRIPT] P1. batch-live-reconciliation-service: branch protection applied on `main` with
@@ -94,8 +94,10 @@ discovered during another workstream, not a critical-path blocker, but worth fix
       required-check matrix (this turn) — includes archived user-management-ui exception, features-service
       LDR-as-default exception, and the 2-context check-staging-lock+quality-gates-v2 model for
       execution/instruments/deployment-ui.
-- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE — deferred to operator (requires
-      decision on user-management-ui unarchive question first).
+- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE — operator clarified 2026-05-30 that
+      user-management-ui is archived BY DESIGN (folded into unified-trading-system-ui), so no unarchive
+      blocker remains. All 4 Phase 2 scope items resolved (4 protected + 1 dead-letter). Codex updated
+      this turn. Plan is archive-eligible after PR #98 merges.
 
 ## Success criteria
 
