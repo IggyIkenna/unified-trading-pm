@@ -278,10 +278,15 @@ Concrete questions to answer + corresponding redesigns to ship:
 
 ## Phase 3 — Fix the CLI granularity (closes Finding B from the sibling plan)
 
-- [ ] [DESIGN] P1. **3.1 Define the canonical instrument_id parser.** A canonical id is `VENUE:INSTRUMENT_TYPE:SYMBOL`.
+- [x] ✅ [DESIGN] P1. **3.1 Define the canonical instrument_id parser.** A canonical id is `VENUE:INSTRUMENT_TYPE:SYMBOL`.
       Given a list of canonical ids, the scanner can derive the venue set + the instrument_type set + the symbol set,
       and filter blob paths on each axis independently. Document the parser spec in UAC (it likely belongs there as a
       shared utility; check `unified_api_contracts.canonical.*` for an existing parser before adding one).
+      **DONE 2026-05-30** — unified-api-contracts@aff01de5: `unified_api_contracts/canonical/instrument_key.py`
+      with `parse_instrument_key`, `format_instrument_key`, `derive_venue_set`, `derive_instrument_type_set`,
+      `derive_symbol_set`. Exported from `unified_api_contracts.canonical`. 16 tests in `tests/test_instrument_key.py`.
+      No existing parser in UAC — confirmed via grep before adding. MDPS `utils/path_parsing.py` implementation kept
+      as the MDPS-internal caller; downstream callers should migrate to `unified_api_contracts.canonical.parse_instrument_key`.
 - [ ] [AGENT] P1. **3.2 Replace the substring filter in `_collect_matching_parquet_blobs`** with a structured check
       derived from the parsed canonical id. Each blob path is matched on (venue, instrument_type, symbol) extracted from
       the path, against the per-axis derived sets. Bare-symbol matching (`BTCUSDT`) stays supported as a fallback for
