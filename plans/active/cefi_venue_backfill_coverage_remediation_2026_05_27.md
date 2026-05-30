@@ -298,8 +298,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `EVENT_TOPIC_REGISTRY` SSOT. Zero traffic is expected, not an incident. alerting-service@6ff5c36:
       `_SUBSCRIPTIONS_WITH_NO_PUBLISHER` + startup warning log documents the gap so future operators won't
       re-investigate the same "zero traffic" observation.
-- [ ] [AGENT] P2. **qg-snapshot job never ran**: no run.log ever; serial shows clean boot then only OS noise for 5+ days
+- [x] [AGENT] P2. **qg-snapshot job never ran**: no run.log ever; serial shows clean boot then only OS noise for 5+ days
       — the QG-snapshot startup task never produced output (missing/failed-pre-logging). Diagnose or retire.
+      **Root cause**: `launch-qg-snapshot-vm.sh` referenced `$VM_NAME`, `$FULL_METADATA`, `$LABELS` which were never
+      defined; `set -euo pipefail` caused immediate exit at line 131 before VM creation. Fixed by inserting
+      `RUN_TS/VM_NAME/lc_singleton_check/FULL_METADATA/LABELS` assignments after `BACKFILL_CMD` definition.
+      deployment-service@$(cd /home/ubuntu/unified-trading-system-repos/.tabs/3/deployment-service && git rev-parse --short HEAD 2>/dev/null || echo "pending")
 
 ### §6H — Cross-cutting / cosmetic
 
