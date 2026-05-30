@@ -131,8 +131,12 @@ resolves the minimum window each family/feature needs and backfills exactly that
         2024 VM: exit_code=137 (OOM, 80.7% RSS at death) — 0 processed_candles manifest entries.
         2025 VM: silent crash (log frozen 19:35 UTC, no EXIT_STATUS, VM self-deleted).
       **Re-launched 2026-05-30 (ikenna-slot-1) with e2-highmem-8 (64GB) to prevent OOM:**
-        `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING
-        `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) RUNNING
+        `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING (09:33 UTC: on day=2024-01-02)
+        `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) OOM'd AGAIN (EXIT_STATUS=137 at ~08:55 UTC, self-deleted).
+      **2025 VM re-re-launched 2026-05-30 09:37 UTC (ikenna-slot-1) with e2-highmem-8 + MAX_WORKERS=2:**
+        `mdps-backfill-cefi-main-prd-20260530-093741` (2025-01-01..2025-12-31) RUNNING (MACHINE_TYPE=e2-highmem-8, MAX_WORKERS=2)
+      **GCS file evidence 2026-05-30 09:40 UTC:** processed_candles/by_date/day=2024-01-01/timeframe=1m/data_type=trades
+        BINANCE-FUTURES: 31 files ✅  BYBIT: 57 files ✅  OKX-FUTURES: 32 ✅  OKX-SPOT: 72 ✅  DERIBIT: 26 ✅
       — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
       2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
 - [x] ✅ [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
