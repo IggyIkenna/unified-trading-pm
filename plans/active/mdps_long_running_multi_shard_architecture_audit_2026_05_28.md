@@ -335,9 +335,13 @@ start implementation against an unconfirmed shape.
       (c) Pandas→Polars input conversion at CeFi trades adapter — `pl.from_pandas(tick_data[cols_needed])` (Stage 2:
           table-level roundtrip replaced with column-subset conversion). No unnecessary round-trips in the
           read→aggregate→write hot path.
-- [ ] [AGENT] P1. **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural
+- [x] [AGENT] P1. **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural
       cleanup the refactor enables. The sibling plan's Phase 2.2 fix should be **deleted** at this point — keeping it
       would mask any retention regressions the new architecture introduces.
+      **Done**: Removed psutil import and RSS-measurement block from `_process_candles_for_one_date`; kept `del
+      tracker + gc.collect()` and `del orchestrator` for in-process Python-cycle cleanup (still needed when
+      `--subprocess-per-date` is not active). Simplified comments to reflect subprocess-per-date as structural fix.
+      Commit: market-data-processing-service@6c65e98. Tests: 13/13 pass.
 - [ ] [AGENT] P1. **4.4 Wire memory bounds into QG.** A per-shard memory regression test that runs a representative
       scope and asserts peak RSS < threshold. This is what should have caught the 25 GB per-day floor at code-review
       time. Threshold = whatever the Phase 2.3 measurement establishes for the chosen engine.
