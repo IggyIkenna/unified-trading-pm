@@ -191,8 +191,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [UAC] P1. Unit tests: dual-source happy path, conflict path, missing-source-A-present-source-B path, field-union
       path.
   - 8 tests: happy-path-no-overlap, with-duplicates, missing-source-A, field-union, warning-log assertion, + facade exports. 35 total in test_source_priority_pipeline_mode.py. UAC@28fc083c
-- [ ] [UAC] P1. Remove the "deferred to a follow-up plan" line from `source_priority.py` docstring; replace with link to
+- [x] ✅ [UAC] P1. Remove the "deferred to a follow-up plan" line from `source_priority.py` docstring; replace with link to
       THIS plan's archive path.
+  - Replaced "deferred to follow-up plan" with reference to Phase 2 helpers; multi_source_priority_merge_2026_* placeholder resolved. UAC@193074a0
 
 ### Phase 3 — Schema: source column on TradFi parquets (1 day)
 
