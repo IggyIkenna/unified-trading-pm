@@ -342,9 +342,12 @@ start implementation against an unconfirmed shape.
       tracker + gc.collect()` and `del orchestrator` for in-process Python-cycle cleanup (still needed when
       `--subprocess-per-date` is not active). Simplified comments to reflect subprocess-per-date as structural fix.
       Commit: market-data-processing-service@6c65e98. Tests: 13/13 pass.
-- [ ] [AGENT] P1. **4.4 Wire memory bounds into QG.** A per-shard memory regression test that runs a representative
+- [x] [AGENT] P1. **4.4 Wire memory bounds into QG.** A per-shard memory regression test that runs a representative
       scope and asserts peak RSS < threshold. This is what should have caught the 25 GB per-day floor at code-review
       time. Threshold = whatever the Phase 2.3 measurement establishes for the chosen engine.
+      **Done**: Added [6.X] PER-SHARD MEMORY REGRESSION GATE section to `scripts/quality-gates.sh`. Runs
+      `tests/perf/test_polars_instrument_day_memory.py` on every QG pass: 1M-tick synthetic CeFi-perp day,
+      RSS ≤ 2 GB, Python heap ≤ 500 MB. Baseline ~250 MB (8× inside bar). Commit: market-data-processing-service@f6cc5a0.
 
 ## Phase 5 — Observability
 
