@@ -172,9 +172,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 2 — Consume regime in supervised layer (ml-service) — *no new service*
 
-- [ ] [ML] P2. Feed `cluster_id` / soft-membership into `regime_conditional_trainer.py:20-95` (augment the thin binary
+- [x] [ML] P2. Feed `cluster_id` / soft-membership into `regime_conditional_trainer.py:20-95` (augment the thin binary
   vol-regime it splits on today). Confirms separation of concerns: clustering = unsupervised *discovery*; ml-service =
   supervised *selection*. No kNN/clustering lands inside ml-service.
+  `train_cluster_conditional_models()` + `has_cluster_columns()` + helpers. prob_cluster_k retained
+  as features; cluster_id dropped (split key). 7 new unit tests; ruff clean. Pushed ml-service 8fb2338.
 - [ ] [STRATEGY] P3. Route `cluster_id` into `RegimeAwareAllocator.regime_score`
   (`portfolio_allocator/archetypes.py:360`).
 
