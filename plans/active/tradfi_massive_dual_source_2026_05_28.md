@@ -89,8 +89,25 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - Credential ask → operator if not yet signed. Per External Data Is Always Available rule, this is
     `BLOCKED-CREDENTIALS` until [ack].
   - Required SM secrets: `MASSIVE_API_KEY` (GCP `central-element-323112` + AWS `427895769566`).
-- [ ] [AUDIT] P1. Workspace-wide grep for "databento" + "polygon" + "polygon.io" hardcoded references; capture
-      remediation list. Plan Pass 1 = registry-driven, not text-replace.
+- [x] ✅ [AUDIT] P1. Workspace-wide grep for "databento" + "polygon" + "polygon.io" hardcoded references; capture
+      remediation list. Plan Pass 1 = registry-driven, not text-replace. **DONE 2026-05-30** (slot-1 audit):
+      12 production code files with hardcoded references found. Key groups:
+      - **Registry-level (expected/acceptable)**: `unified_api_contracts/registry/endpoints.py:43-44`
+        (databento hist/live URLs); `registry/_endpoint_registry_data.py:147`; `capability_declarations/_tradfi.py:74`
+        (base_urls). These are the SSOT — not targets for removal.
+      - **Adapter-level hardcoded URLs (remediation target)**: `features-service/…/polygon_corporate_actions_adapter.py:27`
+        (`_BASE_URL = "https://api.polygon.io"`); `instruments-service/…/tradfi/polygon.py:67`
+        (`_POLYGON_BASE = "https://api.polygon.io"`). Fix: route through `get_tradfi_protocol_url("polygon")` in UAC.
+      - **Source string hardcodes in domain logic (remediation target)**:
+        `unified_api_contracts/registry/tradfi_symbology.py:243,254` (`data_source="databento"`);
+        `features-service/…/corporate_actions_calculator.py:71,100` (`source="polygon"`);
+        `instruments-service/…/router.py:231` (`if source == "databento"`). Fix: import source constants from UAC
+        `SOURCE_PRIORITY` registry or a `TradFiSource` enum (Phase 1 UAC work).
+      - **Config/SM layer (acceptable — not hardcoded secrets)**: `cloud_config.py:526`, `data_source_mapping.py:67`,
+        `market_interface/config.py:42` all use `AliasChoices("DATABENTO_API_KEY")` / SM lookup — correct pattern.
+      Remediation plan: Pass 1 (registry-driven) = Phase 1 UAC SOURCE_PRIORITY update will make source strings
+      importable constants; adapters switch to `get_tradfi_protocol_url()`. Pass 2 = when Massive connector is added,
+      adapter URL hardcodes become moot (both route through registry). No text-replace needed.
 - [ ] [AUDIT] P1. Confirm `SOURCE_PRIORITY` module docstring's deferred-plan slug is `multi_source_priority_merge_*` and
       reserve THIS plan's slug as the canonical successor (cross-link both ways).
 
