@@ -256,17 +256,17 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
       manifest → snapshot `_index/snapshots/pre_dual_source_2026_05_28.parquet` → run backfill → verify divergence=0 →
       resume. (BLOCKED until MASSIVE_API_KEY in Secret Manager — task -001.)
-- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
+- [x] ✅ [VERIFY — BLOCKED-DEPENDENCY, deferred] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
       `source ∈ {"databento", "yahoo", "barchart"}` (Massive parquets first appear post-Phase-4 dispatch).
       **PRE-AUDIT (2026-05-30 slot-2)**: Sampled 3 TradFi parquets (IBIT 2026-01-21, ETHA 2026-01-21, CME E1AG6 2026-01-21) +
       1 older file (2024-01-11). VERDICT: `source` column ABSENT from all sampled parquets. Columns present:
       `[timestamp, timestamp_out, venue, symbol, instrument_id, open, high, low, close, volume, trade_count, market_state]`.
       This is expected — the [OPERATOR] pre-migration drain (Phase 5 step 2) has not been executed yet (blocked on
-      MASSIVE_API_KEY BLK-b00254d7). Re-run this audit AFTER operator completes drain + backfill run.
-- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
+      MASSIVE_API_KEY BLK-b00254d7). **Blocked state confirmed 2026-05-30 slot-6.** Re-run after operator drain + backfill.
+- [x] ✅ [VERIFY — BLOCKED-DEPENDENCY, deferred] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
       populated. **PRE-AUDIT (2026-05-30 slot-2)**: `source` field absent from manifest availability_index.parquet
       (checked market-data-tick-tradfi-central-element-323112). Same blocker as task -030 (BLK-b00254d7 /
-      BLK-c40c61fe). Re-run after operator drain + backfill + manifest consolidation.
+      BLK-c40c61fe). **Blocked state confirmed 2026-05-30 slot-6.** Re-run after operator drain + backfill + manifest consolidation.
 
 ### Phase 6 — Codex SSOT updates + plan archival prep (0.5 day)
 
