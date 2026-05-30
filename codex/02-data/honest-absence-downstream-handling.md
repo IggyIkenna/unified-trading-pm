@@ -1028,3 +1028,49 @@ NaN payload conforms to the ODDS UAC schema: all price/volume columns are `float
 
 **Cluster validation**: `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` ensures the
 validator sees the correct denominator including NaN-fill rows.
+
+---
+
+## Per-source consumer policy — TradFi dual-source cells (v9, 2026-05-30)
+
+**Plan**: `tradfi_massive_dual_source_2026_05_28.md`. **Live**: UTL@`c7bfa427`.
+
+When both Databento and Massive run for the same TradFi `(venue, data_type, day)`, the manifest holds two rows
+distinguished by `source`. Each row carries an independent `capture_status`.
+
+### Union semantics — cell-level coverage
+
+> **Rule**: a TradFi cell is treated as `captured` by downstream consumers if **at least one** source row has
+> `capture_status=captured`. A cell is `attempted_failed` only when **all** source rows failed.
+
+This matches the honest-coverage denominator policy: the `compute_honest_coverage` numerator counts a cell once
+(captured) as long as any source delivered data, not once per source.
+
+### Per-consumer policy table
+
+| Consumer | Policy when ≥1 source captured | Policy when all sources failed |
+|----------|-------------------------------|-------------------------------|
+| **Feature pipeline** (MDPS → features-service) | Read the `SOURCE_PRIORITY`-ranked shard. Prefer `"massive"` over `"databento"` when both are `captured` (SOURCE_PRIORITY rank order). | Propagate `attempted_failed` upstream. Feature service records `EXPECTED_UNATTEMPTED` for downstream ML. |
+| **ML training** | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present. | Mark training window as `DATA_MISSING`; do not impute. |
+| **Execution service** | Use highest-priority captured source for reference pricing. | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`. |
+| **Data-status UI** | Show cell as `captured` (green). Tooltip lists per-source status breakdown. | Show cell as `attempted_failed` (red). |
+| **Honest-coverage rollup** | Cell counts as 1 captured row in numerator. | Cell counts as 1 attempted_failed row; excluded from numerator. |
+
+### Source priority for TradFi
+
+The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`.
+For TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and
+broader options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
+
+### Empty-confirmed from one source, captured from another
+
+A cell where Massive returned zero rows for a day (legitimate market holiday gap) while Databento captured data is
+valid:
+
+```
+(source=databento) → capture_status=captured
+(source=massive)   → capture_status=empty_confirmed  (reason=SOURCE_RETURNED_ZERO)
+```
+
+Downstream consumers treat this cell as `captured` (union semantics). The `empty_confirmed` Massive row is logged and
+visible in the data-status UI tooltip but does not degrade coverage percentage.
