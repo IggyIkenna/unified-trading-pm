@@ -168,10 +168,10 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 5 — Codex SSOT updates (P2)
 
-- [ ] [AGENT] P2. Update `codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
+- [x] ✅ [AGENT] P2. Update `codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
       silent-failure modes + which check catches each. - The closed-set of valid tags + how to add a new one (PR to
       PLAN_FORMAT.md). - The 3 cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every
-      4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only).
+      4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only). — PM@created
 - [ ] [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors see
       the canonical form + the auto-fixer in one place.
 
