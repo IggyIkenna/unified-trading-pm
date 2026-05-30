@@ -56,7 +56,7 @@ for _p in (UAC_PATH, UTL_PATH):
 
 # ruff: noqa: I001
 import pandas as pd
-from unified_api_contracts.canonical.crosscutting.pipeline_mode import PipelineMode  # type: ignore[import-not-found]
+from unified_api_contracts import PipelineMode  # type: ignore[import-not-found]
 from unified_trading_library import get_storage_client  # type: ignore[import-not-found]
 from unified_trading_library import derive_pipeline_mode_for_row  # type: ignore[import-not-found]
 

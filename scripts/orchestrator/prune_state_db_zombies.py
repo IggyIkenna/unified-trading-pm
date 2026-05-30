@@ -50,18 +50,20 @@ def _load_backlog_ids(backlog_path: Path) -> set[str]:
         return set()
     try:
         import yaml  # pyyaml — available on all orchestrator VMs
+
         with backlog_path.open() as fh:
             data = yaml.safe_load(fh) or {}
     except ImportError:
         # Fallback: regex scan for `  id: <value>` lines inside tasks list.
         import re
+
         text = backlog_path.read_text()
         return set(re.findall(r"^\s+id:\s+(\S+)", text, re.MULTILINE))
     tasks = data.get("tasks") or []
     return {str(t["id"]) for t in tasks if isinstance(t, dict) and "id" in t}
 
 
-def main() -> int:  # noqa: C901
+def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -116,14 +118,10 @@ def main() -> int:  # noqa: C901
     cur.execute("SELECT COUNT(*) FROM tasks WHERE status = 'dispatched'")
     dispatched_count: int = cur.fetchone()[0]
 
-    cur.execute(
-        "SELECT COUNT(*) FROM tasks WHERE status = 'queued' AND dispatched_to IS NOT NULL"
-    )
+    cur.execute("SELECT COUNT(*) FROM tasks WHERE status = 'queued' AND dispatched_to IS NOT NULL")
     queued_dispatched: int = cur.fetchone()[0]
 
-    cur.execute(
-        "SELECT task_id FROM tasks WHERE status = 'queued' AND dispatched_to IS NULL"
-    )
+    cur.execute("SELECT task_id FROM tasks WHERE status = 'queued' AND dispatched_to IS NULL")
     queued_undispatched_ids: set[str] = {row[0] for row in cur.fetchall()}
     queued_undispatched: int = len(queued_undispatched_ids)
 
@@ -168,7 +166,7 @@ def main() -> int:  # noqa: C901
         chunk = zombie_list[i : i + chunk_size]
         placeholders = ",".join("?" * len(chunk))
         cur.execute(
-            f"DELETE FROM tasks"
+            f"DELETE FROM tasks"  # nosec B608 — placeholders is only `?,?,...`; values bound via params
             f" WHERE task_id IN ({placeholders})"
             f"   AND status = 'queued'"
             f"   AND dispatched_to IS NULL",

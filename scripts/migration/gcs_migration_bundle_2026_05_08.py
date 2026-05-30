@@ -84,7 +84,7 @@ for _p in (UAC_PATH, UTL_PATH):
 
 import contextlib
 
-from unified_api_contracts.canonical.crosscutting.pipeline_mode import (  # type: ignore[import-not-found]
+from unified_api_contracts import (  # type: ignore[import-not-found]
     PipelineMode,
     pipeline_mode_for_source,
 )

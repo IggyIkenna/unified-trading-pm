@@ -143,6 +143,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/generate_instrument_snapshot.py"
     "!**/generate-strategy-instances-fixture.py"
     "!**/audit_dead_code.py"
+    "!**/prune_state_db_zombies.py"
     "!**/quality_gates/**"
     "!**/migration/**"
     "!**/qg/**"
