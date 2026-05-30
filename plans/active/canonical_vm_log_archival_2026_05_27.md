@@ -78,9 +78,14 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       `vm-logs/` prefix. Prefer (a) — keeps the hot prefix small + the archive immutable. (If durability demands a
       physically separate bucket, mint it via a helper, not an inline string — see the formalise-helper todo.) —
       deployment-service@3cd0b1d ✅ (implemented option a)
-- [ ] [AGENT] P2. **Periodic serial capture for long-lived VMs**: one-shot serial capture misses early boot output once
+- [x] [AGENT] P2. **Periodic serial capture for long-lived VMs**: one-shot serial capture misses early boot output once
       the ring buffer wraps. For LONG_LIVED_LIVE / SCHEDULED_RECURRING VMs, capture serial on a schedule (or on
-      state-change) into the archive.
+      state-change) into the archive. — deployment-service@e534481 ✅
+      Extended `vm_log_archival_cron.py` with `capture_long_lived_serial()`: lists RUNNING VMs via compute_v1 API,
+      filters to `_LONG_LIVED_VM_PREFIXES` (30 prefixes covering LONG_LIVED_LIVE + SCHEDULED_RECURRING from watchdog),
+      captures serial via `get_serial_port_output()`, stores to canonical
+      `log-archive/serial-rolling/{date}/{vm}/serial-console.txt`. Added `vm_serial_rolling_uri()` helper to
+      `deployments_registry.py`. Daily cron now covers both log rolling AND serial history.
 - [ ] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
       `codex/05-infrastructure/vm-tarball-deployment.md` (or a new `codex/05-infrastructure/vm-log-archival.md`), and
       reference it from the kill/teardown runbook.
