@@ -385,7 +385,9 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ## Codex SSOT updates
 
-- [ ] [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
+- [x] [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
       `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs.
-- [ ] [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
+      PM@c29891c1 — added §"Expiry-window filtering contract" + §"401≠honest-absence".
+- [x] [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
       anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc.
+      PM@c29891c1 — added §"§6A honest-absence-violation classes".
