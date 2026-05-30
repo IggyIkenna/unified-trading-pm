@@ -281,9 +281,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `Unknown asset_group 'SPORTS'. Valid:     ['cefi','defi','prediction','sports','tradfi']`. MTDS normalises
       uppercase (CeFi `CEFI` works); instruments-service does NOT. Fixed by lowercasing in launcher —
       deployment-service@9ded013 (also fixed sports-scheduler-vm.sh)
-- [ ] [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
+- [x] ✅ DONE [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
       miss, every poll logs `Found 0 upcoming fixtures within 48h horizon` → the fixture-window dispatch never triggers
       (likely a downstream effect of instruments_service data never being written). Re-verify after the venv fix.
+      — deployment-service@3ef4da9 | root cause: `str(blob).endswith(".parquet")` always False for BlobMetadata dataclass
+      objects (repr never ends with ".parquet") — all blobs silently skipped → 0 fixtures. Fixed: `blob.name` used in
+      filter + download_bytes path. Regression test added in test_sports_trigger_scheduler_periodic.py.
 - [x] ✅ [AGENT] P1. **alerting-quietness processed ZERO alert messages in 5+ days** (730 heartbeats, no
       ALERT_RECEIVED/FIRED/SUPPRESSED across 5 subscribed topics). Either no upstream service publishes to those topics,
       or the subscriber consumes silently. Verify the publisher side — an alerting pipeline that has seen zero traffic
