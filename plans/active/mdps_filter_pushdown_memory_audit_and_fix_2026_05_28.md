@@ -342,10 +342,13 @@ Per operator 2026-05-28 EOD, the sequence is:
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
-- [ ] [AGENT] P2. **4.1 Update `codex/04-architecture/` or `codex/06-coding-standards/` with the read-time filter
+- [x] ✅ [AGENT] P2. **4.1 Update `codex/04-architecture/` or `codex/06-coding-standards/` with the read-time filter
       discipline** — every batch service whose pipeline matches MDPS's shape (list raw → filter → load → process →
       write) MUST apply scope filters at the LIST stage, not the WRITE stage. Reference this plan + the 2026-05-28
-      incident. (If no codex doc fits, write a stub.)
+      incident. (If no codex doc fits, write a stub.) — Doc already landed at PM commit `d52b0eb6`:
+      `codex/06-coding-standards/read-time-filter-pushdown.md`. Covers: rule, anti-pattern, correct pattern,
+      verification recipe, reference implementation (MDPS `e47205d`), incidents, cross-service generalization.
+      Checkbox flip 2026-05-30.
 - [ ] [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
       launcher.** **Refinement** (discovered 2026-05-28 during Phase 3 prep): the TradFi `e2-highmem-8 + max-workers=2`
       mitigation in `launch-mdps-sharded-backfill.sh:174,184` targets a _different_ root cause than the scanner
