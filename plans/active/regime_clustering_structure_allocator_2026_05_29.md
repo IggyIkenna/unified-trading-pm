@@ -3,12 +3,13 @@ name: regime_clustering_structure_allocator_2026_05_29
 title: "Regime Clustering + Proximity → Factor-Targeted Structure Allocator"
 type: mixed
 parent_epic: features_and_ml_master
-priority: P2
+priority: P1
 status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 18
 assigned_vm: vm-ml
+priority_history: "P2→P1 2026-05-30 (operator: feed dispatch)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
 completion_gates:
@@ -33,6 +34,18 @@ repo_gates:
     deployment: none
     business: none
   - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: greeks-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: market-tick-data-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: market-data-processing-service
     code: C0
     deployment: none
     business: none
@@ -83,6 +96,31 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - **Objective is edge, not replication**: maximise expected P&L net of cost subject to tracking-error + risk
   constraints — never minimise greek tracking error alone.
 
+## Operator decisions (resolved 2026-05-30)
+
+> Operator calls baked in so autonomous workers build against them instead of stalling at judgment walls.
+
+- **Priority**: P1 (bumped from P2) — dispatcher actively feeds it; still ordered behind live-DeFi cutover P0s.
+- **Options data source**: **Deribit + Tardis** (crypto-options focus). **REUSE** existing ingestion — MTDS Deribit
+  adapter (`market_tick_data_service/.../adapters/deribit.py`) + MDPS `CefiOptionsChainAdapter`
+  (`market_data_processing_service/.../adapters/cefi/options_chain_adapter.py`) already land Deribit BTC/ETH chains
+  (bid_iv/ask_iv/mark_iv, bid/ask price, strike, OI, top-of-book size). Tardis historical sub = the only credential ask
+  (operator-acked here).
+- **Strike/term normalisation**: **forward log-moneyness `k = ln(K/F)` + business-day tenor**. Delta-space is a deferred
+  upgrade (needs the vol surface). Requires forward `F` (ABSENT today — Phase 1 forward-price item).
+- **Timeframe fusion**: build **BOTH** (a) long-frame-gates-short-frame AND (b) weighted-vote-across-timeframes, behind
+  a **config toggle**; A/B test both OOS — do not hardcode one (Phase 6).
+
+### Reuse map (from 2026-05-30 audit — build only the gaps)
+
+| Need | Status | Reuse / build |
+| --- | --- | --- |
+| Option chains (bid/ask + size) | PARTIAL | REUSE MTDS+Tardis Deribit; BUILD full depth + live REST + multi-venue |
+| Greeks Δ/Γ/Θ/Vega/Ρ | EXISTS | REUSE greeks-service PricingLedger |
+| Greeks vanna/volga | ABSENT | BUILD — extend BS kernel (Phase 3) |
+| Vol surface | PARTIAL | REUSE features-service term-structure/skew pillars; interpolate grid |
+| Forward `F` | ABSENT | BUILD from perp mark+funding / futures mark (Phase 1) |
+
 ---
 
 ## Phase 0 — Unblock per-archetype PnL attribution (foundation)
@@ -110,6 +148,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   Euclidean, never raw correlated-feature Euclidean.
 - [ ] [UAC] P2. Register `regime_clustering` (+ `strategy_pnl_archetype`) in
   `unified_api_contracts/.../features/registry.py EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
+- [ ] [FEATURES] P1. **Compute forward price `F`** (ABSENT today) from perp mark + funding
+  (`F ≈ S·(1 + funding·τ_next)`) or futures mark; land as a small PIT feature/ledger field. Prerequisite for the
+  forward-log-moneyness normalisation (Phase 3).
 
 ## Phase 2 — Consume regime in supervised layer (ml-service) — *no new service*
 
@@ -124,10 +165,14 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - [ ] [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
   cluster's PIT history → solve for the option combo that hits the target. Replaces fixed-menu (iron condor/straddle)
   with continuous construction. (This is the legit core of the external "factor-deconstruction" idea, de-marketed.)
-- [ ] [STRATEGY] P2. **Normalised strike/term representation for modelling**: model/select in stationary coordinates —
-  log-moneyness `k = ln(K/F)`, normalised tenor `τ`, delta-space — NOT raw dollar strikes (non-stationary across
-  underlyings + time). Training/clustering and the factor-target solve operate in this normalised continuous space; the
-  real listed strike/expiry is recovered in Phase 4. Keeps the prediction matrix clean while execution stays discrete.
+- [ ] [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
+  today Δ/Γ/Θ/Vega/Ρ only; UAC `OptionGreeks` already has vanna/volga slots). REUSE the existing PricingLedger output
+  path. The factor-target objective needs these second-order greeks.
+- [ ] [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
+  log-moneyness `k = ln(K/F)` + business-day tenor `τ`** (arbitrage-correct, stationary across underlyings + time).
+  Depends on forward `F` (Phase 1 forward-price item). Delta-space is a deferred upgrade (needs the vol surface).
+  Training/clustering + the factor-target solve run in this normalised space; the real listed strike/expiry is recovered
+  in Phase 4.
 - [ ] [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
   strikes×expiries) — NOT optimise-continuous-then-snap (nearest-strike ≠ nearest-risk; snapping distorts the engineered
   profile).
@@ -142,9 +187,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 4 — Continuous→discrete execution realism
 
-- [ ] [FEATURES] P1. Ingest **point-in-time historical option chains** (bid/ask **and size/depth**) so the backtest's
-  availability + slippage are real, not synthetic. Source decision (IB historical vs vendor) → if blocked, file
-  `BLOCKED-CREDENTIALS` ping per the External-Data rule (do not descope).
+- [ ] [FEATURES] P1. **Historical option chains = REUSE Deribit + Tardis (RESOLVED 2026-05-30)** — MTDS Deribit adapter
+  + MDPS `CefiOptionsChainAdapter` already land Deribit BTC/ETH chains (bid_iv/ask_iv/mark_iv, bid/ask price, strike, OI,
+  top-of-book size). Tardis historical sub = `BLOCKED-CREDENTIALS` (operator-acked 2026-05-30). **Gaps to build**: full
+  order-book depth per strike (only top-of-book size today); live Deribit REST chain (not just Tardis batch); multi-venue
+  (Binance/Bybit/OKX).
 - [ ] [EXECUTION] P1. Slippage model uses quote **size/depth + partial fills**, not just spread width — options books are
   thin; "can't fill the size" is the binding constraint.
 - [ ] [STRATEGY] P1. P&L computed on rounded discrete contracts incl. exchange fees + modelled slippage (no synthetic-mid
@@ -171,8 +218,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 ## Phase 6 — Multi-timeframe + fusion
 
 - [ ] [FEATURES] P3. Run clustering per timeframe window.
-- [ ] [STRATEGY] P3. Define the **fusion rule explicitly** (e.g. long-frame regime gates short-frame entry vs weighted
-  vote). Undefined fusion = more overfit knobs; review-blocking without a stated rule.
+- [ ] [STRATEGY] P2. **Implement BOTH fusion modes behind a config toggle (RESOLVED 2026-05-30)**: (a) long-frame regime
+  gates short-frame entry; (b) weighted vote across timeframes (weighted by membership confidence). A/B test both OOS;
+  operator picks the winner from results — do not hardcode one.
 
 ## Phase 7 — Validation, acceptance KPIs, codex
 
