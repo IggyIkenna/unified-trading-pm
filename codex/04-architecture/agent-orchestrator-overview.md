@@ -24,7 +24,8 @@ See § "Difference vs trading services" below.
 `port 8026 locally; agent-orchestrator.odum-research.com prod`).
 
 Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; infra/deploy reference
-→ `codex/05-infrastructure/agent-orchestrator-deploy.md`.
+→ `codex/05-infrastructure/agent-orchestrator-deploy.md`; **central API host** (instance, ports, watchdog, auto-reboot,
+resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestrator-api-host.md`.
 
 ---
 

@@ -152,9 +152,13 @@ operator intervention.
 
 ## Phase 6 — Codex SSOT updates (P2)
 
-- [ ] [AGENT] P2. Document the central API host architecture (m8i.4xlarge, port 8026 + 443, watchdog + auto-reboot
+- [x] ✅ [AGENT] P2. Document the central API host architecture (m8i.4xlarge, port 8026 + 443, watchdog + auto-reboot
       pattern, claude-poller replacement) in `codex/05-infrastructure/agent-orchestrator-api-host.md` (new).
-- [ ] [AGENT] P2. Cross-link from `codex/04-architecture/agent-orchestrator-overview.md` to the new doc.
+      **DONE 2026-05-30** — `codex/05-infrastructure/agent-orchestrator-api-host.md` shipped: instance identity, port
+      layout (nginx :443 → uvicorn :8765), MemoryHigh/MemoryMax/TasksMax resource limits, watchdog service, EventBridge
+      auto-reboot + ceiling logic, httpx usage-poller replacement, root-cause history, operator runbook.
+- [x] ✅ [AGENT] P2. Cross-link from `codex/04-architecture/agent-orchestrator-overview.md` to the new doc.
+      **DONE 2026-05-30** — added § "Central API host" pointer in overview cross-links.
 
 ## Success criteria
 
