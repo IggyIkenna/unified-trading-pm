@@ -292,6 +292,72 @@ grep -r "\"swaps\"\|\"liquidity\"\|\"rate_indices\"\|\"mev_bundles\"\|\"bridge_f
 
 ---
 
+## TradFi canonical schema — dual-source `source` column (Phase 3+)
+
+**Plan SSOT**: `plans/active/tradfi_massive_dual_source_2026_05_28.md` Phases 1–3.
+
+### `source` column — every TradFi parquet + manifest row
+
+From Phase 3 (UTL@c7bfa427, MANIFEST_SCHEMA_VERSION=9), every TradFi parquet **must** carry a `source: str` column.
+
+- **Writer enforcement**: `record_captured(source=...)` raises `MissingSourceError` when `category=="tradfi"` and
+  `source` is omitted. QG STEP 5.64 enforces via `check_tradfi_source_explicit_at_record_captured.py`.
+- **Schema version**: TradFi parquets are v9 (v8 → v9 bump at Phase 3). The `MANIFEST_SCHEMA_VERSION` constant in UTL
+  reflects this.
+- **`source` is NOT a hive partition key** — it is a row-level column within the parquet. Co-mingled sources under the
+  same `day=…/asset_group=tradfi/venue=…/` prefix are disambiguated by the `source` column value, not by a separate
+  hive shard.
+- **Backfill**: pre-Phase-3 TradFi parquets are retroactively stamped `source='databento'` by
+  `market_tick_data_service/scripts/backfill_tradfi_source_column.py`. Run only after the pre-migration drain (operator
+  step) per the single-walk discipline.
+
+Canonical source strings for TradFi:
+
+| Source value   | Meaning                                                         |
+| -------------- | --------------------------------------------------------------- |
+| `"databento"`  | Databento historical/live TradFi data                           |
+| `"massive"`    | Massive (formerly Polygon.io) batch REST data (Starter tier)    |
+| `"yahoo"`      | Yahoo Finance rolling 60-day fallback (VIX 15m only)            |
+| `"barchart"`   | Barchart preload (VIX 15m only)                                 |
+
+### SOURCE_PRIORITY — multi-source TradFi cells
+
+`unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` records ordered source lists per
+`(asset_group, data_type)` cell. TradFi cells after Phase 1 of `tradfi_massive_dual_source_2026_05_28.md`:
+
+```python
+SOURCE_PRIORITY = {
+    ("tradfi", "trades"):        ["databento", "massive"],
+    ("tradfi", "tbbo"):          ["databento", "massive"],
+    ("tradfi", "ohlcv_1m"):      ["databento", "massive"],
+    # databento primary; massive secondary; yahoo/barchart: VIX 15m rolling fallback
+    ("tradfi", "ohlcv_15m"):     ["databento", "massive", "yahoo", "barchart"],
+    ("tradfi", "options_chain"): ["databento", "massive"],
+    ("tradfi", "futures_chain"): ["databento", "massive"],
+    ...
+}
+```
+
+Tie-breaker rule: first-in-list = primary (databento emits before Massive's 15-min delayed feed). When databento is
+absent and massive is present, `select_primary_available_source()` returns `"massive"` automatically.
+
+Emission latency for massive: 900,000 ms (15 min Starter-tier delayed feed).
+
+### Multi-source merge helpers (Phase 2)
+
+| Helper                                                              | Returns                                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------------- |
+| `get_all_sources_with_priority(asset_group, data_type)`             | `list[tuple[str, PipelineMode]]` — ordered source list    |
+| `select_primary_available_source(asset_group, data_type, avail)`    | `str` — highest-priority available source                 |
+| `detect_dual_source_conflicts(source_a, keys_a, source_b, keys_b)` | `list[tuple]` — conflicting rows (logs WARNING)           |
+
+Conflict rows are emitted to the manifest with `divergence_kind=DUAL_SOURCE_DUPLICATE` — never silently dropped.
+
+Import surface: `from unified_api_contracts.canonical.crosscutting.source_priority import (SOURCE_PRIORITY,
+get_all_sources_with_priority, select_primary_available_source, detect_dual_source_conflicts)`.
+
+---
+
 ## Audit-confirmed canonical picks — 2026-05-12 SSOT cleanup (Phase 1)
 
 Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catalogue audit
