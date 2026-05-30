@@ -180,10 +180,10 @@ alone doesn't escape it.
 
 ### Phase 3 — UTL (0.5 day)
 
-- [ ] [SCRIPT] P0. Same recipe as Phase 1+2 in unified-trading-library:
+- [x] ✅ [SCRIPT] P0. Same recipe as Phase 1+2 in unified-trading-library:
   - Local `quality-gates.sh` full run → sentinel
-  - Add v2 caller workflow
-  - Quickmerge
+  - Add v2 caller workflow — unified-trading-library@ca5fae9d (`ci(workflows): add quality-gates-v2 caller`)
+  - Quickmerge — v2 running on UTL main; run 26671218489 completed success 2026-05-30T01:51Z
 - [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` 2026-05-29 (18-branch sweep).
 - [x] ✅ [VERIFY] P0. Next UTL PR triggers v2 cleanly.
 
