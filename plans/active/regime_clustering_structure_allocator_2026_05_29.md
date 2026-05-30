@@ -206,8 +206,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   thin; "can't fill the size" is the binding constraint.
   `OptionsSlippageModel`: top-of-book size check + linear price impact for excess qty; plugged into
   `DiscreteStructureAllocator` via `slippage_fn` parameter. 12 unit tests. strategy-service@10b8eaa.
-- [ ] [STRATEGY] P1. P&L computed on rounded discrete contracts incl. exchange fees + modelled slippage (no synthetic-mid
+- [x] ✅ [STRATEGY] P1. P&L computed on rounded discrete contracts incl. exchange fees + modelled slippage (no synthetic-mid
   fills).
+  `exchange_fee_per_contract` parameter added to `DiscreteStructureAllocator`; fill_value uses bid/ask (not mid);
+  qty defaults to integer 1. 8 unit tests. strategy-service@ba78a8e.
 
 ## Phase 4b — Hard pre-trade risk-gate veto (the "survival layer")
 
