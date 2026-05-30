@@ -129,7 +129,7 @@ gets imported 24×.
 
 ### Phase 5 — L5 codify in CLAUDE.md (small docs PR, fast-path)
 
-- [ ] [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default everywhere."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default everywhere."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — added to `cursor-configs/CLAUDE.md` after the "backlog is plan-driven" rule. Covers: invariant, env var default, audit recipe (verify_fleet_prune_state.sh), recovery (enable_prune_stale.sh), SSOT link.
 - [ ] [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full architecture: regen lifecycle, yaml⇆state.db invariants, audit recipe, recovery if drift detected. Collision group: none. Estimate: 0.1 AI-day.
 - [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger CI run; if checks fail, fix root cause. Collision group: none. Estimate: 0.05 AI-day.
 

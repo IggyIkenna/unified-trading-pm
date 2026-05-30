@@ -256,6 +256,14 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
   once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
   `unified-trading-pm/plans/PLAN_FORMAT.md`.
+- **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified 2026-05-30)**:
+  `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and `state.db` MUST reflect only
+  tasks whose `- [ ]` checkbox is open in an active plan. `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default on every fleet VM
+  (enabled via `/etc/systemd/system/orchestrator.service.d/prune-stale.conf`). If you observe `state.db` queued-row count drifting
+  more than ±5 from `backlog.yaml` task count on any VM, run
+  `scripts/orchestrator/verify_fleet_prune_state.sh` to audit and
+  `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
+  `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
