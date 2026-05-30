@@ -504,8 +504,11 @@ pinpointed the real blockers.**
 - [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
       read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
       15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
-- [ ] [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
-      backfill 2026-05-27.
+- [x] ✅ [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
+      backfill 2026-05-27. Fix: `_write_feature_group_manifest` in `delta_one/engine/orchestrator.py` had two §6A
+      silent-skip paths — (1) `success_count == 0 → return` now emits `empty_confirmed(SOURCE_RETURNED_ZERO)`, and
+      (2) `not is_complete → return` now writes a partial manifest row + logs warning. Regression tests in
+      `tests/delta_one/unit/test_orchestrator_manifest_write.py`. Shipped features-service@8e5e5e09 → live-defi-rollout.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
 
