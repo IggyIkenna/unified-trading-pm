@@ -173,9 +173,13 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   Depends on forward `F` (Phase 1 forward-price item). Delta-space is a deferred upgrade (needs the vol surface).
   Training/clustering + the factor-target solve run in this normalised space; the real listed strike/expiry is recovered
   in Phase 4.
-- [ ] [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
+- [x] ✅ [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
   strikes×expiries) — NOT optimise-continuous-then-snap (nearest-strike ≠ nearest-risk; snapping distorts the engineered
   profile).
+  **DONE 2026-05-30** — `strategy_service/engine/strategies/v2/vol_trading/discrete_structure_allocator.py`.
+  `DiscreteStructureAllocator` enumerates N-leg combos × 2ⁿ side assignments directly over the discrete `ListedOption`
+  chain. Dollar-scaled greek-penalty objective. Pluggable `expected_pnl_fn` for Phase 2 regime wiring.
+  17 unit tests in `tests/unit/engine/strategies/v2/test_discrete_structure_allocator.py`. QG passes.
 - [ ] [STRATEGY] P1. **Objective = maximise expected P&L net of cost, subject to (a) greek-tracking-error constraint and
   (b) risk gates** — NOT minimise greek tracking error alone (tracking error is a *replication* objective; the
   min-tracking-error portfolio can be negative-EV after costs). Tracking-error penalty terms must be **dollar-scaled per
