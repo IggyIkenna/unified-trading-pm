@@ -315,7 +315,15 @@ Once Phase 1 and Phase 2 land their `[DESIGN][P1]` items, this phase is the actu
 TBD here — they depend on which execution model and which engine are chosen. Land the design decisions first; don't
 start implementation against an unconfirmed shape.
 
-- [ ] [AGENT] P1. **4.1 Refactor execution model** per the Phase 1 decision.
+- [x] ✅ [AGENT] P1. **4.1 Refactor execution model** per the Phase 1 decision.
+      **DONE 2026-05-30** — market-data-processing-service@fd37f58: `--subprocess-per-date` opt-in flag.
+      When set, each date in the `[start_date, end_date]` range is spawned as a separate subprocess via
+      `subprocess.run([sys.executable, "-m", "market_data_processing_service", "process", ...])`
+      with `env=os.environ.copy()` (GCP credentials inherited). `_build_single_date_argv` reconstructs argv
+      from parent's parsed namespace, pinning both `--start-date` and `--end-date` to the single date.
+      Subprocess gets `--skip-date-validation` (parent already validated). `--subprocess-per-date` omitted
+      from child argv to prevent recursion. Also adds `--skip-date-validation` to the parser (was a
+      getattr default, now a proper CLI arg). 4 new tests in `TestSubprocessPerDate`. 13 tests pass.
 - [ ] [AGENT] P1. **4.2 Refactor data engine** per the Phase 2 decision.
 - [ ] [AGENT] P1. **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural
       cleanup the refactor enables. The sibling plan's Phase 2.2 fix should be **deleted** at this point — keeping it
