@@ -268,9 +268,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 ## Phase 6 — Multi-timeframe + fusion
 
 - [ ] [FEATURES] P3. Run clustering per timeframe window.
-- [ ] [STRATEGY] P2. **Implement BOTH fusion modes behind a config toggle (RESOLVED 2026-05-30)**: (a) long-frame regime
+- [x] ✅ [STRATEGY] P2. **Implement BOTH fusion modes behind a config toggle (RESOLVED 2026-05-30)**: (a) long-frame regime
   gates short-frame entry; (b) weighted vote across timeframes (weighted by membership confidence). A/B test both OOS;
   operator picks the winner from results — do not hardcode one.
+  — strategy-service@8391bdd | `timeframe_fusion.py`: `fuse_cluster_assignments()` dispatches on `TimeframeFusionConfig.mode="gate"|"vote"`. Gate: long-frame confidence gates short-frame entry. Vote: entropy-weighted blended soft-probs. 22 unit tests.
 
 ## Phase 7 — Validation, acceptance KPIs, codex
 
