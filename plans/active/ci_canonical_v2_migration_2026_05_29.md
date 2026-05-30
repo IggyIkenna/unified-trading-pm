@@ -256,10 +256,12 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       - features-service: 7 lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
 - [ ] [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical required-check
       name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context.
-- [ ] [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with Option D results +
+- [x] ✅ [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with Option D results +
       close-out: which repos shipped v2 successfully, whether v2 ghosted (Plan-B trigger), GH ticket status.
-- [ ] [CLAUDE.md] P1. If the v2 workflow filename/job key needs to be communicated workspace-wide, add a 1-line pointer
+      — unified-trading-pm@6975bd86
+- [x] ✅ [CLAUDE.md] P1. If the v2 workflow filename/job key needs to be communicated workspace-wide, add a 1-line pointer
       under "CI Verification After Every Push" section.
+      — Added: "Required check name (all repos): quality-gates-v2 (v1 retired 2026-05-29)". unified-trading-pm@2da8eaba
 - [ ] [SCRIPT] P1. **Enable `enforce_admins` on staging + main across all 10 repos** — blocks admin bypass of branch
       protection (currently `enforce_admins: false`, meaning `IggyIkenna` can merge PRs even when `quality-gates` check
       has not passed). Only enable AFTER all 10 repos are green and passing QG on main. Command per repo:
