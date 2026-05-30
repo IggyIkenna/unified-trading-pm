@@ -1,0 +1,129 @@
+---
+name: harsh_pc_dispatch_failover_2026_05_30
+title: "harsh-pc dispatch failover — when host offline > 10 min, roll its queue to fleet VMs by affinity"
+parent_epic: plans/epics/orchestrator_master.md
+assigned_vm: vm-orchestrator
+priority: P0
+status: active
+estimate_class: refactor
+estimate_baseline_ai_days: 1.5
+estimate_calibrated_ai_days: 0.6
+created: 2026-05-30
+last_updated: 2026-05-30
+locked_by: live-defi-rollout
+locked_since: 2026-05-30
+codex_ssots:
+  - codex/04-architecture/agent-orchestrator-overview.md
+related_plans:
+  - plans/active/autospawn_idle_vms_2026_05_30.md
+  - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
+---
+
+## Why this exists
+
+The operator sweep on 2026-05-29/30 flagged: "this is the whole point — to avoid backlog on PCs that switch off."
+
+Today, **harsh-pc has 6,940 cached queued tasks** but the host is unreachable from the central api-host
+(`Connection refused`). Harsh's laptop is offline (closed/asleep). Those tasks just sit. The `central api-host` and the
+`vm-orchestrator` fleet members have NO knowledge of what's in his queue beyond the last heartbeat snapshot.
+
+**Two related but distinct problems**:
+
+1. **Tasks pinned to harsh-pc** (`target_slot` references one of his slot IDs, or `assigned_vm: harsh-pc`) → will
+   NEVER dispatch when his host is offline. They're functionally stranded.
+2. **Tasks that COULD run elsewhere** (no hard slot affinity, just soft preference) → should fall over to a fleet VM
+   with matching task category / asset_group / repo affinity.
+
+This plan addresses (2) — soft-affinity tasks fall over automatically. (1) — tasks deliberately pinned to harsh-pc —
+stay pinned (operator may have explicit reasons; never auto-rewrite hard pins).
+
+## The failover contract
+
+Tasks roll from `harsh-pc` to a fleet VM when ALL of:
+
+1. **Host offline**: heartbeat from harsh-pc absent for > 10 min (no `/api/heartbeat` from his orchestrator since the
+   threshold). The 10-min window is conservative — laptop sleep / brief network gaps are common.
+2. **Task is soft-pinned**: `target_slot IS NULL` OR `target_slot` is configured with `failover_allowed: true`. Hard
+   pins (`failover_allowed: false`) stay.
+3. **A fleet VM has matching affinity**: prefer VMs where `repos` overlaps with `vm.master_plans` (per
+   `orchestrator_vm_registry.yaml`), then by `asset_group`, then by collision_group, then by least-loaded queue depth.
+4. **Account headroom available on target VM**: matches `autospawn_idle_vms_2026_05_30.md` § 3 (re-use that contract).
+
+Tasks are re-pinned by updating `task.target_slot` to a fleet VM's slot ID + setting `task.failover_origin =
+"harsh-pc"` (for audit / rollback).
+
+## Rollback contract
+
+When harsh-pc heartbeat returns AND the failover task has not yet been claimed by the fleet target → rollback:
+restore `task.target_slot` to its original harsh-pc value, clear `failover_origin`. Already-claimed-or-done tasks
+stay where they ran.
+
+## Anti-patterns explicitly forbidden
+
+- **Do NOT failover hard-pinned tasks** — operator may have explicit reasons (debug, manual, audit). Hard pins MUST be
+  honored.
+- **Do NOT failover tasks already dispatched on harsh-pc** — `dispatched_to IS NOT NULL` means a worker may be running
+  it. Steal-attempt = race + duplicate work.
+- **Do NOT failover the central-api-host's queue** (api-host is the planning VM; its queue is small and not
+  worker-dispatched anyway).
+- **Do NOT failover faster than the 10-min threshold** — brief network glitches happen; threshold is intentional
+  conservatism.
+- **Do NOT delete the cached harsh-pc heartbeat snapshot** on failover — that's the audit trail for what was stranded.
+
+## CI-safety contract (HARD)
+
+Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link to avoid duplication.
+
+## Phases
+
+### Phase 0 — Baseline (DONE 2026-05-30)
+
+- [x] [DIAG] P0. Pre-existing fleet state captured — harsh-pc connection refused since at least 2026-05-29 18:00 UTC. Cached heartbeat shows 6,940 queued tasks in his state.db. No mechanism today re-routes those tasks. Captured this session 2026-05-30 02:10-02:20 UTC.
+
+### Phase 1 — Design the FailoverLoop
+
+- [ ] [DESIGN] P0. Document the `FailoverLoop` design in `codex/04-architecture/agent-orchestrator-overview.md` § "Host-offline failover lifecycle": heartbeat-silence threshold (10 min), soft-vs-hard pin distinction, affinity-matching logic (`repos` ⊃ `vm.master_plans`, then `asset_group`, then `collision_group`, then `least-loaded`), rollback on heartbeat-return, audit trail (`failover_origin` field). Collision group: `ao_failover_design`. Estimate: 0.15 AI-day.
+- [ ] [DESIGN] P0. Audit `target_slot` semantics in current `regen_backlog_from_plan.py` — confirm whether `target_slot` is always present, whether `failover_allowed: false` exists today (likely not), and what default to assume (recommend: default `failover_allowed: true` for ALL soft-pinned tasks; opt-in to hard-pin via new field). Collision group: `ao_failover_design`. Estimate: 0.1 AI-day.
+
+### Phase 2 — Add `failover_allowed` field to task schema (single PR)
+
+- [ ] [CODE] P0. Add `failover_allowed: bool = True` to `Task` ORM model + Pydantic schema in `agent-orchestrator/server/models.py`. Migration: backfill existing rows with `True` (the safe default). Update `regen_backlog_from_plan.py` to pass `failover_allowed=False` ONLY when the source plan task explicitly sets `failover_allowed: false` in YAML. Collision group: `ao_failover_schema`. Estimate: 0.2 AI-day.
+- [ ] [TEST] P0. Unit test: task with `failover_allowed=True` is eligible; task with `failover_allowed=False` is NOT eligible. Backfill migration test on a seed DB. Collision group: `ao_failover_schema`. Estimate: 0.1 AI-day.
+- [ ] [QG] P0. QG green → quickmerge `feat(failover): add Task.failover_allowed field`. Collision group: `ao_failover_schema`. Estimate: 0.1 AI-day.
+
+### Phase 3 — Implement FailoverLoop in agent-orchestrator (single PR, depends on Phase 2)
+
+- [ ] [CODE] P0. Add `server/failover.py` with `FailoverLoop` class — periodic tick (default 60s) that scans `fleet_summary` for hosts with `last_heartbeat_age > 600s`. For each offline host, fetch its cached task list, filter to (`failover_allowed=True` AND `dispatched_to IS NULL` AND `status='queued'`), then for each task pick the best fleet VM by affinity (repos overlap → asset_group → collision_group → least-loaded). Re-assign `target_slot` + set `failover_origin = <offline_host>`. Env-flag-gated: `ORCHESTRATOR_FAILOVER_ENABLED=true` default false. Collision group: `ao_failover_code`. Estimate: 0.4 AI-day.
+- [ ] [CODE] P0. Implement rollback logic — when an offline host's heartbeat returns AND a failover task is still `queued AND dispatched_to IS NULL` on the fleet target, restore `target_slot` to original AND clear `failover_origin`. Already-claimed-or-done tasks stay. Collision group: `ao_failover_code`. Estimate: 0.2 AI-day.
+- [ ] [TEST] P0. Unit tests for FailoverLoop: (a) host online → no failover, (b) host offline 5 min → no failover (under threshold), (c) host offline 15 min → failover, (d) hard-pinned task → not failovered, (e) dispatched task → not failovered, (f) rollback on heartbeat-return for unclaimed failover. Collision group: `ao_failover_code`. Estimate: 0.25 AI-day.
+- [ ] [QG] P0. QG green → quickmerge `feat(failover): FailoverLoop — re-route soft-pinned tasks when host offline > 10 min`. Collision group: `ao_failover_code`. Estimate: 0.1 AI-day.
+
+### Phase 4 — Per-VM rollout of the flag (post-merge)
+
+- [ ] [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_failover.sh` — SSM script that writes `/etc/systemd/system/orchestrator.service.d/failover.conf` with `Environment=ORCHESTRATOR_FAILOVER_ENABLED=true` then `systemctl daemon-reload + restart orchestrator`. Enable on `vm-orchestrator` ONLY first (single source of truth for failover decisions; per-VM enables would race). Collision group: none. Estimate: 0.05 AI-day.
+- [ ] [SCRIPT] P0. Enable on vm-orchestrator + verify by simulating harsh-pc offline (stop sending heartbeats for 12 min) → confirm at least one task with soft-pin migrates to a fleet VM with matching affinity. Document migration events in this plan. Collision group: `ao_failover_rollout`. Estimate: 0.2 AI-day.
+- [ ] [VERIFY] P0. End-to-end test: while harsh-pc is offline (the actual case as of 2026-05-30), watch FailoverLoop migrate the tasks with matching affinity. Capture count + per-task migration map in this plan. Confirm rollback fires the moment harsh-pc heartbeats again with un-claimed tasks. Collision group: none. Estimate: 0.15 AI-day.
+
+### Phase 5 — Codify in CLAUDE.md (small docs PR, fast-path)
+
+- [ ] [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator host-offline failover: soft-pinned tasks fall over to fleet VMs when host heartbeat silent > 10 min. Hard pins (failover_allowed: false) stay. ORCHESTRATOR_FAILOVER_ENABLED=true on vm-orchestrator only (single source of failover decisions)."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day.
+- [ ] [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-host-offline-failover.md` — full architecture: heartbeat lifecycle, affinity-matching algorithm, rollback semantics, audit trail (`failover_origin`), interaction with collision_group. Collision group: none. Estimate: 0.1 AI-day.
+- [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger CI run; fix root cause if checks fail. Collision group: none. Estimate: 0.05 AI-day.
+
+## Closing condition
+
+This plan closes when:
+
+1. All Phase 1 + Phase 2 + Phase 3 + Phase 4 items are ✅
+2. harsh-pc going offline > 10 min triggers measurable task migration to fleet VMs within 60s of the threshold breach
+3. harsh-pc coming back online triggers rollback of unclaimed failover tasks within 60s
+4. CLAUDE.md HARD RULE shipped (Phase 5)
+5. The cached harsh-pc heartbeat snapshot remains visible in fleet/summary as an audit trail (NOT deleted on failover)
+
+## Composes with
+
+- `autospawn_idle_vms_2026_05_30.md` — that plan handles "VM running, no worker." This plan handles "host offline,
+  workers can't run." Different triggers, both required for true autonomy.
+- `agent_orchestrator_backlog_state_alignment_2026_05_29.md` — without zombie cleanup, "queue not empty" checks on
+  harsh-pc would fire on zombies. Phase 1 of that plan is the prerequisite.
+- Both plans together = **fleet self-heals across host failures AND VM idleness**.
