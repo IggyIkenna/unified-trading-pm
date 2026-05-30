@@ -135,7 +135,7 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=5)
+        urllib.request.urlopen(req, timeout=5)  # nosec: B310 — HTTPS webhook URL from env var, not user input
     except Exception as e:
         print(f"Slack notify failed: {e}", file=sys.stderr)
 
