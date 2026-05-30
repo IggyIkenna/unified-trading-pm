@@ -544,6 +544,120 @@ The season-bounds table lives in `unified_api_contracts.canonical.domain.sports.
 
 ---
 
+## Multi-source cell consumer policy (TradFi dual-source, v9)
+
+> Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. Applies to `asset_group=tradfi` only when a
+> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`).
+> Requires v9 manifest schema with the `source` column populated.
+
+### Union semantics for multi-source cells
+
+When a TradFi cell has manifest rows from more than one source, the downstream consumer resolves the cell's effective
+`capture_status` by **union**: if at least one source row has `capture_status=captured`, the cell is treated as
+`captured` for all downstream purposes.
+
+| Source A `capture_status`  | Source B `capture_status`  | Resolved cell status | Downstream action                                                                                                                   |
+| -------------------------- | -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `captured`                 | `captured`                 | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)       |
+| `captured`                 | `empty_confirmed`          | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                              |
+| `captured`                 | `attempted_failed`         | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)                |
+| `empty_confirmed`          | `empty_confirmed`          | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
+| `attempted_failed`         | `attempted_failed`         | `attempted_failed`   | Both failed; block live trade, alert                                                                                                |
+
+**Critical rule**: a single `attempted_failed` source does NOT block a consumer when another source is `captured`. The
+failure is recorded and alerted per source, but the cell-level status is `captured`. This is the key difference from the
+single-source world where any `attempted_failed` immediately triggers `DependencyError`.
+
+### Per-reason taxonomy unchanged
+
+The `error_reason` taxonomy (see `## Reason taxonomy` and `## Per-reason-group → consumer policy`) applies **per source
+row** — not to the resolved cell status. A source B row with `capture_status=empty_confirmed[EXPECTED_HOLIDAY]` still
+means "source B expected empty on that holiday." The union resolution step runs AFTER per-source reason validation.
+
+Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply
+to the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
+normally; it never sees the source B empty row directly.
+
+### Source priority resolution
+
+When the resolved cell status is `captured` and multiple sources contributed captured rows, the consumer selects the
+primary source using `select_primary_available_source()` from
+`unified_api_contracts.canonical.crosscutting.source_priority`:
+
+```python
+from unified_api_contracts.canonical.crosscutting.source_priority import (
+    select_primary_available_source,
+    detect_dual_source_conflicts,
+)
+
+# rows_by_source: dict[str, pd.DataFrame] — keyed by source string
+primary_source = select_primary_available_source(
+    rows_by_source=rows_by_source,
+    asset_group="tradfi",
+    data_type=data_type,
+)
+df = rows_by_source[primary_source]
+```
+
+`SOURCE_PRIORITY[("tradfi", data_type)]` determines source preference order (e.g. `["databento", "massive"]` for OHLCV
+data types). `select_primary_available_source` returns the highest-priority source whose manifest row is `captured`.
+
+### Conflict detection when both sources are captured
+
+If both sources have `captured` status for the same cell (expected state after Phase 5 Massive backfill), call
+`detect_dual_source_conflicts()` to surface any divergences before committing to a primary:
+
+- `DivergenceKind.DUAL_SOURCE_DUPLICATE` — both sources present but content is identical; deduplicate silently
+- `DivergenceKind.VALUE_DIVERGENCE` — OHLCV values differ between sources beyond tolerance; log + alert (primary source
+  wins; do NOT blend or average the two)
+- `DivergenceKind.COVERAGE_DIVERGENCE` — one source has more bars than the other; primary source wins
+
+These divergences are soft warnings for the reconciliation audit; the primary source's data is always the authoritative
+downstream output.
+
+### Pre-flight gate adaptation
+
+When the pre-flight gate checks a TradFi cell's upstream status (step 2 from `## Pre-flight validation`), it MUST apply
+union semantics before deciding whether to proceed or raise `DependencyError`:
+
+```python
+def resolve_cell_status(
+    manifest_rows: list[AvailabilityRecord],  # one per source for this (shard_key, day)
+) -> CaptureStatus:
+    """Union: captured beats empty_confirmed beats attempted_failed."""
+    statuses = {r.capture_status for r in manifest_rows}
+    if CaptureStatus.CAPTURED in statuses:
+        return CaptureStatus.CAPTURED
+    if CaptureStatus.EMPTY_CONFIRMED in statuses:
+        return CaptureStatus.EMPTY_CONFIRMED
+    return CaptureStatus.ATTEMPTED_FAILED
+```
+
+A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no
+`DependencyError`. The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
+
+### Scope
+
+This section applies only when ALL of the following are true:
+
+- `asset_group=tradfi`
+- v9 manifest schema — `source` column populated (non-empty) on TradFi rows
+- Multiple source rows exist for the same `(shard_key, day)` combination
+
+For `asset_group` ≠ `tradfi`, each cell has exactly one source row (source column is `""`); this section does not apply
+and standard single-source rules govern.
+
+### Cross-references
+
+- `SOURCE_PRIORITY` registry + UAC multi-source merge logic:
+  `unified_api_contracts.canonical.crosscutting.source_priority`
+- v9 `source` column definition + backfill plan:
+  [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) § _Schema v9_
+- Phase 5 Massive backfill (blocked BLK-b00254d7 pending MASSIVE_API_KEY credential):
+  `tradfi_massive_dual_source_2026_05_28.md` Phase 5
+
+---
+
 ## Per-service consumer-class — 4-state `capture_status` handling
 
 > **Codified 2026-05-22** — fills the P0 gap from `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 3.D.3.
