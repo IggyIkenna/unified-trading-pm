@@ -68,7 +68,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
     strings); uses a line-by-line approach only as last resort.
     """
     try:
-        import yaml  # type: ignore[import-untyped]
+        import yaml  # type: ignore[import-untyped]  # noqa: imports-inside-functions
         with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
         return data.get("tasks", []) if isinstance(data, dict) else []
@@ -81,7 +81,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
         srv = _WORKSPACE / "agent-orchestrator"
         if str(srv) not in sys.path:
             sys.path.insert(0, str(srv))
-        from server.backlog import load_backlog  # type: ignore[import-not-found]
+        from server.backlog import load_backlog  # type: ignore[import-not-found]  # noqa: imports-inside-functions
         tasks = load_backlog(path)
         return [t.model_dump() for t in tasks]
     except Exception:
@@ -125,7 +125,7 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
     if not _SLACK_WEBHOOK:
         return
     try:
-        import urllib.request
+        import urllib.request  # noqa: imports-inside-functions
         payload: dict = {"text": text}
         if blocks:
             payload["blocks"] = blocks
