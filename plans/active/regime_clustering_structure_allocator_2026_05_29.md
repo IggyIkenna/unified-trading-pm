@@ -130,8 +130,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   **DONE 2026-05-30** — strategy-service@8deaf28: `_session_pnl_realized` + `_session_pnl_unrealized` added to
   `BaseArchetypeEngineV2`; staked_basis accumulates net_carry bps/yr income per elapsed hour; APD accumulates
   expected round-trip PnL (gross − cost) per instruction. 8 tests pass; ruff + basedpyright clean.
-- [ ] [FEATURES] P2. Subscribe the PnL stream in features-service, roll to lagged 30d/Nd windows, land as feature group
+- [x] ✅ [FEATURES] P2. Subscribe the PnL stream in features-service, roll to lagged 30d/Nd windows, land as feature group
   `strategy_pnl_archetype` through the existing `FeatureWriter` PIT path. Regime-focused → lag is acceptable by design.
+  **DONE 2026-05-30** — features-service@13421644: new module `features_service/strategy_pnl_archetype/rolling_compute.py`.
+  PIT window [target_date−N, target_date−1]; outputs pnl_realized_Nd, pnl_unrealized_last, n_trades_Nd, sharpe_Nd,
+  drawdown_Nd (null < min_periods=5). 12 unit tests; basedpyright 0 errors.
 - [ ] [FEATURES] P2. **PnL vectorisation = one sub-vector per archetype** (each archetype contributes its own
   PnL/Sharpe/drawdown dims) concatenated into the market-state feature vector, so the cluster space sees *how each
   archetype is performing now* alongside conventional market features. This is the explicit "PnL-per-archetype as
