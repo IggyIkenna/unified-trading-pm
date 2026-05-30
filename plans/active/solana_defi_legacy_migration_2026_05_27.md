@@ -236,7 +236,7 @@ source:
       run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`.
       **DONE 2026-05-30**: Bug-G fix already shipped (MTDS gas_fee_handler.py accepts "solana"/"sol" sentinel;
       deployment-service setup-data-pipeline-vm.sh:1116 passes `--gas-fee-chains solana`). Checkbox flip only.
-- [ ] [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
+- [x] ✅ [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
       the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through `collect-lst-rates`
       which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with the latest date
       captured, every prior date short-circuits. Net: the VM wrote jitoSOL + 12 EVM LSTs for 2026-05-27 only, NOT
@@ -247,6 +247,8 @@ source:
       daily-replayable (collector currently reads "latest" only — needs a `target_date_str` parameter analog to marginfi
       TVL filter). Provenance: slot-1 2026-05-28 run.log
       `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`.
+      **DONE 2026-05-30 (Bug-M)**: MTDS@0644e40 — LstRatesHandler now respects `--force` to bypass the sentinel cluster
+      check; re-launch marinade VM with `--force` to write historical Marinade rows past already-captured dates.
 - [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
       every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
       `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
