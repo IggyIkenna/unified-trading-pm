@@ -231,15 +231,40 @@ Concrete questions to answer + corresponding redesigns to ship:
 
 ## Phase 2 — Decide the data-engine shape
 
-- [ ] [DESIGN] P1. **2.1 Pick the data engine.** Closed set:
+- [x] ✅ [DESIGN] P1. **2.1 Pick the data engine.** Closed set:
   - **(a) Pure Polars end-to-end**: read raw via polars, aggregate via polars (already partially in place), write via
     polars. Pandas eliminated.
   - **(b) Pure Pandas with pyarrow engine**: `pd.read_parquet(engine="pyarrow")`. Eliminates polars but loses polars'
     faster aggregation path.
   - **(c) Pyarrow-table end-to-end**: lowest-level, most explicit memory control, fewer high-level conveniences. Pick
     one. The expectation per operator direction is (a). Document why.
-- [ ] [DESIGN] P1. **2.2 Audit every parquet read/write callsite in MDPS.** Tabulate `(file:line, engine, why)`. Any
+      **DECISION 2026-05-30: (a) Pure Polars** — already >95% complete (Stage 5E). All 13 parquet callsites use Polars
+      natively. The 2 Polars→Pandas conversions (`canonical_writer.py:1400,2204`, `live_aggregator.py:324`) are
+      INTENTIONAL hard-protocol boundaries (UTL `record_captured` + `TickFetcher` require pandas DataFrames). These
+      stay; do NOT attempt to convert UTL internals. Pandas fallbacks were removed in Stage 5E. No pyarrow direct decode
+      remains in production paths (Stage 5.6 already migrated `mock_data_provider.py:196`).
+      Why not (b) or (c): polars is faster for aggregation (candle engine is polars-native); pyarrow direct would
+      require explicit column handling that polars already provides ergonomically; no benefit over polars + conversion
+      at UTL boundary is cheaper than rewriting UTL.
+- [x] ✅ [DESIGN] P1. **2.2 Audit every parquet read/write callsite in MDPS.** Tabulate `(file:line, engine, why)`. Any
       mixed-engine boundary is a candidate conversion buffer that the refactor must eliminate.
+      **AUDIT DONE 2026-05-30** — 13 callsites (10 read, 2 write, 1 mock write):
+      | File | Line | Op | Engine | Note |
+      |------|------|----|--------|------|
+      | `app/adapters/prediction/trades_adapter.py` | 198 | read | Polars | lifecycle dataset |
+      | `app/calculators/polars_candle_engine.py` | 306 | write | Polars | candle output |
+      | `app/core/canonical_writer.py` | 1400 | read | Polars→Pandas | UTL boundary |
+      | `app/core/canonical_writer.py` | 2204 | read | Polars→Pandas | UTL boundary |
+      | `app/core/cloud_data_provider.py` | 144 | read | Polars | legacy fallback |
+      | `app/core/cloud_data_provider.py` | 229 | read | Polars | sports/prediction |
+      | `app/core/data_source.py` | 174 | read | Polars | Stage 5E, no pandas fallback |
+      | `app/core/live_aggregator.py` | 324 | read | Polars→Pandas | UTL TickFetcher boundary |
+      | `app/core/live_workers.py` | 488 | read | Polars | Stage 5E, low_memory=True |
+      | `engine/mock_data_provider.py` | 140 | read | Polars | instruments availability |
+      | `engine/mock_data_provider.py` | 144 | read | Polars | instruments availability |
+      | `engine/mock_data_provider.py` | 196 | read | Polars | Stage 5.6 (replaced pyarrow) |
+      | `engine/mock_data_provider.py` | 291 | write | Polars | mock candles |
+      Mixed-engine: 2 intentional Polars→Pandas at UTL boundaries. No round-trips. No remaining fallbacks.
 - [ ] [DESIGN] P1. **2.3 Measure the per-instrument peak memory for the chosen engine.** Run one instrument-day through
       the chosen engine, take a tracemalloc snapshot at peak. Compare against the current mixed-engine peak. The bar:
       per-instrument peak ≤ 2 GB for a typical CeFi perp trades day. (Numbers from the canary suggest the current
