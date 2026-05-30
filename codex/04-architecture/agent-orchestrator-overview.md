@@ -405,6 +405,74 @@ Enable via systemd drop-in: `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in
 
 SSOT: `server/autospawn.py` + `plans/active/autospawn_idle_vms_2026_05_30.md`.
 
+## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
+
+Addresses the case where a host (e.g. harsh-pc) goes offline and its soft-pinned tasks would otherwise sit
+indefinitely. The `FailoverLoop` runs in `server/failover.py` on vm-orchestrator only (single decision source;
+per-VM enables would race).
+
+### Trigger contract
+
+| Gate | Condition |
+|------|-----------|
+| Host offline | `last_heartbeat_age > 600s` (10 min) for the source host — conservative threshold for laptop sleep / brief network gaps |
+| Task soft-pinned | `target_slot IS NULL` OR `target_slot.failover_allowed = true` |
+| Task not dispatched | `dispatched_to IS NULL` AND `status = 'queued'` |
+| Fleet VM available | At least one fleet VM passes affinity-match AND account-headroom check (re-uses AutoSpawnLoop § 3 contract) |
+
+### Affinity-matching algorithm
+
+For each eligible task, pick the best fleet VM by priority:
+
+1. **Repo overlap**: `task.repos` ⊆ `vm.master_plans` entries (per `orchestrator_vm_registry.yaml`)
+2. **Asset group**: `task.asset_group` matches `vm.asset_group`
+3. **Collision group**: `task.collision_group` not already active on the target
+4. **Least loaded**: fewest `status='queued'` tasks in target VM's `state.db`
+
+First VM that passes all applicable filters wins. On tie, random among finalists.
+
+### Soft vs hard pin distinction
+
+- **Soft pin** (`failover_allowed: true`, default for all tasks): eligible for failover.
+- **Hard pin** (`failover_allowed: false`): NEVER failovered — operator may have explicit reasons (debug, audit, manual
+  run). Hard pins are opt-in, set via `failover_allowed: false` in the source plan task YAML.
+
+Re-assignment writes `task.target_slot = <fleet_vm_slot_id>` + `task.failover_origin = "<offline_host>"` for audit.
+
+### Rollback on heartbeat-return
+
+When the offline host's heartbeat returns:
+
+- For each failovered task with `failover_origin = <host>` AND `dispatched_to IS NULL` (still unclaimed on fleet
+  target): restore `target_slot` to original harsh-pc value + clear `failover_origin`.
+- Already-claimed or already-done tasks stay where they ran — no rollback.
+- Rollback fires within one `FailoverLoop` tick (default 60s) of heartbeat resuming.
+
+### Audit trail
+
+`task.failover_origin` persists the source host name. The cached last heartbeat snapshot from the offline host is
+**never deleted** on failover — it remains visible in `/api/fleet/summary` as audit evidence of what was stranded.
+
+### Env vars
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `ORCHESTRATOR_FAILOVER_ENABLED` | `false` | Must be `true` to arm FailoverLoop |
+| `ORCHESTRATOR_FAILOVER_INTERVAL_SECONDS` | `60` | Tick interval |
+| `ORCHESTRATOR_FAILOVER_HEARTBEAT_THRESHOLD_SECONDS` | `600` | Offline threshold (10 min) |
+
+Enable via drop-in: `/etc/systemd/system/orchestrator.service.d/failover.conf` on vm-orchestrator only.
+Rollout script: `unified-trading-pm/scripts/orchestrator/enable_failover.sh` (Phase 4).
+
+### Anti-patterns
+
+- **Never failover hard-pinned tasks** (`failover_allowed: false`)
+- **Never failover dispatched tasks** (`dispatched_to IS NOT NULL`) — steal-attempt = race + duplicate work
+- **Never failover api-host queue** — planning VM, not worker-dispatched
+- **Never delete the cached heartbeat snapshot** on failover
+
+SSOT: `server/failover.py` (Phase 3) + `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
+
 ## Plan reference
 
 Full deployment plan (P0–P6): `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` (P5 cutover
