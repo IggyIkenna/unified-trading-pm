@@ -151,18 +151,22 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 1 — UAC contract additions (1 day)
 
-- [ ] [UAC] P1. `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` — append `"massive"` to:
+- [x] ✅ [UAC] P1. `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` — append `"massive"` to:
   - `("tradfi", "trades")`
   - `("tradfi", "tbbo")`
   - `("tradfi", "ohlcv_1m")`
   - `("tradfi", "ohlcv_15m")` — slot AFTER databento, BEFORE yahoo/barchart (priority order)
   - `("tradfi", "options_chain")`
   - `("tradfi", "futures_chain")`
-- [ ] [UAC] P1. `pipeline_mode_for_source("massive")` — register the batch `PipelineMode` for Massive (likely
-      `BATCH_REST` matching Databento's batch shape; verify closed-set round-trip test passes).
-- [ ] [UAC] P1. `emission_latency_ms_for_source("massive")` — register Massive's emission latency. Delayed-tier default
+  - UAC@f7cf8828
+- [x] ✅ [UAC] P1. `pipeline_mode_for_source("massive")` — register the batch `PipelineMode` for Massive:
+      `BATCH_MASSIVE = "batch_massive"` (alphabetically after BATCH_HYPERLIQUID_REST); closed-set round-trip test passes.
+  - UAC@f7cf8828
+- [x] ✅ [UAC] P1. `emission_latency_ms_for_source("massive")` — register Massive's emission latency. Delayed-tier default
       = 15 minutes (900_000 ms) per Massive's Starter tier semantics. Real-time tier would be sub-second.
-- [ ] [UAC] P1. Add Massive to UAC source-string registry test fixture; assert closed-set tests pass.
+  - UAC@f7cf8828
+- [x] ✅ [UAC] P1. Add Massive to UAC source-string registry test fixture; assert closed-set tests pass.
+      62 tests pass: test_source_priority (28) + test_source_priority_pipeline_mode (14) + test_pipeline_mode (20).
 - [ ] [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
 
 ### Phase 2 — Multi-source merge logic (3 days — the deferred plan slot)
