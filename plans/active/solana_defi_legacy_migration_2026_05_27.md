@@ -587,6 +587,41 @@ plan. Commit + push via the standard `docs(plans):` flow.
       Outer `write()` `try/except` still swallows the final raise so manifest writes stay best-effort. Unit tests cover
       all 4 classification paths + retry semantics in `tests/unit/test_manifest_writer_429_backoff.py`.
 
+### Hardening — subgraph silent-data-loss + AAVE OP follow-ups
+
+- [x] ✅ [DOCS] P3. **AAVE_V3-OPTIMISM `_defi.py` comment refresh — 2026-05-30 (uac@9f2da8d3)**. The previous comment
+      said "Coverage: 2022 → 2024-09-11 (subgraph stops indexing past that)" — wrong. Re-verified 2026-05-30: both the
+      Aave github-README deployment `DSfLz...` and the Messari deployment `3RWFx...` are AT HEAD with
+      `hasIndexingErrors:false`, but Aave silently republished `DSfLz...` to an empty v0.0.5 between 2026-05-08 and
+      2026-05-29 (both `reserveParamsHistoryItems` AND `reserves` return `[]`). Messari deployment has sparse
+      post-2024-12 coverage and a broken `market{inputToken{symbol}}` join. Comment now captures the actual abandonment
+      pattern + records that RPC fallback is the canonical primary path until a fresh rich deployment surfaces.
+- [x] ✅ [INFRA] P2. **Subgraph silent-data-loss probe shipped — 2026-05-30 (mtds@cef599e3 + deployment-service@8f2a83c
+      + alerting-service@b6cbb2f)**. Daily cron at `0 */6 * * *` UTC (Cloud Run Job
+      `uts-prod-subgraph-health-probe` + Cloud Scheduler `uts-prod-subgraph-health-probe-cron`) probes every
+      `(protocol, chain)` in `SUBGRAPH_IDS` for HEAD_LAG (>6h stale block) + EMPTY_YESTERDAY (zero rows yesterday UTC)
+      + DEPLOYMENT_CHANGED (IPFS hash differs from fingerprint stored at
+      `gs://<lending-indices-bucket>/_index/subgraph_fingerprints/fingerprints.parquet`) + SCHEMA_INVALID. Alerts
+      publish to the new `defi_data_quality_alerts` Pub/Sub topic; alerting-service subscribes + routes via the
+      existing PagerDuty/Slack router. Per-cell errors are isolated (shard-level failure isolation HARD RULE) — one
+      bad probe never aborts the sweep. Protects against the silent republish pattern that hit AAVE_V3-OPTIMISM
+      2026-05-08→29. 16 unit tests cover signal detection + fingerprint round-trip + alert payload shape + per-cell
+      crash isolation.
+- [x] ✅ [POLICY] P3. **AAVE_V3-OPTIMISM canonical data source = RPC fallback (decision recorded 2026-05-30)** — Aave
+      team abandoned the OP subgraph deployment (silently republished `DSfLz...` to empty v0.0.5 between 2026-05-08
+      and 2026-05-29). No rich subgraph alternative exists. Messari `3RWFx...` kept as the cascade's 2nd variant for
+      partial coverage. Native subgraph variant kept in the cascade for the day Aave revives the deployment. If a
+      new rich deployment surfaces: swap `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to its ID + re-backfill the affected
+      date range. Operationally: 14-row daily-resolution RPC data is sufficient for the carry archetype.
+- [ ] [CODE] P3. **Multi-parquet-per-day consolidator** — when both the rich subgraph and the sparse RPC fallback
+      wrote parquets for the same `(date, venue, chain)` (during the 2026-05-08→2026-05-29 abandonment window),
+      downstream readers see multiple parquets per cell. Implement a consolidator that keeps the row-count-maximizing
+      parquet per `(date, venue, chain)` and archives/deletes the loser. Affects AAVE_V3-OPTIMISM dates 2025-01-01 →
+      2026-05-28 (~320 dates with co-existing rich May-08 parquets + sparse May-29 RPC parquets). **NICE-TO-HAVE**,
+      not launch-blocker; 14-row RPC data is operationally sufficient for the daily-resolution carry archetype. Use
+      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object` for object ops (NOT
+      subprocess gcloud per CLAUDE.md GCS-ops SSOT).
+
 ### Pre-existing (carry-over, lower urgency)
 
 - [ ] [CODE] [AGENT-AUTO] P3. **PACIFICA** is CeFi perp (not Solana DeFi) — coverage routes via CeFi perp pipeline
