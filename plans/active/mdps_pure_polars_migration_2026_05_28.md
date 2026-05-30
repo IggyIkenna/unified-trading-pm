@@ -520,14 +520,16 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
       `CandleOrchestrationWriter`) trimmed
   - kept; production MRO intact
     (`OrchestrationWorkersMixin → BatchOrchestrationMixin → LiveOrchestrationMixin → CandleWriteMixin → object`).
-- [ ] [BLOCKED-PROTOCOL] P1. **3.6 Remove the boundary `.to_pandas()` at the adapter call** — re-scoped
+- [x] ✅ [BLOCKED-PROTOCOL — deferred to successor plan] P1. **3.6 Remove the boundary `.to_pandas()` at the adapter call** — re-scoped
       2026-05-29 from BLOCKED-ON-STAGE-4 to BLOCKED-PROTOCOL: the call sits at
       ``live_workers._process_standard_timeframe:1529`` and feeds
       ``adapter.process_to_candles(tick_data: pd.DataFrame, ...)`` which is the UAC
       ``BaseCandleAdapter`` Protocol. Per the 2026-05-29 operator directive ("if the output is
       pandas it is okay for now, we will do the migration later on for cross repos"), this
-      cross-repo Protocol stays pandas. Same status as Stage 5.2 / 5.3 / 5.4 — gated on a UAC
-      adapter Protocol lift that's out of scope for this plan.
+      cross-repo Protocol stays pandas. Deferral finalized 2026-05-30 (slot-6): tracked in the
+      pandas-callsite tracker table (row: "All 18 adapters' process_to_candles") as "Future plan".
+      Named successor: `mdps_adapter_protocol_pandas_to_polars_<YYYY_MM_DD>.md` — file when
+      adapter migration becomes priority. No MDPS code change in this plan.
 - [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — Initial pass updated 10 tests
       (test_league_passthrough, test_per_instrument_pipeline, plus tests for the four (B)-scaffold classes). The (B)
       test files were subsequently deleted with the (B) deletion at @febcb3b, so the net result is the remaining
