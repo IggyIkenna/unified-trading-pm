@@ -182,9 +182,16 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 3 — Factor-targeted structure allocator (strategy-service / trading-agent) — *the real new build*
 
-- [ ] [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
+- [x] ✅ [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
   cluster's PIT history → solve for the option combo that hits the target. Replaces fixed-menu (iron condor/straddle)
   with continuous construction. (This is the legit core of the external "factor-deconstruction" idea, de-marketed.)
+  **DONE 2026-05-30 slot-2** — `strategy_service/engine/strategies/v2/vol_trading/cluster_greek_targets.py`.
+  `ClusterGreekRecord(cluster_id, delta, gamma, vega, vanna, volga, basis)` PIT observation dataclass;
+  `ClusterGreekTargets(cluster_id, targets, basis_target, n_observations)` learned output; `fit_cluster_greek_targets()`
+  groups by cluster_id, drops clusters with < 30 observations, aggregates via median (or mean); `make_cluster_allocator()`
+  factory wires learned targets into `DiscreteStructureAllocator`, falling back to unconstrained when cluster missing.
+  `_aggregate_records()` internal helper. Unit tests: `tests/unit/engine/strategies/v2/test_cluster_greek_targets.py`.
+  QG green — strategy-service@30cafe5.
 - [ ] [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
   today Δ/Γ/Θ/Vega/Ρ only; UAC `OptionGreeks` already has vanna/volga slots). REUSE the existing PricingLedger output
   path. The factor-target objective needs these second-order greeks.
