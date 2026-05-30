@@ -204,7 +204,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       that `category=="tradfi"` raises MissingSourceError when source omitted. UTL@c7bfa427.
 - [x] ✅ [UAC] P1. Bump TradFi parquet `schema_version` (likely v8 → v9 per the v8 divergence already documented).
       MANIFEST_SCHEMA_VERSION=9 in UTL@c7bfa427. Cluster-validation kwargs in `record_captured` include `source`.
-- [ ] [QG] P1. STEP 5.64 (cluster validation) MUST fail if writer omits `source` for TradFi cells.
+- [x] ✅ [QG] P1. STEP 5.64 (cluster validation) MUST fail if writer omits `source` for TradFi cells.
+      PM@16ec41729 — check_tradfi_source_explicit_at_record_captured.py + empty baseline; UTL@07f77824
+      quality-gates.sh STEP 5.64 wired + QG-allow markers on kwargs-forwarding callsites.
 
 ### Phase 4 — MTDS Massive connector (REST / batch only) (2 days)
 
