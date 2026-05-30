@@ -273,13 +273,12 @@ source:
       **FIXED 2026-05-30** (MTDS@c3ae794c): `_collect_kamino` now emits `pool_id` (aliased from vault PDA `address`) +
       `vault_address` (secondary) + `token_a`/`token_b` from resolved mint symbols. Kamino backfill rerun via
       collect-solana-defi --protocols kamino (see Bug-K "Bug fixes" section above — already `[x] ✅`).
-- [ ] [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
+- [x] ✅ [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
       date in the new VM run.** `solana_defi_handler._collect_jito` hits
-      `kobe.mainnet.jito.network/api/v1/     stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
-      (or absent), so the handler gives up and returns empty. Possible causes: (a) Jito's Stakenet API moved / endpoint
-      deprecated, (b) field renamed in their response, (c) we need an auth header now. Fix: read the actual response
-      body once, confirm field names, update collector OR switch to an on-chain RPC read against the Jito stake pool
-      program. Provenance: same run.log as above.
+      `kobe.mainnet.jito.network/api/v1/stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
+      (or absent), so the handler gives up and returns empty.
+      — MTDS@c3ae794c (backfill 2026-05-30). Root cause = API drift: Jito shape changed from single object to time-series
+      payload. Rewrote `_collect_jito` to consume latest entry; added `_collect_jito_historical` via DeFiLlama yields chart.
 - [ ] [MTDS] P3. **GCS object-mutation 429s on per-VM manifest shard at the start of every backfill VM** — both
       `mtds-solana-drift-backfill` and the new `mtds-solana-defi-backfill` get `429 rateLimitExceeded ... per-VM shard`
       on the first few flushes. Non-blocking (manifest writes are best-effort) but it means the first ~10-30s of
