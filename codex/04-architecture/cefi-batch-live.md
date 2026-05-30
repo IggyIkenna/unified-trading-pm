@@ -134,6 +134,46 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 
 ---
 
+## §9 — CeFi adapter: expiry-window contract + 401≠honest-absence (2026-05-27)
+
+> Full codex SSOT: [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md).
+> Summary here for CeFi adapter authors.
+
+### Expiry-window pre-request filter (MANDATORY)
+
+CeFi dated instruments (OKX, Deribit, Kraken futures/options) carry `available_from` / `available_to_datetime` in
+`InstrumentRecord`. The adapter MUST filter the `(instrument, date)` request matrix against this window BEFORE making
+any Tardis API call:
+
+```python
+# In the CeFi Tardis download expansion loop:
+if instr.available_from and date < instr.available_from.date():
+    manifest.record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_NOT_LISTED)
+    continue
+if instr.available_to_datetime and date > instr.available_to_datetime.date():
+    manifest.record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_DELISTED)
+    continue
+```
+
+**Why**: Tardis code 140 (`"Data available only up to <date>"`) is a predictable 400 for out-of-window requests —
+~1,250 per OKX VM per backfill window. These are NOT adapter errors; they are the wrong `(instrument, date)` pairs.
+Record `expected_unattempted` before the call, not `attempted_failed` after.
+
+### 401 — blocked credentials, NOT honest absence
+
+If Tardis returns HTTP 401 (expired key / missing key), record `attempted_failed` with `CLASSIFIED_VENUE_ERROR`:
+
+```python
+except VenueAuthError:  # classified from HTTP 401 by classify_venue_error()
+    manifest.record_failed(error=classify_venue_error(exc))  # → attempted_failed
+    # Do NOT record_empty — data exists, key is temporarily invalid
+```
+
+Rationale: a 401-stamped `empty_confirmed` row looks like a calendar gap to downstream consumers and will never be
+retried after key renewal. `attempted_failed` keeps the cell in the "retryable" queue.
+
+---
+
 ## §8 Cross-references
 
 - **Batch/live invariant (global)**: [`batch-live-architecture.md`](batch-live-architecture.md) §1-§4
@@ -149,3 +189,5 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 - **Shard-granularity SSOT**: `plans/epics/infrastructure_master.md`
 - **Empty-record rules**:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+- **CeFi expiry-window + 401 contract**:
+  [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md)

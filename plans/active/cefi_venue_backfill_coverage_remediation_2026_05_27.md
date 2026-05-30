@@ -388,8 +388,11 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ## Codex SSOT updates
 
-- [ ] [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
+- [x] ✅ DONE [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
       `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs.
+      — Added `## §7 — CeFi expiry-window contract + 401≠honest-absence` to `honest-absence-downstream-handling.md`
+      (manifest matrix, pre-request filter pseudocode, 401 rule + rationale, cross-refs). Added `## §9` to
+      `cefi-batch-live.md` (adapter-level pseudocode for expiry filter + 401 handling). — PM@<sha-pending>
 - [x] ✅ [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
       anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc.
       — Added `## §6A honest-absence violation classes` section to `codex/02-data/honest-absence-downstream-handling.md`

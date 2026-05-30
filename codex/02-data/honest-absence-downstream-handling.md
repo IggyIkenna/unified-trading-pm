@@ -675,8 +675,8 @@ The season-bounds table lives in `unified_api_contracts.canonical.domain.sports.
 ## Multi-source cell consumer policy (TradFi dual-source, v9)
 
 > Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. Applies to `asset_group=tradfi` only when a
-> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`).
-> Requires v9 manifest schema with the `source` column populated.
+> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`). Requires
+> v9 manifest schema with the `source` column populated.
 
 ### Union semantics for multi-source cells
 
@@ -684,13 +684,13 @@ When a TradFi cell has manifest rows from more than one source, the downstream c
 `capture_status` by **union**: if at least one source row has `capture_status=captured`, the cell is treated as
 `captured` for all downstream purposes.
 
-| Source A `capture_status`  | Source B `capture_status`  | Resolved cell status | Downstream action                                                                                                                   |
-| -------------------------- | -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `captured`                 | `captured`                 | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)       |
-| `captured`                 | `empty_confirmed`          | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                              |
-| `captured`                 | `attempted_failed`         | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)                |
-| `empty_confirmed`          | `empty_confirmed`          | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
-| `attempted_failed`         | `attempted_failed`         | `attempted_failed`   | Both failed; block live trade, alert                                                                                                |
+| Source A `capture_status` | Source B `capture_status` | Resolved cell status | Downstream action                                                                                                                  |
+| ------------------------- | ------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `captured`                | `captured`                | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)      |
+| `captured`                | `empty_confirmed`         | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                             |
+| `captured`                | `attempted_failed`        | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)               |
+| `empty_confirmed`         | `empty_confirmed`         | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
+| `attempted_failed`        | `attempted_failed`        | `attempted_failed`   | Both failed; block live trade, alert                                                                                               |
 
 **Critical rule**: a single `attempted_failed` source does NOT block a consumer when another source is `captured`. The
 failure is recorded and alerted per source, but the cell-level status is `captured`. This is the key difference from the
@@ -702,8 +702,8 @@ The `error_reason` taxonomy (see `## Reason taxonomy` and `## Per-reason-group �
 row** — not to the resolved cell status. A source B row with `capture_status=empty_confirmed[EXPECTED_HOLIDAY]` still
 means "source B expected empty on that holiday." The union resolution step runs AFTER per-source reason validation.
 
-Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply
-to the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
+Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply to
+the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
 normally; it never sees the source B empty row directly.
 
 ### Source priority resolution
@@ -761,8 +761,8 @@ def resolve_cell_status(
     return CaptureStatus.ATTEMPTED_FAILED
 ```
 
-A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no
-`DependencyError`. The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
+A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no `DependencyError`.
+The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
 
 ### Scope
 
@@ -1176,19 +1176,19 @@ This matches the honest-coverage denominator policy: the `compute_honest_coverag
 
 ### Per-consumer policy table
 
-| Consumer | Policy when ≥1 source captured | Policy when all sources failed |
-|----------|-------------------------------|-------------------------------|
+| Consumer                                       | Policy when ≥1 source captured                                                                                                        | Policy when all sources failed                                                                           |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Feature pipeline** (MDPS → features-service) | Read the `SOURCE_PRIORITY`-ranked shard. Prefer `"massive"` over `"databento"` when both are `captured` (SOURCE_PRIORITY rank order). | Propagate `attempted_failed` upstream. Feature service records `EXPECTED_UNATTEMPTED` for downstream ML. |
-| **ML training** | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present. | Mark training window as `DATA_MISSING`; do not impute. |
-| **Execution service** | Use highest-priority captured source for reference pricing. | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`. |
-| **Data-status UI** | Show cell as `captured` (green). Tooltip lists per-source status breakdown. | Show cell as `attempted_failed` (red). |
-| **Honest-coverage rollup** | Cell counts as 1 captured row in numerator. | Cell counts as 1 attempted_failed row; excluded from numerator. |
+| **ML training**                                | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present.  | Mark training window as `DATA_MISSING`; do not impute.                                                   |
+| **Execution service**                          | Use highest-priority captured source for reference pricing.                                                                           | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`.                           |
+| **Data-status UI**                             | Show cell as `captured` (green). Tooltip lists per-source status breakdown.                                                           | Show cell as `attempted_failed` (red).                                                                   |
+| **Honest-coverage rollup**                     | Cell counts as 1 captured row in numerator.                                                                                           | Cell counts as 1 attempted_failed row; excluded from numerator.                                          |
 
 ### Source priority for TradFi
 
-The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`.
-For TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and
-broader options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
+The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`. For
+TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and broader
+options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
 
 ### Empty-confirmed from one source, captured from another
 
@@ -1202,3 +1202,74 @@ valid:
 
 Downstream consumers treat this cell as `captured` (union semantics). The `empty_confirmed` Massive row is logged and
 visible in the data-status UI tooltip but does not degrade coverage percentage.
+
+---
+
+## §7 — CeFi expiry-window contract + 401≠honest-absence (backfill audit 2026-05-27)
+
+> **Source**: operator direction 2026-05-27 + CeFi audit findings §1 + §2 of
+> `cefi_venue_backfill_coverage_remediation_2026_05_27.md`. Codified here to prevent re-discovery.
+
+### Expiry-window request-filtering contract
+
+CeFi dated instruments (OKX futures, Deribit options/futures, Kraken futures) have a documented availability window
+`[available_from, available_to_datetime]` sourced from `InstrumentRecord` (instruments-service SSOT via Tardis
+`availableSince`/`availableTo`).
+
+**Rule**: never request data for dates OUTSIDE `[available_from, available_to_datetime]`. The correct pre-request filter:
+
+```python
+if available_from and date < available_from.date():
+    record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_NOT_LISTED)
+    continue
+if available_to and date > available_to_datetime.date():
+    record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_DELISTED)
+    continue
+```
+
+**Why**: Tardis responds to out-of-window requests with `code 140: "Data … available only up to <date>"` (HTTP 400).
+These 400s are not adapter errors — they are predictable consequences of requesting impossible (shard_key, day) pairs.
+Attempting the request and recording `attempted_failed` is wrong; the correct manifest state is `expected_unattempted`.
+
+**Shipped**: `market-tick-data-service@91e3df03` (OKX window filter in CeFi Tardis download path).
+`instruments-service@ffb8192` (Kraken futures `_parse_underscore_yymmdd_symbol_expiry()` fallback to populate
+`available_to_datetime` for `FI_XBTUSD_*` symbols).
+
+| Scenario                                     | `capture_status`      | `error_reason`                        |
+| -------------------------------------------- | --------------------- | ------------------------------------- |
+| Date < `available_from` (pre-listing)        | `expected_unattempted`| `EXPECTED_INSTRUMENT_NOT_LISTED`      |
+| Date > `available_to_datetime` (post-expiry) | `expected_unattempted`| `EXPECTED_INSTRUMENT_DELISTED`        |
+| Date in window, request succeeds             | `captured`            | (none)                                |
+| Date in window, Tardis returns 400 for other reasons | `attempted_failed` | `CLASSIFIED_VENUE_ERROR` or typed reason |
+
+### 401≠honest-absence rule
+
+**Rule**: HTTP 401 (expired API key / missing credentials) MUST be recorded as `attempted_failed`, NOT as
+`empty_confirmed` or `expected_unattempted`.
+
+**Operator direction 2026-05-27**: _"If the issue is 401, we should not mark that one as honest-absence — that will
+make the data look corrupt."_
+
+A 401 means the data EXISTS but is temporarily inaccessible due to a credential block. It is NOT a confirmed absence.
+
+| Scenario                                           | `capture_status`   | `error_reason`             |
+| -------------------------------------------------- | ------------------ | -------------------------- |
+| HTTP 401 — expired key                             | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+| HTTP 401 — missing key                             | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+| HTTP 400 code 140 — out-of-window date             | `expected_unattempted` | `EXPECTED_INSTRUMENT_DELISTED` or `EXPECTED_INSTRUMENT_NOT_LISTED` |
+| HTTP 400 other reason (e.g. bad symbol)            | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+
+**Why the distinction matters**: `empty_confirmed` tells downstream consumers "this data does not exist, skip it." A
+401-era manifest stamped `empty_confirmed` looks identical to a correctly absent day — consumers will never retry and
+the data gap becomes permanent even after key renewal. `attempted_failed` marks the cell as "retryable once key is
+active," which is the correct operational state.
+
+**Recovery path**: after Tardis API key renewal, re-run the backfill for all dates where manifest rows carry
+`attempted_failed` due to 401s. The rows' `capture_status` will flip to `captured` once the download succeeds.
+
+### Cross-references
+
+- `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §1 (expiry window), §2 (401 rule)
+- `codex/04-architecture/cefi-batch-live.md` §9 (adapter-level expiry-window + 401 contract)
+- `market-tick-data-service@91e3df03` — window filter implementation
+- `instruments-service@ffb8192` — Kraken underscore-symbol expiry parser
