@@ -265,10 +265,16 @@ Concrete questions to answer + corresponding redesigns to ship:
       | `engine/mock_data_provider.py` | 196 | read | Polars | Stage 5.6 (replaced pyarrow) |
       | `engine/mock_data_provider.py` | 291 | write | Polars | mock candles |
       Mixed-engine: 2 intentional Polars→Pandas at UTL boundaries. No round-trips. No remaining fallbacks.
-- [ ] [DESIGN] P1. **2.3 Measure the per-instrument peak memory for the chosen engine.** Run one instrument-day through
+- [x] ✅ [DESIGN] P1. **2.3 Measure the per-instrument peak memory for the chosen engine.** Run one instrument-day through
       the chosen engine, take a tracemalloc snapshot at peak. Compare against the current mixed-engine peak. The bar:
       per-instrument peak ≤ 2 GB for a typical CeFi perp trades day. (Numbers from the canary suggest the current
       mixed-engine peak is ~7-8 GB per instrument-day; the bar should be a real improvement, not parity.)
+      **DONE 2026-05-30** — market-data-processing-service@c293522: `tests/perf/test_polars_instrument_day_memory.py`
+      (3 tests, all pass). Measurement: 1M ticks (BTCUSDT-perp-equivalent, 5 timeframes + buy/sell split).
+      **tracemalloc Python-heap delta: ~22 MB. RSS growth: ~250 MB. RSS absolute peak: ~339 MB.**
+      **8× inside the 2 GB bar; ~24× better than the old mixed-engine ~7-8 GB.**
+      Root cause of the improvement: no Polars→Pandas→Polars round-trips; C-arena allocation stays in a single
+      Polars execution context; no per-conversion copies.
 
 ## Phase 3 — Fix the CLI granularity (closes Finding B from the sibling plan)
 
