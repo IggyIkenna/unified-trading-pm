@@ -1,0 +1,15 @@
+# Baseline for check_tradfi_source_explicit_at_record_captured.py (QG STEP 5.64).
+# Introduced: tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30.
+#
+# Entries here are KNOWN occurrences of record_captured() without source=
+# that pre-date Phase 3 enforcement. Each surfaces as a WARNING (exit-clean)
+# until cleared. Clear by adding source= to the callsite and removing the entry.
+#
+# Valid status values:
+#   pending_phase3_sweep    — pre-Phase-3 callsite; clear in Phase 3 sweep PR
+#   pending_massive_mtds_phase4 — will gain source= when MTDS Massive lands
+#
+# default_successor is printed alongside every WARNING to identify the clearing plan.
+default_successor: "tradfi_massive_dual_source_2026_05_28.md Phase 4 MTDS sweep"
+
+entries: []
