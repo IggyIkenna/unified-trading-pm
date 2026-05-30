@@ -364,8 +364,12 @@ start implementation against an unconfirmed shape.
       instruments_per_sec, success_count, error_count, total_candles, shard_category; per-date SHARD_COMPLETED in
       `_log_category_summary` (orchestration_service.py) aggregating all data_types. Regression guard:
       test_batch_workers_shard_completed.py (two cases: success path + error path). 2026-05-30.
-- [ ] [AGENT] P2. **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
-      ("the manifest is now 1.2 GB") are caught before they OOM a small box.
+- [x] ✅ [AGENT] P2. **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
+      ("the manifest is now 1.2 GB") are caught before they OOM a small box. Shipped at UTL@ff3c897e:
+      `_emit_manifest_load_size` helper emits MANIFEST_LOAD_SIZE_BYTES{bucket, path, bytes_compressed, mb_compressed}
+      on every cache-miss read of the consolidated availability_index.parquet via both download paths in
+      `_read_consolidated_if_fresh` (manifest_writer.py). Cache hits (TTL 60s) and per-VM shard reads do NOT fire —
+      only real GCS downloads. Regression guard: test_manifest_load_size_event.py. 2026-05-30.
 
 ## Phase 6 — Codex updates (targets from the 2026-05-28 codex audit)
 
