@@ -116,9 +116,12 @@ indefinitely with no auto-unblock when blockers complete.
       Classify_repo: added unpushed_plans 10th TSV column (pipe-separated basenames). post_snapshot Python block:
       parses col 10 → `unpushed_plans: [list]`. RepoStatus Pydantic model gains `unpushed_plans: list[str]`.
       — unified-trading-pm@<sha> + agent-orchestrator@<sha>
-- [ ] [AGENT] P1. Extend the Slack alert template that consumes the git-status report to fire a higher-priority alert
+- [x] ✅ [AGENT] P1. Extend the Slack alert template that consumes the git-status report to fire a higher-priority alert
       (e.g. `🔴 Slot N has unpushed plan(s): X.md, Y.md`) when `unpushed_plans` is non-empty. Existing 5-min
       git-staleness threshold is fine; just decorate the message.
+      Added `notify_unpushed_plans()` to `server/notifications/slack.py`. Added `_maybe_alert_unpushed_plans()`
+      to `WorkerLivenessKicker` (throttled 30min). Called from liveness tick. No staleness threshold for plan
+      files — alert fires immediately on first dirty-plan detection. — agent-orchestrator@<sha>
 - [ ] [AGENT] P1. Update `codex/12-agent-workflow/symmetric-worker-model.md` (or appropriate codex doc) to note that
       plan-file dirty-state has its own alert.
 
