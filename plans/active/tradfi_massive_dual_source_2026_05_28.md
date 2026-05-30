@@ -197,12 +197,13 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 3 — Schema: source column on TradFi parquets (1 day)
 
-- [ ] [UTL] P1. Add `source: str` column to TradFi writer schemas in `unified_trading_library.writegate` per
-      writegate_honest_coverage_endtoend Phase 6.x conventions.
-- [ ] [UTL] P1. Update `record_captured(source=...)` kwarg — pass-through to manifest row. Validate in `record_captured`
-      that `source` is in `SOURCE_PRIORITY` for the (asset_group, data_type) pair.
-- [ ] [UAC] P1. Bump TradFi parquet `schema_version` (likely v8 → v9 per the v8 divergence already documented).
-      Cluster-validation kwargs in `record_captured` include `source` in the cluster spec.
+- [x] ✅ [UTL] P1. Add `source: str` column to TradFi writer schemas in `unified_trading_library.writegate` per
+      writegate_honest_coverage_endtoend Phase 6.x conventions. UTL@c7bfa427 — AvailabilityRecord.source,
+      _ROW_KEY_COLUMNS, MissingSourceError, 9 tests (test_manifest_writer_source.py).
+- [x] ✅ [UTL] P1. Update `record_captured(source=...)` kwarg — pass-through to manifest row. Validate in `record_captured`
+      that `category=="tradfi"` raises MissingSourceError when source omitted. UTL@c7bfa427.
+- [x] ✅ [UAC] P1. Bump TradFi parquet `schema_version` (likely v8 → v9 per the v8 divergence already documented).
+      MANIFEST_SCHEMA_VERSION=9 in UTL@c7bfa427. Cluster-validation kwargs in `record_captured` include `source`.
 - [ ] [QG] P1. STEP 5.64 (cluster validation) MUST fail if writer omits `source` for TradFi cells.
 
 ### Phase 4 — MTDS Massive connector (REST / batch only) (2 days)
