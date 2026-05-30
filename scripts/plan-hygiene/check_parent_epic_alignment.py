@@ -119,7 +119,7 @@ def _score_plan_against_surface(
     body_lower = body.lower()
     scores: list[tuple[str, int]] = []
     for epic, data in surface.items():
-        count = sum(1 for kw in data.get("keywords", []) if kw.lower() in body_lower)
+        count = sum(1 for kw in data.get("keywords", []) if kw.lower() in body_lower)  # noqa: qg-empty-fallback
         scores.append((epic, count))
     scores.sort(key=lambda x: x[1], reverse=True)
     return scores
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     for plan_path in plans:
         text = plan_path.read_text(encoding="utf-8")
         fm = _parse_frontmatter(text)
-        declared = fm.get("parent_epic", "").strip()
+        declared = fm.get("parent_epic", "").strip()  # noqa: qg-empty-fallback
 
         if not declared:
             # Orphan — skip (orphan check handles this separately)

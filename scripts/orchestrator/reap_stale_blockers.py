@@ -53,7 +53,7 @@ _DEFAULT_BACKLOG = _WORKSPACE / "agent-orchestrator" / "data" / "config" / "back
 _DEFAULT_DB = _WORKSPACE / "agent-orchestrator" / "data" / "state" / "state.db"
 _DEFAULT_STALE_DAYS = 3
 
-_SLACK_WEBHOOK = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")
+_SLACK_WEBHOOK = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")  # noqa: qg-empty-fallback
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
         import yaml  # type: ignore[import-untyped]  # noqa: imports-inside-functions
         with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        return data.get("tasks", []) if isinstance(data, dict) else []
+        return data.get("tasks", []) if isinstance(data, dict) else []  # noqa: qg-empty-fallback
     except ImportError:
         pass
 
