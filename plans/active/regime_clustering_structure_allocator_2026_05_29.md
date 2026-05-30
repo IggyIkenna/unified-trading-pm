@@ -149,10 +149,12 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 1 — Regime clustering as a PIT feature (features-service)
 
-- [ ] [FEATURES] P2. New `cross_instrument/app/calculators/regime_clustering.py`: `fit_regime_clusters()` (batch only) —
+- [x] [FEATURES] P2. New `cross_instrument/app/calculators/regime_clustering.py`: `fit_regime_clusters()` (batch only) —
   PCA-whiten/decorrelate **inside fold** → GMM (soft) / HDBSCAN fit via `PurgedWalkForwardSplitter`
   (`ml-service/.../backtest_v2/walk_forward.py`, with embargo). Persist centroids + transform to GCS + manifest
   (`feature_group="regime_clustering"`, `job_id=fold_id`).
+  `ClusterFoldResult` dataclass + `persist_cluster_fits()` GCS writer. 16 unit tests; 0 ruff/basedpyright errors.
+  Pushed features-service 03191758.
 - [ ] [FEATURES] P2. `assign_clusters()` + `compute_proximity()` — identical batch/live code. Emit `cluster_id`, soft
   membership probs, centroid distances, and `regime_abstain` flag (distance > threshold OR membership entropy high).
 - [ ] [SCRIPT] P3. Use **exact** distances (data is ~MBs; no IVF-PQ/quantisation). Metric = Mahalanobis / post-PCA
