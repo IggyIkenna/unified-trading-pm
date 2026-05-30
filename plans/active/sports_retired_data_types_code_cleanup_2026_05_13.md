@@ -108,6 +108,9 @@ intent says these are retired; code must reflect that.
       EXPECTED_DEPRECATED_DATA_TYPE is in _EMPTY_REASON_KEYS taxonomy; ok_mask treats
       empty_confirmed rows as OK (not missing from denominator); TestRetiredDataTypesHonestCoverage
       + test_each_registered_reason_routes_to_correct_bucket pass (21/21 tests, QG green).
+      Also: deployment-api@c328334 (slot 2) adds TestSportsRetiredDataTypeFiltering — verifies
+      SPORTS_DATA_TYPE_META excludes retired types and _build_data_type_grouping clips them
+      from the denominator; QG green 252s.
 
 ## Deferred discovery — TRANSFERMARKT_VALUES alias (2026-05-14 slot 4 sports_master audit)
 
