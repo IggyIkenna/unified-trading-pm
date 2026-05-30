@@ -185,9 +185,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - [ ] [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
   cluster's PIT history → solve for the option combo that hits the target. Replaces fixed-menu (iron condor/straddle)
   with continuous construction. (This is the legit core of the external "factor-deconstruction" idea, de-marketed.)
-- [ ] [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
+- [x] ✅ [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
   today Δ/Γ/Θ/Vega/Ρ only; UAC `OptionGreeks` already has vanna/volga slots). REUSE the existing PricingLedger output
-  path. The factor-target objective needs these second-order greeks.
+  path. The factor-target objective needs these second-order greeks. — greeks-service@de96df3 | 11 new tests in
+  TestVannaVolga; ATM vanna≈-0.281, volga≈0.0985. LedgerRow wiring deferred (UAC cross-repo, separate task).
 - [ ] [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
   log-moneyness `k = ln(K/F)` + business-day tenor `τ`** (arbitrage-correct, stationary across underlyings + time).
   Depends on forward `F` (Phase 1 forward-price item). Delta-space is a deferred upgrade (needs the vol surface).
