@@ -110,7 +110,7 @@ After Phase 2 PR lands on LDR, autonomous pm-pull.timer propagates the new agent
 Then per-VM enable the flag via systemd drop-in + restart orchestrator. SSM-driven, one VM at a time (so a bug in
 Phase 2 doesn't melt the fleet).
 
-- [ ] [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_prune_stale.sh` — SSM script that writes `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` with `Environment=ORCHESTRATOR_REGEN_PRUNE_STALE=true` then `systemctl daemon-reload + restart orchestrator`. Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_prune_stale.sh` — SSM script that writes `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` with `Environment=ORCHESTRATOR_REGEN_PRUNE_STALE=true` then `systemctl daemon-reload + restart orchestrator`. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — script at `scripts/orchestrator/enable_prune_stale.sh`. Idempotent; waits one regen tick after restart; prints before/after `queued` count from state.db for operator verification. Env overrides: `ORCHESTRATOR_STATE_DB`, `ORCHESTRATOR_REGEN_INTERVAL_S`.
 - [ ] [SCRIPT] P0. Roll the flag to all 11 VMs **sequentially** (NOT parallel): vm-orchestrator first → wait 1 regen cycle → verify counts drop → vm-cefi → … → vm-cross-cutting last. Document each VM's pre/post numbers in this plan. Collision group: `ao_prune_l3_rollout`. Estimate: 0.2 AI-day.
 - [ ] [VERIFY] P0. After all 11 VMs rolled: fleet/summary `backlog_queued` for each VM matches `/api/backlog` total (no drift). Numbers should stabilize at ~270 (small VMs) or whatever the canonical scope produces for vm-ml/vm-trading-core post-L4. Collision group: none. Estimate: 0.1 AI-day.
 
