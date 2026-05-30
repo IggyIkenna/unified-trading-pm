@@ -146,14 +146,16 @@ alone doesn't escape it.
   - `.github/workflows/quality-gates-v2.yml` — caller, job key `quality-gates-v2` — unified-trading-pm@a9d340df
   - `.github/workflows/python-quality-gates-v2.yml` — reusable callee, job key `quality-gates-v2` — @a9d340df
   - DO NOT delete v1 files yet — leave them as ghost-targets so the cache doesn't poison v2 via shared registration
-- [ ] [SCRIPT] P0.
+- [x] ✅ [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
       Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
+      — 2026-05-29: DONE via PR #88 (commit 84957fba6); v2 files on PM main. Checkbox re-flipped after accidental revert in 6c1e361e.
 - [x] ✅ [SCRIPT] P0. **Branch protection rotation** on PM main+staging:
   - Removed `quality-gates` from required status checks on both branches
   - Added `quality-gates-v2` as new required status check on both branches
   - 18/18 branches rotated across all 9 service repos + PM 2026-05-29
-- [ ] [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
+- [x] ✅ [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
+      — Merged 2026-05-29T18:11:35Z. Title: "docs(plans): TradFi dual-source (Massive + Databento) — co-mingle source column".
 - [x] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
       fall back to Plan-B (inline QG steps in v2 caller, no reusable).
       — PR #93 (fix/pm-ci-self-clone) merged 2026-05-29; run 26654854795 passed ✅ (V=12/12).
