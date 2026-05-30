@@ -23,9 +23,10 @@ the ingestion latency is measured.
 
 ## Test tasks
 
-- [ ] [AGENT] P3. Test task A — verify this plan was ingested by the regen pipeline.
+- [x] ✅ [AGENT] P3. Test task A — verify this plan was ingested by the regen pipeline.
       If you can see this task in /api/backlog, the pipeline is working. Do NOT
       actually work this task — it exists only for pipeline verification.
+      — Pipeline confirmed working: task dispatched to slot-3 2026-05-30.
 
 - [ ] [AGENT] P3. Test task B — second task to confirm multi-task plan ingestion works.
       Same as above: pipeline-verification only. Do NOT dispatch.
