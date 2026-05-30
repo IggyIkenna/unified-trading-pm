@@ -381,5 +381,8 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 - [ ] [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
       `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs.
-- [ ] [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
+- [x] ✅ [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
       anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc.
+      — Added `## §6A honest-absence violation classes` section to `codex/02-data/honest-absence-downstream-handling.md`
+      with 3-class taxonomy, per-class examples (OKX@774db33, dex-swaps@ed5fdcf, Understat@c654ccf, MDPS-2026-05-05),
+      required call-site patterns, and summary anti-pattern table. PM@e40df622

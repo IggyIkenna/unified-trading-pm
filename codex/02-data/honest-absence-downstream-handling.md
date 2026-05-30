@@ -155,6 +155,134 @@ workspace-wide gate that "handles" missing data — by design.
 
 ---
 
+## §6A honest-absence violation classes (CeFi/DeFi backfill audit 2026-05-27)
+
+> Codified 2026-05-30 per `cefi_venue_backfill_coverage_remediation_2026_05_27.md` § 6A. These three classes were
+> discovered during the CeFi/DeFi venue backfill audit and generalise the operator's 401≠honest-absence concern into
+> a taxonomy of silent-drop bugs. All three result in phantom cells — positions in the expected universe that look
+> absent when they should be `empty_confirmed` or `attempted_failed` in the manifest.
+
+### Class 1 — In-flight shard failure with no manifest marker ("phantom gap")
+
+**What it looks like**: The adapter logs `WARNING in-flight key=<venue>/<sym>/<date>/<dt>  failed: <error>` (or
+equivalent) but exits without calling `record_empty()` or `record_failed()`. The manifest has **no row** for that
+`(venue, data_type, day)` cell — the failure is invisible to downstream consumers and honest-coverage metrics.
+
+**Example** (OKX Tardis, fixed MTDS@774db33): `ConnectionTimeoutError` on `book_snapshot_5` and
+`ArrowInvalid: Empty CSV file` on `trades` produced ~27+ sampled phantom cells per run.
+
+**Why it's wrong**: A missing manifest row on a calendar-trading day is indistinguishable from "pipeline never ran."
+The pre-flight gate at downstream consumers raises `DependencyError` instead of NaN-filling or alerting correctly.
+Honest-coverage denominator can't count what it doesn't see.
+
+**Required fix**: In every in-flight failure handler, classify the exception and write a manifest row:
+
+```python
+try:
+    ...  # fetch / write parquet
+except EmptyCsvError:
+    writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+except (ConnectionTimeoutError, aiohttp.ClientError):
+    writer.record_failed(row_key=..., error=classify_venue_error(exc))
+```
+
+The manifest row may be `empty_confirmed` (for genuinely empty sources) or `attempted_failed` (for network/timeout
+failures). What's never acceptable is silence.
+
+---
+
+### Class 2 — Silent-zero ("adapter produces no rows, records nothing")
+
+**What it looks like**: The adapter's fetch loop returns zero rows (due to a schema error, empty subgraph result, or
+exhausted cascade) but the calling code silently continues without recording any manifest row. The parquet is either
+absent or written as a 0-row file with `capture_status=captured` — both are honest-absence violations.
+
+**Example A** (DeFi dex-swaps, fixed MTDS@ed5fdcf): `_PANCAKESWAP_BSC_SWAPS_QUERY` included an unrecognised field
+(`sqrtPriceX96`) causing a schema parse error → all cascade queries returned `None` → handler emitted
+`SOURCE_RETURNED_ZERO` on a live subgraph (misleading). Fix: raise `_SubgraphNotFoundError` on HTTP 404; raise
+`RuntimeError` when ALL cascade queries fail on schema errors → caller calls `record_failed(ADAPTER_FETCH_FAILED)`.
+
+**Example B** (Understat 2019, fixed instruments-service@c654ccf): 100% `404` responses on `getMatch/*` and
+`getLeagueData/*/2019` → adapter logged 0 rows but called `record_empty(EXPECTED_NO_FIXTURE)` — using the wrong
+reason for a fetch failure. Fix: track `_fetch_error_count`; emit `record_failed(HTTP_NOT_FOUND)` when errors
+occurred instead of `record_empty(EXPECTED_NO_FIXTURE)`.
+
+**Why it's wrong**: A `captured` row with 0 rows in the parquet (or no row at all) is worse than `empty_confirmed`.
+Downstream features compute on 0 meaningful rows and may produce garbage statistics. Honest-coverage numerator
+counts the cell as captured when it should count it as failed.
+
+**Required fix**: Zero-row fetch result must always produce a manifest row, never silence:
+
+```python
+rows = adapter.fetch(...)
+if not rows:
+    # Check WHY we got 0 rows
+    if fetch_had_errors:
+        writer.record_failed(row_key=..., error=classify_venue_error(last_exc))
+    else:
+        writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+    return
+# normal path
+writer.record_captured(row_key=..., df=rows_df)
+```
+
+The key diagnostic: **was the fetch attempted and failed** (`attempted_failed`) or **did the fetch succeed but the
+source had no data** (`empty_confirmed[SOURCE_RETURNED_ZERO]`)?
+
+---
+
+### Class 3 — Captured-0-row ("manifest says captured, parquet is empty")
+
+**What it looks like**: `record_captured` is called with a 0-row DataFrame (or `row_count=0`), writing
+`capture_status=captured` to the manifest despite the parquet having no meaningful rows. Downstream consumers
+trust the `captured` status and attempt to compute features — on empty input.
+
+**Historical example** (MDPS 2026-05-05): MDPS wrote 1440-bar NaN-filled placeholder parquets with
+`capture_status=captured` for years. Banned in writegate Phase 2.A. The reconciler
+`reconcile_legacy_nan_placeholder_bars.py` reclassifies these rows to `attempted_failed[LEGACY_NAN_PLACEHOLDER]`.
+
+**New form** (CEFi/DeFi adapters): A 0-row parquet at `record_captured(df=pd.DataFrame(), ...)` is structurally
+identical — manifest says captured, downstream gets empty. `ManifestWriter` now raises `MissingRowCountError` (or
+`EmptyDataFrameError` depending on schema enforcement phase) when `df` is empty and `record_captured` is called.
+
+**Why it's wrong**: `capture_status=captured` is a contract: "the data was here, fetch it." If the parquet is empty,
+that contract is broken. Features compute on empty input; ML trains on ghost rows; execution prices assets with
+no real ticks behind them.
+
+**Required fix**: Never call `record_captured` with an empty DataFrame. The pre-write validation in the
+`ManifestWriter` enforces this — but the adapter must also classify correctly:
+
+```python
+if df.is_empty():  # polars; .empty for pandas
+    # EITHER the source had nothing:
+    writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+    # OR the fetch itself failed:
+    # writer.record_failed(row_key=..., error=...)
+    return
+writer.record_captured(row_key=..., df=df)
+```
+
+---
+
+### Summary anti-pattern table (§6A additions)
+
+| Violation class                            | Symptom                                                                                           | Root cause pattern                                                                     | Required call site                                                                                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **In-flight drop** (Class 1)               | Exception logged in adapter, no manifest row written; cell absent from expected universe          | Exception handler exits without calling `record_empty` or `record_failed`              | `record_failed(classify_venue_error(exc))` for network/5xx; `record_empty(SOURCE_RETURNED_ZERO)` for empty-CSV / expected-empty parse results  |
+| **Silent-zero** (Class 2)                  | Zero rows returned; no manifest row, OR wrong reason (`EXPECTED_NO_FIXTURE` instead of `HTTP_NOT_FOUND`) | `if not rows: return` (no manifest write); wrong reason selection on fetch failure     | Inspect `fetch_had_errors`; route to `record_failed` vs `record_empty` explicitly                                                             |
+| **Captured-0-row** (Class 3)               | `capture_status=captured` in manifest; 0-row parquet on disk; downstream computes on empty input  | `record_captured(df=empty_df)` called without checking `df.is_empty()` first           | Check `df.is_empty()` before `record_captured`; route to `record_empty` or `record_failed` on empty                                           |
+
+### Detection
+
+Run `scripts/check_zero_row_captures.py --asset-group cefi` (instruments-service) to scan for
+`capture_status=captured` rows whose associated parquet has 0 rows. This is the Class 3 detector.
+
+For Class 1 + Class 2, grep adapter logs for `in-flight.*failed` and `WARNING.*0 rows` patterns that lack a
+companion manifest entry in the scan window. The `ADAPTER_FETCH_FAILED` event emitted by correctly-wired adapters
+provides the audit trail.
+
+---
+
 ## Reference incidents
 
 - **2026-05-05 MDPS empty-placeholder OHLC** — 1440 NaN-filled rows per `(venue, data_type, day)` for years; manifest
