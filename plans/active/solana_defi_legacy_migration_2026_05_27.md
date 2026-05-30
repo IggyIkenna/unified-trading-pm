@@ -243,7 +243,7 @@ source:
       **FIXED 2026-05-30** (MTDS@c3ae794c + deployment-service@3e83f30): handler accepts `solana` sentinel;
       setup-data-pipeline-vm.sh passes `--gas-fee-chains solana`. Backfill VM `mtds-gas-fees-solana` relaunched
       2026-05-30 (slot-1) with tarball@cef599e, range 2025-01-17→2026-05-28, verified RUNNING.
-- [ ] [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
+- [x] ✅ [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
       the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through `collect-lst-rates`
       which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with the latest date
       captured, every prior date short-circuits. Net: the VM wrote jitoSOL + 12 EVM LSTs for 2026-05-27 only, NOT
@@ -254,6 +254,11 @@ source:
       daily-replayable (collector currently reads "latest" only — needs a `target_date_str` parameter analog to marginfi
       TVL filter). Provenance: slot-1 2026-05-28 run.log
       `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`.
+      **FIXED 2026-05-30** (MTDS@c3ae794c): `_collect_marinade` now accepts `target_date_str` + routes past dates
+      through `_collect_marinade_historical` (DeFiLlama yields chart, daily APY back to 2025-02-26). Note:
+      `launch-marinade-solana-backfill-vm.sh` uses `collect-lst-rates` (wrong path for this fix); re-launch done via
+      direct `collect-solana-defi --protocols marinade --solana-lending-backfill` VM
+      `mtds-marinade-bugm-relaunch-20260530-052448` (asia-northeast1-c), range 2025-01-17→2026-05-28, verified RUNNING.
 - [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
       every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
       `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
