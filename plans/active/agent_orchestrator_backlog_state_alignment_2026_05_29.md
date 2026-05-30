@@ -206,9 +206,9 @@ imported 24×.
       default everywhere."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** —
       added to `cursor-configs/CLAUDE.md` after the "backlog is plan-driven" rule. Covers: invariant, env var default,
       audit recipe (verify_fleet_prune_state.sh), recovery (enable_prune_stale.sh), SSOT link.
-- [ ] [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full
+- [x] ✅ [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full
       architecture: regen lifecycle, yaml⇆state.db invariants, audit recipe, recovery if drift detected. Collision
-      group: none. Estimate: 0.1 AI-day.
+      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — doc written: regen lifecycle flow diagram, invariants table (dedup-by-brief, dedup-by-id, no-task-steal, idempotent, per-VM scope), env vars table, drift audit recipe, recovery for orphan yaml + zombie state.db + brief-mutation accumulation, anti-patterns, related systems.
 - [x] ✅ [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger
       CI run; if checks fail, fix root cause. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — PR #102
       created (https://github.com/IggyIkenna/unified-trading-pm/pull/102). `quickmerge --agent` blocked by pre-existing
