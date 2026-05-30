@@ -180,10 +180,14 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   `DiscreteStructureAllocator` enumerates N-leg combos × 2ⁿ side assignments directly over the discrete `ListedOption`
   chain. Dollar-scaled greek-penalty objective. Pluggable `expected_pnl_fn` for Phase 2 regime wiring.
   17 unit tests in `tests/unit/engine/strategies/v2/test_discrete_structure_allocator.py`. QG passes.
-- [ ] [STRATEGY] P1. **Objective = maximise expected P&L net of cost, subject to (a) greek-tracking-error constraint and
+- [x] ✅ [STRATEGY] P1. **Objective = maximise expected P&L net of cost, subject to (a) greek-tracking-error constraint and
   (b) risk gates** — NOT minimise greek tracking error alone (tracking error is a *replication* objective; the
   min-tracking-error portfolio can be negative-EV after costs). Tracking-error penalty terms must be **dollar-scaled per
   greek** (greek × P&L sensitivity), never raw-unit summed. Any brute-force combo winner re-validated OOS (see PBO gate).
+  **DONE 2026-05-30** — `RiskGates` hard-limit dataclass (delta/vega/gamma/premium caps); veto pipeline in
+  `DiscreteStructureAllocator.solve()`: enumerate → risk-gate veto → OOS validation → rank. `OosVetoResult`
+  hook for Phase-7 Deflated Sharpe/PBO (pass-through until wired). Dollar-scaled greek penalty in score already ✅.
+  strategy-service@c854b0e2.
 - [ ] [STRATEGY] P1. **Overfit gate**: per-cluster structure must clear Deflated Sharpe / PBO out-of-sample before it is
   selectable. Reject "dominated-in-permutation-pool" / "+Sharpe-in-sample" winners.
 - [ ] [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
