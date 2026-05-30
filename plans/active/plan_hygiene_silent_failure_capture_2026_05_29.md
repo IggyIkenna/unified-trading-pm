@@ -168,10 +168,12 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 5 — Codex SSOT updates (P2)
 
-- [ ] [AGENT] P2. Update `codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
+- [x] ✅ [AGENT] P2. Update `codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
       silent-failure modes + which check catches each. - The closed-set of valid tags + how to add a new one (PR to
       PLAN_FORMAT.md). - The 3 cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every
       4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only).
+      Created `codex/12-agent-workflow/plan-hygiene.md` with all 4 modes, severity table, cron schedules, and tag
+      set. PLAN_FORMAT.md cross-link added in same commit. — unified-trading-pm@ab6c3039
 - [x] ✅ [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors see
       the canonical form + the auto-fixer in one place.
       **DONE (2026-05-30 slot-2)**: Added "Full hygiene reference" pointer paragraph to PLAN_FORMAT.md §"Canonical
