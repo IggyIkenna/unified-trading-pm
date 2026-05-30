@@ -39,6 +39,20 @@ PRI = r"P[0-3](?:\.[0-9]+)*"
 # Patterns: ordered by specificity. Each maps a non-canonical capture to
 # canonical "[TAG] [optional second tag] P<n>. <rest>".
 RULES = [
+    # Edge case A: [TAG — inline qualifier] [SECOND_TAG] P<n>. body
+    #   → [TAG] [SECOND_TAG] P<n>. body — inline qualifier
+    # Decision: move qualifier to description (plan Phase 4 option b).
+    # Covers BLOCKED-CREDENTIALS and similar annotated blocked tags.
+    (re.compile(rf"^(- \[ \] )\[({TAG}) — ([^\]]+)\] \[({TAG})\] ({PRI})\.\s*(.*)$"),
+     lambda m: f"{m.group(1)}[{m.group(2)}] [{m.group(4)}] {m.group(5)}. {m.group(6).rstrip()} — {m.group(3).strip()}"),
+    # Edge case A (no second tag): [TAG — inline qualifier] P<n>. body
+    #   → [TAG] P<n>. body — inline qualifier
+    (re.compile(rf"^(- \[ \] )\[({TAG}) — ([^\]]+)\] ({PRI})\.\s*(.*)$"),
+     lambda m: f"{m.group(1)}[{m.group(2)}] {m.group(4)}. {m.group(5).rstrip()} — {m.group(3).strip()}"),
+    # Edge case B: [CLAUDE.md] P<n>. body  → [CLAUDE-MD] P<n>. body
+    # Decision: rename tag — dots break the tag regex.
+    (re.compile(rf"^(- \[ \] )\[CLAUDE\.md\] ({PRI})\.\s*(.*)$"),
+     lambda m: f"{m.group(1)}[CLAUDE-MD] {m.group(2)}. {m.group(3)}"),
     # [TAG1][TAG2][P<n>] body   → [TAG1] [TAG2] P<n>. body
     (re.compile(rf"^(- \[ \] )\[({TAG})\]\s*\[({TAG})\]\s*\[({PRI})\]\s*(.*)$"),
      lambda m: f"{m.group(1)}[{m.group(2)}] [{m.group(3)}] {m.group(4)}. {m.group(5)}"),
