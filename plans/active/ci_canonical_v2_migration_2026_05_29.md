@@ -206,7 +206,11 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       `completed success` (run 26671817742 + 26671814846 + 26655510120). No further action needed.
 - [x] ✅ [SCRIPT] P1. ml-service — straight v2 application
       **DONE (pre-existing, verified 2026-05-30)** — `quality-gates-v2` run 26671238677: `completed success` on main.
-- [ ] [SCRIPT] P1. features-service — no quality-gates-v2 runs found; workflow needs to be added.
+- [x] ✅ [SCRIPT] P1. features-service — no quality-gates-v2 runs found; workflow needs to be added.
+      **DONE 2026-05-30** — features-service@a3606c9d. Workflow existed but only triggered on main/staging
+      (neither branch exists — default=live-defi-rollout). Fixed to also trigger on live-defi-rollout.
+      Fixed job name from "alerting-service" → "features-service". Push triggered run 26673516272 (in_progress).
+      Branch protection on LDR already required quality-gates-v2.
 - [ ] [SCRIPT] P1. batch-live-reconciliation-service — v2 workflow exists (run 26671824109) but latest run is `failure`; investigate CI failures.
 - [x] ✅ [SCRIPT] P1. execution-service — quality-gates-v2 run 26671829905: `completed success` on main.
 - [ ] [SCRIPT] P1. instruments-service — v2 workflow exists (run 26671835898) but latest run is `failure`; investigate CI failures.
