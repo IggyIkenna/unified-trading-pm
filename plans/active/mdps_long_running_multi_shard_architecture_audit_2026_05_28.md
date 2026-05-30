@@ -324,7 +324,17 @@ start implementation against an unconfirmed shape.
       Subprocess gets `--skip-date-validation` (parent already validated). `--subprocess-per-date` omitted
       from child argv to prevent recursion. Also adds `--skip-date-validation` to the parser (was a
       getattr default, now a proper CLI arg). 4 new tests in `TestSubprocessPerDate`. 13 tests pass.
-- [ ] [AGENT] P1. **4.2 Refactor data engine** per the Phase 2 decision.
+- [x] ✅ [AGENT] P1. **4.2 Refactor data engine** per the Phase 2 decision.
+      **DONE (pre-existing) — Stage 5E completed in sibling plan** (market-data-processing-service@58d51d2).
+      Verification 2026-05-30: 0 `pd.read_parquet` calls in batch production paths. 13 Polars parquet callsites
+      (10 read, 2 write, 1 mock) verified against Phase 2.2 audit. Remaining `to_pandas()` / `from_pandas()` calls
+      fall into 3 documented categories:
+      (a) UTL boundary write seam — `candle_write_mixin.py`, `data_sink.py`, `canonical_writer.py` — UTL APIs require
+          `pd.DataFrame`; documented at each callsite. Single conversion per shard.
+      (b) UTL timestamp validator seam — `orchestration_writer.py`, `orchestration_state.py`, `data_sink.py`.
+      (c) Pandas→Polars input conversion at CeFi trades adapter — `pl.from_pandas(tick_data[cols_needed])` (Stage 2:
+          table-level roundtrip replaced with column-subset conversion). No unnecessary round-trips in the
+          read→aggregate→write hot path.
 - [ ] [AGENT] P1. **4.3 Replace the tactical `del + gc.collect()` patches** from the sibling plan with the structural
       cleanup the refactor enables. The sibling plan's Phase 2.2 fix should be **deleted** at this point — keeping it
       would mask any retention regressions the new architecture introduces.
