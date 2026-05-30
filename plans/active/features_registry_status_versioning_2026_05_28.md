@@ -190,8 +190,14 @@ guard.
 - [x] ✅ [LIB] P1. 10 pytest cases (revised from 8): resolve helper, sentinel fallback, metadata build, parquet metadata
       round-trip via PyArrow for 3 groups, assertion that NO per-row column is added, partition dict carries
       `feature_group_version` key, sentinel surfaces in partition path. 8,407 total tests pass, basedpyright clean.
-- [ ] [LIB] P2. ManifestWriter cross-repo extension to also carry `feature_group_version` — **DEFERRED** to follow-up
+- [x] ✅ [LIB] P2. ManifestWriter cross-repo extension to also carry `feature_group_version` — **DEFERRED** to follow-up
       plan (touches UTL + UAC contracts; out-of-scope for this layer).
+      **ACK (2026-05-30 slot-2)**: Operator-directed DEFERRED at plan-write time. Scope confirmed: ManifestWriter
+      `record_captured()` would need a new `formula_versions: dict[str, int]` kwarg + schema-version bump in UTL;
+      `DeltaOneFeatureRecord` in UAC would need the matching field; and the features-service writer would need to pass
+      the per-column version dict from `compute_column_versions()`. The GCS hive partition key
+      (`feature_group_version=N/`) is already wired (features@0fe3160d). Manifest extension deferred to a follow-up
+      plan when UTL+UAC contract changes can be sequenced safely. No code changes in this pass.
 
 ### Phase 4 — Status tracker CLI + drift detection [P1]
 
