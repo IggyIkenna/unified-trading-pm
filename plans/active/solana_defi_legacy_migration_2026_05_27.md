@@ -198,9 +198,12 @@ source:
       SSOT enforced everywhere. **Estimate**: ~2–3 cal AI-days (was ~1–2 for the in-place modernize; full split adds
       registry-update + Terraform + per-venue tests).
 
-- [ ] [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was its
+- [x] ✅ [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was its
       last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +
       `defi-data-pipeline.md` with the Solana instrument_types.
+      D2 partial-update: lst_rates/ confirmed deleted 2026-05-28; lending_indices/+dex_pools/ deferred to Gate-2 finish.
+      Catalog instrument-type table gained solana_lending/solana_vault/solana_amm_pool rows (UAC@7e9f4ad9+UAC@90b2bb9d).
+      Pipeline doc: collect-solana-defi deprecated; legacy-prefix note updated. — PM@(Gate-6 commit)
 
 ## Backfill launch findings 2026-05-28 (slot-1 four-VM dispatch)
 

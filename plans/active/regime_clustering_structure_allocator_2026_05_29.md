@@ -182,18 +182,29 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 3 — Factor-targeted structure allocator (strategy-service / trading-agent) — *the real new build*
 
-- [ ] [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
+- [x] ✅ [STRATEGY] P2. Per-cluster target **risk-factor exposure** (delta/gamma/vega/vanna/volga/basis) learned from that
   cluster's PIT history → solve for the option combo that hits the target. Replaces fixed-menu (iron condor/straddle)
   with continuous construction. (This is the legit core of the external "factor-deconstruction" idea, de-marketed.)
+  **DONE 2026-05-30 slot-2** — `strategy_service/engine/strategies/v2/vol_trading/cluster_greek_targets.py`.
+  `ClusterGreekRecord(cluster_id, delta, gamma, vega, vanna, volga, basis)` PIT observation dataclass;
+  `ClusterGreekTargets(cluster_id, targets, basis_target, n_observations)` learned output; `fit_cluster_greek_targets()`
+  groups by cluster_id, drops clusters with < 30 observations, aggregates via median (or mean); `make_cluster_allocator()`
+  factory wires learned targets into `DiscreteStructureAllocator`, falling back to unconstrained when cluster missing.
+  `_aggregate_records()` internal helper. Unit tests: `tests/unit/engine/strategies/v2/test_cluster_greek_targets.py`.
+  QG green — strategy-service@30cafe5.
 - [x] ✅ [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
   today Δ/Γ/Θ/Vega/Ρ only; UAC `OptionGreeks` already has vanna/volga slots). REUSE the existing PricingLedger output
   path. The factor-target objective needs these second-order greeks. — greeks-service@de96df3 | 11 new tests in
   TestVannaVolga; ATM vanna≈-0.281, volga≈0.0985. LedgerRow wiring deferred (UAC cross-repo, separate task).
-- [ ] [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
+- [x] ✅ [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
   log-moneyness `k = ln(K/F)` + business-day tenor `τ`** (arbitrage-correct, stationary across underlyings + time).
   Depends on forward `F` (Phase 1 forward-price item). Delta-space is a deferred upgrade (needs the vol surface).
   Training/clustering + the factor-target solve run in this normalised space; the real listed strike/expiry is recovered
   in Phase 4.
+  **DONE 2026-05-30 slot-2** — `strategy_service/engine/strategies/v2/vol_trading/discrete_structure_allocator.py`:
+  `ListedOption.forward_price: Decimal | None` field + `ListedOption.log_moneyness` property (`k = ln(K/F)`);
+  `business_day_tenor()` standalone function (Mon–Fri calendar, 252 d/yr). 12 new tests (ATM/OTM/ITM sign semantics
+  + FD-verified values). basedpyright + ruff clean. QG green — strategy-service@9d53bee.
 - [x] ✅ [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
   strikes×expiries) — NOT optimise-continuous-then-snap (nearest-strike ≠ nearest-risk; snapping distorts the engineered
   profile).
@@ -213,8 +224,8 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   selectable. Reject "dominated-in-permutation-pool" / "+Sharpe-in-sample" winners.
   `overfit_gates.py`: `deflated_sharpe_ratio()` (Bailey & Lopez de Prado 2014), `DeflatedSharpeGate`, `PboGate` stub,
   `CompositeOosGate`. 23 unit tests. strategy-service@45043b3.
-- [ ] [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
-  `vol_trading_options` / a new options engine.
+- [x] ✅ [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
+  `vol_trading_options` / a new options engine. **DONE 2026-05-30** — `on_cluster_assignment_event()` + `on_options_structure_event()` hooks; `emit_directives()` emits `VOL_TRADING_OPTIONS` `ArchetypeAllocationDirective` carrying `cluster_id`/`soft_probs`/`regime_abstain`/`structure_legs`/`structure_score` as `param_overrides` when both events received. `_build_vol_trading_param_overrides()` helper. 8 new unit tests (12 total). basedpyright + ruff clean. — trading-agent-service@2e7c845
 
 ## Phase 4 — Continuous→discrete execution realism
 

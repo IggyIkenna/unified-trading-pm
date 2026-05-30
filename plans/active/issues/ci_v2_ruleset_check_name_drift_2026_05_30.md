@@ -30,14 +30,30 @@ output-channel lag) — deployment-api's `workspace-qg.yml` job name is correct.
 **Verification (re-runnable):** `python3 scripts/repo-management/verify_branch_protection_check_names.py`
 → prints per-repo MAIN/STAGING required contexts + `ALL RULESETS CONSISTENT: True`.
 
-### Residual follow-ups (small, non-blocking)
+### Codification SHIPPED 2026-05-30 (closes residuals 1 + 2)
 
-1. **8 repos still on `workspace-qg.yml`** (pinned correctly to `… / quality-gates`). Re-run the
-   pin when they migrate to `quality-gates-v2.yml`.
-2. **No IaC owns these rulesets** — set manually via `gh api`; will drift if workflow names change.
-   RECOMMEND codifying (committed verify script + a sibling apply script that derives names from live
-   workflow files — no hardcoded strings — or Terraform `github_repository_ruleset`).
-3. Old open PRs predating the workflow-name fix may show a missing required check until re-run; new PRs match immediately.
+Both follow-ups are now mechanised so this never recurs:
+
+- **Apply script** — `scripts/repo-management/pin_branch_protection_rulesets.py`. Derives each
+  repo's QG context from its **live workflow file** (no hardcoded names), idempotent, dry-run by
+  default. Verified idempotent against the aligned fleet (`Ruleset changes needed: 0`).
+  - **Residual 1 (8 `workspace-qg.yml` repos) is now self-healing:** when any migrates to
+    `quality-gates-v2.yml`, run `python3 scripts/repo-management/pin_branch_protection_rulesets.py --apply`
+    and it auto-re-pins that repo's rulesets to `… / quality-gates-v2`. No manual edits.
+- **IaC alternative** — `terraform/github-branch-protection/` (`github_repository_ruleset` +
+  `import.sh` + README). Passed `terraform validate` (integrations/github v6). Mutually exclusive
+  with the script — README documents picking ONE SSOT.
+- **Drift detection** — `verify_branch_protection_check_names.py` reports
+  `ALL RULESETS CONSISTENT: True/False`.
+
+NOTE: these manage the modern **rulesets**, separate from the legacy classic-protection scripts
+(`set-branch-protection.sh`, `propagation/apply-branch-protection.sh`).
+
+### Remaining (truly minor)
+
+- Old open PRs predating the workflow-name fix may show a missing required check until re-run; new
+  PRs match immediately.
+- Optional: wire `verify_branch_protection_check_names.py` into a scheduled CI drift-alert.
 
 ---
 
