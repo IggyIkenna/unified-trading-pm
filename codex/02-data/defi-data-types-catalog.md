@@ -56,12 +56,15 @@ per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...
 
 ### Instrument Type Mapping
 
-| instrument_type | Data types                                                                                                                  |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `spot_asset`    | dex_swaps, dex_pool_state, bridge_events, mev_events, token_transfers, governance_events, staking_yields, vault_share_price |
-| `lending`       | lending_indices, liquidations, liquidation_events, flash_loan_events, position_data, risk_params                            |
-| `staking`       | staking_yields, lst_rates, rewards, eigenlayer_rewards, native_staking_rates                                                |
-| `perpetual`     | perp_funding                                                                                                                |
+| instrument_type   | Data types                                                                                                                  | Notes                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `spot_asset`      | dex_swaps, dex_pool_state, bridge_events, mev_events, token_transfers, governance_events, staking_yields, vault_share_price | EVM DEX + bridging + governance                    |
+| `lending`         | lending_indices, liquidations, liquidation_events, flash_loan_events, position_data, risk_params                            | EVM lending protocols (Aave/Compound/Spark)        |
+| `staking`         | staking_yields, lst_rates, rewards, eigenlayer_rewards, native_staking_rates                                                | LST + restaking + native staking                   |
+| `perpetual`       | perp_funding                                                                                                                | DeFi perps (GMX/Hyperliquid/Drift)                 |
+| `solana_lending`  | lending_indices                                                                                                             | Solana lending (Kamino/Solend/Marginfi) — UAC@7e9f4ad9 |
+| `solana_vault`    | dex_pools                                                                                                                   | Kamino vault strategies (Solana) — UAC@90b2bb9d    |
+| `solana_amm_pool` | dex_pools                                                                                                                   | Solana AMM pools (Orca/Raydium/Phoenix) — UAC@90b2bb9d |
 
 ---
 
