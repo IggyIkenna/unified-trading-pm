@@ -215,6 +215,10 @@ BLOCKED-CREDENTIALS | BLOCKED-OPERATOR-DECISION | BLOCKED-UPSTREAM-OUTAGE
 BLOCKED-PLAYWRIGHT | BLOCKED-OPERATOR | BLOCKED-INFRA
 ```
 
+**Full hygiene reference**: `codex/12-agent-workflow/plan-hygiene.md` — covers all 4 silent-failure modes,
+check-vs-fix script pairing, cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping
+every 4h), and the HARD vs SOFT severity ladder. When in doubt about a format question, read that doc first.
+
 ### Sub-bullet checkboxes (explicit allowance, codified 2026-05-12)
 
 Nested checkboxes under a parent todo are **allowed** when they represent atomic sub-tasks that ship together with the

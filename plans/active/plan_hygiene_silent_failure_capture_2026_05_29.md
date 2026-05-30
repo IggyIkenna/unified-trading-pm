@@ -172,8 +172,13 @@ indefinitely with no auto-unblock when blockers complete.
       silent-failure modes + which check catches each. - The closed-set of valid tags + how to add a new one (PR to
       PLAN_FORMAT.md). - The 3 cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every
       4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only).
-- [ ] [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors see
+- [x] ✅ [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors see
       the canonical form + the auto-fixer in one place.
+      **DONE (2026-05-30 slot-2)**: Added "Full hygiene reference" pointer paragraph to PLAN_FORMAT.md §"Canonical
+      form + automated hygiene" immediately after the closed-set tag list. Points to
+      `codex/12-agent-workflow/plan-hygiene.md` (the full reference doc, created by -002) and describes the 4
+      modes/cron schedules/severity ladder. The existing `check_todo_format.sh` + `fix_todo_format.sh` references
+      in that same section remain the per-script canonical pointers. PM commit pushed to live-defi-rollout.
 
 ## Phase 6 — PM-pull + PlanRegenLoop latency (P0 — added 2026-05-29 after empirical test)
 
