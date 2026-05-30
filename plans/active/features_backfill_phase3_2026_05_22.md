@@ -91,7 +91,9 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
         Bug 2 (BLK-062521f7, dependency checker): `DependencyChecker._resolve_gcs_path` overridden to call
           `resolve_bucket_name` (env-tiered prd bucket) instead of flat template → features-service@7188ea9e.
       VMs launched 2026-05-30 03:26: features-onchain-defi-20260530-032606 + features-delta-one-defi-20260530-032619 (Bug 1 fix).
-      VM re-launched 2026-05-30 03:28: features-delta-one-defi-20260530-032825 (Bug 1+2 fix — env-tiered bucket).
+      VM re-launched 2026-05-30 03:28: features-delta-one-defi-20260530-032825 (Bug 1+2 fix — but tarball was pre-fix).
+      Tarball rebuilt 2026-05-30 03:35: features-service-code@7188ea9e (env-tiered bucket fix included).
+      VM re-launched 2026-05-30 03:37: features-delta-one-defi-20260530-033732 (tarball 7188ea9e — definitive relaunch).
       Awaiting VM completion for final verification.
 - [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — delta-one-defi dependency checker was using
       FLAT bucket template `market-data-tick-{asset_group_lower}-{project_id}`
