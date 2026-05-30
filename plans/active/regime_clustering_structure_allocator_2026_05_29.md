@@ -178,8 +178,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   supervised *selection*. No kNN/clustering lands inside ml-service.
   `train_cluster_conditional_models()` + `has_cluster_columns()` + helpers. prob_cluster_k retained
   as features; cluster_id dropped (split key). 7 new unit tests; ruff clean. Pushed ml-service 8fb2338.
-- [ ] [STRATEGY] P3. Route `cluster_id` into `RegimeAwareAllocator.regime_score`
+- [x] ✅ [STRATEGY] P3. Route `cluster_id` into `RegimeAwareAllocator.regime_score`
   (`portfolio_allocator/archetypes.py:360`).
+  — strategy-service@529abc8 (backfill 2026-05-30). `cluster_regime_score(cluster_id, soft_probs)` converts GMM assignment to Decimal score in [0,1]. `RegimeAwareAllocator.weight()` uses it directly.
 
 ## Phase 3 — Factor-targeted structure allocator (strategy-service / trading-agent) — *the real new build*
 
