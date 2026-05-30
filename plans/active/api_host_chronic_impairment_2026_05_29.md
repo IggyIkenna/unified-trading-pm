@@ -115,13 +115,26 @@ operator intervention.
 > auto-reboots if `StatusCheckFailed_Instance` stays `1` for ≥3 consecutive minutes (currently the metric reports
 > per-5-min datapoints, so 2 consecutive failures = 10 min outage).
 
-- [ ] [AGENT] P1. EventBridge rule: pattern matches CloudWatch alarm `api-host-impaired` (≥3 datapoints out of 3
+- [x] ✅ [AGENT] P1. EventBridge rule: pattern matches CloudWatch alarm `api-host-impaired` (≥3 datapoints out of 3
       `StatusCheckFailed_Instance == 1`). Action: trigger Lambda →
-      `ec2:RebootInstances --instance-ids     i-0c9b283b31d6b5ca7`. Terraform under `deployment-service/terraform/aws/`.
-- [ ] [AGENT] P1. CloudWatch alarm + EventBridge rule deployment. Telegram + Slack alert MUST also fire so operator sees
-      the auto-reboot event (`🔄 Auto-rebooted i-0c9b283b31d6b5ca7 at <ts> — impaired for ≥10 min`).
-- [ ] [AGENT] P1. Document the auto-reboot loop ceiling (e.g. ≤3 auto-reboots/24h; on 4th, pause auto-reboot and page
+      `ec2:RebootInstances --instance-ids i-0c9b283b31d6b5ca7`. Terraform under `deployment-service/terraform/aws/`.
+      **DONE 2026-05-30** — `deployment-service/terraform/aws/api_host_auto_reboot.tf` shipped @ deployment-service@c8fc73d.
+      Resources: `aws_cloudwatch_metric_alarm.api_host_impaired` (3/3 × 5-min periods = 15 min impairment threshold),
+      `aws_cloudwatch_event_rule.api_host_auto_reboot` (EventBridge pattern: source=aws.cloudwatch,
+      detail-type=CloudWatch Alarm State Change, alarmName=api-host-impaired, state.value=ALARM),
+      `aws_lambda_function.api_host_auto_reboot` (Python 3.12 inline, timeout 30s), IAM role + least-privilege policy.
+- [x] ✅ [AGENT] P1. CloudWatch alarm + EventBridge rule deployment. Telegram + Slack alert MUST also fire so operator sees
+      the auto-reboot event (`🔄 Auto-rebooted i-0c9b283b31d6b5ca7 at <ts> — impaired for ≥15 min`).
+      **DONE 2026-05-30** — Lambda reads Slack webhook + Telegram bot-token/chat-id from SSM at runtime
+      (`/uts/alerts/slack-webhook-url`, `/uts/alerts/telegram-bot-token`, `/uts/alerts/telegram-chat-id`).
+      Operator must create these SSM SecureString parameters. Alert format: `🔄 Auto-rebooted <id> at <ts> —
+      impaired for ≥15 min (StatusCheckFailed_Instance 3/3 datapoints). Reboot N/3 in current 24h window.`
+- [x] ✅ [AGENT] P1. Document the auto-reboot loop ceiling (e.g. ≤3 auto-reboots/24h; on 4th, pause auto-reboot and page
       operator) so a permanently-broken host can't infinite-loop on reboots.
+      **DONE 2026-05-30** — Lambda implements SSM-tracked sliding window: `/uts/api-host/reboot-ceiling/count` +
+      `/uts/api-host/reboot-ceiling/window-start`. On 4th alarm within 24h: EventBridge rule self-disables via
+      `events:DisableRule` + sends `🚨 Auto-reboot CEILING HIT` alert. Operator re-enables manually:
+      `aws events enable-rule --name uts-api-host-auto-reboot-<env>`.
 
 ## Phase 5 — Resource limits as belt-and-braces (P1)
 
