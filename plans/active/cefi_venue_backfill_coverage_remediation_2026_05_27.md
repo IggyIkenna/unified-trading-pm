@@ -198,9 +198,15 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       (these are Tardis batch-API glob patterns, not valid per-instrument IDs). Added guard in
       `TardisAdapter._resolve_symbols` to filter symbols without "-" for derivatives-only venues.
       6 new tests in `test_deribit_universe_routing.py` prove the fix.
-- [ ] [AGENT] P2. **Coinbase 400 = symbol-not-yet-listed** (SOL/DOGE/ADA/AVAX-USD not on Coinbase in 2020) — a DIFFERENT
+- [x] ✅ [AGENT] P2. **Coinbase 400 = symbol-not-yet-listed** (SOL/DOGE/ADA/AVAX-USD not on Coinbase in 2020) — a DIFFERENT
       400 cause than OKX's expiry-window. Handled as partial (`captured=4 expected=8`), but feed it into the §3 coverage
       map so "not-listed-yet" is distinguished from "out-of-window" and "blocked-key".
+      — market-tick-data-service@0bf3f3c: `_resolve_symbols` now returns `(valid_symbols, pre_listing_symbols)`.
+      When `instrument_ids` is explicitly provided, it loads the GCS instruments parquet and filters symbols whose
+      `available_from_datetime > date` into `pre_listing_symbols`. The caller (`download_batch`) emits
+      `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` for each filtered symbol × data_type, so the coverage map
+      records "not-listed-yet" instead of leaving them as silent 0-row non-entries or partial captures.
+      GCS parquet unavailability is caught and logged at DEBUG — all instrument_ids pass through unchanged (safe fallback).
 
 ### §6C — Memory / performance
 
