@@ -155,6 +155,134 @@ workspace-wide gate that "handles" missing data — by design.
 
 ---
 
+## §6A honest-absence violation classes (CeFi/DeFi backfill audit 2026-05-27)
+
+> Codified 2026-05-30 per `cefi_venue_backfill_coverage_remediation_2026_05_27.md` § 6A. These three classes were
+> discovered during the CeFi/DeFi venue backfill audit and generalise the operator's 401≠honest-absence concern into
+> a taxonomy of silent-drop bugs. All three result in phantom cells — positions in the expected universe that look
+> absent when they should be `empty_confirmed` or `attempted_failed` in the manifest.
+
+### Class 1 — In-flight shard failure with no manifest marker ("phantom gap")
+
+**What it looks like**: The adapter logs `WARNING in-flight key=<venue>/<sym>/<date>/<dt>  failed: <error>` (or
+equivalent) but exits without calling `record_empty()` or `record_failed()`. The manifest has **no row** for that
+`(venue, data_type, day)` cell — the failure is invisible to downstream consumers and honest-coverage metrics.
+
+**Example** (OKX Tardis, fixed MTDS@774db33): `ConnectionTimeoutError` on `book_snapshot_5` and
+`ArrowInvalid: Empty CSV file` on `trades` produced ~27+ sampled phantom cells per run.
+
+**Why it's wrong**: A missing manifest row on a calendar-trading day is indistinguishable from "pipeline never ran."
+The pre-flight gate at downstream consumers raises `DependencyError` instead of NaN-filling or alerting correctly.
+Honest-coverage denominator can't count what it doesn't see.
+
+**Required fix**: In every in-flight failure handler, classify the exception and write a manifest row:
+
+```python
+try:
+    ...  # fetch / write parquet
+except EmptyCsvError:
+    writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+except (ConnectionTimeoutError, aiohttp.ClientError):
+    writer.record_failed(row_key=..., error=classify_venue_error(exc))
+```
+
+The manifest row may be `empty_confirmed` (for genuinely empty sources) or `attempted_failed` (for network/timeout
+failures). What's never acceptable is silence.
+
+---
+
+### Class 2 — Silent-zero ("adapter produces no rows, records nothing")
+
+**What it looks like**: The adapter's fetch loop returns zero rows (due to a schema error, empty subgraph result, or
+exhausted cascade) but the calling code silently continues without recording any manifest row. The parquet is either
+absent or written as a 0-row file with `capture_status=captured` — both are honest-absence violations.
+
+**Example A** (DeFi dex-swaps, fixed MTDS@ed5fdcf): `_PANCAKESWAP_BSC_SWAPS_QUERY` included an unrecognised field
+(`sqrtPriceX96`) causing a schema parse error → all cascade queries returned `None` → handler emitted
+`SOURCE_RETURNED_ZERO` on a live subgraph (misleading). Fix: raise `_SubgraphNotFoundError` on HTTP 404; raise
+`RuntimeError` when ALL cascade queries fail on schema errors → caller calls `record_failed(ADAPTER_FETCH_FAILED)`.
+
+**Example B** (Understat 2019, fixed instruments-service@c654ccf): 100% `404` responses on `getMatch/*` and
+`getLeagueData/*/2019` → adapter logged 0 rows but called `record_empty(EXPECTED_NO_FIXTURE)` — using the wrong
+reason for a fetch failure. Fix: track `_fetch_error_count`; emit `record_failed(HTTP_NOT_FOUND)` when errors
+occurred instead of `record_empty(EXPECTED_NO_FIXTURE)`.
+
+**Why it's wrong**: A `captured` row with 0 rows in the parquet (or no row at all) is worse than `empty_confirmed`.
+Downstream features compute on 0 meaningful rows and may produce garbage statistics. Honest-coverage numerator
+counts the cell as captured when it should count it as failed.
+
+**Required fix**: Zero-row fetch result must always produce a manifest row, never silence:
+
+```python
+rows = adapter.fetch(...)
+if not rows:
+    # Check WHY we got 0 rows
+    if fetch_had_errors:
+        writer.record_failed(row_key=..., error=classify_venue_error(last_exc))
+    else:
+        writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+    return
+# normal path
+writer.record_captured(row_key=..., df=rows_df)
+```
+
+The key diagnostic: **was the fetch attempted and failed** (`attempted_failed`) or **did the fetch succeed but the
+source had no data** (`empty_confirmed[SOURCE_RETURNED_ZERO]`)?
+
+---
+
+### Class 3 — Captured-0-row ("manifest says captured, parquet is empty")
+
+**What it looks like**: `record_captured` is called with a 0-row DataFrame (or `row_count=0`), writing
+`capture_status=captured` to the manifest despite the parquet having no meaningful rows. Downstream consumers
+trust the `captured` status and attempt to compute features — on empty input.
+
+**Historical example** (MDPS 2026-05-05): MDPS wrote 1440-bar NaN-filled placeholder parquets with
+`capture_status=captured` for years. Banned in writegate Phase 2.A. The reconciler
+`reconcile_legacy_nan_placeholder_bars.py` reclassifies these rows to `attempted_failed[LEGACY_NAN_PLACEHOLDER]`.
+
+**New form** (CEFi/DeFi adapters): A 0-row parquet at `record_captured(df=pd.DataFrame(), ...)` is structurally
+identical — manifest says captured, downstream gets empty. `ManifestWriter` now raises `MissingRowCountError` (or
+`EmptyDataFrameError` depending on schema enforcement phase) when `df` is empty and `record_captured` is called.
+
+**Why it's wrong**: `capture_status=captured` is a contract: "the data was here, fetch it." If the parquet is empty,
+that contract is broken. Features compute on empty input; ML trains on ghost rows; execution prices assets with
+no real ticks behind them.
+
+**Required fix**: Never call `record_captured` with an empty DataFrame. The pre-write validation in the
+`ManifestWriter` enforces this — but the adapter must also classify correctly:
+
+```python
+if df.is_empty():  # polars; .empty for pandas
+    # EITHER the source had nothing:
+    writer.record_empty(row_key=..., reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)
+    # OR the fetch itself failed:
+    # writer.record_failed(row_key=..., error=...)
+    return
+writer.record_captured(row_key=..., df=df)
+```
+
+---
+
+### Summary anti-pattern table (§6A additions)
+
+| Violation class                            | Symptom                                                                                           | Root cause pattern                                                                     | Required call site                                                                                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **In-flight drop** (Class 1)               | Exception logged in adapter, no manifest row written; cell absent from expected universe          | Exception handler exits without calling `record_empty` or `record_failed`              | `record_failed(classify_venue_error(exc))` for network/5xx; `record_empty(SOURCE_RETURNED_ZERO)` for empty-CSV / expected-empty parse results  |
+| **Silent-zero** (Class 2)                  | Zero rows returned; no manifest row, OR wrong reason (`EXPECTED_NO_FIXTURE` instead of `HTTP_NOT_FOUND`) | `if not rows: return` (no manifest write); wrong reason selection on fetch failure     | Inspect `fetch_had_errors`; route to `record_failed` vs `record_empty` explicitly                                                             |
+| **Captured-0-row** (Class 3)               | `capture_status=captured` in manifest; 0-row parquet on disk; downstream computes on empty input  | `record_captured(df=empty_df)` called without checking `df.is_empty()` first           | Check `df.is_empty()` before `record_captured`; route to `record_empty` or `record_failed` on empty                                           |
+
+### Detection
+
+Run `scripts/check_zero_row_captures.py --asset-group cefi` (instruments-service) to scan for
+`capture_status=captured` rows whose associated parquet has 0 rows. This is the Class 3 detector.
+
+For Class 1 + Class 2, grep adapter logs for `in-flight.*failed` and `WARNING.*0 rows` patterns that lack a
+companion manifest entry in the scan window. The `ADAPTER_FETCH_FAILED` event emitted by correctly-wired adapters
+provides the audit trail.
+
+---
+
 ## Reference incidents
 
 - **2026-05-05 MDPS empty-placeholder OHLC** — 1440 NaN-filled rows per `(venue, data_type, day)` for years; manifest
@@ -673,8 +801,8 @@ The season-bounds table lives in `unified_api_contracts.canonical.domain.sports.
 ## Multi-source cell consumer policy (TradFi dual-source, v9)
 
 > Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. Applies to `asset_group=tradfi` only when a
-> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`).
-> Requires v9 manifest schema with the `source` column populated.
+> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`). Requires
+> v9 manifest schema with the `source` column populated.
 
 ### Union semantics for multi-source cells
 
@@ -682,13 +810,13 @@ When a TradFi cell has manifest rows from more than one source, the downstream c
 `capture_status` by **union**: if at least one source row has `capture_status=captured`, the cell is treated as
 `captured` for all downstream purposes.
 
-| Source A `capture_status`  | Source B `capture_status`  | Resolved cell status | Downstream action                                                                                                                   |
-| -------------------------- | -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `captured`                 | `captured`                 | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)       |
-| `captured`                 | `empty_confirmed`          | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                              |
-| `captured`                 | `attempted_failed`         | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)                |
-| `empty_confirmed`          | `empty_confirmed`          | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
-| `attempted_failed`         | `attempted_failed`         | `attempted_failed`   | Both failed; block live trade, alert                                                                                                |
+| Source A `capture_status` | Source B `capture_status` | Resolved cell status | Downstream action                                                                                                                  |
+| ------------------------- | ------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `captured`                | `captured`                | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)      |
+| `captured`                | `empty_confirmed`         | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                             |
+| `captured`                | `attempted_failed`        | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)               |
+| `empty_confirmed`         | `empty_confirmed`         | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
+| `attempted_failed`        | `attempted_failed`        | `attempted_failed`   | Both failed; block live trade, alert                                                                                               |
 
 **Critical rule**: a single `attempted_failed` source does NOT block a consumer when another source is `captured`. The
 failure is recorded and alerted per source, but the cell-level status is `captured`. This is the key difference from the
@@ -700,8 +828,8 @@ The `error_reason` taxonomy (see `## Reason taxonomy` and `## Per-reason-group �
 row** — not to the resolved cell status. A source B row with `capture_status=empty_confirmed[EXPECTED_HOLIDAY]` still
 means "source B expected empty on that holiday." The union resolution step runs AFTER per-source reason validation.
 
-Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply
-to the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
+Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply to
+the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
 normally; it never sees the source B empty row directly.
 
 ### Source priority resolution
@@ -759,8 +887,8 @@ def resolve_cell_status(
     return CaptureStatus.ATTEMPTED_FAILED
 ```
 
-A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no
-`DependencyError`. The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
+A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no `DependencyError`.
+The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
 
 ### Scope
 
@@ -1174,19 +1302,19 @@ This matches the honest-coverage denominator policy: the `compute_honest_coverag
 
 ### Per-consumer policy table
 
-| Consumer | Policy when ≥1 source captured | Policy when all sources failed |
-|----------|-------------------------------|-------------------------------|
+| Consumer                                       | Policy when ≥1 source captured                                                                                                        | Policy when all sources failed                                                                           |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Feature pipeline** (MDPS → features-service) | Read the `SOURCE_PRIORITY`-ranked shard. Prefer `"massive"` over `"databento"` when both are `captured` (SOURCE_PRIORITY rank order). | Propagate `attempted_failed` upstream. Feature service records `EXPECTED_UNATTEMPTED` for downstream ML. |
-| **ML training** | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present. | Mark training window as `DATA_MISSING`; do not impute. |
-| **Execution service** | Use highest-priority captured source for reference pricing. | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`. |
-| **Data-status UI** | Show cell as `captured` (green). Tooltip lists per-source status breakdown. | Show cell as `attempted_failed` (red). |
-| **Honest-coverage rollup** | Cell counts as 1 captured row in numerator. | Cell counts as 1 attempted_failed row; excluded from numerator. |
+| **ML training**                                | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present.  | Mark training window as `DATA_MISSING`; do not impute.                                                   |
+| **Execution service**                          | Use highest-priority captured source for reference pricing.                                                                           | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`.                           |
+| **Data-status UI**                             | Show cell as `captured` (green). Tooltip lists per-source status breakdown.                                                           | Show cell as `attempted_failed` (red).                                                                   |
+| **Honest-coverage rollup**                     | Cell counts as 1 captured row in numerator.                                                                                           | Cell counts as 1 attempted_failed row; excluded from numerator.                                          |
 
 ### Source priority for TradFi
 
-The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`.
-For TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and
-broader options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
+The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`. For
+TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and broader
+options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
 
 ### Empty-confirmed from one source, captured from another
 
@@ -1200,3 +1328,74 @@ valid:
 
 Downstream consumers treat this cell as `captured` (union semantics). The `empty_confirmed` Massive row is logged and
 visible in the data-status UI tooltip but does not degrade coverage percentage.
+
+---
+
+## §7 — CeFi expiry-window contract + 401≠honest-absence (backfill audit 2026-05-27)
+
+> **Source**: operator direction 2026-05-27 + CeFi audit findings §1 + §2 of
+> `cefi_venue_backfill_coverage_remediation_2026_05_27.md`. Codified here to prevent re-discovery.
+
+### Expiry-window request-filtering contract
+
+CeFi dated instruments (OKX futures, Deribit options/futures, Kraken futures) have a documented availability window
+`[available_from, available_to_datetime]` sourced from `InstrumentRecord` (instruments-service SSOT via Tardis
+`availableSince`/`availableTo`).
+
+**Rule**: never request data for dates OUTSIDE `[available_from, available_to_datetime]`. The correct pre-request filter:
+
+```python
+if available_from and date < available_from.date():
+    record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_NOT_LISTED)
+    continue
+if available_to and date > available_to_datetime.date():
+    record_empty(reason=EmptyConfirmedReason.EXPECTED_INSTRUMENT_DELISTED)
+    continue
+```
+
+**Why**: Tardis responds to out-of-window requests with `code 140: "Data … available only up to <date>"` (HTTP 400).
+These 400s are not adapter errors — they are predictable consequences of requesting impossible (shard_key, day) pairs.
+Attempting the request and recording `attempted_failed` is wrong; the correct manifest state is `expected_unattempted`.
+
+**Shipped**: `market-tick-data-service@91e3df03` (OKX window filter in CeFi Tardis download path).
+`instruments-service@ffb8192` (Kraken futures `_parse_underscore_yymmdd_symbol_expiry()` fallback to populate
+`available_to_datetime` for `FI_XBTUSD_*` symbols).
+
+| Scenario                                     | `capture_status`      | `error_reason`                        |
+| -------------------------------------------- | --------------------- | ------------------------------------- |
+| Date < `available_from` (pre-listing)        | `expected_unattempted`| `EXPECTED_INSTRUMENT_NOT_LISTED`      |
+| Date > `available_to_datetime` (post-expiry) | `expected_unattempted`| `EXPECTED_INSTRUMENT_DELISTED`        |
+| Date in window, request succeeds             | `captured`            | (none)                                |
+| Date in window, Tardis returns 400 for other reasons | `attempted_failed` | `CLASSIFIED_VENUE_ERROR` or typed reason |
+
+### 401≠honest-absence rule
+
+**Rule**: HTTP 401 (expired API key / missing credentials) MUST be recorded as `attempted_failed`, NOT as
+`empty_confirmed` or `expected_unattempted`.
+
+**Operator direction 2026-05-27**: _"If the issue is 401, we should not mark that one as honest-absence — that will
+make the data look corrupt."_
+
+A 401 means the data EXISTS but is temporarily inaccessible due to a credential block. It is NOT a confirmed absence.
+
+| Scenario                                           | `capture_status`   | `error_reason`             |
+| -------------------------------------------------- | ------------------ | -------------------------- |
+| HTTP 401 — expired key                             | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+| HTTP 401 — missing key                             | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+| HTTP 400 code 140 — out-of-window date             | `expected_unattempted` | `EXPECTED_INSTRUMENT_DELISTED` or `EXPECTED_INSTRUMENT_NOT_LISTED` |
+| HTTP 400 other reason (e.g. bad symbol)            | `attempted_failed` | `CLASSIFIED_VENUE_ERROR`   |
+
+**Why the distinction matters**: `empty_confirmed` tells downstream consumers "this data does not exist, skip it." A
+401-era manifest stamped `empty_confirmed` looks identical to a correctly absent day — consumers will never retry and
+the data gap becomes permanent even after key renewal. `attempted_failed` marks the cell as "retryable once key is
+active," which is the correct operational state.
+
+**Recovery path**: after Tardis API key renewal, re-run the backfill for all dates where manifest rows carry
+`attempted_failed` due to 401s. The rows' `capture_status` will flip to `captured` once the download succeeds.
+
+### Cross-references
+
+- `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §1 (expiry window), §2 (401 rule)
+- `codex/04-architecture/cefi-batch-live.md` §9 (adapter-level expiry-window + 401 contract)
+- `market-tick-data-service@91e3df03` — window filter implementation
+- `instruments-service@ffb8192` — Kraken underscore-symbol expiry parser

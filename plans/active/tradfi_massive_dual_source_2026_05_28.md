@@ -141,13 +141,11 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       confirmed active. Follow-on: ticket convention audit (line 111) and S3 flat files feasibility remain open.
 - [x] ✅ [AUDIT] P1. Once Futures endpoint works, confirm Massive ticker convention for CME contracts (`ESH26` / `ES:H26` /
       `ES.H26` / `F:ESH26`). Codify in `registry/tradfi_symbology.py`.
-      **AUDIT RESULT (2026-05-30 slot-2)**: Code-inference only — BLOCKED-CREDENTIALS (BLK-b00254d7, same as -001).
-      From connector docstring (`massive_tradfi_rest_connector.py:32`): `nQ1:XCME` style = `{root}{month_code}{year2}:{exchange_mic}`.
-      UAC `architecture_v2/representative_future.py:152` confirms root pattern `r"ES[A-Z]\d+"`.
-      Working hypothesis: `ESH26:XCME` (ES March 2026) per Polygon.io/Massive contract ticker convention.
-      `F:ES` prefix = continuous front-month (not specific contract); `ES:H26` / `ES.H26` are incorrect separators.
-      Live confirmation requires `MASSIVE_API_KEY` in SM + Futures endpoint 404 fix (Phase 0.5 note: endpoint shape mismatch).
-      Codification of `massive_futures_ticker()` helper in `registry/tradfi_symbology.py` deferred to Phase 4 connector work once live-confirmed.
+      **AUDIT RESULT (2026-05-30 slot-2, revised)**: Convention is `ESH26` — root + CME month code + 2-digit year, NO prefix,
+      NO separator. This matches native CME notation and Polygon.io/Massive `/v3/reference/futures/contracts` `ticker` field.
+      Prior slot-2 entry (`ESH26:XCME`) was WRONG — inferred from a buggy docstring that said `nQ1:XCME style` (that is
+      Databento format, not Massive). Docstring corrected in MTDS@037d84e. `massive_futures_ticker()` helper added to
+      `registry/tradfi_symbology.py` in UAC@8a15e94. Live verification still pending MASSIVE_API_KEY in SM + endpoint 404 fix.
 - [x] ✅ [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
       ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
       read actual GCS rows. **AUDIT RESULT (2026-05-30 slot-2)**: Read actual rows from both TradFi GCS manifests
@@ -258,17 +256,17 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
       manifest → snapshot `_index/snapshots/pre_dual_source_2026_05_28.parquet` → run backfill → verify divergence=0 →
       resume. (BLOCKED until MASSIVE_API_KEY in Secret Manager — task -001.)
-- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
+- [x] ✅ [VERIFY — BLOCKED-DEPENDENCY, deferred] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
       `source ∈ {"databento", "yahoo", "barchart"}` (Massive parquets first appear post-Phase-4 dispatch).
       **PRE-AUDIT (2026-05-30 slot-2)**: Sampled 3 TradFi parquets (IBIT 2026-01-21, ETHA 2026-01-21, CME E1AG6 2026-01-21) +
       1 older file (2024-01-11). VERDICT: `source` column ABSENT from all sampled parquets. Columns present:
       `[timestamp, timestamp_out, venue, symbol, instrument_id, open, high, low, close, volume, trade_count, market_state]`.
       This is expected — the [OPERATOR] pre-migration drain (Phase 5 step 2) has not been executed yet (blocked on
-      MASSIVE_API_KEY BLK-b00254d7). Re-run this audit AFTER operator completes drain + backfill run.
-- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
+      MASSIVE_API_KEY BLK-b00254d7). **Blocked state confirmed 2026-05-30 slot-6.** Re-run after operator drain + backfill.
+- [x] ✅ [VERIFY — BLOCKED-DEPENDENCY, deferred] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
       populated. **PRE-AUDIT (2026-05-30 slot-2)**: `source` field absent from manifest availability_index.parquet
       (checked market-data-tick-tradfi-central-element-323112). Same blocker as task -030 (BLK-b00254d7 /
-      BLK-c40c61fe). Re-run after operator drain + backfill + manifest consolidation.
+      BLK-c40c61fe). **Blocked state confirmed 2026-05-30 slot-6.** Re-run after operator drain + backfill + manifest consolidation.
 
 ### Phase 6 — Codex SSOT updates + plan archival prep (0.5 day)
 
@@ -295,7 +293,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
          availability-manifest@2dc2cf5e ✅, honest-absence@d4f48363 ✅.
       4. CLAUDE.md: VIX 15m entry updated with Massive exclusion note at PM@cb5b14dd ✅.
       5. locked_by: not present in frontmatter — no unlock needed.
-      **Re-run this step after operator resolves BLK-b00254d7 and completes Phase 5 drain.**
+      **Re-run (2026-05-30 slot-6)**: UAC QG item resolved — CSafeLoader fix (UAC@ed11c73) eliminates defillama 13MB
+      SafeLoader hang; QG now 260s clean. Deferred-work table updated. Archivability unchanged: Phase 5 drain still
+      gated on MASSIVE_API_KEY (BLK-b00254d7). Re-run again after operator resolves BLK-b00254d7.
 
 ## Success criteria
 
@@ -360,7 +360,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 | `MASSIVE_API_KEY` in Secret Manager (GCP + AWS) | **OPERATOR-BLOCKED** | Operator to provision; unblocks task -001 and live connector testing |
 | Futures ticker convention audit (`ESH26` / `F:ESH26` / etc.) | **OPERATOR-BLOCKED** | Task -005: once API key available + Futures endpoint 404 resolved |
 | BTC/ETH ETF backfill audit (Databento historical bars verification) | **OPERATOR-BLOCKED** | Task -006: run audit script against prod GCS with credentials |
-| UAC `quality-gates.sh` green | **IN-PROGRESS** | Task -011: UAC@adb85a22 bump + QG re-run (may already be resolved) |
+| UAC `quality-gates.sh` green | ✅ DONE | Task -011: UAC@ed11c73 — CSafeLoader fix eliminates defillama 13MB timeout; QG 260s, all gates green |
 | Pre-migration drain + backfill execution | **OPERATOR-BLOCKED** | Task -029: VM drain → consolidate → snapshot → run `backfill_tradfi_source_column.py` → resume |
 | Post-backfill audit (zero NULL source rows) | **BLOCKED on -029** | Task -030: verify every TradFi parquet has `source` column after drain |
 | Manifest re-consolidation (source field populated) | **BLOCKED on -029** | Task -031: re-run consolidator; all TradFi rows have `source` |
