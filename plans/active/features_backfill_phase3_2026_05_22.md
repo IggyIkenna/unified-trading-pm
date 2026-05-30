@@ -95,8 +95,16 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
         Bug 3 (onchain IS_CATALOGUE_EMPTY): `_count_is_defi_instruments` looked for flat
           `day={date}/instruments.parquet` — IS bucket stores per-venue shards at
           `day={date}/venue={V}/instruments.parquet`. Fixed to list+aggregate across venue shards.
-      Current VMs (03:46 UTC): features-onchain-defi-20260530-034626 + features-delta-one-defi-20260530-034640.
-      Awaiting compute completion (~1-2h) for final verification.
+      **Status update 2026-05-30 (slot-1):**
+        - features-onchain-defi-20260530-034626: RUNNING ✅ — lending_rates 118/118 days written
+          (2026-01-25→2026-05-22), 42k-89k rows/day, schema_version=8, 0 LookaheadBias violations.
+          lst_yields / oracle_deviation currently processing (WriteGate rejecting sparse lst_native_rate_ts).
+        - features-delta-one-defi-20260530-034640: FAILED exit_code=1 ❌ — ALL 18 groups fail.
+          **Bug 4 discovered**: DeFi prd bucket only contains data_type=dex_swaps but delta-one candle
+          loader expects data_type=oracle_prices (for POOL instruments) or data_type=trades
+          (for restaking ticks). Candles loaded: 0/8 instruments. This is an architectural mismatch
+          unrelated to bugs 1-3. Blocker filed: BLK-a5b69169 — awaiting operator decision on whether
+          delta-one-defi should support dex_swaps or whether verify scope should be onchain-only.
 - [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — see Bug 2+3 above (features-service@1924f46f).
 
 ## Phase 3 — TradFi features compute
