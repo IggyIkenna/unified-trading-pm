@@ -118,8 +118,10 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       instead of empty_confirmed. Fixed in process_to_candles(): pre-check for raw MTDS data with no h2h rows → return
       _make_empty_candle_output() (honest absence) before reaching the MalformedTickFieldError raise. Same fix closes
       §6E. 5 new tests, 1372 total pass. — market-data-processing-service@bb7c829
-- [ ] [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
-      cap RSS for deribit book_snapshot_5 before relaunch.
+- [x] ✅ [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
+      cap RSS for deribit book_snapshot_5 before relaunch. — MTDS@5b6c584 + deployment-service@ec8042d:
+      added _deribit_book_runner (max_concurrent=4, env TARDIS_DERIBIT_BOOK_MAX_CONCURRENT); default 16-slot runner
+      still used for all other venues. QG exit 0.
 - [ ] [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
       forward-poll failure.
 - [ ] [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
