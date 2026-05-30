@@ -217,9 +217,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 > model can be wrong. **Reuse, do not rebuild**: wire into execution-service's existing pre-trade path (per-client
 > preflight KMS → venue auth → balance; shard-level isolation) rather than inventing a new "Go-Bus."
 
-- [ ] [EXECUTION] P1. After construction + sizing, every proposed structure passes a hard-limit gate (margin ceiling,
+- [x] ✅ [EXECUTION] P1. After construction + sizing, every proposed structure passes a hard-limit gate (margin ceiling,
   portfolio VaR, aggregate per-tenor vega/gamma caps, liquidity-sink check). Breach → systemic veto, drop trade. Limits
   are static config, independent of the regime model.
+  `PortfolioRiskGate` + `PortfolioSnapshot` in `portfolio_risk_gate.py`. 16 unit tests. strategy-service@a937219.
 - [ ] [EXECUTION] P2. Gate is the LAST step (after Phase 3 sizing + Phase 5 analog overlay) and cannot be overridden by a
   high regime/conviction score — a "good" prediction that breaches a risk limit is still vetoed.
 
