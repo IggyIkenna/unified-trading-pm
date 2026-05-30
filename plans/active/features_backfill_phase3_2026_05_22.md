@@ -76,31 +76,28 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
       delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps
       backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1 — runs on prd).
-      VM launched 2026-05-30: features-onchain-defi-20260530-025827 (FAILED rc=2 — empty INSTALL_ARGS_NODEPS bug)
-      VM re-launched 2026-05-30: features-onchain-defi-20260530-032606 (asia-northeast1-c, e2-standard-8) — fixed setup script
+      All earlier VMs FAILED (see fix log below).
+      VM re-launched 2026-05-30 03:46: features-onchain-defi-20260530-034626 (DEFINITIVE — all 3 bugs fixed)
       cmd: python -m features_service --feature-family onchain --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd
       `processed_candles`, 118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28**
       (banner #2 — dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
-      VM launched 2026-05-30: features-delta-one-defi-20260530-025907 (FAILED rc=2 — empty INSTALL_ARGS_NODEPS bug)
-      VM re-launched 2026-05-30: features-delta-one-defi-20260530-032619 (asia-northeast1-c, e2-standard-8) — fixed setup script + UAC export fix
+      All earlier VMs FAILED (see fix log below).
+      VM re-launched 2026-05-30 03:46: features-delta-one-defi-20260530-034640 (DEFINITIVE — all 3 bugs fixed)
       cmd: python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
-      **Fixes applied 2026-05-30 (slot-1):**
-        Bug 1 (setup script, rc=2): `INSTALL_ARGS_NODEPS` guard + UAC export fix → tarballs rebuilt (eb9c0b2).
-        Bug 2 (BLK-062521f7, dependency checker): `DependencyChecker._resolve_gcs_path` overridden to call
-          `resolve_bucket_name` (env-tiered prd bucket) instead of flat template → features-service@7188ea9e.
-      VMs launched 2026-05-30 03:26: features-onchain-defi-20260530-032606 + features-delta-one-defi-20260530-032619 (Bug 1 fix).
-      VM re-launched 2026-05-30 03:28: features-delta-one-defi-20260530-032825 (Bug 1+2 fix — but tarball was pre-fix).
-      Tarball rebuilt 2026-05-30 03:35: features-service-code@7188ea9e (env-tiered bucket fix included).
-      VM re-launched 2026-05-30 03:37: features-delta-one-defi-20260530-033732 (tarball 7188ea9e — definitive relaunch).
-      Awaiting VM completion for final verification.
-- [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — delta-one-defi dependency checker was using
-      FLAT bucket template `market-data-tick-{asset_group_lower}-{project_id}`
-      (= `market-data-tick-defi-central-element-323112`, data only up to 2026-01-24), NOT the env-tiered
-      prd bucket `market-data-tick-defi-prd-central-element-323112` (118 days, 2026-01-25→2026-05-22).
-      Fixed: overrode `_resolve_gcs_path` in `DependencyChecker` to call `resolve_bucket_name` (same as
-      LookbackValidator at line 377). features-service@7188ea9e, branch tab/rootm/1.
+      **Three bugs fixed 2026-05-30 (slot-1) — all in features-service@1924f46f:**
+        Bug 1 (setup script rc=2): `INSTALL_ARGS_NODEPS` guard in setup-data-pipeline-vm.sh (deployment-service@10626fd).
+          UAC export fix also needed: `resolve_data_type_for_feature_group` (eb9c0b2).
+        Bug 2 (delta-one dep checker): `DependencyChecker._resolve_gcs_path` overridden to call
+          `resolve_bucket_name(kind="market-data")` (env-tiered `market-data-tick-defi-prd-{pid}`) instead of
+          legacy flat template `market-data-tick-{ag}-{pid}` which resolves to the pre-2026-01-24 bucket.
+        Bug 3 (onchain IS_CATALOGUE_EMPTY): `_count_is_defi_instruments` looked for flat
+          `day={date}/instruments.parquet` — IS bucket stores per-venue shards at
+          `day={date}/venue={V}/instruments.parquet`. Fixed to list+aggregate across venue shards.
+      Current VMs (03:46 UTC): features-onchain-defi-20260530-034626 + features-delta-one-defi-20260530-034640.
+      Awaiting compute completion (~1-2h) for final verification.
+- [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — see Bug 2+3 above (features-service@1924f46f).
 
 ## Phase 3 — TradFi features compute
 
