@@ -276,8 +276,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [CODEX] P1. `codex/02-data/availability-manifest-and-data-status.md` — document `source` field in manifest row +
       per-source `capture_status` semantics. Multi-source cell can be `captured` from one source + `empty_confirmed`
       from another in the same window. — PM@2dc2cf5e
-- [ ] [CODEX] P1. `codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell has at
+- [x] ✅ [CODEX] P1. `codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell has at
       least one `captured` source, downstream treats cell as captured (union semantics). Per-reason taxonomy unchanged.
+      — PM@d4f48363
 - [ ] [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path.
 - [ ] [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
       futures gap still resolved via Yahoo/Barchart).
