@@ -188,8 +188,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [UAC] P1. Add Massive to UAC source-string registry test fixture; assert closed-set tests pass.
       62 tests pass: test_source_priority (28) + test_source_priority_pipeline_mode (14) + test_pipeline_mode (20).
 - [x] ✅ [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
-      Fixed N813 lint error (DivergenceKind alias renamed facade_dk → DivergenceKindFacade) + ruff auto-fix blank line.
-      QG passes: 452s, all gates green. UAC@6c3be2e
+      Fixed N813 lint error (DivergenceKind alias renamed → DivergenceKindFacade) + ruff blank-line auto-fix (UAC@6c3be2e).
+      Fixed PyYAML SafeLoader infinite hang on 13MB defillama cassettes: switched all 5 cassette-loading test files to
+      CSafeLoader C extension — QG runtime dropped from ~4555s (timeout) to 260s. UAC@ed11c73
 
 ### Phase 2 — Multi-source merge logic (3 days — the deferred plan slot)
 
