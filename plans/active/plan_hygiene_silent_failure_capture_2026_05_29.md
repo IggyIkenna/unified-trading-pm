@@ -152,7 +152,10 @@ indefinitely with no auto-unblock when blockers complete.
       `install_reap_stale_blockers.sh` (sudo bash to install). Logs to `/var/log/orchestrator/reap_<date>.log`.
       **[OPERATOR-SSM]**: run `sudo bash scripts/orchestrator/install_reap_stale_blockers.sh`
       on the orchestrator VM to activate. — unified-trading-pm@<sha>
-- [ ] [AGENT] P1. Document the reaper in `codex/12-agent-workflow/` (new sub-doc or extension of existing).
+- [x] ✅ [AGENT] P1. Document the reaper in `codex/12-agent-workflow/` (new sub-doc or extension of existing).
+      New doc: `codex/12-agent-workflow/stale-blocker-reaper.md`. Covers: background (no blocked status in DB),
+      three finding categories (DEADLOCK/ORPHAN/PHANTOM_DONE), script usage, cron schedule, operator response
+      guide, cross-references. — unified-trading-pm@<sha>
 
 ## Phase 4 — Edge-case extensions to check_todo_format (P2)
 
