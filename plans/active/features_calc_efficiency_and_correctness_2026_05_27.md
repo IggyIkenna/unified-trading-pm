@@ -164,7 +164,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       **VERDICT**: 28-38h total. Not schedulable as a P2 ad-hoc fix — needs a dedicated migration window + operator
       coordination (reader layout change affects mtf + cross_instrument live path). File a successor active plan when
       features end-to-end + correctness is GREEN per operator priority order (see 1.4 note). Investigation complete.
-- [ ] [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
+- [x] ✅ [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
       successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest
       scope assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
       (candlestick_patterns / momentum / moving_averages / oscillators / technical_indicators / volatility_realized /
@@ -179,6 +179,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       priority order is (1) features-service end-to-end correct, then (2) function correctness, then (3)
       colocation/parallelism optimisations to eliminate IO waste. This is a (3) item — don't pull forward; revisit after
       end-to-end + correctness ship.
+      **ACK (2026-05-30 slot-2)**: Operator direction confirmed. No code shipped — deferred per priority order.
+      Successor plan `colocated_feature_pipeline_in_memory_handoff_TBD.md` to be filed when (1)+(2) are GREEN. — PM@b4be0743
 - [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
       `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
       `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
