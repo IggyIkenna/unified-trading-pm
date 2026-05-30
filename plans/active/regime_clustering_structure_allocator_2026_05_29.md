@@ -135,10 +135,12 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   **DONE 2026-05-30** — features-service@13421644: new module `features_service/strategy_pnl_archetype/rolling_compute.py`.
   PIT window [target_date−N, target_date−1]; outputs pnl_realized_Nd, pnl_unrealized_last, n_trades_Nd, sharpe_Nd,
   drawdown_Nd (null < min_periods=5). 12 unit tests; basedpyright 0 errors.
-- [ ] [FEATURES] P2. **PnL vectorisation = one sub-vector per archetype** (each archetype contributes its own
+- [x] [FEATURES] P2. **PnL vectorisation = one sub-vector per archetype** (each archetype contributes its own
   PnL/Sharpe/drawdown dims) concatenated into the market-state feature vector, so the cluster space sees *how each
   archetype is performing now* alongside conventional market features. This is the explicit "PnL-per-archetype as
   features" lever — it enriches regime discovery beyond price/fundamental features alone.
+  `vectorise_pnl_sub_vectors()` in rolling_compute.py: pivots tall→wide, {archetype}_{metric} columns, null for absent
+  archetypes. 5 unit tests; basedpyright 0 errors. Pushed features-service 936032d0.
 - [ ] [TEST] P2. PIT test: assert every `strategy_pnl_archetype` value is knowable strictly before its row `timestamp`
   (extend `LookaheadBiasError` coverage).
 
