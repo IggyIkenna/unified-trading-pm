@@ -77,9 +77,10 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 - [x] ✅ DONE [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs
       what needs the paid key: Tardis free = 1st-of-month days + most-recent rolling window; paid = all other historical
       dates. Persist as a small SSOT (e.g. UAC registry or a config the launcher reads) keyed by venue.
-- [ ] [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
+- [x] ✅ [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
       free-fetchable date set (or skip launch entirely) instead of spinning at 100% CPU on 401s. Surfaces in the UI plan
-      (see deployment_ui plan §venue-key-status).
+      (see deployment_ui plan §venue-key-status). — UAC@362aa1a + UTL@16f4b1f2 + MTDS@828b0bc + deployment-service@88ae990:
+      TARDIS_FREE_ONLY=1 VM metadata gate in TickDataHandler; TARDIS_KEY_CHECK + FREE_ONLY launcher flags; 5 unit tests green.
 
 ## §4 — Fleet VM operational fixes (from the 25-VM audit) (P0–P2)
 
