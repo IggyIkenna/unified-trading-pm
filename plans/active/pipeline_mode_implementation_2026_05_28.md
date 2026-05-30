@@ -120,14 +120,14 @@ impact, no walk needed now.
       input data. Fixed stage0 \_get_sides() to use \_is_batch_mode() / \_is_live_mode() predicates; updated all 15
       tests to use real PipelineMode string values (batch_tardis, live_websocket). —
       batch-live-reconciliation-service@cf50965
-- [ ] [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
+- [x] ✅ [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
       chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
       tick.
-      **[BLOCKED-PLAYWRIGHT]**: Code shipped — deployment-api@0ae5230 (pipeline_mode filter in /turbo), unified-trading-system-ui@ee457621
+      Code shipped — deployment-api@0ae5230 (pipeline_mode filter in /turbo), unified-trading-system-ui@ee457621
       (10 pipeline_mode chips in DataStatusFiltersUpper, pipeline_mode wired into context + fetchData + getDataStatusTurbo call).
-      Regression spec: `tests/e2e/data-status-pipeline-mode-filter.spec.ts` (4 L2 tests).
-      Checkbox requires `pw:L2 ✓ | regression: tests/e2e/data-status-pipeline-mode-filter.spec.ts` evidence from a
-      UI-capable slot running `npx playwright test --project=chromium tests/smoke/`.
+      **pw:L2 ✓ — all 4 tests pass** @ unified-trading-system-ui@e1e3b9a7: fixed test selector bug (button:has-text("Clear")
+      matched "Clear Cache" header button first; changed to getByRole("button", { name: "Clear", exact: true })).
+      Regression spec: `tests/e2e/data-status-pipeline-mode-filter.spec.ts` 4/4 passed.
 - [x] ✅ [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
       dimension in the catalogue parquet + the published markdown matrix.
       Added `pipeline_modes: list[str]` to `TupleEntry`; `_aggregate_tuple` collects distinct sorted pipeline_mode values from filtered manifest slice; `_build_entry` includes them; `render_markdown` adds Pipeline Modes column. Pre-Phase-2 manifests without the column yield `[]`. 3 new tests (13/13 pass). — unified-api-contracts@ab7d0121
