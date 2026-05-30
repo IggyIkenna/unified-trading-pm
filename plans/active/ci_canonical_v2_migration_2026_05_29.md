@@ -199,15 +199,19 @@ alone doesn't escape it.
 Apply the same v2 recipe to alerting-service, ml-service, features-service, batch-live-reconciliation-service,
 execution-service, instruments-service, deployment-ui. Order by risk (lowest first):
 
-- [ ] [SCRIPT] P1. alerting-service — already has `workspace-qg.yml` and `workspace-qg-v2.yml` from May-27 Option B
+- [x] ✅ [SCRIPT] P1. alerting-service — already has `workspace-qg.yml` and `workspace-qg-v2.yml` from May-27 Option B
       attempt. Add v3 caller pointing at v2 callee; rotate branch protection.
-- [ ] [SCRIPT] P1. ml-service — straight v2 application
-- [ ] [SCRIPT] P1. features-service
-- [ ] [SCRIPT] P1. batch-live-reconciliation-service
-- [ ] [SCRIPT] P1. execution-service
-- [ ] [SCRIPT] P1. instruments-service
+      **DONE (pre-existing, verified 2026-05-30)** — `quality-gates-v2.yml` already present + merged to main
+      (alerting-service@4cb4600). Branch protection already requires `quality-gates-v2`. Last 3 runs: all
+      `completed success` (run 26671817742 + 26671814846 + 26655510120). No further action needed.
+- [x] ✅ [SCRIPT] P1. ml-service — straight v2 application
+      **DONE (pre-existing, verified 2026-05-30)** — `quality-gates-v2` run 26671238677: `completed success` on main.
+- [ ] [SCRIPT] P1. features-service — no quality-gates-v2 runs found; workflow needs to be added.
+- [ ] [SCRIPT] P1. batch-live-reconciliation-service — v2 workflow exists (run 26671824109) but latest run is `failure`; investigate CI failures.
+- [x] ✅ [SCRIPT] P1. execution-service — quality-gates-v2 run 26671829905: `completed success` on main.
+- [ ] [SCRIPT] P1. instruments-service — v2 workflow exists (run 26671835898) but latest run is `failure`; investigate CI failures.
 - [ ] [SCRIPT] P1. deployment-ui — note: uses `ui-quality-gates.yml` not python-quality-gates; v2 here means
-      ui-quality-gates-v2.yml + GCP_SA_KEY secret path verified
+      ui-quality-gates-v2.yml + GCP_SA_KEY secret path verified. Latest run 26671220021: `failure` (23s — likely config issue).
 - [ ] [VERIFY] P1. workspace-qg green across all 10 repos via
       `gh run list --repo <each> --workflow quality-gates-v2 --limit 1` per repo
 
