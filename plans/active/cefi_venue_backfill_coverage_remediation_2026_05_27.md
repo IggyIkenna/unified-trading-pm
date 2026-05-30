@@ -122,8 +122,10 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       cap RSS for deribit book_snapshot_5 before relaunch. — MTDS@5b6c584 + deployment-service@ec8042d:
       added _deribit_book_runner (max_concurrent=4, env TARDIS_DERIBIT_BOOK_MAX_CONCURRENT); default 16-slot runner
       still used for all other venues. QG exit 0.
-- [ ] [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
-      forward-poll failure.
+- [x] ✅ [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
+      forward-poll failure. Root cause: `launch-footystats-forward-poll.sh` passed `VM_ASSET_GROUP=SPORTS` (uppercase)
+      → `InstrumentsHandler.preflight()` raised "Unknown asset_group 'SPORTS'" → immediate exit 1. Fix landed in
+      deployment-service@9ded013 (lowercase `VM_ASSET_GROUP=sports`). See also §6G for full diagnosis. — deployment-service@9ded013
 - [ ] [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
       GCE still RUNNING): ensure `VM_SHUTDOWN_ON_COMPLETION` actually deletes the instance, not just exits the process.
 - [x] ✅ [AGENT] P1. **tradfi reprocess**: the 5 tradfi MDPS VMs (deleted 2026-05-27) ran the pre-2026-05-26 OHLCV adapter
