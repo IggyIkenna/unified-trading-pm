@@ -253,9 +253,16 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [SCRIPT] P1. `market-tick-data-service/scripts/backfill_tradfi_source_column.py` — single-walk pass over existing
       TradFi parquets, write `source='databento'` row column, increment `schema_version` to match Phase 3.
       MTDS@f2369d0 — idempotent, parallel, --dry-run mode, log_event instrumentation.
-- [ ] [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
+- [x] ✅ [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
       manifest → snapshot `_index/snapshots/pre_dual_source_2026_05_28.parquet` → run backfill → verify divergence=0 →
       resume. (BLOCKED until MASSIVE_API_KEY in Secret Manager — task -001.)
+      **DRAIN RESULT (2026-05-30 slot-2)**: MASSIVE_API_KEY confirmed in GCP SM. No raw-tick writes since 2026-05-18
+      (no active MTDS TradFi writer). 4 zombie mdps-backfill-tradfi VMs stopped. Snapshot taken (16.5MB →
+      `_index/snapshots/pre_dual_source_2026_05_28.parquet`). Backfill ran: 4106 blobs / 511,164,547 rows
+      backfilled with `source='databento'`, 0 failures. `mode=local` fix shipped as MTDS@401f79d. Manifest
+      reconsolidated: 579,372 rows. AWS SM not verifiable from this VM role (orchestrator-epic-role lacks
+      secretsmanager permissions) — AWS TradFi jobs not running per GCS write audit. Resume: Cloud Run service
+      (mtds-tradfi) manages live collection; no GCE resume needed.
 - [x] ✅ [VERIFY — BLOCKED-DEPENDENCY, deferred] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
       `source ∈ {"databento", "yahoo", "barchart"}` (Massive parquets first appear post-Phase-4 dispatch).
       **PRE-AUDIT (2026-05-30 slot-2)**: Sampled 3 TradFi parquets (IBIT 2026-01-21, ETHA 2026-01-21, CME E1AG6 2026-01-21) +
