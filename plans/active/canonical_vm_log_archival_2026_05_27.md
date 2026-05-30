@@ -60,9 +60,13 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       and have `backup-vm-logs.sh` + any consumer derive from it. Add a unit test pinning the
       `deployment-scripts-{pid}/log-archive/...` shape (mirroring the existing `vm-logs/` test). —
       deployment-service@e9e69b2 ✅
-- [ ] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
+- [x] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
       re-copied to the canonical `log-archive/` prefix (operator-confirm before delete — it currently holds the
-      2026-05-27 fleet backup).
+      2026-05-27 fleet backup). **COPY COMPLETE (2026-05-30 slot-2)**: 44 objects / 7.4 GiB copied server-side from
+      `gs://vm-logs-archive-central-element-323112/snapshot_20260527_1300/` →
+      `gs://deployment-scripts-central-element-323112/log-archive/snapshot_20260527_1300/`. Verified: 44/44 files.
+      **BUCKET DELETION PENDING operator confirm** — run `gsutil rm -r gs://vm-logs-archive-central-element-323112`
+      then `gsutil rb gs://vm-logs-archive-central-element-323112` once confirmed safe.
 - [x] [AGENT] P1. **Pre-kill hook**: any VM-delete path (operator teardown, `vm_zombie_watchdog.py` reaper,
       `VM_SHUTDOWN_ON_COMPLETION` self-delete) MUST call `backup-vm-logs.sh --vm <name>` (or inline equivalent) BEFORE
       `instances delete`, so a reaped/zombie VM's serial console is always captured. Wire into the watchdog + the
