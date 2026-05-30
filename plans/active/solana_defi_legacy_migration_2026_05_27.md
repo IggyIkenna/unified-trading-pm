@@ -102,8 +102,14 @@ source:
   (~8–12h sequential at ~3–7s/shard). Best run with `--max-dates` chunks or backgrounded on a VM. CLI: `--dry-run` /
   `--only-protocol` / `--only-data-type` / `--max-dates` for control. Manifest emission deferred to Gate 3 consolidator
   (no explicit per-shard emit in the migration script — the consolidator discovers newly-written files).
-- [ ] [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
-      venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets.
+- [x] ✅ [SCRIPT] P1. **Gate 3 — manifest reconcile + verify**: consolidate canonical bucket manifests; confirm Solana
+      venues now show `captured` rows per (date, venue, chain, instrument_type); sample-inspect parquets. **DONE
+      2026-05-30** — MTDS@86d0113. `scripts/gate3_solana_manifest_reconcile.py` scanned both split buckets + wrote
+      per-VM shards + consolidated. lending-indices: **2,811 SOLANA rows** (KAMINO=1,259 SOLEND=1,039 MARGINFI=513),
+      `instrument_type=solana_lending`, 2022-11-01→2026-05-28, all `captured`. dex-pools: **1,555 SOLANA rows**
+      (ORCA=529 RAYDIUM=528 PHOENIX=497 KAMINO=1), `solana_amm_pool`+`solana_vault`, 2022-11-01→2026-05-28, all
+      `captured`. Sample-inspect confirmed correct `instrument_id` format (`VENUE-SOLANA:SOLANA_LENDING:<market_id>`)
+      + `ts_event=midnight UTC`. Kamino vault count=1 (not 1,199 expected) — Bug-K backfill rerun pending per plan.
 - [~] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
   (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest rows
   in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains. **`lst_rates/` DONE
