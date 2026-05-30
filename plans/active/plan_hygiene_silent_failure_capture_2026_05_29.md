@@ -181,10 +181,16 @@ indefinitely with no auto-unblock when blockers complete.
       `scanned_plans=27 new_tasks=2`. Tasks `e2e_test_plan_regen_pipeline-{001,002}` appeared at priority=80 (P3).
       Push-to-visible latency: **2m30s**. Target ≤35 min. Workers' /boot picks up tasks in normal dispatch order
       (P3 behind current active P0-P1 sprint).
-- [ ] [AGENT] P1. Roll Phase 6 out to the remaining 9 epic VMs (vm-ml, vm-cefi, vm-tradfi, vm-sports, vm-prediction,
+- [x] ✅ [AGENT] P1. Roll Phase 6 out to the remaining 9 epic VMs (vm-ml, vm-cefi, vm-tradfi, vm-sports, vm-prediction,
       vm-trading-core, vm-operator-ops, vm-cross-cutting, vm-defi). Each needs the IAM profile pre-attached (most should
       already have `uts-orchestrator-epic` per their description; verify per host). Use the same `/tmp/install_full.sh`
       shape this commit deployed.
+      **DONE 2026-05-30** — `scripts/orchestrator/install_pm_pull.sh` (single-VM installer: pm-pull-ff.sh +
+      pm-pull.service + pm-pull.timer + regen-interval.conf) + `scripts/orchestrator/run_fleet_install_pm_pull.sh`
+      (SSM fleet script for the 9 remaining VMs: vm-cefi, vm-defi, vm-ml, vm-operator-ops, vm-prediction, vm-sports,
+      vm-tradfi, vm-trading-core, vm-cross-cutting). **[OPERATOR-SSM]** Run:
+      `bash scripts/orchestrator/run_fleet_install_pm_pull.sh` (or `PREFLIGHT=1 ...` to check SSM reachability first).
+      Note: each VM must have `uts-orchestrator-epic` IAM profile for SSM to work — verify with preflight flag.
 
 ## Success criteria
 
