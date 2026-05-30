@@ -48,7 +48,7 @@ Three independent layers applied in order. A breach at any layer vetoes the stru
 |---|---|---|
 | **Risk gates** (pre-score) | `RiskGates` in `discrete_structure_allocator.py` | |Δ|, |Vega|, |Γ| caps; premium floor/ceiling |
 | **Portfolio gate** (post-construction) | `portfolio_risk_gate.py` | Margin ceiling, per-tenor vega/gamma, liquidity cost |
-| **Analog execution gate** (Phase 5) | `analog_execution_gate.py` | kNN of historical analogs; size down/veto on bad execution history |
+| **Analog execution gate** (Phase 5) | `analog_gate.py` `KnnAnalogGate` | kNN of historical analogs; size down/veto on bad execution history; cluster-filtered |
 
 **Slippage model**: `options_slippage.py` — size/depth-aware. Legs that walk past top-of-book depth are penalised by `price_impact_per_contract × qty_beyond²`. Plugged into `DiscreteStructureAllocator` via `slippage_fn`.
 
@@ -108,7 +108,21 @@ Three independent layers applied in order. A breach at any layer vetoes the stru
 | **Construction** | `DiscreteStructureAllocator` | Which real contracts? What size? | Edge objective (not tracking-error minimisation); dollar-scaled constraints; discrete from the start |
 | **Risk** | `RiskGates` + `PortfolioRiskGate` + `AnalogExecutionGate` | Does it breach a hard limit? | Model-independent, unconditional veto; analog gate conditions on exogenous execution quality |
 
-The three layers are **always executed in order**. A veto at any layer overrides all lower-layer decisions. No exception for "high-conviction" regime signals.
+The three layers are **always executed in order** (enforced by `StructurePipeline`). A veto at any layer overrides all lower-layer decisions. No exception for "high-conviction" regime signals.
+
+```python
+# structure_pipeline.py — enforced step order (cannot be reordered)
+candidates = allocator.solve(regime_context)          # Phase 3
+for candidate in candidates:
+    analog = analog_gate_fn(candidate, regime_context)  # Phase 5
+    if not analog.passes: continue
+    pg_ok, _ = portfolio_gate.allows(candidate, snapshot)  # Phase 4b (LAST)
+    if not pg_ok: continue
+    return PipelineResult(candidate=candidate)
+```
+
+`regime_context` (cluster_id, soft_probs, feature_vector) flows to phases 3 and 5 only.
+The `PortfolioRiskGate` is intentionally blind to conviction.
 
 ---
 
@@ -123,7 +137,8 @@ The three layers are **always executed in order**. A veto at any layer overrides
 | Greek computation | `greeks-service` | `kernels/black_scholes.py` `BlackScholesKernel` |
 | Slippage model | `strategy-service` | `options_slippage.py` `OptionsSlippageModel` |
 | Portfolio gate | `strategy-service` | `portfolio_risk_gate.py` `PortfolioRiskGate` |
-| Analog execution gate | `strategy-service` | `analog_execution_gate.py` `AnalogExecutionGate` |
+| Analog execution gate (kNN) | `strategy-service` | `analog_gate.py` `KnnAnalogGate` — cluster-filtered; slippage/win-rate veto; soft-Kelly scale |
+| Gate pipeline | `strategy-service` | `structure_pipeline.py` `StructurePipeline` — enforced Phase 3→4b→5 ordering |
 | Timeframe fusion | `strategy-service` | `timeframe_fusion.py` `fuse_cluster_assignments()` |
 | Cluster greek targets | `strategy-service` | `cluster_greek_targets.py` `fit_cluster_greek_targets()` |
 | Listed chain | `market-tick-data-service` | `adapters/deribit.py` + `adapters/tardis.py` |
