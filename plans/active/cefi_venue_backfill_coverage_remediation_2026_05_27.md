@@ -317,8 +317,11 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       — unified-trading-library@de00a08d (2026-05-26) | Already fixed: `resource_profiler._dump_traceback_all_threads`
       now uses `tempfile.TemporaryFile` (has a real fileno) instead of `io.StringIO` (no fileno). Failure path
       demoted to `debug` so residual failures don't flood logs. No VM bootstrap changes needed.
-- [ ] [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
+- [x] ✅ [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
       intended; if so, silence the WARNING; if not, ship the file.
+      — deployment-service@54a1644 | Confirmed: `{}` defaults are functional (service runs fine without file). VMs don't
+      have PM checked out → `WORKSPACE_ROOT` not set. Downgraded `logger.warning` → `logger.debug` at
+      `config_loader.py:116`. Set `RUNTIME_TOPOLOGY_PATH` or `WORKSPACE_ROOT` to enable full topology config.
 
 ### §6I — Manifest/migration defects (2026-05-27, ikenna GCS spot-check of cefi `_index/availability_index.parquet` + raw_tick_data on disk)
 
