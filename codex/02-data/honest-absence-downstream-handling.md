@@ -163,6 +163,132 @@ workspace-wide gate that "handles" missing data — by design.
   placeholders to mask path-prefix drift. Deleted 2026-05-05.
 - **2026-05-06 (this doc)** — sports `data_available_at` rename + `_create_full_day_empty_output` consumer audit
   surfaced the need for a workspace-wide downstream-consumption SSOT separate from the write-side manifest doc.
+- **2026-05-27 (cefi remediation §1 + §2)** — OKX Tardis `code 140` (request outside expiry window) misclassified as
+  download error; ~1,250 spurious 400s per VM per window. Operator directive: "if the issue is of 401, we should not
+  mark that one as honest-absence — that will make the data look corrupt."
+
+---
+
+## Expiry-window filtering contract (CeFi dated futures — codified 2026-05-27)
+
+### Rule
+
+For dated futures and options, every (instrument, date) pair MUST be filtered against the instrument's availability
+window **before** the request is issued to Tardis (or any other historical data source). Never request a shard that is
+outside the contract's active life.
+
+### Correct absence classification
+
+| Condition | Manifest status | Reason |
+|-----------|----------------|--------|
+| `date < InstrumentRecord.available_from` — instrument not yet listed on the requested date | `empty_confirmed` | `EXPECTED_INSTRUMENT_NOT_LISTED` |
+| `date > InstrumentRecord.available_to_datetime` — contract expired before the requested date | `empty_confirmed` | `EXPECTED_INSTRUMENT_DELISTED` |
+| In-window date, paid Tardis key expired (HTTP 401) | `attempted_failed` | `CLASSIFIED_VENUE_ERROR` — see §401 rule below |
+| In-window date, Tardis `code 140` returned at request time (should not happen post-fix) | `empty_confirmed` | `EXPECTED_INSTRUMENT_DELISTED` |
+
+### Source of window bounds
+
+`InstrumentRecord.available_from` / `InstrumentRecord.available_to_datetime` — populated from Tardis
+`availableSince` / `availableTo` at universe-build time by `instruments-service`. Do NOT re-fetch Tardis per tick
+request; load once per run. Venues covered: OKX (dash-parser `YYMMDD`), Deribit (DDMMMYY + Tardis expiry), Kraken
+futures (underscore `FI_XBTUSD_YYMMDD` fallback added `instruments-service@ffb8192`).
+
+### Anti-pattern
+
+Issuing the request anyway and letting Tardis return an error is **not acceptable** — it burns quota, floods logs with
+vendor 400s, and makes the backfill log look like a failure when it's a calendar truth. Pre-filter in the expansion
+step (caller of `tick_data_handler`) before any HTTP call. Shipped: `market-tick-data-service@91e3df03`.
+
+---
+
+## 401 ≠ honest absence (operator directive 2026-05-27)
+
+> "if the issue is of 401, we should not mark that one as honest-absence — that will make the data look corrupt."
+
+### Rule
+
+**HTTP 401 (expired or missing API key) MUST NOT be recorded as `empty_confirmed` or `expected_unattempted`.** The data
+exists and is downloadable; it is blocked on a credential. Recording it as honest absence makes the manifest lie about
+coverage and causes downstream consumers (reconcilers, feature builders, strategy engines) to treat a credential failure
+as a real data gap.
+
+### Correct action for 401
+
+Record as `attempted_failed[CLASSIFIED_VENUE_ERROR]`. The `error_detail` field SHOULD carry the HTTP status code (401)
+so dashboards and alerting can distinguish credential failures from other transient errors.
+
+### Downstream treatment
+
+Consumers encountering `attempted_failed` for a CeFi shard on a date that should have paid data MUST treat it as a
+pending-download situation, not as an honest absence:
+
+- **Reconcilers**: flag the cell as `PENDING_DOWNLOAD` in their report; do not propagate as `empty_confirmed`.
+- **Feature builders**: exclude from window (same as any `attempted_failed`) — do not forward-fill.
+- **Alerting**: fire a `CREDENTIAL_FAILURE` alert if the count exceeds a daily threshold.
+
+### The three-way distinction for "no data" in CeFi backfill
+
+| Situation | Manifest status | Reason | Consumer reads as |
+|-----------|----------------|--------|------------------|
+| Date outside contract expiry window | `empty_confirmed` | `EXPECTED_INSTRUMENT_DELISTED` | Calendar truth — skip in all consumers |
+| Date before instrument listing | `empty_confirmed` | `EXPECTED_INSTRUMENT_NOT_LISTED` | Calendar truth — skip |
+| Paid-key expired / missing (HTTP 401) | `attempted_failed` | `CLASSIFIED_VENUE_ERROR` | Credential-blocked — re-attempt when key rotated |
+| Transient vendor error (5xx, timeout) | `attempted_failed` | `CLASSIFIED_VENUE_ERROR` | Retry-eligible |
+| Source returned zero rows (no error) | `empty_confirmed` | `SOURCE_RETURNED_ZERO` | Source truth — data does not exist for this shard |
+
+---
+
+## §6A honest-absence-violation classes (anti-patterns — codified 2026-05-27)
+
+These three anti-patterns were named in the CeFi remediation audit and apply workspace-wide.
+
+### Class 1 — In-flight shard failure with no manifest marker
+
+**Description**: an adapter failure (connection timeout, Arrow schema error, stream truncation) produces a `WARNING`
+log line but the shard exits without calling `record_empty()` or `record_failed()`. The manifest row is never written
+(or is written as `captured` with 0 rows from a prior run).
+
+**Harm**: the shard is invisible to reconcilers; coverage reports under-count the asset_group; orchestrators re-attempt
+on the next VM run, but manifest state is inconsistent.
+
+**Correct fix**: every in-flight failure handler MUST call `record_failed()` with a typed reason before propagating or
+swallowing the exception. Shard-level failure isolation (no `raise` in per-venue loops) means the handler is always
+reachable. Classification:
+- Connection timeout / network error → `CLASSIFIED_VENUE_ERROR` (via `classify_venue_error()`)
+- Empty CSV / zero-byte stream → `SOURCE_RETURNED_ZERO` or `expected_unattempted[EXPECTED_INSTRUMENT_DELISTED]`
+  depending on whether the instrument was alive on the date
+
+**Shipped fix**: `market-tick-data-service@774db33` (Tardis stream adapter).
+
+### Class 2 — Silent zero (source returns 0 rows, no `record_empty`)
+
+**Description**: the source adapter returns an empty DataFrame (no rows, no error) and the writer calls
+`record_captured(...)` with 0 rows — or silently skips the manifest call. The manifest shows `captured` but the parquet
+is empty or missing.
+
+**Harm**: downstream features compute on empty data (NaN or divide-by-zero); coverage metrics show 100% when the data
+is absent; reconcilers miss the gap.
+
+**Correct fix**: after calling the source:
+1. If `len(df) == 0` AND the instrument is expected to be alive (IS catalog says alive): call
+   `record_failed(UPSTREAM_SUBGRAPH_ZERO)` (DeFi subgraphs) or emit `ADAPTER_FETCH_FAILED` + `record_failed(CLASSIFIED_VENUE_ERROR)`.
+2. If `len(df) == 0` AND the instrument is known absent (expired, delisted, pre-listing): call
+   `record_empty(reason=EXPECTED_INSTRUMENT_DELISTED / EXPECTED_INSTRUMENT_NOT_LISTED)`.
+3. If `len(df) == 0` AND the source legitimately returned nothing (deprecated subgraph, source gap): call
+   `record_empty(reason=SOURCE_RETURNED_ZERO)`.
+4. NEVER call `record_captured(...)` with 0 rows for an instrument that is expected to be alive.
+
+### Class 3 — Captured-0-row (manifest `captured`, 0-row parquet exists)
+
+**Description**: manifest row has `capture_status="captured"` but the parquet file written has 0 data rows (or
+`row_count=0` in the manifest). This is distinct from Class 2 — the write call was made, just with empty data.
+
+**Harm**: consumers read the parquet, get 0 rows, and may fail silently (features output NaN, rolling windows
+under-count, ML training excludes the date as if the market was closed).
+
+**Correct fix**: `record_captured()` in UTL raises `CapturedZeroRowsError` when `row_count == 0` and the shard is
+not an explicit "zero-activity confirmed" type. Writers MUST pass `row_count=len(df)` to trigger this guard. If the
+instrument is live and data was expected, treat as Class 2 and call `record_failed` instead.
 
 ---
 
