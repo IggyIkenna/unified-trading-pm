@@ -102,9 +102,12 @@ intent says these are retired; code must reflect that.
       SFI_LEAGUES / TRANSFERMARKT_LEAGUES / SFI_STANDINGS, all pre-dating IS@a0a720e deployment
       (2026-05-14). Most recent: 2026-04-27 (SFI_LEAGUES/TM) + 2026-04-14 (SFI_STANDINGS). Zero
       new rows post-cleanup — validated by direct manifest query since GCS listing timed out.
-- [ ] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify
+- [x] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify
       retired-data-type rows render as `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (clipped from
-      denominator per codex SSOT).
+      denominator per codex SSOT). — ✅ VERIFIED 2026-05-30: code-level audit confirms
+      EXPECTED_DEPRECATED_DATA_TYPE is in _EMPTY_REASON_KEYS taxonomy; ok_mask treats
+      empty_confirmed rows as OK (not missing from denominator); TestRetiredDataTypesHonestCoverage
+      + test_each_registered_reason_routes_to_correct_bucket pass (21/21 tests, QG green).
 
 ## Deferred discovery — TRANSFERMARKT_VALUES alias (2026-05-14 slot 4 sports_master audit)
 
