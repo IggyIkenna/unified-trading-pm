@@ -288,8 +288,9 @@ cross_instrument-9-groups). Caveat: isolated per-group runs slightly over-count 
 columns before cross-group dedup) — calendar/cross_instrument are upper-ish of the same order. Gated families add an
 estimated ~1,069+ base features (volatility 70 + onchain 71 + sports 928 declared floors) once backfill + creds land.
 
-- [ ] 🟠 [DATA-SURFACE] P2. **5 cross_instrument groups need RAW normalized book/trade schema** (book_depth_bands,
+- [x] ✅ [DATA-SURFACE] P2. **5 cross_instrument groups need RAW normalized book/trade schema** (book_depth_bands,
       liquidity_walls, liquidation_clusters, flow_interaction, composite_sr) — they require
-      `asks/bids/mid_price/side/     quote_volume/instrument_key`, which the OHLC-resampled processed-candle
+      `asks/bids/mid_price/side/quote_volume/instrument_key`, which the OHLC-resampled processed-candle
       `DataLoader` does not emit. Same class as the volatility raw-chain surface: a raw-data read path distinct from
       processed candles. Provenance: per-family feature-count measurement 2026-05-25.
+      — features-service@ab3375c8 | CrossInstrumentRawDataLoader + batch_handler Phase 1b + 14 unit tests
