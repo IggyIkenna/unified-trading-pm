@@ -313,8 +313,10 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       [cosmetic now, diagnostic-loss later]
       **Already shipped**: UTL `resource_profiler._dump_traceback_all_threads` now writes to `tempfile.TemporaryFile`
       (real fileno) instead of `io.StringIO`; failure log demoted to `debug`. unified-trading-library@de00a08d.
-- [ ] [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
+- [x] [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
       intended; if so, silence the WARNING; if not, ship the file.
+      **Confirmed defaults intentional.** Only prediction launchers include the file; other VMs operate on defaults
+      without issues. Demoted `logger.warning` → `logger.debug` in `topology_reader.py`. UTL@574f56ae.
 
 ### §6I — Manifest/migration defects (2026-05-27, ikenna GCS spot-check of cefi `_index/availability_index.parquet` + raw_tick_data on disk)
 
