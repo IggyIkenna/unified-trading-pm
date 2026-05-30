@@ -187,7 +187,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - UAC@f7cf8828
 - [x] ✅ [UAC] P1. Add Massive to UAC source-string registry test fixture; assert closed-set tests pass.
       62 tests pass: test_source_priority (28) + test_source_priority_pipeline_mode (14) + test_pipeline_mode (20).
-- [ ] [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
+- [x] ✅ [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
+      Fixed N813 lint error (DivergenceKind alias renamed facade_dk → DivergenceKindFacade) + ruff auto-fix blank line.
+      QG passes: 452s, all gates green. UAC@6c3be2e
 
 ### Phase 2 — Multi-source merge logic (3 days — the deferred plan slot)
 
