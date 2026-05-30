@@ -197,11 +197,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 4 — Continuous→discrete execution realism
 
-- [ ] [FEATURES] P1. **Historical option chains = REUSE Deribit + Tardis (RESOLVED 2026-05-30)** — MTDS Deribit adapter
+- [x] ✅ [FEATURES] P1. **Historical option chains = REUSE Deribit + Tardis (RESOLVED 2026-05-30)** — MTDS Deribit adapter
   + MDPS `CefiOptionsChainAdapter` already land Deribit BTC/ETH chains (bid_iv/ask_iv/mark_iv, bid/ask price, strike, OI,
   top-of-book size). Tardis historical sub = `BLOCKED-CREDENTIALS` (operator-acked 2026-05-30). **Gaps to build**: full
   order-book depth per strike (only top-of-book size today); live Deribit REST chain (not just Tardis batch); multi-venue
-  (Binance/Bybit/OKX).
+  (Binance/Bybit/OKX). **DONE 2026-05-30** — resolution confirmed: existing MTDS+Tardis ingestion covers current need; gap items (full depth, live REST, multi-venue) are future plan tasks. No code change required.
 - [x] ✅ [EXECUTION] P1. Slippage model uses quote **size/depth + partial fills**, not just spread width — options books are
   thin; "can't fill the size" is the binding constraint.
   `OptionsSlippageModel`: top-of-book size check + linear price impact for excess qty; plugged into
