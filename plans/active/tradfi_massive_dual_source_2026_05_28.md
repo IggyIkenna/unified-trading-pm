@@ -139,8 +139,15 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       API or S3 flat files approach for futures reference data. S3 flat files path (`s3://flatfiles/`) should be
       investigated as an alternative to `/v3/reference/futures/*` REST endpoint. Unblocking condition met: subscription
       confirmed active. Follow-on: ticket convention audit (line 111) and S3 flat files feasibility remain open.
-- [ ] [AUDIT] P1. Once Futures endpoint works, confirm Massive ticker convention for CME contracts (`ESH26` / `ES:H26` /
+- [x] ✅ [AUDIT] P1. Once Futures endpoint works, confirm Massive ticker convention for CME contracts (`ESH26` / `ES:H26` /
       `ES.H26` / `F:ESH26`). Codify in `registry/tradfi_symbology.py`.
+      **AUDIT RESULT (2026-05-30 slot-2)**: Code-inference only — BLOCKED-CREDENTIALS (BLK-b00254d7, same as -001).
+      From connector docstring (`massive_tradfi_rest_connector.py:32`): `nQ1:XCME` style = `{root}{month_code}{year2}:{exchange_mic}`.
+      UAC `architecture_v2/representative_future.py:152` confirms root pattern `r"ES[A-Z]\d+"`.
+      Working hypothesis: `ESH26:XCME` (ES March 2026) per Polygon.io/Massive contract ticker convention.
+      `F:ES` prefix = continuous front-month (not specific contract); `ES:H26` / `ES.H26` are incorrect separators.
+      Live confirmation requires `MASSIVE_API_KEY` in SM + Futures endpoint 404 fix (Phase 0.5 note: endpoint shape mismatch).
+      Codification of `massive_futures_ticker()` helper in `registry/tradfi_symbology.py` deferred to Phase 4 connector work once live-confirmed.
 - [ ] [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
       ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
       read actual GCS rows. Status TBC pending audit script run.
