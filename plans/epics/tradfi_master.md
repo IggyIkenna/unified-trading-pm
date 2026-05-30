@@ -16,6 +16,7 @@ related_plans:
   - ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
   - ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
   - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
+  - ../active/tradfi_massive_dual_source_2026_05_28.md
 ---
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
