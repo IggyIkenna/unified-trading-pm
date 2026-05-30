@@ -300,16 +300,19 @@ option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UT
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
 preserved in v8.
 
-**Schema v8 is live as of Phase 4.DEFAULT-REMOVAL (UTL@`547ff3c`, 2026-05-12).** `MANIFEST_SCHEMA_VERSION = 8` in
-`manifest_writer.py:131`. The `pipeline_mode=` default is removed (explicit-or-fail) from all 6 public `record_*`
-methods. The 3 v8 emission kwargs (`service_emission_state=` / `last_emission_decision_at=` /
-`expected_window_completeness_fraction=`) still accept `None` (defaults remain) pending an emission-policy callsite
-sweep across MTDS + instruments-service (tracked as deferred follow-up in Phase 4). `read_availability_index()`
-backfills missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion cutoff. The runtime SSOT
-lives in `unified-trading-library/unified_trading_library/manifest_writer.py`.
+**Schema v9 is live as of 2026-05-30 (UTL@`c7bfa427`).** `MANIFEST_SCHEMA_VERSION = 9` in
+`manifest_writer.py`. v9 adds the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below).
+All prior v8 semantics are unchanged.
+
+**Schema v8** (UTL@`547ff3c`, 2026-05-12): `MANIFEST_SCHEMA_VERSION = 8`. The `pipeline_mode=` default was removed
+(explicit-or-fail) from all 6 public `record_*` methods. The 3 v8 emission kwargs (`service_emission_state=` /
+`last_emission_decision_at=` / `expected_window_completeness_fraction=`) still accept `None` (defaults remain) pending
+an emission-policy callsite sweep across MTDS + instruments-service (tracked as deferred follow-up in Phase 4).
+`read_availability_index()` backfills missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion
+cutoff. The runtime SSOT lives in `unified-trading-library/unified_trading_library/manifest_writer.py`.
 
 ```python
-MANIFEST_SCHEMA_VERSION = 8  # v8: pipeline_mode default removed (Phase 4.DEFAULT-REMOVAL, 2026-05-12)
+MANIFEST_SCHEMA_VERSION = 9  # v9: source column added (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30)
 
 @dataclass
 class AvailabilityRecord:
@@ -382,6 +385,15 @@ class AvailabilityRecord:
     # See codex/02-data/pipeline-mode-partition.md for the full SSOT.
     # ─────────────────────────────────────────────────────────────────────
     pipeline_mode: str | None = None  # "batch_databento" | "batch_tardis" | … | "live_websocket" | None (pre-migration)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v9 — TradFi data-source tag (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30)
+    # Identifies which upstream provider produced the rows in this shard.
+    # REQUIRED for TradFi cells (category=="tradfi") — MissingSourceError
+    # raised when omitted. Non-TradFi cells default to "".
+    # Closed-set values mirror UAC SOURCE_PRIORITY source strings.
+    # ─────────────────────────────────────────────────────────────────────
+    source: str = ""                  # "databento" | "massive" | "" (non-TradFi / pre-v9 legacy)
 
     # ─────────────────────────────────────────────────────────────────────
     # v8 — emission tracking (manifest_schema_final_gate_2026_05_09)
@@ -1585,3 +1597,55 @@ with a coloured progress bar (captured / empty_confirmed / attempted_failed / ex
 
 SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
 `codex/03-deployment/data-status-ui-surface.md`.
+
+---
+
+## TradFi `source` column — v9 {#tradfi-source-column--v9}
+
+**Plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017). **Live**: UTL@`c7bfa427` (2026-05-30).
+
+### Manifest row `source` field
+
+Every `AvailabilityRecord` now carries `source: str = ""`. For TradFi cells this is the closed-set upstream provider
+string; for all other asset groups it defaults to `""` (no enforcement).
+
+| Value | Provider | When stamped |
+|-------|----------|-------------|
+| `"databento"` | Databento | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
+| `"massive"` | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4) |
+| `""` | — | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled |
+
+### Per-source `capture_status` semantics in a dual-source cell
+
+When both Databento and Massive run for the same `(venue, data_type, day)`, the manifest contains **two separate rows**
+— one per `source`. Each row carries its own independent `capture_status`:
+
+```
+(venue=NYSE, data_type=ohlcv_1m, day=2026-05-30, source=databento) → capture_status=captured
+(venue=NYSE, data_type=ohlcv_1m, day=2026-05-30, source=massive)   → capture_status=captured
+```
+
+A cell where one source succeeded and one failed:
+
+```
+(venue=NYSE, data_type=ohlcv_1m, day=2026-05-30, source=databento) → capture_status=captured
+(venue=NYSE, data_type=ohlcv_1m, day=2026-05-30, source=massive)   → capture_status=attempted_failed
+```
+
+**Honest-coverage denominator rule**: a cell counts as `captured` for coverage purposes if **at least one** source row
+has `capture_status=captured`. A cell where all source rows are `attempted_failed` counts as failed. This is the "union
+semantics" policy documented in `codex/02-data/honest-absence-downstream-handling.md`.
+
+### `MissingSourceError` gate
+
+`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted
+or empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
+written — no partial rows land in the catalogue. Non-TradFi callsites are unaffected.
+
+### QG STEP 5.64
+
+`unified-trading-library/scripts/quality-gates.sh` runs STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`
+from `unified-trading-pm/scripts/quality_gates/`) to statically enforce that every `record_captured(...)` callsite
+inside the UTL source tree carries a `source=` kwarg. Callsites that forward `source` via `**kwargs` carry the
+`# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML
+(`tradfi_source_explicit_baseline.yaml`) is empty — all UTL source callsites are already clean.
