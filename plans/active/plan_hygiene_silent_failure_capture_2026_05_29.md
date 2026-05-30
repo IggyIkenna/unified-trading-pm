@@ -129,8 +129,12 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 3 — Stale-blocker reaper (P1)
 
-- [ ] [AGENT] P1. Define the schema additions (if any) needed in the orchestrator backlog DB: confirm there is a
+- [x] ✅ [AGENT] P1. Define the schema additions (if any) needed in the orchestrator backlog DB: confirm there is a
       `blocked_on: List[task_id]` or equivalent field; if missing, add it (lightweight migration).
+      **Finding (2026-05-30)**: NO schema addition needed. `BacklogTask.prereqs.completed_tasks: list[str]` already
+      IS the `blocked_on` list — the dispatcher skips `queued` tasks whose `prereqs.completed_tasks` have any entry
+      not yet `done`. `TaskRow.queued_at` is the staleness timestamp. The reaper queries `status=queued` tasks where
+      `prereqs.completed_tasks` includes any task not `done`, with `queued_at < now-3d`. No new DB column needed.
 - [ ] [AGENT] P1. Write `scripts/orchestrator/reap_stale_blockers.py`: query backlog for tasks in `state=blocked` with
       `assigned_at >= now-3d`; for each, look up the blocker dependency. Three outcomes: - Blocker `done` or `archived`
       → auto-unblock the task; log a `docs(backlog): unblock <task> — blocker <id> resolved` entry to a daily summary
