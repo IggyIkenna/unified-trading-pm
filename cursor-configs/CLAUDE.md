@@ -264,6 +264,12 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `scripts/orchestrator/verify_fleet_prune_state.sh` to audit and
   `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
   `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
+- **Orchestrator autospawn: workers self-heal (HARD RULE codified 2026-05-30)**: `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is the
+  default on every fleet VM (enabled via `/etc/systemd/system/orchestrator.service.d/autospawn.conf`). The `AutoSpawnLoop`
+  in `server/autospawn.py` wakes a slot automatically when queue > 0 AND no active worker AND account headroom > 50%.
+  Manual SSM spawn (`/api/slots/<id>/spawn`) is only needed for cold-start of a new VM that has never had a drop-in written.
+  If a VM stays idle > 15 min with queued tasks, check that the drop-in exists and `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is
+  in the unit env. SSOT: `plans/active/autospawn_idle_vms_2026_05_30.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)

@@ -110,7 +110,7 @@ the flag via systemd drop-in + restart orchestrator. **Sequential per-VM** so a 
 
 ### Phase 4 — Codify in CLAUDE.md (small docs PR, fast-path)
 
-- [ ] [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator autospawn: workers self-heal. ORCHESTRATOR_AUTOSPAWN_ENABLED=true is the default everywhere. Manual SSM spawn is only needed for cold-start of a new VM."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator autospawn: workers self-heal. ORCHESTRATOR_AUTOSPAWN_ENABLED=true is the default everywhere. Manual SSM spawn is only needed for cold-start of a new VM."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — Added HARD RULE block under `### Other key rules` in `cursor-configs/CLAUDE.md`: autospawn default on every VM via drop-in, AutoSpawnLoop trigger contract summary, manual spawn only for cold-start, link to `plans/active/autospawn_idle_vms_2026_05_30.md`.
 - [ ] [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-autospawn.md` — the full architecture: trigger contract, cooldown, account rotation, failure modes, alerting, recovery if autospawn flaps. Collision group: none. Estimate: 0.1 AI-day.
 - [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger CI run; fix root cause if checks fail. Collision group: none. Estimate: 0.05 AI-day.
 
