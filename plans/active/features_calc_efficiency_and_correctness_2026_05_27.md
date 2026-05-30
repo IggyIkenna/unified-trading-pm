@@ -240,7 +240,7 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       refactored `base.py _add_lagged_features` 58L → 27L by extracting `_select_lag_candidates`. Result:
       `batch_handler.py` 1058 → 737L, all methods ≤48L, basedpyright 0/0/0, ruff clean. Full QG: codex-compliance 3
       violations → 1 (the remaining one is 1.7e, deferred). Runtime semantics unchanged; smoke tests pass.
-- [ ] [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
+- [x] ✅ [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
       workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
       (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in e8c8693d
       (2026-05-26) when consolidating basedpyright config into pyproject.toml; comment said "kept at pre-rollout
@@ -249,6 +249,14 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       at a time, fix the resulting errors, then next. Out of scope for today's QG-green push — surfaces as the
       codex-compliance violation but won't be cleared in a single sitting. **Operator 2026-05-28**: deferred — needs
       deeper investigation to pick a path (grind / selective / leave + document exception). Revisit later.
+      **INVESTIGATION (2026-05-30 slot-2)**: Audited `pyproject.toml` lines 148-162 — the plan understates scope: 11
+      suppressions are active (not 5): the 5 `reportUnknown*` plus `reportAttributeAccessIssue`, `reportArgumentType`,
+      `reportCallIssue`, `reportOperatorIssue`, `reportUnnecessaryComparison`, `reportUnnecessaryCast` (all "none").
+      Ran basedpyright (`mtds-venv`) against current `features_service/`: **574 errors, 1 warning** even WITH all 11
+      suppressions active. Path "grind" would require fixing 574+ errors before removing a single suppression.
+      "Selective" = identify which suppressions cover real issues vs. noise (needs per-error triage). "Leave + document
+      exception" = add a CLAUDE.md exception note and accept the deviation. Operator direction stands: deferred, revisit
+      in a dedicated session with sufficient runway to triage all 574 errors. No code changes in this pass.
 - [x] ✅ [BUG][P1] **1.7c test_orchestration_flow MagicMock leak.** — **FIXED** features@e13ad554. Root cause refined:
       not the `get_settings().base_timeframe` leak (that's at atexit, separate cross_instrument flush). The actual
       runtime fail was `OrchestrationService.process_feature_group` constructing
