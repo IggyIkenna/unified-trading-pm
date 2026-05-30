@@ -144,10 +144,11 @@ operator intervention.
       **DONE 2026-05-30** — `scripts/orchestrator/apply_resource_limits.sh` written. Writes
       `/etc/systemd/system/orchestrator.service.d/resource-limits.conf` with `MemoryHigh=48G MemoryMax=56G TasksMax=10000`.
       Sized for m8i.4xlarge (64 GB): soft ceiling 75%, hard ceiling 87.5%. daemon-reload + restart. Idempotent.
+      Also added to `scripts/orchestrator.service` template @ agent-orchestrator@057f860.
       **[OPERATOR-SSM]** Run on `i-0c9b283b31d6b5ca7`: `bash scripts/orchestrator/apply_resource_limits.sh`
 - [x] ✅ [AGENT] P1. Same limits on the new watchdog service (Phase 2) so it can't itself eat memory.
-      **DONE 2026-05-30** — Same script applies `/etc/systemd/system/orch-watchdog.service.d/resource-limits.conf`
-      with `MemoryHigh=256M MemoryMax=512M TasksMax=50` if `orch-watchdog.service` exists.
+      **DONE 2026-05-30** — `scripts/orch-watchdog.service` already ships with `MemoryMax=512M TasksMax=50` (Phase 2
+      delivery). Script also applies `/etc/systemd/system/orch-watchdog.service.d/resource-limits.conf` with same.
 
 ## Phase 6 — Codex SSOT updates (P2)
 
