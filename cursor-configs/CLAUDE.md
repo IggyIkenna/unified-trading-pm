@@ -140,12 +140,14 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
   `LegacyBlankErrorReasonError`. Enum:
   `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
   `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
-- Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
+- Cluster validation MANDATORY at `record_captured()` for bundled data_types. UTL raises
   `MissingClusterValidationError` if kwargs absent.
 - **TradFi `source` column (v9 schema)**: `record_captured(source=...)` REQUIRED for all TradFi writes. UTL raises
-  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. QG STEP 5.64 enforces. Multi-source union
-  semantics: if ≥1 source is `captured`, downstream treats the cell as `captured`. Source priority:
-  `select_primary_available_source()` in `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
+  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. Closed set: `"databento"` / `"massive"`.
+  QG STEP 5.64 enforces; use `# QG-allow: tradfi-source-not-applicable` for kwargs-forwarding patterns.
+  MANIFEST_SCHEMA_VERSION bumped 8→9. Multi-source union semantics: if ≥1 source is `captured`, downstream treats
+  the cell as `captured`. Source priority: `select_primary_available_source()` in
+  `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
   `codex/02-data/honest-absence-downstream-handling.md` § "Multi-source cell consumer policy". Landed:
   `tradfi_massive_dual_source_2026_05_28.md` Phase 3.
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
