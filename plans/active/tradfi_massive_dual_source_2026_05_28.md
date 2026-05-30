@@ -282,7 +282,19 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path. — PM@22a60541
 - [x] ✅ [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
       futures gap still resolved via Yahoo/Barchart). Added explicit Massive exclusion note. — PM@cb5b14dd
-- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE.
+- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE.
+      **AUDIT RESULT (2026-05-30 slot-2)**: 5-step check complete. VERDICT: **NOT YET ARCHIVABLE** — Phase 4 + Phase 5
+      items blocked on MASSIVE_API_KEY (BLK-b00254d7). Steps:
+      1. DEFERRED scan: "Live/WebSocket Massive connector" deferred in Out-of-scope section; named successor
+         `tradfi_massive_live_ws_<YYYY_MM_DD>.md` not yet filed (filed when live becomes priority per operator). Phase 4
+         connector work blocked on MASSIVE_API_KEY — not a voluntary deferral. No partition migration involved.
+      2. BLOCKED items: 3 still open — [OPERATOR] pre-migration drain, [VERIFY] task -030, [VERIFY] task -031. All
+         gated on MASSIVE_API_KEY being added to SM. Pre-audit notes appended to -030/-031.
+      3. Codex alignment: all 3 codex docs updated — contracts-scope-and-layout@8b616c40 ✅,
+         availability-manifest@2dc2cf5e ✅, honest-absence@d4f48363 ✅.
+      4. CLAUDE.md: VIX 15m entry updated with Massive exclusion note at PM@cb5b14dd ✅.
+      5. locked_by: not present in frontmatter — no unlock needed.
+      **Re-run this step after operator resolves BLK-b00254d7 and completes Phase 5 drain.**
 
 ## Success criteria
 
