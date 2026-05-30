@@ -654,6 +654,7 @@ phase — plans omitting this are review-blocking.
 
 - Pushes to `main` / PRs → CI runs. **Always verify** via
   `gh run list --branch <branch> --repo <owner>/<repo> --limit 5`.
+- **Required check name (all repos)**: `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2).
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
