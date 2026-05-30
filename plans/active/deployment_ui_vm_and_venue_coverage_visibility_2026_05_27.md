@@ -97,6 +97,7 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
 
 ## §5 — Verification
 
-- [ ] [AGENT][UI] P0. `npm run dev`, wait 8–10s, read terminal for errors; manually load VM page + History tab + venue
+- [x] [AGENT][UI] P0. `npm run dev`, wait 8–10s, read terminal for errors; manually load VM page + History tab + venue
       panel in browser; confirm golden path + empty/edge states. Then
       `npx playwright test --project=chromium     tests/smoke/` green before any ✅ tick (per epic HARD RULE).
+      pw:L2 ✓ 140/140 — deployment-ui@39b9aee
