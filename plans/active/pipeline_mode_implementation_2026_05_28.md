@@ -126,8 +126,9 @@ impact, no walk needed now.
       Regression spec: `tests/e2e/data-status-pipeline-mode-filter.spec.ts` (4 L2 tests).
       Checkbox requires `pw:L2 ✓ | regression: tests/e2e/data-status-pipeline-mode-filter.spec.ts` evidence from a
       UI-capable slot running `npx playwright test --project=chromium tests/smoke/`.
-- [ ] [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
+- [x] ✅ [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
       dimension in the catalogue parquet + the published markdown matrix.
+      Added `pipeline_modes: list[str]` to `TupleEntry`; `_aggregate_tuple` collects distinct sorted pipeline_mode values from filtered manifest slice; `_build_entry` includes them; `render_markdown` adds Pipeline Modes column. Pre-Phase-2 manifests without the column yield `[]`. 3 new tests (13/13 pass). — unified-api-contracts@ab7d0121
 
 ## Phase 5 — On-disk partition (DEFERRED — named successor)
 
