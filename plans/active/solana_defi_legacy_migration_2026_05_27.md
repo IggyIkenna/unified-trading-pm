@@ -279,12 +279,16 @@ source:
       (or absent), so the handler gives up and returns empty.
       — MTDS@c3ae794c (backfill 2026-05-30). Root cause = API drift: Jito shape changed from single object to time-series
       payload. Rewrote `_collect_jito` to consume latest entry; added `_collect_jito_historical` via DeFiLlama yields chart.
-- [ ] [MTDS] P3. **GCS object-mutation 429s on per-VM manifest shard at the start of every backfill VM** — both
+- [x] ✅ [MTDS] P3. **GCS object-mutation 429s on per-VM manifest shard at the start of every backfill VM** — both
       `mtds-solana-drift-backfill` and the new `mtds-solana-defi-backfill` get `429 rateLimitExceeded ... per-VM shard`
       on the first few flushes. Non-blocking (manifest writes are best-effort) but it means the first ~10-30s of
       manifest rows are missing from the per-VM shard. Fix: add an exponential backoff inside `DefiManifestRecorder`
       flush, or batch the early flushes. Already a known pattern — track here so the next manifest-consolidator pass
       dedup-merges correctly.
+      — Covered by Bug-R (UTL@cb1f4b5f, 2026-05-29): `ManifestWriter._write_per_vm_shard` now routes uploads through
+      `_upload_with_backoff_on_429` — 3 retries at 1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/
+      `TooManyRequests`. `DefiManifestRecorder.close()` calls `self._writer.close()` which flows through this path;
+      no additional layer needed at the recorder level (backfill 2026-05-30).
 
 ### Next slot-1 actions (sequenced)
 
