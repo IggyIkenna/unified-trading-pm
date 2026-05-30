@@ -96,9 +96,11 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
           `day={date}/instruments.parquet` — IS bucket stores per-venue shards at
           `day={date}/venue={V}/instruments.parquet`. Fixed to list+aggregate across venue shards.
       **Status update 2026-05-30 (slot-1):**
-        - features-onchain-defi-20260530-034626: RUNNING ✅ — lending_rates 118/118 days written
-          (2026-01-25→2026-05-22), 42k-89k rows/day, schema_version=8, 0 LookaheadBias violations.
-          lst_yields / oracle_deviation currently processing (WriteGate rejecting sparse lst_native_rate_ts).
+        - features-onchain-defi-20260530-034626: RUNNING ✅ — 13 feature groups total processing sequentially.
+          Groups completed: macro_sentiment (fast), lending_rates 118/118 days, lst_yields (WriteGate rejected
+          all days — sparse data), risk_params 118/118 days (127k-389k rows/day). Currently writing: rewards
+          (started at 04:16 UTC, 118 days). ETA ~60 more min. Pre-verified: schema_version=8, 42k+ rows/day
+          on lending_rates, 0 LookaheadBias violations.
         - features-delta-one-defi-20260530-034640: FAILED exit_code=1 ❌ — ALL 18 groups fail.
           **Bug 4 discovered**: DeFi prd bucket only contains data_type=dex_swaps but delta-one candle
           loader expects data_type=oracle_prices (for POOL instruments) or data_type=trades
