@@ -229,13 +229,12 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 5 — Backfill Databento corpus with source column (1 day + run-to-completion)
 
-- [ ] [SCRIPT] P1. `market-tick-data-service/scripts/backfill_tradfi_source_column.py` — single-walk pass over existing
+- [x] ✅ [SCRIPT] P1. `market-tick-data-service/scripts/backfill_tradfi_source_column.py` — single-walk pass over existing
       TradFi parquets, write `source='databento'` row column, increment `schema_version` to match Phase 3.
-  - Composes with single-walk discipline HARD RULE: this is part of the next bundled migration; if Phase 2.2 walk is
-    still open, bundle into it. If Phase 2.2 is closed, this is a scheduled next-migration window.
-- [ ] [SCRIPT] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
+      MTDS@f2369d0 — idempotent, parallel, --dry-run mode, log_event instrumentation.
+- [ ] [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
       manifest → snapshot `_index/snapshots/pre_dual_source_2026_05_28.parquet` → run backfill → verify divergence=0 →
-      resume.
+      resume. (BLOCKED until MASSIVE_API_KEY in Secret Manager — task -001.)
 - [ ] [VERIFY] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
       `source ∈ {"databento", "yahoo", "barchart"}` (Massive parquets first appear post-Phase-4 dispatch).
 - [ ] [VERIFY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
