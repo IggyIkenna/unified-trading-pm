@@ -158,3 +158,42 @@ All repos that were worked on this session have local QG passing:
 - features-service ✅ (2c1fe688 — deep import fix: `from unified_trading_library import resolve_bucket_name`)
 - ml-service ✅ (cd266ff — asyncio.run() fix: 4 locations in test_cli_handlers_coverage.py)
 - alerting-service ✅ (previously verified)
+
+---
+
+## Resolution: Option D — Change BOTH caller AND callee paths (shipped 2026-05-29)
+
+**Option D** escaped the ghost cache by changing both ends of the reusable workflow chain simultaneously:
+
+1. **Caller**: new file `quality-gates-v2.yml`, new job key `quality-gates-v2`
+2. **Callee**: new file `python-quality-gates-v2.yml` in PM (referenced by all service repos at `@live-defi-rollout`)
+3. **Zero references** to the original `python-quality-gates.yml` path → GitHub has no prior cache key to hit
+
+**Results** (verified 2026-05-29/30):
+
+| Repo | Run | Status | Notes |
+|------|-----|--------|-------|
+| unified-trading-pm | 26654854795 | ✅ success | First v2 run — no startup_failure |
+| unified-api-contracts | 26656815065 | ✅ success | PR #54 — v2 clean |
+| unified-trading-library | 26671218489 | ✅ success | 3 consecutive v2 runs, no ghost |
+| alerting-service | 26655510120 | ✅ success | |
+| ml-service | 26671238677 | ✅ success | |
+| execution-service | 26671829905 | ✅ success | |
+| features-service | 26673516272 | ❌ lint errors | Pre-existing code quality; not startup_failure |
+| batch-live-recon | 26671824109 | ❌ coverage | Pre-existing code quality; not startup_failure |
+| instruments-service | 26671835898 | ❌ coverage | Pre-existing code quality; not startup_failure |
+| deployment-ui | 26671220021 | ❌ GH_PAT auth | GH_PAT secret not configured; not startup_failure |
+
+**Conclusion**: All 10 repos are running `quality-gates-v2` (no `startup_failure`). Failures are pre-existing
+code quality issues, not the ghost cache problem. Option D confirmed effective.
+
+**GH Support ticket #4422570**: still open as of 2026-05-30. Not required for unblock — Option D is sufficient.
+GH ticket can be closed once confirmed by operator.
+
+**Branch protection**: all 10 repos' main + staging now require `quality-gates-v2` (rotated 2026-05-29).
+
+**v1 cleanup**: `quality-gates.yml` / `workspace-qg.yml` deleted from 6/10 passing repos (2026-05-30).
+PM's `python-quality-gates.yml` (callee) kept pending GH ticket close-out.
+
+**ISSUE STATUS: RESOLVED** — Option D shipped 2026-05-29. Ghost cache bypassed.
+Plan ref: `plans/active/ci_canonical_v2_migration_2026_05_29.md`
