@@ -185,10 +185,12 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - `select_primary_available_source(asset_group, data_type, available_sources)` applies rules 1-3 (list order)
     at runtime: databento absent + massive present → returns massive. Rule 4 (field union) is consumer-layer.
   - 7 new tests; 80 total pass. UAC@898bc948
-- [ ] [UAC] P1. Conflict detection: same (asset_group, venue, day, ticker, ts) appearing in both sources → log + count,
+- [x] ✅ [UAC] P1. Conflict detection: same (asset_group, venue, day, ticker, ts) appearing in both sources → log + count,
       emit to manifest as `divergence_kind=DUAL_SOURCE_DUPLICATE`. Do NOT silently drop.
-- [ ] [UAC] P1. Unit tests: dual-source happy path, conflict path, missing-source-A-present-source-B path, field-union
+  - `DivergenceKind.DUAL_SOURCE_DUPLICATE = "DUAL_SOURCE_DUPLICATE"` StrEnum; `detect_dual_source_conflicts(source_a, keys_a, source_b, keys_b)` logs WARNING + returns sorted duplicates. UAC@28fc083c
+- [x] ✅ [UAC] P1. Unit tests: dual-source happy path, conflict path, missing-source-A-present-source-B path, field-union
       path.
+  - 8 tests: happy-path-no-overlap, with-duplicates, missing-source-A, field-union, warning-log assertion, + facade exports. 35 total in test_source_priority_pipeline_mode.py. UAC@28fc083c
 - [ ] [UAC] P1. Remove the "deferred to a follow-up plan" line from `source_priority.py` docstring; replace with link to
       THIS plan's archive path.
 
