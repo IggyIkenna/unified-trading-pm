@@ -293,7 +293,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
          availability-manifest@2dc2cf5e ✅, honest-absence@d4f48363 ✅.
       4. CLAUDE.md: VIX 15m entry updated with Massive exclusion note at PM@cb5b14dd ✅.
       5. locked_by: not present in frontmatter — no unlock needed.
-      **Re-run this step after operator resolves BLK-b00254d7 and completes Phase 5 drain.**
+      **Re-run (2026-05-30 slot-6)**: UAC QG item resolved — CSafeLoader fix (UAC@ed11c73) eliminates defillama 13MB
+      SafeLoader hang; QG now 260s clean. Deferred-work table updated. Archivability unchanged: Phase 5 drain still
+      gated on MASSIVE_API_KEY (BLK-b00254d7). Re-run again after operator resolves BLK-b00254d7.
 
 ## Success criteria
 
@@ -358,7 +360,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 | `MASSIVE_API_KEY` in Secret Manager (GCP + AWS) | **OPERATOR-BLOCKED** | Operator to provision; unblocks task -001 and live connector testing |
 | Futures ticker convention audit (`ESH26` / `F:ESH26` / etc.) | **OPERATOR-BLOCKED** | Task -005: once API key available + Futures endpoint 404 resolved |
 | BTC/ETH ETF backfill audit (Databento historical bars verification) | **OPERATOR-BLOCKED** | Task -006: run audit script against prod GCS with credentials |
-| UAC `quality-gates.sh` green | **IN-PROGRESS** | Task -011: UAC@adb85a22 bump + QG re-run (may already be resolved) |
+| UAC `quality-gates.sh` green | ✅ DONE | Task -011: UAC@ed11c73 — CSafeLoader fix eliminates defillama 13MB timeout; QG 260s, all gates green |
 | Pre-migration drain + backfill execution | **OPERATOR-BLOCKED** | Task -029: VM drain → consolidate → snapshot → run `backfill_tradfi_source_column.py` → resume |
 | Post-backfill audit (zero NULL source rows) | **BLOCKED on -029** | Task -030: verify every TradFi parquet has `source` column after drain |
 | Manifest re-consolidation (source field populated) | **BLOCKED on -029** | Task -031: re-run consolidator; all TradFi rows have `source` |
