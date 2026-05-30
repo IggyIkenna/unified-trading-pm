@@ -253,8 +253,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   portfolio VaR, aggregate per-tenor vega/gamma caps, liquidity-sink check). Breach → systemic veto, drop trade. Limits
   are static config, independent of the regime model.
   `PortfolioRiskGate` + `PortfolioSnapshot` in `portfolio_risk_gate.py`. 16 unit tests. strategy-service@a937219.
-- [ ] [EXECUTION] P2. Gate is the LAST step (after Phase 3 sizing + Phase 5 analog overlay) and cannot be overridden by a
-  high regime/conviction score — a "good" prediction that breaches a risk limit is still vetoed.
+- [x] ✅ [EXECUTION] P2. Gate is the LAST step (after Phase 3 sizing + Phase 5 analog overlay) and cannot be overridden by a
+  high regime/conviction score — a "good" prediction that breaches a risk limit is still vetoed. **DONE 2026-05-30** —
+  `StructurePipeline` in `structure_pipeline.py`: wraps `DiscreteStructureAllocator.solve()` → `analog_gate_fn` (Phase 5 stub) → `PortfolioRiskGate.allows()` (LAST). `regime_context` flows to allocator + analog gate only; never reaches the portfolio gate. `AnalogGateResult` + `PipelineResult` audit types. 10 unit tests incl. conviction-bypass proof + fallback-to-next-candidate. basedpyright + ruff clean. — strategy-service@da4f32a
 
 ## Phase 5 — Analog-based execution gate (steal from Blue Flame — the genuinely good idea)
 
