@@ -86,13 +86,19 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
       VM re-launched 2026-05-30: features-delta-one-defi-20260530-032619 (asia-northeast1-c, e2-standard-8) — fixed setup script + UAC export fix
       cmd: python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
-      **Root cause identified 2026-05-30 (slot-1):** rc=2 bug in setup-data-pipeline-vm.sh —
-        `INSTALL_ARGS_NODEPS` array has no `-e` entries for VM_TASK=features-backfill, causing
-        `uv pip install --no-sources --no-deps` (no packages) → rc=2. Fixed with guard: only run
-        NODEPS install when array has >2 elements. Also: UAC missing export of
-        `resolve_data_type_for_feature_group` fixed (commit eb9c0b2). Both tarballs rebuilt.
-      Re-launched VMs (2026-05-30 03:26): features-onchain-defi-20260530-032606 + features-delta-one-defi-20260530-032619.
+      **Fixes applied 2026-05-30 (slot-1):**
+        Bug 1 (setup script, rc=2): `INSTALL_ARGS_NODEPS` guard + UAC export fix → tarballs rebuilt (eb9c0b2).
+        Bug 2 (BLK-062521f7, dependency checker): `DependencyChecker._resolve_gcs_path` overridden to call
+          `resolve_bucket_name` (env-tiered prd bucket) instead of flat template → features-service@7188ea9e.
+      VMs launched 2026-05-30 03:26: features-onchain-defi-20260530-032606 + features-delta-one-defi-20260530-032619 (Bug 1 fix).
+      VM re-launched 2026-05-30 03:28: features-delta-one-defi-20260530-032825 (Bug 1+2 fix — env-tiered bucket).
       Awaiting VM completion for final verification.
+- [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — delta-one-defi dependency checker was using
+      FLAT bucket template `market-data-tick-{asset_group_lower}-{project_id}`
+      (= `market-data-tick-defi-central-element-323112`, data only up to 2026-01-24), NOT the env-tiered
+      prd bucket `market-data-tick-defi-prd-central-element-323112` (118 days, 2026-01-25→2026-05-22).
+      Fixed: overrode `_resolve_gcs_path` in `DependencyChecker` to call `resolve_bucket_name` (same as
+      LookbackValidator at line 377). features-service@7188ea9e, branch tab/rootm/1.
 
 ## Phase 3 — TradFi features compute
 
