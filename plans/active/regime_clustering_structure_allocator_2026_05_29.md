@@ -239,8 +239,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 7 — Validation, acceptance KPIs, codex
 
-- [ ] [TEST] P1. **Backtest↔paper tracking-error KPI** (B4): backtest P&L must track paper fills within a declared bps
+- [x] ✅ [TEST] P1. **Backtest↔paper tracking-error KPI** (B4): backtest P&L must track paper fills within a declared bps
   band — the single number that proves the continuous→discrete bridge is real, not cosmetic.
+  `compute_tracking_error_bps()` + `BacktestPaperParityChecker`. 13 unit tests (TE=0 for discrete fills). strategy-service@13e63cc.
 - [ ] [TEST] P1. All fitting under purged+embargoed walk-forward; report deflated OOS Sharpe per regime + abstain
   coverage on OOD live states.
 - [ ] [CODEX] P2. Write `codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
