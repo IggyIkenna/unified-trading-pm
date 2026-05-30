@@ -127,8 +127,13 @@ resolves the minimum window each family/feature needs and backfills exactly that
       cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed). — **MDPS
       (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
       `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647`
-      (2025-01-01..2025-12-31); both RUNNING; DEPLOYMENT_ENV=prod → writes to `market-data-tick-cefi-prd-*`;
-      VM_SHUTDOWN_ON_COMPLETION=true. — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
+      (2025-01-01..2025-12-31); BOTH CRASHED 2026-05-28 before emitting manifest entries:
+        2024 VM: exit_code=137 (OOM, 80.7% RSS at death) — 0 processed_candles manifest entries.
+        2025 VM: silent crash (log frozen 19:35 UTC, no EXIT_STATUS, VM self-deleted).
+      **Re-launched 2026-05-30 (ikenna-slot-1) with e2-highmem-8 (64GB) to prevent OOM:**
+        `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING
+        `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) RUNNING
+      — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
       2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
 - [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
