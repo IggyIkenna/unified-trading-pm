@@ -375,29 +375,26 @@ start implementation against an unconfirmed shape.
 
 The codex audit above named the exact docs that need to land. Phase 6 is the close-out for each finding.
 
-- [ ] [AGENT] P2. **6.1 (Finding A — cleanup discipline)** Add a new §15 to
+- [x] ✅ [AGENT] P2. **6.1 (Finding A — cleanup discipline)** Add a new §15 to
       [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md):
-      "Batch Service Lifecycle: Setup, Work, Cleanup". Body: every batch service with per-date state (caches, GCS
-      clients, manifest buffers) MUST call a `_cleanup_after_date(date)` hook on every per-date exit path, including
-      success. Reference implementation: `orchestration_base.py::_cleanup_after_day()`. Reference incident: sibling plan
-      Phase 3.2 attempt-2 (25 GB per-day floor before the wiring fix).
-- [ ] [AGENT] P2. **6.2 (Finding B — instrument_id contract)** Add a new section to
+      "Batch Service Lifecycle: Setup, Work, Cleanup". Pre-existing at PM@d53aff6b — section 15 already codified at
+      2026-05-28 with full "Why", anti-pattern example, correct pattern (try/finally), state audit table, reference
+      implementation (orchestration_base.py + orchestration_service.py), reference incident (2026-05-28 OOM), and
+      "Composes with" cross-links. No new content needed. Checkbox flip only. 2026-05-30.
+- [x] ✅ [AGENT] P2. **6.2 (Finding B — instrument_id contract)** Add a new section to
       [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md): "Instrument
-      Identity and CLI Granularity". Body: canonical form `VENUE:INSTRUMENT_TYPE:SYMBOL`; venue + instrument_type ARE
-      derivable; data_type is INDEPENDENT (requires `--data-types`); atomic shard is
-      `(asset_group, venue, instrument_type, data_type, symbol, date)`; bare-symbol substring matching is a deprecated
-      convenience.
-- [ ] [AGENT] P2. **6.3 (Finding C — VM lifecycle reconciliation)** Extend
+      Identity and CLI Granularity". Pre-existing at PM@d53aff6b — section "Instrument Identity and CLI Granularity
+      (HARD RULE — codified 2026-05-28)" at line 108 of cli-convention.md covers canonical form, venue derivability,
+      data_type independence, atomic shard definition. No new content needed. Checkbox flip only. 2026-05-30.
+- [x] ✅ [AGENT] P2. **6.3 (Finding C — VM lifecycle reconciliation)** Extend
       [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) §
-      "The invariants" with a new invariant: "Services running as `EPHEMERAL_BATCH` may amortise startup cost across one
-      shard. Services running multi-shard inside one VM lifecycle (the actual MDPS deployment shape) MUST call
-      `_cleanup_after_shard()` at every shard boundary." Either extend `EPHEMERAL_BATCH` semantics or add a new
-      LifecycleClass `LONG_RUNNING_MULTI_SHARD_BATCH` — decision belongs to Phase 1.1 of this plan.
-- [ ] [AGENT] P2. **6.4 (Finding D — data engine)** Add a new doc at
-      `codex/06-coding-standards/data-engine-selection.md`. Body: pick one engine end-to-end; Polars→Pandas→Polars is a
-      banned anti-pattern; for parquet I/O + aggregation prefer pure Polars; for I/O only use
-      `pd.read_parquet(engine="pyarrow")`; `low_memory=True` only matters when no intermediate `.to_pandas()` is
-      inserted.
+      "The invariants" with multi-shard cleanup invariant. Pre-existing at PM@d53aff6b — invariant 10 "Per-shard
+      cleanup discipline for multi-shard VMs (HARD RULE, codified 2026-05-28)" at line 121 of vm-tarball-deployment.md
+      covers EPHEMERAL_BATCH multi-shard cleanup requirement. No new content needed. Checkbox flip only. 2026-05-30.
+- [x] ✅ [AGENT] P2. **6.4 (Finding D — data engine)** Add a new doc at
+      `codex/06-coding-standards/data-engine-selection.md`. Pre-existing at PM@d53aff6b — full doc exists with Rule,
+      Why, decision tree, banned anti-patterns (Polars→Pandas→Polars), low_memory guidance. No new content needed.
+      Checkbox flip only. 2026-05-30.
 
 ## Out of scope
 
