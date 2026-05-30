@@ -131,8 +131,12 @@ source:
       errors, 0 wrong-bucket Solana parquets remaining. Sample-inspected `KAMINO-SOLANA:SOLANA_LENDING:...`
       instrument_id (correct type). Gate 7 ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT
       enforced). ✓
-- [ ] [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the heavier
-      path (full split) pls")**. **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
+- [x] ✅ [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the heavier
+      path (full split) pls")** — DONE 2026-05-30. MTDS@896d5c9 + UAC@f98a639. Monolithic `solana_defi_handler.py`
+      deleted; Solana DEX (orca/raydium/kamino/phoenix) → `dex_pools_handler.py`; Solana lending
+      (kamino/solend/marginfi) → `lending_indices_handler.py`; UAC `mtds_operations` updated to per-data-type ops;
+      QG exclusions removed; backfill script updated; MTDS QG: 2179 passed, 15 skipped.
+      **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
       declared was the direction: _"Old monolithic handlers (`evm_defi_handler`, `solana_defi_handler`) replaced by
       per-data-type handlers"_. The doc/code drift (file still on disk, QG-excluded at `scripts/quality-gates.sh:25`)
       means the split was never completed for Solana. **This gate completes it.**
