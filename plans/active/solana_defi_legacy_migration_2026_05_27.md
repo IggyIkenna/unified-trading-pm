@@ -493,7 +493,15 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 - [ ] 🟡 OPERATIONALLY BROKEN [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
       mtds@9a840e01 but sig index NOT BUILT on GCS yet; index builder dispatched 2026-05-29 — relaunch + flip will
-      follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636). Root cause **CONFIRMED** by
+      follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636).
+      **2026-05-30 sig index audit (slot-1)**: `_index/drift_v2_sig_index_parts/` has 2936 parts covering
+      2026-02-15→2026-05-28 (HEAD end); `_index/drift_v2_sig_index_parts_b/` has 876 parts covering
+      2024-10-31→2025-01-14. **GAP: 2025-01-14→2026-02-15 (13 months) not in either index set.** Backfill VM
+      ran 2026-05-29 (exit 0) but silently returned 0 rows for all dates in gap rather than "sig index missing"
+      (handler fell through to "program activity quiet" branch for dates with no index hits). Consequence: dates
+      2025-01-09→2026-02-14 wrote empty/zero records — not actually missing data. **Relaunch BLOCKED** until
+      index gap filled. Operator action: run `build_drift_v2_sig_index.py --back-to 2025-01-09 --parts-prefix
+      drift_v2_sig_index_parts_gap` to fill the 2025-01-14→2026-02-15 gap; then re-run backfill for same range. Root cause **CONFIRMED** by
       slot-1 probe 2026-05-29:
       `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
       ListBucket: `prefix=market` → 0 keys; the only populated prefix is
