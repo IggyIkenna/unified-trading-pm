@@ -225,6 +225,30 @@ the same file — resolve with their changes in mind (likely their work should b
 
 ---
 
+## quality-gates-v2 — canonical required-check name (codified 2026-05-29)
+
+**Job key**: `quality-gates-v2` (was `quality-gates` in v1 callers — retired).
+
+The v1 `quality-gates` check context was poisoned by GitHub's server-side BuildFailed ghost cache (GH Support ticket
+#4422570). Option D escape (2026-05-29): rename BOTH caller workflow file AND job key, reference a new callee path
+(`python-quality-gates-v2.yml`). GitHub has no prior cache entry for the new context.
+
+**Canonical workflow files** (as of 2026-05-29):
+
+| Repo type      | Caller                             | Callee                                                                                    |
+| -------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| PM             | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)      |
+| Service repo   | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
+
+**Required status check across all repos**: `quality-gates-v2` (all 10 repos rotated 2026-05-29).
+
+**v1 cleanup status**: `quality-gates.yml` / `workspace-qg.yml` deleted from PM, UAC, UTL, alerting-service,
+ml-service, execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH ticket clears.
+
+**Plan reference**: `plans/active/ci_canonical_v2_migration_2026_05_29.md`
+
+---
+
 ## Workspace-qg unified trigger surface (codified 2026-05-16 — Phase B rollout complete)
 
 **SSOT template**: `unified-trading-pm/scripts/workflow-templates/workspace-qg.yml.tmpl`. All 21 Python service repos
@@ -285,8 +309,8 @@ references in old per-repo files (`unified-cloud-interface` / `unified-config-in
 | Field                   | Value                                                                                                                         |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Item                    | CI workflow consistency across 21 Python repos                                                                                |
-| Cutover criterion       | All 21 repos have `workspace-qg.yml` (not `quality-gates.yml`); template rendered from PM SSOT                                |
-| Continuous verification | `gh workflow list --repo IggyIkenna/<repo> --json name` returns `workspace-qg`; per-repo `quality-gates.yml` no longer exists |
-| Cadence                 | Weekly drift-check (one repo per day across the week)                                                                         |
-| Owner                   | Slot 1 main pre-cutover; post-cutover cron VM (see `plans/epics/infrastructure_master.md` for VM assignment)                  |
-| Last verified           | 2026-05-16 (Phase B rollout — see `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT") |
+| Cutover criterion       | All 10 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 caller deleted |
+| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success` |
+| Cadence                 | Weekly drift-check (one repo per day across the week)                                              |
+| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                  |
+| Last verified           | 2026-05-30: 6/10 green; 4 have pre-existing code quality issues (see ci_canonical_v2_migration plan Phase 4) |
