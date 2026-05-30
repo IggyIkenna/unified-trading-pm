@@ -136,6 +136,12 @@ source:
       deleted; Solana DEX (orca/raydium/kamino/phoenix) → `dex_pools_handler.py`; Solana lending
       (kamino/solend/marginfi) → `lending_indices_handler.py`; UAC `mtds_operations` updated to per-data-type ops;
       QG exclusions removed; backfill script updated; MTDS QG: 2179 passed, 15 skipped.
+      **Supplementary commits (slot-1 2026-05-30)**: MTDS@1f5fb5a + MTDS@3ba2501 + deployment-service@839fd53.
+      `_solana_defi_fetch.py` shared async fetch module added; `lending_indices_handler.py` + `dex_pools_handler.py`
+      extended via Solana branch in `_collect_protocol_chain`; `full-defi-backfill.sh` collect-solana-defi lines replaced
+      with per-data-type equivalents; `launch-mtds-solana-defi-backfill-vm.sh` deleted. `solana_defi_handler.py` kept
+      in main worktree for Drift backfill (`setup-data-pipeline-vm.sh:1082 --solana-drift-backfill`) pending separate
+      Drift migration. Tests: 157 passed, 1 skipped.
       **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
       declared was the direction: _"Old monolithic handlers (`evm_defi_handler`, `solana_defi_handler`) replaced by
       per-data-type handlers"_. The doc/code drift (file still on disk, QG-excluded at `scripts/quality-gates.sh:25`)
