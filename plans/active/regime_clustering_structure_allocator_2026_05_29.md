@@ -270,7 +270,8 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 6 — Multi-timeframe + fusion
 
-- [ ] [FEATURES] P3. Run clustering per timeframe window.
+- [x] ✅ [FEATURES] P3. Run clustering per timeframe window.
+  — features-service@e6b331fc | `fit_and_assign_per_timeframe()` in `regime_clustering.py`: runs independent PCA-whitened GMM fits per timeframe dict (e.g. `{"1h": df, "4h": df, "24h": df}`); returns `PerTimeframeClusterResult` per timeframe with `fold_results` + latest-fold `ClusterAssignment`. `ClusterFoldResult` gains `test_start`/`test_end` fields. Consumer: `timeframe_fusion.fuse_cluster_assignments()` at strategy-service@8391bdd. 37 unit tests (7 new) green.
 - [x] ✅ [STRATEGY] P2. **Implement BOTH fusion modes behind a config toggle (RESOLVED 2026-05-30)**: (a) long-frame regime
   gates short-frame entry; (b) weighted vote across timeframes (weighted by membership confidence). A/B test both OOS;
   operator picks the winner from results — do not hardcode one.
