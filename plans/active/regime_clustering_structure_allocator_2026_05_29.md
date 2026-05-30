@@ -188,8 +188,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   `DiscreteStructureAllocator.solve()`: enumerate → risk-gate veto → OOS validation → rank. `OosVetoResult`
   hook for Phase-7 Deflated Sharpe/PBO (pass-through until wired). Dollar-scaled greek penalty in score already ✅.
   strategy-service@c854b0e2.
-- [ ] [STRATEGY] P1. **Overfit gate**: per-cluster structure must clear Deflated Sharpe / PBO out-of-sample before it is
+- [x] ✅ [STRATEGY] P1. **Overfit gate**: per-cluster structure must clear Deflated Sharpe / PBO out-of-sample before it is
   selectable. Reject "dominated-in-permutation-pool" / "+Sharpe-in-sample" winners.
+  `overfit_gates.py`: `deflated_sharpe_ratio()` (Bailey & Lopez de Prado 2014), `DeflatedSharpeGate`, `PboGate` stub,
+  `CompositeOosGate`. 23 unit tests. strategy-service@45043b3.
 - [ ] [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
   `vol_trading_options` / a new options engine.
 
