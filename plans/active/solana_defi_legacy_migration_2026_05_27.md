@@ -492,9 +492,8 @@ plan. Commit + push via the standard `docs(plans):` flow.
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped mtds@9a840e01;
-      sig index gap FILLED (3547+876 parts, 2024-10-31→2026-05-29 continuous); VM `mtds-solana-drift-backfill`
-      RUNNING 2026-05-30 (backfill 2025-01-09→2026-02-14 in progress). Original fix MTDS@fc7e0636;
-      Helius dispatcher MTDS@9a840e01; index build completed 2026-05-30T09:36Z per SANITY_CHECK.
+      sig index gap FILLED (3547+876 parts, 2024-10-31→2026-05-29 continuous) 2026-05-30T09:36Z per SANITY_CHECK;
+      OOM fix shipped mtds@93acab3 (pyarrow filter pushdown). Original fix MTDS@fc7e0636.
       **2026-05-30 sig index audit (slot-1)**: `_index/drift_v2_sig_index_parts/` has 2936 parts covering
       2026-02-15→2026-05-28 (HEAD end); `_index/drift_v2_sig_index_parts_b/` has 876 parts covering
       2024-10-31→2025-01-14. **GAP: 2025-01-14→2026-02-15 (13 months) not in either index set.** Backfill VM
@@ -502,20 +501,14 @@ plan. Commit + push via the standard `docs(plans):` flow.
       (handler fell through to "program activity quiet" branch for dates with no index hits). Consequence: dates
       2025-01-09→2026-02-14 wrote empty/zero records — not actually missing data. **Relaunch BLOCKED** until
       index gap filled.
-      **2026-05-30T09:36Z UPDATE (slot-1 on tab-1)**: Drift unblock chain on `vm-ml` (AWS `i-02294132088f23e50`, ap-northeast-1)
-      hit 3 sequential SANITY_CHECK bugs in `/home/ubuntu/drift_unblock_chain.sh` — all patched in-place:
-      (1) `gcs_list_objects` import doesn't exist in UTL (canonical is `bucket.list_blobs()` via `get_storage_client`);
-      (2) `resolve_bucket_name(service=, asset_group=)` kwarg form wrong (canonical is `cloud="gcp" kind=...
-      asset_group="defi"`); (3) `kind="raw_tick_data"` not a valid yaml key — Drift sig index parts live in the flat
-      bucket `market-data-tick-defi-central-element-323112` (no env suffix), hardcoded after patches. **SANITY_CHECK
-      PASSED 2026-05-30T09:36Z**: `_index/drift_v2_sig_index_parts/` 3547 parts + `_index/drift_v2_sig_index_parts_b/`
-      876 parts; total_rows=442,205,000; blocktime range 2024-10-31 → 2026-05-29 (so the 2025-01-14→2026-02-15 gap is
-      now FILLED — Builder #1 + #2 both completed). LAUNCH_VM then failed exit=1 because
-      `mtds-solana-drift-backfill` TERMINATED instance from yesterday's 2026-05-29 run still occupied the name; deleted
-      via `gcloud compute instances delete` 2026-05-30T10:43Z; chain restarted PID 1492804 2026-05-30T09:53Z, currently
-      re-running SANITY_CHECK (~10min) → LAUNCH_VM → VERIFY. Per-T+10min verify will confirm RUNNING; flip parent + followup
-      to ✅ on chain CHAIN_DONE log line. Operator action: run `build_drift_v2_sig_index.py --back-to 2025-01-09 --parts-prefix
-      drift_v2_sig_index_parts_gap` to fill the 2025-01-14→2026-02-15 gap; then re-run backfill for same range. Root cause **CONFIRMED** by
+      **2026-05-30T09:36Z UPDATE (slot-1 on tab-1)**: SANITY_CHECK PASSED — `_index/drift_v2_sig_index_parts/`
+      3547 parts + `_index/drift_v2_sig_index_parts_b/` 876 parts; total_rows=442,205,000; blocktime range
+      2024-10-31→2026-05-29 (gap NOW FILLED — Builder #1 + #2 both completed). VM launched 2026-05-30T10:06Z
+      but OOM'd at 10:07Z (handler loaded all 4423 parts into RAM simultaneously — ~35-70 GB RSS).
+      **OOM fix shipped 2026-05-30 (mtds@93acab3, slot-2)**: `_load_drift_v2_sig_index` rewritten with pyarrow
+      row-group filter pushdown — only parts overlapping the target date window are decoded. Peak RSS: ~15 MB.
+      63/63 tests green. **Operator action**: relaunch backfill VM via
+      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`. Root cause **CONFIRMED** by
       slot-1 probe 2026-05-29:
       `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
       ListBucket: `prefix=market` → 0 keys; the only populated prefix is
