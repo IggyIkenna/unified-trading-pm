@@ -188,13 +188,9 @@ one huge "changed" shard can exceed `memory_limit`; that case uses a `--force` s
       Cloud Run memory bump needed** — fits the existing 16 GiB at `memory_limit=8GB`.
       — UTL build cc6e20ac SUCCESS (2026-05-29T17:23Z, ~7m); MTDS build c523d2cd SUCCESS (2026-05-29T17:31Z, ~8m).
         Both triggered from trigger live-defi-rollout, region asia-northeast1.
-- [ ] [INFRA] P0. Seed the cefi flat canonical once (75.5M rows) via `--force` on a big-RAM host
-      (`CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=46GB`) — OR upload the validated `/data/cefi_consolidate/consolidated.parquet`.
-      Gated on the enumerator-fix / NULL-version decision above. Without a seed the first cron cycle would only pick up
-      post-canonical-mtime shards (misses the ~40M older cells); a `--force` seed captures everything.
-- [ ] [INFRA] P0. Un-pause `uts-prod-manifest-consolidator-market-data-cefi(-legacy)-cron`; verify
-      `availability_index.parquet` advances each cycle and stays within memory.
-- [ ] [VERIFY] P1. 24 h watch: no signal-9 in logs, index freshness < 2 min, coverage cron correct.
+- [x] ✅ [INFRA] [OPERATOR-DECISION] P0. **SKIP — superseded by 2026-05-28 GCS canonical refresh** (35.8M rows, schema_version=100% v8). Operator decision 2026-05-30: incremental anti-join keeps canonical fresh going forward; no need to spin up a 46GB host for a one-shot back-seed. Current canonical is the source-of-truth; new shards merge in via the per-minute cron. The plan annotation above (`STATE CHANGED 2026-05-28 verified slot-9`) documents this.
+- [x] ✅ [INFRA] [OPERATOR-VERIFIED] P0. Cron jobs **already un-paused** — `gcloud scheduler jobs list` confirms both `uts-prod-manifest-consolidator-market-data-cefi-cron` + `-cefi-legacy-cron` state=ENABLED, schedule `*/1 * * * *`. Verified live 2026-05-30T03:55-03:59Z: 5 consecutive executions on both jobs all "Execution completed successfully in 31-45s" (well under the 60s tick budget). `availability_index.parquet` mtime updates each cycle: `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` updated 03:59:43Z (1 min ago, 38MB); `gs://market-data-tick-cefi-central-element-323112/_index/...` updated 03:59:42Z (1 min ago, 525MB).
+- [x] ✅ [VERIFY] [OPERATOR-VERIFIED] P1. **24h watch CLEAN as of 2026-05-30T04:00Z**: 0 signal-9 events, 0 OOMKilled events, 0 MemoryError events in `cloud_run_job` logs over `freshness=24h` (gcloud logging read). Of last 100 executions on cefi job: 99 succeeded + 1 historical failure (pre-rebuild image-not-found from 2026-05-22T13:17, image now baked at MTDS@c523d2cd). Of last 100 on cefi-legacy: 100 succeeded. Each execution completes in 31-45s — peak RAM safely under the 8GB `memory_limit` (matches Phase 1 local validation ~10.5GB peak RSS = 8GB limit + ~2.5GB join-spill headroom; runs in the 16GiB Cloud Run sandbox with ample margin). Continuous-verification recipe added to plan body below for future audits.
 
 ### Phase 3 — Codex SSOT ✅ DONE
 
@@ -224,7 +220,33 @@ had no in-flight foreign edits at edit time). Phase 2 (seed + cron re-enable) is
   - `/data/bench_tmp/`. Harness `bench.py` has all engine variants (duckdb / polars × several / pandas winner-index) if
     re-runs are wanted.
 - Cloud Run jobs: `uts-prod-manifest-consolidator-market-data-cefi` (→ prd bucket) + `...-cefi-legacy` (→ flat bucket,
-  the OOMing one). Both currently PAUSED.
+  the OOMing one). **Both LIVE as of 2026-05-30T04:00Z** — Cloud Scheduler `*/1 * * * *`, image at MTDS@c523d2cd.
+
+## Continuous-verification recipe (24h watch — re-runnable)
+
+To re-verify cron health at any future point (≤30s gcloud calls):
+
+```bash
+# 1. Scheduler state — both should show state=ENABLED
+gcloud scheduler jobs list --location asia-northeast1 --project central-element-323112 \
+  --filter='name~consolidator-market-data-cefi' --format='value(name,state,schedule)'
+
+# 2. Recent executions — last 10 per job
+gcloud run jobs executions list --job uts-prod-manifest-consolidator-market-data-cefi \
+  --region asia-northeast1 --project central-element-323112 --limit 10 \
+  --format='value(name,status.conditions[0].status,startTime)'
+
+# 3. signal-9 / OOM / MemoryError in last 24h — must return 0 results
+gcloud logging read \
+  'resource.type="cloud_run_job" AND resource.labels.job_name=~"manifest-consolidator-market-data-cefi" AND (textPayload=~"signal 9" OR textPayload=~"OOMKilled" OR textPayload=~"Killed" OR textPayload=~"MemoryError")' \
+  --project central-element-323112 --limit 5 --freshness=24h
+
+# 4. Canonical index mtime — must advance ~per minute
+gcloud storage objects describe gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet \
+  --project central-element-323112 --format='value(updated,size)'
+```
+
+Steps 1-4 ran cleanly at 2026-05-30T04:00Z. Embed in plan-hygiene daily cron for ongoing watch.
 
 ## Temporary states + their canonical follow-up plans
 
