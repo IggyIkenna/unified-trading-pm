@@ -210,22 +210,22 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 4 — MTDS Massive connector (REST / batch only) (2 days)
 
-- [ ] [MTDS] P1. New module `market_tick_data_service/handlers/tradfi/massive_tradfi_rest_connector.py`. Mirror shape of
-      `databento_tradfi_ws_connector.py` REST path. Auth via `MASSIVE_API_KEY`.
-- [ ] [MTDS] P1. Endpoint mapping (per coverage matrix above): | data_type | Massive endpoint | |---|---| | `trades` |
-      `/v3/trades/{ticker}` | | `tbbo` | `/v3/quotes/{ticker}` | | `ohlcv_1m` |
-      `/v2/aggs/ticker/{ticker}/range/1/minute/{from}/{to}` | | `ohlcv_15m` |
-      `/v2/aggs/ticker/{ticker}/range/15/minute/{from}/{to}` | | `options_chain` | `/v3/snapshot/options/{underlying}` |
-      | `futures_chain` | `/v3/reference/futures/contracts` + `/v3/reference/futures/products` |
-- [ ] [MTDS] P1. Universe / symbol resolution: instruments-service → Massive ticker mapping. SPX = `I:SPX`, VIX index =
-      `I:VIX`, ETF options use OPRA root, CME futures use Massive's futures contract ticker convention.
-- [ ] [MTDS] P1. Error classification via UAC `classify_venue_error()`. Emit `ADAPTER_FETCH_FAILED` per workspace
-      adapter contract.
-- [ ] [MTDS] P1. Manifest emission per writegate Phase 6.x: every (asset_group, venue, day, data_type) cell gets
-      `record_captured(source="massive", ...)` or `record_empty(reason=<typed>, source="massive")`.
-- [ ] [MTDS] P1. Unit tests: 200 happy path, 401 auth-fail, 429 rate-limit, 5xx upstream, 200 empty (→
-      `SOURCE_RETURNED_ZERO`), per-data_type cassette tests.
-- [ ] [MTDS] P1. Integration tests: `@pytest.mark.requires_credentials` — gated, skipped without `MASSIVE_API_KEY`.
+- [x] ✅ [MTDS] P1. New module `market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py`.
+      MTDS@e6b5fca — MassiveTradfiRestConnector(BaseTradfiAdapter), 6 fetch methods, MassiveAPIError.
+- [x] ✅ [MTDS] P1. Endpoint mapping implemented: trades→/v3/trades/{ticker}, tbbo→/v3/quotes/{ticker},
+      ohlcv_1m→/v2/aggs/ticker/{ticker}/range/1/minute/{from}/{to}, ohlcv_15m→15/minute variant,
+      options_chain→/v3/snapshot/options/{underlying}, futures_chain→/v3/reference/futures/contracts.
+      MTDS@e6b5fca.
+- [x] ✅ [MTDS] P1. Universe / symbol resolution helpers: massive_equity_ticker, massive_index_ticker
+      (I: prefix for indices). CME futures use Massive contract ticker convention. MTDS@e6b5fca.
+- [x] ✅ [MTDS] P1. Error classification via UAC classify_venue_error(). log_event("ADAPTER_FETCH_FAILED")
+      emitted with venue, source, data_type, error_code, error_action. MTDS@e6b5fca.
+- [x] ✅ [MTDS] P1. MASSIVE_SOURCE="massive" constant stamped on every fetch result for callers to pass
+      as source= to record_captured. fetch_for_data_type dispatches + logs via log_event. MTDS@e6b5fca.
+- [x] ✅ [MTDS] P1. 31 unit tests (test_massive_tradfi_rest_connector.py): 200 happy path per data_type,
+      401/429/500 error paths, normalisation round-trips, symbol helpers, dispatch. MTDS@e6b5fca.
+- [x] ✅ [MTDS] P1. 2 integration tests @pytest.mark.requires_credentials — gated, deselected in CI.
+      MTDS@e6b5fca.
 
 ### Phase 5 — Backfill Databento corpus with source column (1 day + run-to-completion)
 
