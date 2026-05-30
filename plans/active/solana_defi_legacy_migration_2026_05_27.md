@@ -700,9 +700,12 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Pre-existing (carry-over, lower urgency)
 
-- [ ] [CODE] [AGENT-AUTO] P3. **PACIFICA** is CeFi perp (not Solana DeFi) — coverage routes via CeFi perp pipeline
+- [x] ✅ [CODE] [AGENT-AUTO] P3. **PACIFICA** is CeFi perp (not Solana DeFi) — coverage routes via CeFi perp pipeline
       (`unified_api_contracts/registry/cefi_perp_venue_endpoints.py`). Verify PACIFICA has current MTDS coverage via the
       CeFi path; if stale, file in CeFi backfill plan.
+      — Verified 2026-05-30: PACIFICA has full CeFi perp coverage via MTDS `perp_funding_handler.py` (line 90 in
+      DEFAULT_PROTOCOLS; `_collect_pacifica()` at line 962; `_PACIFICA_FUNDING_START_DATE = "2025-06-01"`). UAC registry
+      confirms `PACIFICA-SOLANA: ["perp_funding"]` in expected_coverage.py. No CeFi backfill plan needed.
 
 ### Done-when
 
