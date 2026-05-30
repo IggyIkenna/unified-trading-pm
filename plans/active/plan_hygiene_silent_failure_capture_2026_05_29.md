@@ -110,9 +110,12 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 2 — Unpushed plan-file detection (P1)
 
-- [ ] [AGENT] P1. Extend `scripts/dev/slot-git-status-report.sh`: when iterating dirty / untracked files in a slot's
+- [x] ✅ [AGENT] P1. Extend `scripts/dev/slot-git-status-report.sh`: when iterating dirty / untracked files in a slot's
       `unified-trading-pm` worktree, detect any path matching `plans/active/*.md` or `plans/active/issues/*.md` and
       escalate severity in the reported payload (a new field `unpushed_plans: [list]`).
+      Classify_repo: added unpushed_plans 10th TSV column (pipe-separated basenames). post_snapshot Python block:
+      parses col 10 → `unpushed_plans: [list]`. RepoStatus Pydantic model gains `unpushed_plans: list[str]`.
+      — unified-trading-pm@<sha> + agent-orchestrator@<sha>
 - [ ] [AGENT] P1. Extend the Slack alert template that consumes the git-status report to fire a higher-priority alert
       (e.g. `🔴 Slot N has unpushed plan(s): X.md, Y.md`) when `unpushed_plans` is non-empty. Existing 5-min
       git-staleness threshold is fine; just decorate the message.

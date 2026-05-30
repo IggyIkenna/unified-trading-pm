@@ -110,10 +110,14 @@ epoch_to_iso() {
 NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
-#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso
+#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans
+#
+# unpushed_plans: pipe-separated list of plan file basenames (plans/active/*.md or
+#   plans/active/issues/*.md) that are dirty or untracked in a unified-trading-pm worktree.
+#   Empty string for all other repos.
 classify_repo() {
     local repo_dir="$1"
-    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso
+    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans
     repo_name=$(basename "${repo_dir}")
     int_branch="${INTEGRATION_BRANCH}"
 
@@ -122,7 +126,7 @@ classify_repo() {
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
         popd >/dev/null
         return 0
     fi
@@ -131,14 +135,20 @@ classify_repo() {
     porcelain=$(git status --porcelain 2>/dev/null || echo "")
     dirty_files=0
     dirty_oldest_iso=""
+    unpushed_plans=""
     if [[ -n "${porcelain}" ]]; then
         dirty_files=$(printf '%s\n' "${porcelain}" | wc -l | tr -d ' ')
-        # Find oldest mtime among dirty files (relative paths from porcelain col 4+).
-        local oldest_epoch="" line file ep
+        # Find oldest mtime among dirty files; also collect unpushed plan files for
+        # unified-trading-pm repos (paths matching plans/active/*.md or plans/active/issues/*.md).
+        local oldest_epoch="" line file ep plan_list=()
         while IFS= read -r line; do
             [[ -z "${line}" ]] && continue
             file="${line:3}"
             file="${file%% -> *}"
+            # Detect plan files (dirty or untracked) in unified-trading-pm worktrees.
+            if [[ "${file}" == plans/active/*.md || "${file}" == plans/active/issues/*.md ]]; then
+                plan_list+=("$(basename "${file}")")
+            fi
             [[ -f "${file}" || -d "${file}" ]] || continue
             ep=$(stat_mtime_epoch "${file}")
             [[ -z "${ep}" ]] && continue
@@ -147,6 +157,11 @@ classify_repo() {
             fi
         done <<< "${porcelain}"
         dirty_oldest_iso=$(epoch_to_iso "${oldest_epoch}")
+        # Build pipe-separated list of unpushed plan basenames.
+        if [[ "${#plan_list[@]}" -gt 0 ]]; then
+            unpushed_plans="$(printf '%s|' "${plan_list[@]}")"
+            unpushed_plans="${unpushed_plans%|}"   # strip trailing pipe
+        fi
     fi
 
     ahead=0
@@ -164,8 +179,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}"
             popd >/dev/null
             return 0
         fi
@@ -184,8 +199,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}"
     popd >/dev/null
 }
 
@@ -236,9 +251,9 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 9:
-        parts += [""] * (9 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest = parts[:9]
+    if len(parts) < 10:
+        parts += [""] * (10 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw = parts[:10]
     repo = {
         "name": name,
         "branch": branch,
@@ -251,6 +266,8 @@ for line in sys.stdin:
     }
     if dirty_oldest:
         repo["dirty_oldest_mtime"] = dirty_oldest
+    if unpushed_raw:
+        repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     repos.append(repo)
 print(json.dumps({"reported_at": reported_at, "host": host, "repos": repos}))
 ' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}")
