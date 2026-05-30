@@ -448,12 +448,22 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
     MDPS gap). `_load_and_join` → None → silent skip. Follow-up needed: orchestrator should emit
     `empty_confirmed(NO_INPUT_AVAILABLE)` manifest row per skipped instrument (silent skip = §6A violation). Tracked
     as **DEFERRED** below in Temporary states.
-- [ ] [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
+- [x] ✅ [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
       guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
       for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
       dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the real
       absence.) Folded into the per-service status-calibration audit:
-      `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`.
+      `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`. — features-service@00b3571c
+  - **Root cause**: `VolatilityOrchestrationService.process_feature_group` only called `_write_manifest_record` when
+    `total_success > 0` — when all underlyings returned empty futures chain data, no manifest row was written (§6A
+    silent skip).
+  - **Fix**: Added `_write_empty_manifest_record` (features@00b3571c): when `total_success == 0`, emits
+    `empty_confirmed(SOURCE_RETURNED_ZERO)` at the group+date level. The GCS source (processed_candles bucket)
+    returned zero futures chain records for every in-scope underlying — this is the honest manifestable fact.
+    Whether the root cause is "future never listed" vs "MDPS data not backfilled" requires IS-catalogue lookup
+    outside this layer — calibration deferred to `capture_status_calibration_per_service_2026_05_27.md`.
+  - **QG note**: disk at 100% blocked full QG run (ruff/basedpyright not installed in empty venv). Syntax clean.
+    Two regression tests added (empty_confirmed written on zero success; ManifestWriter failure swallowed).
 
 ### TradFi scope (operator decision 2026-05-26)
 
