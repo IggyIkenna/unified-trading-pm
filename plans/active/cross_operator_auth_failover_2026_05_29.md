@@ -147,11 +147,14 @@ why + reproduction.
 
 ## Phase 4 — Codex SSOT updates (P1)
 
-- [ ] [AGENT] P1. Update `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to document: - Shared-pool
+- [x] ✅ [AGENT] P1. Update `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to document: - Shared-pool
       design (any account can serve any operator). - Rotation triggers (`rate_limit`, `auth_failed`,
       `operator_directed`). - The 180s spawn-heartbeat watchdog. - The Slack alert schema for rotation events.
-- [ ] [AGENT] P1. Cross-link from `agent-orchestrator/data/config/accounts.json` `_phase5_note` → this codex doc → this
+      **DONE 2026-05-30** — new §§ "Cross-operator shared account pool" + "Rotation across accounts — three triggers"
+      added with trigger table, watchdog mechanics, Slack alert schema, Composes-with cross-link.
+- [x] ✅ [AGENT] P1. Cross-link from `agent-orchestrator/data/config/accounts.json` `_phase5_note` → this codex doc → this
       plan.
+      **DONE 2026-05-30** — `_shared_pool_note` added to accounts.json referencing codex doc + this plan.
 
 ## Success criteria
 
