@@ -249,7 +249,7 @@ source:
       `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`.
       **DONE 2026-05-30 (Bug-M)**: MTDS@0644e40 — LstRatesHandler now respects `--force` to bypass the sentinel cluster
       check; re-launch marinade VM with `--force` to write historical Marinade rows past already-captured dates.
-- [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
+- [x] ✅ [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
       every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
       `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
       `_collect_kamino` (alias `vault_address` → `pool_id` for the dex_pools contract; keep `vault_address` as a
@@ -257,6 +257,9 @@ source:
       `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-defi-backfill/run.log` (one warning per
       processed date). Composes with Gate 1 schema-contracts work above — if a `solana_vault` instrument_type lands as
       planned, the Kamino vault rows route there instead and this becomes moot. Capture so it doesn't slip.
+      **DONE 2026-05-30**: Already fixed in new `dex_pools_handler._collect_kamino` which emits `pool_id=vault_addr`
+      (line 1146), AND `schema_validation.py` line 27 already accepts `("pool_id", "vault_address")` as alternatives.
+      Checkbox-only flip.
 - [ ] [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
       date in the new VM run.** `solana_defi_handler._collect_jito` hits
       `kobe.mainnet.jito.network/api/v1/     stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
