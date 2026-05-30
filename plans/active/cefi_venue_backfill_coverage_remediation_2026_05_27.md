@@ -307,10 +307,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 
 ### §6H — Cross-cutting / cosmetic
 
-- [ ] [AGENT] P2. **`faulthandler.dump_traceback failed: fileno`** on every VM (frequency rises with concurrency —
+- [x] [AGENT] P2. **`faulthandler.dump_traceback failed: fileno`** on every VM (frequency rises with concurrency —
       okx-2025 ~20/window, prediction-2025 69/tail) — the faulthandler can't write to its fd, so **fatal-signal stack
       traces are silently lost**, hurting future crash diagnosis. Fix the faulthandler fd setup in the VM bootstrap.
       [cosmetic now, diagnostic-loss later]
+      **Already shipped**: UTL `resource_profiler._dump_traceback_all_threads` now writes to `tempfile.TemporaryFile`
+      (real fileno) instead of `io.StringIO`; failure log demoted to `debug`. unified-trading-library@de00a08d.
 - [ ] [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
       intended; if so, silence the WARNING; if not, ship the file.
 
