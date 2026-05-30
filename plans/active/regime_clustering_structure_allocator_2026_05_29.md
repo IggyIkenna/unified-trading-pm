@@ -219,8 +219,8 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   selectable. Reject "dominated-in-permutation-pool" / "+Sharpe-in-sample" winners.
   `overfit_gates.py`: `deflated_sharpe_ratio()` (Bailey & Lopez de Prado 2014), `DeflatedSharpeGate`, `PboGate` stub,
   `CompositeOosGate`. 23 unit tests. strategy-service@45043b3.
-- [ ] [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
-  `vol_trading_options` / a new options engine.
+- [x] ✅ [TRADING-AGENT] P2. Emit structure as `param_overrides` via `allocation_directive_loop.py emit_directives()` into
+  `vol_trading_options` / a new options engine. **DONE 2026-05-30** — `on_cluster_assignment_event()` + `on_options_structure_event()` hooks; `emit_directives()` emits `VOL_TRADING_OPTIONS` `ArchetypeAllocationDirective` carrying `cluster_id`/`soft_probs`/`regime_abstain`/`structure_legs`/`structure_score` as `param_overrides` when both events received. `_build_vol_trading_param_overrides()` helper. 8 new unit tests (12 total). basedpyright + ruff clean. — trading-agent-service@2e7c845
 
 ## Phase 4 — Continuous→discrete execution realism
 
