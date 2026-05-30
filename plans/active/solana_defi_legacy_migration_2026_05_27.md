@@ -339,10 +339,13 @@ source:
       vm-ml SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on
       vm-ml (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill
       launch dispatch.
-- [ ] [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
+- [x] ✅ [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
       (likely `deployment-service/terraform/gcp/*.tf` or a setup script). Roles granted ad-hoc 2026-05-29 during vm-ml
       backfill dispatch: `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` (project-scope). Without SSOT
       sync, a future `tofu apply` could revert them.
+      — deployment-service@dab9a60 (2026-05-30). Added `google_project_iam_member.unified_trading_compute_instance_admin`
+      + `google_project_iam_member.unified_trading_service_account_user` to `terraform/gcp/main.tf` after the existing
+      SA IAM block.
 
 ## Not in scope (separately tracked)
 
