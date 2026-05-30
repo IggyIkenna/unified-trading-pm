@@ -351,9 +351,13 @@ start implementation against an unconfirmed shape.
 
 ## Phase 5 — Observability
 
-- [ ] [AGENT] P2. **5.1** Emit `MEMORY_HIGH_WATER_MARK` events at each shard boundary (per-date, per-data_type,
+- [x] ✅ [AGENT] P2. **5.1** Emit `MEMORY_HIGH_WATER_MARK` events at each shard boundary (per-date, per-data_type,
       per-instrument) — currently the only memory signal is the existing `MEMORY_BACKPRESSURE_ENGAGED` warning, which
-      only fires when we're already in trouble.
+      only fires when we're already in trouble. Shipped at MDPS@3f98ed9: per-date in `_cleanup_after_day`
+      (orchestration_base.py) + per-data_type at end of `_process_files_parallel` (batch_workers.py). Fields:
+      shard_date, shard_type, shard_data_type, memory_rss_mb, memory_rss_bytes, instruments_processed, success_count.
+      Per-instrument omitted — psutil call per instrument × hundreds of instruments = performance regression;
+      existing `PROCESSING_COMPLETED` covers per-instrument observability. 2026-05-30.
 - [ ] [AGENT] P2. **5.2** Per-shard wall-clock timing emitted as a `SHARD_COMPLETED` event with structured fields, so
       the per-shard cost model in Phase 0.3 can be validated against real production data.
 - [ ] [AGENT] P2. **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
