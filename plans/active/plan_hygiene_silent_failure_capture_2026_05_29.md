@@ -122,8 +122,10 @@ indefinitely with no auto-unblock when blockers complete.
       Added `notify_unpushed_plans()` to `server/notifications/slack.py`. Added `_maybe_alert_unpushed_plans()`
       to `WorkerLivenessKicker` (throttled 30min). Called from liveness tick. No staleness threshold for plan
       files — alert fires immediately on first dirty-plan detection. — agent-orchestrator@<sha>
-- [ ] [AGENT] P1. Update `codex/12-agent-workflow/symmetric-worker-model.md` (or appropriate codex doc) to note that
+- [x] ✅ [AGENT] P1. Update `codex/12-agent-workflow/symmetric-worker-model.md` (or appropriate codex doc) to note that
       plan-file dirty-state has its own alert.
+      Updated `local-slot-host-symmetric-worker-model.md` under "Drift reporter" section: documented `unpushed_plans`
+      field, immediate Slack alert, 30min throttle, and the no-grace-period rule for plan files. — unified-trading-pm@<sha>
 
 ## Phase 3 — Stale-blocker reaper (P1)
 
