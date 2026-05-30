@@ -159,12 +159,12 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 4 — Edge-case extensions to check_todo_format (P2)
 
-- [ ] [AGENT] P2. Handle 2 known residual edge cases that fail the canonical regex despite being operator-intent: -
-      `[BLOCKED-CREDENTIALS — operator action] [AUDIT] P0. ...` — tag has space + em-dash inside brackets. Decision:
-      either (a) accept inline `— operator action` qualifier in tag (relax regex), or (b) auto-rewrite to canonical
-      `[BLOCKED-CREDENTIALS] [AUDIT] P0. ... — operator action` (move qualifier to description). -
-      `[CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" ...` — tag has `.` (period). Decision: rename to
-      `[CODEX] P1.` or `[CLAUDE-MD] P1.` since dots break the tag regex.
+- [x] ✅ [AGENT] P2. Handle 2 known residual edge cases that fail the canonical regex despite being operator-intent:
+      Shipped at PM@1bec016a. Edge case A: `[TAG — qualifier] [SECOND?] P<n>.` rewrites to
+      `[TAG] [SECOND?] P<n>. body — qualifier` (option b — move qualifier to description; two rules in fix_todo_format.sh
+      cover with-second-tag and solo-tag forms). Edge case B: `[CLAUDE.md] P<n>.` rewrites to `[CLAUDE-MD] P<n>.`
+      (dots banned in tags). check_todo_format.sh guidance text updated to document both patterns. Dry-run confirmed 0
+      accidental rewrites on current plan corpus. 2026-05-30.
 
 ## Phase 5 — Codex SSOT updates (P2)
 
