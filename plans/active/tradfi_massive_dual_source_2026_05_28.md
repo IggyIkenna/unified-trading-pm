@@ -280,8 +280,8 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       least one `captured` source, downstream treats cell as captured (union semantics). Per-reason taxonomy unchanged.
       — PM@d4f48363
 - [x] ✅ [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path. — PM@22a60541
-- [ ] [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
-      futures gap still resolved via Yahoo/Barchart).
+- [x] ✅ [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
+      futures gap still resolved via Yahoo/Barchart). Added explicit Massive exclusion note. — PM@cb5b14dd
 - [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE.
 
 ## Success criteria
