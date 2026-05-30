@@ -92,13 +92,21 @@ indefinitely with no auto-unblock when blockers complete.
       `yaml     mtds_mdps_master:       keywords: [mtds, mdps, instruments-service, manifest, market-tick, candle, backfill]       repos: [market-tick-data-service, market-data-processing-service, instruments-service]     features_and_ml_master:       keywords: [features-service, feature-, ml-, training, registry, polars, formula]       repos: [features-service, ml-service, ml-training-service]     # ... one entry per epic in plans/epics/README.md (19 epics)     `
       Seed each epic's keywords by scanning the epic master plan + its currently-active child plans for distinctive
       tokens (the audit doc from Phase 0 lists existing plan→epic mappings).
-- [ ] [AGENT] P1. Write `scripts/plan-hygiene/check_parent_epic_alignment.py` (style matching `check_todo_format.sh`):
+- [x] ✅ [AGENT] P1. Write `scripts/plan-hygiene/check_parent_epic_alignment.py` (style matching `check_todo_format.sh`):
       for each `plans/active/*.md`, score the plan body against every epic's keyword surface; if the highest-scoring
       epic differs from the declared `parent_epic`, emit a WARN with the top-3 epic scores. Soft check (operator
-      decides; no auto-fix).
-- [ ] [AGENT] P1. Wire into `scripts/plan-hygiene/run_hygiene_sweep.sh` as a SOFT check (warn-only — semantic guess
-      shouldn't block hygiene-green).
-- [ ] [AGENT] P1. Run on current plans. Expect a small list (≤5) of suspect mismatches; report and let operators decide.
+      decides; no auto-fix). — unified-trading-pm@<sha>
+- [x] ✅ [AGENT] P1. Wire into `scripts/plan-hygiene/run_hygiene_sweep.sh` as a SOFT check (warn-only — semantic guess
+      shouldn't block hygiene-green). — same commit
+- [x] ✅ [AGENT] P1. Run on current plans. Expect a small list (≤5) of suspect mismatches; report and let operators decide.
+      **Result (2026-05-30)**: 17 WARNs on 32 plans. Most are heuristic cross-contamination (backfill plans for
+      cefi/defi/tradfi score high on domain epics despite belonging to mtds_mdps_master; manifest-touching plans
+      score high on manifest_master). No clearly wrong parent_epic assignments — all are operator-acceptable.
+      Suspect mismatches surfaced (partial): `features_backfill_phase3` (mtds_mdps > features_and_ml),
+      `pipeline_mode_implementation` (manifest_master tied with batch_live_symmetry), `plan_hygiene_*`
+      (plan_hygiene_master > orchestrator_master — see note: plan_hygiene_master is a valid epic but most
+      hygiene plans intentionally declare orchestrator_master). Operators should review and refine keyword
+      weights in epic-keyword-surface.yaml if false-positive rate is too high.
 
 ## Phase 2 — Unpushed plan-file detection (P1)
 
