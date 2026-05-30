@@ -171,9 +171,12 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 2 — Multi-source merge logic (3 days — the deferred plan slot)
 
-- [ ] [UAC] P1. `read_with_source_priority()` — extend to return `Iterator[tuple[Row, source, pipeline_mode]]` when
+- [x] ✅ [UAC] P1. `read_with_source_priority()` — extend to return `Iterator[tuple[Row, source, pipeline_mode]]` when
       multiple sources are present for the same (asset_group, venue, day, data_type) cell. Today the function assumes
       single-source-per-cell; this is the merge logic.
+  - Added `get_all_sources_with_priority(asset_group, data_type) -> list[tuple[str, PipelineMode]]` returning full
+    ordered source list (primary first). Multi-source cells like `("tradfi","trades")` return `[("databento", BATCH_DATABENTO), ("massive", BATCH_MASSIVE)]`.
+  - 6 new tests; 73 total pass. Exposed via crosscutting facade. UAC@87570f4d
 - [ ] [UAC] P1. Tie-breaker implementation per module docstring:
   1. Timestamp-availability (live-time emitters win over archive-only)
   2. Coverage (broader-coverage wins where overlap)
